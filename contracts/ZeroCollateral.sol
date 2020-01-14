@@ -47,6 +47,9 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/contracts/access/
     // address of the DAI Contract
     address public DAI_CONTRACT;
     
+     // address of the Zero Collateral DAO Wallet
+    address public ZC_DAO_CONTRACT;
+    
     // borrow count
     uint256 BORROW_COUNT = 0;
     
@@ -130,6 +133,7 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/contracts/access/
 
     constructor(
         address daiContract,
+        address daoContract,
         string memory name, 
         string memory symbol, 
         uint8 decimals
@@ -137,6 +141,7 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/contracts/access/
         public
     {
         DAI_CONTRACT = daiContract;
+        ZC_DAO_CONTRACT = daoContract;
         _name = name;
         _symbol = symbol;
         _decimals = decimals;
@@ -539,14 +544,24 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/contracts/access/
                         default_pool_addition = (interest / 2);
                     }
                     
+                    // split redepmtion pool and dao funding amounts
+                    uint256 dao_funding_amount = (((redemption_pool_addition * (10**18))/100) * 2)/10;
+                    uint256 redemption_pool_amount = (((redemption_pool_addition * (10**18))/100) * 8)/10;
+                    
                     // updated amount of DAI in REDEMPTION_POOL & DEFAULT_POOL
-                    REDEMPTION_POOL += ((redemption_pool_addition * (10**18))/100); // 10^18 decimals for DAI
+                    REDEMPTION_POOL += redemption_pool_amount; // 10^18 decimals for DAI
                     DEFAULT_POOL += ((default_pool_addition * (10**18))/100) ; // 10^18 decimals for DAI
                     
-                    borrowAccounts[msg.sender].amountPaidRedemptionPool += ((redemption_pool_addition * (10**18))/100);
+                    borrowAccounts[msg.sender].amountPaidRedemptionPool += redemption_pool_amount;
                     borrowAccounts[msg.sender].amountPaidDefaultPool += ((default_pool_addition * (10**18))/100);
                    
                     borrows[borrowerLastBorrowId].amountOwed = 0;
+                    
+                    // transfer DAI to ZC DAO wallet from this address
+                    ERC20(DAI_CONTRACT).transfer(ZC_DAO_CONTRACT, dao_funding_amount);
+                    require(checkSuccess(), "ERC20#dao_funding: TRANSFER_FAILED");
+                    
+                    
                }else{
                     // transfer DAI to this address from borrow address
                     ERC20(DAI_CONTRACT).transferFrom(msg.sender, address(this), ((amouontRepay * (10**18))/100) );
@@ -562,14 +577,22 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/contracts/access/
                         default_pool_addition = ((interest - remainingOwed) / 2);
                     }
                     
+                    // split redepmtion pool and dao funding amounts
+                    uint256 dao_funding_amount = (((redemption_pool_addition * (10**18))/100) * 2)/10;
+                    uint256 redemption_pool_amount = (((redemption_pool_addition * (10**18))/100) * 8)/10;
+                    
                     // updated amount of DAI in REDEMPTION_POOL
-                    REDEMPTION_POOL += ((redemption_pool_addition * (10**18))/100) ; // 10^18 decimals for DAI
+                    REDEMPTION_POOL += redemption_pool_amount; // 10^18 decimals for DAI
                     DEFAULT_POOL += ((default_pool_addition * (10**18))/100) ; // 10^18 decimals for DAI
                     
-                    borrowAccounts[msg.sender].amountPaidRedemptionPool += ((redemption_pool_addition * (10**18))/100);
+                    borrowAccounts[msg.sender].amountPaidRedemptionPool += redemption_pool_amount;
                     borrowAccounts[msg.sender].amountPaidDefaultPool += ((default_pool_addition * (10**18))/100);
                     
                     borrows[borrowerLastBorrowId].amountOwed -= amouontRepay;
+                    
+                    // transfer DAI to ZC DAO wallet from this address
+                    ERC20(DAI_CONTRACT).transfer(ZC_DAO_CONTRACT, dao_funding_amount);
+                    require(checkSuccess(), "ERC20#dao_funding: TRANSFER_FAILED");
                }
                if (borrows[borrowerLastBorrowId].amountOwed == 0){
                    borrows[borrowerLastBorrowId].active =  false;
