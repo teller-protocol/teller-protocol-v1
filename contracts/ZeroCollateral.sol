@@ -123,9 +123,6 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/contracts/access/
     // collateral withdrawn by borrower
     event collateralWithdrawn(address indexed borrower, uint256 amount);
     
-    // set number max blocks for borrow to be paid
-    uint256 MAX_BLOCKS_BORROW = 172800; // equates to ~thirty days (at 4 blocks per minute)
-    
     // borrow event initiated 
     event borrowInitiated(address indexed borrower, Borrow borrow);
 
@@ -245,6 +242,11 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/contracts/access/
     // get DEFAULT_POOL
     function getDefaultPool() public view returns(uint256) {
         return DEFAULT_POOL;
+    }
+    
+    // get COLLATERAL_LOCKED
+    function getCollateralLocked() public view returns(uint256) {
+        return COLLATERAL_LOCKED;
     }
     
     // redeem interest from redemption pool 
@@ -367,7 +369,7 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/contracts/access/
         
         uint256 borrowerLastBorrowId = borrowAccounts[borrower].lastBorrowId;
         
-        if (borrows[borrowerLastBorrowId].active ==  true && block.number > borrows[borrowerLastBorrowId].blockEnd){
+        if (borrows[borrowerLastBorrowId].active ==  true && block.timestamp > borrows[borrowerLastBorrowId].blockEnd){
             // set old amount paid to DEFAULT_POOL
             uint256 oldAmountPaidDefaultPool = borrowAccounts[borrower].amountPaidDefaultPool;
             
@@ -436,7 +438,33 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/contracts/access/
         } 
     }
     
-    function calculateInterest(uint256 amountBorrow) view public returns (uint256) {
+    // calculate interest rate given number of days (0 decimals)
+    function calculateInterestWithDays(uint256 numberDays) view public returns (uint256) {
+        // max term 365 days
+        require(numberDays <= 365, "Number Days: MORE THAN 365");
+        
+        uint256 interest_rate = 12 * (10**18);
+        
+        if (numberDays <= 7){
+            interest_rate = (0*(10**18)) + (( (1*(10**18)) * (numberDays - 0)) / 7 );
+        }else if (7 < numberDays && numberDays <= 14){
+            interest_rate = (1*(10**18)) + (( (5*(10**17)) * (numberDays - 7)) / 7 );
+        }else if (14 < numberDays && numberDays <= 30){
+            interest_rate = (15*(10**17)) + (( (1*(10**18)) * (numberDays - 14)) / 14 );
+        }else if (30 < numberDays && numberDays <= 60){
+            interest_rate = (25*(10**17)) + (( (15*(10**17)) * (numberDays - 30)) / 30 );
+        }else if (60 < numberDays && numberDays <= 120){
+            interest_rate = (4*(10**18)) + (( (2*(10**18)) * (numberDays - 60)) / 60 );
+        }else if (120 < numberDays && numberDays <= 180){
+            interest_rate = (6*(10**18)) + (( (2*(10**18)) * (numberDays - 120)) / 60 );
+        }else if (180 < numberDays && numberDays <= 365){
+            interest_rate = (8*(10**18)) + (( (4*(10**18)) * (numberDays - 180)) / 185 );
+        }
+         
+         return interest_rate;
+    }
+    
+    function calculateInterestDiscount(uint256 amountBorrow, uint256 numberDays) view public returns (uint256) {
         
         // calculate % of interest paid (18 decimals) + collateralNonRedeemable (18 decimals), divided by borrow amount (2 decimals). Resulting 16 decimals.
         uint256 x = ((borrowAccounts[msg.sender].amountPaidRedemptionPool + borrowAccounts[msg.sender].collateralNonRedeemable)) / amountBorrow;
@@ -445,10 +473,11 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/contracts/access/
             x = (10**16);
         }
         
-        // interest rate calculated
-         uint256 interest_rate = ((12 * (10**16)) - (x*8)) / (10**16);
+        // interest rate discount calculated
+        uint256 interest_rate = calculateInterestWithDays(numberDays); // 18 decimals
+        uint256 interest_rate_discount = interest_rate - (((interest_rate * x)/3)  / (10**16)); // 18 decimals
          
-         return interest_rate;
+         return interest_rate_discount;
     }
     
     // retrieve all borrows
@@ -461,7 +490,10 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/contracts/access/
         return (borrows[id]);
     }
     
-    function createBorrow(uint256 amouontBorrow) public returns(bool) {
+    function createBorrow(uint256 amouontBorrow, uint256 numberDays) public returns(bool) {
+        // max term 365 days
+        require(numberDays <= 365, "Number Days: MORE THAN 365");
+        
         // cannot withdraw collateral
         uint256 amountAvailableForWithdraw = (ERC20(DAI_CONTRACT).balanceOf(address(this)) - COLLATERAL_LOCKED - DEFAULT_POOL - REDEMPTION_POOL) / (10**16);
         
@@ -491,17 +523,22 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/contracts/access/
         // create borrow
         Borrow storage borrow = borrows[BORROW_COUNT];
         
-        uint256 BORROW_INTEREST_RATE = calculateInterest(amouontBorrow);
+        uint256 BORROW_INTEREST_RATE = (calculateInterestDiscount(amouontBorrow, numberDays));
         
         borrow.amouontBorrow = amouontBorrow;
-        borrow.amountOwed = (amouontBorrow*(100+BORROW_INTEREST_RATE))/100; // using 100 multiplier to maintain number above decimal
-        borrow.amountOwedInitial = (amouontBorrow*(100+BORROW_INTEREST_RATE))/100;
+        borrow.amountOwed = amouontBorrow + (amouontBorrow*BORROW_INTEREST_RATE)/(10**20); // divided by 18 + 2 decimals to remove inerest rate decimals
+        borrow.amountOwedInitial = amouontBorrow + (amouontBorrow*BORROW_INTEREST_RATE)/(10**20);
         borrow.active = true;
-        borrow.blockStart = block.number;
-        borrow.blockEnd = block.number + MAX_BLOCKS_BORROW;
+        borrow.blockStart = block.timestamp;
+        borrow.blockEnd = block.timestamp + (numberDays * 60*60*24);
         borrow.account = msg.sender;
         borrow.liquidated = false;
         borrow.id = BORROW_COUNT;
+        
+        if (borrow.amouontBorrow == borrow.amountOwedInitial){
+            borrow.amountOwed = amouontBorrow + 1;
+            borrow.amountOwedInitial = amouontBorrow + 1;
+        }
         
         BorrowStucts.push(borrow);
         borrowAccounts[msg.sender].lastBorrowId = BORROW_COUNT;
