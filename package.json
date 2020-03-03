@@ -5,8 +5,8 @@
   "scripts": {
     "compile": "truffle compile",
     "ganache": "ganache-cli -p 8545 --gasLimit 0x90F560",
-    "solhint": "yarn solhint \"./contracts/**/*.sol\"",
-    "eslint": "yarn eslint \"./test/**/*.js\"",
+    "lint-sol": "yarn solhint \"./contracts/**/*.sol\"",
+    "lint-js": "yarn eslint \"./test/**/*.js\"",
     "test": "truffle test"
 
   },
