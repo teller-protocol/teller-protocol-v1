@@ -37,6 +37,8 @@ import "./Chainlink.sol";
 
     // ============ State Variables ============
 
+    uint256 constant DAI_DECIMALS = 10**18;
+
     // address of the DAI Contract
     address public DAI_CONTRACT;
 
@@ -53,10 +55,10 @@ import "./Chainlink.sol";
     uint256 BLOCK_ACCRUED_INTEREST = block.number;
 
     // amount of DAI remaining as unredeemed interest
-    uint256 public unredeemedDAIIntered = 0;
+    uint256 public unredeemedDAIInterest = 0;
 
     // amount of DAI remaining as unredeemed interest
-    uint256 DEFAULT_POOL = 0;
+    uint256 public defaultPool = 0;
 
     // amount collateral locked in contract
     uint256 public collateralLocked = 0;
@@ -95,11 +97,14 @@ import "./Chainlink.sol";
         uint256 id;
     }
 
-    // mapping of all borrows
-    mapping (uint256 => Borrow) borrows;
+    // mapping of borrowID to borrow
+    mapping (uint256 => Borrow) public borrows;
 
     // publically accessible array of all borrows
     Borrow[] public borrowStucts;
+
+    // event on redemption of interest
+    event Redeemed(address indexed lenderAccount, uint256 amount);
 
     // collateral deposited by borrower
     event CollateralDeposited(address indexed borrower, uint256 amount);
@@ -159,11 +164,11 @@ import "./Chainlink.sol";
     {
         // cannot withdraw collateral
         uint256 amountAvailableForWithdraw = IERC20(DAI_CONTRACT).balanceOf(address(this))
-        amountAvailableForWithdraw = amountAvailableForWithdraw.sub(collateralLocked.sub(DEFAULT_POOL.sub(unredeemedDAIIntered)));
+        amountAvailableForWithdraw = amountAvailableForWithdraw.sub(collateralLocked.sub(defaultPool.sub(unredeemedDAIInterest)));
 
         // only allow withdraw up to available
         uint256 finalAmount = amount
-        if (amount > amountAvailableForWithdraw){
+        if (amount > amountAvailableForWithdraw) {
             finalAmount = amountAvailableForWithdraw;
         }
         
@@ -183,31 +188,16 @@ import "./Chainlink.sol";
         return totalAccruedInterest;
     }
     
-    // get accrued interest of sender account
-    function getAccountAccruedInterest() public view returns(uint256) {
-        return lenderAccounts[msg.sender].totalAccruedInterest;
+    // get accrued interest of a particular account
+    function getAccountAccruedInterest(address account) public view returns(uint256) {
+        return lenderAccounts[account].totalAccruedInterest;
     }
     
     // call update accrued interest of sender account
-    function callUpdateAccountAccruedInterest() public returns(uint256) {
+    function callUpdateAccountAccruedInterest() public {
         updateTotalAccruedInterest();
         updateAccountAccruedInterest();
         return lenderAccounts[msg.sender].totalAccruedInterest;
-    }
-    
-    // get unredeemedDAIIntered
-    function getRedemptionPool() public view returns(uint256) {
-        return unredeemedDAIIntered;
-    }
-    
-    // get DEFAULT_POOL
-    function getDefaultPool() public view returns(uint256) {
-        return DEFAULT_POOL;
-    }
-    
-    // get collateralLocked
-    function getCollateralLocked() public view returns(uint256) {
-        return collateralLocked;
     }
     
     // redeem interest from redemption pool 
@@ -216,44 +206,42 @@ import "./Chainlink.sol";
         updateTotalAccruedInterest();
         updateAccountAccruedInterest();
         
-         // calculated interest_redeemable as amount of DAI in decimals
-        uint256 interest_redeemable = ((lenderAccounts[msg.sender].totalAccruedInterest * unredeemedDAIIntered) / totalAccruedInterest) ;
+         // calculated interestRedeemable as amount of DAI in decimals
+        uint256 interestRedeemable = lenderAccounts[msg.sender].totalAccruedInterest.mul(unredeemedDAIInterest).div(totalAccruedInterest);
         
         // update totalAccruedInterest
-        totalAccruedInterest -= lenderAccounts[msg.sender].totalAccruedInterest;
+        totalAccruedInterest = totalAccruedInterest.sub(lenderAccounts[msg.sender].totalAccruedInterest);
         
         // set accrued interest of lender to 0
         lenderAccounts[msg.sender].totalAccruedInterest = 0;
         
-        // update unredeemedDAIIntered
-        unredeemedDAIIntered -= interest_redeemable;
+        // update unredeemedDAIInterest
+        unredeemedDAIInterest = unredeemedDAIInterest.sub(interestRedeemable);
         
         // transfer DAI to lender
-        ERC20(DAI_CONTRACT).transfer(msg.sender, interest_redeemable);
-        require(checkSuccess(), "ERC20#withdraw: TRANSFER_FAILED");
+        require(IERC20(DAI_CONTRACT).transfer(msg.sender, interestRedeemable));
         
         // emit event of redemption
-        emit Redeemed(msg.sender, interest_redeemable);
+        emit Redeemed(msg.sender, interestRedeemable);
         
-        return interest_redeemable;
+        return interestRedeemable;
     }
     
     // calculate borrower collateral needed for specific borrow. collateral in value of DAI
-    function getCollateralNeeded(uint256 amountBorrow) view public returns(uint256){
-        uint256 poolContributions = (borrowerAccounts[msg.sender].amountPaidRedemptionPool);
-        uint256 amountBorrowDecimals = amountBorrow*(10**16); // convert to DAI decimals
+    function getCollateralNeeded(uint256 amountBorrow) view public returns (uint256) {
+        uint256 poolContributions = borrowerAccounts[msg.sender].amountPaidRedemptionPool;
+        uint256 amountBorrowDecimals = amountBorrow.mul(DAI_DECIMALS); // convert to DAI decimals
         
-        if (poolContributions >= amountBorrowDecimals){
+        if (poolContributions >= amountBorrowDecimals) {
             return 0;
-        }else{
-            return ( amountBorrowDecimals - poolContributions ); // return DAI units of collateral
+        } else {
+            return amountBorrowDecimals.sub(poolContributions); // return DAI units of collateral
         }
     }
     
     // get total collateral of borrower
-    function collateralsOf(address borrower) public view returns (uint256) {
-        uint256 totalCollateral = borrowerAccounts[borrower].collateralRedeemable + borrowerAccounts[borrower].collateralNonRedeemable;
-        return totalCollateral;
+    function getTotalCollateral(address borrower) public view returns (uint256) {
+        return borrowerAccounts[borrower].collateralRedeemable.add(borrowerAccounts[borrower].collateralNonRedeemable);
     }
     
     // get redeemable collateral of borrower
@@ -270,27 +258,25 @@ import "./Chainlink.sol";
     // borrower deposit redeemable collateral
     function depositCollateralRedeemableBorrower(uint256 amount) public payable {
         
-        ERC20(DAI_CONTRACT).transferFrom(msg.sender, address(this), amount);
-        require(checkSuccess(), "ERC20#deposit: TRANSFER_FAILED");
+        require(IERC20(DAI_CONTRACT).transferFrom(msg.sender, address(this), amount));
         
-        collateralLocked += amount;
+        collateralLocked = collateralLocked.add(amount);
         
         // updated account collateral redeemable
-        borrowerAccounts[msg.sender].collateralRedeemable += amount;
-        emit collateralDeposited(msg.sender, amount);
+        borrowerAccounts[msg.sender].collateralRedeemable = borrowerAccounts[msg.sender].collateralRedeemable.add(amount);
+        emit CollateralDeposited(msg.sender, amount);
     }
     
     // borrower deposit non-redeemable collateral
     function depositCollateralNonredeemableBorrower(uint256 amount) public payable {
         
-        ERC20(DAI_CONTRACT).transferFrom(msg.sender, address(this), amount);
-        require(checkSuccess(), "ERC20#deposit: TRANSFER_FAILED");
+        require(IERC20(DAI_CONTRACT).transferFrom(msg.sender, address(this), amount));
         
-        DEFAULT_POOL += amount;
+        defaultPool = defaultPool.add(amount);
         
         // updated account collateral redeemable
-        borrowerAccounts[msg.sender].collateralNonRedeemable += amount;
-        emit collateralDeposited(msg.sender, amount);
+        borrowerAccounts[msg.sender].collateralNonRedeemable = borrowerAccounts[msg.sender].collateralNonRedeemable.add(amount);
+        emit CollateralDeposited(msg.sender, amount);
     }
     
     // borrower withdraw collateral
@@ -301,26 +287,23 @@ import "./Chainlink.sol";
         
         // check for no outstanding borrow
         uint256 borrowerLastBorrowId = borrowerAccounts[msg.sender].lastBorrowId;
-        if (borrowerLastBorrowId != 0){
-            bool outstandingBorrow = getBorrow(borrowerLastBorrowId).active;
-            require(outstandingBorrow==false, "Collateral#withdraw: OUTSTANDING_BORROW");
+        if (borrowerLastBorrowId != 0) {
+            require(!getBorrow(borrowerLastBorrowId).active, "Collateral#withdraw: OUTSTANDING_BORROW");
         }
         
-        if (borrowerAccounts[msg.sender].collateralRedeemable > amount){
+        if (borrowerAccounts[msg.sender].collateralRedeemable > amount) {
             borrowerAccounts[msg.sender].collateralRedeemable -= amount;
-            collateralLocked -= amount;
-            ERC20(DAI_CONTRACT).transfer(msg.sender, amount);
-            require(checkSuccess(), "ERC20#withdraw: TRANSFER_FAILED");
+            collateralLocked = collateralLocked.sub(amount);
+            require(IERC20(DAI_CONTRACT).transfer(msg.sender, amount));
             
-            emit collateralWithdrawn(msg.sender, amount);
-        }else{
+            emit CollateralWithdrawn(msg.sender, amount);
+        } else {
             uint256 transfer_amount = borrowerAccounts[msg.sender].collateralRedeemable;
             borrowerAccounts[msg.sender].collateralRedeemable = 0;
             collateralLocked -= transfer_amount;
-            ERC20(DAI_CONTRACT).transfer(msg.sender, transfer_amount);
-            require(checkSuccess(), "ERC20#withdraw: TRANSFER_FAILED");
+            require(IERC20(DAI_CONTRACT).transfer(msg.sender, transfer_amount));
             
-            emit collateralWithdrawn(msg.sender, borrowerAccounts[msg.sender].collateralRedeemable);
+            emit CollateralWithdrawn(msg.sender, borrowerAccounts[msg.sender].collateralRedeemable);
         }
         
     }
@@ -330,8 +313,8 @@ import "./Chainlink.sol";
         
         uint256 borrowerLastBorrowId = borrowerAccounts[borrower].lastBorrowId;
         
-        if (borrows[borrowerLastBorrowId].active ==  true && block.timestamp > borrows[borrowerLastBorrowId].blockEnd){
-            // set old amount paid to DEFAULT_POOL
+        if (borrows[borrowerLastBorrowId].active && block.timestamp > borrows[borrowerLastBorrowId].blockEnd) {
+            // set old amount paid to defaultPool
             uint256 oldAmountPaidDefaultPool = borrowerAccounts[borrower].amountPaidDefaultPool;
             
             // liquidate account
@@ -340,30 +323,30 @@ import "./Chainlink.sol";
             
             
             // amount owed from loan
-            uint256 amountOwedDAI = ((borrows[borrowerLastBorrowId].amountOwed * (10**18))/100);
+            uint256 amountOwedDAI = ((borrows[borrowerLastBorrowId].amountOwed * (DAI_DECIMALS))/100);
             
-            if (amountOwedDAI > oldAmountPaidDefaultPool){
-                uint256 liquidatedCollateral = amountOwedDAI - oldAmountPaidDefaultPool;
+            if (amountOwedDAI > oldAmountPaidDefaultPool) {
+                uint256 liquidatedCollateral = amountOwedDAI.sub(oldAmountPaidDefaultPool);
                 
                 // primary liquidation: non-redeemable collateral
-                if (liquidatedCollateral > borrowerAccounts[borrower].collateralNonRedeemable){
+                if (liquidatedCollateral > borrowerAccounts[borrower].collateralNonRedeemable) {
                     // update collateralNonRedeemable
                     uint256 oldCollateralNonRedeemable = borrowerAccounts[borrower].collateralNonRedeemable;
                     
                     borrowerAccounts[borrower].collateralNonRedeemable = 0;
-                    liquidatedCollateral -= oldCollateralNonRedeemable;
+                    liquidatedCollateral = liquidatedCollateral.sub(oldCollateralNonRedeemable);
                     
                     // update default pool (where non-redeemable collateral resides)
-                    DEFAULT_POOL -= oldCollateralNonRedeemable;
-                    unredeemedDAIIntered += oldCollateralNonRedeemable;
+                    defaultPool = defaultPool.sub(oldCollateralNonRedeemable);
+                    unredeemedDAIInterest = unredeemedDAIInterest.add(oldCollateralNonRedeemable);
                     
-                }else{
+                } else {
                     // update collateralNonRedeemable
                     borrowerAccounts[borrower].collateralNonRedeemable -= liquidatedCollateral;
                     
                     // update default pool (where non-redeemable collateral resides)
-                    DEFAULT_POOL -= liquidatedCollateral;
-                    unredeemedDAIIntered += liquidatedCollateral;
+                    defaultPool -= liquidatedCollateral;
+                    unredeemedDAIInterest = unredeemedDAIInterest.add(liquidatedCollateral);
                     
                     // set liquidatedCollateral to 0
                     liquidatedCollateral = 0;
@@ -371,7 +354,7 @@ import "./Chainlink.sol";
                 }
                 
                 // secondary liquidation: redeemable collateral
-                if (liquidatedCollateral > borrowerAccounts[borrower].collateralRedeemable){
+                if (liquidatedCollateral > borrowerAccounts[borrower].collateralRedeemable) {
                     // update collateralRedeemable
                     uint256 oldCollateralRedeemable = borrowerAccounts[borrower].collateralRedeemable;
                     borrowerAccounts[borrower].collateralRedeemable = 0;
@@ -379,14 +362,14 @@ import "./Chainlink.sol";
                 
                     // update collateral locked
                     collateralLocked -= oldCollateralRedeemable;
-                    unredeemedDAIIntered += oldCollateralRedeemable;
-                }else{
+                    unredeemedDAIInterest = unredeemedDAIInterest.add(oldCollateralRedeemable);
+                } else {
                     // update collateralRedeemable
                     borrowerAccounts[borrower].collateralRedeemable -= liquidatedCollateral;
                     
                     // update collateral locked
                     collateralLocked -= liquidatedCollateral;
-                    unredeemedDAIIntered += liquidatedCollateral;
+                    unredeemedDAIInterest = unredeemedDAIInterest.add(liquidatedCollateral);
                     
                     // set liquidatedCollateral to 0
                     liquidatedCollateral = 0;
@@ -404,51 +387,41 @@ import "./Chainlink.sol";
         // max term 365 days
         require(numberDays <= 365, "Number Days: MORE THAN 365");
         
-        uint256 interest_rate = 12 * (10**18);
+        uint256 interestRate = 12.mul(DAI_DECIMALS);
         
-        if (numberDays <= 7){
-            interest_rate = (0*(10**18)) + (( (1*(10**18)) * (numberDays - 0)) / 7 );
-        }else if (7 < numberDays && numberDays <= 14){
-            interest_rate = (1*(10**18)) + (( (5*(10**17)) * (numberDays - 7)) / 7 );
-        }else if (14 < numberDays && numberDays <= 30){
-            interest_rate = (15*(10**17)) + (( (1*(10**18)) * (numberDays - 14)) / 14 );
-        }else if (30 < numberDays && numberDays <= 60){
-            interest_rate = (25*(10**17)) + (( (15*(10**17)) * (numberDays - 30)) / 30 );
-        }else if (60 < numberDays && numberDays <= 120){
-            interest_rate = (4*(10**18)) + (( (2*(10**18)) * (numberDays - 60)) / 60 );
-        }else if (120 < numberDays && numberDays <= 180){
-            interest_rate = (6*(10**18)) + (( (2*(10**18)) * (numberDays - 120)) / 60 );
-        }else if (180 < numberDays && numberDays <= 365){
-            interest_rate = (8*(10**18)) + (( (4*(10**18)) * (numberDays - 180)) / 185 );
+        if (numberDays <= 7) {
+            interestRate = DAI_DECIMALS.mul(numberDays).div(7);
+        } else if (7 < numberDays && numberDays <= 14) {
+            interestRate = DAI_DECIMALS.add(5.mul(DAI_DECIMALS).mul(numberDays - 7).div(7));
+        } else if (14 < numberDays && numberDays <= 30) {
+            interestRate = 15.mul(DAI_DECIMALS).add(DAI_DECIMALS.mul(numberDays - 14).div(14));
+        } else if (30 < numberDays && numberDays <= 60) {
+            interestRate = 25.mul(DAI_DECIMALS).add(15.mul(DAI_DECIMALS).mul(numberDays - 30).div(30));
+        } else if (60 < numberDays && numberDays <= 120) {
+            interestRate = 4.mul(DAI_DECIMALS).add(2.mul(DAI_DECIMALS).mul(numberDays - 60).div(60));
+        } else if (120 < numberDays && numberDays <= 180) {
+            interestRate = 6.mul(DAI_DECIMALS).add(2.mul(DAI_DECIMALS).mul(numberDays - 120).div(60));
+        } else if (180 < numberDays && numberDays <= 365) {
+            interestRate = 8.mul(DAI_DECIMALS).add(4.mul(DAI_DECIMALS).mul(numberDays - 180).div(185));
         }
          
-         return interest_rate;
+        return interestRate;
     }
     
     function calculateInterestDiscount(uint256 amountBorrow, uint256 numberDays) view public returns (uint256) {
         
         // calculate % of interest paid (18 decimals) + collateralNonRedeemable (18 decimals), divided by borrow amount (2 decimals). Resulting 16 decimals.
         uint256 x = ((borrowerAccounts[msg.sender].amountPaidRedemptionPool + borrowerAccounts[msg.sender].collateralNonRedeemable)) / amountBorrow;
-        
-        if (x > (10**16)){
+
+        if (x > (10**16)) {
             x = (10**16);
         }
         
         // interest rate discount calculated
-        uint256 interest_rate = calculateInterestWithDays(numberDays); // 18 decimals
-        uint256 interest_rate_discount = interest_rate - (((interest_rate * x)/3)  / (10**16)); // 18 decimals
+        uint256 interestRate = calculateInterestWithDays(numberDays); // 18 decimals
+        uint256 interestRateDiscount = interestRate - (((interestRate * x)/3)  / (10**16)); // 18 decimals
          
-         return interest_rate_discount;
-    }
-    
-    // retrieve all borrows
-    function getAllBorrows() view public returns(Borrow[] memory) {
-        return BorrowStucts;
-    }
-    
-    // retrieve borrow by id
-    function getBorrow(uint256 id) view public returns (Borrow memory) {
-        return (borrows[id]);
+         return interestRateDiscount;
     }
     
     function createBorrow(uint256 amountBorrow, uint256 numberDays) public returns(bool) {
@@ -456,25 +429,25 @@ import "./Chainlink.sol";
         require(numberDays <= 365, "Number Days: MORE THAN 365");
         
         // cannot withdraw collateral
-        uint256 amountAvailableForWithdraw = (ERC20(DAI_CONTRACT).balanceOf(address(this)) - collateralLocked - DEFAULT_POOL - unredeemedDAIIntered) / (10**16);
-        
+        uint256 amountAvailableForWithdraw = IERC20(DAI_CONTRACT).balanceOf(address(this)).sub(collateralLocked).sub(defaultPool).sub(unredeemedDAIInterest).div(DAI_DECIMALS);
+        uint256 finalAmount = amountBorrow;
         // only allow withdraw up to available
-        if (amountBorrow > amountAvailableForWithdraw){
-            amountBorrow = amountAvailableForWithdraw;
+        if (finalAmount > amountAvailableForWithdraw) {
+            finalAmount = amountAvailableForWithdraw;
         }
         
         // check if any outstanding borrows
         uint256 borrowerLastBorrowId = borrowerAccounts[msg.sender].lastBorrowId;
         
-        if (borrowerLastBorrowId != 0){
-            if (getBorrow(borrowerLastBorrowId).active ==  true){
+        if (borrowerLastBorrowId != 0) {
+            if (getBorrow(borrowerLastBorrowId).active ==  true) {
                 return false;
             }
         }
         
         
         // check if collateralDeposited > getCollateralNeeded
-        if (getCollateralNeeded(amountBorrow) > collateralsOf(msg.sender)){
+        if (getCollateralNeeded(finalAmount) > collateralsOf(msg.sender)) {
             return false;
         }
         
@@ -484,11 +457,11 @@ import "./Chainlink.sol";
         // create borrow
         Borrow storage borrow = borrows[borrowCount];
         
-        uint256 BORROW_INTEREST_RATE = (calculateInterestDiscount(amountBorrow, numberDays));
+        uint256 BORROW_interestRate = (calculateInterestDiscount(finalAmount, numberDays));
         
-        borrow.amountBorrow = amountBorrow;
-        borrow.amountOwed = amountBorrow + (amountBorrow*BORROW_INTEREST_RATE)/(10**20); // divided by 18 + 2 decimals to remove inerest rate decimals
-        borrow.amountOwedInitial = amountBorrow + (amountBorrow*BORROW_INTEREST_RATE)/(10**20);
+        borrow.amountBorrow = finalAmount;
+        borrow.amountOwed = finalAmount + (finalAmount*BORROW_interestRate)/(10**20); // divided by 18 + 2 decimals to remove inerest rate decimals
+        borrow.amountOwedInitial = finalAmount + (finalAmount*BORROW_interestRate)/(10**20);
         borrow.active = true;
         borrow.blockStart = block.timestamp;
         borrow.blockEnd = block.timestamp + (numberDays * 60*60*24);
@@ -496,18 +469,17 @@ import "./Chainlink.sol";
         borrow.liquidated = false;
         borrow.id = borrowCount;
         
-        if (borrow.amountBorrow == borrow.amountOwedInitial){
-            borrow.amountOwed = amountBorrow + 1;
-            borrow.amountOwedInitial = amountBorrow + 1;
+        if (borrow.amountBorrow == borrow.amountOwedInitial) {
+            borrow.amountOwed = finalAmount.add(1);
+            borrow.amountOwedInitial = finalAmount.add(1);
         }
         
-        BorrowStucts.push(borrow);
+        borrowStucts.push(borrow);
         borrowerAccounts[msg.sender].lastBorrowId = borrowCount;
         
-        ERC20(DAI_CONTRACT).transfer(msg.sender, ( (amountBorrow * (10**18)) / 100 ));
-        require(checkSuccess(), "ERC20#withdraw: TRANSFER_FAILED");
+        require(ERC20(DAI_CONTRACT).transfer(msg.sender, ( (finalAmount * (DAI_DECIMALS)) / 100 )));
         
-        emit borrowInitiated(msg.sender, borrow);
+        emit BorrowInitiated(msg.sender, borrow);
         
         return true;
     }
@@ -517,82 +489,77 @@ import "./Chainlink.sol";
         
         uint256 borrowerLastBorrowId = borrowerAccounts[msg.sender].lastBorrowId;
         
-            if (borrows[borrowerLastBorrowId].active ==  true){
+            if (borrows[borrowerLastBorrowId].active ==  true) {
                
                // set initial redemption pool additional value to zero
-               uint256 unredeemedDAIIntered_addition = 0;
-               uint256 default_pool_addition = 0;
+               uint256 unredeemedDAIInterest_addition = 0;
+               uint256 defaultPool_addition = 0;
                
                // calculate general borrow interest
                uint256 interest = borrows[borrowerLastBorrowId].amountOwedInitial - borrows[borrowerLastBorrowId].amountBorrow;
                
-               if (amouontRepay > borrows[borrowerLastBorrowId].amountOwed){
+               if (amouontRepay > borrows[borrowerLastBorrowId].amountOwed) {
                    repayOverAmount += (amouontRepay - borrows[borrowerLastBorrowId].amountOwed);
                    
                     // transfer DAI to this address from borrow address
-                    ERC20(DAI_CONTRACT).transferFrom(msg.sender, address(this), ((borrows[borrowerLastBorrowId].amountOwed * (10**18))/100) );
-                    require(checkSuccess(), "ERC20#deposit: TRANSFER_FAILED");
+                    require(IERC20(DAI_CONTRACT).transferFrom(msg.sender, address(this), ((borrows[borrowerLastBorrowId].amountOwed * (DAI_DECIMALS))/100) ));
                     
-                    // update unredeemedDAIIntered_addition based on previous paybacks
-                    if (interest > borrows[borrowerLastBorrowId].amountOwed){
-                        unredeemedDAIIntered_addition = (borrows[borrowerLastBorrowId].amountOwed / 2);
-                        default_pool_addition = (borrows[borrowerLastBorrowId].amountOwed / 2);
-                    }else{
-                        unredeemedDAIIntered_addition = (interest / 2);
-                        default_pool_addition = (interest / 2);
+                    // update unredeemedDAIInterest_addition based on previous paybacks
+                    if (interest > borrows[borrowerLastBorrowId].amountOwed) {
+                        unredeemedDAIInterest_addition = (borrows[borrowerLastBorrowId].amountOwed / 2);
+                        defaultPool_addition = (borrows[borrowerLastBorrowId].amountOwed / 2);
+                    } else {
+                        unredeemedDAIInterest_addition = (interest / 2);
+                        defaultPool_addition = (interest / 2);
                     }
                     
                     // split redepmtion pool and dao funding amounts
-                    uint256 dao_funding_amount = (((unredeemedDAIIntered_addition * (10**18))/100) * 2)/10;
-                    uint256 unredeemedDAIIntered_amount = (((unredeemedDAIIntered_addition * (10**18))/100) * 8)/10;
+                    uint256 dao_funding_amount = (((unredeemedDAIInterest_addition * (DAI_DECIMALS))/100) * 2)/10;
+                    uint256 unredeemedDAIInterest_amount = (((unredeemedDAIInterest_addition * (DAI_DECIMALS))/100) * 8)/10;
                     
-                    // updated amount of DAI in unredeemedDAIIntered & DEFAULT_POOL
-                    unredeemedDAIIntered += unredeemedDAIIntered_amount; // 10^18 decimals for DAI
-                    DEFAULT_POOL += ((default_pool_addition * (10**18))/100) ; // 10^18 decimals for DAI
+                    // updated amount of DAI in unredeemedDAIInterest & defaultPool
+                    unredeemedDAIInterest += unredeemedDAIInterest_amount; // 10^18 decimals for DAI
+                    defaultPool += ((defaultPool_addition * (DAI_DECIMALS))/100) ; // 10^18 decimals for DAI
                     
-                    borrowerAccounts[msg.sender].amountPaidRedemptionPool += unredeemedDAIIntered_amount;
-                    borrowerAccounts[msg.sender].amountPaidDefaultPool += ((default_pool_addition * (10**18))/100);
+                    borrowerAccounts[msg.sender].amountPaidRedemptionPool += unredeemedDAIInterest_amount;
+                    borrowerAccounts[msg.sender].amountPaidDefaultPool += ((defaultPool_addition * (DAI_DECIMALS))/100);
                    
                     borrows[borrowerLastBorrowId].amountOwed = 0;
                     
                     // transfer DAI to ZC DAO wallet from this address
-                    ERC20(DAI_CONTRACT).transfer(ZC_DAO_CONTRACT, dao_funding_amount);
-                    require(checkSuccess(), "ERC20#dao_funding: TRANSFER_FAILED");
+                    require(IERC20(DAI_CONTRACT).transfer(ZC_DAO_CONTRACT, dao_funding_amount));
                     
-                    
-               }else{
+               } else {
                     // transfer DAI to this address from borrow address
-                    ERC20(DAI_CONTRACT).transferFrom(msg.sender, address(this), ((amouontRepay * (10**18))/100) );
-                    require(checkSuccess(), "ERC20#deposit: TRANSFER_FAILED");
+                    require(IERC20(DAI_CONTRACT).transferFrom(msg.sender, address(this), ((amouontRepay * (DAI_DECIMALS))/100)));
                     
-                    // update unredeemedDAIIntered_addition based on previous paybacks
+                    // update unredeemedDAIInterest_addition based on previous paybacks
                     uint256 remainingOwed = borrows[borrowerLastBorrowId].amountOwed - amouontRepay;
-                    if (interest > borrows[borrowerLastBorrowId].amountOwed){
-                        unredeemedDAIIntered_addition = (amouontRepay / 2);
-                        default_pool_addition = (amouontRepay / 2);
-                    }else if (interest > remainingOwed){
-                        unredeemedDAIIntered_addition = ((interest - remainingOwed) / 2);
-                        default_pool_addition = ((interest - remainingOwed) / 2);
+                    if (interest > borrows[borrowerLastBorrowId].amountOwed) {
+                        unredeemedDAIInterest_addition = (amouontRepay / 2);
+                        defaultPool_addition = (amouontRepay / 2);
+                    } else if (interest > remainingOwed) {
+                        unredeemedDAIInterest_addition = ((interest - remainingOwed) / 2);
+                        defaultPool_addition = ((interest - remainingOwed) / 2);
                     }
                     
                     // split redepmtion pool and dao funding amounts
-                    uint256 dao_funding_amount = (((unredeemedDAIIntered_addition * (10**18))/100) * 2)/10;
-                    uint256 unredeemedDAIIntered_amount = (((unredeemedDAIIntered_addition * (10**18))/100) * 8)/10;
+                    uint256 dao_funding_amount = (((unredeemedDAIInterest_addition * (DAI_DECIMALS))/100) * 2)/10;
+                    uint256 unredeemedDAIInterest_amount = (((unredeemedDAIInterest_addition * (DAI_DECIMALS))/100) * 8)/10;
                     
-                    // updated amount of DAI in unredeemedDAIIntered
-                    unredeemedDAIIntered += unredeemedDAIIntered_amount; // 10^18 decimals for DAI
-                    DEFAULT_POOL += ((default_pool_addition * (10**18))/100) ; // 10^18 decimals for DAI
+                    // updated amount of DAI in unredeemedDAIInterest
+                    unredeemedDAIInterest += unredeemedDAIInterest_amount; // 10^18 decimals for DAI
+                    defaultPool += ((defaultPool_addition * (DAI_DECIMALS))/100) ; // 10^18 decimals for DAI
                     
-                    borrowerAccounts[msg.sender].amountPaidRedemptionPool += unredeemedDAIIntered_amount;
-                    borrowerAccounts[msg.sender].amountPaidDefaultPool += ((default_pool_addition * (10**18))/100);
+                    borrowerAccounts[msg.sender].amountPaidRedemptionPool += unredeemedDAIInterest_amount;
+                    borrowerAccounts[msg.sender].amountPaidDefaultPool += ((defaultPool_addition * (DAI_DECIMALS))/100);
                     
                     borrows[borrowerLastBorrowId].amountOwed -= amouontRepay;
                     
                     // transfer DAI to ZC DAO wallet from this address
-                    ERC20(DAI_CONTRACT).transfer(ZC_DAO_CONTRACT, dao_funding_amount);
-                    require(checkSuccess(), "ERC20#dao_funding: TRANSFER_FAILED");
+                    require(IERC20(DAI_CONTRACT).transfer(ZC_DAO_CONTRACT, dao_funding_amount));
                }
-               if (borrows[borrowerLastBorrowId].amountOwed == 0){
+               if (borrows[borrowerLastBorrowId].amountOwed == 0) {
                    borrows[borrowerLastBorrowId].active =  false;
                }
                    
@@ -629,38 +596,5 @@ import "./Chainlink.sol";
         lenderAccounts[msg.sender].totalAccruedInterest += ((block.number - lastBlockAccrued) * balanceOf);
         
         return lenderAccounts[msg.sender].totalAccruedInterest;
-    }
-    
-    // ============ Helper Functions ============
-    function checkSuccess()
-        private pure
-        returns (bool)
-      {
-        uint256 returnValue = 0;
-    
-        /* solium-disable-next-line security/no-inline-assembly */
-        assembly {
-          // check number of bytes returned from last function call
-          switch returndatasize
-    
-          // no bytes returned: assume success
-          case 0x0 {
-            returnValue := 1
-          }
-    
-          // 32 bytes returned: check if non-zero
-          case 0x20 {
-            // copy 32 bytes into scratch space
-            returndatacopy(0x0, 0x0, 0x20)
-    
-            // load those bytes into returnValue
-            returnValue := mload(0x0)
-          }
-    
-          // not sure what was returned: dont mark as success
-          default { }
-        }
-    
-        return returnValue != 0;
-      }
+    }    
 }
