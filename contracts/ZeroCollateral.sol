@@ -21,6 +21,8 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/contracts/math/Sa
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/contracts/access/roles/MinterRole.sol";
 
+import "./Chainlink.sol";
+
 
 /**
  * @title zeroCollateralMain
@@ -33,7 +35,8 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/contracts/access/
  
  contract zeroCollateralMain is
     ERC20, 
-    MinterRole
+    MinterRole,
+    Chainlink
 {
     using SafeMath for uint256;
 
