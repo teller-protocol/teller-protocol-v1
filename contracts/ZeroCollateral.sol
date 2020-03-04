@@ -163,11 +163,11 @@ import "./Chainlink.sol";
         returns (uint256)
     {
         // cannot withdraw collateral
-        uint256 amountAvailableForWithdraw = IERC20(DAI_CONTRACT).balanceOf(address(this))
+        uint256 amountAvailableForWithdraw = IERC20(DAI_CONTRACT).balanceOf(address(this));
         amountAvailableForWithdraw = amountAvailableForWithdraw.sub(collateralLocked.sub(defaultPool.sub(unredeemedDAIInterest)));
 
         // only allow withdraw up to available
-        uint256 finalAmount = amount
+        uint256 finalAmount = amount;
         if (amount > amountAvailableForWithdraw) {
             finalAmount = amountAvailableForWithdraw;
         }
@@ -194,7 +194,7 @@ import "./Chainlink.sol";
     }
     
     // call update accrued interest of sender account
-    function callUpdateAccountAccruedInterest() public {
+    function callUpdateAccountAccruedInterest() public returns(uint256) {
         updateTotalAccruedInterest();
         updateAccountAccruedInterest();
         return lenderAccounts[msg.sender].totalAccruedInterest;
@@ -288,7 +288,7 @@ import "./Chainlink.sol";
         // check for no outstanding borrow
         uint256 borrowerLastBorrowId = borrowerAccounts[msg.sender].lastBorrowId;
         if (borrowerLastBorrowId != 0) {
-            require(!getBorrow(borrowerLastBorrowId).active, "Collateral#withdraw: OUTSTANDING_BORROW");
+            require(!borrows[borrowerLastBorrowId].active, "Collateral#withdraw: OUTSTANDING_BORROW");
         }
         
         if (borrowerAccounts[msg.sender].collateralRedeemable > amount) {
@@ -387,22 +387,22 @@ import "./Chainlink.sol";
         // max term 365 days
         require(numberDays <= 365, "Number Days: MORE THAN 365");
         
-        uint256 interestRate = 12.mul(DAI_DECIMALS);
+        uint256 interestRate = uint256(12).mul(DAI_DECIMALS);
         
         if (numberDays <= 7) {
             interestRate = DAI_DECIMALS.mul(numberDays).div(7);
         } else if (7 < numberDays && numberDays <= 14) {
-            interestRate = DAI_DECIMALS.add(5.mul(DAI_DECIMALS).mul(numberDays - 7).div(7));
+            interestRate = DAI_DECIMALS.add(uint256(5).mul(DAI_DECIMALS).mul(numberDays - 7).div(7));
         } else if (14 < numberDays && numberDays <= 30) {
-            interestRate = 15.mul(DAI_DECIMALS).add(DAI_DECIMALS.mul(numberDays - 14).div(14));
+            interestRate = uint256(15).mul(DAI_DECIMALS).add(DAI_DECIMALS.mul(numberDays - 14).div(14));
         } else if (30 < numberDays && numberDays <= 60) {
-            interestRate = 25.mul(DAI_DECIMALS).add(15.mul(DAI_DECIMALS).mul(numberDays - 30).div(30));
+            interestRate = uint256(25).mul(DAI_DECIMALS).add(uint256(15).mul(DAI_DECIMALS).mul(numberDays - 30).div(30));
         } else if (60 < numberDays && numberDays <= 120) {
-            interestRate = 4.mul(DAI_DECIMALS).add(2.mul(DAI_DECIMALS).mul(numberDays - 60).div(60));
+            interestRate = uint256(4).mul(DAI_DECIMALS).add(uint256(2).mul(DAI_DECIMALS).mul(numberDays - 60).div(60));
         } else if (120 < numberDays && numberDays <= 180) {
-            interestRate = 6.mul(DAI_DECIMALS).add(2.mul(DAI_DECIMALS).mul(numberDays - 120).div(60));
+            interestRate = uint256(6).mul(DAI_DECIMALS).add(uint256(2).mul(DAI_DECIMALS).mul(numberDays - 120).div(60));
         } else if (180 < numberDays && numberDays <= 365) {
-            interestRate = 8.mul(DAI_DECIMALS).add(4.mul(DAI_DECIMALS).mul(numberDays - 180).div(185));
+            interestRate = uint256(8).mul(DAI_DECIMALS).add(uint256(4).mul(DAI_DECIMALS).mul(numberDays - 180).div(185));
         }
          
         return interestRate;
@@ -435,33 +435,34 @@ import "./Chainlink.sol";
         if (finalAmount > amountAvailableForWithdraw) {
             finalAmount = amountAvailableForWithdraw;
         }
-        
+
         // check if any outstanding borrows
         uint256 borrowerLastBorrowId = borrowerAccounts[msg.sender].lastBorrowId;
-        
+
         if (borrowerLastBorrowId != 0) {
-            if (getBorrow(borrowerLastBorrowId).active ==  true) {
+            if (borrows[borrowerLastBorrowId].active) {
                 return false;
             }
         }
-        
-        
+
+
         // check if collateralDeposited > getCollateralNeeded
-        if (getCollateralNeeded(finalAmount) > collateralsOf(msg.sender)) {
+        if (getCollateralNeeded(finalAmount) > getTotalCollateral(msg.sender)) {
             return false;
         }
-        
+
         // increment borrow count
         borrowCount += 1;
-        
+
         // create borrow
         Borrow storage borrow = borrows[borrowCount];
-        
+
         uint256 borrowInterestRate = calculateInterestDiscount(finalAmount, numberDays);
-        
+
         borrow.amountBorrow = finalAmount;
-        borrow.amountOwed = finalAmount.add(finalAmount.mul(borrowInterestRate).div(10**20)); // divided by 18 plus 2 decimals to remove interest rate decimals
-        borrow.amountOwedInitial = borrow.amountOwed
+        // divided by 18 plus 2 decimals to remove interest rate decimals
+        borrow.amountOwed = finalAmount.add(finalAmount.mul(borrowInterestRate).div(10**20));
+        borrow.amountOwedInitial = borrow.amountOwed;
         borrow.active = true;
         borrow.blockStart = block.timestamp;
         borrow.blockEnd = block.timestamp.add(numberDays.mul(60*60*24));
@@ -519,7 +520,7 @@ import "./Chainlink.sol";
                 
                 // updated amount of DAI in unredeemedDAIInterest & defaultPool
                 unredeemedDAIInterest = unredeemedDAIInterest.add(unredeemedDAIInterest_amount); // 10^18 decimals for DAI
-                defaultPool = defaulPool.add(defaultPool_addition.mul(DAI_DECIMALS).div(100)); // 10^18 decimals for DAI
+                defaultPool = defaultPool.add(defaultPool_addition.mul(DAI_DECIMALS).div(100)); // 10^18 decimals for DAI
                 
                 borrowerAccounts[msg.sender].amountPaidRedemptionPool = borrowerAccounts[msg.sender].amountPaidRedemptionPool.add(unredeemedDAIInterest_amount);
                 borrowerAccounts[msg.sender].amountPaidDefaultPool = borrowerAccounts[msg.sender].amountPaidDefaultPool.add(defaultPool_addition.mul(DAI_DECIMALS).div(100));
@@ -549,7 +550,7 @@ import "./Chainlink.sol";
                 
                 // updated amount of DAI in unredeemedDAIInterest
                 unredeemedDAIInterest = unredeemedDAIInterest.add(unredeemedDAIInterest_amount); // 10^18 decimals for DAI
-                defaultPool = defaulPool.add(defaultPool_addition.mul(DAI_DECIMALS).div(100)); // 10^18 decimals for DAI
+                defaultPool = defaultPool.add(defaultPool_addition.mul(DAI_DECIMALS).div(100)); // 10^18 decimals for DAI
                 
                 borrowerAccounts[msg.sender].amountPaidRedemptionPool = borrowerAccounts[msg.sender].amountPaidRedemptionPool.add(unredeemedDAIInterest_amount);
                 borrowerAccounts[msg.sender].amountPaidDefaultPool = borrowerAccounts[msg.sender].amountPaidDefaultPool.add(defaultPool_addition.mul(DAI_DECIMALS).div(100));
@@ -572,9 +573,9 @@ import "./Chainlink.sol";
 
     // ============ Private Functions ============
 
-    function updateTotalAccruedInterest() 
-        private 
-        returns (uint256) 
+    function updateTotalAccruedInterest()
+        private
+        returns (uint256)
     {
         uint256 totalSupply = ERC20(address(this)).totalSupply();
         uint256 previousBlockAccruedInterest = blockAccruedInterest;
@@ -582,17 +583,17 @@ import "./Chainlink.sol";
         totalAccruedInterest = totalAccruedInterest.add(blockAccruedInterest.sub(previousBlockAccruedInterest).mul(totalSupply));
         return totalAccruedInterest;
     }
-    
-    function updateAccountAccruedInterest() 
-        private 
-        returns (uint256) 
+
+    function updateAccountAccruedInterest()
+        private
+        returns (uint256)
     {
         uint256 previousBlockAccruedInterest = lenderAccounts[msg.sender].lastBlockAccrued;
         uint256 balance = ERC20(address(this)).balanceOf(msg.sender);
-        
+
         lenderAccounts[msg.sender].lastBlockAccrued = block.number;
-        lenderAccounts[msg.sender].totalAccruedInterest = lenderAccounts[msg.sender].totalAccruedInterest.add((block.number.sub(previousBlockAccruedInterest).mul(balance));
-        
+        lenderAccounts[msg.sender].totalAccruedInterest = lenderAccounts[msg.sender].totalAccruedInterest.add(block.number.sub(previousBlockAccruedInterest).mul(balance));
+
         return lenderAccounts[msg.sender].totalAccruedInterest;
-    }    
+    }
 }
