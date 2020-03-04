@@ -1,0 +1,23 @@
+{
+  "name": "zero-collateral-v1",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "compile": "truffle compile",
+    "ganache": "ganache-cli -p 8545 --gasLimit 0x90F560",
+    "lint-sol": "yarn solhint \"./contracts/**/*.sol\"",
+    "lint-js": "yarn eslint \"./test/**/*.js\"",
+    "test": "truffle test"
+
+  },
+  "devDependencies": {
+    "@gnosis.pm/mock-contract": "^3.0.7",
+    "eslint": "^5.16.0",
+    "ganache-cli": "^6.4.4",
+    "solhint": "^2.1.0",
+    "truffle": "^5.0.32"
+  },
+  "dependencies": {
+    "openzeppelin-solidity": "2.4"
+  }
+}
