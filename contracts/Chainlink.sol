@@ -1,7 +1,7 @@
-pragma solidity 0.5.0;
+pragma solidity ^0.5.0;
 
 import "./interfaces/AggregatorInterface.sol";
-import "./utils/Ownable.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 /**
     DATA CONTRACTS (ETH/USD)
@@ -15,7 +15,7 @@ contract Chainlink is Ownable {
     // Chainlink Aggregator Instance
     AggregatorInterface internal dataSource;
 
-    function setReferenceContract(address _aggregator) public onlyOwner() {
+    function setReferenceContract(address _aggregator) public onlyOwner {
         dataSource = AggregatorInterface(_aggregator);
     }
 
