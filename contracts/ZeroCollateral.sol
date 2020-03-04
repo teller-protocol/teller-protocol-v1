@@ -292,7 +292,7 @@ import "./Chainlink.sol";
         }
         
         if (borrowerAccounts[msg.sender].collateralRedeemable > amount) {
-            borrowerAccounts[msg.sender].collateralRedeemable -= amount;
+            borrowerAccounts[msg.sender].collateralRedeemable = borrowerAccounts[msg.sender].collateralRedeemable.sub(amount);
             collateralLocked = collateralLocked.sub(amount);
             require(IERC20(DAI_CONTRACT).transfer(msg.sender, amount));
             
@@ -323,7 +323,7 @@ import "./Chainlink.sol";
             
             
             // amount owed from loan
-            uint256 amountOwedDAI = ((borrows[borrowerLastBorrowId].amountOwed * (DAI_DECIMALS))/100);
+            uint256 amountOwedDAI = borrows[borrowerLastBorrowId].amountOwed.mul(DAI_DECIMALS).div(100);
             
             if (amountOwedDAI > oldAmountPaidDefaultPool) {
                 uint256 liquidatedCollateral = amountOwedDAI.sub(oldAmountPaidDefaultPool);
@@ -460,7 +460,7 @@ import "./Chainlink.sol";
         uint256 borrowInterestRate = calculateInterestDiscount(finalAmount, numberDays);
         
         borrow.amountBorrow = finalAmount;
-        borrow.amountOwed = finalAmount.add(finalAmount*borrowInterestRate.div(10**20)); // divided by 18 plus 2 decimals to remove interest rate decimals
+        borrow.amountOwed = finalAmount.add(finalAmount.mul(borrowInterestRate).div(10**20)); // divided by 18 plus 2 decimals to remove interest rate decimals
         borrow.amountOwedInitial = borrow.amountOwed
         borrow.active = true;
         borrow.blockStart = block.timestamp;
@@ -502,20 +502,20 @@ import "./Chainlink.sol";
                 repayOverAmount = repayOverAmount.add(amountRepay.sub(borrows[borrowerLastBorrowId].amountOwed));
                 
                 // transfer DAI to this address from borrow address
-                require(IERC20(DAI_CONTRACT).transferFrom(msg.sender, address(this), ((borrows[borrowerLastBorrowId].amountOwed * (DAI_DECIMALS))/100) ));
+                require(IERC20(DAI_CONTRACT).transferFrom(msg.sender, address(this), borrows[borrowerLastBorrowId].amountOwed.mul(DAI_DECIMALS).div(100)));
                 
                 // update unredeemedDAIInterest_addition based on previous paybacks
                 if (interest > borrows[borrowerLastBorrowId].amountOwed) {
-                    unredeemedDAIInterest_addition = (borrows[borrowerLastBorrowId].amountOwed / 2);
-                    defaultPool_addition = (borrows[borrowerLastBorrowId].amountOwed / 2);
+                    unredeemedDAIInterest_addition = borrows[borrowerLastBorrowId].amountOwed.div(2);
+                    defaultPool_addition = borrows[borrowerLastBorrowId].amountOwed.div(2);
                 } else {
-                    unredeemedDAIInterest_addition = (interest / 2);
-                    defaultPool_addition = (interest / 2);
+                    unredeemedDAIInterest_addition = interest.div(2);
+                    defaultPool_addition = interest.div(2);
                 }
                 
                 // split redepmtion pool and dao funding amounts
-                uint256 daoFundingAmount = (((unredeemedDAIInterest_addition * (DAI_DECIMALS))/100) * 2)/10;
-                uint256 unredeemedDAIInterest_amount = (((unredeemedDAIInterest_addition * (DAI_DECIMALS))/100) * 8)/10;
+                uint256 daoFundingAmount = unredeemedDAIInterest_addition.mul(DAI_DECIMALS).div(100).mul(2).div(10);
+                uint256 unredeemedDAIInterest_amount = unredeemedDAIInterest_addition.mul(DAI_DECIMALS).div(100).mul(8).div(10);
                 
                 // updated amount of DAI in unredeemedDAIInterest & defaultPool
                 unredeemedDAIInterest = unredeemedDAIInterest.add(unredeemedDAIInterest_amount); // 10^18 decimals for DAI
@@ -531,7 +531,7 @@ import "./Chainlink.sol";
                 
             } else {
                 // transfer DAI to this address from borrow address
-                require(IERC20(DAI_CONTRACT).transferFrom(msg.sender, address(this), ((amountRepay * (DAI_DECIMALS))/100)));
+                require(IERC20(DAI_CONTRACT).transferFrom(msg.sender, address(this), amountRepay.mul(DAI_DECIMALS).div(100)));
                 
                 // update unredeemedDAIInterest_addition based on previous paybacks
                 uint256 remainingOwed = borrows[borrowerLastBorrowId].amountOwed.sub(amountRepay);
@@ -544,8 +544,8 @@ import "./Chainlink.sol";
                 }
                 
                 // split redepmtion pool and dao funding amounts
-                uint256 daoFundingAmount = (((unredeemedDAIInterest_addition * (DAI_DECIMALS))/100) * 2)/10;
-                uint256 unredeemedDAIInterest_amount = (((unredeemedDAIInterest_addition * (DAI_DECIMALS))/100) * 8)/10;
+                uint256 daoFundingAmount = unredeemedDAIInterest_addition.div(100).mul(2).div(10);
+                uint256 unredeemedDAIInterest_amount = unredeemedDAIInterest_addition.mul(DAI_DECIMALS).div(100).mul(8).div(10);
                 
                 // updated amount of DAI in unredeemedDAIInterest
                 unredeemedDAIInterest = unredeemedDAIInterest.add(unredeemedDAIInterest_amount); // 10^18 decimals for DAI
