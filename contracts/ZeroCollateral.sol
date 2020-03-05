@@ -118,8 +118,8 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
     // ============ Constructor ============
 
     constructor(
-        address daiContract,
-        address daoContract,
+        address daiAddress,
+        address daoAddress,
         string memory name,
         string memory symbol,
         uint8 decimals
@@ -131,8 +131,8 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         decimals
     )
     {
-        daiContract = daiContract;
-        zcDaoContract = daoContract;
+        daiContract = daiAddress;
+        zcDaoContract = daoAddress;
     }
 
     // ============ Public Functions ============
