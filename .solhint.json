@@ -1,0 +1,23 @@
+{
+  "extends": "solhint:default",
+  "rules": {
+    "func-param-name-mixedcase": "error",
+    "func-name-mixedcase": "error",
+    "event-name-camelcase": "error",
+    "var-name-mixedcase": "error",
+    "modifier-name-mixedcase": "error",
+    "contract-name-camelcase": "error",
+    "const-name-snakecase": "error",
+    "visibility-modifier-order": "error",
+    "func-visibility": "error",
+    "state-visibility": "error",
+    "func-order": "error",
+    "quotes": "error",
+    "max-line-length": "error",
+    "no-unused-vars": "error",
+    "no-complex-fallback": "warn",
+    "check-send-result": "warn",
+    "reentrancy": "warn",
+    "indent": ["error", 4]
+  }
+}
