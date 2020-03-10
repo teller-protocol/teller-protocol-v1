@@ -42,7 +42,8 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
     // address of the DAI Contract
     address public daiContract;
 
-     // address of the Zero Collateral DAO Wallet
+    // address of the Zero Collateral DAO Wallet
+    // part of interest paid automatically goes back to DAO (5-10% ish)
     address public zcDaoContract;
 
     // borrow count
@@ -138,6 +139,7 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
     // ============ Public Functions ============
 
     // lend DAI, mint ZDAI
+    // lender depositing DAI and gets given ZDAI
     function mintZDAI(
         uint256 amount
     )
@@ -155,6 +157,8 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
     }
 
     // burn ZDAI, receive DAI
+    // lender gives back their ZDAI and receives their original DAI back
+    // currently interest is pulled out separately -> redeemInterestFromPool
     function burnZDAI(
         uint256 amount
     )
@@ -182,17 +186,20 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
     }
 
     // call update total accrued interest
+    // TO GO
     function callUpdateTotalAccruedInterest() public returns(uint256) {
         updateTotalAccruedInterest();
         return totalAccruedInterest;
     }
 
     // get accrued interest of a particular account
+    // TOGO
     function getAccountAccruedInterest(address account) public view returns(uint256) {
         return lenderAccounts[account].totalAccruedInterest;
     }
 
     // call update accrued interest of sender account
+    // maybe go?
     function callUpdateAccountAccruedInterest() public returns(uint256) {
         updateTotalAccruedInterest();
         updateAccountAccruedInterest();
@@ -227,6 +234,7 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
     }
 
     // calculate borrower collateral needed for specific borrow. collateral in value of DAI
+    // TO GO
     function getCollateralNeeded(uint256 amountBorrow) public view returns (uint256) {
         uint256 poolContributions = borrowerAccounts[msg.sender].amountPaidRedemptionPool;
         uint256 amountBorrowDecimals = amountBorrow.mul(DAI_DECIMALS); // convert to DAI decimals
@@ -239,22 +247,27 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
     }
 
     // get total collateral of borrower
+    // TO GO?
     function getTotalCollateral(address borrower) public view returns (uint256) {
         return borrowerAccounts[borrower].collateralRedeemable.add(borrowerAccounts[borrower].collateralNonRedeemable);
     }
 
     // get redeemable collateral of borrower
+    // TO GO?
     function getRedeemableCollateral(address borrower) public view returns (uint256) {
         uint256 redeemableCollateral = borrowerAccounts[borrower].collateralRedeemable;
         return redeemableCollateral;
     }
 
     // get borrower account
+    // TO GO?
     function getBorrowAccount(address borrower) public view returns (BorrowAccount memory) {
         return borrowerAccounts[borrower];
     }
 
     // borrower deposit redeemable collateral
+    // change to ETH - deposit ETH and keep track of how much ETH they have
+    // if the current price changes and they're undercollateralised -> problem
     function depositCollateralRedeemableBorrower(uint256 amount) public {
         require(IERC20(daiContract).transferFrom(msg.sender, address(this), amount));
 
@@ -265,7 +278,10 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         emit CollateralDeposited(msg.sender, amount);
     }
 
+    // NEW FUNCTION - get current state of collateral/loan - is it undercollateralised by x%?
+
     // borrower deposit non-redeemable collateral
+    // TO GO - no longer have non redeemable collateral
     function depositCollateralNonredeemableBorrower(uint256 amount) public {
 
         require(IERC20(daiContract).transferFrom(msg.sender, address(this), amount));
@@ -278,6 +294,9 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
     }
 
     // borrower withdraw collateral
+    // liquidate -> anything undercollateralised or expired gets liquidated
+    // then checks there's a outstanding borrow live
+    // can withdraw collateral down to a certain percentage if there's still outstanding borrow
     function withdrawCollateralBorrower(uint256 amount) public {
 
         // liquidate any outstanding unpaid borrows
@@ -307,6 +326,9 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
     }
 
     // liquidate unpaid borrows
+    // now to encorporate the actual price of ETH - is the loan undercollateralised or expired
+    // currently it just checks if it is expired
+    // remove nonredeemable collateral
     function liquidate(address borrower) public{
 
         uint256 borrowerLastBorrowId = borrowerAccounts[borrower].lastBorrowId;
@@ -380,6 +402,7 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
     }
 
     // calculate interest rate given number of days (0 decimals)
+    // TO GO
     function calculateInterestWithDays(uint256 numberDays) public view returns (uint256) {
         // max term 365 days
         require(numberDays <= 365, "Number Days: MORE THAN 365");
@@ -405,8 +428,8 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         return interestRate;
     }
 
+    // TO GO
     function calculateInterestDiscount(uint256 amountBorrow, uint256 numberDays) public view returns (uint256) {
-
         // calculate % of interest paid (18 decimals) + collateralNonRedeemable (18 decimals), divided by borrow amount (2 decimals). Resulting 16 decimals.
         uint256 x = borrowerAccounts[msg.sender].amountPaidRedemptionPool.add(borrowerAccounts[msg.sender].collateralNonRedeemable).div(amountBorrow);
 
@@ -417,10 +440,11 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         // interest rate discount calculated
         uint256 interestRate = calculateInterestWithDays(numberDays); // 18 decimals
         uint256 interestRateDiscount = interestRate.sub(interestRate.mul(x).div(3).div(10**16)); // 18 decimals
-  
+
         return interestRateDiscount;
     }
 
+    // calculates whether they have enough collateral to withdraw amount of DAI
     function createBorrow(uint256 amountBorrow, uint256 numberDays) public returns (bool) {
         // max term 365 days
         require(numberDays <= 365, "Number Days: MORE THAN 365");
@@ -481,6 +505,8 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         return true;
     }
 
+    // paying back an amount of DAI - doesn't have to be all of it
+    // updates the borrow itself
     function repayBorrow(uint256 amountRepay) public returns(uint256) {
         uint256 repayOverAmount;
 
@@ -567,6 +593,7 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
 
     // ============ Private Functions ============
 
+    // updates the accrued interest for the lenders
     function updateTotalAccruedInterest()
         private
         returns (uint256)
