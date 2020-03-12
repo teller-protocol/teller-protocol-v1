@@ -1,0 +1,49 @@
+# Javascript Node CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-javascript/ for more details
+#
+version: 2
+refrences:
+  cache-options: &cache-options
+    key: package-cache-{{ checksum "package.json" }}
+jobs:
+  build:
+    docker:
+      # specify the version you desire here
+      - image: circleci/node:10.15.3
+
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - restore_cache:
+           <<: *cache-options
+      - run:
+          name: install-truffle
+          command: sudo npm install -g truffle@5.1.16
+      - run:
+          name: install-ganache
+          command: sudo npm install -g ganache-cli@6.7.0
+      - run:
+          name: install-package-dependencies
+          command: npm install
+
+      # Download and cache dependencies
+      - run: truffle compile --reset --all
+
+      - run:
+          name: test-reporter-setup
+          command: npm install mocha-junit-reporter --no-save
+      - save_cache:
+          <<: *cache-options
+          paths:
+            - ./node_modules
+      # Ckecking version
+      - run:
+          name: version
+          command: truffle version
+      - run:
+          name: test
+          command: npm run test
+      - run:
+          name: test
+          command: npm run test:coverage

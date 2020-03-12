@@ -30,4 +30,17 @@ module.exports = {
             };
         },
     },
+    zeroCollateral: {
+        collateralDeposited: tx => {
+            const name = 'CollateralDeposited';
+            return {
+                name: name,
+                emitted: (borrower, amount) => emitted(tx, name, ev => {
+                    assert.equal(ev.borrower, borrower);
+                    assert.equal(ev.amount.toString(), amount.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
 }
