@@ -78,8 +78,7 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         uint256 lastBorrowId;
         uint256 amountPaidRedemptionPool;
         uint256 amountPaidDefaultPool;
-        uint256 collateralRedeemable;
-        uint256 collateralNonRedeemable;
+        uint256 collateral;
     }
 
     // array of all borrower accounts
@@ -220,16 +219,17 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         return interestRedeemable;
     }
 
-    // borrower deposit redeemable collateral
+    // borrower deposit collateral
     // change to ETH - deposit ETH and keep track of how much ETH they have
     // if the current price changes and they're undercollateralised -> problem
-    function depositCollateralRedeemableBorrower(uint256 amount) public {
-        require(IERC20(daiContract).transferFrom(msg.sender, address(this), amount));
+    function depositCollateralBorrower() public payable {
+        // Not needed to check msg.valu > 0. It doesn't increase collateral locked.
+        uint256 amount = msg.value;
 
         collateralLocked = collateralLocked.add(amount);
 
-        // updated account collateral redeemable
-        borrowerAccounts[msg.sender].collateralRedeemable = borrowerAccounts[msg.sender].collateralRedeemable.add(amount);
+        // updated account collateral
+        borrowerAccounts[msg.sender].collateral = borrowerAccounts[msg.sender].collateral.add(amount);
         emit CollateralDeposited(msg.sender, amount);
     }
 
@@ -250,19 +250,19 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
             require(!borrows[borrowerLastBorrowId].active, "Collateral#withdraw: OUTSTANDING_BORROW");
         }
 
-        if (borrowerAccounts[msg.sender].collateralRedeemable > amount) {
-            borrowerAccounts[msg.sender].collateralRedeemable = borrowerAccounts[msg.sender].collateralRedeemable.sub(amount);
+        if (borrowerAccounts[msg.sender].collateral > amount) {
+            borrowerAccounts[msg.sender].collateral = borrowerAccounts[msg.sender].collateral.sub(amount);
             collateralLocked = collateralLocked.sub(amount);
             require(IERC20(daiContract).transfer(msg.sender, amount));
 
             emit CollateralWithdrawn(msg.sender, amount);
         } else {
-            uint256 transferAmount = borrowerAccounts[msg.sender].collateralRedeemable;
-            borrowerAccounts[msg.sender].collateralRedeemable = 0;
+            uint256 transferAmount = borrowerAccounts[msg.sender].collateral;
+            borrowerAccounts[msg.sender].collateral = 0;
             collateralLocked = collateralLocked.sub(transferAmount);
             require(IERC20(daiContract).transfer(msg.sender, transferAmount));
 
-            emit CollateralWithdrawn(msg.sender, borrowerAccounts[msg.sender].collateralRedeemable);
+            emit CollateralWithdrawn(msg.sender, borrowerAccounts[msg.sender].collateral);
         }
 
     }
@@ -290,20 +290,20 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
                 uint256 liquidatedCollateral = amountOwedDAI.sub(oldAmountPaidDefaultPool);
 
                 // primary liquidation: non-redeemable collateral
-                if (liquidatedCollateral > borrowerAccounts[borrower].collateralNonRedeemable) {
+                if (liquidatedCollateral > borrowerAccounts[borrower].collateral) {
                     // update collateralNonRedeemable
-                    uint256 oldCollateralNonRedeemable = borrowerAccounts[borrower].collateralNonRedeemable;
+                    uint256 oldCollateral = borrowerAccounts[borrower].collateral;
 
-                    borrowerAccounts[borrower].collateralNonRedeemable = 0;
-                    liquidatedCollateral = liquidatedCollateral.sub(oldCollateralNonRedeemable);
+                    borrowerAccounts[borrower].collateral = 0;
+                    liquidatedCollateral = liquidatedCollateral.sub(oldCollateral);
 
                     // update default pool (where non-redeemable collateral resides)
-                    defaultPool = defaultPool.sub(oldCollateralNonRedeemable);
-                    unredeemedDAIInterest = unredeemedDAIInterest.add(oldCollateralNonRedeemable);
+                    defaultPool = defaultPool.sub(oldCollateral);
+                    unredeemedDAIInterest = unredeemedDAIInterest.add(oldCollateral);
 
                 } else {
                     // update collateralNonRedeemable
-                    borrowerAccounts[borrower].collateralNonRedeemable = borrowerAccounts[borrower].collateralNonRedeemable.sub(liquidatedCollateral);
+                    borrowerAccounts[borrower].collateral = borrowerAccounts[borrower].collateral.sub(liquidatedCollateral);
 
                     // update default pool (where non-redeemable collateral resides)
                     defaultPool = defaultPool.sub(liquidatedCollateral);
@@ -315,18 +315,18 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
                 }
 
                 // secondary liquidation: redeemable collateral
-                if (liquidatedCollateral > borrowerAccounts[borrower].collateralRedeemable) {
+                if (liquidatedCollateral > borrowerAccounts[borrower].collateral) {
                     // update collateralRedeemable
-                    uint256 oldCollateralRedeemable = borrowerAccounts[borrower].collateralRedeemable;
-                    borrowerAccounts[borrower].collateralRedeemable = 0;
-                    liquidatedCollateral = liquidatedCollateral.sub(oldCollateralRedeemable);
+                    uint256 oldCollateral = borrowerAccounts[borrower].collateral;
+                    borrowerAccounts[borrower].collateral = 0;
+                    liquidatedCollateral = liquidatedCollateral.sub(oldCollateral);
 
                     // update collateral locked
-                    collateralLocked = collateralLocked.sub(oldCollateralRedeemable);
-                    unredeemedDAIInterest = unredeemedDAIInterest.add(oldCollateralRedeemable);
+                    collateralLocked = collateralLocked.sub(oldCollateral);
+                    unredeemedDAIInterest = unredeemedDAIInterest.add(oldCollateral);
                 } else {
                     // update collateralRedeemable
-                    borrowerAccounts[borrower].collateralRedeemable = borrowerAccounts[borrower].collateralRedeemable.sub(liquidatedCollateral);
+                    borrowerAccounts[borrower].collateral = borrowerAccounts[borrower].collateral.sub(liquidatedCollateral);
 
                     // update collateral locked
                     collateralLocked = collateralLocked.sub(liquidatedCollateral);
@@ -343,7 +343,19 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         }
     }
 
+    function getCollateralNeeded(uint256 amountBorrow) view public returns(uint256){
+        uint256 poolContributions = (borrowerAccounts[msg.sender].amountPaidRedemptionPool);
+        uint256 amountBorrowDecimals = amountBorrow.mul(10**6); // convert to DAI decimals
+        
+        if (poolContributions >= amountBorrowDecimals){
+            return 0;
+        }else{
+            return ( amountBorrowDecimals - poolContributions ); // return DAI units of collateral
+        }
+    }
+
     // calculates whether they have enough collateral to withdraw amount of DAI
+    /*
     function createBorrow(uint256 amountBorrow, uint256 numberDays) public returns (bool) {
         // max term 365 days
         require(numberDays <= 365, "Number Days: MORE THAN 365");
@@ -402,6 +414,58 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         emit BorrowInitiated(msg.sender, borrow);
 
         return true;
+    }
+
+    function calculateInterestDiscount(uint256 amountBorrow, uint256 numberDays) view public returns (uint256) {
+        // amountBorrow > 0 
+        require(amountBorrow > 0, "Amount Borrow: LESS THAN 0");
+        
+        // calculate % of interest paid (8 decimals) + collateral (8 decimals), divided by borrow amount (2 decimals). Resulting 6 decimals.
+        uint256 x = borrowerAccounts[msg.sender].amountPaidRedemptionPool.add(borrowerAccounts[msg.sender].collateral).div(amountBorrow);
+        
+        if (x > (10**6)){
+            x = (10**6);
+        }
+        
+        // interest rate discount calculated
+        uint256 interest_rate = calculateInterestWithDays(numberDays); // 8 decimals
+        uint256 interest_rate_discount = interest_rate - (((interest_rate * x)/3)  / (10**6)); // 8 decimals
+         
+         return interest_rate_discount;
+    }
+    */
+
+    function getTotalCollateral(address borrower) public view returns (uint256) {
+        return borrowerAccounts[borrower].collateral;
+    }
+
+    function calculateInterestWithDays(uint256 numberDays) view public returns (uint256) {
+        
+        // min term 1 days
+        require(1 <= numberDays, "Number Days: LESS THAN 0");
+        
+        // max term 365 days
+        require(numberDays <= 365, "Number Days: MORE THAN 365");
+        
+        uint256 interest_rate = 12 * (10**8);
+        
+        if (numberDays <= 7){
+            interest_rate = (0*(10**8)) + (( (1*(10**8)) * (numberDays - 0)) / 7 );
+        }else if (7 < numberDays && numberDays <= 14){
+            interest_rate = (1*(10**8)) + (( (5*(10**7)) * (numberDays - 7)) / 7 );
+        }else if (14 < numberDays && numberDays <= 30){
+            interest_rate = (15*(10**7)) + (( (1*(10**8)) * (numberDays - 14)) / 14 );
+        }else if (30 < numberDays && numberDays <= 60){
+            interest_rate = (25*(10**7)) + (( (15*(10**7)) * (numberDays - 30)) / 30 );
+        }else if (60 < numberDays && numberDays <= 120){
+            interest_rate = (4*(10**8)) + (( (2*(10**8)) * (numberDays - 60)) / 60 );
+        }else if (120 < numberDays && numberDays <= 180){
+            interest_rate = (6*(10**8)) + (( (2*(10**8)) * (numberDays - 120)) / 60 );
+        }else if (180 < numberDays && numberDays <= 365){
+            interest_rate = (8*(10**8)) + (( (4*(10**8)) * (numberDays - 180)) / 185 );
+        }
+         
+         return interest_rate;
     }
 
     // paying back an amount of DAI - doesn't have to be all of it
