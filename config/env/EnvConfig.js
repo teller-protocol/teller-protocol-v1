@@ -58,14 +58,9 @@ EnvConfig.prototype.getDefaultAddressIndex = function() {
 }
 
 EnvConfig.prototype.validate = function() {
-    
-    if (!this.getInfuraKey().hasValue()) {
-        throw new Error('INFURA_KEY env variable must be defined in your local .env file.');
-    }
     if (!this.getMnemonic().hasValue()) {
         throw new Error('MNEMONIC_KEY env variable must be defined in your local .env file.');
     }
-
     if (!this.getGasPriceGwei().hasValue()) {
         throw new Error('GAS_PRICE_GWEI_KEY env variable must be defined in your local .env file.');
     }
