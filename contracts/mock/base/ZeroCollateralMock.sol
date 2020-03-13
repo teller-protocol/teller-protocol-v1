@@ -24,13 +24,11 @@ contract ZeroCollateralMock is ZeroCollateralMain {
     
     constructor(
         address daiAddress,
-        address daoAddress,
-        string memory name,
-        string memory symbol,
-        uint8 decimals
+        address zDaiAddress,
+        address daoAddress
     )
         public
-        ZeroCollateralMain(daiAddress, daoAddress, name, symbol, decimals) {
+        ZeroCollateralMain(daiAddress, zDaiAddress, daoAddress) {
     }
 
     /**

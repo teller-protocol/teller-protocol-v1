@@ -47,7 +47,7 @@ contract('ZeroCollateralDepositCollateralBorrowerTest', function (accounts) {
         assert(instance);
         assert(instance.address);
 
-        await zdaiInstance.addMinter(instance.address)
+        await zdaiInstance.addMinter(instance.address);
     });
 
     withData({
