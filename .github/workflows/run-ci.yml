@@ -1,0 +1,38 @@
+name: Compile & Run Smart Contract Unit Tests
+
+on:
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  test:
+    name: Build Project
+    runs-on: ubuntu-latest
+    env:
+      INFURA_KEY: my-infura-key-here
+      GAS_PRICE_GWEI_KEY: 20
+      GAS_WEI_KEY: 2500000
+      MNEMONIC_KEY: my-mnemonic-value-here
+      ADDRESS_COUNT_KEY: 5
+      DEFAULT_ADDRESS_INDEX_KEY: 0
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '10.15.x'
+      - name: Install dependencies
+        run: |
+          yarn install
+      - name: Compiling Smart Contracts
+        run: |
+          ./node_modules/.bin/truffle compile
+      - name: Executing Unit tests
+        run: |
+          yarn test
+      - name: Executing Code Coverage Report
+        run: |
+          yarn test:coverage
+
+
+

@@ -7,6 +7,7 @@ const { zeroCollateral } = require('./utils/events');
 // Mock contracts
 const TokenMock = artifacts.require("./mock/token/SimpleToken.sol");
 const DAOMock = artifacts.require("./mock/util/Mock.sol");
+const ZDai = artifacts.require("./ZDai.sol");
 
 // Smart contracts
 const ZeroCollateralMain = artifacts.require("./ZeroCollateralMain.sol");
@@ -16,6 +17,15 @@ contract('ZeroCollateralDepositCollateralBorrowerTest', function (accounts) {
     let instance;
     
     beforeEach('Setup for each test', async () => {
+        const zdaiInstance = await ZDai.new(
+            'Zero Collateral Unit',
+            'ZCU',
+            18
+        );
+        assert(zdaiInstance);
+        assert(zdaiInstance.address);
+
+
         const daiTokenInstance = await TokenMock.new();
         assert(daiTokenInstance);
         assert(daiTokenInstance.address);
@@ -26,10 +36,8 @@ contract('ZeroCollateralDepositCollateralBorrowerTest', function (accounts) {
 
         const params = [
             daiTokenInstance.address,
+            zdaiInstance.address,
             daoTokenInstance.address,
-            'Zero Collateral Unit',
-            'ZCU',
-            18,
         ];
         const newEstimatedGas = await ZeroCollateralMain.new.estimateGas(...params);
         instance = await ZeroCollateralMain.new(
@@ -38,6 +46,8 @@ contract('ZeroCollateralDepositCollateralBorrowerTest', function (accounts) {
         );
         assert(instance);
         assert(instance.address);
+
+        await zdaiInstance.addMinter(instance.address)
     });
 
     withData({
