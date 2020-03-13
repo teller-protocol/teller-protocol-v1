@@ -21,15 +21,12 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: '10.15.x'
-      - name: Install Truffle Globally
-        run: |
-          yarn add global truffle@5.1.16
       - name: Install dependencies
         run: |
           yarn install
       - name: Compiling Smart Contracts
         run: |
-          truffle compile
+          ./node_modules/.bin/truffle compile
       - name: Executing Unit tests
         run: |
           yarn test
