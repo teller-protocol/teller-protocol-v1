@@ -1,5 +1,5 @@
 /*
-    Copyright 2019 Fabrx Labs Inc.
+    Copyright 2020 Fabrx Labs Inc.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -95,12 +95,15 @@ contract ZeroCollateralMain {
         uint256 amountBorrow;
         uint256 amountOwed;
         uint256 amountOwedInitial;
-        bool active;
         uint256 blockStart;
         uint256 blockEnd;
         address account;
-        bool liquidated;
         uint256 id;
+        uint256 maxLoan;
+        bool active;
+        bool liquidated;
+        uint8 interestRate;
+        uint8 collateralNeeded;
     }
 
     // mapping of borrowID to borrow
@@ -439,7 +442,7 @@ contract ZeroCollateralMain {
         return borrowerAccounts[borrower].collateral;
     }
 
-    function calculateInterestWithDays(uint256 numberDays) view public returns (uint256) {
+    function calculateInterestWithDays(uint256 numberDays) pure public returns (uint256) {
         
         // min term 1 days
         require(1 <= numberDays, "Number Days: LESS THAN 0");
