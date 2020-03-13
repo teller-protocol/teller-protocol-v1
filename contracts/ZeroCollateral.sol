@@ -19,7 +19,7 @@ pragma experimental ABIEncoderV2;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
-import "./Chainlink.sol";
+import "./interfaces/ChainlinkInterface.sol";
 import "./ZDai.sol";
 
 /**
@@ -45,12 +45,12 @@ contract ZeroCollateralMain {
     // this contract should be given MinterRole
     ZDai public zDaiContract;
 
+    // Oracle for ETH/USD rate
+    ChainlinkInterface public oracle;
+
     // address of the Zero Collateral DAO Wallet
     // part of interest paid automatically goes back to DAO (5-10% ish)
     address public zcDaoContract;
-
-    // Oracle for ETH/USD rate
-    Chainlink public oracle;
 
     // borrow count
     uint256 public borrowCount = 0;
