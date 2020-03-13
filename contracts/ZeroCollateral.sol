@@ -18,10 +18,9 @@ pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
-import "openzeppelin-solidity/contracts/access/roles/MinterRole.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "./Chainlink.sol";
+import "./ZDai.sol";
 
 /**
  * @title ZeroCollateralMain
@@ -32,7 +31,7 @@ import "./Chainlink.sol";
  * Values of borrows are dictated in 2 decimals. All other values dictated in DAI (18 decimals).
  */
 
-contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
+contract ZeroCollateralMain {
     using SafeMath for uint256;
 
     // ============ State Variables ============
@@ -40,11 +39,18 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
     uint256 constant private DAI_DECIMALS = 10**18;
 
     // address of the DAI Contract
-    address public daiContract;
+    IERC20 public daiContract;
+
+    // address of the ZDAI token Contract
+    // this contract should be given MinterRole
+    ZDai public zDaiContract;
 
     // address of the Zero Collateral DAO Wallet
     // part of interest paid automatically goes back to DAO (5-10% ish)
     address public zcDaoContract;
+
+    // Oracle for ETH/USD rate
+    Chainlink public oracle;
 
     // borrow count
     uint256 public borrowCount = 0;
@@ -119,38 +125,32 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
 
     constructor(
         address daiAddress,
-        address daoAddress,
-        string memory name,
-        string memory symbol,
-        uint8 decimals
+        address zDaiAddress,
+        address daoAddress
     )
     public
-    ERC20Detailed(
-        name,
-        symbol,
-        decimals
-    )
     {
-        daiContract = daiAddress;
+        zDaiContract = ZDai(zDaiAddress);
+        daiContract = IERC20(daiAddress);
         zcDaoContract = daoAddress;
     }
 
     // ============ Public Functions ============
 
-    // lend DAI, mint ZDAI
+    // lend DAI, mint ZDAI in return
     // lender depositing DAI and gets given ZDAI
-    function mintZDAI(
+    function lendDAI(
         uint256 amount
     )
         public
         returns (uint256)
     {
-        require(IERC20(daiContract).transferFrom(msg.sender, address(this), amount));
+        require(daiContract.transferFrom(msg.sender, address(this), amount), "DAI_DEPOSIT_FAILED");
 
         updateTotalAccruedInterest();
         updateAccountAccruedInterest();
 
-        _mint(msg.sender, amount);
+        zDaiContract.mint(msg.sender, amount);
 
         return amount;
     }
@@ -158,14 +158,14 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
     // burn ZDAI, receive DAI
     // lender gives back their ZDAI and receives their original DAI back
     // currently interest is pulled out separately -> redeemInterestFromPool
-    function burnZDAI(
+    function retrieveDAI(
         uint256 amount
     )
         public
         returns (uint256)
     {
         // cannot withdraw collateral
-        uint256 amountAvailableForWithdraw = IERC20(daiContract).balanceOf(address(this));
+        uint256 amountAvailableForWithdraw = daiContract.balanceOf(address(this));
         amountAvailableForWithdraw = amountAvailableForWithdraw.sub(collateralLocked.sub(defaultPool.sub(unredeemedDAIInterest)));
 
         // only allow withdraw up to available
@@ -177,9 +177,9 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         updateTotalAccruedInterest();
         updateAccountAccruedInterest();
 
-        _burn(msg.sender, finalAmount);
+        zDaiContract.burn(msg.sender, finalAmount);
 
-        require(IERC20(daiContract).transfer(msg.sender, finalAmount));
+        require(daiContract.transfer(msg.sender, finalAmount));
 
         return finalAmount;
     }
@@ -211,7 +211,7 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         unredeemedDAIInterest = unredeemedDAIInterest.sub(interestRedeemable);
 
         // transfer DAI to lender
-        require(IERC20(daiContract).transfer(msg.sender, interestRedeemable));
+        require(daiContract.transfer(msg.sender, interestRedeemable));
 
         // emit event of redemption
         emit Redeemed(msg.sender, interestRedeemable);
@@ -253,14 +253,14 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         if (borrowerAccounts[msg.sender].collateral > amount) {
             borrowerAccounts[msg.sender].collateral = borrowerAccounts[msg.sender].collateral.sub(amount);
             collateralLocked = collateralLocked.sub(amount);
-            require(IERC20(daiContract).transfer(msg.sender, amount));
+            require(daiContract.transfer(msg.sender, amount));
 
             emit CollateralWithdrawn(msg.sender, amount);
         } else {
             uint256 transferAmount = borrowerAccounts[msg.sender].collateral;
             borrowerAccounts[msg.sender].collateral = 0;
             collateralLocked = collateralLocked.sub(transferAmount);
-            require(IERC20(daiContract).transfer(msg.sender, transferAmount));
+            require(daiContract.transfer(msg.sender, transferAmount));
 
             emit CollateralWithdrawn(msg.sender, borrowerAccounts[msg.sender].collateral);
         }
@@ -361,7 +361,7 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         require(numberDays <= 365, "Number Days: MORE THAN 365");
 
         // cannot withdraw collateral
-        uint256 amountAvailableForWithdraw = IERC20(daiContract).balanceOf(address(this)).sub(collateralLocked).sub(defaultPool).sub(unredeemedDAIInterest).div(DAI_DECIMALS);
+        uint256 amountAvailableForWithdraw = daiContract.balanceOf(address(this)).sub(collateralLocked).sub(defaultPool).sub(unredeemedDAIInterest).div(DAI_DECIMALS);
         uint256 finalAmount = amountBorrow;
         // only allow withdraw up to available
         if (finalAmount > amountAvailableForWithdraw) {
@@ -409,7 +409,7 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         borrowStucts.push(borrow);
         borrowerAccounts[msg.sender].lastBorrowId = borrowCount;
 
-        require(ERC20(daiContract).transfer(msg.sender, finalAmount.mul(DAI_DECIMALS).div(100)));
+        require(daiContract.transfer(msg.sender, finalAmount.mul(DAI_DECIMALS).div(100)));
 
         emit BorrowInitiated(msg.sender, borrow);
 
@@ -488,7 +488,7 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
                 repayOverAmount = repayOverAmount.add(amountRepay.sub(borrows[borrowerLastBorrowId].amountOwed));
 
                 // transfer DAI to this address from borrow address
-                require(IERC20(daiContract).transferFrom(msg.sender, address(this), borrows[borrowerLastBorrowId].amountOwed.mul(DAI_DECIMALS).div(100)));
+                require(daiContract.transferFrom(msg.sender, address(this), borrows[borrowerLastBorrowId].amountOwed.mul(DAI_DECIMALS).div(100)));
 
                 // update unredeemedDAIInterestAddition based on previous paybacks
                 if (interest > borrows[borrowerLastBorrowId].amountOwed) {
@@ -513,11 +513,11 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
                 borrows[borrowerLastBorrowId].amountOwed = 0;
 
                 // transfer DAI to ZC DAO wallet from this address
-                require(IERC20(daiContract).transfer(zcDaoContract, daoFundingAmount));
+                require(daiContract.transfer(zcDaoContract, daoFundingAmount));
 
             } else {
                 // transfer DAI to this address from borrow address
-                require(IERC20(daiContract).transferFrom(msg.sender, address(this), amountRepay.mul(DAI_DECIMALS).div(100)));
+                require(daiContract.transferFrom(msg.sender, address(this), amountRepay.mul(DAI_DECIMALS).div(100)));
 
                 // update unredeemedDAIInterestAddition based on previous paybacks
                 uint256 remainingOwed = borrows[borrowerLastBorrowId].amountOwed.sub(amountRepay);
@@ -543,7 +543,7 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
                 borrows[borrowerLastBorrowId].amountOwed = borrows[borrowerLastBorrowId].amountOwed.sub(amountRepay);
 
                 // transfer DAI to ZC DAO wallet from this address
-                require(IERC20(daiContract).transfer(zcDaoContract, daoFundingAmount));
+                require(daiContract.transfer(zcDaoContract, daoFundingAmount));
             }
             if (borrows[borrowerLastBorrowId].amountOwed == 0) {
                 borrows[borrowerLastBorrowId].active =  false;
@@ -561,7 +561,7 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         private
         returns (uint256)
     {
-        uint256 totalSupply = ERC20(address(this)).totalSupply();
+        uint256 totalSupply = zDaiContract.totalSupply();
         uint256 previousBlockAccruedInterest = blockAccruedInterest;
         blockAccruedInterest = block.number;
         totalAccruedInterest = totalAccruedInterest.add(blockAccruedInterest.sub(previousBlockAccruedInterest).mul(totalSupply));
@@ -573,7 +573,7 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         returns (uint256)
     {
         uint256 previousBlockAccruedInterest = lenderAccounts[msg.sender].lastBlockAccrued;
-        uint256 balance = ERC20(address(this)).balanceOf(msg.sender);
+        uint256 balance = zDaiContract.balanceOf(msg.sender);
 
         lenderAccounts[msg.sender].lastBlockAccrued = block.number;
         lenderAccounts[msg.sender].totalAccruedInterest = lenderAccounts[msg.sender].totalAccruedInterest.add(block.number.sub(previousBlockAccruedInterest).mul(balance));
