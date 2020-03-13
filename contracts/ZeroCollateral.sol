@@ -47,31 +47,28 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
     address public zcDaoContract;
 
     // borrow count
-    uint256 public borrowCount = 0;
+    uint256 public borrowCount;
 
     // total accrued interest
-    uint256 public totalAccruedInterest = 0;
+    uint256 public totalAccruedInterest;
 
     // last block number of accrued interest
-    uint256 public blockAccruedInterest = block.number;
+    uint256 public blockAccruedInterest;
 
     // amount of DAI remaining as unredeemed interest
-    uint256 public unredeemedDAIInterest = 0;
+    uint256 public unredeemedDAIInterest;
 
     // amount of DAI remaining as unredeemed interest
-    uint256 public defaultPool = 0;
+    uint256 public defaultPool;
 
     // amount collateral locked in contract
-    uint256 public collateralLocked = 0;
+    uint256 public collateralLocked;
 
     // interest accrued from lending account
     struct LendAccount {
         uint256 lastBlockAccrued;
         uint256 totalAccruedInterest;
     }
-
-    // array of all lending accounts
-    mapping (address => LendAccount) public lenderAccounts;
 
     // borrower account details
     struct BorrowAccount {
@@ -80,9 +77,6 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         uint256 amountPaidDefaultPool;
         uint256 collateral;
     }
-
-    // array of all borrower accounts
-    mapping (address => BorrowAccount) public borrowerAccounts;
 
     // data per borrow as struct
     struct Borrow {
@@ -96,6 +90,12 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         bool liquidated;
         uint256 id;
     }
+
+    // array of all lending accounts
+    mapping (address => LendAccount) public lenderAccounts;
+
+    // array of all borrower accounts
+    mapping (address => BorrowAccount) public borrowerAccounts;
 
     // mapping of borrowID to borrow
     mapping (uint256 => Borrow) public borrows;
@@ -131,11 +131,63 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         decimals
     )
     {
+        require((daiAddress != address(0)) && (daoAddress != address(0)), "ZeroCollateral::constructor - invalid addresses");
+
         daiContract = daiAddress;
         zcDaoContract = daoAddress;
+
+        borrowCount = 0;
+        totalAccruedInterest = 0;
+        blockAccruedInterest = block.number;
+        unredeemedDAIInterest = 0;
+        defaultPool = 0;
+        collateralLocked = 0;
     }
 
     // ============ Public Functions ============
+
+    function getCollateralNeeded(uint256 amountBorrow) public view returns(uint256){
+        uint256 poolContributions = (borrowerAccounts[msg.sender].amountPaidRedemptionPool);
+        uint256 amountBorrowDecimals = amountBorrow.mul(10**6); // convert to DAI decimals
+        
+        if (poolContributions >= amountBorrowDecimals){
+            return 0;
+        }else{
+            return amountBorrowDecimals.sub(poolContributions); // return DAI units of collateral
+        }
+    }
+
+    function getTotalCollateral(address borrower) public view returns (uint256) {
+        return borrowerAccounts[borrower].collateral;
+    }
+
+    function calculateInterestWithDays(uint256 numberDays) public view returns (uint256) {
+        // min term 1 days
+        require(1 <= numberDays, "Number Days: LESS THAN 0");
+        
+        // max term 365 days
+        require(numberDays <= 365, "Number Days: MORE THAN 365");
+        
+        uint256 interest_rate = 12 * (10**8);
+        
+        if (numberDays <= 7){
+            interest_rate = (0*(10**8)) + (( (1*(10**8)) * (numberDays - 0)) / 7 );
+        }else if (7 < numberDays && numberDays <= 14){
+            interest_rate = (1*(10**8)) + (( (5*(10**7)) * (numberDays - 7)) / 7 );
+        }else if (14 < numberDays && numberDays <= 30){
+            interest_rate = (15*(10**7)) + (( (1*(10**8)) * (numberDays - 14)) / 14 );
+        }else if (30 < numberDays && numberDays <= 60){
+            interest_rate = (25*(10**7)) + (( (15*(10**7)) * (numberDays - 30)) / 30 );
+        }else if (60 < numberDays && numberDays <= 120){
+            interest_rate = (4*(10**8)) + (( (2*(10**8)) * (numberDays - 60)) / 60 );
+        }else if (120 < numberDays && numberDays <= 180){
+            interest_rate = (6*(10**8)) + (( (2*(10**8)) * (numberDays - 120)) / 60 );
+        }else if (180 < numberDays && numberDays <= 365){
+            interest_rate = (8*(10**8)) + (( (4*(10**8)) * (numberDays - 180)) / 185 );
+        }
+         
+         return interest_rate;
+    }
 
     // lend DAI, mint ZDAI
     // lender depositing DAI and gets given ZDAI
@@ -145,7 +197,7 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         public
         returns (uint256)
     {
-        require(IERC20(daiContract).transferFrom(msg.sender, address(this), amount));
+        require(IERC20(daiContract).transferFrom(msg.sender, address(this), amount), "ZeroCollateral::mintZDAI - transfer asset failed");
 
         updateTotalAccruedInterest();
         updateAccountAccruedInterest();
@@ -179,17 +231,17 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
 
         _burn(msg.sender, finalAmount);
 
-        require(IERC20(daiContract).transfer(msg.sender, finalAmount));
+        require(IERC20(daiContract).transfer(msg.sender, finalAmount), "ZeroCollateral::burnZDAI - transfer asset failed");
 
         return finalAmount;
     }
 
     // call update accrued interest of sender account
     // maybe go?
-    function callUpdateAccountAccruedInterest() public returns(uint256) {
+    function callUpdateAccountAccruedInterest() public returns(uint256 totalAccruedInterest) {
         updateTotalAccruedInterest();
-        updateAccountAccruedInterest();
-        return lenderAccounts[msg.sender].totalAccruedInterest;
+        totalAccruedInterest = updateAccountAccruedInterest();
+        return totalAccruedInterest;
     }
 
     // redeem interest from redemption pool
@@ -211,7 +263,7 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         unredeemedDAIInterest = unredeemedDAIInterest.sub(interestRedeemable);
 
         // transfer DAI to lender
-        require(IERC20(daiContract).transfer(msg.sender, interestRedeemable));
+        require(IERC20(daiContract).transfer(msg.sender, interestRedeemable), "ZeroCollateral::redeemInterestFromPool - transfer asset failed");
 
         // emit event of redemption
         emit Redeemed(msg.sender, interestRedeemable);
@@ -247,20 +299,20 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         // check for no outstanding borrow
         uint256 borrowerLastBorrowId = borrowerAccounts[msg.sender].lastBorrowId;
         if (borrowerLastBorrowId != 0) {
-            require(!borrows[borrowerLastBorrowId].active, "Collateral#withdraw: OUTSTANDING_BORROW");
+            require(!borrows[borrowerLastBorrowId].active, "ZeroCollateral::withdrawCollateralBorrower - OUTSTANDING_BORROW");
         }
 
         if (borrowerAccounts[msg.sender].collateral > amount) {
             borrowerAccounts[msg.sender].collateral = borrowerAccounts[msg.sender].collateral.sub(amount);
             collateralLocked = collateralLocked.sub(amount);
-            require(IERC20(daiContract).transfer(msg.sender, amount));
+            require(IERC20(daiContract).transfer(msg.sender, amount), "ZeroCollateral::withdrawCollateralBorrower - transfer asset failed");
 
             emit CollateralWithdrawn(msg.sender, amount);
         } else {
             uint256 transferAmount = borrowerAccounts[msg.sender].collateral;
             borrowerAccounts[msg.sender].collateral = 0;
             collateralLocked = collateralLocked.sub(transferAmount);
-            require(IERC20(daiContract).transfer(msg.sender, transferAmount));
+            require(IERC20(daiContract).transfer(msg.sender, transferAmount), "ZeroCollateral::withdrawCollateralBorrower - transfer asset failed");
 
             emit CollateralWithdrawn(msg.sender, borrowerAccounts[msg.sender].collateral);
         }
@@ -343,131 +395,6 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
         }
     }
 
-    function getCollateralNeeded(uint256 amountBorrow) view public returns(uint256){
-        uint256 poolContributions = (borrowerAccounts[msg.sender].amountPaidRedemptionPool);
-        uint256 amountBorrowDecimals = amountBorrow.mul(10**6); // convert to DAI decimals
-        
-        if (poolContributions >= amountBorrowDecimals){
-            return 0;
-        }else{
-            return ( amountBorrowDecimals - poolContributions ); // return DAI units of collateral
-        }
-    }
-
-    // calculates whether they have enough collateral to withdraw amount of DAI
-    /*
-    function createBorrow(uint256 amountBorrow, uint256 numberDays) public returns (bool) {
-        // max term 365 days
-        require(numberDays <= 365, "Number Days: MORE THAN 365");
-
-        // cannot withdraw collateral
-        uint256 amountAvailableForWithdraw = IERC20(daiContract).balanceOf(address(this)).sub(collateralLocked).sub(defaultPool).sub(unredeemedDAIInterest).div(DAI_DECIMALS);
-        uint256 finalAmount = amountBorrow;
-        // only allow withdraw up to available
-        if (finalAmount > amountAvailableForWithdraw) {
-            finalAmount = amountAvailableForWithdraw;
-        }
-
-        // check if any outstanding borrows
-        uint256 borrowerLastBorrowId = borrowerAccounts[msg.sender].lastBorrowId;
-
-        if (borrowerLastBorrowId != 0) {
-            if (borrows[borrowerLastBorrowId].active) {
-                return false;
-            }
-        }
-
-        // check if collateralDeposited > getCollateralNeeded
-        if (getCollateralNeeded(finalAmount) > getTotalCollateral(msg.sender)) {
-            return false;
-        }
-
-        // increment borrow count
-        borrowCount += 1;
-
-        // create borrow
-        Borrow storage borrow = borrows[borrowCount];
-
-        uint256 borrowInterestRate = calculateInterestDiscount(finalAmount, numberDays);
-
-        borrow.amountBorrow = finalAmount;
-        // divided by 18 plus 2 decimals to remove interest rate decimals
-        borrow.amountOwed = finalAmount.add(finalAmount.mul(borrowInterestRate).div(10**20));
-        borrow.amountOwedInitial = borrow.amountOwed;
-        borrow.active = true;
-        borrow.blockStart = block.timestamp;
-        borrow.blockEnd = block.timestamp.add(numberDays.mul(60*60*24));
-        borrow.account = msg.sender;
-        borrow.liquidated = false;
-        borrow.id = borrowCount;
-
-        if (borrow.amountBorrow == borrow.amountOwedInitial) {
-            borrow.amountOwed = finalAmount.add(1);
-            borrow.amountOwedInitial = finalAmount.add(1);
-        }
-
-        borrowStucts.push(borrow);
-        borrowerAccounts[msg.sender].lastBorrowId = borrowCount;
-
-        require(ERC20(daiContract).transfer(msg.sender, finalAmount.mul(DAI_DECIMALS).div(100)));
-
-        emit BorrowInitiated(msg.sender, borrow);
-
-        return true;
-    }
-
-    function calculateInterestDiscount(uint256 amountBorrow, uint256 numberDays) view public returns (uint256) {
-        // amountBorrow > 0 
-        require(amountBorrow > 0, "Amount Borrow: LESS THAN 0");
-        
-        // calculate % of interest paid (8 decimals) + collateral (8 decimals), divided by borrow amount (2 decimals). Resulting 6 decimals.
-        uint256 x = borrowerAccounts[msg.sender].amountPaidRedemptionPool.add(borrowerAccounts[msg.sender].collateral).div(amountBorrow);
-        
-        if (x > (10**6)){
-            x = (10**6);
-        }
-        
-        // interest rate discount calculated
-        uint256 interest_rate = calculateInterestWithDays(numberDays); // 8 decimals
-        uint256 interest_rate_discount = interest_rate - (((interest_rate * x)/3)  / (10**6)); // 8 decimals
-         
-         return interest_rate_discount;
-    }
-    */
-
-    function getTotalCollateral(address borrower) public view returns (uint256) {
-        return borrowerAccounts[borrower].collateral;
-    }
-
-    function calculateInterestWithDays(uint256 numberDays) view public returns (uint256) {
-        
-        // min term 1 days
-        require(1 <= numberDays, "Number Days: LESS THAN 0");
-        
-        // max term 365 days
-        require(numberDays <= 365, "Number Days: MORE THAN 365");
-        
-        uint256 interest_rate = 12 * (10**8);
-        
-        if (numberDays <= 7){
-            interest_rate = (0*(10**8)) + (( (1*(10**8)) * (numberDays - 0)) / 7 );
-        }else if (7 < numberDays && numberDays <= 14){
-            interest_rate = (1*(10**8)) + (( (5*(10**7)) * (numberDays - 7)) / 7 );
-        }else if (14 < numberDays && numberDays <= 30){
-            interest_rate = (15*(10**7)) + (( (1*(10**8)) * (numberDays - 14)) / 14 );
-        }else if (30 < numberDays && numberDays <= 60){
-            interest_rate = (25*(10**7)) + (( (15*(10**7)) * (numberDays - 30)) / 30 );
-        }else if (60 < numberDays && numberDays <= 120){
-            interest_rate = (4*(10**8)) + (( (2*(10**8)) * (numberDays - 60)) / 60 );
-        }else if (120 < numberDays && numberDays <= 180){
-            interest_rate = (6*(10**8)) + (( (2*(10**8)) * (numberDays - 120)) / 60 );
-        }else if (180 < numberDays && numberDays <= 365){
-            interest_rate = (8*(10**8)) + (( (4*(10**8)) * (numberDays - 180)) / 185 );
-        }
-         
-         return interest_rate;
-    }
-
     // paying back an amount of DAI - doesn't have to be all of it
     // updates the borrow itself
     function repayBorrow(uint256 amountRepay) public returns(uint256) {
@@ -488,7 +415,10 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
                 repayOverAmount = repayOverAmount.add(amountRepay.sub(borrows[borrowerLastBorrowId].amountOwed));
 
                 // transfer DAI to this address from borrow address
-                require(IERC20(daiContract).transferFrom(msg.sender, address(this), borrows[borrowerLastBorrowId].amountOwed.mul(DAI_DECIMALS).div(100)));
+                require(
+                    IERC20(daiContract).transferFrom(msg.sender, address(this), borrows[borrowerLastBorrowId].amountOwed.mul(DAI_DECIMALS).div(100)),
+                    "ZeroCollateral::repayBorrow - transfer asset failed"
+                );
 
                 // update unredeemedDAIInterestAddition based on previous paybacks
                 if (interest > borrows[borrowerLastBorrowId].amountOwed) {
@@ -513,11 +443,14 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
                 borrows[borrowerLastBorrowId].amountOwed = 0;
 
                 // transfer DAI to ZC DAO wallet from this address
-                require(IERC20(daiContract).transfer(zcDaoContract, daoFundingAmount));
+                require(IERC20(daiContract).transfer(zcDaoContract, daoFundingAmount), "ZeroCollateral::repayBorrow - transfer asset failed");
 
             } else {
                 // transfer DAI to this address from borrow address
-                require(IERC20(daiContract).transferFrom(msg.sender, address(this), amountRepay.mul(DAI_DECIMALS).div(100)));
+                require(
+                    IERC20(daiContract).transferFrom(msg.sender, address(this), amountRepay.mul(DAI_DECIMALS).div(100)),
+                    "ZeroCollateral::repayBorrow - transfer asset failed"
+                );
 
                 // update unredeemedDAIInterestAddition based on previous paybacks
                 uint256 remainingOwed = borrows[borrowerLastBorrowId].amountOwed.sub(amountRepay);
@@ -543,10 +476,10 @@ contract ZeroCollateralMain is ERC20Detailed, ERC20, MinterRole, Chainlink {
                 borrows[borrowerLastBorrowId].amountOwed = borrows[borrowerLastBorrowId].amountOwed.sub(amountRepay);
 
                 // transfer DAI to ZC DAO wallet from this address
-                require(IERC20(daiContract).transfer(zcDaoContract, daoFundingAmount));
+                require(IERC20(daiContract).transfer(zcDaoContract, daoFundingAmount), "ZeroCollateral::repayBorrow - transfer asset failed");
             }
             if (borrows[borrowerLastBorrowId].amountOwed == 0) {
-                borrows[borrowerLastBorrowId].active =  false;
+                borrows[borrowerLastBorrowId].active = false;
             }
         }
 
