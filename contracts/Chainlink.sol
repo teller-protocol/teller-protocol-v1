@@ -15,15 +15,15 @@ contract Chainlink is Ownable {
     // Chainlink Aggregator Instance
     AggregatorInterface internal dataSource;
 
-    function setReferenceContract(address _aggregator) public onlyOwner {
+    function setReferenceContract(address _aggregator) external onlyOwner {
         dataSource = AggregatorInterface(_aggregator);
     }
 
-    function getLatestPrice() public view returns (int256) {
+    function getLatestPrice() external view returns (int256) {
         return dataSource.latestAnswer();
     }
 
-    function getLatestUpdateHeight() public view returns (uint256) {
+    function getLatestUpdateHeight() external view returns (uint256) {
         return dataSource.latestTimestamp();
     }
 
