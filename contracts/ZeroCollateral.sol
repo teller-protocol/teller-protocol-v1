@@ -14,12 +14,22 @@
     limitations under the License.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
+// Libraries
+import "./util/AddressLib.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
+// Commons
+import "./util/ZeroCollateralCommon.sol";
+
+// Interfaces
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/ChainlinkInterface.sol";
+import "./interfaces/ZeroCollateralInterface.sol";
+
+// Contracts
 import "./ZDai.sol";
 
 /**
@@ -31,7 +41,8 @@ import "./ZDai.sol";
  * Values of borrows are dictated in 2 decimals. All other values dictated in DAI (18 decimals).
  */
 
-contract ZeroCollateralMain {
+contract ZeroCollateralMain is ZeroCollateralInterface {
+    using AddressLib for address;
     using SafeMath for uint256;
 
     // ============ State Variables ============
@@ -53,79 +64,36 @@ contract ZeroCollateralMain {
     address public zcDaoContract;
 
     // borrow count
-    uint256 public borrowCount = 0;
+    uint256 public borrowCount;
 
     // total accrued interest
-    uint256 public totalAccruedInterest = 0;
+    uint256 public totalAccruedInterest;
 
     // last block number of accrued interest
-    uint256 public blockAccruedInterest = block.number;
+    uint256 public blockAccruedInterest;
 
     // amount of DAI remaining as unredeemed interest
-    uint256 public unredeemedDAIInterest = 0;
+    uint256 public unredeemedDAIInterest;
 
     // amount of DAI remaining as unredeemed interest
-    uint256 public defaultPool = 0;
+    uint256 public defaultPool;
 
     // amount collateral locked in contract
-    uint256 public collateralLocked = 0;
-
-    // interest accrued from lending account
-    struct LendAccount {
-        uint256 lastBlockAccrued;
-        uint256 totalAccruedInterest;
-    }
+    uint256 public collateralLocked;
 
     // array of all lending accounts
-    mapping (address => LendAccount) public lenderAccounts;
-
-    // borrower account details
-    struct BorrowAccount {
-        uint256 lastBorrowId;
-        uint256 amountPaidRedemptionPool;
-        uint256 amountPaidDefaultPool;
-        uint256 collateral;
-    }
+    mapping (address => ZeroCollateralCommon.LendAccount) public lenderAccounts;
 
     // array of all borrower accounts
-    mapping (address => BorrowAccount) public borrowerAccounts;
-
-    // data per borrow as struct
-    struct Borrow {
-        uint256 amountBorrow;
-        uint256 amountOwed;
-        uint256 amountOwedInitial;
-        uint256 blockStart;
-        uint256 blockEnd;
-        address account;
-        uint256 id;
-        uint256 maxLoan;
-        bool active;
-        bool liquidated;
-        uint8 interestRate;
-        uint8 collateralNeeded;
-    }
+    mapping (address => ZeroCollateralCommon.BorrowAccount) public borrowerAccounts;
 
     // mapping of borrowID to borrow
-    mapping (uint256 => Borrow) public borrows;
+    mapping (uint256 => ZeroCollateralCommon.Borrow) public borrows;
 
     // publically accessible array of all borrows
-    Borrow[] public borrowStucts;
-
-    // event on redemption of interest
-    event Redeemed(address indexed lenderAccount, uint256 amount);
-
-    // collateral deposited by borrower
-    event CollateralDeposited(address indexed borrower, uint256 amount);
-
-    // collateral withdrawn by borrower
-    event CollateralWithdrawn(address indexed borrower, uint256 amount);
-
-    // borrow event initiated
-    event BorrowInitiated(address indexed borrower, Borrow borrow);
+    ZeroCollateralCommon.Borrow[] public borrowStucts;
 
     // ============ Constructor ============
-
     constructor(
         address daiAddress,
         address zDaiAddress,
@@ -133,9 +101,37 @@ contract ZeroCollateralMain {
     )
     public
     {
+        require(daiAddress != address(0x0), "Dai address is required.");
+        require(zDaiAddress != address(0x0), "ZDai address is required.");
+        require(daoAddress != address(0x0), "ZCDao address is required.");
         zDaiContract = ZDai(zDaiAddress);
         daiContract = IERC20(daiAddress);
         zcDaoContract = daoAddress;
+        blockAccruedInterest = block.number;
+    }
+
+    /**
+        It sets info for a specific borrow (identified by id). It is used ONLY for testing purposes.
+     */
+    function setBorrowerAccountInfo(
+        address borrower,
+        uint256 maxLoan,
+        uint8 interestRate,
+        uint8 collateralNeeded
+    ) external {
+        borrower.requireNotEmpty("Borrower address is required.");
+        borrowerAccounts[borrower].maxLoan = maxLoan;
+        borrowerAccounts[borrower].interestRate = interestRate;
+        borrowerAccounts[borrower].collateralNeeded = collateralNeeded;
+    }
+
+    function hasActiveBorrow(address borrower)
+        external
+        view
+        returns(bool)
+    {
+        uint256 borrowerLastBorrowId = borrowerAccounts[borrower].lastBorrowId;
+        return borrowerLastBorrowId != 0 && borrows[borrowerLastBorrowId].active;
     }
 
     // ============ Public Functions ============
@@ -168,8 +164,7 @@ contract ZeroCollateralMain {
         returns (uint256)
     {
         // cannot withdraw collateral
-        uint256 amountAvailableForWithdraw = daiContract.balanceOf(address(this));
-        amountAvailableForWithdraw = amountAvailableForWithdraw.sub(collateralLocked.sub(defaultPool.sub(unredeemedDAIInterest)));
+        uint256 amountAvailableForWithdraw = getAvailableDaiBalance();
 
         // only allow withdraw up to available
         uint256 finalAmount = amount;
@@ -182,7 +177,7 @@ contract ZeroCollateralMain {
 
         zDaiContract.burn(msg.sender, finalAmount);
 
-        require(daiContract.transfer(msg.sender, finalAmount));
+        transferDai(msg.sender, finalAmount);
 
         return finalAmount;
     }
@@ -214,7 +209,7 @@ contract ZeroCollateralMain {
         unredeemedDAIInterest = unredeemedDAIInterest.sub(interestRedeemable);
 
         // transfer DAI to lender
-        require(daiContract.transfer(msg.sender, interestRedeemable));
+        transferDai(msg.sender, interestRedeemable);
 
         // emit event of redemption
         emit Redeemed(msg.sender, interestRedeemable);
@@ -225,8 +220,8 @@ contract ZeroCollateralMain {
     // borrower deposit collateral
     // change to ETH - deposit ETH and keep track of how much ETH they have
     // if the current price changes and they're undercollateralised -> problem
-    function depositCollateralBorrower() public payable {
-        // Not needed to check msg.valu > 0. It doesn't increase collateral locked.
+    function depositCollateralBorrower() external payable {
+        // Not needed to check msg.value > 0. It doesn't increase collateral locked.
         uint256 amount = msg.value;
 
         collateralLocked = collateralLocked.add(amount);
@@ -242,16 +237,13 @@ contract ZeroCollateralMain {
     // liquidate -> anything undercollateralised or expired gets liquidated
     // then checks there's a outstanding borrow live
     // can withdraw collateral down to a certain percentage if there's still outstanding borrow
-    function withdrawCollateralBorrower(uint256 amount) public {
+    function withdrawCollateralBorrower(uint256 amount) external {
 
         // liquidate any outstanding unpaid borrows
-        liquidate(msg.sender);
+        this.liquidate(msg.sender);
 
         // check for no outstanding borrow
-        uint256 borrowerLastBorrowId = borrowerAccounts[msg.sender].lastBorrowId;
-        if (borrowerLastBorrowId != 0) {
-            require(!borrows[borrowerLastBorrowId].active, "Collateral#withdraw: OUTSTANDING_BORROW");
-        }
+        require(!this.hasActiveBorrow(msg.sender), "Collateral#withdraw: OUTSTANDING_BORROW");
 
         uint256 toWithdraw = amount;
         if (borrowerAccounts[msg.sender].collateral > toWithdraw) {
@@ -269,71 +261,37 @@ contract ZeroCollateralMain {
     // now to encorporate the actual price of ETH - is the loan undercollateralised or expired
     // currently it just checks if it is expired
     // remove nonredeemable collateral
-    function liquidate(address borrower) public{
+    function liquidate(address borrower) external {
 
         uint256 borrowerLastBorrowId = borrowerAccounts[borrower].lastBorrowId;
 
         if (borrows[borrowerLastBorrowId].active && block.timestamp > borrows[borrowerLastBorrowId].blockEnd) {
-            // set old amount paid to defaultPool
-            uint256 oldAmountPaidDefaultPool = borrowerAccounts[borrower].amountPaidDefaultPool;
-
-            // liquidate account
-            borrowerAccounts[borrower].amountPaidRedemptionPool = 0;
-            borrowerAccounts[borrower].amountPaidDefaultPool = 0;
-
             // amount owed from loan
             uint256 amountOwedDAI = borrows[borrowerLastBorrowId].amountOwed.mul(DAI_DECIMALS).div(100);
+            uint256 liquidatedCollateral = amountOwedDAI;
 
-            if (amountOwedDAI > oldAmountPaidDefaultPool) {
-                uint256 liquidatedCollateral = amountOwedDAI.sub(oldAmountPaidDefaultPool);
+            // primary liquidation: non-redeemable collateral
+            if (liquidatedCollateral > borrowerAccounts[borrower].collateral) {
+                // update collateralNonRedeemable
+                uint256 oldCollateral = borrowerAccounts[borrower].collateral;
 
-                // primary liquidation: non-redeemable collateral
-                if (liquidatedCollateral > borrowerAccounts[borrower].collateral) {
-                    // update collateralNonRedeemable
-                    uint256 oldCollateral = borrowerAccounts[borrower].collateral;
+                borrowerAccounts[borrower].collateral = 0;
+                liquidatedCollateral = liquidatedCollateral.sub(oldCollateral);
 
-                    borrowerAccounts[borrower].collateral = 0;
-                    liquidatedCollateral = liquidatedCollateral.sub(oldCollateral);
+                // update default pool (where non-redeemable collateral resides)
+                defaultPool = defaultPool.sub(oldCollateral);
+                unredeemedDAIInterest = unredeemedDAIInterest.add(oldCollateral);
 
-                    // update default pool (where non-redeemable collateral resides)
-                    defaultPool = defaultPool.sub(oldCollateral);
-                    unredeemedDAIInterest = unredeemedDAIInterest.add(oldCollateral);
+            } else {
+                // update collateralNonRedeemable
+                borrowerAccounts[borrower].collateral = borrowerAccounts[borrower].collateral.sub(liquidatedCollateral);
 
-                } else {
-                    // update collateralNonRedeemable
-                    borrowerAccounts[borrower].collateral = borrowerAccounts[borrower].collateral.sub(liquidatedCollateral);
+                // update default pool (where non-redeemable collateral resides)
+                defaultPool = defaultPool.sub(liquidatedCollateral);
+                unredeemedDAIInterest = unredeemedDAIInterest.add(liquidatedCollateral);
 
-                    // update default pool (where non-redeemable collateral resides)
-                    defaultPool = defaultPool.sub(liquidatedCollateral);
-                    unredeemedDAIInterest = unredeemedDAIInterest.add(liquidatedCollateral);
-
-                    // set liquidatedCollateral to 0
-                    liquidatedCollateral = 0;
-
-                }
-
-                // secondary liquidation: redeemable collateral
-                if (liquidatedCollateral > borrowerAccounts[borrower].collateral) {
-                    // update collateralRedeemable
-                    uint256 oldCollateral = borrowerAccounts[borrower].collateral;
-                    borrowerAccounts[borrower].collateral = 0;
-                    liquidatedCollateral = liquidatedCollateral.sub(oldCollateral);
-
-                    // update collateral locked
-                    collateralLocked = collateralLocked.sub(oldCollateral);
-                    unredeemedDAIInterest = unredeemedDAIInterest.add(oldCollateral);
-                } else {
-                    // update collateralRedeemable
-                    borrowerAccounts[borrower].collateral = borrowerAccounts[borrower].collateral.sub(liquidatedCollateral);
-
-                    // update collateral locked
-                    collateralLocked = collateralLocked.sub(liquidatedCollateral);
-                    unredeemedDAIInterest = unredeemedDAIInterest.add(liquidatedCollateral);
-
-                    // set liquidatedCollateral to 0
-                    liquidatedCollateral = 0;
-                }
-
+                // set liquidatedCollateral to 0
+                liquidatedCollateral = 0;
             }
 
             borrows[borrowerLastBorrowId].liquidated = true;
@@ -341,20 +299,9 @@ contract ZeroCollateralMain {
         }
     }
 
-    function getCollateralNeeded(uint256 amountBorrow) view public returns(uint256){
-        uint256 poolContributions = (borrowerAccounts[msg.sender].amountPaidRedemptionPool);
-        uint256 amountBorrowDecimals = amountBorrow.mul(10**6); // convert to DAI decimals
-        
-        if (poolContributions >= amountBorrowDecimals){
-            return 0;
-        }else{
-            return ( amountBorrowDecimals - poolContributions ); // return DAI units of collateral
-        }
-    }
-
     // calculates whether they have enough collateral to withdraw amount of DAI
     /*
-    function createBorrow(uint256 amountBorrow, uint256 numberDays) public returns (bool) {
+    function createBorrow(uint256 amountBorrow, uint256 numberDays) external returns (bool) {
         // max term 365 days
         require(numberDays <= 365, "Number Days: MORE THAN 365");
 
@@ -376,7 +323,7 @@ contract ZeroCollateralMain {
         }
 
         // check if collateralDeposited > getCollateralNeeded
-        if (getCollateralNeeded(finalAmount) > getTotalCollateral(msg.sender)) {
+        if (getCollateralNeeded(finalAmount) > this.getTotalCollateral(msg.sender)) {
             return false;
         }
 
@@ -384,7 +331,7 @@ contract ZeroCollateralMain {
         borrowCount += 1;
 
         // create borrow
-        Borrow storage borrow = borrows[borrowCount];
+        ZeroCollateralCommon.Borrow storage borrow = borrows[borrowCount];
 
         uint256 borrowInterestRate = calculateInterestDiscount(finalAmount, numberDays);
 
@@ -433,7 +380,7 @@ contract ZeroCollateralMain {
     }
     */
 
-    function getTotalCollateral(address borrower) public view returns (uint256) {
+    function getTotalCollateral(address borrower) external view returns (uint256) {
         return borrowerAccounts[borrower].collateral;
     }
 
@@ -468,12 +415,12 @@ contract ZeroCollateralMain {
 
     // paying back an amount of DAI - doesn't have to be all of it
     // updates the borrow itself
-    function repayBorrow(uint256 amountRepay) public returns(uint256) {
+    function repayBorrow(uint256 amountRepay) external returns(uint256) {
         uint256 repayOverAmount;
 
         uint256 borrowerLastBorrowId = borrowerAccounts[msg.sender].lastBorrowId;
 
-        if (borrows[borrowerLastBorrowId].active) {
+        if (borrows[borrowerLastBorrowId].active) { // TODO isBorrowActive(borrowId)
 
             // set initial redemption pool additional value to zero
             uint256 unredeemedDAIInterestAddition = 0;
@@ -505,8 +452,7 @@ contract ZeroCollateralMain {
                 unredeemedDAIInterest = unredeemedDAIInterest.add(unredeemedDAIInterestAmount); // 10^18 decimals for DAI
                 defaultPool = defaultPool.add(defaultPoolAddition.mul(DAI_DECIMALS).div(100)); // 10^18 decimals for DAI
 
-                borrowerAccounts[msg.sender].amountPaidRedemptionPool = borrowerAccounts[msg.sender].amountPaidRedemptionPool.add(unredeemedDAIInterestAmount);
-                borrowerAccounts[msg.sender].amountPaidDefaultPool = borrowerAccounts[msg.sender].amountPaidDefaultPool.add(defaultPoolAddition.mul(DAI_DECIMALS).div(100));
+                //borrowerAccounts[msg.sender].amountPaidDefaultPool = borrowerAccounts[msg.sender].amountPaidDefaultPool.add(defaultPoolAddition.mul(DAI_DECIMALS).div(100));
 
                 borrows[borrowerLastBorrowId].amountOwed = 0;
 
@@ -535,8 +481,7 @@ contract ZeroCollateralMain {
                 unredeemedDAIInterest = unredeemedDAIInterest.add(unredeemedDAIInterestAmount); // 10^18 decimals for DAI
                 defaultPool = defaultPool.add(defaultPoolAddition.mul(DAI_DECIMALS).div(100)); // 10^18 decimals for DAI
 
-                borrowerAccounts[msg.sender].amountPaidRedemptionPool = borrowerAccounts[msg.sender].amountPaidRedemptionPool.add(unredeemedDAIInterestAmount);
-                borrowerAccounts[msg.sender].amountPaidDefaultPool = borrowerAccounts[msg.sender].amountPaidDefaultPool.add(defaultPoolAddition.mul(DAI_DECIMALS).div(100));
+                //borrowerAccounts[msg.sender].amountPaidDefaultPool = borrowerAccounts[msg.sender].amountPaidDefaultPool.add(defaultPoolAddition.mul(DAI_DECIMALS).div(100));
 
                 borrows[borrowerLastBorrowId].amountOwed = borrows[borrowerLastBorrowId].amountOwed.sub(amountRepay);
 
@@ -577,5 +522,19 @@ contract ZeroCollateralMain {
         lenderAccounts[msg.sender].totalAccruedInterest = lenderAccounts[msg.sender].totalAccruedInterest.add(block.number.sub(previousBlockAccruedInterest).mul(balance));
 
         return lenderAccounts[msg.sender].totalAccruedInterest;
+    }
+
+    function getDaiBalance() private view returns (uint256 balance) {
+        return daiContract.balanceOf(address(this));
+    }
+
+    function getAvailableDaiBalance() private view returns (uint256 availableDai) {
+        uint256 daiBalance = getDaiBalance();
+        return daiBalance.sub(collateralLocked.sub(defaultPool.sub(unredeemedDAIInterest)));
+    }
+
+    function transferDai(address to, uint256 amount) private {
+        bool result = daiContract.transfer(to, amount);
+        require(result, "Dai transfer failed.");
     }
 }
