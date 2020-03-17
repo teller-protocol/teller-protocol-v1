@@ -253,21 +253,16 @@ contract ZeroCollateralMain {
             require(!borrows[borrowerLastBorrowId].active, "Collateral#withdraw: OUTSTANDING_BORROW");
         }
 
-        if (borrowerAccounts[msg.sender].collateral > amount) {
-            borrowerAccounts[msg.sender].collateral = borrowerAccounts[msg.sender].collateral.sub(amount);
-            collateralLocked = collateralLocked.sub(amount);
-            require(daiContract.transfer(msg.sender, amount));
-
-            emit CollateralWithdrawn(msg.sender, amount);
-        } else {
-            uint256 transferAmount = borrowerAccounts[msg.sender].collateral;
-            borrowerAccounts[msg.sender].collateral = 0;
-            collateralLocked = collateralLocked.sub(transferAmount);
-            require(daiContract.transfer(msg.sender, transferAmount));
-
-            emit CollateralWithdrawn(msg.sender, borrowerAccounts[msg.sender].collateral);
+        uint256 toWithdraw = amount;
+        if (borrowerAccounts[msg.sender].collateral > toWithdraw) {
+            toWithdraw = borrowerAccounts[msg.sender].collateral;
         }
 
+        borrowerAccounts[msg.sender].collateral = borrowerAccounts[msg.sender].collateral.sub(toWithdraw);
+        collateralLocked = collateralLocked.sub(toWithdraw);
+        msg.sender.transfer(toWithdraw);
+
+        emit CollateralWithdrawn(msg.sender, amount);
     }
 
     // liquidate unpaid borrows
