@@ -13,7 +13,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 */
-pragma solidity ^0.5.10;
+pragma solidity 0.5.17;
 
 import "../../ZeroCollateral.sol";
 
@@ -32,12 +32,11 @@ contract ZeroCollateralMock is ZeroCollateralMain {
     }
 
     /**
-        It sets info for a specific borrow (identified by id). It is used ONLY for testing purposes.
+        It mocks borrow info for a specific borrower address / borrow id. It is used ONLY for testing purposes.
      */
-    function setBorrowInfo(uint256 id, uint256 maxLoan, uint8 interestRate, uint8 collateralNeeded) external {
-        borrows[id].id = id;
-        borrows[id].maxLoan = maxLoan;
-        borrows[id].interestRate = interestRate;
-        borrows[id].collateralNeeded = collateralNeeded;
+    function mockBorrowInfo(address borrower, uint256 borrowId) external {
+        borrowerAccounts[borrower].lastBorrowId = borrowId;
+
+        borrows[borrowId].active = true;
     }
 }
