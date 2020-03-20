@@ -26,7 +26,7 @@ import "./util/ZeroCollateralCommon.sol";
 
 // Interfaces
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
-import "./interfaces/ChainlinkInterface.sol";
+import "./interfaces/PairAggregatorInterface.sol";
 import "./interfaces/ZeroCollateralInterface.sol";
 
 // Contracts
@@ -57,7 +57,7 @@ contract ZeroCollateralMain is ZeroCollateralInterface {
     ZDai public zDaiContract;
 
     // Oracle for ETH/USD rate
-    ChainlinkInterface public oracle;
+    PairAggregatorInterface public oracle;
 
     // address of the Zero Collateral DAO Wallet
     // part of interest paid automatically goes back to DAO (5-10% ish)
