@@ -1,0 +1,198 @@
+/*
+    Copyright 2020 Fabrx Labs Inc.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+*/
+pragma solidity 0.5.17;
+
+// Libraries
+import "../util/AddressLib.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
+// Commons
+import "../util/ZeroCollateralCommon.sol";
+
+// Interfaces
+import "../interfaces/DAIPoolInterface.sol";
+import "../interfaces/LenderInfoInterface.sol";
+import "../interfaces/ZDAIInterface.sol";
+
+contract LenderInfo is LenderInfoInterface {
+    using AddressLib for address;
+    using SafeMath for uint256;
+
+    /* State Variables */
+
+    // total accrued interest
+    uint256 public totalAccruedInterest;
+
+    // last block number of accrued interest
+    uint256 public blockAccruedInterest;
+
+    DAIPoolInterface public daiPool;
+
+    ZDAIInterface public zdai;
+
+    // array of all lending accounts
+    mapping (address => ZeroCollateralCommon.LendAccount) public lenderAccounts;
+
+    /** Modifiers */
+
+    modifier isZDai(address anAddress) {
+        require(areAddressesEqual(address(zdai), anAddress), "Address has no permissions.");
+        _;
+    }
+
+    modifier isDaiPool(address anAddress) {
+        require(areAddressesEqual(address(daiPool), anAddress), "Address has no permissions.");
+        _;
+    }
+
+    /* Constructor */
+
+    constructor(
+        address zdaiAddress,
+        address daiPoolAddress
+    )
+    public
+    {
+        require(zdaiAddress != address(0x0), "ZDai address is required.");
+        require(daiPoolAddress != address(0x0), "Dai pool address is required.");
+        zdai = ZDAIInterface(zdaiAddress);
+        daiPool = DAIPoolInterface(daiPoolAddress);
+        blockAccruedInterest = block.number;
+    }
+
+    /** External Functions */
+
+    function zDaiTransfer(address sender, address recipient, uint256)
+        external
+        isZDai(msg.sender)
+        // TODO Check sender/recipient is not 0x0.
+        returns (bool)
+    {
+        // Updating accrued interest for zDAI sender.
+        updateAccruedInterestFor(sender);
+        
+        // Updating accrued interest for zDAI recipient.
+        updateAccruedInterestFor(recipient);
+
+        return true;
+    }
+
+    function zDaiMinted(address recipient, uint256)
+        external
+        isDaiPool(msg.sender)
+        // TODO Check recipient is not 0x0.
+        returns (bool)
+    {
+        // Updating accrued interest for zDAI recipient.
+        updateAccruedInterestFor(recipient);
+
+        return true;
+    }
+
+    function zDaiBurnt(address recipient, uint256)
+        external
+        isDaiPool(msg.sender)
+        // TODO Check recipient is not 0x0.
+        returns (bool)
+    {
+        // Updating accrued interest for zDAI recipient.
+        updateAccruedInterestFor(recipient);
+
+        return true;
+    }
+
+    function withdrawInterest(address recipient, uint256 amount)
+        external
+        isDaiPool(msg.sender)
+        // TODO Check recipient is not 0x0.
+        returns (uint256)
+    {
+
+        return 0;
+    }
+
+    function getCurrentBlockNumber()
+        external
+        view
+        returns (uint256 blockNumber)
+    {
+        return block.number;
+    }
+
+    /** Internal Functions */
+
+    /**
+        Updates the accrued interest for a specific lender.
+    
+        @param lender address.
+        @return the updated accrued intereset for the lender address.
+     */
+    function updateAccruedInterestFor(address lender)
+        internal
+        returns (uint256)
+    {
+        // Get last block accrued
+        uint256 previousBlockAccruedInterest = lenderAccounts[lender].lastBlockAccrued;
+        uint256 currentBlockNumber = this.getCurrentBlockNumber();
+
+        // Update last block accrued.
+        lenderAccounts[lender].lastBlockAccrued = currentBlockNumber;
+
+        // Update total accrued interest.
+        lenderAccounts[lender].totalAccruedInterest = calculateNewAccruedInterestFor(
+                                                            lenderAccounts[lender].totalAccruedInterest,
+                                                            previousBlockAccruedInterest,
+                                                            currentBlockNumber,
+                                                            getZDaiBalanceOf(lender)
+                                                        );
+
+        emit AccruedInterestUpdated(
+            lender,
+            lenderAccounts[lender].lastBlockAccrued,
+            lenderAccounts[lender].totalAccruedInterest
+        );
+
+        return lenderAccounts[lender].totalAccruedInterest;
+    }
+
+    function calculateNewAccruedInterestFor(
+        uint256 currentAccruedInterest,
+        uint256 previousBlockAccruedInterest,
+        uint256 currentBlockNumber,
+        uint256 currentZDaiBalance
+    )
+        internal
+        pure
+        returns (uint256 newAccruedInterest)
+    {
+        uint256 blocksDifference = currentBlockNumber.sub(previousBlockAccruedInterest);
+        return currentAccruedInterest.add(blocksDifference.mul(currentZDaiBalance));
+    }
+
+    function areAddressesEqual(address leftAddress, address rightAddress)
+        internal
+        view
+        returns (bool)
+    {
+        return leftAddress.isEqualTo(rightAddress);
+    }
+
+    /** Private Functions */
+
+    function getZDaiBalanceOf(address anAddress) private view returns (uint256 balance) {
+        return zdai.balanceOf(anAddress);
+    }
+}

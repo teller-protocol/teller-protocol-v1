@@ -10,4 +10,5 @@ interface LenderInfoInterface {
 
     function withdrawInterest(address recipient, uint256 amount) external returns (uint256);
 
+    event AccruedInterestUpdated(address lender, uint256 lastBlockAccrued, uint256 totalAccruedInterest);
 }
