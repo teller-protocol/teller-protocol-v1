@@ -1,4 +1,7 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
+
+import '../util/ZeroCollateralCommon.sol';
 
 interface LoansInterface {
 
@@ -6,18 +9,31 @@ interface LoansInterface {
     event CollateralDeposited(uint256 indexed loanID, address indexed borrower, uint256 depositAmount);
 
     // collateral withdrawn by borrower
-    event ColalteralWithdrawn(uint256 indexed loanID, address indexed borrower, uint256 depositAmount);
+    event CollateralWithdrawn(uint256 indexed loanID, address indexed borrower, uint256 depositAmount);
 
-    function depositCollateral(uint256 loanId) external returns (uint256);
+    function borrowerLoans(address borrower) external returns (uint256[] memory);
 
-    function withdrawCollateral(uint256 amount, uint256 loanId) external;
+    function loans(uint256 loanID) external returns (ZeroCollateralCommon.Loan memory);
 
-    function takeOutLoan(uint256 amountBorrow, uint256 numberDays) external returns (uint256 loadId);
+    function signerNonceTaken(address signer, uint256 nonce) external returns (bool);
 
-    // function withdrawDai(uint256 amount, uint256 loanId) external;
+    function depositCollateral(address borrower, uint256 loanID) external payable;
 
-    function repayDai(uint256 amount, uint256 loanId) external;
+    function withdrawCollateral(uint256 amount, uint256 loanID) external;
 
-    function liquidateLoan(uint256 loanId) external;
+    function takeOutLoan(
+        uint8 interestRate,
+        uint8 collateralRatio,
+        uint256 maxLoanAmount,
+        uint256 numberDays,
+        uint256 amountBorrow,
+        ZeroCollateralCommon.Signature calldata signature
+    ) external payable returns (uint256 loadId);
+
+    // function withdrawDai(uint256 amount, uint256 loanID) external;
+
+    function repayDai(uint256 amount, uint256 loanID) external;
+
+    function liquidateLoan(uint256 loanID) external;
 
 }

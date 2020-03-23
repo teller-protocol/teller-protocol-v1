@@ -19,14 +19,14 @@ contract Loans is LoansInterface, SignerRole {
     // At any time, this variable stores the next available loan ID
     uint256 public loanIDCounter;
 
-    PairAggregatorInterface priceOracle;
-    DAIPoolInterface daiPool;
+    PairAggregatorInterface public priceOracle;
+    DAIPoolInterface public daiPool;
 
-    mapping(address => uint256[]) borrowerLoans;
+    mapping(address => uint256[]) public borrowerLoans;
 
-    mapping(uint256 => ZeroCollateralCommon.Loan) loans;
+    mapping(uint256 => ZeroCollateralCommon.Loan) public loans;
 
-    mapping(address => mapping(uint256 => bool)) signerNonceTaken;
+    mapping(address => mapping(uint256 => bool)) public signerNonceTaken;
 
     modifier loanIDValid(uint256 loanID) {
       require(loanID < loanIDCounter, "LOAN_ID_INVALID");
@@ -83,7 +83,7 @@ contract Loans is LoansInterface, SignerRole {
           msg.sender.transfer(withdrawalAmount);
         }
 
-        emit CollateralDeposited(loanID, msg.sender, withdrawalAmount);
+        emit CollateralWithdrawn(loanID, msg.sender, withdrawalAmount);
     }
 
     function takeOutLoan(
