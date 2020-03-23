@@ -43,4 +43,29 @@ module.exports = {
             };
         },
     },
+    lenderInfo: {
+        accruedInterestUpdated: tx => {
+            const name = 'AccruedInterestUpdated';
+            return {
+                name: name,
+                emitted: (lender, lastBlockAccrued, totalAccruedInterest) => emitted(tx, name, ev => {
+                    assert.equal(ev.lender, lender);
+                    assert.equal(ev.lastBlockAccrued.toString(), lastBlockAccrued.toString());
+                    assert.equal(ev.totalAccruedInterest.toString(), totalAccruedInterest.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        accruedInterestWithdrawn: tx => {
+            const name = 'AccruedInterestWithdrawn';
+            return {
+                name: name,
+                emitted: (recipient, amount) => emitted(tx, name, ev => {
+                    assert.equal(ev.recipient, recipient);
+                    assert.equal(ev.amount.toString(), amount.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
 }

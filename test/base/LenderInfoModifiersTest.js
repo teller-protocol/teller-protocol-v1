@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t } = require('../utils/consts');
+const { t, NULL_ADDRESS } = require('../utils/consts');
 
 // Mock contracts
 
@@ -63,6 +63,36 @@ contract('LenderInfoZDaiMintedTest', function (accounts) {
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because the sender has no permissions.');
+                assert(result);
+            } catch (error) {
+                // Assertions
+                assert(mustFail);
+                assert(error);
+                assert.equal(error.reason, expectedErrorMessage);
+            }
+        });
+    });
+
+    withData({
+        _1_validAddress: [accounts[0], accounts[1], accounts[1], undefined, false],
+        _2_invalidAddress: [accounts[0], accounts[1], NULL_ADDRESS, 'Address is required.', true],
+    }, function(
+        zdaiAddress,
+        daiPoolAddress,
+        sender,
+        expectedErrorMessage,
+        mustFail
+    ) {    
+        it(t('user', 'isValid', 'Should able (or not) to call function with modifier isValid.', mustFail), async function() {
+            // Setup
+            const instance = await LenderInfo.new(zdaiAddress, daiPoolAddress);
+
+            try {
+                // Invocation
+                const result = await instance._isValid(sender);
+
+                // Assertions
+                assert(!mustFail, 'It should have failed because the address is invalid/empty.');
                 assert(result);
             } catch (error) {
                 // Assertions

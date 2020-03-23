@@ -33,9 +33,6 @@ contract LenderInfo is LenderInfoInterface {
 
     /* State Variables */
 
-    // total accrued interest
-    uint256 public totalAccruedInterest;
-
     // last block number of accrued interest
     uint256 public blockAccruedInterest;
 
@@ -55,6 +52,11 @@ contract LenderInfo is LenderInfoInterface {
 
     modifier isDaiPool(address anAddress) {
         require(areAddressesEqual(address(daiPool), anAddress), "Address has no permissions.");
+        _;
+    }
+
+    modifier isValid(address anAddress) {
+        anAddress.requireNotEmpty("Address is required.");
         _;
     }
 
@@ -78,7 +80,8 @@ contract LenderInfo is LenderInfoInterface {
     function zDaiTransfer(address sender, address recipient, uint256)
         external
         isZDai(msg.sender)
-        // TODO Check sender/recipient is not 0x0.
+        isValid(sender)
+        isValid(recipient)
         returns (bool)
     {
         // Updating accrued interest for zDAI sender.
@@ -93,7 +96,7 @@ contract LenderInfo is LenderInfoInterface {
     function zDaiMinted(address recipient, uint256)
         external
         isDaiPool(msg.sender)
-        // TODO Check recipient is not 0x0.
+        isValid(recipient)
         returns (bool)
     {
         // Updating accrued interest for zDAI recipient.
@@ -105,7 +108,7 @@ contract LenderInfo is LenderInfoInterface {
     function zDaiBurnt(address recipient, uint256)
         external
         isDaiPool(msg.sender)
-        // TODO Check recipient is not 0x0.
+        isValid(recipient)
         returns (bool)
     {
         // Updating accrued interest for zDAI recipient.
@@ -117,11 +120,26 @@ contract LenderInfo is LenderInfoInterface {
     function withdrawInterest(address recipient, uint256 amount)
         external
         isDaiPool(msg.sender)
-        // TODO Check recipient is not 0x0.
+        isValid(recipient)
         returns (uint256)
     {
+        // Updating accrued interest for zDAI recipient.
+        updateAccruedInterestFor(recipient);
 
-        return 0;
+        uint256 amountToWithdraw = amount;
+        uint256 accruedInterest = lenderAccounts[recipient].totalAccruedInterest;
+        
+        if (accruedInterest >= amountToWithdraw) {
+            lenderAccounts[recipient].totalAccruedInterest = accruedInterest.sub(amountToWithdraw);
+        } else {
+            amountToWithdraw = lenderAccounts[recipient].totalAccruedInterest;
+            lenderAccounts[recipient].totalAccruedInterest = 0;
+        }
+        lenderAccounts[recipient].lastBlockAccrued = this.getCurrentBlockNumber();
+
+        emit AccruedInterestWithdrawn(recipient, amountToWithdraw);
+
+        return amountToWithdraw;
     }
 
     function getCurrentBlockNumber()

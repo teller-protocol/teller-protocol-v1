@@ -10,7 +10,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 // Smart contracts
 const LenderInfo = artifacts.require("./mock/base/LenderInfoMock.sol");
 
-contract('LenderInfoUpdateAccruedInterestForTest', function (accounts) {
+contract('LenderInfoWithdrawInterestTest', function (accounts) {
     let instance;
     let zdaiInstance;
     let daiPoolInstance;
@@ -34,19 +34,20 @@ contract('LenderInfoUpdateAccruedInterestForTest', function (accounts) {
     });
 
     withData({
-        _1_0Interest_2blocks_5balance: [accounts[0], 0, 98, 100, 5, 10],
-        _2_14Interest_0blocks_10balance: [accounts[1], 14, 100, 100, 10, 14],
-        _3_0Interest_0blocks_2000balance: [accounts[2], 0, 100, 100, 2000, 0],
-        _4_78Interest_200blocks_250balance: [accounts[3], 78, 120, 320, 250, 50078],
+        _1_10withdraw_0Interest_1blocks_20balance_10withdrawn: [accounts[0], 10, 0, 0, 1, 20, 10, 10],
+        _2_50withdraw_20Interest_2blocks_15balance_Allwithdrawn: [accounts[1], 50, 10, 1, 3, 15, 40, 0],
+        _3_180withdraw_100Interest_5blocks_20balance_Allwithdrawn: [accounts[2], 180, 100, 5, 10, 20, 180, 20],
     }, function(
         lenderAddress,
+        amountToWithdraw,
         currentAccruedInterest,
         previousBlockAccruedInterest,
         currentBlockNumber,
         currentZDaiBalance,
+        amountWithdrawnExpected,
         newAccruedInterestExpected,
     ) {    
-        it(t('user', 'updateAccruedInterestFor', 'Should able to update the accrued interest.', false), async function() {
+        it(t('user', 'withdrawInterest', 'Should able to withdraw interest.', false), async function() {
             // Setup
             await instance.setCurrentBlockNumber(currentBlockNumber.toString());
             await instance.mockLenderInfo(
@@ -60,13 +61,14 @@ contract('LenderInfoUpdateAccruedInterestForTest', function (accounts) {
             );
 
             // Invocation
-            const result = await instance._updateAccruedInterestFor(lenderAddress);
+            const result = await instance.withdrawInterest(lenderAddress, amountToWithdraw);
 
             // Assertions
             assert(result);
             lenderInfo
-                .accruedInterestUpdated(result)
-                .emitted(lenderAddress, currentBlockNumber, newAccruedInterestExpected);
+                .accruedInterestWithdrawn(result)
+                .emitted(lenderAddress, amountWithdrawnExpected);
+
             const lenderAccountResult = await instance.lenderAccounts(lenderAddress);
             assert.equal(lenderAccountResult.lastBlockAccrued.toString(), currentBlockNumber.toString());
             assert.equal(lenderAccountResult.totalAccruedInterest.toString(), newAccruedInterestExpected.toString());

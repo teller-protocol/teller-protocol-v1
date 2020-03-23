@@ -37,4 +37,6 @@ contract LenderInfoModifiersMock is LenderInfo {
 
     function _isDaiPool() isDaiPool(msg.sender) external {}
 
+    function _isValid(address anAddress) isValid(anAddress) external {}
+
 }
