@@ -1,5 +1,6 @@
 pragma solidity 0.5.17;
 
+
 /**
  * Utility library of inline functions on addresses
  */
@@ -10,15 +11,11 @@ library AddressLib {
         return self == ADDRESS_EMPTY;
     }
 
-    function  isEqualTo(address self, address other) internal pure returns (bool) {
+    function isEqualTo(address self, address other) internal pure returns (bool) {
         return self == other;
     }
 
-    function isNotEqualTo(address self, address other)
-        internal
-        pure
-        returns (bool)
-    {
+    function isNotEqualTo(address self, address other) internal pure returns (bool) {
         return self != other;
     }
 
@@ -26,17 +23,11 @@ library AddressLib {
         return self != ADDRESS_EMPTY;
     }
 
-    function requireNotEmpty(address self, string memory message)
-        internal
-        pure
-    {
+    function requireNotEmpty(address self, string memory message) internal pure {
         require(isNotEmpty(self), message);
     }
 
-    function requireEmpty(address self, string memory message)
-        internal
-        pure
-    {
+    function requireEmpty(address self, string memory message) internal pure {
         require(isEmpty(self), message);
     }
 
@@ -47,11 +38,10 @@ library AddressLib {
         require(isEqualTo(self, other), message);
     }
 
-    function requireNotEqualTo(
-        address self,
-        address other,
-        string memory message
-    ) internal pure {
+    function requireNotEqualTo(address self, address other, string memory message)
+        internal
+        pure
+    {
         require(isNotEqualTo(self, other), message);
     }
 }

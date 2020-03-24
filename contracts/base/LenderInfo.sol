@@ -27,6 +27,7 @@ import "../interfaces/DAIPoolInterface.sol";
 import "../interfaces/LenderInfoInterface.sol";
 import "../interfaces/ZDAIInterface.sol";
 
+
 contract LenderInfo is LenderInfoInterface {
     using AddressLib for address;
     using SafeMath for uint256;
@@ -41,17 +42,23 @@ contract LenderInfo is LenderInfoInterface {
     ZDAIInterface public zdai;
 
     // array of all lending accounts
-    mapping (address => ZeroCollateralCommon.LendAccount) public lenderAccounts;
+    mapping(address => ZeroCollateralCommon.LendAccount) public lenderAccounts;
 
     /** Modifiers */
 
     modifier isZDai(address anAddress) {
-        require(areAddressesEqual(address(zdai), anAddress), "Address has no permissions.");
+        require(
+            areAddressesEqual(address(zdai), anAddress),
+            "Address has no permissions."
+        );
         _;
     }
 
     modifier isDaiPool(address anAddress) {
-        require(areAddressesEqual(address(daiPool), anAddress), "Address has no permissions.");
+        require(
+            areAddressesEqual(address(daiPool), anAddress),
+            "Address has no permissions."
+        );
         _;
     }
 
@@ -62,12 +69,7 @@ contract LenderInfo is LenderInfoInterface {
 
     /* Constructor */
 
-    constructor(
-        address zdaiAddress,
-        address daiPoolAddress
-    )
-    public
-    {
+    constructor(address zdaiAddress, address daiPoolAddress) public {
         require(zdaiAddress != address(0x0), "ZDai address is required.");
         require(daiPoolAddress != address(0x0), "Dai pool address is required.");
         zdai = ZDAIInterface(zdaiAddress);
@@ -84,7 +86,7 @@ contract LenderInfo is LenderInfoInterface {
     {
         // Updating accrued interest for zDAI sender.
         updateAccruedInterestFor(sender);
-        
+
         // Updating accrued interest for zDAI recipient.
         updateAccruedInterestFor(recipient);
 
@@ -124,9 +126,11 @@ contract LenderInfo is LenderInfoInterface {
 
         uint256 amountToWithdraw = amount;
         uint256 accruedInterest = lenderAccounts[recipient].totalAccruedInterest;
-        
+
         if (accruedInterest >= amountToWithdraw) {
-            lenderAccounts[recipient].totalAccruedInterest = accruedInterest.sub(amountToWithdraw);
+            lenderAccounts[recipient].totalAccruedInterest = accruedInterest.sub(
+                amountToWithdraw
+            );
         } else {
             amountToWithdraw = lenderAccounts[recipient].totalAccruedInterest;
             lenderAccounts[recipient].totalAccruedInterest = 0;
@@ -138,11 +142,7 @@ contract LenderInfo is LenderInfoInterface {
         return amountToWithdraw;
     }
 
-    function getCurrentBlockNumber()
-        external
-        view
-        returns (uint256 blockNumber)
-    {
+    function getCurrentBlockNumber() external view returns (uint256 blockNumber) {
         return block.number;
     }
 
@@ -154,10 +154,7 @@ contract LenderInfo is LenderInfoInterface {
         @param lender address.
         @return the updated accrued intereset for the lender address.
      */
-    function updateAccruedInterestFor(address lender)
-        internal
-        returns (uint256)
-    {
+    function updateAccruedInterestFor(address lender) internal returns (uint256) {
         // Get last block accrued
         uint256 previousBlockAccruedInterest = lenderAccounts[lender].lastBlockAccrued;
         uint256 currentBlockNumber = this.getCurrentBlockNumber();
@@ -167,11 +164,11 @@ contract LenderInfo is LenderInfoInterface {
 
         // Update total accrued interest.
         lenderAccounts[lender].totalAccruedInterest = calculateNewAccruedInterestFor(
-                                                            lenderAccounts[lender].totalAccruedInterest,
-                                                            previousBlockAccruedInterest,
-                                                            currentBlockNumber,
-                                                            getZDaiBalanceOf(lender)
-                                                        );
+            lenderAccounts[lender].totalAccruedInterest,
+            previousBlockAccruedInterest,
+            currentBlockNumber,
+            getZDaiBalanceOf(lender)
+        );
 
         emit AccruedInterestUpdated(
             lender,
@@ -187,11 +184,7 @@ contract LenderInfo is LenderInfoInterface {
         uint256 previousBlockAccruedInterest,
         uint256 currentBlockNumber,
         uint256 currentZDaiBalance
-    )
-        internal
-        pure
-        returns (uint256 newAccruedInterest)
-    {
+    ) internal pure returns (uint256 newAccruedInterest) {
         uint256 blocksDifference = currentBlockNumber.sub(previousBlockAccruedInterest);
         return currentAccruedInterest.add(blocksDifference.mul(currentZDaiBalance));
     }

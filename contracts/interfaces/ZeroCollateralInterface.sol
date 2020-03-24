@@ -19,6 +19,7 @@ pragma experimental ABIEncoderV2;
 
 import "../util/ZeroCollateralCommon.sol";
 
+
 /**
  * @title ZeroCollateralMain
  * @author Fabrx Labs Inc.
@@ -29,7 +30,6 @@ import "../util/ZeroCollateralCommon.sol";
  */
 
 contract ZeroCollateralInterface {
-
     // event on redemption of interest
     event Redeemed(address indexed lenderAccount, uint256 amount);
 
@@ -52,10 +52,7 @@ contract ZeroCollateralInterface {
         uint8 collateralNeeded
     ) external;
 
-    function hasActiveBorrow(address borrower)
-        external
-        view
-        returns(bool);
+    function hasActiveBorrow(address borrower) external view returns (bool);
 
     // borrower deposit collateral
     // change to ETH - deposit ETH and keep track of how much ETH they have
@@ -78,10 +75,10 @@ contract ZeroCollateralInterface {
 
     // calculates whether they have enough collateral to withdraw amount of DAI
     // function createBorrow(uint256 amountBorrow, uint256 numberDays) external returns (bool);
-    
+
     function getTotalCollateral(address borrower) external view returns (uint256);
 
     // paying back an amount of DAI - doesn't have to be all of it
     // updates the borrow itself
-    function repayBorrow(uint256 amountRepay) external returns(uint256);
+    function repayBorrow(uint256 amountRepay) external returns (uint256);
 }
