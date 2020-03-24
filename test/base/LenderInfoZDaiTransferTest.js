@@ -1,6 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t } = require('../utils/consts');
+const { t, sum, createInfo } = require('../utils/consts');
+const { mockLenderInfo } = require('../utils/contracts');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -32,25 +33,9 @@ contract('LenderInfoZDaiTransferTest', function (accounts) {
         assert(instance.address);
     });
 
-    const createInfo = (addressIndex, plusLastAccruedBlockNumber, lastAccruedInterest, expectedAccruedInterest) => ({
-            address: accounts[addressIndex],
-            plusLastAccruedBlockNumber,
-            lastAccruedInterest,
-            expectedAccruedInterest,
-    });
-    const sum = (a, b) => parseInt(a.toString()) + parseInt(b.toString());
-    // TODO Extract common functions
-    const mockLenderInfo = async (lenderData, currentBlockNumber) => {
-        await instance.mockLenderInfo(
-            lenderData.address,
-            sum(currentBlockNumber, lenderData.plusLastAccruedBlockNumber),
-            lenderData.lastAccruedInterest
-        );
-    };
-
     withData({
-        _1_onlyRecipient: [1, createInfo(0, 0, 0, 0), createInfo(1, 0, 0, 1), 1, 1],
-        _2_both: [10, createInfo(0, 0, 0, 10), createInfo(1, 1, 0, 5), 5, 2],
+        _1_onlyRecipient: [1, createInfo(accounts[0], 0, 0, 0), createInfo(accounts[1], 0, 0, 1), 1, 1],
+        _2_both: [10, createInfo(accounts[0], 0, 0, 10), createInfo(accounts[1], 1, 0, 5), 5, 2],
     }, function(
         senderInitialAmount,
         sender,
@@ -66,8 +51,8 @@ contract('LenderInfoZDaiTransferTest', function (accounts) {
 
             // Mocking lender info (accrued interest and lastaccrued block number) and current block number.
             const currentBlockNumber = await web3.eth.getBlockNumber();
-            await mockLenderInfo(recipient, currentBlockNumber);
-            await mockLenderInfo(sender, currentBlockNumber);
+            await mockLenderInfo(instance, recipient, currentBlockNumber);
+            await mockLenderInfo(instance, sender, currentBlockNumber);
             await instance.setCurrentBlockNumber(sum(currentBlockNumber, plusBlockNumbers));
 
             // Invocation

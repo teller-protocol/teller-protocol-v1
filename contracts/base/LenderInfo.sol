@@ -142,7 +142,7 @@ contract LenderInfo is LenderInfoInterface {
         return amountToWithdraw;
     }
 
-    function getCurrentBlockNumber() external view returns (uint256 blockNumber) {
+    function getCurrentBlockNumber() external view returns (uint256) {
         return block.number;
     }
 
@@ -184,7 +184,7 @@ contract LenderInfo is LenderInfoInterface {
         uint256 previousBlockAccruedInterest,
         uint256 currentBlockNumber,
         uint256 currentZDaiBalance
-    ) internal pure returns (uint256 newAccruedInterest) {
+    ) internal pure returns (uint256) {
         uint256 blocksDifference = currentBlockNumber.sub(previousBlockAccruedInterest);
         return currentAccruedInterest.add(blocksDifference.mul(currentZDaiBalance));
     }
@@ -199,7 +199,7 @@ contract LenderInfo is LenderInfoInterface {
 
     /** Private Functions */
 
-    function getZDaiBalanceOf(address anAddress) private view returns (uint256 balance) {
+    function getZDaiBalanceOf(address anAddress) private view returns (uint256) {
         return zdai.balanceOf(anAddress);
     }
 }

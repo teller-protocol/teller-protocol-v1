@@ -20,5 +20,12 @@ module.exports = {
     },
     daysToMillis: (days) => {
         return days * 24 * 60 * 60 * 1000;
-    }
+    },
+    sum: (a, b) => parseInt(a.toString()) + parseInt(b.toString()),
+    createInfo: (address, plusLastAccruedBlockNumber, lastAccruedInterest, expectedAccruedInterest) => ({
+        address,
+        plusLastAccruedBlockNumber,
+        lastAccruedInterest,
+        expectedAccruedInterest,
+    }),
 }

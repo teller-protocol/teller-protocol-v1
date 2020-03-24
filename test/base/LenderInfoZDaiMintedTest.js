@@ -1,6 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t } = require('../utils/consts');
+const { t, sum, createInfo } = require('../utils/consts');
+const { mockLenderInfo } = require('../utils/contracts');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -32,26 +33,10 @@ contract('LenderInfoZDaiMintedTest', function (accounts) {
         assert(instance.address);
     });
 
-    const createInfo = (addressIndex, plusLastAccruedBlockNumber, lastAccruedInterest, expectedAccruedInterest) => ({
-            address: accounts[addressIndex],
-            plusLastAccruedBlockNumber,
-            lastAccruedInterest,
-            expectedAccruedInterest,
-    });
-    const sum = (a, b) => parseInt(a.toString()) + parseInt(b.toString());
-
-    const mockLenderInfo = async (lenderData, currentBlockNumber) => {
-        await instance.mockLenderInfo(
-            lenderData.address,
-            sum(currentBlockNumber, lenderData.plusLastAccruedBlockNumber),
-            lenderData.lastAccruedInterest
-        );
-    };
-
     withData({
-        _1_0currentIntereset_1block_1minted: [createInfo(1, 0, 0, 1), 1, 1],
-        _2_100currentInterest_1block_150minted: [createInfo(2, 2, 100, 400), 150, 4],
-        _3_10currentInterest_0Blocks_50minted: [createInfo(3, 4, 10, 10), 50, 4],
+        _1_0currentIntereset_1block_1minted: [createInfo(accounts[1], 0, 0, 1), 1, 1],
+        _2_100currentInterest_1block_150minted: [createInfo(accounts[2], 2, 100, 400), 150, 4],
+        _3_10currentInterest_0Blocks_50minted: [createInfo(accounts[3], 4, 10, 10), 50, 4],
     }, function(
         recipient,
         amount,
@@ -62,7 +47,7 @@ contract('LenderInfoZDaiMintedTest', function (accounts) {
             await zdaiInstance.mint(recipient.address, amount, { from: tokensOwner });
             // Mocking recipient info (accrued interest and lastaccrued block number) and current block number.
             const currentBlockNumber = await web3.eth.getBlockNumber();
-            await mockLenderInfo(recipient, currentBlockNumber);
+            await mockLenderInfo(instance, recipient, currentBlockNumber);
             await instance.setCurrentBlockNumber(sum(currentBlockNumber, plusBlockNumbers));
 
             // Invocation
