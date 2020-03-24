@@ -80,8 +80,6 @@ contract LenderInfo is LenderInfoInterface {
     function zDaiTransfer(address sender, address recipient, uint256)
         external
         isZDai(msg.sender)
-        isValid(sender)
-        isValid(recipient)
         returns (bool)
     {
         // Updating accrued interest for zDAI sender.
@@ -96,7 +94,6 @@ contract LenderInfo is LenderInfoInterface {
     function zDaiMinted(address recipient, uint256)
         external
         isDaiPool(msg.sender)
-        isValid(recipient)
         returns (bool)
     {
         // Updating accrued interest for zDAI recipient.
@@ -108,7 +105,6 @@ contract LenderInfo is LenderInfoInterface {
     function zDaiBurnt(address recipient, uint256)
         external
         isDaiPool(msg.sender)
-        isValid(recipient)
         returns (bool)
     {
         // Updating accrued interest for zDAI recipient.
@@ -123,7 +119,7 @@ contract LenderInfo is LenderInfoInterface {
         isValid(recipient)
         returns (uint256)
     {
-        // Updating accrued interest for zDAI recipient.
+        // Updating accrued interest for DAI recipient.
         updateAccruedInterestFor(recipient);
 
         uint256 amountToWithdraw = amount;

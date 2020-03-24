@@ -10,7 +10,9 @@
     "lint-js": "yarn eslint \"./test/**/*.js\"",
     "test": "truffle test",
     "test:coverage": "truffle compile && truffle run coverage",
-    "deploy:ropsten": "truffle compile && truffle deploy --network ropsten"
+    "deploy:ropsten": "truffle compile && truffle deploy --network ropsten",
+    "lint:prettier": "prettier --write **/**/**/*.sol",
+    "lint:prettier:print": "prettier **/**/**/*.sol"
   },
   "devDependencies": {
     "@gnosis.pm/mock-contract": "^3.0.7",
@@ -21,6 +23,8 @@
     "leche": "^2.3.0",
     "lodash": "^4.17.15",
     "mocha": "^7.1.0",
+    "prettier": "^2.0.2",
+    "prettier-plugin-solidity": "^1.0.0-alpha.46",
     "solhint": "^2.1.0",
     "solidity-coverage": "^0.7.2",
     "truffle": "^5.1.16",
