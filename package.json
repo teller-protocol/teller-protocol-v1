@@ -6,13 +6,13 @@
   "scripts": {
     "compile": "truffle compile",
     "ganache": "ganache-cli -p 8545 --gasLimit 0x90F560",
-    "lint-sol": "yarn solhint \"./contracts/**/*.sol\"",
-    "lint-js": "yarn eslint \"./test/**/*.js\"",
+    "lint-sol": "yarn solhint -f table \"./contracts/**/*.sol\"",
+    "lint-js": "yarn eslint -f table \"./test/**/*.js\"",
     "test": "truffle test",
     "test:coverage": "truffle compile && truffle run coverage",
     "deploy:ropsten": "truffle compile && truffle deploy --network ropsten",
-    "lint:prettier": "prettier --write **/**/**/*.sol",
-    "lint:prettier:print": "prettier **/**/**/*.sol"
+    "format:prettier": "prettier --write contracts/**/*.sol",
+    "format:prettier:print": "prettier contracts/**/*.sol"
   },
   "devDependencies": {
     "@gnosis.pm/mock-contract": "^3.0.7",
@@ -20,12 +20,14 @@
     "eslint": "^5.16.0",
     "eth-gas-reporter": "^0.2.15",
     "ganache-cli": "^6.4.4",
+    "husky": "^4.2.3",
     "leche": "^2.3.0",
     "lodash": "^4.17.15",
     "mocha": "^7.1.0",
     "prettier": "^2.0.2",
     "prettier-plugin-solidity": "^1.0.0-alpha.46",
     "solhint": "^2.1.0",
+    "solhint-plugin-prettier": "^0.0.4",
     "solidity-coverage": "^0.7.2",
     "truffle": "^5.1.16",
     "truffle-assertions": "^0.9.2"
@@ -38,5 +40,10 @@
     "web3": "1.0.0-beta.55",
     "web3-provider-engine": "15.0.0",
     "web3-utils": "1.0.0-beta.55"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn test && yarn format:prettier"
+    }
   }
 }
