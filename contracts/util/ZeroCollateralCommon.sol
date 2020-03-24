@@ -16,16 +16,16 @@ library ZeroCollateralCommon {
     // Data per borrow as struct
     struct Loan {
         uint256 id;
-        address borrower;
-        bool active;
-        bool liquidated;
         uint256 collateral;
-        uint8 interestRate;
-        uint8 collateralRatio;
         uint256 maxLoanAmount;
         uint256 totalOwed;
-        uint256 blockStart;
-        uint256 blockEnd;
+        uint256 timeStart;
+        uint256 timeEnd;
+        address payable borrower;
+        bool active;
+        bool liquidated;
+        uint8 interestRate;
+        uint8 collateralRatio;
     }
 
     struct Signature {
