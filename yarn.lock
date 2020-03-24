@@ -2993,6 +2993,11 @@ ganache-cli@^6.4.4:
     source-map-support "0.5.12"
     yargs "13.2.4"
 
+ganache-time-traveler@^1.0.5:
+  version "1.0.14"
+  resolved "https://registry.yarnpkg.com/ganache-time-traveler/-/ganache-time-traveler-1.0.14.tgz#930716b86ca6306fc62b0b6a9de59f479d9aaed7"
+  integrity sha512-HjoasTIgjgjWRyKfw7AlmJuVZX/SZNR3KEqIKcGuX4jgGb7ofyjcD2RnnGb1LQcVrCi95s4Pe7019ZPt+SQEJA==
+
 get-caller-file@^2.0.1:
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/get-caller-file/-/get-caller-file-2.0.5.tgz#4f94412a82db32f36e3b0b9741f8a97feb031f7e"

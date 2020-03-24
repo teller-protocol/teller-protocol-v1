@@ -18,6 +18,7 @@
     "eslint": "^5.16.0",
     "eth-gas-reporter": "^0.2.15",
     "ganache-cli": "^6.4.4",
+    "ganache-time-traveler": "^1.0.5",
     "leche": "^2.3.0",
     "lodash": "^4.17.15",
     "mocha": "^7.1.0",

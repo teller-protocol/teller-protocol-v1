@@ -102,8 +102,12 @@ contract Loans is LoansInterface, SignerRole {
 
         require(amountBorrow <= maxLoanAmount, "BORROW_AMOUNT_NOT_AUTHORIZED");
 
-        bytes32 hashedLoan = hashLoan(interestRate, collateralRatio, msg.sender, maxLoanAmount, numberDays, signature.signerNonce);
-        address signer = ecrecover(hashedLoan, signature.v, signature.r, signature.s);
+        address signer = ecrecover(
+            hashLoan(interestRate, collateralRatio, msg.sender, maxLoanAmount, numberDays, signature.signerNonce),
+            signature.v,
+            signature.r,
+            signature.s
+        );
 
         // check that the signer and signature are valid and that the signature not double spent
         require(isSigner(signer), "SIGNER_NOT_AUTHORIZED");
@@ -115,24 +119,12 @@ contract Loans is LoansInterface, SignerRole {
         require(priceOracle.getLatestTimestamp() >= now.sub(ONE_HOUR), "ORACLE_PRICE_OLD");
 
         uint256 ethPrice = uint256(priceOracle.getLatestAnswer());
-        uint256 minCollateralDAI = amountBorrow.mul(collateralRatio).div(100);
+        // uint256 minCollateralDAI = amountBorrow.mul(collateralRatio).div(100);
         // TODO - CHECK DECIMALS ON ETH PRICE
-        require(msg.value.mul(ethPrice) >= minCollateralDAI, "MORE_COLLATERAL_REQUIRED");
+        require(msg.value.mul(ethPrice) >= amountBorrow.mul(collateralRatio).div(100), "MORE_COLLATERAL_REQUIRED");
 
         // Create the loan
-        loans[loanIDCounter] = ZeroCollateralCommon.Loan ({
-            id: loanIDCounter,
-            borrower: msg.sender,
-            active: true,
-            liquidated: false,
-            collateral: msg.value,
-            interestRate: interestRate,
-            collateralRatio: collateralRatio,
-            maxLoanAmount: maxLoanAmount,
-            totalOwed: amountBorrow.add(amountBorrow.mul(interestRate).mul(numberDays).div(100).div(365)),
-            timeStart: now,
-            timeEnd: now.add(numberDays.mul(ONE_DAY))
-        });
+        createNewLoan(interestRate, collateralRatio, maxLoanAmount, numberDays, amountBorrow);
 
         // add loanID to the borrower's list of loans
         borrowerLoans[msg.sender].push(loanIDCounter);
@@ -225,6 +217,29 @@ contract Loans is LoansInterface, SignerRole {
     function payInCollateral(uint256 loanID, uint256 amount) internal {
         totalCollateral = totalCollateral.add(amount);
         loans[loanID].collateral = loans[loanID].collateral.add(amount);
+    }
+
+    // This function must be separated out to avoid a stack overflow
+    function createNewLoan(
+        uint8 interestRate,
+        uint8 collateralRatio,
+        uint256 maxLoanAmount,
+        uint256 numberDays,
+        uint256 amountBorrow
+    ) internal {
+      loans[loanIDCounter] = ZeroCollateralCommon.Loan ({
+            id: loanIDCounter,
+            borrower: msg.sender,
+            active: true,
+            liquidated: false,
+            collateral: msg.value,
+            interestRate: interestRate,
+            collateralRatio: collateralRatio,
+            maxLoanAmount: maxLoanAmount,
+            totalOwed: amountBorrow.add(amountBorrow.mul(interestRate).mul(numberDays).div(100).div(365)),
+            timeStart: now,
+            timeEnd: now.add(numberDays.mul(ONE_DAY))
+        });
     }
 
 }

@@ -1,7 +1,6 @@
 pragma solidity 0.5.17;
 
 library ZeroCollateralCommon {
-    
     // Interest accrued from lending account
     struct LendAccount {
         uint256 lastBlockAccrued;

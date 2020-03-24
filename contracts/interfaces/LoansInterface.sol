@@ -11,7 +11,7 @@ interface LoansInterface {
     // collateral withdrawn by borrower
     event CollateralWithdrawn(uint256 indexed loanID, address indexed borrower, uint256 depositAmount);
 
-    function borrowerLoans(address borrower) external returns (uint256[] memory);
+    // function borrowerLoans(address borrower) external returns (uint256[] memory);
 
     function loans(uint256 loanID) external returns (ZeroCollateralCommon.Loan memory);
 
