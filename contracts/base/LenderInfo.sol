@@ -194,6 +194,7 @@ contract LenderInfo is LenderInfoInterface {
         view
         returns (bool)
     {
+        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
         return leftAddress.isEqualTo(rightAddress);
     }
 
