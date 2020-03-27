@@ -35,6 +35,11 @@ module.exports = {
 		}
 	},
 	networks: {
+    // development: {
+    //   host: "localhost",
+    //   port: 8555,
+    //   network_id: "*" // match any network
+    // },
 		ganache: {
 			host: '127.0.0.1',
 			port: 8545,

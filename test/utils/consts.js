@@ -4,6 +4,7 @@ const DEFAULT_DECIMALS = 18;
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 const ZERO = new BigNumber(0);
 const NETWORK_PROVIDER = 'http://127.0.0.1:7545';
+const COVERAGE_NETWORK = 'http://127.0.0.1:8555';
 const ONE_HOUR = 3600
 const ONE_DAY = ONE_HOUR*24
 
@@ -12,6 +13,7 @@ module.exports = {
     NULL_ADDRESS,
     ZERO,
     NETWORK_PROVIDER,
+    COVERAGE_NETWORK,
     ONE_HOUR,
     ONE_DAY,
     t: function (who, func, desc, fail) {

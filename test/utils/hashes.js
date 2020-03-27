@@ -18,9 +18,18 @@ function hashLoan(loan) {
   )
 }
 
-async function signLoanHash(signer, loanHash, networkProvider) {
-  const eth = new web3Eth(networkProvider)
-  const signature = await eth.sign(ethUtil.bufferToHex(loanHash), signer)
+async function signLoanHash(signer, loanHash, networkProvider, backupProvider) {
+  let signature
+  let eth
+
+  try {
+    eth = new web3Eth(networkProvider)
+    signature = await eth.sign(ethUtil.bufferToHex(loanHash), signer)
+  } catch {
+    eth = new web3Eth(backupProvider)
+    signature = await eth.sign(ethUtil.bufferToHex(loanHash), signer)
+  }
+
   const { v, r, s } = ethUtil.fromRpcSig(signature)
   return {
     v: String(v),

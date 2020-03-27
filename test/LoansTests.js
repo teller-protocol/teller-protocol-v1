@@ -1,14 +1,20 @@
 const Loans = artifacts.require('Loans')
 const Mock = artifacts.require('Mock')
 const EtherUsdAggregator = artifacts.require('EtherUsdAggregator')
-const SimpleToken = artifacts.require('SimpleToken')
 const MockDAIPool = artifacts.require('MockDAIPool')
 
 const assert = require('assert')
 const time = require('ganache-time-traveler')
 const truffleAssert = require('truffle-assertions')
 
-const { NULL_ADDRESS, NETWORK_PROVIDER, ONE_HOUR, ONE_DAY, getLatestTimestamp } = require('./utils/consts');
+const {
+  NULL_ADDRESS,
+  NETWORK_PROVIDER,
+  COVERAGE_NETWORK,
+  ONE_HOUR,
+  ONE_DAY,
+  getLatestTimestamp
+} = require('./utils/consts');
 const { hashLoan, signLoanHash } = require('./utils/hashes');
 
 
@@ -107,7 +113,7 @@ contract('Loans Unit Tests', async accounts => {
     })
 
     it('should not allow a borrow amount larger than the max', async () => {
-      const signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER)
+      const signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER, COVERAGE_NETWORK)
 
       await truffleAssert.reverts(
         loans.takeOutLoan(
@@ -130,7 +136,7 @@ contract('Loans Unit Tests', async accounts => {
 
     it('should not allow a non-signer to sign a loan', async () => {
       // signed by an attacker
-      const signature = await signLoanHash(attackerAddress, hashedLoan, NETWORK_PROVIDER)
+      const signature = await signLoanHash(attackerAddress, hashedLoan, NETWORK_PROVIDER, COVERAGE_NETWORK)
 
       // reverts as the signer was not authorized
       await truffleAssert.reverts(
@@ -158,7 +164,7 @@ contract('Loans Unit Tests', async accounts => {
 
       await mockOracle.givenMethodReturnUint(mockOracleTimestamp, nintyMinsAgo)
 
-      const signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER)
+      const signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER, COVERAGE_NETWORK)
 
       await truffleAssert.reverts(
         loans.takeOutLoan(
@@ -187,7 +193,7 @@ contract('Loans Unit Tests', async accounts => {
       // ETH/DAI price of 199
       await mockOracle.givenMethodReturnUint(mockOracleValue, 199)
 
-      const signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER)
+      const signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER, COVERAGE_NETWORK)
 
       // 6000 DAI in value is required as collateral
       // Alice sends 30 ETH in, with an ETH price of 199 DAI => 5970 DAI in value
@@ -221,7 +227,7 @@ contract('Loans Unit Tests', async accounts => {
       // ETH/DAI price of 205 this time - therefore 30 ETH is enough collateral
       await mockOracle.givenMethodReturnUint(mockOracleValue, 205)
 
-      const signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER)
+      const signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER, COVERAGE_NETWORK)
 
       // 6000 DAI in value is required as collateral
       // Alice sends 30 ETH in, with an ETH price of 205 DAI => 6150 DAI in value
@@ -286,7 +292,7 @@ contract('Loans Unit Tests', async accounts => {
       // ETH/DAI price of 205 this time - therefore 30 ETH is enough collateral
       await mockOracle.givenMethodReturnUint(mockOracleValue, 205)
 
-      const signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER)
+      const signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER, COVERAGE_NETWORK)
 
       // 6000 DAI in value is required as collateral
       // Alice sends 30 ETH in, with an ETH price of 205 DAI => 6150 DAI in value
@@ -351,7 +357,7 @@ contract('Loans Unit Tests', async accounts => {
       // ETH/DAI price of 205 this time - therefore 30 ETH is enough collateral
       await mockOracle.givenMethodReturnUint(mockOracleValue, 205)
 
-      const signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER)
+      const signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER, COVERAGE_NETWORK)
 
       // 6000 DAI in value is required as collateral
       // Alice sends 30 ETH in, with an ETH price of 205 DAI => 6150 DAI in value
@@ -425,7 +431,7 @@ contract('Loans Unit Tests', async accounts => {
       // ETH/DAI price of 205 this time - therefore 30 ETH is enough collateral
       await mockOracle.givenMethodReturnUint(mockOracleValue, 205)
 
-      const signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER)
+      const signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER, COVERAGE_NETWORK)
 
       // 6000 DAI in value is required as collateral
       // Alice sends 30 ETH in, with an ETH price of 205 DAI => 6150 DAI in value
@@ -480,7 +486,7 @@ contract('Loans Unit Tests', async accounts => {
       // ETH/DAI price of 205 this time - therefore 30 ETH is enough collateral
       await mockOracle.givenMethodReturnUint(mockOracleValue, 205)
 
-      let signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER)
+      let signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER, COVERAGE_NETWORK)
 
       // 6000 DAI in value is required as collateral
       // Alice sends 30 ETH in, with an ETH price of 205 DAI => 6150 DAI in value
@@ -513,7 +519,7 @@ contract('Loans Unit Tests', async accounts => {
         signerNonce: 1,
       })
 
-      signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER)
+      signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER, COVERAGE_NETWORK)
 
       // now bob takes out a loan
       result = await loans.takeOutLoan(
@@ -545,7 +551,7 @@ contract('Loans Unit Tests', async accounts => {
         signerNonce: 2,
       })
 
-      signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER)
+      signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER, COVERAGE_NETWORK)
 
       // now bob takes out a loan
       result = await loans.takeOutLoan(
@@ -587,7 +593,7 @@ contract('Loans Unit Tests', async accounts => {
         numberDays: NUMBER_DAYS,
         signerNonce: 0,
       })
-      signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER)
+      signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER, COVERAGE_NETWORK)
 
       await loans.takeOutLoan(
         INTEREST_RATE,
@@ -665,7 +671,7 @@ contract('Loans Unit Tests', async accounts => {
         numberDays: NUMBER_DAYS,
         signerNonce: 0,
       })
-      signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER)
+      signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER, COVERAGE_NETWORK)
 
       await loans.takeOutLoan(
         INTEREST_RATE,
@@ -784,7 +790,7 @@ contract('Loans Unit Tests', async accounts => {
         numberDays: NUMBER_DAYS,
         signerNonce: 0,
       })
-      signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER)
+      signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER, COVERAGE_NETWORK)
 
       await loans.takeOutLoan(
         INTEREST_RATE,
@@ -883,7 +889,7 @@ contract('Loans Unit Tests', async accounts => {
         numberDays: NUMBER_DAYS,
         signerNonce: 0,
       })
-      signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER)
+      signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER, COVERAGE_NETWORK)
 
       await loans.takeOutLoan(
         INTEREST_RATE,
