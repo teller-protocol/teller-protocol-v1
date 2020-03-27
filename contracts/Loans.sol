@@ -22,7 +22,7 @@ contract Loans is LoansInterface, SignerRole {
     PairAggregatorInterface public priceOracle;
     DAIPoolInterface public daiPool;
 
-    mapping(address => uint256[]) public borrowerLoans;
+    mapping(address => uint256[]) private borrowerLoans;
 
     mapping(uint256 => ZeroCollateralCommon.Loan) public loans;
 
@@ -69,11 +69,16 @@ contract Loans is LoansInterface, SignerRole {
     function withdrawCollateral(uint256 amount, uint256 loanID) external loanIDValid(loanID) {
         require(msg.sender == loans[loanID].borrower, "CALLER_DOESNT_OWN_LOAN");
 
-        // Find the minimum collateral amount this loan is allowed
-        uint256 minimumCollateral = getMinimumAllowedCollateral(loanID);
+        // Find the minimum collateral amount this loan is allowed in DAI
+        uint256 minimumCollateralDAI = getMinimumAllowedCollateralDAI(loanID);
+
+        require(priceOracle.getLatestTimestamp() >= now.sub(ONE_HOUR), "ORACLE_PRICE_OLD");
+
+        uint256 ethPrice = uint256(priceOracle.getLatestAnswer());
+        uint256 minimumCollateralETH = minimumCollateralDAI.div(ethPrice);
 
         // Withdrawal amount holds the amoutn of excess collateral in the loan
-        uint256 withdrawalAmount = loans[loanID].collateral.sub(minimumCollateral);
+        uint256 withdrawalAmount = loans[loanID].collateral.sub(minimumCollateralETH);
         if (withdrawalAmount > amount) {
           withdrawalAmount = amount;
         }
@@ -87,8 +92,8 @@ contract Loans is LoansInterface, SignerRole {
     }
 
     function takeOutLoan(
-        uint8 interestRate,
-        uint8 collateralRatio,
+        uint256 interestRate,
+        uint256 collateralRatio,
         uint256 maxLoanAmount,
         uint256 numberDays,
         uint256 amountBorrow,
@@ -103,7 +108,12 @@ contract Loans is LoansInterface, SignerRole {
         require(amountBorrow <= maxLoanAmount, "BORROW_AMOUNT_NOT_AUTHORIZED");
 
         address signer = ecrecover(
-            hashLoan(interestRate, collateralRatio, msg.sender, maxLoanAmount, numberDays, signature.signerNonce),
+            keccak256(
+              abi.encodePacked(
+                "\x19Ethereum Signed Message:\n32",
+                hashLoan(interestRate, collateralRatio, msg.sender, maxLoanAmount, numberDays, signature.signerNonce)
+              )
+            ),
             signature.v,
             signature.r,
             signature.s
@@ -119,9 +129,9 @@ contract Loans is LoansInterface, SignerRole {
         require(priceOracle.getLatestTimestamp() >= now.sub(ONE_HOUR), "ORACLE_PRICE_OLD");
 
         uint256 ethPrice = uint256(priceOracle.getLatestAnswer());
-        // uint256 minCollateralDAI = amountBorrow.mul(collateralRatio).div(100);
+
         // TODO - CHECK DECIMALS ON ETH PRICE
-        require(msg.value.mul(ethPrice) >= amountBorrow.mul(collateralRatio).div(100), "MORE_COLLATERAL_REQUIRED");
+        require(msg.value.mul(ethPrice) >= amountBorrow.mul(collateralRatio).div(10000), "MORE_COLLATERAL_REQUIRED");
 
         // Create the loan
         createNewLoan(interestRate, collateralRatio, maxLoanAmount, numberDays, amountBorrow);
@@ -133,6 +143,17 @@ contract Loans is LoansInterface, SignerRole {
         // give the borrower their requested amount of DAI
         daiPool.createLoan(amountBorrow, msg.sender);
 
+        totalCollateral = totalCollateral.add(msg.value);
+
+        emit LoanCreated(
+            loanID,
+            msg.sender,
+            interestRate,
+            collateralRatio,
+            maxLoanAmount,
+            numberDays
+        );
+
         return loanIDCounter-1;
     }
 
@@ -140,6 +161,8 @@ contract Loans is LoansInterface, SignerRole {
     // function withdrawDai(uint256 amount, uint256 loanID) external;
 
     function repayDai(uint256 amount, uint256 loanID) external loanIDValid(loanID) {
+        require(loans[loanID].active, "LOAN_NOT_ACTIVE");
+
         // calculate the actual amount to repay
         uint256 toPay = amount;
         if (loans[loanID].totalOwed < toPay) {
@@ -168,7 +191,7 @@ contract Loans is LoansInterface, SignerRole {
 
         uint256 ethPrice = uint256(priceOracle.getLatestAnswer());
         uint256 collateralInDAI = loans[loanID].collateral.mul(ethPrice);
-        uint256 minCollateralDAI = loans[loanID].totalOwed.mul(loans[loanID].collateralRatio).div(100);
+        uint256 minCollateralDAI = getMinimumAllowedCollateralDAI(loanID);
         // TODO - CHECK DECIMALS ON ETH PRICE
 
         // must be under collateralised or expired
@@ -183,16 +206,20 @@ contract Loans is LoansInterface, SignerRole {
         payOutCollateral(loanID, loans[loanID].collateral, msg.sender);
     }
 
-    function getMinimumAllowedCollateral(uint256 loanID) internal view returns (uint256) {
-        uint256 loanAmount = loans[loanID].totalOwed;
-        uint8 collateralRatio = loans[loanID].collateralRatio;
+    function getBorrowerLoans(address borrower) external view returns (uint256[] memory) {
+        return borrowerLoans[borrower];
+    }
 
-        return loanAmount.mul(collateralRatio).div(100);
+    function getMinimumAllowedCollateralDAI(uint256 loanID) internal view returns (uint256) {
+        uint256 loanAmount = loans[loanID].totalOwed;
+        uint256 collateralRatio = loans[loanID].collateralRatio;
+
+        return loanAmount.mul(collateralRatio).div(10000);
     }
 
     function hashLoan(
-      uint8 interestRate,
-      uint8 collateralRatio,
+      uint256 interestRate,
+      uint256 collateralRatio,
       address borrower,
       uint256 maxLoanAmount,
       uint256 numberDays,
@@ -221,24 +248,24 @@ contract Loans is LoansInterface, SignerRole {
 
     // This function must be separated out to avoid a stack overflow
     function createNewLoan(
-        uint8 interestRate,
-        uint8 collateralRatio,
+        uint256 interestRate,
+        uint256 collateralRatio,
         uint256 maxLoanAmount,
         uint256 numberDays,
         uint256 amountBorrow
     ) internal {
-      loans[loanIDCounter] = ZeroCollateralCommon.Loan ({
+        loans[loanIDCounter] = ZeroCollateralCommon.Loan ({
             id: loanIDCounter,
-            borrower: msg.sender,
-            active: true,
-            liquidated: false,
             collateral: msg.value,
             interestRate: interestRate,
             collateralRatio: collateralRatio,
             maxLoanAmount: maxLoanAmount,
-            totalOwed: amountBorrow.add(amountBorrow.mul(interestRate).mul(numberDays).div(100).div(365)),
+            totalOwed: amountBorrow.add(amountBorrow.mul(interestRate).mul(numberDays).div(10000).div(365)),
             timeStart: now,
-            timeEnd: now.add(numberDays.mul(ONE_DAY))
+            timeEnd: now.add(numberDays.mul(ONE_DAY)),
+            borrower: msg.sender,
+            active: true,
+            liquidated: false
         });
     }
 

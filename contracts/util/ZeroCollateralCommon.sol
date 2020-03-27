@@ -20,11 +20,11 @@ library ZeroCollateralCommon {
         uint256 totalOwed;
         uint256 timeStart;
         uint256 timeEnd;
+        uint256 interestRate;
+        uint256 collateralRatio;
         address payable borrower;
         bool active;
         bool liquidated;
-        uint8 interestRate;
-        uint8 collateralRatio;
     }
 
     struct Signature {

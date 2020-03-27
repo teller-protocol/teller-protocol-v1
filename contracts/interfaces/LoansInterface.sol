@@ -11,7 +11,17 @@ interface LoansInterface {
     // collateral withdrawn by borrower
     event CollateralWithdrawn(uint256 indexed loanID, address indexed borrower, uint256 depositAmount);
 
-    // function borrowerLoans(address borrower) external returns (uint256[] memory);
+    // new loan created
+    event LoanCreated(
+      uint256 indexed loanID,
+      address indexed borrower,
+      uint256 interestRate,
+      uint256 collateralRatio,
+      uint256 maxLoanAmount,
+      uint256 numberDays
+    );
+
+    function getBorrowerLoans(address borrower) external view returns (uint256[] memory);
 
     function loans(uint256 loanID) external returns (ZeroCollateralCommon.Loan memory);
 
@@ -22,8 +32,8 @@ interface LoansInterface {
     function withdrawCollateral(uint256 amount, uint256 loanID) external;
 
     function takeOutLoan(
-        uint8 interestRate,
-        uint8 collateralRatio,
+        uint256 interestRate,
+        uint256 collateralRatio,
         uint256 maxLoanAmount,
         uint256 numberDays,
         uint256 amountBorrow,
