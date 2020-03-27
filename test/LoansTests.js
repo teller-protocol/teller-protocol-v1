@@ -8,7 +8,7 @@ const assert = require('assert')
 const time = require('ganache-time-traveler')
 const truffleAssert = require('truffle-assertions')
 
-const { NULL_ADDRESS, NETWORK_PROVIDER, ONE_HOUR, getLatestTimestamp } = require('./utils/consts');
+const { NULL_ADDRESS, NETWORK_PROVIDER, ONE_HOUR, ONE_DAY, getLatestTimestamp } = require('./utils/consts');
 const { hashLoan, signLoanHash } = require('./utils/hashes');
 
 
@@ -272,7 +272,7 @@ contract('Loans Unit Tests', async accounts => {
       assert.equal(loan['maxLoanAmount'], MAX_LOAN_AMOUNT, 'maxLoanAmount incorrect')
       assert.equal(loan['totalOwed'], 10057, 'totalOwed incorrect')    // 10000 DAI plus 7% annual interest for 30 days
       assert.equal(loan['timeStart'], loanTimestamp, 'timeStart incorrect')
-      assert.equal(loan['timeEnd'], loanTimestamp+(ONE_HOUR*24*NUMBER_DAYS), 'timeEnd incorrect')
+      assert.equal(loan['timeEnd'], loanTimestamp+(ONE_DAY*NUMBER_DAYS), 'timeEnd incorrect')
       assert.equal(loan['borrower'], aliceAddress, 'borrower incorrect')
       assert.equal(loan['active'], true, 'borrower incorrect')
       assert.equal(loan['liquidated'], false, 'borrower incorrect')
@@ -863,6 +863,133 @@ contract('Loans Unit Tests', async accounts => {
       assert.equal(activeBefore, true, 'Loan wasnt active before')
       assert.equal(activeAfter, false, 'Loan should no longer be active')
     })
+  })
+
+  describe('Test liquidateLoan()', async () => {
+    beforeEach(async () => {
+      // setup a loan for Alice
+      const fortyFiveMinsAgo = (await getLatestTimestamp()) - (0.75 * ONE_HOUR)
+      await mockOracle.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
+
+      // ETH/DAI price of 205 this time - therefore 30 ETH is enough collateral
+      await mockOracle.givenMethodReturnUint(mockOracleValue, 200)
+
+      // create a loan for alice with ID 0
+      let hashedLoan = hashLoan({
+        interestRate: INTEREST_RATE,        // 700 -> 7.00%
+        collateralRatio: COLLATERAL_RATIO,    // 6000 -> 60.00%
+        borrower: aliceAddress,
+        maxLoanAmount: MAX_LOAN_AMOUNT,
+        numberDays: NUMBER_DAYS,
+        signerNonce: 0,
+      })
+      signature = await signLoanHash(signerAddress, hashedLoan, NETWORK_PROVIDER)
+
+      await loans.takeOutLoan(
+        INTEREST_RATE,
+        COLLATERAL_RATIO,
+        MAX_LOAN_AMOUNT,
+        NUMBER_DAYS,
+        MAX_LOAN_AMOUNT,
+        {
+          signerNonce: 0,
+          v: signature.v,
+          r: signature.r,
+          s: signature.s
+        },
+        {
+          from: aliceAddress,
+          value: 35
+        }
+      )
+    })
+
+    it('should not succeed for a non-existent loan', async () => {
+      await truffleAssert.reverts(
+        loans.liquidateLoan(
+          1
+        ),
+        'LOAN_ID_INVALID'
+      )
+    })
+
+    it('should not succeed if the loan is not under colalteralised and not expired', async () => {
+      await truffleAssert.reverts(
+        loans.liquidateLoan(
+          0
+        ),
+        'DOESNT_NEED_LIQUIDATION'
+      )
+    })
+
+    it('should not proceed if the oracle is outdated', async () => {
+      // mock the oracle returning an old timestamp
+      const nintyMinsAgo = (await getLatestTimestamp()) - (1.5 * ONE_HOUR)
+
+      await mockOracle.givenMethodReturnUint(mockOracleTimestamp, nintyMinsAgo)
+
+      await truffleAssert.reverts(
+        loans.liquidateLoan(
+          0
+        ),
+        'ORACLE_PRICE_OLD'
+      )
+    })
+
+    it('should succeed if the loan is undercollateralised', async () => {
+      // ETH/DAI price of 100 this time - therefore 30 ETH is not enough collateral
+      await mockOracle.givenMethodReturnUint(mockOracleValue, 100)
+
+      let loan = await loans.loans.call(0)
+
+      let activeBefore = loan['active']
+      let collateralBefore = loan['collateral']
+      let contractBefore = await web3.eth.getBalance(loans.address)
+
+      await loans.liquidateLoan(
+        0
+      )
+
+      loan = await loans.loans.call(0)
+      let activeAfter = loan['active']
+      let contractAfter = await web3.eth.getBalance(loans.address)
+      let collateralAfter = loan['collateral']
+      
+      assert.equal(contractBefore-collateralBefore, contractAfter, 'Coalteral should have been paid out')
+      assert.equal(0, collateralAfter, 'Collateral should be 0')
+      assert.equal(activeBefore, true, 'Loan wasnt active before')
+      assert.equal(activeAfter, false, 'Loan should no longer be active')
+    })
+
+    it.only('should succeed if the loan is expired', async () => {
+      // go forward in time 31 days
+      await time.advanceTimeAndBlock(31*ONE_DAY)
+
+      // new oracle time for this future date
+      const fortyFiveMinsAgo = (await getLatestTimestamp()) - (0.75 * ONE_HOUR)
+      await mockOracle.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
+
+      let loan = await loans.loans.call(0)
+
+      let activeBefore = loan['active']
+      let collateralBefore = loan['collateral']
+      let contractBefore = await web3.eth.getBalance(loans.address)
+
+      await loans.liquidateLoan(
+        0
+      )
+
+      loan = await loans.loans.call(0)
+      let activeAfter = loan['active']
+      let contractAfter = await web3.eth.getBalance(loans.address)
+      let collateralAfter = loan['collateral']
+      
+      assert.equal(contractBefore-collateralBefore, contractAfter, 'Coalteral should have been paid out')
+      assert.equal(0, collateralAfter, 'Collateral should be 0')
+      assert.equal(activeBefore, true, 'Loan wasnt active before')
+      assert.equal(activeAfter, false, 'Loan should no longer be active')
+    })
+
   })
 
 })

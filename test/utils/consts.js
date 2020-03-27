@@ -5,6 +5,7 @@ const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 const ZERO = new BigNumber(0);
 const NETWORK_PROVIDER = 'http://127.0.0.1:7545';
 const ONE_HOUR = 3600
+const ONE_DAY = ONE_HOUR*24
 
 module.exports = {
     DEFAULT_DECIMALS,
@@ -12,6 +13,7 @@ module.exports = {
     ZERO,
     NETWORK_PROVIDER,
     ONE_HOUR,
+    ONE_DAY,
     t: function (who, func, desc, fail) {
         const failText = fail ? '\x1b[31mMustFail\x1b[0m .' : '\x1b[0m';
         return '\x1b[32m.' + func + ' => \x1b[36m' + who + '\x1b[0m\033[01;34m : ' + desc + ' '+ failText;
