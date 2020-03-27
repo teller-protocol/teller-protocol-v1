@@ -17,4 +17,6 @@ contract MockDAIPool is DAIPoolInterface {
     function createLoan(uint256, address) external returns (bool) {
       return true;
     }
+
+    function withdrawInterest(uint256 amount) external {}
 }
