@@ -19,7 +19,4 @@ contract SimpleToken is ERC20Detailed, ERC20Mintable, ERC20Burnable {
         _mint(msg.sender, 1000000000000 * (10**uint256(decimals())));
     }
 
-    function mint(address beneficiary, uint256 amount) public {
-        _mint(beneficiary, amount);
-    }
 }
