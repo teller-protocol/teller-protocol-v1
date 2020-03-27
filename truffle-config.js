@@ -22,7 +22,15 @@ module.exports = {
 		reporterOptions : {
 			currency: 'USD',
 			excludeContracts: ['Migrations'],
-			showTimeSpent: true
+			showTimeSpent: true,
+			excludeContracts: [
+				'Migrations',
+				'SimpleToken',
+				'LenderInfoMock',
+				'LenderInfoModifiersMock',
+				'Mock',
+				'ZeroCollateralMock'
+			]
 		},
 	},
 	compilers: {

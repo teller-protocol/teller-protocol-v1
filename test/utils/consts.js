@@ -31,5 +31,12 @@ module.exports = {
     },
     getLatestTimestamp: async () => {
       return (await web3.eth.getBlock('latest')).timestamp
-    }
+    },
+    sum: (a, b) => parseInt(a.toString()) + parseInt(b.toString()),
+    createInfo: (address, plusLastAccruedBlockNumber, lastAccruedInterest, expectedAccruedInterest) => ({
+        address,
+        plusLastAccruedBlockNumber,
+        lastAccruedInterest,
+        expectedAccruedInterest,
+    }),
 }
