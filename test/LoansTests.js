@@ -961,7 +961,7 @@ contract('Loans Unit Tests', async accounts => {
       assert.equal(activeAfter, false, 'Loan should no longer be active')
     })
 
-    it.only('should succeed if the loan is expired', async () => {
+    it('should succeed if the loan is expired', async () => {
       // go forward in time 31 days
       await time.advanceTimeAndBlock(31*ONE_DAY)
 
