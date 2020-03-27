@@ -88,25 +88,16 @@ contract LenderInfo is LenderInfoInterface {
 
         // Updating accrued interest for zDAI recipient.
         updateAccruedInterestFor(recipient);
-
     }
 
-    function zDaiMinted(address recipient, uint256)
-        external
-        isDaiPool(msg.sender)
-    {
+    function zDaiMinted(address recipient, uint256) external isDaiPool(msg.sender) {
         // Updating accrued interest for zDAI recipient.
         updateAccruedInterestFor(recipient);
-
     }
 
-    function zDaiBurnt(address recipient, uint256)
-        external
-        isDaiPool(msg.sender)
-    {
+    function zDaiBurnt(address recipient, uint256) external isDaiPool(msg.sender) {
         // Updating accrued interest for zDAI recipient.
         updateAccruedInterestFor(recipient);
-
     }
 
     function withdrawInterest(address recipient, uint256 amount)
