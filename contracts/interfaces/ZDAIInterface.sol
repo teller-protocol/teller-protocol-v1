@@ -1,11 +1,17 @@
 pragma solidity 0.5.17;
 
-interface ZDAIInterface {
+import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
-    function burn(address account, uint256 amount) external;
 
-    function transfer(address recipient, uint256 amount) external returns (bool);
+/**
 
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
+    Note: since interfaces cannot be inherited by other interfaces, this ZDAIInterface is defined as contract.
+    See details at: https://github.com/ethereum/solidity/issues/3419#issuecomment-429988401
+ */
+contract ZDAIInterface is IERC20 {
+    function burn(uint256 amount) external;
 
+    function burnFrom(address account, uint256 amount) external;
+
+    function mint(address account, uint256 amount) external returns (bool);
 }

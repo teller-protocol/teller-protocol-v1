@@ -19,5 +19,6 @@
     "check-send-result": "warn",
     "reentrancy": "warn",
     "indent": ["error", 4]
-  }
+  },
+  "plugins": ["prettier"]
 }

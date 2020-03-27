@@ -1,7 +1,7 @@
 pragma solidity 0.5.17;
 
-interface DAIPoolInterface {
 
+interface DAIPoolInterface {
     function depositDai(uint256 amount) external;
 
     function withdrawDai(uint256 amount) external;
@@ -11,5 +11,4 @@ interface DAIPoolInterface {
     function createLoan(uint256 amount, address borrower) external returns (bool);
 
     function withdrawInterest(uint256 amount) external;
-
 }
