@@ -18,4 +18,5 @@ contract SimpleToken is ERC20Detailed, ERC20Mintable, ERC20Burnable {
     constructor() public ERC20Detailed("SimpleToken", "SIM", 18) {
         _mint(msg.sender, 1000000000000 * (10**uint256(decimals())));
     }
+
 }

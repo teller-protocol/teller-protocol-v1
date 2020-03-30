@@ -1,7 +1,6 @@
 pragma solidity 0.5.17;
 
-
-contract ZeroCollateralCommon {
+library ZeroCollateralCommon {
     // Interest accrued from lending account
     struct LendAccount {
         uint256 lastBlockAccrued;
@@ -9,24 +8,29 @@ contract ZeroCollateralCommon {
     }
 
     // Borrower account details
-    struct BorrowAccount {
+    struct Borrower {
         uint256 lastBorrowId;
-        uint256 collateral;
-        uint256 maxLoan;
-        uint8 interestRate;
-        uint8 collateralNeeded;
     }
 
     // Data per borrow as struct
-    struct Borrow {
-        uint256 amountBorrow;
-        uint256 amountOwed;
-        uint256 amountOwedInitial;
-        uint256 blockStart;
-        uint256 blockEnd;
-        address account;
+    struct Loan {
         uint256 id;
+        uint256 collateral;
+        uint256 maxLoanAmount;
+        uint256 totalOwed;
+        uint256 timeStart;
+        uint256 timeEnd;
+        uint256 interestRate;
+        uint256 collateralRatio;
+        address payable borrower;
         bool active;
         bool liquidated;
+    }
+
+    struct Signature {
+      uint256 signerNonce;
+      uint8 v;
+      bytes32 r;
+      bytes32 s;
     }
 }
