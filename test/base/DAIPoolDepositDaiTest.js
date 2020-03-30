@@ -21,12 +21,6 @@ contract('DAIPoolDepositDaiTest', function (accounts) {
     let daiInstance;
     let lenderInfoInstance;
     let loanInfoInstance;
-
-    afterEach('', async () => {
-        await zdaiInstance.reset();
-        await daiInstance.reset();
-        await loanInfoInstance.reset();
-    });
     
     beforeEach('Setup for each test', async () => {
         zdaiInstance = await createInstance(Mock.new());
