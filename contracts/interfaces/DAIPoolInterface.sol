@@ -13,8 +13,5 @@ interface DAIPoolInterface {
 
     function withdrawInterest(uint256 amount) external;
 
-    event DaiDeposited(
-        address sender,
-        uint256 amount
-    );
+    event DaiDeposited(address sender, uint256 amount);
 }

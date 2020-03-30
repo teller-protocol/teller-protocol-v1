@@ -31,6 +31,7 @@ import "../interfaces/ZDAIInterface.sol";
 // Contracts
 import "./Initializable.sol";
 
+
 contract DAIPool is DAIPoolInterface, Initializable {
     using AddressLib for address;
 
@@ -60,7 +61,7 @@ contract DAIPool is DAIPoolInterface, Initializable {
         daiAddress.requireNotEmpty("DAI address is required.");
         lenderInfoAddress.requireNotEmpty("LenderInfo address is required.");
         loanInfoAddress.requireNotEmpty("LoanInfo address is required.");
-        
+
         initialize();
 
         zdai = ZDAIInterface(zdaiAddress);
@@ -75,7 +76,7 @@ contract DAIPool is DAIPoolInterface, Initializable {
 
         // Transfering DAI tokens to DAIPool
         daiTransferFrom(msg.sender, amount);
-        
+
         // Mint ZDAI tokens
         zdaiMint(msg.sender, amount);
 
@@ -83,10 +84,7 @@ contract DAIPool is DAIPoolInterface, Initializable {
         lenderInfo.zDaiMinted(msg.sender, amount);
 
         // Emit event
-        emit DaiDeposited(
-            msg.sender,
-            amount
-        );
+        emit DaiDeposited(msg.sender, amount);
     }
 
     function withdrawDai(uint256 amount) external {}
