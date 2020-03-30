@@ -13,29 +13,41 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 */
-
 pragma solidity 0.5.17;
 
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20Mintable.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 
-contract ZDai is ERC20Detailed, ERC20Mintable {
+// Libraries
 
-    constructor(
-          string memory name,
-          string memory symbol,
-          uint8 decimals
-    )
-    public
-    ERC20Detailed(
-        name,
-        symbol,
-        decimals
-    )
-    {}
+// Commons
 
-    function burn(address account, uint256 amount) public onlyMinter returns (bool) {
-        _burn(account, amount);
-        return true;
+// Interfaces
+
+contract Initializable {
+    /* State Variables */
+
+    bool public _isInitialized;
+
+    /** Modifiers */
+
+    modifier isNotInitialized() {
+        require(!_isInitialized, "It is already initialized.");
+        _;
     }
+
+    modifier isInitialized() {
+        require(_isInitialized, "It is not initialized.");
+        _;
+    }
+
+    /* Constructor */
+
+    /** External Functions */
+
+    /** Internal functions */
+
+    function initialize() internal {
+        _isInitialized = true;
+    }
+
+    /** Private functions */
 }

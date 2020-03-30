@@ -1,6 +1,6 @@
 module.exports = {
-    network: 'test',
+    network: 'ganache',
     chainlink: require('./chainlink'),
     tokens: require('./tokens'),
-    maxGasLimit: 6000000,
+    maxGasLimit: 9000000,
 };

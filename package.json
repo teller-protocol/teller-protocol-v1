@@ -11,6 +11,7 @@
     "test": "truffle test",
     "test:coverage": "truffle compile && truffle run coverage",
     "deploy:ropsten": "truffle compile && truffle deploy --network ropsten",
+    "deploy:ganache": "truffle compile && truffle deploy --network ganache --reset",
     "format:prettier": "prettier --write contracts/**/*.sol",
     "format:prettier:print": "prettier contracts/**/*.sol"
   },
@@ -24,6 +25,7 @@
     "ganache-cli": "^6.4.4",
     "ganache-time-traveler": "^1.0.5",
     "husky": "^4.2.3",
+    "jsonfile": "^6.0.1",
     "leche": "^2.3.0",
     "lodash": "^4.17.15",
     "mocha": "^7.1.0",
@@ -34,7 +36,8 @@
     "solidity-coverage": "^0.7.2",
     "truffle": "^5.1.16",
     "truffle-assertions": "^0.9.2",
-    "web3-eth": "1.2.2"
+    "web3-eth": "1.2.2",
+    "truffle-plugin-verify": "^0.3.10"
   },
   "dependencies": {
     "@chainlink/contracts": "^0.0.3",
