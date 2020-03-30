@@ -70,6 +70,11 @@ contract DAIPool is DAIPoolInterface, Initializable {
         loanInfo = LoanInfoInterface(loanInfoAddress);
     }
 
+    /**
+        @notice It allows users to deposit DAIs into the pool.
+        @dev the user must call DAI.approve function previously.
+        @param amount of DAIs to deposit in the pool.
+    */
     function depositDai(uint256 amount) external isInitialized {
         // Require DAI approval from sender to this contract.
         requireDAIAllowance(msg.sender, amount);
@@ -99,14 +104,16 @@ contract DAIPool is DAIPoolInterface, Initializable {
 
     /** Private functions */
 
+    /**
+
+     */
     function requireDAIAllowance(address owner, uint256 amount) private view {
         uint256 allowanceResult = dai.allowance(owner, address(this));
         require(allowanceResult >= amount, "Not enough tokens allowed.");
     }
 
     /**
-        It transfers an amount of DAI tokens from an address to this contract.
-
+        @notice It transfers an amount of DAI tokens from an address to this contract.
         @param from address where the DAI tokens will transfer from.
         @param amount to be transferred.
         @dev It throws a require error if 'transferFrom' invocation fails.
@@ -117,8 +124,7 @@ contract DAIPool is DAIPoolInterface, Initializable {
     }
 
     /**
-        It mints ZDAI tokens, and send them to a specific address.
-    
+        @notice It mints ZDAI tokens, and send them to a specific address.
         @param to address which will receive the minted tokens.
         @param amount to be minted.
         @dev This contract must has a Minter Role in ZDAI (mintable) token.
