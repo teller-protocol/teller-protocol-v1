@@ -56,8 +56,6 @@ interface LoansInterface {
         ZeroCollateralCommon.Signature calldata signature
     ) external payable returns (uint256 loadId);
 
-    // function withdrawDai(uint256 amount, uint256 loanID) external;
-
     function repayDai(uint256 amount, uint256 loanID) external;
 
     function liquidateLoan(uint256 loanID) external;

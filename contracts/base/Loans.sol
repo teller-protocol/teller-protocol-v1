@@ -17,10 +17,10 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import './interfaces/LoansInterface.sol';
-import './interfaces/PairAggregatorInterface.sol';
-import './interfaces/DAIPoolInterface.sol';
-import './util/ZeroCollateralCommon.sol';
+import '../interfaces/LoansInterface.sol';
+import '../interfaces/PairAggregatorInterface.sol';
+import '../interfaces/DAIPoolInterface.sol';
+import '../util/ZeroCollateralCommon.sol';
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/access/roles/SignerRole.sol";
 
@@ -29,6 +29,11 @@ contract Loans is LoansInterface, SignerRole {
 
     uint256 constant private ONE_HOUR = 3600;
     uint256 constant private ONE_DAY = 3600*24;
+    uint256 constant private LIQUIDATE_ETH_PRICE = 95; // Eth is bought at 95% of the going rate
+    uint256 constant private ONE_HUNDRED = 100; // Used when finding a percentage of a number - divide by 100
+    uint256 constant private DAYS_PER_YEAR = 365;
+    uint256 constant private TEN_THOUSAND = 10000; // For interest and collateral, 7% is represented as 700.
+        // to find the value of something we must divide 700 by 100 to remove decimal places, and another 100 for percentage
 
     uint256 public totalCollateral;
 
@@ -107,6 +112,19 @@ contract Loans is LoansInterface, SignerRole {
         emit CollateralWithdrawn(loanID, msg.sender, withdrawalAmount);
     }
 
+    /**
+     * @notice Take out a loan
+     * @param interestRate uint256 The interest rate of the loan
+     * @param collateralRatio uint256 The ratio of colalteral to principal required
+     * @param maxLoanAmount uint256 The maximum amount of DAI allowed
+     * @param numberDays uint256 The length of the loan
+     * @param amountBorrow uint256 The initial amount to draw out for the loan
+     * @param signature ZeroCollateralCommon.Signature A signature from an authorized signer
+     *
+     * @dev collateral ratio is a percentage of the loan amount that's required in collateral
+     * @dev the percentage will be *(10**2). I.e. collateralRatio of 5244 means 52.44% collateral
+     * @dev is required in the loan. Interest rate is also a percentage with 2 decimal points.
+     */
     function takeOutLoan(
         uint256 interestRate,
         uint256 collateralRatio,
@@ -115,12 +133,6 @@ contract Loans is LoansInterface, SignerRole {
         uint256 amountBorrow,
         ZeroCollateralCommon.Signature calldata signature
     ) external payable returns (uint256 loanID) {
-        // collateral ratio is a percentage of the loan amount that's required in collateral
-        // the percentage will be *(10**2). I.e. collateralRatio of 5244 means 52.44% collateral
-        // is required in the loan.
-
-        // interest rate is also a percentage with 2 decimal points
-
         require(amountBorrow <= maxLoanAmount, "BORROW_AMOUNT_NOT_AUTHORIZED");
 
         address signer = ecrecover(
@@ -147,7 +159,7 @@ contract Loans is LoansInterface, SignerRole {
         uint256 ethPrice = uint256(priceOracle.getLatestAnswer());
 
         // TODO - CHECK DECIMALS ON ETH PRICE
-        require(msg.value.mul(ethPrice) >= amountBorrow.mul(collateralRatio).div(10000), "MORE_COLLATERAL_REQUIRED");
+        require(msg.value.mul(ethPrice) >= amountBorrow.mul(collateralRatio).div(TEN_THOUSAND), "MORE_COLLATERAL_REQUIRED");
 
         // Create the loan
         createNewLoan(interestRate, collateralRatio, maxLoanAmount, numberDays, amountBorrow);
@@ -174,8 +186,11 @@ contract Loans is LoansInterface, SignerRole {
     }
 
 
-    // function withdrawDai(uint256 amount, uint256 loanID) external;
-
+    /**
+     * @notice Make a payment to a loan
+     * @param amount uint256 The amount of DAI to pay back to the loan
+     * @param loanID uint256 The ID of the loan the payment is for
+     */
     function repayDai(uint256 amount, uint256 loanID) external loanIDValid(loanID) {
         require(loans[loanID].active, "LOAN_NOT_ACTIVE");
 
@@ -199,6 +214,10 @@ contract Loans is LoansInterface, SignerRole {
 
     }
 
+    /**
+     * @notice Liquidate a loan if it is expired or undercollateralised
+     * @param loanID uint256 The ID of the loan to be liquidated
+     */
     function liquidateLoan(uint256 loanID) external loanIDValid(loanID) {
         require(loans[loanID].active, "LOAN_NOT_ACTIVE");
 
@@ -216,12 +235,16 @@ contract Loans is LoansInterface, SignerRole {
         loans[loanID].active = false;
 
         // the msg.sender pays DAI at 95% of collateral price
-        daiPool.liquidationPayment(collateralInDAI.mul(95).div(100), msg.sender);
+        daiPool.liquidationPayment(collateralInDAI.mul(LIQUIDATE_ETH_PRICE).div(ONE_HUNDRED), msg.sender);
 
         // and gets sent the ETH collateral in return
         payOutCollateral(loanID, loans[loanID].collateral, msg.sender);
     }
 
+    /**
+     * @notice Get a list of all loans for a borrower
+     * @param borrower address The borrower's address
+     */
     function getBorrowerLoans(address borrower) external view returns (uint256[] memory) {
         return borrowerLoans[borrower];
     }
@@ -230,7 +253,7 @@ contract Loans is LoansInterface, SignerRole {
         uint256 loanAmount = loans[loanID].totalOwed;
         uint256 collateralRatio = loans[loanID].collateralRatio;
 
-        return loanAmount.mul(collateralRatio).div(10000);
+        return loanAmount.mul(collateralRatio).div(TEN_THOUSAND);
     }
 
     function hashLoan(
@@ -276,7 +299,7 @@ contract Loans is LoansInterface, SignerRole {
             interestRate: interestRate,
             collateralRatio: collateralRatio,
             maxLoanAmount: maxLoanAmount,
-            totalOwed: amountBorrow.add(amountBorrow.mul(interestRate).mul(numberDays).div(10000).div(365)),
+            totalOwed: amountBorrow.add(amountBorrow.mul(interestRate).mul(numberDays).div(TEN_THOUSAND).div(DAYS_PER_YEAR)),
             timeStart: now,
             timeEnd: now.add(numberDays.mul(ONE_DAY)),
             borrower: msg.sender,

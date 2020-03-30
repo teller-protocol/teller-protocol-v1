@@ -1,7 +1,7 @@
 const Loans = artifacts.require('Loans')
 const Mock = artifacts.require('Mock')
 const EtherUsdAggregator = artifacts.require('EtherUsdAggregator')
-const MockDAIPool = artifacts.require('MockDAIPool')
+const DAIPoolMock = artifacts.require('DAIPoolMock')
 
 const assert = require('assert')
 const time = require('ganache-time-traveler')
@@ -32,8 +32,8 @@ contract('Loans Unit Tests', async accounts => {
 
   let mockOracle
   let mockOracleInterface
-  let mockDaiPool
-  let mockDaiPoolInterface
+  let daiPoolMock
+  let daiPoolMockInterface
 
   let mockOracleTimestamp
   let mockOracleValue
@@ -51,10 +51,10 @@ contract('Loans Unit Tests', async accounts => {
 
   async function setupMockContracts() {
     mockOracle = await Mock.new()
-    mockDaiPool = await Mock.new()
+    daiPoolMock = await Mock.new()
 
     mockOracleInterface = await EtherUsdAggregator.new(accounts[1])
-    mockDaiPoolInterface = await MockDAIPool.new()
+    daiPoolMockInterface = await DAIPoolMock.new()
 
     mockOracleTimestamp = await mockOracleInterface.contract.methods
     .getLatestTimestamp()
@@ -68,7 +68,7 @@ contract('Loans Unit Tests', async accounts => {
     await setupMockContracts()
     loans = await Loans.new(
       mockOracle.address,
-      mockDaiPool.address
+      daiPoolMock.address
     )
   })
 
@@ -78,14 +78,14 @@ contract('Loans Unit Tests', async accounts => {
       assert.equal(result, mockOracle.address, 'Oracle address not set correctly')
       
       result = await loans.daiPool.call()
-      assert.equal(result, mockDaiPool.address, 'DAI Pool address not set correctly')
+      assert.equal(result, daiPoolMock.address, 'DAI Pool address not set correctly')
     })
 
     it('should not accept an oracle address of 0', async () => {
       await truffleAssert.reverts(
         Loans.new(
           NULL_ADDRESS,
-          mockDaiPool.address
+          daiPoolMock.address
         ),
         'PROVIDE_ORACLE_ADDRESS'
       )
@@ -413,8 +413,8 @@ contract('Loans Unit Tests', async accounts => {
       assert.equal(loan['active'], true, 'borrower incorrect')
       assert.equal(loan['liquidated'], false, 'borrower incorrect')
 
-      const callCount = await mockDaiPool.invocationCountForMethod.call(
-        mockDaiPoolInterface.contract.methods.createLoan(0, NULL_ADDRESS).encodeABI()
+      const callCount = await daiPoolMock.invocationCountForMethod.call(
+        daiPoolMockInterface.contract.methods.createLoan(0, NULL_ADDRESS).encodeABI()
       )
       assert.equal(
         callCount,
