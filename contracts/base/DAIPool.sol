@@ -25,7 +25,7 @@ import "../util/ZeroCollateralCommon.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/DAIPoolInterface.sol";
 import "../interfaces/LenderInfoInterface.sol";
-import "../interfaces/LoanInfoInterface.sol";
+import "../interfaces/LoansInterface.sol";
 import "../interfaces/ZDAIInterface.sol";
 
 // Contracts
@@ -43,7 +43,7 @@ contract DAIPool is DAIPoolInterface, Initializable {
 
     LenderInfoInterface public lenderInfo;
 
-    LoanInfoInterface public loanInfo;
+    LoansInterface public loanInfo;
 
     /** Modifiers */
 
@@ -67,7 +67,7 @@ contract DAIPool is DAIPoolInterface, Initializable {
         zdai = ZDAIInterface(zdaiAddress);
         dai = IERC20(daiAddress);
         lenderInfo = LenderInfoInterface(lenderInfoAddress);
-        loanInfo = LoanInfoInterface(loanInfoAddress);
+        loanInfo = LoansInterface(loanInfoAddress);
     }
 
     /**
@@ -95,6 +95,8 @@ contract DAIPool is DAIPoolInterface, Initializable {
     function withdrawDai(uint256 amount) external {}
 
     function repayDai(uint256 amount, address borrower) external {}
+
+    function liquidationPayment(uint256 amount, address liquidator) external {}
 
     function createLoan(uint256 amount, address borrower) external returns (bool) {}
 

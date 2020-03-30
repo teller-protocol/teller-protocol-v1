@@ -10,6 +10,7 @@ const SafeMath = artifacts.require("./util/SafeMath.sol");
 // Official Smart Contracts
 const ZDai = artifacts.require("./base/ZDai.sol");
 const LenderInfo = artifacts.require("./base/LenderInfo.sol");
+const Loans = artifacts.require("./base/Loans.sol");
 const DAIPool = artifacts.require("./base/DAIPool.sol");
 const EtherUsdAggregator = artifacts.require("./providers/chainlink/EtherUsdAggregator.sol");
 
@@ -32,25 +33,26 @@ module.exports = async function(deployer, network, accounts) {
 
   await deployerApp.deploys([ AddressLib, SafeMath, ZDai ], deployOptions);
 
+  const { chainlink: { dataContracts: { eth_usd } } } = networkConfig;
+  assert(eth_usd, 'Chainlinnk ETH/USD data contract is undefined.');
+  await deployerApp.deploy(EtherUsdAggregator, eth_usd, deployOptions);
+
   await deployerApp.links(DAIPool, [ AddressLib ]);
   await deployerApp.deploy(DAIPool, deployOptions);
-  
+
   await deployerApp.links(LenderInfo, [ AddressLib, SafeMath ]);
   await deployerApp.deploy(LenderInfo, ZDai.address, DAIPool.address, deployOptions);
 
-  const loanInfoAddress = accounts[4];// TODO Change it when the Loans is merged;
+  await deployerApp.links(Loans, [ SafeMath ]);
+  await deployerApp.deploy(Loans, EtherUsdAggregator.address, DAIPool.address, deployOptions);
 
   const daiPoolInstance = await DAIPool.deployed();
   await daiPoolInstance.initialize(
     ZDai.address,
     tokens.DAI,
     LenderInfo.address,
-    loanInfoAddress
+    Loans.address
   );
-
-  const { chainlink: { dataContracts: { eth_usd } } } = networkConfig;
-  assert(eth_usd, 'Chainlinnk ETH/USD data contract is undefined.');
-  await deployerApp.deploy(EtherUsdAggregator, eth_usd, deployOptions);
 
   deployerApp.print();
   deployerApp.writeJson();
