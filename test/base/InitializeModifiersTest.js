@@ -1,7 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
-const { createInstance } = require('../utils/contracts');
 
 // Mock contracts
 
@@ -12,7 +11,7 @@ contract('InitializeModifiersTest', function (accounts) {
     let instance;
     
     beforeEach('Setup for each test', async () => {
-        instance = await createInstance(Initializable.new());
+        instance = await Initializable.new();
     });
 
     withData({

@@ -13,7 +13,8 @@
     "deploy:ropsten": "truffle compile && truffle deploy --network ropsten",
     "deploy:ganache": "truffle compile && truffle deploy --network ganache --reset",
     "format:prettier": "prettier --write contracts/**/*.sol",
-    "format:prettier:print": "prettier contracts/**/*.sol"
+    "format:prettier:print": "prettier contracts/**/*.sol",
+    "verify:ropsten": "truffle run verify DAIPool LenderInfo Loans ZDai --network ropsten"
   },
   "devDependencies": {
     "@gnosis.pm/mock-contract": "^3.0.7",

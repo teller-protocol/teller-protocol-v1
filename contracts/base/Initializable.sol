@@ -25,7 +25,7 @@ pragma solidity 0.5.17;
 contract Initializable {
     /* State Variables */
 
-    bool public _isInitialized;
+    bool private _isInitialized;
 
     /** Modifiers */
 

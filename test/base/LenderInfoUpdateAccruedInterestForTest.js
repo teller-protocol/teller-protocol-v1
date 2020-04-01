@@ -2,7 +2,6 @@
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
 const { lenderInfo } = require('../utils/events');
-const { createInstance } = require('../utils/contracts');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 
 // Mock contracts
@@ -18,13 +17,11 @@ contract('LenderInfoUpdateAccruedInterestForTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     
     beforeEach('Setup for each test', async () => {
-        zdaiInstance = await createInstance(Mock.new());
-        daiPoolInstance = await createInstance(Mock.new());
-        instance = await createInstance(
-            LenderInfo.new(
-                zdaiInstance.address,
-                daiPoolInstance.address,
-            )
+        zdaiInstance = await Mock.new();
+        daiPoolInstance = await Mock.new();
+        instance = await LenderInfo.new(
+            zdaiInstance.address,
+            daiPoolInstance.address,
         );
     });
 

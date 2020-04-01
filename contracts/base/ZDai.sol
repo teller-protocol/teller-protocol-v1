@@ -21,7 +21,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 
 
 contract ZDai is ERC20Detailed, ERC20Mintable {
-    string private constant NAME = "ZeroCollateral DAI";
+    string private constant NAME = "Zero Collateral DAI";
     string private constant SYMBOL = "zDAI";
     uint8 private constant DECIMALS = 18;
 

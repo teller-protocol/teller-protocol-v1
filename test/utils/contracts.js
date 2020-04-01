@@ -8,10 +8,4 @@ module.exports = {
             lenderData.lastAccruedInterest
         );
     },
-    createInstance: async newPromise => {
-        const contract = await newPromise;
-        assert(contract);
-        assert(contract.address);
-        return contract;
-    },
 }

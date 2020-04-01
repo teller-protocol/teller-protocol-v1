@@ -2,7 +2,6 @@
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
 const { daiPool } = require('../utils/events');
-const { createInstance } = require('../utils/contracts');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const MintableInterfaceEncoder = require('../utils/encoders/MintableInterfaceEncoder');
 
@@ -23,11 +22,11 @@ contract('DAIPoolDepositDaiTest', function (accounts) {
     let loanInfoInstance;
     
     beforeEach('Setup for each test', async () => {
-        zdaiInstance = await createInstance(Mock.new());
-        daiInstance = await createInstance(Mock.new());
-        loanInfoInstance = await createInstance(Mock.new());
-        instance = await createInstance(DAIPool.new());
-        lenderInfoInstance = await createInstance(LenderInfo.new(zdaiInstance.address, instance.address));
+        zdaiInstance = await Mock.new();
+        daiInstance = await Mock.new();
+        loanInfoInstance = await Mock.new();
+        instance = await DAIPool.new();
+        lenderInfoInstance = await LenderInfo.new(zdaiInstance.address, instance.address);
 
         await instance.initialize(
             zdaiInstance.address,

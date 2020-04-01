@@ -24,7 +24,7 @@ contract InitializableModifiersMock is Initializable {
     
     /** State Variables */
 
-    /** Connstructor */
+    /** Constructor */
 
     function _externalIsNotInitialized() isNotInitialized() external {}
 

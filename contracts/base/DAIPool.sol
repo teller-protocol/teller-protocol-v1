@@ -75,7 +75,7 @@ contract DAIPool is DAIPoolInterface, Initializable {
         @dev the user must call DAI.approve function previously.
         @param amount of DAIs to deposit in the pool.
     */
-    function depositDai(uint256 amount) external isInitialized {
+    function depositDai(uint256 amount) external isInitialized() {
         // Require DAI approval from sender to this contract.
         requireDAIAllowance(msg.sender, amount);
 

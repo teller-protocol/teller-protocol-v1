@@ -1,7 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS } = require('../utils/consts');
-const { createInstance } = require('../utils/contracts');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -14,8 +13,8 @@ contract('LenderInfoConstructorTest', function (accounts) {
     let daiPoolInstance;
 
     beforeEach('Setup for each test', async () => {
-        zdaiInstance = await createInstance(Mock.new());
-        daiPoolInstance = await createInstance(Mock.new());
+        zdaiInstance = await Mock.new();
+        daiPoolInstance = await Mock.new();
     });
 
     withData({
