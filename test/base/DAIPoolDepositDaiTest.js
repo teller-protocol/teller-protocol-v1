@@ -37,15 +37,12 @@ contract('DAIPoolDepositDaiTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [1, accounts[0], true, true, 1, undefined, false],
-        _2_notEnoughAllowance: [49, accounts[1], true, true, 50, 'Not enough tokens allowed.', true],
-        _3_notTransferFromEnoughBalance: [100, accounts[2], false, true, 100, 'Transfer from was not successful.', true],
-        _4_notMint: [60, accounts[0], true, false, 60, 'Mint was not successful.', true],
-    }, function(allowance, recipient, transferFrom, mint, amountToDeposit, expectedErrorMessage, mustFail) {
+        _1_basic: [accounts[0], true, true, 1, undefined, false],
+        _2_notTransferFromEnoughBalance: [accounts[2], false, true, 100, 'Transfer from was not successful.', true],
+        _3_notMint: [accounts[0], true, false, 60, 'Mint was not successful.', true],
+    }, function(recipient, transferFrom, mint, amountToDeposit, expectedErrorMessage, mustFail) {
         it(t('user', 'depositDai', 'Should able (or not) to deposit DAIs.', mustFail), async function() {
             // Setup
-            const encodeAllowance = erc20InterfaceEncoder.encodeAllowance();
-            await daiInstance.givenMethodReturnUint(encodeAllowance, allowance);
             const encodeTransferFrom = erc20InterfaceEncoder.encodeTransferFrom();
             await daiInstance.givenMethodReturnBool(encodeTransferFrom, transferFrom);
             const encodeMint = mintableInterfaceEncoder.encodeMint();

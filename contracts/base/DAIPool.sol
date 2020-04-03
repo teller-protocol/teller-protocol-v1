@@ -76,8 +76,6 @@ contract DAIPool is DAIPoolInterface, Initializable {
         @param amount of DAIs to deposit in the pool.
     */
     function depositDai(uint256 amount) external isInitialized() {
-        // Require DAI approval from sender to this contract.
-        requireDAIAllowance(msg.sender, amount);
 
         // Transfering DAI tokens to DAIPool
         daiTransferFrom(msg.sender, amount);
@@ -105,14 +103,6 @@ contract DAIPool is DAIPoolInterface, Initializable {
     /** Internal functions */
 
     /** Private functions */
-
-    /**
-
-     */
-    function requireDAIAllowance(address owner, uint256 amount) private view {
-        uint256 allowanceResult = dai.allowance(owner, address(this));
-        require(allowanceResult >= amount, "Not enough tokens allowed.");
-    }
 
     /**
         @notice It transfers an amount of DAI tokens from an address to this contract.
