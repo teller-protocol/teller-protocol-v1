@@ -111,7 +111,7 @@ contract DAIPool is DAIPoolInterface, Initializable {
      */
     function daiTransferFrom(address from, uint256 amount) private {
         bool transferFromResult = dai.transferFrom(from, address(this), amount);
-        require(transferFromResult, "Transfer from was not successful.");
+        require(transferFromResult, "TransferFrom wasn't successful.");
     }
 
     /**

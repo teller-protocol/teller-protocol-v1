@@ -22,15 +22,15 @@ contract('InitializeModifiersTest', function (accounts) {
         expectedErrorMessage,
         mustFail
     ) {    
-        it(t('user', '_isNotInitialized', 'Should (or not) be able to create a new instance.', mustFail), async function() {
+        it(t('user', 'isNotInitialized', 'Should (or not) be able to create a new instance.', mustFail), async function() {
             // Setup
             if(callInitialize) {
-                await instance._externalInitialize();
+                await instance.externalInitialize();
             }
 
             try {
                 // Invocation
-                const result = await instance._externalIsNotInitialized();
+                const result = await instance.externalIsNotInitialized();
                 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
@@ -52,15 +52,15 @@ contract('InitializeModifiersTest', function (accounts) {
         expectedErrorMessage,
         mustFail
     ) {    
-        it(t('user', '_isInitialized', 'Should (or not) be able to create a new instance.', mustFail), async function() {
+        it(t('user', 'isInitialized', 'Should (or not) be able to create a new instance.', mustFail), async function() {
             // Setup
             if(callInitialize) {
-                await instance._externalInitialize();
+                await instance.externalInitialize();
             }
 
             try {
                 // Invocation
-                const result = await instance._externalIsInitialized();
+                const result = await instance.externalIsInitialized();
                 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');

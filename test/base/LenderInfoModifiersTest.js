@@ -28,7 +28,7 @@ contract('LenderInfoZDaiMintedTest', function (accounts) {
 
             try {
                 // Invocation
-                const result = await instance._isZDai({ from: sender });
+                const result = await instance.externalIsZDai({ from: sender });
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because the sender has no permissions.');
@@ -59,7 +59,7 @@ contract('LenderInfoZDaiMintedTest', function (accounts) {
 
             try {
                 // Invocation
-                const result = await instance._isDaiPool({ from: sender });
+                const result = await instance.externalIsDaiPool({ from: sender });
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because the sender has no permissions.');
@@ -89,7 +89,7 @@ contract('LenderInfoZDaiMintedTest', function (accounts) {
 
             try {
                 // Invocation
-                const result = await instance._isValid(sender);
+                const result = await instance.externalIsValid(sender);
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because the address is invalid/empty.');

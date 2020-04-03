@@ -38,7 +38,7 @@ contract('DAIPoolDepositDaiTest', function (accounts) {
 
     withData({
         _1_basic: [accounts[0], true, true, 1, undefined, false],
-        _2_notTransferFromEnoughBalance: [accounts[2], false, true, 100, 'Transfer from was not successful.', true],
+        _2_notTransferFromEnoughBalance: [accounts[2], false, true, 100, "TransferFrom wasn't successful.", true],
         _3_notMint: [accounts[0], true, false, 60, 'Mint was not successful.', true],
     }, function(recipient, transferFrom, mint, amountToDeposit, expectedErrorMessage, mustFail) {
         it(t('user', 'depositDai', 'Should able (or not) to deposit DAIs.', mustFail), async function() {

@@ -26,11 +26,11 @@ contract InitializableModifiersMock is Initializable {
 
     /** Constructor */
 
-    function _externalIsNotInitialized() isNotInitialized() external {}
+    function externalIsNotInitialized() isNotInitialized() external {}
 
-    function _externalIsInitialized() isInitialized() external {}
+    function externalIsInitialized() isInitialized() external {}
 
-    function _externalInitialize() external {
+    function externalInitialize() external {
         initialize();
     }
 

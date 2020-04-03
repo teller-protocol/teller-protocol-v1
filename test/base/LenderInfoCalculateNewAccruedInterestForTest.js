@@ -38,7 +38,7 @@ contract('LenderInfoCalculateNewAccruedInterestForTest', function (accounts) {
             // Setup
 
             // Invocation
-            const result = await instance._calculateNewAccruedInterestFor(
+            const result = await instance.externalCalculateNewAccruedInterestFor(
                 currentAccruedInterest,
                 previousBlockAccruedInterest,
                 currentBlockNumber,

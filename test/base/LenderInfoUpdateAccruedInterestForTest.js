@@ -52,7 +52,7 @@ contract('LenderInfoUpdateAccruedInterestForTest', function (accounts) {
             );
 
             // Invocation
-            const result = await instance._updateAccruedInterestFor(lenderAddress);
+            const result = await instance.externalUpdateAccruedInterestFor(lenderAddress);
 
             // Assertions
             assert(result);

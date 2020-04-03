@@ -33,10 +33,10 @@ contract LenderInfoModifiersMock is LenderInfo {
         LenderInfo(zdaiAddress, daiPoolAddress)
     {}
 
-    function _isZDai() isZDai(msg.sender) external {}
+    function externalIsZDai() isZDai(msg.sender) external {}
 
-    function _isDaiPool() isDaiPool(msg.sender) external {}
+    function externalIsDaiPool() isDaiPool(msg.sender) external {}
 
-    function _isValid(address anAddress) isValid(anAddress) external {}
+    function externalIsValid(address anAddress) isValid(anAddress) external {}
 
 }
