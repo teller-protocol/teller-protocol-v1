@@ -76,7 +76,6 @@ contract DAIPool is DAIPoolInterface, Initializable {
         @param amount of DAIs to deposit in the pool.
     */
     function depositDai(uint256 amount) external isInitialized() {
-
         // Transfering DAI tokens to DAIPool
         daiTransferFrom(msg.sender, amount);
 
