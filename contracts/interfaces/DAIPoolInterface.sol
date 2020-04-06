@@ -1,10 +1,10 @@
 pragma solidity 0.5.17;
 
+
 /**
     @notice This interface defines the functions for a DAI pool that holds all of the DAI that lenders transfer into the protocol.
  */
 interface DAIPoolInterface {
-
     /**
         @notice It allows users to deposit DAIs into the pool.
         @dev the user must call DAI.approve function previously.
@@ -76,6 +76,4 @@ interface DAIPoolInterface {
         @param amount of DAI tokens.
      */
     event PaymentLiquidated(address liquidator, uint256 amount);
-
-
 }

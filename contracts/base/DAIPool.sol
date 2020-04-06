@@ -30,6 +30,7 @@ import "../interfaces/ZDAIInterface.sol";
 // Contracts
 import "./Initializable.sol";
 
+
 /**
     @notice The DAIPool contract holds all of the DAI that lenders transfer into the protocol. It is the contract that lenders interact with to deposit and withdraw DAI including interest. The DAIPool interacts with the LenderInformation contract to ensure DAI balances and interest owed is kept up to date.
  */
@@ -118,7 +119,7 @@ contract DAIPool is DAIPoolInterface, Initializable {
         // Checks contract hast enough DAI balance.
         requireEnoughDAIBalance(amount);
 
-        // Check holder/sender has enough zDAI balance.        
+        // Check holder/sender has enough zDAI balance.
         requireEnoughZDaiBalanceFor(msg.sender, amount);
 
         // Burn ZDAI tokens.
@@ -156,7 +157,10 @@ contract DAIPool is DAIPoolInterface, Initializable {
         @param liquidator address to receive the tokens.
         @dev It throws a require error if this contract hasn't enough DAI balance.
      */
-    function liquidationPayment(uint256 amount, address liquidator) external isLoan(msg.sender) {
+    function liquidationPayment(uint256 amount, address liquidator)
+        external
+        isLoan(msg.sender)
+    {
         // Checks contract has enough DAI balance.
         requireEnoughDAIBalance(amount);
 
