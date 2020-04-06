@@ -12,24 +12,13 @@ contract('DAIPoolInitializeTest', function (accounts) {
     let zdaiInstance;
     let daiInstance;
     let lenderInfoInstance;
-    let loanInfoInstance;
+    let loansInstance;
     
     beforeEach('Setup for each test', async () => {
         zdaiInstance = await Mock.new();
-        assert(zdaiInstance);
-        assert(zdaiInstance.address);
-
         daiInstance = await Mock.new();
-        assert(daiInstance);
-        assert(daiInstance.address);
-
         lenderInfoInstance = await Mock.new();
-        assert(lenderInfoInstance);
-        assert(lenderInfoInstance.address);
-
-        loanInfoInstance = await Mock.new();
-        assert(loanInfoInstance);
-        assert(loanInfoInstance.address);
+        loansInstance = await Mock.new();
     });
 
     withData({
@@ -37,7 +26,7 @@ contract('DAIPoolInitializeTest', function (accounts) {
         _2_notZdai: [false, true, true, true, 'ZDai address is required.', true],
         _3_notDai: [true, false, true, true, 'DAI address is required.', true],
         _4_notLenderInfo: [true, true, false, true, 'LenderInfo address is required.', true],
-        _5_notLoanInfo: [true, true, true, false, 'LoanInfo address is required.', true],
+        _5_notLoanInfo: [true, true, true, false, 'Loans address is required.', true],
         _5_notZdai_notLoanInfo: [false, true, true, false, 'ZDai address is required.', true],
         _6_notDai_notLenderInfo: [true, false, false, true, 'DAI address is required.', true],
     }, function(
@@ -54,7 +43,7 @@ contract('DAIPoolInitializeTest', function (accounts) {
             const zDaiAddress = createZdai ? zdaiInstance.address : NULL_ADDRESS;
             const daiAddress = createDai ? daiInstance.address : NULL_ADDRESS;
             const lenderInfoAddress = createLenderInfo ? lenderInfoInstance.address : NULL_ADDRESS;
-            const loanInfoAddress = createLoanInfo ? loanInfoInstance.address : NULL_ADDRESS;
+            const loanInfoAddress = createLoanInfo ? loansInstance.address : NULL_ADDRESS;
 
             try {
                 // Invocation

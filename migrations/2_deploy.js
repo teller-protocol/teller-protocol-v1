@@ -53,6 +53,9 @@ module.exports = async function(deployer, network, accounts) {
     LenderInfo.address,
     Loans.address
   );
+  
+  const zdaiInstance = await ZDai.deployed();
+  await zdaiInstance.addMinter(DAIPool.address, { from: deployerAccount });
 
   deployerApp.print();
   deployerApp.writeJson();

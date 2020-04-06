@@ -1,9 +1,9 @@
 const { encode } = require('../consts');
+const ERC20InterfaceEncoder = require('./ERC20InterfaceEncoder');
 
-class MintableInterfaceEncoder {
+class MintableInterfaceEncoder extends ERC20InterfaceEncoder {
     constructor(web3) {
-        this.web3 = web3;
-        assert(web3, 'Web3 instance is required.');
+        super(web3);
     }
 }
 
