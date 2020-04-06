@@ -36,7 +36,7 @@ contract('DAIPoolRepayDaiTest', function (accounts) {
     withData({
         _1_basic: [accounts[1], loansAddress, true, 10, undefined, false],
         _2_notLoan: [accounts[1], accounts[2], true, 10, 'Address is not Loans contract.', true],
-        _4_transferFail: [accounts[1], loansAddress, false, 200, 'Transfer from was not successful.', true],
+        _3_transferFail: [accounts[1], loansAddress, false, 200, "TransferFrom wasn't successful.", true],
     }, function(borrower, sender, transferFrom, amountToRepay, expectedErrorMessage, mustFail) {
         it(t('user', 'repayDai', 'Should able (or not) to repay loan.', mustFail), async function() {
             // Setup
