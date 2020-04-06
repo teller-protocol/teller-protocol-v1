@@ -68,4 +68,17 @@ module.exports = {
             };
         },
     },
-}
+    daiPool: {
+        daiDeposited: tx => {
+            const name = 'DaiDeposited';
+            return {
+                name: name,
+                emitted: (sender, amount) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.amount.toString(), amount.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
+};

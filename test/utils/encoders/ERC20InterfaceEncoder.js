@@ -11,4 +11,12 @@ ERC20InterfaceEncoder.prototype.encodeBalanceOf = function() {
     return encode(this.web3, 'balanceOf(address)');
 }
 
+ERC20InterfaceEncoder.prototype.encodeAllowance = function() {
+    return encode(this.web3, 'allowance(address,address)');
+}
+
+ERC20InterfaceEncoder.prototype.encodeTransferFrom = function() {
+    return encode(this.web3, 'transferFrom(address,address,uint256)');
+}
+
 module.exports = ERC20InterfaceEncoder;

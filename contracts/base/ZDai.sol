@@ -13,30 +13,22 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 */
+
 pragma solidity 0.5.17;
 
-import "../../base/LenderInfo.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Mintable.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 
-/**
-    This contract is created ONLY for testing purposes.
- */
-contract LenderInfoModifiersMock is LenderInfo {
-    
-    /** State Variables */
 
-    /** Connstructor */
-    constructor(
-        address zdaiAddress,
-        address daiPoolAddress
-    )
-        public
-        LenderInfo(zdaiAddress, daiPoolAddress)
-    {}
+contract ZDai is ERC20Detailed, ERC20Mintable {
+    string private constant NAME = "Zero Collateral DAI";
+    string private constant SYMBOL = "zDAI";
+    uint8 private constant DECIMALS = 18;
 
-    function externalIsZDai() isZDai(msg.sender) external {}
+    constructor() public ERC20Detailed(NAME, SYMBOL, DECIMALS) {}
 
-    function externalIsDaiPool() isDaiPool(msg.sender) external {}
-
-    function externalIsValid(address anAddress) isValid(anAddress) external {}
-
+    function burn(address account, uint256 amount) public onlyMinter returns (bool) {
+        _burn(account, amount);
+        return true;
+    }
 }

@@ -1,5 +1,6 @@
 pragma solidity 0.5.17;
 
+
 library ZeroCollateralCommon {
     // Interest accrued from lending account
     struct LendAccount {
@@ -28,9 +29,9 @@ library ZeroCollateralCommon {
     }
 
     struct Signature {
-      uint256 signerNonce;
-      uint8 v;
-      bytes32 r;
-      bytes32 s;
+        uint256 signerNonce;
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
     }
 }

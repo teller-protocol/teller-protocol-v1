@@ -7,6 +7,7 @@ const infuraKeyValue = envConfig.getInfuraKey().get();
 const gasKeyValue = envConfig.getGasWei().get();
 const gasPriceKeyValue = envConfig.getGasPriceGwei().get();
 const defaultAddressIndex = envConfig.getDefaultAddressIndex().get();
+const etherscanApiKey = envConfig.getEtherscanApiKey().get();
 
 const Web3 = require('web3');
 
@@ -15,13 +16,18 @@ const HDWalletProvider = require('truffle-hdwallet-provider');
 
 module.exports = {
 	web3: Web3,
-	plugins: ["solidity-coverage"],
+	plugins: [
+		'solidity-coverage',
+		'truffle-plugin-verify',
+	],
+	api_keys: {
+		etherscan: etherscanApiKey,
+	},
 	mocha: {
 		enableTimeouts: false,
 		reporter: 'eth-gas-reporter',
 		reporterOptions : {
 			currency: 'USD',
-			excludeContracts: ['Migrations'],
 			showTimeSpent: true,
 			excludeContracts: [
 				'Migrations',

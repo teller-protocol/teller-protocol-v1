@@ -15,19 +15,11 @@ contract('LenderInfoCalculateNewAccruedInterestForTest', function (accounts) {
     
     beforeEach('Setup for each test', async () => {
         zdaiInstance = await Mock.new();
-        assert(zdaiInstance);
-        assert(zdaiInstance.address);
-
         daiPoolInstance = await Mock.new();
-        assert(daiPoolInstance);
-        assert(daiPoolInstance.address);
-
         instance = await LenderInfo.new(
             zdaiInstance.address,
             daiPoolInstance.address,
         );
-        assert(instance);
-        assert(instance.address);
     });
 
     withData({
@@ -46,7 +38,7 @@ contract('LenderInfoCalculateNewAccruedInterestForTest', function (accounts) {
             // Setup
 
             // Invocation
-            const result = await instance._calculateNewAccruedInterestFor(
+            const result = await instance.externalCalculateNewAccruedInterestFor(
                 currentAccruedInterest,
                 previousBlockAccruedInterest,
                 currentBlockNumber,

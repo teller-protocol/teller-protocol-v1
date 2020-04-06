@@ -17,24 +17,32 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import '../util/ZeroCollateralCommon.sol';
+import "../util/ZeroCollateralCommon.sol";
+
 
 interface LoansInterface {
-
     // collateral deposited by borrower
-    event CollateralDeposited(uint256 indexed loanID, address indexed borrower, uint256 depositAmount);
+    event CollateralDeposited(
+        uint256 indexed loanID,
+        address indexed borrower,
+        uint256 depositAmount
+    );
 
     // collateral withdrawn by borrower
-    event CollateralWithdrawn(uint256 indexed loanID, address indexed borrower, uint256 depositAmount);
+    event CollateralWithdrawn(
+        uint256 indexed loanID,
+        address indexed borrower,
+        uint256 depositAmount
+    );
 
     // new loan created
     event LoanCreated(
-      uint256 indexed loanID,
-      address indexed borrower,
-      uint256 interestRate,
-      uint256 collateralRatio,
-      uint256 maxLoanAmount,
-      uint256 numberDays
+        uint256 indexed loanID,
+        address indexed borrower,
+        uint256 interestRate,
+        uint256 collateralRatio,
+        uint256 maxLoanAmount,
+        uint256 numberDays
     );
 
     function getBorrowerLoans(address borrower) external view returns (uint256[] memory);
@@ -59,5 +67,4 @@ interface LoansInterface {
     function repayDai(uint256 amount, uint256 loanID) external;
 
     function liquidateLoan(uint256 loanID) external;
-
 }

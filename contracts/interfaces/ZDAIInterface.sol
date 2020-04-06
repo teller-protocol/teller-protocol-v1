@@ -4,7 +4,6 @@ import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
 
 /**
-
     Note: since interfaces cannot be inherited by other interfaces, this ZDAIInterface is defined as contract.
     See details at: https://github.com/ethereum/solidity/issues/3419#issuecomment-429988401
  */

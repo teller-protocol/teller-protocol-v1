@@ -11,15 +11,10 @@ const LenderInfo = artifacts.require("./base/LenderInfo.sol");
 contract('LenderInfoConstructorTest', function (accounts) {
     let zdaiInstance;
     let daiPoolInstance;
-    
+
     beforeEach('Setup for each test', async () => {
         zdaiInstance = await Mock.new();
-        assert(zdaiInstance);
-        assert(zdaiInstance.address);
-
         daiPoolInstance = await Mock.new();
-        assert(daiPoolInstance);
-        assert(daiPoolInstance.address);
     });
 
     withData({

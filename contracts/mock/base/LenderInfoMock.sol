@@ -68,7 +68,7 @@ contract LenderInfoMock is LenderInfo {
         lenderAccounts[lender].totalAccruedInterest = totalAccruedInterest;
     }
 
-    function _updateAccruedInterestFor(address lender)
+    function externalUpdateAccruedInterestFor(address lender)
         external
         returns (uint256)
     {
@@ -78,7 +78,7 @@ contract LenderInfoMock is LenderInfo {
     /**
         It mocks borrow info for a specific borrower address / borrow id. It is used ONLY for testing purposes.
      */
-    function _calculateNewAccruedInterestFor(
+    function externalCalculateNewAccruedInterestFor(
         uint256 currentAccruedInterest,
         uint256 previousBlockAccruedInterest,
         uint256 blockNumber,

@@ -18,19 +18,11 @@ contract('LenderInfoZDaiMintedTest', function (accounts) {
     
     beforeEach('Setup for each test', async () => {
         zdaiInstance = await ZDaiToken.new({from: tokensOwner});
-        assert(zdaiInstance);
-        assert(zdaiInstance.address);
-
         daiPoolInstance = await Mock.new();
-        assert(daiPoolInstance);
-        assert(daiPoolInstance.address);
-
         instance = await LenderInfo.new(
             zdaiInstance.address,
             daiPoolInstance.address,
         );
-        assert(instance);
-        assert(instance.address);
     });
 
     withData({

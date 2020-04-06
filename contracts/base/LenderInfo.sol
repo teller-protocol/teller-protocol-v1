@@ -133,8 +133,7 @@ contract LenderInfo is LenderInfoInterface {
     /** Internal Functions */
 
     /**
-        Updates the accrued interest for a specific lender.
-    
+        @notice Updates the accrued interest for a specific lender.
         @param lender address.
         @return the updated accrued intereset for the lender address.
      */
