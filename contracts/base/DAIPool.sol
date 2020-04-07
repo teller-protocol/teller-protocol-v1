@@ -165,12 +165,8 @@ contract DAIPool is DAIPoolInterface, Initializable {
         @param amount of DAI tokens to transfer.
         @param borrower address which will receive the DAI tokens.
         @dev This function only can be invoked by the LoansInterface implementation.
-        @dev It throws a require error if current DAI balance isn't enough to transfer the DAIs.
      */
     function createLoan(uint256 amount, address borrower) external isLoan(msg.sender) {
-        // Checks contract has enough DAI balance.
-        requireEnoughDAIBalance(amount);
-
         // Transfer DAIs to the borrower.
         daiTransfer(borrower, amount);
     }
@@ -198,27 +194,6 @@ contract DAIPool is DAIPoolInterface, Initializable {
     function daiTransfer(address recipient, uint256 amount) private {
         bool transferResult = dai.transfer(recipient, amount);
         require(transferResult, "Transfer was not successful.");
-    }
-
-    /**
-        @notice It checks whether a holder address has enough amount of zDAI or not.
-        @param holder address
-        @param amount of tokens to verify.
-        @dev It throws a require error if holder hasn't enough zDAI tokens.
-     */
-    function requireEnoughZDaiBalanceFor(address holder, uint256 amount) private view {
-        uint256 currentZDaiBalance = zdai.balanceOf(holder);
-        require(currentZDaiBalance >= amount, "Not enough zDAI balance.");
-    }
-
-    /**
-        @notice It checks whether this contract has enough DAI balance or not.
-        @param amount of DAI tokens to verify.
-        @dev It throws a require error if this contract hasn't enough DAI tokens.
-     */
-    function requireEnoughDAIBalance(uint256 amount) private view {
-        uint256 currentDaiBalance = this.getDaiBalance();
-        require(currentDaiBalance >= amount, "Not enough DAI balance.");
     }
 
     /**

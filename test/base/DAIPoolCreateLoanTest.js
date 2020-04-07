@@ -33,17 +33,14 @@ contract('DAIPoolCreateLoanTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [accounts[1], loansAddress, true, 100, 10, undefined, false],
-        _2_notLoanSender: [accounts[1], accounts[4], true, 100, 10, 'Address is not Loans contract.', true],
-        _3_transferFail: [accounts[1], loansAddress, false, 100, 10, 'Transfer was not successful.', true],
-        _4_notEnoughDaiBalance: [accounts[1], loansAddress, true, 150, 151, 'Not enough DAI balance.', true],
-    }, function(borrower, sender, transfer, daiPoolBalance, amountToTransfer, expectedErrorMessage, mustFail) {
+        _1_basic: [accounts[1], loansAddress, true, 10, undefined, false],
+        _2_notLoanSender: [accounts[1], accounts[4], true, 10, 'Address is not Loans contract.', true],
+        _3_transferFail: [accounts[1], loansAddress, false, 10, 'Transfer was not successful.', true],
+    }, function(borrower, sender, transfer, amountToTransfer, expectedErrorMessage, mustFail) {
         it(t('user', 'createLoan', 'Should able (or not) to create loan.', mustFail), async function() {
             // Setup
             const encodeTransfer = erc20InterfaceEncoder.encodeTransfer();
             await daiInstance.givenMethodReturnBool(encodeTransfer, transfer);
-            const encodeBalanceOf = erc20InterfaceEncoder.encodeBalanceOf();
-            await daiInstance.givenMethodReturnUint(encodeBalanceOf, daiPoolBalance);
 
             try {
                 // Invocation
