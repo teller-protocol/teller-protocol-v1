@@ -61,7 +61,7 @@ interface DAIPoolInterface {
         @param sender address that withdrew the DAIs tokens.
         @param amount of DAI tokens.
      */
-    event DaiWithdrew(address sender, uint256 amount);
+    event DaiWithdrawn(address sender, uint256 amount);
 
     /**
         @notice This event is emitted when an borrower repaid a loan.

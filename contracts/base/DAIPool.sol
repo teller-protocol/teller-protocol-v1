@@ -69,7 +69,7 @@ contract DAIPool is DAIPoolInterface, Initializable {
         @param daiAddress DAI token address.
         @param lenderInfoAddress LenderInfo contract address.
         @param loansAddress Loans contract address.
-        @dev It throws a require error if the contract is already iintialized.
+        @dev It throws a require error if the contract is already initialized.
      */
     function initialize(
         address zdaiAddress,
@@ -112,16 +112,8 @@ contract DAIPool is DAIPoolInterface, Initializable {
     /**
         @notice It allows any zDAI holder to burn their zDAI tokens and withdraw their DAIs.
         @param amount of DAI tokens to withdraw.
-        @dev It throws a require error if the contract hasn't enough DAI balance.
-        @dev It throws a require error if the holder hasn't enough zDAI balance.
      */
     function withdrawDai(uint256 amount) external {
-        // Checks contract hast enough DAI balance.
-        requireEnoughDAIBalance(amount);
-
-        // Check holder/sender has enough zDAI balance.
-        requireEnoughZDaiBalanceFor(msg.sender, amount);
-
         // Burn ZDAI tokens.
         zdai.burn(amount);
 
@@ -132,7 +124,7 @@ contract DAIPool is DAIPoolInterface, Initializable {
         daiTransfer(msg.sender, amount);
 
         // Emit event.
-        emit DaiWithdrew(msg.sender, amount);
+        emit DaiWithdrawn(msg.sender, amount);
     }
 
     /**
@@ -155,15 +147,11 @@ contract DAIPool is DAIPoolInterface, Initializable {
         @notice Once a loan is liquidated, it transfers the amount in DAI tokens to the liquidator address.
         @param amount in DAI tokens to liquidate.
         @param liquidator address to receive the tokens.
-        @dev It throws a require error if this contract hasn't enough DAI balance.
      */
     function liquidationPayment(uint256 amount, address liquidator)
         external
         isLoan(msg.sender)
     {
-        // Checks contract has enough DAI balance.
-        requireEnoughDAIBalance(amount);
-
         // Transfers DAIs to the liquidator.
         daiTransfer(liquidator, amount);
 
@@ -172,7 +160,7 @@ contract DAIPool is DAIPoolInterface, Initializable {
     }
 
     /**
-        @notice Ønce the loan is created, it transfers the amount of DAIs to the borrower.
+        @notice Once the loan is created, it transfers the amount of DAIs to the borrower.
 
         @param amount of DAI tokens to transfer.
         @param borrower address which will receive the DAI tokens.

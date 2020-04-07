@@ -80,8 +80,8 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-        daiWithdrew: tx => {
-            const name = 'DaiWithdrew';
+        daiWithdrawn: tx => {
+            const name = 'DaiWithdrawn';
             return {
                 name: name,
                 emitted: (sender, amount) => emitted(tx, name, ev => {

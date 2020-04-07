@@ -11,7 +11,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const LenderInfo = artifacts.require("./base/LenderInfo.sol");
 const DAIPool = artifacts.require("./base/DAIPool.sol");
 
-contract('DAIPoolLiquidatePaymentTest', function (accounts) {
+contract('DAIPoolLiquidationPaymentTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     let instance;
     let zdaiInstance;
@@ -34,17 +34,14 @@ contract('DAIPoolLiquidatePaymentTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [accounts[1], loansInstance, true, 100, 10, undefined, false],
-        _2_transferFail: [accounts[1], loansInstance, false, 100, 10, 'Transfer was not successful.', true],
-        _3_notEnoughDaiBalance: [accounts[1], loansInstance, true, 70, 71, 'Not enough DAI balance.', true],
-        _4_notLoansSender: [accounts[1], accounts[2], true, 100, 71, 'Address is not Loans contract.', true],
-    }, function(liquidator, sender, transfer, daiPoolBalance, amountToLiquidate, expectedErrorMessage, mustFail) {
+        _1_basic: [accounts[1], loansInstance, true, 10, undefined, false],
+        _2_transferFail: [accounts[1], loansInstance, false, 10, 'Transfer was not successful.', true],
+        _3_notLoansSender: [accounts[1], accounts[2], true, 71, 'Address is not Loans contract.', true],
+    }, function(liquidator, sender, transfer, amountToLiquidate, expectedErrorMessage, mustFail) {
         it(t('user', 'liquidationPayment', 'Should able (or not) to liquidate payment.', mustFail), async function() {
             // Setup
             const encodeTransfer = erc20InterfaceEncoder.encodeTransfer();
             await daiInstance.givenMethodReturnBool(encodeTransfer, transfer);
-            const encodeBalanceOf = erc20InterfaceEncoder.encodeBalanceOf();
-            await daiInstance.givenMethodReturnUint(encodeBalanceOf, daiPoolBalance);
 
             try {
                 // Invocation

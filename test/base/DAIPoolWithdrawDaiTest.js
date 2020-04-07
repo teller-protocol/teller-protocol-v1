@@ -35,16 +35,11 @@ contract('DAIPoolWithdrawDaiTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [accounts[0], 1000, 100, true, 10, undefined, false],
-        _2_notEnoughDai: [accounts[1], 150, 200, true, 151, 'Not enough DAI balance.', true],
-        _3_notEnoughZDai: [accounts[1], 210, 200, true, 201, 'Not enough zDAI balance.', true],
-        _4_transferFail: [accounts[1], 2000, 200, false, 50, 'Transfer was not successful.', true],
-    }, function(recipient, daiBalance, zdaiBalance, transfer, amountToWithdraw, expectedErrorMessage, mustFail) {
+        _1_basic: [accounts[0], true, 10, undefined, false],
+        _2_transferFail: [accounts[1], false, 50, 'Transfer was not successful.', true],
+    }, function(recipient, transfer, amountToWithdraw, expectedErrorMessage, mustFail) {
         it(t('user', 'withdrawDai', 'Should able (or not) to withdraw DAIs.', mustFail), async function() {
             // Setup
-            const encodeBalanceOf = burnableInterfaceEncoder.encodeBalanceOf();
-            await daiInstance.givenMethodReturnUint(encodeBalanceOf, daiBalance);
-            await zdaiInstance.givenMethodReturnUint(encodeBalanceOf, zdaiBalance);
             const encodeTransfer = burnableInterfaceEncoder.encodeTransfer();
             await daiInstance.givenMethodReturnBool(encodeTransfer, transfer);
 
@@ -56,7 +51,7 @@ contract('DAIPoolWithdrawDaiTest', function (accounts) {
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
                 daiPool
-                    .daiWithdrew(result)
+                    .daiWithdrawn(result)
                     .emitted(recipient, amountToWithdraw);
             } catch (error) {
                 // Assertions
