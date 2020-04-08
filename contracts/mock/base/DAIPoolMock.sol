@@ -14,9 +14,7 @@ contract DAIPoolMock is DAIPoolInterface {
 
     function liquidationPayment(uint256, address) external {}
 
-    function createLoan(uint256, address) external returns (bool) {
-      return true;
-    }
+    function createLoan(uint256, address) external {}
 
     function withdrawInterest(uint256 amount) external {}
 }

@@ -80,5 +80,38 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        daiWithdrawn: tx => {
+            const name = 'DaiWithdrawn';
+            return {
+                name: name,
+                emitted: (sender, amount) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.amount.toString(), amount.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        paymentLiquidated: tx => {
+            const name = 'PaymentLiquidated';
+            return {
+                name: name,
+                emitted: (liquidator, amount) => emitted(tx, name, ev => {
+                    assert.equal(ev.liquidator, liquidator);
+                    assert.equal(ev.amount.toString(), amount.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        daiRepaid: tx => {
+            const name = 'DaiRepaid';
+            return {
+                name: name,
+                emitted: (borrower, amount) => emitted(tx, name, ev => {
+                    assert.equal(ev.borrower, borrower);
+                    assert.equal(ev.amount.toString(), amount.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     },
 };

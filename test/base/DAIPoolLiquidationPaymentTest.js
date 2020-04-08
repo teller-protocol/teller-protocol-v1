@@ -3,7 +3,6 @@ const withData = require('leche').withData;
 const { t } = require('../utils/consts');
 const { daiPool } = require('../utils/events');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
-const MintableInterfaceEncoder = require('../utils/encoders/MintableInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -12,19 +11,17 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const LenderInfo = artifacts.require("./base/LenderInfo.sol");
 const DAIPool = artifacts.require("./base/DAIPool.sol");
 
-contract('DAIPoolDepositDaiTest', function (accounts) {
+contract('DAIPoolLiquidationPaymentTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
-    const mintableInterfaceEncoder = new MintableInterfaceEncoder(web3);
     let instance;
     let zdaiInstance;
     let daiInstance;
     let lenderInfoInstance;
-    let loansInstance;
+    let loansInstance = accounts[0];
     
     beforeEach('Setup for each test', async () => {
         zdaiInstance = await Mock.new();
         daiInstance = await Mock.new();
-        loansInstance = await Mock.new();
         instance = await DAIPool.new();
         lenderInfoInstance = await LenderInfo.new(zdaiInstance.address, instance.address);
 
@@ -32,32 +29,30 @@ contract('DAIPoolDepositDaiTest', function (accounts) {
             zdaiInstance.address,
             daiInstance.address,
             lenderInfoInstance.address,
-            loansInstance.address,
+            loansInstance,
         );
     });
 
     withData({
-        _1_basic: [accounts[0], true, true, 1, undefined, false],
-        _2_notTransferFromEnoughBalance: [accounts[2], false, true, 100, "TransferFrom wasn't successful.", true],
-        _3_notMint: [accounts[0], true, false, 60, 'Mint was not successful.', true],
-    }, function(recipient, transferFrom, mint, amountToDeposit, expectedErrorMessage, mustFail) {
-        it(t('user', 'depositDai', 'Should able (or not) to deposit DAIs.', mustFail), async function() {
+        _1_basic: [accounts[1], loansInstance, true, 10, undefined, false],
+        _2_transferFail: [accounts[1], loansInstance, false, 10, 'Transfer was not successful.', true],
+        _3_notLoansSender: [accounts[1], accounts[2], true, 71, 'Address is not Loans contract.', true],
+    }, function(liquidator, sender, transfer, amountToLiquidate, expectedErrorMessage, mustFail) {
+        it(t('user', 'liquidationPayment', 'Should able (or not) to liquidate payment.', mustFail), async function() {
             // Setup
-            const encodeTransferFrom = erc20InterfaceEncoder.encodeTransferFrom();
-            await daiInstance.givenMethodReturnBool(encodeTransferFrom, transferFrom);
-            const encodeMint = mintableInterfaceEncoder.encodeMint();
-            await zdaiInstance.givenMethodReturnBool(encodeMint, mint);
+            const encodeTransfer = erc20InterfaceEncoder.encodeTransfer();
+            await daiInstance.givenMethodReturnBool(encodeTransfer, transfer);
 
             try {
                 // Invocation
-                const result = await instance.depositDai(amountToDeposit, { from: recipient });
+                const result = await instance.liquidationPayment(amountToLiquidate, liquidator, { from: sender });
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
                 daiPool
-                    .daiDeposited(result)
-                    .emitted(recipient, amountToDeposit);
+                    .paymentLiquidated(result)
+                    .emitted(liquidator, amountToLiquidate);
             } catch (error) {
                 // Assertions
                 assert(mustFail);
