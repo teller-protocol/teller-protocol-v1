@@ -134,7 +134,11 @@ contract DAIPool is DAIPoolInterface, Initializable {
         @param amount in DAI tokens.
         @param borrower address that is repaying the loan.
      */
-    function repayDai(uint256 amount, address borrower) external isInitialized() isLoan() {
+    function repayDai(uint256 amount, address borrower)
+        external
+        isInitialized()
+        isLoan()
+    {
         // Transfers DAI tokens to DAIPool.
         daiTransferFrom(borrower, amount);
 
@@ -166,7 +170,11 @@ contract DAIPool is DAIPoolInterface, Initializable {
         @param borrower address which will receive the DAI tokens.
         @dev This function only can be invoked by the LoansInterface implementation.
      */
-    function createLoan(uint256 amount, address borrower) external isInitialized() isLoan() {
+    function createLoan(uint256 amount, address borrower)
+        external
+        isInitialized()
+        isLoan()
+    {
         // Transfer DAIs to the borrower.
         daiTransfer(borrower, amount);
     }
