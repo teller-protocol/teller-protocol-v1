@@ -51,11 +51,10 @@ contract DAIPool is DAIPoolInterface, Initializable {
 
     /**
         @notice It checks the address is the Loans contract address.
-        @param anAddress to verify.
         @dev It throws a require error if parameter is not equal to loans contract address.
      */
-    modifier isLoan(address anAddress) {
-        loans.requireEqualTo(anAddress, "Address is not Loans contract.");
+    modifier isLoan() {
+        loans.requireEqualTo(msg.sender, "Address is not Loans contract.");
         _;
     }
 
@@ -113,7 +112,7 @@ contract DAIPool is DAIPoolInterface, Initializable {
         @notice It allows any zDAI holder to burn their zDAI tokens and withdraw their DAIs.
         @param amount of DAI tokens to withdraw.
      */
-    function withdrawDai(uint256 amount) external {
+    function withdrawDai(uint256 amount) external isInitialized() {
         // Burn ZDAI tokens.
         zdai.burn(amount);
 
@@ -135,7 +134,7 @@ contract DAIPool is DAIPoolInterface, Initializable {
         @param amount in DAI tokens.
         @param borrower address that is repaying the loan.
      */
-    function repayDai(uint256 amount, address borrower) external isLoan(msg.sender) {
+    function repayDai(uint256 amount, address borrower) external isInitialized() isLoan() {
         // Transfers DAI tokens to DAIPool.
         daiTransferFrom(borrower, amount);
 
@@ -150,7 +149,8 @@ contract DAIPool is DAIPoolInterface, Initializable {
      */
     function liquidationPayment(uint256 amount, address liquidator)
         external
-        isLoan(msg.sender)
+        isInitialized()
+        isLoan()
     {
         // Transfers DAIs to the liquidator.
         daiTransfer(liquidator, amount);
@@ -166,20 +166,12 @@ contract DAIPool is DAIPoolInterface, Initializable {
         @param borrower address which will receive the DAI tokens.
         @dev This function only can be invoked by the LoansInterface implementation.
      */
-    function createLoan(uint256 amount, address borrower) external isLoan(msg.sender) {
+    function createLoan(uint256 amount, address borrower) external isInitialized() isLoan() {
         // Transfer DAIs to the borrower.
         daiTransfer(borrower, amount);
     }
 
-    /**
-        @notice It gets the current DAI balance for this contract.
-        @return current DAI balance.
-     */
-    function getDaiBalance() external view returns (uint256) {
-        return dai.balanceOf(address(this));
-    }
-
-    function withdrawInterest(uint256 amount) external {}
+    function withdrawInterest(uint256 amount) external isInitialized() {}
 
     /** Internal functions */
 
