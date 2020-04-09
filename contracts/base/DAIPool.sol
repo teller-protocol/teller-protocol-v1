@@ -114,9 +114,9 @@ contract DAIPool is DAIPoolInterface, Initializable {
      */
     function withdrawDai(uint256 amount) external isInitialized() {
         // Burn ZDAI tokens.
-        zdai.burn(amount);
+        zdai.burn(msg.sender, amount);
 
-        // Notify ZDAI tokens were burnt/
+        // Notify ZDAI tokens were burnt
         lenderInfo.zDaiBurnt(msg.sender, amount);
 
         // Transfers DAI tokens

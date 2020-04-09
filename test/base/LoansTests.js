@@ -14,8 +14,8 @@ const {
   ONE_HOUR,
   ONE_DAY,
   getLatestTimestamp
-} = require('./utils/consts');
-const { hashLoan, signLoanHash } = require('./utils/hashes');
+} = require('../utils/consts');
+const { hashLoan, signLoanHash } = require('../utils/hashes');
 
 
 contract('Loans Unit Tests', async accounts => {
