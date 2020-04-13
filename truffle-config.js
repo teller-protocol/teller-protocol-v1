@@ -1,4 +1,5 @@
 const envConfig = require('./config/env')();
+const preamble = require('./docs/preamble');
 
 // Environment Configuration
 const addressCountValue = envConfig.getAddressCount().get();
@@ -22,6 +23,9 @@ module.exports = {
 	],
 	api_keys: {
 		etherscan: etherscanApiKey,
+	},
+	verify: {
+		preamble,
 	},
 	mocha: {
 		enableTimeouts: false,
