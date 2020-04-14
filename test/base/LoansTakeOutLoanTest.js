@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, encode } = require('../utils/consts');
+const { t, encode, createLoanInfo } = require('../utils/consts');
 const { createSignature } = require('../utils/hashes');
 const { loans } = require('../utils/events');
 
