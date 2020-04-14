@@ -30,19 +30,6 @@ module.exports = {
             };
         },
     },
-    zeroCollateral: {
-        collateralDeposited: tx => {
-            const name = 'CollateralDeposited';
-            return {
-                name: name,
-                emitted: (borrower, amount) => emitted(tx, name, ev => {
-                    assert.equal(ev.borrower, borrower);
-                    assert.equal(ev.amount.toString(), amount.toString());
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
-    },
     lenderInfo: {
         accruedInterestUpdated: tx => {
             const name = 'AccruedInterestUpdated';
@@ -109,6 +96,23 @@ module.exports = {
                 emitted: (borrower, amount) => emitted(tx, name, ev => {
                     assert.equal(ev.borrower, borrower);
                     assert.equal(ev.amount.toString(), amount.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
+    loans: {
+        loanCreated: tx => {
+            const name = 'LoanCreated';
+            return {
+                name: name,
+                emitted: (borrower, interestRate, collateralRatio, maxLoanAmount, numberDays, loanID) => emitted(tx, name, ev => {
+                    assert.equal(ev.borrower, borrower);
+                    assert.equal(ev.interestRate.toString(), interestRate.toString());
+                    assert.equal(ev.collateralRatio.toString(), collateralRatio.toString());
+                    assert.equal(ev.maxLoanAmount.toString(), maxLoanAmount.toString());
+                    assert.equal(ev.numberDays.toString(), numberDays.toString());
+                    assert.equal(ev.loanID.toString(), loanID.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };

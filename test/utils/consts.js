@@ -39,4 +39,16 @@ module.exports = {
         lastAccruedInterest,
         expectedAccruedInterest,
     }),
+    createLoanInfo: (borrowerIndex, collateralRatio, maxLoanAmount, interestRate) => {
+        return {
+            interestRate,
+            collateralRatio,
+            borrowerIndex,
+            signerIndex: 0,
+            maxLoanAmount,
+            numberDays: 10,
+            signerNonce: 0,
+            takeOutLoanValue: 1,
+        };
+    },
 }
