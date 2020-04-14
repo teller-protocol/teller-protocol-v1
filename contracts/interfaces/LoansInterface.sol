@@ -62,7 +62,7 @@ interface LoansInterface {
         uint256 numberDays,
         uint256 amountBorrow,
         ZeroCollateralCommon.Signature calldata signature
-    ) external payable returns (uint256 loadId);
+    ) external payable returns (uint256);
 
     function repayDai(uint256 amount, uint256 loanID) external;
 

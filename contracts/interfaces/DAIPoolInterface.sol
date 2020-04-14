@@ -54,26 +54,26 @@ interface DAIPoolInterface {
         @param sender address.
         @param amount of DAI tokens.
      */
-    event DaiDeposited(address sender, uint256 amount);
+    event DaiDeposited(address indexed sender, uint256 amount);
 
     /**
         @notice This event is emitted when an user withdraws DAI tokens from the pool.
         @param sender address that withdrew the DAIs tokens.
         @param amount of DAI tokens.
      */
-    event DaiWithdrawn(address sender, uint256 amount);
+    event DaiWithdrawn(address indexed sender, uint256 amount);
 
     /**
         @notice This event is emitted when an borrower repaid a loan.
         @param borrower address.
         @param amount in DAIs.
      */
-    event DaiRepaid(address borrower, uint256 amount);
+    event DaiRepaid(address indexed borrower, uint256 amount);
 
     /**
         @notice This event is emitted when a liquidator liquidates a loan.
         @param liquidator address.
         @param amount of DAI tokens.
      */
-    event PaymentLiquidated(address liquidator, uint256 amount);
+    event PaymentLiquidated(address indexed liquidator, uint256 amount);
 }

@@ -35,7 +35,9 @@ module.exports = {
 				'LenderInfoMock',
 				'LenderInfoModifiersMock',
 				'Mock',
-				'ZeroCollateralMock'
+				'LoansMock',
+				'DAIPoolMock',
+				'InitializableModifiersMock',
 			]
 		},
 	},

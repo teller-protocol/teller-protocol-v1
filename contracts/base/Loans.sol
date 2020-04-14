@@ -140,7 +140,7 @@ contract Loans is LoansInterface, SignerRole {
         uint256 numberDays,
         uint256 amountBorrow,
         ZeroCollateralCommon.Signature calldata signature
-    ) external payable returns (uint256 loanID) {
+    ) external payable returns (uint256) {
         require(amountBorrow <= maxLoanAmount, "BORROW_AMOUNT_NOT_AUTHORIZED");
 
         address signer = ecrecover(
@@ -192,8 +192,10 @@ contract Loans is LoansInterface, SignerRole {
             amountBorrow
         );
 
+        uint256 loanID = loanIDCounter;
+
         // add loanID to the borrower's list of loans
-        borrowerLoans[msg.sender].push(loanIDCounter);
+        borrowerLoans[msg.sender].push(loanID);
         loanIDCounter += 1;
 
         // give the borrower their requested amount of DAI
@@ -210,7 +212,7 @@ contract Loans is LoansInterface, SignerRole {
             numberDays
         );
 
-        return loanIDCounter - 1;
+        return loanID;
     }
 
     /**
