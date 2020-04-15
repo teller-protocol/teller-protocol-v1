@@ -36,7 +36,7 @@ const createSignature = async (borrower, loanInfo, signer) => {
       numberDays: loanInfo.numberDays,
       signerNonce: loanInfo.signerNonce,
   });
-  const signature = await signLoanHash(signer, hashedLoan, NETWORK_PROVIDER, COVERAGE_NETWORK);
+  const signature = await signLoanHash(signer, hashedLoan);
   return signature;
 }
 
