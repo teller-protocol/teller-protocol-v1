@@ -134,11 +134,7 @@ contract LendingPool is LendingPoolInterface, Initializable {
         @param amount of tokens.
         @param borrower address that is repaying the loan.
      */
-    function repay(uint256 amount, address borrower)
-        external
-        isInitialized()
-        isLoan()
-    {
+    function repay(uint256 amount, address borrower) external isInitialized() isLoan() {
         // Transfers tokens to LendingPool.
         tokenTransferFrom(borrower, amount);
 
