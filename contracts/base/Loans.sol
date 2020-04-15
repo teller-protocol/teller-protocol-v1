@@ -19,7 +19,7 @@ pragma experimental ABIEncoderV2;
 
 import "../interfaces/LoansInterface.sol";
 import "../interfaces/PairAggregatorInterface.sol";
-import "../interfaces/DAIPoolInterface.sol";
+import "../interfaces/LendingPoolInterface.sol";
 import "../util/ZeroCollateralCommon.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/access/roles/SignerRole.sol";
@@ -42,7 +42,7 @@ contract Loans is LoansInterface, SignerRole {
     uint256 public loanIDCounter;
 
     PairAggregatorInterface public priceOracle;
-    DAIPoolInterface public daiPool;
+    LendingPoolInterface public lendingPool;
 
     mapping(address => uint256[]) private borrowerLoans;
 
@@ -55,12 +55,12 @@ contract Loans is LoansInterface, SignerRole {
         _;
     }
 
-    constructor(address priceOracleAddress, address daiPoolAddress) public {
+    constructor(address priceOracleAddress, address lendingPoolAddress) public {
         require(priceOracleAddress != address(0), "PROVIDE_ORACLE_ADDRESS");
-        require(daiPoolAddress != address(0), "PROVIDE_DAIPOOL_ADDRESS");
+        require(lendingPoolAddress != address(0), "PROVIDE_LENDINGPOOL_ADDRESS");
 
         priceOracle = PairAggregatorInterface(priceOracleAddress);
-        daiPool = DAIPoolInterface(daiPoolAddress);
+        lendingPool = LendingPoolInterface(lendingPoolAddress);
     }
 
     /**
@@ -95,7 +95,7 @@ contract Loans is LoansInterface, SignerRole {
     {
         require(msg.sender == loans[loanID].borrower, "CALLER_DOESNT_OWN_LOAN");
 
-        // Find the minimum collateral amount this loan is allowed in DAI
+        // Find the minimum collateral amount this loan is allowed in tokens
         uint256 minimumCollateralDAI = getMinimumAllowedCollateralDAI(loanID);
 
         require(
@@ -124,7 +124,7 @@ contract Loans is LoansInterface, SignerRole {
      * @notice Take out a loan
      * @param interestRate uint256 The interest rate of the loan
      * @param collateralRatio uint256 The ratio of colalteral to principal required
-     * @param maxLoanAmount uint256 The maximum amount of DAI allowed
+     * @param maxLoanAmount uint256 The maximum amount of tokens allowed
      * @param numberDays uint256 The length of the loan
      * @param amountBorrow uint256 The initial amount to draw out for the loan
      * @param signature ZeroCollateralCommon.Signature A signature from an authorized signer
@@ -198,8 +198,8 @@ contract Loans is LoansInterface, SignerRole {
         borrowerLoans[msg.sender].push(loanID);
         loanIDCounter += 1;
 
-        // give the borrower their requested amount of DAI
-        daiPool.createLoan(amountBorrow, msg.sender);
+        // give the borrower their requested amount of tokens
+        lendingPool.createLoan(amountBorrow, msg.sender);
 
         totalCollateral = totalCollateral.add(msg.value);
 
@@ -217,10 +217,10 @@ contract Loans is LoansInterface, SignerRole {
 
     /**
      * @notice Make a payment to a loan
-     * @param amount uint256 The amount of DAI to pay back to the loan
+     * @param amount uint256 The amount of tokens to pay back to the loan
      * @param loanID uint256 The ID of the loan the payment is for
      */
-    function repayDai(uint256 amount, uint256 loanID) external loanIDValid(loanID) {
+    function repay(uint256 amount, uint256 loanID) external loanIDValid(loanID) {
         require(loans[loanID].active, "LOAN_NOT_ACTIVE");
 
         // calculate the actual amount to repay
@@ -242,7 +242,7 @@ contract Loans is LoansInterface, SignerRole {
                 );
             }
 
-            daiPool.repayDai(toPay, msg.sender);
+            lendingPool.repay(toPay, msg.sender);
         }
     }
 
@@ -272,8 +272,8 @@ contract Loans is LoansInterface, SignerRole {
 
         loans[loanID].active = false;
 
-        // the msg.sender pays DAI at 95% of collateral price
-        daiPool.liquidationPayment(
+        // the msg.sender pays tokens at 95% of collateral price
+        lendingPool.liquidationPayment(
             collateralInDAI.mul(LIQUIDATE_ETH_PRICE).div(ONE_HUNDRED),
             msg.sender
         );

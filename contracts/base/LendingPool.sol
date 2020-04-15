@@ -23,8 +23,8 @@ import "../util/ZeroCollateralCommon.sol";
 
 // Interfaces
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
-import "../interfaces/DAIPoolInterface.sol";
-import "../interfaces/LenderInfoInterface.sol";
+import "../interfaces/LendingPoolInterface.sol";
+import "../interfaces/LendersInterface.sol";
 import "../interfaces/ZDAIInterface.sol";
 
 // Contracts
@@ -32,18 +32,18 @@ import "./Initializable.sol";
 
 
 /**
-    @notice The DAIPool contract holds all of the DAI that lenders transfer into the protocol. It is the contract that lenders interact with to deposit and withdraw DAI including interest. The DAIPool interacts with the LenderInformation contract to ensure DAI balances and interest owed is kept up to date.
+    @notice The LendingPool contract holds all of the tokens that lenders transfer into the protocol. It is the contract that lenders interact with to deposit and withdraw their tokens including interest. The LendingPool interacts with the LenderInformation contract to ensure token balances and interest owed is kept up to date.
  */
-contract DAIPool is DAIPoolInterface, Initializable {
+contract LendingPool is LendingPoolInterface, Initializable {
     using AddressLib for address;
 
     /* State Variables */
 
-    IERC20 public dai;
+    IERC20 public token;
 
     ZDAIInterface public zdai;
 
-    LenderInfoInterface public lenderInfo;
+    LendersInterface public lenders;
 
     address public loans;
 
@@ -65,90 +65,90 @@ contract DAIPool is DAIPoolInterface, Initializable {
     /**
         @notice It initializes the contract state variables.
         @param zdaiAddress zDAI token address.
-        @param daiAddress DAI token address.
-        @param lenderInfoAddress LenderInfo contract address.
+        @param tokenAddress ERC20 token address.
+        @param lendersAddress Lenders contract address.
         @param loansAddress Loans contract address.
         @dev It throws a require error if the contract is already initialized.
      */
     function initialize(
         address zdaiAddress,
-        address daiAddress,
-        address lenderInfoAddress,
+        address tokenAddress,
+        address lendersAddress,
         address loansAddress
     ) external isNotInitialized() {
         zdaiAddress.requireNotEmpty("ZDai address is required.");
-        daiAddress.requireNotEmpty("DAI address is required.");
-        lenderInfoAddress.requireNotEmpty("LenderInfo address is required.");
+        tokenAddress.requireNotEmpty("Token address is required.");
+        lendersAddress.requireNotEmpty("Lenders address is required.");
         loansAddress.requireNotEmpty("Loans address is required.");
 
         initialize();
 
         zdai = ZDAIInterface(zdaiAddress);
-        dai = IERC20(daiAddress);
-        lenderInfo = LenderInfoInterface(lenderInfoAddress);
+        token = IERC20(tokenAddress);
+        lenders = LendersInterface(lendersAddress);
         loans = loansAddress;
     }
 
     /**
-        @notice It allows users to deposit DAIs into the pool.
-        @dev the user must call DAI.approve function previously.
-        @param amount of DAIs to deposit in the pool.
+        @notice It allows users to deposit tokens into the pool.
+        @dev the user must call ERC20.approve function previously.
+        @param amount of tokens to deposit in the pool.
     */
-    function depositDai(uint256 amount) external isInitialized() {
-        // Transfering DAI tokens to DAIPool
-        daiTransferFrom(msg.sender, amount);
+    function deposit(uint256 amount) external isInitialized() {
+        // Transfering tokens to the LendingPool
+        tokenTransferFrom(msg.sender, amount);
 
         // Mint ZDAI tokens
         zdaiMint(msg.sender, amount);
 
         // Notify ZDAI tokens were minted
-        lenderInfo.zDaiMinted(msg.sender, amount);
+        lenders.zDaiMinted(msg.sender, amount);
 
         // Emit event
-        emit DaiDeposited(msg.sender, amount);
+        emit TokenDeposited(msg.sender, amount);
     }
 
     /**
-        @notice It allows any zDAI holder to burn their zDAI tokens and withdraw their DAIs.
-        @param amount of DAI tokens to withdraw.
+        @notice It allows any zDAI holder to burn their zDAI tokens and withdraw their tokens.
+        @param amount of tokens to withdraw.
      */
-    function withdrawDai(uint256 amount) external isInitialized() {
+    function withdraw(uint256 amount) external isInitialized() {
         // Burn ZDAI tokens.
         zdai.burn(msg.sender, amount);
 
         // Notify ZDAI tokens were burnt
-        lenderInfo.zDaiBurnt(msg.sender, amount);
+        lenders.zDaiBurnt(msg.sender, amount);
 
-        // Transfers DAI tokens
-        daiTransfer(msg.sender, amount);
+        // Transfers tokens
+        tokenTransfer(msg.sender, amount);
 
         // Emit event.
-        emit DaiWithdrawn(msg.sender, amount);
+        emit TokenWithdrawn(msg.sender, amount);
     }
 
     /**
         @notice It allows a borrower repaying their loan. 
         @dev This function can be called ONLY by the Loans contract.
-        @dev It requires a DAI.approve call before calling it.
-        @dev It throws a require error if borrower called DAI.approve function before calling it.
-        @param amount in DAI tokens.
+        @dev It requires a ERC20.approve call before calling it.
+        @dev It throws a require error if borrower called ERC20.approve function before calling it.
+        @param amount of tokens.
         @param borrower address that is repaying the loan.
      */
-    function repayDai(uint256 amount, address borrower)
+    function repay(uint256 amount, address borrower)
         external
         isInitialized()
         isLoan()
     {
-        // Transfers DAI tokens to DAIPool.
-        daiTransferFrom(borrower, amount);
+        // Transfers tokens to LendingPool.
+        tokenTransferFrom(borrower, amount);
 
         // Emits event.
-        emit DaiRepaid(borrower, amount);
+        emit TokenRepaid(borrower, amount);
     }
 
     /**
-        @notice Once a loan is liquidated, it transfers the amount in DAI tokens to the liquidator address.
-        @param amount in DAI tokens to liquidate.
+        @notice Once a loan is liquidated, it transfers the amount in tokens to the liquidator address.
+        @param amount of tokens to liquidate.
         @param liquidator address to receive the tokens.
      */
     function liquidationPayment(uint256 amount, address liquidator)
@@ -156,18 +156,18 @@ contract DAIPool is DAIPoolInterface, Initializable {
         isInitialized()
         isLoan()
     {
-        // Transfers DAIs to the liquidator.
-        daiTransfer(liquidator, amount);
+        // Transfers tokens to the liquidator.
+        tokenTransfer(liquidator, amount);
 
         // Emits event
         emit PaymentLiquidated(liquidator, amount);
     }
 
     /**
-        @notice Once the loan is created, it transfers the amount of DAIs to the borrower.
+        @notice Once the loan is created, it transfers the amount of tokens to the borrower.
 
-        @param amount of DAI tokens to transfer.
-        @param borrower address which will receive the DAI tokens.
+        @param amount of tokens to transfer.
+        @param borrower address which will receive the tokens.
         @dev This function only can be invoked by the LoansInterface implementation.
      */
     function createLoan(uint256 amount, address borrower)
@@ -175,8 +175,8 @@ contract DAIPool is DAIPoolInterface, Initializable {
         isInitialized()
         isLoan()
     {
-        // Transfer DAIs to the borrower.
-        daiTransfer(borrower, amount);
+        // Transfer tokens to the borrower.
+        tokenTransfer(borrower, amount);
     }
 
     function withdrawInterest(uint256 amount) external isInitialized() {}
@@ -186,24 +186,24 @@ contract DAIPool is DAIPoolInterface, Initializable {
     /** Private functions */
 
     /**
-        @notice It transfers an amount of DAI tokens to a specific address.
-        @param recipient address which will receive the DAI tokens.
+        @notice It transfers an amount of tokens to a specific address.
+        @param recipient address which will receive the tokens.
         @param amount of tokens to transfer.
         @dev It throws a require error if 'transfer' invocation fails.
      */
-    function daiTransfer(address recipient, uint256 amount) private {
-        bool transferResult = dai.transfer(recipient, amount);
+    function tokenTransfer(address recipient, uint256 amount) private {
+        bool transferResult = token.transfer(recipient, amount);
         require(transferResult, "Transfer was not successful.");
     }
 
     /**
-        @notice It transfers an amount of DAI tokens from an address to this contract.
-        @param from address where the DAI tokens will transfer from.
+        @notice It transfers an amount of tokens from an address to this contract.
+        @param from address where the tokens will transfer from.
         @param amount to be transferred.
         @dev It throws a require error if 'transferFrom' invocation fails.
      */
-    function daiTransferFrom(address from, uint256 amount) private {
-        bool transferFromResult = dai.transferFrom(from, address(this), amount);
+    function tokenTransferFrom(address from, uint256 amount) private {
+        bool transferFromResult = token.transferFrom(from, address(this), amount);
         require(transferFromResult, "TransferFrom wasn't successful.");
     }
 

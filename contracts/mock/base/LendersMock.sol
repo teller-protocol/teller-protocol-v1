@@ -15,12 +15,12 @@
 */
 pragma solidity 0.5.17;
 
-import "../../base/LenderInfo.sol";
+import "../../base/Lenders.sol";
 
 /**
     This contract is created ONLY for testing purposes.
  */
-contract LenderInfoMock is LenderInfo {
+contract LendersMock is Lenders {
     
     /** State Variables */
 
@@ -31,10 +31,10 @@ contract LenderInfoMock is LenderInfo {
     /** Connstructor */
     constructor(
         address zdaiAddress,
-        address daiPoolAddress
+        address lendingPoolAddress
     )
         public
-        LenderInfo(zdaiAddress, daiPoolAddress)
+        Lenders(zdaiAddress, lendingPoolAddress)
     {
         addressesEqual = true;
     }

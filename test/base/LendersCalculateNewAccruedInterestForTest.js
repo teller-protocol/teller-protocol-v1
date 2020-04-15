@@ -6,19 +6,19 @@ const { t } = require('../utils/consts');
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const LenderInfo = artifacts.require("./mock/base/LenderInfoMock.sol");
+const Lenders = artifacts.require("./mock/base/LendersMock.sol");
 
-contract('LenderInfoCalculateNewAccruedInterestForTest', function (accounts) {
+contract('LendersCalculateNewAccruedInterestForTest', function (accounts) {
     let instance;
     let zdaiInstance;
-    let daiPoolInstance;
+    let lendingPoolInstance;
     
     beforeEach('Setup for each test', async () => {
         zdaiInstance = await Mock.new();
-        daiPoolInstance = await Mock.new();
-        instance = await LenderInfo.new(
+        lendingPoolInstance = await Mock.new();
+        instance = await Lenders.new(
             zdaiInstance.address,
-            daiPoolInstance.address,
+            lendingPoolInstance.address,
         );
     });
 

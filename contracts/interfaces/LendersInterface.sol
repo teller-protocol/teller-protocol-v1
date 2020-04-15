@@ -1,7 +1,7 @@
 pragma solidity 0.5.17;
 
 
-interface LenderInfoInterface {
+interface LendersInterface {
     function zDaiTransfer(address sender, address recipient, uint256 amount) external;
 
     function zDaiMinted(address recipient, uint256 amount) external;

@@ -36,11 +36,11 @@ module.exports = {
 			excludeContracts: [
 				'Migrations',
 				'SimpleToken',
-				'LenderInfoMock',
-				'LenderInfoModifiersMock',
+				'LendersMock',
+				'LendersModifiersMock',
 				'Mock',
 				'LoansMock',
-				'DAIPoolMock',
+				'LendingPoolMock',
 				'InitializableModifiersMock',
 			]
 		},

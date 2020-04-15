@@ -73,6 +73,9 @@ DeployerApp.prototype.print = function() {
 }
 
 DeployerApp.prototype.writeJson = function(outputJson = `./build/${this.network}_${new Date().getTime()}.json`) {
+    if(this.canDeployMock()) {
+        return;
+    }
     const jsonData = {
         contracts: []
     };

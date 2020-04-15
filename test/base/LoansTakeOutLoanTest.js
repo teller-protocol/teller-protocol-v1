@@ -13,14 +13,14 @@ const Loans = artifacts.require("./mock/base/LoansMock.sol");
 contract('LoansTakeOutLoanTest', function (accounts) {
     let instance;
     let oracleInstance;
-    let daiPoolInstance;
+    let lendingPoolInstance;
     
     beforeEach('Setup for each test', async () => {
-        daiPoolInstance = await Mock.new();
+        lendingPoolInstance = await Mock.new();
         oracleInstance = await Mock.new();
         instance = await Loans.new(
             oracleInstance.address,
-            daiPoolInstance.address,
+            lendingPoolInstance.address,
         );
     });
 

@@ -1,7 +1,7 @@
 const Loans = artifacts.require('Loans')
 const Mock = artifacts.require('Mock')
 const EtherUsdAggregator = artifacts.require('EtherUsdAggregator')
-const DAIPoolMock = artifacts.require('DAIPoolMock')
+const LendingPoolMock = artifacts.require('LendingPoolMock');
 
 const assert = require('assert')
 const time = require('ganache-time-traveler')
@@ -30,8 +30,8 @@ contract('Loans Unit Tests', async accounts => {
 
   let mockOracle
   let mockOracleInterface
-  let daiPoolMock
-  let daiPoolMockInterface
+  let lendingPoolMock
+  let lendingPoolMockInterface
 
   let mockOracleTimestamp
   let mockOracleValue
@@ -49,10 +49,10 @@ contract('Loans Unit Tests', async accounts => {
 
   async function setupMockContracts() {
     mockOracle = await Mock.new()
-    daiPoolMock = await Mock.new()
+    lendingPoolMock = await Mock.new()
 
     mockOracleInterface = await EtherUsdAggregator.new(accounts[1])
-    daiPoolMockInterface = await DAIPoolMock.new()
+    lendingPoolMockInterface = await LendingPoolMock.new()
 
     mockOracleTimestamp = await mockOracleInterface.contract.methods
     .getLatestTimestamp()
@@ -66,7 +66,7 @@ contract('Loans Unit Tests', async accounts => {
     await setupMockContracts()
     loans = await Loans.new(
       mockOracle.address,
-      daiPoolMock.address
+      lendingPoolMock.address
     )
   })
 
@@ -75,15 +75,15 @@ contract('Loans Unit Tests', async accounts => {
       let result = await loans.priceOracle.call()
       assert.equal(result, mockOracle.address, 'Oracle address not set correctly')
       
-      result = await loans.daiPool.call()
-      assert.equal(result, daiPoolMock.address, 'DAI Pool address not set correctly')
+      result = await loans.lendingPool.call()
+      assert.equal(result, lendingPoolMock.address, 'DAI Pool address not set correctly')
     })
 
     it('should not accept an oracle address of 0', async () => {
       await truffleAssert.reverts(
         Loans.new(
           NULL_ADDRESS,
-          daiPoolMock.address
+          lendingPoolMock.address
         ),
         'PROVIDE_ORACLE_ADDRESS'
       )
@@ -95,7 +95,7 @@ contract('Loans Unit Tests', async accounts => {
           mockOracle.address,
           NULL_ADDRESS
         ),
-        'PROVIDE_DAIPOOL_ADDRESS'
+        'PROVIDE_LENDINGPOOL_ADDRESS'
       )
     })
   })
@@ -411,8 +411,8 @@ contract('Loans Unit Tests', async accounts => {
       assert.equal(loan['active'], true, 'borrower incorrect')
       assert.equal(loan['liquidated'], false, 'borrower incorrect')
 
-      const callCount = await daiPoolMock.invocationCountForMethod.call(
-        daiPoolMockInterface.contract.methods.createLoan(0, NULL_ADDRESS).encodeABI()
+      const callCount = await lendingPoolMock.invocationCountForMethod.call(
+        lendingPoolMockInterface.contract.methods.createLoan(0, NULL_ADDRESS).encodeABI()
       )
       assert.equal(
         callCount,
@@ -770,7 +770,7 @@ contract('Loans Unit Tests', async accounts => {
     })
   })
 
-  describe('Test repayDai()', async () => {
+  describe('Test repay()', async () => {
     beforeEach(async () => {
       // setup a loan for Alice
       const fortyFiveMinsAgo = (await getLatestTimestamp()) - (0.75 * ONE_HOUR)
@@ -811,7 +811,7 @@ contract('Loans Unit Tests', async accounts => {
 
     it('should not succeed for a non-existent loan', async () => {
       await truffleAssert.reverts(
-        loans.repayDai(
+        loans.repay(
           1000,
           1
         ),
@@ -826,7 +826,7 @@ contract('Loans Unit Tests', async accounts => {
       let activeBefore = loan['active']
       let contractBefore = await web3.eth.getBalance(loans.address)
 
-      await loans.repayDai(
+      await loans.repay(
         1000,
         0
       )
@@ -850,7 +850,7 @@ contract('Loans Unit Tests', async accounts => {
       let collateralBefore = loan['collateral']
       let contractBefore = await web3.eth.getBalance(loans.address)
 
-      await loans.repayDai(
+      await loans.repay(
         amountOwedBefore+100,     // try to pay more than owed
         0
       )

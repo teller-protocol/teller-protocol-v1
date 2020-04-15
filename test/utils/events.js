@@ -30,7 +30,7 @@ module.exports = {
             };
         },
     },
-    lenderInfo: {
+    lenders: {
         accruedInterestUpdated: tx => {
             const name = 'AccruedInterestUpdated';
             return {
@@ -55,9 +55,9 @@ module.exports = {
             };
         },
     },
-    daiPool: {
-        daiDeposited: tx => {
-            const name = 'DaiDeposited';
+    lendingPool: {
+        tokenDeposited: tx => {
+            const name = 'TokenDeposited';
             return {
                 name: name,
                 emitted: (sender, amount) => emitted(tx, name, ev => {
@@ -67,8 +67,8 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-        daiWithdrawn: tx => {
-            const name = 'DaiWithdrawn';
+        tokenWithdrawn: tx => {
+            const name = 'TokenWithdrawn';
             return {
                 name: name,
                 emitted: (sender, amount) => emitted(tx, name, ev => {
@@ -89,8 +89,8 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-        daiRepaid: tx => {
-            const name = 'DaiRepaid';
+        tokenRepaid: tx => {
+            const name = 'TokenRepaid';
             return {
                 name: name,
                 emitted: (borrower, amount) => emitted(tx, name, ev => {

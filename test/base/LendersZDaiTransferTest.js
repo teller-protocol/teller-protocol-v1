@@ -8,20 +8,20 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const ZDaiToken = artifacts.require("./mock/token/SimpleToken.sol");
 
 // Smart contracts
-const LenderInfo = artifacts.require("./mock/base/LenderInfoMock.sol");
+const Lenders = artifacts.require("./mock/base/LendersMock.sol");
 
-contract('LenderInfoZDaiTransferTest', function (accounts) {
+contract('LendersZDaiTransferTest', function (accounts) {
     const tokensOwner = accounts[8];
     let instance;
     let zdaiInstance;
-    let daiPoolInstance;
+    let lendingPoolInstance;
     
     beforeEach('Setup for each test', async () => {
         zdaiInstance = await ZDaiToken.new({from: tokensOwner});
-        daiPoolInstance = await Mock.new();
-        instance = await LenderInfo.new(
+        lendingPoolInstance = await Mock.new();
+        instance = await Lenders.new(
             zdaiInstance.address,
-            daiPoolInstance.address,
+            lendingPoolInstance.address,
         );
     });
 

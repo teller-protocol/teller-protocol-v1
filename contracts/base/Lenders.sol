@@ -23,12 +23,12 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../util/ZeroCollateralCommon.sol";
 
 // Interfaces
-import "../interfaces/DAIPoolInterface.sol";
-import "../interfaces/LenderInfoInterface.sol";
+import "../interfaces/LendingPoolInterface.sol";
+import "../interfaces/LendersInterface.sol";
 import "../interfaces/ZDAIInterface.sol";
 
 
-contract LenderInfo is LenderInfoInterface {
+contract Lenders is LendersInterface {
     using AddressLib for address;
     using SafeMath for uint256;
 
@@ -37,7 +37,7 @@ contract LenderInfo is LenderInfoInterface {
     // last block number of accrued interest
     uint256 public blockAccruedInterest;
 
-    DAIPoolInterface public daiPool;
+    LendingPoolInterface public lendingPool;
 
     ZDAIInterface public zdai;
 
@@ -54,9 +54,9 @@ contract LenderInfo is LenderInfoInterface {
         _;
     }
 
-    modifier isDaiPool(address anAddress) {
+    modifier isLendingPool(address anAddress) {
         require(
-            areAddressesEqual(address(daiPool), anAddress),
+            areAddressesEqual(address(lendingPool), anAddress),
             "Address has no permissions."
         );
         _;
@@ -69,11 +69,11 @@ contract LenderInfo is LenderInfoInterface {
 
     /* Constructor */
 
-    constructor(address zdaiAddress, address daiPoolAddress) public {
+    constructor(address zdaiAddress, address lendingPoolAddress) public {
         require(zdaiAddress != address(0x0), "ZDai address is required.");
-        require(daiPoolAddress != address(0x0), "Dai pool address is required.");
+        require(lendingPoolAddress != address(0x0), "LendingPool address is required");
         zdai = ZDAIInterface(zdaiAddress);
-        daiPool = DAIPoolInterface(daiPoolAddress);
+        lendingPool = LendingPoolInterface(lendingPoolAddress);
         blockAccruedInterest = block.number;
     }
 
@@ -90,23 +90,23 @@ contract LenderInfo is LenderInfoInterface {
         updateAccruedInterestFor(recipient);
     }
 
-    function zDaiMinted(address recipient, uint256) external isDaiPool(msg.sender) {
+    function zDaiMinted(address recipient, uint256) external isLendingPool(msg.sender) {
         // Updating accrued interest for zDAI recipient.
         updateAccruedInterestFor(recipient);
     }
 
-    function zDaiBurnt(address recipient, uint256) external isDaiPool(msg.sender) {
+    function zDaiBurnt(address recipient, uint256) external isLendingPool(msg.sender) {
         // Updating accrued interest for zDAI recipient.
         updateAccruedInterestFor(recipient);
     }
 
     function withdrawInterest(address recipient, uint256 amount)
         external
-        isDaiPool(msg.sender)
+        isLendingPool(msg.sender)
         isValid(recipient)
         returns (uint256)
     {
-        // Updating accrued interest for DAI recipient.
+        // Updating accrued interest for recipient.
         updateAccruedInterestFor(recipient);
 
         uint256 amountToWithdraw = amount;

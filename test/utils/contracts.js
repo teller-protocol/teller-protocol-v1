@@ -8,14 +8,14 @@ module.exports = {
             lenderData.lastAccruedInterest
         );
     },
-    initContracts: async (daiPool, zdai, dai, loans, LenderInfo) => {
-        const lenderInfo = await LenderInfo.new(zdai.address, daiPool.address);
-        await daiPool.initialize(
+    initContracts: async (lendingPool, zdai, dai, loans, Lenders) => {
+        const lenders = await Lenders.new(zdai.address, lendingPool.address);
+        await lendingPool.initialize(
             zdai.address,
             dai.address,
-            lenderInfo.address,
+            lenders.address,
             loans.address,
         );
-        return lenderInfo;
+        return lenders;
     },
 }
