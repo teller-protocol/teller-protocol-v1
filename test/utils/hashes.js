@@ -1,6 +1,5 @@
 const ethUtil = require('ethereumjs-util')
 const abi = require('ethereumjs-abi')
-const web3Eth = require('web3-eth')
 
 function hashLoan(loan) {
   return ethUtil.keccak256(
@@ -18,18 +17,8 @@ function hashLoan(loan) {
   )
 }
 
-async function signLoanHash(signer, loanHash, networkProvider, backupProvider) {
-  let signature
-  let eth
-
-  try {
-    eth = new web3Eth(networkProvider)
-    signature = await eth.sign(ethUtil.bufferToHex(loanHash), signer)
-  } catch {
-    eth = new web3Eth(backupProvider)
-    signature = await eth.sign(ethUtil.bufferToHex(loanHash), signer)
-  }
-
+async function signLoanHash(signer, loanHash) {
+  const signature = await web3.eth.sign(ethUtil.bufferToHex(loanHash), signer);
   const { v, r, s } = ethUtil.fromRpcSig(signature)
   return {
     v: String(v),
