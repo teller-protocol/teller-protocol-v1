@@ -5,4 +5,7 @@ module.exports = {
     tokens: require('./tokens'),
     zerocollateral: require('./zerocollateral'),
     maxGasLimit: 7000000,
+    toTxUrl: ({ tx }) => {
+        return `https://ropsten.etherscan.io/tx/${tx}`;
+    },
 };

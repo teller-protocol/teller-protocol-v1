@@ -37,7 +37,6 @@
     "solidity-coverage": "^0.7.2",
     "truffle": "^5.1.16",
     "truffle-assertions": "^0.9.2",
-    "web3-eth": "1.2.2",
     "truffle-plugin-verify": "^0.3.10"
   },
   "dependencies": {
