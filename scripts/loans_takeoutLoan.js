@@ -1,6 +1,6 @@
 // Smart contracts
 const LoansInterface = artifacts.require("./interfaces/LoansInterface.sol");
-const DAIPoolInterface = artifacts.require("./interfaces/DAIPoolInterface.sol");
+const LendingPoolInterface = artifacts.require("./interfaces/LendingPoolInterface.sol");
 const ERC20 = artifacts.require("openzeppelin-solidity/contracts/token/ERC20/IERC20.sol");
 
 // Util classes
@@ -17,7 +17,7 @@ const borrowerIndex = 0;
 const signerIndex = 0;
 const maxLoanAmount = 5;
 const numberDays = 10;
-const signerNonce = 1;
+const signerNonce = 0;
 const takeOutLoanValue = 1;
 
 module.exports = async (callback) => {
@@ -32,10 +32,10 @@ module.exports = async (callback) => {
 
         const daiInstance = await ERC20.at(tokens.DAI);
         const loansInstance = await LoansInterface.at(zerocollateral.Loans);
-        const daiPoolInstance = await DAIPoolInterface.at(zerocollateral.DAIPool);
+        const lendingPoolInstance = await LendingPoolInterface.at(zerocollateral.LendingPool);
 
-        const daiPoolDaiBalance = await daiInstance.balanceOf(daiPoolInstance.address);
-        assert(BigNumber(daiPoolDaiBalance.toString()).gte(maxLoanAmount.toString()), "DAIPool: Not enough DAI balance.");
+        const lendingPoolDaiBalance = await daiInstance.balanceOf(lendingPoolInstance.address);
+        assert(BigNumber(lendingPoolDaiBalance.toString()).gte(maxLoanAmount.toString()), "LendingPool: Not enough DAI balance.");
 
         const accounts = await web3.eth.getAccounts();
         assert(accounts, "Accounts must be defined.");

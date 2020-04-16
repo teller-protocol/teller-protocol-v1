@@ -7,8 +7,8 @@ const ProcessArgs = require('./utils/ProcessArgs');
 const processArgs = new ProcessArgs();
 
 /** Process parameters: */
-const loanId = 1;
-const senderIndex = 0;
+const loanId = 0;
+const senderIndex = 1;
 const borrowerIndex = 0;
 const collateralValue = 40000000;
 
