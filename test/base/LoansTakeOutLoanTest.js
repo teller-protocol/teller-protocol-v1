@@ -37,7 +37,7 @@ contract('LoansTakeOutLoanTest', function (accounts) {
 
             const borrower = accounts[loanInfo.borrowerIndex];
             const signer = accounts[loanInfo.signerIndex];
-            const signature = await createSignature(borrower, loanInfo, signer);
+            const signature = await createSignature(web3, borrower, loanInfo, signer);
 
             // Invocation
             const result = await instance.takeOutLoan(

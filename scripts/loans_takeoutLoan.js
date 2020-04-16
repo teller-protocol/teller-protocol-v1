@@ -4,10 +4,9 @@ const DAIPoolInterface = artifacts.require("./interfaces/DAIPoolInterface.sol");
 const ERC20 = artifacts.require("openzeppelin-solidity/contracts/token/ERC20/IERC20.sol");
 
 // Util classes
-const ethUtil = require('ethereumjs-util');
 const BigNumber = require('bignumber.js');
 const assert = require('assert');
-const { hashLoan } = require('../test/utils/hashes');
+const { hashLoan, signLoanHash } = require('../test/utils/hashes');
 const ProcessArgs = require('./utils/ProcessArgs');
 const processArgs = new ProcessArgs();
 
@@ -53,15 +52,8 @@ module.exports = async (callback) => {
             numberDays,
             signerNonce,
         });
-        const msg = ethUtil.bufferToHex(new Buffer(hashedLoan, 'utf8'));
-        const sig = await web3.eth.sign(msg, signer);
-
-        const { v, r, s } = ethUtil.fromRpcSig(sig);
-        const signature = {
-            v: String(v),
-            r: ethUtil.bufferToHex(r),
-            s: ethUtil.bufferToHex(s),
-        };
+        
+        const signature = await signLoanHash(web3, signer, hashedLoan);
 
         const result = await loansInstance.takeOutLoan(
             interestRate,

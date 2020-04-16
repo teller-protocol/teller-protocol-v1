@@ -17,7 +17,7 @@ function hashLoan(loan) {
   )
 }
 
-async function signLoanHash(signer, loanHash) {
+async function signLoanHash(web3, signer, loanHash) {
   const signature = await web3.eth.sign(ethUtil.bufferToHex(loanHash), signer);
   const { v, r, s } = ethUtil.fromRpcSig(signature)
   return {
@@ -27,7 +27,7 @@ async function signLoanHash(signer, loanHash) {
   }
 }
 
-const createSignature = async (borrower, loanInfo, signer) => {
+const createSignature = async (web3, borrower, loanInfo, signer) => {
   const hashedLoan = hashLoan({
       interestRate: loanInfo.interestRate,
       collateralRatio: loanInfo.collateralRatio,
@@ -36,7 +36,7 @@ const createSignature = async (borrower, loanInfo, signer) => {
       numberDays: loanInfo.numberDays,
       signerNonce: loanInfo.signerNonce,
   });
-  const signature = await signLoanHash(signer, hashedLoan);
+  const signature = await signLoanHash(web3, signer, hashedLoan);
   return signature;
 }
 
