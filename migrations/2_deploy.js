@@ -3,15 +3,12 @@ const DeployerApp = require('./utils/DeployerApp');
 
 // Mock Smart Contracts
 
-// Libraries
-const AddressLib = artifacts.require("./util/AddressLib.sol");
-const SafeMath = artifacts.require("./util/SafeMath.sol");
-
 // Official Smart Contracts
 const ZDai = artifacts.require("./base/ZDai.sol");
 const Lenders = artifacts.require("./base/Lenders.sol");
 const Loans = artifacts.require("./base/Loans.sol");
 const LendingPool = artifacts.require("./base/LendingPool.sol");
+const Consensus = artifacts.require("./base/Consensus.sol");
 const EtherUsdAggregator = artifacts.require("./providers/chainlink/EtherUsdAggregator.sol");
 
 module.exports = async function(deployer, network, accounts) {
@@ -31,19 +28,19 @@ module.exports = async function(deployer, network, accounts) {
   // Creating DeployerApp helper.
   const deployerApp = new DeployerApp(deployer, web3, deployerAccount, network);
 
-  await deployerApp.deploys([ AddressLib, SafeMath, ZDai ], deployOptions);
+  await deployerApp.deploy(ZDai, deployOptions);
 
   const { chainlink: { dataContracts: { eth_usd } } } = networkConfig;
-  assert(eth_usd, 'Chainlinnk ETH/USD data contract is undefined.');
+  assert(eth_usd, 'Chainlink ETH/USD data contract is undefined.');
   await deployerApp.deploy(EtherUsdAggregator, eth_usd, deployOptions);
 
-  await deployerApp.links(LendingPool, [ AddressLib ]);
   await deployerApp.deploy(LendingPool, deployOptions);
 
-  await deployerApp.links(Lenders, [ AddressLib, SafeMath ]);
-  await deployerApp.deploy(Lenders, ZDai.address, LendingPool.address, deployOptions);
+  await deployerApp.deploy(Consensus, deployOptions);
+  console.log('starting lender info')
 
-  await deployerApp.links(Loans, [ SafeMath ]);
+  await deployerApp.deploy(Lenders, ZDai.address, LendingPool.address, Consensus.address, deployOptions);
+  console.log('finished lender info')
   await deployerApp.deploy(Loans, EtherUsdAggregator.address, LendingPool.address, deployOptions);
 
   const daiLendingPoolInstance = await LendingPool.deployed();
@@ -56,6 +53,11 @@ module.exports = async function(deployer, network, accounts) {
 
   const zTokenInstance = await ZDai.deployed();
   await zTokenInstance.addMinter(LendingPool.address, { from: deployerAccount });
+
+  const consensusInstance = await Consensus.deployed();
+  await consensusInstance.initialize(
+    Lenders.address,
+  );
 
   deployerApp.print();
   deployerApp.writeJson();
