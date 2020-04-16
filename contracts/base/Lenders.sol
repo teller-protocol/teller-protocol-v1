@@ -23,7 +23,6 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../util/ZeroCollateralCommon.sol";
 
 // Interfaces
-import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
 import "../interfaces/ZTokenInterface.sol";
 
@@ -34,29 +33,38 @@ contract Lenders is LendersInterface {
 
     /* State Variables */
 
-    // last block number of accrued interest
-    uint256 public blockAccruedInterest;
-
-    LendingPoolInterface public lendingPool;
+    address public lendingPool;
+    address public consensus;
 
     ZTokenInterface public zToken;
 
-    // array of all lending accounts
-    mapping(address => ZeroCollateralCommon.LendAccount) public lenderAccounts;
+    // The total interest that has not yet been withdrawn by a lender
+    mapping(address => ZeroCollateralCommon.AccruedInterest) public accruedInterest;
+
+    // The block number at which an address requested an interest update.
+    // If the interest has been updated, this reverts to 0.
+    mapping(address => uint256) public requestedInterestUpdate;
 
     /** Modifiers */
-
-    modifier isZToken(address anAddress) {
+    modifier isZToken() {
         require(
-            areAddressesEqual(address(zToken), anAddress),
+            _areAddressesEqual(address(zToken), msg.sender),
             "Address has no permissions."
         );
         _;
     }
 
-    modifier isLendingPool(address anAddress) {
+    modifier isLendingPool() {
         require(
-            areAddressesEqual(address(lendingPool), anAddress),
+            _areAddressesEqual(lendingPool, msg.sender),
+            "Address has no permissions."
+        );
+        _;
+    }
+
+    modifier isConsensus() {
+        require(
+            _areAddressesEqual(consensus, msg.sender),
             "Address has no permissions."
         );
         _;
@@ -69,110 +77,111 @@ contract Lenders is LendersInterface {
 
     /* Constructor */
 
-    constructor(address zTokenAddress, address lendingPoolAddress) public {
+    constructor(
+        address zTokenAddress,
+        address lendingPoolAddress,
+        address consensusAddress
+    ) public {
         require(zTokenAddress != address(0x0), "zToken address is required.");
-        require(lendingPoolAddress != address(0x0), "LendingPool address is required");
-        zToken = ZTokenInterface(zTokenAddress);
-        lendingPool = LendingPoolInterface(lendingPoolAddress);
-        blockAccruedInterest = block.number;
+        require(lendingPoolAddress != address(0x0), "LendingPool address is required.");
+        require(consensusAddress != address(0x0), "Consensus address is required.");
+        zToken = zTokenAddress;
+        lendingPool = lendingPoolAddress;
+        consensus = consensusAddress;
     }
 
     /** External Functions */
 
-    function zTokenTransfer(address sender, address recipient, uint256)
+    function zTokenTransfer(address sender, address, uint256)
         external
-        isZToken(msg.sender)
+        isZDai()
     {
-        // Updating accrued interest for zToken sender.
-        updateAccruedInterestFor(sender);
-
-        // Updating accrued interest for zToken recipient.
-        updateAccruedInterestFor(recipient);
+        if (_getZTokenBalanceOf(sender) == 0) {
+            _updateAccruedInterestFor(sender);
+        }
     }
 
-    function zTokenMinted(address recipient, uint256) external isLendingPool(msg.sender) {
+    function zTokenBurnt(address recipient, uint256) external isLendingPool() {
         // Updating accrued interest for zToken recipient.
-        updateAccruedInterestFor(recipient);
+        if (_getZTokenBalanceOf(recipient) == 0) {
+            _updateAccruedInterestFor(recipient);
+        }
     }
 
-    function zTokenBurnt(address recipient, uint256) external isLendingPool(msg.sender) {
-        // Updating accrued interest for zToken recipient.
-        updateAccruedInterestFor(recipient);
+    function updateAccruedInterest() external {
+        require(_getZTokenBalanceOf(msg.sender) > 0, 'SENDER_IS_NOT_LENDER');
+
+        _updateAccruedInterestFor(msg.sender);
+    }
+
+    function setAccruedInterest(
+        address lender,
+        uint256 startBlock,
+        uint256 endBlock,
+        uint256 amount
+    )
+        external
+        isConsensus()
+    {
+        require(requestedInterestUpdate[lender] == endBlock, 'INCORRECT_END_BLOCK');
+        require(accruedInterest[lender].blockLastAccrued == startBlock, 'INCORRECT_START_BLOCK');
+
+        requestedInterestUpdate[lender] = 0;
+
+        accruedInterest[lender].totalAccruedInterest = accruedInterest[lender]
+            .totalAccruedInterest
+            .add(amount);
+
+        accruedInterest[lender].totalNotWithdrawn = accruedInterest[lender]
+            .totalNotWithdrawn
+            .add(amount);
+
+        accruedInterest[lender].blockLastAccrued = endBlock;
+
+        emit AccruedInterestUpdated(
+            lender,
+            accruedInterest[lender].totalNotWithdrawn,
+            accruedInterest[lender].totalAccruedInterest
+        );
     }
 
     function withdrawInterest(address recipient, uint256 amount)
         external
-        isLendingPool(msg.sender)
+        isLendingPool()
         isValid(recipient)
         returns (uint256)
     {
-        // Updating accrued interest for recipient.
-        updateAccruedInterestFor(recipient);
-
         uint256 amountToWithdraw = amount;
-        uint256 accruedInterest = lenderAccounts[recipient].totalAccruedInterest;
+        uint256 withdrawableInterest = accruedInterest[recipient].totalNotWithdrawn;
 
-        if (accruedInterest >= amountToWithdraw) {
-            lenderAccounts[recipient].totalAccruedInterest = accruedInterest.sub(
-                amountToWithdraw
-            );
-        } else {
-            amountToWithdraw = lenderAccounts[recipient].totalAccruedInterest;
-            lenderAccounts[recipient].totalAccruedInterest = 0;
+        if (withdrawableInterest == 0) return 0;
+
+        if (withdrawableInterest < amountToWithdraw) {
+            amountToWithdraw = withdrawableInterest;
         }
+
+        accruedInterest[recipient].totalNotWithdrawn = withdrawableInterest.sub(
+            amountToWithdraw
+        );
 
         emit AccruedInterestWithdrawn(recipient, amountToWithdraw);
 
         return amountToWithdraw;
     }
 
-    function getCurrentBlockNumber() external view returns (uint256) {
-        return block.number;
-    }
-
     /** Internal Functions */
 
-    /**
-        @notice Updates the accrued interest for a specific lender.
-        @param lender address.
-        @return the updated accrued intereset for the lender address.
-     */
-    function updateAccruedInterestFor(address lender) internal returns (uint256) {
-        // Get last block accrued
-        uint256 previousBlockAccruedInterest = lenderAccounts[lender].lastBlockAccrued;
-        uint256 currentBlockNumber = this.getCurrentBlockNumber();
+    function _updateAccruedInterestFor(address lender) internal {
+        if (requestedInterestUpdate[lender] != 0) {
+          emit CancelInterestUpdate(lender, requestedInterestUpdate[lender]);
+        }
 
-        // Update last block accrued.
-        lenderAccounts[lender].lastBlockAccrued = currentBlockNumber;
+        requestedInterestUpdate[lender] = _getCurrentBlockNumber();
 
-        // Update total accrued interest.
-        lenderAccounts[lender].totalAccruedInterest = calculateNewAccruedInterestFor(
-            lenderAccounts[lender].totalAccruedInterest,
-            previousBlockAccruedInterest,
-            currentBlockNumber,
-            getZTokenBalanceOf(lender)
-        );
-
-        emit AccruedInterestUpdated(
-            lender,
-            lenderAccounts[lender].lastBlockAccrued,
-            lenderAccounts[lender].totalAccruedInterest
-        );
-
-        return lenderAccounts[lender].totalAccruedInterest;
+        emit InterestUpdateRequested(lender, _getCurrentBlockNumber());
     }
 
-    function calculateNewAccruedInterestFor(
-        uint256 currentAccruedInterest,
-        uint256 previousBlockAccruedInterest,
-        uint256 currentBlockNumber,
-        uint256 currentZTokenBalance
-    ) internal pure returns (uint256) {
-        uint256 blocksDifference = currentBlockNumber.sub(previousBlockAccruedInterest);
-        return currentAccruedInterest.add(blocksDifference.mul(currentZTokenBalance));
-    }
-
-    function areAddressesEqual(address leftAddress, address rightAddress)
+    function _areAddressesEqual(address leftAddress, address rightAddress)
         internal
         view
         returns (bool)
@@ -183,7 +192,11 @@ contract Lenders is LendersInterface {
 
     /** Private Functions */
 
-    function getZTokenBalanceOf(address anAddress) private view returns (uint256) {
+    function _getZTokenBalanceOf(address anAddress) private view returns (uint256) {
         return zToken.balanceOf(anAddress);
+    }
+
+    function _getCurrentBlockNumber() private view returns (uint256) {
+        return block.number;
     }
 }

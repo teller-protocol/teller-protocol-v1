@@ -13,10 +13,14 @@ interface LendersInterface {
         returns (uint256);
 
     event AccruedInterestUpdated(
-        address lender,
-        uint256 lastBlockAccrued,
+        address indexed lender,
+        uint256 totalNotWithdrawn,
         uint256 totalAccruedInterest
     );
 
-    event AccruedInterestWithdrawn(address recipient, uint256 amount);
+    event InterestUpdateRequested(address indexed lender, uint256 blockNumber);
+
+    event CancelInterestUpdate(address indexed lender, uint256 blockNumber);
+
+    event AccruedInterestWithdrawn(address indexed recipient, uint256 amount);
 }

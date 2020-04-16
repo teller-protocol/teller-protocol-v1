@@ -27,15 +27,16 @@ contract LendersModifiersMock is Lenders {
     /** Connstructor */
     constructor(
         address zTokenAddress,
-        address lendingPoolAddress
+        address lendingPoolAddress,
+        address consensusAddress
     )
         public
-        Lenders(zTokenAddress, lendingPoolAddress)
+        Lenders(zTokenAddress, lendingPoolAddress, consensusAddress)
     {}
 
-    function externalIsZToken() isZToken(msg.sender) external {}
+    function externalIsZToken() isZToken() external {}
 
-    function externalIsLendingPool() isLendingPool(msg.sender) external {}
+    function externalIsLendingPool() isLendingPool() external {}
 
     function externalIsValid(address anAddress) isValid(anAddress) external {}
 

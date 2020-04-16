@@ -2,15 +2,18 @@ pragma solidity 0.5.17;
 
 
 library ZeroCollateralCommon {
-    // Interest accrued from lending account
-    struct LendAccount {
-        uint256 lastBlockAccrued;
-        uint256 totalAccruedInterest;
-    }
 
     // Borrower account details
     struct Borrower {
         uint256 lastBorrowId;
+    }
+
+    // The amount of interest owed to a borrower
+    // The interest is just that accrued until `blockLastAccrued`
+    struct AccruedInterest {
+      uint256 totalAccruedInterest;
+      uint256 totalNotWithdrawn;
+      uint256 blockLastAccrued;
     }
 
     // Data per borrow as struct
