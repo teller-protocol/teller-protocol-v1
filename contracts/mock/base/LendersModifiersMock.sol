@@ -40,4 +40,6 @@ contract LendersModifiersMock is Lenders {
 
     function externalIsValid(address anAddress) isValid(anAddress) external {}
 
+    function externalIsConsensus() isConsensus() external {}
+
 }
