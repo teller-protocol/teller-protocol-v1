@@ -1,25 +1,29 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, sum, createInfo } = require('../utils/consts');
-const { mockLenderInfo } = require('../utils/contracts');
+const { t } = require('../utils/consts');
+const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
+const { lenders } = require('../utils/events');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
-const ZTokenToken = artifacts.require("./mock/token/SimpleToken.sol");
 
 // Smart contracts
 const Lenders = artifacts.require("./mock/base/LendersMock.sol");
 
 contract('LendersZTokenTransferTest', function (accounts) {
-    const tokensOwner = accounts[8];
     let instance;
     let zTokenInstance;
     let lendingPoolInstance;
     let interestConsensusInstance;
+    const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
+
+    const amountTransferred = 5
+    const recipient = accounts[4]
     
     beforeEach('Setup for each test', async () => {
-        zTokenInstance = await ZTokenToken.new({from: tokensOwner});
+        zTokenInstance = await Mock.new();
         interestConsensusInstance = await Mock.new();
+        lendingPoolInstance = await Mock.new();
         instance = await Lenders.new(
             zTokenInstance.address,
             lendingPoolInstance.address,
@@ -28,37 +32,49 @@ contract('LendersZTokenTransferTest', function (accounts) {
     });
 
     withData({
-        _1_onlyRecipient: [1, createInfo(accounts[0], 0, 0, 0), createInfo(accounts[1], 0, 0, 1), 1, 1],
-        _2_both: [10, createInfo(accounts[0], 0, 0, 10), createInfo(accounts[1], 1, 0, 5), 5, 2],
+        _1_Sender0Balance_no_update_previously_requested: [accounts[0], 0, 0],
+        _2_Sender0Balance_update_previously_requested: [accounts[0], 0, 234],
+        _3_Sender0Balance50Balance: [accounts[0], 50, 0],
     }, function(
-        senderInitialAmount,
         sender,
-        recipient,
-        amount,
-        plusBlockNumbers,
+        senderZTokenBalance,
+        currentRequestUpdateBlock,
     ) {    
         it(t('user', 'zTokenTransfer', 'Should able to update the accrued interest after transfering zToken.', false), async function() {
-            // Setup
-            // Initial transfer to sender and, transfer sender to recipient.
-            await zTokenInstance.transfer(sender.address, senderInitialAmount.toString(), { from: tokensOwner });
-            await zTokenInstance.transfer(recipient.address, amount.toString(), { from: sender.address });
+            // mock sender's balance
+            await zTokenInstance.givenMethodReturnUint(
+              erc20InterfaceEncoder.encodeBalanceOf(),
+              senderZTokenBalance
+            );
 
-            // Mocking lender info (accrued interest and lastaccrued block number) and current block number.
-            const currentBlockNumber = await web3.eth.getBlockNumber();
-            await mockLenderInfo(instance, recipient, currentBlockNumber);
-            await mockLenderInfo(instance, sender, currentBlockNumber);
-            await instance.setCurrentBlockNumber(sum(currentBlockNumber, plusBlockNumbers));
+            // mock lender interest request
+            await instance.mockRequestUpdate(sender, currentRequestUpdateBlock)
 
             // Invocation
-            const result = await instance.zTokenTransfer(sender.address, recipient.address, amount);
+            const result = await instance.zTokenTransfer(sender, recipient, amountTransferred);
+            const blockRequestedUpdate = await instance.requestedInterestUpdate.call(sender);
 
-            // Assertions
-            assert(result);
-            const senderLenderAccountResult = await instance.lenderAccounts(sender.address);
-            assert.equal(senderLenderAccountResult.totalAccruedInterest.toString(), sender.expectedAccruedInterest.toString());
+            if (senderZTokenBalance == 0) {
+              assert.equal(blockRequestedUpdate.toNumber(), result.receipt.blockNumber);
+              lenders
+                  .interestUpdateRequested(result)
+                  .emitted(sender, result.receipt.blockNumber);
+            } else {
+                assert.equal(blockRequestedUpdate.toNumber(), currentRequestUpdateBlock);
+                lenders
+                    .interestUpdateRequested(result)
+                    .notEmitted()
+            }
 
-            const recipientLenderAccountResult = await instance.lenderAccounts(recipient.address);
-            assert.equal(recipientLenderAccountResult.totalAccruedInterest.toString(), recipient.expectedAccruedInterest.toString());
+            if (senderZTokenBalance == 0 && currentRequestUpdateBlock != 0) {
+                lenders
+                    .cancelInterestUpdate(result)
+                    .emitted(sender, currentRequestUpdateBlock);
+            } else {
+                lenders
+                    .cancelInterestUpdate(result)
+                    .notEmitted()
+            }
         });
     });
 });

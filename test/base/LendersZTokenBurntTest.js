@@ -45,9 +45,8 @@ contract('LendersZTokenBurntTest', function (accounts) {
               currentZTokenBalance
             );
 
+            // mock lender interest request
             await instance.mockRequestUpdate(recipient, currentRequestUpdateBlock)
-
-            const previousBlockUpdated = await instance.requestedInterestUpdate.call(recipient);
 
             // Invocation
             const result = await instance.zTokenBurnt(recipient, amount);
@@ -59,7 +58,7 @@ contract('LendersZTokenBurntTest', function (accounts) {
                     .interestUpdateRequested(result)
                     .emitted(recipient, result.receipt.blockNumber);
             } else {
-                assert.equal(blockRequestedUpdate.toNumber(), previousBlockUpdated.toNumber());
+                assert.equal(blockRequestedUpdate.toNumber(), currentRequestUpdateBlock);
                 lenders
                     .interestUpdateRequested(result)
                     .notEmitted()
@@ -73,7 +72,7 @@ contract('LendersZTokenBurntTest', function (accounts) {
                 lenders
                     .cancelInterestUpdate(result)
                     .notEmitted()
-          }
+            }
         });
     });
 });
