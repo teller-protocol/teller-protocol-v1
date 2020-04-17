@@ -39,7 +39,7 @@ contract LendingPool is LendingPoolInterface, Initializable {
 
     /* State Variables */
 
-    IERC20 public token;
+    IERC20 public lendingToken;
 
     ZTokenInterface public zToken;
 
@@ -65,26 +65,26 @@ contract LendingPool is LendingPoolInterface, Initializable {
     /**
         @notice It initializes the contract state variables.
         @param zTokenAddress zToken token address.
-        @param tokenAddress ERC20 token address.
+        @param lendingTokenAddress ERC20 token address.
         @param lendersAddress Lenders contract address.
         @param loansAddress Loans contract address.
         @dev It throws a require error if the contract is already initialized.
      */
     function initialize(
         address zTokenAddress,
-        address tokenAddress,
+        address lendingTokenAddress,
         address lendersAddress,
         address loansAddress
     ) external isNotInitialized() {
         zTokenAddress.requireNotEmpty("zToken address is required.");
-        tokenAddress.requireNotEmpty("Token address is required.");
+        lendingTokenAddress.requireNotEmpty("Token address is required.");
         lendersAddress.requireNotEmpty("Lenders address is required.");
         loansAddress.requireNotEmpty("Loans address is required.");
 
         initialize();
 
         zToken = ZTokenInterface(zTokenAddress);
-        token = IERC20(tokenAddress);
+        lendingToken = IERC20(lendingTokenAddress);
         lenders = LendersInterface(lendersAddress);
         loans = loansAddress;
     }
@@ -188,7 +188,7 @@ contract LendingPool is LendingPoolInterface, Initializable {
         @dev It throws a require error if 'transfer' invocation fails.
      */
     function tokenTransfer(address recipient, uint256 amount) private {
-        bool transferResult = token.transfer(recipient, amount);
+        bool transferResult = lendingToken.transfer(recipient, amount);
         require(transferResult, "Transfer was not successful.");
     }
 
@@ -199,7 +199,7 @@ contract LendingPool is LendingPoolInterface, Initializable {
         @dev It throws a require error if 'transferFrom' invocation fails.
      */
     function tokenTransferFrom(address from, uint256 amount) private {
-        bool transferFromResult = token.transferFrom(from, address(this), amount);
+        bool transferFromResult = lendingToken.transferFrom(from, address(this), amount);
         require(transferFromResult, "TransferFrom wasn't successful.");
     }
 
