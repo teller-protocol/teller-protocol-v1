@@ -10,6 +10,14 @@ interface LendersInterface {
         external
         returns (uint256);
 
+    function requestedInterestUpdate(address) external returns (uint256);
+
+    function setAccruedInterest(
+        address lender,
+        uint256 endBlock,
+        uint256 amount
+    ) external;
+
     event AccruedInterestUpdated(
         address indexed lender,
         uint256 totalNotWithdrawn,

@@ -14,6 +14,7 @@
     limitations under the License.
 */
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 // Libraries
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
@@ -54,7 +55,7 @@ contract InterestConsensus is Initializable, Consensus {
     }
 
     function submitInterestResult(
-        ZeroCollateralCommon.Signature signature,
+        ZeroCollateralCommon.Signature calldata signature,
         address lender,
         uint256 blockNumber,
         uint256 interest
@@ -62,57 +63,61 @@ contract InterestConsensus is Initializable, Consensus {
         require(!hasSubmitted[msg.sender][lender][blockNumber], 'SIGNER_ALREADY_SUBMITTED');
         hasSubmitted[msg.sender][lender][blockNumber] = true;
 
-        require(lenderInfo.requestedUpdate(lender) == blockNumber, 'INTEREST_NOT_REQUESTED');
+        require(lenderInfo.requestedInterestUpdate(lender) == blockNumber, 'INTEREST_NOT_REQUESTED');
 
         require(!nodeSubmissions[lender][blockNumber].finalised, 'INTEREST_ALREADY_FINALISED');
 
         bytes32 hashedData = hashData(lender, blockNumber, interest, signature.signerNonce);
         require(_signatureValid(signature, hashedData), 'SIGNATURE_NOT_VALID');
 
+        ZeroCollateralCommon.AggregatedInterest memory aggregatedData = nodeSubmissions[lender][blockNumber];
+
         // if this is the first submission for this request
-        if (nodeSubmissions[lender][blockNumber].totalSubmissions == 0) {
-            nodeSubmissions[lender][blockNumber] = ZeroCollateralCommon.AggregatedInterest({
+        if (aggregatedData.totalSubmissions == 0) {
+            aggregatedData = ZeroCollateralCommon.AggregatedInterest({
                 totalSubmissions: 1,
                 minValue: interest,
                 maxValue: interest,
-                sumOfValues: interest
-            })
+                sumOfValues: interest,
+                finalised: false
+            });
         } else {
-            if (interest < nodeSubmissions[lender][blockNumber].minValue) {
-                nodeSubmissions[lender][blockNumber].minValue = interest;
+            if (interest < aggregatedData.minValue) {
+                aggregatedData.minValue = interest;
             }
-            if (interest > nodeSubmissions[lender][blockNumber].maxValue) {
-                nodeSubmissions[lender][blockNumber].maxValue = interest;
+            if (interest > aggregatedData.maxValue) {
+                aggregatedData.maxValue = interest;
             }
 
-            nodeSubmissions[lender][blockNumber].sumOfValues = nodeSubmissions[lender][blockNumber]
-                .sumOfValues
-                .add(interest);
-            nodeSubmissions[lender][blockNumber].totalSubmissions++;
+            aggregatedData.sumOfValues = aggregatedData.sumOfValues.add(interest);
+            aggregatedData.totalSubmissions++;
         }
 
         emit InterestSubmitted(msg.sender, lender, blockNumber, interest);
 
-        if (nodeSubmissions[lender][blockNumber].totalSubmissions > requiredSubmissions) {
-            nodeSubmissions[lender][blockNumber].finalised = true;
+        if (aggregatedData.totalSubmissions > requiredSubmissions) {
+            aggregatedData.finalised = true;
 
-            require(_resultsWithinTolerance(lender, blockNumber), 'MAXIMUM_TOLERANCE_SURPASSED');
-            
             // average the submissions
-            uint256 finalInterest = nodeSubmissions[lender][blockNumber]
-                .sumOfValues
-                .div(nodeSubmissions[lender][blockNumber].totalSubmissions)
-            
+            uint256 finalInterest = aggregatedData.sumOfValues.div(aggregatedData.totalSubmissions);
+
+            require(
+              _resultsWithinTolerance(aggregatedData.maxValue, aggregatedData.minValue, finalInterest),
+              'MAXIMUM_TOLERANCE_SURPASSED'
+            );
+
             lenderInfo.setAccruedInterest(lender, blockNumber, finalInterest);
 
             emit InterestAccepted(lender, blockNumber, finalInterest);
         }
+
+        nodeSubmissions[lender][blockNumber] = aggregatedData;
     }
 
-    function hashSubmission(
+    function hashData(
         address lender,
         uint256 blockNumber,
-        uint256 interest
+        uint256 interest,
         uint256 signerNonce
     ) internal pure returns (bytes32) {
         return keccak256(
