@@ -67,7 +67,7 @@ contract InterestConsensus is Initializable, Consensus {
 
         require(!nodeSubmissions[lender][blockNumber].finalised, 'INTEREST_ALREADY_FINALISED');
 
-        bytes32 hashedData = hashData(lender, blockNumber, interest, signature.signerNonce);
+        bytes32 hashedData = _hashData(lender, blockNumber, interest, signature.signerNonce);
         require(_signatureValid(signature, hashedData), 'SIGNATURE_NOT_VALID');
 
         ZeroCollateralCommon.AggregatedInterest memory aggregatedData = nodeSubmissions[lender][blockNumber];
@@ -114,7 +114,7 @@ contract InterestConsensus is Initializable, Consensus {
         nodeSubmissions[lender][blockNumber] = aggregatedData;
     }
 
-    function hashData(
+    function _hashData(
         address lender,
         uint256 blockNumber,
         uint256 interest,
