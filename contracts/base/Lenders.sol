@@ -34,7 +34,7 @@ contract Lenders is LendersInterface {
     /* State Variables */
 
     address public lendingPool;
-    address public consensus;
+    address public interestConsensus;
 
     ZTokenInterface public zToken;
 
@@ -64,7 +64,7 @@ contract Lenders is LendersInterface {
 
     modifier isConsensus() {
         require(
-            _areAddressesEqual(consensus, msg.sender),
+            _areAddressesEqual(interestConsensus, msg.sender),
             "Address has no permissions."
         );
         _;
@@ -80,14 +80,14 @@ contract Lenders is LendersInterface {
     constructor(
         address zTokenAddress,
         address lendingPoolAddress,
-        address consensusAddress
+        address interestConsensusAddress
     ) public {
         require(zTokenAddress != address(0x0), "zToken address is required.");
         require(lendingPoolAddress != address(0x0), "LendingPool address is required.");
-        require(consensusAddress != address(0x0), "Consensus address is required.");
+        require(interestConsensusAddress != address(0x0), "Consensus address is required.");
         zToken = zTokenAddress;
         lendingPool = lendingPoolAddress;
-        consensus = consensusAddress;
+        consensus = interestConsensusAddress;
     }
 
     /** External Functions */
@@ -116,7 +116,6 @@ contract Lenders is LendersInterface {
 
     function setAccruedInterest(
         address lender,
-        uint256 startBlock,
         uint256 endBlock,
         uint256 amount
     )
@@ -124,7 +123,6 @@ contract Lenders is LendersInterface {
         isConsensus()
     {
         require(requestedInterestUpdate[lender] == endBlock, 'INCORRECT_END_BLOCK');
-        require(accruedInterest[lender].blockLastAccrued == startBlock, 'INCORRECT_START_BLOCK');
 
         requestedInterestUpdate[lender] = 0;
 

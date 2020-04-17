@@ -16,6 +16,14 @@ library ZeroCollateralCommon {
       uint256 blockLastAccrued;
     }
 
+    struct AggregatedInterest {
+      uint256 totalSubmissions;
+      uint256 maxValue;
+      uint256 minValue;
+      uint256 sumOfValues;
+      bool finalised;
+    }
+
     // Data per borrow as struct
     struct Loan {
         uint256 id;
