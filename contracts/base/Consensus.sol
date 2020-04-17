@@ -26,11 +26,11 @@ contract Consensus is SignerRole {
     using SafeMath for uint256;
 
     // Has signer address already submitted their answer for (user, identifier)?
-    mapping(address => mapping(address => mapping(uint256 => bool))) hasSubmitted;
+    mapping(address => mapping(address => mapping(uint256 => bool))) public hasSubmitted;
 
     // mapping from signer address, to signerNonce, to boolean.
     // Has the signer already used this nonce?
-    mapping(address => mapping(uint256 => bool)) signerNonceTaken;
+    mapping(address => mapping(uint256 => bool)) public signerNonceTaken;
 
     // the total number of submissions required for consensus on a value
     uint256 public requiredSubmissions;
