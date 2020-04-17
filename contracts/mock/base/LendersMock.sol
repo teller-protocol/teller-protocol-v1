@@ -15,12 +15,12 @@
 */
 pragma solidity 0.5.17;
 
-import "../../base/LenderInfo.sol";
+import "../../base/Lenders.sol";
 
 /**
     This contract is created ONLY for testing purposes.
  */
-contract LenderInfoMock is LenderInfo {
+contract LendersMock is Lenders {
     
     /** State Variables */
 
@@ -30,11 +30,11 @@ contract LenderInfoMock is LenderInfo {
 
     /** Connstructor */
     constructor(
-        address zdaiAddress,
-        address daiPoolAddress
+        address zTokenAddress,
+        address lendingPoolAddress
     )
         public
-        LenderInfo(zdaiAddress, daiPoolAddress)
+        Lenders(zTokenAddress, lendingPoolAddress)
     {
         addressesEqual = true;
     }
@@ -82,7 +82,7 @@ contract LenderInfoMock is LenderInfo {
         uint256 currentAccruedInterest,
         uint256 previousBlockAccruedInterest,
         uint256 blockNumber,
-        uint256 currentZDaiBalance
+        uint256 currentZTokenBalance
     )
         external 
         pure
@@ -92,7 +92,7 @@ contract LenderInfoMock is LenderInfo {
             currentAccruedInterest,
             previousBlockAccruedInterest,
             blockNumber,
-            currentZDaiBalance
+            currentZTokenBalance
         );
     }
 }

@@ -15,27 +15,27 @@
 */
 pragma solidity 0.5.17;
 
-import "../../base/LenderInfo.sol";
+import "../../base/Lenders.sol";
 
 /**
     This contract is created ONLY for testing purposes.
  */
-contract LenderInfoModifiersMock is LenderInfo {
+contract LendersModifiersMock is Lenders {
     
     /** State Variables */
 
     /** Connstructor */
     constructor(
-        address zdaiAddress,
-        address daiPoolAddress
+        address zTokenAddress,
+        address lendingPoolAddress
     )
         public
-        LenderInfo(zdaiAddress, daiPoolAddress)
+        Lenders(zTokenAddress, lendingPoolAddress)
     {}
 
-    function externalIsZDai() isZDai(msg.sender) external {}
+    function externalIsZToken() isZToken(msg.sender) external {}
 
-    function externalIsDaiPool() isDaiPool(msg.sender) external {}
+    function externalIsLendingPool() isLendingPool(msg.sender) external {}
 
     function externalIsValid(address anAddress) isValid(anAddress) external {}
 

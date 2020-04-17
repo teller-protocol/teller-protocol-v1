@@ -23,12 +23,12 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../util/ZeroCollateralCommon.sol";
 
 // Interfaces
-import "../interfaces/DAIPoolInterface.sol";
-import "../interfaces/LenderInfoInterface.sol";
-import "../interfaces/ZDAIInterface.sol";
+import "../interfaces/LendingPoolInterface.sol";
+import "../interfaces/LendersInterface.sol";
+import "../interfaces/ZTokenInterface.sol";
 
 
-contract LenderInfo is LenderInfoInterface {
+contract Lenders is LendersInterface {
     using AddressLib for address;
     using SafeMath for uint256;
 
@@ -37,26 +37,26 @@ contract LenderInfo is LenderInfoInterface {
     // last block number of accrued interest
     uint256 public blockAccruedInterest;
 
-    DAIPoolInterface public daiPool;
+    LendingPoolInterface public lendingPool;
 
-    ZDAIInterface public zdai;
+    ZTokenInterface public zToken;
 
     // array of all lending accounts
     mapping(address => ZeroCollateralCommon.LendAccount) public lenderAccounts;
 
     /** Modifiers */
 
-    modifier isZDai(address anAddress) {
+    modifier isZToken(address anAddress) {
         require(
-            areAddressesEqual(address(zdai), anAddress),
+            areAddressesEqual(address(zToken), anAddress),
             "Address has no permissions."
         );
         _;
     }
 
-    modifier isDaiPool(address anAddress) {
+    modifier isLendingPool(address anAddress) {
         require(
-            areAddressesEqual(address(daiPool), anAddress),
+            areAddressesEqual(address(lendingPool), anAddress),
             "Address has no permissions."
         );
         _;
@@ -69,44 +69,44 @@ contract LenderInfo is LenderInfoInterface {
 
     /* Constructor */
 
-    constructor(address zdaiAddress, address daiPoolAddress) public {
-        require(zdaiAddress != address(0x0), "ZDai address is required.");
-        require(daiPoolAddress != address(0x0), "Dai pool address is required.");
-        zdai = ZDAIInterface(zdaiAddress);
-        daiPool = DAIPoolInterface(daiPoolAddress);
+    constructor(address zTokenAddress, address lendingPoolAddress) public {
+        require(zTokenAddress != address(0x0), "zToken address is required.");
+        require(lendingPoolAddress != address(0x0), "LendingPool address is required");
+        zToken = ZTokenInterface(zTokenAddress);
+        lendingPool = LendingPoolInterface(lendingPoolAddress);
         blockAccruedInterest = block.number;
     }
 
     /** External Functions */
 
-    function zDaiTransfer(address sender, address recipient, uint256)
+    function zTokenTransfer(address sender, address recipient, uint256)
         external
-        isZDai(msg.sender)
+        isZToken(msg.sender)
     {
-        // Updating accrued interest for zDAI sender.
+        // Updating accrued interest for zToken sender.
         updateAccruedInterestFor(sender);
 
-        // Updating accrued interest for zDAI recipient.
+        // Updating accrued interest for zToken recipient.
         updateAccruedInterestFor(recipient);
     }
 
-    function zDaiMinted(address recipient, uint256) external isDaiPool(msg.sender) {
-        // Updating accrued interest for zDAI recipient.
+    function zTokenMinted(address recipient, uint256) external isLendingPool(msg.sender) {
+        // Updating accrued interest for zToken recipient.
         updateAccruedInterestFor(recipient);
     }
 
-    function zDaiBurnt(address recipient, uint256) external isDaiPool(msg.sender) {
-        // Updating accrued interest for zDAI recipient.
+    function zTokenBurnt(address recipient, uint256) external isLendingPool(msg.sender) {
+        // Updating accrued interest for zToken recipient.
         updateAccruedInterestFor(recipient);
     }
 
     function withdrawInterest(address recipient, uint256 amount)
         external
-        isDaiPool(msg.sender)
+        isLendingPool(msg.sender)
         isValid(recipient)
         returns (uint256)
     {
-        // Updating accrued interest for DAI recipient.
+        // Updating accrued interest for recipient.
         updateAccruedInterestFor(recipient);
 
         uint256 amountToWithdraw = amount;
@@ -150,7 +150,7 @@ contract LenderInfo is LenderInfoInterface {
             lenderAccounts[lender].totalAccruedInterest,
             previousBlockAccruedInterest,
             currentBlockNumber,
-            getZDaiBalanceOf(lender)
+            getZTokenBalanceOf(lender)
         );
 
         emit AccruedInterestUpdated(
@@ -166,10 +166,10 @@ contract LenderInfo is LenderInfoInterface {
         uint256 currentAccruedInterest,
         uint256 previousBlockAccruedInterest,
         uint256 currentBlockNumber,
-        uint256 currentZDaiBalance
+        uint256 currentZTokenBalance
     ) internal pure returns (uint256) {
         uint256 blocksDifference = currentBlockNumber.sub(previousBlockAccruedInterest);
-        return currentAccruedInterest.add(blocksDifference.mul(currentZDaiBalance));
+        return currentAccruedInterest.add(blocksDifference.mul(currentZTokenBalance));
     }
 
     function areAddressesEqual(address leftAddress, address rightAddress)
@@ -183,7 +183,7 @@ contract LenderInfo is LenderInfoInterface {
 
     /** Private Functions */
 
-    function getZDaiBalanceOf(address anAddress) private view returns (uint256) {
-        return zdai.balanceOf(anAddress);
+    function getZTokenBalanceOf(address anAddress) private view returns (uint256) {
+        return zToken.balanceOf(anAddress);
     }
 }

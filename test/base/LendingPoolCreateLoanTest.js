@@ -7,27 +7,27 @@ const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder')
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const LenderInfo = artifacts.require("./base/LenderInfo.sol");
-const DAIPool = artifacts.require("./base/DAIPool.sol");
+const Lenders = artifacts.require("./base/Lenders.sol");
+const LendingPool = artifacts.require("./base/LendingPool.sol");
 
-contract('DAIPoolCreateLoanTest', function (accounts) {
+contract('LendingPoolCreateLoanTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     let instance;
-    let zdaiInstance;
+    let zTokenInstance;
     let daiInstance;
-    let lenderInfoInstance;
+    let lendersInstance;
     let loansAddress = accounts[0];
     
     beforeEach('Setup for each test', async () => {
-        zdaiInstance = await Mock.new();
+        zTokenInstance = await Mock.new();
         daiInstance = await Mock.new();
-        instance = await DAIPool.new();
-        lenderInfoInstance = await LenderInfo.new(zdaiInstance.address, instance.address);
+        instance = await LendingPool.new();
+        lendersInstance = await Lenders.new(zTokenInstance.address, instance.address);
 
         await instance.initialize(
-            zdaiInstance.address,
+            zTokenInstance.address,
             daiInstance.address,
-            lenderInfoInstance.address,
+            lendersInstance.address,
             loansAddress,
         );
     });

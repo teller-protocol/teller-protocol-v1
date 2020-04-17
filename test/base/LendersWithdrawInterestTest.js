@@ -1,27 +1,27 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
-const { lenderInfo } = require('../utils/events');
+const { lenders } = require('../utils/events');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const LenderInfo = artifacts.require("./mock/base/LenderInfoMock.sol");
+const Lenders = artifacts.require("./mock/base/LendersMock.sol");
 
-contract('LenderInfoWithdrawInterestTest', function (accounts) {
+contract('LendersWithdrawInterestTest', function (accounts) {
     let instance;
-    let zdaiInstance;
-    let daiPoolInstance;
+    let zTokenInstance;
+    let lendingPoolInstance;
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     
     beforeEach('Setup for each test', async () => {
-        zdaiInstance = await Mock.new();
-        daiPoolInstance = await Mock.new();
-        instance = await LenderInfo.new(
-            zdaiInstance.address,
-            daiPoolInstance.address,
+        zTokenInstance = await Mock.new();
+        lendingPoolInstance = await Mock.new();
+        instance = await Lenders.new(
+            zTokenInstance.address,
+            lendingPoolInstance.address,
         );
     });
 
@@ -35,7 +35,7 @@ contract('LenderInfoWithdrawInterestTest', function (accounts) {
         currentAccruedInterest,
         previousBlockAccruedInterest,
         currentBlockNumber,
-        currentZDaiBalance,
+        currentZTokenBalance,
         amountWithdrawnExpected,
         newAccruedInterestExpected,
     ) {    
@@ -47,9 +47,9 @@ contract('LenderInfoWithdrawInterestTest', function (accounts) {
                 previousBlockAccruedInterest.toString(),
                 currentAccruedInterest.toString()
             );
-            await zdaiInstance.givenMethodReturnUint(
+            await zTokenInstance.givenMethodReturnUint(
                 erc20InterfaceEncoder.encodeBalanceOf(),
-                currentZDaiBalance.toString()
+                currentZTokenBalance.toString()
             );
 
             // Invocation
@@ -57,7 +57,7 @@ contract('LenderInfoWithdrawInterestTest', function (accounts) {
 
             // Assertions
             assert(result);
-            lenderInfo
+            lenders
                 .accruedInterestWithdrawn(result)
                 .emitted(lenderAddress, amountWithdrawnExpected);
 

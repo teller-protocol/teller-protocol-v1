@@ -1,5 +1,5 @@
 // Smart contracts
-const DAIPoolInterface = artifacts.require("./interfaces/DAIPoolInterface.sol");
+const LendingPoolInterface = artifacts.require("./interfaces/LendingPoolInterface.sol");
 const ERC20 = artifacts.require("openzeppelin-solidity/contracts/token/ERC20/IERC20.sol");
 
 // Util classes
@@ -19,11 +19,11 @@ module.exports = async (callback) => {
         const appConf = require('../config')(network);
         const { zerocollateral, tokens, toTxUrl } = appConf.networkConfig;
 
-        assert(zerocollateral.DAIPool, "DAIPool address is undefined.");
+        assert(zerocollateral.LendingPool, "LendingPool address is undefined.");
         assert(tokens.DAI, "DAI address is undefined.");
 
         const daiInstance = await ERC20.at(tokens.DAI);
-        const daiPoolInstance = await DAIPoolInterface.at(zerocollateral.DAIPool);
+        const lendingPoolInstance = await LendingPoolInterface.at(zerocollateral.LendingPool);
         
         const accounts = await web3.eth.getAccounts();
         assert(accounts, "Accounts must be defined.");
@@ -32,7 +32,7 @@ module.exports = async (callback) => {
 
         const initialSenderDaiBalance = await daiInstance.balanceOf(sender);
 
-        const result = await daiPoolInstance.withdrawDai(withdrawAmount, { from: sender });
+        const result = await lendingPoolInstance.withdraw(withdrawAmount, { from: sender });
         console.log(toTxUrl(result));
 
         const finalSenderDaiBalance = await daiInstance.balanceOf(sender);

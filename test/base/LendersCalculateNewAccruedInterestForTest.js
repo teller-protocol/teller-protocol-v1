@@ -6,19 +6,19 @@ const { t } = require('../utils/consts');
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const LenderInfo = artifacts.require("./mock/base/LenderInfoMock.sol");
+const Lenders = artifacts.require("./mock/base/LendersMock.sol");
 
-contract('LenderInfoCalculateNewAccruedInterestForTest', function (accounts) {
+contract('LendersCalculateNewAccruedInterestForTest', function (accounts) {
     let instance;
-    let zdaiInstance;
-    let daiPoolInstance;
+    let zTokenInstance;
+    let lendingPoolInstance;
     
     beforeEach('Setup for each test', async () => {
-        zdaiInstance = await Mock.new();
-        daiPoolInstance = await Mock.new();
-        instance = await LenderInfo.new(
-            zdaiInstance.address,
-            daiPoolInstance.address,
+        zTokenInstance = await Mock.new();
+        lendingPoolInstance = await Mock.new();
+        instance = await Lenders.new(
+            zTokenInstance.address,
+            lendingPoolInstance.address,
         );
     });
 
@@ -31,7 +31,7 @@ contract('LenderInfoCalculateNewAccruedInterestForTest', function (accounts) {
         currentAccruedInterest,
         previousBlockAccruedInterest,
         currentBlockNumber,
-        currentZDaiBalance,
+        currentZTokenBalance,
         newAccruedInterestExpected,
     ) {    
         it(t('user', 'calculateNewAccruedInterestFor', 'Should able to calculate the new accrued interest.', false), async function() {
@@ -42,7 +42,7 @@ contract('LenderInfoCalculateNewAccruedInterestForTest', function (accounts) {
                 currentAccruedInterest,
                 previousBlockAccruedInterest,
                 currentBlockNumber,
-                currentZDaiBalance
+                currentZTokenBalance
             );
 
             // Assertions

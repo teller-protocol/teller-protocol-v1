@@ -6,38 +6,38 @@ const { t, NULL_ADDRESS } = require('../utils/consts');
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const LenderInfo = artifacts.require("./base/LenderInfo.sol");
+const Lenders = artifacts.require("./base/Lenders.sol");
 
-contract('LenderInfoConstructorTest', function (accounts) {
-    let zdaiInstance;
-    let daiPoolInstance;
+contract('LendersConstructorTest', function (accounts) {
+    let zTokenInstance;
+    let lendingPoolInstance;
 
     beforeEach('Setup for each test', async () => {
-        zdaiInstance = await Mock.new();
-        daiPoolInstance = await Mock.new();
+        zTokenInstance = await Mock.new();
+        lendingPoolInstance = await Mock.new();
     });
 
     withData({
         _1_basic: [true, true, undefined, false],
-        _2_notZdaiInstance: [false, true, 'ZDai address is required.', true],
-        _3_notDaiPoolInstance: [true, false, 'Dai pool address is required.', true],
-        _4_notZdaiInstance_notDaiPoolInstance: [false, false, 'ZDai address is required.', true],
+        _2_notzTokenInstance: [false, true, 'zToken address is required.', true],
+        _3_notLendingPoolInstance: [true, false, 'LendingPool address is required', true],
+        _4_notzTokenInstance_notLendingPoolInstance: [false, false, 'zToken address is required.', true],
     }, function(
-        createZdaiInstance,
-        createDaiPoolInstance,
+        createzTokenInstance,
+        createLendingPoolInstance,
         expectedErrorMessage,
         mustFail
     ) {    
         it(t('user', 'new', 'Should (or not) be able to create a new instance.', mustFail), async function() {
             // Setup
-            const zDaiAddress = createZdaiInstance ? zdaiInstance.address : NULL_ADDRESS;
-            const daiPoolAddress = createDaiPoolInstance ? daiPoolInstance.address : NULL_ADDRESS;
+            const zTokenAddress = createzTokenInstance ? zTokenInstance.address : NULL_ADDRESS;
+            const lendingPoolAddress = createLendingPoolInstance ? lendingPoolInstance.address : NULL_ADDRESS;
 
             try {
                 // Invocation
-                const result = await LenderInfo.new(
-                    zDaiAddress,
-                    daiPoolAddress,
+                const result = await Lenders.new(
+                    zTokenAddress,
+                    lendingPoolAddress,
                 );;
                 
                 // Assertions

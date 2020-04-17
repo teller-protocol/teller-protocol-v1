@@ -5,23 +5,23 @@ const { mockLenderInfo } = require('../utils/contracts');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
-const ZDaiToken = artifacts.require("./mock/token/SimpleToken.sol");
+const ZTokenToken = artifacts.require("./mock/token/SimpleToken.sol");
 
 // Smart contracts
-const LenderInfo = artifacts.require("./mock/base/LenderInfoMock.sol");
+const Lenders = artifacts.require("./mock/base/LendersMock.sol");
 
-contract('LenderInfoZDaiMintedTest', function (accounts) {
+contract('LendersZTokenMintedTest', function (accounts) {
     const tokensOwner = accounts[8];
     let instance;
-    let zdaiInstance;
-    let daiPoolInstance;
+    let zTokenInstance;
+    let lendingPoolInstance;
     
     beforeEach('Setup for each test', async () => {
-        zdaiInstance = await ZDaiToken.new({from: tokensOwner});
-        daiPoolInstance = await Mock.new();
-        instance = await LenderInfo.new(
-            zdaiInstance.address,
-            daiPoolInstance.address,
+        zTokenInstance = await ZTokenToken.new({from: tokensOwner});
+        lendingPoolInstance = await Mock.new();
+        instance = await Lenders.new(
+            zTokenInstance.address,
+            lendingPoolInstance.address,
         );
     });
 
@@ -34,16 +34,16 @@ contract('LenderInfoZDaiMintedTest', function (accounts) {
         amount,
         plusBlockNumbers,
     ) {    
-        it(t('user', 'zDaiMinted', 'Should able to update the accrued interest after minting zDai.', false), async function() {
+        it(t('user', 'zTokenMinted', 'Should able to update the accrued interest after minting zToken.', false), async function() {
             // Setup
-            await zdaiInstance.mint(recipient.address, amount, { from: tokensOwner });
+            await zTokenInstance.mint(recipient.address, amount, { from: tokensOwner });
             // Mocking recipient info (accrued interest and lastaccrued block number) and current block number.
             const currentBlockNumber = await web3.eth.getBlockNumber();
             await mockLenderInfo(instance, recipient, currentBlockNumber);
             await instance.setCurrentBlockNumber(sum(currentBlockNumber, plusBlockNumbers));
 
             // Invocation
-            const result = await instance.zDaiMinted(recipient.address, amount);
+            const result = await instance.zTokenMinted(recipient.address, amount);
 
             // Assertions
             assert(result);

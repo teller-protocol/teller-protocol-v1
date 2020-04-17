@@ -1,34 +1,34 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
-const { daiPool } = require('../utils/events');
+const { lendingPool } = require('../utils/events');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const LenderInfo = artifacts.require("./base/LenderInfo.sol");
-const DAIPool = artifacts.require("./base/DAIPool.sol");
+const Lenders = artifacts.require("./base/Lenders.sol");
+const LendingPool = artifacts.require("./base/LendingPool.sol");
 
-contract('DAIPoolLiquidationPaymentTest', function (accounts) {
+contract('LendingPoolLiquidationPaymentTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     let instance;
-    let zdaiInstance;
+    let zTokenInstance;
     let daiInstance;
-    let lenderInfoInstance;
+    let lendersInstance;
     let loansInstance = accounts[0];
     
     beforeEach('Setup for each test', async () => {
-        zdaiInstance = await Mock.new();
+        zTokenInstance = await Mock.new();
         daiInstance = await Mock.new();
-        instance = await DAIPool.new();
-        lenderInfoInstance = await LenderInfo.new(zdaiInstance.address, instance.address);
+        instance = await LendingPool.new();
+        lendersInstance = await Lenders.new(zTokenInstance.address, instance.address);
 
         await instance.initialize(
-            zdaiInstance.address,
+            zTokenInstance.address,
             daiInstance.address,
-            lenderInfoInstance.address,
+            lendersInstance.address,
             loansInstance,
         );
     });
@@ -50,7 +50,7 @@ contract('DAIPoolLiquidationPaymentTest', function (accounts) {
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
-                daiPool
+                lendingPool
                     .paymentLiquidated(result)
                     .emitted(liquidator, amountToLiquidate);
             } catch (error) {

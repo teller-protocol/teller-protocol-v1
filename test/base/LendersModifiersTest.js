@@ -5,30 +5,30 @@ const { t, NULL_ADDRESS } = require('../utils/consts');
 // Mock contracts
 
 // Smart contracts
-const LenderInfo = artifacts.require("./mock/base/LenderInfoModifiersMock.sol");
+const Lenders = artifacts.require("./mock/base/LendersModifiersMock.sol");
 
-contract('LenderInfoZDaiMintedTest', function (accounts) {
+contract('LendersModifiersTest', function (accounts) {
     
     beforeEach('Setup for each test', async () => { });
 
     withData({
-        _1_zdaiSender: [accounts[0], accounts[1], accounts[0], undefined, false],
-        _2_daiPoolSender: [accounts[0], accounts[1], accounts[1], 'Address has no permissions.', true],
+        _1_zTokenSender: [accounts[0], accounts[1], accounts[0], undefined, false],
+        _2_lendingPoolSender: [accounts[0], accounts[1], accounts[1], 'Address has no permissions.', true],
         _3_notValidSender: [accounts[0], accounts[1], accounts[2], 'Address has no permissions.', true],
     }, function(
-        zdaiAddress,
-        daiPoolAddress,
+        zTokenAddress,
+        lendingPoolAddress,
         sender,
         expectedErrorMessage,
         mustFail
     ) {    
-        it(t('user', 'isZDai', 'Should able (or not) to call function with modifier isZDai.', mustFail), async function() {
+        it(t('user', 'isZToken', 'Should able (or not) to call function with modifier isZToken.', mustFail), async function() {
             // Setup
-            const instance = await LenderInfo.new(zdaiAddress, daiPoolAddress);
+            const instance = await Lenders.new(zTokenAddress, lendingPoolAddress);
 
             try {
                 // Invocation
-                const result = await instance.externalIsZDai({ from: sender });
+                const result = await instance.externalIsZToken({ from: sender });
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because the sender has no permissions.');
@@ -43,23 +43,23 @@ contract('LenderInfoZDaiMintedTest', function (accounts) {
     });
 
     withData({
-        _1_zdaiSender: [accounts[0], accounts[1], accounts[1], undefined, false],
-        _2_daiPoolSender: [accounts[0], accounts[1], accounts[0], 'Address has no permissions.', true],
+        _1_zTokenSender: [accounts[0], accounts[1], accounts[1], undefined, false],
+        _2_lendingPoolSender: [accounts[0], accounts[1], accounts[0], 'Address has no permissions.', true],
         _3_notValidSender: [accounts[0], accounts[1], accounts[2], 'Address has no permissions.', true],
     }, function(
-        zdaiAddress,
-        daiPoolAddress,
+        zTokenAddress,
+        lendingPoolAddress,
         sender,
         expectedErrorMessage,
         mustFail
     ) {    
-        it(t('user', 'isDaiPool', 'Should able (or not) to call function with modifier isDaiPool.', mustFail), async function() {
+        it(t('user', 'isLendingPool', 'Should able (or not) to call function with modifier isLendingPool.', mustFail), async function() {
             // Setup
-            const instance = await LenderInfo.new(zdaiAddress, daiPoolAddress);
+            const instance = await Lenders.new(zTokenAddress, lendingPoolAddress);
 
             try {
                 // Invocation
-                const result = await instance.externalIsDaiPool({ from: sender });
+                const result = await instance.externalIsLendingPool({ from: sender });
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because the sender has no permissions.');
@@ -77,15 +77,15 @@ contract('LenderInfoZDaiMintedTest', function (accounts) {
         _1_validAddress: [accounts[0], accounts[1], accounts[1], undefined, false],
         _2_invalidAddress: [accounts[0], accounts[1], NULL_ADDRESS, 'Address is required.', true],
     }, function(
-        zdaiAddress,
-        daiPoolAddress,
+        zTokenAddress,
+        lendingPoolAddress,
         sender,
         expectedErrorMessage,
         mustFail
     ) {    
         it(t('user', 'isValid', 'Should able (or not) to call function with modifier isValid.', mustFail), async function() {
             // Setup
-            const instance = await LenderInfo.new(zdaiAddress, daiPoolAddress);
+            const instance = await Lenders.new(zTokenAddress, lendingPoolAddress);
 
             try {
                 // Invocation

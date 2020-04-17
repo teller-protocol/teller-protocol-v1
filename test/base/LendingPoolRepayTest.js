@@ -1,34 +1,34 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
-const { daiPool } = require('../utils/events');
+const { lendingPool } = require('../utils/events');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const LenderInfo = artifacts.require("./base/LenderInfo.sol");
-const DAIPool = artifacts.require("./base/DAIPool.sol");
+const Lenders = artifacts.require("./base/Lenders.sol");
+const LendingPool = artifacts.require("./base/LendingPool.sol");
 
-contract('DAIPoolRepayDaiTest', function (accounts) {
+contract('LendingPoolRepayTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     let instance;
-    let zdaiInstance;
+    let zTokenInstance;
     let daiInstance;
-    let lenderInfoInstance;
+    let lendersInstance;
     let loansAddress = accounts[0];
     
     beforeEach('Setup for each test', async () => {
-        zdaiInstance = await Mock.new();
+        zTokenInstance = await Mock.new();
         daiInstance = await Mock.new();
-        instance = await DAIPool.new();
-        lenderInfoInstance = await LenderInfo.new(zdaiInstance.address, instance.address);
+        instance = await LendingPool.new();
+        lendersInstance = await Lenders.new(zTokenInstance.address, instance.address);
 
         await instance.initialize(
-            zdaiInstance.address,
+            zTokenInstance.address,
             daiInstance.address,
-            lenderInfoInstance.address,
+            lendersInstance.address,
             loansAddress,
         );
     });
@@ -38,20 +38,20 @@ contract('DAIPoolRepayDaiTest', function (accounts) {
         _2_notLoan: [accounts[1], accounts[2], true, 10, 'Address is not Loans contract.', true],
         _3_transferFail: [accounts[1], loansAddress, false, 200, "TransferFrom wasn't successful.", true],
     }, function(borrower, sender, transferFrom, amountToRepay, expectedErrorMessage, mustFail) {
-        it(t('user', 'repayDai', 'Should able (or not) to repay loan.', mustFail), async function() {
+        it(t('user', 'repay', 'Should able (or not) to repay loan.', mustFail), async function() {
             // Setup
             const encodeTransferFrom = erc20InterfaceEncoder.encodeTransferFrom();
             await daiInstance.givenMethodReturnBool(encodeTransferFrom, transferFrom);
 
             try {
                 // Invocation
-                const result = await instance.repayDai(amountToRepay, borrower, { from: sender });
+                const result = await instance.repay(amountToRepay, borrower, { from: sender });
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
-                daiPool
-                    .daiRepaid(result)
+                lendingPool
+                    .tokenRepaid(result)
                     .emitted(borrower, amountToRepay);
             } catch (error) {
                 // Assertions

@@ -9,9 +9,9 @@ const SafeMath = artifacts.require("./util/SafeMath.sol");
 
 // Official Smart Contracts
 const ZDai = artifacts.require("./base/ZDai.sol");
-const LenderInfo = artifacts.require("./base/LenderInfo.sol");
+const Lenders = artifacts.require("./base/Lenders.sol");
 const Loans = artifacts.require("./base/Loans.sol");
-const DAIPool = artifacts.require("./base/DAIPool.sol");
+const LendingPool = artifacts.require("./base/LendingPool.sol");
 const EtherUsdAggregator = artifacts.require("./providers/chainlink/EtherUsdAggregator.sol");
 
 module.exports = async function(deployer, network, accounts) {
@@ -37,25 +37,25 @@ module.exports = async function(deployer, network, accounts) {
   assert(eth_usd, 'Chainlinnk ETH/USD data contract is undefined.');
   await deployerApp.deploy(EtherUsdAggregator, eth_usd, deployOptions);
 
-  await deployerApp.links(DAIPool, [ AddressLib ]);
-  await deployerApp.deploy(DAIPool, deployOptions);
+  await deployerApp.links(LendingPool, [ AddressLib ]);
+  await deployerApp.deploy(LendingPool, deployOptions);
 
-  await deployerApp.links(LenderInfo, [ AddressLib, SafeMath ]);
-  await deployerApp.deploy(LenderInfo, ZDai.address, DAIPool.address, deployOptions);
+  await deployerApp.links(Lenders, [ AddressLib, SafeMath ]);
+  await deployerApp.deploy(Lenders, ZDai.address, LendingPool.address, deployOptions);
 
   await deployerApp.links(Loans, [ SafeMath ]);
-  await deployerApp.deploy(Loans, EtherUsdAggregator.address, DAIPool.address, deployOptions);
+  await deployerApp.deploy(Loans, EtherUsdAggregator.address, LendingPool.address, deployOptions);
 
-  const daiPoolInstance = await DAIPool.deployed();
-  await daiPoolInstance.initialize(
+  const daiLendingPoolInstance = await LendingPool.deployed();
+  await daiLendingPoolInstance.initialize(
     ZDai.address,
     tokens.DAI,
-    LenderInfo.address,
+    Lenders.address,
     Loans.address
   );
-  
-  const zdaiInstance = await ZDai.deployed();
-  await zdaiInstance.addMinter(DAIPool.address, { from: deployerAccount });
+
+  const zTokenInstance = await ZDai.deployed();
+  await zTokenInstance.addMinter(LendingPool.address, { from: deployerAccount });
 
   deployerApp.print();
   deployerApp.writeJson();

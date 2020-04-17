@@ -1,7 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
-const { daiPool } = require('../utils/events');
+const { lendingPool } = require('../utils/events');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const MintableInterfaceEncoder = require('../utils/encoders/MintableInterfaceEncoder');
 
@@ -9,29 +9,29 @@ const MintableInterfaceEncoder = require('../utils/encoders/MintableInterfaceEnc
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const LenderInfo = artifacts.require("./base/LenderInfo.sol");
-const DAIPool = artifacts.require("./base/DAIPool.sol");
+const Lenders = artifacts.require("./base/Lenders.sol");
+const LendingPool = artifacts.require("./base/LendingPool.sol");
 
-contract('DAIPoolDepositDaiTest', function (accounts) {
+contract('LendingPoolDepositTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     const mintableInterfaceEncoder = new MintableInterfaceEncoder(web3);
     let instance;
-    let zdaiInstance;
+    let zTokenInstance;
     let daiInstance;
-    let lenderInfoInstance;
+    let lendersInstance;
     let loansInstance;
     
     beforeEach('Setup for each test', async () => {
-        zdaiInstance = await Mock.new();
+        zTokenInstance = await Mock.new();
         daiInstance = await Mock.new();
         loansInstance = await Mock.new();
-        instance = await DAIPool.new();
-        lenderInfoInstance = await LenderInfo.new(zdaiInstance.address, instance.address);
+        instance = await LendingPool.new();
+        lendersInstance = await Lenders.new(zTokenInstance.address, instance.address);
 
         await instance.initialize(
-            zdaiInstance.address,
+            zTokenInstance.address,
             daiInstance.address,
-            lenderInfoInstance.address,
+            lendersInstance.address,
             loansInstance.address,
         );
     });
@@ -41,22 +41,22 @@ contract('DAIPoolDepositDaiTest', function (accounts) {
         _2_notTransferFromEnoughBalance: [accounts[2], false, true, 100, "TransferFrom wasn't successful.", true],
         _3_notMint: [accounts[0], true, false, 60, 'Mint was not successful.', true],
     }, function(recipient, transferFrom, mint, amountToDeposit, expectedErrorMessage, mustFail) {
-        it(t('user', 'depositDai', 'Should able (or not) to deposit DAIs.', mustFail), async function() {
+        it(t('user', 'deposit', 'Should able (or not) to deposit DAIs.', mustFail), async function() {
             // Setup
             const encodeTransferFrom = erc20InterfaceEncoder.encodeTransferFrom();
             await daiInstance.givenMethodReturnBool(encodeTransferFrom, transferFrom);
             const encodeMint = mintableInterfaceEncoder.encodeMint();
-            await zdaiInstance.givenMethodReturnBool(encodeMint, mint);
+            await zTokenInstance.givenMethodReturnBool(encodeMint, mint);
 
             try {
                 // Invocation
-                const result = await instance.depositDai(amountToDeposit, { from: recipient });
+                const result = await instance.deposit(amountToDeposit, { from: recipient });
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
-                daiPool
-                    .daiDeposited(result)
+                lendingPool
+                    .tokenDeposited(result)
                     .emitted(recipient, amountToDeposit);
             } catch (error) {
                 // Assertions
