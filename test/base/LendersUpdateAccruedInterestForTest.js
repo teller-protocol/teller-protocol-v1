@@ -14,14 +14,17 @@ contract('LendersUpdateAccruedInterestForTest', function (accounts) {
     let instance;
     let zTokenInstance;
     let lendingPoolInstance;
+    let interestConsensusInstance;
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     
     beforeEach('Setup for each test', async () => {
         zTokenInstance = await Mock.new();
         lendingPoolInstance = await Mock.new();
+        interestConsensusInstance = await Mock.new();
         instance = await Lenders.new(
             zTokenInstance.address,
             lendingPoolInstance.address,
+            interestConsensusInstance.address
         );
     });
 

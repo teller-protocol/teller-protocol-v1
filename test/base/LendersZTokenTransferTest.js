@@ -15,13 +15,15 @@ contract('LendersZTokenTransferTest', function (accounts) {
     let instance;
     let zTokenInstance;
     let lendingPoolInstance;
+    let interestConsensusInstance;
     
     beforeEach('Setup for each test', async () => {
         zTokenInstance = await ZTokenToken.new({from: tokensOwner});
-        lendingPoolInstance = await Mock.new();
+        interestConsensusInstance = await Mock.new();
         instance = await Lenders.new(
             zTokenInstance.address,
             lendingPoolInstance.address,
+            interestConsensusInstance.address
         );
     });
 
