@@ -24,8 +24,6 @@ contract LendersMock is Lenders {
     
     /** State Variables */
 
-    uint256 public currentBlockNumber;
-
     bool public addressesEqual;
 
     /** Constructor */
@@ -44,24 +42,12 @@ contract LendersMock is Lenders {
         addressesEqual = value;
     }
 
-    function setCurrentBlockNumber(uint256 blockNumber) external {
-        currentBlockNumber = blockNumber;
-    }
-
     function _areAddressesEqual(address, address)
         internal
         view
         returns (bool)
     {
         return addressesEqual;
-    }
-
-    function externalGetCurrentBlockNumber()
-        external
-        view
-        returns (uint256 blockNumber)
-    {
-        return currentBlockNumber;
     }
 
     function mockLenderInfo(
@@ -75,9 +61,11 @@ contract LendersMock is Lenders {
         accruedInterest[lender].totalNotWithdrawn = totalNotWithdrawn;
     }
 
-    function externalUpdateAccruedInterestFor(address lender)
-        external
-    {
-        super._updateAccruedInterestFor(lender);
+    function mockRequestUpdate(
+        address lender,
+        uint256 blockNumber
+    ) external {
+        requestedInterestUpdate[lender] = blockNumber;
     }
+
 }

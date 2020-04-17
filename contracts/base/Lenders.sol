@@ -152,7 +152,7 @@ contract Lenders is LendersInterface {
         uint256 amountToWithdraw = amount;
         uint256 withdrawableInterest = accruedInterest[recipient].totalNotWithdrawn;
 
-        if (withdrawableInterest == 0) return 0;
+        if (withdrawableInterest == 0 || amountToWithdraw == 0) return 0;
 
         if (withdrawableInterest < amountToWithdraw) {
             amountToWithdraw = withdrawableInterest;

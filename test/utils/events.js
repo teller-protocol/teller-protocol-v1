@@ -31,6 +31,28 @@ module.exports = {
         },
     },
     lenders: {
+        interestUpdateRequested: tx => {
+            const name = 'InterestUpdateRequested';
+            return {
+                name: name,
+                emitted: (lender, blockNumber) => emitted(tx, name, ev => {
+                    assert.equal(ev.lender, lender);
+                    assert.equal(ev.blockNumber.toString(), blockNumber.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            }
+        },
+        cancelInterestUpdate: tx => {
+            const name = 'CancelInterestUpdate';
+            return {
+                name: name,
+                emitted: (lender, blockNumber) => emitted(tx, name, ev => {
+                    assert.equal(ev.lender, lender);
+                    assert.equal(ev.blockNumber.toString(), blockNumber.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            }
+        },
         accruedInterestUpdated: tx => {
             const name = 'AccruedInterestUpdated';
             return {
