@@ -36,7 +36,7 @@ module.exports = async function(deployer, network, accounts) {
 
   await deployerApp.deploy(LendingPool, deployOptions);
 
-  await deployerApp.deploy(InterestConsensus, deployOptions);
+  await deployerApp.deploy(InterestConsensus, 2, 0, deployOptions);
   console.log('starting lender info')
 
   await deployerApp.deploy(Lenders, ZDai.address, LendingPool.address, InterestConsensus.address, deployOptions);
