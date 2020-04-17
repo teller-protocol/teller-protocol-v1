@@ -84,7 +84,10 @@ contract Lenders is LendersInterface {
     ) public {
         require(zTokenAddress != address(0x0), "zToken address is required.");
         require(lendingPoolAddress != address(0x0), "LendingPool address is required.");
-        require(interestConsensusAddress != address(0x0), "Consensus address is required.");
+        require(
+            interestConsensusAddress != address(0x0),
+            "Consensus address is required."
+        );
         zToken = ZTokenInterface(zTokenAddress);
         lendingPool = lendingPoolAddress;
         interestConsensus = interestConsensusAddress;
@@ -92,10 +95,7 @@ contract Lenders is LendersInterface {
 
     /** External Functions */
 
-    function zTokenTransfer(address sender, address, uint256)
-        external
-        isZToken()
-    {
+    function zTokenTransfer(address sender, address, uint256) external isZToken() {
         if (_getZTokenBalanceOf(sender) == 0) {
             _updateAccruedInterestFor(sender);
         }
@@ -109,20 +109,16 @@ contract Lenders is LendersInterface {
     }
 
     function updateAccruedInterest() external {
-        require(_getZTokenBalanceOf(msg.sender) > 0, 'SENDER_IS_NOT_LENDER');
+        require(_getZTokenBalanceOf(msg.sender) > 0, "SENDER_IS_NOT_LENDER");
 
         _updateAccruedInterestFor(msg.sender);
     }
 
-    function setAccruedInterest(
-        address lender,
-        uint256 endBlock,
-        uint256 amount
-    )
+    function setAccruedInterest(address lender, uint256 endBlock, uint256 amount)
         external
         isConsensus()
     {
-        require(requestedInterestUpdate[lender] == endBlock, 'INCORRECT_END_BLOCK');
+        require(requestedInterestUpdate[lender] == endBlock, "INCORRECT_END_BLOCK");
 
         requestedInterestUpdate[lender] = 0;
 
@@ -171,7 +167,7 @@ contract Lenders is LendersInterface {
 
     function _updateAccruedInterestFor(address lender) internal {
         if (requestedInterestUpdate[lender] != 0) {
-          emit CancelInterestUpdate(lender, requestedInterestUpdate[lender]);
+            emit CancelInterestUpdate(lender, requestedInterestUpdate[lender]);
         }
 
         requestedInterestUpdate[lender] = _getCurrentBlockNumber();

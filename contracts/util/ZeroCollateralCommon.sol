@@ -2,7 +2,6 @@ pragma solidity 0.5.17;
 
 
 library ZeroCollateralCommon {
-
     // Borrower account details
     struct Borrower {
         uint256 lastBorrowId;
@@ -11,17 +10,17 @@ library ZeroCollateralCommon {
     // The amount of interest owed to a borrower
     // The interest is just that accrued until `blockLastAccrued`
     struct AccruedInterest {
-      uint256 totalAccruedInterest;
-      uint256 totalNotWithdrawn;
-      uint256 blockLastAccrued;
+        uint256 totalAccruedInterest;
+        uint256 totalNotWithdrawn;
+        uint256 blockLastAccrued;
     }
 
     struct AggregatedInterest {
-      uint256 totalSubmissions;
-      uint256 maxValue;
-      uint256 minValue;
-      uint256 sumOfValues;
-      bool finalised;
+        uint256 totalSubmissions;
+        uint256 maxValue;
+        uint256 minValue;
+        uint256 sumOfValues;
+        bool finalised;
     }
 
     // Data per borrow as struct

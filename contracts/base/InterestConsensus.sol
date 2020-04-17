@@ -26,6 +26,7 @@ import "../interfaces/LendersInterface.sol";
 import "./Initializable.sol";
 import "./Consensus.sol";
 
+
 contract InterestConsensus is Initializable, Consensus {
     using SafeMath for uint256;
 
@@ -34,20 +35,22 @@ contract InterestConsensus is Initializable, Consensus {
     // mapping of (lender, blockNumber) to the aggregated node submissions for their request
     mapping(address => mapping(uint256 => ZeroCollateralCommon.AggregatedInterest)) nodeSubmissions;
 
-    event InterestSubmitted(address signer, address lender, uint256 blockNumber, uint256 interest);
+    event InterestSubmitted(
+        address signer,
+        address lender,
+        uint256 blockNumber,
+        uint256 interest
+    );
 
     event InterestAccepted(address lender, uint256 blockNumber, uint256 interest);
 
-    constructor(
-        uint256 initRequiredSubmissions,
-        uint256 initMaximumTolerance
-    ) public Consensus(
-      initRequiredSubmissions,
-      initMaximumTolerance
-    ){}
+    constructor(uint256 initRequiredSubmissions, uint256 initMaximumTolerance)
+        public
+        Consensus(initRequiredSubmissions, initMaximumTolerance)
+    {}
 
     function initialize(address lenderInfoAddress) public isNotInitialized() {
-        require(lenderInfoAddress != address(0), 'MUST_PROVIDE_LENDER_INFO');
+        require(lenderInfoAddress != address(0), "MUST_PROVIDE_LENDER_INFO");
 
         lenderInfo = LendersInterface(lenderInfoAddress);
 
@@ -60,17 +63,33 @@ contract InterestConsensus is Initializable, Consensus {
         uint256 blockNumber,
         uint256 interest
     ) external onlySigner() isInitialized() {
-        require(!hasSubmitted[msg.sender][lender][blockNumber], 'SIGNER_ALREADY_SUBMITTED');
+        require(
+            !hasSubmitted[msg.sender][lender][blockNumber],
+            "SIGNER_ALREADY_SUBMITTED"
+        );
         hasSubmitted[msg.sender][lender][blockNumber] = true;
 
-        require(lenderInfo.requestedInterestUpdate(lender) == blockNumber, 'INTEREST_NOT_REQUESTED');
+        require(
+            lenderInfo.requestedInterestUpdate(lender) == blockNumber,
+            "INTEREST_NOT_REQUESTED"
+        );
 
-        require(!nodeSubmissions[lender][blockNumber].finalised, 'INTEREST_ALREADY_FINALISED');
+        require(
+            !nodeSubmissions[lender][blockNumber].finalised,
+            "INTEREST_ALREADY_FINALISED"
+        );
 
-        bytes32 hashedData = _hashData(lender, blockNumber, interest, signature.signerNonce);
-        require(_signatureValid(signature, hashedData), 'SIGNATURE_NOT_VALID');
+        bytes32 hashedData = _hashData(
+            lender,
+            blockNumber,
+            interest,
+            signature.signerNonce
+        );
+        require(_signatureValid(signature, hashedData), "SIGNATURE_NOT_VALID");
 
-        ZeroCollateralCommon.AggregatedInterest memory aggregatedData = nodeSubmissions[lender][blockNumber];
+
+            ZeroCollateralCommon.AggregatedInterest memory aggregatedData
+         = nodeSubmissions[lender][blockNumber];
 
         // if this is the first submission for this request
         if (aggregatedData.totalSubmissions == 0) {
@@ -99,11 +118,17 @@ contract InterestConsensus is Initializable, Consensus {
             aggregatedData.finalised = true;
 
             // average the submissions
-            uint256 finalInterest = aggregatedData.sumOfValues.div(aggregatedData.totalSubmissions);
+            uint256 finalInterest = aggregatedData.sumOfValues.div(
+                aggregatedData.totalSubmissions
+            );
 
             require(
-              _resultsWithinTolerance(aggregatedData.maxValue, aggregatedData.minValue, finalInterest),
-              'MAXIMUM_TOLERANCE_SURPASSED'
+                _resultsWithinTolerance(
+                    aggregatedData.maxValue,
+                    aggregatedData.minValue,
+                    finalInterest
+                ),
+                "MAXIMUM_TOLERANCE_SURPASSED"
             );
 
             lenderInfo.setAccruedInterest(lender, blockNumber, finalInterest);
@@ -120,14 +145,6 @@ contract InterestConsensus is Initializable, Consensus {
         uint256 interest,
         uint256 signerNonce
     ) internal pure returns (bytes32) {
-        return keccak256(
-            abi.encode(
-                lender,
-                blockNumber,
-                interest,
-                signerNonce
-            )
-        );
+        return keccak256(abi.encode(lender, blockNumber, interest, signerNonce));
     }
-
 }

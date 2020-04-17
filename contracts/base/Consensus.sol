@@ -22,6 +22,7 @@ import "../util/ZeroCollateralCommon.sol";
 // Contracts
 import "openzeppelin-solidity/contracts/access/roles/SignerRole.sol";
 
+
 contract Consensus is SignerRole {
     using SafeMath for uint256;
 
@@ -39,27 +40,24 @@ contract Consensus is SignerRole {
     // i.e. maximumTolerance of 325 => tolerance of 3.25% => 0.0325 of value
     uint256 public maximumTolerance;
 
-    constructor(
-        uint256 initRequiredSubmissions,
-        uint256 initMaximumTolerance
-    ) public {
-        require(initRequiredSubmissions > 0, 'VALUE_MUST_BE_PROVIDED');
+    constructor(uint256 initRequiredSubmissions, uint256 initMaximumTolerance) public {
+        require(initRequiredSubmissions > 0, "VALUE_MUST_BE_PROVIDED");
         requiredSubmissions = initRequiredSubmissions;
         maximumTolerance = initMaximumTolerance;
     }
 
-    function _resultsWithinTolerance(
-      uint256 maximum,
-      uint256 minimum,
-      uint256 average
-    ) internal view returns (bool) {
+    function _resultsWithinTolerance(uint256 maximum, uint256 minimum, uint256 average)
+        internal
+        view
+        returns (bool)
+    {
         uint256 toleranceAmount = average.mul(maximumTolerance).div(10000);
 
         if (minimum < average.sub(toleranceAmount)) {
-          return false;
+            return false;
         }
         if (maximum > average.add(toleranceAmount)) {
-          return false;
+            return false;
         }
         return true;
     }
@@ -69,12 +67,7 @@ contract Consensus is SignerRole {
         bytes32 dataHash
     ) internal view returns (bool) {
         address signer = ecrecover(
-            keccak256(
-                abi.encodePacked(
-                    "\x19Ethereum Signed Message:\n32",
-                    dataHash
-                )
-            ),
+            keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", dataHash)),
             signature.v,
             signature.r,
             signature.s
@@ -82,5 +75,4 @@ contract Consensus is SignerRole {
 
         return (signer == msg.sender);
     }
-
 }
