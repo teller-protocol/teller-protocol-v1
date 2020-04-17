@@ -63,7 +63,7 @@ contract('LendersUpdateAccruedInterestTest', function (accounts) {
                       .cancelInterestUpdate(result)
                       .emitted(lenderAddress, currentRequestUpdateBlock);
               } else {
-                lenders
+                  lenders
                       .cancelInterestUpdate(result)
                       .notEmitted()
               }
