@@ -85,16 +85,16 @@ contract Lenders is LendersInterface {
         require(zTokenAddress != address(0x0), "zToken address is required.");
         require(lendingPoolAddress != address(0x0), "LendingPool address is required.");
         require(interestConsensusAddress != address(0x0), "Consensus address is required.");
-        zToken = zTokenAddress;
+        zToken = ZTokenInterface(zTokenAddress);
         lendingPool = lendingPoolAddress;
-        consensus = interestConsensusAddress;
+        interestConsensus = interestConsensusAddress;
     }
 
     /** External Functions */
 
     function zTokenTransfer(address sender, address, uint256)
         external
-        isZDai()
+        isZToken()
     {
         if (_getZTokenBalanceOf(sender) == 0) {
             _updateAccruedInterestFor(sender);

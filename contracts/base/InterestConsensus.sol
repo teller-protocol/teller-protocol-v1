@@ -20,7 +20,7 @@ pragma experimental ABIEncoderV2;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 // Interfaces
-import "../interfaces/LenderInfoInterface.sol";
+import "../interfaces/LendersInterface.sol";
 
 // Contracts
 import "./Initializable.sol";
@@ -29,7 +29,7 @@ import "./Consensus.sol";
 contract InterestConsensus is Initializable, Consensus {
     using SafeMath for uint256;
 
-    LenderInfoInterface public lenderInfo;
+    LendersInterface public lenderInfo;
 
     // mapping of (lender, blockNumber) to the aggregated node submissions for their request
     mapping(address => mapping(uint256 => ZeroCollateralCommon.AggregatedInterest)) nodeSubmissions;
@@ -49,7 +49,7 @@ contract InterestConsensus is Initializable, Consensus {
     function initialize(address lenderInfoAddress) public isNotInitialized() {
         require(lenderInfoAddress != address(0), 'MUST_PROVIDE_LENDER_INFO');
 
-        lenderInfo = LenderInfoInterface(lenderInfoAddress);
+        lenderInfo = LendersInterface(lenderInfoAddress);
 
         initialize();
     }

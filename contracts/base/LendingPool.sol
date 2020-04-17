@@ -101,9 +101,6 @@ contract LendingPool is LendingPoolInterface, Initializable {
         // Mint zToken tokens
         zTokenMint(msg.sender, amount);
 
-        // Notify zToken tokens were minted
-        lenders.zTokenMinted(msg.sender, amount);
-
         // Emit event
         emit TokenDeposited(msg.sender, amount);
     }
