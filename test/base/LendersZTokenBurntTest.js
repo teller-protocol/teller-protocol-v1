@@ -5,22 +5,22 @@ const { mockLenderInfo } = require('../utils/contracts');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
-const ZDaiToken = artifacts.require("./mock/token/SimpleToken.sol");
+const ZTokenToken = artifacts.require("./mock/token/SimpleToken.sol");
 
 // Smart contracts
 const Lenders = artifacts.require("./mock/base/LendersMock.sol");
 
-contract('LendersZDaiBurntTest', function (accounts) {
+contract('LendersZTokenBurntTest', function (accounts) {
     const tokensOwner = accounts[8];
     let instance;
-    let zdaiInstance;
+    let zTokenInstance;
     let lendingPoolInstance;
     
     beforeEach('Setup for each test', async () => {
-        zdaiInstance = await ZDaiToken.new({from: tokensOwner});
+        zTokenInstance = await ZTokenToken.new({from: tokensOwner});
         lendingPoolInstance = await Mock.new();
         instance = await Lenders.new(
-            zdaiInstance.address,
+            zTokenInstance.address,
             lendingPoolInstance.address,
         );
     });
@@ -35,10 +35,10 @@ contract('LendersZDaiBurntTest', function (accounts) {
         amount,
         plusBlockNumbers,
     ) {    
-        it(t('user', 'zDaiBurnt', 'Should able to update the accrued interest after burning zDai.', false), async function() {
+        it(t('user', 'zTokenBurnt', 'Should able to update the accrued interest after burning zToken.', false), async function() {
             // Setup
-            await zdaiInstance.transfer(recipient.address, initialAmount, { from: tokensOwner });
-            await zdaiInstance.burn(amount, { from: recipient.address });
+            await zTokenInstance.transfer(recipient.address, initialAmount, { from: tokensOwner });
+            await zTokenInstance.burn(amount, { from: recipient.address });
 
             // Mocking recipient info (accrued interest and lastaccrued block number) and current block number.
             const currentBlockNumber = await web3.eth.getBlockNumber();
@@ -46,7 +46,7 @@ contract('LendersZDaiBurntTest', function (accounts) {
             await instance.setCurrentBlockNumber(sum(currentBlockNumber, plusBlockNumbers));
 
             // Invocation
-            const result = await instance.zDaiBurnt(recipient.address, amount);
+            const result = await instance.zTokenBurnt(recipient.address, amount);
 
             // Assertions
             assert(result);

@@ -25,7 +25,7 @@ import "../util/ZeroCollateralCommon.sol";
 // Interfaces
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
-import "../interfaces/ZDAIInterface.sol";
+import "../interfaces/ZTokenInterface.sol";
 
 
 contract Lenders is LendersInterface {
@@ -39,16 +39,16 @@ contract Lenders is LendersInterface {
 
     LendingPoolInterface public lendingPool;
 
-    ZDAIInterface public zdai;
+    ZTokenInterface public zToken;
 
     // array of all lending accounts
     mapping(address => ZeroCollateralCommon.LendAccount) public lenderAccounts;
 
     /** Modifiers */
 
-    modifier isZDai(address anAddress) {
+    modifier isZToken(address anAddress) {
         require(
-            areAddressesEqual(address(zdai), anAddress),
+            areAddressesEqual(address(zToken), anAddress),
             "Address has no permissions."
         );
         _;
@@ -69,34 +69,34 @@ contract Lenders is LendersInterface {
 
     /* Constructor */
 
-    constructor(address zdaiAddress, address lendingPoolAddress) public {
-        require(zdaiAddress != address(0x0), "ZDai address is required.");
+    constructor(address zTokenAddress, address lendingPoolAddress) public {
+        require(zTokenAddress != address(0x0), "zToken address is required.");
         require(lendingPoolAddress != address(0x0), "LendingPool address is required");
-        zdai = ZDAIInterface(zdaiAddress);
+        zToken = ZTokenInterface(zTokenAddress);
         lendingPool = LendingPoolInterface(lendingPoolAddress);
         blockAccruedInterest = block.number;
     }
 
     /** External Functions */
 
-    function zDaiTransfer(address sender, address recipient, uint256)
+    function zTokenTransfer(address sender, address recipient, uint256)
         external
-        isZDai(msg.sender)
+        isZToken(msg.sender)
     {
-        // Updating accrued interest for zDAI sender.
+        // Updating accrued interest for zToken sender.
         updateAccruedInterestFor(sender);
 
-        // Updating accrued interest for zDAI recipient.
+        // Updating accrued interest for zToken recipient.
         updateAccruedInterestFor(recipient);
     }
 
-    function zDaiMinted(address recipient, uint256) external isLendingPool(msg.sender) {
-        // Updating accrued interest for zDAI recipient.
+    function zTokenMinted(address recipient, uint256) external isLendingPool(msg.sender) {
+        // Updating accrued interest for zToken recipient.
         updateAccruedInterestFor(recipient);
     }
 
-    function zDaiBurnt(address recipient, uint256) external isLendingPool(msg.sender) {
-        // Updating accrued interest for zDAI recipient.
+    function zTokenBurnt(address recipient, uint256) external isLendingPool(msg.sender) {
+        // Updating accrued interest for zToken recipient.
         updateAccruedInterestFor(recipient);
     }
 
@@ -150,7 +150,7 @@ contract Lenders is LendersInterface {
             lenderAccounts[lender].totalAccruedInterest,
             previousBlockAccruedInterest,
             currentBlockNumber,
-            getZDaiBalanceOf(lender)
+            getZTokenBalanceOf(lender)
         );
 
         emit AccruedInterestUpdated(
@@ -166,10 +166,10 @@ contract Lenders is LendersInterface {
         uint256 currentAccruedInterest,
         uint256 previousBlockAccruedInterest,
         uint256 currentBlockNumber,
-        uint256 currentZDaiBalance
+        uint256 currentZTokenBalance
     ) internal pure returns (uint256) {
         uint256 blocksDifference = currentBlockNumber.sub(previousBlockAccruedInterest);
-        return currentAccruedInterest.add(blocksDifference.mul(currentZDaiBalance));
+        return currentAccruedInterest.add(blocksDifference.mul(currentZTokenBalance));
     }
 
     function areAddressesEqual(address leftAddress, address rightAddress)
@@ -183,7 +183,7 @@ contract Lenders is LendersInterface {
 
     /** Private Functions */
 
-    function getZDaiBalanceOf(address anAddress) private view returns (uint256) {
-        return zdai.balanceOf(anAddress);
+    function getZTokenBalanceOf(address anAddress) private view returns (uint256) {
+        return zToken.balanceOf(anAddress);
     }
 }

@@ -30,11 +30,11 @@ contract LendersMock is Lenders {
 
     /** Connstructor */
     constructor(
-        address zdaiAddress,
+        address zTokenAddress,
         address lendingPoolAddress
     )
         public
-        Lenders(zdaiAddress, lendingPoolAddress)
+        Lenders(zTokenAddress, lendingPoolAddress)
     {
         addressesEqual = true;
     }
@@ -82,7 +82,7 @@ contract LendersMock is Lenders {
         uint256 currentAccruedInterest,
         uint256 previousBlockAccruedInterest,
         uint256 blockNumber,
-        uint256 currentZDaiBalance
+        uint256 currentZTokenBalance
     )
         external 
         pure
@@ -92,7 +92,7 @@ contract LendersMock is Lenders {
             currentAccruedInterest,
             previousBlockAccruedInterest,
             blockNumber,
-            currentZDaiBalance
+            currentZTokenBalance
         );
     }
 }

@@ -13,10 +13,10 @@ interface LendingPoolInterface {
     function deposit(uint256 amount) external;
 
     /**
-        @notice It allows any zDAI holder to burn their zDAI tokens and withdraw their tokens.
+        @notice It allows any zToken holder to burn their zToken tokens and withdraw their tokens.
         @param amount of tokens to withdraw.
         @dev It throws a require error if the contract hasn't enough tokens balance.
-        @dev It throws a require error if the holder hasn't enough zDAI balance.
+        @dev It throws a require error if the holder hasn't enough zToken balance.
      */
     function withdraw(uint256 amount) external;
 
@@ -39,7 +39,7 @@ interface LendingPoolInterface {
     function liquidationPayment(uint256 amount, address liquidator) external;
 
     /**
-        @notice Ønce the loan is created, it transfers the amount of tokens to the borrower.
+        @notice Once the loan is created, it transfers the amount of tokens to the borrower.
         @param amount of tokens to transfer.
         @param borrower address which will receive the tokens.
         @dev This function only can be invoked by the LoansInterface implementation.

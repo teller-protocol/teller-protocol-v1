@@ -2,11 +2,11 @@ pragma solidity 0.5.17;
 
 
 interface LendersInterface {
-    function zDaiTransfer(address sender, address recipient, uint256 amount) external;
+    function zTokenTransfer(address sender, address recipient, uint256 amount) external;
 
-    function zDaiMinted(address recipient, uint256 amount) external;
+    function zTokenMinted(address recipient, uint256 amount) external;
 
-    function zDaiBurnt(address recipient, uint256 amount) external;
+    function zTokenBurnt(address recipient, uint256 amount) external;
 
     function withdrawInterest(address recipient, uint256 amount)
         external

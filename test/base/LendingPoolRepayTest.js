@@ -14,19 +14,19 @@ const LendingPool = artifacts.require("./base/LendingPool.sol");
 contract('LendingPoolRepayTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     let instance;
-    let zdaiInstance;
+    let zTokenInstance;
     let daiInstance;
     let lendersInstance;
     let loansAddress = accounts[0];
     
     beforeEach('Setup for each test', async () => {
-        zdaiInstance = await Mock.new();
+        zTokenInstance = await Mock.new();
         daiInstance = await Mock.new();
         instance = await LendingPool.new();
-        lendersInstance = await Lenders.new(zdaiInstance.address, instance.address);
+        lendersInstance = await Lenders.new(zTokenInstance.address, instance.address);
 
         await instance.initialize(
-            zdaiInstance.address,
+            zTokenInstance.address,
             daiInstance.address,
             lendersInstance.address,
             loansAddress,

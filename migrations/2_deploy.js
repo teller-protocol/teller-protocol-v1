@@ -54,8 +54,8 @@ module.exports = async function(deployer, network, accounts) {
     Loans.address
   );
 
-  const zdaiInstance = await ZDai.deployed();
-  await zdaiInstance.addMinter(LendingPool.address, { from: deployerAccount });
+  const zTokenInstance = await ZDai.deployed();
+  await zTokenInstance.addMinter(LendingPool.address, { from: deployerAccount });
 
   deployerApp.print();
   deployerApp.writeJson();

@@ -10,14 +10,14 @@ const Lenders = artifacts.require("./mock/base/LendersMock.sol");
 
 contract('LendersCalculateNewAccruedInterestForTest', function (accounts) {
     let instance;
-    let zdaiInstance;
+    let zTokenInstance;
     let lendingPoolInstance;
     
     beforeEach('Setup for each test', async () => {
-        zdaiInstance = await Mock.new();
+        zTokenInstance = await Mock.new();
         lendingPoolInstance = await Mock.new();
         instance = await Lenders.new(
-            zdaiInstance.address,
+            zTokenInstance.address,
             lendingPoolInstance.address,
         );
     });
@@ -31,7 +31,7 @@ contract('LendersCalculateNewAccruedInterestForTest', function (accounts) {
         currentAccruedInterest,
         previousBlockAccruedInterest,
         currentBlockNumber,
-        currentZDaiBalance,
+        currentZTokenBalance,
         newAccruedInterestExpected,
     ) {    
         it(t('user', 'calculateNewAccruedInterestFor', 'Should able to calculate the new accrued interest.', false), async function() {
@@ -42,7 +42,7 @@ contract('LendersCalculateNewAccruedInterestForTest', function (accounts) {
                 currentAccruedInterest,
                 previousBlockAccruedInterest,
                 currentBlockNumber,
-                currentZDaiBalance
+                currentZTokenBalance
             );
 
             // Assertions

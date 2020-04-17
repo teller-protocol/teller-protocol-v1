@@ -9,34 +9,34 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const Lenders = artifacts.require("./base/Lenders.sol");
 
 contract('LendersConstructorTest', function (accounts) {
-    let zdaiInstance;
+    let zTokenInstance;
     let lendingPoolInstance;
 
     beforeEach('Setup for each test', async () => {
-        zdaiInstance = await Mock.new();
+        zTokenInstance = await Mock.new();
         lendingPoolInstance = await Mock.new();
     });
 
     withData({
         _1_basic: [true, true, undefined, false],
-        _2_notZdaiInstance: [false, true, 'ZDai address is required.', true],
+        _2_notzTokenInstance: [false, true, 'zToken address is required.', true],
         _3_notLendingPoolInstance: [true, false, 'LendingPool address is required', true],
-        _4_notZdaiInstance_notLendingPoolInstance: [false, false, 'ZDai address is required.', true],
+        _4_notzTokenInstance_notLendingPoolInstance: [false, false, 'zToken address is required.', true],
     }, function(
-        createZdaiInstance,
+        createzTokenInstance,
         createLendingPoolInstance,
         expectedErrorMessage,
         mustFail
     ) {    
         it(t('user', 'new', 'Should (or not) be able to create a new instance.', mustFail), async function() {
             // Setup
-            const zDaiAddress = createZdaiInstance ? zdaiInstance.address : NULL_ADDRESS;
+            const zTokenAddress = createzTokenInstance ? zTokenInstance.address : NULL_ADDRESS;
             const lendingPoolAddress = createLendingPoolInstance ? lendingPoolInstance.address : NULL_ADDRESS;
 
             try {
                 // Invocation
                 const result = await Lenders.new(
-                    zDaiAddress,
+                    zTokenAddress,
                     lendingPoolAddress,
                 );;
                 

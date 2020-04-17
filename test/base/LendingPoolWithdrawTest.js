@@ -17,7 +17,7 @@ const ZDai = artifacts.require("./base/ZDai.sol");
 contract('LendingPoolWithdrawTest', function (accounts) {
     const burnableInterfaceEncoder = new BurnableInterfaceEncoder(web3);
     let instance;
-    let zdaiInstance;
+    let zTokenInstance;
     let daiInstance;
     let loansInstance;
     
@@ -32,9 +32,9 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     }, function(recipient, transfer, amountToWithdraw, expectedErrorMessage, mustFail) {
         it(t('user', 'withdraw', 'Should able (or not) to withdraw DAIs.', mustFail), async function() {
             // Setup
-            zdaiInstance = await Mock.new();
+            zTokenInstance = await Mock.new();
             daiInstance = await Mock.new();
-            await initContracts(instance, zdaiInstance, daiInstance, loansInstance, Lenders);
+            await initContracts(instance, zTokenInstance, daiInstance, loansInstance, Lenders);
             const encodeTransfer = burnableInterfaceEncoder.encodeTransfer();
             await daiInstance.givenMethodReturnBool(encodeTransfer, transfer);
 
@@ -64,10 +64,10 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     }, function(depositSender, depositAmount, recipient, amountToWithdraw, expectedErrorMessage, mustFail) {
         it(t('user', 'withdraw', 'Should able (or not) to withdraw DAIs.', mustFail), async function() {
             // Setup
-            zdaiInstance = await ZDai.new();
+            zTokenInstance = await ZDai.new();
             daiInstance = await DAI.new();
-            await zdaiInstance.addMinter(instance.address);
-            await initContracts(instance, zdaiInstance, daiInstance, loansInstance, Lenders);
+            await zTokenInstance.addMinter(instance.address);
+            await initContracts(instance, zTokenInstance, daiInstance, loansInstance, Lenders);
             await daiInstance.approve(instance.address, depositAmount, { from: depositSender });
             await instance.deposit(depositAmount, { from: depositSender });
             

@@ -12,15 +12,15 @@ const Lenders = artifacts.require("./mock/base/LendersMock.sol");
 
 contract('LendersWithdrawInterestTest', function (accounts) {
     let instance;
-    let zdaiInstance;
+    let zTokenInstance;
     let lendingPoolInstance;
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     
     beforeEach('Setup for each test', async () => {
-        zdaiInstance = await Mock.new();
+        zTokenInstance = await Mock.new();
         lendingPoolInstance = await Mock.new();
         instance = await Lenders.new(
-            zdaiInstance.address,
+            zTokenInstance.address,
             lendingPoolInstance.address,
         );
     });
@@ -35,7 +35,7 @@ contract('LendersWithdrawInterestTest', function (accounts) {
         currentAccruedInterest,
         previousBlockAccruedInterest,
         currentBlockNumber,
-        currentZDaiBalance,
+        currentZTokenBalance,
         amountWithdrawnExpected,
         newAccruedInterestExpected,
     ) {    
@@ -47,9 +47,9 @@ contract('LendersWithdrawInterestTest', function (accounts) {
                 previousBlockAccruedInterest.toString(),
                 currentAccruedInterest.toString()
             );
-            await zdaiInstance.givenMethodReturnUint(
+            await zTokenInstance.givenMethodReturnUint(
                 erc20InterfaceEncoder.encodeBalanceOf(),
-                currentZDaiBalance.toString()
+                currentZTokenBalance.toString()
             );
 
             // Invocation

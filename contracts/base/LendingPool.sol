@@ -25,7 +25,7 @@ import "../util/ZeroCollateralCommon.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
-import "../interfaces/ZDAIInterface.sol";
+import "../interfaces/ZTokenInterface.sol";
 
 // Contracts
 import "./Initializable.sol";
@@ -41,7 +41,7 @@ contract LendingPool is LendingPoolInterface, Initializable {
 
     IERC20 public token;
 
-    ZDAIInterface public zdai;
+    ZTokenInterface public zToken;
 
     LendersInterface public lenders;
 
@@ -64,26 +64,26 @@ contract LendingPool is LendingPoolInterface, Initializable {
 
     /**
         @notice It initializes the contract state variables.
-        @param zdaiAddress zDAI token address.
+        @param zTokenAddress zToken token address.
         @param tokenAddress ERC20 token address.
         @param lendersAddress Lenders contract address.
         @param loansAddress Loans contract address.
         @dev It throws a require error if the contract is already initialized.
      */
     function initialize(
-        address zdaiAddress,
+        address zTokenAddress,
         address tokenAddress,
         address lendersAddress,
         address loansAddress
     ) external isNotInitialized() {
-        zdaiAddress.requireNotEmpty("ZDai address is required.");
+        zTokenAddress.requireNotEmpty("zToken address is required.");
         tokenAddress.requireNotEmpty("Token address is required.");
         lendersAddress.requireNotEmpty("Lenders address is required.");
         loansAddress.requireNotEmpty("Loans address is required.");
 
         initialize();
 
-        zdai = ZDAIInterface(zdaiAddress);
+        zToken = ZTokenInterface(zTokenAddress);
         token = IERC20(tokenAddress);
         lenders = LendersInterface(lendersAddress);
         loans = loansAddress;
@@ -98,26 +98,26 @@ contract LendingPool is LendingPoolInterface, Initializable {
         // Transfering tokens to the LendingPool
         tokenTransferFrom(msg.sender, amount);
 
-        // Mint ZDAI tokens
-        zdaiMint(msg.sender, amount);
+        // Mint zToken tokens
+        zTokenMint(msg.sender, amount);
 
-        // Notify ZDAI tokens were minted
-        lenders.zDaiMinted(msg.sender, amount);
+        // Notify zToken tokens were minted
+        lenders.zTokenMinted(msg.sender, amount);
 
         // Emit event
         emit TokenDeposited(msg.sender, amount);
     }
 
     /**
-        @notice It allows any zDAI holder to burn their zDAI tokens and withdraw their tokens.
+        @notice It allows any zToken holder to burn their zToken tokens and withdraw their tokens.
         @param amount of tokens to withdraw.
      */
     function withdraw(uint256 amount) external isInitialized() {
-        // Burn ZDAI tokens.
-        zdai.burn(msg.sender, amount);
+        // Burn zToken tokens.
+        zToken.burn(msg.sender, amount);
 
-        // Notify ZDAI tokens were burnt
-        lenders.zDaiBurnt(msg.sender, amount);
+        // Notify zToken tokens were burnt
+        lenders.zTokenBurnt(msg.sender, amount);
 
         // Transfers tokens
         tokenTransfer(msg.sender, amount);
@@ -204,14 +204,14 @@ contract LendingPool is LendingPoolInterface, Initializable {
     }
 
     /**
-        @notice It mints ZDAI tokens, and send them to a specific address.
+        @notice It mints zToken tokens, and send them to a specific address.
         @param to address which will receive the minted tokens.
         @param amount to be minted.
-        @dev This contract must has a Minter Role in ZDAI (mintable) token.
+        @dev This contract must has a Minter Role in zToken (mintable) token.
         @dev It throws a require error if mint invocation fails.
      */
-    function zdaiMint(address to, uint256 amount) private {
-        bool mintResult = zdai.mint(to, amount);
+    function zTokenMint(address to, uint256 amount) private {
+        bool mintResult = zToken.mint(to, amount);
         require(mintResult, "Mint was not successful.");
     }
 }
