@@ -36,10 +36,12 @@ module.exports = async function(deployer, network, accounts) {
 
   await deployerApp.deploy(LendingPool, deployOptions);
 
-  await deployerApp.deploy(InterestConsensus, 2, 0, deployOptions);
+  const requiredSubmissions = env.getDefaultRequiredSubmissions().getOrDefault()
+  const maximumTolerance = env.getDefaultMaximumTolerance().getOrDefault()
+  await deployerApp.deploy(InterestConsensus, requiredSubmissions, maximumTolerance, deployOptions);
 
   await deployerApp.deploy(Lenders, ZDai.address, LendingPool.address, InterestConsensus.address, deployOptions);
-  
+
   await deployerApp.deploy(Loans, EtherUsdAggregator.address, LendingPool.address, deployOptions);
 
   const daiLendingPoolInstance = await LendingPool.deployed();

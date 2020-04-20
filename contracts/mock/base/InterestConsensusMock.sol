@@ -60,7 +60,7 @@ contract InterestConsensusMock is InterestConsensus {
         uint256 blockNumber,
         uint256 interest,
         uint256 signerNonce
-    ) external pure returns (bytes32) {
+    ) external view returns (bytes32) {
         return _hashData(lender, blockNumber, interest, signerNonce);
     }
 
