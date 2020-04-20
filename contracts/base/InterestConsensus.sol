@@ -137,6 +137,9 @@ contract InterestConsensus is Initializable, Consensus, InterestConsensusInterfa
         uint256 interest,
         uint256 signerNonce
     ) internal view returns (bytes32) {
-        return keccak256(abi.encode(address(this), lender, blockNumber, interest, signerNonce));
+        return
+            keccak256(
+                abi.encode(address(this), lender, blockNumber, interest, signerNonce)
+            );
     }
 }
