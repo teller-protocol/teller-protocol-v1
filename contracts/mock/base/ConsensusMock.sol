@@ -32,7 +32,7 @@ contract ConsensusMock is Consensus {
         ZeroCollateralCommon.Signature calldata signature,
         bytes32 dataHash
     ) external view returns (bool) {
-        _signatureValid(signature, dataHash);
+        return _signatureValid(signature, dataHash);
     }
 
     function externalResultsWithinTolerance(
