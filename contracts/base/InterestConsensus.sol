@@ -21,28 +21,20 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 // Interfaces
 import "../interfaces/LendersInterface.sol";
+import "../interfaces/InterestConsensusInterface.sol";
 
 // Contracts
 import "./Initializable.sol";
 import "./Consensus.sol";
 
 
-contract InterestConsensus is Initializable, Consensus {
+contract InterestConsensus is Initializable, Consensus, InterestConsensusInterface {
     using SafeMath for uint256;
 
     LendersInterface public lenderInfo;
 
     // mapping of (lender, blockNumber) to the aggregated node submissions for their request
     mapping(address => mapping(uint256 => ZeroCollateralCommon.AggregatedInterest)) nodeSubmissions;
-
-    event InterestSubmitted(
-        address signer,
-        address lender,
-        uint256 blockNumber,
-        uint256 interest
-    );
-
-    event InterestAccepted(address lender, uint256 blockNumber, uint256 interest);
 
     constructor(uint256 initRequiredSubmissions, uint256 initMaximumTolerance)
         public
@@ -52,9 +44,9 @@ contract InterestConsensus is Initializable, Consensus {
     function initialize(address lenderInfoAddress) public isNotInitialized() {
         require(lenderInfoAddress != address(0), "MUST_PROVIDE_LENDER_INFO");
 
-        lenderInfo = LendersInterface(lenderInfoAddress);
-
         initialize();
+
+        lenderInfo = LendersInterface(lenderInfoAddress);
     }
 
     function submitInterestResult(
@@ -88,8 +80,7 @@ contract InterestConsensus is Initializable, Consensus {
         require(_signatureValid(signature, hashedData), "SIGNATURE_NOT_VALID");
 
 
-            ZeroCollateralCommon.AggregatedInterest memory aggregatedData
-         = nodeSubmissions[lender][blockNumber];
+        ZeroCollateralCommon.AggregatedInterest memory aggregatedData = nodeSubmissions[lender][blockNumber];
 
         // if this is the first submission for this request
         if (aggregatedData.totalSubmissions == 0) {
