@@ -107,7 +107,7 @@ contract InterestConsensus is Initializable, Consensus, InterestConsensusInterfa
         emit InterestSubmitted(msg.sender, lender, blockNumber, interest);
 
         if (aggregatedData.totalSubmissions > requiredSubmissions) {
-            aggregatedData.finalised = true;
+            aggregatedData.finalized = true;
 
             // average the submissions
             uint256 finalInterest = aggregatedData.sumOfValues.div(
