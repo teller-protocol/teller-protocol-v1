@@ -37,10 +37,9 @@ module.exports = async function(deployer, network, accounts) {
   await deployerApp.deploy(LendingPool, deployOptions);
 
   await deployerApp.deploy(InterestConsensus, 2, 0, deployOptions);
-  console.log('starting lender info')
 
   await deployerApp.deploy(Lenders, ZDai.address, LendingPool.address, InterestConsensus.address, deployOptions);
-  console.log('finished lender info')
+  
   await deployerApp.deploy(Loans, EtherUsdAggregator.address, LendingPool.address, deployOptions);
 
   const daiLendingPoolInstance = await LendingPool.deployed();

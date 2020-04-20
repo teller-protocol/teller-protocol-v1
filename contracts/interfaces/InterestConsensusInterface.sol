@@ -3,9 +3,9 @@ pragma experimental ABIEncoderV2;
 
 import "../util/ZeroCollateralCommon.sol";
 
-interface InterestConsensusInterface {
 
-  event InterestSubmitted(
+interface InterestConsensusInterface {
+    event InterestSubmitted(
         address signer,
         address lender,
         uint256 blockNumber,
@@ -20,5 +20,4 @@ interface InterestConsensusInterface {
         uint256 blockNumber,
         uint256 interest
     ) external;
-
 }

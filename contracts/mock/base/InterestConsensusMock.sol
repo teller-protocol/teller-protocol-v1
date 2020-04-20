@@ -35,14 +35,14 @@ contract InterestConsensusMock is InterestConsensus {
         uint256 maxValue,
         uint256 minValue,
         uint256 sumOfValues,
-        bool finalised
+        bool finalized
     ) external {
         nodeSubmissions[lender][blockNumber] = ZeroCollateralCommon.AggregatedInterest({
             totalSubmissions: totalSubmissions,
             minValue: minValue,
             maxValue: maxValue,
             sumOfValues: sumOfValues,
-            finalised: finalised
+            finalized: finalized
         });
     }
 

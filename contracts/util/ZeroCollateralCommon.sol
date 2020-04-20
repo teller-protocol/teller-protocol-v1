@@ -20,7 +20,7 @@ library ZeroCollateralCommon {
         uint256 maxValue;
         uint256 minValue;
         uint256 sumOfValues;
-        bool finalised;
+        bool finalized;
     }
 
     // Data per borrow as struct

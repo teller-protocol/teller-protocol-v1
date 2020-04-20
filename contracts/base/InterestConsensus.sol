@@ -67,8 +67,8 @@ contract InterestConsensus is Initializable, Consensus, InterestConsensusInterfa
         );
 
         require(
-            !nodeSubmissions[lender][blockNumber].finalised,
-            "INTEREST_ALREADY_FINALISED"
+            !nodeSubmissions[lender][blockNumber].finalized,
+            "INTEREST_ALREADY_FINALIZED"
         );
 
         bytes32 hashedData = _hashData(
@@ -80,7 +80,8 @@ contract InterestConsensus is Initializable, Consensus, InterestConsensusInterfa
         require(_signatureValid(signature, hashedData), "SIGNATURE_NOT_VALID");
 
 
-        ZeroCollateralCommon.AggregatedInterest memory aggregatedData = nodeSubmissions[lender][blockNumber];
+            ZeroCollateralCommon.AggregatedInterest memory aggregatedData
+         = nodeSubmissions[lender][blockNumber];
 
         // if this is the first submission for this request
         if (aggregatedData.totalSubmissions == 0) {
@@ -89,7 +90,7 @@ contract InterestConsensus is Initializable, Consensus, InterestConsensusInterfa
                 minValue: interest,
                 maxValue: interest,
                 sumOfValues: interest,
-                finalised: false
+                finalized: false
             });
         } else {
             if (interest < aggregatedData.minValue) {
