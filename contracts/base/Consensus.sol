@@ -26,6 +26,8 @@ import "openzeppelin-solidity/contracts/access/roles/SignerRole.sol";
 contract Consensus is SignerRole {
     using SafeMath for uint256;
 
+    uint256 internal constant PERCENTAGE_TO_DECIMAL = 10000;
+
     // Has signer address already submitted their answer for (user, identifier)?
     mapping(address => mapping(address => mapping(uint256 => bool))) public hasSubmitted;
 
@@ -51,7 +53,9 @@ contract Consensus is SignerRole {
         view
         returns (bool)
     {
-        uint256 toleranceAmount = average.mul(maximumTolerance).div(10000);
+        uint256 toleranceAmount = average.mul(maximumTolerance).div(
+            PERCENTAGE_TO_DECIMAL
+        );
 
         if (minimum < average.sub(toleranceAmount)) {
             return false;
