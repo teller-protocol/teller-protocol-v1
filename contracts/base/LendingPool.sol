@@ -32,7 +32,7 @@ import "./Initializable.sol";
 
 
 /**
-    @notice The LendingPool contract holds all of the tokens that lenders transfer into the protocol. It is the contract that lenders interact with to deposit and withdraw their tokens including interest. The LendingPool interacts with the LenderInformation contract to ensure token balances and interest owed is kept up to date.
+    @notice The LendingPool contract holds all of the tokens that lenders transfer into the protocol. It is the contract that lenders interact with to deposit and withdraw their tokens including interest. The LendingPool interacts with the Lenders contract to ensure token balances and interest owed is kept up to date.
  */
 contract LendingPool is LendingPoolInterface, Initializable {
     using AddressLib for address;
