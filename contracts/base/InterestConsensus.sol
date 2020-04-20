@@ -31,7 +31,7 @@ import "./Consensus.sol";
 contract InterestConsensus is Initializable, Consensus, InterestConsensusInterface {
     using SafeMath for uint256;
 
-    LendersInterface public lenderInfo;
+    LendersInterface public lenders;
 
     // mapping of (lender, blockNumber) to the aggregated node submissions for their request
     mapping(address => mapping(uint256 => ZeroCollateralCommon.AggregatedInterest)) nodeSubmissions;
@@ -41,12 +41,12 @@ contract InterestConsensus is Initializable, Consensus, InterestConsensusInterfa
         Consensus(initRequiredSubmissions, initMaximumTolerance)
     {}
 
-    function initialize(address lenderInfoAddress) public isNotInitialized() {
-        require(lenderInfoAddress != address(0), "MUST_PROVIDE_LENDER_INFO");
+    function initialize(address lendersAddress) public isNotInitialized() {
+        require(lendersAddress != address(0), "MUST_PROVIDE_LENDER_INFO");
 
         initialize();
 
-        lenderInfo = LendersInterface(lenderInfoAddress);
+        lenders = LendersInterface(lendersAddress);
     }
 
     function submitInterestResult(
@@ -62,7 +62,7 @@ contract InterestConsensus is Initializable, Consensus, InterestConsensusInterfa
         hasSubmitted[msg.sender][lender][blockNumber] = true;
 
         require(
-            lenderInfo.requestedInterestUpdate(lender) == blockNumber,
+            lenders.requestedInterestUpdate(lender) == blockNumber,
             "INTEREST_NOT_REQUESTED"
         );
 
@@ -123,7 +123,7 @@ contract InterestConsensus is Initializable, Consensus, InterestConsensusInterfa
                 "MAXIMUM_TOLERANCE_SURPASSED"
             );
 
-            lenderInfo.setAccruedInterest(lender, blockNumber, finalInterest);
+            lenders.setAccruedInterest(lender, blockNumber, finalInterest);
 
             emit InterestAccepted(lender, blockNumber, finalInterest);
         }
