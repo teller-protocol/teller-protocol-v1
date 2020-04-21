@@ -9,16 +9,16 @@ contract('ConsensusResultsToleranceTest', function () {
 
     withData({
         // average + tolerance = 552 (max is 560)
-        _max_too_high: [230, 560, 538, 540, false],
+        _1_max_too_high: [230, 560, 538, 540, false],
         // average - tolerance = 528 (min is 520)
-        _min_too_low: [230, 550, 520, 540, false],
-        _all_within_range: [320, 35970, 33780, 34860, true],
+        _2_min_too_low: [230, 550, 520, 540, false],
+        _3_all_within_range: [320, 35970, 33780, 34860, true],
         // average + tolerance = 35975 (max is 35976)
-        _max_too_high_close: [320, 35976, 34000, 34860, false],
+        _4_max_too_high_close: [320, 35976, 34000, 34860, false],
         // average - tolerance = 14075 (min is 14074)
-        _min_too_low_close: [123, 14350, 14074, 14250, false],
+        _5_min_too_low_close: [123, 14350, 14074, 14250, false],
         // all the same with 0 tolerance
-        _all_within_range_0_tolerance: [0, 12345, 12345, 12345, true],
+        _6_all_within_range_0_tolerance: [0, 12345, 12345, 12345, true],
     }, function(
         maximumTolerance,
         maximum,
