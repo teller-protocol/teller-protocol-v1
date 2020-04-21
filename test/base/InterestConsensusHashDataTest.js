@@ -1,7 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
-const { hashInterest, signHash } = require('../utils/hashes');
+const { hashInterest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
 
 // Smart contracts
@@ -10,7 +10,7 @@ const InterestConsensusMock = artifacts.require("./mock/base/InterestConsensusMo
 // constants
 const { NULL_ADDRESS } = require('../utils/consts');
 
-contract('ConsensusSignatureValidTest', function (accounts) {
+contract('InterestConsensusHashDataTest', function (accounts) {
     const tolerance = 0
     const submissions = 1
     let instance
