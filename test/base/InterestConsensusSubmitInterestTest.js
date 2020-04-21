@@ -3,6 +3,8 @@ const { t } = require('../utils/consts');
 const { hashInterest, signHash } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
 
+const LendersInterfaceEncoder = require('../utils/encoders/LendersInterfaceEncoder');
+
 // Smart contracts
 const InterestConsensusMock = artifacts.require("./mock/base/InterestConsensusMock.sol");
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -14,10 +16,12 @@ contract('InterestConsensusSubmitInterestTest', function (accounts) {
     const tolerance = 0
     const submissions = 1
     let instance
-    let lenders
+    let lendersInstance
 
     const msgSender = accounts[0]
     const lender = accounts[1]
+
+    const lendersInterfaceEncoder = new LendersInterfaceEncoder(web3);
 
     beforeEach('Setup for each test', async () => {
         
@@ -30,7 +34,9 @@ contract('InterestConsensusSubmitInterestTest', function (accounts) {
         _2_signer_nonce_taken: [
             5, 0, 5, 3600, 3, msgSender, true, false, 5, 1, 3600, 3600, 3600, false, true, 'SIGNER_NONCE_TAKEN'
         ],
-        // _3_interest_not_requested: [NULL_ADDRESS, 0, 0, 0],
+        _3_interest_not_requested: [
+            5, 0, 5, 3600, 3, msgSender, false, false, 3, 1, 3600, 3600, 3600, false, true, 'INTEREST_NOT_REQUESTED'
+        ],
         // _4_interest_already_finalized: [NULL_ADDRESS, 0, 0, 0],
         // _5_signature_not_valid: [NULL_ADDRESS, 0, 0, 0],
         // _5_signature_not_valid: [NULL_ADDRESS, 0, 0, 0],
@@ -55,8 +61,8 @@ contract('InterestConsensusSubmitInterestTest', function (accounts) {
         it(t('user', 'new', 'Should correctly calculate the hash', false), async function() {
             // set up contract
             instance = await InterestConsensusMock.new(submissions, tolerance)
-            lenders = await Mock.new()
-            await instance.initialize(lenders.address)
+            lendersInstance = await Mock.new()
+            await instance.initialize(lendersInstance.address)
 
             // mock data for the test
             await instance.mockHasSubmitted(msgSender, lender, blockNumber, mockHasSubmitted)
@@ -70,6 +76,12 @@ contract('InterestConsensusSubmitInterestTest', function (accounts) {
                 mockSumOfValues,
                 mockFinalized
             )
+
+            // mock lenders response
+            await lendersInstance.givenMethodReturnUint(
+              lendersInterfaceEncoder.encodeRequestInterestUpdate(),
+              mockBlockRequested
+          );
 
             // hash and sign the interest information
             let hashedData = hashInterest(
