@@ -13,7 +13,7 @@ const {
   ONE_DAY,
   getLatestTimestamp
 } = require('../utils/consts');
-const { hashLoan, signLoanHash } = require('../utils/hashes');
+const { hashLoan, signHash } = require('../utils/hashes');
 
 
 contract('Loans Unit Tests', async accounts => {
@@ -111,7 +111,7 @@ contract('Loans Unit Tests', async accounts => {
     })
 
     it('should not allow a borrow amount larger than the max', async () => {
-      const signature = await signLoanHash(web3, signerAddress, hashedLoan)
+      const signature = await signHash(web3, signerAddress, hashedLoan)
 
       await truffleAssert.reverts(
         loans.takeOutLoan(
@@ -134,7 +134,7 @@ contract('Loans Unit Tests', async accounts => {
 
     it('should not allow a non-signer to sign a loan', async () => {
       // signed by an attacker
-      const signature = await signLoanHash(web3, attackerAddress, hashedLoan)
+      const signature = await signHash(web3, attackerAddress, hashedLoan)
 
       // reverts as the signer was not authorized
       await truffleAssert.reverts(
@@ -162,7 +162,7 @@ contract('Loans Unit Tests', async accounts => {
 
       await mockOracle.givenMethodReturnUint(mockOracleTimestamp, nintyMinsAgo)
 
-      const signature = await signLoanHash(web3, signerAddress, hashedLoan)
+      const signature = await signHash(web3, signerAddress, hashedLoan)
 
       await truffleAssert.reverts(
         loans.takeOutLoan(
@@ -191,7 +191,7 @@ contract('Loans Unit Tests', async accounts => {
       // ETH/DAI price of 199
       await mockOracle.givenMethodReturnUint(mockOracleValue, 199)
 
-      const signature = await signLoanHash(web3, signerAddress, hashedLoan)
+      const signature = await signHash(web3, signerAddress, hashedLoan)
 
       // 6000 DAI in value is required as collateral
       // Alice sends 30 ETH in, with an ETH price of 199 DAI => 5970 DAI in value
@@ -225,7 +225,7 @@ contract('Loans Unit Tests', async accounts => {
       // ETH/DAI price of 205 this time - therefore 30 ETH is enough collateral
       await mockOracle.givenMethodReturnUint(mockOracleValue, 205)
 
-      const signature = await signLoanHash(web3, signerAddress, hashedLoan)
+      const signature = await signHash(web3, signerAddress, hashedLoan)
 
       // 6000 DAI in value is required as collateral
       // Alice sends 30 ETH in, with an ETH price of 205 DAI => 6150 DAI in value
@@ -290,7 +290,7 @@ contract('Loans Unit Tests', async accounts => {
       // ETH/DAI price of 205 this time - therefore 30 ETH is enough collateral
       await mockOracle.givenMethodReturnUint(mockOracleValue, 205)
 
-      const signature = await signLoanHash(web3, signerAddress, hashedLoan)
+      const signature = await signHash(web3, signerAddress, hashedLoan)
 
       // 6000 DAI in value is required as collateral
       // Alice sends 30 ETH in, with an ETH price of 205 DAI => 6150 DAI in value
@@ -355,7 +355,7 @@ contract('Loans Unit Tests', async accounts => {
       // ETH/DAI price of 205 this time - therefore 30 ETH is enough collateral
       await mockOracle.givenMethodReturnUint(mockOracleValue, 205)
 
-      const signature = await signLoanHash(web3, signerAddress, hashedLoan)
+      const signature = await signHash(web3, signerAddress, hashedLoan)
 
       // 6000 DAI in value is required as collateral
       // Alice sends 30 ETH in, with an ETH price of 205 DAI => 6150 DAI in value
@@ -429,7 +429,7 @@ contract('Loans Unit Tests', async accounts => {
       // ETH/DAI price of 205 this time - therefore 30 ETH is enough collateral
       await mockOracle.givenMethodReturnUint(mockOracleValue, 205)
 
-      const signature = await signLoanHash(web3, signerAddress, hashedLoan)
+      const signature = await signHash(web3, signerAddress, hashedLoan)
 
       // 6000 DAI in value is required as collateral
       // Alice sends 30 ETH in, with an ETH price of 205 DAI => 6150 DAI in value
@@ -484,7 +484,7 @@ contract('Loans Unit Tests', async accounts => {
       // ETH/DAI price of 205 this time - therefore 30 ETH is enough collateral
       await mockOracle.givenMethodReturnUint(mockOracleValue, 205)
 
-      let signature = await signLoanHash(web3, signerAddress, hashedLoan)
+      let signature = await signHash(web3, signerAddress, hashedLoan)
 
       // 6000 DAI in value is required as collateral
       // Alice sends 30 ETH in, with an ETH price of 205 DAI => 6150 DAI in value
@@ -517,7 +517,7 @@ contract('Loans Unit Tests', async accounts => {
         signerNonce: 1,
       })
 
-      signature = await signLoanHash(web3, signerAddress, hashedLoan)
+      signature = await signHash(web3, signerAddress, hashedLoan)
 
       // now bob takes out a loan
       result = await loans.takeOutLoan(
@@ -549,7 +549,7 @@ contract('Loans Unit Tests', async accounts => {
         signerNonce: 2,
       })
 
-      signature = await signLoanHash(web3, signerAddress, hashedLoan)
+      signature = await signHash(web3, signerAddress, hashedLoan)
 
       // now bob takes out a loan
       result = await loans.takeOutLoan(
@@ -591,7 +591,7 @@ contract('Loans Unit Tests', async accounts => {
         numberDays: NUMBER_DAYS,
         signerNonce: 0,
       })
-      signature = await signLoanHash(web3, signerAddress, hashedLoan)
+      signature = await signHash(web3, signerAddress, hashedLoan)
 
       await loans.takeOutLoan(
         INTEREST_RATE,
@@ -669,7 +669,7 @@ contract('Loans Unit Tests', async accounts => {
         numberDays: NUMBER_DAYS,
         signerNonce: 0,
       })
-      signature = await signLoanHash(web3, signerAddress, hashedLoan)
+      signature = await signHash(web3, signerAddress, hashedLoan)
 
       await loans.takeOutLoan(
         INTEREST_RATE,
@@ -788,7 +788,7 @@ contract('Loans Unit Tests', async accounts => {
         numberDays: NUMBER_DAYS,
         signerNonce: 0,
       })
-      signature = await signLoanHash(web3, signerAddress, hashedLoan)
+      signature = await signHash(web3, signerAddress, hashedLoan)
 
       await loans.takeOutLoan(
         INTEREST_RATE,
@@ -887,7 +887,7 @@ contract('Loans Unit Tests', async accounts => {
         numberDays: NUMBER_DAYS,
         signerNonce: 0,
       })
-      signature = await signLoanHash(web3, signerAddress, hashedLoan)
+      signature = await signHash(web3, signerAddress, hashedLoan)
 
       await loans.takeOutLoan(
         INTEREST_RATE,
