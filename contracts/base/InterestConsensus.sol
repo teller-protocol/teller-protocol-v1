@@ -27,6 +27,7 @@ import "../interfaces/InterestConsensusInterface.sol";
 import "./Initializable.sol";
 import "./Consensus.sol";
 
+
 contract InterestConsensus is Initializable, Consensus, InterestConsensusInterface {
     using SafeMath for uint256;
 
