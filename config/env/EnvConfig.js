@@ -4,6 +4,8 @@ const EnvValue = require('./EnvValue');
 const DEFAULT_GAS_WEI = "4600000";
 const DEFAULT_ADDRESS_COUNT = "10";
 const DEFAULT_ADDRESS_INDEX = "0";
+const DEFAULT_REQUIRED_SUBMISSIONS = "7";
+const DEFAULT_MAXIMUM_TOLERANCE = "0";
 
 const ADDRESS_COUNT_KEY = 'ADDRESS_COUNT_KEY';
 const DEFAULT_ADDRESS_INDEX_KEY = 'DEFAULT_ADDRESS_INDEX_KEY';
@@ -12,6 +14,8 @@ const INFURA_KEY = 'INFURA_KEY';
 const GAS_WEI_KEY = 'GAS_WEI_KEY';
 const GAS_PRICE_GWEI_KEY = 'GAS_PRICE_GWEI_KEY';
 const ETHERSCAN_API_KEY = 'ETHERSCAN_API_KEY';
+const DEFAULT_REQUIRED_SUBMISSIONS_KEY = 'DEFAULT_REQUIRED_SUBMISSIONS_KEY'
+const DEFAULT_MAXIMUM_TOLERANCE_KEY = 'DEFAULT_MAXIMUM_TOLERANCE_KEY'
 
 class EnvConfig {
     constructor() {
@@ -29,6 +33,8 @@ EnvConfig.prototype.initializeConf = function() {
     this.createItem(GAS_PRICE_GWEI_KEY, undefined, 'Default gas price value in gwei.');
     this.createItem(INFURA_KEY, undefined, 'Infura provider key is used to deploy smart contracts.');
     this.createItem(ETHERSCAN_API_KEY, undefined, 'Etherscan.io key is used to verify smart contracts.');
+    this.createItem(DEFAULT_REQUIRED_SUBMISSIONS_KEY, DEFAULT_REQUIRED_SUBMISSIONS, 'This is the default number of node submissions for consensus.');
+    this.createItem(DEFAULT_MAXIMUM_TOLERANCE_KEY, DEFAULT_MAXIMUM_TOLERANCE, 'This is the maximum tolerance of difference in node submissions.');
 }
 
 EnvConfig.prototype.createItem = function(name, defaultValue = undefined, description = undefined) {
@@ -71,6 +77,14 @@ EnvConfig.prototype.validate = function() {
     if (!this.getGasPriceGwei().hasValue()) {
         throw new Error('GAS_PRICE_GWEI_KEY env variable must be defined in your local .env file.');
     }
+}
+
+EnvConfig.prototype.getDefaultRequiredSubmissions = function() {
+  return this.conf.get(DEFAULT_REQUIRED_SUBMISSIONS_KEY);
+}
+
+EnvConfig.prototype.getDefaultMaximumTolerance = function() {
+  return this.conf.get(DEFAULT_MAXIMUM_TOLERANCE_KEY);
 }
 
 module.exports = EnvConfig;

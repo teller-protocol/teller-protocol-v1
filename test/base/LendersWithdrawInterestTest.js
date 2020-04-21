@@ -2,7 +2,6 @@
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
 const { lenders } = require('../utils/events');
-const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -14,42 +13,40 @@ contract('LendersWithdrawInterestTest', function (accounts) {
     let instance;
     let zTokenInstance;
     let lendingPoolInstance;
-    const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
+    let interestConsensusInstance;
     
     beforeEach('Setup for each test', async () => {
         zTokenInstance = await Mock.new();
         lendingPoolInstance = await Mock.new();
+        interestConsensusInstance = await Mock.new();
         instance = await Lenders.new(
             zTokenInstance.address,
             lendingPoolInstance.address,
+            interestConsensusInstance.address
         );
     });
 
     withData({
-        _1_10withdraw_0Interest_1blocks_20balance_10withdrawn: [accounts[0], 10, 0, 0, 1, 20, 10, 10],
-        _2_50withdraw_20Interest_2blocks_15balance_Allwithdrawn: [accounts[1], 50, 10, 1, 3, 15, 40, 0],
-        _3_180withdraw_100Interest_5blocks_20balance_Allwithdrawn: [accounts[2], 180, 100, 5, 10, 20, 180, 20],
+        _1_0Available_10Requested: [accounts[0], 10, 0, 100, 4, 0, 0],
+        _2_50Available_10Requested: [accounts[1], 10, 50, 100, 3, 10, 40],
+        _3_50Available_100Requested: [accounts[2], 100, 50, 100, 20, 50, 0],
+        _5_50Available_0Requested: [accounts[0], 0, 50, 100, 4, 0, 50],
     }, function(
         lenderAddress,
         amountToWithdraw,
-        currentAccruedInterest,
+        totalNotWithdrawn,
+        totalAccruedInterest,
         previousBlockAccruedInterest,
-        currentBlockNumber,
-        currentZTokenBalance,
         amountWithdrawnExpected,
-        newAccruedInterestExpected,
+        newTotalNotWithdrawn,
     ) {    
         it(t('user', 'withdrawInterest', 'Should able to withdraw interest.', false), async function() {
             // Setup
-            await instance.setCurrentBlockNumber(currentBlockNumber.toString());
             await instance.mockLenderInfo(
                 lenderAddress,
                 previousBlockAccruedInterest.toString(),
-                currentAccruedInterest.toString()
-            );
-            await zTokenInstance.givenMethodReturnUint(
-                erc20InterfaceEncoder.encodeBalanceOf(),
-                currentZTokenBalance.toString()
+                totalNotWithdrawn.toString(),
+                totalAccruedInterest.toString()
             );
 
             // Invocation
@@ -57,13 +54,16 @@ contract('LendersWithdrawInterestTest', function (accounts) {
 
             // Assertions
             assert(result);
-            lenders
-                .accruedInterestWithdrawn(result)
-                .emitted(lenderAddress, amountWithdrawnExpected);
+            if (amountWithdrawnExpected != 0) {
+                lenders
+                    .accruedInterestWithdrawn(result)
+                    .emitted(lenderAddress, amountWithdrawnExpected);
+            }
 
-            const lenderAccountResult = await instance.lenderAccounts(lenderAddress);
-            assert.equal(lenderAccountResult.lastBlockAccrued.toString(), currentBlockNumber.toString());
-            assert.equal(lenderAccountResult.totalAccruedInterest.toString(), newAccruedInterestExpected.toString());
+            const lenderAccruedInterest = await instance.accruedInterest(lenderAddress);
+            assert.equal(lenderAccruedInterest.totalNotWithdrawn.toString(), newTotalNotWithdrawn.toString());
+            assert.equal(lenderAccruedInterest.blockLastAccrued.toString(), previousBlockAccruedInterest.toString());
+            assert.equal(lenderAccruedInterest.totalAccruedInterest.toString(), totalAccruedInterest.toString());
         });
     });
 });

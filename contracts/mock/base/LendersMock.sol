@@ -24,17 +24,16 @@ contract LendersMock is Lenders {
     
     /** State Variables */
 
-    uint256 public currentBlockNumber;
-
     bool public addressesEqual;
 
-    /** Connstructor */
+    /** Constructor */
     constructor(
         address zTokenAddress,
-        address lendingPoolAddress
+        address lendingPoolAddress,
+        address consensusAddress
     )
         public
-        Lenders(zTokenAddress, lendingPoolAddress)
+        Lenders(zTokenAddress, lendingPoolAddress, consensusAddress)
     {
         addressesEqual = true;
     }
@@ -43,11 +42,7 @@ contract LendersMock is Lenders {
         addressesEqual = value;
     }
 
-    function setCurrentBlockNumber(uint256 blockNumber) external {
-        currentBlockNumber = blockNumber;
-    }
-
-    function areAddressesEqual(address, address)
+    function _areAddressesEqual(address, address)
         internal
         view
         returns (bool)
@@ -55,44 +50,22 @@ contract LendersMock is Lenders {
         return addressesEqual;
     }
 
-    function getCurrentBlockNumber()
-        external
-        view
-        returns (uint256 blockNumber)
-    {
-        return currentBlockNumber;
+    function mockLenderInfo(
+        address lender,
+        uint256 blockLastAccrued,
+        uint256 totalNotWithdrawn,
+        uint256 totalAccruedInterest
+    ) external {
+        accruedInterest[lender].blockLastAccrued = blockLastAccrued;
+        accruedInterest[lender].totalAccruedInterest = totalAccruedInterest;
+        accruedInterest[lender].totalNotWithdrawn = totalNotWithdrawn;
     }
 
-    function mockLenderInfo(address lender, uint256 lastBlockAccrued, uint256 totalAccruedInterest) external {
-        lenderAccounts[lender].lastBlockAccrued = lastBlockAccrued;
-        lenderAccounts[lender].totalAccruedInterest = totalAccruedInterest;
+    function mockRequestUpdate(
+        address lender,
+        uint256 blockNumber
+    ) external {
+        requestedInterestUpdate[lender] = blockNumber;
     }
 
-    function externalUpdateAccruedInterestFor(address lender)
-        external
-        returns (uint256)
-    {
-        return super.updateAccruedInterestFor(lender);
-    }
-
-    /**
-        It mocks borrow info for a specific borrower address / borrow id. It is used ONLY for testing purposes.
-     */
-    function externalCalculateNewAccruedInterestFor(
-        uint256 currentAccruedInterest,
-        uint256 previousBlockAccruedInterest,
-        uint256 blockNumber,
-        uint256 currentZTokenBalance
-    )
-        external 
-        pure
-        returns (uint256 newAccruedInterest)
-    {
-        return super.calculateNewAccruedInterestFor(
-            currentAccruedInterest,
-            previousBlockAccruedInterest,
-            blockNumber,
-            currentZTokenBalance
-        );
-    }
 }

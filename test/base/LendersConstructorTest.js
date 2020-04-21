@@ -11,20 +11,24 @@ const Lenders = artifacts.require("./base/Lenders.sol");
 contract('LendersConstructorTest', function (accounts) {
     let zTokenInstance;
     let lendingPoolInstance;
+    let interestConsensusInstance;
 
     beforeEach('Setup for each test', async () => {
         zTokenInstance = await Mock.new();
         lendingPoolInstance = await Mock.new();
+        interestConsensusInstance = await Mock.new();
     });
 
     withData({
-        _1_basic: [true, true, undefined, false],
-        _2_notzTokenInstance: [false, true, 'zToken address is required.', true],
-        _3_notLendingPoolInstance: [true, false, 'LendingPool address is required', true],
-        _4_notzTokenInstance_notLendingPoolInstance: [false, false, 'zToken address is required.', true],
+        _1_basic: [true, true, true, undefined, false],
+        _2_notzTokenInstance: [false, true, true, 'zToken address is required.', true],
+        _3_notLendingPoolInstance: [true, false, true, 'LendingPool address is required.', true],
+        _4_notConsensusInstance: [true, true, false, 'Consensus address is required.', true],
+        _5_notzTokenInstance_notLendingPoolInstance: [false, false, true, 'zToken address is required.', true],
     }, function(
         createzTokenInstance,
         createLendingPoolInstance,
+        createConsensusInstance,
         expectedErrorMessage,
         mustFail
     ) {    
@@ -32,13 +36,15 @@ contract('LendersConstructorTest', function (accounts) {
             // Setup
             const zTokenAddress = createzTokenInstance ? zTokenInstance.address : NULL_ADDRESS;
             const lendingPoolAddress = createLendingPoolInstance ? lendingPoolInstance.address : NULL_ADDRESS;
+            const consensusAddress = createConsensusInstance ? interestConsensusInstance.address : NULL_ADDRESS;
 
             try {
                 // Invocation
                 const result = await Lenders.new(
                     zTokenAddress,
                     lendingPoolAddress,
-                );;
+                    consensusAddress,
+                );
                 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
