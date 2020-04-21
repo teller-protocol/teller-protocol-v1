@@ -61,7 +61,10 @@ contract InterestConsensus is Initializable, Consensus, InterestConsensusInterfa
         );
         hasSubmitted[msg.sender][lender][blockNumber] = true;
 
-        require(!signerNonceTaken[msg.sender][signature.signerNonce], "SIGNER_NONCE_TAKEN");
+        require(
+            !signerNonceTaken[msg.sender][signature.signerNonce],
+            "SIGNER_NONCE_TAKEN"
+        );
         signerNonceTaken[msg.sender][signature.signerNonce] = true;
 
         require(
