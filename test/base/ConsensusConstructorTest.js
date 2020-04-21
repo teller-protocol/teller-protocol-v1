@@ -5,7 +5,7 @@ const { t } = require('../utils/consts');
 // Smart contracts
 const Consensus = artifacts.require("./base/Consensus.sol");
 
-contract('LendersConstructorTest', function () {
+contract('ConsensusConstructorTest', function () {
 
     withData({
         _1_reqsubs0_tolerance0: [0, 0, 'VALUE_MUST_BE_PROVIDED', true],
@@ -33,7 +33,6 @@ contract('LendersConstructorTest', function () {
             } catch (error) {
                 // Assertions
                 assert(mustFail);
-                assert(error);
                 assert.equal(error.reason, expectedErrorMessage);
             }
         });
