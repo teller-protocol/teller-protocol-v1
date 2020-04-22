@@ -140,4 +140,31 @@ module.exports = {
             };
         },
     },
+    interestConsensus: {
+      interestSubmitted: tx => {
+          const name = 'InterestSubmitted';
+          return {
+              name: name,
+              emitted: (signer, lender, blockNumber, interest) => emitted(tx, name, ev => {
+                  assert.equal(ev.signer, signer);
+                  assert.equal(ev.lender, lender);
+                  assert.equal(ev.blockNumber.toString(), blockNumber.toString());
+                  assert.equal(ev.interest.toString(), interest.toString());
+              }),
+              notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+          };
+      },
+      interestAccepted: tx => {
+        const name = 'InterestAccepted';
+        return {
+            name: name,
+            emitted: (lender, blockNumber, interest) => emitted(tx, name, ev => {
+                assert.equal(ev.lender, lender);
+                assert.equal(ev.blockNumber.toString(), blockNumber.toString());
+                assert.equal(ev.interest.toString(), interest.toString());
+            }),
+            notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+        };
+    },
+  },
 };
