@@ -14,8 +14,6 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const { NULL_ADDRESS } = require('../utils/consts');
 
 contract('InterestConsensusSubmitInterestTest', function (accounts) {
-    const tolerance = 0
-    const submissions = 1
     let instance
     let lendersInstance
 
@@ -24,28 +22,36 @@ contract('InterestConsensusSubmitInterestTest', function (accounts) {
 
     const lendersInterfaceEncoder = new LendersInterfaceEncoder(web3);
 
-    beforeEach('Setup for each test', async () => {
-        
-    })
-
     withData({
         _1_signer_already_submitted: [      // signer already submitted for this loan
-            5, 0, 5, 3600, 3, msgSender, false, true, 5, 1, 3600, 3600, 3600, false, true, 'SIGNER_ALREADY_SUBMITTED'
+            5, 0, 4, 3600, 3, msgSender, false, true, 4, 1, 3600, 3600, 3600, false, true, 'SIGNER_ALREADY_SUBMITTED'
         ],
         _2_signer_nonce_taken: [            // signer nonce 3 is already taken
-            5, 0, 5, 3600, 3, msgSender, true, false, 5, 1, 3600, 3600, 3600, false, true, 'SIGNER_NONCE_TAKEN'
+            5, 0, 4, 3600, 3, msgSender, true, false, 4, 1, 3600, 3600, 3600, false, true, 'SIGNER_NONCE_TAKEN'
         ],
         _3_interest_not_requested: [        // requested block different to submitted block
-            5, 0, 5, 3600, 3, msgSender, false, false, 3, 1, 3600, 3600, 3600, false, true, 'INTEREST_NOT_REQUESTED'
+            5, 0, 4, 3600, 3, msgSender, false, false, 3, 1, 3600, 3600, 3600, false, true, 'INTEREST_NOT_REQUESTED'
         ],
         _4_interest_already_finalized: [    // finalized is true
-            5, 0, 5, 3600, 3, msgSender, false, false, 5, 1, 3600, 3600, 3600, true, true, 'INTEREST_ALREADY_FINALIZED'
+            5, 0, 4, 3600, 3, msgSender, false, false, 4, 1, 3600, 3600, 3600, true, true, 'INTEREST_ALREADY_FINALIZED'
         ],
         _5_signature_not_valid: [           // signed by the lender
-            5, 0, 5, 3600, 3, lender, false, false, 5, 1, 3600, 3600, 3600, false, true, 'SIGNATURE_NOT_VALID'
+            5, 0, 4, 3600, 3, lender, false, false, 4, 1, 3600, 3600, 3600, false, true, 'SIGNATURE_NOT_VALID'
         ],
-        _6_first_submission_for_loan: [           // no info in node submissions mocking
-            5, 0, 5, 3600, 3, msgSender, false, false, 5, 0, 0, 0, 0, false, false, undefined
+        _6_first_submission_for_loan: [     // no info in node submissions mocking
+            5, 0, 4, 3600, 3, msgSender, false, false, 4, 0, 0, 0, 0, false, false, undefined
+        ],
+        _7_new_min_value: [                 // submission is less than current min
+            5, 0, 4, 3123, 3, msgSender, false, false, 4, 2, 3333, 3214, 6547, false, false, undefined
+        ],
+        _8_new_max_value: [                 // submission is more than current max
+            5, 0, 4, 3400, 3, msgSender, false, false, 4, 2, 3333, 3214, 6547, false, false, undefined
+        ],
+        _9_final_interest_outside_tolerance: [  // after submission, average=14250, average-tolerance=14075, min=14074
+            5, 123, 4, 14074, 3, msgSender, false, false, 4, 4, 14350, 14200, 57176, false, true, 'MAXIMUM_TOLERANCE_SURPASSED'
+        ],
+        _10_final_interest_inside_tolerance: [  // after submission, average=34860
+            5, 320, 4, 35970, 3, msgSender, false, false, 4, 4, 35000, 33780, 138330, false, false, undefined
         ],
     }, function(
         submissions,
@@ -65,7 +71,7 @@ contract('InterestConsensusSubmitInterestTest', function (accounts) {
         mustFail,
         expectedErrorMessage,
     ) {    
-        it(t('user', 'new', 'Should correctly calculate the hash', false), async function() {
+        it(t('user', 'new', 'Should correctly update the node submissions', false), async function() {
             // set up contract
             instance = await InterestConsensusMock.new(submissions, tolerance)
             lendersInstance = await Mock.new()
@@ -133,6 +139,25 @@ contract('InterestConsensusSubmitInterestTest', function (accounts) {
                     assert(nodeSubmissions['sumOfValues'].toNumber(), interest, 'Sum incorrect')
                     assert(nodeSubmissions['finalized'].toString(), false, 'Finalized incorrect')
                 } else {
+                    const newMin = interest < mockMinValue ? interest : mockMinValue
+                    const newMax = interest < mockMaxValue ? interest : mockMaxValue
+                    const newSum = mockSumOfValues + interest
+                    const newTotal = mockTotalSubmissions + 1
+                    const finalized = (newTotal >= submissions)
+
+                    assert(nodeSubmissions['totalSubmissions'].toNumber(), newTotal, 'Total submissions incorrect')
+                    assert(nodeSubmissions['minValue'].toNumber(), newMin, 'Min incorrect')
+                    assert(nodeSubmissions['maxValue'].toNumber(), newMax, 'Max incorrect')
+                    assert(nodeSubmissions['sumOfValues'].toNumber(), newSum, 'Sum incorrect')
+                    assert(nodeSubmissions['finalized'].toString(), finalized, 'Finalized incorrect')
+
+                    if (newTotal >= submissions) {
+                        const finalInterest = Math.floor(newSum / newTotal)
+
+                        interestConsensus
+                          .interestAccepted(result)
+                          .emitted(lender, blockNumber, finalInterest);
+                    }
                 }
 
             } catch (error) {
