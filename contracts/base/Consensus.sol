@@ -53,6 +53,7 @@ contract Consensus is SignerRole {
         view
         returns (bool)
     {
+        // maximumTolerance = 325 => tolerance of 3.25% => 0.0325 of value
         uint256 toleranceAmount = average.mul(maximumTolerance).div(
             PERCENTAGE_TO_DECIMAL
         );

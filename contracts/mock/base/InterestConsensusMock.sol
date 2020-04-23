@@ -24,8 +24,8 @@ contract InterestConsensusMock is InterestConsensus {
         uint256 initRequiredSubmissions,
         uint256 initMaximumTolerance
     ) public InterestConsensus(
-      initRequiredSubmissions,
-      initMaximumTolerance
+        initRequiredSubmissions,
+        initMaximumTolerance
     ){}
 
     function mockNodeSubmissions(
@@ -53,6 +53,14 @@ contract InterestConsensusMock is InterestConsensus {
         bool hasSub
     ) external {
         hasSubmitted[signer][lender][blockNumber] = hasSub;
+    }
+
+    function mockSignerNonce(
+        address signer,
+        uint256 signerNonce,
+        bool taken
+    ) external {
+        signerNonceTaken[signer][signerNonce] = taken;
     }
 
     function externalHashData(

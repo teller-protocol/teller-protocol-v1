@@ -1,7 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t, encode, createLoanInfo } = require('../utils/consts');
-const { createSignature } = require('../utils/hashes');
+const { createLoanSig } = require('../utils/hashes');
 const { loans } = require('../utils/events');
 
 // Mock contracts
@@ -37,7 +37,7 @@ contract('LoansTakeOutLoanTest', function (accounts) {
 
             const borrower = accounts[loanInfo.borrowerIndex];
             const signer = accounts[loanInfo.signerIndex];
-            const signature = await createSignature(web3, borrower, loanInfo, signer);
+            const signature = await createLoanSig(web3, borrower, loanInfo, signer);
 
             // Invocation
             const result = await instance.takeOutLoan(

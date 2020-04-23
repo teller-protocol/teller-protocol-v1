@@ -6,7 +6,7 @@ const ERC20 = artifacts.require("openzeppelin-solidity/contracts/token/ERC20/IER
 // Util classes
 const BigNumber = require('bignumber.js');
 const assert = require('assert');
-const { hashLoan, signLoanHash } = require('../test/utils/hashes');
+const { hashLoan, signHash } = require('../test/utils/hashes');
 const ProcessArgs = require('./utils/ProcessArgs');
 const processArgs = new ProcessArgs();
 
@@ -53,7 +53,7 @@ module.exports = async (callback) => {
             signerNonce,
         });
         
-        const signature = await signLoanHash(web3, signer, hashedLoan);
+        const signature = await signHash(web3, signer, hashedLoan);
 
         const result = await loansInstance.takeOutLoan(
             interestRate,

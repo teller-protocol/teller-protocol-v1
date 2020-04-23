@@ -34,7 +34,7 @@ contract InterestConsensus is Initializable, Consensus, InterestConsensusInterfa
     LendersInterface public lenders;
 
     // mapping of (lender, blockNumber) to the aggregated node submissions for their request
-    mapping(address => mapping(uint256 => ZeroCollateralCommon.AggregatedInterest)) nodeSubmissions;
+    mapping(address => mapping(uint256 => ZeroCollateralCommon.AggregatedInterest)) public nodeSubmissions;
 
     constructor(uint256 initRequiredSubmissions, uint256 initMaximumTolerance)
         public
@@ -60,6 +60,12 @@ contract InterestConsensus is Initializable, Consensus, InterestConsensusInterfa
             "SIGNER_ALREADY_SUBMITTED"
         );
         hasSubmitted[msg.sender][lender][blockNumber] = true;
+
+        require(
+            !signerNonceTaken[msg.sender][signature.signerNonce],
+            "SIGNER_NONCE_TAKEN"
+        );
+        signerNonceTaken[msg.sender][signature.signerNonce] = true;
 
         require(
             lenders.requestedInterestUpdate(lender) == blockNumber,
@@ -106,7 +112,7 @@ contract InterestConsensus is Initializable, Consensus, InterestConsensusInterfa
 
         emit InterestSubmitted(msg.sender, lender, blockNumber, interest);
 
-        if (aggregatedData.totalSubmissions > requiredSubmissions) {
+        if (aggregatedData.totalSubmissions >= requiredSubmissions) {
             aggregatedData.finalized = true;
 
             // average the submissions
