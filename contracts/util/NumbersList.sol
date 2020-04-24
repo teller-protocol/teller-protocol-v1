@@ -6,7 +6,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 library NumbersList {
     using SafeMath for uint256;
 
-    uint256 private constant PERCENTAGE_TO_DECIMAL = 10000;
+    uint256 private constant PERCENTAGE_TO_DECIMAL = 100;
 
     struct Values {
         uint256 length;
@@ -19,7 +19,7 @@ library NumbersList {
         if (self.max < newValue) {
             self.max = newValue;
         }
-        if (self.min > newValue) {
+        if (self.min > newValue || self.length == 0) {
             self.min = newValue;
         }
         self.sum = self.sum.add(newValue);
@@ -28,6 +28,10 @@ library NumbersList {
 
     function totalValues(Values storage self) internal view returns (uint256) {
         return self.length;
+    }
+
+    function isEmpty(Values storage self) internal view returns (bool) {
+        return totalValues(self) == 0;
     }
 
     function isFinalized(Values storage self, uint256 totalRequiredValues)
@@ -39,7 +43,7 @@ library NumbersList {
     }
 
     function getAverage(Values storage self) internal view returns (uint256) {
-        return self.sum.div(totalValues(self));
+        return isEmpty(self) ? 0 : self.sum.div(totalValues(self));
     }
 
     function isWithinTolerance(Values storage self, uint256 tolerance)
@@ -47,6 +51,9 @@ library NumbersList {
         view
         returns (bool)
     {
+        if (isEmpty(self)) {
+            return false;
+        }
         uint256 average = getAverage(self);
         uint256 toleranceAmount = average.mul(tolerance).div(PERCENTAGE_TO_DECIMAL);
 
