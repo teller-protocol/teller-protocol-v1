@@ -1,7 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t, encode, createLoanInfo, SEVEN_DAYS } = require('../utils/consts');
-const { createLoanSig } = require('../utils/hashes');
 const { loans } = require('../utils/events');
 
 // Mock contracts
