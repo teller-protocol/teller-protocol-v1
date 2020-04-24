@@ -15,7 +15,7 @@ library NumbersList {
         uint256 sum;
     }
 
-    function addValue(Values storage self, uint256 newValue) internal returns (bool) {
+    function addValue(Values storage self, uint256 newValue) internal {
         if (self.max < newValue) {
             self.max = newValue;
         }
@@ -51,12 +51,12 @@ library NumbersList {
         uint256 toleranceAmount = average.mul(tolerance).div(PERCENTAGE_TO_DECIMAL);
 
         uint256 minTolerance = average.sub(toleranceAmount);
-        if (self.min <= minTolerance) {
+        if (self.min < minTolerance) {
             return false;
         }
 
         uint256 maxTolerance = average.add(toleranceAmount);
-        if (self.max >= maxTolerance) {
+        if (self.max > maxTolerance) {
             return false;
         }
         return true;
