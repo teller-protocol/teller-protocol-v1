@@ -42,7 +42,7 @@ contract InterestConsensus is Initializable, Consensus, InterestConsensusInterfa
     {}
 
     function initialize(address lendersAddress) public isNotInitialized() {
-        require(lendersAddress != address(0), "MUST_PROVIDE_LENDER_INFO");
+        require(lendersAddress != address(0), "MUST_PROVIDE_LENDERS");
 
         initialize();
 

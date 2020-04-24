@@ -9,6 +9,7 @@ const Lenders = artifacts.require("./base/Lenders.sol");
 const Loans = artifacts.require("./base/Loans.sol");
 const LendingPool = artifacts.require("./base/LendingPool.sol");
 const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
+const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 const EtherUsdAggregator = artifacts.require("./providers/chainlink/EtherUsdAggregator.sol");
 
 module.exports = async function(deployer, network, accounts) {
@@ -18,7 +19,10 @@ module.exports = async function(deployer, network, accounts) {
   const { networkConfig, env } = appConfig;
 
   // Getting configuration values.
+  const requiredSubmissions = env.getDefaultRequiredSubmissions().getOrDefault();
+  const maximumTolerance = env.getDefaultMaximumTolerance().getOrDefault();
   const deployerAccountIndex = env.getDefaultAddressIndex().getOrDefault();
+  const timeWindowToTakeOutLoan = env.getTimeWindowToTakeOutLoan().getOrDefault();
   const deployerAccount = accounts[deployerAccountIndex];
   console.log(`Deployer account index is ${deployerAccountIndex} => ${deployerAccount}`);
   const { maxGasLimit, tokens } = networkConfig;
@@ -36,13 +40,25 @@ module.exports = async function(deployer, network, accounts) {
 
   await deployerApp.deploy(LendingPool, deployOptions);
 
-  const requiredSubmissions = env.getDefaultRequiredSubmissions().getOrDefault()
-  const maximumTolerance = env.getDefaultMaximumTolerance().getOrDefault()
   await deployerApp.deploy(InterestConsensus, requiredSubmissions, maximumTolerance, deployOptions);
+  await deployerApp.deploy(LoanTermsConsensus, requiredSubmissions, maximumTolerance, deployOptions);
 
-  await deployerApp.deploy(Lenders, ZDai.address, LendingPool.address, InterestConsensus.address, deployOptions);
+  await deployerApp.deploy(
+    Lenders,
+    ZDai.address,
+    LendingPool.address,
+    InterestConsensus.address,
+    deployOptions,
+  );
 
-  await deployerApp.deploy(Loans, EtherUsdAggregator.address, LendingPool.address, deployOptions);
+  await deployerApp.deploy(
+    Loans,
+    EtherUsdAggregator.address,
+    LendingPool.address,
+    LoanTermsConsensus.address,
+    timeWindowToTakeOutLoan,
+    deployOptions,
+  );
 
   const daiLendingPoolInstance = await LendingPool.deployed();
   await daiLendingPoolInstance.initialize(
@@ -55,10 +71,11 @@ module.exports = async function(deployer, network, accounts) {
   const zTokenInstance = await ZDai.deployed();
   await zTokenInstance.addMinter(LendingPool.address, { from: deployerAccount });
 
-  const consensusInstance = await InterestConsensus.deployed();
-  await consensusInstance.initialize(
-    Lenders.address,
-  );
+  const interestConsensusInstance = await InterestConsensus.deployed();
+  await interestConsensusInstance.initialize(Lenders.address);
+
+  const loanTermsConsensusInstance = await LoanTermsConsensus.deployed();
+  await loanTermsConsensusInstance.initialize(Loans.address);
 
   deployerApp.print();
   deployerApp.writeJson();

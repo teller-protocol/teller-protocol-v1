@@ -6,6 +6,7 @@ const DEFAULT_ADDRESS_COUNT = "10";
 const DEFAULT_ADDRESS_INDEX = "0";
 const DEFAULT_REQUIRED_SUBMISSIONS = "7";
 const DEFAULT_MAXIMUM_TOLERANCE = "0";
+const DEFAULT_TIME_WINDOW_TAKE_OUT_LOAN = "7";
 
 const ADDRESS_COUNT_KEY = 'ADDRESS_COUNT_KEY';
 const DEFAULT_ADDRESS_INDEX_KEY = 'DEFAULT_ADDRESS_INDEX_KEY';
@@ -14,8 +15,9 @@ const INFURA_KEY = 'INFURA_KEY';
 const GAS_WEI_KEY = 'GAS_WEI_KEY';
 const GAS_PRICE_GWEI_KEY = 'GAS_PRICE_GWEI_KEY';
 const ETHERSCAN_API_KEY = 'ETHERSCAN_API_KEY';
-const DEFAULT_REQUIRED_SUBMISSIONS_KEY = 'DEFAULT_REQUIRED_SUBMISSIONS_KEY'
-const DEFAULT_MAXIMUM_TOLERANCE_KEY = 'DEFAULT_MAXIMUM_TOLERANCE_KEY'
+const DEFAULT_REQUIRED_SUBMISSIONS_KEY = 'DEFAULT_REQUIRED_SUBMISSIONS_KEY';
+const DEFAULT_MAXIMUM_TOLERANCE_KEY = 'DEFAULT_MAXIMUM_TOLERANCE_KEY';
+const TIME_WINDOW_TAKE_OUT_LOAN = 'TIME_WINDOW_TAKE_OUT_LOAN'
 
 class EnvConfig {
     constructor() {
@@ -35,6 +37,7 @@ EnvConfig.prototype.initializeConf = function() {
     this.createItem(ETHERSCAN_API_KEY, undefined, 'Etherscan.io key is used to verify smart contracts.');
     this.createItem(DEFAULT_REQUIRED_SUBMISSIONS_KEY, DEFAULT_REQUIRED_SUBMISSIONS, 'This is the default number of node submissions for consensus.');
     this.createItem(DEFAULT_MAXIMUM_TOLERANCE_KEY, DEFAULT_MAXIMUM_TOLERANCE, 'This is the maximum tolerance of difference in node submissions.');
+    this.createItem(TIME_WINDOW_TAKE_OUT_LOAN, DEFAULT_TIME_WINDOW_TAKE_OUT_LOAN, 'Time window to allow borrower to take out the requested loan.');
 }
 
 EnvConfig.prototype.createItem = function(name, defaultValue = undefined, description = undefined) {
@@ -86,5 +89,9 @@ EnvConfig.prototype.getDefaultRequiredSubmissions = function() {
 EnvConfig.prototype.getDefaultMaximumTolerance = function() {
   return this.conf.get(DEFAULT_MAXIMUM_TOLERANCE_KEY);
 }
+
+EnvConfig.prototype.getTimeWindowToTakeOutLoan = function() {
+    return this.conf.get(TIME_WINDOW_TAKE_OUT_LOAN);
+  }
 
 module.exports = EnvConfig;

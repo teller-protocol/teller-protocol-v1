@@ -80,4 +80,9 @@ contract Consensus is SignerRole {
 
         return (signer == msg.sender);
     }
+
+    function _processSignerNonce(address signer, uint256 signerNonce) internal {
+        require(!signerNonceTaken[signer][signerNonce], "SIGNER_NONCE_TAKEN");
+        signerNonceTaken[signer][signerNonce] = true;
+    }
 }

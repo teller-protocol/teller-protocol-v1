@@ -49,6 +49,10 @@ interface LendingPoolInterface {
 
     function withdrawInterest(uint256 amount) external;
 
+    function lendingToken() external view returns (address);
+
+    function zToken() external view returns (address);
+
     /**
         @notice This event is emitted when an user deposits tokens into the pool.
         @param sender address.

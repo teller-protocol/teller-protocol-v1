@@ -6,13 +6,13 @@ import "../util/ZeroCollateralCommon.sol";
 
 interface InterestConsensusInterface {
     event InterestSubmitted(
-        address signer,
-        address lender,
+        address indexed signer,
+        address indexed lender,
         uint256 blockNumber,
         uint256 interest
     );
 
-    event InterestAccepted(address lender, uint256 blockNumber, uint256 interest);
+    event InterestAccepted(address indexed lender, uint256 blockNumber, uint256 interest);
 
     function submitInterestResult(
         ZeroCollateralCommon.Signature calldata signature,

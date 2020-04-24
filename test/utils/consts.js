@@ -7,6 +7,7 @@ const NETWORK_PROVIDER = 'http://127.0.0.1:7545';
 const COVERAGE_NETWORK = 'http://127.0.0.1:8555';
 const ONE_HOUR = 3600
 const ONE_DAY = ONE_HOUR*24
+const SEVEN_DAYS = 7
 
 module.exports = {
     DEFAULT_DECIMALS,
@@ -16,6 +17,7 @@ module.exports = {
     COVERAGE_NETWORK,
     ONE_HOUR,
     ONE_DAY,
+    SEVEN_DAYS,
     t: function (who, func, desc, fail) {
         const failText = fail ? '\x1b[31mMustFail\x1b[0m .' : '\x1b[0m';
         return '\x1b[32m.' + func + ' => \x1b[36m' + who + '\x1b[0m\033[01;34m : ' + desc + ' '+ failText;
