@@ -35,6 +35,21 @@ interface LoansInterface {
         uint256 depositAmount
     );
 
+    event LoanRequested(
+        uint256 indexed requestedLoanId,
+        address indexed borrower,
+        uint256 amount,
+        uint32 numberOfDays
+    );
+
+    event LoanTermsUpdated(
+        uint256 indexed requestedLoanId,
+        address indexed borrower,
+        uint256 interestRate,
+        uint256 collateralRatio,
+        uint256 maxLoanAmount
+    );
+
     // new loan created
     event LoanCreated(
         uint256 indexed loanID,
@@ -47,24 +62,29 @@ interface LoansInterface {
 
     function getBorrowerLoans(address borrower) external view returns (uint256[] memory);
 
-    function loans(uint256 loanID) external returns (ZeroCollateralCommon.Loan memory);
+    function requestedLoans(uint256 loanID)
+        external
+        returns (ZeroCollateralCommon.RequestedLoan memory);
 
-    function signerNonceTaken(address signer, uint256 nonce) external returns (bool);
+    function loans(uint256 loanID) external returns (ZeroCollateralCommon.Loan memory);
 
     function depositCollateral(address borrower, uint256 loanID) external payable;
 
     function withdrawCollateral(uint256 amount, uint256 loanID) external;
 
-    function takeOutLoan(
-        uint256 interestRate,
-        uint256 collateralRatio,
-        uint256 maxLoanAmount,
-        uint256 numberDays,
-        uint256 amountBorrow,
-        ZeroCollateralCommon.Signature calldata signature
-    ) external payable returns (uint256);
+    function requestLoan(uint256 amount, uint16 numberOfDays) external;
+
+    function takeOutLoan() external payable returns (uint256);
 
     function repay(uint256 amount, uint256 loanID) external;
 
     function liquidateLoan(uint256 loanID) external;
+
+    function setLoanTerms(
+        address borrower,
+        uint256 requestedLoanId,
+        uint256 interestRate,
+        uint256 collateralRatio,
+        uint256 maxLoanAmount
+    ) external;
 }

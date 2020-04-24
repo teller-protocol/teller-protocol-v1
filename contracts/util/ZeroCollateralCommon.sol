@@ -1,7 +1,11 @@
 pragma solidity 0.5.17;
 
+import "./NumbersList.sol";
+
 
 library ZeroCollateralCommon {
+    enum RequestedLoanStatus {NonExistent, Processing, Processed, TakenOut}
+
     // Borrower account details
     struct Borrower {
         uint256 lastBorrowId;
@@ -21,6 +25,27 @@ library ZeroCollateralCommon {
         uint256 minValue;
         uint256 sumOfValues;
         bool finalized;
+    }
+
+    struct AggregatedLoanTerms {
+        NumbersList.Values interestRates;
+        NumbersList.Values collateralRatios;
+        NumbersList.Values maxLoanAmounts;
+    }
+
+    struct RequestedLoan {
+        // Requested Loan Data
+        address payable borrower;
+        uint256 id;
+        uint256 amount;
+        uint256 numberOfDays;
+        // Loan Terms
+        uint256 maxLoanAmount;
+        uint256 interestRate;
+        uint256 collateralRatio;
+        // Requested Loan Status
+        uint256 processedAt;
+        RequestedLoanStatus status;
     }
 
     // Data per borrow as struct

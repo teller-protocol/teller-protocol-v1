@@ -20,12 +20,12 @@ pragma experimental ABIEncoderV2;
 import "../interfaces/LoansInterface.sol";
 import "../interfaces/PairAggregatorInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
+import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../util/ZeroCollateralCommon.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "openzeppelin-solidity/contracts/access/roles/SignerRole.sol";
 
 
-contract Loans is LoansInterface, SignerRole {
+contract Loans is LoansInterface {
     using SafeMath for uint256;
 
     uint256 private constant ONE_HOUR = 3600;
@@ -41,26 +41,50 @@ contract Loans is LoansInterface, SignerRole {
     // At any time, this variable stores the next available loan ID
     uint256 public loanIDCounter;
 
+    uint256 public timeWindowToTakeOutLoan = 7 days;
+
     PairAggregatorInterface public priceOracle;
+
     LendingPoolInterface public lendingPool;
+
+    LoanTermsConsensusInterface public loanTermsConsensus;
 
     mapping(address => uint256[]) private borrowerLoans;
 
+    mapping(uint256 => ZeroCollateralCommon.RequestedLoan) public requestedLoans;
+
     mapping(uint256 => ZeroCollateralCommon.Loan) public loans;
 
-    mapping(address => mapping(uint256 => bool)) public signerNonceTaken;
+    /** Modifiers */
 
     modifier loanIDValid(uint256 loanID) {
         require(loanID < loanIDCounter, "LOAN_ID_INVALID");
         _;
     }
 
-    constructor(address priceOracleAddress, address lendingPoolAddress) public {
+    modifier isConsensus() {
+        require(msg.sender == address(loanTermsConsensus), "SENDER_NOT_ALLOWED");
+        _;
+    }
+
+    constructor(
+        address priceOracleAddress,
+        address lendingPoolAddress,
+        address loanTermsConsensusAddress,
+        uint256 aTimeWindowToTakeOutLoan
+    ) public {
         require(priceOracleAddress != address(0), "PROVIDE_ORACLE_ADDRESS");
         require(lendingPoolAddress != address(0), "PROVIDE_LENDINGPOOL_ADDRESS");
+        require(
+            loanTermsConsensusAddress != address(0),
+            "PROVIDE_REQUESTEDLOANCONSENSUS_ADDRESS"
+        );
+        require(aTimeWindowToTakeOutLoan > 0, "PROVIDE_TIMEWINDOW_TAKEOUT_LOAN");
 
         priceOracle = PairAggregatorInterface(priceOracleAddress);
         lendingPool = LendingPoolInterface(lendingPoolAddress);
+        loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
+        timeWindowToTakeOutLoan = aTimeWindowToTakeOutLoan * 1 days;
     }
 
     /**
@@ -120,99 +144,109 @@ contract Loans is LoansInterface, SignerRole {
         emit CollateralWithdrawn(loanID, msg.sender, withdrawalAmount);
     }
 
-    /**
-     * @notice Take out a loan
-     * @param interestRate uint256 The interest rate of the loan
-     * @param collateralRatio uint256 The ratio of colalteral to principal required
-     * @param maxLoanAmount uint256 The maximum amount of tokens allowed
-     * @param numberDays uint256 The length of the loan
-     * @param amountBorrow uint256 The initial amount to draw out for the loan
-     * @param signature ZeroCollateralCommon.Signature A signature from an authorized signer
-     *
-     * @dev collateral ratio is a percentage of the loan amount that's required in collateral
-     * @dev the percentage will be *(10**2). I.e. collateralRatio of 5244 means 52.44% collateral
-     * @dev is required in the loan. Interest rate is also a percentage with 2 decimal points.
-     */
-    function takeOutLoan(
+    function requestLoan(uint256 amount, uint16 numberOfDays) external {
+        address payable borrower = msg.sender;
+        ZeroCollateralCommon.RequestedLoan memory lastRequestedLoan = getRequestedLoan(
+            borrower
+        );
+        require(
+            lastRequestedLoan.status >=
+                ZeroCollateralCommon.RequestedLoanStatus.Processed,
+            "ALREADY_HAS_A_REQUESTED_LOAN"
+        );
+
+        uint256 requestedLoanId = loanIDCounter;
+        loanIDCounter += 1;
+
+        createRequestedLoan(requestedLoanId, borrower, amount, numberOfDays);
+
+        emit LoanRequested(requestedLoanId, borrower, amount, numberOfDays);
+    }
+
+    function setLoanTerms(
+        address borrower,
+        uint256 requestedLoanId,
         uint256 interestRate,
         uint256 collateralRatio,
-        uint256 maxLoanAmount,
-        uint256 numberDays,
-        uint256 amountBorrow,
-        ZeroCollateralCommon.Signature calldata signature
-    ) external payable returns (uint256) {
-        require(amountBorrow <= maxLoanAmount, "BORROW_AMOUNT_NOT_AUTHORIZED");
-
-        address signer = ecrecover(
-            keccak256(
-                abi.encodePacked(
-                    "\x19Ethereum Signed Message:\n32",
-                    hashLoan(
-                        interestRate,
-                        collateralRatio,
-                        msg.sender,
-                        maxLoanAmount,
-                        numberDays,
-                        signature.signerNonce
-                    )
-                )
-            ),
-            signature.v,
-            signature.r,
-            signature.s
+        uint256 maxLoanAmount
+    ) external isConsensus() {
+        require(
+            requestedLoans[requestedLoanId].status ==
+                ZeroCollateralCommon.RequestedLoanStatus.Processing,
+            "CURRENT_STATUS_NOT_PROCESSING"
+        );
+        require(
+            requestedLoans[requestedLoanId].borrower == borrower,
+            "BORROWER_NOT_LOAN_OWNER"
         );
 
-        // check that the signer and signature are valid and that the signature not double spent
-        require(isSigner(signer), "SIGNER_NOT_AUTHORIZED");
-        require(!signerNonceTaken[signer][signature.signerNonce], "SIGNER_NONCE_TAKEN");
+        // Update Loan Terms
+        requestedLoans[requestedLoanId].interestRate = interestRate;
+        requestedLoans[requestedLoanId].collateralRatio = collateralRatio;
+        requestedLoans[requestedLoanId].maxLoanAmount = maxLoanAmount;
+        requestedLoans[requestedLoanId].status = ZeroCollateralCommon
+            .RequestedLoanStatus
+            .Processed;
+        requestedLoans[requestedLoanId].processedAt = now;
 
-        signerNonceTaken[signer][signature.signerNonce] = true;
+        // Emit event
+        emit LoanTermsUpdated(
+            requestedLoanId,
+            borrower,
+            interestRate,
+            collateralRatio,
+            maxLoanAmount
+        );
+    }
 
-        // check that enough collateral has been provided for this loan
-        require(
-            priceOracle.getLatestTimestamp() >= now.sub(ONE_HOUR),
-            "ORACLE_PRICE_OLD"
+    /**
+     * @notice Take out a pre-requested loan.
+     */
+    function takeOutLoan() external payable returns (uint256) {
+        address payable borrower = msg.sender;
+        ZeroCollateralCommon.RequestedLoan memory requestedLoan = getRequestedLoan(
+            borrower
         );
 
-        uint256 ethPrice = uint256(priceOracle.getLatestAnswer());
-
-        // TODO - CHECK DECIMALS ON ETH PRICE
         require(
-            msg.value.mul(ethPrice) >=
-                amountBorrow.mul(collateralRatio).div(TEN_THOUSAND),
+            requestedLoan.status == ZeroCollateralCommon.RequestedLoanStatus.Processed,
+            "REQUESTED_LOAN_NOT_PROCESSED"
+        );
+        require(
+            requestedLoan.processedAt >= now.sub(timeWindowToTakeOutLoan),
+            "TIME_WINDOW_FINISHED"
+        );
+
+        // Check that Oracle price (Ether) is updated.
+        require(isOraclePriceUpdated(), "ORACLE_PRICE_OLD");
+
+        // Check that enough collateral has been provided for this loan
+        require(
+            isCollateralSentEnough(requestedLoan.amount, requestedLoan.collateralRatio),
             "MORE_COLLATERAL_REQUIRED"
         );
 
         // Create the loan
-        createNewLoan(
-            interestRate,
-            collateralRatio,
-            maxLoanAmount,
-            numberDays,
-            amountBorrow
-        );
+        createNewLoan(msg.value, requestedLoan);
 
-        uint256 loanID = loanIDCounter;
+        // Add loan ID to the borrower's list of loans
+        borrowerLoans[borrower].push(requestedLoan.id);
 
-        // add loanID to the borrower's list of loans
-        borrowerLoans[msg.sender].push(loanID);
-        loanIDCounter += 1;
-
-        // give the borrower their requested amount of tokens
-        lendingPool.createLoan(amountBorrow, msg.sender);
+        // Give the borrower their requested amount of tokens
+        lendingPool.createLoan(requestedLoan.amount, borrower);
 
         totalCollateral = totalCollateral.add(msg.value);
 
         emit LoanCreated(
-            loanID,
-            msg.sender,
-            interestRate,
-            collateralRatio,
-            maxLoanAmount,
-            numberDays
+            requestedLoan.id,
+            borrower,
+            requestedLoan.interestRate,
+            requestedLoan.collateralRatio,
+            requestedLoan.maxLoanAmount,
+            requestedLoan.numberOfDays
         );
 
-        return loanID;
+        return requestedLoan.id;
     }
 
     /**
@@ -301,25 +335,42 @@ contract Loans is LoansInterface, SignerRole {
         return loanAmount.mul(collateralRatio).div(TEN_THOUSAND);
     }
 
-    function hashLoan(
-        uint256 interestRate,
-        uint256 collateralRatio,
-        address borrower,
-        uint256 maxLoanAmount,
-        uint256 numberDays,
-        uint256 signerNonce
-    ) internal pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(
-                    interestRate,
-                    collateralRatio,
-                    borrower,
-                    maxLoanAmount,
-                    numberDays,
-                    signerNonce
-                )
-            );
+    function getRequestedLoan(address borrower)
+        internal
+        view
+        returns (ZeroCollateralCommon.RequestedLoan memory)
+    {
+        uint256[] memory requestedLoansList = borrowerLoans[borrower];
+        uint256 lastRequestedLoanIndex = requestedLoansList.length == 0
+            ? 0
+            : requestedLoansList.length - 1;
+        return requestedLoans[lastRequestedLoanIndex];
+    }
+
+    function createRequestedLoan(
+        uint256 requestedLoanId,
+        address payable borrower,
+        uint256 amount,
+        uint256 numberOfDays
+    ) internal {
+        requestedLoans[requestedLoanId] = ZeroCollateralCommon.RequestedLoan({
+            borrower: // Requested Loan Data
+            borrower,
+            id: requestedLoanId,
+            amount: amount,
+            numberOfDays: numberOfDays,
+            maxLoanAmount: // Loan Terms
+            0,
+            interestRate: 0,
+            collateralRatio: 0,
+            processedAt: // Requested Loan Status
+            0,
+            status: ZeroCollateralCommon.RequestedLoanStatus.Processing
+        });
+    }
+
+    function isOraclePriceUpdated() internal view returns (bool) {
+        return priceOracle.getLatestTimestamp() >= now.sub(ONE_HOUR);
     }
 
     function payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
@@ -337,28 +388,41 @@ contract Loans is LoansInterface, SignerRole {
 
     // This function must be separated out to avoid a stack overflow
     function createNewLoan(
-        uint256 interestRate,
-        uint256 collateralRatio,
-        uint256 maxLoanAmount,
-        uint256 numberDays,
-        uint256 amountBorrow
+        uint256 collateral,
+        ZeroCollateralCommon.RequestedLoan memory requestedLoan
     ) internal {
-        loans[loanIDCounter] = ZeroCollateralCommon.Loan({
-            id: loanIDCounter,
-            collateral: msg.value,
-            interestRate: interestRate,
-            collateralRatio: collateralRatio,
-            maxLoanAmount: maxLoanAmount,
-            totalOwed: amountBorrow.add(
-                amountBorrow.mul(interestRate).mul(numberDays).div(TEN_THOUSAND).div(
-                    DAYS_PER_YEAR
-                )
-            ),
+        uint256 totalOwed = requestedLoan.amount.add(
+            requestedLoan
+                .amount
+                .mul(requestedLoan.interestRate)
+                .mul(requestedLoan.numberOfDays)
+                .div(TEN_THOUSAND)
+                .div(DAYS_PER_YEAR)
+        );
+        loans[requestedLoan.id] = ZeroCollateralCommon.Loan({
+            id: requestedLoan.id,
+            collateral: collateral,
+            interestRate: requestedLoan.interestRate,
+            collateralRatio: requestedLoan.collateralRatio,
+            maxLoanAmount: requestedLoan.maxLoanAmount,
+            totalOwed: totalOwed,
             timeStart: now,
-            timeEnd: now.add(numberDays.mul(ONE_DAY)),
-            borrower: msg.sender,
+            timeEnd: now.add(requestedLoan.numberOfDays.mul(ONE_DAY)),
+            borrower: requestedLoan.borrower,
             active: true,
             liquidated: false
         });
+    }
+
+    function isCollateralSentEnough(uint256 amountToBorrow, uint256 collateralRatio)
+        internal
+        view
+        returns (bool)
+    {
+        // TODO - CHECK DECIMALS ON ETH PRICE (LOOKS LIKE IT CONTAINS 8 DECIMALS)
+        uint256 oneEtherPrice = uint256(priceOracle.getLatestAnswer());
+        uint256 collateralSent = msg.value.mul(oneEtherPrice);
+        uint256 collateralNeeded = amountToBorrow.mul(collateralRatio).div(TEN_THOUSAND);
+        return collateralSent >= collateralNeeded;
     }
 }
