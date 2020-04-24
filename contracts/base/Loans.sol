@@ -354,17 +354,14 @@ contract Loans is LoansInterface {
         uint256 numberOfDays
     ) internal {
         requestedLoans[requestedLoanId] = ZeroCollateralCommon.RequestedLoan({
-            borrower: // Requested Loan Data
-            borrower,
+            borrower: borrower,
             id: requestedLoanId,
             amount: amount,
             numberOfDays: numberOfDays,
-            maxLoanAmount: // Loan Terms
-            0,
+            maxLoanAmount: 0,
             interestRate: 0,
             collateralRatio: 0,
-            processedAt: // Requested Loan Status
-            0,
+            processedAt: 0,
             status: ZeroCollateralCommon.RequestedLoanStatus.Processing
         });
     }
