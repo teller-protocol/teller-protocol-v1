@@ -14,6 +14,7 @@
     limitations under the License.
 */
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 import "../../base/Lenders.sol";
 
@@ -59,13 +60,6 @@ contract LendersMock is Lenders {
         accruedInterest[lender].blockLastAccrued = blockLastAccrued;
         accruedInterest[lender].totalAccruedInterest = totalAccruedInterest;
         accruedInterest[lender].totalNotWithdrawn = totalNotWithdrawn;
-    }
-
-    function mockRequestUpdate(
-        address lender,
-        uint256 blockNumber
-    ) external {
-        requestedInterestUpdate[lender] = blockNumber;
     }
 
 }

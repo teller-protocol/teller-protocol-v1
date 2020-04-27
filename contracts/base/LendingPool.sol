@@ -98,9 +98,6 @@ contract LendingPool is LendingPoolInterface, Initializable {
         // Transfering tokens to the LendingPool
         tokenTransferFrom(msg.sender, amount);
 
-        // Mint zToken tokens
-        zTokenMint(msg.sender, amount);
-
         // Emit event
         emit TokenDeposited(msg.sender, amount);
     }
@@ -112,9 +109,6 @@ contract LendingPool is LendingPoolInterface, Initializable {
     function withdraw(uint256 amount) external isInitialized() {
         // Burn zToken tokens.
         zToken.burn(msg.sender, amount);
-
-        // Notify zToken tokens were burnt
-        lenders.zTokenBurnt(msg.sender, amount);
 
         // Transfers tokens
         tokenTransfer(msg.sender, amount);

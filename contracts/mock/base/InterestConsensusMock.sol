@@ -20,29 +20,19 @@ import "../../base/InterestConsensus.sol";
 
 contract InterestConsensusMock is InterestConsensus {
 
-    constructor(
-        uint256 initRequiredSubmissions,
-        uint256 initMaximumTolerance
-    ) public InterestConsensus(
-        initRequiredSubmissions,
-        initMaximumTolerance
-    ){}
-
-    function mockNodeSubmissions(
+    function mockInterestSubmissions(
         address lender,
         uint256 blockNumber,
         uint256 totalSubmissions,
         uint256 maxValue,
         uint256 minValue,
-        uint256 sumOfValues,
-        bool finalized
+        uint256 sumOfValues
     ) external {
-        nodeSubmissions[lender][blockNumber] = ZeroCollateralCommon.AggregatedInterest({
-            totalSubmissions: totalSubmissions,
-            minValue: minValue,
-            maxValue: maxValue,
-            sumOfValues: sumOfValues,
-            finalized: finalized
+        interestSubmissions[lender][blockNumber] = NumbersList.Values({
+            length: totalSubmissions,
+            min: minValue,
+            max: maxValue,
+            sum: sumOfValues
         });
     }
 
@@ -61,15 +51,6 @@ contract InterestConsensusMock is InterestConsensus {
         bool taken
     ) external {
         signerNonceTaken[signer][signerNonce] = taken;
-    }
-
-    function externalHashData(
-        address lender,
-        uint256 blockNumber,
-        uint256 interest,
-        uint256 signerNonce
-    ) external view returns (bytes32) {
-        return _hashData(lender, blockNumber, interest, signerNonce);
     }
 
 }

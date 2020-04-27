@@ -14,6 +14,7 @@
     limitations under the License.
 */
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 import "../../base/Lenders.sol";
 
@@ -39,7 +40,5 @@ contract LendersModifiersMock is Lenders {
     function externalIsLendingPool() isLendingPool() external {}
 
     function externalIsValid(address anAddress) isValid(anAddress) external {}
-
-    function externalIsConsensus() isConsensus() external {}
 
 }

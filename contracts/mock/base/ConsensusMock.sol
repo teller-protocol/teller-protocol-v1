@@ -20,27 +20,11 @@ import "../../base/Consensus.sol";
 
 contract ConsensusMock is Consensus {
 
-    constructor(
-        uint256 initRequiredSubmissions,
-        uint256 initMaximumTolerance
-    ) public Consensus(
-      initRequiredSubmissions,
-      initMaximumTolerance
-    ){}
-
     function externalSignatureValid(
         ZeroCollateralCommon.Signature calldata signature,
         bytes32 dataHash
     ) external view returns (bool) {
         return _signatureValid(signature, dataHash);
-    }
-
-    function externalResultsWithinTolerance(
-      uint256 maximum,
-      uint256 minimum,
-      uint256 average
-    ) external view returns (bool) {
-        return _resultsWithinTolerance(maximum, minimum, average);
     }
 
 }

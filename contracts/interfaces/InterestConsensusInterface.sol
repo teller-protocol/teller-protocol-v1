@@ -14,10 +14,8 @@ interface InterestConsensusInterface {
 
     event InterestAccepted(address lender, uint256 blockNumber, uint256 interest);
 
-    function submitInterestResult(
-        ZeroCollateralCommon.Signature calldata signature,
-        address lender,
-        uint256 blockNumber,
-        uint256 interest
-    ) external;
+    function processRequest(
+        ZeroCollateralCommon.InterestRequest calldata request,
+        ZeroCollateralCommon.InterestResponse[] calldata responses
+    ) external returns (uint256);
 }

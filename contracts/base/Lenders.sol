@@ -14,6 +14,7 @@
     limitations under the License.
 */
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 // Libraries
 import "../util/AddressLib.sol";
@@ -25,7 +26,7 @@ import "../util/ZeroCollateralCommon.sol";
 // Interfaces
 import "../interfaces/LendersInterface.sol";
 import "../interfaces/ZTokenInterface.sol";
-
+import "../interfaces/InterestConsensusInterface.sol";
 
 contract Lenders is LendersInterface {
     using AddressLib for address;
@@ -34,16 +35,12 @@ contract Lenders is LendersInterface {
     /* State Variables */
 
     address public lendingPool;
-    address public interestConsensus;
+    InterestConsensusInterface public interestConsensus;
 
     ZTokenInterface public zToken;
 
     // The total interest that has not yet been withdrawn by a lender
     mapping(address => ZeroCollateralCommon.AccruedInterest) public accruedInterest;
-
-    // The block number at which an address requested an interest update.
-    // If the interest has been updated, this reverts to 0.
-    mapping(address => uint256) public requestedInterestUpdate;
 
     /** Modifiers */
     modifier isZToken() {
@@ -57,14 +54,6 @@ contract Lenders is LendersInterface {
     modifier isLendingPool() {
         require(
             _areAddressesEqual(lendingPool, msg.sender),
-            "Address has no permissions."
-        );
-        _;
-    }
-
-    modifier isConsensus() {
-        require(
-            _areAddressesEqual(interestConsensus, msg.sender),
             "Address has no permissions."
         );
         _;
@@ -90,52 +79,43 @@ contract Lenders is LendersInterface {
         );
         zToken = ZTokenInterface(zTokenAddress);
         lendingPool = lendingPoolAddress;
-        interestConsensus = interestConsensusAddress;
+        interestConsensus = InterestConsensusInterface(interestConsensusAddress);
     }
 
     /** External Functions */
 
-    function zTokenTransfer(address sender, address, uint256) external isZToken() {
-        if (_getZTokenBalanceOf(sender) == 0) {
-            _updateAccruedInterestFor(sender);
-        }
-    }
-
-    function zTokenBurnt(address recipient, uint256) external isLendingPool() {
-        // Updating accrued interest for zToken recipient.
-        if (_getZTokenBalanceOf(recipient) == 0) {
-            _updateAccruedInterestFor(recipient);
-        }
-    }
-
-    function updateAccruedInterest() external {
-        require(_getZTokenBalanceOf(msg.sender) > 0, "SENDER_IS_NOT_LENDER");
-
-        _updateAccruedInterestFor(msg.sender);
-    }
-
-    function setAccruedInterest(address lender, uint256 endBlock, uint256 amount)
+    function setAccruedInterest(
+        ZeroCollateralCommon.InterestRequest calldata request,
+        ZeroCollateralCommon.InterestResponse[] calldata responses
+    )
         external
-        isConsensus()
     {
-        require(requestedInterestUpdate[lender] == endBlock, "INCORRECT_END_BLOCK");
+        require(
+            accruedInterest[request.lender].blockLastAccrued == request.startTime,
+            'GAP_IN_INTEREST_ACCRUAL'
+        );
+        require(request.endTime > request.startTime, 'INVALID_INTERVAL');
+        require(request.requestTime >= request.endTime, 'INVALID_REQUEST');
 
-        requestedInterestUpdate[lender] = 0;
+        uint256 amount = interestConsensus.processRequest(
+            request,
+            responses
+        );
 
-        accruedInterest[lender].totalAccruedInterest = accruedInterest[lender]
+        accruedInterest[request.lender].totalAccruedInterest = accruedInterest[request.lender]
             .totalAccruedInterest
             .add(amount);
 
-        accruedInterest[lender].totalNotWithdrawn = accruedInterest[lender]
+        accruedInterest[request.lender].totalNotWithdrawn = accruedInterest[request.lender]
             .totalNotWithdrawn
             .add(amount);
 
-        accruedInterest[lender].blockLastAccrued = endBlock;
+        accruedInterest[request.lender].blockLastAccrued = request.endTime;
 
         emit AccruedInterestUpdated(
-            lender,
-            accruedInterest[lender].totalNotWithdrawn,
-            accruedInterest[lender].totalAccruedInterest
+            request.lender,
+            accruedInterest[request.lender].totalNotWithdrawn,
+            accruedInterest[request.lender].totalAccruedInterest
         );
     }
 
@@ -164,16 +144,6 @@ contract Lenders is LendersInterface {
     }
 
     /** Internal Functions */
-
-    function _updateAccruedInterestFor(address lender) internal {
-        if (requestedInterestUpdate[lender] != 0) {
-            emit CancelInterestUpdate(lender, requestedInterestUpdate[lender]);
-        }
-
-        requestedInterestUpdate[lender] = _getCurrentBlockNumber();
-
-        emit InterestUpdateRequested(lender, _getCurrentBlockNumber());
-    }
 
     function _areAddressesEqual(address leftAddress, address rightAddress)
         internal
