@@ -33,7 +33,7 @@ contract InterestConsensus is Consensus, Initializable, InterestConsensusInterfa
     using SafeMath for uint256;
     using NumbersList for NumbersList.Values;
 
-    uint256 constant internal THIRTY_DAYS = 2592000;
+    uint256 internal constant THIRTY_DAYS = 2592000;
 
     address public lenders;
 
@@ -41,10 +41,7 @@ contract InterestConsensus is Consensus, Initializable, InterestConsensusInterfa
     mapping(address => mapping(uint256 => NumbersList.Values)) public interestSubmissions;
 
     modifier isLenders() {
-        require(
-            lenders == msg.sender,
-            "Address has no permissions."
-        );
+        require(lenders == msg.sender, "Address has no permissions.");
         _;
     }
 
@@ -63,15 +60,11 @@ contract InterestConsensus is Consensus, Initializable, InterestConsensusInterfa
         maximumTolerance = initMaximumTolerance;
     }
 
-
     function processRequest(
         ZeroCollateralCommon.InterestRequest calldata request,
         ZeroCollateralCommon.InterestResponse[] calldata responses
     ) external isInitialized() isLenders() returns (uint256) {
-        require(
-            responses.length >= requiredSubmissions,
-            'INSUFFICIENT_RESPONSES'
-        );
+        require(responses.length >= requiredSubmissions, "INSUFFICIENT_RESPONSES");
 
         bytes32 requestHash = _hashRequest(request);
 
@@ -80,11 +73,14 @@ contract InterestConsensus is Consensus, Initializable, InterestConsensusInterfa
         }
 
         require(
-            interestSubmissions[request.lender][request.endTime].isWithinTolerance(maximumTolerance),
-            'RESPONSES_TOO_VARIED'
+            interestSubmissions[request.lender][request.endTime].isWithinTolerance(
+                maximumTolerance
+            ),
+            "RESPONSES_TOO_VARIED"
         );
 
-        uint256 average = interestSubmissions[request.lender][request.endTime].getAverage();
+        uint256 average = interestSubmissions[request.lender][request.endTime]
+            .getAverage();
 
         emit InterestAccepted(request.lender, request.endTime, average);
 
@@ -108,13 +104,10 @@ contract InterestConsensus is Consensus, Initializable, InterestConsensusInterfa
         );
         signerNonceTaken[response.signer][response.signature.signerNonce] = true;
 
-        require(response.responseTime >= now.sub(THIRTY_DAYS), 'RESPONSE_EXPIRED');
+        require(response.responseTime >= now.sub(THIRTY_DAYS), "RESPONSE_EXPIRED");
 
         bytes32 responseHash = _hashResponse(response, requestHash);
-        require(
-            _signatureValid(response.signature, responseHash),
-            'SIGNATURE_INVALID'
-        );
+        require(_signatureValid(response.signature, responseHash), "SIGNATURE_INVALID");
 
         interestSubmissions[request.lender][request.endTime].addValue(response.interest);
 
@@ -130,27 +123,31 @@ contract InterestConsensus is Consensus, Initializable, InterestConsensusInterfa
         ZeroCollateralCommon.InterestResponse memory response,
         bytes32 requestHash
     ) internal pure returns (bytes32) {
-        return keccak256(
-            abi.encode(
-                response.responseTime,
-                response.interest,
-                response.signature.signerNonce,
-                requestHash
-            )
-        );
+        return
+            keccak256(
+                abi.encode(
+                    response.responseTime,
+                    response.interest,
+                    response.signature.signerNonce,
+                    requestHash
+                )
+            );
     }
 
-    function _hashRequest(
-        ZeroCollateralCommon.InterestRequest memory request
-    ) internal view returns (bytes32) {
-        return keccak256(
-            abi.encode(
-                msg.sender,
-                request.lender,
-                request.startTime,
-                request.endTime,
-                request.requestTime
-            )
-        );
+    function _hashRequest(ZeroCollateralCommon.InterestRequest memory request)
+        internal
+        view
+        returns (bytes32)
+    {
+        return
+            keccak256(
+                abi.encode(
+                    msg.sender,
+                    request.lender,
+                    request.startTime,
+                    request.endTime,
+                    request.requestTime
+                )
+            );
     }
 }

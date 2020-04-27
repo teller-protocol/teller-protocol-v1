@@ -28,6 +28,7 @@ import "../interfaces/LendersInterface.sol";
 import "../interfaces/ZTokenInterface.sol";
 import "../interfaces/InterestConsensusInterface.sol";
 
+
 contract Lenders is LendersInterface {
     using AddressLib for address;
     using SafeMath for uint256;
@@ -87,26 +88,23 @@ contract Lenders is LendersInterface {
     function setAccruedInterest(
         ZeroCollateralCommon.InterestRequest calldata request,
         ZeroCollateralCommon.InterestResponse[] calldata responses
-    )
-        external
-    {
+    ) external {
         require(
             accruedInterest[request.lender].blockLastAccrued == request.startTime,
-            'GAP_IN_INTEREST_ACCRUAL'
+            "GAP_IN_INTEREST_ACCRUAL"
         );
-        require(request.endTime > request.startTime, 'INVALID_INTERVAL');
-        require(request.requestTime >= request.endTime, 'INVALID_REQUEST');
+        require(request.endTime > request.startTime, "INVALID_INTERVAL");
+        require(request.requestTime >= request.endTime, "INVALID_REQUEST");
 
-        uint256 amount = interestConsensus.processRequest(
-            request,
-            responses
-        );
+        uint256 amount = interestConsensus.processRequest(request, responses);
 
-        accruedInterest[request.lender].totalAccruedInterest = accruedInterest[request.lender]
+        accruedInterest[request.lender].totalAccruedInterest = accruedInterest[request
+            .lender]
             .totalAccruedInterest
             .add(amount);
 
-        accruedInterest[request.lender].totalNotWithdrawn = accruedInterest[request.lender]
+        accruedInterest[request.lender].totalNotWithdrawn = accruedInterest[request
+            .lender]
             .totalNotWithdrawn
             .add(amount);
 
