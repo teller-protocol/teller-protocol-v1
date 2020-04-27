@@ -1,7 +1,6 @@
 const { DUMMY_ADDRESS } = require('../../consts');
 
 module.exports = {
-    dataContracts: {
-        eth_usd: DUMMY_ADDRESS,
-    }
+    USDC_ETH: DUMMY_ADDRESS,
+    DAI_ETH: DUMMY_ADDRESS,
 };

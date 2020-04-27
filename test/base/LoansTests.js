@@ -1,6 +1,6 @@
 const Loans = artifacts.require('Loans')
 const Mock = artifacts.require('Mock')
-const EtherUsdAggregator = artifacts.require('EtherUsdAggregator')
+const ChainlinkPairAggregator = artifacts.require('ChainlinkPairAggregator')
 const LendingPoolMock = artifacts.require('LendingPoolMock');
 
 const assert = require('assert')
@@ -51,7 +51,7 @@ contract('Loans Unit Tests', async accounts => {
     mockOracle = await Mock.new()
     lendingPoolMock = await Mock.new()
 
-    mockOracleInterface = await EtherUsdAggregator.new(accounts[1])
+    mockOracleInterface = await ChainlinkPairAggregator.new(accounts[1])
     lendingPoolMockInterface = await LendingPoolMock.new()
 
     mockOracleTimestamp = await mockOracleInterface.contract.methods

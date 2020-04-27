@@ -12,7 +12,7 @@ const DAI = artifacts.require("./mock/token/SimpleToken.sol");
 // Smart contracts
 const Lenders = artifacts.require("./base/Lenders.sol");
 const LendingPool = artifacts.require("./base/LendingPool.sol");
-const ZDai = artifacts.require("./base/ZDai.sol");
+const ZDai = artifacts.require("./base/ZDAI.sol");
 
 contract('LendingPoolWithdrawTest', function (accounts) {
     const burnableInterfaceEncoder = new BurnableInterfaceEncoder(web3);

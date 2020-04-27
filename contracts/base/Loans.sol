@@ -55,7 +55,10 @@ contract Loans is LoansInterface, SignerRole {
         _;
     }
 
-    constructor(address priceOracleAddress, address lendingPoolAddress) public {
+    constructor(
+        address priceOracleAddress,
+        address lendingPoolAddress
+    ) public {
         require(priceOracleAddress != address(0), "PROVIDE_ORACLE_ADDRESS");
         require(lendingPoolAddress != address(0), "PROVIDE_LENDINGPOOL_ADDRESS");
 
@@ -360,5 +363,16 @@ contract Loans is LoansInterface, SignerRole {
             active: true,
             liquidated: false
         });
+    }
+
+    function isCollateralSentEnough(uint msgValue, uint256 amountToBorrow, uint256 collateralRatio)
+        internal
+        view
+        returns (bool)
+    {
+        uint256 oneLendingTokenPriceWeis = uint256(priceOracle.getLatestAnswer());
+        uint256 collateralSent = msgValue.div(oneLendingTokenPriceWeis);
+        uint256 collateralNeeded = amountToBorrow.mul(collateralRatio).div(1000);
+        return collateralSent >= collateralNeeded;
     }
 }
