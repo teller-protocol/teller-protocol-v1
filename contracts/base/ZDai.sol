@@ -17,11 +17,11 @@ pragma solidity 0.5.17;
 
 import "./ZToken.sol";
 
+
 contract ZDAI is ZToken {
     string private constant NAME = "Zero Collateral DAI";
     string private constant SYMBOL = "zDAI";
     uint8 private constant DECIMALS = 18;
 
     constructor() public ZToken(NAME, SYMBOL, DECIMALS) {}
-
 }

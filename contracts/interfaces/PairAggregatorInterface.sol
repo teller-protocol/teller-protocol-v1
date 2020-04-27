@@ -1,5 +1,6 @@
 pragma solidity 0.5.17;
 
+
 interface PairAggregatorInterface {
     function getLatestAnswer() external view returns (int256);
 
