@@ -6,7 +6,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 library NumbersList {
     using SafeMath for uint256;
 
-    uint256 private constant PERCENTAGE_TO_DECIMAL = 100;
+    uint256 private constant PERCENTAGE_TO_DECIMAL = 10000;
 
     struct Values {
         uint256 length;
