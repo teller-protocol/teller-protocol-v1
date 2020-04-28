@@ -17,16 +17,30 @@ function hashLoan(loan) {
   )
 }
 
-function hashInterest(consensusAddress, submission) {
+function hashResponse(response, requestHash) {
+  return ethUtil.keccak256(
+    abi.rawEncode(
+      ['uint256', 'uint256', 'uint256', 'bytes32'],
+      [
+        response.responseTime,
+        response.interest,
+        response.signature.signerNonce,
+        requestHash,
+      ]
+    )
+  )
+}
+
+function hashRequest(request, msgSender) {
   return ethUtil.keccak256(
     abi.rawEncode(
       ['address', 'address', 'uint256', 'uint256', 'uint256'],
       [
-        consensusAddress,
-        submission.lender,
-        submission.blockNumber,
-        submission.interest,
-        submission.signerNonce,
+        msgSender,
+        request.lender,
+        request.startTime,
+        request.endTime,
+        request.requestTime
       ]
     )
   )
@@ -57,7 +71,8 @@ const createLoanSig = async (web3, borrower, loanInfo, signer) => {
 
 module.exports = {
   hashLoan,
-  hashInterest,
+  hashRequest,
+  hashResponse,
   signHash,
   createLoanSig,
 }

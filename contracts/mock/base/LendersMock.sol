@@ -39,10 +39,6 @@ contract LendersMock is Lenders {
         addressesEqual = true;
     }
 
-    function setAddressesEqual(bool value) external {
-        addressesEqual = value;
-    }
-
     function _areAddressesEqual(address, address)
         internal
         view

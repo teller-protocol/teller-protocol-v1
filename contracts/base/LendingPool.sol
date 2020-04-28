@@ -98,6 +98,9 @@ contract LendingPool is LendingPoolInterface, Initializable {
         // Transfering tokens to the LendingPool
         tokenTransferFrom(msg.sender, amount);
 
+        // Mint zToken tokens	
+        zTokenMint(msg.sender, amount);
+
         // Emit event
         emit TokenDeposited(msg.sender, amount);
     }
