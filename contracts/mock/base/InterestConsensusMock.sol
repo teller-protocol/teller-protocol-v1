@@ -53,4 +53,25 @@ contract InterestConsensusMock is InterestConsensus {
         signerNonceTaken[signer][signerNonce] = taken;
     }
 
+    function externalProcessResponse(
+        ZeroCollateralCommon.InterestRequest calldata request,
+        ZeroCollateralCommon.InterestResponse calldata response,
+        bytes32 requestHash
+    ) external {
+        _processReponse(request, response, requestHash);
+    }
+
+    function externalHashResponse(
+        ZeroCollateralCommon.InterestResponse calldata response,
+        bytes32 requestHash
+    ) external pure {
+        _hashResponse(response, requestHash);
+    }
+
+    function externalHashRequest(
+        ZeroCollateralCommon.InterestRequest calldata request
+    ) external view {
+        _hashRequest(request);
+    }
+
 }
