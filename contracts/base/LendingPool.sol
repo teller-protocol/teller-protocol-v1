@@ -118,7 +118,7 @@ contract LendingPool is LendingPoolInterface, Initializable {
     }
 
     /**
-        @notice It allows a borrower repaying their loan. 
+        @notice It allows a borrower repaying their loan.
         @dev This function can be called ONLY by the Loans contract.
         @dev It requires a ERC20.approve call before calling it.
         @dev It throws a require error if borrower called ERC20.approve function before calling it.

@@ -20,9 +20,6 @@ pragma experimental ABIEncoderV2;
 import "../util/AddressLib.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-// Commons
-import "../util/ZeroCollateralCommon.sol";
-
 // Interfaces
 import "../interfaces/LendersInterface.sol";
 import "../interfaces/ZTokenInterface.sol";

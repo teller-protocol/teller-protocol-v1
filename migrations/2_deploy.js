@@ -36,9 +36,7 @@ module.exports = async function(deployer, network, accounts) {
 
   await deployerApp.deploy(LendingPool, deployOptions);
 
-  const requiredSubmissions = env.getDefaultRequiredSubmissions().getOrDefault()
-  const maximumTolerance = env.getDefaultMaximumTolerance().getOrDefault()
-  await deployerApp.deploy(InterestConsensus, requiredSubmissions, maximumTolerance, deployOptions);
+  await deployerApp.deploy(InterestConsensus, deployOptions);
 
   await deployerApp.deploy(Lenders, ZDai.address, LendingPool.address, InterestConsensus.address, deployOptions);
 
@@ -55,9 +53,13 @@ module.exports = async function(deployer, network, accounts) {
   const zTokenInstance = await ZDai.deployed();
   await zTokenInstance.addMinter(LendingPool.address, { from: deployerAccount });
 
+  const requiredSubmissions = env.getDefaultRequiredSubmissions().getOrDefault()
+  const maximumTolerance = env.getDefaultMaximumTolerance().getOrDefault()
   const consensusInstance = await InterestConsensus.deployed();
   await consensusInstance.initialize(
     Lenders.address,
+    requiredSubmissions,
+    maximumTolerance
   );
 
   deployerApp.print();
