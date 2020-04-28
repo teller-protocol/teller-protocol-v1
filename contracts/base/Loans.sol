@@ -22,6 +22,7 @@ import "../interfaces/PairAggregatorInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../util/ZeroCollateralCommon.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/access/roles/SignerRole.sol";
 
 
@@ -31,6 +32,7 @@ contract Loans is LoansInterface, SignerRole {
     uint256 private constant ONE_HOUR = 3600;
     uint256 private constant ONE_DAY = 3600 * 24;
     uint256 private constant LIQUIDATE_ETH_PRICE = 95; // Eth is bought at 95% of the going rate
+    uint256 private constant TEN = 10; // Used to calculate one whole token.
     uint256 private constant ONE_HUNDRED = 100; // Used when finding a percentage of a number - divide by 100
     uint256 private constant DAYS_PER_YEAR = 365;
     uint256 private constant TEN_THOUSAND = 10000; // For interest and collateral, 7% is represented as 700.
@@ -362,14 +364,23 @@ contract Loans is LoansInterface, SignerRole {
         });
     }
 
+    function getAWholeLendingToken() internal view returns (uint256) {
+        uint8 decimals = ERC20Detailed(lendingPool.lendingToken()).decimals();
+        return TEN ** decimals;
+    }
+
     function isCollateralSentEnough(
         uint256 msgValue,
         uint256 amountToBorrow,
         uint256 collateralRatio
     ) internal view returns (bool) {
+        // Calculate Collateral Sent (in lending tokens) = ether sent / 1 lending token price in ether -wei(s)- * a whole lending token (with decimals).
+        uint256 aWholeLendingToken = getAWholeLendingToken();
         uint256 oneLendingTokenPriceWeis = uint256(priceOracle.getLatestAnswer());
-        uint256 collateralSent = msgValue.div(oneLendingTokenPriceWeis);
-        uint256 collateralNeeded = amountToBorrow.mul(collateralRatio).div(1000);
+        uint256 collateralSent = msgValue.div(oneLendingTokenPriceWeis).mul(aWholeLendingToken);
+
+        // Collateral Needed = Amount to Borrow (with lending token decimals) 
+        uint256 collateralNeeded = amountToBorrow.mul(collateralRatio).div(TEN_THOUSAND);
         return collateralSent >= collateralNeeded;
     }
 }

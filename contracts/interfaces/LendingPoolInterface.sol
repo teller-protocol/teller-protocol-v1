@@ -1,6 +1,5 @@
 pragma solidity 0.5.17;
 
-
 /**
     @notice This interface defines the functions for a lending pool that holds all of the tokens that lenders transfer into the protocol.
  */
@@ -48,6 +47,8 @@ interface LendingPoolInterface {
     function createLoan(uint256 amount, address borrower) external;
 
     function withdrawInterest(uint256 amount) external;
+
+    function lendingToken() external view returns (address);
 
     /**
         @notice This event is emitted when an user deposits tokens into the pool.

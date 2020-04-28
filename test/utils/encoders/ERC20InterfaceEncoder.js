@@ -23,4 +23,8 @@ ERC20InterfaceEncoder.prototype.encodeTransfer = function() {
     return encode(this.web3, 'transfer(address,uint256)');
 }
 
+ERC20InterfaceEncoder.prototype.encodeDecimals = function() {
+    return encode(this.web3, 'decimals()');
+}
+
 module.exports = ERC20InterfaceEncoder;
