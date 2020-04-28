@@ -366,7 +366,7 @@ contract Loans is LoansInterface, SignerRole {
 
     function getAWholeLendingToken() internal view returns (uint256) {
         uint8 decimals = ERC20Detailed(lendingPool.lendingToken()).decimals();
-        return TEN ** decimals;
+        return TEN**decimals;
     }
 
     function isCollateralSentEnough(
@@ -377,9 +377,11 @@ contract Loans is LoansInterface, SignerRole {
         // Calculate Collateral Sent (in lending tokens) = ether sent / 1 lending token price in ether -wei(s)- * a whole lending token (with decimals).
         uint256 aWholeLendingToken = getAWholeLendingToken();
         uint256 oneLendingTokenPriceWeis = uint256(priceOracle.getLatestAnswer());
-        uint256 collateralSent = msgValue.div(oneLendingTokenPriceWeis).mul(aWholeLendingToken);
+        uint256 collateralSent = msgValue.div(oneLendingTokenPriceWeis).mul(
+            aWholeLendingToken
+        );
 
-        // Collateral Needed = Amount to Borrow (with lending token decimals) 
+        // Collateral Needed = Amount to Borrow (with lending token decimals)
         uint256 collateralNeeded = amountToBorrow.mul(collateralRatio).div(TEN_THOUSAND);
         return collateralSent >= collateralNeeded;
     }
