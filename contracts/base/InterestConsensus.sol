@@ -107,7 +107,10 @@ contract InterestConsensus is Consensus, Initializable, InterestConsensusInterfa
         require(response.responseTime >= now.sub(THIRTY_DAYS), "RESPONSE_EXPIRED");
 
         bytes32 responseHash = _hashResponse(response, requestHash);
-        require(_signatureValid(response.signature, responseHash, response.signer), "SIGNATURE_INVALID");
+        require(
+            _signatureValid(response.signature, responseHash, response.signer),
+            "SIGNATURE_INVALID"
+        );
 
         interestSubmissions[request.lender][request.endTime].addValue(response.interest);
 
