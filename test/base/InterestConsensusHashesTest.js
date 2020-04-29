@@ -10,20 +10,21 @@ const InterestConsensusMock = artifacts.require("./mock/base/InterestConsensusMo
 // constants
 const { NULL_ADDRESS } = require('../utils/consts');
 
-contract('InterestConsensusHashRequestTest', function (accounts) {
+contract('InterestConsensus hashRequest and hashReponse', function (accounts) {
     const tolerance = 0
     const submissions = 1
+    const lendersAddress = accounts[3]
     let instance
 
     beforeEach('Setup for each test', async () => {
-        instance = await InterestConsensusMock.new(submissions, tolerance)
+        instance = await InterestConsensusMock.new()
+        await instance.initialize(lendersAddress, submissions, tolerance)
     })
 
     withData({
-        _1_first_test: [accounts[1], accounts[2], 234764, 344673177, 34467317723],
-        _2_second_test: [accounts[4], NULL_ADDRESS, 0, 0, 0],
+        _1_first_test_hashRequest: [accounts[2], 234764, 344673177, 34467317723],
+        _2_second_test_hashRequest: [NULL_ADDRESS, 0, 0, 0],
     }, function(
-        msgSender,
         lender,
         startTime,
         endTime,
@@ -38,7 +39,7 @@ contract('InterestConsensusHashRequestTest', function (accounts) {
                         endTime: endTime,
                         requestTime: requestTime,
                     },
-                    msgSender
+                    lendersAddress
                 )
             )
 
@@ -49,9 +50,6 @@ contract('InterestConsensusHashRequestTest', function (accounts) {
                   startTime: startTime,
                   endTime: endTime,
                   requestTime: requestTime,
-                },
-                {
-                    from: msgSender
                 }
             );
 
@@ -60,8 +58,8 @@ contract('InterestConsensusHashRequestTest', function (accounts) {
     });
 
     withData({
-        _1_first_test: [accounts[0], 234764, 344673177, 34467317723],
-        _2_second_test: [NULL_ADDRESS, 0, 0, 0],
+        _1_first_test_hashResponse: [accounts[0], 234764, 344673177, 34467317723],
+        _2_second_test_hashResponse: [NULL_ADDRESS, 0, 0, 0],
     }, function(
         signer,
         responseTime,
