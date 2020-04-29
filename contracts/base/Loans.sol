@@ -377,8 +377,8 @@ contract Loans is LoansInterface, SignerRole {
         // Calculate Collateral Sent (in lending tokens) = ether sent / 1 lending token price in ether -wei(s)- * a whole lending token (with decimals).
         uint256 aWholeLendingToken = getAWholeLendingToken();
         uint256 oneLendingTokenPriceWeis = uint256(priceOracle.getLatestAnswer());
-        uint256 collateralSent = msgValue.div(oneLendingTokenPriceWeis).mul(
-            aWholeLendingToken
+        uint256 collateralSent = msgValue.mul(aWholeLendingToken).div(
+            oneLendingTokenPriceWeis
         );
 
         // Collateral Needed = Amount to Borrow (with lending token decimals)
