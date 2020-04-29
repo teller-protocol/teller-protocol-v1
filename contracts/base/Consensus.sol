@@ -42,7 +42,8 @@ contract Consensus is SignerRole {
 
     function _signatureValid(
         ZeroCollateralCommon.Signature memory signature,
-        bytes32 dataHash
+        bytes32 dataHash,
+        address expectedSigner
     ) internal view returns (bool) {
         address signer = ecrecover(
             keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", dataHash)),
@@ -51,6 +52,6 @@ contract Consensus is SignerRole {
             signature.s
         );
 
-        return (signer == msg.sender);
+        return (signer == expectedSigner) && (isSigner(expectedSigner));
     }
 }

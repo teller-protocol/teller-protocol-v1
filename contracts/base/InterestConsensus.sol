@@ -37,7 +37,7 @@ contract InterestConsensus is Consensus, Initializable, InterestConsensusInterfa
 
     address public lenders;
 
-    // mapping of (lender, blockNumber) to the aggregated node submissions for their request
+    // mapping of (lender, endTime) to the aggregated node submissions for their request
     mapping(address => mapping(uint256 => NumbersList.Values)) public interestSubmissions;
 
     modifier isLenders() {
@@ -107,7 +107,7 @@ contract InterestConsensus is Consensus, Initializable, InterestConsensusInterfa
         require(response.responseTime >= now.sub(THIRTY_DAYS), "RESPONSE_EXPIRED");
 
         bytes32 responseHash = _hashResponse(response, requestHash);
-        require(_signatureValid(response.signature, responseHash), "SIGNATURE_INVALID");
+        require(_signatureValid(response.signature, responseHash, response.signer), "SIGNATURE_INVALID");
 
         interestSubmissions[request.lender][request.endTime].addValue(response.interest);
 
@@ -142,7 +142,7 @@ contract InterestConsensus is Consensus, Initializable, InterestConsensusInterfa
         return
             keccak256(
                 abi.encode(
-                    msg.sender,
+                    lenders,
                     request.lender,
                     request.startTime,
                     request.endTime,

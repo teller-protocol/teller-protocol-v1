@@ -22,13 +22,13 @@ contract InterestConsensusMock is InterestConsensus {
 
     function mockInterestSubmissions(
         address lender,
-        uint256 blockNumber,
+        uint256 endTime,
         uint256 totalSubmissions,
         uint256 maxValue,
         uint256 minValue,
         uint256 sumOfValues
     ) external {
-        interestSubmissions[lender][blockNumber] = NumbersList.Values({
+        interestSubmissions[lender][endTime] = NumbersList.Values({
             length: totalSubmissions,
             min: minValue,
             max: maxValue,

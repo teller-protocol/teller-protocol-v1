@@ -63,7 +63,7 @@ async function createResponseSig(web3, signer, interestResponse, requestHash) {
   interestResponse.signature.v = String(v)
   interestResponse.signature.r = ethUtil.bufferToHex(r)
   interestResponse.signature.s = ethUtil.bufferToHex(s)
-  return interestReponse
+  return interestResponse
 }
 
 const createLoanSig = async (web3, borrower, loanInfo, signer) => {
@@ -85,4 +85,5 @@ module.exports = {
   hashResponse,
   signHash,
   createLoanSig,
+  createResponseSig
 }

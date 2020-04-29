@@ -22,9 +22,10 @@ contract ConsensusMock is Consensus {
 
     function externalSignatureValid(
         ZeroCollateralCommon.Signature calldata signature,
-        bytes32 dataHash
+        bytes32 dataHash,
+        address expectedSigner
     ) external view returns (bool) {
-        return _signatureValid(signature, dataHash);
+        return _signatureValid(signature, dataHash, expectedSigner);
     }
 
 }
