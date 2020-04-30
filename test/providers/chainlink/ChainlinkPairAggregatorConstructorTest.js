@@ -6,9 +6,9 @@ const { t, NULL_ADDRESS } = require('../../utils/consts');
 const ChainlinkAggregatorMock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const EtherUsdAggregator = artifacts.require("./providers/chainlink/EtherUsdAggregator.sol");
+const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
 
-contract('EtherUsdAggregatorConstructorTest', function (accounts) {
+contract('ChainlinkPairAggregatorConstructorTest', function (accounts) {
     let chainlinkAggregator;
     
     beforeEach('Setup for each test', async () => {
@@ -29,7 +29,7 @@ contract('EtherUsdAggregatorConstructorTest', function (accounts) {
 
             try {
                 // Invocation
-                const result = await EtherUsdAggregator.new(chainlinkAddress);
+                const result = await ChainlinkPairAggregator.new(chainlinkAddress);
                 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');

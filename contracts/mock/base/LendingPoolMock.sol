@@ -17,4 +17,8 @@ contract LendingPoolMock is LendingPoolInterface {
     function createLoan(uint256, address) external {}
 
     function withdrawInterest(uint256 amount) external {}
+
+    function lendingToken() external view returns (address) {
+        return address(0x0);
+    }
 }

@@ -9,6 +9,7 @@ const ProcessArgs = require('./utils/ProcessArgs');
 const processArgs = new ProcessArgs();
 
 /** Process parameters: */
+const tokenName = 'DAI';
 const senderIndex = 0;
 const depositAmount = 3000;
 
@@ -19,38 +20,40 @@ module.exports = async (callback) => {
         const appConf = require('../config')(network);
         const { zerocollateral, tokens, toTxUrl } = appConf.networkConfig;
 
-        assert(zerocollateral.LendingPool, "LendingPool address is undefined.");
-        assert(tokens.DAI, "DAI address is undefined.");
+        const lendingPoolAddress = zerocollateral[`LendingPool_z${tokenName}`];
+        assert(lendingPoolAddress, "LendingPool address is undefined.");
+        const tokenAddress = tokens[tokenName];
+        assert(tokenAddress, "Token address is undefined.");
 
-        const daiInstance = await ERC20.at(tokens.DAI);
-        const lendingPoolInstance = await LendingPoolInterface.at(zerocollateral.LendingPool);
+        const daiInstance = await ERC20.at(tokenAddress);
+        const lendingPoolInstance = await LendingPoolInterface.at(lendingPoolAddress);
 
         const accounts = await web3.eth.getAccounts();
         assert(accounts, "Accounts must be defined.");
         const sender = accounts[senderIndex];
         assert(sender, "Sender must be defined.");
 
-        const initialLendingPoolDaiBalance = await daiInstance.balanceOf(lendingPoolInstance.address);
+        const initialLendingPoolDaiBalance = await daiInstance.balanceOf(lendingPoolAddress);
 
         const senderDaiBalance = await daiInstance.balanceOf(sender);
         assert(BigNumber(senderDaiBalance.toString()).gte(depositAmount), "Not enough DAI balance.");
 
-        await daiInstance.approve(lendingPoolInstance.address, depositAmount, { from: sender });
+        await daiInstance.approve(lendingPoolAddress, depositAmount, { from: sender });
 
-        await daiInstance.allowance(sender, lendingPoolInstance.address);
+        await daiInstance.allowance(sender, lendingPoolAddress);
         const result = await lendingPoolInstance.deposit(depositAmount, { from: sender });
         console.log(toTxUrl(result));
 
-        const finalLendingPoolDaiBalance = await daiInstance.balanceOf(lendingPoolInstance.address);
+        const finalLendingPoolDaiBalance = await daiInstance.balanceOf(lendingPoolAddress);
         console.log('');
-        console.log(`Deposit DAI`);
+        console.log(`Deposit ${tokenName}`);
         console.log('-'.repeat(11));
-        console.log(`DAI Amount: ${depositAmount.toString()}`);
+        console.log(`${tokenName} Amount: ${depositAmount.toString()}`);
         console.log('');
-        console.log(`DAI LendingPool`);
+        console.log(`${tokenName} LendingPool`);
         console.log('-'.repeat(8));
-        console.log(`Initial DAI Balance:   ${initialLendingPoolDaiBalance.toString()}`);
-        console.log(`Final DAI Balance:     ${finalLendingPoolDaiBalance.toString()}`);
+        console.log(`Initial ${tokenName} Balance:   ${initialLendingPoolDaiBalance.toString()}`);
+        console.log(`Final ${tokenName} Balance:     ${finalLendingPoolDaiBalance.toString()}`);
 
         console.log('>>>> The script finished successfully. <<<<');
         callback();

@@ -1,6 +1,6 @@
+const { DUMMY_ADDRESS } = require('../../consts');
 
 module.exports = {
-    dataContracts: {
-        eth_usd: '0x1234567890123456789012345678901234567890',
-    }
+    USDC_ETH: DUMMY_ADDRESS,
+    DAI_ETH: DUMMY_ADDRESS,
 };
