@@ -49,11 +49,11 @@ contract LendersMock is Lenders {
 
     function mockLenderInfo(
         address lender,
-        uint256 blockLastAccrued,
+        uint256 timeLastAccrued,
         uint256 totalNotWithdrawn,
         uint256 totalAccruedInterest
     ) external {
-        accruedInterest[lender].blockLastAccrued = blockLastAccrued;
+        accruedInterest[lender].timeLastAccrued = timeLastAccrued;
         accruedInterest[lender].totalAccruedInterest = totalAccruedInterest;
         accruedInterest[lender].totalNotWithdrawn = totalNotWithdrawn;
     }

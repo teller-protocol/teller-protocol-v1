@@ -36,7 +36,7 @@ contract('LendersWithdrawInterestTest', function (accounts) {
         amountToWithdraw,
         totalNotWithdrawn,
         totalAccruedInterest,
-        previousBlockAccruedInterest,
+        timeLastAccrued,
         amountWithdrawnExpected,
         newTotalNotWithdrawn,
     ) {    
@@ -44,7 +44,7 @@ contract('LendersWithdrawInterestTest', function (accounts) {
             // Setup
             await instance.mockLenderInfo(
                 lenderAddress,
-                previousBlockAccruedInterest.toString(),
+                timeLastAccrued.toString(),
                 totalNotWithdrawn.toString(),
                 totalAccruedInterest.toString()
             );
@@ -62,7 +62,7 @@ contract('LendersWithdrawInterestTest', function (accounts) {
 
             const lenderAccruedInterest = await instance.accruedInterest(lenderAddress);
             assert.equal(lenderAccruedInterest.totalNotWithdrawn.toString(), newTotalNotWithdrawn.toString());
-            assert.equal(lenderAccruedInterest.blockLastAccrued.toString(), previousBlockAccruedInterest.toString());
+            assert.equal(lenderAccruedInterest.timeLastAccrued.toString(), timeLastAccrued.toString());
             assert.equal(lenderAccruedInterest.totalAccruedInterest.toString(), totalAccruedInterest.toString());
         });
     });

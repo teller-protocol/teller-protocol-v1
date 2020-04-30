@@ -8,11 +8,11 @@ library ZeroCollateralCommon {
     }
 
     // The amount of interest owed to a borrower
-    // The interest is just that accrued until `blockLastAccrued`
+    // The interest is just that accrued until `timeLastAccrued`
     struct AccruedInterest {
         uint256 totalAccruedInterest;
         uint256 totalNotWithdrawn;
-        uint256 blockLastAccrued;
+        uint256 timeLastAccrued;
     }
 
     struct InterestRequest {

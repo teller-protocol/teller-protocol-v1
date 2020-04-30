@@ -87,7 +87,7 @@ contract Lenders is LendersInterface {
         ZeroCollateralCommon.InterestResponse[] calldata responses
     ) external {
         require(
-            accruedInterest[request.lender].blockLastAccrued == request.startTime,
+            accruedInterest[request.lender].timeLastAccrued == request.startTime,
             "GAP_IN_INTEREST_ACCRUAL"
         );
         require(request.endTime > request.startTime, "INVALID_INTERVAL");
@@ -105,7 +105,7 @@ contract Lenders is LendersInterface {
             .totalNotWithdrawn
             .add(amount);
 
-        accruedInterest[request.lender].blockLastAccrued = request.endTime;
+        accruedInterest[request.lender].timeLastAccrued = request.endTime;
 
         emit AccruedInterestUpdated(
             request.lender,
