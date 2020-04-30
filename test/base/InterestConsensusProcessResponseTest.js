@@ -8,7 +8,7 @@ const { interestConsensus } = require('../utils/events');
 const InterestConsensusMock = artifacts.require("./mock/base/InterestConsensusMock.sol");
 
 
-contract('InterestConsensusSubmitInterestTest', function (accounts) {
+contract('InterestConsensusProcessResponseTest', function (accounts) {
     let instance
     const lendersContract = accounts[1]
     const nodeAddress = accounts[2]

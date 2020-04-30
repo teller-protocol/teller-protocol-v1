@@ -1,12 +1,12 @@
 // @dev see details on https://www.npmjs.com/package/truffle-assertions
 const truffleAssert = require('truffle-assertions');
 
-const emitted = (tx, eventName, assertFunction) => {
-    truffleAssert.eventEmitted(tx, eventName, event => {
-        assertFunction(event);
-        return true;
-    });
-};
+// const emitted = (tx, eventName, assertFunction) => {
+//     truffleAssert.eventEmitted(tx, eventName, event => {
+//         return assertFunction(event);
+//         // return true;
+//     });
+// };
 
 const notEmitted = (tx, eventName, assertFunction) => {
     truffleAssert.eventNotEmitted(tx, eventName, event => {
@@ -145,11 +145,13 @@ module.exports = {
           const name = 'InterestSubmitted';
           return {
               name: name,
-              emitted: (signer, lender, blockNumber, interest) => emitted(tx, name, ev => {
-                  assert.equal(ev.signer, signer);
-                  assert.equal(ev.lender, lender);
-                  assert.equal(ev.blockNumber.toString(), blockNumber.toString());
-                  assert.equal(ev.interest.toString(), interest.toString());
+              emitted: (signer, lender, blockNumber, interest) => truffleAssert.eventEmitted(tx, name, ev => {
+                  return (
+                      ev.signer == signer && 
+                      ev.lender == lender &&
+                      ev.blockNumber.toString() == blockNumber.toString() &&
+                      ev.interest.toString() == interest.toString()
+                  )
               }),
               notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
           };
@@ -158,10 +160,12 @@ module.exports = {
         const name = 'InterestAccepted';
         return {
             name: name,
-            emitted: (lender, blockNumber, interest) => emitted(tx, name, ev => {
-                assert.equal(ev.lender, lender);
-                assert.equal(ev.blockNumber.toString(), blockNumber.toString());
-                assert.equal(ev.interest.toString(), interest.toString());
+            emitted: (lender, blockNumber, interest) => truffleAssert.eventEmitted(tx, name, ev => {
+                return (
+                    ev.lender == lender && 
+                    ev.blockNumber.toString() == blockNumber.toString() &&
+                    ev.interest.toString() == interest.toString()
+                )
             }),
             notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
         };
