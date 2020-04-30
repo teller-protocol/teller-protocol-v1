@@ -31,7 +31,7 @@ contract InitializableModifiersMock is Initializable {
     function externalIsInitialized() isInitialized() external {}
 
     function externalInitialize() external {
-        initialize();
+        _initialize();
     }
 
 }

@@ -57,7 +57,7 @@ contract InterestConsensus is Consensus, Initializable, InterestConsensusInterfa
         require(initRequiredSubmissions > 0, "MUST_PROVIDE_REQUIRED_SUBS");
         require(initResponseExpiry > 0, "MUST_PROVIDE_RESPONSE_EXP");
 
-        initialize();
+        _initialize();
 
         lenders = lendersAddress;
         requiredSubmissions = initRequiredSubmissions;

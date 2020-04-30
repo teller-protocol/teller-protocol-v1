@@ -2,11 +2,6 @@ pragma solidity 0.5.17;
 
 
 library ZeroCollateralCommon {
-    // Borrower account details
-    struct Borrower {
-        uint256 lastBorrowId;
-    }
-
     // The amount of interest owed to a borrower
     // The interest is just that accrued until `timeLastAccrued`
     struct AccruedInterest {
@@ -26,6 +21,22 @@ library ZeroCollateralCommon {
         address signer;
         uint256 responseTime;
         uint256 interest;
+        Signature signature;
+    }
+
+    struct LoanRequest {
+        address borrower;
+        address recipient;
+        uint256 amount;
+        uint256 duration;
+        uint256 requestTime;
+    }
+
+    struct LoanResponse {
+        uint256 maxAmount;
+        uint256 collateralRatio;
+        uint256 interestRate;
+        uint256 responseTime;
         Signature signature;
     }
 

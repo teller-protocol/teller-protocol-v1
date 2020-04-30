@@ -81,7 +81,7 @@ contract Loans is LoansInterface, SignerRole {
         uint256 depositAmount = msg.value;
 
         // update the contract total and the loan collateral total
-        payInCollateral(loanID, depositAmount);
+        _payInCollateral(loanID, depositAmount);
 
         emit CollateralDeposited(loanID, borrower, depositAmount);
     }
@@ -98,7 +98,7 @@ contract Loans is LoansInterface, SignerRole {
         require(msg.sender == loans[loanID].borrower, "CALLER_DOESNT_OWN_LOAN");
 
         // Find the minimum collateral amount this loan is allowed in tokens
-        uint256 minimumCollateralDAI = getMinimumAllowedCollateralDAI(loanID);
+        uint256 minimumCollateralDAI = _getMinimumAllowedCollateralDAI(loanID);
 
         require(
             priceOracle.getLatestTimestamp() >= now.sub(ONE_HOUR),
@@ -116,7 +116,7 @@ contract Loans is LoansInterface, SignerRole {
 
         if (withdrawalAmount > 0) {
             // Update the contract total and the loan collateral total
-            payOutCollateral(loanID, withdrawalAmount, msg.sender);
+            _payOutCollateral(loanID, withdrawalAmount, msg.sender);
         }
 
         emit CollateralWithdrawn(loanID, msg.sender, withdrawalAmount);
@@ -149,7 +149,7 @@ contract Loans is LoansInterface, SignerRole {
             keccak256(
                 abi.encodePacked(
                     "\x19Ethereum Signed Message:\n32",
-                    hashLoan(
+                    _hashLoan(
                         interestRate,
                         collateralRatio,
                         msg.sender,
@@ -186,7 +186,7 @@ contract Loans is LoansInterface, SignerRole {
         );
 
         // Create the loan
-        createNewLoan(
+        _createNewLoan(
             interestRate,
             collateralRatio,
             maxLoanAmount,
@@ -237,7 +237,7 @@ contract Loans is LoansInterface, SignerRole {
             if (loans[loanID].totalOwed == 0) {
                 loans[loanID].active = false;
 
-                payOutCollateral(
+                _payOutCollateral(
                     loanID,
                     loans[loanID].collateral,
                     loans[loanID].borrower
@@ -263,7 +263,7 @@ contract Loans is LoansInterface, SignerRole {
 
         uint256 ethPrice = uint256(priceOracle.getLatestAnswer());
         uint256 collateralInDAI = loans[loanID].collateral.mul(ethPrice);
-        uint256 minCollateralDAI = getMinimumAllowedCollateralDAI(loanID);
+        uint256 minCollateralDAI = _getMinimumAllowedCollateralDAI(loanID);
         // TODO - CHECK DECIMALS ON ETH PRICE
 
         // must be under collateralised or expired
@@ -281,7 +281,7 @@ contract Loans is LoansInterface, SignerRole {
         );
 
         // and gets sent the ETH collateral in return
-        payOutCollateral(loanID, loans[loanID].collateral, msg.sender);
+        _payOutCollateral(loanID, loans[loanID].collateral, msg.sender);
     }
 
     /**
@@ -292,7 +292,7 @@ contract Loans is LoansInterface, SignerRole {
         return borrowerLoans[borrower];
     }
 
-    function getMinimumAllowedCollateralDAI(uint256 loanID)
+    function _getMinimumAllowedCollateralDAI(uint256 loanID)
         internal
         view
         returns (uint256)
@@ -303,7 +303,7 @@ contract Loans is LoansInterface, SignerRole {
         return loanAmount.mul(collateralRatio).div(TEN_THOUSAND);
     }
 
-    function hashLoan(
+    function _hashLoan(
         uint256 interestRate,
         uint256 collateralRatio,
         address borrower,
@@ -324,7 +324,7 @@ contract Loans is LoansInterface, SignerRole {
             );
     }
 
-    function payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
+    function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
         internal
     {
         totalCollateral = totalCollateral.sub(amount);
@@ -332,13 +332,13 @@ contract Loans is LoansInterface, SignerRole {
         recipient.transfer(amount);
     }
 
-    function payInCollateral(uint256 loanID, uint256 amount) internal {
+    function _payInCollateral(uint256 loanID, uint256 amount) internal {
         totalCollateral = totalCollateral.add(amount);
         loans[loanID].collateral = loans[loanID].collateral.add(amount);
     }
 
     // This function must be separated out to avoid a stack overflow
-    function createNewLoan(
+    function _createNewLoan(
         uint256 interestRate,
         uint256 collateralRatio,
         uint256 maxLoanAmount,
