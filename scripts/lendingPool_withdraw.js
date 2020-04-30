@@ -9,6 +9,7 @@ const ProcessArgs = require('./utils/ProcessArgs');
 const processArgs = new ProcessArgs();
 
 /** Process parameters: */
+const tokenName = 'DAI';
 const senderIndex = 0;
 const withdrawAmount = 20;
 
@@ -19,11 +20,13 @@ module.exports = async (callback) => {
         const appConf = require('../config')(network);
         const { zerocollateral, tokens, toTxUrl } = appConf.networkConfig;
 
-        assert(zerocollateral.LendingPool, "LendingPool address is undefined.");
-        assert(tokens.DAI, "DAI address is undefined.");
+        const lendingPoolAddress = zerocollateral[`LendingPool_Z${tokenName}`];
+        assert(lendingPoolAddress, "LendingPool address is undefined.");
+        const tokenAddress = tokens[tokenName];
+        assert(tokenAddress, "Token address is undefined.");
 
-        const daiInstance = await ERC20.at(tokens.DAI);
-        const lendingPoolInstance = await LendingPoolInterface.at(zerocollateral.LendingPool);
+        const daiInstance = await ERC20.at(tokenAddress);
+        const lendingPoolInstance = await LendingPoolInterface.at(lendingPoolAddress);
         
         const accounts = await web3.eth.getAccounts();
         assert(accounts, "Accounts must be defined.");
@@ -37,14 +40,14 @@ module.exports = async (callback) => {
 
         const finalSenderDaiBalance = await daiInstance.balanceOf(sender);
         console.log('');
-        console.log(`Withdraw DAI`);
+        console.log(`Withdraw ${tokenName}`);
         console.log('-'.repeat(11));
-        console.log(`DAI Amount: ${withdrawAmount.toString()}`);
+        console.log(`${tokenName} Amount: ${withdrawAmount.toString()}`);
         console.log('');
         console.log(`Sender`);
         console.log('-'.repeat(8));
-        console.log(`Initial DAI Balance:   ${initialSenderDaiBalance.toString()}`);
-        console.log(`Final DAI Balance:     ${finalSenderDaiBalance.toString()}`);
+        console.log(`Initial ${tokenName} Balance:   ${initialSenderDaiBalance.toString()}`);
+        console.log(`Final ${tokenName} Balance:     ${finalSenderDaiBalance.toString()}`);
         
         console.log('>>>> The script finished successfully. <<<<');
         callback();

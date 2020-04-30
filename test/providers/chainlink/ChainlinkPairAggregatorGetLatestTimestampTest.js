@@ -7,9 +7,9 @@ const AggregatorInterfaceEncoder = require('../../utils/encoders/AggregatorInter
 const ChainlinkAggregatorMock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const EtherUsdAggregator = artifacts.require("./providers/chainlink/EtherUsdAggregator.sol");
+const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
 
-contract('EtherUsdAggregatorGetLatestTimestampTest', function (accounts) {
+contract('ChainlinkPairAggregatorGetLatestTimestampTest', function (accounts) {
     const aggregatorInterfaceEncoder = new AggregatorInterfaceEncoder(web3);
     let chainlinkAggregator;
     let instance;
@@ -19,7 +19,7 @@ contract('EtherUsdAggregatorGetLatestTimestampTest', function (accounts) {
         assert(chainlinkAggregator);
         assert(chainlinkAggregator.address);
 
-        instance = await EtherUsdAggregator.new(chainlinkAggregator.address);
+        instance = await ChainlinkPairAggregator.new(chainlinkAggregator.address);
         assert(instance);
         assert(instance.address);
     });
