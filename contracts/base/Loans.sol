@@ -364,18 +364,18 @@ contract Loans is LoansInterface, SignerRole {
         });
     }
 
-    function getAWholeLendingToken() internal view returns (uint256) {
+    function _getAWholeLendingToken() internal view returns (uint256) {
         uint8 decimals = ERC20Detailed(lendingPool.lendingToken()).decimals();
         return TEN**decimals;
     }
 
-    function isCollateralSentEnough(
+    function _isCollateralSentEnough(
         uint256 msgValue,
         uint256 amountToBorrow,
         uint256 collateralRatio
     ) internal view returns (bool) {
         // Calculate Collateral Sent (in lending tokens) = ether sent / 1 lending token price in ether -wei(s)- * a whole lending token (with decimals).
-        uint256 aWholeLendingToken = getAWholeLendingToken();
+        uint256 aWholeLendingToken = _getAWholeLendingToken();
         uint256 oneLendingTokenPriceWeis = uint256(priceOracle.getLatestAnswer());
         uint256 collateralSent = msgValue.mul(aWholeLendingToken).div(
             oneLendingTokenPriceWeis

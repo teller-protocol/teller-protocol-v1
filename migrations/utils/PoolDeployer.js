@@ -35,8 +35,8 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
     await this.deployer.deployWith(`Lenders_${zTokenName}`, Lenders, ZToken.address, LendingPool.address, InterestConsensus.address, txConfig);
     await this.deployer.deployWith(`Loans_${zTokenName}`, Loans, ChainlinkPairAggregator.address, LendingPool.address, txConfig);
   
-    const daiLendingPoolInstance = await LendingPool.deployed();
-    await daiLendingPoolInstance.initialize(
+    const lendingPoolInstance = await LendingPool.deployed();
+    await lendingPoolInstance.initialize(
       ZToken.address,
       tokenAddress,
       Lenders.address,

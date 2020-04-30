@@ -18,6 +18,6 @@ contract LoansMock is Loans {
     }
 
     function externalIsCollateralSentEnough(uint256 msgValue, uint256 amountToBorrow, uint256 collateralRatio) external view returns (bool) {
-        return isCollateralSentEnough(msgValue, amountToBorrow, collateralRatio);
+        return _isCollateralSentEnough(msgValue, amountToBorrow, collateralRatio);
     }
 }
