@@ -148,5 +148,28 @@ module.exports = {
             notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
         };
     },
-  },
+    settings: {
+        lendingPoolPaused: tx => {
+            const name = 'LendingPoolPaused';
+            return {
+                name: name,
+                emitted: (account, lendingPoolAddress) => emitted(tx, name, ev => {
+                    assert.equal(ev.account, account);
+                    assert.equal(ev.lendingPoolAddress, lendingPoolAddress);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        lendingPoolUnpaused: tx => {
+            const name = 'LendingPoolUnpaused';
+            return {
+                name: name,
+                emitted: (account, lendingPoolAddress) => emitted(tx, name, ev => {
+                    assert.equal(ev.account, account);
+                    assert.equal(ev.lendingPoolAddress, lendingPoolAddress);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    }
 };
