@@ -2,6 +2,9 @@ pragma solidity 0.5.17;
 
 
 library ZeroCollateralCommon {
+
+    enum LoanStatus { NonExistent, TermsSet, Active, Closed }
+
     // The amount of interest owed to a borrower
     // The interest is just that accrued until `timeLastAccrued`
     struct AccruedInterest {
@@ -25,7 +28,7 @@ library ZeroCollateralCommon {
     }
 
     struct LoanRequest {
-        address borrower;
+        address payable borrower;
         address recipient;
         uint256 amount;
         uint256 duration;
@@ -44,14 +47,17 @@ library ZeroCollateralCommon {
     struct Loan {
         uint256 id;
         uint256 collateral;
+        uint256 lastCollateralIn;
         uint256 maxLoanAmount;
         uint256 totalOwed;
         uint256 timeStart;
         uint256 timeEnd;
         uint256 interestRate;
         uint256 collateralRatio;
+        uint256 termExpiry;
         address payable borrower;
-        bool active;
+        address recipient;
+        LoanStatus status;
         bool liquidated;
     }
 

@@ -75,6 +75,7 @@ contract Lenders is LendersInterface {
             interestConsensusAddress != address(0x0),
             "Consensus address is required."
         );
+
         zToken = ZTokenInterface(zTokenAddress);
         lendingPool = lendingPoolAddress;
         interestConsensus = InterestConsensusInterface(interestConsensusAddress);

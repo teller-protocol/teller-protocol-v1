@@ -22,11 +22,29 @@ import "../util/NumbersList.sol";
 import "../util/ZeroCollateralCommon.sol";
 
 // Contracts
-import "./Initializable.sol";
 import "./Consensus.sol";
 
+// Interfaces
+import "../interfaces/LoanTermsConsensusInterface.sol";
 
-contract LoanTermsConsensus is Consensus, Initializable {
+
+contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
     using SafeMath for uint256;
     using NumbersList for NumbersList.Values;
+
+    function processRequest(
+        ZeroCollateralCommon.LoanRequest calldata request,
+        ZeroCollateralCommon.LoanResponse[] calldata responses,
+        uint256 loanID
+    ) external isInitialized() isCaller() returns (
+        uint256 interest,
+        uint256 collateralRatio,
+        uint256 maxLoanAmount
+    ) {
+        // for each response:
+        // check response time was recently
+        // check signature valid
+
+        return (0,0,0);
+    }
 }

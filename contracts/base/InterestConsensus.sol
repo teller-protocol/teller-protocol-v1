@@ -26,49 +26,23 @@ import "../util/ZeroCollateralCommon.sol";
 import "../interfaces/InterestConsensusInterface.sol";
 
 // Contracts
-import "./Initializable.sol";
 import "./Consensus.sol";
 
 
-contract InterestConsensus is Consensus, Initializable, InterestConsensusInterface {
+contract InterestConsensus is Consensus, InterestConsensusInterface {
     using AddressLib for address;
     using SafeMath for uint256;
     using NumbersList for NumbersList.Values;
-
-    address public lenders;
 
     uint256 responseExpiryLength;
 
     // mapping of (lender, endTime) to the aggregated node submissions for their request
     mapping(address => mapping(uint256 => NumbersList.Values)) public interestSubmissions;
 
-    modifier isLenders() {
-        require(lenders == msg.sender, "Address has no permissions.");
-        _;
-    }
-
-    function initialize(
-        address lendersAddress,
-        uint256 initRequiredSubmissions,
-        uint256 initMaximumTolerance,
-        uint256 initResponseExpiry
-    ) public isNotInitialized() {
-        lendersAddress.requireNotEmpty("MUST_PROVIDE_LENDER_INFO");
-        require(initRequiredSubmissions > 0, "MUST_PROVIDE_REQUIRED_SUBS");
-        require(initResponseExpiry > 0, "MUST_PROVIDE_RESPONSE_EXP");
-
-        _initialize();
-
-        lenders = lendersAddress;
-        requiredSubmissions = initRequiredSubmissions;
-        maximumTolerance = initMaximumTolerance;
-        responseExpiryLength = initResponseExpiry;
-    }
-
     function processRequest(
         ZeroCollateralCommon.InterestRequest calldata request,
         ZeroCollateralCommon.InterestResponse[] calldata responses
-    ) external isInitialized() isLenders() returns (uint256) {
+    ) external isInitialized() isCaller() returns (uint256) {
         require(responses.length >= requiredSubmissions, "INSUFFICIENT_RESPONSES");
 
         bytes32 requestHash = _hashRequest(request);
@@ -153,7 +127,7 @@ contract InterestConsensus is Consensus, Initializable, InterestConsensusInterfa
         return
             keccak256(
                 abi.encode(
-                    lenders,
+                    caller,
                     request.lender,
                     request.startTime,
                     request.endTime,

@@ -17,20 +17,25 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
+// Libraries
+import "../util/ZeroCollateralCommon.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
+// Contracts
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
+
+// Interfaces
 import "../interfaces/LoansInterface.sol";
 import "../interfaces/PairAggregatorInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
-import "../util/ZeroCollateralCommon.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
-import "openzeppelin-solidity/contracts/access/roles/SignerRole.sol";
+import "../interfaces/LoanTermsConsensusInterface.sol";
 
-
-contract Loans is LoansInterface, SignerRole {
+contract Loans is LoansInterface {
     using SafeMath for uint256;
 
-    uint256 private constant ONE_HOUR = 3600;
-    uint256 private constant ONE_DAY = 3600 * 24;
+    uint256 private constant ONE_HOUR = 60 * 60;
+    uint256 private constant ONE_DAY = ONE_HOUR * 24;
+    uint256 private constant THIRTY_DAYS = ONE_DAY * 30;
     uint256 private constant LIQUIDATE_ETH_PRICE = 95; // Eth is bought at 95% of the going rate
     uint256 private constant TEN = 10; // Used to calculate one whole token.
     uint256 private constant ONE_HUNDRED = 100; // Used when finding a percentage of a number - divide by 100
@@ -45,24 +50,40 @@ contract Loans is LoansInterface, SignerRole {
 
     PairAggregatorInterface public priceOracle;
     LendingPoolInterface public lendingPool;
+    LoanTermsConsensusInterface public loanTermsConsensus;
 
-    mapping(address => uint256[]) private borrowerLoans;
+    mapping(address => uint256[]) public borrowerLoans;
 
     mapping(uint256 => ZeroCollateralCommon.Loan) public loans;
-
-    mapping(address => mapping(uint256 => bool)) public signerNonceTaken;
 
     modifier loanIDValid(uint256 loanID) {
         require(loanID < loanIDCounter, "LOAN_ID_INVALID");
         _;
     }
 
-    constructor(address priceOracleAddress, address lendingPoolAddress) public {
+    modifier loanActive(uint256 loanID) {
+        require(
+            loans[loanID].status == ZeroCollateralCommon.LoanStatus.Active,
+            "LOAN_NOT_ACTIVE"
+        );
+        _;
+    }
+
+    constructor(
+        address priceOracleAddress,
+        address lendingPoolAddress,
+        address loanTermsConsensusAddress
+    ) public {
         require(priceOracleAddress != address(0), "PROVIDE_ORACLE_ADDRESS");
         require(lendingPoolAddress != address(0), "PROVIDE_LENDINGPOOL_ADDRESS");
+        require(
+            loanTermsConsensusAddress != address(0x0),
+            "Consensus address is required."
+        );
 
         priceOracle = PairAggregatorInterface(priceOracleAddress);
         lendingPool = LendingPoolInterface(lendingPoolAddress);
+        loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
     }
 
     /**
@@ -73,10 +94,9 @@ contract Loans is LoansInterface, SignerRole {
     function depositCollateral(address borrower, uint256 loanID)
         external
         payable
-        loanIDValid(loanID)
+        loanActive(loanID)
     {
         require(loans[loanID].borrower == borrower, "BORROWER_LOAN_ID_MISMATCH");
-        require(loans[loanID].active, "LOAN_NOT_ACTIVE");
 
         uint256 depositAmount = msg.value;
 
@@ -122,53 +142,60 @@ contract Loans is LoansInterface, SignerRole {
         emit CollateralWithdrawn(loanID, msg.sender, withdrawalAmount);
     }
 
+    function setLoanTerms(
+        ZeroCollateralCommon.LoanRequest calldata request,
+        ZeroCollateralCommon.LoanResponse[] calldata responses
+    ) external payable {
+        uint256 interestRate;
+        uint256 collateralRatio;
+        uint256 maxLoanAmount;
+
+        uint256 loanID = loanIDCounter;
+        loanIDCounter += 1;
+
+        (interestRate, collateralRatio, maxLoanAmount) = loanTermsConsensus.processRequest(
+            request,
+            responses,
+            loanID
+        );
+
+        loans[loanID] = ZeroCollateralCommon.Loan({
+            id: loanID,
+            collateral: msg.value,
+            lastCollateralIn: now,
+            maxLoanAmount: maxLoanAmount,
+            totalOwed: 0,
+            timeStart: 0,
+            timeEnd: 0,
+            interestRate: interestRate,
+            collateralRatio: collateralRatio,
+            termExpiry: now.add(THIRTY_DAYS),
+            borrower: request.borrower,
+            recipient: request.recipient,
+            status: ZeroCollateralCommon.LoanStatus.TermsSet,
+            liquidated: false
+        });
+
+        borrowerLoans[request.borrower].push(loanID);
+
+        totalCollateral = totalCollateral.add(msg.value);
+    }
+
     /**
      * @notice Take out a loan
-     * @param interestRate uint256 The interest rate of the loan
-     * @param collateralRatio uint256 The ratio of colalteral to principal required
-     * @param maxLoanAmount uint256 The maximum amount of tokens allowed
-     * @param numberDays uint256 The length of the loan
-     * @param amountBorrow uint256 The initial amount to draw out for the loan
-     * @param signature ZeroCollateralCommon.Signature A signature from an authorized signer
      *
      * @dev collateral ratio is a percentage of the loan amount that's required in collateral
      * @dev the percentage will be *(10**2). I.e. collateralRatio of 5244 means 52.44% collateral
      * @dev is required in the loan. Interest rate is also a percentage with 2 decimal points.
      */
     function takeOutLoan(
-        uint256 interestRate,
-        uint256 collateralRatio,
-        uint256 maxLoanAmount,
-        uint256 numberDays,
-        uint256 amountBorrow,
-        ZeroCollateralCommon.Signature calldata signature
-    ) external payable returns (uint256) {
-        require(amountBorrow <= maxLoanAmount, "BORROW_AMOUNT_NOT_AUTHORIZED");
-
-        address signer = ecrecover(
-            keccak256(
-                abi.encodePacked(
-                    "\x19Ethereum Signed Message:\n32",
-                    _hashLoan(
-                        interestRate,
-                        collateralRatio,
-                        msg.sender,
-                        maxLoanAmount,
-                        numberDays,
-                        signature.signerNonce
-                    )
-                )
-            ),
-            signature.v,
-            signature.r,
-            signature.s
-        );
-
-        // check that the signer and signature are valid and that the signature not double spent
-        require(isSigner(signer), "SIGNER_NOT_AUTHORIZED");
-        require(!signerNonceTaken[signer][signature.signerNonce], "SIGNER_NONCE_TAKEN");
-
-        signerNonceTaken[signer][signature.signerNonce] = true;
+        uint256 loanID,
+        uint256 amountBorrow
+    ) external {
+        // check amount to borrow is less than max
+        // check expiry not passed
+        // check time since colalteral deposit is acceptable
+        // check caller is borrower or recipient?
 
         // check that enough collateral has been provided for this loan
         require(
@@ -180,41 +207,14 @@ contract Loans is LoansInterface, SignerRole {
 
         // TODO - CHECK DECIMALS ON ETH PRICE
         require(
-            msg.value.mul(ethPrice) >=
-                amountBorrow.mul(collateralRatio).div(TEN_THOUSAND),
+            loans[loanID].collateral.mul(ethPrice) >=
+                amountBorrow.mul(loans[loanID].collateralRatio).div(TEN_THOUSAND),
             "MORE_COLLATERAL_REQUIRED"
         );
 
-        // Create the loan
-        _createNewLoan(
-            interestRate,
-            collateralRatio,
-            maxLoanAmount,
-            numberDays,
-            amountBorrow
-        );
-
-        uint256 loanID = loanIDCounter;
-
-        // add loanID to the borrower's list of loans
-        borrowerLoans[msg.sender].push(loanID);
-        loanIDCounter += 1;
-
         // give the borrower their requested amount of tokens
-        lendingPool.createLoan(amountBorrow, msg.sender);
+        lendingPool.createLoan(amountBorrow, loans[loanID].recipient);
 
-        totalCollateral = totalCollateral.add(msg.value);
-
-        emit LoanCreated(
-            loanID,
-            msg.sender,
-            interestRate,
-            collateralRatio,
-            maxLoanAmount,
-            numberDays
-        );
-
-        return loanID;
     }
 
     /**
@@ -222,9 +222,7 @@ contract Loans is LoansInterface, SignerRole {
      * @param amount uint256 The amount of tokens to pay back to the loan
      * @param loanID uint256 The ID of the loan the payment is for
      */
-    function repay(uint256 amount, uint256 loanID) external loanIDValid(loanID) {
-        require(loans[loanID].active, "LOAN_NOT_ACTIVE");
-
+    function repay(uint256 amount, uint256 loanID) external loanActive(loanID) {
         // calculate the actual amount to repay
         uint256 toPay = amount;
         if (loans[loanID].totalOwed < toPay) {
@@ -235,7 +233,7 @@ contract Loans is LoansInterface, SignerRole {
             // update the loan
             loans[loanID].totalOwed = loans[loanID].totalOwed.sub(toPay);
             if (loans[loanID].totalOwed == 0) {
-                loans[loanID].active = false;
+                loans[loanID].status = ZeroCollateralCommon.LoanStatus.Closed;
 
                 _payOutCollateral(
                     loanID,
@@ -252,9 +250,7 @@ contract Loans is LoansInterface, SignerRole {
      * @notice Liquidate a loan if it is expired or undercollateralised
      * @param loanID uint256 The ID of the loan to be liquidated
      */
-    function liquidateLoan(uint256 loanID) external loanIDValid(loanID) {
-        require(loans[loanID].active, "LOAN_NOT_ACTIVE");
-
+    function liquidateLoan(uint256 loanID) external loanActive(loanID) {
         // check that enough collateral has been provided for this loan
         require(
             priceOracle.getLatestTimestamp() >= now.sub(ONE_HOUR),
@@ -272,7 +268,8 @@ contract Loans is LoansInterface, SignerRole {
             "DOESNT_NEED_LIQUIDATION"
         );
 
-        loans[loanID].active = false;
+        loans[loanID].status = ZeroCollateralCommon.LoanStatus.Closed;
+        loans[loanID].liquidated = true;
 
         // the msg.sender pays tokens at 95% of collateral price
         lendingPool.liquidationPayment(
@@ -335,33 +332,6 @@ contract Loans is LoansInterface, SignerRole {
     function _payInCollateral(uint256 loanID, uint256 amount) internal {
         totalCollateral = totalCollateral.add(amount);
         loans[loanID].collateral = loans[loanID].collateral.add(amount);
-    }
-
-    // This function must be separated out to avoid a stack overflow
-    function _createNewLoan(
-        uint256 interestRate,
-        uint256 collateralRatio,
-        uint256 maxLoanAmount,
-        uint256 numberDays,
-        uint256 amountBorrow
-    ) internal {
-        loans[loanIDCounter] = ZeroCollateralCommon.Loan({
-            id: loanIDCounter,
-            collateral: msg.value,
-            interestRate: interestRate,
-            collateralRatio: collateralRatio,
-            maxLoanAmount: maxLoanAmount,
-            totalOwed: amountBorrow.add(
-                amountBorrow.mul(interestRate).mul(numberDays).div(TEN_THOUSAND).div(
-                    DAYS_PER_YEAR
-                )
-            ),
-            timeStart: now,
-            timeEnd: now.add(numberDays.mul(ONE_DAY)),
-            borrower: msg.sender,
-            active: true,
-            liquidated: false
-        });
     }
 
     function _getAWholeLendingToken() internal view returns (uint256) {

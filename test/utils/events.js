@@ -123,11 +123,11 @@ module.exports = {
           const name = 'InterestSubmitted';
           return {
               name: name,
-              emitted: (signer, lender, blockNumber, interest) => truffleAssert.eventEmitted(tx, name, ev => {
+              emitted: (signer, lender, endTime, interest) => truffleAssert.eventEmitted(tx, name, ev => {
                   return (
                       ev.signer == signer && 
                       ev.lender == lender &&
-                      ev.blockNumber.toString() == blockNumber.toString() &&
+                      ev.endTime.toString() == endTime.toString() &&
                       ev.interest.toString() == interest.toString()
                   )
               }),
@@ -138,10 +138,10 @@ module.exports = {
         const name = 'InterestAccepted';
         return {
             name: name,
-            emitted: (lender, blockNumber, interest) => truffleAssert.eventEmitted(tx, name, ev => {
+            emitted: (lender, endTime, interest) => truffleAssert.eventEmitted(tx, name, ev => {
                 return (
                     ev.lender == lender && 
-                    ev.blockNumber.toString() == blockNumber.toString() &&
+                    ev.endTime.toString() == endTime.toString() &&
                     ev.interest.toString() == interest.toString()
                 )
             }),

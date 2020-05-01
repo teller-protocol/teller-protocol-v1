@@ -21,9 +21,10 @@ import "../util/ZeroCollateralCommon.sol";
 
 // Contracts
 import "openzeppelin-solidity/contracts/access/roles/SignerRole.sol";
+import "./Initializable.sol";
 
 
-contract Consensus is SignerRole {
+contract Consensus is SignerRole, Initializable {
     using SafeMath for uint256;
 
     // Has signer address already submitted their answer for (user, identifier)?
@@ -39,6 +40,32 @@ contract Consensus is SignerRole {
     // this is a percentage with 2 decimal places
     // i.e. maximumTolerance of 325 => tolerance of 3.25% => 0.0325 of value
     uint256 public maximumTolerance;
+
+    // the address with permissions to submit a request for processing
+    address caller;
+
+    modifier isCaller() {
+        require(caller == msg.sender, "Address has no permissions.");
+        _;
+    }
+
+    function initialize(
+        address callerAddress,
+        uint256 initRequiredSubmissions,
+        uint256 initMaximumTolerance,
+        uint256 initResponseExpiry
+    ) public isNotInitialized() {
+        require(callerAddress != address(0), "MUST_PROVIDE_LENDER_INFO");
+        require(initRequiredSubmissions > 0, "MUST_PROVIDE_REQUIRED_SUBS");
+        require(initResponseExpiry > 0, "MUST_PROVIDE_RESPONSE_EXP");
+
+        _initialize();
+
+        caller = callerAddress;
+        requiredSubmissions = initRequiredSubmissions;
+        maximumTolerance = initMaximumTolerance;
+        responseExpiryLength = initResponseExpiry;
+    }
 
     function _signatureValid(
         ZeroCollateralCommon.Signature memory signature,

@@ -18,8 +18,8 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/InterestConsensus.sol";
 
-contract InterestConsensusModifiersMock is InterestConsensus {
+contract ConsensusModifiersMock is Consensus {
 
-    function externalIsLenders() isLenders() external {}
+    function externalIsCaller() isCaller() external {}
 
 }
