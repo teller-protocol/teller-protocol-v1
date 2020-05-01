@@ -30,6 +30,7 @@ import "../interfaces/PairAggregatorInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 
+
 contract Loans is LoansInterface {
     using SafeMath for uint256;
 
@@ -153,11 +154,8 @@ contract Loans is LoansInterface {
         uint256 loanID = loanIDCounter;
         loanIDCounter += 1;
 
-        (interestRate, collateralRatio, maxLoanAmount) = loanTermsConsensus.processRequest(
-            request,
-            responses,
-            loanID
-        );
+        (interestRate, collateralRatio, maxLoanAmount) = loanTermsConsensus
+            .processRequest(request, responses, loanID);
 
         loans[loanID] = ZeroCollateralCommon.Loan({
             id: loanID,
@@ -188,10 +186,7 @@ contract Loans is LoansInterface {
      * @dev the percentage will be *(10**2). I.e. collateralRatio of 5244 means 52.44% collateral
      * @dev is required in the loan. Interest rate is also a percentage with 2 decimal points.
      */
-    function takeOutLoan(
-        uint256 loanID,
-        uint256 amountBorrow
-    ) external {
+    function takeOutLoan(uint256 loanID, uint256 amountBorrow) external {
         // check amount to borrow is less than max
         // check expiry not passed
         // check time since colalteral deposit is acceptable
@@ -214,7 +209,6 @@ contract Loans is LoansInterface {
 
         // give the borrower their requested amount of tokens
         lendingPool.createLoan(amountBorrow, loans[loanID].recipient);
-
     }
 
     /**

@@ -3,6 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "../util/ZeroCollateralCommon.sol";
 
+
 interface InterestConsensusInterface {
     event InterestSubmitted(
         address indexed signer,

@@ -3,6 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "../util/ZeroCollateralCommon.sol";
 
+
 interface LoanTermsConsensusInterface {
     event TermsSubmitted(
         address signer,
