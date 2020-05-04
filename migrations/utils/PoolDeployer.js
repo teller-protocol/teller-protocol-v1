@@ -12,7 +12,13 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
     const zTokenInstance = await ZToken.deployed();
     const zTokenName = await zTokenInstance.symbol();
     console.log(`Deploying pool for token ${tokenName}...`);
-    const { requiredSubmissions, maximumTolerance, tokens, aggregators } = this.deployConfig;
+    const {
+        requiredSubmissions,
+        maximumTolerance,
+        responseExpiry,
+        tokens,
+        aggregators
+    } = this.deployConfig;
     assert(tokenName, 'Token name is undefined.');
     const tokenAddress = tokens[tokenName.toUpperCase()];
     assert(tokenAddress, `Tokens address for token ${tokenName.toUpperCase()} is undefined.`);
@@ -50,6 +56,7 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
       Lenders.address,
       requiredSubmissions,
       maximumTolerance,
+      responseExpiry
     );
 }
 

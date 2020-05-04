@@ -55,7 +55,7 @@ contract InterestConsensus is Consensus, Initializable, InterestConsensusInterfa
     ) public isNotInitialized() {
         lendersAddress.requireNotEmpty("MUST_PROVIDE_LENDER_INFO");
         require(initRequiredSubmissions > 0, "MUST_PROVIDE_REQUIRED_SUBS");
-        require(responseExpiryLength > 0, "MUST_PROVIDE_RESPONSE_EXP");
+        require(initResponseExpiry > 0, "MUST_PROVIDE_RESPONSE_EXP");
 
         initialize();
 
@@ -109,7 +109,10 @@ contract InterestConsensus is Consensus, Initializable, InterestConsensusInterfa
         );
         signerNonceTaken[response.signer][response.signature.signerNonce] = true;
 
-        require(response.responseTime >= now.sub(responseExpiryLength), "RESPONSE_EXPIRED");
+        require(
+            response.responseTime >= now.sub(responseExpiryLength),
+            "RESPONSE_EXPIRED"
+        );
 
         bytes32 responseHash = _hashResponse(response, requestHash);
         require(

@@ -19,7 +19,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
     const lendersContract = accounts[1]
     const nodeAddress = accounts[2]
     const submissions = 5
-    const tolerance = 0
+  const tolerance = 0
     const endTime = 34567
     const lender = accounts[3]
 

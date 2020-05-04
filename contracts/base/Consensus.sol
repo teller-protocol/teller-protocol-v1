@@ -45,7 +45,7 @@ contract Consensus is SignerRole {
         bytes32 dataHash,
         address expectedSigner
     ) internal view returns (bool) {
-        if (!isSigner(expectedSigner)) return false
+        if (!isSigner(expectedSigner)) return false;
 
         address signer = ecrecover(
             keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", dataHash)),
