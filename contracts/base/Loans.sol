@@ -76,7 +76,7 @@ contract Loans is LoansInterface {
     modifier loanActiveOrSet(uint256 loanID) {
         require(
             loans[loanID].status == ZeroCollateralCommon.LoanStatus.TermsSet ||
-            loans[loanID].status == ZeroCollateralCommon.LoanStatus.Active,
+                loans[loanID].status == ZeroCollateralCommon.LoanStatus.Active,
             "LOAN_NOT_ACTIVE_OR_SET"
         );
         _;
@@ -109,7 +109,10 @@ contract Loans is LoansInterface {
         payable
         loanActiveOrSet(loanID)
     {
-        require(loans[loanID].loanTerms.borrower == borrower, "BORROWER_LOAN_ID_MISMATCH");
+        require(
+            loans[loanID].loanTerms.borrower == borrower,
+            "BORROWER_LOAN_ID_MISMATCH"
+        );
 
         uint256 depositAmount = msg.value;
 
@@ -201,7 +204,10 @@ contract Loans is LoansInterface {
      * @dev the percentage will be *(10**2). I.e. collateralRatio of 5244 means 52.44% collateral
      * @dev is required in the loan. Interest rate is also a percentage with 2 decimal points.
      */
-    function takeOutLoan(uint256 loanID, uint256 amountBorrow) external loanTermsSet(loanID) {
+    function takeOutLoan(uint256 loanID, uint256 amountBorrow)
+        external
+        loanTermsSet(loanID)
+    {
         // check amount to borrow is less than max
         // check expiry not passed
         // check time since colalteral deposit is acceptable
@@ -218,7 +224,9 @@ contract Loans is LoansInterface {
         // TODO - CHECK DECIMALS ON ETH PRICE
         require(
             loans[loanID].collateral.mul(ethPrice) >=
-                amountBorrow.mul(loans[loanID].loanTerms.collateralRatio).div(TEN_THOUSAND),
+                amountBorrow.mul(loans[loanID].loanTerms.collateralRatio).div(
+                    TEN_THOUSAND
+                ),
             "MORE_COLLATERAL_REQUIRED"
         );
 

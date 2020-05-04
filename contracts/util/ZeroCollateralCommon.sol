@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 
 
 library ZeroCollateralCommon {
-    enum LoanStatus { NonExistent, TermsSet, Active, Closed }
+    enum LoanStatus {NonExistent, TermsSet, Active, Closed}
 
     // The amount of interest owed to a borrower
     // The interest is just that accrued until `timeLastAccrued`
