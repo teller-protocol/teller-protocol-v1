@@ -212,12 +212,12 @@ contract Loans is LoansInterface {
     {
         require(
             loans[loanID].loanTerms.maxLoanAmount >= amountBorrow,
-            'MAX_LOAN_EXCEEDED'
+            "MAX_LOAN_EXCEEDED"
         );
-        require(loans[loanID].termsExpiry <= now, 'LOAN_TERMS_EXPIRED');
+        require(loans[loanID].termsExpiry <= now, "LOAN_TERMS_EXPIRED");
         require(
             loans[loanID].lastCollateralIn <= now.sub(safetyInterval),
-            'COLLATERAL_DEPOSITED_RECENTLY'
+            "COLLATERAL_DEPOSITED_RECENTLY"
         );
         // check caller is borrower or recipient?
 
