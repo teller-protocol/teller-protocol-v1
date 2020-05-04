@@ -85,7 +85,8 @@ contract Loans is LoansInterface {
     constructor(
         address priceOracleAddress,
         address lendingPoolAddress,
-        address loanTermsConsensusAddress
+        address loanTermsConsensusAddress,
+        uint256 safetyInterval
     ) public {
         require(priceOracleAddress != address(0), "PROVIDE_ORACLE_ADDRESS");
         require(lendingPoolAddress != address(0), "PROVIDE_LENDINGPOOL_ADDRESS");
@@ -93,6 +94,7 @@ contract Loans is LoansInterface {
             loanTermsConsensusAddress != address(0x0),
             "Consensus address is required."
         );
+        require(safetyInterval > 0, "PROVIDE_SAFETY_INTERVAL");
 
         priceOracle = PairAggregatorInterface(priceOracleAddress);
         lendingPool = LendingPoolInterface(lendingPoolAddress);
@@ -144,7 +146,7 @@ contract Loans is LoansInterface {
         uint256 ethPrice = uint256(priceOracle.getLatestAnswer());
         uint256 minimumCollateralETH = minimumCollateralDAI.div(ethPrice);
 
-        // Withdrawal amount holds the amoutn of excess collateral in the loan
+        // Withdrawal amount holds the amount of excess collateral in the loan
         uint256 withdrawalAmount = loans[loanID].collateral.sub(minimumCollateralETH);
         if (withdrawalAmount > amount) {
             withdrawalAmount = amount;
@@ -208,9 +210,15 @@ contract Loans is LoansInterface {
         external
         loanTermsSet(loanID)
     {
-        // check amount to borrow is less than max
-        // check expiry not passed
-        // check time since colalteral deposit is acceptable
+        require(
+            loans[loanID].loanTerms.maxLoanAmount >= amountBorrow,
+            'MAX_LOAN_EXCEEDED'
+        );
+        require(loans[loanID].termsExpiry <= now, 'LOAN_TERMS_EXPIRED');
+        require(
+            loans[loanID].lastCollateralIn <= now.sub(safetyInterval),
+            'COLLATERAL_DEPOSITED_RECENTLY'
+        );
         // check caller is borrower or recipient?
 
         // check that enough collateral has been provided for this loan
