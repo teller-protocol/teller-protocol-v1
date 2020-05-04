@@ -43,6 +43,27 @@ module.exports = {
         lastAccruedInterest,
         expectedAccruedInterest,
     }),
+    createInterestRequest:(lender, startTime, endTime, requestTime) => {
+        return {
+            lender: lender,
+            startTime: startTime,
+            endTime: endTime,
+            requestTime: requestTime,
+        }
+    },
+    createUnsignedResponse: (signer, responseTime, interest, signerNonce) => {
+        return {
+            signer: signer,
+            responseTime: responseTime,
+            interest: interest,
+            signature: {
+                signerNonce: signerNonce,
+                v: 0,
+                r: "0",
+                s: "0"
+            }
+        }
+    },
     createLoanInfo: (borrowerIndex, collateralRatio, maxLoanAmount, interestRate) => {
         return {
             interestRate,

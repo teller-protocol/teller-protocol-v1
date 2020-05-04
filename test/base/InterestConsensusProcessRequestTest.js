@@ -1,5 +1,11 @@
 const withData = require('leche').withData;
-const { t, getLatestTimestamp, THIRTY_DAYS, ONE_DAY } = require('../utils/consts');
+const { 
+    t,
+    getLatestTimestamp,
+    ONE_DAY,
+    createInterestRequest,
+    createUnsignedResponse
+} = require('../utils/consts');
 const { createResponseSig, hashRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
 const { interestConsensus } = require('../utils/events');
@@ -20,74 +26,19 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
 
     let currentTime
 
-    const interestRequest = {
-        lender: lender,
-        startTime: 23456,
-        endTime: endTime,
-        requestTime: 45678,
-    }
+    const interestRequest = createInterestRequest(lender, 23456, endTime, 45678)
 
     const requestHash = ethUtil.bufferToHex(hashRequest(interestRequest, lendersContract))
 
-    let responseOne = {
-        signer: nodeOne,
-        responseTime: 0,
-        interest: 35976,
-        signature: {
-            signerNonce: 1,
-            v: 0,
-            r: "0",
-            s: "0"
-        }
-    }
+    let responseOne = createUnsignedResponse(nodeOne, 0, 35976, 0)
 
-    let responseTwo = {
-        signer: nodeTwo,
-        responseTime: 0,
-        interest: 34732,
-        signature: {
-            signerNonce: 4,
-            v: 0,
-            r: "0",
-            s: "0"
-        }
-    }
+    let responseTwo = createUnsignedResponse(nodeTwo, 0, 34732, 4)
 
-    let responseThree = {
-        signer: nodeThree,
-        responseTime: 0,
-        interest: 34732,
-        signature: {
-            signerNonce: 4,
-            v: 0,
-            r: "0",
-            s: "0"
-        }
-    }
+    let responseThree = createUnsignedResponse(nodeThree, 0, 34732, 4)
 
-    let responseFour = {
-        signer: nodeFour,
-        responseTime: 0,
-        interest: 34000,
-        signature: {
-            signerNonce: 0,
-            v: 0,
-            r: "0",
-            s: "0"
-        }
-    }
+    let responseFour = createUnsignedResponse(nodeFour, 0, 34000, 0)
 
-    let responseFive = {
-        signer: nodeThree,  // note this is another node 3 signed response
-        responseTime: 0,
-        interest: 34736,
-        signature: {
-            signerNonce: 1,
-            v: 0,
-            r: "0",
-            s: "0"
-        }
-    }
+    let responseFive = createUnsignedResponse(nodeThree, 0, 34736, 1)
 
     before('Setup the response times and signatures', async () => {
         currentTime = await getLatestTimestamp()

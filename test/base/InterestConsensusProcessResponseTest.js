@@ -1,5 +1,11 @@
 const withData = require('leche').withData;
-const { t, getLatestTimestamp, THIRTY_DAYS, ONE_DAY } = require('../utils/consts');
+const {
+    t,
+    getLatestTimestamp,
+    THIRTY_DAYS,
+    ONE_DAY,
+    createInterestRequest
+} = require('../utils/consts');
 const { createResponseSig, hashRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
 const { interestConsensus } = require('../utils/events');
@@ -17,12 +23,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
     const endTime = 34567
     const lender = accounts[3]
 
-    const interestRequest = {
-        lender: lender,
-        startTime: 23456,
-        endTime: endTime,
-        requestTime: 45678,
-    }
+    const interestRequest = createInterestRequest(lender, 23456, endTime, 45678)
 
     const requestHash = ethUtil.bufferToHex(hashRequest(interestRequest, lendersContract))
 
@@ -84,18 +85,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
                 mockSumOfValues
             )
 
-            let interestResponse = {
-                signer: nodeAddress,
-                responseTime: responseTime,
-                interest: interest,
-                signature: {
-                    signerNonce: signerNonce,
-                    v: 0,
-                    r: "0",
-                    s: "0"
-                }
-            }
-
+            let interestResponse = createUnsignedResponse(signer, responseTime, interest, signerNonce)
             interestResponse = await createResponseSig(web3, nodeAddress, interestResponse, requestHash)
 
             try {

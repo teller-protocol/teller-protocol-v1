@@ -19,6 +19,7 @@ pragma experimental ABIEncoderV2;
 // Libraries
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../util/NumbersList.sol";
+import "../util/AddressLib.sol";
 import "../util/ZeroCollateralCommon.sol";
 
 // Interfaces
@@ -30,12 +31,13 @@ import "./Consensus.sol";
 
 
 contract InterestConsensus is Consensus, Initializable, InterestConsensusInterface {
+    using AddressLib for address;
     using SafeMath for uint256;
     using NumbersList for NumbersList.Values;
 
-    uint256 internal constant THIRTY_DAYS = 2592000;
-
     address public lenders;
+
+    uint256 responseExpiryLength;
 
     // mapping of (lender, endTime) to the aggregated node submissions for their request
     mapping(address => mapping(uint256 => NumbersList.Values)) public interestSubmissions;
@@ -48,16 +50,19 @@ contract InterestConsensus is Consensus, Initializable, InterestConsensusInterfa
     function initialize(
         address lendersAddress,
         uint256 initRequiredSubmissions,
-        uint256 initMaximumTolerance
+        uint256 initMaximumTolerance,
+        uint256 initResponseExpiry
     ) public isNotInitialized() {
-        require(lendersAddress != address(0), "MUST_PROVIDE_LENDER_INFO");
+        lendersAddress.requireNotEmpty("MUST_PROVIDE_LENDER_INFO");
         require(initRequiredSubmissions > 0, "MUST_PROVIDE_REQUIRED_SUBS");
+        require(responseExpiryLength > 0, "MUST_PROVIDE_RESPONSE_EXP");
 
         initialize();
 
         lenders = lendersAddress;
         requiredSubmissions = initRequiredSubmissions;
         maximumTolerance = initMaximumTolerance;
+        responseExpiryLength = initResponseExpiry;
     }
 
     function processRequest(
@@ -104,7 +109,7 @@ contract InterestConsensus is Consensus, Initializable, InterestConsensusInterfa
         );
         signerNonceTaken[response.signer][response.signature.signerNonce] = true;
 
-        require(response.responseTime >= now.sub(THIRTY_DAYS), "RESPONSE_EXPIRED");
+        require(response.responseTime >= now.sub(responseExpiryLength), "RESPONSE_EXPIRED");
 
         bytes32 responseHash = _hashResponse(response, requestHash);
         require(
