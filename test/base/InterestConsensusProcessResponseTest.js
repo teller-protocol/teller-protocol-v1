@@ -63,7 +63,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
         it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
             // set up contract
             instance = await InterestConsensusMock.new()
-            await instance.initialize(lendersContract, submissions, tolerance)
+            await instance.initialize(lendersContract, submissions, tolerance, THIRTY_DAYS)
 
             const currentTime = await getLatestTimestamp()
             const responseTime = mockExpiredResponse ?

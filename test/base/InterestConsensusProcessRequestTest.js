@@ -4,7 +4,8 @@ const {
     getLatestTimestamp,
     ONE_DAY,
     createInterestRequest,
-    createUnsignedResponse
+    createUnsignedResponse,
+    THIRTY_DAYS
 } = require('../utils/consts');
 const { createResponseSig, hashRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
@@ -89,7 +90,7 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
         it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
             // set up contract
             instance = await InterestConsensus.new()
-            await instance.initialize(lendersContract, reqSubmissions, tolerance)
+            await instance.initialize(lendersContract, reqSubmissions, tolerance, THIRTY_DAYS)
 
             await instance.addSigner(nodeOne)
             await instance.addSigner(nodeTwo)

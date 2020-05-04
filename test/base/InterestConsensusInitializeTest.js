@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, NULL_ADDRESS } = require('../utils/consts');
+const { t, NULL_ADDRESS, THIRTY_DAYS } = require('../utils/consts');
 
 // Smart contracts
 const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
@@ -30,7 +30,8 @@ contract('InterestConsensusInitializeTest', function (accounts) {
                 let result = await instance.initialize(
                     lendersAddress,
                     requiredSubmissions,
-                    maximumTolerance
+                    maximumTolerance,
+                    THIRTY_DAYS
                 )
 
                 // Assertions

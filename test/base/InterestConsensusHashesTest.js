@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t } = require('../utils/consts');
+const { t, THIRTY_DAYS } = require('../utils/consts');
 const { hashRequest, signHash, hashResponse } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
 
@@ -18,7 +18,7 @@ contract('InterestConsensus hashRequest and hashReponse', function (accounts) {
 
     beforeEach('Setup for each test', async () => {
         instance = await InterestConsensusMock.new()
-        await instance.initialize(lendersAddress, submissions, tolerance)
+        await instance.initialize(lendersAddress, submissions, tolerance, THIRTY_DAYS)
     })
 
     withData({
