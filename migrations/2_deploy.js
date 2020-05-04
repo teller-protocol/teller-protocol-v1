@@ -11,6 +11,7 @@ const Lenders = artifacts.require("./base/Lenders.sol");
 const Loans = artifacts.require("./base/Loans.sol");
 const LendingPool = artifacts.require("./base/LendingPool.sol");
 const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
+const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
 
 module.exports = async function(deployer, network, accounts) {
@@ -48,6 +49,7 @@ module.exports = async function(deployer, network, accounts) {
     Loans,
     LendingPool,
     InterestConsensus,
+    LoanTermsConsensus,
     ChainlinkPairAggregator
   };
   const deployerApp = new DeployerApp(deployer, web3, deployerAccount, network);

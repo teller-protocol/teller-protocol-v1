@@ -49,20 +49,16 @@ interface LoansInterface {
 
     function loans(uint256 loanID) external returns (ZeroCollateralCommon.Loan memory);
 
-    function signerNonceTaken(address signer, uint256 nonce) external returns (bool);
-
-    function depositCollateral(address borrower, uint256 loanID) external payable;
+    function depositCollateral(address, uint256) external payable;
 
     function withdrawCollateral(uint256 amount, uint256 loanID) external;
 
-    function takeOutLoan(
-        uint256 interestRate,
-        uint256 collateralRatio,
-        uint256 maxLoanAmount,
-        uint256 numberDays,
-        uint256 amountBorrow,
-        ZeroCollateralCommon.Signature calldata signature
-    ) external payable returns (uint256);
+    function setLoanTerms(
+        ZeroCollateralCommon.LoanRequest calldata request,
+        ZeroCollateralCommon.LoanResponse[] calldata responses
+    ) external payable;
+
+    function takeOutLoan(uint256 loanID, uint256 amountBorrow) external;
 
     function repay(uint256 amount, uint256 loanID) external;
 

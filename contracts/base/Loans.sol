@@ -57,15 +57,27 @@ contract Loans is LoansInterface {
 
     mapping(uint256 => ZeroCollateralCommon.Loan) public loans;
 
-    modifier loanIDValid(uint256 loanID) {
-        require(loanID < loanIDCounter, "LOAN_ID_INVALID");
-        _;
-    }
-
     modifier loanActive(uint256 loanID) {
         require(
             loans[loanID].status == ZeroCollateralCommon.LoanStatus.Active,
             "LOAN_NOT_ACTIVE"
+        );
+        _;
+    }
+
+    modifier loanTermsSet(uint256 loanID) {
+        require(
+            loans[loanID].status == ZeroCollateralCommon.LoanStatus.TermsSet,
+            "LOAN_NOT_SET"
+        );
+        _;
+    }
+
+    modifier loanActiveOrSet(uint256 loanID) {
+        require(
+            loans[loanID].status == ZeroCollateralCommon.LoanStatus.TermsSet ||
+            loans[loanID].status == ZeroCollateralCommon.LoanStatus.Active,
+            "LOAN_NOT_ACTIVE_OR_SET"
         );
         _;
     }
@@ -95,9 +107,9 @@ contract Loans is LoansInterface {
     function depositCollateral(address borrower, uint256 loanID)
         external
         payable
-        loanActive(loanID)
+        loanActiveOrSet(loanID)
     {
-        require(loans[loanID].borrower == borrower, "BORROWER_LOAN_ID_MISMATCH");
+        require(loans[loanID].loanTerms.borrower == borrower, "BORROWER_LOAN_ID_MISMATCH");
 
         uint256 depositAmount = msg.value;
 
@@ -114,9 +126,9 @@ contract Loans is LoansInterface {
      */
     function withdrawCollateral(uint256 amount, uint256 loanID)
         external
-        loanIDValid(loanID)
+        loanActiveOrSet(loanID)
     {
-        require(msg.sender == loans[loanID].borrower, "CALLER_DOESNT_OWN_LOAN");
+        require(msg.sender == loans[loanID].loanTerms.borrower, "CALLER_DOESNT_OWN_LOAN");
 
         // Find the minimum collateral amount this loan is allowed in tokens
         uint256 minimumCollateralDAI = _getMinimumAllowedCollateralDAI(loanID);
@@ -159,24 +171,27 @@ contract Loans is LoansInterface {
 
         loans[loanID] = ZeroCollateralCommon.Loan({
             id: loanID,
-            collateral: msg.value,
-            lastCollateralIn: now,
-            maxLoanAmount: maxLoanAmount,
+            loanTerms: ZeroCollateralCommon.LoanTerms({
+                borrower: request.borrower,
+                recipient: request.recipient,
+                maxLoanAmount: maxLoanAmount,
+                collateralRatio: collateralRatio,
+                interestRate: interestRate
+            }),
+            termsExpiry: now.add(THIRTY_DAYS),
+            loanStartTime: 0,
+            loanEndTime: 0,
+            collateral: 0,
+            lastCollateralIn: 0,
             totalOwed: 0,
-            timeStart: 0,
-            timeEnd: 0,
-            interestRate: interestRate,
-            collateralRatio: collateralRatio,
-            termExpiry: now.add(THIRTY_DAYS),
-            borrower: request.borrower,
-            recipient: request.recipient,
             status: ZeroCollateralCommon.LoanStatus.TermsSet,
             liquidated: false
         });
 
-        borrowerLoans[request.borrower].push(loanID);
+        // update collateral, totalCollateral, and lastCollateralIn
+        _payInCollateral(loanID, msg.value);
 
-        totalCollateral = totalCollateral.add(msg.value);
+        borrowerLoans[request.borrower].push(loanID);
     }
 
     /**
@@ -186,7 +201,7 @@ contract Loans is LoansInterface {
      * @dev the percentage will be *(10**2). I.e. collateralRatio of 5244 means 52.44% collateral
      * @dev is required in the loan. Interest rate is also a percentage with 2 decimal points.
      */
-    function takeOutLoan(uint256 loanID, uint256 amountBorrow) external {
+    function takeOutLoan(uint256 loanID, uint256 amountBorrow) external loanTermsSet(loanID) {
         // check amount to borrow is less than max
         // check expiry not passed
         // check time since colalteral deposit is acceptable
@@ -203,12 +218,12 @@ contract Loans is LoansInterface {
         // TODO - CHECK DECIMALS ON ETH PRICE
         require(
             loans[loanID].collateral.mul(ethPrice) >=
-                amountBorrow.mul(loans[loanID].collateralRatio).div(TEN_THOUSAND),
+                amountBorrow.mul(loans[loanID].loanTerms.collateralRatio).div(TEN_THOUSAND),
             "MORE_COLLATERAL_REQUIRED"
         );
 
         // give the borrower their requested amount of tokens
-        lendingPool.createLoan(amountBorrow, loans[loanID].recipient);
+        lendingPool.createLoan(amountBorrow, loans[loanID].loanTerms.recipient);
     }
 
     /**
@@ -232,7 +247,7 @@ contract Loans is LoansInterface {
                 _payOutCollateral(
                     loanID,
                     loans[loanID].collateral,
-                    loans[loanID].borrower
+                    loans[loanID].loanTerms.borrower
                 );
             }
 
@@ -258,7 +273,7 @@ contract Loans is LoansInterface {
 
         // must be under collateralised or expired
         require(
-            minCollateralDAI > collateralInDAI || loans[loanID].timeEnd < now,
+            minCollateralDAI > collateralInDAI || loans[loanID].loanEndTime < now,
             "DOESNT_NEED_LIQUIDATION"
         );
 
@@ -289,7 +304,7 @@ contract Loans is LoansInterface {
         returns (uint256)
     {
         uint256 loanAmount = loans[loanID].totalOwed;
-        uint256 collateralRatio = loans[loanID].collateralRatio;
+        uint256 collateralRatio = loans[loanID].loanTerms.collateralRatio;
 
         return loanAmount.mul(collateralRatio).div(TEN_THOUSAND);
     }
@@ -326,6 +341,7 @@ contract Loans is LoansInterface {
     function _payInCollateral(uint256 loanID, uint256 amount) internal {
         totalCollateral = totalCollateral.add(amount);
         loans[loanID].collateral = loans[loanID].collateral.add(amount);
+        loans[loanID].lastCollateralIn = now;
     }
 
     function _getAWholeLendingToken() internal view returns (uint256) {
