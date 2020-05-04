@@ -18,9 +18,11 @@ pragma experimental ABIEncoderV2;
 
 // Libraries
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "../util/NumbersList.sol";
+import "../util/AddressLib.sol";
+import "../util/ZeroCollateralCommon.sol";
 
 // Interfaces
-import "../interfaces/LendersInterface.sol";
 import "../interfaces/InterestConsensusInterface.sol";
 
 // Contracts
@@ -28,124 +30,135 @@ import "./Initializable.sol";
 import "./Consensus.sol";
 
 
-contract InterestConsensus is Initializable, Consensus, InterestConsensusInterface {
+contract InterestConsensus is Consensus, Initializable, InterestConsensusInterface {
+    using AddressLib for address;
     using SafeMath for uint256;
+    using NumbersList for NumbersList.Values;
 
-    LendersInterface public lenders;
+    address public lenders;
 
-    // mapping of (lender, blockNumber) to the aggregated node submissions for their request
-    mapping(address => mapping(uint256 => ZeroCollateralCommon.AggregatedInterest)) public nodeSubmissions;
+    uint256 responseExpiryLength;
 
-    constructor(uint256 initRequiredSubmissions, uint256 initMaximumTolerance)
-        public
-        Consensus(initRequiredSubmissions, initMaximumTolerance)
-    {}
+    // mapping of (lender, endTime) to the aggregated node submissions for their request
+    mapping(address => mapping(uint256 => NumbersList.Values)) public interestSubmissions;
 
-    function initialize(address lendersAddress) public isNotInitialized() {
-        require(lendersAddress != address(0), "MUST_PROVIDE_LENDER_INFO");
+    modifier isLenders() {
+        require(lenders == msg.sender, "Address has no permissions.");
+        _;
+    }
+
+    function initialize(
+        address lendersAddress,
+        uint256 initRequiredSubmissions,
+        uint256 initMaximumTolerance,
+        uint256 initResponseExpiry
+    ) public isNotInitialized() {
+        lendersAddress.requireNotEmpty("MUST_PROVIDE_LENDER_INFO");
+        require(initRequiredSubmissions > 0, "MUST_PROVIDE_REQUIRED_SUBS");
+        require(initResponseExpiry > 0, "MUST_PROVIDE_RESPONSE_EXP");
 
         initialize();
 
-        lenders = LendersInterface(lendersAddress);
+        lenders = lendersAddress;
+        requiredSubmissions = initRequiredSubmissions;
+        maximumTolerance = initMaximumTolerance;
+        responseExpiryLength = initResponseExpiry;
     }
 
-    function submitInterestResult(
-        ZeroCollateralCommon.Signature calldata signature,
-        address lender,
-        uint256 blockNumber,
-        uint256 interest
-    ) external onlySigner() isInitialized() {
+    function processRequest(
+        ZeroCollateralCommon.InterestRequest calldata request,
+        ZeroCollateralCommon.InterestResponse[] calldata responses
+    ) external isInitialized() isLenders() returns (uint256) {
+        require(responses.length >= requiredSubmissions, "INSUFFICIENT_RESPONSES");
+
+        bytes32 requestHash = _hashRequest(request);
+
+        for (uint256 i = 0; i < responses.length; i++) {
+            _processReponse(request, responses[i], requestHash);
+        }
+
         require(
-            !hasSubmitted[msg.sender][lender][blockNumber],
+            interestSubmissions[request.lender][request.endTime].isWithinTolerance(
+                maximumTolerance
+            ),
+            "RESPONSES_TOO_VARIED"
+        );
+
+        uint256 average = interestSubmissions[request.lender][request.endTime]
+            .getAverage();
+
+        emit InterestAccepted(request.lender, request.endTime, average);
+
+        return average;
+    }
+
+    function _processReponse(
+        ZeroCollateralCommon.InterestRequest memory request,
+        ZeroCollateralCommon.InterestResponse memory response,
+        bytes32 requestHash
+    ) internal {
+        require(
+            !hasSubmitted[response.signer][request.lender][request.endTime],
             "SIGNER_ALREADY_SUBMITTED"
         );
-        hasSubmitted[msg.sender][lender][blockNumber] = true;
+        hasSubmitted[response.signer][request.lender][request.endTime] = true;
 
         require(
-            !signerNonceTaken[msg.sender][signature.signerNonce],
+            !signerNonceTaken[response.signer][response.signature.signerNonce],
             "SIGNER_NONCE_TAKEN"
         );
-        signerNonceTaken[msg.sender][signature.signerNonce] = true;
+        signerNonceTaken[response.signer][response.signature.signerNonce] = true;
 
         require(
-            lenders.requestedInterestUpdate(lender) == blockNumber,
-            "INTEREST_NOT_REQUESTED"
+            response.responseTime >= now.sub(responseExpiryLength),
+            "RESPONSE_EXPIRED"
         );
 
+        bytes32 responseHash = _hashResponse(response, requestHash);
         require(
-            !nodeSubmissions[lender][blockNumber].finalized,
-            "INTEREST_ALREADY_FINALIZED"
+            _signatureValid(response.signature, responseHash, response.signer),
+            "SIGNATURE_INVALID"
         );
 
-        bytes32 hashedData = _hashData(
-            lender,
-            blockNumber,
-            interest,
-            signature.signerNonce
+        interestSubmissions[request.lender][request.endTime].addValue(response.interest);
+
+        emit InterestSubmitted(
+            response.signer,
+            request.lender,
+            request.endTime,
+            response.interest
         );
-        require(_signatureValid(signature, hashedData), "SIGNATURE_NOT_VALID");
-
-
-            ZeroCollateralCommon.AggregatedInterest memory aggregatedData
-         = nodeSubmissions[lender][blockNumber];
-
-        // if this is the first submission for this request
-        if (aggregatedData.totalSubmissions == 0) {
-            aggregatedData = ZeroCollateralCommon.AggregatedInterest({
-                totalSubmissions: 1,
-                minValue: interest,
-                maxValue: interest,
-                sumOfValues: interest,
-                finalized: false
-            });
-        } else {
-            if (interest < aggregatedData.minValue) {
-                aggregatedData.minValue = interest;
-            }
-            if (interest > aggregatedData.maxValue) {
-                aggregatedData.maxValue = interest;
-            }
-
-            aggregatedData.sumOfValues = aggregatedData.sumOfValues.add(interest);
-            aggregatedData.totalSubmissions++;
-        }
-
-        emit InterestSubmitted(msg.sender, lender, blockNumber, interest);
-
-        if (aggregatedData.totalSubmissions >= requiredSubmissions) {
-            aggregatedData.finalized = true;
-
-            // average the submissions
-            uint256 finalInterest = aggregatedData.sumOfValues.div(
-                aggregatedData.totalSubmissions
-            );
-
-            require(
-                _resultsWithinTolerance(
-                    aggregatedData.maxValue,
-                    aggregatedData.minValue,
-                    finalInterest
-                ),
-                "MAXIMUM_TOLERANCE_SURPASSED"
-            );
-
-            lenders.setAccruedInterest(lender, blockNumber, finalInterest);
-
-            emit InterestAccepted(lender, blockNumber, finalInterest);
-        }
-
-        nodeSubmissions[lender][blockNumber] = aggregatedData;
     }
 
-    function _hashData(
-        address lender,
-        uint256 blockNumber,
-        uint256 interest,
-        uint256 signerNonce
-    ) internal view returns (bytes32) {
+    function _hashResponse(
+        ZeroCollateralCommon.InterestResponse memory response,
+        bytes32 requestHash
+    ) internal pure returns (bytes32) {
         return
             keccak256(
-                abi.encode(address(this), lender, blockNumber, interest, signerNonce)
+                abi.encode(
+                    response.responseTime,
+                    response.interest,
+                    response.signature.signerNonce,
+                    requestHash
+                )
+            );
+    }
+
+    function _hashRequest(ZeroCollateralCommon.InterestRequest memory request)
+        internal
+        view
+        returns (bytes32)
+    {
+        return
+            keccak256(
+                abi.encode(
+                    lenders,
+                    request.lender,
+                    request.startTime,
+                    request.endTime,
+                    request.requestTime
+                )
             );
     }
 }

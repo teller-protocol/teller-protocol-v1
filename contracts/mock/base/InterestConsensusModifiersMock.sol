@@ -16,29 +16,10 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../../base/Lenders.sol";
+import "../../base/InterestConsensus.sol";
 
-/**
-    This contract is created ONLY for testing purposes.
- */
-contract LendersModifiersMock is Lenders {
-    
-    /** State Variables */
+contract InterestConsensusModifiersMock is InterestConsensus {
 
-    /** Connstructor */
-    constructor(
-        address zTokenAddress,
-        address lendingPoolAddress,
-        address consensusAddress
-    )
-        public
-        Lenders(zTokenAddress, lendingPoolAddress, consensusAddress)
-    {}
-
-    function externalIsZToken() isZToken() external {}
-
-    function externalIsLendingPool() isLendingPool() external {}
-
-    function externalIsValid(address anAddress) isValid(anAddress) external {}
+    function externalIsLenders() isLenders() external {}
 
 }

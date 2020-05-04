@@ -14,6 +14,7 @@
     limitations under the License.
 */
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 import "../../base/Lenders.sol";
 
@@ -38,10 +39,6 @@ contract LendersMock is Lenders {
         addressesEqual = true;
     }
 
-    function setAddressesEqual(bool value) external {
-        addressesEqual = value;
-    }
-
     function _areAddressesEqual(address, address)
         internal
         view
@@ -52,20 +49,13 @@ contract LendersMock is Lenders {
 
     function mockLenderInfo(
         address lender,
-        uint256 blockLastAccrued,
+        uint256 timeLastAccrued,
         uint256 totalNotWithdrawn,
         uint256 totalAccruedInterest
     ) external {
-        accruedInterest[lender].blockLastAccrued = blockLastAccrued;
+        accruedInterest[lender].timeLastAccrued = timeLastAccrued;
         accruedInterest[lender].totalAccruedInterest = totalAccruedInterest;
         accruedInterest[lender].totalNotWithdrawn = totalNotWithdrawn;
-    }
-
-    function mockRequestUpdate(
-        address lender,
-        uint256 blockNumber
-    ) external {
-        requestedInterestUpdate[lender] = blockNumber;
     }
 
 }

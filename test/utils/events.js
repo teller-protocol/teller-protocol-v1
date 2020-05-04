@@ -31,35 +31,13 @@ module.exports = {
         },
     },
     lenders: {
-        interestUpdateRequested: tx => {
-            const name = 'InterestUpdateRequested';
-            return {
-                name: name,
-                emitted: (lender, blockNumber) => emitted(tx, name, ev => {
-                    assert.equal(ev.lender, lender);
-                    assert.equal(ev.blockNumber.toString(), blockNumber.toString());
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            }
-        },
-        cancelInterestUpdate: tx => {
-            const name = 'CancelInterestUpdate';
-            return {
-                name: name,
-                emitted: (lender, blockNumber) => emitted(tx, name, ev => {
-                    assert.equal(ev.lender, lender);
-                    assert.equal(ev.blockNumber.toString(), blockNumber.toString());
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            }
-        },
         accruedInterestUpdated: tx => {
             const name = 'AccruedInterestUpdated';
             return {
                 name: name,
-                emitted: (lender, lastBlockAccrued, totalAccruedInterest) => emitted(tx, name, ev => {
+                emitted: (lender, totalNotWithdrawn, totalAccruedInterest) => emitted(tx, name, ev => {
                     assert.equal(ev.lender, lender);
-                    assert.equal(ev.lastBlockAccrued.toString(), lastBlockAccrued.toString());
+                    assert.equal(ev.totalNotWithdrawn.toString(), totalNotWithdrawn.toString());
                     assert.equal(ev.totalAccruedInterest.toString(), totalAccruedInterest.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
@@ -145,11 +123,13 @@ module.exports = {
           const name = 'InterestSubmitted';
           return {
               name: name,
-              emitted: (signer, lender, blockNumber, interest) => emitted(tx, name, ev => {
-                  assert.equal(ev.signer, signer);
-                  assert.equal(ev.lender, lender);
-                  assert.equal(ev.blockNumber.toString(), blockNumber.toString());
-                  assert.equal(ev.interest.toString(), interest.toString());
+              emitted: (signer, lender, blockNumber, interest) => truffleAssert.eventEmitted(tx, name, ev => {
+                  return (
+                      ev.signer == signer && 
+                      ev.lender == lender &&
+                      ev.blockNumber.toString() == blockNumber.toString() &&
+                      ev.interest.toString() == interest.toString()
+                  )
               }),
               notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
           };
@@ -158,10 +138,12 @@ module.exports = {
         const name = 'InterestAccepted';
         return {
             name: name,
-            emitted: (lender, blockNumber, interest) => emitted(tx, name, ev => {
-                assert.equal(ev.lender, lender);
-                assert.equal(ev.blockNumber.toString(), blockNumber.toString());
-                assert.equal(ev.interest.toString(), interest.toString());
+            emitted: (lender, blockNumber, interest) => truffleAssert.eventEmitted(tx, name, ev => {
+                return (
+                    ev.lender == lender && 
+                    ev.blockNumber.toString() == blockNumber.toString() &&
+                    ev.interest.toString() == interest.toString()
+                )
             }),
             notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
         };

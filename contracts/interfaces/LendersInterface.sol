@@ -1,29 +1,24 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
+
+import "../util/ZeroCollateralCommon.sol";
 
 
 interface LendersInterface {
-    function zTokenTransfer(address sender, address recipient, uint256 amount) external;
-
-    function zTokenBurnt(address recipient, uint256 amount) external;
-
     function withdrawInterest(address recipient, uint256 amount)
         external
         returns (uint256);
 
-    function requestedInterestUpdate(address) external returns (uint256);
-
-    function setAccruedInterest(address lender, uint256 endBlock, uint256 amount)
-        external;
+    function setAccruedInterest(
+        ZeroCollateralCommon.InterestRequest calldata request,
+        ZeroCollateralCommon.InterestResponse[] calldata responses
+    ) external;
 
     event AccruedInterestUpdated(
         address indexed lender,
         uint256 totalNotWithdrawn,
         uint256 totalAccruedInterest
     );
-
-    event InterestUpdateRequested(address indexed lender, uint256 blockNumber);
-
-    event CancelInterestUpdate(address indexed lender, uint256 blockNumber);
 
     event AccruedInterestWithdrawn(address indexed recipient, uint256 amount);
 }

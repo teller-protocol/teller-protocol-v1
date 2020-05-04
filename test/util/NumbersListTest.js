@@ -93,6 +93,18 @@ contract('ValuesListTest', function (accounts) {
         _1_empty: [[], 0, false],
         _2_10min_10max_10avg_1tol: [[10], 1, true],
         _3_10min_30max_20avg_10tol: [[10, 20, 30], 10, false],
+        // average 542, tolerance 12
+        _4_max_too_high: [[560,535,538,535], 230, false],
+        // average 540, tolerance 12
+        _5_min_too_low: [[550,520,550], 230, false],
+        // average 34860, tolerance 1115
+        _6_all_within_range: [[35970, 33780, 34830], 320, true],
+        // average 34860, tolerance = 1115, (max is 35976)
+        _7_max_too_high_close: [[35976, 34732, 34732, 34000], 320, false],
+        // average 14250, tolerance 175, (min is 14074)
+        _8_min_too_low_close: [[14350, 14074, 14326], 123, false],
+        // all the same with 0 tolerance
+        _9_all_within_range_0_tolerance: [[12345, 12345, 12345], 0, true],
     }, function(values, tolerance, expectedResult) {
         it(t('user', 'isWithinTolerance', 'Should be able to get min/max/sum.', false), async function() {
             // Setup

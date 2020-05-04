@@ -78,39 +78,6 @@ contract('LendersModifiersTest', function (accounts) {
     });
 
     withData({
-      _1_zTokenSender: [accounts[0], accounts[1], accounts[2], accounts[0], 'Address has no permissions.', true],
-      _2_lendingPoolSender: [accounts[0], accounts[1], accounts[2], accounts[1], 'Address has no permissions.', true],
-      _3_consensusSender: [accounts[0], accounts[1], accounts[2], accounts[2], undefined, false],
-      _4_notValidSender: [accounts[0], accounts[1], accounts[2], accounts[3], 'Address has no permissions.', true],
-  }, function(
-      zTokenAddress,
-      lendingPoolAddress,
-      consensusAddress,
-      sender,
-      expectedErrorMessage,
-      mustFail
-  ) {    
-      it(t('user', 'isConsensus', 'Should able (or not) to call function with modifier isConsensus.', mustFail), async function() {
-          // Setup
-          const instance = await Lenders.new(zTokenAddress, lendingPoolAddress, consensusAddress);
-
-          try {
-              // Invocation
-              const result = await instance.externalIsConsensus({ from: sender });
-
-              // Assertions
-              assert(!mustFail, 'It should have failed because the sender has no permissions.');
-              assert(result);
-          } catch (error) {
-              // Assertions
-              assert(mustFail);
-              assert(error);
-              assert.equal(error.reason, expectedErrorMessage);
-          }
-      });
-  });
-
-    withData({
         _1_validAddress: [accounts[0], accounts[1], accounts[2], accounts[1], undefined, false],
         _2_invalidAddress: [accounts[0], accounts[1], accounts[2], NULL_ADDRESS, 'Address is required.', true],
     }, function(

@@ -8,19 +8,25 @@ library ZeroCollateralCommon {
     }
 
     // The amount of interest owed to a borrower
-    // The interest is just that accrued until `blockLastAccrued`
+    // The interest is just that accrued until `timeLastAccrued`
     struct AccruedInterest {
         uint256 totalAccruedInterest;
         uint256 totalNotWithdrawn;
-        uint256 blockLastAccrued;
+        uint256 timeLastAccrued;
     }
 
-    struct AggregatedInterest {
-        uint256 totalSubmissions;
-        uint256 maxValue;
-        uint256 minValue;
-        uint256 sumOfValues;
-        bool finalized;
+    struct InterestRequest {
+        address lender;
+        uint256 startTime;
+        uint256 endTime;
+        uint256 requestTime;
+    }
+
+    struct InterestResponse {
+        address signer;
+        uint256 responseTime;
+        uint256 interest;
+        Signature signature;
     }
 
     // Data per borrow as struct

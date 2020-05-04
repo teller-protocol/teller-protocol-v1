@@ -20,29 +20,19 @@ import "../../base/InterestConsensus.sol";
 
 contract InterestConsensusMock is InterestConsensus {
 
-    constructor(
-        uint256 initRequiredSubmissions,
-        uint256 initMaximumTolerance
-    ) public InterestConsensus(
-        initRequiredSubmissions,
-        initMaximumTolerance
-    ){}
-
-    function mockNodeSubmissions(
+    function mockInterestSubmissions(
         address lender,
-        uint256 blockNumber,
+        uint256 endTime,
         uint256 totalSubmissions,
         uint256 maxValue,
         uint256 minValue,
-        uint256 sumOfValues,
-        bool finalized
+        uint256 sumOfValues
     ) external {
-        nodeSubmissions[lender][blockNumber] = ZeroCollateralCommon.AggregatedInterest({
-            totalSubmissions: totalSubmissions,
-            minValue: minValue,
-            maxValue: maxValue,
-            sumOfValues: sumOfValues,
-            finalized: finalized
+        interestSubmissions[lender][endTime] = NumbersList.Values({
+            length: totalSubmissions,
+            min: minValue,
+            max: maxValue,
+            sum: sumOfValues
         });
     }
 
@@ -63,13 +53,25 @@ contract InterestConsensusMock is InterestConsensus {
         signerNonceTaken[signer][signerNonce] = taken;
     }
 
-    function externalHashData(
-        address lender,
-        uint256 blockNumber,
-        uint256 interest,
-        uint256 signerNonce
+    function externalProcessResponse(
+        ZeroCollateralCommon.InterestRequest calldata request,
+        ZeroCollateralCommon.InterestResponse calldata response,
+        bytes32 requestHash
+    ) external {
+        _processReponse(request, response, requestHash);
+    }
+
+    function externalHashResponse(
+        ZeroCollateralCommon.InterestResponse calldata response,
+        bytes32 requestHash
+    ) external pure returns (bytes32) {
+        return _hashResponse(response, requestHash);
+    }
+
+    function externalHashRequest(
+        ZeroCollateralCommon.InterestRequest calldata request
     ) external view returns (bytes32) {
-        return _hashData(lender, blockNumber, interest, signerNonce);
+        return _hashRequest(request);
     }
 
 }

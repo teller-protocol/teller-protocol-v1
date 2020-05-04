@@ -2,20 +2,24 @@ const { BigNumber } = require( 'bignumber.js');
 
 const DEFAULT_DECIMALS = 18;
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
+const NULL_BYTES = '0x0000000000000000000000000000000000000000000000000000000000000000'
 const ZERO = new BigNumber(0);
 const NETWORK_PROVIDER = 'http://127.0.0.1:7545';
 const COVERAGE_NETWORK = 'http://127.0.0.1:8555';
 const ONE_HOUR = 3600
 const ONE_DAY = ONE_HOUR*24
+const THIRTY_DAYS = ONE_DAY*30
 
 module.exports = {
     DEFAULT_DECIMALS,
     NULL_ADDRESS,
+    NULL_BYTES,
     ZERO,
     NETWORK_PROVIDER,
     COVERAGE_NETWORK,
     ONE_HOUR,
     ONE_DAY,
+    THIRTY_DAYS,
     t: function (who, func, desc, fail) {
         const failText = fail ? '\x1b[31mMustFail\x1b[0m .' : '\x1b[0m';
         return '\x1b[32m.' + func + ' => \x1b[36m' + who + '\x1b[0m\033[01;34m : ' + desc + ' '+ failText;
@@ -39,6 +43,27 @@ module.exports = {
         lastAccruedInterest,
         expectedAccruedInterest,
     }),
+    createInterestRequest:(lender, startTime, endTime, requestTime) => {
+        return {
+            lender: lender,
+            startTime: startTime,
+            endTime: endTime,
+            requestTime: requestTime,
+        }
+    },
+    createUnsignedResponse: (signer, responseTime, interest, signerNonce) => {
+        return {
+            signer: signer,
+            responseTime: responseTime,
+            interest: interest,
+            signature: {
+                signerNonce: signerNonce,
+                v: 0,
+                r: "0",
+                s: "0"
+            }
+        }
+    },
     createLoanInfo: (borrowerIndex, collateralRatio, maxLoanAmount, interestRate) => {
         return {
             interestRate,

@@ -6,6 +6,7 @@ const DEFAULT_ADDRESS_COUNT = "10";
 const DEFAULT_ADDRESS_INDEX = "0";
 const DEFAULT_REQUIRED_SUBMISSIONS = "7";
 const DEFAULT_MAXIMUM_TOLERANCE = "0";
+const DEFAULT_RESPONSE_EXPIRY = "2592000"; // 30 days
 
 const ADDRESS_COUNT_KEY = 'ADDRESS_COUNT_KEY';
 const DEFAULT_ADDRESS_INDEX_KEY = 'DEFAULT_ADDRESS_INDEX_KEY';
@@ -16,6 +17,7 @@ const GAS_PRICE_GWEI_KEY = 'GAS_PRICE_GWEI_KEY';
 const ETHERSCAN_API_KEY = 'ETHERSCAN_API_KEY';
 const DEFAULT_REQUIRED_SUBMISSIONS_KEY = 'DEFAULT_REQUIRED_SUBMISSIONS_KEY'
 const DEFAULT_MAXIMUM_TOLERANCE_KEY = 'DEFAULT_MAXIMUM_TOLERANCE_KEY'
+const DEFAULT_RESPONSE_EXPIRY_KEY = 'DEFAULT_RESPONSE_EXPIRY_KEY'
 
 class EnvConfig {
     constructor() {
@@ -35,6 +37,7 @@ EnvConfig.prototype.initializeConf = function() {
     this.createItem(ETHERSCAN_API_KEY, undefined, 'Etherscan.io key is used to verify smart contracts.');
     this.createItem(DEFAULT_REQUIRED_SUBMISSIONS_KEY, DEFAULT_REQUIRED_SUBMISSIONS, 'This is the default number of node submissions for consensus.');
     this.createItem(DEFAULT_MAXIMUM_TOLERANCE_KEY, DEFAULT_MAXIMUM_TOLERANCE, 'This is the maximum tolerance of difference in node submissions.');
+    this.createItem(DEFAULT_RESPONSE_EXPIRY_KEY, DEFAULT_RESPONSE_EXPIRY, 'This is the time after which node responses expire.');
 }
 
 EnvConfig.prototype.createItem = function(name, defaultValue = undefined, description = undefined) {
@@ -85,6 +88,10 @@ EnvConfig.prototype.getDefaultRequiredSubmissions = function() {
 
 EnvConfig.prototype.getDefaultMaximumTolerance = function() {
   return this.conf.get(DEFAULT_MAXIMUM_TOLERANCE_KEY);
+}
+
+EnvConfig.prototype.getDefaultResponseExpiry = function() {
+  return this.conf.get(DEFAULT_RESPONSE_EXPIRY_KEY);
 }
 
 module.exports = EnvConfig;

@@ -12,7 +12,13 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
     const zTokenInstance = await ZToken.deployed();
     const zTokenName = await zTokenInstance.symbol();
     console.log(`Deploying pool for token ${tokenName}...`);
-    const { requiredSubmissions, maximumTolerance, tokens, aggregators } = this.deployConfig;
+    const {
+        requiredSubmissions,
+        maximumTolerance,
+        responseExpiry,
+        tokens,
+        aggregators
+    } = this.deployConfig;
     assert(tokenName, 'Token name is undefined.');
     const tokenAddress = tokens[tokenName.toUpperCase()];
     assert(tokenAddress, `Tokens address for token ${tokenName.toUpperCase()} is undefined.`);
@@ -31,7 +37,7 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
 
     await this.deployer.deployWith(`ChainlinkPairAggregator_${aggregatorName.toUpperCase()}`, ChainlinkPairAggregator, aggregatorAddress, txConfig);
     await this.deployer.deployWith(`LendingPool_${zTokenName}`, LendingPool, txConfig);
-    await this.deployer.deployWith(`InterestConsensus_${zTokenName}`, InterestConsensus, requiredSubmissions, maximumTolerance, txConfig);
+    await this.deployer.deployWith(`InterestConsensus_${zTokenName}`, InterestConsensus, txConfig);
     await this.deployer.deployWith(`Lenders_${zTokenName}`, Lenders, ZToken.address, LendingPool.address, InterestConsensus.address, txConfig);
     await this.deployer.deployWith(`Loans_${zTokenName}`, Loans, ChainlinkPairAggregator.address, LendingPool.address, txConfig);
   
@@ -48,6 +54,9 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
     const consensusInstance = await InterestConsensus.deployed();
     await consensusInstance.initialize(
       Lenders.address,
+      requiredSubmissions,
+      maximumTolerance,
+      responseExpiry
     );
 }
 
