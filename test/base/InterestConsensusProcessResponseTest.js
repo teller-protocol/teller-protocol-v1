@@ -4,7 +4,8 @@ const {
     getLatestTimestamp,
     THIRTY_DAYS,
     ONE_DAY,
-    createInterestRequest
+    createInterestRequest,
+    createUnsignedResponse
 } = require('../utils/consts');
 const { createResponseSig, hashRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
@@ -85,7 +86,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
                 mockSumOfValues
             )
 
-            let interestResponse = createUnsignedResponse(signer, responseTime, interest, signerNonce)
+            let interestResponse = createUnsignedResponse(nodeAddress, responseTime, interest, signerNonce)
             interestResponse = await createResponseSig(web3, nodeAddress, interestResponse, requestHash)
 
             try {
