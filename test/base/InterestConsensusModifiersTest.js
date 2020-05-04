@@ -1,11 +1,11 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t } = require('../utils/consts');
+const { t, THIRTY_DAYS } = require('../utils/consts');
 
 // Smart contracts
 const InterestConsensus = artifacts.require("./base/InterestConsensusModifiersMock.sol");
 
-contract('InterestConsensusInitializeTest', function (accounts) {
+contract('InterestConsensusModifiersTest', function (accounts) {
     const reqSubmissions = 1
     const maxTolerance = 1
 
@@ -25,7 +25,8 @@ contract('InterestConsensusInitializeTest', function (accounts) {
                 await instance.initialize(
                     lendersAddress,
                     reqSubmissions,
-                    maxTolerance
+                    maxTolerance,
+                    THIRTY_DAYS
                 )
 
                 const result = await instance.externalIsLenders({ from:  msgSender })
