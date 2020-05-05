@@ -30,21 +30,38 @@ import "../interfaces/SettingsInterface.sol";
 contract Settings is Pausable, Ownable, SettingsInterface {
     using AddressLib for address;
 
+    /** Constants */
+    bytes32 public constant REQUIRED_SUBMISSIONS_SETTING = "RequiredSubmissions";
+    bytes32 public constant MAXIMUM_TOLERANCE_SETTING = "MaximumTolerance";
+    bytes32 public constant RESPONSE_EXPIRY_LENGTH_SETTING = "ResponseExpiryLength";
+
     /* State Variables */
 
     mapping(address => bool) public lendingPoolPaused;
 
+    // the total number of submissions required for consensus on a value
     uint256 public requiredSubmissions;
 
+    // this is a percentage with 2 decimal places
+    // i.e. maximumTolerance of 325 => tolerance of 3.25% => 0.0325 of value
     uint256 public maximumTolerance;
+
+    uint256 public responseExpiryLength;
 
     /** Modifiers */
 
     /* Constructor */
 
-    constructor(uint256 aRequiredSubmissions, uint256 aMaximumTolerance) public {
+    constructor(
+        uint256 aRequiredSubmissions,
+        uint256 aMaximumTolerance,
+        uint256 aResponseExpiryLength
+    ) public {
+        require(aRequiredSubmissions > 0, "MUST_PROVIDE_REQUIRED_SUBS");
+        require(aResponseExpiryLength > 0, "MUST_PROVIDE_RESPONSE_EXP");
         requiredSubmissions = aRequiredSubmissions;
         maximumTolerance = aMaximumTolerance;
+        responseExpiryLength = aResponseExpiryLength;
     }
 
     /** External Functions */
@@ -55,10 +72,12 @@ contract Settings is Pausable, Ownable, SettingsInterface {
         whenNotPaused()
     {
         require(requiredSubmissions != newRequiredSubmissions, "NEW_VALUE_REQUIRED");
+        require(newRequiredSubmissions > 0, "MUST_PROVIDE_REQUIRED_SUBS");
         uint256 oldRequiredSubmissions = requiredSubmissions;
         requiredSubmissions = newRequiredSubmissions;
 
-        emit RequiredSubmissionsUpdated(
+        emit SettingUpdated(
+            REQUIRED_SUBMISSIONS_SETTING,
             msg.sender,
             oldRequiredSubmissions,
             newRequiredSubmissions
@@ -74,10 +93,29 @@ contract Settings is Pausable, Ownable, SettingsInterface {
         uint256 oldMaximumTolerance = maximumTolerance;
         maximumTolerance = newMaximumTolerance;
 
-        emit MaximumToleranceUpdated(
+        emit SettingUpdated(
+            MAXIMUM_TOLERANCE_SETTING,
             msg.sender,
             oldMaximumTolerance,
             newMaximumTolerance
+        );
+    }
+
+    function setResponseExpiryLength(uint256 newResponseExpiryLength)
+        external
+        onlyOwner()
+        whenNotPaused()
+    {
+        require(responseExpiryLength != newResponseExpiryLength, "NEW_VALUE_REQUIRED");
+        require(newResponseExpiryLength > 0, "MUST_PROVIDE_RESPONSE_EXP");
+        uint256 oldResponseExpiryLength = responseExpiryLength;
+        responseExpiryLength = newResponseExpiryLength;
+
+        emit SettingUpdated(
+            RESPONSE_EXPIRY_LENGTH_SETTING,
+            msg.sender,
+            oldResponseExpiryLength,
+            newResponseExpiryLength
         );
     }
 

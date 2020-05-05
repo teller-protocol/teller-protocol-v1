@@ -1,13 +1,12 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, THIRTY_DAYS } = require('../utils/consts');
+const { t } = require('../utils/consts');
 
 // Smart contracts
-const InterestConsensus = artifacts.require("./base/InterestConsensusModifiersMock.sol");
+const InterestConsensus = artifacts.require("./mock/base/InterestConsensusModifiersMock.sol");
+const Mock = artifacts.require("./mock/util/Mock.sol");
 
 contract('InterestConsensusModifiersTest', function (accounts) {
-    const reqSubmissions = 1
-    const maxTolerance = 1
 
     withData({
         _1_not_lenders: [accounts[1], accounts[3], 'Address has no permissions.', true],
@@ -21,12 +20,11 @@ contract('InterestConsensusModifiersTest', function (accounts) {
         it(t('user', 'new', 'Should (or not) be able to call the function', mustFail), async function() {
             try {
                 // Setup
+                const settings = await Mock.new();
                 const instance = await InterestConsensus.new();
                 await instance.initialize(
                     lendersAddress,
-                    reqSubmissions,
-                    maxTolerance,
-                    THIRTY_DAYS
+                    settings.address,
                 )
 
                 const result = await instance.externalIsLenders({ from:  msgSender })

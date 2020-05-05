@@ -2,16 +2,11 @@ pragma solidity 0.5.17;
 
 
 interface SettingsInterface {
-    event RequiredSubmissionsUpdated(
+    event SettingUpdated(
+        bytes32 indexed settingName,
         address indexed sender,
-        uint256 oldRequiredSubmissions,
-        uint256 newRequiredSubmissions
-    );
-
-    event MaximumToleranceUpdated(
-        address indexed sender,
-        uint256 oldMaximumTolerance,
-        uint256 newMaximumTolerance
+        uint256 oldValue,
+        uint256 newValue
     );
 
     event LendingPoolPaused(address indexed account, address indexed lendingPoolAddress);
@@ -28,6 +23,10 @@ interface SettingsInterface {
     function maximumTolerance() external view returns (uint256);
 
     function setMaximumTolerance(uint256 newMaximumTolerance) external;
+
+    function responseExpiryLength() external view returns (uint256);
+
+    function setResponseExpiryLength(uint256 newResponseExpiryLength) external;
 
     function isPaused() external view returns (bool);
 

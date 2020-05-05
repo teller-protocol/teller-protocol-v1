@@ -13,9 +13,6 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
     const zTokenName = await zTokenInstance.symbol();
     console.log(`Deploying pool for token ${tokenName}...`);
     const {
-        requiredSubmissions,
-        maximumTolerance,
-        responseExpiry,
         tokens,
         aggregators
     } = this.deployConfig;
@@ -57,9 +54,7 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
     const consensusInstance = await InterestConsensus.deployed();
     await consensusInstance.initialize(
       Lenders.address,
-      requiredSubmissions,
-      maximumTolerance,
-      responseExpiry
+      settingsInstance.address,
     );
 }
 

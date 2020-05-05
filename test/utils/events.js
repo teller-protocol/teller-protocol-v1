@@ -172,5 +172,19 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        settingUpdated: tx => {
+            const name = 'SettingUpdated';
+            return {
+                name: name,
+                emitted: (settingName, sender, oldValue, newValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.settingName.toString(), settingName.toString());
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.oldValue.toString(), oldValue.toString());
+                    assert.equal(ev.newValue, newValue);
+
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     }
 };

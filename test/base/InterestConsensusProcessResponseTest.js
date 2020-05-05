@@ -12,6 +12,7 @@ const ethUtil = require('ethereumjs-util')
 const { interestConsensus } = require('../utils/events');
 
 // Smart contracts
+const Settings = artifacts.require("./base/Settings.sol");
 const InterestConsensusMock = artifacts.require("./mock/base/InterestConsensusMock.sol");
 
 
@@ -20,7 +21,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
     const lendersContract = accounts[1]
     const nodeAddress = accounts[2]
     const submissions = 5
-  const tolerance = 0
+    const tolerance = 0
     const endTime = 34567
     const lender = accounts[3]
 
@@ -63,8 +64,9 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
     ) {    
         it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
             // set up contract
+            const settings = await Settings.new(submissions, tolerance, THIRTY_DAYS);
             instance = await InterestConsensusMock.new()
-            await instance.initialize(lendersContract, submissions, tolerance, THIRTY_DAYS)
+            await instance.initialize(lendersContract, settings.address)
 
             const currentTime = await getLatestTimestamp()
             const responseTime = mockExpiredResponse ?

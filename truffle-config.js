@@ -45,6 +45,8 @@ module.exports = {
 				'InterestConsensusMock',
 				'NumbersListMock',
 				'BaseMock',
+				'ConsensusMock',
+				'InterestConsensusModifiersMock',
 			]
 		},
 	},

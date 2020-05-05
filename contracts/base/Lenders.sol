@@ -35,17 +35,14 @@ contract Lenders is LendersInterface {
     address public lendingPool;
     InterestConsensusInterface public interestConsensus;
 
-    ZTokenInterface public zToken;
+    address public zToken;
 
     // The total interest that has not yet been withdrawn by a lender
     mapping(address => ZeroCollateralCommon.AccruedInterest) public accruedInterest;
 
     /** Modifiers */
     modifier isZToken() {
-        require(
-            _areAddressesEqual(address(zToken), msg.sender),
-            "Address has no permissions."
-        );
+        require(_areAddressesEqual(zToken, msg.sender), "Address has no permissions.");
         _;
     }
 
@@ -75,7 +72,7 @@ contract Lenders is LendersInterface {
             interestConsensusAddress != address(0x0),
             "Consensus address is required."
         );
-        zToken = ZTokenInterface(zTokenAddress);
+        zToken = zTokenAddress;
         lendingPool = lendingPoolAddress;
         interestConsensus = InterestConsensusInterface(interestConsensusAddress);
     }
@@ -150,12 +147,4 @@ contract Lenders is LendersInterface {
     }
 
     /** Private Functions */
-
-    function _getZTokenBalanceOf(address anAddress) private view returns (uint256) {
-        return zToken.balanceOf(anAddress);
-    }
-
-    function _getCurrentBlockNumber() private view returns (uint256) {
-        return block.number;
-    }
 }

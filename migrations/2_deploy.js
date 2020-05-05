@@ -36,9 +36,6 @@ module.exports = async function(deployer, network, accounts) {
 
   const txConfig = { gas: maxGasLimit, from: deployerAccount };
   const deployConfig = {
-    requiredSubmissions,
-    maximumTolerance,
-    responseExpiry,
     tokens,
     aggregators: chainlink,
   };
@@ -47,7 +44,7 @@ module.exports = async function(deployer, network, accounts) {
   const deployerApp = new DeployerApp(deployer, web3, deployerAccount, network);
   
   await deployerApp.deploys([ZDAI, ZUSDC], txConfig);
-  await deployerApp.deploy(Settings, requiredSubmissions, maximumTolerance, txConfig);
+  await deployerApp.deploy(Settings, requiredSubmissions, maximumTolerance, responseExpiry, txConfig);
   const artifacts = {
     Lenders,
     Loans,

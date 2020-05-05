@@ -1,22 +1,21 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, NULL_ADDRESS, THIRTY_DAYS } = require('../utils/consts');
+const { t, NULL_ADDRESS } = require('../utils/consts');
 
 // Smart contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
 const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
 const Lenders = artifacts.require("./base/Lenders.sol");
 
 contract('InterestConsensusInitializeTest', function (accounts) {
 
     withData({
-        _1_no_reqsubmissions: [true, 0, 1, 'MUST_PROVIDE_REQUIRED_SUBS', true],
-        _2_no_lenders: [false, 1, 1, 'MUST_PROVIDE_LENDER_INFO', true],
-        _3_no_maxtolerance: [true, 1, 0, undefined, false],
-        _4_all_provided: [true, 1, 1, undefined, false],
+        _1_no_settings: [true, false, 'MUST_PROVIDE_SETTINGS', true],
+        _2_no_lenders: [false, true, 'MUST_PROVIDE_LENDER_INFO', true],
+        _4_all_provided: [true, true, undefined, false],
     }, function(
         provideLenders,
-        requiredSubmissions,
-        maximumTolerance,
+        provideSettings,
         expectedErrorMessage,
         mustFail
     ) {    
@@ -24,14 +23,14 @@ contract('InterestConsensusInitializeTest', function (accounts) {
             try {
                 // Setup
                 const instance = await InterestConsensus.new();
-                const lenders = await Lenders.new(accounts[1], accounts[2], instance.address)
-                const lendersAddress = provideLenders ? lenders.address : NULL_ADDRESS
+                const settings = await Mock.new();
+                const lenders = await Lenders.new(accounts[1], accounts[2], instance.address);
+                const lendersAddress = provideLenders ? lenders.address : NULL_ADDRESS;
+                const settingsAddress = provideSettings ? settings.address : NULL_ADDRESS;
 
                 let result = await instance.initialize(
                     lendersAddress,
-                    requiredSubmissions,
-                    maximumTolerance,
-                    THIRTY_DAYS
+                    settingsAddress,
                 )
 
                 // Assertions
