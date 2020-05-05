@@ -40,7 +40,7 @@ contract Loans is LoansInterface {
     uint256 private constant LIQUIDATE_ETH_PRICE = 9500; // Eth is bought at 95.00% of the going rate
     uint256 private constant TEN = 10; // Used to calculate one whole token.
     uint256 private constant HOURS_PER_YEAR = 365 * 24;
-    uint256 private constant TEN_THOUSAND = 10000; // For interest, collateral, and liquidation price, 7% is represented as 700.
+    uint256 private constant TEN_THOUSAND = 10000; // For interestRate, collateral, and liquidation price, 7% is represented as 700.
     // to find the value of something we must divide 700 by 100 to remove decimal places, and another 100 for percentage
 
     uint256 public totalCollateral;
@@ -375,7 +375,7 @@ contract Loans is LoansInterface {
 
     function _getCollateralNeededInTokens(uint256 loanAmount, uint256 collateralRatio)
         internal
-        view
+        pure
         returns (uint256)
     {
         // gets the amount of collateral needed in lending tokens (not wei)

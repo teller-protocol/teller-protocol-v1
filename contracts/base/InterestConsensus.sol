@@ -17,10 +17,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Libraries
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "../util/NumbersList.sol";
 import "../util/AddressLib.sol";
-import "../util/ZeroCollateralCommon.sol";
 
 // Interfaces
 import "../interfaces/InterestConsensusInterface.sol";
@@ -31,8 +28,6 @@ import "./Consensus.sol";
 
 contract InterestConsensus is Consensus, InterestConsensusInterface {
     using AddressLib for address;
-    using SafeMath for uint256;
-    using NumbersList for NumbersList.Values;
 
     // mapping of (lender, endTime) to the aggregated node submissions for their request
     mapping(address => mapping(uint256 => NumbersList.Values)) public interestSubmissions;
@@ -49,19 +44,11 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
             _processReponse(request, responses[i], requestHash);
         }
 
-        require(
-            interestSubmissions[request.lender][request.endTime].isWithinTolerance(
-                maximumTolerance
-            ),
-            "RESPONSES_TOO_VARIED"
-        );
+        uint256 interestAccrued = _getConsensus(interestSubmissions[request.lender][request.endTime]);
 
-        uint256 average = interestSubmissions[request.lender][request.endTime]
-            .getAverage();
+        emit InterestAccepted(request.lender, request.endTime, interestAccrued);
 
-        emit InterestAccepted(request.lender, request.endTime, average);
-
-        return average;
+        return interestAccrued;
     }
 
     function _processReponse(
@@ -69,27 +56,15 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         ZeroCollateralCommon.InterestResponse memory response,
         bytes32 requestHash
     ) internal {
-        require(
-            !hasSubmitted[response.signer][request.lender][request.endTime],
-            "SIGNER_ALREADY_SUBMITTED"
-        );
-        hasSubmitted[response.signer][request.lender][request.endTime] = true;
-
-        require(
-            !signerNonceTaken[response.signer][response.signature.signerNonce],
-            "SIGNER_NONCE_TAKEN"
-        );
-        signerNonceTaken[response.signer][response.signature.signerNonce] = true;
-
-        require(
-            response.responseTime >= now.sub(responseExpiryLength),
-            "RESPONSE_EXPIRED"
-        );
-
         bytes32 responseHash = _hashResponse(response, requestHash);
-        require(
-            _signatureValid(response.signature, responseHash, response.signer),
-            "SIGNATURE_INVALID"
+
+        _validateResponse(
+            response.signer,
+            request.lender,
+            request.endTime,
+            response.responseTime,
+            responseHash,
+            response.signature
         );
 
         interestSubmissions[request.lender][request.endTime].addValue(response.interest);

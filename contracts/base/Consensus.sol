@@ -18,6 +18,7 @@ pragma solidity 0.5.17;
 // Libraries
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../util/ZeroCollateralCommon.sol";
+import "../util/NumbersList.sol";
 
 // Contracts
 import "openzeppelin-solidity/contracts/access/roles/SignerRole.sol";
@@ -26,6 +27,7 @@ import "./Initializable.sol";
 
 contract Consensus is SignerRole, Initializable {
     using SafeMath for uint256;
+    using NumbersList for NumbersList.Values;
 
     // Has signer address already submitted their answer for (user, identifier)?
     mapping(address => mapping(address => mapping(uint256 => bool))) public hasSubmitted;
@@ -52,7 +54,7 @@ contract Consensus is SignerRole, Initializable {
     }
 
     function initialize(
-        address callerAddress,
+        address callerAddress, // loans for LoanTermsConsensus, lenders for InterestConsensus
         uint256 initRequiredSubmissions,
         uint256 initMaximumTolerance,
         uint256 initResponseExpiry
@@ -76,6 +78,11 @@ contract Consensus is SignerRole, Initializable {
     ) internal view returns (bool) {
         if (!isSigner(expectedSigner)) return false;
 
+        require(
+            !signerNonceTaken[expectedSigner][signature.signerNonce],
+            "SIGNER_NONCE_TAKEN"
+        );
+
         address signer = ecrecover(
             keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", dataHash)),
             signature.v,
@@ -83,5 +90,40 @@ contract Consensus is SignerRole, Initializable {
             signature.s
         );
         return (signer == expectedSigner);
+    }
+
+    function _getConsensus(NumbersList.Values storage values) internal view returns (uint256) {
+       require(
+            values.isWithinTolerance(maximumTolerance),
+            "RESPONSES_TOO_VARIED"
+        );
+
+        return values.getAverage();
+    }
+
+    function _validateResponse(
+        address signer,
+        address user,
+        uint256 requestIdentifier,
+        uint256 responseTime,
+        bytes32 responseHash,
+        ZeroCollateralCommon.Signature memory signature
+    ) internal {
+        require(
+            !hasSubmitted[signer][user][requestIdentifier],
+            "SIGNER_ALREADY_SUBMITTED"
+        );
+        hasSubmitted[signer][user][requestIdentifier] = true;
+
+        require(
+            responseTime >= now.sub(responseExpiryLength),
+            "RESPONSE_EXPIRED"
+        );
+
+        require(
+            _signatureValid(signature, responseHash, signer),
+            "SIGNATURE_INVALID"
+        );
+        signerNonceTaken[signer][signature.signerNonce] = true;
     }
 }

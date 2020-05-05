@@ -6,18 +6,18 @@ import "../util/ZeroCollateralCommon.sol";
 
 interface LoanTermsConsensusInterface {
     event TermsSubmitted(
-        address signer,
-        address borrower,
-        uint256 loanID,
-        uint256 interest,
+        address indexed signer,
+        address indexed borrower,
+        uint256 indexed requestNonce,
+        uint256 interestRate,
         uint256 collateralRatio,
         uint256 maxLoanAmount
     );
 
     event TermsAccepted(
-        address borrower,
-        uint256 loanID,
-        uint256 interest,
+        address indexed borrower,
+        uint256 indexed requestNonce,
+        uint256 interestRate,
         uint256 collateralRatio,
         uint256 maxLoanAmount
     );

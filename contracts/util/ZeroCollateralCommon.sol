@@ -1,5 +1,6 @@
 pragma solidity 0.5.17;
 
+import "./NumbersList.sol";
 
 library ZeroCollateralCommon {
     enum LoanStatus {NonExistent, TermsSet, Active, Closed}
@@ -10,6 +11,13 @@ library ZeroCollateralCommon {
         uint256 totalAccruedInterest;
         uint256 totalNotWithdrawn;
         uint256 timeLastAccrued;
+    }
+
+    struct Signature {
+        uint256 signerNonce;
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
     }
 
     struct InterestRequest {
@@ -26,6 +34,30 @@ library ZeroCollateralCommon {
         Signature signature;
     }
 
+    struct LoanRequest {
+        address payable borrower;
+        address recipient;
+        uint256 requestNonce;
+        uint256 amount;
+        uint256 duration;
+        uint256 requestTime;
+    }
+
+    struct LoanResponse {
+        address signer;
+        uint256 responseTime;
+        uint256 interestRate;
+        uint256 collateralRatio;
+        uint256 maxLoanAmount;
+        Signature signature;
+    }
+
+    struct AccruedLoanTerms {
+        NumbersList.Values interestRate;
+        NumbersList.Values collateralRatio;
+        NumbersList.Values maxLoanAmount;
+    }
+
     struct LoanTerms {
         address payable borrower;
         address recipient;
@@ -33,22 +65,6 @@ library ZeroCollateralCommon {
         uint256 collateralRatio;
         uint256 interestRate;
         uint256 duration;
-    }
-
-    struct LoanRequest {
-        address payable borrower;
-        address recipient;
-        uint256 amount;
-        uint256 duration;
-        uint256 requestTime;
-    }
-
-    struct LoanResponse {
-        uint256 maxAmount;
-        uint256 collateralRatio;
-        uint256 interestRate;
-        uint256 responseTime;
-        Signature signature;
     }
 
     // Data per borrow as struct
@@ -62,12 +78,5 @@ library ZeroCollateralCommon {
         uint256 totalOwed;
         LoanStatus status;
         bool liquidated;
-    }
-
-    struct Signature {
-        uint256 signerNonce;
-        uint8 v;
-        bytes32 r;
-        bytes32 s;
     }
 }

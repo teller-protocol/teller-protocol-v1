@@ -16,11 +16,6 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-// Libraries
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "../util/NumbersList.sol";
-import "../util/ZeroCollateralCommon.sol";
-
 // Contracts
 import "./Consensus.sol";
 
@@ -29,23 +24,108 @@ import "../interfaces/LoanTermsConsensusInterface.sol";
 
 
 contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
-    using SafeMath for uint256;
-    using NumbersList for NumbersList.Values;
+    mapping(address => mapping(uint256 => ZeroCollateralCommon.AccruedLoanTerms)) public termSubmissions;
+    mapping(address => mapping(uint256 => bool)) public requestNonceTaken;
 
     function processRequest(
         ZeroCollateralCommon.LoanRequest calldata request,
-        ZeroCollateralCommon.LoanResponse[] calldata responses,
-        uint256 loanID
+        ZeroCollateralCommon.LoanResponse[] calldata responses
     )
         external
         isInitialized()
         isCaller()
-        returns (uint256 interest, uint256 collateralRatio, uint256 maxLoanAmount)
+        returns (uint256 interestRate, uint256 collateralRatio, uint256 maxLoanAmount)
     {
-        // for each response:
-        // check response time was recently
-        // check signature valid
+        require(responses.length >= requiredSubmissions, "INSUFFICIENT_RESPONSES");
+        require(
+            !requestNonceTaken[request.borrower][request.requestNonce],
+            "REQUEST_NONCE_TAKEN"
+        );
+        requestNonceTaken[request.borrower][request.requestNonce] = true;
 
-        return (0, 0, 0);
+        bytes32 requestHash = _hashRequest(request);
+
+        for (uint256 i = 0; i < responses.length; i++) {
+            _processReponse(request, responses[i], requestHash);
+        }
+
+        interestRate = _getConsensus(termSubmissions[request.borrower][request.requestNonce].interestRate);
+        collateralRatio = _getConsensus(termSubmissions[request.borrower][request.requestNonce].collateralRatio);
+        maxLoanAmount = _getConsensus(termSubmissions[request.borrower][request.requestNonce].maxLoanAmount);
+
+        emit TermsAccepted(
+            request.borrower,
+            request.requestNonce,
+            interestRate,
+            collateralRatio,
+            maxLoanAmount
+        );
     }
+
+    function _processReponse(
+        ZeroCollateralCommon.LoanRequest memory request,
+        ZeroCollateralCommon.LoanResponse memory response,
+        bytes32 requestHash
+    ) internal {
+        bytes32 responseHash = _hashResponse(response, requestHash);
+
+        _validateResponse(
+            response.signer,
+            request.borrower,
+            request.requestNonce,
+            response.responseTime,
+            responseHash,
+            response.signature
+        );
+
+        termSubmissions[request.borrower][request.requestNonce].interestRate.addValue(response.interestRate);
+        termSubmissions[request.borrower][request.requestNonce].collateralRatio.addValue(response.collateralRatio);
+        termSubmissions[request.borrower][request.requestNonce].maxLoanAmount.addValue(response.maxLoanAmount);
+
+        emit TermsSubmitted(
+            response.signer,
+            request.borrower,
+            request.requestNonce,
+            response.interestRate,
+            response.collateralRatio,
+            response.maxLoanAmount
+        );
+    }
+
+    function _hashResponse(
+        ZeroCollateralCommon.LoanResponse memory response,
+        bytes32 requestHash
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    response.responseTime,
+                    response.interestRate,
+                    response.collateralRatio,
+                    response.maxLoanAmount,
+                    response.signature.signerNonce,
+                    requestHash
+                )
+            );
+    }
+
+    function _hashRequest(ZeroCollateralCommon.LoanRequest memory request)
+        internal
+        view
+        returns (bytes32)
+    {
+        return
+            keccak256(
+                abi.encode(
+                    caller,
+                    request.borrower,
+                    request.recipient,
+                    request.requestNonce,
+                    request.amount,
+                    request.duration,
+                    request.requestTime
+                )
+            );
+    }
+
 }
