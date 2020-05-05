@@ -4,15 +4,11 @@ import "../../base/Base.sol";
 
 contract BaseMock is Base {
 
-    constructor(address settingsAddress)
-        public
-        Base(settingsAddress) { }
+    function externalWhenNotPaused() external whenNotPaused() {}
 
-    function externalWhenNotPaused() external whenNotPaused(address(this)) {}
+    function externalWhenLendingPoolNotPaused() external whenLendingPoolNotPaused() {}
 
-    function externalWhenNotPausedAn(address anAddress) external whenNotPaused(anAddress) {}
+    function externalWhenPaused() external whenPaused() {}
 
-    function externalWhenPaused() external whenPaused(address(this)) {}
-
-    function externalWhenPausedAn(address anAddress) external whenPaused(anAddress) {}
+    function externalWhenLendingPoolPaused() external whenLendingPoolPaused() {}
 }

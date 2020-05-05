@@ -32,11 +32,13 @@ contract('LoansIsCollateralSentEnoughTest', function (accounts) {
         const zToken = await Mock.new();
         lendingToken = await Mock.new();
         const lenders = await Mock.new();
+        const settings = await Mock.new();
         await lendingPoolInstance.initialize(
             zToken.address,
             lendingToken.address,
             lenders.address,
             instance.address,
+            settings.address,
         );
     });
 

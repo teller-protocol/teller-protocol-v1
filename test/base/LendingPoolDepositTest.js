@@ -28,6 +28,7 @@ contract('LendingPoolDepositTest', function (accounts) {
         loansInstance = await Mock.new();
         interestConsensusInstance = await Mock.new();
         instance = await LendingPool.new();
+        const settingsInstance = await Mock.new();
 
         lendersInstance = await Lenders.new(
           zTokenInstance.address,
@@ -40,6 +41,7 @@ contract('LendingPoolDepositTest', function (accounts) {
             daiInstance.address,
             lendersInstance.address,
             loansInstance.address,
+            settingsInstance.address,
         );
     });
 

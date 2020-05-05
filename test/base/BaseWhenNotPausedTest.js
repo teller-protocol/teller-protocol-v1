@@ -15,14 +15,15 @@ contract('BaseWhenNotPausedTest', function (accounts) {
     
     beforeEach('Setup for each test', async () => {
         settings = await Settings.new(1, 1);
-        instance = await BaseMock.new(settings.address);
+        instance = await BaseMock.new();
+        await instance.initialize(settings.address);
     });
 
     withData({
         _1_notPaused: [false, undefined, false],
-        _2_paused: [true, 'PLATFORM_OR_POOL_IS_PAUSED', true],
+        _2_paused: [true, 'PLATFORM_IS_PAUSED', true],
     }, function(callPause, expectedErrorMessage,mustFail) {
-        it(t('user', 'externalWhenNotPaused / Platform', 'Should (or not) be able to call function when it is/isnt paused.', mustFail), async function() {
+        it(t('user', 'whenNotPaused', 'Should (or not) be able to call function when it is/isnt paused.', mustFail), async function() {
             // Setup
             if (callPause) {
                 await settings.pause({ from: owner });
@@ -45,20 +46,19 @@ contract('BaseWhenNotPausedTest', function (accounts) {
     });
 
     withData({
-        _1_notPaused: [1, 2, false, undefined, false],
-        _2_paused: [2, 2, true, 'PLATFORM_OR_POOL_IS_PAUSED', true]
-    }, function(lendingIndex, senderIndex, callPause, expectedErrorMessage,mustFail) {
-        it(t('user', 'externalWhenNotPaused / Lending', 'Should (or not) be able to call function when a lending address is/isnt paused.', mustFail), async function() {
+        _1_notPaused: [2, false, undefined, false],
+        _2_paused: [2, true, 'LENDING_POOL_IS_PAUSED', true]
+    }, function(senderIndex, callPause, expectedErrorMessage,mustFail) {
+        it(t('user', 'whenLendingPoolNotPaused', 'Should (or not) be able to call function when a lending address is/isnt paused.', mustFail), async function() {
             // Setup
             const senderAddress = accounts[senderIndex];
-            const lendingPoolAddress = accounts[lendingIndex];
             if (callPause) {
-                await settings.pauseLendingPool(lendingPoolAddress, { from: owner });
+                await settings.pauseLendingPool(instance.address, { from: owner });
             }
 
             try {
                 // Invocation
-                const result = await instance.externalWhenNotPausedAn(lendingPoolAddress, { from: senderAddress });
+                const result = await instance.externalWhenLendingPoolNotPaused({ from: senderAddress });
                 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');

@@ -8,13 +8,14 @@ module.exports = {
             lenderData.lastAccruedInterest
         );
     },
-    initContracts: async (lendingPool, zToken, consensus, dai, loans, Lenders) => {
+    initContracts: async (settings, lendingPool, zToken, consensus, dai, loans, Lenders) => {
         const lenders = await Lenders.new(zToken.address, lendingPool.address, consensus.address);
         await lendingPool.initialize(
             zToken.address,
             dai.address,
             lenders.address,
             loans.address,
+            settings.address,
         );
         return lenders;
     },

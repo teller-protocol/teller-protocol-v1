@@ -32,7 +32,8 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
         Loans,
         LendingPool,
         InterestConsensus,
-        ChainlinkPairAggregator
+        ChainlinkPairAggregator,
+        Settings,
     } = this.artifacts;
 
     await this.deployer.deployWith(`ChainlinkPairAggregator_${aggregatorName.toUpperCase()}`, ChainlinkPairAggregator, aggregatorAddress, txConfig);
@@ -40,13 +41,15 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
     await this.deployer.deployWith(`InterestConsensus_${zTokenName}`, InterestConsensus, txConfig);
     await this.deployer.deployWith(`Lenders_${zTokenName}`, Lenders, ZToken.address, LendingPool.address, InterestConsensus.address, txConfig);
     await this.deployer.deployWith(`Loans_${zTokenName}`, Loans, ChainlinkPairAggregator.address, LendingPool.address, txConfig);
-  
+    
+    const settingsInstance = await Settings.deployed();
     const lendingPoolInstance = await LendingPool.deployed();
     await lendingPoolInstance.initialize(
       ZToken.address,
       tokenAddress,
       Lenders.address,
-      Loans.address
+      Loans.address,
+      settingsInstance.address,
     );
   
     await zTokenInstance.addMinter(LendingPool.address, txConfig);

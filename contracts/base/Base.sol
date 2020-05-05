@@ -17,47 +17,57 @@ pragma solidity 0.5.17;
 
 // Libraries
 import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
+import "../util/AddressLib.sol";
 
 // Commons
+import "./Initializable.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
 
 
-contract Base is ReentrancyGuard {
+contract Base is Initializable, ReentrancyGuard {
+    using AddressLib for address;
+
     /* State Variables */
 
     SettingsInterface public settings;
 
     /** Modifiers */
 
-    modifier whenNotPaused(address lendingPoolAddress) {
-        require(
-            !_isPaused() && !_isPoolPaused(lendingPoolAddress),
-            "PLATFORM_OR_POOL_IS_PAUSED"
-        );
-        //require(, "LENDING_IS_PAUSED");
+    modifier whenNotPaused() {
+        require(!_isPaused(), "PLATFORM_IS_PAUSED");
         _;
     }
 
-    modifier whenPaused(address lendingPoolAddress) {
-        require(
-            _isPaused() || _isPoolPaused(lendingPoolAddress),
-            "PLATFORM_OR_POOL_IS_NOT_PAUSED"
-        );
+    modifier whenLendingPoolNotPaused() {
+        require(!_isPoolPaused(address(this)), "LENDING_POOL_IS_PAUSED");
+        _;
+    }
+
+    modifier whenPaused() {
+        require(_isPaused(), "PLATFORM_IS_NOT_PAUSED");
+        _;
+    }
+
+    modifier whenLendingPoolPaused() {
+        require(_isPoolPaused(address(this)), "LENDING_POOL_IS_NOT_PAUSED");
         _;
     }
 
     /* Constructor */
 
-    constructor(address settingsAddress) public {
-        require(settingsAddress != address(0x0), "SETTIGNS_MUST_BE_PROVIDED");
-        settings = SettingsInterface(settingsAddress);
-    }
-
     /** External Functions */
 
     /** Internal functions */
+
+    function initialize(address settingsAddress) external isNotInitialized() {
+        settingsAddress.requireNotEmpty("SETTIGNS_MUST_BE_PROVIDED");
+
+        initialize();
+
+        settings = SettingsInterface(settingsAddress);
+    }
 
     function _isPoolPaused(address poolAddress) internal view returns (bool) {
         return settings.lendingPoolPaused(poolAddress);

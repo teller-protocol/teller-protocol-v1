@@ -42,10 +42,7 @@ contract Settings is Pausable, Ownable, SettingsInterface {
 
     /* Constructor */
 
-    constructor(uint256 aRequiredSubmissions, uint256 aMaximumTolerance)
-        public
-        Pausable()
-    {
+    constructor(uint256 aRequiredSubmissions, uint256 aMaximumTolerance) public {
         requiredSubmissions = aRequiredSubmissions;
         maximumTolerance = aMaximumTolerance;
     }
