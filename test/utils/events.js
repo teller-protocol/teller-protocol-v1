@@ -119,34 +119,35 @@ module.exports = {
         },
     },
     interestConsensus: {
-      interestSubmitted: tx => {
-          const name = 'InterestSubmitted';
-          return {
-              name: name,
-              emitted: (signer, lender, blockNumber, interest) => truffleAssert.eventEmitted(tx, name, ev => {
-                  return (
-                      ev.signer == signer && 
-                      ev.lender == lender &&
-                      ev.blockNumber.toString() == blockNumber.toString() &&
-                      ev.interest.toString() == interest.toString()
-                  )
-              }),
-              notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-          };
-      },
-      interestAccepted: tx => {
-        const name = 'InterestAccepted';
-        return {
-            name: name,
-            emitted: (lender, blockNumber, interest) => truffleAssert.eventEmitted(tx, name, ev => {
-                return (
-                    ev.lender == lender && 
-                    ev.blockNumber.toString() == blockNumber.toString() &&
-                    ev.interest.toString() == interest.toString()
-                )
-            }),
-            notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-        };
+        interestSubmitted: tx => {
+            const name = 'InterestSubmitted';
+            return {
+                name: name,
+                emitted: (signer, lender, blockNumber, interest) => truffleAssert.eventEmitted(tx, name, ev => {
+                    return (
+                        ev.signer == signer && 
+                        ev.lender == lender &&
+                        ev.blockNumber.toString() == blockNumber.toString() &&
+                        ev.interest.toString() == interest.toString()
+                    )
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        interestAccepted: tx => {
+            const name = 'InterestAccepted';
+            return {
+                name: name,
+                emitted: (lender, blockNumber, interest) => truffleAssert.eventEmitted(tx, name, ev => {
+                    return (
+                        ev.lender == lender && 
+                        ev.blockNumber.toString() == blockNumber.toString() &&
+                        ev.interest.toString() == interest.toString()
+                    )
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     },
     settings: {
         lendingPoolPaused: tx => {
