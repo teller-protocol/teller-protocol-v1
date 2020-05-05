@@ -24,6 +24,7 @@ module.exports = async function(deployer, network, accounts) {
   const requiredSubmissions = env.getDefaultRequiredSubmissions().getOrDefault();
   const maximumTolerance = env.getDefaultMaximumTolerance().getOrDefault();
   const responseExpiry = env.getDefaultResponseExpiry().getOrDefault();
+  const safetyInterval = env.getDefaultSafetyInterval().getOrDefault();
   const deployerAccountIndex = env.getDefaultAddressIndex().getOrDefault();
   const deployerAccount = accounts[deployerAccountIndex];
   console.log(`Deployer account index is ${deployerAccountIndex} => ${deployerAccount}`);
@@ -39,6 +40,7 @@ module.exports = async function(deployer, network, accounts) {
     requiredSubmissions,
     maximumTolerance,
     responseExpiry,
+    safetyInterval,
     tokens,
     aggregators: chainlink,
   };

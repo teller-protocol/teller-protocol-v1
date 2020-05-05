@@ -7,6 +7,7 @@ const DEFAULT_ADDRESS_INDEX = "0";
 const DEFAULT_REQUIRED_SUBMISSIONS = "7";
 const DEFAULT_MAXIMUM_TOLERANCE = "0";
 const DEFAULT_RESPONSE_EXPIRY = "2592000"; // 30 days
+const DEFAULT_SAFETY_INTERVAL = "300" // 5 minutes
 
 const ADDRESS_COUNT_KEY = 'ADDRESS_COUNT_KEY';
 const DEFAULT_ADDRESS_INDEX_KEY = 'DEFAULT_ADDRESS_INDEX_KEY';
@@ -18,6 +19,7 @@ const ETHERSCAN_API_KEY = 'ETHERSCAN_API_KEY';
 const DEFAULT_REQUIRED_SUBMISSIONS_KEY = 'DEFAULT_REQUIRED_SUBMISSIONS_KEY'
 const DEFAULT_MAXIMUM_TOLERANCE_KEY = 'DEFAULT_MAXIMUM_TOLERANCE_KEY'
 const DEFAULT_RESPONSE_EXPIRY_KEY = 'DEFAULT_RESPONSE_EXPIRY_KEY'
+const DEFAULT_SAFETY_INTERVAL_KEY = 'DEFAULT_SAFETY_INTERVAL_KEY'
 
 class EnvConfig {
     constructor() {
@@ -38,6 +40,7 @@ EnvConfig.prototype.initializeConf = function() {
     this.createItem(DEFAULT_REQUIRED_SUBMISSIONS_KEY, DEFAULT_REQUIRED_SUBMISSIONS, 'This is the default number of node submissions for consensus.');
     this.createItem(DEFAULT_MAXIMUM_TOLERANCE_KEY, DEFAULT_MAXIMUM_TOLERANCE, 'This is the maximum tolerance of difference in node submissions.');
     this.createItem(DEFAULT_RESPONSE_EXPIRY_KEY, DEFAULT_RESPONSE_EXPIRY, 'This is the time after which node responses expire.');
+    this.createItem(DEFAULT_SAFETY_INTERVAL_KEY, DEFAULT_SAFETY_INTERVAL, 'This is the time between depositing collateral and taking out a loan.');
 }
 
 EnvConfig.prototype.createItem = function(name, defaultValue = undefined, description = undefined) {
@@ -92,6 +95,10 @@ EnvConfig.prototype.getDefaultMaximumTolerance = function() {
 
 EnvConfig.prototype.getDefaultResponseExpiry = function() {
   return this.conf.get(DEFAULT_RESPONSE_EXPIRY_KEY);
+}
+
+EnvConfig.prototype.getDefaultSafetyInterval = function() {
+  return this.conf.get(DEFAULT_SAFETY_INTERVAL_KEY);
 }
 
 module.exports = EnvConfig;

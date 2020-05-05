@@ -37,11 +37,10 @@ contract Loans is LoansInterface {
     uint256 private constant ONE_HOUR = 60 * 60;
     uint256 private constant ONE_DAY = ONE_HOUR * 24;
     uint256 private constant THIRTY_DAYS = ONE_DAY * 30;
-    uint256 private constant LIQUIDATE_ETH_PRICE = 95; // Eth is bought at 95% of the going rate
+    uint256 private constant LIQUIDATE_ETH_PRICE = 9500; // Eth is bought at 95.00% of the going rate
     uint256 private constant TEN = 10; // Used to calculate one whole token.
-    uint256 private constant ONE_HUNDRED = 100; // Used when finding a percentage of a number - divide by 100
-    uint256 private constant DAYS_PER_YEAR = 365;
-    uint256 private constant TEN_THOUSAND = 10000; // For interest and collateral, 7% is represented as 700.
+    uint256 private constant HOURS_PER_YEAR = 365*24;
+    uint256 private constant TEN_THOUSAND = 10000; // For interest, collateral, and liquidation price, 7% is represented as 700.
     // to find the value of something we must divide 700 by 100 to remove decimal places, and another 100 for percentage
 
     uint256 public totalCollateral;
@@ -52,6 +51,8 @@ contract Loans is LoansInterface {
     PairAggregatorInterface public priceOracle;
     LendingPoolInterface public lendingPool;
     LoanTermsConsensusInterface public loanTermsConsensus;
+
+    uint256 safetyInterval;
 
     mapping(address => uint256[]) public borrowerLoans;
 
@@ -86,7 +87,7 @@ contract Loans is LoansInterface {
         address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
-        uint256 safetyInterval
+        uint256 initSafetyInterval
     ) public {
         require(priceOracleAddress != address(0), "PROVIDE_ORACLE_ADDRESS");
         require(lendingPoolAddress != address(0), "PROVIDE_LENDINGPOOL_ADDRESS");
@@ -94,11 +95,12 @@ contract Loans is LoansInterface {
             loanTermsConsensusAddress != address(0x0),
             "Consensus address is required."
         );
-        require(safetyInterval > 0, "PROVIDE_SAFETY_INTERVAL");
+        require(initSafetyInterval > 0, "PROVIDE_SAFETY_INTERVAL");
 
         priceOracle = PairAggregatorInterface(priceOracleAddress);
         lendingPool = LendingPoolInterface(lendingPoolAddress);
         loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
+        safetyInterval = initSafetyInterval;
     }
 
     /**
@@ -136,18 +138,14 @@ contract Loans is LoansInterface {
         require(msg.sender == loans[loanID].loanTerms.borrower, "CALLER_DOESNT_OWN_LOAN");
 
         // Find the minimum collateral amount this loan is allowed in tokens
-        uint256 minimumCollateralDAI = _getMinimumAllowedCollateralDAI(loanID);
-
-        require(
-            priceOracle.getLatestTimestamp() >= now.sub(ONE_HOUR),
-            "ORACLE_PRICE_OLD"
+        uint256 collateralNeededToken = _getCollateralNeededInTokens(
+            loans[loanID].totalOwed,
+            loans[loanID].loanTerms.collateralRatio
         );
-
-        uint256 ethPrice = uint256(priceOracle.getLatestAnswer());
-        uint256 minimumCollateralETH = minimumCollateralDAI.div(ethPrice);
+        uint256 collateralNeededWei = _convertTokenToWei(collateralNeededToken);
 
         // Withdrawal amount holds the amount of excess collateral in the loan
-        uint256 withdrawalAmount = loans[loanID].collateral.sub(minimumCollateralETH);
+        uint256 withdrawalAmount = loans[loanID].collateral.sub(collateralNeededWei);
         if (withdrawalAmount > amount) {
             withdrawalAmount = amount;
         }
@@ -181,11 +179,11 @@ contract Loans is LoansInterface {
                 recipient: request.recipient,
                 maxLoanAmount: maxLoanAmount,
                 collateralRatio: collateralRatio,
-                interestRate: interestRate
+                interestRate: interestRate,
+                duration: request.duration
             }),
             termsExpiry: now.add(THIRTY_DAYS),
             loanStartTime: 0,
-            loanEndTime: 0,
             collateral: 0,
             lastCollateralIn: 0,
             totalOwed: 0,
@@ -214,29 +212,43 @@ contract Loans is LoansInterface {
             loans[loanID].loanTerms.maxLoanAmount >= amountBorrow,
             "MAX_LOAN_EXCEEDED"
         );
+
         require(loans[loanID].termsExpiry <= now, "LOAN_TERMS_EXPIRED");
+
         require(
             loans[loanID].lastCollateralIn <= now.sub(safetyInterval),
             "COLLATERAL_DEPOSITED_RECENTLY"
         );
+
         // check caller is borrower or recipient?
 
         // check that enough collateral has been provided for this loan
-        require(
-            priceOracle.getLatestTimestamp() >= now.sub(ONE_HOUR),
-            "ORACLE_PRICE_OLD"
+        uint256 collateralNeededToken = _getCollateralNeededInTokens(
+            amountBorrow,
+            loans[loanID].loanTerms.collateralRatio
         );
+        uint256 collateralNeededWei = _convertTokenToWei(collateralNeededToken);
 
-        uint256 ethPrice = uint256(priceOracle.getLatestAnswer());
-
-        // TODO - CHECK DECIMALS ON ETH PRICE
         require(
-            loans[loanID].collateral.mul(ethPrice) >=
-                amountBorrow.mul(loans[loanID].loanTerms.collateralRatio).div(
-                    TEN_THOUSAND
-                ),
+            loans[loanID].collateral >= collateralNeededWei,
             "MORE_COLLATERAL_REQUIRED"
         );
+
+        loans[loanID].loanStartTime = now;
+
+        // durationInHours is rounded up to the next hour
+        uint256 durationInHours = loans[loanID].loanTerms.duration.div(ONE_HOUR);
+        if (loans[loanID].loanTerms.duration.mod(ONE_HOUR) > 0) {
+            durationInHours++;
+        }
+
+        loans[loanID].totalOwed = amountBorrow.add(
+            amountBorrow.mul(loans[loanID].loanTerms.interestRate)
+                .mul(durationInHours)
+                .div(TEN_THOUSAND)
+                .div(HOURS_PER_YEAR)
+        );
+        loans[loanID].status = ZeroCollateralCommon.LoanStatus.Active;
 
         // give the borrower their requested amount of tokens
         lendingPool.createLoan(amountBorrow, loans[loanID].loanTerms.recipient);
@@ -255,8 +267,10 @@ contract Loans is LoansInterface {
         }
 
         if (toPay > 0) {
-            // update the loan
+            // update the amount owed on the loan
             loans[loanID].totalOwed = loans[loanID].totalOwed.sub(toPay);
+
+            // if the loan is now fully paid, close it and return collateral
             if (loans[loanID].totalOwed == 0) {
                 loans[loanID].status = ZeroCollateralCommon.LoanStatus.Closed;
 
@@ -267,6 +281,7 @@ contract Loans is LoansInterface {
                 );
             }
 
+            // collect the money from the payer
             lendingPool.repay(toPay, msg.sender);
         }
     }
@@ -276,34 +291,36 @@ contract Loans is LoansInterface {
      * @param loanID uint256 The ID of the loan to be liquidated
      */
     function liquidateLoan(uint256 loanID) external loanActive(loanID) {
-        // check that enough collateral has been provided for this loan
-        require(
-            priceOracle.getLatestTimestamp() >= now.sub(ONE_HOUR),
-            "ORACLE_PRICE_OLD"
+
+        // calculate the amount of collateral the loan needs in tokens
+        uint256 collateralNeededToken = _getCollateralNeededInTokens(
+            loans[loanID].totalOwed,
+            loans[loanID].loanTerms.collateralRatio
         );
+        uint256 collateralNeededWei = _convertTokenToWei(collateralNeededToken);
 
-        uint256 ethPrice = uint256(priceOracle.getLatestAnswer());
-        uint256 collateralInDAI = loans[loanID].collateral.mul(ethPrice);
-        uint256 minCollateralDAI = _getMinimumAllowedCollateralDAI(loanID);
-        // TODO - CHECK DECIMALS ON ETH PRICE
+        // calculate when the loan should end
+        uint256 loanEndTime = loans[loanID].loanStartTime.add(loans[loanID].loanTerms.duration);
 
-        // must be under collateralised or expired
+        // to liquidate it must be undercollateralised, or expired
         require(
-            minCollateralDAI > collateralInDAI || loans[loanID].loanEndTime < now,
+            collateralNeededWei > loans[loanID].collateral || loanEndTime < now,
             "DOESNT_NEED_LIQUIDATION"
         );
 
         loans[loanID].status = ZeroCollateralCommon.LoanStatus.Closed;
         loans[loanID].liquidated = true;
 
-        // the msg.sender pays tokens at 95% of collateral price
+        uint256 collateralInTokens = _convertWeiToToken(loans[loanID].collateral);
+
+        // the caller gets the collateral from the loan
+        _payOutCollateral(loanID, loans[loanID].collateral, msg.sender);
+
+        // the pays tokens at x% of collateral price
         lendingPool.liquidationPayment(
-            collateralInDAI.mul(LIQUIDATE_ETH_PRICE).div(ONE_HUNDRED),
+            collateralInTokens.mul(LIQUIDATE_ETH_PRICE).div(TEN_THOUSAND),
             msg.sender
         );
-
-        // and gets sent the ETH collateral in return
-        _payOutCollateral(loanID, loans[loanID].collateral, msg.sender);
     }
 
     /**
@@ -312,17 +329,6 @@ contract Loans is LoansInterface {
      */
     function getBorrowerLoans(address borrower) external view returns (uint256[] memory) {
         return borrowerLoans[borrower];
-    }
-
-    function _getMinimumAllowedCollateralDAI(uint256 loanID)
-        internal
-        view
-        returns (uint256)
-    {
-        uint256 loanAmount = loans[loanID].totalOwed;
-        uint256 collateralRatio = loans[loanID].loanTerms.collateralRatio;
-
-        return loanAmount.mul(collateralRatio).div(TEN_THOUSAND);
     }
 
     function _hashLoan(
@@ -365,20 +371,39 @@ contract Loans is LoansInterface {
         return TEN**decimals;
     }
 
-    function _isCollateralSentEnough(
-        uint256 msgValue,
-        uint256 amountToBorrow,
-        uint256 collateralRatio
-    ) internal view returns (bool) {
-        // Calculate Collateral Sent (in lending tokens) = ether sent / 1 lending token price in ether -wei(s)- * a whole lending token (with decimals).
+    function _getCollateralNeededInTokens(uint256 loanAmount, uint256 collateralRatio)
+        internal
+        view
+        returns (uint256)
+    {
+        // gets the amount of collateral needed in lending tokens (not wei)
+        return loanAmount.mul(collateralRatio).div(TEN_THOUSAND);
+    }
+
+    function _convertWeiToToken(
+        uint256 weiAmount
+    ) internal view returns (uint256) {
+        // wei amount / lending token price in wei * the lending token decimals.
         uint256 aWholeLendingToken = _getAWholeLendingToken();
-        uint256 oneLendingTokenPriceWeis = uint256(priceOracle.getLatestAnswer());
-        uint256 collateralSent = msgValue.mul(aWholeLendingToken).div(
-            oneLendingTokenPriceWeis
+        uint256 oneLendingTokenPriceWei = uint256(priceOracle.getLatestAnswer());
+        uint256 weiValue = weiAmount.mul(aWholeLendingToken).div(
+            oneLendingTokenPriceWei
         );
 
-        // Collateral Needed = Amount to Borrow (with lending token decimals)
-        uint256 collateralNeeded = amountToBorrow.mul(collateralRatio).div(TEN_THOUSAND);
-        return collateralSent >= collateralNeeded;
+        return weiValue;
+    }
+
+    function _convertTokenToWei(
+        uint256 tokenAmount
+    ) internal view returns (uint256) {
+        // tokenAmount is in token units, chainlink price is in whole tokens
+        // token amount in tokens * lending token price in wei / the lending token decimals.
+        uint256 aWholeLendingToken = _getAWholeLendingToken();
+        uint256 oneLendingTokenPriceWei = uint256(priceOracle.getLatestAnswer());
+        uint256 tokenValue = tokenAmount.mul(oneLendingTokenPriceWei).div(
+            aWholeLendingToken
+        );
+
+        return tokenValue;
     }
 }

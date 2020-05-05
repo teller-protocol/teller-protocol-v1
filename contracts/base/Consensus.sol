@@ -44,6 +44,8 @@ contract Consensus is SignerRole, Initializable {
     // the address with permissions to submit a request for processing
     address caller;
 
+    uint256 responseExpiryLength;
+
     modifier isCaller() {
         require(caller == msg.sender, "Address has no permissions.");
         _;

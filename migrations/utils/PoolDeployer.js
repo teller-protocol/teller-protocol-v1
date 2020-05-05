@@ -16,6 +16,7 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
         requiredSubmissions,
         maximumTolerance,
         responseExpiry,
+        safetyInterval,
         tokens,
         aggregators
     } = this.deployConfig;
@@ -41,7 +42,7 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
     await this.deployer.deployWith(`InterestConsensus_${zTokenName}`, InterestConsensus, txConfig);
     await this.deployer.deployWith(`Lenders_${zTokenName}`, Lenders, ZToken.address, LendingPool.address, InterestConsensus.address, txConfig);
     await this.deployer.deployWith(`LoanTermsConsensus_${zTokenName}`, LoanTermsConsensus, txConfig);
-    await this.deployer.deployWith(`Loans_${zTokenName}`, Loans, ChainlinkPairAggregator.address, LendingPool.address, LoanTermsConsensus.address, txConfig);
+    await this.deployer.deployWith(`Loans_${zTokenName}`, Loans, ChainlinkPairAggregator.address, LendingPool.address, LoanTermsConsensus.address, safetyInterval, txConfig);
   
     const lendingPoolInstance = await LendingPool.deployed();
     await lendingPoolInstance.initialize(
@@ -66,6 +67,7 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
       Loans.address,
       requiredSubmissions,
       maximumTolerance,
+      responseExpiry
     );
 }
 

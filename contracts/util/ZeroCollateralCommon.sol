@@ -32,6 +32,7 @@ library ZeroCollateralCommon {
         uint256 maxLoanAmount;
         uint256 collateralRatio;
         uint256 interestRate;
+        uint256 duration;
     }
 
     struct LoanRequest {
@@ -56,7 +57,6 @@ library ZeroCollateralCommon {
         LoanTerms loanTerms;
         uint256 termsExpiry;
         uint256 loanStartTime;
-        uint256 loanEndTime;
         uint256 collateral;
         uint256 lastCollateralIn;
         uint256 totalOwed;

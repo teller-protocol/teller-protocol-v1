@@ -10,20 +10,18 @@ contract LoansMock is Loans {
     constructor(
         address priceOracleAddress,
         address lendingPoolAddress,
-        address loanTermsConsensusAddress
+        address loanTermsConsensusAddress,
+        uint256 safetyInterval
     ) public Loans(
         priceOracleAddress,
         lendingPoolAddress,
-        loanTermsConsensusAddress
+        loanTermsConsensusAddress,
+        safetyInterval
     ) { }
 
     function setLoanIDCounter(uint256 newLoanIdCounter)
         external
     {
         loanIDCounter = newLoanIdCounter;
-    }
-
-    function externalIsCollateralSentEnough(uint256 msgValue, uint256 amountToBorrow, uint256 collateralRatio) external view returns (bool) {
-        return _isCollateralSentEnough(msgValue, amountToBorrow, collateralRatio);
     }
 }

@@ -34,8 +34,6 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
     using SafeMath for uint256;
     using NumbersList for NumbersList.Values;
 
-    uint256 responseExpiryLength;
-
     // mapping of (lender, endTime) to the aggregated node submissions for their request
     mapping(address => mapping(uint256 => NumbersList.Values)) public interestSubmissions;
 
