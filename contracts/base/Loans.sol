@@ -39,7 +39,7 @@ contract Loans is LoansInterface {
     uint256 private constant THIRTY_DAYS = ONE_DAY * 30;
     uint256 private constant LIQUIDATE_ETH_PRICE = 9500; // Eth is bought at 95.00% of the going rate
     uint256 private constant TEN = 10; // Used to calculate one whole token.
-    uint256 private constant HOURS_PER_YEAR = 365*24;
+    uint256 private constant HOURS_PER_YEAR = 365 * 24;
     uint256 private constant TEN_THOUSAND = 10000; // For interest, collateral, and liquidation price, 7% is represented as 700.
     // to find the value of something we must divide 700 by 100 to remove decimal places, and another 100 for percentage
 
@@ -243,7 +243,8 @@ contract Loans is LoansInterface {
         }
 
         loans[loanID].totalOwed = amountBorrow.add(
-            amountBorrow.mul(loans[loanID].loanTerms.interestRate)
+            amountBorrow
+                .mul(loans[loanID].loanTerms.interestRate)
                 .mul(durationInHours)
                 .div(TEN_THOUSAND)
                 .div(HOURS_PER_YEAR)
@@ -291,7 +292,6 @@ contract Loans is LoansInterface {
      * @param loanID uint256 The ID of the loan to be liquidated
      */
     function liquidateLoan(uint256 loanID) external loanActive(loanID) {
-
         // calculate the amount of collateral the loan needs in tokens
         uint256 collateralNeededToken = _getCollateralNeededInTokens(
             loans[loanID].totalOwed,
@@ -300,7 +300,9 @@ contract Loans is LoansInterface {
         uint256 collateralNeededWei = _convertTokenToWei(collateralNeededToken);
 
         // calculate when the loan should end
-        uint256 loanEndTime = loans[loanID].loanStartTime.add(loans[loanID].loanTerms.duration);
+        uint256 loanEndTime = loans[loanID].loanStartTime.add(
+            loans[loanID].loanTerms.duration
+        );
 
         // to liquidate it must be undercollateralised, or expired
         require(
@@ -380,22 +382,16 @@ contract Loans is LoansInterface {
         return loanAmount.mul(collateralRatio).div(TEN_THOUSAND);
     }
 
-    function _convertWeiToToken(
-        uint256 weiAmount
-    ) internal view returns (uint256) {
+    function _convertWeiToToken(uint256 weiAmount) internal view returns (uint256) {
         // wei amount / lending token price in wei * the lending token decimals.
         uint256 aWholeLendingToken = _getAWholeLendingToken();
         uint256 oneLendingTokenPriceWei = uint256(priceOracle.getLatestAnswer());
-        uint256 weiValue = weiAmount.mul(aWholeLendingToken).div(
-            oneLendingTokenPriceWei
-        );
+        uint256 weiValue = weiAmount.mul(aWholeLendingToken).div(oneLendingTokenPriceWei);
 
         return weiValue;
     }
 
-    function _convertTokenToWei(
-        uint256 tokenAmount
-    ) internal view returns (uint256) {
+    function _convertTokenToWei(uint256 tokenAmount) internal view returns (uint256) {
         // tokenAmount is in token units, chainlink price is in whole tokens
         // token amount in tokens * lending token price in wei / the lending token decimals.
         uint256 aWholeLendingToken = _getAWholeLendingToken();
