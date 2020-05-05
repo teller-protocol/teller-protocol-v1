@@ -5,7 +5,7 @@ const { t, NULL_ADDRESS } = require('../utils/consts');
 // Mock contracts
 
 // Smart contracts
-const Base = artifacts.require("./base/Base.sol");
+const Base = artifacts.require("./mock/base/BaseMock.sol");
 
 contract('BaseInitializeTest', function (accounts) {
 
@@ -19,7 +19,7 @@ contract('BaseInitializeTest', function (accounts) {
 
             try {
                 // Invocation
-                const result = await instance.initialize(settingsAddress);
+                const result = await instance.externalInitialize(settingsAddress);
                 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');

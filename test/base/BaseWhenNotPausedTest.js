@@ -16,7 +16,7 @@ contract('BaseWhenNotPausedTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         settings = await Settings.new(1, 1);
         instance = await BaseMock.new();
-        await instance.initialize(settings.address);
+        await instance.externalInitialize(settings.address);
     });
 
     withData({

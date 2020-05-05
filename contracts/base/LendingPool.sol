@@ -82,7 +82,7 @@ contract LendingPool is Base, LendingPoolInterface {
         lendersAddress.requireNotEmpty("Lenders address is required.");
         loansAddress.requireNotEmpty("Loans address is required.");
 
-        this.initialize(settingsAddress);
+        initialize(settingsAddress);
 
         zToken = ZTokenInterface(zTokenAddress);
         lendingToken = IERC20(lendingTokenAddress);
