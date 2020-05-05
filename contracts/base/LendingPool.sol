@@ -33,10 +33,7 @@ import "./Base.sol";
 /**
     @notice The LendingPool contract holds all of the tokens that lenders transfer into the protocol. It is the contract that lenders interact with to deposit and withdraw their tokens including interest. The LendingPool interacts with the Lenders contract to ensure token balances and interest owed is kept up to date.
  */
-contract LendingPool is
-    Base,
-    LendingPoolInterface
-{
+contract LendingPool is Base, LendingPoolInterface {
     using AddressLib for address;
 
     /* State Variables */
