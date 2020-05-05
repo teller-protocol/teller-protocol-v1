@@ -92,11 +92,12 @@ contract Consensus is SignerRole, Initializable {
         return (signer == expectedSigner);
     }
 
-    function _getConsensus(NumbersList.Values storage values) internal view returns (uint256) {
-       require(
-            values.isWithinTolerance(maximumTolerance),
-            "RESPONSES_TOO_VARIED"
-        );
+    function _getConsensus(NumbersList.Values storage values)
+        internal
+        view
+        returns (uint256)
+    {
+        require(values.isWithinTolerance(maximumTolerance), "RESPONSES_TOO_VARIED");
 
         return values.getAverage();
     }
@@ -115,15 +116,9 @@ contract Consensus is SignerRole, Initializable {
         );
         hasSubmitted[signer][user][requestIdentifier] = true;
 
-        require(
-            responseTime >= now.sub(responseExpiryLength),
-            "RESPONSE_EXPIRED"
-        );
+        require(responseTime >= now.sub(responseExpiryLength), "RESPONSE_EXPIRED");
 
-        require(
-            _signatureValid(signature, responseHash, signer),
-            "SIGNATURE_INVALID"
-        );
+        require(_signatureValid(signature, responseHash, signer), "SIGNATURE_INVALID");
         signerNonceTaken[signer][signature.signerNonce] = true;
     }
 }

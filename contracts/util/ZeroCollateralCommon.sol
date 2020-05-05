@@ -2,6 +2,7 @@ pragma solidity 0.5.17;
 
 import "./NumbersList.sol";
 
+
 library ZeroCollateralCommon {
     enum LoanStatus {NonExistent, TermsSet, Active, Closed}
 

@@ -49,9 +49,15 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
             _processReponse(request, responses[i], requestHash);
         }
 
-        interestRate = _getConsensus(termSubmissions[request.borrower][request.requestNonce].interestRate);
-        collateralRatio = _getConsensus(termSubmissions[request.borrower][request.requestNonce].collateralRatio);
-        maxLoanAmount = _getConsensus(termSubmissions[request.borrower][request.requestNonce].maxLoanAmount);
+        interestRate = _getConsensus(
+            termSubmissions[request.borrower][request.requestNonce].interestRate
+        );
+        collateralRatio = _getConsensus(
+            termSubmissions[request.borrower][request.requestNonce].collateralRatio
+        );
+        maxLoanAmount = _getConsensus(
+            termSubmissions[request.borrower][request.requestNonce].maxLoanAmount
+        );
 
         emit TermsAccepted(
             request.borrower,
@@ -78,9 +84,15 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
             response.signature
         );
 
-        termSubmissions[request.borrower][request.requestNonce].interestRate.addValue(response.interestRate);
-        termSubmissions[request.borrower][request.requestNonce].collateralRatio.addValue(response.collateralRatio);
-        termSubmissions[request.borrower][request.requestNonce].maxLoanAmount.addValue(response.maxLoanAmount);
+        termSubmissions[request.borrower][request.requestNonce].interestRate.addValue(
+            response.interestRate
+        );
+        termSubmissions[request.borrower][request.requestNonce].collateralRatio.addValue(
+            response.collateralRatio
+        );
+        termSubmissions[request.borrower][request.requestNonce].maxLoanAmount.addValue(
+            response.maxLoanAmount
+        );
 
         emit TermsSubmitted(
             response.signer,
@@ -127,5 +139,4 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
                 )
             );
     }
-
 }

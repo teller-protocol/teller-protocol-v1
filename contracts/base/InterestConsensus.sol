@@ -44,7 +44,9 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
             _processReponse(request, responses[i], requestHash);
         }
 
-        uint256 interestAccrued = _getConsensus(interestSubmissions[request.lender][request.endTime]);
+        uint256 interestAccrued = _getConsensus(
+            interestSubmissions[request.lender][request.endTime]
+        );
 
         emit InterestAccepted(request.lender, request.endTime, interestAccrued);
 
