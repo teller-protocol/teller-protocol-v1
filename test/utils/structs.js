@@ -1,3 +1,5 @@
+const { NULL_BYTES } = require('./consts');
+
 module.exports = {
     createInterestRequest:(lender, startTime, endTime, requestTime) => {
         return {
@@ -7,7 +9,7 @@ module.exports = {
             requestTime: requestTime,
         }
     },
-    createUnsignedResponse: (signer, responseTime, interest, signerNonce) => {
+    createUnsignedInterestResponse: (signer, responseTime, interest, signerNonce) => {
         return {
             signer: signer,
             responseTime: responseTime,
@@ -15,8 +17,8 @@ module.exports = {
             signature: {
                 signerNonce: signerNonce,
                 v: 0,
-                r: "0",
-                s: "0"
+                r: NULL_BYTES,
+                s: NULL_BYTES
             }
         }
     },
@@ -42,7 +44,7 @@ module.exports = {
             duration: duration,
         }
     },
-    createLoanResponse: (signer, responseTime, interestRate, collateralRatio, maxLoanAmount, signature) => {
+    createUnsignedLoanResponse: (signer, responseTime, interestRate, collateralRatio, maxLoanAmount, signerNonce) => {
         return {
             signer: signer,
             responseTime: responseTime,
@@ -52,8 +54,8 @@ module.exports = {
             signature: {
                 signerNonce: signerNonce,
                 v: 0,
-                r: "0",
-                s: "0"
+                r: NULL_BYTES,
+                s: NULL_BYTES
             }
         }
     },

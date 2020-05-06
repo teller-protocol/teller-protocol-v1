@@ -202,8 +202,10 @@ contract Loans is LoansInterface {
             liquidated: false
         });
 
+        if (msg.value > 0) {
         // update collateral, totalCollateral, and lastCollateralIn
-        _payInCollateral(loanID, msg.value);
+            _payInCollateral(loanID, msg.value);
+        }
 
         borrowerLoans[request.borrower].push(loanID);
     }

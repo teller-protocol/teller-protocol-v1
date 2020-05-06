@@ -2,6 +2,7 @@
 const withData = require('leche').withData;
 const { t, NULL_BYTES, NULL_ADDRESS } = require('../utils/consts');
 const { lenders } = require('../utils/events');
+const { createInterestRequest, createUnsignedInterestResponse } = require('../utils/structs');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -10,7 +11,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const Lenders = artifacts.require("./mock/base/LendersMock.sol");
 const InterestConsensus = artifacts.require("./mock/base/InterestConsensus.sol");
 
-contract('LendersWithdrawInterestTest', function (accounts) {
+contract('LendersSetAccruedInterestTest', function (accounts) {
     let instance;
     let zTokenInstance;
     let lendingPoolInstance;
@@ -20,36 +21,11 @@ contract('LendersWithdrawInterestTest', function (accounts) {
 
     const lenderAddress = accounts[2]
 
-    const emptyRequest = {
-      lender: NULL_ADDRESS,
-      startTime: 0,
-      endTime: 0,
-      requestTime: 0,
-  }
+    const emptyRequest = createInterestRequest(NULL_ADDRESS, 0, 0, 0)
 
-    let responseOne = {
-        signer: accounts[0],
-        responseTime: 0,
-        interest: 35976,
-        signature: {
-            signerNonce: 1,
-            v: 0,
-            r: NULL_BYTES,
-            s: NULL_BYTES
-        }
-    }
+    let responseOne = createUnsignedInterestResponse(accounts[0], 0, 35976, 1)
 
-    let responseTwo = {
-        signer: accounts[1],
-        responseTime: 0,
-        interest: 34732,
-        signature: {
-            signerNonce: 4,
-            v: 0,
-            r: NULL_BYTES,
-            s: NULL_BYTES
-        }
-    }
+    let responseTwo = createUnsignedInterestResponse(accounts[1], 0, 34732, 4)
     
     beforeEach('Setup for each test', async () => {
         zTokenInstance = await Mock.new();
@@ -87,7 +63,7 @@ contract('LendersWithdrawInterestTest', function (accounts) {
         mustFail,
         expectedErrorMessage,
     ) {    
-        it(t('user', 'withdrawInterest', 'Should able to withdraw interest.', false), async function() {
+        it(t('user', 'setAccruedInterest', 'Should able to set accrued interest.', false), async function() {
             const interestRequest = {
                 lender: lenderAddress,
                 startTime: startTime,
