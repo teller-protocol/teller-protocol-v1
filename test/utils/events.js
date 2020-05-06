@@ -100,6 +100,17 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        interestWithdrawn: tx => {
+            const name = 'InterestWithdrawn';
+            return {
+                name: name,
+                emitted: (lender, amount) => emitted(tx, name, ev => {
+                    assert.equal(ev.lender, lender);
+                    assert.equal(ev.amount.toString(), amount.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     },
     loans: {
         loanCreated: tx => {

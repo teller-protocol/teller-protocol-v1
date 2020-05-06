@@ -16,6 +16,9 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
+// Contracts
+import "../base/Base.sol";
+
 // Libraries
 import "../util/AddressLib.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
@@ -26,7 +29,7 @@ import "../interfaces/ZTokenInterface.sol";
 import "../interfaces/InterestConsensusInterface.sol";
 
 
-contract Lenders is LendersInterface {
+contract Lenders is Base, LendersInterface {
     using AddressLib for address;
     using SafeMath for uint256;
 
@@ -61,28 +64,29 @@ contract Lenders is LendersInterface {
 
     /* Constructor */
 
-    constructor(
+    /** External Functions */
+
+    function initialize(
         address zTokenAddress,
         address lendingPoolAddress,
-        address interestConsensusAddress
-    ) public {
-        require(zTokenAddress != address(0x0), "zToken address is required.");
-        require(lendingPoolAddress != address(0x0), "LendingPool address is required.");
-        require(
-            interestConsensusAddress != address(0x0),
-            "Consensus address is required."
-        );
+        address interestConsensusAddress,
+        address settingAddress
+    ) external isNotInitialized() {
+        zTokenAddress.requireNotEmpty("ZTOKEN_MUST_BE_PROVIDED");
+        lendingPoolAddress.requireNotEmpty("LENDING_POOL_MUST_BE_PROVIDED");
+        interestConsensusAddress.requireNotEmpty("CONSENSUS_MUST_BE_PROVIDED");
+
+        initialize(settingAddress);
+
         zToken = zTokenAddress;
         lendingPool = lendingPoolAddress;
         interestConsensus = InterestConsensusInterface(interestConsensusAddress);
     }
 
-    /** External Functions */
-
     function setAccruedInterest(
         ZeroCollateralCommon.InterestRequest calldata request,
         ZeroCollateralCommon.InterestResponse[] calldata responses
-    ) external {
+    ) external isInitialized() whenNotPaused() whenLendingPoolNotPaused() nonReentrant() {
         require(
             accruedInterest[request.lender].timeLastAccrued == request.startTime,
             "GAP_IN_INTEREST_ACCRUAL"
@@ -115,6 +119,10 @@ contract Lenders is LendersInterface {
         external
         isLendingPool()
         isValid(recipient)
+        isInitialized()
+        whenNotPaused()
+        whenLendingPoolNotPaused()
+        nonReentrant()
         returns (uint256)
     {
         uint256 amountToWithdraw = amount;

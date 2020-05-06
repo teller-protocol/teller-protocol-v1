@@ -11,7 +11,7 @@ contract('BaseInitializeTest', function (accounts) {
 
     withData({
         _1_basic: [accounts[0], undefined, false],
-        _2_notSettings: [NULL_ADDRESS, 'SETTIGNS_MUST_BE_PROVIDED', true],
+        _2_notSettings: [NULL_ADDRESS, 'SETTINGS_MUST_BE_PROVIDED', true],
     }, function(settingsAddress, expectedErrorMessage, mustFail) {
         it(t('user', 'initialize', 'Should (or not) be able to inintialize the new instance.', mustFail), async function() {
             // Setup

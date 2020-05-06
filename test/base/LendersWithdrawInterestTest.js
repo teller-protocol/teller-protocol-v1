@@ -14,15 +14,19 @@ contract('LendersWithdrawInterestTest', function (accounts) {
     let zTokenInstance;
     let lendingPoolInstance;
     let interestConsensusInstance;
+    let settingsInstance;
     
     beforeEach('Setup for each test', async () => {
         zTokenInstance = await Mock.new();
         lendingPoolInstance = await Mock.new();
         interestConsensusInstance = await Mock.new();
-        instance = await Lenders.new(
+        settingsInstance = await Mock.new();
+        instance = await Lenders.new();
+        await instance.initialize(
             zTokenInstance.address,
             lendingPoolInstance.address,
-            interestConsensusInstance.address
+            interestConsensusInstance.address,
+            settingsInstance.address,
         );
     });
 

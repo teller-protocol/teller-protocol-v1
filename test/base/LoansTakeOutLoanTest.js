@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, encode, createLoanInfo } = require('../utils/consts');
+const { t, encode, createLoanInfo, THIRTY_DAYS } = require('../utils/consts');
 const { createLoanSig } = require('../utils/hashes');
 const { loans } = require('../utils/events');
 
@@ -8,6 +8,7 @@ const { loans } = require('../utils/events');
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
+const Settings = artifacts.require("./base/Settings.sol");
 const Loans = artifacts.require("./mock/base/LoansMock.sol");
 
 contract('LoansTakeOutLoanTest', function (accounts) {
@@ -18,9 +19,12 @@ contract('LoansTakeOutLoanTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
         oracleInstance = await Mock.new();
-        instance = await Loans.new(
+        const settingsInstance = await Settings.new(1, 1, THIRTY_DAYS);
+        instance = await Loans.new();
+        await instance.initialize(
             oracleInstance.address,
             lendingPoolInstance.address,
+            settingsInstance.address,
         );
     });
 

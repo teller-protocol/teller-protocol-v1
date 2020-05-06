@@ -201,7 +201,17 @@ contract LendingPool is Base, LendingPoolInterface {
         whenNotPaused()
         whenLendingPoolNotPaused()
         nonReentrant()
-    {}
+    {
+        address lender = msg.sender;
+
+        uint256 amountWithdrawn = lenders.withdrawInterest(lender, amount);
+
+        requireEnoughLendingTokenBalance(amountWithdrawn);
+
+        tokenTransfer(lender, amountWithdrawn);
+
+        emit InterestWithdrawn(lender, amountWithdrawn);
+    }
 
     /** Internal functions */
 
@@ -227,6 +237,11 @@ contract LendingPool is Base, LendingPoolInterface {
     function tokenTransferFrom(address from, uint256 amount) private {
         bool transferFromResult = lendingToken.transferFrom(from, address(this), amount);
         require(transferFromResult, "TransferFrom wasn't successful.");
+    }
+
+    function requireEnoughLendingTokenBalance(uint256 amount) private view {
+        uint256 lendingTokenBalance = lendingToken.balanceOf(address(this));
+        require(lendingTokenBalance >= amount, "NOT_ENOUGH_LENDING_TOKEN_BALANCE");
     }
 
     /**

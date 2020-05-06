@@ -62,7 +62,7 @@ contract Base is Initializable, ReentrancyGuard {
     /** Internal functions */
 
     function initialize(address settingsAddress) internal isNotInitialized() {
-        settingsAddress.requireNotEmpty("SETTIGNS_MUST_BE_PROVIDED");
+        settingsAddress.requireNotEmpty("SETTINGS_MUST_BE_PROVIDED");
 
         initialize();
 
