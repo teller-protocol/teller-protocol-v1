@@ -1,6 +1,8 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, FIVE_MIN, NULL_ADDRESS, createLoanTerms, ACTIVE } = require('../utils/consts');
+const { t, FIVE_MIN, NULL_ADDRESS, ACTIVE } = require('../utils/consts');
+const { loans } = require('../utils/events');
+const { createLoanTerms } = require('../utils/structs');
 
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const PairAggregatorEncoder = require('../utils/encoders/PairAggregatorEncoder');
@@ -80,7 +82,7 @@ contract('LoansWithdrawCollateralTest', function (accounts) {
             try {
                 const contractBalBefore = await web3.eth.getBalance(instance.address)
 
-                await instance.withdrawCollateral(withdrawalAmount, mockLoanID, { from: msgSender })
+                const tx = await instance.withdrawCollateral(withdrawalAmount, mockLoanID, { from: msgSender })
                 
                 const totalAfter = await instance.totalCollateral.call()
                 const contractBalAfter = await web3.eth.getBalance(instance.address)
@@ -89,6 +91,10 @@ contract('LoansWithdrawCollateralTest', function (accounts) {
                 const paidOut = Math.min(withdrawalAllowed, withdrawalAmount)
 
                 let loan = await instance.loans.call(mockLoanID)
+
+                loans
+                    .collateralWithdrawn(tx)
+                    .emitted(mockLoanID, loanBorrower, paidOut)
 
                 assert.equal(parseInt(loan['collateral']), (loanCollateral - paidOut))
                 assert.equal(totalCollateral - paidOut, parseInt(totalAfter))

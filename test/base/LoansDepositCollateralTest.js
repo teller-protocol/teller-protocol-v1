@@ -1,6 +1,9 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, FIVE_MIN, NULL_ADDRESS, createLoanTerms, ACTIVE } = require('../utils/consts');
+const { t, FIVE_MIN, NULL_ADDRESS, ACTIVE } = require('../utils/consts');
+const { createLoanTerms } = require('../utils/structs');
+
+const { loans } = require('../utils/events');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -51,6 +54,10 @@ contract('LoansDepositCollateralTest', function (accounts) {
 
                 let tx = await instance.depositCollateral(specifiedBorrower, mockLoanID, { value: msgValue })
                 let txTimestamp = (await web3.eth.getBlock(tx.receipt.blockNumber)).timestamp
+
+                loans
+                  .collateralDeposited(tx)
+                  .emitted(mockLoanID, loanBorrower, msgValue)
 
                 const totalAfter = await instance.totalCollateral.call()
                 const contractBalAfter = await web3.eth.getBalance(instance.address)

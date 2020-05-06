@@ -32,7 +32,7 @@ interface LoansInterface {
     event CollateralWithdrawn(
         uint256 indexed loanID,
         address indexed borrower,
-        uint256 depositAmount
+        uint256 withdrawalAmount
     );
 
     // new loan created

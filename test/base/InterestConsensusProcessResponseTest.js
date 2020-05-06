@@ -3,10 +3,9 @@ const {
     t,
     getLatestTimestamp,
     THIRTY_DAYS,
-    ONE_DAY,
-    createInterestRequest,
-    createUnsignedResponse
+    ONE_DAY
 } = require('../utils/consts');
+const { createInterestRequest, createUnsignedResponse } = require('../utils/structs');
 const { createResponseSig, hashRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
 const { interestConsensus } = require('../utils/events');

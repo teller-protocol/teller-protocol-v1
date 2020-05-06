@@ -117,6 +117,30 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        collateralDeposited: tx => {
+            const name = 'CollateralDeposited';
+            return {
+                name: name,
+                emitted: (loanID, borrower, depositAmount) => emitted(tx, name, ev => {
+                    assert.equal(ev.loanID.toString(), loanID.toString());
+                    assert.equal(ev.borrower, borrower);
+                    assert.equal(ev.depositAmount.toString(), depositAmount.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        collateralWithdrawn: tx => {
+            const name = 'CollateralWithdrawn';
+            return {
+                name: name,
+                emitted: (loanID, borrower, withdrawalAmount) => emitted(tx, name, ev => {
+                    assert.equal(ev.loanID.toString(), loanID.toString());
+                    assert.equal(ev.borrower, borrower);
+                    assert.equal(ev.withdrawalAmount.toString(), withdrawalAmount.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     },
     interestConsensus: {
       interestSubmitted: tx => {
