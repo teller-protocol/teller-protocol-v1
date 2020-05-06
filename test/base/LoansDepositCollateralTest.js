@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, FIVE_MIN, NULL_ADDRESS, createLoanTerms } = require('../utils/consts');
+const { t, FIVE_MIN, NULL_ADDRESS, createLoanTerms, ACTIVE } = require('../utils/consts');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -13,6 +13,8 @@ contract('LoansDepositCollateralTest', function (accounts) {
     let oracleInstance;
     let loanTermsConsInstance;
     let lendingPoolInstance;
+
+    const mockLoanID = 7
     
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
@@ -27,34 +29,36 @@ contract('LoansDepositCollateralTest', function (accounts) {
     });
 
     withData({
-        _1_borrower_mismatch: [accounts[1], accounts[2], 5000000, 123456, 7, true, 'BORROWER_LOAN_ID_MISMATCH'],
-        _2_deposit_zero: [accounts[1], accounts[1], 0, 123456, 7, true, 'CANNOT_DEPOSIT_ZERO'],
-        _3_deposit_more: [accounts[1], accounts[1], 5000000, 123456, 7, false, undefined],
+        _1_borrower_mismatch: [accounts[1], accounts[2], 5000000, 123456, true, 'BORROWER_LOAN_ID_MISMATCH'],
+        _2_deposit_zero: [accounts[1], accounts[1], 0, 123456, true, 'CANNOT_DEPOSIT_ZERO'],
+        _3_deposit_more: [accounts[1], accounts[1], 5000000, 123456, false, undefined],
     }, function(
         loanBorrower,
         specifiedBorrower,
         msgValue,
         mockCollateral,
-        mockLoanID,
         mustFail,
         expectedErrorMessage
     ) {
         it(t('user', 'depositCollateral', 'Should able to deposit collateral.', false), async function() {
             // Setup
             const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, 0, 0, 0)
-            await instance.setLoan(mockLoanID, loanTerms, 0, 0, mockCollateral, 0, 0, 2, false)
+            await instance.setLoan(mockLoanID, loanTerms, 0, 0, mockCollateral, 0, 0, ACTIVE, false)
 
             try {
+                const contractBalBefore = await web3.eth.getBalance(instance.address)
                 const totalBefore = await instance.totalCollateral.call()
 
                 let tx = await instance.depositCollateral(specifiedBorrower, mockLoanID, { value: msgValue })
                 let txTimestamp = (await web3.eth.getBlock(tx.receipt.blockNumber)).timestamp
 
                 const totalAfter = await instance.totalCollateral.call()
+                const contractBalAfter = await web3.eth.getBalance(instance.address)
 
                 let loan = await instance.loans.call(mockLoanID)
                 assert.equal(parseInt(loan['collateral']), (mockCollateral + msgValue))
                 assert.equal(parseInt(totalBefore) + msgValue, parseInt(totalAfter))
+                assert.equal(parseInt(contractBalBefore) + msgValue, parseInt(contractBalAfter))
 
                 assert.equal(parseInt(loan['lastCollateralIn']), txTimestamp)
             } catch (error) {

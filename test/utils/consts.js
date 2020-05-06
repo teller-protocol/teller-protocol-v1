@@ -10,8 +10,16 @@ const FIVE_MIN = 60*5
 const ONE_HOUR = 3600
 const ONE_DAY = ONE_HOUR*24
 const THIRTY_DAYS = ONE_DAY*30
+const NON_EXISTENT = 0
+const TERMS_SET = 1
+const ACTIVE = 2
+const CLOSED = 3
 
 module.exports = {
+    NON_EXISTENT,
+    TERMS_SET,
+    ACTIVE,
+    CLOSED,
     DEFAULT_DECIMALS,
     NULL_ADDRESS,
     NULL_BYTES,

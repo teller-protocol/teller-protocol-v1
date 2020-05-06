@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, NULL_ADDRESS } = require('../utils/consts');
+const { t, NON_EXISTENT, ACTIVE, TERMS_SET, CLOSED } = require('../utils/consts');
 
 // Smart contracts
 const LoansModifiersMock = artifacts.require("./mock/base/LoansModifiersMock.sol");
@@ -13,10 +13,10 @@ contract('LoansModifiersTest', function (accounts) {
     });
 
     withData({
-        _1_loanNonExistent: [0, 'LOAN_NOT_ACTIVE', true],
-        _2_loanTermsSet: [1, 'LOAN_NOT_ACTIVE', true],
-        _3_loanActive: [2, undefined, false],
-        _4_loanClosed: [3, 'LOAN_NOT_ACTIVE', true],
+        _1_loanNonExistent: [NON_EXISTENT, 'LOAN_NOT_ACTIVE', true],
+        _2_loanTermsSet: [TERMS_SET, 'LOAN_NOT_ACTIVE', true],
+        _3_loanActive: [ACTIVE, undefined, false],
+        _4_loanClosed: [CLOSED, 'LOAN_NOT_ACTIVE', true],
     }, function(
         loanStatus,
         expectedErrorMessage,

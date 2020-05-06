@@ -42,6 +42,10 @@ contract LoansMock is Loans {
         borrowerLoans[borrower] = loanIDs;
     }
 
+    function setTotalCollateral(uint256 amount) external {
+        totalCollateral = amount;
+    }
+
     function setLoan(
         uint256 id,
         ZeroCollateralCommon.LoanTerms calldata loanTerms,
@@ -65,4 +69,7 @@ contract LoansMock is Loans {
             liquidated: liquidated
         });
     }
+
+    function() external payable {}
+
 }

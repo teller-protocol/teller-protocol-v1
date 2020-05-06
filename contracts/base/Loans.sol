@@ -92,7 +92,7 @@ contract Loans is LoansInterface {
         require(priceOracleAddress != address(0), "PROVIDE_ORACLE_ADDRESS");
         require(lendingPoolAddress != address(0), "PROVIDE_LENDINGPOOL_ADDRESS");
         require(
-            loanTermsConsensusAddress != address(0x0),
+            loanTermsConsensusAddress != address(0),
             "Consensus address is required."
         );
         require(initSafetyInterval > 0, "PROVIDE_SAFETY_INTERVAL");
@@ -146,6 +146,7 @@ contract Loans is LoansInterface {
         loanActiveOrSet(loanID)
     {
         require(msg.sender == loans[loanID].loanTerms.borrower, "CALLER_DOESNT_OWN_LOAN");
+        require(amount > 0, "CANNOT_WITHDRAW_ZERO");
 
         // Find the minimum collateral amount this loan is allowed in tokens
         uint256 collateralNeededToken = _getCollateralNeededInTokens(
@@ -262,7 +263,11 @@ contract Loans is LoansInterface {
         loans[loanID].status = ZeroCollateralCommon.LoanStatus.Active;
 
         // give the recipient their requested amount of tokens
-        lendingPool.createLoan(amountBorrow, loans[loanID].loanTerms.recipient);
+        if (loans[loanID].loanTerms.recipient != address(0)) {
+            lendingPool.createLoan(amountBorrow, loans[loanID].loanTerms.recipient);
+        } else {
+            lendingPool.createLoan(amountBorrow, loans[loanID].loanTerms.borrower);
+        }
     }
 
     /**
