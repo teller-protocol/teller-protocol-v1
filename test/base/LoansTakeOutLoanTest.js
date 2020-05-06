@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, encode, createLoanInfo } = require('../utils/consts');
+const { t, encode, createLoanInfo, FIVE_MIN } = require('../utils/consts');
 const { createLoanSig } = require('../utils/hashes');
 const { loans } = require('../utils/events');
 
@@ -14,13 +14,17 @@ contract('LoansTakeOutLoanTest', function (accounts) {
     let instance;
     let oracleInstance;
     let lendingPoolInstance;
+    let loanTermsConsInstance;
     
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
         oracleInstance = await Mock.new();
+        loanTermsConsInstance = await Mock.new();
         instance = await Loans.new(
             oracleInstance.address,
             lendingPoolInstance.address,
+            loanTermsConsInstance.address,
+            FIVE_MIN
         );
     });
 

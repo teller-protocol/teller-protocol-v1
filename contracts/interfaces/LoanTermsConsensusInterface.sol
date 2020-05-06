@@ -24,7 +24,6 @@ interface LoanTermsConsensusInterface {
 
     function processRequest(
         ZeroCollateralCommon.LoanRequest calldata request,
-        ZeroCollateralCommon.LoanResponse[] calldata responses,
-        uint256 loanID
+        ZeroCollateralCommon.LoanResponse[] calldata responses
     ) external returns (uint256, uint256, uint256);
 }

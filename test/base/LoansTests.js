@@ -11,6 +11,7 @@ const {
   NULL_ADDRESS,
   ONE_HOUR,
   ONE_DAY,
+  FIVE_MIN,
   getLatestTimestamp
 } = require('../utils/consts');
 const { hashLoan, signHash } = require('../utils/hashes');
@@ -28,10 +29,11 @@ contract('Loans Unit Tests', async accounts => {
   const MAX_LOAN_AMOUNT = 10000
   const NUMBER_DAYS = 30
 
-  let mockOracle
+  let oracleMock
   let mockOracleInterface
   let lendingPoolMock
   let lendingPoolMockInterface
+  let loansTermsConsensusMock
 
   let mockOracleTimestamp
   let mockOracleValue
@@ -48,8 +50,9 @@ contract('Loans Unit Tests', async accounts => {
   })
 
   async function setupMockContracts() {
-    mockOracle = await Mock.new()
+    oracleMock = await Mock.new()
     lendingPoolMock = await Mock.new()
+    loansTermsConsensusMock = await Mock.new()
 
     mockOracleInterface = await ChainlinkPairAggregator.new(accounts[1])
     lendingPoolMockInterface = await LendingPoolMock.new()
@@ -65,7 +68,7 @@ contract('Loans Unit Tests', async accounts => {
   before('Deploy Loans Contract', async () => {
     await setupMockContracts()
     loans = await Loans.new(
-      mockOracle.address,
+      oracleMock.address,
       lendingPoolMock.address
     )
   })
@@ -73,7 +76,7 @@ contract('Loans Unit Tests', async accounts => {
   describe('Test the constructor', async () => {
     it('should set the addresses of the oracle and pool', async () => {
       let result = await loans.priceOracle.call()
-      assert.equal(result, mockOracle.address, 'Oracle address not set correctly')
+      assert.equal(result, oracleMock.address, 'Oracle address not set correctly')
       
       result = await loans.lendingPool.call()
       assert.equal(result, lendingPoolMock.address, 'DAI Pool address not set correctly')
@@ -92,7 +95,7 @@ contract('Loans Unit Tests', async accounts => {
     it('should not accept a dai pool address of 0', async () => {
       await truffleAssert.reverts(
         Loans.new(
-          mockOracle.address,
+          oracleMock.address,
           NULL_ADDRESS
         ),
         'PROVIDE_LENDINGPOOL_ADDRESS'
@@ -160,7 +163,7 @@ contract('Loans Unit Tests', async accounts => {
       // mock the oracle returning an old timestamp
       const nintyMinsAgo = (await getLatestTimestamp()) - (1.5 * ONE_HOUR)
 
-      await mockOracle.givenMethodReturnUint(mockOracleTimestamp, nintyMinsAgo)
+      await oracleMock.givenMethodReturnUint(mockOracleTimestamp, nintyMinsAgo)
 
       const signature = await signHash(web3, signerAddress, hashedLoan)
 
@@ -186,10 +189,10 @@ contract('Loans Unit Tests', async accounts => {
     it('should not proceed if not enough collateral has been provided', async () => {
       // mock the oracle returning a new timestamp
       const fortyFiveMinsAgo = (await getLatestTimestamp()) - (0.75 * ONE_HOUR)
-      await mockOracle.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
+      await oracleMock.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
 
       // ETH/DAI price of 199
-      await mockOracle.givenMethodReturnUint(mockOracleValue, 199)
+      await oracleMock.givenMethodReturnUint(mockOracleValue, 199)
 
       const signature = await signHash(web3, signerAddress, hashedLoan)
 
@@ -220,10 +223,10 @@ contract('Loans Unit Tests', async accounts => {
     it('should successfully create a loan for valid parameters and signature', async () => {
       // mock the oracle returning a new timestamp
       const fortyFiveMinsAgo = (await getLatestTimestamp()) - (0.75 * ONE_HOUR)
-      await mockOracle.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
+      await oracleMock.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
 
       // ETH/DAI price of 205 this time - therefore 30 ETH is enough collateral
-      await mockOracle.givenMethodReturnUint(mockOracleValue, 205)
+      await oracleMock.givenMethodReturnUint(mockOracleValue, 205)
 
       const signature = await signHash(web3, signerAddress, hashedLoan)
 
@@ -285,10 +288,10 @@ contract('Loans Unit Tests', async accounts => {
     it('should successfully create a loan for valid parameters and signature', async () => {
       // mock the oracle returning a new timestamp
       const fortyFiveMinsAgo = (await getLatestTimestamp()) - (0.75 * ONE_HOUR)
-      await mockOracle.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
+      await oracleMock.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
 
       // ETH/DAI price of 205 this time - therefore 30 ETH is enough collateral
-      await mockOracle.givenMethodReturnUint(mockOracleValue, 205)
+      await oracleMock.givenMethodReturnUint(mockOracleValue, 205)
 
       const signature = await signHash(web3, signerAddress, hashedLoan)
 
@@ -350,10 +353,10 @@ contract('Loans Unit Tests', async accounts => {
     it('should successfully create a loan for valid parameters and signature', async () => {
       // mock the oracle returning a new timestamp
       const fortyFiveMinsAgo = (await getLatestTimestamp()) - (0.75 * ONE_HOUR)
-      await mockOracle.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
+      await oracleMock.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
 
       // ETH/DAI price of 205 this time - therefore 30 ETH is enough collateral
-      await mockOracle.givenMethodReturnUint(mockOracleValue, 205)
+      await oracleMock.givenMethodReturnUint(mockOracleValue, 205)
 
       const signature = await signHash(web3, signerAddress, hashedLoan)
 
@@ -424,10 +427,10 @@ contract('Loans Unit Tests', async accounts => {
     it('should not allow a repeated signer nonce', async () => {
       // mock the oracle returning a new timestamp
       const fortyFiveMinsAgo = (await getLatestTimestamp()) - (0.75 * ONE_HOUR)
-      await mockOracle.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
+      await oracleMock.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
 
       // ETH/DAI price of 205 this time - therefore 30 ETH is enough collateral
-      await mockOracle.givenMethodReturnUint(mockOracleValue, 205)
+      await oracleMock.givenMethodReturnUint(mockOracleValue, 205)
 
       const signature = await signHash(web3, signerAddress, hashedLoan)
 
@@ -479,10 +482,10 @@ contract('Loans Unit Tests', async accounts => {
     it('should take out more loans for the same and different users', async () => {
       // mock the oracle returning a new timestamp
       const fortyFiveMinsAgo = (await getLatestTimestamp()) - (0.75 * ONE_HOUR)
-      await mockOracle.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
+      await oracleMock.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
 
       // ETH/DAI price of 205 this time - therefore 30 ETH is enough collateral
-      await mockOracle.givenMethodReturnUint(mockOracleValue, 205)
+      await oracleMock.givenMethodReturnUint(mockOracleValue, 205)
 
       let signature = await signHash(web3, signerAddress, hashedLoan)
 
@@ -577,10 +580,10 @@ contract('Loans Unit Tests', async accounts => {
   describe('Test depositCollateral()', async () => {
     beforeEach(async () => {
       const fortyFiveMinsAgo = (await getLatestTimestamp()) - (0.75 * ONE_HOUR)
-      await mockOracle.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
+      await oracleMock.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
 
       // ETH/DAI price of 205 this time - therefore 30 ETH is enough collateral
-      await mockOracle.givenMethodReturnUint(mockOracleValue, 205)
+      await oracleMock.givenMethodReturnUint(mockOracleValue, 205)
 
       // create a loan for alice with ID 0
       let hashedLoan = hashLoan({
@@ -655,10 +658,10 @@ contract('Loans Unit Tests', async accounts => {
     beforeEach(async () => {
       // setup a loan for Alice
       const fortyFiveMinsAgo = (await getLatestTimestamp()) - (0.75 * ONE_HOUR)
-      await mockOracle.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
+      await oracleMock.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
 
       // ETH/DAI price of 205 this time - therefore 30 ETH is enough collateral
-      await mockOracle.givenMethodReturnUint(mockOracleValue, 200)
+      await oracleMock.givenMethodReturnUint(mockOracleValue, 200)
 
       // create a loan for alice with ID 0
       let hashedLoan = hashLoan({
@@ -774,10 +777,10 @@ contract('Loans Unit Tests', async accounts => {
     beforeEach(async () => {
       // setup a loan for Alice
       const fortyFiveMinsAgo = (await getLatestTimestamp()) - (0.75 * ONE_HOUR)
-      await mockOracle.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
+      await oracleMock.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
 
       // ETH/DAI price of 205 this time - therefore 30 ETH is enough collateral
-      await mockOracle.givenMethodReturnUint(mockOracleValue, 200)
+      await oracleMock.givenMethodReturnUint(mockOracleValue, 200)
 
       // create a loan for alice with ID 0
       let hashedLoan = hashLoan({
@@ -873,10 +876,10 @@ contract('Loans Unit Tests', async accounts => {
     beforeEach(async () => {
       // setup a loan for Alice
       const fortyFiveMinsAgo = (await getLatestTimestamp()) - (0.75 * ONE_HOUR)
-      await mockOracle.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
+      await oracleMock.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
 
       // ETH/DAI price of 205 this time - therefore 30 ETH is enough collateral
-      await mockOracle.givenMethodReturnUint(mockOracleValue, 200)
+      await oracleMock.givenMethodReturnUint(mockOracleValue, 200)
 
       // create a loan for alice with ID 0
       let hashedLoan = hashLoan({
@@ -930,7 +933,7 @@ contract('Loans Unit Tests', async accounts => {
       // mock the oracle returning an old timestamp
       const nintyMinsAgo = (await getLatestTimestamp()) - (1.5 * ONE_HOUR)
 
-      await mockOracle.givenMethodReturnUint(mockOracleTimestamp, nintyMinsAgo)
+      await oracleMock.givenMethodReturnUint(mockOracleTimestamp, nintyMinsAgo)
 
       await truffleAssert.reverts(
         loans.liquidateLoan(
@@ -942,7 +945,7 @@ contract('Loans Unit Tests', async accounts => {
 
     it('should succeed if the loan is undercollateralised', async () => {
       // ETH/DAI price of 100 this time - therefore 30 ETH is not enough collateral
-      await mockOracle.givenMethodReturnUint(mockOracleValue, 100)
+      await oracleMock.givenMethodReturnUint(mockOracleValue, 100)
 
       let loan = await loans.loans.call(0)
 
@@ -971,7 +974,7 @@ contract('Loans Unit Tests', async accounts => {
 
       // new oracle time for this future date
       const fortyFiveMinsAgo = (await getLatestTimestamp()) - (0.75 * ONE_HOUR)
-      await mockOracle.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
+      await oracleMock.givenMethodReturnUint(mockOracleTimestamp, fortyFiveMinsAgo)
 
       let loan = await loans.loans.call(0)
 

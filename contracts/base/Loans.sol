@@ -104,6 +104,14 @@ contract Loans is LoansInterface {
     }
 
     /**
+     * @notice Get a list of all loans for a borrower
+     * @param borrower address The borrower's address
+     */
+    function getBorrowerLoans(address borrower) external view returns (uint256[] memory) {
+        return borrowerLoans[borrower];
+    }
+
+    /**
      * @notice Deposit collateral into a loan
      * @param borrower address The address of the loan borrower.
      * @param loanID uint256 The ID of the loan the collateral is for
@@ -170,7 +178,7 @@ contract Loans is LoansInterface {
         loanIDCounter += 1;
 
         (interestRate, collateralRatio, maxLoanAmount) = loanTermsConsensus
-            .processRequest(request, responses, loanID);
+            .processRequest(request, responses);
 
         loans[loanID] = ZeroCollateralCommon.Loan({
             id: loanID,
@@ -323,14 +331,6 @@ contract Loans is LoansInterface {
             collateralInTokens.mul(LIQUIDATE_ETH_PRICE).div(TEN_THOUSAND),
             msg.sender
         );
-    }
-
-    /**
-     * @notice Get a list of all loans for a borrower
-     * @param borrower address The borrower's address
-     */
-    function getBorrowerLoans(address borrower) external view returns (uint256[] memory) {
-        return borrowerLoans[borrower];
     }
 
     function _hashLoan(
