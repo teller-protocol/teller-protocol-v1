@@ -36,26 +36,51 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
     await this.deployer.deployWith(`ChainlinkPairAggregator_${aggregatorName.toUpperCase()}`, ChainlinkPairAggregator, aggregatorAddress, txConfig);
     await this.deployer.deployWith(`LendingPool_${zTokenName}`, LendingPool, txConfig);
     await this.deployer.deployWith(`InterestConsensus_${zTokenName}`, InterestConsensus, txConfig);
-    await this.deployer.deployWith(`Lenders_${zTokenName}`, Lenders, ZToken.address, LendingPool.address, InterestConsensus.address, txConfig);
-    await this.deployer.deployWith(`Loans_${zTokenName}`, Loans, ChainlinkPairAggregator.address, LendingPool.address, txConfig);
+    await this.deployer.deployWith(`Lenders_${zTokenName}`, Lenders, txConfig);
+    await this.deployer.deployWith(`Loans_${zTokenName}`, Loans, txConfig);
     
-    const settingsInstance = await Settings.deployed();
+    const lenderInstance = await Lenders.deployed();
     const lendingPoolInstance = await LendingPool.deployed();
-    await lendingPoolInstance.initialize(
-      ZToken.address,
-      tokenAddress,
-      Lenders.address,
-      Loans.address,
-      settingsInstance.address,
-    );
-  
-    await zTokenInstance.addMinter(LendingPool.address, txConfig);
-  
+    const settingsInstance = await Settings.deployed();
     const consensusInstance = await InterestConsensus.deployed();
-    await consensusInstance.initialize(
-      Lenders.address,
-      settingsInstance.address,
+    const loansInstance = await Loans.deployed();
+
+    await loansInstance.initialize(
+        ChainlinkPairAggregator.address,
+        LendingPool.address,
+        Settings.address,
     );
+    await lenderInstance.initialize(
+        ZToken.address,
+        LendingPool.address,
+        InterestConsensus.address,
+        Settings.address,
+    );
+    
+    await lendingPoolInstance.initialize(
+        ZToken.address,
+        tokenAddress,
+        Lenders.address,
+        Loans.address,
+        settingsInstance.address,
+    );
+  
+    await consensusInstance.initialize(
+        Lenders.address,
+        settingsInstance.address,
+    );
+
+    await zTokenInstance.addMinter(LendingPool.address, txConfig);
+
+    const initializables = [
+        Lenders, LendingPool, InterestConsensus, Loans
+    ];
+
+    for (const initializable of initializables) {
+        const deployed = await initializable.deployed();
+        const result = await deployed.initialized();
+        assert(result, `${initializable.contract_name} is NOT initialized.`);
+    }
 }
 
 module.exports = PoolDeployer;
