@@ -19,6 +19,7 @@ pragma experimental ABIEncoderV2;
 
 import "../util/ZeroCollateralCommon.sol";
 
+
 interface LoansInterface {
     // collateral deposited by borrower
     event CollateralDeposited(
@@ -46,7 +47,10 @@ interface LoansInterface {
 
     function getBorrowerLoans(address borrower) external view returns (uint256[] memory);
 
-    function loans(uint256 loanID) external view returns (ZeroCollateralCommon.Loan memory);
+    function loans(uint256 loanID)
+        external
+        view
+        returns (ZeroCollateralCommon.Loan memory);
 
     function depositCollateral(address, uint256) external payable;
 
