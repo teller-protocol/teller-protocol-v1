@@ -62,9 +62,9 @@ library ZeroCollateralCommon {
     struct LoanTerms {
         address payable borrower;
         address recipient;
-        uint256 maxLoanAmount;
-        uint256 collateralRatio;
         uint256 interestRate;
+        uint256 collateralRatio;
+        uint256 maxLoanAmount;
         uint256 duration;
     }
 

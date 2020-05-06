@@ -78,4 +78,14 @@ module.exports = {
             takeOutLoanValue: 1,
         };
     },
+    createLoanTerms: (borrower, recipient, interestRate, collateralRatio, maxLoanAmount, duration) => {
+        return {
+            borrower: borrower,
+            recipient: recipient,
+            interestRate: interestRate,
+            collateralRatio: collateralRatio,
+            maxLoanAmount: maxLoanAmount,
+            duration: duration,
+        }
+  },
 }

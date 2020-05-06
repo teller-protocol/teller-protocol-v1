@@ -126,6 +126,8 @@ contract Loans is LoansInterface {
             "BORROWER_LOAN_ID_MISMATCH"
         );
 
+        require(msg.value > 0, "CANNOT_DEPOSIT_ZERO");
+
         uint256 depositAmount = msg.value;
 
         // update the contract total and the loan collateral total
@@ -259,7 +261,7 @@ contract Loans is LoansInterface {
         );
         loans[loanID].status = ZeroCollateralCommon.LoanStatus.Active;
 
-        // give the borrower their requested amount of tokens
+        // give the recipient their requested amount of tokens
         lendingPool.createLoan(amountBorrow, loans[loanID].loanTerms.recipient);
     }
 
