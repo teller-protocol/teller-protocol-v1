@@ -35,14 +35,21 @@ interface LoansInterface {
         uint256 withdrawalAmount
     );
 
-    // new loan created
-    event LoanCreated(
+    event LoanTermsSet(
         uint256 indexed loanID,
         address indexed borrower,
+        address recipient,
         uint256 interestRate,
         uint256 collateralRatio,
         uint256 maxLoanAmount,
-        uint256 numberDays
+        uint256 duration
+    );
+
+    // new loan created
+    event LoanTakenOut(
+        uint256 indexed loanID,
+        address indexed borrower,
+        uint256 amountBorrowed
     );
 
     function getBorrowerLoans(address borrower) external view returns (uint256[] memory);

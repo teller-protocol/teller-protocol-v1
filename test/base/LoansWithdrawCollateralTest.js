@@ -41,14 +41,15 @@ contract('LoansWithdrawCollateralTest', function (accounts) {
     });
 
     withData({
-        _1_non_borrower: [accounts[1], 0, 0, 0, 0, 0, 0, accounts[2], 0, true, 'CALLER_DOESNT_OWN_LOAN'],
-        _2_withdraw_zero: [accounts[1], 0, 0, 0, 0, 0, 0, accounts[1], 0, true, 'CANNOT_WITHDRAW_ZERO'],
-        _3_more_than_allowed: [accounts[1], 12564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 10000, false, undefined],
-        _4_less_than_allowed: [accounts[1], 12564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 1000, false, undefined],
-        _5_none_allowed: [accounts[1], 12564000, 5410, 35082, 18, 65432, 5161305000000000, accounts[1], 1000, false, undefined],
+        _1_non_borrower: [accounts[1], 0, 0, 0, 0, 0, 0, 0, accounts[2], 0, true, 'CALLER_DOESNT_OWN_LOAN'],
+        _2_withdraw_zero: [accounts[1], 0, 0, 0, 0, 0, 0, 0, accounts[1], 0, true, 'CANNOT_WITHDRAW_ZERO'],
+        _3_more_than_allowed: [accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 10000, false, undefined],
+        _4_less_than_allowed: [accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 1000, false, undefined],
+        _5_none_allowed: [accounts[1], 10000000, 2564000, 5410, 35082, 18, 65432, 5161305000000000, accounts[1], 1000, false, undefined],
     }, function(
         loanBorrower,
-        loanTotalOwed,
+        loanPrincipalOwed,
+        loanInterestOwed,
         loanCollateralRatio,
         loanCollateral,
         tokenDecimals,
@@ -62,7 +63,7 @@ contract('LoansWithdrawCollateralTest', function (accounts) {
         it(t('user', 'depositCollateral', 'Should able to deposit collateral.', false), async function() {
             // Setup
             const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, 0)
-            await instance.setLoan(mockLoanID, loanTerms, 0, 0, loanCollateral, 0, loanTotalOwed, ACTIVE, false)
+            await instance.setLoan(mockLoanID, loanTerms, 0, 0, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, ACTIVE, false)
             await instance.setTotalCollateral(totalCollateral)
 
             // give the contract collateral through a deposit (mock has a fallback)
@@ -87,6 +88,7 @@ contract('LoansWithdrawCollateralTest', function (accounts) {
                 const totalAfter = await instance.totalCollateral.call()
                 const contractBalAfter = await web3.eth.getBalance(instance.address)
 
+                const loanTotalOwed = loanPrincipalOwed + loanInterestOwed
                 const withdrawalAllowed = loanCollateral - Math.floor((Math.floor((loanTotalOwed * loanCollateralRatio) / 10000) * oraclePrice) / (10 ** tokenDecimals))
                 const paidOut = Math.min(withdrawalAllowed, withdrawalAmount)
 

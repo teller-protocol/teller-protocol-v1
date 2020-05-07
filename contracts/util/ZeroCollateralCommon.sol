@@ -76,7 +76,8 @@ library ZeroCollateralCommon {
         uint256 loanStartTime;
         uint256 collateral;
         uint256 lastCollateralIn;
-        uint256 totalOwed;
+        uint256 principalOwed;
+        uint256 interestOwed;
         LoanStatus status;
         bool liquidated;
     }

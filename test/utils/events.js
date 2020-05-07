@@ -102,17 +102,30 @@ module.exports = {
         },
     },
     loans: {
-        loanCreated: tx => {
-            const name = 'LoanCreated';
+        loanTermsSet: tx => {
+            const name = 'LoanTermsSet';
             return {
                 name: name,
-                emitted: (borrower, interestRate, collateralRatio, maxLoanAmount, numberDays, loanID) => emitted(tx, name, ev => {
+                emitted: (loanID, borrower, recipient, interestRate, collateralRatio, maxLoanAmount, duration) => emitted(tx, name, ev => {
+                    assert.equal(ev.loanID.toString(), loanID.toString());
                     assert.equal(ev.borrower, borrower);
+                    assert.equal(ev.recipient, recipient);
                     assert.equal(ev.interestRate.toString(), interestRate.toString());
                     assert.equal(ev.collateralRatio.toString(), collateralRatio.toString());
                     assert.equal(ev.maxLoanAmount.toString(), maxLoanAmount.toString());
-                    assert.equal(ev.numberDays.toString(), numberDays.toString());
+                    assert.equal(ev.duration.toString(), duration.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        loanTakenOut: tx => {
+            const name = 'LoanTakenOut';
+            return {
+                name: name,
+                emitted: (loanID, borrower, amountBorrowed) => emitted(tx, name, ev => {
                     assert.equal(ev.loanID.toString(), loanID.toString());
+                    assert.equal(ev.borrower, borrower);
+                    assert.equal(ev.amountBorrowed.toString(), amountBorrowed.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };

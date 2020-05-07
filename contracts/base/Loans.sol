@@ -39,7 +39,7 @@ contract Loans is LoansInterface {
     uint256 private constant THIRTY_DAYS = ONE_DAY * 30;
     uint256 private constant LIQUIDATE_ETH_PRICE = 9500; // Eth is bought at 95.00% of the going rate
     uint256 private constant TEN = 10; // Used to calculate one whole token.
-    uint256 private constant HOURS_PER_YEAR = 365 * 24;
+    uint256 private constant DAYS_PER_YEAR_4DP = 3650000;
     uint256 private constant TEN_THOUSAND = 10000; // For interestRate, collateral, and liquidation price, 7% is represented as 700.
     // to find the value of something we must divide 700 by 100 to remove decimal places, and another 100 for percentage
 
@@ -150,7 +150,7 @@ contract Loans is LoansInterface {
 
         // Find the minimum collateral amount this loan is allowed in tokens
         uint256 collateralNeededToken = _getCollateralNeededInTokens(
-            loans[loanID].totalOwed,
+            _getTotalOwed(loanID),
             loans[loanID].loanTerms.collateralRatio
         );
         uint256 collateralNeededWei = _convertTokenToWei(collateralNeededToken);
@@ -188,26 +188,37 @@ contract Loans is LoansInterface {
             loanTerms: ZeroCollateralCommon.LoanTerms({
                 borrower: request.borrower,
                 recipient: request.recipient,
-                maxLoanAmount: maxLoanAmount,
-                collateralRatio: collateralRatio,
                 interestRate: interestRate,
+                collateralRatio: collateralRatio,
+                maxLoanAmount: maxLoanAmount,
                 duration: request.duration
             }),
             termsExpiry: now.add(THIRTY_DAYS),
             loanStartTime: 0,
             collateral: 0,
             lastCollateralIn: 0,
-            totalOwed: 0,
+            principalOwed: 0,
+            interestOwed: 0,
             status: ZeroCollateralCommon.LoanStatus.TermsSet,
             liquidated: false
         });
 
         if (msg.value > 0) {
-        // update collateral, totalCollateral, and lastCollateralIn
+            // update collateral, totalCollateral, and lastCollateralIn
             _payInCollateral(loanID, msg.value);
         }
 
         borrowerLoans[request.borrower].push(loanID);
+
+        emit LoanTermsSet(
+            loanID,
+            request.borrower,
+            request.recipient,
+            interestRate,
+            collateralRatio,
+            maxLoanAmount,
+            request.duration
+        );
     }
 
     /**
@@ -226,18 +237,23 @@ contract Loans is LoansInterface {
             "MAX_LOAN_EXCEEDED"
         );
 
-        require(loans[loanID].termsExpiry <= now, "LOAN_TERMS_EXPIRED");
+        require(loans[loanID].termsExpiry >= now, "LOAN_TERMS_EXPIRED");
 
         require(
             loans[loanID].lastCollateralIn <= now.sub(safetyInterval),
             "COLLATERAL_DEPOSITED_RECENTLY"
         );
 
-        // check caller is borrower or recipient?
+        loans[loanID].principalOwed = amountBorrow;
+        loans[loanID].interestOwed = amountBorrow
+            .mul(loans[loanID].loanTerms.interestRate)
+            .mul(loans[loanID].loanTerms.duration)
+            .div(TEN_THOUSAND)
+            .div(DAYS_PER_YEAR_4DP);
 
         // check that enough collateral has been provided for this loan
         uint256 collateralNeededToken = _getCollateralNeededInTokens(
-            amountBorrow,
+            _getTotalOwed(loanID),
             loans[loanID].loanTerms.collateralRatio
         );
         uint256 collateralNeededWei = _convertTokenToWei(collateralNeededToken);
@@ -249,19 +265,6 @@ contract Loans is LoansInterface {
 
         loans[loanID].loanStartTime = now;
 
-        // durationInHours is rounded up to the next hour
-        uint256 durationInHours = loans[loanID].loanTerms.duration.div(ONE_HOUR);
-        if (loans[loanID].loanTerms.duration.mod(ONE_HOUR) > 0) {
-            durationInHours++;
-        }
-
-        loans[loanID].totalOwed = amountBorrow.add(
-            amountBorrow
-                .mul(loans[loanID].loanTerms.interestRate)
-                .mul(durationInHours)
-                .div(TEN_THOUSAND)
-                .div(HOURS_PER_YEAR)
-        );
         loans[loanID].status = ZeroCollateralCommon.LoanStatus.Active;
 
         // give the recipient their requested amount of tokens
@@ -270,6 +273,8 @@ contract Loans is LoansInterface {
         } else {
             lendingPool.createLoan(amountBorrow, loans[loanID].loanTerms.borrower);
         }
+
+        emit LoanTakenOut(loanID, loans[loanID].loanTerms.borrower, amountBorrow);
     }
 
     /**
@@ -280,16 +285,18 @@ contract Loans is LoansInterface {
     function repay(uint256 amount, uint256 loanID) external loanActive(loanID) {
         // calculate the actual amount to repay
         uint256 toPay = amount;
-        if (loans[loanID].totalOwed < toPay) {
-            toPay = loans[loanID].totalOwed;
+        uint256 totalOwed = _getTotalOwed(loanID);
+        if (totalOwed < toPay) {
+            toPay = totalOwed;
         }
 
         if (toPay > 0) {
             // update the amount owed on the loan
-            loans[loanID].totalOwed = loans[loanID].totalOwed.sub(toPay);
+            totalOwed = totalOwed.sub(toPay);
+            _payLoan(loanID, toPay);
 
             // if the loan is now fully paid, close it and return collateral
-            if (loans[loanID].totalOwed == 0) {
+            if (totalOwed == 0) {
                 loans[loanID].status = ZeroCollateralCommon.LoanStatus.Closed;
 
                 _payOutCollateral(
@@ -311,7 +318,7 @@ contract Loans is LoansInterface {
     function liquidateLoan(uint256 loanID) external loanActive(loanID) {
         // calculate the amount of collateral the loan needs in tokens
         uint256 collateralNeededToken = _getCollateralNeededInTokens(
-            loans[loanID].totalOwed,
+            _getTotalOwed(loanID),
             loans[loanID].loanTerms.collateralRatio
         );
         uint256 collateralNeededWei = _convertTokenToWei(collateralNeededToken);
@@ -375,6 +382,23 @@ contract Loans is LoansInterface {
         totalCollateral = totalCollateral.add(amount);
         loans[loanID].collateral = loans[loanID].collateral.add(amount);
         loans[loanID].lastCollateralIn = now;
+    }
+
+    // when this function is called, we've guaranteed that toPay is at most
+    // equal to the total amount owed on the loan. It cannot be bigger.
+    function _payLoan(uint256 loanID, uint256 toPay) internal {
+        if (toPay > loans[loanID].principalOwed) {
+            uint256 leftToPay = toPay;
+            leftToPay -= loans[loanID].principalOwed;
+            loans[loanID].principalOwed = 0;
+            loans[loanID].interestOwed -= leftToPay;
+        } else {
+            loans[loanID].principalOwed -= toPay;
+        }
+    }
+
+    function _getTotalOwed(uint256 loanID) internal returns (uint256) {
+        return loans[loanID].interestOwed.add(loans[loanID].principalOwed);
     }
 
     function _getAWholeLendingToken() internal view returns (uint256) {

@@ -46,7 +46,7 @@ contract('LoansDepositCollateralTest', function (accounts) {
         it(t('user', 'depositCollateral', 'Should able to deposit collateral.', false), async function() {
             // Setup
             const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, 0, 0, 0)
-            await instance.setLoan(mockLoanID, loanTerms, 0, 0, mockCollateral, 0, 0, ACTIVE, false)
+            await instance.setLoan(mockLoanID, loanTerms, 0, 0, mockCollateral, 0, 0, 0, ACTIVE, false)
 
             try {
                 const contractBalBefore = await web3.eth.getBalance(instance.address)

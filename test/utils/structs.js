@@ -22,16 +22,29 @@ module.exports = {
             }
         }
     },
-    createLoanInfo: (borrowerIndex, collateralRatio, maxLoanAmount, interestRate) => {
+    createLoan: (
+        loanID,
+        loanTerms,
+        termsExpiry,
+        loanStartTime,
+        collateral,
+        lastCollateralIn,
+        principalOwed, 
+        interestOwed, 
+        status,
+        liquidated
+    ) => {
         return {
-            interestRate,
-            collateralRatio,
-            borrowerIndex,
-            signerIndex: 0,
-            maxLoanAmount,
-            numberDays: 10,
-            signerNonce: 0,
-            takeOutLoanValue: 1,
+            loanID: loanID,
+            loanTerms: loanTerms,
+            termsExpiry: termsExpiry,
+            loanStartTime: loanStartTime,
+            collateral: collateral,
+            lastCollateralIn: lastCollateralIn,
+            principalOwed: principalOwed,
+            interestOwed: interestOwed,
+            status: status,
+            liquidated: liquidated,
         };
     },
     createLoanTerms: (borrower, recipient, interestRate, collateralRatio, maxLoanAmount, duration) => {

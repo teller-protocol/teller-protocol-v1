@@ -53,7 +53,8 @@ contract LoansMock is Loans {
         uint256 loanStartTime,
         uint256 collateral,
         uint256 lastCollateralIn,
-        uint256 totalOwed,
+        uint256 principalOwed,
+        uint256 interestOwed,
         ZeroCollateralCommon.LoanStatus status,
         bool liquidated
     ) external {
@@ -64,7 +65,8 @@ contract LoansMock is Loans {
             loanStartTime: loanStartTime,
             collateral: collateral,
             lastCollateralIn: lastCollateralIn,
-            totalOwed: totalOwed,
+            principalOwed: principalOwed,
+            interestOwed: interestOwed,
             status: status,
             liquidated: liquidated
         });

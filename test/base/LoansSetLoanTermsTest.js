@@ -110,7 +110,8 @@ contract('LoansSetLoanTermsTest', function (accounts) {
             assert.equal(loan['loanStartTime'].toString(), 0)
             assert.equal(loan['collateral'].toString(), msgValue)
             assert.equal(loan['lastCollateralIn'].toString(), lastCollateralIn)
-            assert.equal(loan['totalOwed'].toString(), 0)
+            assert.equal(loan['principalOwed'].toString(), 0)
+            assert.equal(loan['interestOwed'].toString(), 0)
             assert.equal(loan['status'].toString(), TERMS_SET)
             assert.equal(loan['liquidated'], false)
 
@@ -118,6 +119,17 @@ contract('LoansSetLoanTermsTest', function (accounts) {
             assert.equal(parseInt(totalBefore) + msgValue, parseInt(totalAfter))
             assert.equal(parseInt(contractBalBefore) + msgValue, parseInt(contractBalAfter))
             
+            loans
+                .loanTermsSet(tx)
+                .emitted(
+                    mockLoanIDCounter, 
+                    loanRequest.borrower,
+                    loanRequest.recipient,
+                    interestRate,
+                    collateralRatio,
+                    maxLoanAmount,
+                    loanRequest.duration
+                )
         });
     });
 });

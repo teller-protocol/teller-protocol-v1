@@ -920,7 +920,7 @@ contract('Loans Unit Tests', async accounts => {
       )
     })
 
-    it('should not succeed if the loan is not under colalteralised and not expired', async () => {
+    it('should not succeed if the loan is not under collateralised and not expired', async () => {
       await truffleAssert.reverts(
         loans.liquidateLoan(
           0
