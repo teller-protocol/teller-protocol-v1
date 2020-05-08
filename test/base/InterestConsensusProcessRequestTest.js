@@ -6,7 +6,7 @@ const {
     THIRTY_DAYS
 } = require('../utils/consts');
 const { createInterestRequest, createUnsignedInterestResponse } = require('../utils/structs');
-const { createResponseSig, hashRequest } = require('../utils/hashes');
+const { createInterestResponseSig, hashInterestRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
 const { interestConsensus } = require('../utils/events');
 
@@ -28,7 +28,7 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
 
     const interestRequest = createInterestRequest(lender, 23456, endTime, 45678)
 
-    const requestHash = ethUtil.bufferToHex(hashRequest(interestRequest, lendersContract))
+    const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract))
 
     let responseOne = createUnsignedInterestResponse(nodeOne, 0, 35976, 0)
 
@@ -49,11 +49,11 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
         responseFour.responseTime = currentTime - ONE_DAY
         responseFive.responseTime = currentTime - (15 * ONE_DAY)
 
-        responseOne = await createResponseSig(web3, nodeOne, responseOne, requestHash)
-        responseTwo = await createResponseSig(web3, nodeTwo, responseTwo, requestHash)
-        responseThree = await createResponseSig(web3, nodeThree, responseThree, requestHash)
-        responseFour = await createResponseSig(web3, nodeFour, responseFour, requestHash)
-        responseFive = await createResponseSig(web3, nodeThree, responseFive, requestHash)
+        responseOne = await createInterestResponseSig(web3, nodeOne, responseOne, requestHash)
+        responseTwo = await createInterestResponseSig(web3, nodeTwo, responseTwo, requestHash)
+        responseThree = await createInterestResponseSig(web3, nodeThree, responseThree, requestHash)
+        responseFour = await createInterestResponseSig(web3, nodeFour, responseFour, requestHash)
+        responseFive = await createInterestResponseSig(web3, nodeThree, responseFive, requestHash)
     })
 
     withData({
@@ -123,11 +123,8 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
                 interestConsensus
                     .interestAccepted(result)
                     .emitted(lender, endTime, Math.floor(totalInterest / responses.length))
-
-
               
             } catch (error) {
-                if (!mustFail) console.log(error)
                 assert(mustFail, 'Should not have failed');
                 assert.equal(error.reason, expectedErrorMessage);
             }

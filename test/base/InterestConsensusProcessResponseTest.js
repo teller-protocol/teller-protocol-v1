@@ -6,7 +6,7 @@ const {
     ONE_DAY
 } = require('../utils/consts');
 const { createInterestRequest, createUnsignedInterestResponse } = require('../utils/structs');
-const { createResponseSig, hashRequest } = require('../utils/hashes');
+const { createInterestResponseSig, hashInterestRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
 const { interestConsensus } = require('../utils/events');
 
@@ -25,7 +25,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
 
     const interestRequest = createInterestRequest(lender, 23456, endTime, 45678)
 
-    const requestHash = ethUtil.bufferToHex(hashRequest(interestRequest, lendersContract))
+    const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract))
 
     withData({
         _1_signer_already_submitted: [   // signer already submitted for this loan
@@ -86,7 +86,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
             )
 
             let interestResponse = createUnsignedInterestResponse(nodeAddress, responseTime, interest, signerNonce)
-            interestResponse = await createResponseSig(web3, nodeAddress, interestResponse, requestHash)
+            interestResponse = await createInterestResponseSig(web3, nodeAddress, interestResponse, requestHash)
 
             try {
                 const result = await instance.externalProcessResponse(
@@ -120,7 +120,6 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
                     assert(submission['sum'].toNumber(), newSum, 'Sum incorrect')
                 }
             } catch (error) {
-                if (!mustFail) console.log(error)
                 assert(mustFail, 'Should not have failed');
                 assert.equal(error.reason, expectedErrorMessage);
             }
