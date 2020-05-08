@@ -5,7 +5,7 @@ const {
     THIRTY_DAYS,
     ONE_DAY
 } = require('../utils/consts');
-const { createInterestRequest, createUnsignedResponse } = require('../utils/structs');
+const { createInterestRequest, createUnsignedInterestResponse } = require('../utils/structs');
 const { createResponseSig, hashRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
 const { interestConsensus } = require('../utils/events');
@@ -85,7 +85,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
                 mockSumOfValues
             )
 
-            let interestResponse = createUnsignedResponse(nodeAddress, responseTime, interest, signerNonce)
+            let interestResponse = createUnsignedInterestResponse(nodeAddress, responseTime, interest, signerNonce)
             interestResponse = await createResponseSig(web3, nodeAddress, interestResponse, requestHash)
 
             try {

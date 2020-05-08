@@ -5,7 +5,7 @@ const {
     ONE_DAY,
     THIRTY_DAYS
 } = require('../utils/consts');
-const { createInterestRequest, createUnsignedResponse } = require('../utils/structs');
+const { createInterestRequest, createUnsignedInterestResponse } = require('../utils/structs');
 const { createResponseSig, hashRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
 const { interestConsensus } = require('../utils/events');
@@ -30,15 +30,15 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
 
     const requestHash = ethUtil.bufferToHex(hashRequest(interestRequest, lendersContract))
 
-    let responseOne = createUnsignedResponse(nodeOne, 0, 35976, 0)
+    let responseOne = createUnsignedInterestResponse(nodeOne, 0, 35976, 0)
 
-    let responseTwo = createUnsignedResponse(nodeTwo, 0, 34732, 4)
+    let responseTwo = createUnsignedInterestResponse(nodeTwo, 0, 34732, 4)
 
-    let responseThree = createUnsignedResponse(nodeThree, 0, 34732, 4)
+    let responseThree = createUnsignedInterestResponse(nodeThree, 0, 34732, 4)
 
-    let responseFour = createUnsignedResponse(nodeFour, 0, 34000, 0)
+    let responseFour = createUnsignedInterestResponse(nodeFour, 0, 34000, 0)
 
-    let responseFive = createUnsignedResponse(nodeThree, 0, 34736, 1)
+    let responseFive = createUnsignedInterestResponse(nodeThree, 0, 34736, 1)
 
     before('Setup the response times and signatures', async () => {
         currentTime = await getLatestTimestamp()

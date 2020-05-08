@@ -46,6 +46,18 @@ contract LoansMock is Loans {
         totalCollateral = amount;
     }
 
+    function externalPayLoan(uint256 loanID, uint256 toPay) external {
+        _payLoan(loanID, toPay);
+    }
+
+    function externalConvertWeiToToken(uint256 weiAmount) external returns (uint256) {
+        return _convertWeiToToken(weiAmount);
+    }
+
+    function externalConvertTokenToWei(uint256 tokenAmount) external returns (uint256) {
+        return _convertTokenToWei(tokenAmount);
+    }
+
     function setLoan(
         uint256 id,
         ZeroCollateralCommon.LoanTerms calldata loanTerms,
