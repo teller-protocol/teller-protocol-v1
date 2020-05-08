@@ -349,27 +349,6 @@ contract Loans is LoansInterface {
         );
     }
 
-    function _hashLoan(
-        uint256 interestRate,
-        uint256 collateralRatio,
-        address borrower,
-        uint256 maxLoanAmount,
-        uint256 numberDays,
-        uint256 signerNonce
-    ) internal pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(
-                    interestRate,
-                    collateralRatio,
-                    borrower,
-                    maxLoanAmount,
-                    numberDays,
-                    signerNonce
-                )
-            );
-    }
-
     function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
         internal
     {

@@ -45,7 +45,7 @@ contract('LoansRepayTest', function (accounts) {
         amountToPay,
         loanCollateral
     ) {
-        it(t('user', 'withdrawCollateral', 'Should able to withdraw collateral.', false), async function() {
+        it(t('user', 'repay', 'Should able to repay your loan.', false), async function() {
             // Setup
             await instance.setLoan(mockLoanID, loanTerms, 0, 0, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, ACTIVE, false) 
               
@@ -80,7 +80,6 @@ contract('LoansRepayTest', function (accounts) {
 
             assert.equal(loan['principalOwed'].toString(), newPrincipalOwed)
             assert.equal(loan['interestOwed'].toString(), newInterestOwed)
-
 
             if (newPrincipalOwed + newInterestOwed == 0) {
                 assert.equal(parseInt(loan['collateral']), 0)

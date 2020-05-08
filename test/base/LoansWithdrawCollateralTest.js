@@ -38,6 +38,10 @@ contract('LoansWithdrawCollateralTest', function (accounts) {
             loanTermsConsInstance.address,
             FIVE_MIN
         );
+
+        // encode lending token address
+        const encodeLendingToken = lendingPoolInterfaceEncoder.encodeLendingToken();
+        await lendingPoolInstance.givenMethodReturnAddress(encodeLendingToken, lendingTokenInstance.address);
     });
 
     withData({
@@ -72,10 +76,6 @@ contract('LoansWithdrawCollateralTest', function (accounts) {
             // encode current token price
             const encodeGetLatestAnswer = pairAggregatorEncoder.encodeGetLatestAnswer();
             await oracleInstance.givenMethodReturnUint(encodeGetLatestAnswer, oraclePrice.toString());
-
-            // encode lending token address
-            const encodeLendingToken = lendingPoolInterfaceEncoder.encodeLendingToken();
-            await lendingPoolInstance.givenMethodReturnAddress(encodeLendingToken, lendingTokenInstance.address);
 
             // encode token decimals
             const encodeDecimals = erc20InterfaceEncoder.encodeDecimals();
