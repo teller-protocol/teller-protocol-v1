@@ -5,7 +5,7 @@ const { t } = require('../utils/consts');
 // Smart contracts
 const NumbersListMock = artifacts.require("./mock/util/NumbersListMock.sol");
 
-contract('ValuesListTest', function (accounts) {
+contract('NumbersListTest', function (accounts) {
     let instance;
     
     beforeEach('Setup for each test', async () => {
@@ -25,7 +25,7 @@ contract('ValuesListTest', function (accounts) {
             
             // Assertions
             const result = await instance.totalValues();
-            assert.equal(result.toString(), values.count.toString());
+            assert.equal(result.toString(), values.length.toString());
         });
     });
 
@@ -85,7 +85,7 @@ contract('ValuesListTest', function (accounts) {
             assert.equal(min.toString(), expectedMin.toString());
             assert.equal(max.toString(), expectedMax.toString());
             assert.equal(sum.toString(), expectedSum.toString());
-            assert.equal(count.toString(), values.count.toString());
+            assert.equal(count.toString(), values.length.toString());
         });
     });
 
