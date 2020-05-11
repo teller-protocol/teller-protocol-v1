@@ -106,7 +106,6 @@ contract('LendersSetAccruedInterestTest', function (accounts) {
                     .accruedInterestUpdated(result)
                     .emitted(lenderAddress, mockTotalNotWithdrawn + average, mockTotalAccrued + average)
             } catch (error) {
-                if (!mustFail) console.log(error)
                 assert(mustFail, 'Should not have failed');
                 assert.equal(error.reason, expectedErrorMessage);
             }

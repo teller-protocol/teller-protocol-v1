@@ -25,7 +25,7 @@ contract('ValuesListTest', function (accounts) {
             
             // Assertions
             const result = await instance.totalValues();
-            assert.equal(result.toString(), values.length.toString());
+            assert.equal(result.toString(), values.count.toString());
         });
     });
 
@@ -72,20 +72,20 @@ contract('ValuesListTest', function (accounts) {
         _4_5Items: [[4,3,1], 1, 4, 8],
         _5_10Items: [[21, 14, 18, 4, 13, 15, 2, 35, 27, 8], 2, 35, 157]
     }, function(values, expectedMin, expectedMax, expectedSum) {
-        it(t('user', 'min/max/sum/length', 'Should be able to get min/max/sum/length.', false), async function() {
+        it(t('user', 'min/max/sum/count', 'Should be able to get min/max/sum/count.', false), async function() {
             // Setup
             for (const value of values) {
                 await instance.addValue(value);
             }
 
             // Invocation
-            const { min, max, sum, length } = await instance.values();
+            const { min, max, sum, count } = await instance.values();
             
             // Assertions
             assert.equal(min.toString(), expectedMin.toString());
             assert.equal(max.toString(), expectedMax.toString());
             assert.equal(sum.toString(), expectedSum.toString());
-            assert.equal(length.toString(), values.length.toString());
+            assert.equal(count.toString(), values.count.toString());
         });
     });
 

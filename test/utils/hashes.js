@@ -100,6 +100,16 @@ async function createInterestResponseSig(web3, signer, interestResponse, request
   return interestResponse
 }
 
+async function createLoanResponseSig(web3, signer, loanResponse, requestHash) {
+  const responseHash = hashLoanTermsResponse(loanResponse, requestHash)
+  const signature = await web3.eth.sign(ethUtil.bufferToHex(responseHash), signer);
+  const { v, r, s } = ethUtil.fromRpcSig(signature)
+  loanResponse.signature.v = String(v)
+  loanResponse.signature.r = ethUtil.bufferToHex(r)
+  loanResponse.signature.s = ethUtil.bufferToHex(s)
+  return loanResponse
+}
+
 module.exports = {
   hashLoan,
   hashInterestRequest,
@@ -107,5 +117,6 @@ module.exports = {
   hashLoanTermsResponse,
   hashLoanTermsRequest,
   signHash,
-  createInterestResponseSig
+  createInterestResponseSig,
+  createLoanResponseSig
 }

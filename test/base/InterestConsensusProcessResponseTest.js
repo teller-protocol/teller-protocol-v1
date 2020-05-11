@@ -19,7 +19,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
     const lendersContract = accounts[1]
     const nodeAddress = accounts[2]
     const submissions = 5
-  const tolerance = 0
+    const tolerance = 0
     const endTime = 34567
     const lender = accounts[3]
 
@@ -104,7 +104,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
                 let submission = await instance.interestSubmissions.call(lender, endTime)
 
                 if (mockTotalSubmissions == 0) {
-                    assert(submission['length'].toNumber(), 1, 'Total submissions incorrect')
+                    assert(submission['count'].toNumber(), 1, 'Total submissions incorrect')
                     assert(submission['min'].toNumber(), interest, 'Min incorrect')
                     assert(submission['max'].toNumber(), interest, 'Max incorrect')
                     assert(submission['sum'].toNumber(), interest, 'Sum incorrect')
@@ -114,7 +114,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
                     const newSum = mockSumOfValues + interest
                     const newTotal = mockTotalSubmissions + 1
 
-                    assert(submission['length'].toNumber(), newTotal, 'Total submissions incorrect')
+                    assert(submission['count'].toNumber(), newTotal, 'Total submissions incorrect')
                     assert(submission['min'].toNumber(), newMin, 'Min incorrect')
                     assert(submission['max'].toNumber(), newMax, 'Max incorrect')
                     assert(submission['sum'].toNumber(), newSum, 'Sum incorrect')

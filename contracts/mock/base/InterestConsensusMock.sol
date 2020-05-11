@@ -29,7 +29,7 @@ contract InterestConsensusMock is InterestConsensus {
         uint256 sumOfValues
     ) external {
         interestSubmissions[lender][endTime] = NumbersList.Values({
-            length: totalSubmissions,
+            count: totalSubmissions,
             min: minValue,
             max: maxValue,
             sum: sumOfValues

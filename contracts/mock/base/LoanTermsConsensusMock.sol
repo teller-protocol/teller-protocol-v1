@@ -20,21 +20,53 @@ import "../../base/LoanTermsConsensus.sol";
 
 contract LoanTermsConsensusMock is LoanTermsConsensus {
 
-    // function mockInterestSubmissions(
-    //     address lender,
-    //     uint256 endTime,
-    //     uint256 totalSubmissions,
-    //     uint256 maxValue,
-    //     uint256 minValue,
-    //     uint256 sumOfValues
-    // ) external {
-    //     interestSubmissions[lender][endTime] = NumbersList.Values({
-    //         length: totalSubmissions,
-    //         min: minValue,
-    //         max: maxValue,
-    //         sum: sumOfValues
-    //     });
-    // }
+    function mockInterestRateSubmissions(
+        address borrower,
+        uint256 requestNonce,
+        uint256 totalSubmissions,
+        uint256 maxValue,
+        uint256 minValue,
+        uint256 sumOfValues
+    ) external {
+        termSubmissions[borrower][requestNonce].interestRate = NumbersList.Values({
+            count: totalSubmissions,
+            min: minValue,
+            max: maxValue,
+            sum: sumOfValues
+        });
+    }
+
+    function mockCollateralRatioSubmissions(
+        address borrower,
+        uint256 requestNonce,
+        uint256 totalSubmissions,
+        uint256 maxValue,
+        uint256 minValue,
+        uint256 sumOfValues
+    ) external {
+        termSubmissions[borrower][requestNonce].collateralRatio = NumbersList.Values({
+            count: totalSubmissions,
+            min: minValue,
+            max: maxValue,
+            sum: sumOfValues
+        });
+    }
+
+    function mockMaxAmountSubmissions(
+        address borrower,
+        uint256 requestNonce,
+        uint256 totalSubmissions,
+        uint256 maxValue,
+        uint256 minValue,
+        uint256 sumOfValues
+    ) external {
+        termSubmissions[borrower][requestNonce].maxLoanAmount = NumbersList.Values({
+            count: totalSubmissions,
+            min: minValue,
+            max: maxValue,
+            sum: sumOfValues
+        });
+    }
 
     function mockHasSubmitted(
         address signer,
