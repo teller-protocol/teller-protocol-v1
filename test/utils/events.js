@@ -209,7 +209,7 @@ module.exports = {
             return {
                 name: name,
                 emitted: (borrower, requestNonce, interestRate, collateralRatio, maxLoanAmount) => truffleAssert.eventEmitted(tx, name, ev => {
-                    return (
+                  return (
                         ev.borrower == borrower &&
                         ev.requestNonce.toString() == requestNonce.toString() &&
                         ev.interestRate.toString() == interestRate.toString() &&
