@@ -58,7 +58,7 @@ contract('BaseWhenNotPausedTest', function (accounts) {
 
             try {
                 // Invocation
-                const result = await instance.externalWhenLendingPoolNotPaused({ from: senderAddress });
+                const result = await instance.externalWhenLendingPoolNotPaused(instance.address, { from: senderAddress });
                 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');

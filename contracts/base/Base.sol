@@ -40,8 +40,8 @@ contract Base is Initializable, ReentrancyGuard {
         _;
     }
 
-    modifier whenLendingPoolNotPaused() {
-        require(!_isPoolPaused(address(this)), "LENDING_POOL_IS_PAUSED");
+    modifier whenLendingPoolNotPaused(address lendingPoolAddress) {
+        require(!_isPoolPaused(lendingPoolAddress), "LENDING_POOL_IS_PAUSED");
         _;
     }
 
@@ -50,8 +50,8 @@ contract Base is Initializable, ReentrancyGuard {
         _;
     }
 
-    modifier whenLendingPoolPaused() {
-        require(_isPoolPaused(address(this)), "LENDING_POOL_IS_NOT_PAUSED");
+    modifier whenLendingPoolPaused(address lendingPoolAddress) {
+        require(_isPoolPaused(lendingPoolAddress), "LENDING_POOL_IS_NOT_PAUSED");
         _;
     }
 

@@ -99,7 +99,7 @@ contract LendingPool is Base, LendingPoolInterface {
         external
         isInitialized()
         whenNotPaused()
-        whenLendingPoolNotPaused()
+        whenLendingPoolNotPaused(address(this))
     {
         // Transfering tokens to the LendingPool
         tokenTransferFrom(msg.sender, amount);
@@ -119,7 +119,7 @@ contract LendingPool is Base, LendingPoolInterface {
         external
         isInitialized()
         whenNotPaused()
-        whenLendingPoolNotPaused()
+        whenLendingPoolNotPaused(address(this))
         nonReentrant()
     {
         // Burn zToken tokens.
@@ -144,7 +144,7 @@ contract LendingPool is Base, LendingPoolInterface {
         external
         isInitialized()
         isLoan()
-        whenLendingPoolNotPaused()
+        whenLendingPoolNotPaused(address(this))
     {
         // Transfers tokens to LendingPool.
         tokenTransferFrom(borrower, amount);
@@ -162,7 +162,7 @@ contract LendingPool is Base, LendingPoolInterface {
         external
         isInitialized()
         isLoan()
-        whenLendingPoolNotPaused()
+        whenLendingPoolNotPaused(address(this))
     {
         // Transfers tokens to the liquidator.
         tokenTransfer(liquidator, amount);
@@ -182,7 +182,7 @@ contract LendingPool is Base, LendingPoolInterface {
         external
         isInitialized()
         isLoan()
-        whenLendingPoolNotPaused()
+        whenLendingPoolNotPaused(address(this))
     {
         // Transfer tokens to the borrower.
         tokenTransfer(borrower, amount);
@@ -192,7 +192,7 @@ contract LendingPool is Base, LendingPoolInterface {
         external
         isInitialized()
         whenNotPaused()
-        whenLendingPoolNotPaused()
+        whenLendingPoolNotPaused(address(this))
     {
         address lender = msg.sender;
 

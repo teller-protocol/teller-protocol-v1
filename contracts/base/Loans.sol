@@ -83,7 +83,7 @@ contract Loans is Base, LoansInterface, SignerRole {
         loanIDValid(loanID)
         isInitialized()
         whenNotPaused()
-        whenLendingPoolNotPaused()
+        whenLendingPoolNotPaused(address(lendingPool))
     {
         require(loans[loanID].borrower == borrower, "BORROWER_LOAN_ID_MISMATCH");
         require(loans[loanID].active, "LOAN_NOT_ACTIVE");
@@ -106,7 +106,7 @@ contract Loans is Base, LoansInterface, SignerRole {
         loanIDValid(loanID)
         isInitialized()
         whenNotPaused()
-        whenLendingPoolNotPaused()
+        whenLendingPoolNotPaused(address(lendingPool))
         nonReentrant()
     {
         require(msg.sender == loans[loanID].borrower, "CALLER_DOESNT_OWN_LOAN");
@@ -161,7 +161,7 @@ contract Loans is Base, LoansInterface, SignerRole {
         payable
         isInitialized()
         whenNotPaused()
-        whenLendingPoolNotPaused()
+        whenLendingPoolNotPaused(address(lendingPool))
         nonReentrant()
         returns (uint256)
     {
@@ -249,7 +249,7 @@ contract Loans is Base, LoansInterface, SignerRole {
         loanIDValid(loanID)
         isInitialized()
         whenNotPaused()
-        whenLendingPoolNotPaused()
+        whenLendingPoolNotPaused(address(lendingPool))
         nonReentrant()
     {
         require(loans[loanID].active, "LOAN_NOT_ACTIVE");
@@ -286,7 +286,7 @@ contract Loans is Base, LoansInterface, SignerRole {
         loanIDValid(loanID)
         isInitialized()
         whenNotPaused()
-        whenLendingPoolNotPaused()
+        whenLendingPoolNotPaused(address(lendingPool))
         nonReentrant()
     {
         require(loans[loanID].active, "LOAN_NOT_ACTIVE");
