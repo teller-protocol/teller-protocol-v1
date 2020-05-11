@@ -12,7 +12,7 @@ contract('InterestConsensusInitializeTest', function (accounts) {
     withData({
         _1_no_settings: [true, false, 'MUST_PROVIDE_SETTINGS', true],
         _2_no_lenders: [false, true, 'MUST_PROVIDE_LENDER_INFO', true],
-        _4_all_provided: [true, true, undefined, false],
+        _3_all_provided: [true, true, undefined, false],
     }, function(
         provideLenders,
         provideSettings,

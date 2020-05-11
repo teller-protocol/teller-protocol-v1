@@ -76,7 +76,7 @@ contract Lenders is Base, LendersInterface {
         lendingPoolAddress.requireNotEmpty("LENDING_POOL_MUST_BE_PROVIDED");
         interestConsensusAddress.requireNotEmpty("CONSENSUS_MUST_BE_PROVIDED");
 
-        initialize(settingAddress);
+        _initialize(settingAddress);
 
         zToken = zTokenAddress;
         lendingPool = lendingPoolAddress;
@@ -86,7 +86,7 @@ contract Lenders is Base, LendersInterface {
     function setAccruedInterest(
         ZeroCollateralCommon.InterestRequest calldata request,
         ZeroCollateralCommon.InterestResponse[] calldata responses
-    ) external isInitialized() whenNotPaused() whenLendingPoolNotPaused() nonReentrant() {
+    ) external isInitialized() whenNotPaused() whenLendingPoolNotPaused() {
         require(
             accruedInterest[request.lender].timeLastAccrued == request.startTime,
             "GAP_IN_INTEREST_ACCRUAL"
@@ -120,9 +120,6 @@ contract Lenders is Base, LendersInterface {
         isLendingPool()
         isValid(recipient)
         isInitialized()
-        whenNotPaused()
-        whenLendingPoolNotPaused()
-        nonReentrant()
         returns (uint256)
     {
         uint256 amountToWithdraw = amount;

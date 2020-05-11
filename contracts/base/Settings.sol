@@ -17,7 +17,6 @@ pragma solidity 0.5.17;
 
 // Libraries
 import "openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 // Commons
 import "../util/AddressLib.sol";
@@ -27,7 +26,7 @@ import "../util/AddressLib.sol";
 import "../interfaces/SettingsInterface.sol";
 
 
-contract Settings is Pausable, Ownable, SettingsInterface {
+contract Settings is Pausable, SettingsInterface {
     using AddressLib for address;
 
     /** Constants */
@@ -68,7 +67,7 @@ contract Settings is Pausable, Ownable, SettingsInterface {
 
     function setRequiredSubmissions(uint256 newRequiredSubmissions)
         external
-        onlyOwner()
+        onlyPauser()
         whenNotPaused()
     {
         require(requiredSubmissions != newRequiredSubmissions, "NEW_VALUE_REQUIRED");
@@ -86,7 +85,7 @@ contract Settings is Pausable, Ownable, SettingsInterface {
 
     function setMaximumTolerance(uint256 newMaximumTolerance)
         external
-        onlyOwner()
+        onlyPauser()
         whenNotPaused()
     {
         require(maximumTolerance != newMaximumTolerance, "NEW_VALUE_REQUIRED");
@@ -103,7 +102,7 @@ contract Settings is Pausable, Ownable, SettingsInterface {
 
     function setResponseExpiryLength(uint256 newResponseExpiryLength)
         external
-        onlyOwner()
+        onlyPauser()
         whenNotPaused()
     {
         require(responseExpiryLength != newResponseExpiryLength, "NEW_VALUE_REQUIRED");
@@ -121,7 +120,7 @@ contract Settings is Pausable, Ownable, SettingsInterface {
 
     function pauseLendingPool(address lendingPoolAddress)
         external
-        onlyOwner()
+        onlyPauser()
         whenNotPaused()
     {
         lendingPoolAddress.requireNotEmpty("LENDING_POOL_IS_REQUIRED");
@@ -134,7 +133,7 @@ contract Settings is Pausable, Ownable, SettingsInterface {
 
     function unpauseLendingPool(address lendingPoolAddress)
         external
-        onlyOwner()
+        onlyPauser()
         whenNotPaused()
     {
         lendingPoolAddress.requireNotEmpty("LENDING_POOL_IS_REQUIRED");

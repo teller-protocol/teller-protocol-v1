@@ -51,7 +51,7 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         lendersAddress.requireNotEmpty("MUST_PROVIDE_LENDER_INFO");
         settingsAddress.requireNotEmpty("MUST_PROVIDE_SETTINGS");
 
-        initialize(settingsAddress);
+        _initialize(settingsAddress);
 
         lenders = lendersAddress;
     }

@@ -66,7 +66,7 @@ contract Loans is Base, LoansInterface, SignerRole {
         require(priceOracleAddress != address(0), "PROVIDE_ORACLE_ADDRESS");
         require(lendingPoolAddress != address(0), "PROVIDE_LENDINGPOOL_ADDRESS");
 
-        initialize(settingsAddress);
+        _initialize(settingsAddress);
 
         priceOracle = PairAggregatorInterface(priceOracleAddress);
         lendingPool = LendingPoolInterface(lendingPoolAddress);
@@ -84,7 +84,6 @@ contract Loans is Base, LoansInterface, SignerRole {
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused()
-        nonReentrant()
     {
         require(loans[loanID].borrower == borrower, "BORROWER_LOAN_ID_MISMATCH");
         require(loans[loanID].active, "LOAN_NOT_ACTIVE");

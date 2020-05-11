@@ -13,6 +13,6 @@ contract BaseMock is Base {
     function externalWhenLendingPoolPaused() external whenLendingPoolPaused() {}
 
     function externalInitialize(address settingsAddress) external {
-        super.initialize(settingsAddress);
+        super._initialize(settingsAddress);
     }
 }

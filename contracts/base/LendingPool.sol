@@ -82,7 +82,7 @@ contract LendingPool is Base, LendingPoolInterface {
         lendersAddress.requireNotEmpty("Lenders address is required.");
         loansAddress.requireNotEmpty("Loans address is required.");
 
-        initialize(settingsAddress);
+        _initialize(settingsAddress);
 
         zToken = ZTokenInterface(zTokenAddress);
         lendingToken = IERC20(lendingTokenAddress);
@@ -100,7 +100,6 @@ contract LendingPool is Base, LendingPoolInterface {
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused()
-        nonReentrant()
     {
         // Transfering tokens to the LendingPool
         tokenTransferFrom(msg.sender, amount);
@@ -145,9 +144,7 @@ contract LendingPool is Base, LendingPoolInterface {
         external
         isInitialized()
         isLoan()
-        whenNotPaused()
         whenLendingPoolNotPaused()
-        nonReentrant()
     {
         // Transfers tokens to LendingPool.
         tokenTransferFrom(borrower, amount);
@@ -165,9 +162,7 @@ contract LendingPool is Base, LendingPoolInterface {
         external
         isInitialized()
         isLoan()
-        whenNotPaused()
         whenLendingPoolNotPaused()
-        nonReentrant()
     {
         // Transfers tokens to the liquidator.
         tokenTransfer(liquidator, amount);
@@ -187,9 +182,7 @@ contract LendingPool is Base, LendingPoolInterface {
         external
         isInitialized()
         isLoan()
-        whenNotPaused()
         whenLendingPoolNotPaused()
-        nonReentrant()
     {
         // Transfer tokens to the borrower.
         tokenTransfer(borrower, amount);
@@ -200,7 +193,6 @@ contract LendingPool is Base, LendingPoolInterface {
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused()
-        nonReentrant()
     {
         address lender = msg.sender;
 
