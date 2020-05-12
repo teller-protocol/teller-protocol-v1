@@ -23,18 +23,6 @@ import "../../base/Loans.sol";
  */
 contract LoansModifiersMock is Loans {
 
-    constructor(
-        address priceOracleAddress,
-        address lendingPoolAddress,
-        address loanTermsConsensusAddress,
-        uint256 safetyInterval
-    ) public Loans(
-        priceOracleAddress,
-        lendingPoolAddress,
-        loanTermsConsensusAddress,
-        safetyInterval
-    ) { }
-
     function setLoanStatus(uint256 loanID, ZeroCollateralCommon.LoanStatus status) external {
         loans[loanID].status = status;
     }

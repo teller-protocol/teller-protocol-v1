@@ -80,7 +80,10 @@ contract Consensus is Base, SignerRole {
         view
         returns (uint256)
     {
-        require(values.isWithinTolerance(settings.maximumTolerance()), "RESPONSES_TOO_VARIED");
+        require(
+            values.isWithinTolerance(settings.maximumTolerance()),
+            "RESPONSES_TOO_VARIED"
+        );
 
         return values.getAverage();
     }
@@ -99,7 +102,10 @@ contract Consensus is Base, SignerRole {
         );
         hasSubmitted[signer][user][requestIdentifier] = true;
 
-        require(responseTime >= now.sub(settings.responseExpiryLength()), "RESPONSE_EXPIRED");
+        require(
+            responseTime >= now.sub(settings.responseExpiryLength()),
+            "RESPONSE_EXPIRED"
+        );
 
         require(_signatureValid(signature, responseHash, signer), "SIGNATURE_INVALID");
         signerNonceTaken[signer][signature.signerNonce] = true;

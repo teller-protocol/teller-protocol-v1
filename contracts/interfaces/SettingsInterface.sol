@@ -26,6 +26,8 @@ interface SettingsInterface {
 
     function responseExpiryLength() external view returns (uint256);
 
+    function safetyInterval() external view returns (uint256);
+
     function setResponseExpiryLength(uint256 newResponseExpiryLength) external;
 
     function isPaused() external view returns (bool);
