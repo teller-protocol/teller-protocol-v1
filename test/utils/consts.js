@@ -1,5 +1,8 @@
 const { BigNumber } = require( 'bignumber.js');
 
+const REQUIRED_SUBMISSIONS = 'RequiredSubmissions';
+const MAXIMUM_TOLERANCE = 'MaximumTolerance';
+const RESPONSE_EXPIRY_LENGTH = 'ResponseExpiryLength';
 const DEFAULT_DECIMALS = 18;
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 const NULL_BYTES = '0x0000000000000000000000000000000000000000000000000000000000000000'
@@ -30,6 +33,9 @@ module.exports = {
     ONE_HOUR,
     ONE_DAY,
     THIRTY_DAYS,
+    REQUIRED_SUBMISSIONS,
+    MAXIMUM_TOLERANCE,
+    RESPONSE_EXPIRY_LENGTH,
     t: function (who, func, desc, fail) {
         const failText = fail ? '\x1b[31mMustFail\x1b[0m .' : '\x1b[0m';
         return '\x1b[32m.' + func + ' => \x1b[36m' + who + '\x1b[0m\033[01;34m : ' + desc + ' '+ failText;
@@ -47,4 +53,7 @@ module.exports = {
       return (await web3.eth.getBlock('latest')).timestamp
     },
     sum: (a, b) => parseInt(a.toString()) + parseInt(b.toString()),
+    toBytes32: (web3, text) => {
+      return web3.utils.padRight(web3.utils.stringToHex(text), 64, '0');
+    },
 }

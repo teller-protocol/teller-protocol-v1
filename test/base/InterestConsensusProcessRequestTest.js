@@ -11,6 +11,7 @@ const ethUtil = require('ethereumjs-util')
 const { interestConsensus } = require('../utils/events');
 
 // Smart contracts
+const Settings = artifacts.require("./base/Settings.sol");
 const InterestConsensus = artifacts.require("./mock/base/InterestConsensus.sol");
 
 
@@ -88,8 +89,9 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
     ) {    
         it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
             // set up contract
-            instance = await InterestConsensus.new()
-            await instance.initialize(lendersContract, reqSubmissions, tolerance, THIRTY_DAYS)
+            const settings = await Settings.new(reqSubmissions, tolerance, THIRTY_DAYS);
+            instance = await InterestConsensus.new();
+            await instance.initialize(lendersContract, settings.address);
 
             await instance.addSigner(nodeOne)
             await instance.addSigner(nodeTwo)

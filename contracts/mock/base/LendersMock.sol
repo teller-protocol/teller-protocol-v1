@@ -25,27 +25,11 @@ contract LendersMock is Lenders {
     
     /** State Variables */
 
-    bool public addressesEqual;
+    bool public addressesEqual = true;
 
     /** Constructor */
-    constructor(
-        address zTokenAddress,
-        address lendingPoolAddress,
-        address consensusAddress
-    )
-        public
-        Lenders(zTokenAddress, lendingPoolAddress, consensusAddress)
-    {
-        addressesEqual = true;
-    }
 
-    function _areAddressesEqual(address, address)
-        internal
-        view
-        returns (bool)
-    {
-        return addressesEqual;
-    }
+    /** External Functions */
 
     function mockLenderInfo(
         address lender,
@@ -58,4 +42,13 @@ contract LendersMock is Lenders {
         accruedInterest[lender].totalNotWithdrawn = totalNotWithdrawn;
     }
 
+    /** Internal Functions */
+
+    function _areAddressesEqual(address, address)
+        internal
+        view
+        returns (bool)
+    {
+        return addressesEqual;
+    }
 }

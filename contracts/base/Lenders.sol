@@ -16,6 +16,9 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
+// Contracts
+import "../base/Base.sol";
+
 // Libraries
 import "../util/AddressLib.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
@@ -26,7 +29,7 @@ import "../interfaces/ZTokenInterface.sol";
 import "../interfaces/InterestConsensusInterface.sol";
 
 
-contract Lenders is LendersInterface {
+contract Lenders is Base, LendersInterface {
     using AddressLib for address;
     using SafeMath for uint256;
 
@@ -35,17 +38,14 @@ contract Lenders is LendersInterface {
     address public lendingPool;
     InterestConsensusInterface public interestConsensus;
 
-    ZTokenInterface public zToken;
+    address public zToken;
 
     // The total interest that has not yet been withdrawn by a lender
     mapping(address => ZeroCollateralCommon.AccruedInterest) public accruedInterest;
 
     /** Modifiers */
     modifier isZToken() {
-        require(
-            _areAddressesEqual(address(zToken), msg.sender),
-            "Address has no permissions."
-        );
+        require(_areAddressesEqual(zToken, msg.sender), "Address has no permissions.");
         _;
     }
 
@@ -64,29 +64,29 @@ contract Lenders is LendersInterface {
 
     /* Constructor */
 
-    constructor(
+    /** External Functions */
+
+    function initialize(
         address zTokenAddress,
         address lendingPoolAddress,
-        address interestConsensusAddress
-    ) public {
-        require(zTokenAddress != address(0x0), "zToken address is required.");
-        require(lendingPoolAddress != address(0x0), "LendingPool address is required.");
-        require(
-            interestConsensusAddress != address(0x0),
-            "Consensus address is required."
-        );
+        address interestConsensusAddress,
+        address settingAddress
+    ) external isNotInitialized() {
+        zTokenAddress.requireNotEmpty("ZTOKEN_MUST_BE_PROVIDED");
+        lendingPoolAddress.requireNotEmpty("LENDING_POOL_MUST_BE_PROVIDED");
+        interestConsensusAddress.requireNotEmpty("CONSENSUS_MUST_BE_PROVIDED");
 
-        zToken = ZTokenInterface(zTokenAddress);
+        _initialize(settingAddress);
+
+        zToken = zTokenAddress;
         lendingPool = lendingPoolAddress;
         interestConsensus = InterestConsensusInterface(interestConsensusAddress);
     }
 
-    /** External Functions */
-
     function setAccruedInterest(
         ZeroCollateralCommon.InterestRequest calldata request,
         ZeroCollateralCommon.InterestResponse[] calldata responses
-    ) external {
+    ) external isInitialized() whenNotPaused() whenLendingPoolNotPaused(lendingPool) {
         require(
             accruedInterest[request.lender].timeLastAccrued == request.startTime,
             "GAP_IN_INTEREST_ACCRUAL"
@@ -119,6 +119,8 @@ contract Lenders is LendersInterface {
         external
         isLendingPool()
         isValid(recipient)
+        isInitialized()
+
         returns (uint256)
     {
         uint256 amountToWithdraw = amount;
@@ -151,12 +153,4 @@ contract Lenders is LendersInterface {
     }
 
     /** Private Functions */
-
-    function _getZTokenBalanceOf(address anAddress) private view returns (uint256) {
-        return zToken.balanceOf(anAddress);
-    }
-
-    function _getCurrentBlockNumber() private view returns (uint256) {
-        return block.number;
-    }
 }

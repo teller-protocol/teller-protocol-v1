@@ -13,27 +13,31 @@ contract('LendingPoolInitializeTest', function (accounts) {
     let daiInstance;
     let lendersInstance;
     let loansInstance;
+    let settingsInstance;
     
     beforeEach('Setup for each test', async () => {
         zTokenInstance = await Mock.new();
         daiInstance = await Mock.new();
         lendersInstance = await Mock.new();
         loansInstance = await Mock.new();
+        settingsInstance = await Mock.new();
     });
 
     withData({
-        _1_basic: [true, true, true, true, undefined, false],
-        _2_notZdai: [false, true, true, true, 'zToken address is required.', true],
-        _3_notDai: [true, false, true, true, 'Token address is required.', true],
-        _4_notLenderInfo: [true, true, false, true, 'Lenders address is required.', true],
-        _5_notLoanInfo: [true, true, true, false, 'Loans address is required.', true],
-        _5_notZdai_notLoanInfo: [false, true, true, false, 'zToken address is required.', true],
-        _6_notDai_notLenderInfo: [true, false, false, true, 'Token address is required.', true],
+        _1_basic: [true, true, true, true, true, undefined, false],
+        _2_notZdai: [false, true, true, true, true, 'zToken address is required.', true],
+        _3_notDai: [true, false, true, true, true, 'Token address is required.', true],
+        _4_notLenderInfo: [true, true, false, true, true, 'Lenders address is required.', true],
+        _5_notLoanInfo: [true, true, true, false, true, 'Loans address is required.', true],
+        _5_notZdai_notLoanInfo: [false, true, true, false, true, 'zToken address is required.', true],
+        _6_notDai_notLenderInfo: [true, false, false, true, true, 'Token address is required.', true],
+        _7_notSettings: [true, true, true, true, false, 'SETTINGS_MUST_BE_PROVIDED', true],
     }, function(
         createZdai,
         createDai,
         createLenderInfo,
         createLoanInfo,
+        createSettings,
         expectedErrorMessage,
         mustFail
     ) {    
@@ -44,6 +48,7 @@ contract('LendingPoolInitializeTest', function (accounts) {
             const daiAddress = createDai ? daiInstance.address : NULL_ADDRESS;
             const lendersAddress = createLenderInfo ? lendersInstance.address : NULL_ADDRESS;
             const loanInfoAddress = createLoanInfo ? loansInstance.address : NULL_ADDRESS;
+            const settingsAddress = createSettings ? settingsInstance.address : NULL_ADDRESS;
 
             try {
                 // Invocation
@@ -52,6 +57,7 @@ contract('LendingPoolInitializeTest', function (accounts) {
                     daiAddress,
                     lendersAddress,
                     loanInfoAddress,
+                    settingsAddress,
                 );;
                 
                 // Assertions

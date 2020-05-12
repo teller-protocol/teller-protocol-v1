@@ -31,10 +31,13 @@ contract('LendersSetAccruedInterestTest', function (accounts) {
         zTokenInstance = await Mock.new();
         lendingPoolInstance = await Mock.new();
         interestConsensusInstance = await Mock.new();
-        instance = await Lenders.new(
+        settingsInstance = await Mock.new();
+        instance = await Lenders.new();
+        await instance.initialize(
             zTokenInstance.address,
             lendingPoolInstance.address,
-            interestConsensusInstance.address
+            interestConsensusInstance.address,
+            settingsInstance.address,
         );
 
         interestConsensusTemplate = await InterestConsensus.new()

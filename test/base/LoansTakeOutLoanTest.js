@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, getLatestTimestamp, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE } = require('../utils/consts');
+const { t, THIRTY_DAYS, getLatestTimestamp, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE } = require('../utils/consts');
 const { createLoanTerms } = require('../utils/structs');
 const { loans } = require('../utils/events');
 
@@ -12,6 +12,7 @@ const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterf
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
+const Settings = artifacts.require("./base/Settings.sol");
 const Loans = artifacts.require("./mock/base/LoansMock.sol");
 
 contract('LoansTakeOutLoanTest', function (accounts) {
@@ -35,12 +36,14 @@ contract('LoansTakeOutLoanTest', function (accounts) {
         lendingPoolInstance = await Mock.new();
         lendingTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
+        const settingsInstance = await Settings.new(1, 1, THIRTY_DAYS);
         loanTermsConsInstance = await Mock.new();
-        instance = await Loans.new(
+        instance = await Loans.new();
+        await instance.initialize(
             oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
-            FIVE_MIN
+            settingsInstance.address,
         );
 
         // encode lending token address

@@ -17,7 +17,7 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-// Libraries
+import "../base/Base.sol";
 import "../util/ZeroCollateralCommon.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
@@ -31,7 +31,7 @@ import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 
 
-contract Loans is LoansInterface {
+contract Loans is Base, LoansInterface {
     using SafeMath for uint256;
 
     uint256 private constant ONE_HOUR = 60 * 60;
@@ -51,8 +51,6 @@ contract Loans is LoansInterface {
     PairAggregatorInterface public priceOracle;
     LendingPoolInterface public lendingPool;
     LoanTermsConsensusInterface public loanTermsConsensus;
-
-    uint256 safetyInterval;
 
     mapping(address => uint256[]) public borrowerLoans;
 
@@ -83,24 +81,24 @@ contract Loans is LoansInterface {
         _;
     }
 
-    constructor(
+    function initialize(
         address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
-        uint256 initSafetyInterval
-    ) public {
+        address settingsAddress
+    ) external isNotInitialized() {
         require(priceOracleAddress != address(0), "PROVIDE_ORACLE_ADDRESS");
         require(lendingPoolAddress != address(0), "PROVIDE_LENDINGPOOL_ADDRESS");
         require(
             loanTermsConsensusAddress != address(0),
             "Consensus address is required."
         );
-        require(initSafetyInterval > 0, "PROVIDE_SAFETY_INTERVAL");
+
+        _initialize(settingsAddress);
 
         priceOracle = PairAggregatorInterface(priceOracleAddress);
         lendingPool = LendingPoolInterface(lendingPoolAddress);
         loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
-        safetyInterval = initSafetyInterval;
     }
 
     /**
@@ -120,6 +118,9 @@ contract Loans is LoansInterface {
         external
         payable
         loanActiveOrSet(loanID)
+        isInitialized()
+        whenNotPaused()
+        whenLendingPoolNotPaused(address(lendingPool))
     {
         require(
             loans[loanID].loanTerms.borrower == borrower,
@@ -144,6 +145,10 @@ contract Loans is LoansInterface {
     function withdrawCollateral(uint256 amount, uint256 loanID)
         external
         loanActiveOrSet(loanID)
+        isInitialized()
+        whenNotPaused()
+        whenLendingPoolNotPaused(address(lendingPool))
+        nonReentrant()
     {
         require(msg.sender == loans[loanID].loanTerms.borrower, "CALLER_DOESNT_OWN_LOAN");
         require(amount > 0, "CANNOT_WITHDRAW_ZERO");
@@ -231,6 +236,10 @@ contract Loans is LoansInterface {
     function takeOutLoan(uint256 loanID, uint256 amountBorrow)
         external
         loanTermsSet(loanID)
+        isInitialized()
+        whenNotPaused()
+        whenLendingPoolNotPaused(address(lendingPool))
+        nonReentrant()
     {
         require(
             loans[loanID].loanTerms.maxLoanAmount >= amountBorrow,
@@ -240,7 +249,7 @@ contract Loans is LoansInterface {
         require(loans[loanID].termsExpiry >= now, "LOAN_TERMS_EXPIRED");
 
         require(
-            loans[loanID].lastCollateralIn <= now.sub(safetyInterval),
+            loans[loanID].lastCollateralIn <= now.sub(settings.safetyInterval()),
             "COLLATERAL_DEPOSITED_RECENTLY"
         );
 
@@ -282,7 +291,14 @@ contract Loans is LoansInterface {
      * @param amount uint256 The amount of tokens to pay back to the loan
      * @param loanID uint256 The ID of the loan the payment is for
      */
-    function repay(uint256 amount, uint256 loanID) external loanActive(loanID) {
+    function repay(uint256 amount, uint256 loanID)
+        external
+        loanActive(loanID)
+        isInitialized()
+        whenNotPaused()
+        whenLendingPoolNotPaused(address(lendingPool))
+        nonReentrant()
+    {
         // calculate the actual amount to repay
         uint256 toPay = amount;
         uint256 totalOwed = _getTotalOwed(loanID);
@@ -315,7 +331,14 @@ contract Loans is LoansInterface {
      * @notice Liquidate a loan if it is expired or undercollateralised
      * @param loanID uint256 The ID of the loan to be liquidated
      */
-    function liquidateLoan(uint256 loanID) external loanActive(loanID) {
+    function liquidateLoan(uint256 loanID)
+        external
+        loanActive(loanID)
+        isInitialized()
+        whenNotPaused()
+        whenLendingPoolNotPaused(address(lendingPool))
+        nonReentrant()
+    {
         // calculate the amount of collateral the loan needs in tokens
         uint256 collateralNeededToken = _getCollateralNeededInTokens(
             _getTotalOwed(loanID),

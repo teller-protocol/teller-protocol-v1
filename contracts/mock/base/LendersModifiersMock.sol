@@ -24,14 +24,8 @@ import "../../base/Lenders.sol";
 contract LendersModifiersMock is Lenders {
 
     /** Constructor */
-    constructor(
-        address zTokenAddress,
-        address lendingPoolAddress,
-        address consensusAddress
-    )
-        public
-        Lenders(zTokenAddress, lendingPoolAddress, consensusAddress)
-    {}
+
+    /** External Functions */
 
     function externalIsZToken() isZToken() external {}
 

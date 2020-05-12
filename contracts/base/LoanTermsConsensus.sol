@@ -36,7 +36,7 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         isCaller()
         returns (uint256 interestRate, uint256 collateralRatio, uint256 maxLoanAmount)
     {
-        require(responses.length >= requiredSubmissions, "INSUFFICIENT_RESPONSES");
+        require(responses.length >= settings.requiredSubmissions(), "INSUFFICIENT_RESPONSES");
         require(
             !requestNonceTaken[request.borrower][request.requestNonce],
             "REQUEST_NONCE_TAKEN"

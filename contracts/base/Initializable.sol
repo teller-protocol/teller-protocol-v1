@@ -43,6 +43,10 @@ contract Initializable {
 
     /** External Functions */
 
+    function initialized() external view returns (bool) {
+        return _isInitialized;
+    }
+
     /** Internal functions */
 
     function _initialize() internal {

@@ -16,7 +16,6 @@
 pragma solidity 0.5.17;
 
 // Libraries
-import "../util/AddressLib.sol";
 
 // Commons
 import "../util/ZeroCollateralCommon.sol";
@@ -28,13 +27,13 @@ import "../interfaces/LendersInterface.sol";
 import "../interfaces/ZTokenInterface.sol";
 
 // Contracts
-import "./Initializable.sol";
+import "./Base.sol";
 
 
 /**
     @notice The LendingPool contract holds all of the tokens that lenders transfer into the protocol. It is the contract that lenders interact with to deposit and withdraw their tokens including interest. The LendingPool interacts with the Lenders contract to ensure token balances and interest owed is kept up to date.
  */
-contract LendingPool is LendingPoolInterface, Initializable {
+contract LendingPool is Base, LendingPoolInterface {
     using AddressLib for address;
 
     /* State Variables */
@@ -68,20 +67,22 @@ contract LendingPool is LendingPoolInterface, Initializable {
         @param lendingTokenAddress ERC20 token address.
         @param lendersAddress Lenders contract address.
         @param loansAddress Loans contract address.
+        @param settingsAddress Settings contract address.
         @dev It throws a require error if the contract is already initialized.
      */
     function initialize(
         address zTokenAddress,
         address lendingTokenAddress,
         address lendersAddress,
-        address loansAddress
+        address loansAddress,
+        address settingsAddress
     ) external isNotInitialized() {
         zTokenAddress.requireNotEmpty("zToken address is required.");
         lendingTokenAddress.requireNotEmpty("Token address is required.");
         lendersAddress.requireNotEmpty("Lenders address is required.");
         loansAddress.requireNotEmpty("Loans address is required.");
 
-        _initialize();
+        _initialize(settingsAddress);
 
         zToken = ZTokenInterface(zTokenAddress);
         lendingToken = IERC20(lendingTokenAddress);
@@ -94,7 +95,12 @@ contract LendingPool is LendingPoolInterface, Initializable {
         @dev the user must call ERC20.approve function previously.
         @param amount of tokens to deposit in the pool.
     */
-    function deposit(uint256 amount) external isInitialized() {
+    function deposit(uint256 amount)
+        external
+        isInitialized()
+        whenNotPaused()
+        whenLendingPoolNotPaused(address(this))
+    {
         // Transfering tokens to the LendingPool
         tokenTransferFrom(msg.sender, amount);
 
@@ -109,7 +115,13 @@ contract LendingPool is LendingPoolInterface, Initializable {
         @notice It allows any zToken holder to burn their zToken tokens and withdraw their tokens.
         @param amount of tokens to withdraw.
      */
-    function withdraw(uint256 amount) external isInitialized() {
+    function withdraw(uint256 amount)
+        external
+        isInitialized()
+        whenNotPaused()
+        whenLendingPoolNotPaused(address(this))
+        nonReentrant()
+    {
         // Burn zToken tokens.
         zToken.burn(msg.sender, amount);
 
@@ -128,7 +140,12 @@ contract LendingPool is LendingPoolInterface, Initializable {
         @param amount of tokens.
         @param borrower address that is repaying the loan.
      */
-    function repay(uint256 amount, address borrower) external isInitialized() isLoan() {
+    function repay(uint256 amount, address borrower)
+        external
+        isInitialized()
+        isLoan()
+        whenLendingPoolNotPaused(address(this))
+    {
         // Transfers tokens to LendingPool.
         tokenTransferFrom(borrower, amount);
 
@@ -145,6 +162,7 @@ contract LendingPool is LendingPoolInterface, Initializable {
         external
         isInitialized()
         isLoan()
+        whenLendingPoolNotPaused(address(this))
     {
         // Transfers tokens to the liquidator.
         tokenTransfer(liquidator, amount);
@@ -164,12 +182,28 @@ contract LendingPool is LendingPoolInterface, Initializable {
         external
         isInitialized()
         isLoan()
+        whenLendingPoolNotPaused(address(this))
     {
         // Transfer tokens to the borrower.
         tokenTransfer(borrower, amount);
     }
 
-    function withdrawInterest(uint256 amount) external isInitialized() {}
+    function withdrawInterest(uint256 amount)
+        external
+        isInitialized()
+        whenNotPaused()
+        whenLendingPoolNotPaused(address(this))
+    {
+        address lender = msg.sender;
+
+        uint256 amountWithdrawn = lenders.withdrawInterest(lender, amount);
+
+        requireEnoughLendingTokenBalance(amountWithdrawn);
+
+        tokenTransfer(lender, amountWithdrawn);
+
+        emit InterestWithdrawn(lender, amountWithdrawn);
+    }
 
     /** Internal functions */
 
@@ -195,6 +229,11 @@ contract LendingPool is LendingPoolInterface, Initializable {
     function tokenTransferFrom(address from, uint256 amount) private {
         bool transferFromResult = lendingToken.transferFrom(from, address(this), amount);
         require(transferFromResult, "TransferFrom wasn't successful.");
+    }
+
+    function requireEnoughLendingTokenBalance(uint256 amount) private view {
+        uint256 lendingTokenBalance = lendingToken.balanceOf(address(this));
+        require(lendingTokenBalance >= amount, "NOT_ENOUGH_LENDING_TOKEN_BALANCE");
     }
 
     /**

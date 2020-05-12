@@ -36,7 +36,10 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         ZeroCollateralCommon.InterestRequest calldata request,
         ZeroCollateralCommon.InterestResponse[] calldata responses
     ) external isInitialized() isCaller() returns (uint256) {
-        require(responses.length >= requiredSubmissions, "INSUFFICIENT_RESPONSES");
+        require(
+            responses.length >= settings.requiredSubmissions(),
+            "INSUFFICIENT_RESPONSES"
+        );
 
         bytes32 requestHash = _hashRequest(request);
 
