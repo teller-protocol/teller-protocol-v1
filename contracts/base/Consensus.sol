@@ -21,9 +21,10 @@ import "../util/ZeroCollateralCommon.sol";
 
 // Contracts
 import "openzeppelin-solidity/contracts/access/roles/SignerRole.sol";
+import "../base/Base.sol";
 
 
-contract Consensus is SignerRole {
+contract Consensus is Base, SignerRole {
     using SafeMath for uint256;
 
     // Has signer address already submitted their answer for (user, identifier)?
@@ -32,13 +33,6 @@ contract Consensus is SignerRole {
     // mapping from signer address, to signerNonce, to boolean.
     // Has the signer already used this nonce?
     mapping(address => mapping(uint256 => bool)) public signerNonceTaken;
-
-    // the total number of submissions required for consensus on a value
-    uint256 public requiredSubmissions;
-
-    // this is a percentage with 2 decimal places
-    // i.e. maximumTolerance of 325 => tolerance of 3.25% => 0.0325 of value
-    uint256 public maximumTolerance;
 
     function _signatureValid(
         ZeroCollateralCommon.Signature memory signature,

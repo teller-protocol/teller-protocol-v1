@@ -1,4 +1,5 @@
 const Loans = artifacts.require('Loans')
+const Settings = artifacts.require('Settings')
 const Mock = artifacts.require('Mock')
 const ChainlinkPairAggregator = artifacts.require('ChainlinkPairAggregator')
 const LendingPoolMock = artifacts.require('LendingPoolMock');
@@ -11,7 +12,8 @@ const {
   NULL_ADDRESS,
   ONE_HOUR,
   ONE_DAY,
-  getLatestTimestamp
+  getLatestTimestamp,
+  THIRTY_DAYS,
 } = require('../utils/consts');
 const { hashLoan, signHash } = require('../utils/hashes');
 
@@ -35,6 +37,7 @@ contract('Loans Unit Tests', async accounts => {
 
   let mockOracleTimestamp
   let mockOracleValue
+  let settingsInstance
 
   let loans
 
@@ -50,6 +53,7 @@ contract('Loans Unit Tests', async accounts => {
   async function setupMockContracts() {
     mockOracle = await Mock.new()
     lendingPoolMock = await Mock.new()
+    settingsInstance = await Settings.new(1, 1, THIRTY_DAYS)
 
     mockOracleInterface = await ChainlinkPairAggregator.new(accounts[1])
     lendingPoolMockInterface = await LendingPoolMock.new()
@@ -64,9 +68,11 @@ contract('Loans Unit Tests', async accounts => {
 
   before('Deploy Loans Contract', async () => {
     await setupMockContracts()
-    loans = await Loans.new(
+    loans = await Loans.new()
+    await loans.initialize(
       mockOracle.address,
-      lendingPoolMock.address
+      lendingPoolMock.address,
+      settingsInstance.address,
     )
   })
 
@@ -80,22 +86,38 @@ contract('Loans Unit Tests', async accounts => {
     })
 
     it('should not accept an oracle address of 0', async () => {
+      const loans = await Loans.new()
       await truffleAssert.reverts(
-        Loans.new(
+        loans.initialize(
           NULL_ADDRESS,
-          lendingPoolMock.address
+          lendingPoolMock.address,
+          settingsInstance.address,
         ),
         'PROVIDE_ORACLE_ADDRESS'
       )
     })
 
     it('should not accept a dai pool address of 0', async () => {
+      const loans = await Loans.new()
       await truffleAssert.reverts(
-        Loans.new(
+        loans.initialize(
           mockOracle.address,
-          NULL_ADDRESS
+          NULL_ADDRESS,
+          settingsInstance.address,
         ),
         'PROVIDE_LENDINGPOOL_ADDRESS'
+      )
+    })
+
+    it('should not accept a settings address of 0', async () => {
+      const loans = await Loans.new()
+      await truffleAssert.reverts(
+        loans.initialize(
+          mockOracle.address,
+          lendingPoolMock.address,
+          NULL_ADDRESS,
+        ),
+        'SETTINGS_MUST_BE_PROVIDED'
       )
     })
   })

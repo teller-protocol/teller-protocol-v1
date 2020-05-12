@@ -25,15 +25,9 @@ contract LendersModifiersMock is Lenders {
     
     /** State Variables */
 
-    /** Connstructor */
-    constructor(
-        address zTokenAddress,
-        address lendingPoolAddress,
-        address consensusAddress
-    )
-        public
-        Lenders(zTokenAddress, lendingPoolAddress, consensusAddress)
-    {}
+    /** Constructor */
+
+    /** External Functions */
 
     function externalIsZToken() isZToken() external {}
 

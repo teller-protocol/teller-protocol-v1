@@ -5,6 +5,7 @@ const { hashRequest, signHash, hashResponse } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
 
 // Smart contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
 const InterestConsensusMock = artifacts.require("./mock/base/InterestConsensusMock.sol");
 
 // constants
@@ -17,8 +18,9 @@ contract('InterestConsensus hashRequest and hashReponse', function (accounts) {
     let instance
 
     beforeEach('Setup for each test', async () => {
+        const settings = await Mock.new();
         instance = await InterestConsensusMock.new()
-        await instance.initialize(lendersAddress, submissions, tolerance, THIRTY_DAYS)
+        await instance.initialize(lendersAddress, settings.address);
     })
 
     withData({

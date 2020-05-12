@@ -7,9 +7,6 @@ import "../../base/Loans.sol";
 
 contract LoansMock is Loans {
 
-    constructor(address priceOracleAddress, address lendingPoolAddress)
-        public
-        Loans(priceOracleAddress, lendingPoolAddress) { }
 
     function setLoanIDCounter(uint256 newLoanIdCounter)
         external

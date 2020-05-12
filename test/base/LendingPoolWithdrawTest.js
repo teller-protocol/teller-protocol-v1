@@ -21,10 +21,12 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     let daiInstance;
     let loansInstance;
     let consensusInstance;
+    let settingsInstance;
     
     beforeEach('Setup for each test', async () => {
         loansInstance = await Mock.new();
         consensusInstance = await Mock.new();
+        settingsInstance = await Mock.new();
         instance = await LendingPool.new();
     });
 
@@ -36,7 +38,7 @@ contract('LendingPoolWithdrawTest', function (accounts) {
             // Setup
             zTokenInstance = await Mock.new();
             daiInstance = await Mock.new();
-            await initContracts(instance, zTokenInstance, consensusInstance, daiInstance, loansInstance, Lenders);
+            await initContracts(settingsInstance, instance, zTokenInstance, consensusInstance, daiInstance, loansInstance, Lenders);
             const encodeTransfer = burnableInterfaceEncoder.encodeTransfer();
             await daiInstance.givenMethodReturnBool(encodeTransfer, transfer);
 
@@ -69,7 +71,7 @@ contract('LendingPoolWithdrawTest', function (accounts) {
             zTokenInstance = await ZDai.new();
             daiInstance = await DAI.new();
             await zTokenInstance.addMinter(instance.address);
-            await initContracts(instance, zTokenInstance, consensusInstance, daiInstance, loansInstance, Lenders);
+            await initContracts(settingsInstance, instance, zTokenInstance, consensusInstance, daiInstance, loansInstance, Lenders);
             await daiInstance.approve(instance.address, depositAmount, { from: depositSender });
             await instance.deposit(depositAmount, { from: depositSender });
             

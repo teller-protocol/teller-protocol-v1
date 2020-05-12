@@ -7,6 +7,7 @@ const PoolDeployer = require('./utils/PoolDeployer');
 // Official Smart Contracts
 const ZDAI = artifacts.require("./base/ZDAI.sol");
 const ZUSDC = artifacts.require("./base/ZUSDC.sol");
+const Settings = artifacts.require("./base/Settings.sol");
 const Lenders = artifacts.require("./base/Lenders.sol");
 const Loans = artifacts.require("./base/Loans.sol");
 const LendingPool = artifacts.require("./base/LendingPool.sol");
@@ -35,25 +36,24 @@ module.exports = async function(deployer, network, accounts) {
 
   const txConfig = { gas: maxGasLimit, from: deployerAccount };
   const deployConfig = {
-    requiredSubmissions,
-    maximumTolerance,
-    responseExpiry,
     tokens,
     aggregators: chainlink,
   };
 
   // Creating DeployerApp helper.
+  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, network);
+  
+  await deployerApp.deploys([ZDAI, ZUSDC], txConfig);
+  await deployerApp.deploy(Settings, requiredSubmissions, maximumTolerance, responseExpiry, txConfig);
   const artifacts = {
     Lenders,
     Loans,
     LendingPool,
     InterestConsensus,
-    ChainlinkPairAggregator
+    ChainlinkPairAggregator,
+    Settings,
   };
-  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, network);
   const poolDeployer = new PoolDeployer(deployerApp, deployConfig, artifacts);
-
-  await deployerApp.deploys([ZDAI, ZUSDC], txConfig);
 
   await poolDeployer.deployPool('DAI_ETH', 'DAI', ZDAI, txConfig);
   await poolDeployer.deployPool('USDC_ETH', 'USDC', ZUSDC, txConfig);

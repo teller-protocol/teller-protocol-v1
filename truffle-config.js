@@ -44,6 +44,9 @@ module.exports = {
 				'InitializableModifiersMock',
 				'InterestConsensusMock',
 				'NumbersListMock',
+				'BaseMock',
+				'ConsensusMock',
+				'InterestConsensusModifiersMock',
 			]
 		},
 	},
@@ -61,7 +64,7 @@ module.exports = {
 			host: '127.0.0.1',
 			port: 8545,
 			network_id: '*',
-			gas: 0x90F560,
+			gas: gasKeyValue,
 			gasPrice: 0x01,
 		},
 		ropsten: {

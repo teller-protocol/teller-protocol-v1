@@ -10,7 +10,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const Lenders = artifacts.require("./mock/base/LendersMock.sol");
 const InterestConsensus = artifacts.require("./mock/base/InterestConsensus.sol");
 
-contract('LendersWithdrawInterestTest', function (accounts) {
+contract('LendersSetAccruedInterestTest', function (accounts) {
     let instance;
     let zTokenInstance;
     let lendingPoolInstance;
@@ -55,10 +55,13 @@ contract('LendersWithdrawInterestTest', function (accounts) {
         zTokenInstance = await Mock.new();
         lendingPoolInstance = await Mock.new();
         interestConsensusInstance = await Mock.new();
-        instance = await Lenders.new(
+        settingsInstance = await Mock.new();
+        instance = await Lenders.new();
+        await instance.initialize(
             zTokenInstance.address,
             lendingPoolInstance.address,
-            interestConsensusInstance.address
+            interestConsensusInstance.address,
+            settingsInstance.address,
         );
 
         interestConsensusTemplate = await InterestConsensus.new()

@@ -100,6 +100,17 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        interestWithdrawn: tx => {
+            const name = 'InterestWithdrawn';
+            return {
+                name: name,
+                emitted: (lender, amount) => emitted(tx, name, ev => {
+                    assert.equal(ev.lender, lender);
+                    assert.equal(ev.amount.toString(), amount.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     },
     loans: {
         loanCreated: tx => {
@@ -119,34 +130,72 @@ module.exports = {
         },
     },
     interestConsensus: {
-      interestSubmitted: tx => {
-          const name = 'InterestSubmitted';
-          return {
-              name: name,
-              emitted: (signer, lender, blockNumber, interest) => truffleAssert.eventEmitted(tx, name, ev => {
-                  return (
-                      ev.signer == signer && 
-                      ev.lender == lender &&
-                      ev.blockNumber.toString() == blockNumber.toString() &&
-                      ev.interest.toString() == interest.toString()
-                  )
-              }),
-              notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-          };
-      },
-      interestAccepted: tx => {
-        const name = 'InterestAccepted';
-        return {
-            name: name,
-            emitted: (lender, blockNumber, interest) => truffleAssert.eventEmitted(tx, name, ev => {
-                return (
-                    ev.lender == lender && 
-                    ev.blockNumber.toString() == blockNumber.toString() &&
-                    ev.interest.toString() == interest.toString()
-                )
-            }),
-            notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-        };
+        interestSubmitted: tx => {
+            const name = 'InterestSubmitted';
+            return {
+                name: name,
+                emitted: (signer, lender, blockNumber, interest) => truffleAssert.eventEmitted(tx, name, ev => {
+                    return (
+                        ev.signer == signer && 
+                        ev.lender == lender &&
+                        ev.blockNumber.toString() == blockNumber.toString() &&
+                        ev.interest.toString() == interest.toString()
+                    )
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        interestAccepted: tx => {
+            const name = 'InterestAccepted';
+            return {
+                name: name,
+                emitted: (lender, blockNumber, interest) => truffleAssert.eventEmitted(tx, name, ev => {
+                    return (
+                        ev.lender == lender && 
+                        ev.blockNumber.toString() == blockNumber.toString() &&
+                        ev.interest.toString() == interest.toString()
+                    )
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     },
-  },
+    settings: {
+        lendingPoolPaused: tx => {
+            const name = 'LendingPoolPaused';
+            return {
+                name: name,
+                emitted: (account, lendingPoolAddress) => emitted(tx, name, ev => {
+                    assert.equal(ev.account, account);
+                    assert.equal(ev.lendingPoolAddress, lendingPoolAddress);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        lendingPoolUnpaused: tx => {
+            const name = 'LendingPoolUnpaused';
+            return {
+                name: name,
+                emitted: (account, lendingPoolAddress) => emitted(tx, name, ev => {
+                    assert.equal(ev.account, account);
+                    assert.equal(ev.lendingPoolAddress, lendingPoolAddress);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        settingUpdated: tx => {
+            const name = 'SettingUpdated';
+            return {
+                name: name,
+                emitted: (settingName, sender, oldValue, newValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.settingName.toString(), settingName.toString());
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.oldValue.toString(), oldValue.toString());
+                    assert.equal(ev.newValue, newValue);
+
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    }
 };

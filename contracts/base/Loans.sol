@@ -17,6 +17,7 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
+import "../base/Base.sol";
 import "../interfaces/LoansInterface.sol";
 import "../interfaces/PairAggregatorInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
@@ -26,7 +27,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/access/roles/SignerRole.sol";
 
 
-contract Loans is LoansInterface, SignerRole {
+contract Loans is Base, LoansInterface, SignerRole {
     using SafeMath for uint256;
 
     uint256 private constant ONE_HOUR = 3600;
@@ -57,9 +58,15 @@ contract Loans is LoansInterface, SignerRole {
         _;
     }
 
-    constructor(address priceOracleAddress, address lendingPoolAddress) public {
+    function initialize(
+        address priceOracleAddress,
+        address lendingPoolAddress,
+        address settingsAddress
+    ) external isNotInitialized() {
         require(priceOracleAddress != address(0), "PROVIDE_ORACLE_ADDRESS");
         require(lendingPoolAddress != address(0), "PROVIDE_LENDINGPOOL_ADDRESS");
+
+        _initialize(settingsAddress);
 
         priceOracle = PairAggregatorInterface(priceOracleAddress);
         lendingPool = LendingPoolInterface(lendingPoolAddress);
@@ -74,6 +81,9 @@ contract Loans is LoansInterface, SignerRole {
         external
         payable
         loanIDValid(loanID)
+        isInitialized()
+        whenNotPaused()
+        whenLendingPoolNotPaused(address(lendingPool))
     {
         require(loans[loanID].borrower == borrower, "BORROWER_LOAN_ID_MISMATCH");
         require(loans[loanID].active, "LOAN_NOT_ACTIVE");
@@ -94,6 +104,10 @@ contract Loans is LoansInterface, SignerRole {
     function withdrawCollateral(uint256 amount, uint256 loanID)
         external
         loanIDValid(loanID)
+        isInitialized()
+        whenNotPaused()
+        whenLendingPoolNotPaused(address(lendingPool))
+        nonReentrant()
     {
         require(msg.sender == loans[loanID].borrower, "CALLER_DOESNT_OWN_LOAN");
 
@@ -142,7 +156,15 @@ contract Loans is LoansInterface, SignerRole {
         uint256 numberDays,
         uint256 amountBorrow,
         ZeroCollateralCommon.Signature calldata signature
-    ) external payable returns (uint256) {
+    )
+        external
+        payable
+        isInitialized()
+        whenNotPaused()
+        whenLendingPoolNotPaused(address(lendingPool))
+        nonReentrant()
+        returns (uint256)
+    {
         require(amountBorrow <= maxLoanAmount, "BORROW_AMOUNT_NOT_AUTHORIZED");
 
         address signer = ecrecover(
@@ -222,7 +244,14 @@ contract Loans is LoansInterface, SignerRole {
      * @param amount uint256 The amount of tokens to pay back to the loan
      * @param loanID uint256 The ID of the loan the payment is for
      */
-    function repay(uint256 amount, uint256 loanID) external loanIDValid(loanID) {
+    function repay(uint256 amount, uint256 loanID)
+        external
+        loanIDValid(loanID)
+        isInitialized()
+        whenNotPaused()
+        whenLendingPoolNotPaused(address(lendingPool))
+        nonReentrant()
+    {
         require(loans[loanID].active, "LOAN_NOT_ACTIVE");
 
         // calculate the actual amount to repay
@@ -252,7 +281,14 @@ contract Loans is LoansInterface, SignerRole {
      * @notice Liquidate a loan if it is expired or undercollateralised
      * @param loanID uint256 The ID of the loan to be liquidated
      */
-    function liquidateLoan(uint256 loanID) external loanIDValid(loanID) {
+    function liquidateLoan(uint256 loanID)
+        external
+        loanIDValid(loanID)
+        isInitialized()
+        whenNotPaused()
+        whenLendingPoolNotPaused(address(lendingPool))
+        nonReentrant()
+    {
         require(loans[loanID].active, "LOAN_NOT_ACTIVE");
 
         // check that enough collateral has been provided for this loan

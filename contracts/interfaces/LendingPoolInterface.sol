@@ -73,6 +73,13 @@ interface LendingPoolInterface {
     event TokenRepaid(address indexed borrower, uint256 amount);
 
     /**
+        @notice This event is emitted when an lender withdraws interests.
+        @param lender address.
+        @param amount of tokens.
+     */
+    event InterestWithdrawn(address indexed lender, uint256 amount);
+
+    /**
         @notice This event is emitted when a liquidator liquidates a loan.
         @param liquidator address.
         @param amount of tokens.

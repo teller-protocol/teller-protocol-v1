@@ -25,18 +25,25 @@ contract('LoansIsCollateralSentEnoughTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await LendingPool.new();
         oracleInstance = await Mock.new();
-        instance = await Loans.new(
+        const lenders = await Mock.new();
+        const settings = await Mock.new();
+
+        const zToken = await Mock.new();
+        instance = await Loans.new();
+        await instance.initialize(
             oracleInstance.address,
             lendingPoolInstance.address,
+            settings.address,
         );
-        const zToken = await Mock.new();
+        
         lendingToken = await Mock.new();
-        const lenders = await Mock.new();
+        
         await lendingPoolInstance.initialize(
             zToken.address,
             lendingToken.address,
             lenders.address,
             instance.address,
+            settings.address,
         );
     });
 
