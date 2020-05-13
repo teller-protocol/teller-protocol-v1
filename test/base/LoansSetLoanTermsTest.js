@@ -25,6 +25,7 @@ contract('LoansSetLoanTermsTest', function (accounts) {
     let loanTermsConsTemplate;
     let processRequestEncoding;
     let oracleInstance;
+    let settingsInstance;
 
     const borrowerAddress = accounts[2]
 
@@ -40,12 +41,14 @@ contract('LoansSetLoanTermsTest', function (accounts) {
         lendingPoolInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
-        instance = await Loans.new(
+        settingsInstance = await Mock.new()
+        instance = await Loans.new();
+        await instance.initialize(
             oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
-            FIVE_MIN
-        );
+            settingsInstance.address
+        )
 
         loanTermsConsTemplate = await LoanTermsConsensus.new()
         processRequestEncoding = loanTermsConsTemplate

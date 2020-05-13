@@ -16,6 +16,7 @@ contract('LoansDepositCollateralTest', function (accounts) {
     let oracleInstance;
     let loanTermsConsInstance;
     let lendingPoolInstance;
+    let settingsInstance;
 
     const mockLoanID = 7
     
@@ -23,12 +24,14 @@ contract('LoansDepositCollateralTest', function (accounts) {
         lendingPoolInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
-        instance = await Loans.new(
+        settingsInstance = await Mock.new()
+        instance = await Loans.new();
+        await instance.initialize(
             oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
-            FIVE_MIN
-        );
+            settingsInstance.address
+        )
     });
 
     withData({

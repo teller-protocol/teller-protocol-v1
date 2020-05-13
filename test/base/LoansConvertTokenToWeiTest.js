@@ -26,18 +26,21 @@ contract('LoansConvertTokenToWeiTest', function () {
     let loanTermsConsInstance;
     let lendingPoolInstance;
     let lendingTokenInstance;
+    let settingsInstance;
     
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
         lendingTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
-        instance = await Loans.new(
+        settingsInstance = await Mock.new()
+        instance = await Loans.new();
+        await instance.initialize(
             oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
-            FIVE_MIN
-        );
+            settingsInstance.address
+        )
 
         // encode lending token address
         const encodeLendingToken = lendingPoolInterfaceEncoder.encodeLendingToken();

@@ -36,7 +36,7 @@ contract('LoansTakeOutLoanTest', function (accounts) {
         lendingPoolInstance = await Mock.new();
         lendingTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
-        const settingsInstance = await Settings.new(1, 1, THIRTY_DAYS);
+        const settingsInstance = await Settings.new(1, 1, THIRTY_DAYS, FIVE_MIN);
         loanTermsConsInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(

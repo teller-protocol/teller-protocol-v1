@@ -15,6 +15,7 @@ contract('LoansRepayTest', function (accounts) {
     let oracleInstance;
     let loanTermsConsInstance;
     let lendingPoolInstance;
+    let settingsInstance;
 
     const mockLoanID = 2831
     const totalCollateral = BigNumber("4500000000000000000") // 4.5 ETH
@@ -26,12 +27,14 @@ contract('LoansRepayTest', function (accounts) {
         lendingTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
-        instance = await Loans.new(
+        settingsInstance = await Mock.new()
+        instance = await Loans.new();
+        await instance.initialize(
             oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
-            FIVE_MIN
-        );
+            settingsInstance.address
+        )
     });
 
     withData({

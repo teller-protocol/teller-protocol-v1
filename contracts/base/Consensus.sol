@@ -45,11 +45,12 @@ contract Consensus is Base, SignerRole {
     }
 
     function initialize(
-        address callerAddress // loans for LoanTermsConsensus, lenders for InterestConsensus
+        address callerAddress, // loans for LoanTermsConsensus, lenders for InterestConsensus
+        address settingAddress
     ) public isNotInitialized() {
         require(callerAddress != address(0), "MUST_PROVIDE_LENDER_INFO");
 
-        _initialize();
+        _initialize(settingAddress);
 
         caller = callerAddress;
     }

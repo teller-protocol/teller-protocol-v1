@@ -10,7 +10,7 @@ const Lenders = artifacts.require("./base/Lenders.sol");
 contract('InterestConsensusInitializeTest', function (accounts) {
 
     withData({
-        _1_no_settings: [true, false, 'MUST_PROVIDE_SETTINGS', true],
+        _1_no_settings: [true, false, 'SETTINGS_MUST_BE_PROVIDED', true],
         _2_no_lenders: [false, true, 'MUST_PROVIDE_LENDER_INFO', true],
         _3_all_provided: [true, true, undefined, false],
     }, function(
@@ -24,7 +24,7 @@ contract('InterestConsensusInitializeTest', function (accounts) {
                 // Setup
                 const instance = await InterestConsensus.new();
                 const settings = await Mock.new();
-                const lenders = await Lenders.new(accounts[1], accounts[2], instance.address);
+                const lenders = await Lenders.new();
                 const lendersAddress = provideLenders ? lenders.address : NULL_ADDRESS;
                 const settingsAddress = provideSettings ? settings.address : NULL_ADDRESS;
 

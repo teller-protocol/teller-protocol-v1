@@ -31,7 +31,7 @@ contract('InterestConsensus hashInterestRequest and hashReponse', function (acco
         lender,
         startTime,
         endTime,
-        requestTime,
+      requestTime,
     ) {    
         it(t('user', 'new', 'Should correctly calculate the hash for a request', false), async function() {
             const request = createInterestRequest(lender, startTime, endTime, requestTime)

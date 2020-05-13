@@ -46,10 +46,12 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
     const settingsInstance = await Settings.deployed();
     const interestConsensus = await InterestConsensus.deployed();
     const loansInstance = await Loans.deployed();
+    const loanTermConsensus = await LoanTermsConsensus.deployed();
 
     await loansInstance.initialize(
         ChainlinkPairAggregator.address,
         LendingPool.address,
+        LoanTermsConsensus.address,
         Settings.address,
     );
     await lenderInstance.initialize(
@@ -69,13 +71,11 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
   
     await zTokenInstance.addMinter(LendingPool.address, txConfig);
   
-    const interestConsensus = await InterestConsensus.deployed();
     await interestConsensus.initialize(
         Lenders.address,
         settingsInstance.address
     );
 
-    const loanTermConsensus = await LoanTermsConsensus.deployed();
     await loanTermConsensus.initialize(
         Loans.address,
         settingsInstance.address

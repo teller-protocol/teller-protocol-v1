@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, THIRTY_DAYS } = require('../utils/consts');
+const { t } = require('../utils/consts');
 const { hashLoanTermsRequest, hashLoanTermsResponse } = require('../utils/hashes');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
 const ethUtil = require('ethereumjs-util')
@@ -12,14 +12,13 @@ const LoanTermsConsensusMock = artifacts.require("./mock/base/LoanTermsConsensus
 const { NULL_ADDRESS } = require('../utils/consts');
 
 contract('LoanTermsConsensus hashRequest and hashReponse', function (accounts) {
-    const tolerance = 0
-    const submissions = 1
     const loansAddress = accounts[3]
+    const settingsAddress = accounts[5]
     let instance
 
     beforeEach('Setup for each test', async () => {
         instance = await LoanTermsConsensusMock.new()
-        await instance.initialize(loansAddress, submissions, tolerance, THIRTY_DAYS)
+        await instance.initialize(loansAddress, settingsAddress)
     })
 
     withData({

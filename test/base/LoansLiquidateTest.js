@@ -25,6 +25,7 @@ contract('LoansLiquidateTest', function (accounts) {
     let oracleInstance;
     let loanTermsConsInstance;
     let lendingPoolInstance;
+    let settingsInstance;
 
     const mockLoanID = 2831
 
@@ -37,12 +38,14 @@ contract('LoansLiquidateTest', function (accounts) {
         lendingTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
-        instance = await Loans.new(
-          oracleInstance.address,
-          lendingPoolInstance.address,
-          loanTermsConsInstance.address,
-          FIVE_MIN
-        );
+        settingsInstance = await Mock.new()
+        instance = await Loans.new();
+        await instance.initialize(
+            oracleInstance.address,
+            lendingPoolInstance.address,
+            loanTermsConsInstance.address,
+            settingsInstance.address
+        )
 
         // encode lending token address
         const encodeLendingToken = lendingPoolInterfaceEncoder.encodeLendingToken();

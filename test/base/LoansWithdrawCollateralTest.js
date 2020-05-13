@@ -24,6 +24,7 @@ contract('LoansWithdrawCollateralTest', function (accounts) {
     let loanTermsConsInstance;
     let lendingPoolInstance;
     let lendingTokenInstance;
+    let settingsInstance;
 
     const mockLoanID = 7
     
@@ -32,12 +33,14 @@ contract('LoansWithdrawCollateralTest', function (accounts) {
         lendingTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
-        instance = await Loans.new(
+        settingsInstance = await Mock.new()
+        instance = await Loans.new();
+        await instance.initialize(
             oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
-            FIVE_MIN
-        );
+            settingsInstance.address
+        )
 
         // encode lending token address
         const encodeLendingToken = lendingPoolInterfaceEncoder.encodeLendingToken();
