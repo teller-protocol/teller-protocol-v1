@@ -35,7 +35,8 @@ module.exports = {
 			showTimeSpent: true,
 			excludeContracts: [
 				'Migrations',
-				'SimpleToken',
+				'DAIMock',
+				'USDCMock',
 				'LendersMock',
 				'LendersModifiersMock',
 				'Mock',

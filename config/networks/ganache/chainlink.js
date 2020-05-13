@@ -1,6 +1,5 @@
-const { DUMMY_ADDRESS } = require('../../consts');
 
 module.exports = {
-    USDC_ETH: DUMMY_ADDRESS,
-    DAI_ETH: DUMMY_ADDRESS,
+    DAI_ETH: '0x9E4F0be4240FDF3C1512294644Fb75961e24d526',
+    USDC_ETH: '0xbEb9CC069278AB64d22d761471844311D0a6b27B',
 };

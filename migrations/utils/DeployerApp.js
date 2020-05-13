@@ -37,6 +37,12 @@ DeployerApp.prototype.deployMockIf = async function(contract, ...params) {
     }
 }
 
+DeployerApp.prototype.deployMockIfWith = async function(contractName, contract, ...params) {
+    if(this.canDeployMock()) {
+        await this.deployWith(contractName, contract, ...params);
+    }
+}
+
 DeployerApp.prototype.deployMocksIf = async function(contracts, ...params) {
     for (const key in contracts) {
         if (contracts.hasOwnProperty(key)) {

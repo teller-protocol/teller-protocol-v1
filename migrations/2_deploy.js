@@ -2,8 +2,6 @@ const assert = require('assert');
 const DeployerApp = require('./utils/DeployerApp');
 const PoolDeployer = require('./utils/PoolDeployer');
 
-// Mock Smart Contracts
-
 // Official Smart Contracts
 const ZDAI = artifacts.require("./base/ZDAI.sol");
 const ZUSDC = artifacts.require("./base/ZUSDC.sol");
@@ -44,6 +42,7 @@ module.exports = async function(deployer, network, accounts) {
   const deployerApp = new DeployerApp(deployer, web3, deployerAccount, network);
   
   await deployerApp.deploys([ZDAI, ZUSDC], txConfig);
+
   await deployerApp.deploy(Settings, requiredSubmissions, maximumTolerance, responseExpiry, txConfig);
   const artifacts = {
     Lenders,
