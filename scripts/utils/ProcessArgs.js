@@ -17,4 +17,11 @@ ProcessArgs.prototype.network = function() {
     return this.defaultNetwork;
 }
 
+ProcessArgs.prototype.getCurrentConfig = function() {
+    const network = this.network();
+    console.log(`Script will be executed in network ${network}.`)
+    const appConf = require('../../config')(network);
+    return appConf;
+}
+
 module.exports = ProcessArgs;

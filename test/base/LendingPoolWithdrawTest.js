@@ -7,7 +7,7 @@ const BurnableInterfaceEncoder = require('../utils/encoders/BurnableInterfaceEnc
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
-const DAI = artifacts.require("./mock/token/SimpleToken.sol");
+const Token = artifacts.require("./mock/token/DAIMock.sol");
 
 // Smart contracts
 const Lenders = artifacts.require("./base/Lenders.sol");
@@ -18,7 +18,7 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     const burnableInterfaceEncoder = new BurnableInterfaceEncoder(web3);
     let instance;
     let zTokenInstance;
-    let daiInstance;
+    let lendingTokenInstance;
     let loansInstance;
     let consensusInstance;
     let settingsInstance;
@@ -37,10 +37,10 @@ contract('LendingPoolWithdrawTest', function (accounts) {
         it(t('user', 'withdraw', 'Should able (or not) to withdraw DAIs.', mustFail), async function() {
             // Setup
             zTokenInstance = await Mock.new();
-            daiInstance = await Mock.new();
-            await initContracts(settingsInstance, instance, zTokenInstance, consensusInstance, daiInstance, loansInstance, Lenders);
+            lendingTokenInstance = await Mock.new();
+            await initContracts(settingsInstance, instance, zTokenInstance, consensusInstance, lendingTokenInstance, loansInstance, Lenders);
             const encodeTransfer = burnableInterfaceEncoder.encodeTransfer();
-            await daiInstance.givenMethodReturnBool(encodeTransfer, transfer);
+            await lendingTokenInstance.givenMethodReturnBool(encodeTransfer, transfer);
 
             try {
                 // Invocation
@@ -69,10 +69,10 @@ contract('LendingPoolWithdrawTest', function (accounts) {
         it(t('user', 'withdraw', 'Should able (or not) to withdraw DAIs.', mustFail), async function() {
             // Setup
             zTokenInstance = await ZDai.new();
-            daiInstance = await DAI.new();
+            lendingTokenInstance = await Token.new();
             await zTokenInstance.addMinter(instance.address);
-            await initContracts(settingsInstance, instance, zTokenInstance, consensusInstance, daiInstance, loansInstance, Lenders);
-            await daiInstance.approve(instance.address, depositAmount, { from: depositSender });
+            await initContracts(settingsInstance, instance, zTokenInstance, consensusInstance, lendingTokenInstance, loansInstance, Lenders);
+            await lendingTokenInstance.approve(instance.address, depositAmount, { from: depositSender });
             await instance.deposit(depositAmount, { from: depositSender });
             
             try {
