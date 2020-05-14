@@ -33,12 +33,3 @@ jobs:
       - name: Executing Code Coverage Report
         run: |
           yarn test:coverage
-      - name: Starting Ganache (Integration Tests)
-        run: |
-          yarn start:ganache
-      - name: Running Integration Tests (on Ganache)
-        run: |
-          yarn test:ganache
-
-
-
