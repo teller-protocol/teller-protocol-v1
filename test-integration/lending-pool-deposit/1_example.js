@@ -1,6 +1,7 @@
 // Util classes
 const BigNumber = require("bignumber.js");
 const {zerocollateral, tokens} = require("../../scripts/utils/contracts");
+const { lendingPool } = require('../../test/utils/events');
 const assert = require("assert");
 
 module.exports = async ({accounts, getContracts, timer}) => {
@@ -8,24 +9,26 @@ module.exports = async ({accounts, getContracts, timer}) => {
   const sender = accounts[1];
   const senderTxConfig = { from: sender };
   const dai = await getContracts.getDeployed(tokens.Dai);
+  const zdai = await getContracts.getDeployed(zerocollateral.ZDai);
   const amount = 100;
-  const amountBigNumber = new BigNumber(amount).times(
-    new BigNumber(10).pow(18)
-  );
-  await dai.mintTo(sender, amountBigNumber, senderTxConfig);
+  const amountWei = new BigNumber(amount).times(new BigNumber(10).pow(18));
+  await dai.mintTo(sender, amountWei, senderTxConfig);
 
-  const lendingPoolZDai = await getContracts.getDeployed(
-    zerocollateral.ZDai_LendingPool
-  );
-
+  const lendingPoolZDai = await getContracts.getDeployed(zerocollateral.ZDai_LendingPool);
   const lendingToken = await lendingPoolZDai.lendingToken();
 
   assert(lendingToken === dai.address,"Lending token and token are not equal.");
 
   await dai.approve(
     lendingPoolZDai.address,
-    amountBigNumber.toString(),
+    amountWei.toString(),
     senderTxConfig
   );
-  await lendingPoolZDai.deposit(amountBigNumber.toString(), {from: sender});
+  const depositResult = await lendingPoolZDai.deposit(amountWei.toString(), {from: sender});
+
+  lendingPool
+    .tokenDeposited(depositResult)
+    .emitted(sender, amountWei);
+  const zdaiSenderBalance = await zdai.balanceOf(sender);
+  assert.equal(zdaiSenderBalance.toString(), amountWei.toString());
 };

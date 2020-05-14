@@ -5,21 +5,27 @@
   "main": "truffle-config.js",
   "scripts": {
     "compile": "truffle compile",
-    "start:ganache": "ganache-cli --db=\"./data/\" -i=\"5777\" -d --gasPrice=\"0x90F560\" --mnemonic=\"blossom spatial metal assault riot bullet truck update forward brave slide way\"",
+
     "lint-sol": "yarn solhint -f table \"./contracts/**/*.sol\"",
     "lint-js": "yarn eslint -f table \"./test/**/*.js\"",
+
     "test": "truffle test",
-    "test:ganache": "yarn run:scripts:ganache",
-    "prepare:ganache": "yarn unzip:ganache:data && yarn start:ganache",
-    "run:scripts:ganache": "truffle exec ./test-integration/main.js --network ganache",
-    "unzip:ganache:data": "rm -f -r data && unzip data.zip",
     "test:coverage": "truffle compile && truffle run coverage",
+    "test:ganache": "truffle exec ./test-integration/main.js --network ganache",
+
+    "remove:ganache:data": "rm -f -r ./test-integration/resources/data",
+    "unzip:ganache:data": "unzip ./test-integration/resources/data.zip -d ./test-integration/resources",
+    "prepare:ganache:data": "yarn remove:ganache:data && yarn unzip:ganache:data",
+    "start:ganache": "yarn prepare:ganache:data && ganache-cli --db=\"./test-integration/resources/data/\" -i=\"5777\" -d --gasPrice=\"0x90F560\" --mnemonic=\"blossom spatial metal assault riot bullet truck update forward brave slide way\"",
+    
     "deploy:mainnet": "truffle compile && truffle deploy --network mainnet --reset -f 1 --to 2",
     "deploy:ropsten": "truffle compile && truffle deploy --network ropsten --reset -f 1 --to 2",
     "deploy:ganache": "truffle compile && truffle deploy --network ganache --reset -f 1 --to 2",
     "deploy:ganache:mock": "truffle compile && truffle deploy --network ganache --reset -f 3 --to 3",
+    
     "format:prettier": "prettier --write contracts/**/*.sol",
     "format:prettier:print": "prettier contracts/**/*.sol",
+    
     "verify:ropsten": "truffle run verify LendingPool Lenders Loans ZDAI ZUSDC InterestConsensus Settings --network ropsten"
   },
   "devDependencies": {
