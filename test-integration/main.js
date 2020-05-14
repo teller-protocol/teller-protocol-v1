@@ -29,16 +29,24 @@ module.exports = async (callback) => {
             await testFunction(testContext);
         };
 
-        for (const test of tests) {
+        for (const testKey in tests) {
+            let test = tests[testKey];
             const testType = typeof test;
             if(testType === 'object') {
-                const testObjects = Object.keys(test).map( key => test[key]);
+                const testObjects = Object.keys(test).map( key => ({test: test[key], key }));
                 for (const testObject of testObjects) {
-                    executeTestFunction(testObject);
+                    console.time(testObject.key);
+                    console.log(`>>>>> Test: ${testObject.key} starts <<<<<`);
+                    executeTestFunction(testObject.test);
+                    console.timeEnd(testObject.key);
+                    console.timeLog(testObject.key)
+                    console.log(`>>>>> Test: ${testObject.key} ends <<<<<`);
                 }
             }
             if(testType === 'function') {
+                console.log(`>>>>> Test: ${testKey} starts <<<<<`);
                 executeTestFunction(testType);
+                console.log(`>>>>> Test: ${testKey} ends <<<<<`);
             }
             await timer.revertToSnapshot(snapshotId);
             console.log(`Reverting blockchain state to snapshot id ${JSON.stringify(snapshotId)}`);

@@ -5,4 +5,4 @@ coverage
 build
 .env
 .DS_Store
-data
+test-integration/resources/data

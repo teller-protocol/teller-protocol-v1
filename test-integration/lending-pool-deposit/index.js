@@ -1,5 +1,5 @@
 const _1_example = require('./1_example');
 
 module.exports = {
-    '1': _1_example,
+    'lending-pool-deposit-1-example': _1_example,
 };
