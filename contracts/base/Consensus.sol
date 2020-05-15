@@ -37,7 +37,7 @@ contract Consensus is Base, SignerRole {
     mapping(address => mapping(uint256 => bool)) public signerNonceTaken;
 
     // the address with permissions to submit a request for processing
-    address caller;
+    address public caller;
 
     modifier isCaller() {
         require(caller == msg.sender, "Address has no permissions.");

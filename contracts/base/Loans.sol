@@ -36,12 +36,13 @@ contract Loans is Base, LoansInterface {
 
     uint256 private constant ONE_HOUR = 60 * 60;
     uint256 private constant ONE_DAY = ONE_HOUR * 24;
-    uint256 private constant THIRTY_DAYS = ONE_DAY * 30;
-    uint256 private constant LIQUIDATE_ETH_PRICE = 9500; // Eth is bought at 95.00% of the going rate
     uint256 private constant TEN = 10; // Used to calculate one whole token.
+    // Loan length will be inputted in days, with 4 decimal places. i.e. 30 days will be inputted as
+    // 300000. Therefore in interest calculations we must divide by 365000
     uint256 private constant DAYS_PER_YEAR_4DP = 3650000;
-    uint256 private constant TEN_THOUSAND = 10000; // For interestRate, collateral, and liquidation price, 7% is represented as 700.
-    // to find the value of something we must divide 700 by 100 to remove decimal places, and another 100 for percentage
+    // For interestRate, collateral, and liquidation price, 7% is represented as 700. To find the value 
+    // of something we must divide 700 by 100 to remove decimal places, and another 100 for percentage.
+    uint256 private constant TEN_THOUSAND = 10000;
 
     uint256 public totalCollateral;
 
@@ -55,6 +56,11 @@ contract Loans is Base, LoansInterface {
     mapping(address => uint256[]) public borrowerLoans;
 
     mapping(uint256 => ZeroCollateralCommon.Loan) public loans;
+
+    modifier isBorrower(address borrower) {
+        require(msg.sender == borrower, 'BORROWER_MUST_BE_SENDER');
+        _;
+    }
 
     modifier loanActive(uint256 loanID) {
         require(
@@ -91,7 +97,7 @@ contract Loans is Base, LoansInterface {
         require(lendingPoolAddress != address(0), "PROVIDE_LENDINGPOOL_ADDRESS");
         require(
             loanTermsConsensusAddress != address(0),
-            "Consensus address is required."
+            "PROVIDED_LOAN_TERMS_ADDRESS"
         );
 
         _initialize(settingsAddress);
@@ -177,7 +183,12 @@ contract Loans is Base, LoansInterface {
     function setLoanTerms(
         ZeroCollateralCommon.LoanRequest calldata request,
         ZeroCollateralCommon.LoanResponse[] calldata responses
-    ) external payable {
+    )
+        external payable
+        isInitialized()
+        whenNotPaused()
+        isBorrower(request.borrower)
+    {
         uint256 interestRate;
         uint256 collateralRatio;
         uint256 maxLoanAmount;
@@ -187,6 +198,8 @@ contract Loans is Base, LoansInterface {
 
         (interestRate, collateralRatio, maxLoanAmount) = loanTermsConsensus
             .processRequest(request, responses);
+
+        uint256 termsExpiry = now.add(settings.termsExpiryTime());
 
         loans[loanID] = ZeroCollateralCommon.Loan({
             id: loanID,
@@ -198,7 +211,7 @@ contract Loans is Base, LoansInterface {
                 maxLoanAmount: maxLoanAmount,
                 duration: request.duration
             }),
-            termsExpiry: now.add(THIRTY_DAYS),
+            termsExpiry: termsExpiry,
             loanStartTime: 0,
             collateral: 0,
             lastCollateralIn: 0,
@@ -211,6 +224,8 @@ contract Loans is Base, LoansInterface {
         if (msg.value > 0) {
             // update collateral, totalCollateral, and lastCollateralIn
             _payInCollateral(loanID, msg.value);
+
+            emit CollateralDeposited(loanID, request.borrower, msg.value);
         }
 
         borrowerLoans[request.borrower].push(loanID);
@@ -222,7 +237,8 @@ contract Loans is Base, LoansInterface {
             interestRate,
             collateralRatio,
             maxLoanAmount,
-            request.duration
+            request.duration,
+            termsExpiry
         );
     }
 
@@ -240,7 +256,9 @@ contract Loans is Base, LoansInterface {
         whenNotPaused()
         whenLendingPoolNotPaused(address(lendingPool))
         nonReentrant()
+        isBorrower(loans[loanID].loanTerms.borrower)
     {
+
         require(
             loans[loanID].loanTerms.maxLoanAmount >= amountBorrow,
             "MAX_LOAN_EXCEEDED"
@@ -315,15 +333,26 @@ contract Loans is Base, LoansInterface {
             if (totalOwed == 0) {
                 loans[loanID].status = ZeroCollateralCommon.LoanStatus.Closed;
 
+                uint256 collateralAmount = loans[loanID].collateral;
                 _payOutCollateral(
                     loanID,
-                    loans[loanID].collateral,
+                    collateralAmount,
                     loans[loanID].loanTerms.borrower
                 );
+
+                emit CollateralWithdrawn(loanID, loans[loanID].loanTerms.borrower, collateralAmount);
             }
 
             // collect the money from the payer
             lendingPool.repay(toPay, msg.sender);
+
+            emit LoanRepaid(
+                loanID,
+                loans[loanID].loanTerms.borrower,
+                toPay,
+                msg.sender,
+                totalOwed
+            );
         }
     }
 
@@ -351,24 +380,35 @@ contract Loans is Base, LoansInterface {
             loans[loanID].loanTerms.duration
         );
 
+        uint256 loanCollateral = loans[loanID].collateral;
+
         // to liquidate it must be undercollateralised, or expired
         require(
-            collateralNeededWei > loans[loanID].collateral || loanEndTime < now,
+            collateralNeededWei > loanCollateral || loanEndTime < now,
             "DOESNT_NEED_LIQUIDATION"
         );
 
         loans[loanID].status = ZeroCollateralCommon.LoanStatus.Closed;
         loans[loanID].liquidated = true;
 
-        uint256 collateralInTokens = _convertWeiToToken(loans[loanID].collateral);
+        uint256 collateralInTokens = _convertWeiToToken(loanCollateral);
 
         // the caller gets the collateral from the loan
-        _payOutCollateral(loanID, loans[loanID].collateral, msg.sender);
+        _payOutCollateral(loanID, loanCollateral, msg.sender);
 
+        uint256 tokenPayment = collateralInTokens.mul(settings.liquidateEthPrice()).div(TEN_THOUSAND);
         // the pays tokens at x% of collateral price
         lendingPool.liquidationPayment(
-            collateralInTokens.mul(LIQUIDATE_ETH_PRICE).div(TEN_THOUSAND),
+            tokenPayment,
             msg.sender
+        );
+
+        emit LoanLiquidated(
+            loanID,
+            loans[loanID].loanTerms.borrower,
+            msg.sender,
+            loanCollateral,
+            tokenPayment
         );
     }
 
@@ -386,20 +426,18 @@ contract Loans is Base, LoansInterface {
         loans[loanID].lastCollateralIn = now;
     }
 
-    // when this function is called, we've guaranteed that toPay is at most
-    // equal to the total amount owed on the loan. It cannot be bigger.
     function _payLoan(uint256 loanID, uint256 toPay) internal {
         if (toPay > loans[loanID].principalOwed) {
             uint256 leftToPay = toPay;
             leftToPay -= loans[loanID].principalOwed;
             loans[loanID].principalOwed = 0;
-            loans[loanID].interestOwed -= leftToPay;
+            loans[loanID].interestOwed = loans[loanID].interestOwed.sub(leftToPay);
         } else {
             loans[loanID].principalOwed -= toPay;
         }
     }
 
-    function _getTotalOwed(uint256 loanID) internal returns (uint256) {
+    function _getTotalOwed(uint256 loanID) internal view returns (uint256) {
         return loans[loanID].interestOwed.add(loans[loanID].principalOwed);
     }
 

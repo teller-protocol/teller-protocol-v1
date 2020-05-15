@@ -38,11 +38,12 @@ interface LoansInterface {
     event LoanTermsSet(
         uint256 indexed loanID,
         address indexed borrower,
-        address recipient,
+        address indexed recipient,
         uint256 interestRate,
         uint256 collateralRatio,
         uint256 maxLoanAmount,
-        uint256 duration
+        uint256 duration,
+        uint256 termsExpiry
     );
 
     // new loan created
@@ -52,6 +53,22 @@ interface LoansInterface {
         uint256 amountBorrowed
     );
 
+    event LoanRepaid(
+        uint256 indexed loanID,
+        address indexed borrower,
+        uint256 amountPaid,
+        address payer,
+        uint256 totalOwed
+    );
+
+    event LoanLiquidated(
+        uint256 indexed loanID,
+        address indexed borrower,
+        address liquidator,
+        uint256 collateralOut,
+        uint256 tokensIn
+    );
+
     function getBorrowerLoans(address borrower) external view returns (uint256[] memory);
 
     function loans(uint256 loanID)
@@ -59,7 +76,7 @@ interface LoansInterface {
         view
         returns (ZeroCollateralCommon.Loan memory);
 
-    function depositCollateral(address, uint256) external payable;
+    function depositCollateral(address borrower, uint256 loanID) external payable;
 
     function withdrawCollateral(uint256 amount, uint256 loanID) external;
 

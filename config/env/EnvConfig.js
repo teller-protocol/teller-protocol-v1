@@ -8,6 +8,8 @@ const DEFAULT_REQUIRED_SUBMISSIONS = "7";
 const DEFAULT_MAXIMUM_TOLERANCE = "0";
 const DEFAULT_RESPONSE_EXPIRY = "2592000"; // 30 days
 const DEFAULT_SAFETY_INTERVAL = "300" // 5 minutes
+const DEFAULT_TERMS_EXPIRY_TIME = "2592000"; // 30 days
+const DEFAULT_LIQUIDATE_ETH_PRICE = "9500"; // 95%
 
 const ADDRESS_COUNT_KEY = 'ADDRESS_COUNT_KEY';
 const DEFAULT_ADDRESS_INDEX_KEY = 'DEFAULT_ADDRESS_INDEX_KEY';
@@ -20,6 +22,8 @@ const DEFAULT_REQUIRED_SUBMISSIONS_KEY = 'DEFAULT_REQUIRED_SUBMISSIONS_KEY'
 const DEFAULT_MAXIMUM_TOLERANCE_KEY = 'DEFAULT_MAXIMUM_TOLERANCE_KEY'
 const DEFAULT_RESPONSE_EXPIRY_KEY = 'DEFAULT_RESPONSE_EXPIRY_KEY'
 const DEFAULT_SAFETY_INTERVAL_KEY = 'DEFAULT_SAFETY_INTERVAL_KEY'
+const DEFAULT_TERMS_EXPIRY_TIME_KEY = 'DEFAULT_TERMS_EXPIRY_TIME_KEY'
+const DEFAULT_LIQUIDATE_ETH_PRICE_KEY = 'DEFAULT_LIQUIDATE_ETH_PRICE_KEY'
 
 class EnvConfig {
     constructor() {
@@ -41,6 +45,8 @@ EnvConfig.prototype.initializeConf = function() {
     this.createItem(DEFAULT_MAXIMUM_TOLERANCE_KEY, DEFAULT_MAXIMUM_TOLERANCE, 'This is the maximum tolerance of difference in node submissions.');
     this.createItem(DEFAULT_RESPONSE_EXPIRY_KEY, DEFAULT_RESPONSE_EXPIRY, 'This is the time after which node responses expire.');
     this.createItem(DEFAULT_SAFETY_INTERVAL_KEY, DEFAULT_SAFETY_INTERVAL, 'This is the time between depositing collateral and taking out a loan.');
+    this.createItem(DEFAULT_TERMS_EXPIRY_TIME_KEY, DEFAULT_TERMS_EXPIRY_TIME, 'This is the time after which loan terms will expire.');
+    this.createItem(DEFAULT_LIQUIDATE_ETH_PRICE_KEY, DEFAULT_LIQUIDATE_ETH_PRICE, 'This is the percentage of market rate liquidated eth will sell for.');
 }
 
 EnvConfig.prototype.createItem = function(name, defaultValue = undefined, description = undefined) {
@@ -98,6 +104,14 @@ EnvConfig.prototype.getDefaultResponseExpiry = function() {
 }
 
 EnvConfig.prototype.getDefaultSafetyInterval = function() {
+  return this.conf.get(DEFAULT_SAFETY_INTERVAL_KEY);
+}
+
+EnvConfig.prototype.getDefaultTermsExpiryTime = function() {
+  return this.conf.get(DEFAULT_SAFETY_INTERVAL_KEY);
+}
+
+EnvConfig.prototype.getDefaultLiquidateEthPrice = function() {
   return this.conf.get(DEFAULT_SAFETY_INTERVAL_KEY);
 }
 

@@ -66,7 +66,7 @@ contract('LoansConvertWeiToTokenTest', function () {
             const encodeDecimals = erc20InterfaceEncoder.encodeDecimals();
             await lendingTokenInstance.givenMethodReturnUint(encodeDecimals, tokenDecimals);
 
-            const tokenAmount = await instance.externalConvertWeiToToken.call(weiAmount)
+            const tokenAmount = await instance.externalConvertWeiToToken(weiAmount)
 
             // do the calculation, and then remove the decimal and all after (big number cannot floor)
             let actualTokenAmount = weiAmount.times(10**tokenDecimals).dividedBy(oraclePrice).toFixed()

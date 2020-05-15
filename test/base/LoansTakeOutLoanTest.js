@@ -36,7 +36,7 @@ contract('LoansTakeOutLoanTest', function (accounts) {
         lendingPoolInstance = await Mock.new();
         lendingTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
-        const settingsInstance = await Settings.new(1, 1, THIRTY_DAYS, FIVE_MIN);
+        const settingsInstance = await Settings.new(1, 1, THIRTY_DAYS, FIVE_MIN, THIRTY_DAYS, 9500);
         loanTermsConsInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(
@@ -101,7 +101,7 @@ contract('LoansTakeOutLoanTest', function (accounts) {
 
             try {
                 // Invocation
-                const tx = await instance.takeOutLoan(mockLoanID, amountToBorrow);
+                const tx = await instance.takeOutLoan(mockLoanID, amountToBorrow, { from: borrower });
                 const txTime = (await web3.eth.getBlock(tx.receipt.blockNumber)).timestamp
                 const interestOwed = Math.floor(amountToBorrow * 1475 * loanDuration / 10000 / 3650000)
                 const loan = await instance.loans.call(mockLoanID)

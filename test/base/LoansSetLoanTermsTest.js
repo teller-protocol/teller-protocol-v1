@@ -4,7 +4,6 @@ const abi = require('ethereumjs-abi')
 const {
   t,
   NULL_ADDRESS,
-  FIVE_MIN,
   TERMS_SET,
   THIRTY_DAYS
 } = require('../utils/consts');
@@ -16,6 +15,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const Loans = artifacts.require("./mock/base/LoansMock.sol");
+const Settings = artifacts.require("./mock/base/Settings.sol");
 const LoanTermsConsensus = artifacts.require("./mock/base/LoanTermsConsensus.sol");
 
 contract('LoansSetLoanTermsTest', function (accounts) {
@@ -41,7 +41,7 @@ contract('LoansSetLoanTermsTest', function (accounts) {
         lendingPoolInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
-        settingsInstance = await Mock.new()
+        settingsInstance = await Settings.new(1, 1, 1, 1, THIRTY_DAYS, 1)
         instance = await Loans.new();
         await instance.initialize(
             oracleInstance.address,
@@ -87,10 +87,13 @@ contract('LoansSetLoanTermsTest', function (accounts) {
             const contractBalBefore = await web3.eth.getBalance(instance.address)
 
             // Invocation
-            const tx = await instance.setLoanTerms(
+          const tx = await instance.setLoanTerms(
                 loanRequest,
                 [responseOne, responseTwo],
-                { value: msgValue }
+                {
+                    from: borrowerAddress,
+                    value: msgValue
+                }
             );
 
             const txTime = (await web3.eth.getBlock(tx.receipt.blockNumber)).timestamp
@@ -131,7 +134,8 @@ contract('LoansSetLoanTermsTest', function (accounts) {
                     interestRate,
                     collateralRatio,
                     maxLoanAmount,
-                    loanRequest.duration
+                    loanRequest.duration,
+                    txTime + THIRTY_DAYS
                 )
         });
     });

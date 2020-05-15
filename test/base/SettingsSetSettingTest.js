@@ -18,7 +18,7 @@ contract('SettingsSetSettingTest', function (accounts) {
     let instance;
     
     beforeEach('Setup for each test', async () => {
-        instance = await Settings.new(1, 1, 1, 1);
+        instance = await Settings.new(1, 1, 1, 1, 1, 1);
     });
 
     withData({

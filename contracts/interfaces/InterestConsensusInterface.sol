@@ -12,7 +12,7 @@ interface InterestConsensusInterface {
         uint256 interest
     );
 
-    event InterestAccepted(address lender, uint256 endTime, uint256 interest);
+    event InterestAccepted(address indexed lender, uint256 endTime, uint256 interest);
 
     function processRequest(
         ZeroCollateralCommon.InterestRequest calldata request,

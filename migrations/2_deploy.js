@@ -26,6 +26,8 @@ module.exports = async function(deployer, network, accounts) {
   const maximumTolerance = env.getDefaultMaximumTolerance().getOrDefault();
   const responseExpiry = env.getDefaultResponseExpiry().getOrDefault();
   const safetyInterval = env.getDefaultSafetyInterval().getOrDefault();
+  const liquidateEthPrice = env.getDefaultLiquidateEthPrice().getOrDefault();
+  const termsExpiryTime = env.getDefaultTermsExpiryTime().getOrDefault();
   const deployerAccountIndex = env.getDefaultAddressIndex().getOrDefault();
   const deployerAccount = accounts[deployerAccountIndex];
   console.log(`Deployer account index is ${deployerAccountIndex} => ${deployerAccount}`);
@@ -46,7 +48,16 @@ module.exports = async function(deployer, network, accounts) {
   const deployerApp = new DeployerApp(deployer, web3, deployerAccount, network);
   
   await deployerApp.deploys([ZDAI, ZUSDC], txConfig);
-  await deployerApp.deploy(Settings, requiredSubmissions, maximumTolerance, responseExpiry, safetyInterval, txConfig);
+  await deployerApp.deploy(
+    Settings,
+    requiredSubmissions,
+    maximumTolerance,
+    responseExpiry,
+    safetyInterval,
+    termsExpiryTime,
+    liquidateEthPrice,
+    txConfig
+  );
   const artifacts = {
     Lenders,
     Loans,

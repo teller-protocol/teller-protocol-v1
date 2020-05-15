@@ -38,11 +38,11 @@ contract LoansMock is Loans {
         _payLoan(loanID, toPay);
     }
 
-    function externalConvertWeiToToken(uint256 weiAmount) external returns (uint256) {
+    function externalConvertWeiToToken(uint256 weiAmount) external view returns (uint256) {
         return _convertWeiToToken(weiAmount);
     }
 
-    function externalConvertTokenToWei(uint256 tokenAmount) external returns (uint256) {
+    function externalConvertTokenToWei(uint256 tokenAmount) external view returns (uint256) {
         return _convertTokenToWei(tokenAmount);
     }
 
