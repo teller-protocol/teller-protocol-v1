@@ -14,8 +14,8 @@ const { loanTermsConsensus } = require('../utils/events');
 const BigNumber = require('bignumber.js');
 
 // Smart contracts
-const LoanTermsConsensus = artifacts.require("./mock/base/LoanTermsConsensus.sol");
-const Settings = artifacts.require("./mock/base/Settings.sol");
+const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
+const Settings = artifacts.require("./base/Settings.sol");
 
 
 contract('LoanTermsConsensusProcessRequestTest', function (accounts) {

@@ -12,7 +12,7 @@ const { interestConsensus } = require('../utils/events');
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
-const InterestConsensus = artifacts.require("./mock/base/InterestConsensus.sol");
+const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
 
 
 contract('InterestConsensusProcessRequestTest', function (accounts) {

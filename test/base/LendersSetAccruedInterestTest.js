@@ -9,7 +9,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const Lenders = artifacts.require("./mock/base/LendersMock.sol");
-const InterestConsensus = artifacts.require("./mock/base/InterestConsensus.sol");
+const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
 
 contract('LendersSetAccruedInterestTest', function (accounts) {
     let instance;
