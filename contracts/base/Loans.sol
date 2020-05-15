@@ -40,7 +40,7 @@ contract Loans is Base, LoansInterface {
     // Loan length will be inputted in days, with 4 decimal places. i.e. 30 days will be inputted as
     // 300000. Therefore in interest calculations we must divide by 365000
     uint256 private constant DAYS_PER_YEAR_4DP = 3650000;
-    // For interestRate, collateral, and liquidation price, 7% is represented as 700. To find the value 
+    // For interestRate, collateral, and liquidation price, 7% is represented as 700. To find the value
     // of something we must divide 700 by 100 to remove decimal places, and another 100 for percentage.
     uint256 private constant TEN_THOUSAND = 10000;
 
@@ -58,7 +58,7 @@ contract Loans is Base, LoansInterface {
     mapping(uint256 => ZeroCollateralCommon.Loan) public loans;
 
     modifier isBorrower(address borrower) {
-        require(msg.sender == borrower, 'BORROWER_MUST_BE_SENDER');
+        require(msg.sender == borrower, "BORROWER_MUST_BE_SENDER");
         _;
     }
 
@@ -95,10 +95,7 @@ contract Loans is Base, LoansInterface {
     ) external isNotInitialized() {
         require(priceOracleAddress != address(0), "PROVIDE_ORACLE_ADDRESS");
         require(lendingPoolAddress != address(0), "PROVIDE_LENDINGPOOL_ADDRESS");
-        require(
-            loanTermsConsensusAddress != address(0),
-            "PROVIDED_LOAN_TERMS_ADDRESS"
-        );
+        require(loanTermsConsensusAddress != address(0), "PROVIDED_LOAN_TERMS_ADDRESS");
 
         _initialize(settingsAddress);
 
@@ -183,12 +180,7 @@ contract Loans is Base, LoansInterface {
     function setLoanTerms(
         ZeroCollateralCommon.LoanRequest calldata request,
         ZeroCollateralCommon.LoanResponse[] calldata responses
-    )
-        external payable
-        isInitialized()
-        whenNotPaused()
-        isBorrower(request.borrower)
-    {
+    ) external payable isInitialized() whenNotPaused() isBorrower(request.borrower) {
         uint256 interestRate;
         uint256 collateralRatio;
         uint256 maxLoanAmount;
@@ -258,7 +250,6 @@ contract Loans is Base, LoansInterface {
         nonReentrant()
         isBorrower(loans[loanID].loanTerms.borrower)
     {
-
         require(
             loans[loanID].loanTerms.maxLoanAmount >= amountBorrow,
             "MAX_LOAN_EXCEEDED"
@@ -340,7 +331,11 @@ contract Loans is Base, LoansInterface {
                     loans[loanID].loanTerms.borrower
                 );
 
-                emit CollateralWithdrawn(loanID, loans[loanID].loanTerms.borrower, collateralAmount);
+                emit CollateralWithdrawn(
+                    loanID,
+                    loans[loanID].loanTerms.borrower,
+                    collateralAmount
+                );
             }
 
             // collect the money from the payer
@@ -396,12 +391,11 @@ contract Loans is Base, LoansInterface {
         // the caller gets the collateral from the loan
         _payOutCollateral(loanID, loanCollateral, msg.sender);
 
-        uint256 tokenPayment = collateralInTokens.mul(settings.liquidateEthPrice()).div(TEN_THOUSAND);
-        // the pays tokens at x% of collateral price
-        lendingPool.liquidationPayment(
-            tokenPayment,
-            msg.sender
+        uint256 tokenPayment = collateralInTokens.mul(settings.liquidateEthPrice()).div(
+            TEN_THOUSAND
         );
+        // the pays tokens at x% of collateral price
+        lendingPool.liquidationPayment(tokenPayment, msg.sender);
 
         emit LoanLiquidated(
             loanID,
