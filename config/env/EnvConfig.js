@@ -108,11 +108,11 @@ EnvConfig.prototype.getDefaultSafetyInterval = function() {
 }
 
 EnvConfig.prototype.getDefaultTermsExpiryTime = function() {
-  return this.conf.get(DEFAULT_SAFETY_INTERVAL_KEY);
+  return this.conf.get(DEFAULT_TERMS_EXPIRY_TIME_KEY);
 }
 
 EnvConfig.prototype.getDefaultLiquidateEthPrice = function() {
-  return this.conf.get(DEFAULT_SAFETY_INTERVAL_KEY);
+  return this.conf.get(DEFAULT_LIQUIDATE_ETH_PRICE_KEY);
 }
 
 module.exports = EnvConfig;
