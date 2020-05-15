@@ -28,6 +28,18 @@ interface SettingsInterface {
 
     function setResponseExpiryLength(uint256 newResponseExpiryLength) external;
 
+    function safetyInterval() external view returns (uint256);
+
+    function setSafetyInterval(uint256 newSafetyInterval) external;
+
+    function termsExpiryTime() external view returns (uint256);
+
+    function setTermsExpiryTime(uint256 newTermsExpiryTime) external;
+
+    function liquidateEthPrice() external view returns (uint256);
+
+    function setLiquidateEthPrice(uint256 newLiquidateEthPrice) external;
+
     function isPaused() external view returns (bool);
 
     function lendingPoolPaused(address lendingPoolAddress) external view returns (bool);

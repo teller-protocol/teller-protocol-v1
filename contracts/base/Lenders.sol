@@ -120,7 +120,6 @@ contract Lenders is Base, LendersInterface {
         isLendingPool()
         isValid(recipient)
         isInitialized()
-
         returns (uint256)
     {
         uint256 amountToWithdraw = amount;

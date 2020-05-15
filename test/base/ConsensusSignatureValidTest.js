@@ -1,7 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
-const { hashRequest, signHash } = require('../utils/hashes');
+const { hashInterestRequest, signHash } = require('../utils/hashes');
 
 // Smart contracts
 const ConsensusMock = artifacts.require("./mock/base/ConsensusMock.sol");
@@ -14,7 +14,7 @@ contract('ConsensusSignatureValidTest', function (accounts) {
     const submissions = 1
     let instance
 
-    const hashOne = hashRequest(
+    const hashOne = hashInterestRequest(
         {
             lender: accounts[2],
             startTime: 345,
@@ -23,7 +23,7 @@ contract('ConsensusSignatureValidTest', function (accounts) {
         },
         accounts[1]
     )
-    const hashTwo = hashRequest(
+    const hashTwo = hashInterestRequest(
         {
             lender: NULL_ADDRESS,
             startTime: 0,

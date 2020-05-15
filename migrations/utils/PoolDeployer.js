@@ -29,6 +29,7 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
         Loans,
         LendingPool,
         InterestConsensus,
+        LoanTermsConsensus,
         ChainlinkPairAggregator,
         Settings,
     } = this.artifacts;
@@ -37,17 +38,20 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
     await this.deployer.deployWith(`LendingPool_${zTokenName}`, LendingPool, txConfig);
     await this.deployer.deployWith(`InterestConsensus_${zTokenName}`, InterestConsensus, txConfig);
     await this.deployer.deployWith(`Lenders_${zTokenName}`, Lenders, txConfig);
+    await this.deployer.deployWith(`LoanTermsConsensus_${zTokenName}`, LoanTermsConsensus, txConfig);
     await this.deployer.deployWith(`Loans_${zTokenName}`, Loans, txConfig);
     
     const lenderInstance = await Lenders.deployed();
     const lendingPoolInstance = await LendingPool.deployed();
     const settingsInstance = await Settings.deployed();
-    const consensusInstance = await InterestConsensus.deployed();
+    const interestConsensus = await InterestConsensus.deployed();
     const loansInstance = await Loans.deployed();
+    const loanTermConsensus = await LoanTermsConsensus.deployed();
 
     await loansInstance.initialize(
         ChainlinkPairAggregator.address,
         LendingPool.address,
+        LoanTermsConsensus.address,
         Settings.address,
     );
     await lenderInstance.initialize(
@@ -65,12 +69,17 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
         settingsInstance.address,
     );
   
-    await consensusInstance.initialize(
+    await zTokenInstance.addMinter(LendingPool.address, txConfig);
+  
+    await interestConsensus.initialize(
         Lenders.address,
-        settingsInstance.address,
+        settingsInstance.address
     );
 
-    await zTokenInstance.addMinter(LendingPool.address, txConfig);
+    await loanTermConsensus.initialize(
+        Loans.address,
+        settingsInstance.address
+    );
 
     const initializables = [
         Lenders, LendingPool, InterestConsensus, Loans

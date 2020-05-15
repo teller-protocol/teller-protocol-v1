@@ -13,7 +13,7 @@ contract NumbersListMock {
     }
 
     function totalValues() external view returns (uint256) {
-        return values.length;
+        return values.count;
     }
 
     function isFinalized(uint256 totalRequiredValues)

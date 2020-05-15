@@ -9,7 +9,7 @@ library NumbersList {
     uint256 private constant PERCENTAGE_TO_DECIMAL = 10000;
 
     struct Values {
-        uint256 length;
+        uint256 count;
         uint256 max;
         uint256 min;
         uint256 sum;
@@ -19,15 +19,15 @@ library NumbersList {
         if (self.max < newValue) {
             self.max = newValue;
         }
-        if (self.min > newValue || self.length == 0) {
+        if (self.min > newValue || self.count == 0) {
             self.min = newValue;
         }
         self.sum = self.sum.add(newValue);
-        self.length = self.length.add(1);
+        self.count = self.count.add(1);
     }
 
     function totalValues(Values storage self) internal view returns (uint256) {
-        return self.length;
+        return self.count;
     }
 
     function isEmpty(Values storage self) internal view returns (bool) {

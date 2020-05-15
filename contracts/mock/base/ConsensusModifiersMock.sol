@@ -16,10 +16,10 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../../base/InterestConsensus.sol";
+import "../../base/Consensus.sol";
 
-contract InterestConsensusModifiersMock is InterestConsensus {
+contract ConsensusModifiersMock is Consensus {
 
-    function externalIsLenders() isLenders() external {}
+    function externalIsCaller() isCaller() external {}
 
 }

@@ -3,11 +3,10 @@ const {
     t,
     getLatestTimestamp,
     THIRTY_DAYS,
-    ONE_DAY,
-    createInterestRequest,
-    createUnsignedResponse
+    ONE_DAY
 } = require('../utils/consts');
-const { createResponseSig, hashRequest } = require('../utils/hashes');
+const { createInterestRequest, createUnsignedInterestResponse } = require('../utils/structs');
+const { createInterestResponseSig, hashInterestRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
 const { interestConsensus } = require('../utils/events');
 
@@ -27,7 +26,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
 
     const interestRequest = createInterestRequest(lender, 23456, endTime, 45678)
 
-    const requestHash = ethUtil.bufferToHex(hashRequest(interestRequest, lendersContract))
+    const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract))
 
     withData({
         _1_signer_already_submitted: [   // signer already submitted for this loan
@@ -64,7 +63,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
     ) {    
         it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
             // set up contract
-            const settings = await Settings.new(submissions, tolerance, THIRTY_DAYS);
+            const settings = await Settings.new(submissions, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500);
             instance = await InterestConsensusMock.new()
             await instance.initialize(lendersContract, settings.address)
 
@@ -88,8 +87,8 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
                 mockSumOfValues
             )
 
-            let interestResponse = createUnsignedResponse(nodeAddress, responseTime, interest, signerNonce)
-            interestResponse = await createResponseSig(web3, nodeAddress, interestResponse, requestHash)
+            let interestResponse = createUnsignedInterestResponse(nodeAddress, responseTime, interest, signerNonce)
+            interestResponse = await createInterestResponseSig(web3, nodeAddress, interestResponse, requestHash)
 
             try {
                 const result = await instance.externalProcessResponse(
@@ -107,7 +106,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
                 let submission = await instance.interestSubmissions.call(lender, endTime)
 
                 if (mockTotalSubmissions == 0) {
-                    assert(submission['length'].toNumber(), 1, 'Total submissions incorrect')
+                    assert(submission['count'].toNumber(), 1, 'Total submissions incorrect')
                     assert(submission['min'].toNumber(), interest, 'Min incorrect')
                     assert(submission['max'].toNumber(), interest, 'Max incorrect')
                     assert(submission['sum'].toNumber(), interest, 'Sum incorrect')
@@ -117,13 +116,12 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
                     const newSum = mockSumOfValues + interest
                     const newTotal = mockTotalSubmissions + 1
 
-                    assert(submission['length'].toNumber(), newTotal, 'Total submissions incorrect')
+                    assert(submission['count'].toNumber(), newTotal, 'Total submissions incorrect')
                     assert(submission['min'].toNumber(), newMin, 'Min incorrect')
                     assert(submission['max'].toNumber(), newMax, 'Max incorrect')
                     assert(submission['sum'].toNumber(), newSum, 'Sum incorrect')
                 }
             } catch (error) {
-                if (!mustFail) console.log(error)
                 assert(mustFail, 'Should not have failed');
                 assert.equal(error.reason, expectedErrorMessage);
             }

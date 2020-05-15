@@ -33,6 +33,9 @@ contract Settings is Pausable, SettingsInterface {
     bytes32 public constant REQUIRED_SUBMISSIONS_SETTING = "RequiredSubmissions";
     bytes32 public constant MAXIMUM_TOLERANCE_SETTING = "MaximumTolerance";
     bytes32 public constant RESPONSE_EXPIRY_LENGTH_SETTING = "ResponseExpiryLength";
+    bytes32 public constant SAFETY_INTERVAL_LENGTH_SETTING = "SafetyInterval";
+    bytes32 public constant TERMS_EXPIRY_TIME_SETTING = "TermsExpiryTime";
+    bytes32 public constant LIQUIDATE_ETH_PRICE_SETTING = "LiquidateEthPrice";
 
     /* State Variables */
 
@@ -47,6 +50,13 @@ contract Settings is Pausable, SettingsInterface {
 
     uint256 public responseExpiryLength;
 
+    uint256 public safetyInterval;
+
+    uint256 public termsExpiryTime;
+
+    // with 2 decimal places. i.e. an ETH liquidation price at 95% is stored as 9500
+    uint256 public liquidateEthPrice;
+
     /** Modifiers */
 
     /* Constructor */
@@ -54,13 +64,23 @@ contract Settings is Pausable, SettingsInterface {
     constructor(
         uint256 aRequiredSubmissions,
         uint256 aMaximumTolerance,
-        uint256 aResponseExpiryLength
+        uint256 aResponseExpiryLength,
+        uint256 aSafetyInterval,
+        uint256 aTermsExpiryTime,
+        uint256 aLiquidateEthPrice
     ) public {
         require(aRequiredSubmissions > 0, "MUST_PROVIDE_REQUIRED_SUBS");
         require(aResponseExpiryLength > 0, "MUST_PROVIDE_RESPONSE_EXP");
+        require(aSafetyInterval > 0, "MUST_PROVIDE_SAFETY_INTERVAL");
+        require(aTermsExpiryTime > 0, "MUST_PROVIDE_TERMS_EXPIRY");
+        require(aLiquidateEthPrice > 0, "MUST_PROVIDE_ETH_PRICE");
+
         requiredSubmissions = aRequiredSubmissions;
         maximumTolerance = aMaximumTolerance;
         responseExpiryLength = aResponseExpiryLength;
+        safetyInterval = aSafetyInterval;
+        termsExpiryTime = aTermsExpiryTime;
+        liquidateEthPrice = aLiquidateEthPrice;
     }
 
     /** External Functions */
@@ -115,6 +135,60 @@ contract Settings is Pausable, SettingsInterface {
             msg.sender,
             oldResponseExpiryLength,
             newResponseExpiryLength
+        );
+    }
+
+    function setSafetyInterval(uint256 newSafetyInterval)
+        external
+        onlyPauser()
+        whenNotPaused()
+    {
+        require(safetyInterval != newSafetyInterval, "NEW_VALUE_REQUIRED");
+        require(newSafetyInterval > 0, "MUST_PROVIDE_SAFETY_INTERVAL");
+        uint256 oldSafetyInterval = safetyInterval;
+        safetyInterval = newSafetyInterval;
+
+        emit SettingUpdated(
+            SAFETY_INTERVAL_LENGTH_SETTING,
+            msg.sender,
+            oldSafetyInterval,
+            newSafetyInterval
+        );
+    }
+
+    function setTermsExpiryTime(uint256 newTermsExpiryTime)
+        external
+        onlyPauser()
+        whenNotPaused()
+    {
+        require(termsExpiryTime != newTermsExpiryTime, "NEW_VALUE_REQUIRED");
+        require(newTermsExpiryTime > 0, "MUST_PROVIDE_TERMS_EXPIRY");
+        uint256 oldTermsExpiryTime = termsExpiryTime;
+        termsExpiryTime = newTermsExpiryTime;
+
+        emit SettingUpdated(
+            TERMS_EXPIRY_TIME_SETTING,
+            msg.sender,
+            oldTermsExpiryTime,
+            newTermsExpiryTime
+        );
+    }
+
+    function setLiquidateEthPrice(uint256 newLiquidateEthPrice)
+        external
+        onlyPauser()
+        whenNotPaused()
+    {
+        require(liquidateEthPrice != newLiquidateEthPrice, "NEW_VALUE_REQUIRED");
+        require(newLiquidateEthPrice > 0, "MUST_PROVIDE_ETH_PRICE");
+        uint256 oldLiquidateEthPrice = liquidateEthPrice;
+        liquidateEthPrice = newLiquidateEthPrice;
+
+        emit SettingUpdated(
+            LIQUIDATE_ETH_PRICE_SETTING,
+            msg.sender,
+            oldLiquidateEthPrice,
+            newLiquidateEthPrice
         );
     }
 

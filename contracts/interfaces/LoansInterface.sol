@@ -32,37 +32,60 @@ interface LoansInterface {
     event CollateralWithdrawn(
         uint256 indexed loanID,
         address indexed borrower,
-        uint256 depositAmount
+        uint256 withdrawalAmount
     );
 
-    // new loan created
-    event LoanCreated(
+    event LoanTermsSet(
         uint256 indexed loanID,
         address indexed borrower,
+        address indexed recipient,
         uint256 interestRate,
         uint256 collateralRatio,
         uint256 maxLoanAmount,
-        uint256 numberDays
+        uint256 duration,
+        uint256 termsExpiry
+    );
+
+    // new loan created
+    event LoanTakenOut(
+        uint256 indexed loanID,
+        address indexed borrower,
+        uint256 amountBorrowed
+    );
+
+    event LoanRepaid(
+        uint256 indexed loanID,
+        address indexed borrower,
+        uint256 amountPaid,
+        address payer,
+        uint256 totalOwed
+    );
+
+    event LoanLiquidated(
+        uint256 indexed loanID,
+        address indexed borrower,
+        address liquidator,
+        uint256 collateralOut,
+        uint256 tokensIn
     );
 
     function getBorrowerLoans(address borrower) external view returns (uint256[] memory);
 
-    function loans(uint256 loanID) external returns (ZeroCollateralCommon.Loan memory);
-
-    function signerNonceTaken(address signer, uint256 nonce) external returns (bool);
+    function loans(uint256 loanID)
+        external
+        view
+        returns (ZeroCollateralCommon.Loan memory);
 
     function depositCollateral(address borrower, uint256 loanID) external payable;
 
     function withdrawCollateral(uint256 amount, uint256 loanID) external;
 
-    function takeOutLoan(
-        uint256 interestRate,
-        uint256 collateralRatio,
-        uint256 maxLoanAmount,
-        uint256 numberDays,
-        uint256 amountBorrow,
-        ZeroCollateralCommon.Signature calldata signature
-    ) external payable returns (uint256);
+    function setLoanTerms(
+        ZeroCollateralCommon.LoanRequest calldata request,
+        ZeroCollateralCommon.LoanResponse[] calldata responses
+    ) external payable;
+
+    function takeOutLoan(uint256 loanID, uint256 amountBorrow) external;
 
     function repay(uint256 amount, uint256 loanID) external;
 

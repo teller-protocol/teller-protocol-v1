@@ -16,19 +16,51 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../../base/InterestConsensus.sol";
+import "../../base/LoanTermsConsensus.sol";
 
-contract InterestConsensusMock is InterestConsensus {
+contract LoanTermsConsensusMock is LoanTermsConsensus {
 
-    function mockInterestSubmissions(
-        address lender,
-        uint256 endTime,
+    function mockInterestRateSubmissions(
+        address borrower,
+        uint256 requestNonce,
         uint256 totalSubmissions,
         uint256 maxValue,
         uint256 minValue,
         uint256 sumOfValues
     ) external {
-        interestSubmissions[lender][endTime] = NumbersList.Values({
+        termSubmissions[borrower][requestNonce].interestRate = NumbersList.Values({
+            count: totalSubmissions,
+            min: minValue,
+            max: maxValue,
+            sum: sumOfValues
+        });
+    }
+
+    function mockCollateralRatioSubmissions(
+        address borrower,
+        uint256 requestNonce,
+        uint256 totalSubmissions,
+        uint256 maxValue,
+        uint256 minValue,
+        uint256 sumOfValues
+    ) external {
+        termSubmissions[borrower][requestNonce].collateralRatio = NumbersList.Values({
+            count: totalSubmissions,
+            min: minValue,
+            max: maxValue,
+            sum: sumOfValues
+        });
+    }
+
+    function mockMaxAmountSubmissions(
+        address borrower,
+        uint256 requestNonce,
+        uint256 totalSubmissions,
+        uint256 maxValue,
+        uint256 minValue,
+        uint256 sumOfValues
+    ) external {
+        termSubmissions[borrower][requestNonce].maxLoanAmount = NumbersList.Values({
             count: totalSubmissions,
             min: minValue,
             max: maxValue,
@@ -54,22 +86,22 @@ contract InterestConsensusMock is InterestConsensus {
     }
 
     function externalProcessResponse(
-        ZeroCollateralCommon.InterestRequest calldata request,
-        ZeroCollateralCommon.InterestResponse calldata response,
+        ZeroCollateralCommon.LoanRequest calldata request,
+        ZeroCollateralCommon.LoanResponse calldata response,
         bytes32 requestHash
     ) external {
         _processReponse(request, response, requestHash);
     }
 
     function externalHashResponse(
-        ZeroCollateralCommon.InterestResponse calldata response,
+        ZeroCollateralCommon.LoanResponse calldata response,
         bytes32 requestHash
     ) external pure returns (bytes32) {
         return _hashResponse(response, requestHash);
     }
 
     function externalHashRequest(
-        ZeroCollateralCommon.InterestRequest calldata request
+        ZeroCollateralCommon.LoanRequest calldata request
     ) external view returns (bytes32) {
         return _hashRequest(request);
     }

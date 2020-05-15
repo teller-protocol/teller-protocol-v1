@@ -9,8 +9,6 @@ const Lenders = artifacts.require("./mock/base/LendersModifiersMock.sol");
 
 contract('LendersModifiersTest', function (accounts) {
     
-    beforeEach('Setup for each test', async () => { });
-
     withData({
         _1_zTokenSender: [accounts[0], accounts[1], accounts[2], accounts[3], accounts[0], undefined, false],
         _2_lendingPoolSender: [accounts[0], accounts[1], accounts[2], accounts[3], accounts[1], 'Address has no permissions.', true],

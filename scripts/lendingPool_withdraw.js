@@ -3,7 +3,6 @@ const LendingPoolInterface = artifacts.require("./interfaces/LendingPoolInterfac
 const ERC20 = artifacts.require("openzeppelin-solidity/contracts/token/ERC20/IERC20.sol");
 
 // Util classes
-const BigNumber = require('bignumber.js');
 const assert = require('assert');
 const ProcessArgs = require('./utils/ProcessArgs');
 const processArgs = new ProcessArgs();

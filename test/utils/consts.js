@@ -9,17 +9,27 @@ const NULL_BYTES = '0x0000000000000000000000000000000000000000000000000000000000
 const ZERO = new BigNumber(0);
 const NETWORK_PROVIDER = 'http://127.0.0.1:7545';
 const COVERAGE_NETWORK = 'http://127.0.0.1:8555';
+const FIVE_MIN = 60*5
 const ONE_HOUR = 3600
 const ONE_DAY = ONE_HOUR*24
 const THIRTY_DAYS = ONE_DAY*30
+const NON_EXISTENT = 0
+const TERMS_SET = 1
+const ACTIVE = 2
+const CLOSED = 3
 
 module.exports = {
+    NON_EXISTENT,
+    TERMS_SET,
+    ACTIVE,
+    CLOSED,
     DEFAULT_DECIMALS,
     NULL_ADDRESS,
     NULL_BYTES,
     ZERO,
     NETWORK_PROVIDER,
     COVERAGE_NETWORK,
+    FIVE_MIN,
     ONE_HOUR,
     ONE_DAY,
     THIRTY_DAYS,
@@ -43,46 +53,7 @@ module.exports = {
       return (await web3.eth.getBlock('latest')).timestamp
     },
     sum: (a, b) => parseInt(a.toString()) + parseInt(b.toString()),
-    createInfo: (address, plusLastAccruedBlockNumber, lastAccruedInterest, expectedAccruedInterest) => ({
-        address,
-        plusLastAccruedBlockNumber,
-        lastAccruedInterest,
-        expectedAccruedInterest,
-    }),
-    createInterestRequest:(lender, startTime, endTime, requestTime) => {
-        return {
-            lender: lender,
-            startTime: startTime,
-            endTime: endTime,
-            requestTime: requestTime,
-        }
-    },
-    createUnsignedResponse: (signer, responseTime, interest, signerNonce) => {
-        return {
-            signer: signer,
-            responseTime: responseTime,
-            interest: interest,
-            signature: {
-                signerNonce: signerNonce,
-                v: 0,
-                r: "0",
-                s: "0"
-            }
-        }
-    },
-    createLoanInfo: (borrowerIndex, collateralRatio, maxLoanAmount, interestRate) => {
-        return {
-            interestRate,
-            collateralRatio,
-            borrowerIndex,
-            signerIndex: 0,
-            maxLoanAmount,
-            numberDays: 10,
-            signerNonce: 0,
-            takeOutLoanValue: 1,
-        };
-    },
     toBytes32: (web3, text) => {
-        return web3.utils.padRight(web3.utils.stringToHex(text), 64, '0');
+      return web3.utils.padRight(web3.utils.stringToHex(text), 64, '0');
     },
 }

@@ -16,21 +16,21 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../../base/Lenders.sol";
+import "../../base/Loans.sol";
 
 /**
     This contract is created ONLY for testing purposes.
  */
-contract LendersModifiersMock is Lenders {
+contract LoansModifiersMock is Loans {
 
-    /** Constructor */
+    function setLoanStatus(uint256 loanID, ZeroCollateralCommon.LoanStatus status) external {
+        loans[loanID].status = status;
+    }
 
-    /** External Functions */
+    function externalLoanActive(uint256 loanID) loanActive(loanID) external {}
 
-    function externalIsZToken() isZToken() external {}
+    function externalLoanTermsSet(uint256 loanID) loanTermsSet(loanID) external {}
 
-    function externalIsLendingPool() isLendingPool() external {}
-
-    function externalIsValid(address anAddress) isValid(anAddress) external {}
+    function externalLoanActiveOrSet(uint256 loanID) loanActiveOrSet(loanID) external {}
 
 }

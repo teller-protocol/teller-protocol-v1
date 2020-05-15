@@ -49,7 +49,7 @@ contract Initializable {
 
     /** Internal functions */
 
-    function initialize() internal {
+    function _initialize() internal {
         _isInitialized = true;
     }
 

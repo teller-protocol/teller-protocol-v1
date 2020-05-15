@@ -3,17 +3,16 @@ const {
     t,
     getLatestTimestamp,
     ONE_DAY,
-    createInterestRequest,
-    createUnsignedResponse,
     THIRTY_DAYS
 } = require('../utils/consts');
-const { createResponseSig, hashRequest } = require('../utils/hashes');
+const { createInterestRequest, createUnsignedInterestResponse } = require('../utils/structs');
+const { createInterestResponseSig, hashInterestRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
 const { interestConsensus } = require('../utils/events');
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
-const InterestConsensus = artifacts.require("./mock/base/InterestConsensus.sol");
+const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
 
 
 contract('InterestConsensusProcessRequestTest', function (accounts) {
@@ -30,17 +29,17 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
 
     const interestRequest = createInterestRequest(lender, 23456, endTime, 45678)
 
-    const requestHash = ethUtil.bufferToHex(hashRequest(interestRequest, lendersContract))
+    const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract))
 
-    let responseOne = createUnsignedResponse(nodeOne, 0, 35976, 0)
+    let responseOne = createUnsignedInterestResponse(nodeOne, 0, 35976, 0)
 
-    let responseTwo = createUnsignedResponse(nodeTwo, 0, 34732, 4)
+    let responseTwo = createUnsignedInterestResponse(nodeTwo, 0, 34732, 4)
 
-    let responseThree = createUnsignedResponse(nodeThree, 0, 34732, 4)
+    let responseThree = createUnsignedInterestResponse(nodeThree, 0, 34732, 4)
 
-    let responseFour = createUnsignedResponse(nodeFour, 0, 34000, 0)
+    let responseFour = createUnsignedInterestResponse(nodeFour, 0, 34000, 0)
 
-    let responseFive = createUnsignedResponse(nodeThree, 0, 34736, 1)
+    let responseFive = createUnsignedInterestResponse(nodeThree, 0, 34736, 1)
 
     before('Setup the response times and signatures', async () => {
         currentTime = await getLatestTimestamp()
@@ -51,11 +50,11 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
         responseFour.responseTime = currentTime - ONE_DAY
         responseFive.responseTime = currentTime - (15 * ONE_DAY)
 
-        responseOne = await createResponseSig(web3, nodeOne, responseOne, requestHash)
-        responseTwo = await createResponseSig(web3, nodeTwo, responseTwo, requestHash)
-        responseThree = await createResponseSig(web3, nodeThree, responseThree, requestHash)
-        responseFour = await createResponseSig(web3, nodeFour, responseFour, requestHash)
-        responseFive = await createResponseSig(web3, nodeThree, responseFive, requestHash)
+        responseOne = await createInterestResponseSig(web3, nodeOne, responseOne, requestHash)
+        responseTwo = await createInterestResponseSig(web3, nodeTwo, responseTwo, requestHash)
+        responseThree = await createInterestResponseSig(web3, nodeThree, responseThree, requestHash)
+        responseFour = await createInterestResponseSig(web3, nodeFour, responseFour, requestHash)
+        responseFive = await createInterestResponseSig(web3, nodeThree, responseFive, requestHash)
     })
 
     withData({
@@ -90,7 +89,7 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
     ) {    
         it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
             // set up contract
-            const settings = await Settings.new(reqSubmissions, tolerance, THIRTY_DAYS);
+            const settings = await Settings.new(reqSubmissions, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500);
             instance = await InterestConsensus.new();
             await instance.initialize(lendersContract, settings.address);
 
@@ -126,11 +125,8 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
                 interestConsensus
                     .interestAccepted(result)
                     .emitted(lender, endTime, Math.floor(totalInterest / responses.length))
-
-
               
             } catch (error) {
-                if (!mustFail) console.log(error)
                 assert(mustFail, 'Should not have failed');
                 assert.equal(error.reason, expectedErrorMessage);
             }

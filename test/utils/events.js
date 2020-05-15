@@ -113,17 +113,55 @@ module.exports = {
         },
     },
     loans: {
-        loanCreated: tx => {
-            const name = 'LoanCreated';
+        loanTermsSet: tx => {
+            const name = 'LoanTermsSet';
             return {
                 name: name,
-                emitted: (borrower, interestRate, collateralRatio, maxLoanAmount, numberDays, loanID) => emitted(tx, name, ev => {
+                emitted: (loanID, borrower, recipient, interestRate, collateralRatio, maxLoanAmount, duration, expiry) => emitted(tx, name, ev => {
+                    assert.equal(ev.loanID.toString(), loanID.toString());
                     assert.equal(ev.borrower, borrower);
+                    assert.equal(ev.recipient, recipient);
                     assert.equal(ev.interestRate.toString(), interestRate.toString());
                     assert.equal(ev.collateralRatio.toString(), collateralRatio.toString());
                     assert.equal(ev.maxLoanAmount.toString(), maxLoanAmount.toString());
-                    assert.equal(ev.numberDays.toString(), numberDays.toString());
+                    assert.equal(ev.duration.toString(), duration.toString());
+                    assert.equal(ev.termsExpiry.toString(), expiry.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        loanTakenOut: tx => {
+            const name = 'LoanTakenOut';
+            return {
+                name: name,
+                emitted: (loanID, borrower, amountBorrowed) => emitted(tx, name, ev => {
                     assert.equal(ev.loanID.toString(), loanID.toString());
+                    assert.equal(ev.borrower, borrower);
+                    assert.equal(ev.amountBorrowed.toString(), amountBorrowed.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        collateralDeposited: tx => {
+            const name = 'CollateralDeposited';
+            return {
+                name: name,
+                emitted: (loanID, borrower, depositAmount) => emitted(tx, name, ev => {
+                    assert.equal(ev.loanID.toString(), loanID.toString());
+                    assert.equal(ev.borrower, borrower);
+                    assert.equal(ev.depositAmount.toString(), depositAmount.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        collateralWithdrawn: tx => {
+            const name = 'CollateralWithdrawn';
+            return {
+                name: name,
+                emitted: (loanID, borrower, withdrawalAmount) => emitted(tx, name, ev => {
+                    assert.equal(ev.loanID.toString(), loanID.toString());
+                    assert.equal(ev.borrower, borrower);
+                    assert.equal(ev.withdrawalAmount.toString(), withdrawalAmount.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -134,11 +172,11 @@ module.exports = {
             const name = 'InterestSubmitted';
             return {
                 name: name,
-                emitted: (signer, lender, blockNumber, interest) => truffleAssert.eventEmitted(tx, name, ev => {
+                emitted: (signer, lender, endTime, interest) => truffleAssert.eventEmitted(tx, name, ev => {
                     return (
                         ev.signer == signer && 
                         ev.lender == lender &&
-                        ev.blockNumber.toString() == blockNumber.toString() &&
+                        ev.endTime.toString() == endTime.toString() &&
                         ev.interest.toString() == interest.toString()
                     )
                 }),
@@ -149,11 +187,46 @@ module.exports = {
             const name = 'InterestAccepted';
             return {
                 name: name,
-                emitted: (lender, blockNumber, interest) => truffleAssert.eventEmitted(tx, name, ev => {
+                emitted: (lender, endTime, interest) => truffleAssert.eventEmitted(tx, name, ev => {
                     return (
                         ev.lender == lender && 
-                        ev.blockNumber.toString() == blockNumber.toString() &&
+                        ev.endTime.toString() == endTime.toString() &&
                         ev.interest.toString() == interest.toString()
+                    )
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
+    loanTermsConsensus: {
+        termsSubmitted: tx => {
+            const name = 'TermsSubmitted';
+            return {
+                name: name,
+                emitted: (signer, borrower, requestNonce, interestRate, collateralRatio, maxLoanAmount) => truffleAssert.eventEmitted(tx, name, ev => {
+                    return (
+                        ev.signer == signer && 
+                        ev.borrower == borrower &&
+                        ev.requestNonce.toString() == requestNonce.toString() &&
+                        ev.interestRate.toString() == interestRate.toString() &&
+                        ev.collateralRatio.toString() == collateralRatio.toString() &&
+                        ev.maxLoanAmount.toString() == maxLoanAmount.toString()
+                    )
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        termsAccepted: tx => {
+            const name = 'TermsAccepted';
+            return {
+                name: name,
+                emitted: (borrower, requestNonce, interestRate, collateralRatio, maxLoanAmount) => truffleAssert.eventEmitted(tx, name, ev => {
+                  return (
+                        ev.borrower == borrower &&
+                        ev.requestNonce.toString() == requestNonce.toString() &&
+                        ev.interestRate.toString() == interestRate.toString() &&
+                        ev.collateralRatio.toString() == collateralRatio.toString() &&
+                        ev.maxLoanAmount.toString() == maxLoanAmount.toString()
                     )
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)

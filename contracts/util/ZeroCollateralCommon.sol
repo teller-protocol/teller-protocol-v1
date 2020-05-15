@@ -1,11 +1,10 @@
 pragma solidity 0.5.17;
 
+import "./NumbersList.sol";
+
 
 library ZeroCollateralCommon {
-    // Borrower account details
-    struct Borrower {
-        uint256 lastBorrowId;
-    }
+    enum LoanStatus {NonExistent, TermsSet, Active, Closed}
 
     // The amount of interest owed to a borrower
     // The interest is just that accrued until `timeLastAccrued`
@@ -13,6 +12,13 @@ library ZeroCollateralCommon {
         uint256 totalAccruedInterest;
         uint256 totalNotWithdrawn;
         uint256 timeLastAccrued;
+    }
+
+    struct Signature {
+        uint256 signerNonce;
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
     }
 
     struct InterestRequest {
@@ -29,25 +35,50 @@ library ZeroCollateralCommon {
         Signature signature;
     }
 
+    struct LoanRequest {
+        address payable borrower;
+        address recipient;
+        uint256 requestNonce;
+        uint256 amount;
+        uint256 duration;
+        uint256 requestTime;
+    }
+
+    struct LoanResponse {
+        address signer;
+        uint256 responseTime;
+        uint256 interestRate;
+        uint256 collateralRatio;
+        uint256 maxLoanAmount;
+        Signature signature;
+    }
+
+    struct AccruedLoanTerms {
+        NumbersList.Values interestRate;
+        NumbersList.Values collateralRatio;
+        NumbersList.Values maxLoanAmount;
+    }
+
+    struct LoanTerms {
+        address payable borrower;
+        address recipient;
+        uint256 interestRate;
+        uint256 collateralRatio;
+        uint256 maxLoanAmount;
+        uint256 duration;
+    }
+
     // Data per borrow as struct
     struct Loan {
         uint256 id;
+        LoanTerms loanTerms;
+        uint256 termsExpiry;
+        uint256 loanStartTime;
         uint256 collateral;
-        uint256 maxLoanAmount;
-        uint256 totalOwed;
-        uint256 timeStart;
-        uint256 timeEnd;
-        uint256 interestRate;
-        uint256 collateralRatio;
-        address payable borrower;
-        bool active;
+        uint256 lastCollateralIn;
+        uint256 principalOwed;
+        uint256 interestOwed;
+        LoanStatus status;
         bool liquidated;
-    }
-
-    struct Signature {
-        uint256 signerNonce;
-        uint8 v;
-        bytes32 r;
-        bytes32 s;
     }
 }

@@ -17,7 +17,7 @@ function hashLoan(loan) {
   )
 }
 
-function hashResponse(response, requestHash) {
+function hashInterestResponse(response, requestHash) {
   return ethUtil.keccak256(
     abi.rawEncode(
       ['uint256', 'uint256', 'uint256', 'bytes32'],
@@ -31,15 +31,49 @@ function hashResponse(response, requestHash) {
   )
 }
 
-function hashRequest(request, msgSender) {
+function hashInterestRequest(request, caller) {
   return ethUtil.keccak256(
     abi.rawEncode(
       ['address', 'address', 'uint256', 'uint256', 'uint256'],
       [
-        msgSender,
+        caller,
         request.lender,
         request.startTime,
         request.endTime,
+        request.requestTime
+      ]
+    )
+  )
+}
+
+
+function hashLoanTermsResponse(response, requestHash) {
+  return ethUtil.keccak256(
+    abi.rawEncode(
+      ['uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes32'],
+      [
+        response.responseTime,
+        response.interestRate,
+        response.collateralRatio,
+        response.maxLoanAmount,
+        response.signature.signerNonce,
+        requestHash
+      ]
+    )
+  )
+}
+
+function hashLoanTermsRequest(request, caller) {
+  return ethUtil.keccak256(
+    abi.rawEncode(
+      ['address', 'address', 'address', 'uint256', 'uint256', 'uint256', 'uint256'],
+      [
+        caller,
+        request.borrower,
+        request.recipient,
+        request.requestNonce,
+        request.amount,
+        request.duration,
         request.requestTime
       ]
     )
@@ -56,8 +90,8 @@ async function signHash(web3, signer, hash) {
   }
 }
 
-async function createResponseSig(web3, signer, interestResponse, requestHash) {
-  const responseHash = hashResponse(interestResponse, requestHash)
+async function createInterestResponseSig(web3, signer, interestResponse, requestHash) {
+  const responseHash = hashInterestResponse(interestResponse, requestHash)
   const signature = await web3.eth.sign(ethUtil.bufferToHex(responseHash), signer);
   const { v, r, s } = ethUtil.fromRpcSig(signature)
   interestResponse.signature.v = String(v)
@@ -66,24 +100,23 @@ async function createResponseSig(web3, signer, interestResponse, requestHash) {
   return interestResponse
 }
 
-const createLoanSig = async (web3, borrower, loanInfo, signer) => {
-  const hashedLoan = hashLoan({
-      interestRate: loanInfo.interestRate,
-      collateralRatio: loanInfo.collateralRatio,
-      borrower,
-      maxLoanAmount: loanInfo.maxLoanAmount,
-      numberDays: loanInfo.numberDays,
-      signerNonce: loanInfo.signerNonce,
-  });
-  const signature = await signHash(web3, signer, hashedLoan);
-  return signature;
+async function createLoanResponseSig(web3, signer, loanResponse, requestHash) {
+  const responseHash = hashLoanTermsResponse(loanResponse, requestHash)
+  const signature = await web3.eth.sign(ethUtil.bufferToHex(responseHash), signer);
+  const { v, r, s } = ethUtil.fromRpcSig(signature)
+  loanResponse.signature.v = String(v)
+  loanResponse.signature.r = ethUtil.bufferToHex(r)
+  loanResponse.signature.s = ethUtil.bufferToHex(s)
+  return loanResponse
 }
 
 module.exports = {
   hashLoan,
-  hashRequest,
-  hashResponse,
+  hashInterestRequest,
+  hashInterestResponse,
+  hashLoanTermsResponse,
+  hashLoanTermsRequest,
   signHash,
-  createLoanSig,
-  createResponseSig
+  createInterestResponseSig,
+  createLoanResponseSig
 }
