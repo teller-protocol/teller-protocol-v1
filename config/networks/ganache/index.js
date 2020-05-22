@@ -2,7 +2,8 @@ module.exports = {
     network: 'ganache',
     chainlink: require('./chainlink'),
     tokens: require('./tokens'),
-    maxGasLimit: 9000000,
+    zerocollateral: require('./zerocollateral'),
+    maxGasLimit: 6721975,
     toTxUrl: ({ tx }) => {
         return `not-supported-url`;
     },
