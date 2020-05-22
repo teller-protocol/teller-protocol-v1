@@ -3,23 +3,25 @@ const LoansInterface = artifacts.require("./base/Loans.sol");
 
 // Util classes
 const assert = require('assert');
-const ProcessArgs = require('./utils/ProcessArgs');
+const ProcessArgs = require('../utils/ProcessArgs');
 const processArgs = new ProcessArgs();
 
 /** Process parameters: */
+const tokenName = 'USDC';
 const loanId = 0;
 const senderIndex = 1;
-const borrowerIndex = 0;
-const collateralValue = 40000000;
+const borrowerIndex = 1;
+const collateralValue = 4000000000;
 
 module.exports = async (callback) => {
     try {
         const network = processArgs.network();
         console.log(`Script will be executed in network ${network}.`)
-        const appConf = require('../config')(network);
+        const appConf = require('../../config')(network);
         const { zerocollateral, toTxUrl } = appConf.networkConfig;
 
-        assert(zerocollateral.Loans, "Loans address is undefined.");
+        const loansAddress = zerocollateral[`Loans_z${tokenName}`];
+        assert(loansAddress, "Loans address is undefined.");
 
         const accounts = await web3.eth.getAccounts();
         assert(accounts, "Accounts must be defined.");
@@ -33,7 +35,7 @@ module.exports = async (callback) => {
         console.log(`Sender:        ${senderIndex} => ${sender}`);
         console.log(`Collateral:    ${collateralValue} WEI => ${web3.utils.fromWei(collateralValue.toString(), 'ether')} ETH`);
 
-        const loansInstance = await LoansInterface.at(zerocollateral.Loans);
+        const loansInstance = await LoansInterface.at(loansAddress);
 
         const result = await loansInstance.depositCollateral(borrower, loanId, { from: sender, value: collateralValue});
         console.log(toTxUrl(result));

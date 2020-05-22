@@ -1,32 +1,33 @@
 // Util classes
-const assert = require('assert');
 const index = require('./index');
-const GetContracts = require('../scripts/utils/GetContracts');
+const Timer = require('../scripts/utils/Timer');
 const ProcessArgs = require('../scripts/utils/ProcessArgs');
+const Accounts = require('../scripts/utils/Accounts');
 
 const processArgs = new ProcessArgs();
 const tests = Object.keys(index).map( key => index[key]);
 
 module.exports = async (callback) => {
-    const Timer = require('../scripts/utils/Timer');
     const timer = new Timer(web3);
+    const accounts = new Accounts(web3);
     let snapshotId;
     try {
-        const accounts = await web3.eth.getAccounts();
-        assert(accounts, "Accounts must be defined.");
-        const appConf = processArgs.getCurrentConfig();
-        const getContracts = new GetContracts(artifacts, appConf.networkConfig, 'zerocollateral');
+        const getContracts = processArgs.createGetContracts(artifacts);
 
         snapshotId = await timer.takeSnapshot();
-        console.log(`Taking blockchain snapshot with id ${JSON.stringify(snapshotId)}`);
         const testContext = {
             processArgs,
             getContracts,
             timer,
             accounts,
         };
-        const executeTestFunction = async (testFunction) => {
-            await testFunction(testContext);
+        const executeTestFunction = async (testFunctionObject) => {
+            console.time(testFunctionObject.key);
+            console.log(`>>>>> Test: ${testFunctionObject.key} starts <<<<<`);
+            await testFunctionObject.test(testContext);
+            console.timeEnd(testFunctionObject.key);
+            console.timeLog(testFunctionObject.key)
+            console.log(`>>>>> Test: ${testFunctionObject.key} ends <<<<<`);
         };
 
         for (const testKey in tests) {
@@ -35,21 +36,15 @@ module.exports = async (callback) => {
             if(testType === 'object') {
                 const testObjects = Object.keys(test).map( key => ({test: test[key], key }));
                 for (const testObject of testObjects) {
-                    console.time(testObject.key);
-                    console.log(`>>>>> Test: ${testObject.key} starts <<<<<`);
-                    executeTestFunction(testObject.test);
-                    console.timeEnd(testObject.key);
-                    console.timeLog(testObject.key)
-                    console.log(`>>>>> Test: ${testObject.key} ends <<<<<`);
+                    try {
+                        await executeTestFunction(testObject);
+                    } catch (error) {
+                        console.log(error);
+                    } finally {
+                        await timer.revertToSnapshot(snapshotId.result);
+                    }
                 }
             }
-            if(testType === 'function') {
-                console.log(`>>>>> Test: ${testKey} starts <<<<<`);
-                executeTestFunction(testType);
-                console.log(`>>>>> Test: ${testKey} ends <<<<<`);
-            }
-            await timer.revertToSnapshot(snapshotId);
-            console.log(`Reverting blockchain state to snapshot id ${JSON.stringify(snapshotId)}`);
         }
         
         console.log('>>>> The script finished successfully. <<<<');

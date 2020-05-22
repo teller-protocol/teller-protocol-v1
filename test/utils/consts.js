@@ -49,6 +49,9 @@ module.exports = {
     daysToMillis: (days) => {
         return days * 24 * 60 * 60 * 1000;
     },
+    daysToSeconds: (days) => {
+        return days * 24 * 60 * 60;
+    },
     getLatestTimestamp: async () => {
       return (await web3.eth.getBlock('latest')).timestamp
     },
@@ -56,4 +59,10 @@ module.exports = {
     toBytes32: (web3, text) => {
       return web3.utils.padRight(web3.utils.stringToHex(text), 64, '0');
     },
+    toDecimals: (amount, decimals) => {
+        return new BigNumber(amount).times(new BigNumber(10).pow(decimals));
+    },
+    toUnits: (amount, decimals) => {
+        return new BigNumber(amount).div(new BigNumber(10).pow(decimals));
+    }
 }

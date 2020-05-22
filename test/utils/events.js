@@ -1,5 +1,6 @@
 // @dev see details on https://www.npmjs.com/package/truffle-assertions
 const truffleAssert = require('truffle-assertions');
+const assert = require('assert');
 
 const emitted = (tx, eventName, assertFunction) => {
     truffleAssert.eventEmitted(tx, eventName, event => {
