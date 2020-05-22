@@ -26,4 +26,14 @@ Accounts.prototype.getAt = async function(indexAccount) {
     return account;
 }
 
+Accounts.prototype.getAtOrDefault = async function(indexAccount, defaultValue) {
+    assert(indexAccount !== undefined, "Index account must be defined.");
+    if (indexAccount < 0) {
+        return defaultValue;
+    }
+    const accounts = await this.getAccounts();
+    const account = accounts[indexAccount];
+    return account || defaultValue;
+}
+
 module.exports = Accounts;
