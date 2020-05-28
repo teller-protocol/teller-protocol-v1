@@ -25,6 +25,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
 import "../interfaces/ZTokenInterface.sol";
+import "../interfaces/CTokenInterface.sol";
 
 // Contracts
 import "./Base.sol";
@@ -39,6 +40,8 @@ contract LendingPool is Base, LendingPoolInterface {
     /* State Variables */
 
     IERC20 public lendingToken;
+
+    CTokenInterface public cToken;
 
     ZTokenInterface public zToken;
 
@@ -75,12 +78,14 @@ contract LendingPool is Base, LendingPoolInterface {
         address lendingTokenAddress,
         address lendersAddress,
         address loansAddress,
+        address cTokenAddress,
         address settingsAddress
     ) external isNotInitialized() {
         zTokenAddress.requireNotEmpty("zToken address is required.");
         lendingTokenAddress.requireNotEmpty("Token address is required.");
         lendersAddress.requireNotEmpty("Lenders address is required.");
         loansAddress.requireNotEmpty("Loans address is required.");
+        cTokenAddress.requireNotEmpty("CToken address is required.");
 
         _initialize(settingsAddress);
 
@@ -88,6 +93,7 @@ contract LendingPool is Base, LendingPoolInterface {
         lendingToken = IERC20(lendingTokenAddress);
         lenders = LendersInterface(lendersAddress);
         loans = loansAddress;
+        cToken = CTokenInterface(cTokenAddress);
     }
 
     /**
@@ -103,6 +109,9 @@ contract LendingPool is Base, LendingPoolInterface {
     {
         // Transfering tokens to the LendingPool
         tokenTransferFrom(msg.sender, amount);
+
+        // deposit them straight into compound
+        depositToCompound(amount);
 
         // Mint zToken tokens
         zTokenMint(msg.sender, amount);
@@ -124,6 +133,9 @@ contract LendingPool is Base, LendingPoolInterface {
     {
         // Burn zToken tokens.
         zToken.burn(msg.sender, amount);
+
+        // Withdraw the tokens from compound
+        withdrawFromCompound(amount);
 
         // Transfers tokens
         tokenTransfer(msg.sender, amount);
@@ -149,6 +161,9 @@ contract LendingPool is Base, LendingPoolInterface {
         // Transfers tokens to LendingPool.
         tokenTransferFrom(borrower, amount);
 
+        // deposit them straight into compound
+        depositToCompound(amount);
+
         // Emits event.
         emit TokenRepaid(borrower, amount);
     }
@@ -164,6 +179,9 @@ contract LendingPool is Base, LendingPoolInterface {
         isLoan()
         whenLendingPoolNotPaused(address(this))
     {
+        // Withdraw the tokens from compound
+        withdrawFromCompound(amount);
+
         // Transfers tokens to the liquidator.
         tokenTransfer(liquidator, amount);
 
@@ -184,6 +202,9 @@ contract LendingPool is Base, LendingPoolInterface {
         isLoan()
         whenLendingPoolNotPaused(address(this))
     {
+        // Withdraw the tokens from compound
+        withdrawFromCompound(amount);
+
         // Transfer tokens to the borrower.
         tokenTransfer(borrower, amount);
     }
@@ -196,16 +217,35 @@ contract LendingPool is Base, LendingPoolInterface {
     {
         address lender = msg.sender;
 
-        uint256 amountWithdrawn = lenders.withdrawInterest(lender, amount);
+        // update the lenders record, returning the actual amount to withdraw
+        uint256 amountToWithdraw = lenders.withdrawInterest(lender, amount);
 
-        requireEnoughLendingTokenBalance(amountWithdrawn);
+        // Withdraw the tokens from compound
+        withdrawFromCompound(amountToWithdraw);
 
-        tokenTransfer(lender, amountWithdrawn);
+        // Transfer tokens to the lender.
+        tokenTransfer(lender, amountToWithdraw);
 
-        emit InterestWithdrawn(lender, amountWithdrawn);
+        emit InterestWithdrawn(lender, amountToWithdraw);
     }
 
     /** Internal functions */
+
+    function depositToCompound(uint256 amount) internal {
+        // approve the cToken contract to take lending tokens
+        lendingToken.approve(address(cToken), amount);
+
+        // Now mint cTokens, which will take lending tokens
+        uint mintResult = cToken.mint(amount);
+        require(mintResult == 0, "COMPOUND_DEPOSIT_ERROR");
+    }
+
+    function withdrawFromCompound(uint256 amount) internal {
+        // this function withdraws 'amount' lending tokens from compound
+        // another function exists to withdraw 'amount' cTokens of lending tokens
+        uint256 redeemResult = cToken.redeemUnderlying(amount);
+        require(redeemResult == 0, "COMPOUND_WITHDRAWAL_ERROR");
+    }
 
     /** Private functions */
 
@@ -229,11 +269,6 @@ contract LendingPool is Base, LendingPoolInterface {
     function tokenTransferFrom(address from, uint256 amount) private {
         bool transferFromResult = lendingToken.transferFrom(from, address(this), amount);
         require(transferFromResult, "TransferFrom wasn't successful.");
-    }
-
-    function requireEnoughLendingTokenBalance(uint256 amount) private view {
-        uint256 lendingTokenBalance = lendingToken.balanceOf(address(this));
-        require(lendingTokenBalance >= amount, "NOT_ENOUGH_LENDING_TOKEN_BALANCE");
     }
 
     /**
