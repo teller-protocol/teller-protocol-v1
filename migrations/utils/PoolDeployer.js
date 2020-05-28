@@ -66,6 +66,7 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
         tokenAddress,
         Lenders.address,
         Loans.address,
+        '0x65c2Fe7C4Ef4d6E8f2eB2aC8A116af04566bF490',          // NEEDS TO CHANGE TO CTOKEN
         settingsInstance.address,
     );
   
