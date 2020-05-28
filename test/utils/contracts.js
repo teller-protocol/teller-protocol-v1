@@ -8,7 +8,7 @@ module.exports = {
             lenderData.lastAccruedInterest
         );
     },
-    initContracts: async (settings, lendingPool, zToken, consensus, lendingToken, loans, Lenders) => {
+    initContracts: async (settings, cToken, lendingPool, zToken, consensus, lendingToken, loans, Lenders) => {
         const lenders = await Lenders.new();
         await lenders.initialize(
             zToken.address,
@@ -21,6 +21,7 @@ module.exports = {
             lendingToken.address,
             lenders.address,
             loans.address,
+            cToken.address,
             settings.address,
         );
         return lenders;

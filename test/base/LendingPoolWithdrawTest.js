@@ -21,12 +21,14 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     let lendingTokenInstance;
     let loansInstance;
     let consensusInstance;
+    let cTokenInstance;
     let settingsInstance;
     
     beforeEach('Setup for each test', async () => {
         loansInstance = await Mock.new();
         consensusInstance = await Mock.new();
         settingsInstance = await Mock.new();
+        cTokenInstance = await Mock.new()
         instance = await LendingPool.new();
     });
 
@@ -38,7 +40,7 @@ contract('LendingPoolWithdrawTest', function (accounts) {
             // Setup
             zTokenInstance = await Mock.new();
             lendingTokenInstance = await Mock.new();
-            await initContracts(settingsInstance, instance, zTokenInstance, consensusInstance, lendingTokenInstance, loansInstance, Lenders);
+            await initContracts(settingsInstance, cTokenInstance, instance, zTokenInstance, consensusInstance, lendingTokenInstance, loansInstance, Lenders);
             const encodeTransfer = burnableInterfaceEncoder.encodeTransfer();
             await lendingTokenInstance.givenMethodReturnBool(encodeTransfer, transfer);
 
@@ -71,7 +73,7 @@ contract('LendingPoolWithdrawTest', function (accounts) {
             zTokenInstance = await ZDai.new();
             lendingTokenInstance = await Token.new();
             await zTokenInstance.addMinter(instance.address);
-            await initContracts(settingsInstance, instance, zTokenInstance, consensusInstance, lendingTokenInstance, loansInstance, Lenders);
+            await initContracts(settingsInstance, cTokenInstance, instance, zTokenInstance, consensusInstance, lendingTokenInstance, loansInstance, Lenders);
             await lendingTokenInstance.approve(instance.address, depositAmount, { from: depositSender });
             await instance.deposit(depositAmount, { from: depositSender });
             

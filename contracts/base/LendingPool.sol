@@ -25,7 +25,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
 import "../interfaces/ZTokenInterface.sol";
-import "../interfaces/CTokenInterface.sol";
+import "../interfaces/CErc20Interface.sol";
 
 // Contracts
 import "./Base.sol";
@@ -41,7 +41,7 @@ contract LendingPool is Base, LendingPoolInterface {
 
     IERC20 public lendingToken;
 
-    CTokenInterface public cToken;
+    CErc20Interface public cToken;
 
     ZTokenInterface public zToken;
 
@@ -93,7 +93,7 @@ contract LendingPool is Base, LendingPoolInterface {
         lendingToken = IERC20(lendingTokenAddress);
         lenders = LendersInterface(lendersAddress);
         loans = loansAddress;
-        cToken = CTokenInterface(cTokenAddress);
+        cToken = CErc20Interface(cTokenAddress);
     }
 
     /**
