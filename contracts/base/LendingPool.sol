@@ -236,7 +236,7 @@ contract LendingPool is Base, LendingPoolInterface {
         lendingToken.approve(address(cToken), amount);
 
         // Now mint cTokens, which will take lending tokens
-        uint mintResult = cToken.mint(amount);
+        uint256 mintResult = cToken.mint(amount);
         require(mintResult == 0, "COMPOUND_DEPOSIT_ERROR");
     }
 
