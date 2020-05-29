@@ -14,7 +14,8 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
     console.log(`Deploying pool for token ${tokenName}...`);
     const {
         tokens,
-        aggregators
+        aggregators,
+        cTokens
     } = this.deployConfig;
     assert(tokenName, 'Token name is undefined.');
     const tokenAddress = tokens[tokenName.toUpperCase()];
@@ -22,8 +23,12 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
   
     assert(aggregatorName, 'Aggregator name is undefined.');
     const aggregatorAddress = aggregators[aggregatorName.toUpperCase()];
-    assert(aggregatorAddress, `Aggregator address for aggregator ${aggregatorAddress} is undefined.`);
-   
+    assert(aggregatorAddress, `Aggregator address for aggregator ${aggregatorName} is undefined.`);
+
+    const cTokenName = 'C'.concat(tokenName)
+    const cTokenAddress = cTokens[cTokenName.toUpperCase()]
+    assert(cTokenAddress, `CToken address for ${cTokenName} is undefined.`);
+
     const {
         Lenders,
         Loans,
@@ -66,7 +71,7 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
         tokenAddress,
         Lenders.address,
         Loans.address,
-        '0x65c2Fe7C4Ef4d6E8f2eB2aC8A116af04566bF490',          // NEEDS TO CHANGE TO CTOKEN
+        cTokenAddress,
         settingsInstance.address,
     );
   
