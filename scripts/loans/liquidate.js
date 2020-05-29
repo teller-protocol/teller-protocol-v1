@@ -1,16 +1,15 @@
 // Smart contracts
 
 // Util classes
-const { zerocollateral } = require("../../scripts/utils/contracts");
-const Accounts = require('../utils/Accounts');
+const { zerocollateral } = require("../utils/contracts");
 const ProcessArgs = require('../utils/ProcessArgs');
+const Accounts = require('../utils/Accounts');
 const processArgs = new ProcessArgs();
 
 /** Process parameters: */
 const tokenName = 'USDC';
-const loanId = 1;
-const borrowerIndex = 1;
-const amount = '300000000';
+const loanID = 1;
+const senderIndex = 0;
 
 module.exports = async (callback) => {
     try {
@@ -21,13 +20,10 @@ module.exports = async (callback) => {
         const getContracts = processArgs.createGetContracts(artifacts);
         const loansInstance = await getContracts.getDeployed(zerocollateral.loans(tokenName));
 
-        const borrower = await accounts.getAt(borrowerIndex);
+        const sender = await accounts.getAt(senderIndex);
+        const txConfig = { from: sender };
 
-        console.log(`Loan ID:       ${loanId}`);
-        console.log(`Borrower:      ${borrowerIndex} => ${borrower}`);
-        console.log(`Amount:        ${amount} WEI`);
-
-        const result = await loansInstance.withdrawCollateral(amount, loanId, { from: borrower });
+        const result = await loansInstance.liquidateLoan(loanID, txConfig);
         console.log(toTxUrl(result));
 
         console.log('>>>> The script finished successfully. <<<<');

@@ -67,6 +67,7 @@ contract LoansMock is Loans {
             lastCollateralIn: lastCollateralIn,
             principalOwed: principalOwed,
             interestOwed: interestOwed,
+            borrowedAmount: loanTerms.maxLoanAmount,
             status: status,
             liquidated: liquidated
         });

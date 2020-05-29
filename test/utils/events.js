@@ -1,4 +1,5 @@
 // @dev see details on https://www.npmjs.com/package/truffle-assertions
+const BigNumber = require('bignumber.js');
 const truffleAssert = require('truffle-assertions');
 const assert = require('assert');
 
@@ -63,7 +64,9 @@ module.exports = {
                 name: name,
                 emitted: (sender, amount) => emitted(tx, name, ev => {
                     assert.equal(ev.sender, sender);
-                    assert.equal(ev.amount.toString(), amount.toString());
+                    assert.equal(
+                        BigNumber(ev.amount.toString()).toFixed(),
+                        BigNumber(amount.toString()).toFixed());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -163,6 +166,20 @@ module.exports = {
                     assert.equal(ev.loanID.toString(), loanID.toString());
                     assert.equal(ev.borrower, borrower);
                     assert.equal(ev.withdrawalAmount.toString(), withdrawalAmount.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        loanLiquidated: tx => {
+            const name = 'LoanLiquidated';
+            return {
+                name: name,
+                emitted: (loanID, borrower, liquidator, collateralOut, tokensIn) => emitted(tx, name, ev => {
+                    assert.equal(ev.loanID.toString(), loanID.toString());
+                    assert.equal(ev.borrower, borrower);
+                    assert.equal(ev.liquidator, liquidator);
+                    assert.equal(ev.collateralOut.toString(), collateralOut.toString());
+                    assert.equal(ev.tokensIn.toString(), tokensIn.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };

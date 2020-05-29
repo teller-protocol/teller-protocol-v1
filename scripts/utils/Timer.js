@@ -5,16 +5,41 @@ class Timer {
   }
 }
 
+const isError = (err, result) => {
+  return err || result.error || !result.result;
+};
+
 const handleResultOrError = async (web3, title, {resolve, reject}, err, result, log = (_) => {}) => {
-  if (err || result.error || !result.result) {
+  if (isError(err, result)) {
     console.log(`${title} - Error: ${JSON.stringify(result)}`);
-    return reject(err);
+    console.log(err);
+    console.log(result);
+    reject(err);
   }
   const block = await web3.eth.getBlock("latest");
-  console.log(`Latest block #: ${block.number}`);
   log(block);
-  return resolve(result);
+  resolve(result);
 };
+
+Timer.prototype.getCurrentTimestamp = async function () {
+  const { timestamp } = await this.getLatestBlock();
+  return parseInt(timestamp.toString());
+}
+
+Timer.prototype.getCurrentDate = async function () {
+  const timestamp = await this.getCurrentTimestamp();
+  return new Date(parseInt(timestamp.toString()) * 1000);
+}
+
+Timer.prototype.getCurrentTimestampAndSum = async function (seconds) {
+  const timestamp = await this.getCurrentTimestamp();
+  return parseInt(timestamp.toString()) + parseInt(seconds.toString());
+}
+
+Timer.prototype.getLatestBlock = async function () {
+  const block = await this.web3.eth.getBlock('latest');
+  return block;
+}
 
 Timer.prototype.takeSnapshot = function () {
   console.log(`Taking blockchain snapshot.`);
@@ -48,13 +73,14 @@ Timer.prototype.advanceBlockAtTime = function (time) {
         params: [time],
         id: new Date().getTime(),
       },
-      (err, result) => {
-        handleResultOrError(
+      async (err, result) => {
+        await handleResultOrError(
+          this.web3,
           'AdvanceBlockAtTime',
           { resolve, reject },
           err,
           result,
-          () => console.log(`Advancing block at time ${time}. Result: ${JSON.stringify(result)}`)
+          () => console.log(`New blockchain timestamp/date: ${time} / ${new Date(time * 1000)}. Result: ${JSON.stringify(result)}`)
         );
       },
     );

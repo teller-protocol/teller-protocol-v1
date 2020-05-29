@@ -209,6 +209,7 @@ contract Loans is Base, LoansInterface {
             lastCollateralIn: 0,
             principalOwed: 0,
             interestOwed: 0,
+            borrowedAmount: 0,
             status: ZeroCollateralCommon.LoanStatus.TermsSet,
             liquidated: false
         });
@@ -263,6 +264,7 @@ contract Loans is Base, LoansInterface {
             "COLLATERAL_DEPOSITED_RECENTLY"
         );
 
+        loans[loanID].borrowedAmount = amountBorrow;
         loans[loanID].principalOwed = amountBorrow;
         loans[loanID].interestOwed = amountBorrow
             .mul(loans[loanID].loanTerms.interestRate)
@@ -424,11 +426,11 @@ contract Loans is Base, LoansInterface {
     function _payLoan(uint256 loanID, uint256 toPay) internal {
         if (toPay > loans[loanID].principalOwed) {
             uint256 leftToPay = toPay;
-            leftToPay -= loans[loanID].principalOwed;
+            leftToPay = leftToPay.sub(loans[loanID].principalOwed);
             loans[loanID].principalOwed = 0;
             loans[loanID].interestOwed = loans[loanID].interestOwed.sub(leftToPay);
         } else {
-            loans[loanID].principalOwed -= toPay;
+            loans[loanID].principalOwed = loans[loanID].principalOwed.sub(toPay);
         }
     }
 
