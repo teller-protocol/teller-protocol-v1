@@ -18,12 +18,26 @@ Accounts.prototype.count = async function() {
     return accounts.length;
 }
 
+Accounts.prototype.getAllAt = async function(...indexes) {
+    const accounts = [];
+    for (const index of indexes) {
+        const account = await this.getAt(index);
+        accounts.push(account);
+    }
+    return accounts;
+}
+
 Accounts.prototype.getAt = async function(indexAccount) {
     assert(indexAccount !== undefined, "Index account must be defined.");
     const accounts = await this.getAccounts();
     const account = accounts[indexAccount];
     assert(account, "Account must be defined.");
     return account;
+}
+
+Accounts.prototype.getTxConfigAt = async function(indexAccount) {
+    const account = await this.getAt(indexAccount);
+    return { from: account };
 }
 
 Accounts.prototype.getAtOrDefault = async function(indexAccount, defaultValue) {
@@ -34,6 +48,14 @@ Accounts.prototype.getAtOrDefault = async function(indexAccount, defaultValue) {
     const accounts = await this.getAccounts();
     const account = accounts[indexAccount];
     return account || defaultValue;
+}
+
+Accounts.prototype.print = async function() {
+    const accounts = await this.getAccounts();
+    console.log(`Total accounts: ${accounts.length}`);
+    for (const accountIndex in accounts) {
+        console.log(`${accountIndex} = ${accounts[accountIndex]}`);    
+    }
 }
 
 module.exports = Accounts;
