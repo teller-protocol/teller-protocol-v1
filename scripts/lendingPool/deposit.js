@@ -1,6 +1,4 @@
 // Smart contracts
-// const LendingPoolInterface = artifacts.require("./interfaces/LendingPoolInterface.sol");
-// const ERC20 = artifacts.require("openzeppelin-solidity/contracts/token/ERC20/IERC20.sol");
 
 // Util classes
 const {zerocollateral, tokens} = require("../../scripts/utils/contracts");
@@ -13,7 +11,7 @@ const processArgs = new ProcessArgs();
 /** Default Parameters: */
 const defaultTokenName = 'USDC';
 const defaultSenderIndex = 0;
-const defaultDepositAmount = 3000000;
+const defaultDepositAmount = '3000000000000';
 
 module.exports = async (callback) => {
     try {
