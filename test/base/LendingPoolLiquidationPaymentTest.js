@@ -3,6 +3,7 @@ const withData = require('leche').withData;
 const { t } = require('../utils/consts');
 const { lendingPool } = require('../utils/events');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
+const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -13,6 +14,7 @@ const LendingPool = artifacts.require("./base/LendingPool.sol");
 
 contract('LendingPoolLiquidationPaymentTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
+    const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
     let instance;
     let zTokenInstance;
     let daiInstance;
@@ -46,14 +48,27 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [accounts[1], loansInstance, true, 10, undefined, false],
-        _2_transferFail: [accounts[1], loansInstance, false, 10, 'Transfer was not successful.', true],
-        _3_notLoansSender: [accounts[1], accounts[2], true, 71, 'Address is not Loans contract.', true],
-    }, function(liquidator, sender, transfer, amountToLiquidate, expectedErrorMessage, mustFail) {
+        _1_basic: [accounts[1], loansInstance, true, 10, false, undefined, false],
+        _2_transferFail: [accounts[1], loansInstance, false, 10, false, 'Transfer was not successful.', true],
+        _3_notLoansSender: [accounts[1], accounts[2], true, 71, false, 'Address is not Loans contract.', true],
+        _4_compoundFail: [accounts[1], loansInstance, true, 10, true, 'COMPOUND_WITHDRAWAL_ERROR', true]
+    }, function(
+        liquidator,
+        sender,
+        transfer,
+        amountToLiquidate,
+        compoundFails,
+        expectedErrorMessage,
+        mustFail
+    ) {
         it(t('user', 'liquidationPayment', 'Should able (or not) to liquidate payment.', mustFail), async function() {
             // Setup
             const encodeTransfer = erc20InterfaceEncoder.encodeTransfer();
             await daiInstance.givenMethodReturnBool(encodeTransfer, transfer);
+
+            const redeemResponse = compoundFails ? 1 : 0
+            const encodeRedeemUnderlying = compoundInterfaceEncoder.encodeRedeemUnderlying();
+            await cTokenInstance.givenMethodReturnUint(encodeRedeemUnderlying, redeemResponse)
 
             try {
                 // Invocation

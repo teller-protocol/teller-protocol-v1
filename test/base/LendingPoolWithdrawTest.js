@@ -4,6 +4,7 @@ const { t } = require('../utils/consts');
 const { lendingPool } = require('../utils/events');
 const { initContracts } = require('../utils/contracts');
 const BurnableInterfaceEncoder = require('../utils/encoders/BurnableInterfaceEncoder');
+const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -16,6 +17,7 @@ const ZDai = artifacts.require("./base/ZDAI.sol");
 
 contract('LendingPoolWithdrawTest', function (accounts) {
     const burnableInterfaceEncoder = new BurnableInterfaceEncoder(web3);
+    const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
     let instance;
     let zTokenInstance;
     let lendingTokenInstance;
@@ -33,9 +35,17 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [accounts[0], true, 10, undefined, false],
-        _2_transferFail: [accounts[1], false, 50, 'Transfer was not successful.', true],
-    }, function(recipient, transfer, amountToWithdraw, expectedErrorMessage, mustFail) {
+        _1_basic: [accounts[0], true, 10, false, undefined, false],
+        _2_transferFail: [accounts[1], false, 50, false, 'Transfer was not successful.', true],
+        _3_compoundFail: [accounts[1], true, 50, true, 'COMPOUND_WITHDRAWAL_ERROR', true],
+    }, function(
+        recipient,
+        transfer,
+        amountToWithdraw,
+        compoundFails,
+        expectedErrorMessage,
+        mustFail
+    ) {
         it(t('user', 'withdraw', 'Should able (or not) to withdraw DAIs.', mustFail), async function() {
             // Setup
             zTokenInstance = await Mock.new();
@@ -43,6 +53,10 @@ contract('LendingPoolWithdrawTest', function (accounts) {
             await initContracts(settingsInstance, cTokenInstance, instance, zTokenInstance, consensusInstance, lendingTokenInstance, loansInstance, Lenders);
             const encodeTransfer = burnableInterfaceEncoder.encodeTransfer();
             await lendingTokenInstance.givenMethodReturnBool(encodeTransfer, transfer);
+
+            const redeemResponse = compoundFails ? 1 : 0
+            const encodeRedeemUnderlying = compoundInterfaceEncoder.encodeRedeemUnderlying();
+            await cTokenInstance.givenMethodReturnUint(encodeRedeemUnderlying, redeemResponse)
 
             try {
                 // Invocation
