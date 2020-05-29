@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const assert = require('assert');
 const GetContracts = require('./GetContracts');
 
@@ -18,10 +19,25 @@ ProcessArgs.prototype.getValue = function(paramName, defaultValue = undefined) {
         const param = this.params[index];
         if(param.toLowerCase() === `--${paramName.toLowerCase()}`) {
             const indexNumber = parseInt(index);
-            return this.params.length >= (indexNumber + 1) ? this.params[(indexNumber + 1)] : defaultValue;
+            let value = defaultValue;
+            if(this.params.length >= (indexNumber + 1)) {
+                value = this.params[(indexNumber + 1)];
+            }
+            console.log(`Getting value (cli param) (or default '${defaultValue}') for '${paramName}': '${value}'`);
+            return value;
         }
     }
     return defaultValue;
+}
+
+ProcessArgs.prototype.getInt = function(paramName, defaultValue = 0) {
+    const value = this.getValue(paramName, defaultValue);
+    const intValue = _.parseInt(value);
+    console.log(`Parsing int value ${value} => ${intValue}`);
+    if (!_.isInteger(intValue)) {
+        throw new Error(`Value (${value}) for param (cli param) ${paramName} is not a number.`);
+    }
+    return intValue;
 }
 
 ProcessArgs.prototype.network = function() {

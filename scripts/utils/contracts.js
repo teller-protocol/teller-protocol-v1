@@ -36,6 +36,13 @@ module.exports = {
                 artifactName,
             };
         },
+        loanTermsConsensus: (tokenName, artifactName = 'LoanTermsConsensus') => {
+            return {
+                keyName: ZERO_COLLATERAL_KEY,
+                contractName: `LoanTermsConsensus_z${tokenName.toUpperCase()}`,
+                artifactName,
+            };
+        },
         lenders: (tokenName, artifactName = 'Lenders') => {
             return {
                 keyName: ZERO_COLLATERAL_KEY,
@@ -56,6 +63,15 @@ module.exports = {
             return {
                 keyName: 'tokens',
                 contractName: tokenName.toUpperCase(),
+                artifactName,
+            };
+        },
+    },
+    chainlink: {
+        get: (tokenName, artifactName = 'PairAggregatorMock') => {
+            return {
+                keyName: 'chainlink',
+                contractName: `${tokenName.toUpperCase()}_ETH`,
                 artifactName,
             };
         },

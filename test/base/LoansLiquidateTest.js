@@ -68,7 +68,7 @@ contract('LoansLiquidateTest', function (accounts) {
         mustFail,
         expectedErrorMessage
     ) {
-        it(t('user', 'liquidate', 'Should able to (or not) liquidate a loan.', false), async function () {
+        it(t('user', 'liquidate', 'Should able to (or not) liquidate a loan.', mustFail), async function () {
             // encode current token price
             const encodeGetLatestAnswer = pairAggregatorEncoder.encodeGetLatestAnswer();
             await oracleInstance.givenMethodReturnUint(encodeGetLatestAnswer, oraclePrice.toString());

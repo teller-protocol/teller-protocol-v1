@@ -4,50 +4,10 @@
 const { zerocollateral } = require("../../scripts/utils/contracts");
 const ProcessArgs = require('../utils/ProcessArgs');
 const Accounts = require('../utils/Accounts');
-const ethUtil = require('ethereumjs-util');
-const { createLoanRequest, createUnsignedLoanResponse, } = require('../../test/utils/structs');
-const { createLoanResponseSig, hashLoanTermsRequest } = require('../../test/utils/hashes');
+const { createLoanTermsRequest, createSignedLoanTermsResponse } = require('../../test/utils/loan-terms-helper');
 const { NULL_ADDRESS, ONE_DAY } = require('../../test/utils/consts');
 
 const processArgs = new ProcessArgs();
-
-const createLoanTermsRequest = (loanRequestInfo) => {
-    const loanTermsRequest = createLoanRequest(
-        loanRequestInfo.borrower,
-        loanRequestInfo.recipient,
-        loanRequestInfo.requestNonce,
-        loanRequestInfo.amount,
-        loanRequestInfo.duration,
-        loanRequestInfo.requestTime,
-    );
-    let requestHash = hashLoanTermsRequest(loanTermsRequest, loanRequestInfo.caller);
-    requestHash = ethUtil.bufferToHex(requestHash);
-    return {
-        loanTermsRequest,
-        requestHash,
-    }
-}
-
-const createSignedInterestResponse = async (web3, loanTermsRequest, loanTermsResponseInfo) => {
-    const { requestHash } = loanTermsRequest;
-    const unsignedLoanTermsResponse = createUnsignedLoanResponse(
-        loanTermsResponseInfo.signer,
-        loanTermsResponseInfo.responseTime,
-        loanTermsResponseInfo.interestRate,
-        loanTermsResponseInfo.collateralRatio,
-        loanTermsResponseInfo.maxLoanAmount,
-        loanTermsResponseInfo.signerNonce
-    );
-
-    const signedResponse = await createLoanResponseSig(
-        web3,
-        unsignedLoanTermsResponse.signer,
-        unsignedLoanTermsResponse,
-        requestHash
-    );
-
-    return signedResponse;
-};
 
 /** Process parameters: */
 const tokenName = 'USDC';
@@ -56,7 +16,7 @@ const recipientIndex = -1;
 const durationInDays = 10;
 const amount = 100;
 const collateralValue = 100000;
-const nonce = 7;
+const nonce = 0;
 
 module.exports = async (callback) => {
     try {
@@ -92,7 +52,7 @@ module.exports = async (callback) => {
             maxLoanAmount: 20000,
             signerNonce: nonce
         };
-        const signedResponse1 = await createSignedInterestResponse(web3, loanTermsRequest, loanResponseInfo1);
+        const signedResponse1 = await createSignedLoanTermsResponse(web3, loanTermsRequest, loanResponseInfo1);
         
         const loanResponseInfo2 = {
             signer: signer2,
@@ -102,7 +62,7 @@ module.exports = async (callback) => {
             maxLoanAmount: 20000,
             signerNonce: nonce
         };
-        const signedResponse2 = await createSignedInterestResponse(web3, loanTermsRequest, loanResponseInfo2);
+        const signedResponse2 = await createSignedLoanTermsResponse(web3, loanTermsRequest, loanResponseInfo2);
 
         const result = await loansInstance.setLoanTerms(
             loanTermsRequest.loanTermsRequest,
