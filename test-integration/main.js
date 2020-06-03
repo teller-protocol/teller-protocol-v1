@@ -21,7 +21,7 @@ const executeTestFunction = async (testFunctionObject, testContext) => {
 };
 
 module.exports = async (callback) => {
-    const revertBlockchain = processArgs.getValue('revert', true);
+    const revertBlockchain = processArgs.getValue('revert', false);
     const initialNonceValue = processArgs.getInt('initialNonce', 0);
     const testResults = new Map();
     const timer = new Timer(web3);
