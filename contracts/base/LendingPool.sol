@@ -179,11 +179,11 @@ contract LendingPool is Base, LendingPoolInterface {
         isLoan()
         whenLendingPoolNotPaused(address(this))
     {
-        // Withdraw the tokens from compound
-        withdrawFromCompound(amount);
+        // Transfers tokens from liquidator to lending pool
+        tokenTransferFrom(liquidator, amount);
 
-        // Transfers tokens to the liquidator.
-        tokenTransfer(liquidator, amount);
+        // deposit them straight into compound
+        depositToCompound(amount);
 
         // Emits event
         emit PaymentLiquidated(liquidator, amount);

@@ -49,13 +49,13 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
 
     withData({
         _1_basic: [accounts[1], loansInstance, true, 10, false, undefined, false],
-        _2_transferFail: [accounts[1], loansInstance, false, 10, false, 'Transfer was not successful.', true],
+        _2_transferFromFail: [accounts[1], loansInstance, false, 10, false, "TransferFrom wasn't successful.", true],
         _3_notLoansSender: [accounts[1], accounts[2], true, 71, false, 'Address is not Loans contract.', true],
-        _4_compoundFail: [accounts[1], loansInstance, true, 10, true, 'COMPOUND_WITHDRAWAL_ERROR', true]
+        _4_compoundFail: [accounts[1], loansInstance, true, 10, true, 'COMPOUND_DEPOSIT_ERROR', true]
     }, function(
         liquidator,
         sender,
-        transfer,
+        transferFrom,
         amountToLiquidate,
         compoundFails,
         expectedErrorMessage,
@@ -63,12 +63,12 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
     ) {
         it(t('user', 'liquidationPayment', 'Should able (or not) to liquidate payment.', mustFail), async function() {
             // Setup
-            const encodeTransfer = erc20InterfaceEncoder.encodeTransfer();
-            await daiInstance.givenMethodReturnBool(encodeTransfer, transfer);
+            const encodeTransferFrom = erc20InterfaceEncoder.encodeTransferFrom();
+            await daiInstance.givenMethodReturnBool(encodeTransferFrom, transferFrom);
 
             const redeemResponse = compoundFails ? 1 : 0
-            const encodeRedeemUnderlying = compoundInterfaceEncoder.encodeRedeemUnderlying();
-            await cTokenInstance.givenMethodReturnUint(encodeRedeemUnderlying, redeemResponse)
+            const encodeMint = compoundInterfaceEncoder.encodeMint();
+            await cTokenInstance.givenMethodReturnUint(encodeMint, redeemResponse)
 
             try {
                 // Invocation
