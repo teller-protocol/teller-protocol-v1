@@ -102,7 +102,7 @@ LoanInfoPrinter.prototype.getStartDate = function() {
 }
 
 LoanInfoPrinter.prototype.getStartTime = function() {
-    return parseInt(this.loanInfo.loanStartTime);
+    return parseInt(this.loanInfo.loanStartTime) * 1000;
 }
 
 LoanInfoPrinter.prototype.getEndDate = function() {
@@ -118,11 +118,11 @@ LoanInfoPrinter.prototype.getEndTime = function() {
     if (startTime === 0) {
         return 0;
     }
-    return (startTime + parseInt(this.loanInfo.loanTerms.duration)) * 1000;
+    return startTime + parseInt(this.loanInfo.loanTerms.duration) * 1000;
 }
 
 LoanInfoPrinter.prototype.isEndTimeLtNow = function() {
-    return this.getEndTime() > Date.now();
+    return this.getEndTime() < Date.now();
 }
 
 LoanInfoPrinter.prototype.isLiquidable = function(price) {
