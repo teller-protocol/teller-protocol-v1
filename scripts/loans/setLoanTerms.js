@@ -86,7 +86,7 @@ module.exports = async (callback) => {
 
         const loanResponseInfo1 = {
             signer: signer1,
-            responseTime: Math.round(Date.now() / 1000) - 10,
+            responseTime: Math.round(Date.now() / 1000) + 30,
             interestRate: 4000,
             collateralRatio: 6000,
             maxLoanAmount: 20000,
@@ -96,7 +96,7 @@ module.exports = async (callback) => {
         
         const loanResponseInfo2 = {
             signer: signer2,
-            responseTime: Math.round(Date.now() / 1000) - 100,
+            responseTime: Math.round(Date.now() / 1000) + 65,
             interestRate: 4000,
             collateralRatio: 6000,
             maxLoanAmount: 20000,

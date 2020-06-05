@@ -4,7 +4,7 @@ module.exports = {
         loans: (tokenName, artifactName = 'Loans') => {
             return {
                 keyName: ZERO_COLLATERAL_KEY,
-                contractName: `Loans_z${tokenName.toLowerCase()}`,
+                contractName: `Loans_z${tokenName.toUpperCase()}`,
                 artifactName,
             }
         },
