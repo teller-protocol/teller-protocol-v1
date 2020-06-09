@@ -3,18 +3,18 @@ const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/Chainli
 
 // Util classes
 const assert = require('assert');
-const ProcessArgs = require('./utils/ProcessArgs');
+const ProcessArgs = require('../utils/ProcessArgs');
 const processArgs = new ProcessArgs();
 
-const tokenName = 'DAI'.toUpperCase();
+const tokenName = 'USDC'.toUpperCase();
 const senderIndex = 0;
-const back = 2;
+const back = 1;
 
 module.exports = async (callback) => {
     try {
         const network = processArgs.network();
         console.log(`Script will be executed in network ${network}.`)
-        const appConf = require('../config')(network);
+        const appConf = require('../../config')(network);
         const { zerocollateral } = appConf.networkConfig;
         const chainlinkPairAggregatorAddress = zerocollateral[`ChainlinkPairAggregator_${tokenName}_ETH`];
 

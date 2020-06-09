@@ -1,23 +1,23 @@
 // Util classes
 const BigNumber = require("bignumber.js");
-const {zerocollateral, tokens} = require("../../scripts/utils/contracts");
+const { zerocollateral, tokens } = require("../../scripts/utils/contracts");
 const { lendingPool } = require('../../test/utils/events');
+const { toDecimals } = require('../../test/utils/consts');
 const assert = require("assert");
 
 module.exports = async ({accounts, getContracts, timer}) => {
   console.log('Integration Test Example.');
-  const sender = accounts[1];
+  const sender = await accounts.getAt(1);
   const senderTxConfig = { from: sender };
-  const dai = await getContracts.getDeployed(tokens.Dai);
-  const zdai = await getContracts.getDeployed(zerocollateral.ZDai);
-  const amount = 100;
-  const amountWei = new BigNumber(amount).times(new BigNumber(10).pow(18));
+  const tokenName = 'DAI';
+  const dai = await getContracts.getDeployed(tokens.get(tokenName));
+  const zdai = await getContracts.getDeployed(zerocollateral.ztoken(tokenName));
+  const amountWei = toDecimals(100, 18);
   await dai.mintTo(sender, amountWei, senderTxConfig);
 
-  const lendingPoolZDai = await getContracts.getDeployed(zerocollateral.ZDai_LendingPool);
+  const lendingPoolZDai = await getContracts.getDeployed(zerocollateral.lendingPool(tokenName));
   const lendingToken = await lendingPoolZDai.lendingToken();
-
-  assert(lendingToken === dai.address,"Lending token and token are not equal.");
+  assert(lendingToken === dai.address, "Lending token and token are not equal.");
 
   await dai.approve(
     lendingPoolZDai.address,

@@ -1,0 +1,14 @@
+version: '3.4'
+services:
+  ganache:
+    image: trufflesuite/ganache-cli:latest
+    environment: 
+      - NETWORK_ID=${NETWORK_ID}
+      - DATA_FOLDER=${DATA_FOLDER}
+      - PORT=${PORT}
+    ports:
+      - "${PORT}:${PORT}"
+    volumes:
+      - ${DATA_FOLDER}:/ganache_data
+    command: "ganache-cli --deterministic --db=/ganache_data --mnemonic ${MNEMONIC_KEY} --networkId ${NETWORK_ID} --hostname 0.0.0.0 --port ${PORT}"
+    

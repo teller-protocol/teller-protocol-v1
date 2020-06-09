@@ -1,82 +1,63 @@
 const ZERO_COLLATERAL_KEY = 'zerocollateral';
 module.exports = {
     zerocollateral: {
-        ZDai_Loans: {
-            keyName: ZERO_COLLATERAL_KEY,
-            contractName: 'Loans_zusdc',
-            artifactName: 'Loans',
+        loans: (tokenName, artifactName = 'Loans') => {
+            return {
+                keyName: ZERO_COLLATERAL_KEY,
+                contractName: `Loans_z${tokenName.toUpperCase()}`,
+                artifactName,
+            }
         },
-        ZUsdc_Loans: {
-            keyName: ZERO_COLLATERAL_KEY,
-            contractName: 'Loans_zusdc',
-            artifactName: 'Loans',
+        ztoken: (tokenName) => {
+            return {
+                keyName: ZERO_COLLATERAL_KEY,
+                contractName: `Z${tokenName.toUpperCase()}`,
+                artifactName: undefined,
+            };
         },
-        ZDai: {
-            keyName: ZERO_COLLATERAL_KEY,
-            contractName: 'ZDAI',
-            artifactName: undefined,
+        oracle: (tokenName, artifactName = 'ChainlinkPairAggregator') => {
+            return {
+                keyName: ZERO_COLLATERAL_KEY,
+                contractName: `ChainlinkPairAggregator_${tokenName.toUpperCase()}_ETH`,
+                artifactName,
+            };
         },
-        ZUsdc: {
-            keyName: ZERO_COLLATERAL_KEY,
-            contractName: 'ZUSDC',
-            artifactName: undefined,
+        lendingPool: (tokenName, artifactName = 'LendingPool') => {
+            return {
+                keyName: ZERO_COLLATERAL_KEY,
+                contractName: `LendingPool_z${tokenName.toUpperCase()}`,
+                artifactName,
+            };
         },
-        Settings: {
-            keyName: ZERO_COLLATERAL_KEY,
-            contractName: 'Settings',
-            artifactName: undefined,
+        interestConsensus: (tokenName, artifactName = 'InterestConsensus') => {
+            return {
+                keyName: ZERO_COLLATERAL_KEY,
+                contractName: `InterestConsensus_z${tokenName.toUpperCase()}`,
+                artifactName,
+            };
         },
-        DaiEth_ChainlinkPairAggregator: {
-            keyName: ZERO_COLLATERAL_KEY,
-            contractName: 'ChainlinkPairAggregator_DAI_ETH',
-            artifactName: 'ChainlinkPairAggregator',
+        lenders: (tokenName, artifactName = 'Lenders') => {
+            return {
+                keyName: ZERO_COLLATERAL_KEY,
+                contractName: `Lenders_z${tokenName.toUpperCase()}`,
+                artifactName,
+            };
         },
-        UsdcEth_ChainlinkPairAggregator: {
-            keyName: ZERO_COLLATERAL_KEY,
-            contractName: 'ChainlinkPairAggregator_USDC_ETH',
-            artifactName: 'ChainlinkPairAggregator',
-        },
-        ZDai_LendingPool: {
-            keyName: ZERO_COLLATERAL_KEY,
-            contractName: 'LendingPool_zDAI',
-            artifactName: 'LendingPool',
-        },
-        ZUsdc_LendingPool: {
-            keyName: ZERO_COLLATERAL_KEY,
-            contractName: 'LendingPool_zUSDC',
-            artifactName: 'LendingPool',
-        },
-        ZDai_InterestConsensus: {
-            keyName: ZERO_COLLATERAL_KEY,
-            contractName: 'InterestConsensus_zDAI',
-            artifactName: 'InterestConsensus',
-        },
-        ZUsdc_InterestConsensus: {
-            keyName: ZERO_COLLATERAL_KEY,
-            contractName: 'InterestConsensus_zUSDC',
-            artifactName: 'InterestConsensus',
-        },
-        ZDai_Lenders: {
-            keyName: ZERO_COLLATERAL_KEY,
-            contractName: 'Lenders_zDAI',
-            artifactName: 'Lenders',
-        },
-        ZUsdc_Lenders: {
-            keyName: ZERO_COLLATERAL_KEY,
-            contractName: 'Lenders_zUSDC',
-            artifactName: 'Lenders',
-        },
+        settings: () => {
+            return {
+                keyName: ZERO_COLLATERAL_KEY,
+                contractName: 'Settings',
+                artifactName: undefined,
+            };
+        }
     },
     tokens: {
-        Dai: {
-            keyName: 'tokens',
-            contractName: 'DAI',
-            artifactName: 'ERC20Mock',
-        },
-        Dai: {
-            keyName: 'tokens',
-            contractName: 'DAI',
-            artifactName: 'ERC20Mock',
+        get: (tokenName, artifactName = 'ERC20Mock') => {
+            return {
+                keyName: 'tokens',
+                contractName: tokenName.toUpperCase(),
+                artifactName,
+            };
         },
     }
 };
