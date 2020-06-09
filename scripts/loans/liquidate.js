@@ -1,18 +1,17 @@
 // Smart contracts
 
 // Util classes
+const { loans: readParams } = require("../utils/cli-builder");
 const { zerocollateral } = require("../utils/contracts");
 const ProcessArgs = require('../utils/ProcessArgs');
 const Accounts = require('../utils/Accounts');
-const processArgs = new ProcessArgs();
-
-/** Process parameters: */
-const tokenName = 'USDC';
-const loanID = 1;
-const senderIndex = 0;
+const processArgs = new ProcessArgs(readParams.liquidate().argv);
 
 module.exports = async (callback) => {
     try {
+        const tokenName = processArgs.getValue('tokenName');
+        const loanId = processArgs.getValue('loanId');
+        const senderIndex = processArgs.getValue('senderIndex');
         const accounts = new Accounts(web3);
         const appConf = processArgs.getCurrentConfig();
         const { toTxUrl } = appConf.networkConfig;
@@ -23,7 +22,7 @@ module.exports = async (callback) => {
         const sender = await accounts.getAt(senderIndex);
         const txConfig = { from: sender };
 
-        const result = await loansInstance.liquidateLoan(loanID, txConfig);
+        const result = await loansInstance.liquidateLoan(loanId, txConfig);
         console.log(toTxUrl(result));
 
         console.log('>>>> The script finished successfully. <<<<');
