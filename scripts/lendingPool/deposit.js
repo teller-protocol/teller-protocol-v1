@@ -3,16 +3,12 @@
 // Util classes
 const {zerocollateral, tokens} = require("../../scripts/utils/contracts");
 const { toTokenDecimals } = require("../../test/utils/consts");
+const { lendingPool: readParams } = require("../utils/cli-builder");
 const BigNumber = require('bignumber.js');
 const assert = require('assert');
 const ProcessArgs = require('../utils/ProcessArgs');
 const Accounts = require('../utils/Accounts');
-const processArgs = new ProcessArgs();
-
-/** Default Parameters: */
-const defaultTokenName = 'USDC';
-const defaultSenderIndex = 0;
-const defaultDepositAmount = '30';
+const processArgs = new ProcessArgs(readParams.deposit().argv);
 
 module.exports = async (callback) => {
     try {
@@ -22,9 +18,9 @@ module.exports = async (callback) => {
         
         const { toTxUrl } = appConf.networkConfig;
 
-        const tokenName = processArgs.getValue('tokenName', defaultTokenName);
-        const senderIndex = processArgs.getValue('senderIndex', defaultSenderIndex);
-        const depositAmount = processArgs.getValue('amount', defaultDepositAmount);
+        const tokenName = processArgs.getValue('tokenName');
+        const senderIndex = processArgs.getValue('senderIndex');
+        const depositAmount = processArgs.getValue('amount');
 
         const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.lendingPool(tokenName));
         const tokenInstance = await getContracts.getDeployed(tokens.get(tokenName));
@@ -45,7 +41,7 @@ module.exports = async (callback) => {
         console.log('');
         console.log(`Deposit ${tokenName}`);
         console.log('-'.repeat(11));
-        console.log(`${tokenName} Amount: ${depositAmountWithDecimals.toString()}`);
+        console.log(`${tokenName} Amount: ${depositAmount.toString()} = ${depositAmountWithDecimals.toString()}`);
         console.log('');
         console.log(`${tokenName} LendingPool`);
         console.log('-'.repeat(8));

@@ -178,8 +178,14 @@ module.exports = {
                     assert.equal(ev.loanID.toString(), loanID.toString());
                     assert.equal(ev.borrower, borrower);
                     assert.equal(ev.liquidator, liquidator);
-                    assert.equal(ev.collateralOut.toString(), collateralOut.toString());
-                    assert.equal(ev.tokensIn.toString(), tokensIn.toString());
+                    assert.equal(
+                        ev.collateralOut.toString(),
+                        BigNumber(collateralOut.toString()).toFixed(0)
+                    );
+                    assert.equal(
+                        ev.tokensIn.toString(),
+                        BigNumber(tokensIn.toString()).toFixed(0)
+                    );
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };

@@ -5,10 +5,10 @@ const { lendingPool } = require('../../test/utils/events');
 const { toDecimals } = require('../../test/utils/consts');
 const assert = require("assert");
 
-module.exports = async ({accounts, getContracts, timer}) => {
+module.exports = async ({processArgs, accounts, getContracts, timer}) => {
   console.log('Integration Test Example.');
   const senderTxConfig = await accounts.getTxConfigAt(1);
-  const tokenName = 'DAI';
+  const tokenName = processArgs.getValue('testTokenName');
   const dai = await getContracts.getDeployed(tokens.get(tokenName));
   const zdai = await getContracts.getDeployed(zerocollateral.ztoken(tokenName));
   const amountWei = toDecimals(100, 18);

@@ -7,9 +7,9 @@ const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds } = require
 const LoanInfoPrinter = require('../../test/utils/printers/LoanInfoPrinter');
 const { createMultipleSignedLoanTermsResponses, createLoanTermsRequest } = require('../../test/utils/loan-terms-helper');
 
-module.exports = async ({accounts, getContracts, timer, web3, nonces}) => {
+module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonces}) => {
   console.log('Liquidate Loan by End Time');
-  const tokenName = 'DAI';
+  const tokenName = processArgs.getValue('testTokenName');
   const settingsInstance = await getContracts.getDeployed(zerocollateral.settings());
   const token = await getContracts.getDeployed(tokens.get(tokenName));
   const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.lendingPool(tokenName));
