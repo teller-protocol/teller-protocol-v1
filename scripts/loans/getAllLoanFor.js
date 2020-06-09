@@ -1,27 +1,17 @@
 // Smart contracts
-const LoansInterface = artifacts.require("./interfaces/LoansInterface.sol");
 
 // Util classes
-const assert = require('assert');
+const { zerocollateral } = require("../../scripts/utils/contracts");
+const { loans: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
-const processArgs = new ProcessArgs();
-
-const borroweAddress = '0xE1F8feA4699Ce3e0196923E6fA16F773600E59e0';
-const tokenName = 'USDC';
+const processArgs = new ProcessArgs(readParams.getAllLoansFor().argv);
 
 module.exports = async (callback) => {
     try {
-        const network = processArgs.network();
-        console.log(`Script will be executed in network ${network}.`)
-        const appConf = require('../../config')(network);
-        const { zerocollateral } = appConf.networkConfig;
-
-        assert(tokenName, "Token name is undefined.");
-
-        const loansAddress = zerocollateral[`Loans_z${tokenName}`];
-        assert(loansAddress, "Loans address is undefined.");
-
-        const loansInstance = await LoansInterface.at(loansAddress);
+        const tokenName = processArgs.getValue('tokenName');
+        const borroweAddress = processArgs.getValue('borrower');
+        const getContracts = processArgs.createGetContracts(artifacts);
+        const loansInstance = await getContracts.getDeployed(zerocollateral.loans(tokenName));
         
         const loanIds = await loansInstance.getBorrowerLoans(borroweAddress);
         

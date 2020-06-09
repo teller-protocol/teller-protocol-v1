@@ -1,4 +1,5 @@
 // Util classes
+const { ganacheTest: readParams } = require('../scripts/utils/cli-builder');
 const index = require('./index');
 const Timer = require('../scripts/utils/Timer');
 const ProcessArgs = require('../scripts/utils/ProcessArgs');
@@ -6,9 +7,8 @@ const Accounts = require('../scripts/utils/Accounts');
 const Nonces = require('../scripts/utils/Nonces');
 const { printSeparatorLine } = require('../test/utils/consts');
 const executeInitializers = require('./initializers');
-const initConfig = require('./initConfig');
 
-const processArgs = new ProcessArgs();
+const processArgs = new ProcessArgs(readParams().argv);
 const tests = Object.keys(index).map( key => index[key]);
 
 const executeTestFunction = async (testFunctionObject, testContext) => {
@@ -21,8 +21,8 @@ const executeTestFunction = async (testFunctionObject, testContext) => {
 };
 
 module.exports = async (callback) => {
-    const revertBlockchain = processArgs.getValue('revert', true);
-    const initialNonceValue = processArgs.getInt('initialNonce', 0);
+    const revertBlockchain = processArgs.getValue('revert', false);
+    const initialNonceValue = processArgs.getValue('initialNonce', 0);
     const testResults = new Map();
     const timer = new Timer(web3);
     const accounts = new Accounts(web3);
@@ -42,7 +42,7 @@ module.exports = async (callback) => {
         };
 
         await executeInitializers(
-            initConfig,
+            processArgs.createInitializersConfig(),
             { processArgs, getContracts, accounts, web3 },
         );
 
