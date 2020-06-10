@@ -25,7 +25,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
 import "../interfaces/ZTokenInterface.sol";
-import "../interfaces/CErc20Interface.sol";
+import "../providers/compound/CErc20Interface.sol";
 
 // Contracts
 import "./Base.sol";
