@@ -70,7 +70,7 @@ contract('LoansWithdrawCollateralTest', function (accounts) {
         it(t('user', 'withdrawCollateral', 'Should able to withdraw collateral.', false), async function() {
             // Setup
             const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, 0)
-            await instance.setLoan(mockLoanID, loanTerms, 0, 0, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, ACTIVE, false)
+            await instance.setLoan(mockLoanID, loanTerms, 0, 0, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, loanTerms.maxLoanAmount, ACTIVE, false)
             await instance.setTotalCollateral(totalCollateral)
 
             // give the contract collateral through a deposit (mock has a fallback)

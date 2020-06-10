@@ -97,7 +97,7 @@ contract('LoansTakeOutLoanTest', function (accounts) {
 
             loanTerms.duration = loanDuration
             loanTerms.recipient = recipient
-            await instance.setLoan(mockLoanID, loanTerms, termsExpiry, 0, 40000, lastCollateralIn, 0, 0, TERMS_SET, false)
+            await instance.setLoan(mockLoanID, loanTerms, termsExpiry, 0, 40000, lastCollateralIn, 0, 0, loanTerms.maxLoanAmount, TERMS_SET, false)
 
             try {
                 // Invocation

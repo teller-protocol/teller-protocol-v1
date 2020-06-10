@@ -50,7 +50,7 @@ contract('LoansRepayTest', function (accounts) {
     ) {
         it(t('user', 'repay', 'Should able to repay your loan.', false), async function() {
             // Setup
-            await instance.setLoan(mockLoanID, loanTerms, 0, 0, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, ACTIVE, false) 
+            await instance.setLoan(mockLoanID, loanTerms, 0, 0, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, loanTerms.maxLoanAmount, ACTIVE, false) 
               
             await instance.setTotalCollateral(totalCollateral)
 

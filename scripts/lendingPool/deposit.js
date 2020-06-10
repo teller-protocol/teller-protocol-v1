@@ -2,6 +2,7 @@
 
 // Util classes
 const {zerocollateral, tokens} = require("../../scripts/utils/contracts");
+const { toTokenDecimals } = require("../../test/utils/consts");
 const BigNumber = require('bignumber.js');
 const assert = require('assert');
 const ProcessArgs = require('../utils/ProcessArgs');
@@ -11,38 +12,40 @@ const processArgs = new ProcessArgs();
 /** Default Parameters: */
 const defaultTokenName = 'USDC';
 const defaultSenderIndex = 0;
-const defaultDepositAmount = '3000000000000';
+const defaultDepositAmount = '30';
 
 module.exports = async (callback) => {
     try {
         const accounts = new Accounts(web3);
         const appConf = processArgs.getCurrentConfig();
+        const getContracts = processArgs.createGetContracts(artifacts);
+        
         const { toTxUrl } = appConf.networkConfig;
 
         const tokenName = processArgs.getValue('tokenName', defaultTokenName);
         const senderIndex = processArgs.getValue('senderIndex', defaultSenderIndex);
         const depositAmount = processArgs.getValue('amount', defaultDepositAmount);
 
-        const sender = await accounts.getAt(senderIndex);
-        const getContracts = processArgs.createGetContracts(artifacts);
         const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.lendingPool(tokenName));
         const tokenInstance = await getContracts.getDeployed(tokens.get(tokenName));
+        const depositAmountWithDecimals = await toTokenDecimals(tokenInstance, depositAmount);
+
+        const sender = await accounts.getAt(senderIndex);
 
         const initialLendingPoolDaiBalance = await tokenInstance.balanceOf(lendingPoolInstance.address);
-
         const senderDaiBalance = await tokenInstance.balanceOf(sender);
-        assert(BigNumber(senderDaiBalance.toString()).gte(depositAmount), `Not enough ${tokenName} balance.`);
+        assert(BigNumber(senderDaiBalance.toString()).gte(depositAmountWithDecimals), `Not enough ${tokenName} balance.`);
 
-        await tokenInstance.approve(lendingPoolInstance.address, depositAmount, { from: sender });
+        await tokenInstance.approve(lendingPoolInstance.address, depositAmountWithDecimals, { from: sender });
 
-        const result = await lendingPoolInstance.deposit(depositAmount, { from: sender });
+        const result = await lendingPoolInstance.deposit(depositAmountWithDecimals, { from: sender });
         console.log(toTxUrl(result));
 
         const finalLendingPoolDaiBalance = await tokenInstance.balanceOf(lendingPoolInstance.address);
         console.log('');
         console.log(`Deposit ${tokenName}`);
         console.log('-'.repeat(11));
-        console.log(`${tokenName} Amount: ${defaultDepositAmount.toString()}`);
+        console.log(`${tokenName} Amount: ${depositAmountWithDecimals.toString()}`);
         console.log('');
         console.log(`${tokenName} LendingPool`);
         console.log('-'.repeat(8));
