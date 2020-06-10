@@ -18,6 +18,10 @@ const TERMS_SET = 1
 const ACTIVE = 2
 const CLOSED = 3
 
+const toDecimals = (amount, decimals) => {
+    return new BigNumber(amount).times(new BigNumber(10).pow(decimals));
+}
+
 module.exports = {
     NON_EXISTENT,
     TERMS_SET,
@@ -68,8 +72,10 @@ module.exports = {
     toBytes32: (web3, text) => {
       return web3.utils.padRight(web3.utils.stringToHex(text), 64, '0');
     },
-    toDecimals: (amount, decimals) => {
-        return new BigNumber(amount).times(new BigNumber(10).pow(decimals));
+    toDecimals,
+    toTokenDecimals: async (token, amount) => {
+        const decimals = await token.decimals();
+        return toDecimals(amount, decimals);
     },
     toUnits: (amount, decimals) => {
         return new BigNumber(amount).div(new BigNumber(10).pow(decimals));
