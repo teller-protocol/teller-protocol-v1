@@ -8,10 +8,10 @@ class PoolDeployer {
     }
 }
 
-PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZToken, txConfig) {
+PoolDeployer.prototype.deployPool = async function(collateralName, Loans, aggregatorName, tokenName, ZToken, txConfig) {
     const zTokenInstance = await ZToken.deployed();
     const zTokenName = await zTokenInstance.symbol();
-    console.log(`Deploying pool for token ${tokenName}...`);
+    console.log(`Deploying pool (collateral ${collateralName}) for token ${tokenName}...`);
     const {
         tokens,
         aggregators
@@ -26,7 +26,6 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
    
     const {
         Lenders,
-        Loans,
         LendingPool,
         InterestConsensus,
         LoanTermsConsensus,
@@ -34,12 +33,12 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
         Settings,
     } = this.artifacts;
 
-    await this.deployer.deployWith(`ChainlinkPairAggregator_${aggregatorName.toUpperCase()}`, ChainlinkPairAggregator, aggregatorAddress, txConfig);
-    await this.deployer.deployWith(`LendingPool_${zTokenName}`, LendingPool, txConfig);
-    await this.deployer.deployWith(`InterestConsensus_${zTokenName}`, InterestConsensus, txConfig);
-    await this.deployer.deployWith(`Lenders_${zTokenName}`, Lenders, txConfig);
-    await this.deployer.deployWith(`LoanTermsConsensus_${zTokenName}`, LoanTermsConsensus, txConfig);
-    await this.deployer.deployWith(`Loans_${zTokenName}`, Loans, txConfig);
+    await this.deployer.deployWith(`${collateralName.toUpperCase()}_ChainlinkPairAggregator_${aggregatorName.toUpperCase()}`, ChainlinkPairAggregator, aggregatorAddress, txConfig);
+    await this.deployer.deployWith(`${collateralName.toUpperCase()}_LendingPool_${zTokenName}`, LendingPool, txConfig);
+    await this.deployer.deployWith(`${collateralName.toUpperCase()}_InterestConsensus_${zTokenName}`, InterestConsensus, txConfig);
+    await this.deployer.deployWith(`${collateralName.toUpperCase()}_Lenders_${zTokenName}`, Lenders, txConfig);
+    await this.deployer.deployWith(`${collateralName.toUpperCase()}_LoanTermsConsensus_${zTokenName}`, LoanTermsConsensus, txConfig);
+    await this.deployer.deployWith(`${collateralName.toUpperCase()}_Loans_${zTokenName}`, Loans, txConfig);
     
     const lenderInstance = await Lenders.deployed();
     const lendingPoolInstance = await LendingPool.deployed();
@@ -48,12 +47,24 @@ PoolDeployer.prototype.deployPool = async function(aggregatorName, tokenName, ZT
     const loansInstance = await Loans.deployed();
     const loanTermConsensus = await LoanTermsConsensus.deployed();
 
-    await loansInstance.initialize(
-        ChainlinkPairAggregator.address,
-        LendingPool.address,
-        LoanTermsConsensus.address,
-        Settings.address,
-    );
+    if( collateralName === 'ETH' ) {
+        await loansInstance.initialize(
+            ChainlinkPairAggregator.address,
+            LendingPool.address,
+            LoanTermsConsensus.address,
+            Settings.address,
+        );
+    } else {
+        const collateralAddress = tokens[collateralName.toUpperCase()];
+        assert(collateralAddress, `Address for collateral token ${collateralName.toUpperCase()} is undefined.`);
+        await loansInstance.initialize(
+            ChainlinkPairAggregator.address,
+            LendingPool.address,
+            LoanTermsConsensus.address,
+            Settings.address,
+            collateralAddress,
+        );
+    }
     await lenderInstance.initialize(
         ZToken.address,
         LendingPool.address,
