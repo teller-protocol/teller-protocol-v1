@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, FIVE_MIN, NULL_ADDRESS, ACTIVE } = require('../utils/consts');
+const { t, NULL_ADDRESS, ACTIVE } = require('../utils/consts');
 const { loans } = require('../utils/events');
 const { createLoanTerms } = require('../utils/structs');
 
@@ -12,7 +12,7 @@ const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterf
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const Loans = artifacts.require("./mock/base/LoansMock.sol");
+const Loans = artifacts.require("./mock/base/EtherLoansMock.sol");
 
 contract('LoansWithdrawCollateralTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);

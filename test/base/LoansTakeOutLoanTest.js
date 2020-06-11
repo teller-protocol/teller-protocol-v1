@@ -13,7 +13,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
-const Loans = artifacts.require("./mock/base/LoansMock.sol");
+const Loans = artifacts.require("./mock/base/EtherLoansMock.sol");
 
 contract('LoansTakeOutLoanTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
