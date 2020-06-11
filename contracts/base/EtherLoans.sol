@@ -23,8 +23,8 @@ import "./LoansBase.sol";
 // Interfaces
 import "../interfaces/EtherLoansInterface.sol";
 
-
 contract EtherLoans is EtherLoansInterface, LoansBase {
+
     /**
      * @notice Deposit collateral into a loan
      * @param borrower address The address of the loan borrower.
@@ -46,7 +46,7 @@ contract EtherLoans is EtherLoansInterface, LoansBase {
 
         uint256 depositAmount = msg.value;
 
-        // Update the contract total and the loan collateral total
+        // update the contract total and the loan collateral total
         _payInCollateral(loanID, depositAmount);
 
         emit CollateralDeposited(loanID, borrower, depositAmount);
@@ -144,13 +144,9 @@ contract EtherLoans is EtherLoansInterface, LoansBase {
             totalOwed
         );
     }
-
-    function _emitLoanLiquidatedEvent(
-        uint256 loanID,
-        address liquidator,
-        uint256 collateralOut,
-        uint256 tokensIn
-    ) internal {
+    function _emitLoanLiquidatedEvent(uint256 loanID, address liquidator, uint256 collateralOut, uint256 tokensIn)
+        internal
+    {
         emit LoanLiquidated(
             loanID,
             loans[loanID].loanTerms.borrower,
