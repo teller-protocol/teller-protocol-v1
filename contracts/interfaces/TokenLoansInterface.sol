@@ -99,5 +99,4 @@ interface TokenLoansInterface {
     function totalCollateral() external view returns (uint256);
 
     function loanIDCounter() external view returns (uint256);
-    
 }
