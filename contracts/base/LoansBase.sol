@@ -29,6 +29,7 @@ import "../interfaces/PairAggregatorInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 
+
 contract LoansBase is Base {
     using SafeMath for uint256;
 
@@ -104,7 +105,7 @@ contract LoansBase is Base {
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused(address(lendingPool))
-        nonReentrant()// TODO Should it be for TokenLoans?
+        nonReentrant() // TODO Should it be for TokenLoans?
     {
         require(msg.sender == loans[loanID].loanTerms.borrower, "CALLER_DOESNT_OWN_LOAN");
         require(amount > 0, "CANNOT_WITHDRAW_ZERO");
@@ -203,7 +204,7 @@ contract LoansBase is Base {
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused(address(lendingPool))
-        nonReentrant()// TODO Should it be for TokenLoans?
+        nonReentrant() // TODO Should it be for TokenLoans?
     {
         // calculate the actual amount to repay
         uint256 toPay = amount;
@@ -238,12 +239,7 @@ contract LoansBase is Base {
             // collect the money from the payer
             lendingPool.repay(toPay, msg.sender);
 
-            _emitLoanRepaidEvent(
-                loanID,
-                toPay,
-                msg.sender,
-                totalOwed
-            );
+            _emitLoanRepaidEvent(loanID, toPay, msg.sender, totalOwed);
         }
     }
 
@@ -294,25 +290,35 @@ contract LoansBase is Base {
         // the pays tokens at x% of collateral price
         lendingPool.liquidationPayment(tokenPayment, msg.sender);
 
-        _emitLoanLiquidatedEvent(
-            loanID,
-            msg.sender,
-            loanCollateral,
-            tokenPayment
-        );
+        _emitLoanLiquidatedEvent(loanID, msg.sender, loanCollateral, tokenPayment);
     }
 
     /** Internal Functions */
 
-    function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient) internal;
+    function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
+        internal;
 
-    function _emitCollateralWithdrawnEvent(uint256 loanID, address payable recipient, uint256 amount) internal;
+    function _emitCollateralWithdrawnEvent(
+        uint256 loanID,
+        address payable recipient,
+        uint256 amount
+    ) internal;
 
     function _emitLoanTakenOutEvent(uint256 loanID, uint256 amountBorrow) internal;
 
-    function _emitLoanRepaidEvent(uint256 loanID, uint256 amountPaid, address payer, uint256 totalOwed) internal;
+    function _emitLoanRepaidEvent(
+        uint256 loanID,
+        uint256 amountPaid,
+        address payer,
+        uint256 totalOwed
+    ) internal;
 
-    function _emitLoanLiquidatedEvent(uint256 loanID, address liquidator, uint256 collateralOut, uint256 tokensIn) internal;
+    function _emitLoanLiquidatedEvent(
+        uint256 loanID,
+        address liquidator,
+        uint256 collateralOut,
+        uint256 tokensIn
+    ) internal;
 
     function _initialize(
         address priceOracleAddress,
@@ -398,25 +404,26 @@ contract LoansBase is Base {
         uint256 maxLoanAmount
     ) internal view returns (ZeroCollateralCommon.Loan memory) {
         uint256 termsExpiry = now.add(settings.termsExpiryTime());
-        return ZeroCollateralCommon.Loan({
-            id: loanID,
-            loanTerms: ZeroCollateralCommon.LoanTerms({
-                borrower: request.borrower,
-                recipient: request.recipient,
-                interestRate: interestRate,
-                collateralRatio: collateralRatio,
-                maxLoanAmount: maxLoanAmount,
-                duration: request.duration
-            }),
-            termsExpiry: termsExpiry,
-            loanStartTime: 0,
-            collateral: 0,
-            lastCollateralIn: 0,
-            principalOwed: 0,
-            interestOwed: 0,
-            borrowedAmount: 0,
-            status: ZeroCollateralCommon.LoanStatus.TermsSet,
-            liquidated: false
-        });
+        return
+            ZeroCollateralCommon.Loan({
+                id: loanID,
+                loanTerms: ZeroCollateralCommon.LoanTerms({
+                    borrower: request.borrower,
+                    recipient: request.recipient,
+                    interestRate: interestRate,
+                    collateralRatio: collateralRatio,
+                    maxLoanAmount: maxLoanAmount,
+                    duration: request.duration
+                }),
+                termsExpiry: termsExpiry,
+                loanStartTime: 0,
+                collateral: 0,
+                lastCollateralIn: 0,
+                principalOwed: 0,
+                interestOwed: 0,
+                borrowedAmount: 0,
+                status: ZeroCollateralCommon.LoanStatus.TermsSet,
+                liquidated: false
+            });
     }
 }
