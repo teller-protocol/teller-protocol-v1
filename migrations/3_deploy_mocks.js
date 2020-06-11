@@ -4,6 +4,7 @@ const DeployerApp = require('./utils/DeployerApp');
 // Mock Smart Contracts
 const DAIMock = artifacts.require("./mock/token/DAIMock.sol");
 const USDCMock = artifacts.require("./mock/token/USDCMock.sol");
+const LINKMock = artifacts.require("./mock/token/LINKMock.sol");
 const PairAggregatorMock = artifacts.require("./mock/providers/chainlink/PairAggregatorMock.sol");
 
 module.exports = async function(deployer, network, accounts) {
@@ -24,13 +25,15 @@ module.exports = async function(deployer, network, accounts) {
   // Creating DeployerApp helper.
   const deployerApp = new DeployerApp(deployer, web3, deployerAccount, network);
   
-  await deployerApp.deployMocksIf([DAIMock, USDCMock], txConfig);
+  await deployerApp.deployMocksIf([DAIMock, USDCMock, LINKMock], txConfig);
 
   const initialDaiEthPrice = '4806625000000000';
-  const initialUsdcEthPrice = '4789225000000000';
   await deployerApp.deployMockIfWith('DAI_ETH', PairAggregatorMock, initialDaiEthPrice, txConfig);
+  const initialUsdcEthPrice = '4789225000000000';
   await deployerApp.deployMockIfWith('USDC_ETH', PairAggregatorMock, initialUsdcEthPrice, txConfig);
-
+  const initialDaiLinkPrice = '4789225000000000'; //TODO set a similar value
+  // The Chainlink Oracle for pairs: DAI/LINK and USDC/LINK don't exist yet. So we use USD/LINK.
+  await deployerApp.deployMockIfWith('USD_LINK', PairAggregatorMock, initialDaiLinkPrice, txConfig);
   deployerApp.print();
   deployerApp.writeJson();
   console.log(`${'='.repeat(25)} Deployment process finished. ${'='.repeat(25)}`);
