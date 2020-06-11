@@ -1,9 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, FIVE_MIN } = require('../utils/consts');
-
+const { t } = require('../utils/consts');
 const BigNumber = require('bignumber.js');
-
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const PairAggregatorEncoder = require('../utils/encoders/PairAggregatorEncoder');
 const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
@@ -12,7 +10,7 @@ const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterf
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const Loans = artifacts.require("./mock/base/LoansMock.sol");
+const Loans = artifacts.require("./mock/base/EtherLoansMock.sol");
 
 contract('LoansConvertTokenToWeiTest', function () {
     BigNumber.set({ DECIMAL_PLACES: 0, ROUNDING_MODE: 3 })

@@ -16,9 +16,9 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../../base/Loans.sol";
+import "../../base/EtherLoans.sol";
 
-contract LoansMock is Loans {
+contract EtherLoansMock is EtherLoans {
 
     function setLoanIDCounter(uint256 newLoanIdCounter)
         external

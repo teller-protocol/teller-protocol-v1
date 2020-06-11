@@ -25,24 +25,22 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 
 // Interfaces
-import "../interfaces/LoansInterface.sol";
 import "../interfaces/PairAggregatorInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 
-
-contract Loans is Base, LoansInterface {
+contract LoansBase is Base {
     using SafeMath for uint256;
 
-    uint256 private constant ONE_HOUR = 60 * 60;
-    uint256 private constant ONE_DAY = ONE_HOUR * 24;
-    uint256 private constant TEN = 10; // Used to calculate one whole token.
+    uint256 internal constant ONE_HOUR = 60 * 60;
+    uint256 internal constant ONE_DAY = ONE_HOUR * 24;
+    uint256 internal constant TEN = 10; // Used to calculate one whole token.
     // Loan length will be inputted in days, with 4 decimal places. i.e. 30 days will be inputted as
     // 300000. Therefore in interest calculations we must divide by 365000
-    uint256 private constant DAYS_PER_YEAR_4DP = 3650000;
+    uint256 internal constant DAYS_PER_YEAR_4DP = 3650000;
     // For interestRate, collateral, and liquidation price, 7% is represented as 700. To find the value
     // of something we must divide 700 by 100 to remove decimal places, and another 100 for percentage.
-    uint256 private constant TEN_THOUSAND = 10000;
+    uint256 internal constant TEN_THOUSAND = 10000;
 
     uint256 public totalCollateral;
 
@@ -87,57 +85,12 @@ contract Loans is Base, LoansInterface {
         _;
     }
 
-    function initialize(
-        address priceOracleAddress,
-        address lendingPoolAddress,
-        address loanTermsConsensusAddress,
-        address settingsAddress
-    ) external isNotInitialized() {
-        require(priceOracleAddress != address(0), "PROVIDE_ORACLE_ADDRESS");
-        require(lendingPoolAddress != address(0), "PROVIDE_LENDINGPOOL_ADDRESS");
-        require(loanTermsConsensusAddress != address(0), "PROVIDED_LOAN_TERMS_ADDRESS");
-
-        _initialize(settingsAddress);
-
-        priceOracle = PairAggregatorInterface(priceOracleAddress);
-        lendingPool = LendingPoolInterface(lendingPoolAddress);
-        loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
-    }
-
     /**
      * @notice Get a list of all loans for a borrower
      * @param borrower address The borrower's address
      */
     function getBorrowerLoans(address borrower) external view returns (uint256[] memory) {
         return borrowerLoans[borrower];
-    }
-
-    /**
-     * @notice Deposit collateral into a loan
-     * @param borrower address The address of the loan borrower.
-     * @param loanID uint256 The ID of the loan the collateral is for
-     */
-    function depositCollateral(address borrower, uint256 loanID)
-        external
-        payable
-        loanActiveOrSet(loanID)
-        isInitialized()
-        whenNotPaused()
-        whenLendingPoolNotPaused(address(lendingPool))
-    {
-        require(
-            loans[loanID].loanTerms.borrower == borrower,
-            "BORROWER_LOAN_ID_MISMATCH"
-        );
-
-        require(msg.value > 0, "CANNOT_DEPOSIT_ZERO");
-
-        uint256 depositAmount = msg.value;
-
-        // update the contract total and the loan collateral total
-        _payInCollateral(loanID, depositAmount);
-
-        emit CollateralDeposited(loanID, borrower, depositAmount);
     }
 
     /**
@@ -151,7 +104,7 @@ contract Loans is Base, LoansInterface {
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused(address(lendingPool))
-        nonReentrant()
+        nonReentrant()// TODO Should it be for TokenLoans?
     {
         require(msg.sender == loans[loanID].loanTerms.borrower, "CALLER_DOESNT_OWN_LOAN");
         require(amount > 0, "CANNOT_WITHDRAW_ZERO");
@@ -174,66 +127,7 @@ contract Loans is Base, LoansInterface {
             _payOutCollateral(loanID, withdrawalAmount, msg.sender);
         }
 
-        emit CollateralWithdrawn(loanID, msg.sender, withdrawalAmount);
-    }
-
-    function setLoanTerms(
-        ZeroCollateralCommon.LoanRequest calldata request,
-        ZeroCollateralCommon.LoanResponse[] calldata responses
-    ) external payable isInitialized() whenNotPaused() isBorrower(request.borrower) {
-        uint256 interestRate;
-        uint256 collateralRatio;
-        uint256 maxLoanAmount;
-
-        uint256 loanID = loanIDCounter;
-        loanIDCounter += 1;
-
-        (interestRate, collateralRatio, maxLoanAmount) = loanTermsConsensus
-            .processRequest(request, responses);
-
-        uint256 termsExpiry = now.add(settings.termsExpiryTime());
-
-        loans[loanID] = ZeroCollateralCommon.Loan({
-            id: loanID,
-            loanTerms: ZeroCollateralCommon.LoanTerms({
-                borrower: request.borrower,
-                recipient: request.recipient,
-                interestRate: interestRate,
-                collateralRatio: collateralRatio,
-                maxLoanAmount: maxLoanAmount,
-                duration: request.duration
-            }),
-            termsExpiry: termsExpiry,
-            loanStartTime: 0,
-            collateral: 0,
-            lastCollateralIn: 0,
-            principalOwed: 0,
-            interestOwed: 0,
-            borrowedAmount: 0,
-            status: ZeroCollateralCommon.LoanStatus.TermsSet,
-            liquidated: false
-        });
-
-        if (msg.value > 0) {
-            // update collateral, totalCollateral, and lastCollateralIn
-            _payInCollateral(loanID, msg.value);
-        }
-
-        borrowerLoans[request.borrower].push(loanID);
-
-        emit LoanTermsSet(
-            loanID,
-            request.borrower,
-            request.recipient,
-            interestRate,
-            collateralRatio,
-            maxLoanAmount,
-            request.duration,
-            termsExpiry
-        );
-        if (msg.value > 0) {
-            emit CollateralDeposited(loanID, request.borrower, msg.value);
-        }
+        _emitCollateralWithdrawnEvent(loanID, msg.sender, withdrawalAmount);
     }
 
     /**
@@ -249,7 +143,7 @@ contract Loans is Base, LoansInterface {
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused(address(lendingPool))
-        nonReentrant()
+        nonReentrant() // TODO Should it be for TokenLoans?
         isBorrower(loans[loanID].loanTerms.borrower)
     {
         require(
@@ -295,7 +189,7 @@ contract Loans is Base, LoansInterface {
             lendingPool.createLoan(amountBorrow, loans[loanID].loanTerms.borrower);
         }
 
-        emit LoanTakenOut(loanID, loans[loanID].loanTerms.borrower, amountBorrow);
+        _emitLoanTakenOutEvent(loanID, amountBorrow);
     }
 
     /**
@@ -309,7 +203,7 @@ contract Loans is Base, LoansInterface {
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused(address(lendingPool))
-        nonReentrant()
+        nonReentrant()// TODO Should it be for TokenLoans?
     {
         // calculate the actual amount to repay
         uint256 toPay = amount;
@@ -334,7 +228,7 @@ contract Loans is Base, LoansInterface {
                     loans[loanID].loanTerms.borrower
                 );
 
-                emit CollateralWithdrawn(
+                _emitCollateralWithdrawnEvent(
                     loanID,
                     loans[loanID].loanTerms.borrower,
                     collateralAmount
@@ -344,9 +238,8 @@ contract Loans is Base, LoansInterface {
             // collect the money from the payer
             lendingPool.repay(toPay, msg.sender);
 
-            emit LoanRepaid(
+            _emitLoanRepaidEvent(
                 loanID,
-                loans[loanID].loanTerms.borrower,
                 toPay,
                 msg.sender,
                 totalOwed
@@ -366,6 +259,7 @@ contract Loans is Base, LoansInterface {
         whenLendingPoolNotPaused(address(lendingPool))
         nonReentrant()
     {
+        // TODO Validate allowance amount.
         // calculate the amount of collateral the loan needs in tokens
         uint256 collateralNeededToken = _getCollateralNeededInTokens(
             _getTotalOwed(loanID),
@@ -400,21 +294,41 @@ contract Loans is Base, LoansInterface {
         // the pays tokens at x% of collateral price
         lendingPool.liquidationPayment(tokenPayment, msg.sender);
 
-        emit LoanLiquidated(
+        _emitLoanLiquidatedEvent(
             loanID,
-            loans[loanID].loanTerms.borrower,
             msg.sender,
             loanCollateral,
             tokenPayment
         );
     }
 
-    function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
-        internal
-    {
-        totalCollateral = totalCollateral.sub(amount);
-        loans[loanID].collateral = loans[loanID].collateral.sub(amount);
-        recipient.transfer(amount);
+    /** Internal Functions */
+
+    function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient) internal;
+
+    function _emitCollateralWithdrawnEvent(uint256 loanID, address payable recipient, uint256 amount) internal;
+
+    function _emitLoanTakenOutEvent(uint256 loanID, uint256 amountBorrow) internal;
+
+    function _emitLoanRepaidEvent(uint256 loanID, uint256 amountPaid, address payer, uint256 totalOwed) internal;
+
+    function _emitLoanLiquidatedEvent(uint256 loanID, address liquidator, uint256 collateralOut, uint256 tokensIn) internal;
+
+    function _initialize(
+        address priceOracleAddress,
+        address lendingPoolAddress,
+        address loanTermsConsensusAddress,
+        address settingsAddress
+    ) internal isNotInitialized() {
+        require(priceOracleAddress != address(0), "PROVIDE_ORACLE_ADDRESS");
+        require(lendingPoolAddress != address(0), "PROVIDE_LENDINGPOOL_ADDRESS");
+        require(loanTermsConsensusAddress != address(0), "PROVIDED_LOAN_TERMS_ADDRESS");
+
+        _initialize(settingsAddress);
+
+        priceOracle = PairAggregatorInterface(priceOracleAddress);
+        lendingPool = LendingPoolInterface(lendingPoolAddress);
+        loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
     }
 
     function _payInCollateral(uint256 loanID, uint256 amount) internal {
@@ -457,7 +371,6 @@ contract Loans is Base, LoansInterface {
         uint256 aWholeLendingToken = _getAWholeLendingToken();
         uint256 oneLendingTokenPriceWei = uint256(priceOracle.getLatestAnswer());
         uint256 weiValue = weiAmount.mul(aWholeLendingToken).div(oneLendingTokenPriceWei);
-
         return weiValue;
     }
 
@@ -469,7 +382,41 @@ contract Loans is Base, LoansInterface {
         uint256 tokenValue = tokenAmount.mul(oneLendingTokenPriceWei).div(
             aWholeLendingToken
         );
-
         return tokenValue;
+    }
+
+    function getAndIncrementLoanID() internal returns (uint256 newLoanID) {
+        newLoanID = loanIDCounter;
+        loanIDCounter += 1;
+    }
+
+    function createLoan(
+        uint256 loanID,
+        ZeroCollateralCommon.LoanRequest memory request,
+        uint256 interestRate,
+        uint256 collateralRatio,
+        uint256 maxLoanAmount
+    ) internal view returns (ZeroCollateralCommon.Loan memory) {
+        uint256 termsExpiry = now.add(settings.termsExpiryTime());
+        return ZeroCollateralCommon.Loan({
+            id: loanID,
+            loanTerms: ZeroCollateralCommon.LoanTerms({
+                borrower: request.borrower,
+                recipient: request.recipient,
+                interestRate: interestRate,
+                collateralRatio: collateralRatio,
+                maxLoanAmount: maxLoanAmount,
+                duration: request.duration
+            }),
+            termsExpiry: termsExpiry,
+            loanStartTime: 0,
+            collateral: 0,
+            lastCollateralIn: 0,
+            principalOwed: 0,
+            interestOwed: 0,
+            borrowedAmount: 0,
+            status: ZeroCollateralCommon.LoanStatus.TermsSet,
+            liquidated: false
+        });
     }
 }

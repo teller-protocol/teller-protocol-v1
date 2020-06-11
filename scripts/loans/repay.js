@@ -1,5 +1,5 @@
 // Smart contracts
-const LoansInterface = artifacts.require("./base/Loans.sol");
+const LoansInterface = artifacts.require("./base/EtherLoans.sol");
 const ERC20 = artifacts.require("openzeppelin-solidity/contracts/token/ERC20/IERC20.sol");
 
 // Util classes
