@@ -29,6 +29,7 @@ import "../interfaces/PairAggregatorInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 
+
 contract LoansBase is Base {
     using SafeMath for uint256;
 
@@ -108,7 +109,7 @@ contract LoansBase is Base {
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused(address(lendingPool))
-        nonReentrant()// TODO Should it be for TokenLoans?
+        nonReentrant() // TODO Should it be for TokenLoans?
     {
         require(msg.sender == loans[loanID].loanTerms.borrower, "CALLER_DOESNT_OWN_LOAN");
         require(amount > 0, "CANNOT_WITHDRAW_ZERO");
@@ -263,12 +264,7 @@ contract LoansBase is Base {
             // collect the money from the payer
             lendingPool.repay(toPay, msg.sender);
 
-            _emitLoanRepaidEvent(
-                loanID,
-                toPay,
-                msg.sender,
-                totalOwed
-            );
+            _emitLoanRepaidEvent(loanID, toPay, msg.sender, totalOwed);
         }
     }
 
@@ -319,12 +315,7 @@ contract LoansBase is Base {
         // the pays tokens at x% of collateral price
         lendingPool.liquidationPayment(tokenPayment, msg.sender);
 
-        _emitLoanLiquidatedEvent(
-            loanID,
-            msg.sender,
-            loanCollateral,
-            tokenPayment
-        );
+        _emitLoanLiquidatedEvent(loanID, msg.sender, loanCollateral, tokenPayment);
     }
 
     /** Internal Functions */
