@@ -7,7 +7,8 @@ const ZDAI = artifacts.require("./base/ZDAI.sol");
 const ZUSDC = artifacts.require("./base/ZUSDC.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const Lenders = artifacts.require("./base/Lenders.sol");
-const Loans = artifacts.require("./base/EtherLoans.sol");
+const EtherLoans = artifacts.require("./base/EtherLoans.sol");
+const TokenLoans = artifacts.require("./base/TokenLoans.sol");
 const LendingPool = artifacts.require("./base/LendingPool.sol");
 const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
@@ -59,7 +60,6 @@ module.exports = async function(deployer, network, accounts) {
   );
   const artifacts = {
     Lenders,
-    Loans,
     LendingPool,
     InterestConsensus,
     LoanTermsConsensus,
@@ -67,9 +67,13 @@ module.exports = async function(deployer, network, accounts) {
     Settings,
   };
   const poolDeployer = new PoolDeployer(deployerApp, deployConfig, artifacts);
+  // TODO Improve deployPool and params.
+  await poolDeployer.deployPool('ETH', EtherLoans, 'DAI_ETH', 'DAI', ZDAI, txConfig);
+  await poolDeployer.deployPool('ETH', EtherLoans, 'USDC_ETH', 'USDC', ZUSDC, txConfig);
 
-  await poolDeployer.deployPool('DAI_ETH', 'DAI', ZDAI, txConfig);
-  await poolDeployer.deployPool('USDC_ETH', 'USDC', ZUSDC, txConfig);
+  // TODO as we are using only one oracle, the aggregator USD_LINK will deployed twice: LINK_ChainlinkPairAggregator_USD_LINK
+  await poolDeployer.deployPool('LINK', TokenLoans, 'USD_LINK', 'DAI', ZDAI, txConfig);
+  await poolDeployer.deployPool('LINK', TokenLoans, 'USD_LINK', 'USDC', ZUSDC, txConfig);
 
   deployerApp.print();
   deployerApp.writeJson();
