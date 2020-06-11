@@ -23,8 +23,8 @@ import "./LoansBase.sol";
 // Interfaces
 import "../interfaces/TokenLoansInterface.sol";
 
-contract TokenLoans is TokenLoansInterface, LoansBase {
 
+contract TokenLoans is TokenLoansInterface, LoansBase {
     /** Constants */
 
     /** Properties */
@@ -135,21 +135,24 @@ contract TokenLoans is TokenLoansInterface, LoansBase {
         collateralTokenTransfer(recipient, amount);
     }
 
-    function _emitCollateralWithdrawnEvent(uint256 loanID, address payable recipient, uint256 amount)
-        internal
-    {
+    function _emitCollateralWithdrawnEvent(
+        uint256 loanID,
+        address payable recipient,
+        uint256 amount
+    ) internal {
         emit CollateralWithdrawn(loanID, recipient, amount);
     }
 
-    function _emitLoanTakenOutEvent(uint256 loanID, uint256 amountBorrow)
-        internal
-    {
+    function _emitLoanTakenOutEvent(uint256 loanID, uint256 amountBorrow) internal {
         emit LoanTakenOut(loanID, loans[loanID].loanTerms.borrower, amountBorrow);
     }
 
-    function _emitLoanRepaidEvent(uint256 loanID, uint256 amountPaid, address payer, uint256 totalOwed)
-        internal
-    {
+    function _emitLoanRepaidEvent(
+        uint256 loanID,
+        uint256 amountPaid,
+        address payer,
+        uint256 totalOwed
+    ) internal {
         emit LoanRepaid(
             loanID,
             loans[loanID].loanTerms.borrower,
@@ -159,9 +162,12 @@ contract TokenLoans is TokenLoansInterface, LoansBase {
         );
     }
 
-    function _emitLoanLiquidatedEvent(uint256 loanID, address liquidator, uint256 collateralOut, uint256 tokensIn)
-        internal
-    {
+    function _emitLoanLiquidatedEvent(
+        uint256 loanID,
+        address liquidator,
+        uint256 collateralOut,
+        uint256 tokensIn
+    ) internal {
         emit LoanLiquidated(
             loanID,
             loans[loanID].loanTerms.borrower,
@@ -196,7 +202,11 @@ contract TokenLoans is TokenLoansInterface, LoansBase {
     function collateralTokenTransferFrom(address from, uint256 amount) private {
         uint256 currentAllowance = collateralToken.allowance(from, address(this));
         require(currentAllowance >= amount, "NOT_ENOUGH_COLL_TOKENS_ALLOWANCE");
-        bool transferFromResult = collateralToken.transferFrom(from, address(this), amount);
+        bool transferFromResult = collateralToken.transferFrom(
+            from,
+            address(this),
+            amount
+        );
         require(transferFromResult, "TOKENS_TRANSFER_FAILED");
     }
 }
