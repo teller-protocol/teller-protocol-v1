@@ -7,7 +7,7 @@ const { createLoanTerms } = require('../utils/structs');
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const Loans = artifacts.require("./mock/base/LoansMock.sol");
+const Loans = artifacts.require("./mock/base/EtherLoansMock.sol");
 
 contract('LoansPayLoanTest', function (accounts) {
     let instance;

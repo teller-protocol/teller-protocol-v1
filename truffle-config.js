@@ -40,16 +40,16 @@ module.exports = {
 				'LendersMock',
 				'LendersModifiersMock',
 				'Mock',
-				'LoansMock',
+				'EtherLoansMock',
 				'LendingPoolMock',
 				'InitializableModifiersMock',
 				'InterestConsensusMock',
 				'NumbersListMock',
 				'BaseMock',
 				'ConsensusMock',
-        'ConsensusModifiersMock',
-        'LoanTermsConsensusMock',
-        'LoansModifiersMock'
+				'ConsensusModifiersMock',
+				'LoanTermsConsensusMock',
+				'LoansBaseModifiersMock'
 			]
 		},
 	},

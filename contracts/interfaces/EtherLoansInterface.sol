@@ -19,8 +19,7 @@ pragma experimental ABIEncoderV2;
 
 import "../util/ZeroCollateralCommon.sol";
 
-
-interface LoansInterface {
+interface EtherLoansInterface {
     // collateral deposited by borrower
     event CollateralDeposited(
         uint256 indexed loanID,
@@ -90,7 +89,7 @@ interface LoansInterface {
     function repay(uint256 amount, uint256 loanID) external;
 
     function liquidateLoan(uint256 loanID) external;
-
+    
     function priceOracle() external view returns (address);
 
     function lendingPool() external view returns (address);
@@ -98,4 +97,5 @@ interface LoansInterface {
     function totalCollateral() external view returns (uint256);
 
     function loanIDCounter() external view returns (uint256);
+
 }

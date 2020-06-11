@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, FIVE_MIN, NULL_ADDRESS, ACTIVE, CLOSED, getLatestTimestamp, ONE_HOUR, ONE_DAY } = require('../utils/consts');
+const { t, NULL_ADDRESS, ACTIVE, CLOSED, getLatestTimestamp, ONE_HOUR, ONE_DAY } = require('../utils/consts');
 const { createLoanTerms } = require('../utils/structs');
 const BigNumber = require('bignumber.js');
 
@@ -12,7 +12,7 @@ const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterf
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const Loans = artifacts.require("./mock/base/LoansMock.sol");
+const Loans = artifacts.require("./mock/base/EtherLoansMock.sol");
 
 contract('LoansLiquidateTest', function (accounts) {
     BigNumber.set({ DECIMAL_PLACES: 0, ROUNDING_MODE: 3 })

@@ -3,13 +3,13 @@ const withData = require('leche').withData;
 const { t, NON_EXISTENT, ACTIVE, TERMS_SET, CLOSED } = require('../utils/consts');
 
 // Smart contracts
-const LoansModifiersMock = artifacts.require("./mock/base/LoansModifiersMock.sol");
+const LoansBaseModifiersMock = artifacts.require("./mock/base/LoansBaseModifiersMock.sol");
 
 contract('LoansModifiersTest', function (accounts) {
     let instance
     
     beforeEach('Setup for each test', async () => {
-      instance = await LoansModifiersMock.new(accounts[1], accounts[2], accounts[3], 5000);
+      instance = await LoansBaseModifiersMock.new(accounts[1], accounts[2], accounts[3], 5000);
     });
 
     withData({
