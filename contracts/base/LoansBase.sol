@@ -135,12 +135,16 @@ contract LoansBase is Base {
         _emitCollateralWithdrawnEvent(loanID, msg.sender, withdrawalAmount);
     }
 
-    function getCollateralInfo(uint256 loanID) external view returns (
-        uint256 collateral,
-        uint256 collateralNeededLendingTokens,
-        uint256 collateralNeededCollateralTokens,
-        bool requireCollateral
-    ) {
+    function getCollateralInfo(uint256 loanID)
+        external
+        view
+        returns (
+            uint256 collateral,
+            uint256 collateralNeededLendingTokens,
+            uint256 collateralNeededCollateralTokens,
+            bool requireCollateral
+        )
+    {
         collateral = loans[loanID].collateral; // Collateral Tokens (ETH, LINK).
         (
             collateralNeededLendingTokens,
@@ -341,23 +345,21 @@ contract LoansBase is Base {
         uint256 tokensIn
     ) internal;
 
-    function _getCollateralInfo(
-        uint256 totalOwed,
-        uint256 collateralRatio
-    ) internal view returns (
-        uint256 collateralNeededLendingTokens,
-        uint256 collateralNeededCollateralTokens
-    ) {
+    function _getCollateralInfo(uint256 totalOwed, uint256 collateralRatio)
+        internal
+        view
+        returns (
+            uint256 collateralNeededLendingTokens,
+            uint256 collateralNeededCollateralTokens
+        )
+    {
         // Get collateral needed in lending tokens.
         uint256 collateralNeededToken = _getCollateralNeededInTokens(
             totalOwed,
             collateralRatio
         );
         // Convert collateral (in lending tokens) into collateral tokens.
-        return (
-            collateralNeededToken,
-            _convertTokenToWei(collateralNeededToken)
-        );
+        return (collateralNeededToken, _convertTokenToWei(collateralNeededToken));
     }
 
     function _initialize(
