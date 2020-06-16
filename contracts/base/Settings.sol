@@ -33,7 +33,7 @@ contract Settings is Pausable, SettingsInterface {
     bytes32 public constant REQUIRED_SUBMISSIONS_SETTING = "RequiredSubmissions";
     bytes32 public constant MAXIMUM_TOLERANCE_SETTING = "MaximumTolerance";
     bytes32 public constant RESPONSE_EXPIRY_LENGTH_SETTING = "ResponseExpiryLength";
-    bytes32 public constant SAFETY_INTERVAL_LENGTH_SETTING = "SafetyInterval";
+    bytes32 public constant SAFETY_INTERVAL_SETTING = "SafetyInterval";
     bytes32 public constant TERMS_EXPIRY_TIME_SETTING = "TermsExpiryTime";
     bytes32 public constant LIQUIDATE_ETH_PRICE_SETTING = "LiquidateEthPrice";
 
@@ -149,7 +149,7 @@ contract Settings is Pausable, SettingsInterface {
         safetyInterval = newSafetyInterval;
 
         emit SettingUpdated(
-            SAFETY_INTERVAL_LENGTH_SETTING,
+            SAFETY_INTERVAL_SETTING,
             msg.sender,
             oldSafetyInterval,
             newSafetyInterval

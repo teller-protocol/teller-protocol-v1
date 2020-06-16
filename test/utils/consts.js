@@ -3,6 +3,9 @@ const { BigNumber } = require( 'bignumber.js');
 const REQUIRED_SUBMISSIONS = 'RequiredSubmissions';
 const MAXIMUM_TOLERANCE = 'MaximumTolerance';
 const RESPONSE_EXPIRY_LENGTH = 'ResponseExpiryLength';
+const SAFETY_INTERVAL = 'SafetyInterval';
+const TERMS_EXPIRY_TIME = 'TermsExpiryTime';
+const LIQUIDATE_ETH_PRICE = 'LiquidateEthPrice';
 const DEFAULT_DECIMALS = 18;
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 const NULL_BYTES = '0x0000000000000000000000000000000000000000000000000000000000000000'
@@ -40,6 +43,9 @@ module.exports = {
     REQUIRED_SUBMISSIONS,
     MAXIMUM_TOLERANCE,
     RESPONSE_EXPIRY_LENGTH,
+    SAFETY_INTERVAL,
+    TERMS_EXPIRY_TIME,
+    LIQUIDATE_ETH_PRICE,
     t: function (who, func, desc, fail) {
         const failText = fail ? '\x1b[31mMustFail\x1b[0m .' : '\x1b[0m';
         return '\x1b[32m.' + func + ' => \x1b[36m' + who + '\x1b[0m\033[01;34m : ' + desc + ' '+ failText;
