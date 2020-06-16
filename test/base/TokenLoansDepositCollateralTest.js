@@ -94,7 +94,7 @@ contract('TokenLoansDepositCollateralTest', function (accounts) {
                 assert.equal(parseInt(initialContractCollateralTokenBalance) + collateralAmount, parseInt(finalContractCollateralTokenBalance));
                 assert.equal(parseInt(initialSenderCollateralTokenBalance), parseInt(finalSenderCollateralTokenBalance) + collateralAmount);
 
-                const txTimestamp = await timer.getCurrentTimestamp();
+                const txTimestamp = await timer.getCurrentTimestampInSeconds();
                 assert.equal(parseInt(loanInfo.lastCollateralIn), txTimestamp);
             } catch (error) {
                 assert(mustFail);
