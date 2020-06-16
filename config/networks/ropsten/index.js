@@ -1,6 +1,7 @@
 module.exports = {
     network: 'ropsten',
     chainlink: require('./chainlink'),
+    compound: require('./compound'),
     dao: require('./dao'),
     tokens: require('./tokens'),
     zerocollateral: require('./zerocollateral'),

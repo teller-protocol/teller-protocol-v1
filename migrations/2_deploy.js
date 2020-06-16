@@ -29,7 +29,7 @@ module.exports = async function(deployer, network, accounts) {
   const deployerAccountIndex = env.getDefaultAddressIndex().getOrDefault();
   const deployerAccount = accounts[deployerAccountIndex];
   console.log(`Deployer account index is ${deployerAccountIndex} => ${deployerAccount}`);
-  const { maxGasLimit, tokens, chainlink } = networkConfig;
+  const { maxGasLimit, tokens, chainlink, compound } = networkConfig;
   assert(maxGasLimit, `Max gas limit for network ${network} is undefined.`);
   assert(tokens.DAI, 'DAI token address is not defined.');
   assert(tokens.USDC, 'USDC token address is not defined.');
@@ -40,6 +40,7 @@ module.exports = async function(deployer, network, accounts) {
   const deployConfig = {
     tokens,
     aggregators: chainlink,
+    cTokens: compound,
   };
 
   // Creating DeployerApp helper.
