@@ -3,7 +3,7 @@ const assert = require('assert');
 const BigNumber = require('bignumber.js');
 const { zerocollateral, tokens, chainlink } = require("../../scripts/utils/contracts");
 const { loans, lendingPool } = require('../../test/utils/events');
-const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds } = require('../../test/utils/consts');
+const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds, DEFAULT_DECIMALS } = require('../../test/utils/consts');
 const LoanInfoPrinter = require('../../test/utils/printers/LoanInfoPrinter');
 const { createMultipleSignedLoanTermsResponses, createLoanTermsRequest } = require('../../test/utils/loan-terms-helper');
 
@@ -21,14 +21,14 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   const liquidatorTxConfig = await accounts.getTxConfigAt(2);
   const recipient = NULL_ADDRESS;
   const borrowerNonce = nonces.newNonce(borrower);
-  const oraclePrice = toDecimals('0.005', 18); // 1 token = 0.005 ether = 5000000000000000 wei
+  const oraclePrice = toDecimals('0.005', DEFAULT_DECIMALS); // 1 token = 0.005 ether = 5000000000000000 wei
   const decimals = parseInt(await token.decimals());
-  const lendingPoolDepositAmountWei = toDecimals(1000, decimals);
-  const amountWei = toDecimals(100, decimals);
-  const maxAmountWei = toDecimals(200, decimals);
+  const lendingPoolDepositAmountWei = toDecimals(1000, DEFAULT_DECIMALS);
+  const amountWei = toDecimals(100, DEFAULT_DECIMALS);
+  const maxAmountWei = toDecimals(200, DEFAULT_DECIMALS);
   const durationInDays = 5;
   const signers = await accounts.getAllAt(12, 13);
-  const collateralNeeded = toDecimals(0.321, 18);
+  const collateralNeeded = toDecimals(0.321, DEFAULT_DECIMALS);
   const borrowerTxConfig = { from: borrower };
   const borrowerTxConfigWithValue = { ...borrowerTxConfig, value: collateralNeeded };
 
