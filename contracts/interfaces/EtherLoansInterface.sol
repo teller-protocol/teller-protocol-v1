@@ -19,6 +19,7 @@ pragma experimental ABIEncoderV2;
 
 import "../util/ZeroCollateralCommon.sol";
 
+
 interface EtherLoansInterface {
     // collateral deposited by borrower
     event CollateralDeposited(
