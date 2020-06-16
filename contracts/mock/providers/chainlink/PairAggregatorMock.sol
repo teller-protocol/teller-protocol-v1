@@ -15,7 +15,7 @@
 */
 pragma solidity 0.5.17;
 
-import "@chainlink/contracts/src/v0.5/dev/AggregatorInterface.sol";
+import "@chainlink/contracts/src/v0.5/interfaces/AggregatorInterface.sol";
 
 contract PairAggregatorMock is AggregatorInterface {
 
