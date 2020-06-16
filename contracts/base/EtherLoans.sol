@@ -46,7 +46,7 @@ contract EtherLoans is EtherLoansInterface, LoansBase {
 
         uint256 depositAmount = msg.value;
 
-        // update the contract total and the loan collateral total
+        // Update the contract total and the loan collateral total
         _payInCollateral(loanID, depositAmount);
 
         emit CollateralDeposited(loanID, borrower, depositAmount);

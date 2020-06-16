@@ -96,7 +96,11 @@ interface TokenLoansInterface {
 
     function lendingPool() external view returns (address);
 
+    function lendingToken() external view returns (address);
+
     function totalCollateral() external view returns (uint256);
 
     function loanIDCounter() external view returns (uint256);
+
+    function collateralToken() external view returns (address);
 }

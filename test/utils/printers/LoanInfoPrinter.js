@@ -1,6 +1,7 @@
 const BigNumber = require('bignumber.js');
 const assert = require('assert');
 const { toDecimals, toUnits } = require("../consts");
+const Timer = require('../../../scripts/utils/Timer');
 
 const TEN_THOUSAND = 10000;
 const TEN_HUNDRED = 100;
@@ -11,6 +12,7 @@ class LoanInfoPrinter {
         this.web3 = web3;
         this.loanInfo = loanInfo;
         this.token = { tokenName, decimals };
+        this.timer = new Timer(web3);
         assert(this.web3, 'Web3 instance is required.');
         assert(this.loanInfo, 'Loan info is required.');
         assert(this.token, 'Token is required.');
@@ -98,11 +100,11 @@ LoanInfoPrinter.prototype.getStartDate = function() {
     if(startTime === 0) {
         return undefined;
     }
-    return new Date(startTime * 1000);
+    return new Date(startTime);
 }
 
 LoanInfoPrinter.prototype.getStartTime = function() {
-    return parseInt(this.loanInfo.loanStartTime);
+    return parseInt(this.loanInfo.loanStartTime) * 1000;
 }
 
 LoanInfoPrinter.prototype.getEndDate = function() {
@@ -118,15 +120,23 @@ LoanInfoPrinter.prototype.getEndTime = function() {
     if (startTime === 0) {
         return 0;
     }
-    return (startTime + parseInt(this.loanInfo.loanTerms.duration)) * 1000;
+    return startTime + (parseInt(this.loanInfo.loanTerms.duration) * 1000);
 }
 
-LoanInfoPrinter.prototype.isEndTimeLtNow = function() {
-    return this.getEndTime() > Date.now();
+LoanInfoPrinter.prototype.isEndTimeLtNow = async function() {
+    return this.getEndTime() < (await this.getNowTime());
 }
 
-LoanInfoPrinter.prototype.isLiquidable = function(price) {
-    return this.isCollateralNeededGtCollateral(price) || this.isEndTimeLtNow();
+LoanInfoPrinter.prototype.getNowTime = async function() {
+    return (await this.timer.getCurrentTimestamp());
+}
+
+LoanInfoPrinter.prototype.getNowDate = async function() {
+    return (await this.timer.getCurrentDate());
+}
+
+LoanInfoPrinter.prototype.isLiquidable = async function(price) {
+    return this.isCollateralNeededGtCollateral(price) || (await this.isEndTimeLtNow());
 }
 
 module.exports = LoanInfoPrinter;

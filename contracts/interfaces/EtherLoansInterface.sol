@@ -19,7 +19,6 @@ pragma experimental ABIEncoderV2;
 
 import "../util/ZeroCollateralCommon.sol";
 
-
 interface EtherLoansInterface {
     // collateral deposited by borrower
     event CollateralDeposited(
@@ -94,6 +93,8 @@ interface EtherLoansInterface {
     function priceOracle() external view returns (address);
 
     function lendingPool() external view returns (address);
+
+    function lendingToken() external view returns (address);
 
     function totalCollateral() external view returns (uint256);
 

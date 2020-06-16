@@ -8,7 +8,14 @@ class PoolDeployer {
     }
 }
 
-PoolDeployer.prototype.deployPool = async function(collateralName, Loans, aggregatorName, tokenName, ZToken, txConfig) {
+PoolDeployer.prototype.deployPool = async function(
+    { tokenName, collateralName, oracleTokenName = tokenName},
+    Loans,
+    ZToken,
+    txConfig
+) {
+    assert(tokenName, 'Token name is undefined.');
+    assert(collateralName, 'Collateral token name is undefined.');
     const zTokenInstance = await ZToken.deployed();
     const zTokenName = await zTokenInstance.symbol();
     console.log(`Deploying pool (collateral ${collateralName}) for token ${tokenName}...`);
@@ -16,24 +23,24 @@ PoolDeployer.prototype.deployPool = async function(collateralName, Loans, aggreg
         tokens,
         aggregators
     } = this.deployConfig;
-    assert(tokenName, 'Token name is undefined.');
     const tokenAddress = tokens[tokenName.toUpperCase()];
     assert(tokenAddress, `Tokens address for token ${tokenName.toUpperCase()} is undefined.`);
   
+    const aggregatorName = `${oracleTokenName.toUpperCase()}_${collateralName.toUpperCase()}`;
     assert(aggregatorName, 'Aggregator name is undefined.');
+
+    console.log(`Aggregator name: ${aggregatorName.toUpperCase()}`);
     const aggregatorAddress = aggregators[aggregatorName.toUpperCase()];
     assert(aggregatorAddress, `Aggregator address for aggregator ${aggregatorAddress} is undefined.`);
-   
+    console.log(`Using oracle aggregator '${aggregatorAddress}' for pair '${aggregatorName}'.`);
     const {
         Lenders,
         LendingPool,
         InterestConsensus,
         LoanTermsConsensus,
-        ChainlinkPairAggregator,
         Settings,
     } = this.artifacts;
 
-    await this.deployer.deployWith(`${collateralName.toUpperCase()}_ChainlinkPairAggregator_${aggregatorName.toUpperCase()}`, ChainlinkPairAggregator, aggregatorAddress, txConfig);
     await this.deployer.deployWith(`${collateralName.toUpperCase()}_LendingPool_${zTokenName}`, LendingPool, txConfig);
     await this.deployer.deployWith(`${collateralName.toUpperCase()}_InterestConsensus_${zTokenName}`, InterestConsensus, txConfig);
     await this.deployer.deployWith(`${collateralName.toUpperCase()}_Lenders_${zTokenName}`, Lenders, txConfig);
@@ -49,7 +56,7 @@ PoolDeployer.prototype.deployPool = async function(collateralName, Loans, aggreg
 
     if( collateralName === 'ETH' ) {
         await loansInstance.initialize(
-            ChainlinkPairAggregator.address,
+            aggregatorAddress,
             LendingPool.address,
             LoanTermsConsensus.address,
             Settings.address,
@@ -58,7 +65,7 @@ PoolDeployer.prototype.deployPool = async function(collateralName, Loans, aggreg
         const collateralAddress = tokens[collateralName.toUpperCase()];
         assert(collateralAddress, `Address for collateral token ${collateralName.toUpperCase()} is undefined.`);
         await loansInstance.initialize(
-            ChainlinkPairAggregator.address,
+            aggregatorAddress,
             LendingPool.address,
             LoanTermsConsensus.address,
             Settings.address,
@@ -93,7 +100,7 @@ PoolDeployer.prototype.deployPool = async function(collateralName, Loans, aggreg
     );
 
     const initializables = [
-        Lenders, LendingPool, InterestConsensus, Loans
+        Lenders, LendingPool, InterestConsensus, Loans, LoanTermsConsensus
     ];
 
     for (const initializable of initializables) {

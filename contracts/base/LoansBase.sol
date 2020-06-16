@@ -94,9 +94,13 @@ contract LoansBase is Base {
         return borrowerLoans[borrower];
     }
 
+    function lendingToken() external view returns (address) {
+        return lendingPool.lendingToken();
+    }
+
     /**
      * @notice Withdraw collateral from a loan, unless this isn't allowed
-     * @param amount uint256 The amount of ETH the caller is hoping to withdraw
+     * @param amount uint256 The amount of collateral token or ether the caller is hoping to withdraw.
      * @param loanID uint256 The ID of the loan the collateral is for
      */
     function withdrawCollateral(uint256 amount, uint256 loanID)
@@ -105,7 +109,7 @@ contract LoansBase is Base {
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused(address(lendingPool))
-        nonReentrant() // TODO Should it be for TokenLoans?
+        nonReentrant()
     {
         require(msg.sender == loans[loanID].loanTerms.borrower, "CALLER_DOESNT_OWN_LOAN");
         require(amount > 0, "CANNOT_WITHDRAW_ZERO");
@@ -129,6 +133,23 @@ contract LoansBase is Base {
         }
 
         _emitCollateralWithdrawnEvent(loanID, msg.sender, withdrawalAmount);
+    }
+
+    function getCollateralInfo(uint256 loanID) external view returns (
+        uint256 collateral,
+        uint256 collateralNeededLendingTokens,
+        uint256 collateralNeededCollateralTokens,
+        bool requireCollateral
+    ) {
+        collateral = loans[loanID].collateral; // Collateral Tokens (ETH, LINK).
+        (
+            collateralNeededLendingTokens,
+            collateralNeededCollateralTokens
+        ) = _getCollateralInfo(
+            _getTotalOwed(loanID),
+            loans[loanID].loanTerms.collateralRatio
+        );
+        requireCollateral = collateralNeededCollateralTokens >= collateral;
     }
 
     /**
@@ -319,6 +340,25 @@ contract LoansBase is Base {
         uint256 collateralOut,
         uint256 tokensIn
     ) internal;
+
+    function _getCollateralInfo(
+        uint256 totalOwed,
+        uint256 collateralRatio
+    ) internal view returns (
+        uint256 collateralNeededLendingTokens,
+        uint256 collateralNeededCollateralTokens
+    ) {
+        // Get collateral needed in lending tokens.
+        uint256 collateralNeededToken = _getCollateralNeededInTokens(
+            totalOwed,
+            collateralRatio
+        );
+        // Convert collateral (in lending tokens) into collateral tokens.
+        return (
+            collateralNeededToken,
+            _convertTokenToWei(collateralNeededToken)
+        );
+    }
 
     function _initialize(
         address priceOracleAddress,
