@@ -84,9 +84,6 @@ module.exports = async function(deployer, network, accounts) {
     Settings,
   };
   const poolDeployer = new PoolDeployer(deployerApp, deployConfig, artifacts);
-  // TODO Improve deployPool and params.
-  await poolDeployer.deployPool('ETH', EtherLoans, 'DAI_ETH', 'DAI', ZDAI, txConfig);
-  await poolDeployer.deployPool('ETH', EtherLoans, 'USDC_ETH', 'USDC', ZUSDC, txConfig);
 
   await poolDeployer.deployPool(
     { tokenName: 'DAI', collateralName: 'ETH' },

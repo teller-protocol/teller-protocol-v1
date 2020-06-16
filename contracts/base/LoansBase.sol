@@ -109,7 +109,7 @@ contract LoansBase is Base {
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused(address(lendingPool))
-        nonReentrant() // TODO Should it be for TokenLoans?
+        nonReentrant()
     {
         require(msg.sender == loans[loanID].loanTerms.borrower, "CALLER_DOESNT_OWN_LOAN");
         require(amount > 0, "CANNOT_WITHDRAW_ZERO");
