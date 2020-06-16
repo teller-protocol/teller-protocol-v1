@@ -122,7 +122,7 @@ contract('TokenLoansSetLoanTermsTest', function (accounts) {
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
 
-                const txTime = await timer.getCurrentTimestamp();
+                const txTime = await timer.getCurrentTimestampInSeconds();
                 const termsExpiry = txTime + THIRTY_DAYS;
                 const finalTotalCollateral = await instance.totalCollateral();
                 const finalContractCollateralTokenBalance = await collateralToken.balanceOf(instance.address);
