@@ -10,9 +10,9 @@ const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterf
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const Loans = artifacts.require("./mock/base/EtherLoansMock.sol");
+const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 
-contract('LoansConvertTokenToWeiTest', function () {
+contract('LoansBaseConvertTokenToWeiTest', function () {
     BigNumber.set({ DECIMAL_PLACES: 0, ROUNDING_MODE: 3 })
 
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);

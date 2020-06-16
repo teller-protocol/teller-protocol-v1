@@ -14,7 +14,7 @@ module.exports = async ({processArgs, accounts, getContracts, timer}) => {
   const amountWei = toDecimals(100, 18);
   await dai.mintTo(senderTxConfig.from, amountWei, senderTxConfig);
 
-  const lendingPoolZDai = await getContracts.getDeployed(zerocollateral.lendingPool(tokenName));
+  const lendingPoolZDai = await getContracts.getDeployed(zerocollateral.eth().lendingPool(tokenName));
   const lendingToken = await lendingPoolZDai.lendingToken();
   assert(lendingToken === dai.address, "Lending token and token are not equal.");
 

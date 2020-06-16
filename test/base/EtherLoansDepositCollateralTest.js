@@ -11,7 +11,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 // Smart contracts
 const Loans = artifacts.require("./mock/base/EtherLoansMock.sol");
 
-contract('LoansDepositCollateralTest', function (accounts) {
+contract('EtherLoansDepositCollateralTest', function (accounts) {
     let instance;
     let oracleInstance;
     let loanTermsConsInstance;

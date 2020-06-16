@@ -5,7 +5,7 @@ const { t, NON_EXISTENT, ACTIVE, TERMS_SET, CLOSED } = require('../utils/consts'
 // Smart contracts
 const LoansBaseModifiersMock = artifacts.require("./mock/base/LoansBaseModifiersMock.sol");
 
-contract('LoansModifiersTest', function (accounts) {
+contract('LoansBaseModifiersTest', function (accounts) {
     let instance
     
     beforeEach('Setup for each test', async () => {

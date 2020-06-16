@@ -1,8 +1,8 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, NULL_ADDRESS, ACTIVE, CLOSED, getLatestTimestamp, ONE_HOUR, ONE_DAY } = require('../utils/consts');
+const { t, NULL_ADDRESS, ACTIVE } = require('../utils/consts');
+const { loans } = require('../utils/events');
 const { createLoanTerms } = require('../utils/structs');
-const BigNumber = require('bignumber.js');
 
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const PairAggregatorEncoder = require('../utils/encoders/PairAggregatorEncoder');
@@ -14,9 +14,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 // Smart contracts
 const Loans = artifacts.require("./mock/base/EtherLoansMock.sol");
 
-contract('LoansLiquidateTest', function (accounts) {
-    BigNumber.set({ DECIMAL_PLACES: 0, ROUNDING_MODE: 3 })
-
+contract('EtherLoansWithdrawCollateralTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     const pairAggregatorEncoder = new PairAggregatorEncoder(web3);
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
@@ -25,14 +23,11 @@ contract('LoansLiquidateTest', function (accounts) {
     let oracleInstance;
     let loanTermsConsInstance;
     let lendingPoolInstance;
+    let lendingTokenInstance;
     let settingsInstance;
 
-    const mockLoanID = 2831
-
-    const totalCollateral = BigNumber("8000000000000000000") // 8 ETH
-    const loanBorrower = accounts[3]
-    const liquidator = accounts[4]
-
+    const mockLoanID = 7
+    
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
         lendingTokenInstance = await Mock.new();
@@ -53,22 +48,34 @@ contract('LoansLiquidateTest', function (accounts) {
     });
 
     withData({
-        _1_loan_expired: [1900000000, 32725581, BigNumber("6000000000000000000"), 6512, true, 300000, BigNumber("4721489128502654"), 6, false, undefined],
-        _2_under_collateralised: [1900000000, 32725581, BigNumber("5942423100000000000"), 6512, false, 300000, BigNumber("4721489128502654"), 6, false, undefined],
-        _3_doesnt_need_liquidating: [1900000000, 32725581, BigNumber("6000000000000000000"), 6512, false, 300000, BigNumber("4721489128502654"), 6, true, 'DOESNT_NEED_LIQUIDATION'],
-    }, function (
+        _1_non_borrower: [accounts[1], 0, 0, 0, 0, 0, 0, 0, accounts[2], 0, true, 'CALLER_DOESNT_OWN_LOAN'],
+        _2_withdraw_zero: [accounts[1], 0, 0, 0, 0, 0, 0, 0, accounts[1], 0, true, 'CANNOT_WITHDRAW_ZERO'],
+        _3_more_than_allowed: [accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 10000, false, undefined],
+        _4_less_than_allowed: [accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 1000, false, undefined],
+        _5_none_allowed: [accounts[1], 10000000, 2564000, 5410, 35082, 18, 65432, 5161305000000000, accounts[1], 1000, false, undefined],
+    }, function(
+        loanBorrower,
         loanPrincipalOwed,
         loanInterestOwed,
-        loanCollateral,
         loanCollateralRatio,
-        loanExpired,
-        loanDuration,
-        oraclePrice,
+        loanCollateral,
         tokenDecimals,
+        totalCollateral,
+        oraclePrice,
+        msgSender,
+        withdrawalAmount,
         mustFail,
         expectedErrorMessage
     ) {
-        it(t('user', 'liquidate', 'Should able to (or not) liquidate a loan.', mustFail), async function () {
+        it(t('user', 'withdrawCollateral', 'Should able to withdraw collateral.', false), async function() {
+            // Setup
+            const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, 0)
+            await instance.setLoan(mockLoanID, loanTerms, 0, 0, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, loanTerms.maxLoanAmount, ACTIVE, false)
+            await instance.setTotalCollateral(totalCollateral)
+
+            // give the contract collateral through a deposit (mock has a fallback)
+            await web3.eth.sendTransaction({ from: accounts[1], to: instance.address, value: totalCollateral });
+
             // encode current token price
             const encodeGetLatestAnswer = pairAggregatorEncoder.encodeGetLatestAnswer();
             await oracleInstance.givenMethodReturnUint(encodeGetLatestAnswer, oraclePrice.toString());
@@ -76,43 +83,28 @@ contract('LoansLiquidateTest', function (accounts) {
             // encode token decimals
             const encodeDecimals = erc20InterfaceEncoder.encodeDecimals();
             await lendingTokenInstance.givenMethodReturnUint(encodeDecimals, tokenDecimals);
-
-            // set up the loan information
-            const currentTime = await getLatestTimestamp()
-            const loanLength = Math.floor(loanDuration * ONE_DAY / 10000)
-            let loanExpiry = currentTime - loanLength
-            if (!loanExpired) {
-                loanExpiry += ONE_HOUR
-            }
-
-            const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, loanDuration)
-            await instance.setLoan(mockLoanID, loanTerms, loanExpiry, 0, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, loanTerms.maxLoanAmount, ACTIVE, false)
-            await instance.setTotalCollateral(totalCollateral)
-
-            // give the contract collateral (mock has a fallback)
-            await web3.eth.sendTransaction({ from: accounts[1], to: instance.address, value: totalCollateral });
-
             try {
                 const contractBalBefore = await web3.eth.getBalance(instance.address)
-                const liquidatorBefore = await web3.eth.getBalance(liquidator)
 
-                let tx = await instance.liquidateLoan(mockLoanID, { from: liquidator })
-
+                const tx = await instance.withdrawCollateral(withdrawalAmount, mockLoanID, { from: msgSender })
+                
                 const totalAfter = await instance.totalCollateral.call()
                 const contractBalAfter = await web3.eth.getBalance(instance.address)
-                const liquidatorAfter = await web3.eth.getBalance(liquidator)
+
+                const loanTotalOwed = loanPrincipalOwed + loanInterestOwed
+                const withdrawalAllowed = loanCollateral - Math.floor((Math.floor((loanTotalOwed * loanCollateralRatio) / 10000) * oraclePrice) / (10 ** tokenDecimals))
+                const paidOut = Math.min(withdrawalAllowed, withdrawalAmount)
 
                 let loan = await instance.loans.call(mockLoanID)
 
-                assert.equal(parseInt(loan['collateral']), 0)
-                assert.equal(totalCollateral.minus(loanCollateral).toFixed(), totalAfter.toString())
-                assert.equal(BigNumber(contractBalBefore).minus(loanCollateral).toFixed(), contractBalAfter.toString())
-                assert(parseInt(liquidatorBefore) < parseInt(liquidatorAfter))
-                assert.equal(parseInt(loan['status']), CLOSED)
-                assert.equal(loan['liquidated'], true)
+                loans
+                    .collateralWithdrawn(tx)
+                    .emitted(mockLoanID, loanBorrower, paidOut)
 
+                assert.equal(parseInt(loan['collateral']), (loanCollateral - paidOut))
+                assert.equal(totalCollateral - paidOut, parseInt(totalAfter))
+                assert.equal(parseInt(contractBalBefore) - paidOut, parseInt(contractBalAfter))
             } catch (error) {
-                if (!mustFail) console.log(error)
                 assert(mustFail);
                 assert(error);
                 assert.equal(error.reason, expectedErrorMessage);

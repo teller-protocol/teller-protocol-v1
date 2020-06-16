@@ -18,7 +18,7 @@ const Loans = artifacts.require("./mock/base/EtherLoansMock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 
-contract('LoansSetLoanTermsTest', function (accounts) {
+contract('EtherLoansSetLoanTermsTest', function (accounts) {
     let instance;
     let loanTermsConsInstance;
     let lendingPoolInstance;

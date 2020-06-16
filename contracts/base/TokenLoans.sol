@@ -54,10 +54,7 @@ contract TokenLoans is TokenLoansInterface, LoansBase {
         );
         require(amount > 0, "CANNOT_DEPOSIT_ZERO");
 
-        // Transfer tokens to this contract.
-        collateralTokenTransferFrom(msg.sender, amount);
-
-        // update the contract total and the loan collateral total
+        // Update the loan collateral and total. Transfer tokens to this contract.
         _payInCollateral(loanID, amount);
 
         emit CollateralDeposited(loanID, borrower, amount);
@@ -135,6 +132,13 @@ contract TokenLoans is TokenLoansInterface, LoansBase {
         collateralTokenTransfer(recipient, amount);
     }
 
+    function _payInCollateral(uint256 loanID, uint256 amount) internal {
+        // Update the total collateral and loan collateral
+        super._payInCollateral(loanID, amount);
+        // Transfer collateral tokens to this contract.
+        collateralTokenTransferFrom(msg.sender, amount);
+    }
+
     function _emitCollateralWithdrawnEvent(
         uint256 loanID,
         address payable recipient,
@@ -189,7 +193,7 @@ contract TokenLoans is TokenLoansInterface, LoansBase {
         uint256 currentBalance = collateralToken.balanceOf(address(this));
         require(currentBalance >= amount, "NOT_ENOUGH_COLL_TOKENS_BALANCE");
         bool transferResult = collateralToken.transfer(recipient, amount);
-        require(transferResult, "Transfer was not successful.");
+        require(transferResult, "COLL_TOKENS_TRANSFER_FAILED");
     }
 
     /**
@@ -207,6 +211,6 @@ contract TokenLoans is TokenLoansInterface, LoansBase {
             address(this),
             amount
         );
-        require(transferFromResult, "TOKENS_TRANSFER_FAILED");
+        require(transferFromResult, "COLL_TOKENS_FROM_TRANSFER_FAILED");
     }
 }
