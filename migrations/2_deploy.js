@@ -74,6 +74,7 @@ module.exports = async function(deployer, network, accounts) {
   const deployConfig = {
     tokens,
     aggregators,
+    cTokens: compound,
   };
 
   const artifacts = {
