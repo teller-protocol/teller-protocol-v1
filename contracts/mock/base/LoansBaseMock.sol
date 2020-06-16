@@ -16,22 +16,45 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../../base/EtherLoans.sol";
+import "../../base/LoansBase.sol";
 
-contract EtherLoansMock is EtherLoans {
+contract LoansBaseMock is LoansBase {
 
-    function setLoanIDCounter(uint256 newLoanIdCounter)
-        external
-    {
-        loanIDCounter = newLoanIdCounter;
+    function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
+        internal {}
+
+    function _emitCollateralWithdrawnEvent(
+        uint256 loanID,
+        address payable recipient,
+        uint256 amount
+    ) internal {}
+
+    function _emitLoanTakenOutEvent(uint256 loanID, uint256 amountBorrow) internal {}
+
+    function _emitLoanRepaidEvent(
+        uint256 loanID,
+        uint256 amountPaid,
+        address payer,
+        uint256 totalOwed
+    ) internal {}
+
+    function _emitLoanLiquidatedEvent(
+        uint256 loanID,
+        address liquidator,
+        uint256 collateralOut,
+        uint256 tokensIn
+    ) internal {}
+
+    function externalPayLoan(uint256 loanID, uint256 toPay) external {
+        _payLoan(loanID, toPay);
     }
 
-    function setBorrowerLoans(address borrower, uint256[] calldata loanIDs) external {
-        borrowerLoans[borrower] = loanIDs;
+    function externalConvertWeiToToken(uint256 weiAmount) external view returns (uint256) {
+        return _convertWeiToToken(weiAmount);
     }
 
-    function setTotalCollateral(uint256 amount) external {
-        totalCollateral = amount;
+    function externalConvertTokenToWei(uint256 tokenAmount) external view returns (uint256) {
+        return _convertTokenToWei(tokenAmount);
     }
 
     function setLoan(
@@ -63,5 +86,17 @@ contract EtherLoansMock is EtherLoans {
         });
     }
 
-    function() external payable {}
+    function initialize(
+        address priceOracleAddress,
+        address lendingPoolAddress,
+        address loanTermsConsensusAddress,
+        address settingsAddress
+    ) external isNotInitialized() {
+        _initialize(
+            priceOracleAddress,
+            lendingPoolAddress,
+            loanTermsConsensusAddress,
+            settingsAddress
+        );
+    }
 }

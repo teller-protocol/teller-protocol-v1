@@ -45,7 +45,12 @@ const printOraclePrice = (web3, tokenName, latestAnswer, latestTimestamp) => {
     console.groupEnd();
 }
 
-const printCollateral = (web3, {tokenName, tokenDecimals}, latestAnswer, loanInfo) => {
+const printCollateral = async (
+    web3,
+    {tokenName, tokenDecimals, collateralTokenName, collateralTokenDecimals},
+    latestAnswer,
+    loanInfo
+) => {
     const printer = new LoanInfoPrinter(web3, loanInfo, { tokenName, decimals: tokenDecimals});
     console.group('Collateral / Liquidation Info:');
     console.log(`Total Principal:      ${printer.getOwedValues().principalOwed} = ${printer.getOwedValuesUnit().principalOwedUnit} ${tokenName}`);
@@ -60,8 +65,8 @@ const printCollateral = (web3, {tokenName, tokenDecimals}, latestAnswer, loanInf
     console.log(`Coll. Ratio (value/%/decimals):    ${collateralRatio.toFixed(0)} = ${collateralRatioPercentage.toString()} % = ${collateralRatioDecimals}`);
     console.log(`Coll. Needed (Tokens):             ${collateralNeededInTokens.toFixed(0)} ${tokenName} (${collateralRatioPercentage}% of ${printer.getTotalOwed()} ${tokenName} -total owed-) => Total owed in ${tokenName}`);
     
-    const latestAnswerEther = web3.utils.fromWei(latestAnswer.toString(), 'ether');
-    console.log(`Lastest Price (${tokenName}/ETHER):    1 ${tokenName} = ${latestAnswer.toString()} WEI = ${latestAnswerEther.toString()} ETHER`);
+    const latestAnswerEther = toUnits(latestAnswer.toString(), collateralTokenDecimals);
+    console.log(`Lastest Price (${tokenName}/${collateralTokenName}):    1 ${tokenName} = ${latestAnswer.toString()} = ${latestAnswerEther.toString()} ${collateralTokenName}`);
     console.log(`Whole Token (${tokenName} / ${tokenDecimals}):        ${printer.getAWholeToken()} = 1 ${tokenName}`)
     /**
         1 token                         = latestAnswer
@@ -71,11 +76,14 @@ const printCollateral = (web3, {tokenName, tokenDecimals}, latestAnswer, loanInf
     console.log(`End Time:              ${printer.getEndTime()} / ${printer.getEndDate()}`);
     console.groupEnd();
     console.group('Collateral');
-    console.log(`Current Collateral (A):        ${printer.getCollateral()} WEI = ${printer.getCollateralUnits()} ETHER`);
-    console.log(`Collateral. Needed (B):        ${printer.getCollateralNeededInWeis(latestAnswer).toFixed(0)} WEI = ${printer.getCollateralNeededInWeisUnit(latestAnswer)} ETHER = (Coll. Needed (Tokens) * Lastest Price ${tokenName}/ETHER)`);
+    console.log(`Current Collateral (A):        ${printer.getCollateral()} = ${printer.getCollateralUnits()} ${collateralTokenName}`);
+    console.log(`Collateral. Needed (B):        ${printer.getCollateralNeededInWeis(latestAnswer).toFixed(0)} = ${printer.getCollateralNeededInWeisUnit(latestAnswer)} ${collateralTokenName} = (Coll. Needed (Tokens) * Lastest Price ${tokenName}/${collateralTokenName})`);
     console.log(`Need Collateral (B > A)?:      ${printer.isCollateralNeededGtCollateral(latestAnswer)}`);
-    console.log(`EndTime < Now?:                ${printer.isEndTimeLtNow()}`);
-    console.log(`Liquidable?:                   ${printer.isLiquidable(latestAnswer)}`);
+    const nowTime = await printer.getNowTime();
+    const nowDate = await printer.getNowDate();
+    console.log(`Now:                           ${nowTime} / ${nowDate}`);
+    console.log(`EndTime > Now?:                ${(await printer.isEndTimeLtNow())}`);
+    console.log(`Liquidable?:                   ${(await printer.isLiquidable(latestAnswer))}`);
     console.groupEnd();
 }
 
@@ -84,7 +92,12 @@ module.exports = {
     printLoan,
     printOraclePrice,
     printCollateral,
-    printFullLoan: (web3, { tokenName, tokenDecimals }, latestAnswer, loanInfo) => {
+    printFullLoan: async (
+        web3,
+        { tokenName, tokenDecimals, collateralTokenName, collateralTokenDecimals },
+        latestAnswer,
+        loanInfo
+    ) => {
         const times = 130;
         const main = times + 30;
         console.log('='.repeat(main));
@@ -92,7 +105,12 @@ module.exports = {
         console.log('-'.repeat(times));
         printLoanTerms({ tokenName, tokenDecimals }, loanInfo.loanTerms);
         console.log('-'.repeat(times));
-        printCollateral(web3, {tokenName, tokenDecimals}, latestAnswer, loanInfo);
+        await printCollateral(
+            web3,
+            { tokenName, tokenDecimals, collateralTokenName, collateralTokenDecimals },
+            latestAnswer,
+            loanInfo
+        );
         console.log('='.repeat(main));
     },
 }

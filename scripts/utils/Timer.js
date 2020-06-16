@@ -21,18 +21,23 @@ const handleResultOrError = async (web3, title, {resolve, reject}, err, result, 
   resolve(result);
 };
 
-Timer.prototype.getCurrentTimestamp = async function () {
+Timer.prototype.getCurrentTimestampInSeconds = async function () {
   const { timestamp } = await this.getLatestBlock();
   return parseInt(timestamp.toString());
 }
 
-Timer.prototype.getCurrentDate = async function () {
-  const timestamp = await this.getCurrentTimestamp();
-  return new Date(parseInt(timestamp.toString()) * 1000);
+Timer.prototype.getCurrentTimestamp = async function () {
+  const { timestamp } = await this.getLatestBlock();
+  return parseInt(timestamp.toString()) * 1000;
 }
 
-Timer.prototype.getCurrentTimestampAndSum = async function (seconds) {
+Timer.prototype.getCurrentDate = async function () {
   const timestamp = await this.getCurrentTimestamp();
+  return new Date(parseInt(timestamp.toString()));
+}
+
+Timer.prototype.getCurrentTimestampInSecondsAndSum = async function (seconds) {
+  const timestamp = await this.getCurrentTimestampInSeconds();
   return parseInt(timestamp.toString()) + parseInt(seconds.toString());
 }
 

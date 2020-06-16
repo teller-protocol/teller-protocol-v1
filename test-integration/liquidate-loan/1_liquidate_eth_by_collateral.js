@@ -12,9 +12,9 @@ module.exports = async ({accounts, getContracts, timer, web3, nonces}) => {
   const tokenName = 'DAI';
   const settingsInstance = await getContracts.getDeployed(zerocollateral.settings());
   const token = await getContracts.getDeployed(tokens.get(tokenName));
-  const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.lendingPool(tokenName));
-  const loansInstance = await getContracts.getDeployed(zerocollateral.loans(tokenName));
-  const chainlinkOracle = await getContracts.getDeployed(chainlink.get(tokenName));
+  const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.eth().lendingPool(tokenName));
+  const loansInstance = await getContracts.getDeployed(zerocollateral.eth().loans(tokenName));
+  const chainlinkOracle = await getContracts.getDeployed(zerocollateral.eth().chainlink.custom(tokenName));
 
   const currentTimestamp = parseInt(await timer.getCurrentTimestamp());
   console.log(`Current timestamp: ${currentTimestamp} segs`);
@@ -80,7 +80,7 @@ module.exports = async ({accounts, getContracts, timer, web3, nonces}) => {
   );
 
   const termsExpiryTime = await settingsInstance.termsExpiryTime();
-  const expiryTermsExpected = await timer.getCurrentTimestampAndSum(termsExpiryTime);
+  const expiryTermsExpected = await timer.getCurrentTimestampInSecondsAndSum(termsExpiryTime);
   const loanIDs = await loansInstance.getBorrowerLoans(borrower);
   const lastLoanID = loanIDs[loanIDs.length - 1];
   loans
@@ -97,7 +97,7 @@ module.exports = async ({accounts, getContracts, timer, web3, nonces}) => {
     );
 
   console.log(`Advancing time to take out loan (current: ${(await timer.getCurrentDate())})...`);
-  const nextTimestamp = await timer.getCurrentTimestampAndSum(minutesToSeconds(2));
+  const nextTimestamp = await timer.getCurrentTimestampInSecondsAndSum(minutesToSeconds(2));
   await timer.advanceBlockAtTime(nextTimestamp);
   
   // Take out a loan.

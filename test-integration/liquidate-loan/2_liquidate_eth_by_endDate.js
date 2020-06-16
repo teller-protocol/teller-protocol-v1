@@ -12,9 +12,9 @@ module.exports = async ({accounts, getContracts, timer, web3, nonces}) => {
   const tokenName = 'DAI';
   const settingsInstance = await getContracts.getDeployed(zerocollateral.settings());
   const token = await getContracts.getDeployed(tokens.get(tokenName));
-  const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.lendingPool(tokenName));
-  const loansInstance = await getContracts.getDeployed(zerocollateral.loans(tokenName));
-  const chainlinkOracle = await getContracts.getDeployed(chainlink.get(tokenName));
+  const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.eth().lendingPool(tokenName));
+  const loansInstance = await getContracts.getDeployed(zerocollateral.eth().loans(tokenName));
+  const chainlinkOracle = await getContracts.getDeployed(zerocollateral.eth().chainlink.custom(tokenName));
 
   const currentTimestamp = await timer.getCurrentTimestamp();
   const borrower = await accounts.getAt(1);
@@ -80,7 +80,7 @@ module.exports = async ({accounts, getContracts, timer, web3, nonces}) => {
   const loanIDs = await loansInstance.getBorrowerLoans(borrower);
   const lastLoanID = loanIDs[loanIDs.length - 1];
 
-  const nextTimestamp_1 = await timer.getCurrentTimestampAndSum(minutesToSeconds(2));
+  const nextTimestamp_1 = await timer.getCurrentTimestampInSecondsAndSum(minutesToSeconds(2));
   console.log(`Advancing time to take out loan (Current: ${(await timer.getCurrentDate())})...`);
   await timer.advanceBlockAtTime(nextTimestamp_1);
   
@@ -89,7 +89,7 @@ module.exports = async ({accounts, getContracts, timer, web3, nonces}) => {
   await loansInstance.takeOutLoan(lastLoanID, amountWei, borrowerTxConfig);
 
   // Advance time.
-  const nextTimestamp_2 = await timer.getCurrentTimestampAndSum(loanTermsRequestInfo.duration + 1);
+  const nextTimestamp_2 = await timer.getCurrentTimestampInSecondsAndSum(loanTermsRequestInfo.duration + 1);
   console.log(`Advancing time to liquidate loan (Current: ${(await timer.getCurrentDate())})...`);
   await timer.advanceBlockAtTime(nextTimestamp_2);
 

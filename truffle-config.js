@@ -35,12 +35,16 @@ module.exports = {
 			showTimeSpent: true,
 			excludeContracts: [
 				'Migrations',
+				'ERC20Mock',
 				'DAIMock',
 				'USDCMock',
+				'LINKMock',
 				'LendersMock',
 				'LendersModifiersMock',
 				'Mock',
 				'EtherLoansMock',
+				'TokenLoansMock',
+				'LoansBaseMock',
 				'LendingPoolMock',
 				'InitializableModifiersMock',
 				'InterestConsensusMock',
@@ -49,7 +53,8 @@ module.exports = {
 				'ConsensusMock',
 				'ConsensusModifiersMock',
 				'LoanTermsConsensusMock',
-				'LoansBaseModifiersMock'
+				'LoansBaseModifiersMock',
+				'PairAggregatorMock'
 			]
 		},
 	},
