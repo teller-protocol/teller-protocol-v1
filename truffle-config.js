@@ -2,13 +2,19 @@ const envConfig = require('./config/env')();
 const preamble = require('./docs/preamble');
 
 // Environment Configuration
-const addressCountValue = envConfig.getAddressCount().get();
+const addressCountValue = envConfig.getAddressCount().getOrDefault();
 const mnemonicKeyValue = envConfig.getMnemonic().get();
 const infuraKeyValue = envConfig.getInfuraKey().get();
-const gasKeyValue = envConfig.getGasWei().get();
-const gasPriceKeyValue = envConfig.getGasPriceGwei().get();
-const defaultAddressIndex = envConfig.getDefaultAddressIndex().get();
+const gasKeyValue = envConfig.getGasWei().getOrDefault();
+const gasPriceKeyValue = envConfig.getGasPriceGwei().getOrDefault();
+const defaultAddressIndex = envConfig.getDefaultAddressIndex().getOrDefault();
 const etherscanApiKey = envConfig.getEtherscanApiKey().get();
+const ganacheConfig = {
+	host: envConfig.getGanacheHost().getOrDefault(),
+	port: envConfig.getGanachePort().getOrDefault(),
+	networkId: envConfig.getGanacheNetworkId().getOrDefault(),
+	gasPrice: envConfig.getGanacheGasPrice().getOrDefault(),
+};
 
 const Web3 = require('web3');
 
@@ -69,11 +75,11 @@ module.exports = {
 	},
 	networks: {
 		ganache: {
-			host: '127.0.0.1',
-			port: 8545,
-			network_id: '*',
+			host: ganacheConfig.host,
+			port: ganacheConfig.port,
+			network_id: ganacheConfig.networkId,
 			gas: gasKeyValue,
-			gasPrice: 0x01,
+			gasPrice: ganacheConfig.gasPrice,
 		},
 		ropsten: {
 			provider: function() {

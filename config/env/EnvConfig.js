@@ -10,6 +10,10 @@ const DEFAULT_RESPONSE_EXPIRY = "2592000"; // 30 days
 const DEFAULT_SAFETY_INTERVAL = "300" // 5 minutes
 const DEFAULT_TERMS_EXPIRY_TIME = "2592000"; // 30 days
 const DEFAULT_LIQUIDATE_ETH_PRICE = "9500"; // 95%
+const DEFAULT_GANACHE_PORT = "8545";
+const DEFAULT_GANACHE_HOST = "127.0.0.1";
+const DEFAULT_GANACHE_NETWORK_ID = "*";
+const DEFAULT_GANACHE_GAS_PRICE = "20";
 
 const ADDRESS_COUNT_KEY = 'ADDRESS_COUNT_KEY';
 const DEFAULT_ADDRESS_INDEX_KEY = 'DEFAULT_ADDRESS_INDEX_KEY';
@@ -18,6 +22,10 @@ const INFURA_KEY = 'INFURA_KEY';
 const GAS_WEI_KEY = 'GAS_WEI_KEY';
 const GAS_PRICE_GWEI_KEY = 'GAS_PRICE_GWEI_KEY';
 const ETHERSCAN_API_KEY = 'ETHERSCAN_API_KEY';
+const GANACHE_PORT = 'GANACHE_PORT';
+const GANACHE_HOST = 'GANACHE_HOST';
+const GANACHE_NETWORK_ID = 'GANACHE_NETWORK';
+const GANACHE_GAS_PRICE = 'GANACHE_GAS_PRICE';
 const DEFAULT_REQUIRED_SUBMISSIONS_KEY = 'DEFAULT_REQUIRED_SUBMISSIONS_KEY'
 const DEFAULT_MAXIMUM_TOLERANCE_KEY = 'DEFAULT_MAXIMUM_TOLERANCE_KEY'
 const DEFAULT_RESPONSE_EXPIRY_KEY = 'DEFAULT_RESPONSE_EXPIRY_KEY'
@@ -47,6 +55,11 @@ EnvConfig.prototype.initializeConf = function() {
     this.createItem(DEFAULT_SAFETY_INTERVAL_KEY, DEFAULT_SAFETY_INTERVAL, 'This is the time between depositing collateral and taking out a loan.');
     this.createItem(DEFAULT_TERMS_EXPIRY_TIME_KEY, DEFAULT_TERMS_EXPIRY_TIME, 'This is the time after which loan terms will expire.');
     this.createItem(DEFAULT_LIQUIDATE_ETH_PRICE_KEY, DEFAULT_LIQUIDATE_ETH_PRICE, 'This is the percentage of market rate liquidated eth will sell for.');
+    // Ganache configuration
+    this.createItem(GANACHE_HOST, DEFAULT_GANACHE_HOST, 'This is the host used to connect to the Ganache instance.');
+    this.createItem(GANACHE_PORT, DEFAULT_GANACHE_PORT, 'This is the port used to connect to the Ganache instance.');
+    this.createItem(GANACHE_NETWORK_ID, DEFAULT_GANACHE_NETWORK_ID, 'This is the network id used to connect to the Ganache instance.');
+    this.createItem(GANACHE_GAS_PRICE, DEFAULT_GANACHE_GAS_PRICE, 'This is the gas price used to connect to the Ganache instance.');
 }
 
 EnvConfig.prototype.createItem = function(name, defaultValue = undefined, description = undefined) {
@@ -113,6 +126,22 @@ EnvConfig.prototype.getDefaultTermsExpiryTime = function() {
 
 EnvConfig.prototype.getDefaultLiquidateEthPrice = function() {
   return this.conf.get(DEFAULT_LIQUIDATE_ETH_PRICE_KEY);
+}
+
+EnvConfig.prototype.getGanacheHost = function() {
+    return this.conf.get(GANACHE_HOST);
+}
+
+EnvConfig.prototype.getGanachePort = function() {
+    return this.conf.get(GANACHE_PORT);
+}
+
+EnvConfig.prototype.getGanacheNetworkId = function() {
+    return this.conf.get(GANACHE_NETWORK_ID);
+}
+
+EnvConfig.prototype.getGanacheGasPrice = function() {
+    return this.conf.get(GANACHE_GAS_PRICE);
 }
 
 module.exports = EnvConfig;
