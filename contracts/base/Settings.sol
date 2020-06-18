@@ -41,20 +41,43 @@ contract Settings is Pausable, SettingsInterface {
 
     mapping(address => bool) public lendingPoolPaused;
 
-    // the total number of submissions required for consensus on a value
+    /**
+        It represents the total number of submissions required for consensus on a value.
+     */
     uint256 public requiredSubmissions;
 
-    // this is a percentage with 2 decimal places
-    // i.e. maximumTolerance of 325 => tolerance of 3.25% => 0.0325 of value
+    /**
+        This is the maximum tolerance (a percentage) when the values submitted for the nodes are aggregated.
+        It is used to calculate the collateral ratio, interest rate, and others.
+ 
+        This is a percentage with 2 decimal places.
+        i.e. maximumTolerance of 325 => tolerance of 3.25% => 0.0325 of value
+        i.e. maximumTolerance of 0 => It means all the values submitted must be equals.
+     */
     uint256 public maximumTolerance;
 
+    /**
+        This is the maximum time (in seconds) a node has to submit a response. After that time, the response is considered expired.
+     */
     uint256 public responseExpiryLength;
 
+    /**
+        This is the minimum time you need to wait (in seconds) between the last time you deposit collateral and you take out the loan.
+        It is used to avoid potential attacks using Flash Loans (AAVE) or Flash Swaps (Uniswap V2).
+     */
     uint256 public safetyInterval;
 
+    /**
+        This represents the time (in seconds) that loan terms will be available after requesting them.
+        After this time, the loan terms will expire and the borrower will need to request it again. 
+     */
     uint256 public termsExpiryTime;
 
-    // with 2 decimal places. i.e. an ETH liquidation price at 95% is stored as 9500
+    /**
+        It represents the percentage value (with 2 decimal places) to liquidate loans.
+        
+        i.e. an ETH liquidation price at 95% is stored as 9500
+     */
     uint256 public liquidateEthPrice;
 
     /** Modifiers */
