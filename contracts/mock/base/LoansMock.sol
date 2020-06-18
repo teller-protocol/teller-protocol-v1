@@ -55,9 +55,11 @@ contract LoansMock is Loans {
         uint256 lastCollateralIn,
         uint256 principalOwed,
         uint256 interestOwed,
+        uint256 borrowedAmount,
         ZeroCollateralCommon.LoanStatus status,
         bool liquidated
     ) external {
+        require(loanTerms.maxLoanAmount >= borrowedAmount, "BORROWED_AMOUNT_EXCEEDS_MAX");
         loans[id] = ZeroCollateralCommon.Loan({
             id: id,
             loanTerms: loanTerms,
@@ -67,6 +69,7 @@ contract LoansMock is Loans {
             lastCollateralIn: lastCollateralIn,
             principalOwed: principalOwed,
             interestOwed: interestOwed,
+            borrowedAmount: borrowedAmount,
             status: status,
             liquidated: liquidated
         });

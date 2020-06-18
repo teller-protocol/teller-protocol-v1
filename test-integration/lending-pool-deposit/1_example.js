@@ -7,28 +7,33 @@ const assert = require("assert");
 
 module.exports = async ({accounts, getContracts, timer}) => {
   console.log('Integration Test Example.');
-  const sender = await accounts.getAt(1);
-  const senderTxConfig = { from: sender };
+  const senderTxConfig = await accounts.getTxConfigAt(1);
   const tokenName = 'DAI';
   const dai = await getContracts.getDeployed(tokens.get(tokenName));
   const zdai = await getContracts.getDeployed(zerocollateral.ztoken(tokenName));
   const amountWei = toDecimals(100, 18);
-  await dai.mintTo(sender, amountWei, senderTxConfig);
+  await dai.mintTo(senderTxConfig.from, amountWei, senderTxConfig);
 
   const lendingPoolZDai = await getContracts.getDeployed(zerocollateral.lendingPool(tokenName));
   const lendingToken = await lendingPoolZDai.lendingToken();
   assert(lendingToken === dai.address, "Lending token and token are not equal.");
 
+  const initialZdaiSenderBalance = await zdai.balanceOf(senderTxConfig.from);
+
+  console.log(`Depositing ${tokenName} into the lending pool...`);
   await dai.approve(
     lendingPoolZDai.address,
     amountWei.toString(),
     senderTxConfig
   );
-  const depositResult = await lendingPoolZDai.deposit(amountWei.toString(), {from: sender});
+  const depositResult = await lendingPoolZDai.deposit(amountWei.toString(), senderTxConfig);
 
   lendingPool
     .tokenDeposited(depositResult)
-    .emitted(sender, amountWei);
-  const zdaiSenderBalance = await zdai.balanceOf(sender);
-  assert.equal(zdaiSenderBalance.toString(), amountWei.toString());
+    .emitted(senderTxConfig.from, amountWei);
+  const finalZdaiSenderBalance = await zdai.balanceOf(senderTxConfig.from);
+  assert.equal(
+    BigNumber(finalZdaiSenderBalance.toString()).minus(BigNumber(initialZdaiSenderBalance.toString())),
+    amountWei.toString()
+  );
 };

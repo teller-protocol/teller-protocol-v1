@@ -6,9 +6,9 @@ const { printFullLoan, printOraclePrice } = require("../../test/utils/printer");
 const ProcessArgs = require('../utils/ProcessArgs');
 const processArgs = new ProcessArgs();
 
-// Parameters
-const loanId = 1;
 const tokenName = 'DAI';
+const startLoanId = 0;
+const endLoanId = 100;
 
 module.exports = async (callback) => {
     try {
@@ -29,10 +29,14 @@ module.exports = async (callback) => {
         console.log('-'.repeat(70));
 
         const tokenDecimals = parseInt(await tokenInstance.decimals());
-        const loanInfo = await loansInstance.loans(loanId);
 
-        printFullLoan(web3, { tokenName, tokenDecimals }, latestAnswer, loanInfo);
-        
+        let currentLoanId = startLoanId;
+        while ( currentLoanId < endLoanId && currentLoanId < loanCounter) {
+            const loanInfo = await loansInstance.loans(currentLoanId);
+            printFullLoan(web3, {tokenName, tokenDecimals}, latestAnswer, loanInfo);
+            currentLoanId++;
+        }
+
         console.log('>>>> The script finished successfully. <<<<');
         callback();
     } catch (error) {

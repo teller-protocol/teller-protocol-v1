@@ -10,13 +10,17 @@ const ZERO = new BigNumber(0);
 const NETWORK_PROVIDER = 'http://127.0.0.1:7545';
 const COVERAGE_NETWORK = 'http://127.0.0.1:8555';
 const FIVE_MIN = 60*5
-const ONE_HOUR = 3600
+const ONE_HOUR = 3600 // 60 seconds * 60 minutes = 1 hour
 const ONE_DAY = ONE_HOUR*24
 const THIRTY_DAYS = ONE_DAY*30
 const NON_EXISTENT = 0
 const TERMS_SET = 1
 const ACTIVE = 2
 const CLOSED = 3
+
+const toDecimals = (amount, decimals) => {
+    return new BigNumber(amount).times(new BigNumber(10).pow(decimals));
+}
 
 module.exports = {
     NON_EXISTENT,
@@ -47,10 +51,19 @@ module.exports = {
         return new Date(year, month, day).getTime();
     },
     daysToMillis: (days) => {
-        return days * 24 * 60 * 60 * 1000;
+        return parseInt(days.toString()) * 24 * 60 * 60 * 1000;
     },
     daysToSeconds: (days) => {
-        return days * 24 * 60 * 60;
+        return parseInt(days.toString()) * 24 * 60 * 60;
+    },
+    secondsToDays: (seconds) => {
+        return parseInt(seconds.toString()) / (24 * 60 * 60);
+    },
+    millisToDays: (millis) => {
+        return parseInt(millis.toString()) / (24 * 60 * 60 * 1000);
+    },
+    minutesToSeconds: (minutes) => {
+        return parseInt(minutes.toString()) * 60;
     },
     getLatestTimestamp: async () => {
       return (await web3.eth.getBlock('latest')).timestamp
@@ -59,10 +72,15 @@ module.exports = {
     toBytes32: (web3, text) => {
       return web3.utils.padRight(web3.utils.stringToHex(text), 64, '0');
     },
-    toDecimals: (amount, decimals) => {
-        return new BigNumber(amount).times(new BigNumber(10).pow(decimals));
+    toDecimals,
+    toTokenDecimals: async (token, amount) => {
+        const decimals = await token.decimals();
+        return toDecimals(amount, decimals);
     },
     toUnits: (amount, decimals) => {
         return new BigNumber(amount).div(new BigNumber(10).pow(decimals));
-    }
+    },
+    printSeparatorLine: (length = 100, separator = '-') => {
+        console.log(`\n${separator.repeat(length)}\n`);
+    },
 }

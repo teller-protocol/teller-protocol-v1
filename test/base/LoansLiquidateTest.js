@@ -68,7 +68,7 @@ contract('LoansLiquidateTest', function (accounts) {
         mustFail,
         expectedErrorMessage
     ) {
-        it(t('user', 'liquidate', 'Should able to (or not) liquidate a loan.', false), async function () {
+        it(t('user', 'liquidate', 'Should able to (or not) liquidate a loan.', mustFail), async function () {
             // encode current token price
             const encodeGetLatestAnswer = pairAggregatorEncoder.encodeGetLatestAnswer();
             await oracleInstance.givenMethodReturnUint(encodeGetLatestAnswer, oraclePrice.toString());
@@ -86,7 +86,7 @@ contract('LoansLiquidateTest', function (accounts) {
             }
 
             const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, loanDuration)
-            await instance.setLoan(mockLoanID, loanTerms, loanExpiry, 0, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, ACTIVE, false)
+            await instance.setLoan(mockLoanID, loanTerms, loanExpiry, 0, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, loanTerms.maxLoanAmount, ACTIVE, false)
             await instance.setTotalCollateral(totalCollateral)
 
             // give the contract collateral (mock has a fallback)
