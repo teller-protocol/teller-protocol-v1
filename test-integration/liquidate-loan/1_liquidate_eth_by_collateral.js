@@ -1,40 +1,42 @@
 // Util classes
-const assert = require('assert');
 const BigNumber = require('bignumber.js');
 const { zerocollateral, tokens, chainlink } = require("../../scripts/utils/contracts");
 const { loans, lendingPool } = require('../../test/utils/events');
-const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds, DEFAULT_DECIMALS } = require('../../test/utils/consts');
+const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds } = require('../../test/utils/consts');
 const LoanInfoPrinter = require('../../test/utils/printers/LoanInfoPrinter');
 const { createMultipleSignedLoanTermsResponses, createLoanTermsRequest } = require('../../test/utils/loan-terms-helper');
+const assert = require("assert");
 
 module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonces}) => {
-  console.log('Liquidate Loan by End Time');
+  console.log('Liquidate Loan by Collateral');
   const tokenName = processArgs.getValue('testTokenName');
   const settingsInstance = await getContracts.getDeployed(zerocollateral.settings());
   const token = await getContracts.getDeployed(tokens.get(tokenName));
-  const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.lendingPool(tokenName));
-  const loansInstance = await getContracts.getDeployed(zerocollateral.loans(tokenName));
-  const chainlinkOracle = await getContracts.getDeployed(chainlink.get(tokenName));
+  const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.eth().lendingPool(tokenName));
+  const loansInstance = await getContracts.getDeployed(zerocollateral.eth().loans(tokenName));
+  const chainlinkOracle = await getContracts.getDeployed(zerocollateral.eth().chainlink.custom(tokenName));
 
-  const currentTimestamp = await timer.getCurrentTimestamp();
+  const currentTimestamp = parseInt(await timer.getCurrentTimestamp());
+  console.log(`Current timestamp: ${currentTimestamp} segs`);
+
   const borrower = await accounts.getAt(1);
   const liquidatorTxConfig = await accounts.getTxConfigAt(2);
   const recipient = NULL_ADDRESS;
-  const borrowerNonce = nonces.newNonce(borrower);
-  const oraclePrice = toDecimals('0.005', DEFAULT_DECIMALS); // 1 token = 0.005 ether = 5000000000000000 wei
+  const initialOraclePrice = toDecimals('0.005', 18); // 1 token = 0.005 ether = 5000000000000000 wei
+  const finalOraclePrice = toDecimals('0.006', 18); // 1 token = 0.006 ether = 6000000000000000 wei
   const decimals = parseInt(await token.decimals());
-  const lendingPoolDepositAmountWei = toDecimals(1000, DEFAULT_DECIMALS);
-  const amountWei = toDecimals(100, DEFAULT_DECIMALS);
-  const maxAmountWei = toDecimals(200, DEFAULT_DECIMALS);
+  const lendingPoolDepositAmountWei = toDecimals(4000, decimals);
+  const amountWei = toDecimals(100, decimals);
+  const maxAmountWei = toDecimals(200, decimals);
   const durationInDays = 5;
   const signers = await accounts.getAllAt(12, 13);
-  const collateralNeeded = toDecimals(0.321, DEFAULT_DECIMALS);
+  const collateralNeeded = '320486794520547945';
   const borrowerTxConfig = { from: borrower };
   const borrowerTxConfigWithValue = { ...borrowerTxConfig, value: collateralNeeded };
 
   // Sets Initial Oracle Price
-  console.log(`Settings initial oracle price: 1 ${tokenName} = ${oraclePrice.toFixed(0)} WEI = ${toUnits(oraclePrice, 18)} ETHER`);
-  await chainlinkOracle.setLatestAnswer(oraclePrice);
+  console.log(`Settings initial oracle price: 1 ${tokenName} = ${initialOraclePrice.toFixed(0)} WEI = ${toUnits(initialOraclePrice, 18)} ETHER`);
+  await chainlinkOracle.setLatestAnswer(initialOraclePrice);
 
   // Deposit tokens on lending pool.
   console.log('Depositing tokens on lending pool...');
@@ -46,11 +48,11 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
     .emitted(lenderTxConfig.from, lendingPoolDepositAmountWei);
 
   // Set loan terms.
-  console.log('Requesting loan terms and signing responses...');
+  console.log('Setting loan terms...');
   const loanTermsRequestInfo = {
     borrower,
     recipient,
-    requestNonce: borrowerNonce,
+    requestNonce: nonces.newNonce(borrower),
     amount: amountWei.toFixed(0),
     duration: durationInDays * ONE_DAY,
     requestTime: currentTimestamp,
@@ -70,40 +72,55 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
     loanResponseInfoTemplate,
     nonces,
   );
-  console.log(`Setting loan terms (${signedResponses.length} signed responses)...`);
-  await loansInstance.setLoanTerms(
+
+  const setLoanTermsResult = await loansInstance.setLoanTerms(
     loanTermsRequest.loanTermsRequest,
     signedResponses,
     borrowerTxConfigWithValue
   );
 
+  const termsExpiryTime = await settingsInstance.termsExpiryTime();
+  const expiryTermsExpected = await timer.getCurrentTimestampInSecondsAndSum(termsExpiryTime);
   const loanIDs = await loansInstance.getBorrowerLoans(borrower);
   const lastLoanID = loanIDs[loanIDs.length - 1];
+  loans
+    .loanTermsSet(setLoanTermsResult)
+    .emitted(
+      lastLoanID,
+      borrowerTxConfigWithValue.from,
+      recipient,
+      loanResponseInfoTemplate.interestRate,
+      loanResponseInfoTemplate.collateralRatio,
+      loanResponseInfoTemplate.maxLoanAmount,
+      loanTermsRequestInfo.duration,
+      expiryTermsExpected,
+    );
 
-  const nextTimestamp_1 = await timer.getCurrentTimestampAndSum(minutesToSeconds(2));
-  console.log(`Advancing time to take out loan (Current: ${(await timer.getCurrentDate())})...`);
-  await timer.advanceBlockAtTime(nextTimestamp_1);
+  console.log(`Advancing time to take out loan (current: ${(await timer.getCurrentDate())})...`);
+  const nextTimestamp = await timer.getCurrentTimestampInSecondsAndSum(minutesToSeconds(2));
+  await timer.advanceBlockAtTime(nextTimestamp);
   
   // Take out a loan.
   console.log(`Taking out loan id ${lastLoanID}...`);
-  await loansInstance.takeOutLoan(lastLoanID, amountWei, borrowerTxConfig);
+  const takeOutLoanResult = await loansInstance.takeOutLoan(lastLoanID, amountWei, borrowerTxConfig);
+  loans
+    .loanTakenOut(takeOutLoanResult)
+    .emitted(lastLoanID, borrowerTxConfig.from, amountWei);
 
-  // Advance time.
-  const nextTimestamp_2 = await timer.getCurrentTimestampAndSum(loanTermsRequestInfo.duration + 1);
-  console.log(`Advancing time to liquidate loan (Current: ${(await timer.getCurrentDate())})...`);
-  await timer.advanceBlockAtTime(nextTimestamp_2);
+  // Set a lower price for Token/ETH.
+  console.log(`Settings final (lower) oracle price: 1 ${tokenName} = ${finalOraclePrice.toFixed(0)} WEI = ${toUnits(finalOraclePrice, 18)} ETHER`);
+  await chainlinkOracle.setLatestAnswer(finalOraclePrice);
 
   // Get liquidation status.
   const loanInfo = await loansInstance.loans(lastLoanID);
-
+  
   console.log(`Liquidating loan id ${lastLoanID}...`);
   const initialLiquidatorTokenBalance = await token.balanceOf(liquidatorTxConfig.from);
   const initialTotalCollateral = await loansInstance.totalCollateral();
   const liquidateLoanResult = await loansInstance.liquidateLoan(lastLoanID, liquidatorTxConfig);
-
   const liquidateEthPrice = await settingsInstance.liquidateEthPrice();
   const loanPrinter = new LoanInfoPrinter(web3, loanInfo, { tokenName, decimals });
-  const tokensPaymentIn = loanPrinter.getTotalTokensPaymentInLiquidation(oraclePrice, liquidateEthPrice);
+  const tokensPaymentIn = loanPrinter.getTotalTokensPaymentInLiquidation(finalOraclePrice, liquidateEthPrice);
   loans
     .loanLiquidated(liquidateLoanResult)
     .emitted(lastLoanID, borrower, liquidatorTxConfig.from, loanInfo.collateral, tokensPaymentIn);
@@ -111,14 +128,15 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   const finalTotalCollateral = await loansInstance.totalCollateral();
   assert.equal(
     finalTotalCollateral.toString(),
-    BigNumber(initialTotalCollateral.toString()).minus(loanInfo.collateral.toString()).toFixed(),
+    BigNumber(initialTotalCollateral.toString()).minus(loanInfo.collateral.toString()).toFixed(0),
     'Invalid final total collateral balance (Loans).'
   );
 
   const finalLiquidatorTokenBalance = await token.balanceOf(liquidatorTxConfig.from);
+
   assert.equal(
-    tokensPaymentIn.toString(),
-    BigNumber(finalLiquidatorTokenBalance.toString()).minus(initialLiquidatorTokenBalance.toString()).toFixed(),
+    tokensPaymentIn.toFixed(0),
+    BigNumber(finalLiquidatorTokenBalance.toString()).minus(initialLiquidatorTokenBalance.toString()).toFixed(0),
     'Invalid final liquidator tokens balance.'
   );
 };

@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, FIVE_MIN, NULL_ADDRESS, ACTIVE, CLOSED } = require('../utils/consts');
+const { t, NULL_ADDRESS, ACTIVE, CLOSED } = require('../utils/consts');
 const { createLoanTerms } = require('../utils/structs');
 const BigNumber = require('bignumber.js');
 
@@ -8,9 +8,9 @@ const BigNumber = require('bignumber.js');
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const Loans = artifacts.require("./mock/base/LoansMock.sol");
+const Loans = artifacts.require("./mock/base/EtherLoansMock.sol");
 
-contract('LoansRepayTest', function (accounts) {
+contract('EtherLoansRepayTest', function (accounts) {
     let instance;
     let oracleInstance;
     let loanTermsConsInstance;

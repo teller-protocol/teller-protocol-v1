@@ -14,11 +14,11 @@ const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/stru
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const Loans = artifacts.require("./mock/base/LoansMock.sol");
+const Loans = artifacts.require("./mock/base/EtherLoansMock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 
-contract('LoansSetLoanTermsTest', function (accounts) {
+contract('EtherLoansSetLoanTermsTest', function (accounts) {
     let instance;
     let loanTermsConsInstance;
     let lendingPoolInstance;

@@ -16,23 +16,34 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../../base/Loans.sol";
+import "../../base/LoansBase.sol";
 
-contract LoansMock is Loans {
+contract LoansBaseMock is LoansBase {
 
-    function setLoanIDCounter(uint256 newLoanIdCounter)
-        external
-    {
-        loanIDCounter = newLoanIdCounter;
-    }
+    function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
+        internal {}
 
-    function setBorrowerLoans(address borrower, uint256[] calldata loanIDs) external {
-        borrowerLoans[borrower] = loanIDs;
-    }
+    function _emitCollateralWithdrawnEvent(
+        uint256 loanID,
+        address payable recipient,
+        uint256 amount
+    ) internal {}
 
-    function setTotalCollateral(uint256 amount) external {
-        totalCollateral = amount;
-    }
+    function _emitLoanTakenOutEvent(uint256 loanID, uint256 amountBorrow) internal {}
+
+    function _emitLoanRepaidEvent(
+        uint256 loanID,
+        uint256 amountPaid,
+        address payer,
+        uint256 totalOwed
+    ) internal {}
+
+    function _emitLoanLiquidatedEvent(
+        uint256 loanID,
+        address liquidator,
+        uint256 collateralOut,
+        uint256 tokensIn
+    ) internal {}
 
     function externalPayLoan(uint256 loanID, uint256 toPay) external {
         _payLoan(loanID, toPay);
@@ -75,6 +86,17 @@ contract LoansMock is Loans {
         });
     }
 
-    function() external payable {}
-
+    function initialize(
+        address priceOracleAddress,
+        address lendingPoolAddress,
+        address loanTermsConsensusAddress,
+        address settingsAddress
+    ) external isNotInitialized() {
+        _initialize(
+            priceOracleAddress,
+            lendingPoolAddress,
+            loanTermsConsensusAddress,
+            settingsAddress
+        );
+    }
 }

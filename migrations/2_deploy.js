@@ -7,11 +7,15 @@ const ZDAI = artifacts.require("./base/ZDAI.sol");
 const ZUSDC = artifacts.require("./base/ZUSDC.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const Lenders = artifacts.require("./base/Lenders.sol");
-const Loans = artifacts.require("./base/Loans.sol");
+const EtherLoans = artifacts.require("./base/EtherLoans.sol");
+const TokenLoans = artifacts.require("./base/TokenLoans.sol");
 const LendingPool = artifacts.require("./base/LendingPool.sol");
 const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
+
+const tokensRequired = ['DAI', 'USDC', 'LINK'];
+const chainlinkOraclesRequired = ['DAI_ETH', 'USDC_ETH', 'USD_LINK'];
 
 module.exports = async function(deployer, network, accounts) {
   console.log(`Deploying smart contracts to '${network}'.`)
@@ -31,17 +35,12 @@ module.exports = async function(deployer, network, accounts) {
   console.log(`Deployer account index is ${deployerAccountIndex} => ${deployerAccount}`);
   const { maxGasLimit, tokens, chainlink, compound } = networkConfig;
   assert(maxGasLimit, `Max gas limit for network ${network} is undefined.`);
-  assert(tokens.DAI, 'DAI token address is not defined.');
-  assert(tokens.USDC, 'USDC token address is not defined.');
-  assert(chainlink.DAI_ETH, 'Chainlink: DAI/ETH oracle address is undefined.');
-  assert(chainlink.USDC_ETH, 'Chainlink: USDC/ETH oracle address is undefined.');
+
+  // Validations
+  tokensRequired.forEach( tokenName => assert(tokens[tokenName], `${tokenName} token address is not defined.`));
+  chainlinkOraclesRequired.forEach( pairName => assert(chainlink[pairName], `Chainlink: ${pairName} oracle address is undefined.`));
 
   const txConfig = { gas: maxGasLimit, from: deployerAccount };
-  const deployConfig = {
-    tokens,
-    aggregators: chainlink,
-    cTokens: compound,
-  };
 
   // Creating DeployerApp helper.
   const deployerApp = new DeployerApp(deployer, web3, deployerAccount, network);
@@ -57,19 +56,61 @@ module.exports = async function(deployer, network, accounts) {
     liquidateEthPrice,
     txConfig
   );
+  const aggregators = {};
+  
+  for (const chainlinkOraclePair of chainlinkOraclesRequired) {
+    const chainlinkOracleAddress = chainlink[chainlinkOraclePair];
+  
+    await deployerApp.deployWith(
+      `ChainlinkPairAggregator_${chainlinkOraclePair.toUpperCase()}`,
+      ChainlinkPairAggregator,
+      chainlinkOracleAddress,
+      txConfig
+    );
+    console.log(`New aggregator for ${chainlinkOraclePair}: ${ChainlinkPairAggregator.address} (using Chainlink Oracle address ${chainlinkOracleAddress})`);
+    aggregators[chainlinkOraclePair] = ChainlinkPairAggregator.address;
+  }
+
+  const deployConfig = {
+    tokens,
+    aggregators,
+    cTokens: compound,
+  };
+
   const artifacts = {
     Lenders,
-    Loans,
     LendingPool,
     InterestConsensus,
     LoanTermsConsensus,
-    ChainlinkPairAggregator,
     Settings,
   };
   const poolDeployer = new PoolDeployer(deployerApp, deployConfig, artifacts);
 
-  await poolDeployer.deployPool('DAI_ETH', 'DAI', ZDAI, txConfig);
-  await poolDeployer.deployPool('USDC_ETH', 'USDC', ZUSDC, txConfig);
+  await poolDeployer.deployPool(
+    { tokenName: 'DAI', collateralName: 'ETH' },
+    EtherLoans,
+    ZDAI,
+    txConfig
+  );
+  await poolDeployer.deployPool(
+    { tokenName: 'USDC', collateralName: 'ETH' },
+    EtherLoans,
+    ZUSDC,
+    txConfig
+  );
+
+  await poolDeployer.deployPool(
+    { tokenName: 'DAI', collateralName: 'LINK', oracleTokenName: 'USD' },
+    TokenLoans,
+    ZDAI,
+    txConfig
+  );
+  await poolDeployer.deployPool(
+    { tokenName: 'USDC', collateralName: 'LINK', oracleTokenName: 'USD' },
+    TokenLoans,
+    ZUSDC,
+    txConfig
+  );
 
   deployerApp.print();
   deployerApp.writeJson();
