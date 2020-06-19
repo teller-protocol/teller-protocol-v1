@@ -19,15 +19,32 @@ import "@chainlink/contracts/src/v0.5/interfaces/AggregatorInterface.sol";
 import "../../interfaces/PairAggregatorInterface.sol";
 
 contract ChainlinkPairAggregator is PairAggregatorInterface {
-    AggregatorInterface public aggregator;
 
-    constructor(address aggregatorAddress) public {
-        require(aggregatorAddress != address(0x0), "Aggregator address is required.");
+    uint256 internal constant TEN = 10;
+
+    AggregatorInterface public aggregator;
+    uint8 public tokenDecimals;
+    uint8 public responseDecimals;
+
+    constructor(address aggregatorAddress, uint8 tokenDecimalsValue, uint8 responseDecimalsValue) public {
+        require(aggregatorAddress != address(0x0), "PROVIDE_AGGREGATOR_ADDRESS");
+        require(tokenDecimalsValue > 0, "PROVIDE_VALID_TOKEN_DECIMALS");
+        require(responseDecimalsValue > 0, "PROVIDE_VALID_RESPONSE_DECIMALS");
         aggregator = AggregatorInterface(aggregatorAddress);
+        tokenDecimals = tokenDecimalsValue;
+        responseDecimals = responseDecimalsValue;
     }
 
+    /** External Functions */
+
     function getLatestAnswer() external view returns (int256) {
-        return aggregator.latestAnswer();
+        int256 latestAnswerInverted = _getLatestAnswer();
+        return _normalizeResponse(latestAnswerInverted);
+    }
+
+    function getPreviousAnswer(uint256 roundsBack) external view returns (int256) {
+        int256 answer = _getPreviousAnswer(roundsBack);
+        return _normalizeResponse(answer);
     }
 
     function getLatestTimestamp() external view returns (uint256) {
@@ -38,15 +55,34 @@ contract ChainlinkPairAggregator is PairAggregatorInterface {
         return aggregator.latestRound();
     }
 
-    function getPreviousAnswer(uint256 roundsBack) external view returns (int256) {
+    function getPreviousTimestamp(uint256 roundsBack) external view returns (uint256) {
         uint256 latest = aggregator.latestRound();
-        require(roundsBack <= latest, "Not enough history");
+        require(roundsBack <= latest, "NOT_ENOUGH_HISTORY");
+        return aggregator.getTimestamp(latest - roundsBack);
+    }
+
+    /** Internal Functions */
+
+    function _getLatestAnswer() internal view returns (int256) {
+        return aggregator.latestAnswer();
+    }
+
+    function _getPreviousAnswer(uint256 roundsBack) internal view returns (int256) {
+        uint256 latest = aggregator.latestRound();
+        require(roundsBack <= latest, "NOT_ENOUGH_HISTORY");
         return aggregator.getAnswer(latest - roundsBack);
     }
 
-    function getPreviousTimestamp(uint256 roundsBack) external view returns (uint256) {
-        uint256 latest = aggregator.latestRound();
-        require(roundsBack <= latest, "Not enough history");
-        return aggregator.getTimestamp(latest - roundsBack);
+    function _normalizeDecimals(int256 value) internal view returns (int256) {
+        if( tokenDecimals >= responseDecimals) {
+            uint8 pendingDecimals = tokenDecimals - responseDecimals;
+            return value * int256(TEN ** pendingDecimals);
+        } else {
+            return value;
+        }
+    }
+
+    function _normalizeResponse(int256 response) internal view returns (int256) {
+        return _normalizeDecimals(response);
     }
 }

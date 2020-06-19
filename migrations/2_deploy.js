@@ -15,7 +15,7 @@ const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
 
 const tokensRequired = ['DAI', 'USDC', 'LINK'];
-const chainlinkOraclesRequired = ['DAI_ETH', 'USDC_ETH', 'USD_LINK'];
+const chainlinkOraclesRequired = ['DAI_ETH', 'USDC_ETH', 'LINK_USD'];
 
 module.exports = async function(deployer, network, accounts) {
   console.log(`Deploying smart contracts to '${network}'.`)
@@ -59,15 +59,22 @@ module.exports = async function(deployer, network, accounts) {
   const aggregators = {};
   
   for (const chainlinkOraclePair of chainlinkOraclesRequired) {
-    const chainlinkOracleAddress = chainlink[chainlinkOraclePair];
+    const chainlinkOracleInfo = chainlink[chainlinkOraclePair];
+    const {
+      address,
+      tokenDecimals,
+      responseDecimals,
+    } = chainlinkOracleInfo;
   
     await deployerApp.deployWith(
       `ChainlinkPairAggregator_${chainlinkOraclePair.toUpperCase()}`,
       ChainlinkPairAggregator,
-      chainlinkOracleAddress,
+      address,
+      tokenDecimals,
+      responseDecimals,
       txConfig
     );
-    console.log(`New aggregator for ${chainlinkOraclePair}: ${ChainlinkPairAggregator.address} (using Chainlink Oracle address ${chainlinkOracleAddress})`);
+    console.log(`New aggregator for ${chainlinkOraclePair} (Token Decimals: ${tokenDecimals} / Response Decimals: ${responseDecimals}): ${ChainlinkPairAggregator.address} (using Chainlink Oracle address ${address})`);
     aggregators[chainlinkOraclePair] = ChainlinkPairAggregator.address;
   }
 
@@ -100,13 +107,13 @@ module.exports = async function(deployer, network, accounts) {
   );
 
   await poolDeployer.deployPool(
-    { tokenName: 'DAI', collateralName: 'LINK', oracleTokenName: 'USD' },
+    { tokenName: 'DAI', collateralName: 'LINK', aggregatorName: 'LINK_USD' },
     TokenLoans,
     ZDAI,
     txConfig
   );
   await poolDeployer.deployPool(
-    { tokenName: 'USDC', collateralName: 'LINK', oracleTokenName: 'USD' },
+    { tokenName: 'USDC', collateralName: 'LINK', aggregatorName: 'LINK_USD' },
     TokenLoans,
     ZUSDC,
     txConfig

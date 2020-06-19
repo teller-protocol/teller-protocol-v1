@@ -19,7 +19,7 @@ contract('ChainlinkPairAggregatorGetPreviousTimestampTest', function (accounts) 
         assert(chainlinkAggregator);
         assert(chainlinkAggregator.address);
 
-        instance = await ChainlinkPairAggregator.new(chainlinkAggregator.address);
+        instance = await ChainlinkPairAggregator.new(chainlinkAggregator.address, 18, 18);
         assert(instance);
         assert(instance.address);
     });
@@ -27,7 +27,7 @@ contract('ChainlinkPairAggregatorGetPreviousTimestampTest', function (accounts) 
     withData({
         _1_basic: [getMillis(2020, 03, 14), 135, daysToMillis(5), undefined, false],
         _2_zeroDays: [getMillis(2020, 01, 02), 120, daysToMillis(0), undefined, false],
-        _2_notHistory: [getMillis(2020, 01, 01), 120, getMillis(2020, 02, 02), 'Not enough history', true]
+        _2_notHistory: [getMillis(2020, 01, 01), 120, getMillis(2020, 02, 02), 'NOT_ENOUGH_HISTORY', true]
     }, function(
         latestRoundResponse,
         getAnswerResponse,

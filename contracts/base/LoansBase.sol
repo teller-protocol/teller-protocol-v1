@@ -17,12 +17,13 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../base/Base.sol";
+// Libraries and common
 import "../util/ZeroCollateralCommon.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 // Contracts
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
+import "../base/Base.sol";
 
 // Interfaces
 import "../interfaces/PairAggregatorInterface.sol";
@@ -33,8 +34,6 @@ import "../interfaces/LoanTermsConsensusInterface.sol";
 contract LoansBase is Base {
     using SafeMath for uint256;
 
-    uint256 internal constant ONE_HOUR = 60 * 60;
-    uint256 internal constant ONE_DAY = ONE_HOUR * 24;
     uint256 internal constant TEN = 10; // Used to calculate one whole token.
     // Loan length will be inputted in days, with 4 decimal places. i.e. 30 days will be inputted as
     // 300000. Therefore in interest calculations we must divide by 365000
@@ -142,7 +141,8 @@ contract LoansBase is Base {
             uint256 collateral,
             uint256 collateralNeededLendingTokens,
             uint256 collateralNeededCollateralTokens,
-            bool requireCollateral
+            bool requireCollateral,
+            uint256 oraclePrice
         )
     {
         collateral = loans[loanID].collateral; // Collateral Tokens (ETH, LINK).
@@ -153,7 +153,8 @@ contract LoansBase is Base {
             _getTotalOwed(loanID),
             loans[loanID].loanTerms.collateralRatio
         );
-        requireCollateral = collateralNeededCollateralTokens >= collateral;
+        requireCollateral = collateralNeededCollateralTokens > collateral;
+        oraclePrice = uint256(priceOracle.getLatestAnswer());
     }
 
     /**
@@ -359,7 +360,10 @@ contract LoansBase is Base {
             collateralRatio
         );
         // Convert collateral (in lending tokens) into collateral tokens.
-        return (collateralNeededToken, _convertTokenToWei(collateralNeededToken));
+        return (
+            collateralNeededToken,
+            _convertTokenToWei(collateralNeededToken)
+        );
     }
 
     function _initialize(

@@ -6,3 +6,5 @@ build
 .env
 .DS_Store
 test-integration/resources/data
+.coverage_artifacts
+.coverage_contracts

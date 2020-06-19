@@ -16,10 +16,14 @@ contract('ChainlinkPairAggregatorConstructorTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [true, undefined, false],
-        _2_emptyChainlink: [false, 'Aggregator address is required.', true]
+        _1_basic: [true, 18, 18, undefined, false],
+        _2_emptyChainlink: [false, 18, 18, 'PROVIDE_AGGREGATOR_ADDRESS', true],
+        _3_zeroTokenDecimals: [true, 0, 18, 'PROVIDE_VALID_TOKEN_DECIMALS', true],
+        _4_zeroResponseDecimals: [true, 18, 0, 'PROVIDE_VALID_RESPONSE_DECIMALS', true]
     }, function(
         createChainlinkInstance,
+        tokenDecimals,
+        responseDecimals,
         expectedErrorMessage,
         mustFail
     ) {    
@@ -29,7 +33,7 @@ contract('ChainlinkPairAggregatorConstructorTest', function (accounts) {
 
             try {
                 // Invocation
-                const result = await ChainlinkPairAggregator.new(chainlinkAddress);
+                const result = await ChainlinkPairAggregator.new(chainlinkAddress, tokenDecimals, responseDecimals);
                 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
