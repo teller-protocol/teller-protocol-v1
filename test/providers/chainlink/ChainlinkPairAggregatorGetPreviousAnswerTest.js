@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, getMillis, daysToMillis } = require('../../utils/consts');
+const { t } = require('../../utils/consts');
 const AggregatorInterfaceEncoder = require('../../utils/encoders/AggregatorInterfaceEncoder');
 
 // Mock contracts
@@ -19,15 +19,15 @@ contract('ChainlinkPairAggregatorGetPreviousAnswerTest', function (accounts) {
         assert(chainlinkAggregator);
         assert(chainlinkAggregator.address);
 
-        instance = await ChainlinkPairAggregator.new(chainlinkAggregator.address);
+        instance = await ChainlinkPairAggregator.new(chainlinkAggregator.address, 18, 18);
         assert(instance);
         assert(instance.address);
     });
 
     withData({
-        _1_basic: [getMillis(2020, 01, 02), 120, daysToMillis(5), undefined, false],
-        _2_zeroDays: [getMillis(2020, 01, 02), 120, daysToMillis(0), undefined, false],
-        _3_notHistory: [getMillis(2020, 01, 01), 120, getMillis(2020, 02, 02), 'Not enough history', true]
+        _1_basic: [5, 120, 3, undefined, false],
+        _2_zeroDays: [6, 120, 0, undefined, false],
+        _3_notHistory: [5, 120, 8, 'NOT_ENOUGH_HISTORY', true]
     }, function(
         latestRoundResponse,
         getAnswerResponse,

@@ -9,11 +9,12 @@ class PoolDeployer {
 }
 
 PoolDeployer.prototype.deployPool = async function(
-    { tokenName, collateralName, oracleTokenName = tokenName},
+    { tokenName, collateralName, aggregatorName = `${tokenName.toUpperCase()}_${collateralName.toUpperCase()}`},
     Loans,
     ZToken,
     txConfig
 ) {
+    assert(aggregatorName, 'Aggregator name is undefined.');
     assert(tokenName, 'Token name is undefined.');
     assert(collateralName, 'Collateral token name is undefined.');
     const zTokenInstance = await ZToken.deployed();
@@ -26,9 +27,6 @@ PoolDeployer.prototype.deployPool = async function(
     } = this.deployConfig;
     const tokenAddress = tokens[tokenName.toUpperCase()];
     assert(tokenAddress, `Tokens address for token ${tokenName.toUpperCase()} is undefined.`);
-  
-    const aggregatorName = `${oracleTokenName.toUpperCase()}_${collateralName.toUpperCase()}`;
-    assert(aggregatorName, 'Aggregator name is undefined.');
 
     console.log(`Aggregator name: ${aggregatorName.toUpperCase()}`);
     const aggregatorAddress = aggregators[aggregatorName.toUpperCase()];

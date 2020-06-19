@@ -19,7 +19,7 @@ contract('ChainlinkPairAggregatorGetLatestTimestampTest', function (accounts) {
         assert(chainlinkAggregator);
         assert(chainlinkAggregator.address);
 
-        instance = await ChainlinkPairAggregator.new(chainlinkAggregator.address);
+        instance = await ChainlinkPairAggregator.new(chainlinkAggregator.address, 18, 18);
         assert(instance);
         assert(instance.address);
     });

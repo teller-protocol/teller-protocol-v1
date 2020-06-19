@@ -1,7 +1,19 @@
 const { DUMMY_ADDRESS } = require('../../consts');
 
 module.exports = {
-    USDC_ETH: DUMMY_ADDRESS,
-    DAI_ETH: DUMMY_ADDRESS,
-    USD_LINK: DUMMY_ADDRESS,
+    USDC_ETH: {
+        address: DUMMY_ADDRESS,
+        tokenDecimals: 6,
+        responseDecimals: 18,
+    },
+    DAI_ETH: {
+        address: DUMMY_ADDRESS,
+        tokenDecimals: 18,
+        responseDecimals: 18,
+    },
+    LINK_USD: {
+        address: DUMMY_ADDRESS,
+        tokenDecimals: 18,
+        responseDecimals: 8,
+    },
 };

@@ -48,6 +48,7 @@ contract EtherLoansMock is EtherLoans {
         bool liquidated
     ) external {
         require(loanTerms.maxLoanAmount >= borrowedAmount, "BORROWED_AMOUNT_EXCEEDS_MAX");
+        totalCollateral += collateral;
         loans[id] = ZeroCollateralCommon.Loan({
             id: id,
             loanTerms: loanTerms,
