@@ -1,17 +1,16 @@
 // Smart contracts
 
 // Util classes
+const { loans: readParams } = require("../utils/cli-builder");
 const { zerocollateral, tokens } = require("../utils/contracts");
 const { printFullLoan, printOraclePrice } = require("../../test/utils/printer");
 const ProcessArgs = require('../utils/ProcessArgs');
-const processArgs = new ProcessArgs();
-
-// Parameters
-const loanId = 1;
-const tokenName = 'DAI';
+const processArgs = new ProcessArgs(readParams.getLoan().argv);
 
 module.exports = async (callback) => {
     try {
+        const tokenName = processArgs.getValue('tokenName');
+        const loanId = processArgs.getValue('loanId');
         const getContracts = processArgs.createGetContracts(artifacts);
         const loansInstance = await getContracts.getDeployed(zerocollateral.loans(tokenName));
         const oracleInstance = await getContracts.getDeployed(zerocollateral.oracle(tokenName));

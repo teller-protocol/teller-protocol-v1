@@ -1,4 +1,5 @@
 const BigNumber = require('bignumber.js');
+BigNumber.config({ ROUNDING_MODE: BigNumber.default.ROUND_FLOOR });
 const assert = require('assert');
 const { toDecimals, toUnits } = require("../consts");
 
@@ -47,7 +48,8 @@ LoanInfoPrinter.prototype.getCollateralInTokens = function(price) {
 
 LoanInfoPrinter.prototype.getTotalTokensPaymentInLiquidation = function(price, ethPricePercentage) {
     const collateralInTokens = this.getCollateralInTokens(price);
-    return collateralInTokens.times(ethPricePercentage).div(TEN_THOUSAND);
+    const collateralInTokensBigNumber = BigNumber(collateralInTokens.toFixed(0));
+    return collateralInTokensBigNumber.times(ethPricePercentage).div(TEN_THOUSAND);
 }
 
 LoanInfoPrinter.prototype.getCollateralUnits = function() {

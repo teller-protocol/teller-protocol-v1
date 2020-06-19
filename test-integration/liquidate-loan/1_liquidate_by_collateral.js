@@ -7,9 +7,9 @@ const LoanInfoPrinter = require('../../test/utils/printers/LoanInfoPrinter');
 const { createMultipleSignedLoanTermsResponses, createLoanTermsRequest } = require('../../test/utils/loan-terms-helper');
 const assert = require("assert");
 
-module.exports = async ({accounts, getContracts, timer, web3, nonces}) => {
+module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonces}) => {
   console.log('Liquidate Loan by Collateral');
-  const tokenName = 'DAI';
+  const tokenName = processArgs.getValue('testTokenName');
   const settingsInstance = await getContracts.getDeployed(zerocollateral.settings());
   const token = await getContracts.getDeployed(tokens.get(tokenName));
   const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.lendingPool(tokenName));
@@ -128,14 +128,15 @@ module.exports = async ({accounts, getContracts, timer, web3, nonces}) => {
   const finalTotalCollateral = await loansInstance.totalCollateral();
   assert.equal(
     finalTotalCollateral.toString(),
-    BigNumber(initialTotalCollateral.toString()).minus(loanInfo.collateral.toString()).toFixed(),
+    BigNumber(initialTotalCollateral.toString()).minus(loanInfo.collateral.toString()).toFixed(0),
     'Invalid final total collateral balance (Loans).'
   );
 
   const finalLiquidatorTokenBalance = await token.balanceOf(liquidatorTxConfig.from);
+
   assert.equal(
-    tokensPaymentIn.toString(),
-    BigNumber(finalLiquidatorTokenBalance.toString()).minus(initialLiquidatorTokenBalance.toString()).toFixed(),
+    tokensPaymentIn.toFixed(0),
+    BigNumber(finalLiquidatorTokenBalance.toString()).minus(initialLiquidatorTokenBalance.toString()).toFixed(0),
     'Invalid final liquidator tokens balance.'
   );
 };
