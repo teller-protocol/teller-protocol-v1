@@ -193,11 +193,9 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
 
             // Invocation
             const {
-                collateral: collateralResult,
                 collateralNeededLendingTokens: collateralNeededLendingTokensResult,
                 collateralNeededCollateralTokens: collateralNeededCollateralTokensResult,
                 requireCollateral: requireCollateralResult,
-                oraclePrice: oraclePriceResult
             } = await instance.getCollateralInfo(loanID);
 
             // Assertions

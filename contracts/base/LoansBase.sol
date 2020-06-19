@@ -134,29 +134,6 @@ contract LoansBase is Base {
         _emitCollateralWithdrawnEvent(loanID, msg.sender, withdrawalAmount);
     }
 
-    function getCollateralInfo(uint256 loanID)
-        external
-        view
-        returns (
-            uint256 collateral,
-            uint256 collateralNeededLendingTokens,
-            uint256 collateralNeededCollateralTokens,
-            bool requireCollateral,
-            uint256 oraclePrice
-        )
-    {
-        collateral = loans[loanID].collateral; // Collateral Tokens (ETH, LINK).
-        (
-            collateralNeededLendingTokens,
-            collateralNeededCollateralTokens
-        ) = _getCollateralInfo(
-            _getTotalOwed(loanID),
-            loans[loanID].loanTerms.collateralRatio
-        );
-        requireCollateral = collateralNeededCollateralTokens > collateral;
-        oraclePrice = uint256(priceOracle.getLatestAnswer());
-    }
-
     /**
      * @notice Take out a loan
      *
@@ -170,7 +147,7 @@ contract LoansBase is Base {
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused(address(lendingPool))
-        nonReentrant() // TODO Should it be for TokenLoans?
+        nonReentrant()
         isBorrower(loans[loanID].loanTerms.borrower)
     {
         require(
@@ -194,14 +171,15 @@ contract LoansBase is Base {
             .div(DAYS_PER_YEAR_4DP);
 
         // check that enough collateral has been provided for this loan
-        uint256 collateralNeededToken = _getCollateralNeededInTokens(
-            _getTotalOwed(loanID),
-            loans[loanID].loanTerms.collateralRatio
-        );
-        uint256 collateralNeededWei = _convertTokenToWei(collateralNeededToken);
+        (
+            , // Loan Collateral
+            , // Collateral Needed (in Lending Tokens)
+            , // Collateral Needed (In Collateral)
+            bool requireCollateral
+        ) = _getCollateralInfo(loanID);
 
         require(
-            loans[loanID].collateral >= collateralNeededWei,
+            !requireCollateral,
             "MORE_COLLATERAL_REQUIRED"
         );
 
@@ -230,7 +208,7 @@ contract LoansBase is Base {
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused(address(lendingPool))
-        nonReentrant() // TODO Should it be for TokenLoans?
+        nonReentrant()
     {
         // calculate the actual amount to repay
         uint256 toPay = amount;
@@ -281,20 +259,18 @@ contract LoansBase is Base {
         whenLendingPoolNotPaused(address(lendingPool))
         nonReentrant()
     {
-        // TODO Validate allowance amount.
         // calculate the amount of collateral the loan needs in tokens
-        uint256 collateralNeededToken = _getCollateralNeededInTokens(
-            _getTotalOwed(loanID),
-            loans[loanID].loanTerms.collateralRatio
-        );
-        uint256 collateralNeededWei = _convertTokenToWei(collateralNeededToken);
+        (
+            uint256 loanCollateral,
+            , // Collateral Needed (in Lending Tokens)
+            uint256 collateralNeededWei,
+            // Require Collateral
+        ) = _getCollateralInfo(loanID);
 
         // calculate when the loan should end
         uint256 loanEndTime = loans[loanID].loanStartTime.add(
             loans[loanID].loanTerms.duration
         );
-
-        uint256 loanCollateral = loans[loanID].collateral;
 
         // to liquidate it must be undercollateralised, or expired
         require(
@@ -317,6 +293,19 @@ contract LoansBase is Base {
         lendingPool.liquidationPayment(tokenPayment, msg.sender);
 
         _emitLoanLiquidatedEvent(loanID, msg.sender, loanCollateral, tokenPayment);
+    }
+
+    function getCollateralInfo(uint256 loanID)
+        external
+        view
+        returns (
+            uint256 collateral,
+            uint256 collateralNeededLendingTokens,
+            uint256 collateralNeededCollateralTokens,
+            bool requireCollateral
+        )
+    {
+        return _getCollateralInfo(loanID);
     }
 
     /** Internal Functions */
@@ -346,7 +335,28 @@ contract LoansBase is Base {
         uint256 tokensIn
     ) internal;
 
-    function _getCollateralInfo(uint256 totalOwed, uint256 collateralRatio)
+    function _getCollateralInfo(uint256 loanID)
+        internal
+        view
+        returns (
+            uint256 collateral,
+            uint256 collateralNeededLendingTokens,
+            uint256 collateralNeededCollateralTokens,
+            bool requireCollateral
+        )
+    {
+        collateral = loans[loanID].collateral;
+        (
+            collateralNeededLendingTokens,
+            collateralNeededCollateralTokens
+        ) = _getCollateralNeededInfo(
+            _getTotalOwed(loanID),
+            loans[loanID].loanTerms.collateralRatio
+        );
+        requireCollateral = collateralNeededCollateralTokens > collateral;
+    }
+
+    function _getCollateralNeededInfo(uint256 totalOwed, uint256 collateralRatio)
         internal
         view
         returns (
