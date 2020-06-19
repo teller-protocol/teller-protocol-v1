@@ -360,10 +360,7 @@ contract LoansBase is Base {
             collateralRatio
         );
         // Convert collateral (in lending tokens) into collateral tokens.
-        return (
-            collateralNeededToken,
-            _convertTokenToWei(collateralNeededToken)
-        );
+        return (collateralNeededToken, _convertTokenToWei(collateralNeededToken));
     }
 
     function _initialize(
