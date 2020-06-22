@@ -1,6 +1,6 @@
 // Util classes
 const BigNumber = require('bignumber.js');
-const { zerocollateral, tokens, chainlink } = require("../../scripts/utils/contracts");
+const { zerocollateral, tokens, ctokens, chainlink } = require("../../scripts/utils/contracts");
 const { loans, lendingPool } = require('../../test/utils/events');
 const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds } = require('../../test/utils/consts');
 const { createMultipleSignedLoanTermsResponses, createLoanTermsRequest } = require('../../test/utils/loan-terms-helper');
@@ -38,8 +38,8 @@ module.exports = async ({accounts, getContracts, timer, web3, nonces}) => {
   const borrowerTxConfig = { from: borrower };
 
   const senderTxConfig = await accounts.getTxConfigAt(1);
-  await collateralToken.mintTo(senderTxConfig.from, initialCollateralAmount, senderTxConfig);
-  await collateralToken.mintTo(senderTxConfig.from, finalCollateralAmount, senderTxConfig);
+  await collateralToken.mint(senderTxConfig.from, initialCollateralAmount, senderTxConfig);
+  await collateralToken.mint(senderTxConfig.from, finalCollateralAmount, senderTxConfig);
 
   // Sets Initial Oracle Price
   console.log(`Settings initial oracle price: 1 ${tokenName} = ${initialOraclePrice.toFixed(0)} = ${toUnits(initialOraclePrice, collateralTokenDecimals)} ${collateralTokenName}`);
@@ -84,6 +84,7 @@ module.exports = async ({accounts, getContracts, timer, web3, nonces}) => {
   const initialBorrowerCollateralTokenBalance = await collateralToken.balanceOf(borrowerTxConfig.from);
 
   await collateralToken.approve(loansInstance.address, initialCollateralAmount, borrowerTxConfig);
+
   const setLoanTermsResult = await loansInstance.setLoanTerms(
     loanTermsRequest.loanTermsRequest,
     signedResponses,

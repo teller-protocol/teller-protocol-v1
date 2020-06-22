@@ -12,7 +12,7 @@ module.exports = async ({processArgs, accounts, getContracts, timer}) => {
   const dai = await getContracts.getDeployed(tokens.get(tokenName));
   const zdai = await getContracts.getDeployed(zerocollateral.ztoken(tokenName));
   const amountWei = toDecimals(100, 18);
-  await dai.mintTo(senderTxConfig.from, amountWei, senderTxConfig);
+  await dai.mint(senderTxConfig.from, amountWei, senderTxConfig);
 
   const lendingPoolZDai = await getContracts.getDeployed(zerocollateral.eth().lendingPool(tokenName));
   const lendingToken = await lendingPoolZDai.lendingToken();

@@ -10,8 +10,8 @@ contract ERC20Mock is ERC20Detailed, ERC20Mintable, ERC20Burnable {
         _mint(msg.sender, initialMintAmount * (10**uint256(decimals())));
     }
 
-    function mintTo(address account, uint256 amount)
-        external
+    function mint(address account, uint256 amount)
+        public
         returns (bool)
     {
         _mint(account, amount);

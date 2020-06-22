@@ -80,6 +80,7 @@ module.exports = {
 			network_id: ganacheConfig.networkId,
 			gas: gasKeyValue,
 			gasPrice: ganacheConfig.gasPrice,
+			skipDryRun: true,
 		},
 		ropsten: {
 			provider: function() {
