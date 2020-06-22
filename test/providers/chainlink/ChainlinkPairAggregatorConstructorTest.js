@@ -18,8 +18,8 @@ contract('ChainlinkPairAggregatorConstructorTest', function (accounts) {
     withData({
         _1_basic: [true, 18, 18, undefined, false],
         _2_emptyChainlink: [false, 18, 18, 'PROVIDE_AGGREGATOR_ADDRESS', true],
-        _3_zeroTokenDecimals: [true, 0, 18, 'PROVIDE_VALID_TOKEN_DECIMALS', true],
-        _4_zeroResponseDecimals: [true, 18, 0, 'PROVIDE_VALID_RESPONSE_DECIMALS', true]
+        _3_zeroTokenDecimals: [true, 0, 18, undefined, false],
+        _4_zeroResponseDecimals: [true, 18, 0, undefined, false]
     }, function(
         createChainlinkInstance,
         tokenDecimals,

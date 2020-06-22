@@ -28,8 +28,6 @@ contract ChainlinkPairAggregator is PairAggregatorInterface {
 
     constructor(address aggregatorAddress, uint8 tokenDecimalsValue, uint8 responseDecimalsValue) public {
         require(aggregatorAddress != address(0x0), "PROVIDE_AGGREGATOR_ADDRESS");
-        require(tokenDecimalsValue > 0, "PROVIDE_VALID_TOKEN_DECIMALS");
-        require(responseDecimalsValue > 0, "PROVIDE_VALID_RESPONSE_DECIMALS");
         aggregator = AggregatorInterface(aggregatorAddress);
         tokenDecimals = tokenDecimalsValue;
         responseDecimals = responseDecimalsValue;
@@ -38,7 +36,7 @@ contract ChainlinkPairAggregator is PairAggregatorInterface {
     /** External Functions */
 
     function getLatestAnswer() external view returns (int256) {
-        int256 latestAnswerInverted = _getLatestAnswer();
+        int256 latestAnswerInverted = aggregator.latestAnswer();
         return _normalizeResponse(latestAnswerInverted);
     }
 
@@ -62,10 +60,6 @@ contract ChainlinkPairAggregator is PairAggregatorInterface {
     }
 
     /** Internal Functions */
-
-    function _getLatestAnswer() internal view returns (int256) {
-        return aggregator.latestAnswer();
-    }
 
     function _getPreviousAnswer(uint256 roundsBack) internal view returns (int256) {
         uint256 latest = aggregator.latestRound();
