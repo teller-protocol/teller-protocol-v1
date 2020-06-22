@@ -1,18 +1,16 @@
 // Util classes
 const { zerocollateral } = require("../../scripts/utils/contracts");
 
-const internalAddSigners = async (accounts, collateralTokenName, tokenName, { addressToAddFromIndex, addressToAddToIndex }, loanTermsConsensusInstance) => {
-  const txConfig = await accounts.getTxConfigAt(0);
+const internalAddSigners = async (senderTxConfig, accountAddresses, collateralTokenName, tokenName, loanTermsConsensusInstance) => {
   console.log(`Adding signers to loan terms consensus [${tokenName}-${collateralTokenName} / ${loanTermsConsensusInstance.address}] contract`);
-  for(let currentIndex = addressToAddFromIndex; currentIndex < addressToAddToIndex; currentIndex++) {
-    const addressToAdd = await accounts.getAt(currentIndex);
+  for (const addressToAdd of accountAddresses) {
     const isAlreadySigner = await loanTermsConsensusInstance.isSigner(addressToAdd);
     if (isAlreadySigner === false) {
-        await loanTermsConsensusInstance.addSigner(addressToAdd, txConfig);
-        const isSigner = await loanTermsConsensusInstance.isSigner(addressToAdd);
-        console.log(`Has ${addressToAdd} a signer role? ${isSigner.toString()}`);
+      await loanTermsConsensusInstance.addSigner(addressToAdd, senderTxConfig);
+      const isSigner = await loanTermsConsensusInstance.isSigner(addressToAdd);
+      console.log(`Has ${addressToAdd} a signer role? ${isSigner.toString()}`);
     } else {
-        console.log(`Account ${addressToAdd} is already a signer in contract.`);
+      console.log(`Account ${addressToAdd} is already a signer in contract.`);
     }
   }
 };
@@ -21,14 +19,15 @@ module.exports = async (initConfig, { accounts, getContracts }) => {
   console.log('Adding signers to loan terms consensus contracts.');
   const {
     tokenNames,
-    signerAddresses,
+    signerAddresses = [],
   } = initConfig;
+  const senderTxConfig = await accounts.getTxConfigAt(0);
 
   for (const tokenName of tokenNames) {
     const ethLoanTermsConsensusInstance = await getContracts.getDeployed(zerocollateral.eth().loanTermsConsensus(tokenName));
-    await internalAddSigners(accounts, 'ETH', tokenName, { addressToAddFromIndex, addressToAddToIndex }, ethLoanTermsConsensusInstance );
+    await internalAddSigners(senderTxConfig, signerAddresses, 'ETH', tokenName, ethLoanTermsConsensusInstance );
 
     const linkLoanTermsConsensusInstance = await getContracts.getDeployed(zerocollateral.link().loanTermsConsensus(tokenName));
-    await internalAddSigners(accounts, 'LINK', tokenName, { addressToAddFromIndex, addressToAddToIndex }, linkLoanTermsConsensusInstance );
+    await internalAddSigners(senderTxConfig, signerAddresses, 'LINK', tokenName, linkLoanTermsConsensusInstance );
   }
 };

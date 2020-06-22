@@ -2,6 +2,9 @@ pragma solidity 0.5.17;
 
 
 interface CErc20Interface {
+
+    function balanceOf(address account) external view returns (uint256);
+
     /*** User Interface ***/
 
     function underlying() external view returns (address);

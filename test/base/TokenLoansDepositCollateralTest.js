@@ -67,7 +67,7 @@ contract('TokenLoansDepositCollateralTest', function (accounts) {
             await instance.setLoan(lastLoanID, loanTerms, 0, 0, currentCollateral, 0, 0, 0, loanTerms.maxLoanAmount, ACTIVE, false)
 
             try {
-                await collateralToken.mintTo(sender, currentCollateralTokenBalance, { from: collateralTokenOwner });
+                await collateralToken.mint(sender, currentCollateralTokenBalance, { from: collateralTokenOwner });
                 const initialContractCollateralTokenBalance = await collateralToken.balanceOf(instance.address);
                 const initialSenderCollateralTokenBalance = await collateralToken.balanceOf(sender);
                 const initialTotalCollateral = await instance.totalCollateral();

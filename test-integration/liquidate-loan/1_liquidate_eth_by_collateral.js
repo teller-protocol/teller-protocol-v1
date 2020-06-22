@@ -115,10 +115,21 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   const loanInfo = await loansInstance.loans(lastLoanID);
   
   console.log(`Liquidating loan id ${lastLoanID}...`);
-  const initialLiquidatorTokenBalance = await token.balanceOf(liquidatorTxConfig.from);
+
   const initialTotalCollateral = await loansInstance.totalCollateral();
-  const liquidateLoanResult = await loansInstance.liquidateLoan(lastLoanID, liquidatorTxConfig);
   const liquidateEthPrice = await settingsInstance.liquidateEthPrice();
+  const {
+    collateralNeededLendingTokens,
+  } = await loansInstance.getCollateralInfo(lastLoanID);
+  const transferAmountToLiquidate = BigNumber(collateralNeededLendingTokens.toString()).times(liquidateEthPrice).div(10000);
+
+  await token.mint(liquidatorTxConfig.from, transferAmountToLiquidate.toFixed(0));
+
+  const initialLiquidatorTokenBalance = await token.balanceOf(liquidatorTxConfig.from);
+
+  await token.approve(lendingPoolInstance.address, transferAmountToLiquidate.toFixed(0), liquidatorTxConfig);
+  const liquidateLoanResult = await loansInstance.liquidateLoan(lastLoanID, liquidatorTxConfig);
+
   const loanPrinter = new LoanInfoPrinter(web3, loanInfo, { tokenName, decimals });
   const tokensPaymentIn = loanPrinter.getTotalTokensPaymentInLiquidation(finalOraclePrice, liquidateEthPrice);
   loans
@@ -127,16 +138,15 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
 
   const finalTotalCollateral = await loansInstance.totalCollateral();
   assert.equal(
-    finalTotalCollateral.toString(),
-    BigNumber(initialTotalCollateral.toString()).minus(loanInfo.collateral.toString()).toFixed(0),
+    loanInfo.collateral.toString(),
+    BigNumber(initialTotalCollateral.toString()).minus(finalTotalCollateral.toString()).toFixed(0),
     'Invalid final total collateral balance (Loans).'
   );
 
   const finalLiquidatorTokenBalance = await token.balanceOf(liquidatorTxConfig.from);
-
   assert.equal(
     tokensPaymentIn.toFixed(0),
-    BigNumber(finalLiquidatorTokenBalance.toString()).minus(initialLiquidatorTokenBalance.toString()).toFixed(0),
-    'Invalid final liquidator tokens balance.'
+    BigNumber(initialLiquidatorTokenBalance.toString()).minus(finalLiquidatorTokenBalance.toString()).toFixed(0),
+    'Invalid final liquidator lending tokens balance.'
   );
 };
