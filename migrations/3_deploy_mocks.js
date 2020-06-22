@@ -39,9 +39,11 @@ module.exports = async function(deployer, network, accounts) {
   // The Chainlink Oracle for pairs: DAI/LINK and USDC/LINK don't exist yet. So we use LINK/USD (inversed).
   await deployerApp.deployMockIfWith('LINK_USD', PairAggregatorMock, initialLinkUsdPrice, txConfig);
 
-  const defaultMultiplier = '2';
-  await deployerApp.deployMockIfWith('CDAI', CDAIMock, DAIMock.address, defaultMultiplier, txConfig);
-  await deployerApp.deployMockIfWith('CUSDC', CUSDCMock, USDCMock.address, defaultMultiplier, txConfig);
+  if(deployerApp.canDeployMock()) {
+      const defaultMultiplier = '2';
+      await deployerApp.deployMockIfWith('CDAI', CDAIMock, DAIMock.address, defaultMultiplier, txConfig);
+      await deployerApp.deployMockIfWith('CUSDC', CUSDCMock, USDCMock.address, defaultMultiplier, txConfig);
+  }
 
   deployerApp.print();
   deployerApp.writeJson();
