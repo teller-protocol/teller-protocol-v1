@@ -25,12 +25,14 @@ contract ChainlinkPairAggregator is PairAggregatorInterface {
     AggregatorInterface public aggregator;
     uint8 public tokenDecimals;
     uint8 public responseDecimals;
+    uint8 public collateralDecimals;
 
-    constructor(address aggregatorAddress, uint8 tokenDecimalsValue, uint8 responseDecimalsValue) public {
+    constructor(address aggregatorAddress, uint8 tokenDecimalsValue, uint8 responseDecimalsValue, uint8 collateralDecimalsValue) public {
         require(aggregatorAddress != address(0x0), "PROVIDE_AGGREGATOR_ADDRESS");
         aggregator = AggregatorInterface(aggregatorAddress);
         tokenDecimals = tokenDecimalsValue;
         responseDecimals = responseDecimalsValue;
+        collateralDecimals = collateralDecimalsValue;
     }
 
     /** External Functions */
@@ -68,11 +70,26 @@ contract ChainlinkPairAggregator is PairAggregatorInterface {
     }
 
     function _normalizeDecimals(int256 value) internal view returns (int256) {
-        if( tokenDecimals >= responseDecimals) {
-            uint8 pendingDecimals = tokenDecimals - responseDecimals;
-            return value * int256(TEN ** pendingDecimals);
+        if( responseDecimals == collateralDecimals) {
+            if( tokenDecimals >= responseDecimals) {
+                uint8 pendingDecimals = tokenDecimals - responseDecimals;
+                return value * int256(TEN ** pendingDecimals);
+            } else {
+                return value;
+            }    
         } else {
-            return value;
+            if( responseDecimals > collateralDecimals) {
+                if( tokenDecimals >= responseDecimals) {
+                    uint8 pendingDecimals = tokenDecimals - responseDecimals;
+                    return value * int256(TEN ** pendingDecimals);
+                } else {
+                    uint8 pendingDecimals = responseDecimals - tokenDecimals;
+                    return value / int256(TEN ** pendingDecimals);
+                }
+            } else {
+                uint8 pendingDecimals = collateralDecimals - responseDecimals;
+                return value * int256(TEN ** pendingDecimals);
+            }
         }
     }
 

@@ -1,7 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const BigNumber = require('bignumber.js');
-const { t, toDecimals, NULL_ADDRESS, ACTIVE } = require('../utils/consts');
+const { t, toDecimals, NULL_ADDRESS, ACTIVE, toUnits } = require('../utils/consts');
 const { createLoanTerms } = require('../utils/structs');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const AggregatorInterfaceEncoder = require('../utils/encoders/AggregatorInterfaceEncoder');
@@ -57,6 +57,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
             oracleInstance.address,
             decimalsConf.lendingTokenDecimals,
             decimalsConf.responseDecimals,
+            decimalsConf.collateralDecimals,
         );
         let instance;
         if (useTokens) {
@@ -159,6 +160,72 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
             // 1 DAI = 0.004414795 ETH; repay: 0; coll needed (lending tokens): 50 USD; coll. needed tokens: 0.2207 (50 * 0.0044)
             { requireCollateral: true, neededCollInLendingTokens: '50000000000000000000', neededCollInCollTokens: '220739750000000000' }
         ],
+        _8_usdc_slink_response_12_token_6_repay_0: [
+            buildLoanInfo(7, accounts[0], '5000', 0, 99, 1),
+            true,
+            TokenLoans,
+            0,
+            ChainlinkPairAggregator,
+            { collateralDecimals: 8, lendingTokenDecimals: 6, responseDecimals: 12 },
+            BigNumber("3000000000000"),
+            // 1 USDC = 3 SLINK; repay: 0; coll needed (lending tokens): 50 USDC; coll. needed tokens: 150 (50 * 3)
+            { requireCollateral: true, neededCollInLendingTokens: '50000000', neededCollInCollTokens: '150000000' }
+        ],
+        _9_usdc_slink_response_12_token_6_repay_50: [
+            buildLoanInfo(7, accounts[0], '5000', 0, 99, 1),
+            true,
+            TokenLoans,
+            50,
+            ChainlinkPairAggregator,
+            { collateralDecimals: 8, lendingTokenDecimals: 6, responseDecimals: 12 },
+            BigNumber("3000000000000"),
+            // 1 USDC = 3 SLINK; repay: 50; coll needed (lending tokens): 50 USDC; coll. needed tokens: 75 (25 / 3)
+            { requireCollateral: true, neededCollInLendingTokens: '25000000', neededCollInCollTokens: '75000000' }
+        ],
+        _10_usdc_slink_response_12_token_6_repay_100: [
+            buildLoanInfo(7, accounts[0], '5000', 0, 99, 1),
+            true,
+            TokenLoans,
+            100,
+            ChainlinkPairAggregator,
+            { collateralDecimals: 8, lendingTokenDecimals: 6, responseDecimals: 12 },
+            BigNumber("3000000000000"),
+            // 1 USDC = 3 SLINK; repay: 100; coll needed (lending tokens): 0 USDC; coll. needed tokens: 0
+            { requireCollateral: false, neededCollInLendingTokens: '0', neededCollInCollTokens: '0' }
+        ],
+        _11_usdc_tlink_response_12_token_6_repay_0: [
+            buildLoanInfo(7, accounts[0], '5000', 0, 99, 1),
+            true,
+            TokenLoans,
+            0,
+            ChainlinkPairAggregator,
+            { collateralDecimals: 12, lendingTokenDecimals: 6, responseDecimals: 10 },
+            BigNumber("20000000000"),
+            // 1 USDC = 2 TLINK; repay: 0; coll needed (lending tokens): 50 USDC; coll. needed tokens: 100 (50 * 2)
+            { requireCollateral: true, neededCollInLendingTokens: '50000000', neededCollInCollTokens: '100000000000000' }
+        ],
+        _12_usdc_tlink_response_12_token_6_repay_50: [
+            buildLoanInfo(7, accounts[0], '5000', 0, 99, 1),
+            true,
+            TokenLoans,
+            50,
+            ChainlinkPairAggregator,
+            { collateralDecimals: 12, lendingTokenDecimals: 6, responseDecimals: 10 },
+            BigNumber("20000000000"),
+            // 1 USDC = 2 TLINK; repay: 50; coll needed (lending tokens): 25 USDC; coll. needed tokens: 50 (25 * 2)
+            { requireCollateral: true, neededCollInLendingTokens: '25000000', neededCollInCollTokens: '50000000000000' }
+        ],
+        _13_usdc_tlink_response_12_token_6_repay_100: [
+            buildLoanInfo(7, accounts[0], '5000', 0, 99, 1),
+            true,
+            TokenLoans,
+            100,
+            ChainlinkPairAggregator,
+            { collateralDecimals: 12, lendingTokenDecimals: 6, responseDecimals: 10 },
+            BigNumber("20000000000"),
+            // 1 USDC = 2 TLINK; repay: 100; coll needed (lending tokens): 0 USDC; coll. needed tokens: 0
+            { requireCollateral: false, neededCollInLendingTokens: '0', neededCollInCollTokens: '0' }
+        ],
     }, function(loanInfo, useTokens, loanReference, repayAmount, aggregatorReference, decimalsConf, oraclePrice, expectedResults) {
         it(t('user', 'getCollateralInfo', 'Should able to get collateral info from a loan.', false), async function() {
             // Setup
@@ -196,8 +263,14 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
                 collateralNeededLendingTokens: collateralNeededLendingTokensResult,
                 collateralNeededCollateralTokens: collateralNeededCollateralTokensResult,
                 requireCollateral: requireCollateralResult,
+                oraclePrice: oraclePriceResult
             } = await instance.getCollateralInfo(loanID);
-
+            console.log(`Coll Needed`);
+            console.log(`Oracle Price:      ${oraclePriceResult.toString()}`);
+            console.log(`In Lending Tokens: ${collateralNeededLendingTokensResult.toString()} USDC`);
+            console.log(`In Coll Tokens:    ${collateralNeededCollateralTokensResult.toString()}`);
+            console.log(`Chainlink Return:  ${oraclePrice.toString()}`);
+            
             // Assertions
             assert.equal(requireCollateralResult, expectedResults.requireCollateral);
             assert.equal(collateralNeededCollateralTokensResult.toString(), expectedResults.neededCollInCollTokens);

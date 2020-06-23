@@ -19,9 +19,9 @@ import "./ChainlinkPairAggregator.sol";
 
 contract InverseChainlinkPairAggregator is ChainlinkPairAggregator {
 
-    constructor(address aggregatorAddress, uint8 tokenDecimalsValue, uint8 responseDecimalsValue)
+    constructor(address aggregatorAddress, uint8 tokenDecimalsValue, uint8 responseDecimalsValue, uint8 collateralDecimalsValue)
         public
-        ChainlinkPairAggregator(aggregatorAddress, tokenDecimalsValue, responseDecimalsValue)
+        ChainlinkPairAggregator(aggregatorAddress, tokenDecimalsValue, responseDecimalsValue, collateralDecimalsValue)
         {}
 
     /** External Functions */
