@@ -61,7 +61,7 @@ const internalChainlink = (sourceTokenName, targetTokenName, artifactName = 'Pai
 
 const customCollateralToken = (collateralToken) => {
     const collToken = collateralToken.toUpperCase();
-    const loansArtifactName = collToken === ETH ? 'EtherLoans' : 'TokenLoans';
+    const loansArtifactName = collToken === ETH ? 'EtherCollateralLoans' : 'TokenCollateralLoans';
     return {
         loans: (tokenName) => {
             return internalLoans(collToken, tokenName, loansArtifactName);

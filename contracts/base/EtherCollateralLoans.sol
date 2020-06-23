@@ -21,28 +21,21 @@ pragma experimental ABIEncoderV2;
 import "./LoansBase.sol";
 
 // Interfaces
-import "../interfaces/TokenLoansInterface.sol";
+import "../interfaces/LoansInterface.sol";
 
 
-contract TokenLoans is TokenLoansInterface, LoansBase {
-    /** Constants */
-
-    /** Properties */
+contract EtherCollateralLoans is LoansInterface, LoansBase {
 
     ERC20Detailed public collateralToken;
 
-    /** Modifiers */
-
-    /** External Functions */
-
     /**
-     * @notice Deposit collateral tokens into a loan.
+     * @notice Deposit collateral into a loan
      * @param borrower address The address of the loan borrower.
      * @param loanID uint256 The ID of the loan the collateral is for
-     * @param amount to deposit as collateral.
      */
     function depositCollateral(address borrower, uint256 loanID, uint256 amount)
         external
+        payable
         loanActiveOrSet(loanID)
         isInitialized()
         whenNotPaused()
@@ -52,9 +45,10 @@ contract TokenLoans is TokenLoansInterface, LoansBase {
             loans[loanID].loanTerms.borrower == borrower,
             "BORROWER_LOAN_ID_MISMATCH"
         );
-        require(amount > 0, "CANNOT_DEPOSIT_ZERO");
+        require(msg.value == amount, 'INCORRECT_ETH_AMOUNT');
+        require(msg.value > 0, "CANNOT_DEPOSIT_ZERO");
 
-        // Update the loan collateral and total. Transfer tokens to this contract.
+        // Update the contract total and the loan collateral total
         _payInCollateral(loanID, amount);
 
         emit CollateralDeposited(loanID, borrower, amount);
@@ -64,9 +58,10 @@ contract TokenLoans is TokenLoansInterface, LoansBase {
         ZeroCollateralCommon.LoanRequest calldata request,
         ZeroCollateralCommon.LoanResponse[] calldata responses,
         uint256 collateralAmount
-    ) external isInitialized() whenNotPaused() isBorrower(request.borrower) {
-        uint256 loanID = getAndIncrementLoanID();
+    ) external payable isInitialized() whenNotPaused() isBorrower(request.borrower) {
+        require(msg.value == collateralAmount, 'INCORRECT_ETH_AMOUNT');
 
+        uint256 loanID = getAndIncrementLoanID();
         (
             uint256 interestRate,
             uint256 collateralRatio,
@@ -81,9 +76,9 @@ contract TokenLoans is TokenLoansInterface, LoansBase {
             maxLoanAmount
         );
 
-        if (collateralAmount > 0) {
+        if (msg.value > 0) {
             // Update collateral, totalCollateral, and lastCollateralIn
-            _payInCollateral(loanID, collateralAmount);
+            _payInCollateral(loanID, msg.value);
         }
 
         borrowerLoans[request.borrower].push(loanID);
@@ -98,8 +93,8 @@ contract TokenLoans is TokenLoansInterface, LoansBase {
             request.duration,
             loans[loanID].termsExpiry
         );
-        if (collateralAmount > 0) {
-            emit CollateralDeposited(loanID, request.borrower, collateralAmount);
+        if (msg.value > 0) {
+            emit CollateralDeposited(loanID, request.borrower, msg.value);
         }
     }
 
@@ -107,36 +102,24 @@ contract TokenLoans is TokenLoansInterface, LoansBase {
         address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
-        address settingsAddress,
-        address collateralTokenAddress
+        address settingsAddress
     ) external isNotInitialized() {
-        require(collateralTokenAddress != address(0x0), "PROVIDE_COLL_TOKEN_ADDRESS");
-
         _initialize(
             priceOracleAddress,
             lendingPoolAddress,
             loanTermsConsensusAddress,
             settingsAddress
         );
-
-        collateralToken = ERC20Detailed(collateralTokenAddress);
     }
 
-    /** Internal Function */
+    /** Internal Functions */
 
     function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
         internal
     {
         totalCollateral = totalCollateral.sub(amount);
         loans[loanID].collateral = loans[loanID].collateral.sub(amount);
-        collateralTokenTransfer(recipient, amount);
-    }
-
-    function _payInCollateral(uint256 loanID, uint256 amount) internal {
-        // Update the total collateral and loan collateral
-        super._payInCollateral(loanID, amount);
-        // Transfer collateral tokens to this contract.
-        collateralTokenTransferFrom(msg.sender, amount);
+        recipient.transfer(amount);
     }
 
     function _emitCollateralWithdrawnEvent(
@@ -179,38 +162,5 @@ contract TokenLoans is TokenLoansInterface, LoansBase {
             collateralOut,
             tokensIn
         );
-    }
-
-    /** Private Functions */
-
-    /**
-        @notice It transfers an amount of collateral tokens to a specific address.
-        @param recipient address which will receive the tokens.
-        @param amount of tokens to transfer.
-        @dev It throws a require error if 'transfer' invocation fails.
-     */
-    function collateralTokenTransfer(address recipient, uint256 amount) private {
-        uint256 currentBalance = collateralToken.balanceOf(address(this));
-        require(currentBalance >= amount, "NOT_ENOUGH_COLL_TOKENS_BALANCE");
-        bool transferResult = collateralToken.transfer(recipient, amount);
-        require(transferResult, "COLL_TOKENS_TRANSFER_FAILED");
-    }
-
-    /**
-        @notice It transfers an amount of collateral tokens from an address to this contract.
-        @param from address where the tokens will transfer from.
-        @param amount to be transferred.
-        @dev It throws a require error if the allowance is not enough.
-        @dev It throws a require error if 'transferFrom' invocation fails.
-     */
-    function collateralTokenTransferFrom(address from, uint256 amount) private {
-        uint256 currentAllowance = collateralToken.allowance(from, address(this));
-        require(currentAllowance >= amount, "NOT_ENOUGH_COLL_TOKENS_ALLOWANCE");
-        bool transferFromResult = collateralToken.transferFrom(
-            from,
-            address(this),
-            amount
-        );
-        require(transferFromResult, "COLL_TOKENS_FROM_TRANSFER_FAILED");
     }
 }

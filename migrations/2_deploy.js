@@ -7,8 +7,8 @@ const ZDAI = artifacts.require("./base/ZDAI.sol");
 const ZUSDC = artifacts.require("./base/ZUSDC.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const Lenders = artifacts.require("./base/Lenders.sol");
-const EtherLoans = artifacts.require("./base/EtherLoans.sol");
-const TokenLoans = artifacts.require("./base/TokenLoans.sol");
+const EtherCollateralLoans = artifacts.require("./base/EtherCollateralLoans.sol");
+const TokenCollateralLoans = artifacts.require("./base/TokenCollateralLoans.sol");
 const LendingPool = artifacts.require("./base/LendingPool.sol");
 const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
@@ -99,26 +99,26 @@ module.exports = async function(deployer, network, accounts) {
 
   await poolDeployer.deployPool(
     { tokenName: 'DAI', collateralName: 'ETH' },
-    EtherLoans,
+    EtherCollateralLoans,
     ZDAI,
     txConfig
   );
   await poolDeployer.deployPool(
     { tokenName: 'USDC', collateralName: 'ETH' },
-    EtherLoans,
+    EtherCollateralLoans,
     ZUSDC,
     txConfig
   );
 
   await poolDeployer.deployPool(
     { tokenName: 'DAI', collateralName: 'LINK', aggregatorName: 'LINK_USD' },
-    TokenLoans,
+    TokenCollateralLoans,
     ZDAI,
     txConfig
   );
   await poolDeployer.deployPool(
     { tokenName: 'USDC', collateralName: 'LINK', aggregatorName: 'LINK_USD' },
-    TokenLoans,
+    TokenCollateralLoans,
     ZUSDC,
     txConfig
   );

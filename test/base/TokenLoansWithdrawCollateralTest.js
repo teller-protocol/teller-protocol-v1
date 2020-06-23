@@ -13,9 +13,9 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const LINKMock = artifacts.require("./mock/token/LINKMock.sol");
 
 // Smart contracts
-const Loans = artifacts.require("./mock/base/TokenLoansMock.sol");
+const Loans = artifacts.require("./mock/base/TokenCollateralLoansMock.sol");
 
-contract('TokenLoansWithdrawCollateralTest', function (accounts) {
+contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     const pairAggregatorEncoder = new PairAggregatorEncoder(web3);
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);

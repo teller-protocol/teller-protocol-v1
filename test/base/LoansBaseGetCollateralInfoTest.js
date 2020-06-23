@@ -13,8 +13,8 @@ const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/Chainli
 const InverseChainlinkPairAggregator = artifacts.require("./providers/chainlink/InverseChainlinkPairAggregator.sol");
 
 // Smart contracts
-const TokenLoans = artifacts.require("./mock/base/TokenLoansMock.sol");
-const EtherLoans = artifacts.require("./mock/base/EtherLoansMock.sol");
+const TokenCollateralLoans = artifacts.require("./mock/base/TokenCollateralLoansMock.sol");
+const EtherCollateralLoans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 
 contract('LoansBaseGetCollateralInfoTest', function (accounts) {
     BigNumber.set({ DECIMAL_PLACES: 0, ROUNDING_MODE: 3 })
@@ -85,7 +85,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _1_link_usd_response_8_token_18_inverse_repay_0: [
             buildLoanInfo(1, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             0,
             InverseChainlinkPairAggregator,
             { collateralDecimals: 18, lendingTokenDecimals: 18, responseDecimals: 8 },
@@ -96,7 +96,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _2_link_usd_response_8_token_18_inverse_repay_50: [
             buildLoanInfo(2, accounts[0], '5000', '12.077294685990338150', 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             50,
             InverseChainlinkPairAggregator,
             { collateralDecimals: 18, lendingTokenDecimals: 18, responseDecimals: 8 },
@@ -107,7 +107,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _3_link_usd_response_8_token_18_inverse_repay_100: [
             buildLoanInfo(3, accounts[0], '5000', '12.077294685990338150', 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             100,
             InverseChainlinkPairAggregator,
             { collateralDecimals: 18, lendingTokenDecimals: 18, responseDecimals: 8 },
@@ -118,7 +118,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _4_usdc_eth_response_18_token_6_repay_0: [
             buildLoanInfo(4, accounts[0], '5000', 0, 99, 1),
             false,
-            EtherLoans,
+            EtherCollateralLoans,
             0,
             ChainlinkPairAggregator,
             { collateralDecimals: 18, lendingTokenDecimals: 6, responseDecimals: 18 },
@@ -129,7 +129,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _5_usdc_eth_response_18_token_6_repay_50: [
             buildLoanInfo(5, accounts[0], '5000', '0.215600000000000000', 99, 1),
             false,
-            EtherLoans,
+            EtherCollateralLoans,
             50,
             ChainlinkPairAggregator,
             { collateralDecimals: 18, lendingTokenDecimals: 6, responseDecimals: 18 },
@@ -140,7 +140,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _6_usdc_eth_response_18_token_6_repay_100: [
             buildLoanInfo(6, accounts[0], '5000', '0.215645250000000000', 99, 1),
             false,
-            EtherLoans,
+            EtherCollateralLoans,
             100,
             ChainlinkPairAggregator,
             { collateralDecimals: 18, lendingTokenDecimals: 6, responseDecimals: 18 },
@@ -151,7 +151,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _7_dai_eth_response_18_token_18_repay_0: [
             buildLoanInfo(7, accounts[0], '5000', 0, 99, 1),
             false,
-            EtherLoans,
+            EtherCollateralLoans,
             0,
             ChainlinkPairAggregator,
             { collateralDecimals: 18, lendingTokenDecimals: 18, responseDecimals: 18 },
@@ -162,7 +162,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _8_usdc_slink_response_12_token_6_repay_0: [
             buildLoanInfo(8, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             0,
             ChainlinkPairAggregator,
             { collateralDecimals: 8, lendingTokenDecimals: 6, responseDecimals: 12 },
@@ -173,7 +173,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _9_usdc_slink_response_12_token_6_repay_50: [
             buildLoanInfo(9, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             50,
             ChainlinkPairAggregator,
             { collateralDecimals: 8, lendingTokenDecimals: 6, responseDecimals: 12 },
@@ -184,7 +184,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _10_usdc_slink_response_12_token_6_repay_100: [
             buildLoanInfo(10, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             100,
             ChainlinkPairAggregator,
             { collateralDecimals: 8, lendingTokenDecimals: 6, responseDecimals: 12 },
@@ -195,7 +195,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _11_usdc_tlink_response_12_token_6_repay_0: [
             buildLoanInfo(11, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             0,
             ChainlinkPairAggregator,
             { collateralDecimals: 12, lendingTokenDecimals: 6, responseDecimals: 10 },
@@ -206,7 +206,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _12_usdc_tlink_response_12_token_6_repay_50: [
             buildLoanInfo(12, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             50,
             ChainlinkPairAggregator,
             { collateralDecimals: 12, lendingTokenDecimals: 6, responseDecimals: 10 },
@@ -217,7 +217,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _13_usdc_tlink_response_12_token_6_repay_100: [
             buildLoanInfo(13, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             100,
             ChainlinkPairAggregator,
             { collateralDecimals: 12, lendingTokenDecimals: 6, responseDecimals: 10 },
@@ -228,7 +228,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _14_usdc_tlink_response_12_token_10_repay_0: [
             buildLoanInfo(14, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             0,
             ChainlinkPairAggregator,
             { collateralDecimals: 12, lendingTokenDecimals: 10, responseDecimals: 10 },
@@ -239,7 +239,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _15_usdc_tlink_response_12_token_11_repay_0: [
             buildLoanInfo(15, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             0,
             ChainlinkPairAggregator,
             { collateralDecimals: 12, lendingTokenDecimals: 11, responseDecimals: 10 },
@@ -250,7 +250,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _16_usdc_tlink_response_12_token_11_repay_0: [
             buildLoanInfo(16, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             0,
             ChainlinkPairAggregator,
             { collateralDecimals: 6, lendingTokenDecimals: 10, responseDecimals: 8 },
@@ -261,7 +261,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _17_usdc_tlink_response_12_token_11_repay_50: [
             buildLoanInfo(17, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             50,
             ChainlinkPairAggregator,
             { collateralDecimals: 6, lendingTokenDecimals: 10, responseDecimals: 8 },
@@ -272,7 +272,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _18_usdc_tlink_response_12_token_11_repay_100: [
             buildLoanInfo(18, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             100,
             ChainlinkPairAggregator,
             { collateralDecimals: 6, lendingTokenDecimals: 10, responseDecimals: 8 },
@@ -283,7 +283,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _19_usdc_tlink_response_8_token_10_repay_0: [
             buildLoanInfo(19, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             0,
             ChainlinkPairAggregator,
             { collateralDecimals: 8, lendingTokenDecimals: 10, responseDecimals: 6 },
@@ -294,7 +294,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _20_usdc_tlink_response_8_token_10_repay_50: [
             buildLoanInfo(20, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             50,
             ChainlinkPairAggregator,
             { collateralDecimals: 8, lendingTokenDecimals: 10, responseDecimals: 6 },
@@ -305,7 +305,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _21_usdc_tlink_response_8_token_10_repay_100: [
             buildLoanInfo(21, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             100,
             ChainlinkPairAggregator,
             { collateralDecimals: 8, lendingTokenDecimals: 10, responseDecimals: 6 },
@@ -316,7 +316,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _22_usdc_tlink_response_8_token_10_repay_0: [
             buildLoanInfo(22, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             0,
             ChainlinkPairAggregator,
             { collateralDecimals: 14, lendingTokenDecimals: 10, responseDecimals: 12 },
@@ -327,7 +327,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _23_usdc_tlink_response_8_token_10_repay_50: [
             buildLoanInfo(23, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             50,
             ChainlinkPairAggregator,
             { collateralDecimals: 14, lendingTokenDecimals: 10, responseDecimals: 12 },
@@ -338,7 +338,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _24_usdc_tlink_response_8_token_10_repay_100: [
             buildLoanInfo(24, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             100,
             ChainlinkPairAggregator,
             { collateralDecimals: 14, lendingTokenDecimals: 10, responseDecimals: 12 },
@@ -349,7 +349,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _25_usdc_tlink_response_8_token_10_repay_0: [
             buildLoanInfo(25, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             0,
             ChainlinkPairAggregator,
             { collateralDecimals: 8, lendingTokenDecimals: 12, responseDecimals: 10 },
@@ -360,7 +360,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _26_usdc_tlink_response_8_token_10_repay_50: [
             buildLoanInfo(26, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             50,
             ChainlinkPairAggregator,
             { collateralDecimals: 8, lendingTokenDecimals: 12, responseDecimals: 10 },
@@ -371,7 +371,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _27_usdc_tlink_response_8_token_10_repay_100: [
             buildLoanInfo(27, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             100,
             ChainlinkPairAggregator,
             { collateralDecimals: 8, lendingTokenDecimals: 12, responseDecimals: 10 },
@@ -382,7 +382,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _28_usdc_tlink_response_8_token_10_repay_0: [
             buildLoanInfo(28, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             0,
             ChainlinkPairAggregator,
             { collateralDecimals: 8, lendingTokenDecimals: 10, responseDecimals: 12 },
@@ -393,7 +393,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _29_usdc_tlink_response_8_token_10_repay_50: [
             buildLoanInfo(29, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             50,
             ChainlinkPairAggregator,
             { collateralDecimals: 8, lendingTokenDecimals: 10, responseDecimals: 12 },
@@ -404,7 +404,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         _30_usdc_tlink_response_8_token_10_repay_100: [
             buildLoanInfo(30, accounts[0], '5000', 0, 99, 1),
             true,
-            TokenLoans,
+            TokenCollateralLoans,
             100,
             ChainlinkPairAggregator,
             { collateralDecimals: 8, lendingTokenDecimals: 10, responseDecimals: 12 },
@@ -432,7 +432,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
                 );
                 await collateralToken.givenMethodReturnBool(erc20InterfaceEncoder.encodeTransfer(), true );
             } else {
-                // Sending ETH to EtherLoans contract (the mock has fallback function).
+                // Sending ETH to EtherCollateralLoans contract (the mock has fallback function).
                 await web3.eth.sendTransaction({ from: borrower, to: instance.address, value: toDecimals(collateral, decimalsConf.collateralDecimals) });
             }
             // Mocking lending token data

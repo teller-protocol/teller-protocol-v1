@@ -1,5 +1,5 @@
 // Smart contracts
-const LoansInterface = artifacts.require("./base/EtherLoans.sol");
+const LoansInterface = artifacts.require("./base/EtherCollateralLoans.sol");
 
 // Util classes
 const assert = require('assert');
