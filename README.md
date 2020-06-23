@@ -10,12 +10,13 @@ If you would like to contribute, we encourage you to submit a PR directly or joi
 
 ## Resources
 
-Website → https://zerocollateral.com/
-Twitter → https://twitter.com/zer0collateral 
-Blog → https://medium.com/fabrx-blockchain
-Discord → https://discord.gg/z3AJ9F
+* Website → https://zerocollateral.com/
+* Twitter → https://twitter.com/zer0collateral
+* Blog → https://medium.com/fabrx-blockchain
+* Discord → https://discord.gg/z3AJ9F
 
 ## Get Started
+<a name="readme-get-started"></a>
 
 To get started, you need to install the dependencies:
 
@@ -31,6 +32,7 @@ At this moment, the team is using Truffle v5.1.16.
 ```yarn global add truffle@5.1.16```
 
 ### Create a ```.ENV``` file
+<a name="readme-create-env-file"></a>
 
 You already have a `.env.template` in the root folder. Just copy/paste the `.env.template` file, and create the `.env` in the root folder.
 
@@ -87,6 +89,7 @@ As result, you should see:
 ## Extra Resources
 
 - To execute integration tests follow [this guide](./docs/integration-tests.md).
+- To execute scripts on Ethereum networks follow [this guide](./docs/scripts.md).
 
 ---
 © Copyright 2020, Fabrx Labs
