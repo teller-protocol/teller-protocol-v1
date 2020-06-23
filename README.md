@@ -15,13 +15,11 @@ If you would like to contribute, we encourage you to submit a PR directly or joi
 * Blog → https://medium.com/fabrx-blockchain
 * Discord → https://discord.gg/z3AJ9F
 
-## Get Started
-<a name="readme-get-started"></a>
+## Prerequisites
 
-To get started, you need to install the dependencies:
+### NodeJS Version
 
-- Using Yarn: ```yarn install```
-- Using NPM: ```npm install```
+To avoid any issue with the NodeJS version, please check it before continuing. It should be >= *v10.15.3* and =< *lts/dubnium / v10.21.0*.
 
 ### Install Global Dependencies
 
@@ -62,9 +60,17 @@ Node v10.15.3
 Web3.js v1.2.1
 ```
 
-> This is important to have a stable NodeJS version installed. At the moment of writing this document, the team is using the NodeJS *v10.15.3* and *v10.17.0* without issues.
+> This is important to have a stable NodeJS version installed. At the moment of writing this document, the team is using the NodeJS *lts/dubnium / v10.17.0* without issues.
 
-After installing the dependencies and verifying the NodeJS version, you are able to execute the unit tests, and code coverage.
+## Get Started
+<a name="readme-get-started"></a>
+
+To get started, you need to install the dependencies:
+
+- Using Yarn: ```yarn install```
+- Using NPM: ```npm install```
+
+After checking the prerequisites, you are able to execute the unit tests, and code coverage.
 
 ### Running Unit Tests
 
@@ -89,7 +95,7 @@ As result, you should see:
 ## Extra Resources
 
 - To execute integration tests follow [this guide](./docs/integration-tests.md).
-- To execute scripts on Ethereum networks follow [this guide](./docs/scripts.md).
+- To execute scripts on Ethereum networks follow [this guide](./docs/truffle-scripts.md).
 
 ---
 © Copyright 2020, Fabrx Labs
