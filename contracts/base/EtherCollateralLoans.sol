@@ -25,7 +25,6 @@ import "../interfaces/LoansInterface.sol";
 
 
 contract EtherCollateralLoans is LoansInterface, LoansBase {
-
     ERC20Detailed public collateralToken;
 
     /**
@@ -45,7 +44,7 @@ contract EtherCollateralLoans is LoansInterface, LoansBase {
             loans[loanID].loanTerms.borrower == borrower,
             "BORROWER_LOAN_ID_MISMATCH"
         );
-        require(msg.value == amount, 'INCORRECT_ETH_AMOUNT');
+        require(msg.value == amount, "INCORRECT_ETH_AMOUNT");
         require(msg.value > 0, "CANNOT_DEPOSIT_ZERO");
 
         // Update the contract total and the loan collateral total
@@ -59,7 +58,7 @@ contract EtherCollateralLoans is LoansInterface, LoansBase {
         ZeroCollateralCommon.LoanResponse[] calldata responses,
         uint256 collateralAmount
     ) external payable isInitialized() whenNotPaused() isBorrower(request.borrower) {
-        require(msg.value == collateralAmount, 'INCORRECT_ETH_AMOUNT');
+        require(msg.value == collateralAmount, "INCORRECT_ETH_AMOUNT");
 
         uint256 loanID = getAndIncrementLoanID();
         (

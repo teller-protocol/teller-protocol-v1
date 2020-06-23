@@ -70,7 +70,14 @@ contract TokenCollateralLoans is LoansInterface, LoansBase {
         ZeroCollateralCommon.LoanRequest calldata request,
         ZeroCollateralCommon.LoanResponse[] calldata responses,
         uint256 collateralAmount
-    ) external payable noMsgValue() isInitialized() whenNotPaused() isBorrower(request.borrower) {
+    )
+        external
+        payable
+        noMsgValue()
+        isInitialized()
+        whenNotPaused()
+        isBorrower(request.borrower)
+    {
         uint256 loanID = getAndIncrementLoanID();
 
         (

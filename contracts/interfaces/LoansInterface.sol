@@ -76,7 +76,9 @@ interface LoansInterface {
         view
         returns (ZeroCollateralCommon.Loan memory);
 
-    function depositCollateral(address borrower, uint256 loanID, uint256 amount) external payable;
+    function depositCollateral(address borrower, uint256 loanID, uint256 amount)
+        external
+        payable;
 
     function withdrawCollateral(uint256 amount, uint256 loanID) external;
 
