@@ -171,9 +171,9 @@ contract LoansBase is Base {
             .div(DAYS_PER_YEAR_4DP);
 
         // check that enough collateral has been provided for this loan
-        (, , , bool requireCollateral) = _getCollateralInfo(loanID);
+        (, , , bool moreCollateralRequired) = _getCollateralInfo(loanID);
 
-        require(!requireCollateral, "MORE_COLLATERAL_REQUIRED");
+        require(!moreCollateralRequired, "MORE_COLLATERAL_REQUIRED");
 
         loans[loanID].loanStartTime = now;
 
@@ -252,7 +252,7 @@ contract LoansBase is Base {
         nonReentrant()
     {
         // calculate the amount of collateral the loan needs in tokens
-        (uint256 loanCollateral, , uint256 collateralNeededWei, ) = _getCollateralInfo(
+        (uint256 loanCollateral, , , bool moreCollateralRequired) = _getCollateralInfo(
             loanID
         );
 
@@ -263,7 +263,7 @@ contract LoansBase is Base {
 
         // to liquidate it must be undercollateralised, or expired
         require(
-            collateralNeededWei > loanCollateral || loanEndTime < now,
+            moreCollateralRequired || loanEndTime < now,
             "DOESNT_NEED_LIQUIDATION"
         );
 

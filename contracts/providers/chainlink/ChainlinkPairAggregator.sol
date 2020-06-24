@@ -67,7 +67,7 @@ contract ChainlinkPairAggregator is PairAggregatorInterface {
         return aggregator.getAnswer(latest - roundsBack);
     }
 
-    function _normalizeDecimals(int256 value) internal view returns (int256) {
+    function _normalizeResponse(int256 response) internal view returns (int256) {
         if( collateralDecimals >= responseDecimals) {
             uint8 pendingDecimals = collateralDecimals - responseDecimals;
             return value * int256(TEN ** pendingDecimals);
@@ -75,9 +75,5 @@ contract ChainlinkPairAggregator is PairAggregatorInterface {
             uint8 pendingDecimals = responseDecimals - collateralDecimals;
             return value / int256(TEN ** pendingDecimals);
         }
-    }
-
-    function _normalizeResponse(int256 response) internal view returns (int256) {
-        return _normalizeDecimals(response);
     }
 }
