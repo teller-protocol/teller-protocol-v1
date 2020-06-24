@@ -22,7 +22,6 @@ import "./LoansBase.sol";
 
 
 contract EtherCollateralLoans is LoansBase {
-
     /**
      * @notice Deposit collateral into a loan
      * @param borrower address The address of the loan borrower.
