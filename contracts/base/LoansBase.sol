@@ -314,13 +314,6 @@ contract LoansBase is LoansInterface, Base {
     function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
         internal;
 
-    function _emitLoanLiquidatedEvent(
-        uint256 loanID,
-        address liquidator,
-        uint256 collateralOut,
-        uint256 tokensIn
-    ) internal;
-
     function _getCollateralInfo(uint256 loanID)
         internal
         view
