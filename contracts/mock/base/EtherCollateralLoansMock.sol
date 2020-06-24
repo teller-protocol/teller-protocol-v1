@@ -16,9 +16,9 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../../base/TokenLoans.sol";
+import "../../base/EtherCollateralLoans.sol";
 
-contract TokenLoansMock is TokenLoans {
+contract EtherCollateralLoansMock is EtherCollateralLoans {
 
     function setLoanIDCounter(uint256 newLoanIdCounter)
         external
@@ -63,4 +63,6 @@ contract TokenLoansMock is TokenLoans {
             liquidated: liquidated
         });
     }
+
+    function() external payable {}
 }

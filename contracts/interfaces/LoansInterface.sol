@@ -20,8 +20,8 @@ pragma experimental ABIEncoderV2;
 import "../util/ZeroCollateralCommon.sol";
 
 
-interface EtherLoansInterface {
-    // collateral deposited by borrower
+interface LoansInterface {
+    // Collateral deposited by borrower
     event CollateralDeposited(
         uint256 indexed loanID,
         address indexed borrower,
@@ -76,13 +76,16 @@ interface EtherLoansInterface {
         view
         returns (ZeroCollateralCommon.Loan memory);
 
-    function depositCollateral(address borrower, uint256 loanID) external payable;
+    function depositCollateral(address borrower, uint256 loanID, uint256 amount)
+        external
+        payable;
 
     function withdrawCollateral(uint256 amount, uint256 loanID) external;
 
     function setLoanTerms(
         ZeroCollateralCommon.LoanRequest calldata request,
-        ZeroCollateralCommon.LoanResponse[] calldata responses
+        ZeroCollateralCommon.LoanResponse[] calldata responses,
+        uint256 collateralAmount
     ) external payable;
 
     function takeOutLoan(uint256 loanID, uint256 amountBorrow) external;
@@ -100,6 +103,8 @@ interface EtherLoansInterface {
     function totalCollateral() external view returns (uint256);
 
     function loanIDCounter() external view returns (uint256);
+
+    function collateralToken() external view returns (address);
 
     function getCollateralInfo(uint256 loanID)
         external

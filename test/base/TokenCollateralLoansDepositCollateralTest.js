@@ -11,9 +11,9 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const LINKMock = artifacts.require("./mock/token/LINKMock.sol");
 
 // Smart contracts
-const Loans = artifacts.require("./mock/base/TokenLoansMock.sol");
+const Loans = artifacts.require("./mock/base/TokenCollateralLoansMock.sol");
 
-contract('TokenLoansDepositCollateralTest', function (accounts) {
+contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
     const timer = new Timer(web3);
     const collateralTokenOwner = accounts[9];
     let collateralToken;

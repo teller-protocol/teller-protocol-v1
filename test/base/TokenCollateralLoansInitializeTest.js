@@ -6,9 +6,9 @@ const { t, NULL_ADDRESS } = require('../utils/consts');
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const Loans = artifacts.require("./mock/base/TokenLoansMock.sol");
+const Loans = artifacts.require("./mock/base/TokenCollateralLoansMock.sol");
 
-contract('TokenLoansInitializeTest', function (accounts) {
+contract('TokenCollateralLoansInitializeTest', function (accounts) {
     let priceOracle;
     let lendingPool;
     let loanTermsConsensus;

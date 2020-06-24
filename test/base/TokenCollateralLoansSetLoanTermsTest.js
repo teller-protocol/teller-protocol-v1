@@ -18,7 +18,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const LINKMock = artifacts.require("./mock/token/LINKMock.sol");
 
 // Smart contracts
-const Loans = artifacts.require("./mock/base/TokenLoansMock.sol");
+const Loans = artifacts.require("./mock/base/TokenCollateralLoansMock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 
@@ -50,7 +50,7 @@ const createTermsSetExpectedLoan = (
     };
 };
 
-contract('TokenLoansSetLoanTermsTest', function (accounts) {
+contract('TokenCollateralLoansSetLoanTermsTest', function (accounts) {
     let loanTermsConsensusEncoder;
     let collateralToken;
     let instance;

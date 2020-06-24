@@ -20,18 +20,17 @@ pragma experimental ABIEncoderV2;
 // Contracts
 import "./LoansBase.sol";
 
-// Interfaces
-import "../interfaces/TokenLoansInterface.sol";
 
-
-contract TokenLoans is TokenLoansInterface, LoansBase {
+contract TokenCollateralLoans is LoansBase {
     /** Constants */
 
     /** Properties */
 
-    ERC20Detailed public collateralToken;
-
     /** Modifiers */
+    modifier noMsgValue() {
+        require(msg.value == 0);
+        _;
+    }
 
     /** External Functions */
 
@@ -43,6 +42,8 @@ contract TokenLoans is TokenLoansInterface, LoansBase {
      */
     function depositCollateral(address borrower, uint256 loanID, uint256 amount)
         external
+        payable
+        noMsgValue()
         loanActiveOrSet(loanID)
         isInitialized()
         whenNotPaused()
@@ -64,7 +65,14 @@ contract TokenLoans is TokenLoansInterface, LoansBase {
         ZeroCollateralCommon.LoanRequest calldata request,
         ZeroCollateralCommon.LoanResponse[] calldata responses,
         uint256 collateralAmount
-    ) external isInitialized() whenNotPaused() isBorrower(request.borrower) {
+    )
+        external
+        payable
+        noMsgValue()
+        isInitialized()
+        whenNotPaused()
+        isBorrower(request.borrower)
+    {
         uint256 loanID = getAndIncrementLoanID();
 
         (
@@ -119,7 +127,7 @@ contract TokenLoans is TokenLoansInterface, LoansBase {
             settingsAddress
         );
 
-        collateralToken = ERC20Detailed(collateralTokenAddress);
+        collateralToken = collateralTokenAddress;
     }
 
     /** Internal Function */
@@ -139,48 +147,6 @@ contract TokenLoans is TokenLoansInterface, LoansBase {
         collateralTokenTransferFrom(msg.sender, amount);
     }
 
-    function _emitCollateralWithdrawnEvent(
-        uint256 loanID,
-        address payable recipient,
-        uint256 amount
-    ) internal {
-        emit CollateralWithdrawn(loanID, recipient, amount);
-    }
-
-    function _emitLoanTakenOutEvent(uint256 loanID, uint256 amountBorrow) internal {
-        emit LoanTakenOut(loanID, loans[loanID].loanTerms.borrower, amountBorrow);
-    }
-
-    function _emitLoanRepaidEvent(
-        uint256 loanID,
-        uint256 amountPaid,
-        address payer,
-        uint256 totalOwed
-    ) internal {
-        emit LoanRepaid(
-            loanID,
-            loans[loanID].loanTerms.borrower,
-            amountPaid,
-            payer,
-            totalOwed
-        );
-    }
-
-    function _emitLoanLiquidatedEvent(
-        uint256 loanID,
-        address liquidator,
-        uint256 collateralOut,
-        uint256 tokensIn
-    ) internal {
-        emit LoanLiquidated(
-            loanID,
-            loans[loanID].loanTerms.borrower,
-            liquidator,
-            collateralOut,
-            tokensIn
-        );
-    }
-
     /** Private Functions */
 
     /**
@@ -190,9 +156,9 @@ contract TokenLoans is TokenLoansInterface, LoansBase {
         @dev It throws a require error if 'transfer' invocation fails.
      */
     function collateralTokenTransfer(address recipient, uint256 amount) private {
-        uint256 currentBalance = collateralToken.balanceOf(address(this));
+        uint256 currentBalance = ERC20Detailed(collateralToken).balanceOf(address(this));
         require(currentBalance >= amount, "NOT_ENOUGH_COLL_TOKENS_BALANCE");
-        bool transferResult = collateralToken.transfer(recipient, amount);
+        bool transferResult = ERC20Detailed(collateralToken).transfer(recipient, amount);
         require(transferResult, "COLL_TOKENS_TRANSFER_FAILED");
     }
 
@@ -204,9 +170,12 @@ contract TokenLoans is TokenLoansInterface, LoansBase {
         @dev It throws a require error if 'transferFrom' invocation fails.
      */
     function collateralTokenTransferFrom(address from, uint256 amount) private {
-        uint256 currentAllowance = collateralToken.allowance(from, address(this));
+        uint256 currentAllowance = ERC20Detailed(collateralToken).allowance(
+            from,
+            address(this)
+        );
         require(currentAllowance >= amount, "NOT_ENOUGH_COLL_TOKENS_ALLOWANCE");
-        bool transferFromResult = collateralToken.transferFrom(
+        bool transferFromResult = ERC20Detailed(collateralToken).transferFrom(
             from,
             address(this),
             amount

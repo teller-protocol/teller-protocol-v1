@@ -8,9 +8,9 @@ const BigNumber = require('bignumber.js');
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const Loans = artifacts.require("./mock/base/EtherLoansMock.sol");
+const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 
-contract('EtherLoansRepayTest', function (accounts) {
+contract('EtherCollateralLoansRepayTest', function (accounts) {
     let instance;
     let oracleInstance;
     let loanTermsConsInstance;

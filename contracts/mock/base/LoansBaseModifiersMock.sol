@@ -16,12 +16,12 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../../base/EtherLoans.sol";
+import "../../base/EtherCollateralLoans.sol";
 
 /**
     This contract is created ONLY for testing purposes.
  */
-contract LoansBaseModifiersMock is EtherLoans {
+contract LoansBaseModifiersMock is EtherCollateralLoans {
 
     function setLoanStatus(uint256 loanID, ZeroCollateralCommon.LoanStatus status) external {
         loans[loanID].status = status;

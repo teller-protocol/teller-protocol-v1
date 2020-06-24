@@ -23,7 +23,7 @@
     "deploy:ganache:mock": "truffle compile && truffle deploy --network ganache --reset -f 3 --to 3",
     "format:prettier": "prettier --write contracts/**/*.sol",
     "format:prettier:print": "prettier contracts/**/*.sol",
-    "verify:ropsten": "truffle run verify LendingPool Lenders ChainlinkPairAggregator EtherLoans TokenLoans ZDAI ZUSDC InterestConsensus LoanTermsConsensus Settings --network ropsten"
+    "verify:ropsten": "truffle run verify LendingPool Lenders ChainlinkPairAggregator EtherCollateralLoans TokenCollateralLoans ZDAI ZUSDC InterestConsensus LoanTermsConsensus Settings --network ropsten"
   },
   "devDependencies": {
     "@gnosis.pm/mock-contract": "^3.0.7",

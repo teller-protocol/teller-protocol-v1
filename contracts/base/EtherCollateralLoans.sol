@@ -20,17 +20,16 @@ pragma experimental ABIEncoderV2;
 // Contracts
 import "./LoansBase.sol";
 
-// Interfaces
-import "../interfaces/EtherLoansInterface.sol";
 
+contract EtherCollateralLoans is LoansBase {
+    address public collateralToken = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-contract EtherLoans is EtherLoansInterface, LoansBase {
     /**
      * @notice Deposit collateral into a loan
      * @param borrower address The address of the loan borrower.
      * @param loanID uint256 The ID of the loan the collateral is for
      */
-    function depositCollateral(address borrower, uint256 loanID)
+    function depositCollateral(address borrower, uint256 loanID, uint256 amount)
         external
         payable
         loanActiveOrSet(loanID)
@@ -42,22 +41,23 @@ contract EtherLoans is EtherLoansInterface, LoansBase {
             loans[loanID].loanTerms.borrower == borrower,
             "BORROWER_LOAN_ID_MISMATCH"
         );
+        require(msg.value == amount, "INCORRECT_ETH_AMOUNT");
         require(msg.value > 0, "CANNOT_DEPOSIT_ZERO");
 
-        uint256 depositAmount = msg.value;
-
         // Update the contract total and the loan collateral total
-        _payInCollateral(loanID, depositAmount);
+        _payInCollateral(loanID, amount);
 
-        emit CollateralDeposited(loanID, borrower, depositAmount);
+        emit CollateralDeposited(loanID, borrower, amount);
     }
 
     function setLoanTerms(
         ZeroCollateralCommon.LoanRequest calldata request,
-        ZeroCollateralCommon.LoanResponse[] calldata responses
+        ZeroCollateralCommon.LoanResponse[] calldata responses,
+        uint256 collateralAmount
     ) external payable isInitialized() whenNotPaused() isBorrower(request.borrower) {
-        uint256 loanID = getAndIncrementLoanID();
+        require(msg.value == collateralAmount, "INCORRECT_ETH_AMOUNT");
 
+        uint256 loanID = getAndIncrementLoanID();
         (
             uint256 interestRate,
             uint256 collateralRatio,
@@ -116,47 +116,5 @@ contract EtherLoans is EtherLoansInterface, LoansBase {
         totalCollateral = totalCollateral.sub(amount);
         loans[loanID].collateral = loans[loanID].collateral.sub(amount);
         recipient.transfer(amount);
-    }
-
-    function _emitCollateralWithdrawnEvent(
-        uint256 loanID,
-        address payable recipient,
-        uint256 amount
-    ) internal {
-        emit CollateralWithdrawn(loanID, recipient, amount);
-    }
-
-    function _emitLoanTakenOutEvent(uint256 loanID, uint256 amountBorrow) internal {
-        emit LoanTakenOut(loanID, loans[loanID].loanTerms.borrower, amountBorrow);
-    }
-
-    function _emitLoanRepaidEvent(
-        uint256 loanID,
-        uint256 amountPaid,
-        address payer,
-        uint256 totalOwed
-    ) internal {
-        emit LoanRepaid(
-            loanID,
-            loans[loanID].loanTerms.borrower,
-            amountPaid,
-            payer,
-            totalOwed
-        );
-    }
-
-    function _emitLoanLiquidatedEvent(
-        uint256 loanID,
-        address liquidator,
-        uint256 collateralOut,
-        uint256 tokensIn
-    ) internal {
-        emit LoanLiquidated(
-            loanID,
-            loans[loanID].loanTerms.borrower,
-            liquidator,
-            collateralOut,
-            tokensIn
-        );
     }
 }
