@@ -262,10 +262,7 @@ contract LoansBase is Base {
         );
 
         // to liquidate it must be undercollateralised, or expired
-        require(
-            moreCollateralRequired || loanEndTime < now,
-            "DOESNT_NEED_LIQUIDATION"
-        );
+        require(moreCollateralRequired || loanEndTime < now, "DOESNT_NEED_LIQUIDATION");
 
         loans[loanID].status = ZeroCollateralCommon.LoanStatus.Closed;
         loans[loanID].liquidated = true;
