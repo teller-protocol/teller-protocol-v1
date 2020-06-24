@@ -69,9 +69,13 @@ module.exports = async function(deployer, network, accounts) {
     } = chainlinkOracleInfo;
 
     const ChainlinkPairAggregatorReference = inversed ? InverseChainlinkPairAggregator : ChainlinkPairAggregator;
-  
+    let chainlinkPairAggregatorName =  `ChainlinkPairAggregator_${chainlinkOraclePair.toUpperCase()}`;
+    if(inversed) {
+      const pairs = chainlinkOraclePair.split('_');
+      chainlinkPairAggregatorName =  `ChainlinkPairAggregator_${pairs[1].toUpperCase()}_${pairs[0]}`;
+    }
     await deployerApp.deployWith(
-      `ChainlinkPairAggregator_${chainlinkOraclePair.toUpperCase()}`,
+      chainlinkPairAggregatorName,
       ChainlinkPairAggregatorReference,
       address,
       responseDecimals,

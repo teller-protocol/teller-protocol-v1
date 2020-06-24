@@ -1,3 +1,4 @@
+const _ = require('lodash');
 
 class GetContracts {
     constructor(artifacts, networkConf) {
@@ -6,12 +7,16 @@ class GetContracts {
     }
 }
 
-GetContracts.prototype.getInfo = function({contractName, keyName}) {
+GetContracts.prototype.getInfo = function({contractName, keyName, addressOnProperty = 'address'}) {
     for (const key of Object.keys(this.networkConf[keyName])) {
         const has = key.toLowerCase() === contractName.toLowerCase();
         if(has) {
+            let addressValue = this.networkConf[keyName][key];
+            if(typeof addressValue ===  "object") {
+                addressValue = _.get(this.networkConf[keyName][key], addressOnProperty);
+            }
             return {
-                address: this.networkConf[keyName][key],
+                address: addressValue,
                 name: key,
             };
         }
@@ -19,8 +24,8 @@ GetContracts.prototype.getInfo = function({contractName, keyName}) {
     throw new Error(`Contract ${contractName} not found.`);
 }
 
-GetContracts.prototype.getDeployed = async function({ keyName, contractName, artifactName = undefined}) {
-    const { address, name } = this.getInfo({keyName, contractName});
+GetContracts.prototype.getDeployed = async function({ keyName, contractName, addressOnProperty = 'address', artifactName = undefined}) {
+    const { address, name } = this.getInfo({keyName, contractName, addressOnProperty});
     const artifact = this.artifacts.require(artifactName || name);
     const instance = await artifact.at(address);
     return instance;
