@@ -8,7 +8,7 @@ const AggregatorInterfaceEncoder = require('../../utils/encoders/AggregatorInter
 const ChainlinkAggregatorMock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const ChainlinkPairAggregator = artifacts.require("./mock/providers/chainlink/InverseChainlinkPairAggregatorMock.sol");
+const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/InverseChainlinkPairAggregator.sol");
 
 contract('InverseChainlinkPairAggregatorGetLatestAnswerTest', function (accounts) {
     BigNumber.set({ DECIMAL_PLACES: 0, ROUNDING_MODE: 3 });
