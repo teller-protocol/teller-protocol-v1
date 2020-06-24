@@ -26,8 +26,6 @@ contract TokenCollateralLoans is LoansBase {
 
     /** Properties */
 
-    ERC20Detailed public collateralToken;
-
     /** Modifiers */
     modifier noMsgValue() {
         require(msg.value == 0);

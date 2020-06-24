@@ -77,4 +77,14 @@ contract LoansBaseMock is LoansBase {
             settingsAddress
         );
     }
+
+    function depositCollateral(address borrower, uint256 loanID, uint256 amount)
+        external
+        payable {}
+
+    function setLoanTerms(
+        ZeroCollateralCommon.LoanRequest calldata request,
+        ZeroCollateralCommon.LoanResponse[] calldata responses,
+        uint256 collateralAmount
+    ) external payable {}
 }

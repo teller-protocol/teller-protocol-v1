@@ -45,6 +45,8 @@ contract LoansBase is LoansInterface, Base {
 
     uint256 public totalCollateral;
 
+    ERC20Detailed public collateralToken;
+
     // At any time, this variable stores the next available loan ID
     uint256 public loanIDCounter;
 
