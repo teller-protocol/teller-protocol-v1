@@ -226,6 +226,28 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
             // 1 USDC = 2 TLINK; repay: 100; coll needed (lending tokens): 0 USDC; coll. needed tokens: 0
             { requireCollateral: false, neededCollInLendingTokens: '0', neededCollInCollTokens: '0' }
         ],
+        _14_usdc_tlink_response_12_token_10_repay_0: [
+            buildLoanInfo(7, accounts[0], '5000', 0, 99, 1),
+            true,
+            TokenLoans,
+            0,
+            ChainlinkPairAggregator,
+            { collateralDecimals: 12, lendingTokenDecimals: 10, responseDecimals: 10 },
+            BigNumber("20000000000"),
+            // 1 USDC = 2 TLINK; repay: 0; coll needed (lending tokens): 50 USDC; coll. needed tokens: 100 (50 * 2)
+            { requireCollateral: true, neededCollInLendingTokens: '500000000000', neededCollInCollTokens: '100000000000000' }
+        ],
+        _15_usdc_tlink_response_12_token_11_repay_0: [
+            buildLoanInfo(7, accounts[0], '5000', 0, 99, 1),
+            true,
+            TokenLoans,
+            0,
+            ChainlinkPairAggregator,
+            { collateralDecimals: 12, lendingTokenDecimals: 11, responseDecimals: 10 },
+            BigNumber("20000000000"),
+            // 1 USDC = 2 TLINK; repay: 0; coll needed (lending tokens): 50 USDC; coll. needed tokens: 100 (50 * 2)
+            { requireCollateral: true, neededCollInLendingTokens: '5000000000000', neededCollInCollTokens: '100000000000000' }
+        ],
     }, function(loanInfo, useTokens, loanReference, repayAmount, aggregatorReference, decimalsConf, oraclePrice, expectedResults) {
         it(t('user', 'getCollateralInfo', 'Should able to get collateral info from a loan.', false), async function() {
             // Setup

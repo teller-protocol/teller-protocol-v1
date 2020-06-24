@@ -32,18 +32,20 @@ contract('InverseChainlinkPairAggregatorGetLatestAnswerTest', function (accounts
 
     withData({
         // LINK => 18 decimals, oracle response => 8 decimals, 1 USD = 4.033 (or 403300000 -8 decimals-)
-        _1_link_usd: [18, 8, "403300000"],
+        _1_link_usd: [8, 18, 8, "403300000"],
         // TokenB => 10 decimals, oracle response => 5 decimals, 1 USD = 3.50607 (or 350607 -5 decimals-)
-        _2_usd_tokenB: [10, 5, "350607"],
+        _2_usd_tokenB: [5, 10, 5, "350607"],
         // TokenB => 10 decimals, oracle response => 12 decimals, 1 USD = 43.500600700800 TokenB (or 43500600700800 -12 decimals-)
-        _3_usd_tokenB: [10, 12, "43500600700800"],
+        _3_usd_tokenB: [12, 10, 12, "43500600700800"],
         // TokenC => 10 decimals, oracle response => 10 decimals, 1 USD = 12.0030405060 TokenB (or 120030405060 -10 decimals-)
-        _4_usd_tokenC: [10, 10, "120030405060"],
-    }, function(tokenDecimals, responseDecimals, latestAnswerResponse) {
+        _4_usd_tokenC: [10, 10, 10, "120030405060"],
+        // TokenD => 10 decimals, oracle response => 10 decimals, 1 USD = 12.0030405060 TokenB (or 120030405060 -10 decimals-)
+        _5_usd_tokenD: [5, 10, 10, "120030405060"],
+    }, function(collateralDecimals, tokenDecimals, responseDecimals, latestAnswerResponse) {
         it(t('user', 'getLatestAnswer', 'Should able to get the last price.', false), async function() {
             // Setup
             const expectedLatestAnswer = getExpectedAnswer(latestAnswerResponse, responseDecimals, tokenDecimals);
-            const instance = await ChainlinkPairAggregator.new(chainlinkAggregator.address, tokenDecimals, responseDecimals);
+            const instance = await ChainlinkPairAggregator.new(chainlinkAggregator.address, tokenDecimals, responseDecimals, collateralDecimals);
             await chainlinkAggregator.givenMethodReturnUint(
                 aggregatorInterfaceEncoder.encodeLatestAnswer(),
                 latestAnswerResponse.toString()

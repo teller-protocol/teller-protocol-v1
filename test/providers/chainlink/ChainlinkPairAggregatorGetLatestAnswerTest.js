@@ -18,14 +18,15 @@ contract('ChainlinkPairAggregatorGetLatestAnswerTest', function (accounts) {
     });
 
     withData({
-        _1_token18_response18: [ChainlinkPairAggregator, 18, 18, 1000000, 1000000],
-        _2_token18_response10: [ChainlinkPairAggregator, 18, 10, 3100000, 310000000000000],
-        _3_token5_response18: [ChainlinkPairAggregator, 5, 18, 25000000000000000000, 25000000000000000000],
-        _4_token10_response18: [ChainlinkPairAggregator, 10, 18, 25000000000000, 25000000000000],
-    }, function(aggregatorReference, tokenDecimals, responseDecimals, latestAnswerResponse, expectedLatestAnswerResponse) {
+        _1_coll18_token18_response18: [ChainlinkPairAggregator, 18, 18, 18, 1000000, 1000000],
+        _2_coll18_token18_response10: [ChainlinkPairAggregator, 18, 18, 10, 3100000, 310000000000000],
+        _3_coll18_token5_response18: [ChainlinkPairAggregator, 18, 5, 18, 25000000000000000000, 25000000000000000000],
+        _4_coll18_token10_response18: [ChainlinkPairAggregator, 18, 10, 18, 25000000000000, 25000000000000],
+        _5_coll10_token10_response18: [ChainlinkPairAggregator, 10, 10, 18, 25000000000000, 250000],
+    }, function(aggregatorReference, collateralDecimals, tokenDecimals, responseDecimals, latestAnswerResponse, expectedLatestAnswerResponse) {
         it(t('user', 'getLatestAnswer', 'Should able to get the last price.', false), async function() {
             // Setup
-            const instance = await aggregatorReference.new(chainlinkAggregator.address, tokenDecimals, responseDecimals);
+            const instance = await aggregatorReference.new(chainlinkAggregator.address, tokenDecimals, responseDecimals, collateralDecimals);
             // Mocking response for aggregator 'lastAnswer' function.
             await chainlinkAggregator.givenMethodReturnUint(
                 aggregatorInterfaceEncoder.encodeLatestAnswer(),
