@@ -19,15 +19,30 @@ import "@chainlink/contracts/src/v0.5/interfaces/AggregatorInterface.sol";
 import "../../interfaces/PairAggregatorInterface.sol";
 
 contract ChainlinkPairAggregator is PairAggregatorInterface {
-    AggregatorInterface public aggregator;
 
-    constructor(address aggregatorAddress) public {
-        require(aggregatorAddress != address(0x0), "Aggregator address is required.");
+    uint256 internal constant TEN = 10;
+
+    AggregatorInterface public aggregator;
+    uint8 public responseDecimals;
+    uint8 public collateralDecimals;
+
+    constructor(address aggregatorAddress, uint8 responseDecimalsValue, uint8 collateralDecimalsValue) public {
+        require(aggregatorAddress != address(0x0), "PROVIDE_AGGREGATOR_ADDRESS");
         aggregator = AggregatorInterface(aggregatorAddress);
+        responseDecimals = responseDecimalsValue;
+        collateralDecimals = collateralDecimalsValue;
     }
 
+    /** External Functions */
+
     function getLatestAnswer() external view returns (int256) {
-        return aggregator.latestAnswer();
+        int256 latestAnswerInverted = aggregator.latestAnswer();
+        return _normalizeResponse(latestAnswerInverted);
+    }
+
+    function getPreviousAnswer(uint256 roundsBack) external view returns (int256) {
+        int256 answer = _getPreviousAnswer(roundsBack);
+        return _normalizeResponse(answer);
     }
 
     function getLatestTimestamp() external view returns (uint256) {
@@ -38,15 +53,27 @@ contract ChainlinkPairAggregator is PairAggregatorInterface {
         return aggregator.latestRound();
     }
 
-    function getPreviousAnswer(uint256 roundsBack) external view returns (int256) {
+    function getPreviousTimestamp(uint256 roundsBack) external view returns (uint256) {
         uint256 latest = aggregator.latestRound();
-        require(roundsBack <= latest, "Not enough history");
+        require(roundsBack <= latest, "NOT_ENOUGH_HISTORY");
+        return aggregator.getTimestamp(latest - roundsBack);
+    }
+
+    /** Internal Functions */
+
+    function _getPreviousAnswer(uint256 roundsBack) internal view returns (int256) {
+        uint256 latest = aggregator.latestRound();
+        require(roundsBack <= latest, "NOT_ENOUGH_HISTORY");
         return aggregator.getAnswer(latest - roundsBack);
     }
 
-    function getPreviousTimestamp(uint256 roundsBack) external view returns (uint256) {
-        uint256 latest = aggregator.latestRound();
-        require(roundsBack <= latest, "Not enough history");
-        return aggregator.getTimestamp(latest - roundsBack);
+    function _normalizeResponse(int256 value) internal view returns (int256) {
+        if( collateralDecimals >= responseDecimals) {
+            uint8 pendingDecimals = collateralDecimals - responseDecimals;
+            return value * int256(TEN ** pendingDecimals);
+        } else {
+            uint8 pendingDecimals = responseDecimals - collateralDecimals;
+            return value / int256(TEN ** pendingDecimals);
+        }
     }
 }

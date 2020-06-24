@@ -103,4 +103,14 @@ interface TokenLoansInterface {
     function loanIDCounter() external view returns (uint256);
 
     function collateralToken() external view returns (address);
+
+    function getCollateralInfo(uint256 loanID)
+        external
+        view
+        returns (
+            uint256 collateral,
+            uint256 collateralNeededLendingTokens,
+            uint256 collateralNeededCollateralTokens,
+            bool requireCollateral
+        );
 }

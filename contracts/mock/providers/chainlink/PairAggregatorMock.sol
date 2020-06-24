@@ -53,13 +53,13 @@ contract PairAggregatorMock is AggregatorInterface {
 
     function getAnswer(uint256 roundsBack) external view returns (int256) {
         uint256 latest = latestRound;
-        require(roundsBack <= latest, "Not enough history");
+        require(roundsBack <= latest, "NOT_ENOUGH_HISTORY");
         return prices[latest - roundsBack].price;
     }
 
     function getTimestamp(uint256 roundsBack) external view returns (uint256) {
         uint256 latest = latestRound;
-        require(roundsBack <= latest, "Not enough history");
+        require(roundsBack <= latest, "NOT_ENOUGH_HISTORY");
         return prices[latest - roundsBack].timestamp;
     }
 }

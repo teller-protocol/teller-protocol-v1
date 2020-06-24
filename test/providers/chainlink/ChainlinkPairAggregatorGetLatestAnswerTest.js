@@ -12,25 +12,20 @@ const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/Chainli
 contract('ChainlinkPairAggregatorGetLatestAnswerTest', function (accounts) {
     const aggregatorInterfaceEncoder = new AggregatorInterfaceEncoder(web3);
     let chainlinkAggregator;
-    let instance;
     
     beforeEach('Setup for each test', async () => {
         chainlinkAggregator = await ChainlinkAggregatorMock.new();
-        assert(chainlinkAggregator);
-        assert(chainlinkAggregator.address);
-
-        instance = await ChainlinkPairAggregator.new(chainlinkAggregator.address);
-        assert(instance);
-        assert(instance.address);
     });
 
     withData({
-        _1_basic: [1000000]
-    }, function(
-        latestAnswerResponse
-    ) {    
+        _1_coll18_response18: [ChainlinkPairAggregator, 18, 18, 1000000, 1000000],
+        _2_coll18_response10: [ChainlinkPairAggregator, 18, 10, 3100000, 310000000000000],
+        _3_coll18_response18: [ChainlinkPairAggregator, 18, 18, 25000000000000000000, 25000000000000000000],
+        _4_coll10_response18: [ChainlinkPairAggregator, 10, 18, 25000000000000, 250000],
+    }, function(aggregatorReference, collateralDecimals, responseDecimals, latestAnswerResponse, expectedLatestAnswerResponse) {
         it(t('user', 'getLatestAnswer', 'Should able to get the last price.', false), async function() {
             // Setup
+            const instance = await aggregatorReference.new(chainlinkAggregator.address, responseDecimals, collateralDecimals);
             // Mocking response for aggregator 'lastAnswer' function.
             await chainlinkAggregator.givenMethodReturnUint(
                 aggregatorInterfaceEncoder.encodeLatestAnswer(),
@@ -41,7 +36,7 @@ contract('ChainlinkPairAggregatorGetLatestAnswerTest', function (accounts) {
             const result = await instance.getLatestAnswer();
 
             // Assertions
-            assert.equal(result.toString(), latestAnswerResponse.toString());
+            assert.equal(result.toString(), expectedLatestAnswerResponse.toString());
         });
     });
 });

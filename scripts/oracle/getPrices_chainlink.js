@@ -7,10 +7,9 @@ const ProcessArgs = require('../utils/ProcessArgs');
 const { toUnits } = require('../../test/utils/consts');
 const processArgs = new ProcessArgs();
 
-const sourceTokenName = 'USD'.toUpperCase();
-const targetTokenName = 'LINK'.toUpperCase();
+const sourceTokenName = 'LINK'.toUpperCase();
+const targetTokenName = 'USD'.toUpperCase();
 const back = 1;
-const decimals = 8;
 
 module.exports = async (callback) => {
     try {
@@ -19,23 +18,23 @@ module.exports = async (callback) => {
         const appConf = require('../../config')(network);
         const { chainlink } = appConf.networkConfig;
 
-        const aggregatorAddress = chainlink[`${sourceTokenName}_${targetTokenName}`];
-        assert(aggregatorAddress, "Aggregator address is undefined.");
+        const aggregatorInfo = chainlink[`${sourceTokenName}_${targetTokenName}`];
+        assert(aggregatorInfo, "Aggregator info is undefined.");
 
-        console.log(`Using Chainlink Oracle address: '${aggregatorAddress}'`);
-        const aggregator = await IAggregator.at(aggregatorAddress);
+        console.log(`Using Chainlink Oracle address: '${aggregatorInfo.address}'`);
+        const aggregator = await IAggregator.at(aggregatorInfo.address);
 
         console.log(`Chainlink Aggregator => ${sourceTokenName} / ${targetTokenName}: `);
         console.log(`${'-'.repeat(60)}`);
 
         const getLatestAnswerResult = await aggregator.latestAnswer();
-        console.log(`Lastest Answer:        1 ${sourceTokenName} = ${getLatestAnswerResult.toString()} = ${toUnits(getLatestAnswerResult.toString(), decimals)} ${targetTokenName}`);
+        console.log(`Lastest Answer:        1 ${sourceTokenName} = ${getLatestAnswerResult.toString()} = ${toUnits(getLatestAnswerResult.toString(), aggregatorInfo.responseDecimals)} ${targetTokenName}`);
 
         const getLatestTimestampResult = parseInt(await aggregator.latestTimestamp()) * 1000;
         console.log(`Latest Timestamp:      ${getLatestTimestampResult} ms = ${new Date(getLatestTimestampResult).toISOString()}`);
 
         const getAnswerResult = await aggregator.getAnswer(back);
-        console.log(`Previous Answer:       1 ${sourceTokenName} = ${getAnswerResult.toString()} = ${toUnits(getAnswerResult.toString(), decimals)} ${targetTokenName}`);
+        console.log(`Previous Answer:       1 ${sourceTokenName} = ${getAnswerResult.toString()} = ${toUnits(getAnswerResult.toString(), aggregatorInfo.responseDecimals)} ${targetTokenName}`);
 
         const getTimestampResult = parseInt(await aggregator.getTimestamp(back)) * 1000;
         console.log(`Previous Timestamp:    ${getTimestampResult.toString()} ms = ${new Date(getTimestampResult).toISOString()}`);
