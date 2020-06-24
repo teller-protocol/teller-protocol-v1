@@ -236,7 +236,13 @@ contract LoansBase is LoansInterface, Base {
             // collect the money from the payer
             lendingPool.repay(toPay, msg.sender);
 
-            emit LoanRepaid(loanID, loans[loanID].loanTerms.borrower, toPay, msg.sender, totalOwed);
+            emit LoanRepaid(
+                loanID,
+                loans[loanID].loanTerms.borrower,
+                toPay,
+                msg.sender,
+                totalOwed
+            );
         }
     }
 
@@ -279,7 +285,13 @@ contract LoansBase is LoansInterface, Base {
         // the pays tokens at x% of collateral price
         lendingPool.liquidationPayment(tokenPayment, msg.sender);
 
-        emit LoanLiquidated(loanID, loans[loanID].loanTerms.borrower, msg.sender, loanCollateral, tokenPayment);
+        emit LoanLiquidated(
+            loanID,
+            loans[loanID].loanTerms.borrower,
+            msg.sender,
+            loanCollateral,
+            tokenPayment
+        );
     }
 
     function getCollateralInfo(uint256 loanID)

@@ -21,7 +21,6 @@ pragma experimental ABIEncoderV2;
 import "./LoansBase.sol";
 
 
-
 contract TokenCollateralLoans is LoansBase {
     /** Constants */
 

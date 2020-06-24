@@ -20,6 +20,7 @@ pragma experimental ABIEncoderV2;
 // Contracts
 import "./LoansBase.sol";
 
+
 contract EtherCollateralLoans is LoansBase {
     ERC20Detailed public collateralToken;
 
