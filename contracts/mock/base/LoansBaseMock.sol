@@ -23,28 +23,6 @@ contract LoansBaseMock is LoansBase {
     function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
         internal {}
 
-    function _emitCollateralWithdrawnEvent(
-        uint256 loanID,
-        address payable recipient,
-        uint256 amount
-    ) internal {}
-
-    function _emitLoanTakenOutEvent(uint256 loanID, uint256 amountBorrow) internal {}
-
-    function _emitLoanRepaidEvent(
-        uint256 loanID,
-        uint256 amountPaid,
-        address payer,
-        uint256 totalOwed
-    ) internal {}
-
-    function _emitLoanLiquidatedEvent(
-        uint256 loanID,
-        address liquidator,
-        uint256 collateralOut,
-        uint256 tokensIn
-    ) internal {}
-
     function externalPayLoan(uint256 loanID, uint256 toPay) external {
         _payLoan(loanID, toPay);
     }

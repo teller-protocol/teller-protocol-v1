@@ -20,11 +20,9 @@ pragma experimental ABIEncoderV2;
 // Contracts
 import "./LoansBase.sol";
 
-// Interfaces
-import "../interfaces/LoansInterface.sol";
 
 
-contract TokenCollateralLoans is LoansInterface, LoansBase {
+contract TokenCollateralLoans is LoansBase {
     /** Constants */
 
     /** Properties */
@@ -150,48 +148,6 @@ contract TokenCollateralLoans is LoansInterface, LoansBase {
         super._payInCollateral(loanID, amount);
         // Transfer collateral tokens to this contract.
         collateralTokenTransferFrom(msg.sender, amount);
-    }
-
-    function _emitCollateralWithdrawnEvent(
-        uint256 loanID,
-        address payable recipient,
-        uint256 amount
-    ) internal {
-        emit CollateralWithdrawn(loanID, recipient, amount);
-    }
-
-    function _emitLoanTakenOutEvent(uint256 loanID, uint256 amountBorrow) internal {
-        emit LoanTakenOut(loanID, loans[loanID].loanTerms.borrower, amountBorrow);
-    }
-
-    function _emitLoanRepaidEvent(
-        uint256 loanID,
-        uint256 amountPaid,
-        address payer,
-        uint256 totalOwed
-    ) internal {
-        emit LoanRepaid(
-            loanID,
-            loans[loanID].loanTerms.borrower,
-            amountPaid,
-            payer,
-            totalOwed
-        );
-    }
-
-    function _emitLoanLiquidatedEvent(
-        uint256 loanID,
-        address liquidator,
-        uint256 collateralOut,
-        uint256 tokensIn
-    ) internal {
-        emit LoanLiquidated(
-            loanID,
-            loans[loanID].loanTerms.borrower,
-            liquidator,
-            collateralOut,
-            tokensIn
-        );
     }
 
     /** Private Functions */

@@ -29,9 +29,10 @@ import "../base/Base.sol";
 import "../interfaces/PairAggregatorInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
+import "../interfaces/LoansInterface.sol";
 
 
-contract LoansBase is Base {
+contract LoansBase is LoansInterface, Base {
     using SafeMath for uint256;
 
     uint256 internal constant TEN = 10; // Used to calculate one whole token.
@@ -131,7 +132,7 @@ contract LoansBase is Base {
             _payOutCollateral(loanID, withdrawalAmount, msg.sender);
         }
 
-        _emitCollateralWithdrawnEvent(loanID, msg.sender, withdrawalAmount);
+        emit CollateralWithdrawn(loanID, msg.sender, withdrawalAmount);
     }
 
     /**
@@ -186,7 +187,7 @@ contract LoansBase is Base {
             lendingPool.createLoan(amountBorrow, loans[loanID].loanTerms.borrower);
         }
 
-        _emitLoanTakenOutEvent(loanID, amountBorrow);
+        emit LoanTakenOut(loanID, loans[loanID].loanTerms.borrower, amountBorrow);
     }
 
     /**
@@ -225,7 +226,7 @@ contract LoansBase is Base {
                     loans[loanID].loanTerms.borrower
                 );
 
-                _emitCollateralWithdrawnEvent(
+                emit CollateralWithdrawn(
                     loanID,
                     loans[loanID].loanTerms.borrower,
                     collateralAmount
@@ -235,7 +236,7 @@ contract LoansBase is Base {
             // collect the money from the payer
             lendingPool.repay(toPay, msg.sender);
 
-            _emitLoanRepaidEvent(loanID, toPay, msg.sender, totalOwed);
+            emit LoanRepaid(loanID, loans[loanID].loanTerms.borrower, toPay, msg.sender, totalOwed);
         }
     }
 
@@ -278,7 +279,7 @@ contract LoansBase is Base {
         // the pays tokens at x% of collateral price
         lendingPool.liquidationPayment(tokenPayment, msg.sender);
 
-        _emitLoanLiquidatedEvent(loanID, msg.sender, loanCollateral, tokenPayment);
+        emit LoanLiquidated(loanID, loans[loanID].loanTerms.borrower, msg.sender, loanCollateral, tokenPayment);
     }
 
     function getCollateralInfo(uint256 loanID)
@@ -298,21 +299,6 @@ contract LoansBase is Base {
 
     function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
         internal;
-
-    function _emitCollateralWithdrawnEvent(
-        uint256 loanID,
-        address payable recipient,
-        uint256 amount
-    ) internal;
-
-    function _emitLoanTakenOutEvent(uint256 loanID, uint256 amountBorrow) internal;
-
-    function _emitLoanRepaidEvent(
-        uint256 loanID,
-        uint256 amountPaid,
-        address payer,
-        uint256 totalOwed
-    ) internal;
 
     function _emitLoanLiquidatedEvent(
         uint256 loanID,

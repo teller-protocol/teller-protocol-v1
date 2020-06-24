@@ -20,11 +20,7 @@ pragma experimental ABIEncoderV2;
 // Contracts
 import "./LoansBase.sol";
 
-// Interfaces
-import "../interfaces/LoansInterface.sol";
-
-
-contract EtherCollateralLoans is LoansInterface, LoansBase {
+contract EtherCollateralLoans is LoansBase {
     ERC20Detailed public collateralToken;
 
     /**
@@ -119,47 +115,5 @@ contract EtherCollateralLoans is LoansInterface, LoansBase {
         totalCollateral = totalCollateral.sub(amount);
         loans[loanID].collateral = loans[loanID].collateral.sub(amount);
         recipient.transfer(amount);
-    }
-
-    function _emitCollateralWithdrawnEvent(
-        uint256 loanID,
-        address payable recipient,
-        uint256 amount
-    ) internal {
-        emit CollateralWithdrawn(loanID, recipient, amount);
-    }
-
-    function _emitLoanTakenOutEvent(uint256 loanID, uint256 amountBorrow) internal {
-        emit LoanTakenOut(loanID, loans[loanID].loanTerms.borrower, amountBorrow);
-    }
-
-    function _emitLoanRepaidEvent(
-        uint256 loanID,
-        uint256 amountPaid,
-        address payer,
-        uint256 totalOwed
-    ) internal {
-        emit LoanRepaid(
-            loanID,
-            loans[loanID].loanTerms.borrower,
-            amountPaid,
-            payer,
-            totalOwed
-        );
-    }
-
-    function _emitLoanLiquidatedEvent(
-        uint256 loanID,
-        address liquidator,
-        uint256 collateralOut,
-        uint256 tokensIn
-    ) internal {
-        emit LoanLiquidated(
-            loanID,
-            loans[loanID].loanTerms.borrower,
-            liquidator,
-            collateralOut,
-            tokensIn
-        );
     }
 }
