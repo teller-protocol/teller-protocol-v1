@@ -127,7 +127,7 @@ contract TokenCollateralLoans is LoansBase {
             settingsAddress
         );
 
-        collateralToken = ERC20Detailed(collateralTokenAddress);
+        collateralToken = collateralTokenAddress;
     }
 
     /** Internal Function */
@@ -156,9 +156,9 @@ contract TokenCollateralLoans is LoansBase {
         @dev It throws a require error if 'transfer' invocation fails.
      */
     function collateralTokenTransfer(address recipient, uint256 amount) private {
-        uint256 currentBalance = collateralToken.balanceOf(address(this));
+        uint256 currentBalance = ERC20Detailed(collateralToken).balanceOf(address(this));
         require(currentBalance >= amount, "NOT_ENOUGH_COLL_TOKENS_BALANCE");
-        bool transferResult = collateralToken.transfer(recipient, amount);
+        bool transferResult = ERC20Detailed(collateralToken).transfer(recipient, amount);
         require(transferResult, "COLL_TOKENS_TRANSFER_FAILED");
     }
 
@@ -170,9 +170,9 @@ contract TokenCollateralLoans is LoansBase {
         @dev It throws a require error if 'transferFrom' invocation fails.
      */
     function collateralTokenTransferFrom(address from, uint256 amount) private {
-        uint256 currentAllowance = collateralToken.allowance(from, address(this));
+        uint256 currentAllowance = ERC20Detailed(collateralToken).allowance(from, address(this));
         require(currentAllowance >= amount, "NOT_ENOUGH_COLL_TOKENS_ALLOWANCE");
-        bool transferFromResult = collateralToken.transferFrom(
+        bool transferFromResult = ERC20Detailed(collateralToken).transferFrom(
             from,
             address(this),
             amount

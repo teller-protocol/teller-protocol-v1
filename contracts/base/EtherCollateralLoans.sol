@@ -22,7 +22,7 @@ import "./LoansBase.sol";
 
 
 contract EtherCollateralLoans is LoansBase {
-    ERC20Detailed public collateralToken = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address public collateralToken = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /**
      * @notice Deposit collateral into a loan
