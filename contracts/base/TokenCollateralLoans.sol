@@ -170,7 +170,10 @@ contract TokenCollateralLoans is LoansBase {
         @dev It throws a require error if 'transferFrom' invocation fails.
      */
     function collateralTokenTransferFrom(address from, uint256 amount) private {
-        uint256 currentAllowance = ERC20Detailed(collateralToken).allowance(from, address(this));
+        uint256 currentAllowance = ERC20Detailed(collateralToken).allowance(
+            from,
+            address(this)
+        );
         require(currentAllowance >= amount, "NOT_ENOUGH_COLL_TOKENS_ALLOWANCE");
         bool transferFromResult = ERC20Detailed(collateralToken).transferFrom(
             from,
