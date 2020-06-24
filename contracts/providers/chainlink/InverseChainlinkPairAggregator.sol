@@ -19,25 +19,19 @@ import "./ChainlinkPairAggregator.sol";
 
 contract InverseChainlinkPairAggregator is ChainlinkPairAggregator {
 
-    constructor(address aggregatorAddress, uint8 tokenDecimalsValue, uint8 responseDecimalsValue, uint8 collateralDecimalsValue)
+    constructor(address aggregatorAddress, uint8 responseDecimalsValue, uint8 collateralDecimalsValue)
         public
-        ChainlinkPairAggregator(aggregatorAddress, tokenDecimalsValue, responseDecimalsValue, collateralDecimalsValue)
+        ChainlinkPairAggregator(aggregatorAddress, responseDecimalsValue, collateralDecimalsValue)
         {}
 
     /** External Functions */
 
     /** Internal Functions */
     function _normalizeResponse(int256 response) internal view returns (int256) {
-        int256 valueDecimalsNormalized = _normalizeDecimals(response);
-        return _inverseValue(valueDecimalsNormalized);
+        return _inverseValue(response);
     }
 
     function _inverseValue(int256 value) internal view returns (int256) {
-        // To avoid decimal losses, it is multiplied twice and then divided by value.
-        return (_getAWholeToken() * _getAWholeToken()) / value;
-    }
-
-    function _getAWholeToken() internal view returns (int256) {
-        return int256(TEN ** tokenDecimals);
+        return (int256(TEN ** collateralDecimals) * int256(TEN ** responseDecimals)) / value;
     }
 }

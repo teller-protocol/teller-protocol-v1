@@ -19,9 +19,9 @@ import "../../../providers/chainlink/InverseChainlinkPairAggregator.sol";
 
 contract InverseChainlinkPairAggregatorMock is InverseChainlinkPairAggregator {
 
-    constructor(address aggregatorAddress, uint8 tokenDecimalsValue, uint8 responseDecimalsValue, uint8 collateralDecimalsValue)
+    constructor(address aggregatorAddress, uint8 responseDecimalsValue, uint8 collateralDecimalsValue)
         public
-        InverseChainlinkPairAggregator(aggregatorAddress, tokenDecimalsValue, responseDecimalsValue, collateralDecimalsValue)
+        InverseChainlinkPairAggregator(aggregatorAddress, responseDecimalsValue, collateralDecimalsValue)
         {}
 
     /** External Functions */

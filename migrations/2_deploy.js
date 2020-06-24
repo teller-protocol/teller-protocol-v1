@@ -63,7 +63,6 @@ module.exports = async function(deployer, network, accounts) {
     const {
       address,
       collateralDecimals,
-      tokenDecimals,
       responseDecimals,
     } = chainlinkOracleInfo;
   
@@ -71,12 +70,11 @@ module.exports = async function(deployer, network, accounts) {
       `ChainlinkPairAggregator_${chainlinkOraclePair.toUpperCase()}`,
       ChainlinkPairAggregator,
       address,
-      tokenDecimals,
       responseDecimals,
       collateralDecimals,
       txConfig
     );
-    console.log(`New aggregator for ${chainlinkOraclePair} (Token Decimals: ${tokenDecimals} / Response Decimals: ${responseDecimals}): ${ChainlinkPairAggregator.address} (using Chainlink Oracle address ${address})`);
+    console.log(`New aggregator for ${chainlinkOraclePair} (Collateral Decimals: ${collateralDecimals} / Response Decimals: ${responseDecimals}): ${ChainlinkPairAggregator.address} (using Chainlink Oracle address ${address})`);
     aggregators[chainlinkOraclePair] = ChainlinkPairAggregator.address;
   }
 

@@ -55,7 +55,6 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
     const createLoans = async (useTokens, Loans, aggregatorReference, decimalsConf) => {
         const aggregator = await aggregatorReference.new(
             oracleInstance.address,
-            decimalsConf.lendingTokenDecimals,
             decimalsConf.responseDecimals,
             decimalsConf.collateralDecimals,
         );
@@ -169,7 +168,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
             { collateralDecimals: 8, lendingTokenDecimals: 6, responseDecimals: 12 },
             BigNumber("3000000000000"),
             // 1 USDC = 3 SLINK; repay: 0; coll needed (lending tokens): 50 USDC; coll. needed tokens: 150 (50 * 3)
-            { requireCollateral: true, neededCollInLendingTokens: '50000000', neededCollInCollTokens: '150000000' }
+            { requireCollateral: true, neededCollInLendingTokens: '50000000', neededCollInCollTokens: '15000000000' }
         ],
         _9_usdc_slink_response_12_token_6_repay_50: [
             buildLoanInfo(9, accounts[0], '5000', 0, 99, 1),
@@ -180,7 +179,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
             { collateralDecimals: 8, lendingTokenDecimals: 6, responseDecimals: 12 },
             BigNumber("3000000000000"),
             // 1 USDC = 3 SLINK; repay: 50; coll needed (lending tokens): 50 USDC; coll. needed tokens: 75 (25 / 3)
-            { requireCollateral: true, neededCollInLendingTokens: '25000000', neededCollInCollTokens: '75000000' }
+            { requireCollateral: true, neededCollInLendingTokens: '25000000', neededCollInCollTokens: '7500000000' }
         ],
         _10_usdc_slink_response_12_token_6_repay_100: [
             buildLoanInfo(10, accounts[0], '5000', 0, 99, 1),
