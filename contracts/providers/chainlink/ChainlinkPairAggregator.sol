@@ -79,17 +79,13 @@ contract ChainlinkPairAggregator is PairAggregatorInterface {
             }    
         } else {
             if( responseDecimals > collateralDecimals) {
-                if( tokenDecimals >= responseDecimals) {
-                    uint8 pendingDecimals = tokenDecimals - responseDecimals;
+                uint8 minDecimals = tokenDecimals < collateralDecimals ? tokenDecimals : collateralDecimals;
+                if( minDecimals >= responseDecimals) {
+                    uint8 pendingDecimals = minDecimals - responseDecimals;
                     return value / int256(TEN ** pendingDecimals);
                 } else {
-                    if ( collateralDecimals >= tokenDecimals) {
-                        uint8 pendingDecimals = responseDecimals - tokenDecimals;
-                        return value / int256(TEN ** pendingDecimals);
-                    } else {
-                        uint8 pendingDecimals = responseDecimals - collateralDecimals;
-                        return value / int256(TEN ** pendingDecimals);
-                    }
+                    uint8 pendingDecimals = responseDecimals - minDecimals;
+                    return value / int256(TEN ** pendingDecimals);
                 }
             } else {
                 uint8 pendingDecimals = collateralDecimals - responseDecimals;
