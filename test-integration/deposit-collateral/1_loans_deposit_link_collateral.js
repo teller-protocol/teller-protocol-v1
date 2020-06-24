@@ -1,14 +1,14 @@
 // Util classes
 const BigNumber = require('bignumber.js');
-const { zerocollateral, tokens, ctokens, chainlink } = require("../../scripts/utils/contracts");
+const { zerocollateral, tokens, chainlink } = require("../../scripts/utils/contracts");
 const { loans, lendingPool } = require('../../test/utils/events');
 const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds } = require('../../test/utils/consts');
 const { createMultipleSignedLoanTermsResponses, createLoanTermsRequest } = require('../../test/utils/loan-terms-helper');
 const assert = require("assert");
 
-module.exports = async ({accounts, getContracts, timer, web3, nonces}) => {
+module.exports = async ({accounts, getContracts, processArgs, timer, web3, nonces}) => {
   console.log('Deposit tokens as collateral.');
-  const tokenName = 'DAI';
+  const tokenName = processArgs.getValue('testTokenName');
   const oracleTokenName = 'USD';
   const collateralTokenName = 'LINK';
   const settingsInstance = await getContracts.getDeployed(zerocollateral.settings());
@@ -16,7 +16,7 @@ module.exports = async ({accounts, getContracts, timer, web3, nonces}) => {
   const collateralToken = await getContracts.getDeployed(tokens.get(collateralTokenName));
   const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.link().lendingPool(tokenName));
   const loansInstance = await getContracts.getDeployed(zerocollateral.link().loans(tokenName));
-  const chainlinkOracle = await getContracts.getDeployed(chainlink.custom(oracleTokenName, collateralTokenName));
+  const chainlinkOracle = await getContracts.getDeployed(chainlink.custom(collateralTokenName, oracleTokenName));
 
   const currentTimestamp = parseInt(await timer.getCurrentTimestamp());
   console.log(`Current timestamp: ${currentTimestamp} segs`);

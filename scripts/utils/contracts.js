@@ -53,6 +53,7 @@ const ztoken = (tokenName) => {
 };
 const internalChainlink = (sourceTokenName, targetTokenName, artifactName = 'PairAggregatorMock') => {
     return {
+        addressOnProperty: 'address',
         keyName: 'chainlink',
         contractName: `${sourceTokenName.toUpperCase()}_${targetTokenName.toUpperCase()}`,
         artifactName,

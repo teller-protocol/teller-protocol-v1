@@ -76,6 +76,7 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   const setLoanTermsResult = await loansInstance.setLoanTerms(
     loanTermsRequest.loanTermsRequest,
     signedResponses,
+    borrowerTxConfigWithValue.value,
     borrowerTxConfigWithValue
   );
 

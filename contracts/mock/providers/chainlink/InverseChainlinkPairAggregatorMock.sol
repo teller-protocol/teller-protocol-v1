@@ -28,7 +28,7 @@ contract InverseChainlinkPairAggregatorMock is InverseChainlinkPairAggregator {
 
     /** Internal Functions */
     
-    function _normalizeDecimals(int256 value) internal view returns (int256) {
+    function _normalizeDecimals(int256 value) internal pure returns (int256) {
         return value;
     }
 }
