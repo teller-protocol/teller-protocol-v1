@@ -18,11 +18,12 @@ module.exports = async (callback) => {
         
         const { toTxUrl } = appConf.networkConfig;
 
+        const collateralTokenName = processArgs.getValue('collTokenName');
         const tokenName = processArgs.getValue('tokenName');
         const senderIndex = processArgs.getValue('senderIndex');
         const depositAmount = processArgs.getValue('amount');
 
-        const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.lendingPool(tokenName));
+        const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.custom(collateralTokenName).lendingPool(tokenName));
         const tokenInstance = await getContracts.getDeployed(tokens.get(tokenName));
         const depositAmountWithDecimals = await toTokenDecimals(tokenInstance, depositAmount);
 

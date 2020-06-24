@@ -97,11 +97,21 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   const loanInfo = await loansInstance.loans(lastLoanID);
 
   console.log(`Liquidating loan id ${lastLoanID}...`);
-  const initialLiquidatorTokenBalance = await token.balanceOf(liquidatorTxConfig.from);
+
   const initialTotalCollateral = await loansInstance.totalCollateral();
+  const liquidateEthPrice = await settingsInstance.liquidateEthPrice();
+  const {
+    collateralNeededLendingTokens,
+  } = await loansInstance.getCollateralInfo(lastLoanID);
+  const transferAmountToLiquidate = BigNumber(collateralNeededLendingTokens.toString());
+
+  await token.mint(liquidatorTxConfig.from, transferAmountToLiquidate.toFixed(0));
+
+  const initialLiquidatorTokenBalance = await token.balanceOf(liquidatorTxConfig.from);
+
+  await token.approve(lendingPoolInstance.address, transferAmountToLiquidate.toFixed(0), liquidatorTxConfig);
   const liquidateLoanResult = await loansInstance.liquidateLoan(lastLoanID, liquidatorTxConfig);
 
-  const liquidateEthPrice = await settingsInstance.liquidateEthPrice();
   const loanPrinter = new LoanInfoPrinter(web3, loanInfo, { tokenName, decimals });
   const tokensPaymentIn = loanPrinter.getTotalTokensPaymentInLiquidation(oraclePrice, liquidateEthPrice);
   loans
@@ -118,7 +128,7 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   const finalLiquidatorTokenBalance = await token.balanceOf(liquidatorTxConfig.from);
   assert.equal(
     tokensPaymentIn.toString(),
-    BigNumber(finalLiquidatorTokenBalance.toString()).minus(initialLiquidatorTokenBalance.toString()).toFixed(),
+    BigNumber(initialLiquidatorTokenBalance.toString()).minus(finalLiquidatorTokenBalance.toString()).toFixed(),
     'Invalid final liquidator tokens balance.'
   );
 };

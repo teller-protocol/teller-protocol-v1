@@ -70,7 +70,7 @@ contract('TokenLoansWithdrawCollateralTest', function (accounts) {
             await instance.setLoan(loanID, loanTerms, 0, 0, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, loanTerms.maxLoanAmount, ACTIVE, false)
             await instance.setTotalCollateral(currentTotalCollateral)
 
-            await collateralToken.mintTo(instance.address, currentTotalCollateral, { from: collateralTokenOwner });
+            await collateralToken.mint(instance.address, currentTotalCollateral, { from: collateralTokenOwner });
 
             // encode current token price
             const encodeGetLatestAnswer = pairAggregatorEncoder.encodeGetLatestAnswer();

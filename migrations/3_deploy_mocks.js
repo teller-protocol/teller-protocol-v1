@@ -5,6 +5,8 @@ const DeployerApp = require('./utils/DeployerApp');
 const DAIMock = artifacts.require("./mock/token/DAIMock.sol");
 const USDCMock = artifacts.require("./mock/token/USDCMock.sol");
 const LINKMock = artifacts.require("./mock/token/LINKMock.sol");
+const CDAIMock = artifacts.require("./mock/providers/compound/CDAIMock.sol");
+const CUSDCMock = artifacts.require("./mock/providers/compound/CUSDCMock.sol");
 const PairAggregatorMock = artifacts.require("./mock/providers/chainlink/PairAggregatorMock.sol");
 
 module.exports = async function(deployer, network, accounts) {
@@ -25,7 +27,9 @@ module.exports = async function(deployer, network, accounts) {
   // Creating DeployerApp helper.
   const deployerApp = new DeployerApp(deployer, web3, deployerAccount, network);
   
-  await deployerApp.deployMocksIf([DAIMock, USDCMock, LINKMock], txConfig);
+  await deployerApp.deployMockIfWith('DAI', DAIMock, txConfig);
+  await deployerApp.deployMockIfWith('USDC', USDCMock, txConfig);
+  await deployerApp.deployMockIfWith('LINK', LINKMock, txConfig);
 
   const initialDaiEthPrice = '4806625000000000';
   await deployerApp.deployMockIfWith('DAI_ETH', PairAggregatorMock, initialDaiEthPrice, txConfig);
@@ -34,6 +38,13 @@ module.exports = async function(deployer, network, accounts) {
   const initialLinkUsdPrice = '241545893719807000';
   // The Chainlink Oracle for pairs: DAI/LINK and USDC/LINK don't exist yet. So we use LINK/USD (inversed).
   await deployerApp.deployMockIfWith('LINK_USD', PairAggregatorMock, initialLinkUsdPrice, txConfig);
+
+  if(deployerApp.canDeployMock()) {
+      const defaultMultiplier = '2';
+      await deployerApp.deployMockIfWith('CDAI', CDAIMock, DAIMock.address, defaultMultiplier, txConfig);
+      await deployerApp.deployMockIfWith('CUSDC', CUSDCMock, USDCMock.address, defaultMultiplier, txConfig);
+  }
+
   deployerApp.print();
   deployerApp.writeJson();
   console.log(`${'='.repeat(25)} Deployment process finished. ${'='.repeat(25)}`);

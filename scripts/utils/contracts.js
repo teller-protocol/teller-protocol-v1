@@ -58,57 +58,39 @@ const internalChainlink = (sourceTokenName, targetTokenName, artifactName = 'Pai
         artifactName,
     };
 };
+
+const customCollateralToken = (collateralToken) => {
+    const collToken = collateralToken.toUpperCase();
+    const loansArtifactName = collToken === ETH ? 'EtherLoans' : 'TokenLoans';
+    return {
+        loans: (tokenName) => {
+            return internalLoans(collToken, tokenName, loansArtifactName);
+        },
+        lendingPool: (tokenName, artifactName = 'LendingPool') => {
+            return internalLendingPool(collToken, tokenName, artifactName);
+        },
+        interestConsensus: (tokenName, artifactName = 'LendingPool') => {
+            return internalInterestConsensus(collToken, tokenName, artifactName);
+        },
+        loanTermsConsensus: (tokenName, artifactName = 'LoanTermsConsensus') => {
+            return internalLoanTermsConsensus(collToken, tokenName, artifactName);
+        },
+        lenders: (tokenName, artifactName = 'Lenders') => {
+            return internalLenders(collToken, tokenName, artifactName);
+        },
+        chainlink: {
+            usdc_eth: () => internalChainlink('USDC', collToken),
+            dai_eth: () => internalChainlink('DAI', collToken),
+            custom: (tokenName) => internalChainlink(tokenName.toUpperCase(), collToken),
+        }
+    };
+}
 module.exports = {
     zerocollateral: {
         ztoken,
-        eth: () => {
-            return {
-                loans: (tokenName, artifactName = 'EtherLoans') => {
-                    return internalLoans(ETH, tokenName, artifactName);
-                },
-                lendingPool: (tokenName, artifactName = 'LendingPool') => {
-                    return internalLendingPool(ETH, tokenName, artifactName);
-                },
-                interestConsensus: (tokenName, artifactName = 'LendingPool') => {
-                    return internalInterestConsensus(ETH, tokenName, artifactName);
-                },
-                loanTermsConsensus: (tokenName, artifactName = 'LoanTermsConsensus') => {
-                    return internalLoanTermsConsensus(ETH, tokenName, artifactName);
-                },
-                lenders: (tokenName, artifactName = 'Lenders') => {
-                    return internalLenders(ETH, tokenName, artifactName);
-                },
-                chainlink: {
-                    usdc_eth: () => internalChainlink('USDC', ETH),
-                    dai_eth: () => internalChainlink('DAI', ETH),
-                    custom: (tokenName) => internalChainlink(tokenName.toUpperCase(), ETH),
-                }
-            };
-        },
-        link: () => {
-            return {
-                loans: (tokenName, artifactName = 'TokenLoans') => {
-                    return internalLoans(LINK, tokenName, artifactName);
-                },
-                lendingPool: (tokenName, artifactName = 'LendingPool') => {
-                    return internalLendingPool(LINK, tokenName, artifactName);
-                },
-                interestConsensus: (tokenName, artifactName = 'LendingPool') => {
-                    return internalInterestConsensus(LINK, tokenName, artifactName);
-                },
-                loanTermsConsensus: (tokenName, artifactName = 'LoanTermsConsensus') => {
-                    return internalLoanTermsConsensus(LINK, tokenName, artifactName);
-                },
-                lenders: (tokenName, artifactName = 'Lenders') => {
-                    return internalLenders(LINK, tokenName, artifactName);
-                },
-                chainlink: {
-                    usdc_link: () => internalChainlink('USDC', LINK),
-                    dai_link: () => internalChainlink('DAI', LINK),
-                    custom: (tokenName) => internalChainlink(tokenName.toUpperCase(), LINK),
-                }
-            };
-        },
+        eth: () => customCollateralToken(ETH),
+        link: () => customCollateralToken(LINK),
+        custom: (collateralToken) => customCollateralToken(collateralToken),
         oracles: () => ({
             usdc_eth: () => internalOracle('USDC', 'ETH'),
             dai_eth: () => internalOracle('DAI', 'ETH'),
@@ -129,6 +111,15 @@ module.exports = {
         get: (tokenName, artifactName = 'ERC20Mock') => {
             return {
                 keyName: 'tokens',
+                contractName: tokenName.toUpperCase(),
+                artifactName,
+            };
+        },
+    },
+    ctokens: {
+        get: (tokenName, artifactName = 'CErc20Interface') => {
+            return {
+                keyName: 'compound',
                 contractName: tokenName.toUpperCase(),
                 artifactName,
             };

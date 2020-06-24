@@ -10,6 +10,7 @@ const DEFAULT_SIGNER_ADDRESSES = [
     '0x924Af6Cfa15F76E04763D9e24a1c892fD7767983',
     '0x3Eb394E83f82be8ed7ac86aF0DcbdaE4890Be307',
 ];
+const DEFAULT_COLLATERAL_TOKEN_NAME = 'ETH';
 const DEFAULT_TEST_TOKEN_NAME = 'DAI';
 const DEFAULT_TOKEN_NAMES = ['DAI', 'USDC'];
 const DEFAULT_REQUIRED_SUBMISSIONS = 2;
@@ -56,6 +57,14 @@ const lendingPoolBase = (yargs) => {
         'Token to use when the script is executed.',
         DEFAULT_TEST_TOKEN_NAME,
     );
+    newOption(
+        yargs,
+        'collTokenName',
+        'CT',
+        'string',
+        'Collateral token used to send the transaction.',
+        DEFAULT_COLLATERAL_TOKEN_NAME,
+    );
 };
 
 const loansBase = (yargs) => {
@@ -75,6 +84,14 @@ const loansBase = (yargs) => {
         'string',
         'Token to use when the script is executed.',
         DEFAULT_TEST_TOKEN_NAME,
+    );
+    newOption(
+        yargs,
+        'collToken',
+        'CT',
+        'string',
+        'Collateral token used to send the transaction.',
+        DEFAULT_COLLATERAL_TOKEN_NAME,
     );
 };
 
@@ -175,8 +192,8 @@ module.exports = {
                 'amount',
                 'A',
                 'string',
-                'Total amounnt (wei / including decimals).',
-                '100000000',
+                'Total amounnt (not including decimals). Example: 100 DAI',
+                '100',
             );
             return yargs;
         },
@@ -191,6 +208,34 @@ module.exports = {
                 'string',
                 'Borrower address.',
                 undefined,
+            );
+            return yargs;
+        },
+        listLoans: () => {
+            loansBase(yargs);
+            newOption(
+                yargs,
+                'collTokenName',
+                'CT',
+                'string',
+                'Collateral token used to list the loans.',
+                DEFAULT_COLLATERAL_TOKEN_NAME,
+            );
+            newOption(
+                yargs,
+                'initialLoanId',
+                'ILI',
+                'number',
+                'Initial loan ID to list. Default: 0',
+                0,
+            );
+            newOption(
+                yargs,
+                'finalLoanId',
+                'FLI',
+                'number',
+                'Initial loan ID to list. Default: 10000',
+                10000,
             );
             return yargs;
         },

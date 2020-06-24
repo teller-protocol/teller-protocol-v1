@@ -3,18 +3,22 @@
 // Util classes
 const { zerocollateral, tokens } = require("../utils/contracts");
 const { printFullLoan, printOraclePrice } = require("../../test/utils/printer");
-const ProcessArgs = require('../utils/ProcessArgs');
-const processArgs = new ProcessArgs();
+const { loans: readParams } = require("../utils/cli-builder");
 
-const tokenName = 'DAI';
-const startLoanId = 0;
-const endLoanId = 100;
+const ProcessArgs = require('../utils/ProcessArgs');
+const processArgs = new ProcessArgs(readParams.listLoans().argv);
 
 module.exports = async (callback) => {
     try {
         const getContracts = processArgs.createGetContracts(artifacts);
-        const loansInstance = await getContracts.getDeployed(zerocollateral.loans(tokenName));
-        const oracleInstance = await getContracts.getDeployed(zerocollateral.oracle(tokenName));
+
+        const collTokenName = processArgs.getValue('collTokenName');
+        const tokenName = processArgs.getValue('tokenName');
+        const startLoanId = processArgs.getValue('initialLoanId');
+        const endLoanId = processArgs.getValue('finalLoanId');
+
+        const loansInstance = await getContracts.getDeployed(zerocollateral.custom(collTokenName).loans(tokenName));
+        const oracleInstance = await getContracts.getDeployed(zerocollateral.oracles().custom(tokenName, collTokenName));
         const tokenInstance = await getContracts.getDeployed(tokens.get(tokenName));
 
         const loanIDCounter = await loansInstance.loanIDCounter();

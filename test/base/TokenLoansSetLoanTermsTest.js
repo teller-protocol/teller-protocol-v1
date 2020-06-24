@@ -101,7 +101,7 @@ contract('TokenLoansSetLoanTermsTest', function (accounts) {
                 loanTermsConsensusEncoder.encodeProcessRequest(emptyRequest, [responseOne]),
                 loanTermsConsensusEncoder.encodeProcessRequestReturn(interestRate, collateralRatio, maxLoanAmount),
             );
-            await collateralToken.mintTo(borrowerAddress, mintAmount, { from: sender });
+            await collateralToken.mint(borrowerAddress, mintAmount, { from: sender });
             const initialTotalCollateral = await instance.totalCollateral();
             const initialContractCollateralTokenBalance = await collateralToken.balanceOf(instance.address);
             await collateralToken.approve(instance.address, approveCollateralAmount, { from: borrowerAddress });

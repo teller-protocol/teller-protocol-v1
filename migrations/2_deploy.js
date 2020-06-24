@@ -13,6 +13,7 @@ const LendingPool = artifacts.require("./base/LendingPool.sol");
 const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
+const InverseChainlinkPairAggregator = artifacts.require("./providers/chainlink/InverseChainlinkPairAggregator.sol");
 
 const tokensRequired = ['DAI', 'USDC', 'LINK'];
 const chainlinkOraclesRequired = ['DAI_ETH', 'USDC_ETH', 'LINK_USD'];
@@ -64,17 +65,20 @@ module.exports = async function(deployer, network, accounts) {
       address,
       collateralDecimals,
       responseDecimals,
+      inversed,
     } = chainlinkOracleInfo;
+
+    const ChainlinkPairAggregatorReference = inversed ? InverseChainlinkPairAggregator : ChainlinkPairAggregator;
   
     await deployerApp.deployWith(
       `ChainlinkPairAggregator_${chainlinkOraclePair.toUpperCase()}`,
-      ChainlinkPairAggregator,
+      ChainlinkPairAggregatorReference,
       address,
       responseDecimals,
       collateralDecimals,
       txConfig
     );
-    console.log(`New aggregator for ${chainlinkOraclePair} (Collateral Decimals: ${collateralDecimals} / Response Decimals: ${responseDecimals}): ${ChainlinkPairAggregator.address} (using Chainlink Oracle address ${address})`);
+    console.log(`New aggregator (Inversed? ${inversed}) for ${chainlinkOraclePair} (Collateral Decimals: ${collateralDecimals} / Response Decimals: ${responseDecimals}): ${ChainlinkPairAggregator.address} (using Chainlink Oracle address ${address})`);
     aggregators[chainlinkOraclePair] = ChainlinkPairAggregator.address;
   }
 
