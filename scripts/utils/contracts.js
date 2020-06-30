@@ -93,12 +93,12 @@ module.exports = {
         link: () => customCollateralToken(LINK),
         custom: (collateralToken) => customCollateralToken(collateralToken),
         oracles: () => ({
-            usdc_eth: () => internalOracle('USDC', 'ETH'),
-            dai_eth: () => internalOracle('DAI', 'ETH'),
-            usdc_link: () => internalOracle('USDC', 'LINK'),
-            dai_link: () => internalOracle('DAI', 'LINK'),
-            custom: (sourceTokenName, targetTokenName) =>
-                internalOracle(sourceTokenName.toUpperCase(), targetTokenName.toUpperCase()),
+            usdc_eth: (artifactName = 'ChainlinkPairAggregator') => internalOracle('USDC', 'ETH', artifactName),
+            dai_eth: (artifactName = 'ChainlinkPairAggregator') => internalOracle('DAI', 'ETH', artifactName),
+            usdc_link: (artifactName = 'ChainlinkPairAggregator') => internalOracle('USDC', 'LINK', artifactName),
+            dai_link: (artifactName = 'ChainlinkPairAggregator') => internalOracle('DAI', 'LINK', artifactName),
+            custom: (sourceTokenName, targetTokenName, artifactName = 'ChainlinkPairAggregator') =>
+                internalOracle(sourceTokenName.toUpperCase(), targetTokenName.toUpperCase(), artifactName),
         }),
         settings: () => {
             return {

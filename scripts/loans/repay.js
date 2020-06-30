@@ -1,44 +1,40 @@
 // Smart contracts
-const LoansInterface = artifacts.require("./base/EtherCollateralLoans.sol");
-const ERC20 = artifacts.require("@openzeppelin/contracts/token/ERC20/IERC20.sol");
 
 // Util classes
-const assert = require('assert');
+const { zerocollateral, tokens } = require("../../scripts/utils/contracts");
+const { loans: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
-const processArgs = new ProcessArgs();
-
-/** Process parameters: */
-const loanID = 1;
-const repayAmount = 100;
-const senderIndex = 1;
+const Accounts = require('../utils/Accounts');
+const { toDecimals } = require('../../test/utils/consts');
+const processArgs = new ProcessArgs(readParams.repay().argv);
 
 module.exports = async (callback) => {
     try {
-        const network = processArgs.network();
-        console.log(`Script will be executed in network ${network}.`)
-        const appConf = require('../../config')(network);
-        const { zerocollateral, tokens, toTxUrl } = appConf.networkConfig;
+        const accounts = new Accounts(web3);
+        const appConf = processArgs.getCurrentConfig();
+        const { toTxUrl } = appConf.networkConfig;
 
-        assert(zerocollateral.Loans_zDAI, "Loans_zDAI address is undefined.");
-        assert(tokens.DAI, "DAI address is undefined.");
-        const accounts = await web3.eth.getAccounts();
-        assert(accounts, "Accounts must be defined.");
-        const sender = accounts[senderIndex];
-        assert(sender, "Sender must be defined.");
+        const collateralTokenName = processArgs.getValue('collTokenName');
+        const tokenName = processArgs.getValue('tokenName');
+        const senderIndex = processArgs.getValue('senderIndex');
+        const loanID = processArgs.getValue('loanId');
+        const repayAmount = processArgs.getValue('amount');
 
-        const txConfig = { from: sender };
+        const getContracts = processArgs.createGetContracts(artifacts);
+        const loansInstance = await getContracts.getDeployed(zerocollateral.custom(collateralTokenName).loans(tokenName));
+        const lendingTokenInstance = await getContracts.getDeployed(tokens.get(tokenName));
+        const lendingTokenDecimals = await lendingTokenInstance.decimals();
 
-        const loansInstance = await LoansInterface.at(zerocollateral.Loans_zDAI);
+        const senderTxConfig = await accounts.getTxConfigAt(senderIndex);
+        const repayAmountWithDecimals = toDecimals(repayAmount, lendingTokenDecimals);
 
-        const lendingPoolnAddress = await loansInstance.lendingPool();
-        const lendingTokenAddress = tokens.DAI;
-        const lendingTokenInstance = await ERC20.at(lendingTokenAddress);
+        const lendingPoolAddress = await loansInstance.lendingPool();
 
-        await lendingTokenInstance.approve(lendingPoolnAddress, repayAmount.toString(), txConfig);
+        await lendingTokenInstance.approve(lendingPoolAddress, repayAmountWithDecimals.toString(), senderTxConfig);
         const result = await loansInstance.repay(
-            repayAmount,
+            repayAmountWithDecimals,
             loanID,
-            txConfig
+            senderTxConfig
         );
         console.log(toTxUrl(result));
 

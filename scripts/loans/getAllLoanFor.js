@@ -8,16 +8,17 @@ const processArgs = new ProcessArgs(readParams.getAllLoansFor().argv);
 
 module.exports = async (callback) => {
     try {
+        const collateralTokenName = processArgs.getValue('collTokenName');
         const tokenName = processArgs.getValue('tokenName');
         const borroweAddress = processArgs.getValue('borrower');
         const getContracts = processArgs.createGetContracts(artifacts);
-        const loansInstance = await getContracts.getDeployed(zerocollateral.loans(tokenName));
+        const loansInstance = await getContracts.getDeployed(zerocollateral.custom(collateralTokenName).loans(tokenName));
         
         const loanIds = await loansInstance.getBorrowerLoans(borroweAddress);
         
-        console.log(`Token:     ${tokenName}`);
-        console.log(`Borrower:  ${borroweAddress}`);
-        console.log(`# Loans:   ${loanIds.length}`);
+        console.log(`Token / Coll. Token:   ${tokenName} / ${collateralTokenName}`);
+        console.log(`Borrower:      ${borroweAddress}`);
+        console.log(`# Loans:       ${loanIds.length}`);
         for (const loanId of loanIds) {
             const lastLoan = loanIds.indexOf(loanId) === loanIds.length - 1 ? '<<< Last Loan >>>' : '';
             console.log(`Loan ID: ${loanId} ${lastLoan}`);
