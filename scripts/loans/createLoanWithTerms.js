@@ -10,6 +10,7 @@ const Accounts = require('../utils/Accounts');
 const { createLoanTermsRequest, createSignedLoanTermsResponse } = require('../../test/utils/loan-terms-helper');
 const { NULL_ADDRESS, ONE_DAY, toDecimals } = require('../../test/utils/consts');
 const { default: BigNumber } = require("bignumber.js");
+const { COLL_TOKEN_NAME, TOKEN_NAME, BORROWER_INDEX, RECIPIENT_INDEX, DURATION_DAYS, AMOUNT, NONCE, COLL_AMOUNT } = require('../utils/cli/names');
 const processArgs = new ProcessArgs(readParams.setLoanTerms().argv);
 
 module.exports = async (callback) => {
@@ -20,14 +21,14 @@ module.exports = async (callback) => {
         const { toTxUrl } = appConf.networkConfig;
         const currentTimestamp = await timer.getCurrentTimestamp();
 
-        const collateralTokenName = processArgs.getValue('collTokenName');
-        const tokenName = processArgs.getValue('tokenName');
-        const borrowerIndex = processArgs.getValue('borrowerIndex');
-        const recipientIndex = processArgs.getValue('recipientIndex');
-        const durationInDays = processArgs.getValue('durationDays');
-        const amount = processArgs.getValue('amount');
-        const collateralAmount = processArgs.getValue('collAmount');
-        const nonce = processArgs.getValue('nonce');
+        const collateralTokenName = processArgs.getValue(COLL_TOKEN_NAME.name);
+        const tokenName = processArgs.getValue(TOKEN_NAME.name);
+        const borrowerIndex = processArgs.getValue(BORROWER_INDEX.name);
+        const recipientIndex = processArgs.getValue(RECIPIENT_INDEX.name);
+        const durationInDays = processArgs.getValue(DURATION_DAYS.name);
+        const amount = processArgs.getValue(AMOUNT.name);
+        const collateralAmount = processArgs.getValue(COLL_AMOUNT.name);
+        const nonce = processArgs.getValue(NONCE.name);
 
         const getContracts = processArgs.createGetContracts(artifacts);
         const loansInstance = await getContracts.getDeployed(zerocollateral.custom(collateralTokenName).loans(tokenName));

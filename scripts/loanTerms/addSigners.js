@@ -1,22 +1,20 @@
 // Smart contracts
-const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 
 // Util classes
 const { loanTerms: readParams } = require("../utils/cli-builder");
-const { zerocollateral, tokens } = require("../utils/contracts");
-const { printFullLoan, printOraclePrice } = require("../../test/utils/printer");
-const { getOracleAggregatorInfo, getDecimals } = require("../../test/utils/collateral-helper");
+const { zerocollateral } = require("../utils/contracts");
 const Accounts = require('../utils/Accounts');
 const ProcessArgs = require('../utils/ProcessArgs');
+const { COLL_TOKEN_NAME, TOKEN_NAME, SENDER_INDEX, ADDRESSES } = require("../utils/cli/names");
 const processArgs = new ProcessArgs(readParams.addSigners().argv);
 
 module.exports = async (callback) => {
     try {
         const accounts = new Accounts(web3);
-        const collateralTokenName = processArgs.getValue('collTokenName');
-        const tokenName = processArgs.getValue('tokenName');
-        const senderIndex = processArgs.getValue('senderIndex');
-        const addresses = processArgs.getValue('addresses');
+        const collateralTokenName = processArgs.getValue(COLL_TOKEN_NAME.name);
+        const tokenName = processArgs.getValue(TOKEN_NAME.name);
+        const senderIndex = processArgs.getValue(SENDER_INDEX.name);
+        const addresses = processArgs.getValue(ADDRESSES.name);
         const getContracts = processArgs.createGetContracts(artifacts);
         const appConf = processArgs.getCurrentConfig();
         const { toTxUrl } = appConf.networkConfig;

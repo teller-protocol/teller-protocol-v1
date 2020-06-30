@@ -7,16 +7,17 @@ const { loans: readParams } = require("../utils/cli-builder");
 const { getOracleAggregatorInfo, getDecimals } = require("../../test/utils/collateral-helper");
 
 const ProcessArgs = require('../utils/ProcessArgs');
+const { COLL_TOKEN_NAME, TOKEN_NAME, INITIAL_LOAN_ID, FINAL_LOAN_ID } = require("../utils/cli/names");
 const processArgs = new ProcessArgs(readParams.listLoans().argv);
 
 module.exports = async (callback) => {
     try {
         const getContracts = processArgs.createGetContracts(artifacts);
 
-        const collateralTokenName = processArgs.getValue('collTokenName');
-        const tokenName = processArgs.getValue('tokenName');
-        const startLoanId = processArgs.getValue('initialLoanId');
-        const endLoanId = processArgs.getValue('finalLoanId');
+        const collateralTokenName = processArgs.getValue(COLL_TOKEN_NAME.name);
+        const tokenName = processArgs.getValue(TOKEN_NAME.name);
+        const startLoanId = processArgs.getValue(INITIAL_LOAN_ID.name);
+        const endLoanId = processArgs.getValue(FINAL_LOAN_ID.name);
 
         const loansInstance = await getContracts.getDeployed(zerocollateral.custom(collateralTokenName).loans(tokenName));
 

@@ -18,7 +18,7 @@ class ProcessArgs {
 ProcessArgs.prototype.getValue = function(paramName, defaultValue = undefined) {
     const value = this.params[paramName];
     const defaultValueLabel = defaultValue === undefined ? 'not-provided' : defaultValue;
-    console.log(`Getting value (cli param) (or default '${defaultValueLabel}') for '${paramName}': '${value}'`);
+    console.log(`Getting cli param for '${paramName}': '${value}' (default '${defaultValueLabel}')`);
     return value !== undefined ? value : defaultValue;
 }
 
