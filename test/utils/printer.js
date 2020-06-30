@@ -14,11 +14,11 @@ const printLoanTerms = ({ tokenName, tokenDecimals }, loanTerms) => {
     console.groupEnd();
 }
 
-const printLoan = (loanInfo) => {
+const printLoan = (loanInfo, { tokenName, tokenDecimals, collateralTokenName, collateralTokenDecimals }) => {
     console.group(`Loan:`);
     console.log(`ID:                    ${loanInfo.id.toString()}`);
-    console.log(`Borrowed Amount:       ${loanInfo.borrowedAmount}`);
-    console.log(`Terms Expiry:          ${loanInfo.termsExpiry}`);
+    console.log(`Borrowed Amount:       ${loanInfo.borrowedAmount} = ${toUnits(loanInfo.borrowedAmount, tokenDecimals)} ${tokenName}`);
+    console.log(`Terms Expiry:          ${loanInfo.termsExpiry} secs = ${secondsToDays(loanInfo.termsExpiry).toFixed(2)} days`);
     if(loanInfo.status === loanStatus.TermsSet) {
         console.log(`Start Time:            -- (loan is not active)`);
         console.log(`End Time:              -- (loan is not active)`);
@@ -27,19 +27,28 @@ const printLoan = (loanInfo) => {
         const loanEndTime = parseInt(loanInfo.loanStartTime) + parseInt(loanInfo.loanTerms.duration);
         console.log(`End Time:              ${loanEndTime} / ${new Date(parseInt(loanEndTime)*1000)}`);
     }
-    console.log(`Collateral:            ${loanInfo.collateral}`);
-    console.log(`Last Collateral In:    ${loanInfo.lastCollateralIn}`);
-    console.log(`Principal Owed:        ${loanInfo.principalOwed}`);
-    console.log(`Interest Owed:         ${loanInfo.interestOwed}`);
+    console.log(`Collateral:            ${loanInfo.collateral} = ${toUnits(loanInfo.collateral, collateralTokenDecimals)} ${collateralTokenName}`);
+
+    const lastCollateralInDate = loanInfo.lastCollateralIn === '0' ? '' : new Date(parseInt(loanInfo.lastCollateralIn)*1000);
+    console.log(`Last Collateral In:    ${loanInfo.lastCollateralIn} / ${lastCollateralInDate}`);
+    console.log(`Principal Owed:        ${loanInfo.principalOwed} = ${toUnits(loanInfo.principalOwed, tokenDecimals)} ${tokenName}`);
+    console.log(`Interest Owed:         ${loanInfo.interestOwed} = ${toUnits(loanInfo.interestOwed, tokenDecimals)} ${tokenName}`);
     console.log(`Status:                ${loanInfo.status} ${JSON.stringify(loanStatus)}`);
     console.log(`Liquidated:            ${loanInfo.liquidated}`);
     console.groupEnd();
 }
 
-const printOraclePrice = (web3, tokenName, latestAnswer, latestTimestamp) => {
-    console.group(`Oracle Price ${tokenName}`);
-    const latestAnswerEther = web3.utils.fromWei(latestAnswer.toString(), 'ether');
-    console.log(`Lastest Answer:        1 ${tokenName} = ${latestAnswer.toString()} WEI = ${latestAnswerEther.toString()} ETHER`);
+const printOraclePrice = (
+    web3,
+    {tokenName, tokenDecimals, collateralTokenName, collateralTokenDecimals},
+    { latestAnswer, oracleAddress },
+    latestTimestamp
+) => {
+    console.group(`Oracle Price:`);
+    console.log(`Aggregator Address:    ${oracleAddress}`);
+    console.log(`Pair:                  ${tokenName} / ${collateralTokenName}`);
+    const latestAnswerUnits = toUnits(latestAnswer, collateralTokenDecimals);
+    console.log(`Lastest Answer:        1 ${tokenName} = ${latestAnswer.toString()} = ${latestAnswerUnits.toString()} ${collateralTokenName}`);
     const latestTimestampInt = parseInt(latestTimestamp.toString()) * 1000;
     console.log(`Latest Timestamp:      ${latestTimestampInt} ms = ${new Date(latestTimestampInt).toISOString()}`);
     console.groupEnd();
@@ -95,13 +104,16 @@ module.exports = {
     printFullLoan: async (
         web3,
         { tokenName, tokenDecimals, collateralTokenName, collateralTokenDecimals },
-        latestAnswer,
+        { latestAnswer, oracleAddress, },
         loanInfo
     ) => {
         const times = 130;
         const main = times + 30;
         console.log('='.repeat(main));
-        printLoan(loanInfo);
+        printLoan(
+            loanInfo,
+            { tokenName, tokenDecimals, collateralTokenName, collateralTokenDecimals },
+        );
         console.log('-'.repeat(times));
         printLoanTerms({ tokenName, tokenDecimals }, loanInfo.loanTerms);
         console.log('-'.repeat(times));

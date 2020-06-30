@@ -1,43 +1,65 @@
 // Smart contracts
-const LoansInterface = artifacts.require("./base/EtherCollateralLoans.sol");
 
 // Util classes
+const BigNumber = require('bignumber.js');
 const assert = require('assert');
+const { zerocollateral, tokens } = require("../../scripts/utils/contracts");
+const { loans: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
-const processArgs = new ProcessArgs();
-
-/** Process parameters: */
-const tokenName = 'USDC';
-const loanId = 0;
-const senderIndex = 1;
-const borrowerIndex = 1;
-const collateralValue = 4000000000;
+const Accounts = require('../utils/Accounts');
+const { toDecimals, DEFAULT_DECIMALS } = require('../../test/utils/consts');
+const processArgs = new ProcessArgs(readParams.depositCollateral().argv);
 
 module.exports = async (callback) => {
     try {
-        const network = processArgs.network();
-        console.log(`Script will be executed in network ${network}.`)
-        const appConf = require('../../config')(network);
-        const { zerocollateral, toTxUrl } = appConf.networkConfig;
+        const accounts = new Accounts(web3);
+        const appConf = processArgs.getCurrentConfig();
+        const { toTxUrl } = appConf.networkConfig;
 
-        const loansAddress = zerocollateral[`Loans_z${tokenName}`];
-        assert(loansAddress, "Loans address is undefined.");
+        const collateralTokenName = processArgs.getValue('collTokenName');
+        const tokenName = processArgs.getValue('tokenName');
+        const senderIndex = processArgs.getValue('senderIndex');
+        const borrowerIndex = processArgs.getValue('borrowerIndex');
+        const loanId = processArgs.getValue('loanId');
+        const collateralAmount = processArgs.getValue('amount');
 
-        const accounts = await web3.eth.getAccounts();
-        assert(accounts, "Accounts must be defined.");
-        const borrower = accounts[borrowerIndex];
-        assert(borrower, "Borrower must be defined.");
-        const sender = accounts[senderIndex];
-        assert(sender, "Sender must be defined.");
+        const getContracts = processArgs.createGetContracts(artifacts);
+        const loansInstance = await getContracts.getDeployed(zerocollateral.custom(collateralTokenName).loans(tokenName));
+
+        let collateralTokenDecimals = DEFAULT_DECIMALS;
+        if (collateralTokenName !== 'ETH') {
+            const collateralTokenInstance = await getContracts.getDeployed(tokens.get(collateralTokenName));
+            collateralTokenDecimals = await collateralTokenInstance.decimals();
+        }
+        const collateralAmountWithDecimals = toDecimals(collateralAmount, collateralTokenDecimals.toString()).toFixed(0);
+
+        const borrower = await accounts.getAt(borrowerIndex);
+        const sender = await accounts.getAt(senderIndex);
 
         console.log(`Loan ID:       ${loanId}`);
         console.log(`Borrower:      ${borrowerIndex} => ${borrower}`);
         console.log(`Sender:        ${senderIndex} => ${sender}`);
-        console.log(`Collateral:    ${collateralValue} WEI => ${web3.utils.fromWei(collateralValue.toString(), 'ether')} ETH`);
+        console.log(`Collateral:    ${collateralAmount} => ${collateralAmountWithDecimals} ${collateralTokenName}`);
 
-        const loansInstance = await LoansInterface.at(loansAddress);
-
-        const result = await loansInstance.depositCollateral(borrower, loanId, { from: sender, value: collateralValue});
+        if(collateralTokenName !== 'ETH') {
+            console.log(`Approving tokens...`);
+            const collateralTokenInstance = await getContracts.getDeployed(tokens.get(collateralTokenName));
+            const currentSenderTokenBalance = await collateralTokenInstance.balanceOf(sender);
+            assert(
+                BigNumber(currentSenderTokenBalance.toString()).gte(BigNumber(collateralAmountWithDecimals.toString())),
+                'Sender: Not enough token balance'
+            );
+            await collateralTokenInstance.approve(loansInstance.address, collateralAmountWithDecimals, { from: sender });
+        }
+        const result = await loansInstance.depositCollateral(
+            borrower,
+            loanId,
+            collateralAmountWithDecimals,
+            {
+                from: sender,
+                value: collateralTokenName === 'ETH' ? collateralAmountWithDecimals : '0',
+            }
+        );
         console.log(toTxUrl(result));
 
         console.log('>>>> The script finished successfully. <<<<');
