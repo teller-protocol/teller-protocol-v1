@@ -4,11 +4,12 @@
 const { ganache: readParams } = require("../utils/cli-builder");
 const Timer = require('../utils/Timer');
 const ProcessArgs = require('../utils/ProcessArgs');
+const { SECONDS } = require("../utils/cli/names");
 const processArgs = new ProcessArgs(readParams.advanceTime().argv);
 
 module.exports = async (callback) => {
     try {
-        const seconds = processArgs.getValue('seconds');
+        const seconds = processArgs.getValue(SECONDS.name);
         const timer = new Timer(web3);
         
         const nextTimestamp_1 = await timer.getCurrentTimestampInSecondsAndSum(seconds);

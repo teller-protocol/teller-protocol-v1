@@ -6,6 +6,7 @@ const { loans: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
 const Accounts = require('../utils/Accounts');
 const { toDecimals, DEFAULT_DECIMALS } = require('../../test/utils/consts');
+const { COLL_TOKEN_NAME, TOKEN_NAME, BORROWER_INDEX, LOAN_ID, AMOUNT } = require("../utils/cli/names");
 const processArgs = new ProcessArgs(readParams.withdrawCollateral().argv);
 
 module.exports = async (callback) => {
@@ -14,11 +15,11 @@ module.exports = async (callback) => {
         const appConf = processArgs.getCurrentConfig();
         const { toTxUrl } = appConf.networkConfig;
 
-        const collateralTokenName = processArgs.getValue('collTokenName');
-        const tokenName = processArgs.getValue('tokenName');
-        const borrowerIndex = processArgs.getValue('borrowerIndex');
-        const loanId = processArgs.getValue('loanId');
-        const collateralAmount = processArgs.getValue('amount');
+        const collateralTokenName = processArgs.getValue(COLL_TOKEN_NAME.name);
+        const tokenName = processArgs.getValue(TOKEN_NAME.name);
+        const borrowerIndex = processArgs.getValue(BORROWER_INDEX.name);
+        const loanId = processArgs.getValue(LOAN_ID.name);
+        const collateralAmount = processArgs.getValue(AMOUNT.name);
 
         const getContracts = processArgs.createGetContracts(artifacts);
         const loansInstance = await getContracts.getDeployed(zerocollateral.custom(collateralTokenName).loans(tokenName));

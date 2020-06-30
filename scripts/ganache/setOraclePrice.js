@@ -8,13 +8,14 @@ const { ganache: readParams } = require("../utils/cli-builder");
 const { getDecimals, getOracleAggregatorInfo } = require("../../test/utils/collateral-helper");
 const ProcessArgs = require('../utils/ProcessArgs');
 const { toDecimals } = require('../../test/utils/consts');
+const { TOKEN_NAME, COLL_TOKEN_NAME, NEW_VALUE } = require('../utils/cli/names');
 const processArgs = new ProcessArgs(readParams.setOraclePrice().argv);
 
 module.exports = async (callback) => {
     try {
-        const tokenName = processArgs.getValue('tokenName');
-        const collTokenName = processArgs.getValue('collTokenName');
-        const newValue = processArgs.getValue('newValue');
+        const tokenName = processArgs.getValue(TOKEN_NAME.name);
+        const collTokenName = processArgs.getValue(COLL_TOKEN_NAME.name);
+        const newValue = processArgs.getValue(NEW_VALUE.name);
 
         const getContracts = processArgs.createGetContracts(artifacts);
 

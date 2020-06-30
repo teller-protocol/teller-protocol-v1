@@ -1,13 +1,12 @@
 // Smart contracts
 
 // Util classes
-const BigNumber = require('bignumber.js');
 const { loans: readParams } = require("../utils/cli-builder");
-const assert = require('assert');
 const { toDecimals } = require('../../test/utils/consts');
 const { zerocollateral, tokens } = require("../../scripts/utils/contracts");
 const ProcessArgs = require('../utils/ProcessArgs');
 const Accounts = require('../utils/Accounts');
+const { COLL_TOKEN_NAME, TOKEN_NAME, SENDER_INDEX, LOAN_ID, AMOUNT } = require('../utils/cli/names');
 const processArgs = new ProcessArgs(readParams.setLoanTerms().argv);
 
 module.exports = async (callback) => {
@@ -16,11 +15,11 @@ module.exports = async (callback) => {
         const appConf = processArgs.getCurrentConfig();
         const { toTxUrl } = appConf.networkConfig;
 
-        const collateralTokenName = processArgs.getValue('collTokenName');
-        const tokenName = processArgs.getValue('tokenName');
-        const senderIndex = processArgs.getValue('senderIndex');
-        const loanID = processArgs.getValue('loanID');
-        const loanAmount = processArgs.getValue('amount');
+        const collateralTokenName = processArgs.getValue(COLL_TOKEN_NAME.name);
+        const tokenName = processArgs.getValue(TOKEN_NAME.name);
+        const senderIndex = processArgs.getValue(SENDER_INDEX.name);
+        const loanID = processArgs.getValue(LOAN_ID.name);
+        const loanAmount = processArgs.getValue(AMOUNT.name);
 
         const getContracts = processArgs.createGetContracts(artifacts);
         const loansInstance = await getContracts.getDeployed(zerocollateral.custom(collateralTokenName).loans(tokenName));
