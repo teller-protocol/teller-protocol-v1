@@ -5,6 +5,7 @@ const Accounts = require('../utils/Accounts');
 const { zerocollateral } = require("../utils/contracts");
 const { settings: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
+const { SENDER_INDEX, SETTING_NAME, NEW_VALUE } = require('../utils/cli/names');
 const processArgs = new ProcessArgs(readParams.setNewSetting().argv);
 
 const settingsMap = new Map();
@@ -60,9 +61,9 @@ module.exports = async (callback) => {
         const { toTxUrl } = appConf.networkConfig;
 
         const settings = await getContracts.getDeployed(zerocollateral.settings());
-        const senderIndex = processArgs.getValue('senderIndex');
-        const settingName = processArgs.getValue('settingName');
-        const newValue = processArgs.getValue('newValue');
+        const senderIndex = processArgs.getValue(SENDER_INDEX.name);
+        const settingName = processArgs.getValue(SETTING_NAME.name);
+        const newValue = processArgs.getValue(NEW_VALUE.name);
 
         const settingMapValue = settingsMap.get(settingName);
         if(settingMapValue === undefined) {
