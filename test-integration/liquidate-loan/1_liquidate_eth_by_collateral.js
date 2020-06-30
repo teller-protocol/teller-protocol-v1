@@ -1,6 +1,6 @@
 // Util classes
 const BigNumber = require('bignumber.js');
-const { zerocollateral, tokens, chainlink } = require("../../scripts/utils/contracts");
+const { zerocollateral, tokens } = require("../../scripts/utils/contracts");
 const { loans, lendingPool } = require('../../test/utils/events');
 const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds } = require('../../test/utils/consts');
 const LoanInfoPrinter = require('../../test/utils/printers/LoanInfoPrinter');

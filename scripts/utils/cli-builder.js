@@ -38,9 +38,7 @@ const newOption = (
         }
     )
 };
-
-const lendingPoolBase = (yargs) => {
-    yargs.scriptName("yarn exec ./scripts/lendingPool/*.js");
+const base = (yargs) => {
     newOption(
         yargs,
         'network',
@@ -49,6 +47,11 @@ const lendingPoolBase = (yargs) => {
         'Sets the network to use in the execution.',
         undefined,
     );
+};
+
+const lendingPoolBase = (yargs) => {
+    yargs.scriptName("yarn exec ./scripts/lendingPool/*.js");
+    base(yargs);
     newOption(
         yargs,
         'tokenName',
@@ -87,8 +90,8 @@ const loansBase = (yargs) => {
     );
     newOption(
         yargs,
-        'collToken',
-        'CT',
+        'collTokenName',
+        'CTN',
         'string',
         'Collateral token used to send the transaction.',
         DEFAULT_COLLATERAL_TOKEN_NAME,
@@ -198,6 +201,88 @@ module.exports = {
             return yargs;
         },
     },
+    tokens: {
+        mint: () => {
+            newOption(
+                yargs,
+                'tokenName',
+                'TN',
+                'string',
+                'Token name to mint.',
+                undefined,
+            );
+            newOption(
+                yargs,
+                'receiverIndex',
+                'RI',
+                'number',
+                'Address (index) that will receive the tokens.',
+                0,
+            );
+            newOption(
+                yargs,
+                'amount',
+                'A',
+                'number',
+                'Amount to mint. Default: 10000',
+                10000,
+            );
+            return yargs;
+        },
+        balanceOf: () => {
+            newOption(
+                yargs,
+                'tokenName',
+                'TN',
+                'string',
+                'Token name to mint.',
+                undefined,
+            );
+            newOption(
+                yargs,
+                'accountIndex',
+                'AI',
+                'number',
+                'Address (index) to verify the balance.',
+                0,
+            );
+
+            return yargs;
+        },
+    },
+    ganache: {
+        advanceTime: () => {
+            newOption(
+                yargs,
+                'network',
+                'N',
+                'string',
+                'Sets the network to use in the execution.',
+                undefined,
+            );
+            newOption(
+                yargs,
+                'seconds',
+                'S',
+                'number',
+                'Seconds to advance. Default: 120 seconds',
+                60 * 2,
+            );
+            return yargs;
+        },
+        setOraclePrice: () => {
+            loansBase(yargs);
+            newOption(
+                yargs,
+                'newValue',
+                'SI',
+                'number',
+                'New value.',
+                undefined,
+            );
+            return yargs;
+        },
+    },
     loans: {
         getAllLoansFor: () => {
             loansBase(yargs);
@@ -213,14 +298,6 @@ module.exports = {
         },
         listLoans: () => {
             loansBase(yargs);
-            newOption(
-                yargs,
-                'collTokenName',
-                'CT',
-                'string',
-                'Collateral token used to list the loans.',
-                DEFAULT_COLLATERAL_TOKEN_NAME,
-            );
             newOption(
                 yargs,
                 'initialLoanId',
@@ -239,15 +316,56 @@ module.exports = {
             );
             return yargs;
         },
-        getLoan: () => {
+        setLoanTerms: () => {
             loansBase(yargs);
+
             newOption(
                 yargs,
-                'loanId',
-                'LID',
+                'borrowerIndex',
+                'BI',
                 'number',
-                'Loan ID to find.',
-                undefined,
+                'Index account to use as borrower (transaction sender). Default index 0.',
+                0,
+            );
+            newOption(
+                yargs,
+                'recipientIndex',
+                'RI',
+                'number',
+                'Index account to use as recipient. Default index -1 (0x0 address).',
+                -1,
+            );
+            newOption(
+                yargs,
+                'durationDays',
+                'DD',
+                'number',
+                'Total of days for the loan (duration). Default 10 days.',
+                10,
+            );
+            newOption(
+                yargs,
+                'amount',
+                'A',
+                'number',
+                'Amount to request for the loan terms. Default 100 tokens.',
+                100,
+            );
+            newOption(
+                yargs,
+                'collAmount',
+                'CA',
+                'number',
+                'Amount to send as collateral. Default 0.',
+                0,
+            );
+            newOption(
+                yargs,
+                'nonce',
+                'NN',
+                'number',
+                'Nonce value to use in the signatures. Default 0.',
+                0,
             );
             return yargs;
         },
@@ -278,8 +396,211 @@ module.exports = {
                 'senderIndex',
                 'SI',
                 'number',
-                'Index account (0 based) used to send the transaction.',
+                'Index account (0 based) used to send the transaction. Default: 0',
+                0,
+            );
+            return yargs;
+        },
+        takeOut: () => {
+            loansBase(yargs);
+            newOption(
+                yargs,
+                'senderIndex',
+                'SI',
+                'number',
+                'Index account to take out the loan (transaction sender). Default index 0.',
+                0,
+            );
+            newOption(
+                yargs,
+                'loanID',
+                'LID',
+                'number',
+                'Loan ID to take out (after requesting loan terms).',
                 undefined,
+            );
+            newOption(
+                yargs,
+                'amount',
+                'A',
+                'number',
+                'Amount to request to take out the loan. Default 100.',
+                100,
+            );
+            return yargs;
+        },
+        repay: () => {
+            loansBase(yargs);
+
+            newOption(
+                yargs,
+                'senderIndex',
+                'SI',
+                'number',
+                'Index account to send the transaction. Default index 0.',
+                0,
+            );
+            newOption(
+                yargs,
+                'loanId',
+                'LID',
+                'number',
+                'Loan ID to repay.',
+                undefined,
+            );
+            newOption(
+                yargs,
+                'amount',
+                'A',
+                'number',
+                'Amount to use in the transaction.',
+                undefined,
+            );
+            return yargs;
+        },
+        depositCollateral: () => {
+            loansBase(yargs);
+            newOption(
+                yargs,
+                'borrowerIndex',
+                'BI',
+                'number',
+                'Index account of loan owner. Default index 0.',
+                0,
+            );
+            newOption(
+                yargs,
+                'senderIndex',
+                'SI',
+                'number',
+                'Index account to send the transaction. Default index 0.',
+                1,
+            );
+            newOption(
+                yargs,
+                'loanId',
+                'LID',
+                'number',
+                'Loan ID to repay.',
+                undefined,
+            );
+            newOption(
+                yargs,
+                'amount',
+                'A',
+                'number',
+                'Amount to use in the transaction.',
+                undefined,
+            );
+            return yargs;
+        },
+        withdrawCollateral: () => {
+            loansBase(yargs);
+            newOption(
+                yargs,
+                'borrowerIndex',
+                'BI',
+                'number',
+                'Index account of loan owner. Default index 0.',
+                0,
+            );
+            newOption(
+                yargs,
+                'loanId',
+                'LID',
+                'number',
+                'Loan ID to repay.',
+                undefined,
+            );
+            newOption(
+                yargs,
+                'amount',
+                'A',
+                'number',
+                'Amount to use in the transaction.',
+                undefined,
+            );
+            return yargs;
+        }
+    },
+    loanTerms: {
+        addSigners: () => {
+            newOption(
+                yargs,
+                'tokenName',
+                'TN',
+                'string',
+                'Token to use when the script is executed.',
+                DEFAULT_TEST_TOKEN_NAME,
+            );
+            newOption(
+                yargs,
+                'collTokenName',
+                'CT',
+                'string',
+                'Collateral token used to send the transaction.',
+                DEFAULT_COLLATERAL_TOKEN_NAME,
+            );
+            newOption(
+                yargs,
+                'senderIndex',
+                'SI',
+                'number',
+                `Sender index account. By default is 0`,
+                0,
+            );
+            newOption(
+                yargs,
+                'addresses',
+                'AA',
+                'string',
+                `Addresses to add as signers.`,
+                undefined,
+            );
+            return yargs;
+        },        
+    },
+    cTokens: () => {
+        newOption(
+            yargs,
+            'cTokenName',
+            'CTN',
+            'string',
+            'CToken name to get the exchange rate.',
+            undefined,
+        );
+        return yargs;
+    },
+    settings: {
+        view: () => {
+            base(yargs);
+            return yargs;
+        },
+        setNewSetting: (defaultValue = 10) => {
+            base(yargs);
+            newOption(
+                yargs,
+                'newValue',
+                'NV',
+                'string',
+                'New value to set. Time is in seconds.',
+                defaultValue,
+            );
+            newOption(
+                yargs,
+                'settingName',
+                'SN',
+                'string',
+                'Setting name to connfigure.',
+                undefined,
+            );
+            newOption(
+                yargs,
+                'senderIndex',
+                'SI',
+                'string',
+                `Sender index account. By default is 0`,
+                0,
             );
             return yargs;
         },

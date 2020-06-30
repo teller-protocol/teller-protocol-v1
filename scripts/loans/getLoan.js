@@ -4,33 +4,48 @@
 const { loans: readParams } = require("../utils/cli-builder");
 const { zerocollateral, tokens } = require("../utils/contracts");
 const { printFullLoan, printOraclePrice } = require("../../test/utils/printer");
+const { getOracleAggregatorInfo, getDecimals } = require("../../test/utils/collateral-helper");
 const ProcessArgs = require('../utils/ProcessArgs');
 const processArgs = new ProcessArgs(readParams.getLoan().argv);
 
 module.exports = async (callback) => {
     try {
+        const collateralTokenName = processArgs.getValue('collTokenName');
         const tokenName = processArgs.getValue('tokenName');
         const loanId = processArgs.getValue('loanId');
         const getContracts = processArgs.createGetContracts(artifacts);
-        const loansInstance = await getContracts.getDeployed(zerocollateral.loans(tokenName));
-        const oracleInstance = await getContracts.getDeployed(zerocollateral.oracle(tokenName));
+        const collateralTokenDecimals = await getDecimals(getContracts, collateralTokenName);
+        const oracleInstance = await getContracts.getDeployed(getOracleAggregatorInfo(tokenName, collateralTokenName));
+
+        const loansInstance = await getContracts.getDeployed(zerocollateral.custom(collateralTokenName).loans(tokenName));
         const tokenInstance = await getContracts.getDeployed(tokens.get(tokenName));
 
         const loanIDCounter = await loansInstance.loanIDCounter();
         const loanCounter = parseInt(loanIDCounter.toString());
+
+        const tokenDecimals = parseInt(await tokenInstance.decimals());
+        const loanInfo = await loansInstance.loans(loanId);
 
         console.log(`Total # Loans (${tokenName}): ${loanCounter}`);
         console.log('-'.repeat(70));
 
         const latestAnswer  = await oracleInstance.getLatestAnswer();
         const latestTimestamp = await oracleInstance.getLatestTimestamp();
-        printOraclePrice(web3, tokenName, latestAnswer, latestTimestamp);
+
+        printOraclePrice(
+            web3,
+            { tokenName, tokenDecimals, collateralTokenName, collateralTokenDecimals },
+            { latestAnswer, oracleAddress: oracleInstance.address },
+            latestTimestamp,
+        );
         console.log('-'.repeat(70));
 
-        const tokenDecimals = parseInt(await tokenInstance.decimals());
-        const loanInfo = await loansInstance.loans(loanId);
-
-        printFullLoan(web3, { tokenName, tokenDecimals }, latestAnswer, loanInfo);
+        await printFullLoan(
+            web3,
+            { tokenName, tokenDecimals, collateralTokenDecimals, collateralTokenName },
+            { latestAnswer, oracleAddress: oracleInstance.address },
+            loanInfo
+        );
         
         console.log('>>>> The script finished successfully. <<<<');
         callback();
