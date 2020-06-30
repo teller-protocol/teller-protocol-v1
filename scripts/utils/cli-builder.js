@@ -74,83 +74,26 @@ module.exports = {
     },
     tokens: {
         mint: () => {
-            newOption(
-                yargs,
-                'tokenName',
-                'TN',
-                'string',
-                'Token name to mint.',
-                undefined,
-            );
-            newOption(
-                yargs,
-                'receiverIndex',
-                'RI',
-                'number',
-                'Address (index) that will receive the tokens.',
-                0,
-            );
-            newOption(
-                yargs,
-                'amount',
-                'A',
-                'number',
-                'Amount to mint. Default: 10000',
-                10000,
-            );
+            addTokenName(yargs);
+            addReceiverIndex(yargs);
+            addAmount(yargs);
             return yargs;
         },
         balanceOf: () => {
-            newOption(
-                yargs,
-                'tokenName',
-                'TN',
-                'string',
-                'Token name to mint.',
-                undefined,
-            );
-            newOption(
-                yargs,
-                'accountIndex',
-                'AI',
-                'number',
-                'Address (index) to verify the balance.',
-                0,
-            );
-
+            addTokenName(yargs);
+            addAccountIndex(yargs);
             return yargs;
         },
     },
     ganache: {
         advanceTime: () => {
-            newOption(
-                yargs,
-                'network',
-                'N',
-                'string',
-                'Sets the network to use in the execution.',
-                undefined,
-            );
-            newOption(
-                yargs,
-                'seconds',
-                'S',
-                'number',
-                'Seconds to advance. Default: 120 seconds',
-                60 * 2,
-            );
+            addNetwork(yargs);
+            addSeconds(yargs);
             return yargs;
         },
         setOraclePrice: () => {
-            loansBase(yargs);
-            newOption(
-                yargs,
-                'newValue',
-                'SI',
-                'number',
-                'New value.',
-                undefined,
-            );
+            addLoansBase(yargs);
+            addNewValue(yargs);
             return yargs;
         },
     },
@@ -244,47 +187,19 @@ module.exports = {
         },        
     },
     cTokens: () => {
-        newOption(
-            yargs,
-            'cTokenName',
-            'CTN',
-            'string',
-            'CToken name to get the exchange rate.',
-            undefined,
-        );
+        addCTokenName(yargs);
         return yargs;
     },
     settings: {
         view: () => {
-            base(yargs);
+            addBase(yargs);
             return yargs;
         },
-        setNewSetting: (defaultValue = 10) => {
-            base(yargs);
-            newOption(
-                yargs,
-                'newValue',
-                'NV',
-                'string',
-                'New value to set. Time is in seconds.',
-                defaultValue,
-            );
-            newOption(
-                yargs,
-                'settingName',
-                'SN',
-                'string',
-                'Setting name to connfigure.',
-                undefined,
-            );
-            newOption(
-                yargs,
-                'senderIndex',
-                'SI',
-                'string',
-                `Sender index account. By default is 0`,
-                0,
-            );
+        setNewSetting: () => {
+            addBase(yargs);
+            addNewValue(yargs);
+            addSettingName(yargs);
+            addSenderIndex(yargs);
             return yargs;
         },
     },
