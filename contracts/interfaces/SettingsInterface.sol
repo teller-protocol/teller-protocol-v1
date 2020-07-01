@@ -57,9 +57,14 @@ interface SettingsInterface {
 
     function setMaxLendingAmount(address lendingTokenAddress, uint256 newMaxLendingAmount)
         external;
-    
-    function getMaxLendingAmount(address lendingTokenAddress) external view returns (uint256);
-    
+
+    function getMaxLendingAmount(address lendingTokenAddress)
+        external
+        view
+        returns (uint256);
+
     function exceedsMaxLendingAmount(address lendingTokenAddress, uint256 amount)
-        external view returns (bool);
+        external
+        view
+        returns (bool);
 }

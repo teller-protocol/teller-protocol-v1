@@ -99,13 +99,7 @@ contract TokenCollateralLoans is LoansBase {
 
         borrowerLoans[request.borrower].push(loanID);
 
-        _emitLoanTermsSet(
-            loanID,
-            request,
-            interestRate,
-            collateralRatio,
-            maxLoanAmount
-        );
+        _emitLoanTermsSet(loanID, request, interestRate, collateralRatio, maxLoanAmount);
 
         if (collateralAmount > 0) {
             emit CollateralDeposited(loanID, request.borrower, collateralAmount);
