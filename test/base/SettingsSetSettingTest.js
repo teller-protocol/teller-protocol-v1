@@ -10,6 +10,7 @@ const {
     LIQUIDATE_ETH_PRICE,
     toBytes32,
     minutesToSeconds,
+    NULL_ADDRESS,
 } = require('../utils/consts');
 const { settings } = require('../utils/events');
 
@@ -207,6 +208,36 @@ contract('SettingsSetSettingTest', function (accounts) {
                 settings
                     .settingUpdated(result)
                     .emitted(toBytes32(web3, LIQUIDATE_ETH_PRICE), sender, oldValue, newValue);
+            } catch (error) {
+                // Assertions
+                assert(mustFail);
+                assert(error);
+                assert.equal(error.reason, expectedErrorMessage);
+            }
+        });
+    });
+
+    withData({
+        _1_basic: [0, 1, 100, 1000, undefined, false],
+        _2_new_value_required: [0, 2, 1000, 1000, 'NEW_MAX_AMOUNT_REQUIRED', true],
+    }, function(senderIndex, lendingTokenIndex, currentValue, newValue, expectedErrorMessage, mustFail) {
+        it(t('user', 'setMaxLendingAmount', 'Should (or not) be able to set a new max lending amount value.', mustFail), async function() {
+            // Setup
+            const lendingTokenAddress = lendingTokenIndex === -1 ? NULL_ADDRESS : accounts[lendingTokenIndex];
+            const sender = accounts[senderIndex];
+            await instance.setMaxLendingAmount(lendingTokenAddress, currentValue, { from: sender });
+
+            try {
+                // Invocation
+                const result = await instance.setMaxLendingAmount(lendingTokenAddress, newValue, { from: sender });
+                
+                // Assertions
+                assert(!mustFail, 'It should have failed because data is invalid.');
+                assert(result);
+
+                settings
+                    .maxLendingAmountUpdated(result)
+                    .emitted(sender, lendingTokenAddress, currentValue, newValue);
             } catch (error) {
                 // Assertions
                 assert(mustFail);

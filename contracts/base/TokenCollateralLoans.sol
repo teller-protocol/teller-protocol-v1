@@ -74,6 +74,7 @@ contract TokenCollateralLoans is LoansBase {
         isInitialized()
         whenNotPaused()
         isBorrower(request.borrower)
+        exceedsMaxAmount(request.amount)
     {
         uint256 loanID = getAndIncrementLoanID();
 
@@ -98,16 +99,14 @@ contract TokenCollateralLoans is LoansBase {
 
         borrowerLoans[request.borrower].push(loanID);
 
-        emit LoanTermsSet(
+        _emitLoanTermsSet(
             loanID,
-            request.borrower,
-            request.recipient,
+            request,
             interestRate,
             collateralRatio,
-            maxLoanAmount,
-            request.duration,
-            loans[loanID].termsExpiry
+            maxLoanAmount
         );
+
         if (collateralAmount > 0) {
             emit CollateralDeposited(loanID, request.borrower, collateralAmount);
         }
