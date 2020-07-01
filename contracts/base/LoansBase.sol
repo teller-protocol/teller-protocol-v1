@@ -73,10 +73,7 @@ contract LoansBase is LoansInterface, Base {
 
     modifier exceedsMaxAmount(uint256 amount) {
         require(
-            settings.exceedsMaxLendingAmount(
-                lendingPool.lendingToken(),
-                amount
-            ),
+            settings.exceedsMaxLendingAmount(lendingPool.lendingToken(), amount),
             "AMOUNT_EXCEEDS_MAX_AMOUNT"
         );
         _;
@@ -472,7 +469,7 @@ contract LoansBase is LoansInterface, Base {
 
     function _emitLoanTermsSet(
         uint256 loanID,
-         ZeroCollateralCommon.LoanRequest memory request,
+        ZeroCollateralCommon.LoanRequest memory request,
         uint256 interestRate,
         uint256 collateralRatio,
         uint256 maxLoanAmount
@@ -487,5 +484,5 @@ contract LoansBase is LoansInterface, Base {
             request.duration,
             loans[loanID].termsExpiry
         );
-    }    
+    }
 }

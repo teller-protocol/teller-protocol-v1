@@ -255,7 +255,7 @@ contract Settings is Pausable, SettingsInterface {
     {
         uint256 oldMaxLendingAmount = maxLendingAmount[lendingTokenAddress];
         require(oldMaxLendingAmount != newMaxLendingAmount, "NEW_MAX_AMOUNT_REQUIRED");
-        
+
         maxLendingAmount[lendingTokenAddress] = newMaxLendingAmount;
 
         emit MaxLendingAmountUpdated(
@@ -266,12 +266,18 @@ contract Settings is Pausable, SettingsInterface {
         );
     }
 
-    function getMaxLendingAmount(address lendingTokenAddress) external view returns (uint256) {
+    function getMaxLendingAmount(address lendingTokenAddress)
+        external
+        view
+        returns (uint256)
+    {
         return maxLendingAmount[lendingTokenAddress];
     }
-    
+
     function exceedsMaxLendingAmount(address lendingTokenAddress, uint256 amount)
-        external view returns (bool)
+        external
+        view
+        returns (bool)
     {
         return amount > maxLendingAmount[lendingTokenAddress];
     }
