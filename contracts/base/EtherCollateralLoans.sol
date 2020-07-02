@@ -60,7 +60,7 @@ contract EtherCollateralLoans is LoansBase {
         isInitialized()
         whenNotPaused()
         isBorrower(request.borrower)
-        exceedsMaxAmount(request.amount)
+        notExceedsMaxAmount(request.amount)
     {
         require(msg.value == collateralAmount, "INCORRECT_ETH_AMOUNT");
 

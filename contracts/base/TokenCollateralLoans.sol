@@ -74,7 +74,7 @@ contract TokenCollateralLoans is LoansBase {
         isInitialized()
         whenNotPaused()
         isBorrower(request.borrower)
-        exceedsMaxAmount(request.amount)
+        notExceedsMaxAmount(request.amount)
     {
         uint256 loanID = getAndIncrementLoanID();
 
