@@ -5,6 +5,7 @@ module.exports = {
     dao: require('./dao'),
     tokens: require('./tokens'),
     zerocollateral: require('./zerocollateral'),
+    maxLendingAmounts: require('./maxLendingAmounts'),
     maxGasLimit: 7000000,
     toTxUrl: ({ tx }) => {
         return `https://ropsten.etherscan.io/tx/${tx}`;
