@@ -57,6 +57,7 @@ contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
         currentCollateralTokenBalance,
         approveCollateralAmount,
         collateralAmount,
+        transactionValueAmount,
         currentCollateral,
         transactionValueAmount,
         mustFail,
