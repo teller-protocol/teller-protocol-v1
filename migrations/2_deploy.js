@@ -1,7 +1,8 @@
 const assert = require('assert');
 const DeployerApp = require('./utils/DeployerApp');
 const PoolDeployer = require('./utils/PoolDeployer');
-const { toDecimals } = require('../test/utils/consts');
+const { toDecimals, NULL_ADDRESS, DEFAULT_DECIMALS } = require('../test/utils/consts');
+const { DUMMY_ADDRESS } = require('../config/consts');
 
 
 // Official Smart Contracts
@@ -65,11 +66,17 @@ module.exports = async function(deployer, network, accounts) {
     const maxLendingAmountUnit = maxLendingAmounts[tokenName];
     const tokenAddress = tokens[tokenName];
     assert(tokenAddress, `MaxLendingAmount: Token address for token ${tokenName} is undefined.`);
-    const tokenInstance = await ERC20.at(tokenAddress);
-    const decimals = await tokenInstance.decimals();
+    let decimals = DEFAULT_DECIMALS;
+    if (tokenAddress !== DUMMY_ADDRESS) {
+      const tokenInstance = await ERC20.at(tokenAddress);
+      decimals = await tokenInstance.decimals();
+    }
     const maxLendingAmountWithDecimals = toDecimals(maxLendingAmountUnit, decimals).toFixed(0);
-    console.log(`Configuring MAX lending amount => ${tokenName} / ${tokenAddress} = ${maxLendingAmountUnit} = ${maxLendingAmountWithDecimals}`);
-    await settingsInstance.setMaxLendingAmount(tokenAddress, maxLendingAmountWithDecimals, txConfig);
+    const currentAmount = await settingsInstance.getMaxLendingAmount(tokenAddress);
+    if (currentAmount.toString() !==  maxLendingAmountWithDecimals) {
+      console.log(`Configuring MAX lending amount => ${tokenName} / ${tokenAddress} = ${maxLendingAmountUnit} = ${maxLendingAmountWithDecimals}`);
+      await settingsInstance.setMaxLendingAmount(tokenAddress, maxLendingAmountWithDecimals, txConfig);
+    }
   }
 
   const aggregators = {};
