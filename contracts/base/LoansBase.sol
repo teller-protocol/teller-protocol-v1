@@ -71,9 +71,9 @@ contract LoansBase is LoansInterface, Base {
         _;
     }
 
-    modifier exceedsMaxAmount(uint256 amount) {
+    modifier notExceedsMaxAmount(uint256 amount) {
         require(
-            settings.exceedsMaxLendingAmount(lendingPool.lendingToken(), amount),
+            !settings.exceedsMaxLendingAmount(lendingPool.lendingToken(), amount),
             "AMOUNT_EXCEEDS_MAX_AMOUNT"
         );
         _;

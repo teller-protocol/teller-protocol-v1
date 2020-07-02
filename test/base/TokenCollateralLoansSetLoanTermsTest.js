@@ -12,6 +12,7 @@ const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/stru
 const { assertLoan } = require('../utils/assertions');
 const Timer = require('../../scripts/utils/Timer');
 const LoanTermsConsensusEncoder = require('../utils/encoders/LoanTermsConsensusEncoder');
+const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -51,10 +52,12 @@ const createTermsSetExpectedLoan = (
 };
 
 contract('TokenCollateralLoansSetLoanTermsTest', function (accounts) {
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     let loanTermsConsensusEncoder;
     let collateralToken;
     let instance;
     let loanTermsConsInstance;
+    let settingsInstance;
 
     const timer = new Timer(web3);
     const borrowerAddress = accounts[2];
@@ -70,7 +73,7 @@ contract('TokenCollateralLoansSetLoanTermsTest', function (accounts) {
         loanTermsConsInstance = await Mock.new();
         const lendingPoolInstance = await Mock.new();
         const oracleInstance = await Mock.new();
-        const settingsInstance = await Settings.new(1, 1, 1, 1, THIRTY_DAYS, 1)
+        settingsInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(
             oracleInstance.address,
@@ -90,6 +93,11 @@ contract('TokenCollateralLoansSetLoanTermsTest', function (accounts) {
         _4_not_enough_allowance: [22, 3, 500000, 500000, 470000, 'NOT_ENOUGH_COLL_TOKENS_ALLOWANCE', true],
     }, function(loanID, senderIndex, mintAmount, collateralAmount, approveCollateralAmount, expectedErrorMessage, mustFail) {
         it(t('user', 'setLoanTerms', 'Should able to set loan terms.', mustFail), async function() {
+            // Setup
+            const encodeExceedsMaxLendingAmount = settingsInterfaceEncoder.encodeExceedsMaxLendingAmount();
+            await settingsInstance.givenMethodReturnBool(encodeExceedsMaxLendingAmount, false);
+            const encodeTermsExpiryTime = settingsInterfaceEncoder.encodeTermsExpiryTime();
+            await settingsInstance.givenMethodReturnUint(encodeTermsExpiryTime, THIRTY_DAYS);
             const sender = accounts[senderIndex];
             const interestRate = getAverage(responseOne.interestRate, responseTwo.interestRate);
             const collateralRatio = getAverage(responseOne.collateralRatio, responseTwo.collateralRatio);
