@@ -37,16 +37,19 @@ contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
 
     withData({
         _1_deposit_basic: [
-            1, 1, accounts[1], accounts[1], accounts[1], 5000000, 5000000, 5000000, 0, false, undefined
+            1, 1, accounts[1], accounts[1], accounts[1], 5000000, 5000000, 5000000, 0, 0, false, undefined
         ],
         _2_borrower_loan_mismatch: [
-            2, 2, accounts[2], accounts[2], accounts[3], 6000000, 6000000, 6000000, 0, true, 'BORROWER_LOAN_ID_MISMATCH'
+            2, 2, accounts[2], accounts[2], accounts[3], 6000000, 6000000, 6000000, 0, 0, true, 'BORROWER_LOAN_ID_MISMATCH'
         ],
         _3_deposit_zero: [
-            3, 3, accounts[3], accounts[3], accounts[3], 0, 0, 0, 0, true, 'CANNOT_DEPOSIT_ZERO'
+            3, 3, accounts[3], accounts[3], accounts[3], 0, 0, 0, 0, 0, true, 'CANNOT_DEPOSIT_ZERO'
         ],
         _4_deposit_more: [
-            4, 4, accounts[4], accounts[4], accounts[4], 5000000, 5000000, 5000000, 5000000, false, undefined
+            4, 4, accounts[4], accounts[4], accounts[4], 5000000, 5000000, 5000000, 0, 5000000, false, undefined
+        ],
+        _5_value_not_zero: [
+            4, 4, accounts[4], accounts[4], accounts[4], 5000000, 5000000, 5000000, 5000000, 5000000, true, undefined
         ],
     }, function(
         lastLoanID,
@@ -57,6 +60,7 @@ contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
         currentCollateralTokenBalance,
         approveCollateralAmount,
         collateralAmount,
+        transactionValueAmount,
         currentCollateral,
         mustFail,
         expectedErrorMessage
@@ -74,7 +78,7 @@ contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
                 await collateralToken.approve(instance.address, approveCollateralAmount, { from: sender });
 
                 // Invocation
-                const result = await instance.depositCollateral(specifiedBorrower, currentLoanID, collateralAmount, { from: sender });
+                const result = await instance.depositCollateral(specifiedBorrower, currentLoanID, collateralAmount, { from: sender, value: transactionValueAmount });
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');

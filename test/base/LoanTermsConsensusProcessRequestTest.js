@@ -14,7 +14,7 @@ const { loanTermsConsensus } = require('../utils/events');
 const BigNumber = require('bignumber.js');
 
 // Smart contracts
-const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
+const LoanTermsConsensus = artifacts.require("./mock/base/LoanTermsConsensusMock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 
 
@@ -63,35 +63,39 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
 
     withData({
         _1_insufficient_responses: [
-            3, 320, [responseOne, responseTwo], false, true, 'INSUFFICIENT_RESPONSES'
+            3, 320, undefined, [responseOne, responseTwo], false, true, 'INSUFFICIENT_RESPONSES'
         ],
         _2_one_response_successful: [
-            1, 320, [responseOne], false, false, undefined
+            1, 320, undefined, [responseOne], false, false, undefined
         ],
         _3_responses_just_over_tolerance: [  
-            4, 310, [responseOne, responseTwo, responseThree, responseFour], false, true, 'RESPONSES_TOO_VARIED'
+            4, 310, undefined, [responseOne, responseTwo, responseThree, responseFour], false, true, 'RESPONSES_TOO_VARIED'
         ],
         _4_responses_just_within_tolerance: [
-            4, 320, [responseOne, responseTwo, responseFour, responseFive], false, false, undefined
+            4, 320, undefined, [responseOne, responseTwo, responseFour, responseFive], false, false, undefined
         ],
         _5_zero_tolerance: [
-            1, 0, [responseTwo, responseThree], false, false, undefined
+            1, 0, undefined, [responseTwo, responseThree], false, false, undefined
         ],
         _6_two_responses_same_signer: [     // responseThree and five have the same signer
-            4, 320, [responseOne, responseThree, responseTwo, responseFive], false, true, 'SIGNER_ALREADY_SUBMITTED'
+            4, 320, undefined, [responseOne, responseThree, responseTwo, responseFive], false, true, 'SIGNER_ALREADY_SUBMITTED'
         ],
         _7_expired_response: [    // same as test 4, but expiring one response
-            4, 320, [responseOne, responseTwo, responseFour, responseFive], true, true, 'RESPONSE_EXPIRED'
+            4, 320, undefined, [responseOne, responseTwo, responseFour, responseFive], true, true, 'RESPONSE_EXPIRED'
+        ],
+        _8_nonce_taken: [
+            3, 320, { nonce: 0, signer: nodeOne }, [responseFive, responseOne, responseTwo], false, true, 'SIGNER_NONCE_TAKEN'
         ],
     }, function(
         reqSubmissions,
         tolerance,
+        signerNonceTaken,
         responses,
         responseExpired,
         mustFail,
         expectedErrorMessage,
     ) {    
-        it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
+        it(t('user', 'new', 'Should accept/not accept a nodes response', mustFail), async function() {
             // set up contract
             settings = await Settings.new(reqSubmissions, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500);
             instance = await LoanTermsConsensus.new()
@@ -101,6 +105,13 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
             await instance.addSigner(nodeTwo)
             await instance.addSigner(nodeThree)
             await instance.addSigner(nodeFour)
+            if(signerNonceTaken !== undefined)  {
+                await instance.mockSignerNonce(
+                    signerNonceTaken.signer,
+                    signerNonceTaken.nonce,
+                    true
+                );
+            }
 
             if (responseExpired) {
                 responses[2].responseTime = currentTime - (30 * ONE_DAY)
