@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t } = require('../utils/consts');
+const { t, NULL_ADDRESS } = require('../utils/consts');
 const { lendingPool } = require('../utils/events');
 const BurnableInterfaceEncoder = require('../utils/encoders/BurnableInterfaceEncoder');
 const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
@@ -40,24 +40,21 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
             consensusInstance.address,
             settingsInstance.address,
         );
-        await instance.initialize(
-            zTokenInstance.address,
-            lendingTokenInstance.address,
-            lendersInstance.address,
-            loansInstance.address,
-            cTokenInstance.address,
-            settingsInstance.address,
-        );
     });
 
     withData({
-        _1_basic: [accounts[0], true, 10, 10, 10, false, undefined, false],
-        _2_basic: [accounts[0], true, 40, 30, 25, false, undefined, false],
-        _3_basic: [accounts[0], true, 40, 25, 30, false, undefined, false],
-        _4_transferFail: [accounts[1], false, 50, 50, 50, false, 'Transfer was not successful.', true],
-        _5_notEnoughBalance: [accounts[1], true, 49, 50, 50, true, 'COMPOUND_WITHDRAWAL_ERROR', true],
+        _1_cTokenSupported_basic: [accounts[0], true, true, 10, 10, 10, false, undefined, false],
+        _2_cTokenSupported_basic: [accounts[0], true, true, 40, 30, 25, false, undefined, false],
+        _3_cTokenSupported_basic: [accounts[0], true, true, 40, 25, 30, false, undefined, false],
+        _4_cTokenSupported_transferFail: [accounts[1], true, false, 50, 50, 50, false, 'Transfer was not successful.', true],
+        _5_cTokenSupported_notEnoughBalance: [accounts[1], true, true, 49, 50, 50, true, 'COMPOUND_WITHDRAWAL_ERROR', true],
+        _6_cTokenNotSupported_basic: [accounts[0], false, true, 10, 10, 10, false, undefined, false],
+        _7_cTokenNotSupported_basic: [accounts[0], false, true, 40, 30, 25, false, undefined, false],
+        _8_cTokenNotSupported_basic: [accounts[0], false, true, 40, 25, 30, false, undefined, false],
+        _9_cTokenNotSupported_transferFail: [accounts[1], false, false, 50, 50, 50, false, 'Transfer was not successful.', true],
     }, function(
         lender,
+        isCTokenSupported,
         transfer,
         currentBalanceOf,
         amountToWithdraw,
@@ -68,6 +65,15 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
     ) {
         it(t('user', 'withdrawInterest', 'Should able (or not) to withdraw the interest.', mustFail), async function() {
             // Setup
+            const cTokenAddress = isCTokenSupported ? cTokenInstance.address : NULL_ADDRESS;
+            await instance.initialize(
+                zTokenInstance.address,
+                lendingTokenInstance.address,
+                lendersInstance.address,
+                loansInstance.address,
+                cTokenAddress,
+                settingsInstance.address,
+            );
             await lendersInstance.mockLenderInfo(
                 lender,
                 Math.floor(Date.now() / 1000),

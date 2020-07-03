@@ -19,8 +19,6 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     const burnableInterfaceEncoder = new BurnableInterfaceEncoder(web3);
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
     let instance;
-    let zTokenInstance;
-    let lendingTokenInstance;
     let loansInstance;
     let consensusInstance;
     let cTokenInstance;
@@ -48,8 +46,8 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     ) {
         it(t('user', 'withdraw', 'Should able (or not) to withdraw DAIs.', mustFail), async function() {
             // Setup
-            zTokenInstance = await Mock.new();
-            lendingTokenInstance = await Mock.new();
+            const zTokenInstance = await Mock.new();
+            const lendingTokenInstance = await Mock.new();
             await initContracts(settingsInstance, cTokenInstance, instance, zTokenInstance, consensusInstance, lendingTokenInstance, loansInstance, Lenders);
             const encodeTransfer = burnableInterfaceEncoder.encodeTransfer();
             await lendingTokenInstance.givenMethodReturnBool(encodeTransfer, transfer);
@@ -84,8 +82,8 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     }, function(depositSender, depositAmount, recipient, amountToWithdraw, expectedErrorMessage, mustFail) {
         it(t('user', 'withdraw', 'Should able (or not) to withdraw DAIs.', mustFail), async function() {
             // Setup
-            zTokenInstance = await ZDai.new();
-            lendingTokenInstance = await Token.new();
+            const zTokenInstance = await ZDai.new();
+            const lendingTokenInstance = await Token.new();
             await zTokenInstance.addMinter(instance.address);
             await initContracts(settingsInstance, cTokenInstance, instance, zTokenInstance, consensusInstance, lendingTokenInstance, loansInstance, Lenders);
             await lendingTokenInstance.approve(instance.address, depositAmount, { from: depositSender });
