@@ -231,7 +231,7 @@ contract LendingPool is Base, LendingPoolInterface {
     /** Internal functions */
 
     function _depositToCompoundIfSupported(uint256 amount) internal {
-        if(_isCTokenNotSupported()) {
+        if (_isCTokenNotSupported()) {
             return;
         }
         // approve the cToken contract to take lending tokens
@@ -243,7 +243,7 @@ contract LendingPool is Base, LendingPoolInterface {
     }
 
     function _withdrawFromCompoundIfSupported(uint256 amount) internal {
-        if(_isCTokenNotSupported()) {
+        if (_isCTokenNotSupported()) {
             return;
         }
         // this function withdraws 'amount' lending tokens from compound
