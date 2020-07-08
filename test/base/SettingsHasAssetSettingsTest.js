@@ -2,6 +2,7 @@
 const withData = require('leche').withData;
 const {
     t,
+    NULL_ADDRESS,
 } = require('../utils/consts');
 
 // Mock contracts
@@ -9,7 +10,7 @@ const {
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
 
-contract('SettingsGetMaxLendingAmountTest', function (accounts) {
+contract('SettingsHasAssetSettingsTest', function (accounts) {
     const INITIAL_VALUE = 1;
     let instance;
     
@@ -25,20 +26,27 @@ contract('SettingsGetMaxLendingAmountTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [1, 1, 1],
-        _2_basic: [2, 1000, 1000],
-        _3_not_set: [3, 0, 0],
-    }, function(lendingTokenIndex, currentValue, expectedResult) {
-        it(t('user', 'getMaxLendingAmount', 'Should be able to get the current max lending amount.', false), async function() {
+        _1_with_lending_ctoken: [1, 4, 1, 2400, true],
+        _2_with_lending_without_ctoken: [2, -1, 1000, 240, true],
+        _3_not_set: [-1, -1, 0, 0, false],
+    }, function(lendingTokenIndex, cTokenIndex, currentMaxAmount, currentRateProcessFrequency, expectedResult) {
+        it(t('user', 'hasAssetSettings', 'Should be able to test if it has the asset settings.', false), async function() {
             // Setup
+            const cTokenAddress = cTokenIndex === -1 ? NULL_ADDRESS : accounts[cTokenIndex];
             const lendingTokenAddress = lendingTokenIndex === -1 ? NULL_ADDRESS : accounts[lendingTokenIndex];
             const sender = accounts[0];
-            if (currentValue !== 0) {
-                await instance.setMaxLendingAmount(lendingTokenAddress, currentValue, { from: sender });
+            if (currentMaxAmount > 0 && currentRateProcessFrequency > 0) {
+                await instance.createAssetSettings(
+                    lendingTokenAddress,
+                    cTokenAddress,
+                    currentMaxAmount,
+                    currentRateProcessFrequency,
+                    { from: sender }
+                );
             }
 
             // Invocation
-            const result = await instance.getMaxLendingAmount(lendingTokenAddress);
+            const result = await instance.hasAssetSettings(lendingTokenAddress);
             
             // Assertions
             assert.equal(result.toString(), expectedResult.toString());

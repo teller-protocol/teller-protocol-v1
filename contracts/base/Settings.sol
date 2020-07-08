@@ -14,12 +14,14 @@
     limitations under the License.
 */
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 // Libraries
 import "openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
 
 // Commons
 import "../util/AddressLib.sol";
+import "../util/AssetSettingsLib.sol";
 
 // Interfaces
 
@@ -28,6 +30,7 @@ import "../interfaces/SettingsInterface.sol";
 
 contract Settings is Pausable, SettingsInterface {
     using AddressLib for address;
+    using AssetSettingsLib for AssetSettingsLib.AssetSettings;
 
     /** Constants */
     bytes32 public constant REQUIRED_SUBMISSIONS_SETTING = "RequiredSubmissions";
@@ -40,12 +43,20 @@ contract Settings is Pausable, SettingsInterface {
     /* State Variables */
 
     /**
-        It maps a max cap per lending token.
+        It maps assets settings:
 
-        DAI address => 1000 DAI (max)
-        USDC address => 500 USDC (max)
+        address(DAI) => {
+            maxLendingAmount = 1000 DAI (max)
+            rateProcessFrequency = 5760 blocks (a day). ~15 seconds per block.
+        }
+        address(USDC) => {
+            maxLendingAmount = 500 USDC (max)
+            rateProcessFrequency = 240 blocks (one hour). ~15 seconds per block.
+        }
      */
-    mapping(address => uint256) public maxLendingAmount;
+    mapping(address => AssetSettingsLib.AssetSettings) public assetSettings;
+
+    address[] public assets;
 
     mapping(address => bool) public lendingPoolPaused;
 
@@ -249,29 +260,62 @@ contract Settings is Pausable, SettingsInterface {
         emit LendingPoolUnpaused(msg.sender, lendingPoolAddress);
     }
 
-    function setMaxLendingAmount(address lendingTokenAddress, uint256 newMaxLendingAmount)
-        external
-        onlyPauser()
-    {
-        uint256 oldMaxLendingAmount = maxLendingAmount[lendingTokenAddress];
-        require(oldMaxLendingAmount != newMaxLendingAmount, "NEW_MAX_AMOUNT_REQUIRED");
+    function hasAssetSettings(address lendingTokenAddress) external view returns (bool) {
+        return assetSettings[lendingTokenAddress].exists();
+    }
 
-        maxLendingAmount[lendingTokenAddress] = newMaxLendingAmount;
+    function createAssetSettings(
+        address lendingTokenAddress,
+        address cTokenAddress,
+        uint256 newMaxLendingAmount,
+        uint256 newRateProcessFrequency
+    ) external onlyPauser() {
+        assetSettings[lendingTokenAddress].requireNotExists();
 
-        emit MaxLendingAmountUpdated(
+        assetSettings[lendingTokenAddress].initialize(
+            cTokenAddress,
+            newMaxLendingAmount,
+            newRateProcessFrequency
+        );
+
+        assets.push(lendingTokenAddress);
+
+        emit AssetSettingsCreated(
             msg.sender,
             lendingTokenAddress,
-            oldMaxLendingAmount,
-            newMaxLendingAmount
+            cTokenAddress,
+            newMaxLendingAmount,
+            newRateProcessFrequency
         );
     }
 
-    function getMaxLendingAmount(address lendingTokenAddress)
+    function updateAssetSettings(
+        address lendingTokenAddress,
+        address cTokenAddress,
+        uint256 newMaxLendingAmount,
+        uint256 newRateProcessFrequency
+    ) external onlyPauser() {
+        assetSettings[lendingTokenAddress].update(
+            cTokenAddress,
+            newMaxLendingAmount,
+            newRateProcessFrequency
+        );
+
+        emit AssetSettingsUpdated(
+            msg.sender,
+            lendingTokenAddress,
+            cTokenAddress,
+            newMaxLendingAmount,
+            newRateProcessFrequency
+        );
+    }
+
+    function getAssetSettings(address lendingTokenAddress)
         external
         view
-        returns (uint256)
+        returns (AssetSettingsLib.AssetSettings memory)
     {
-        return maxLendingAmount[lendingTokenAddress];
+        return assetSettings[lendingTokenAddress];
     }
 
     function exceedsMaxLendingAmount(address lendingTokenAddress, uint256 amount)
@@ -279,11 +323,15 @@ contract Settings is Pausable, SettingsInterface {
         view
         returns (bool)
     {
-        return amount > maxLendingAmount[lendingTokenAddress];
+        return assetSettings[lendingTokenAddress].exceedsMaxLendingAmount(amount);
     }
 
     function isPaused() external view returns (bool) {
         return paused();
+    }
+
+    function getAssets() external view returns (address[] memory) {
+        return assets;
     }
 
     /** Internal functions */

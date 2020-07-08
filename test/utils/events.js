@@ -294,15 +294,31 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-        maxLendingAmountUpdated: tx => {
-            const name = 'MaxLendingAmountUpdated';
+        assertSettingsCreated: tx => {
+            const name = 'AssetSettingsCreated';
             return {
                 name: name,
-                emitted: (sender, lendingToken, oldValue, newValue) => emitted(tx, name, ev => {
+                emitted: (sender, lendingToken, cToken, maxLendingAmount, rateProcessFrequency) => emitted(tx, name, ev => {
                     assert.equal(ev.sender, sender);
                     assert.equal(ev.lendingToken.toString(), lendingToken.toString());
-                    assert.equal(ev.oldValue.toString(), oldValue.toString());
-                    assert.equal(ev.newValue, newValue);
+                    assert.equal(ev.cToken.toString(), cToken.toString());
+                    assert.equal(ev.maxLendingAmount.toString(), maxLendingAmount.toString());
+                    assert.equal(ev.rateProcessFrequency, rateProcessFrequency);
+
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        assertSettingsUpdated: tx => {
+            const name = 'AssetSettingsUpdated';
+            return {
+                name: name,
+                emitted: (sender, lendingToken, cToken, newMaxLendingAmount, newRateProcessFrequency) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.lendingToken.toString(), lendingToken.toString());
+                    assert.equal(ev.cToken.toString(), cToken.toString());
+                    assert.equal(ev.newMaxLendingAmount.toString(), newMaxLendingAmount.toString());
+                    assert.equal(ev.newRateProcessFrequency, newRateProcessFrequency);
 
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)

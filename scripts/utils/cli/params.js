@@ -28,6 +28,8 @@ const {
   REQUIRED_SUBMISSIONS,
   SAFETY_INTERVAL,
   TEST_TOKEN_NAME,
+  RATE_PROCESS_FREQUENCY,
+  MAX_LENDING_AMOUNT,
 } = require("./names");
 
 const newOption = (argv, name, alias, type, description, defaultValue) => {
@@ -418,6 +420,28 @@ module.exports.addTestTokenName = (
     TEST_TOKEN_NAME.alias,
     "string",
     `This represents the token to be used in the integration tests. By default ${defaultParam}`,
+    defaultParam
+  );
+};
+
+module.exports.addRateProcessFrequence = (yargs, defaultParam = RATE_PROCESS_FREQUENCY.default) => {
+  newOption(
+    yargs,
+    RATE_PROCESS_FREQUENCY.name,
+    RATE_PROCESS_FREQUENCY.alias,
+    "number",
+    `Define the # blocks (frequence) to process the cToken exchange rate. It considers 1 block every 15 seconds. By default ${defaultParam}`,
+    defaultParam
+  );
+};
+
+module.exports.addMaxLendingAmount = (yargs, defaultParam = MAX_LENDING_AMOUNT.default) => {
+  newOption(
+    yargs,
+    MAX_LENDING_AMOUNT.name,
+    MAX_LENDING_AMOUNT.alias,
+    "number",
+    `It defines the max lending amount for an asset. By default ${defaultParam}`,
     defaultParam
   );
 };

@@ -160,5 +160,15 @@ module.exports = {
         name: 'testTokenName',
         alias: 'TTN',
         default: DEFAULT_TEST_TOKEN_NAME,
-    },    
+    },
+    MAX_LENDING_AMOUNT: {
+        name: 'maxLendingAmount',
+        alias: 'MLA',
+        default: 1000,
+    },
+    RATE_PROCESS_FREQUENCY: {
+        name: 'rateProcessFrequence',
+        alias: 'RPF',
+        default: (12 * 60 * 60) / 15, // 12 hours
+    },
 };

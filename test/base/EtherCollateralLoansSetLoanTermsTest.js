@@ -71,9 +71,17 @@ contract('EtherCollateralLoansSetLoanTermsTest', function (accounts) {
     ) {    
         it(t('user', 'setLoanTerms', 'Should able to set loan terms.', false), async function() {
             const lendingPoolTokenAddress = accounts[5];
+            const cTokenAddress = accounts[6];
+            const sender = accounts[0];
             const encodeLendingToken = lendingPoolInterfaceEncoder.encodeLendingToken();
             await lendingPoolInstance.givenMethodReturnAddress(encodeLendingToken, lendingPoolTokenAddress);
-            await settingsInstance.setMaxLendingAmount(lendingPoolTokenAddress, loanRequest.amount);
+            await settingsInstance.createAssetSettings(
+                lendingPoolTokenAddress,
+                cTokenAddress,
+                loanRequest.amount,
+                240,
+                { from: sender }
+            );
 
             const interestRate = Math.floor((responseOne.interestRate + responseTwo.interestRate) / 2)
             const collateralRatio = Math.floor((responseOne.collateralRatio + responseTwo.collateralRatio) / 2)

@@ -21,6 +21,7 @@ const Settings = artifacts.require("./base/Settings.sol");
 
 contract('SettingsSetSettingTest', function (accounts) {
     const INITIAL_VALUE = 1;
+    const owner = accounts[0];
     let instance;
     
     beforeEach('Setup for each test', async () => {
@@ -215,26 +216,108 @@ contract('SettingsSetSettingTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [0, 1, 100, 1000, undefined, false],
-        _2_new_value_required: [0, 2, 1000, 1000, 'NEW_MAX_AMOUNT_REQUIRED', true],
-    }, function(senderIndex, lendingTokenIndex, currentValue, newValue, expectedErrorMessage, mustFail) {
-        it(t('user', 'setMaxLendingAmount', 'Should (or not) be able to set a new max lending amount value.', mustFail), async function() {
+        _1_basic: [0, 1, 4, true, 100, 240, 1000, 200, 5, undefined, false],
+        _2_sender_not_allowed: [2, 1, 4, true, 100, 240, 1000, 200, 5, 'PauserRole: caller does not have the Pauser role', true],
+        _3_new_max_amount: [0, 2, 4, true, 1000, 3000, 1000, 2500, 5, undefined, false],
+        _4_new_rate_process_freq: [0, 2, 4, true, 1000, 3000, 100, 3000, 4, undefined, false],
+        _5_new_cToken_address: [0, 2, 4, true, 1000, 3000, 100, 3000, 5, undefined, false],
+        _6_new_value_required: [0, 2, 4, true, 1000, 3000, 1000, 3000, 4, 'NEW_SETTINGS_VALUE_REQUIRED', true],
+        _7_not_exist: [0, 2, 4, false, 1000, 3000, 1200, 3200, 5, 'ASSET_SETTINGS_NOT_EXISTS', true],
+    }, function(senderIndex, lendingTokenIndex, cTokenIndex, preInitialize, currentMaxAmount, currentRateProcessFrequency, newMaxAmount, newRateProcessFrequency, newCTokenIndex, expectedErrorMessage, mustFail) {
+        it(t('user', 'updateAssetSettings', 'Should (or not) be able to update the asset settings.', mustFail), async function() {
             // Setup
+            const cTokenAddress = cTokenIndex === -1 ? NULL_ADDRESS : accounts[cTokenIndex];
+            const newCTokenAddress = newCTokenIndex === -1 ? NULL_ADDRESS : accounts[newCTokenIndex];
             const lendingTokenAddress = lendingTokenIndex === -1 ? NULL_ADDRESS : accounts[lendingTokenIndex];
             const sender = accounts[senderIndex];
-            await instance.setMaxLendingAmount(lendingTokenAddress, currentValue, { from: sender });
+            if (preInitialize) {
+                await instance.createAssetSettings(
+                    lendingTokenAddress,
+                    cTokenAddress,
+                    currentMaxAmount,
+                    currentRateProcessFrequency,
+                    { from: owner }
+                );
+            }
 
             try {
                 // Invocation
-                const result = await instance.setMaxLendingAmount(lendingTokenAddress, newValue, { from: sender });
+                const result = await instance.updateAssetSettings(lendingTokenAddress, newCTokenAddress, newMaxAmount, newRateProcessFrequency, { from: sender });
                 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
 
                 settings
-                    .maxLendingAmountUpdated(result)
-                    .emitted(sender, lendingTokenAddress, currentValue, newValue);
+                    .assertSettingsUpdated(result)
+                    .emitted(sender, lendingTokenAddress, newCTokenAddress, newMaxAmount, newRateProcessFrequency);
+                
+                const assetsResult = await instance.getAssets();
+                assert(assetsResult.includes(lendingTokenAddress), 'Assets must include lending token address');
+
+                const assetSettingsResult = await instance.getAssetSettings(lendingTokenAddress);
+                assert.equal(assetSettingsResult.cTokenAddress, newCTokenAddress); 
+                assert.equal(assetSettingsResult.maxLendingAmount, newMaxAmount.toString()); 
+                assert.equal(assetSettingsResult.rateProcessFrequency, newRateProcessFrequency.toString()); 
+            } catch (error) {
+                // Assertions
+                assert(mustFail);
+                assert(error);
+                assert.equal(error.reason, expectedErrorMessage);
+            }
+        });
+    });
+
+    withData({
+        _1_with_cToken_basic: [0, 3, 1, false, 100, 240, undefined, false],
+        _2_with_cToken_already_created: [0, 3, 1, true, 100, 240, 'ASSET_SETTINGS_ALREADY_EXISTS', true],
+        _3_with_cToken_set_0_max_amount: [0, 3, 1, false, 0, 240, 'INIT_MAX_AMOUNT_REQUIRED', true],
+        _4_with_cToken_set_0_rate_process_freq: [0, 3, 1, false, 4000, 0, 'INIT_RATE_PROCESS_FREQ_REQUIRED', true],
+        _5_without_cToken_basic: [0, -1, 1, false, 100, 240, undefined, false],
+        _6_without_cToken_already_created: [0, -1, 1, true, 100, 240, 'ASSET_SETTINGS_ALREADY_EXISTS', true],
+        _7_without_cToken_set_0_max_amount: [0, -1, 1, false, 0, 240, 'INIT_MAX_AMOUNT_REQUIRED', true],
+        _8_without_cToken_set_0_rate_process_freq: [0, -1, 1, false, 4000, 0, 'INIT_RATE_PROCESS_FREQ_REQUIRED', true],
+    }, function(senderIndex, cTokenIndex, lendingTokenIndex, preInitialize, currentMaxAmount, currentRateProcessFrequency, expectedErrorMessage, mustFail) {
+        it(t('user', 'createAssetSettings', 'Should (or not) be able to create asset settings.', mustFail), async function() {
+            // Setup
+            const lendingTokenAddress = lendingTokenIndex === -1 ? NULL_ADDRESS : accounts[lendingTokenIndex];
+            const cTokenAddress = cTokenIndex === -1 ? NULL_ADDRESS : accounts[cTokenIndex];
+            const sender = accounts[senderIndex];
+            if(preInitialize) {
+                await instance.createAssetSettings(
+                    lendingTokenAddress,
+                    cTokenAddress,
+                    currentMaxAmount,
+                    currentRateProcessFrequency,
+                    { from: owner }
+                );
+            }
+
+            try {
+                // Invocation
+                const result = await instance.createAssetSettings(
+                    lendingTokenAddress,
+                    cTokenAddress,
+                    currentMaxAmount,
+                    currentRateProcessFrequency,
+                    { from: sender }
+                );
+                
+                // Assertions
+                assert(!mustFail, 'It should have failed because data is invalid.');
+                assert(result);
+
+                settings
+                    .assertSettingsCreated(result)
+                    .emitted(sender, lendingTokenAddress, cTokenAddress, currentMaxAmount, currentRateProcessFrequency);
+                
+                const assetsResult = await instance.getAssets();
+                assert(assetsResult.includes(lendingTokenAddress), 'Assets must include lending token address');
+
+                const assetSettingsResult = await instance.getAssetSettings(lendingTokenAddress);
+                assert.equal(assetSettingsResult.cTokenAddress, cTokenAddress); 
+                assert.equal(assetSettingsResult.maxLendingAmount, currentMaxAmount.toString()); 
+                assert.equal(assetSettingsResult.rateProcessFrequency, currentRateProcessFrequency.toString()); 
             } catch (error) {
                 // Assertions
                 assert(mustFail);

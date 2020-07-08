@@ -1,5 +1,5 @@
 const yargs = require('yargs');
-const { addNetwork, addTokenName, addCollTokenName, addSenderIndex, addAmount, addNewValue, addLoanId, addSettingName, addCTokenName, addBorrowerIndex, addRecipientIndex, addDurationDays, addReceiverIndex, addInitialLoanId, addFinalLoanId, addAddresses, addNonce, addCollAmount, addSeconds, addBorrower, addAccountIndex, addRevert, addInitialNonce, addSignerAddress, addSignerUrl, addTokenNames, addRequiredSubmissions, addSafetyInterval, addTestTokenName } = require('./cli/params');
+const { addNetwork, addTokenName, addCollTokenName, addSenderIndex, addAmount, addNewValue, addLoanId, addSettingName, addCTokenName, addBorrowerIndex, addRecipientIndex, addDurationDays, addReceiverIndex, addInitialLoanId, addFinalLoanId, addAddresses, addNonce, addCollAmount, addSeconds, addBorrower, addAccountIndex, addRevert, addInitialNonce, addSignerAddress, addSignerUrl, addTokenNames, addRequiredSubmissions, addSafetyInterval, addTestTokenName, addMaxLendingAmount, addRateProcessFrequence } = require('./cli/params');
 
 const addBase = (yargs) => {
     addNetwork(yargs);
@@ -158,6 +158,15 @@ module.exports = {
             addNewValue(yargs);
             addSettingName(yargs);
             addSenderIndex(yargs);
+            return yargs;
+        },
+        updateAssetSettings: () => {
+            addBase(yargs);
+            addSenderIndex(yargs);
+            addTokenName(yargs);
+            addCTokenName(yargs);
+            addMaxLendingAmount(yargs);
+            addRateProcessFrequence(yargs);
             return yargs;
         },
     },

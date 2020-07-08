@@ -38,7 +38,7 @@ module.exports = async function(deployer, network, accounts) {
   const deployerAccountIndex = env.getDefaultAddressIndex().getOrDefault();
   const deployerAccount = accounts[deployerAccountIndex];
   console.log(`Deployer account index is ${deployerAccountIndex} => ${deployerAccount}`);
-  const { maxGasLimit, tokens, chainlink, compound, maxLendingAmounts } = networkConfig;
+  const { maxGasLimit, tokens, chainlink, compound, lendingTokenSettings } = networkConfig;
   assert(maxGasLimit, `Max gas limit for network ${network} is undefined.`);
 
   // Validations
@@ -62,20 +62,33 @@ module.exports = async function(deployer, network, accounts) {
     txConfig
   );
   const settingsInstance = await Settings.deployed();
-  for (const tokenName of Object.keys(maxLendingAmounts)) {
-    const maxLendingAmountUnit = maxLendingAmounts[tokenName];
+  for (const tokenName of Object.keys(lendingTokenSettings)) {
+    const lendingTokenSettingsInfo = lendingTokenSettings[tokenName];
     const tokenAddress = tokens[tokenName];
     assert(tokenAddress, `MaxLendingAmount: Token address for token ${tokenName} is undefined.`);
+
+    const cTokenAddress = compound[lendingTokenSettingsInfo.cToken];
+    assert(cTokenAddress, `MaxLendingAmount: CToken address for cToken name ${lendingTokenSettingsInfo.cToken} is undefined.`);
+  
     let decimals = DEFAULT_DECIMALS;
     if (tokenAddress !== DUMMY_ADDRESS) {
       const tokenInstance = await ERC20.at(tokenAddress);
       decimals = await tokenInstance.decimals();
     }
-    const maxLendingAmountWithDecimals = toDecimals(maxLendingAmountUnit, decimals).toFixed(0);
-    const currentAmount = await settingsInstance.getMaxLendingAmount(tokenAddress);
-    if (currentAmount.toString() !==  maxLendingAmountWithDecimals) {
-      console.log(`Configuring MAX lending amount => ${tokenName} / ${tokenAddress} = ${maxLendingAmountUnit} = ${maxLendingAmountWithDecimals}`);
-      await settingsInstance.setMaxLendingAmount(tokenAddress, maxLendingAmountWithDecimals, txConfig);
+    const maxLendingAmountWithDecimals = toDecimals(lendingTokenSettingsInfo.maxLendingAmount, decimals).toFixed(0);
+
+    const hasAssetSettings = await settingsInstance.hasAssetSettings(tokenAddress);
+    console.log(`Has Asset (${tokenName} / ${lendingTokenSettingsInfo.cToken}) Settings? ${hasAssetSettings}`);
+
+    if (hasAssetSettings.toString() === 'false') {
+      console.log(`Configuring asset ${tokenName} / ${tokenAddress}: CToken Address: ${cTokenAddress} | Max lending amount = ${lendingTokenSettingsInfo.maxLendingAmount} / ${maxLendingAmountWithDecimals}`);
+      await settingsInstance.createAssetSettings(
+        tokenAddress,
+        cTokenAddress,
+        maxLendingAmountWithDecimals,
+        lendingTokenSettingsInfo.rateProcessFrequency,
+        txConfig
+      );
     }
   }
 

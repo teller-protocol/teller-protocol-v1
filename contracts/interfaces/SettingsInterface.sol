@@ -1,4 +1,7 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
+
+import "../util/AssetSettingsLib.sol";
 
 
 interface SettingsInterface {
@@ -9,11 +12,20 @@ interface SettingsInterface {
         uint256 newValue
     );
 
-    event MaxLendingAmountUpdated(
+    event AssetSettingsCreated(
         address indexed sender,
         address indexed lendingToken,
-        uint256 oldValue,
-        uint256 newValue
+        address indexed cToken,
+        uint256 maxLendingAmount,
+        uint256 rateProcessFrequency
+    );
+
+    event AssetSettingsUpdated(
+        address indexed sender,
+        address indexed lendingToken,
+        address indexed cToken,
+        uint256 newMaxLendingAmount,
+        uint256 newRateProcessFrequency
     );
 
     event LendingPoolPaused(address indexed account, address indexed lendingPoolAddress);
@@ -55,16 +67,31 @@ interface SettingsInterface {
 
     function unpauseLendingPool(address lendingPoolAddress) external;
 
-    function setMaxLendingAmount(address lendingTokenAddress, uint256 newMaxLendingAmount)
-        external;
+    function updateAssetSettings(
+        address lendingTokenAddress,
+        address cTokenAddress,
+        uint256 newMaxLendingAmount,
+        uint256 newRateProcessFrequency
+    ) external;
 
-    function getMaxLendingAmount(address lendingTokenAddress)
+    function getAssetSettings(address lendingTokenAddress)
         external
         view
-        returns (uint256);
+        returns (AssetSettingsLib.AssetSettings memory);
+
+    function createAssetSettings(
+        address lendingTokenAddress,
+        address cTokenAddress,
+        uint256 newMaxLendingAmount,
+        uint256 newRateProcessFrequency
+    ) external;
+
+    function hasAssetSettings(address lendingTokenAddress) external view returns (bool);
 
     function exceedsMaxLendingAmount(address lendingTokenAddress, uint256 amount)
         external
         view
         returns (bool);
+
+    function getAssets() external view returns (address[] memory);
 }

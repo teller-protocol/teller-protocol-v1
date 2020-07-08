@@ -28,6 +28,10 @@ interface CErc20Interface {
 
     function decimals() external view returns (uint8);
 
+    function name() external view returns (string memory);
+
+    function symbol() external view returns (string memory);
+
     // function liquidateBorrow(address borrower, uint repayAmount, CTokenInterface cTokenCollateral) external returns (uint);
 
     /*** Admin Functions ***/
