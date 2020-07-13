@@ -49,7 +49,10 @@ contract TokenCollateralLoans is LoansBase {
         whenNotPaused()
         whenLendingPoolNotPaused(address(lendingPool))
     {
-        borrower.requireEqualTo(loans[loanID].loanTerms.borrower, "BORROWER_LOAN_ID_MISMATCH");
+        borrower.requireEqualTo(
+            loans[loanID].loanTerms.borrower,
+            "BORROWER_LOAN_ID_MISMATCH"
+        );
         require(amount > 0, "CANNOT_DEPOSIT_ZERO");
 
         // Update the loan collateral and total. Transfer tokens to this contract.

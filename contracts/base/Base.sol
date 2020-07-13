@@ -65,10 +65,7 @@ contract Base is Initializable, ReentrancyGuard {
 
     function _initialize(address settingsAddress) internal isNotInitialized() {
         settingsAddress.requireNotEmpty("SETTINGS_MUST_BE_PROVIDED");
-        require(
-            settingsAddress.isContract(),
-            "SETTINGS_MUST_BE_A_CONTRACT"
-        );
+        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
 
         _initialize();
 

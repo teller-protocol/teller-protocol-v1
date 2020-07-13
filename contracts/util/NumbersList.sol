@@ -55,7 +55,9 @@ library NumbersList {
             return false;
         }
         uint256 average = getAverage(self);
-        uint256 toleranceAmount = average.mul(tolerancePercentage).div(PERCENTAGE_TO_DECIMAL);
+        uint256 toleranceAmount = average.mul(tolerancePercentage).div(
+            PERCENTAGE_TO_DECIMAL
+        );
 
         uint256 minTolerance = average.sub(toleranceAmount);
         if (self.min < minTolerance) {

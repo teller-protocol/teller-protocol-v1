@@ -222,11 +222,7 @@ contract LoansBase is LoansInterface, Base {
             loans[loanID].status = ZeroCollateralCommon.LoanStatus.Closed;
 
             uint256 collateralAmount = loans[loanID].collateral;
-            _payOutCollateral(
-                loanID,
-                collateralAmount,
-                loans[loanID].loanTerms.borrower
-            );
+            _payOutCollateral(loanID, collateralAmount, loans[loanID].loanTerms.borrower);
 
             emit CollateralWithdrawn(
                 loanID,
@@ -407,7 +403,9 @@ contract LoansBase is LoansInterface, Base {
         // wei amount / lending token price in wei * the lending token decimals.
         uint256 aWholeLendingToken = _getAWholeLendingToken();
         uint256 oneLendingTokenPriceWei = uint256(priceOracle.getLatestAnswer());
-        uint256 tokenValue = weiAmount.mul(aWholeLendingToken).div(oneLendingTokenPriceWei);
+        uint256 tokenValue = weiAmount.mul(aWholeLendingToken).div(
+            oneLendingTokenPriceWei
+        );
         return tokenValue;
     }
 
