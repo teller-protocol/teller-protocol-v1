@@ -58,7 +58,7 @@ contract InterestConsensusMock is InterestConsensus {
         ZeroCollateralCommon.InterestResponse calldata response,
         bytes32 requestHash
     ) external {
-        _processReponse(request, response, requestHash);
+        _processResponse(request, response, requestHash);
     }
 
     function externalHashResponse(

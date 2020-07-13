@@ -6,6 +6,7 @@ const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/stru
 const ethUtil = require('ethereumjs-util')
 
 // Smart contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
 const LoanTermsConsensusMock = artifacts.require("./mock/base/LoanTermsConsensusMock.sol");
 
 // constants
@@ -13,12 +14,12 @@ const { NULL_ADDRESS } = require('../utils/consts');
 
 contract('LoanTermsConsensus hashRequest and hashReponse', function (accounts) {
     const loansAddress = accounts[3]
-    const settingsAddress = accounts[5]
     let instance
 
     beforeEach('Setup for each test', async () => {
+        const settingsInstance = await Mock.new();
         instance = await LoanTermsConsensusMock.new()
-        await instance.initialize(loansAddress, settingsAddress)
+        await instance.initialize(loansAddress, settingsInstance.address)
     })
 
     withData({

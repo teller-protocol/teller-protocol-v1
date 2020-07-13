@@ -17,6 +17,7 @@ pragma solidity 0.5.17;
 
 // Libraries
 import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
+import "openzeppelin-solidity/contracts/utils/Address.sol";
 import "../util/AddressLib.sol";
 
 // Commons
@@ -28,6 +29,7 @@ import "../interfaces/SettingsInterface.sol";
 
 contract Base is Initializable, ReentrancyGuard {
     using AddressLib for address;
+    using Address for address;
 
     /* State Variables */
 
@@ -63,6 +65,10 @@ contract Base is Initializable, ReentrancyGuard {
 
     function _initialize(address settingsAddress) internal isNotInitialized() {
         settingsAddress.requireNotEmpty("SETTINGS_MUST_BE_PROVIDED");
+        require(
+            settingsAddress.isContract(),
+            "SETTINGS_MUST_BE_A_CONTRACT"
+        );
 
         _initialize();
 

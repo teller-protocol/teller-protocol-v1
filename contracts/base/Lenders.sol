@@ -122,22 +122,13 @@ contract Lenders is Base, LendersInterface {
         isInitialized()
         returns (uint256)
     {
-        uint256 amountToWithdraw = amount;
-        uint256 withdrawableInterest = accruedInterest[recipient].totalNotWithdrawn;
+        require(accruedInterest[recipient].totalNotWithdrawn >= amount, "AMOUNT_EXCEEDS_AVAILABLE_AMOUNT");
 
-        if (withdrawableInterest == 0 || amountToWithdraw == 0) return 0;
+        accruedInterest[recipient].totalNotWithdrawn = accruedInterest[recipient].totalNotWithdrawn.sub(amount);
 
-        if (withdrawableInterest < amountToWithdraw) {
-            amountToWithdraw = withdrawableInterest;
-        }
+        emit AccruedInterestWithdrawn(recipient, amount);
 
-        accruedInterest[recipient].totalNotWithdrawn = withdrawableInterest.sub(
-            amountToWithdraw
-        );
-
-        emit AccruedInterestWithdrawn(recipient, amountToWithdraw);
-
-        return amountToWithdraw;
+        return amount;
     }
 
     /** Internal Functions */

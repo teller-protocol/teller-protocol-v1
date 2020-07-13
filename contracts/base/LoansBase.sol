@@ -116,7 +116,7 @@ contract LoansBase is LoansInterface, Base {
         require(msg.sender == loans[loanID].loanTerms.borrower, "CALLER_DOESNT_OWN_LOAN");
         require(amount > 0, "CANNOT_WITHDRAW_ZERO");
 
-        // Find the minimum collateral amount this loan is allowed in tokens
+        // Find the minimum collateral amount this loan is allowed in tokens or ether.
         uint256 collateralNeededToken = _getCollateralNeededInTokens(
             _getTotalOwed(loanID),
             loans[loanID].loanTerms.collateralRatio
@@ -205,6 +205,7 @@ contract LoansBase is LoansInterface, Base {
         whenLendingPoolNotPaused(address(lendingPool))
         nonReentrant()
     {
+        require(amount > 0, "AMOUNT_VALUE_REQUIRED");
         // calculate the actual amount to repay
         uint256 toPay = amount;
         uint256 totalOwed = _getTotalOwed(loanID);
@@ -212,40 +213,38 @@ contract LoansBase is LoansInterface, Base {
             toPay = totalOwed;
         }
 
-        if (toPay > 0) {
-            // update the amount owed on the loan
-            totalOwed = totalOwed.sub(toPay);
-            _payLoan(loanID, toPay);
+        // update the amount owed on the loan
+        totalOwed = totalOwed.sub(toPay);
+        _payLoan(loanID, toPay);
 
-            // if the loan is now fully paid, close it and return collateral
-            if (totalOwed == 0) {
-                loans[loanID].status = ZeroCollateralCommon.LoanStatus.Closed;
+        // if the loan is now fully paid, close it and return collateral
+        if (totalOwed == 0) {
+            loans[loanID].status = ZeroCollateralCommon.LoanStatus.Closed;
 
-                uint256 collateralAmount = loans[loanID].collateral;
-                _payOutCollateral(
-                    loanID,
-                    collateralAmount,
-                    loans[loanID].loanTerms.borrower
-                );
+            uint256 collateralAmount = loans[loanID].collateral;
+            _payOutCollateral(
+                loanID,
+                collateralAmount,
+                loans[loanID].loanTerms.borrower
+            );
 
-                emit CollateralWithdrawn(
-                    loanID,
-                    loans[loanID].loanTerms.borrower,
-                    collateralAmount
-                );
-            }
-
-            // collect the money from the payer
-            lendingPool.repay(toPay, msg.sender);
-
-            emit LoanRepaid(
+            emit CollateralWithdrawn(
                 loanID,
                 loans[loanID].loanTerms.borrower,
-                toPay,
-                msg.sender,
-                totalOwed
+                collateralAmount
             );
         }
+
+        // collect the money from the payer
+        lendingPool.repay(toPay, msg.sender);
+
+        emit LoanRepaid(
+            loanID,
+            loans[loanID].loanTerms.borrower,
+            toPay,
+            msg.sender,
+            totalOwed
+        );
     }
 
     /**
@@ -284,7 +283,7 @@ contract LoansBase is LoansInterface, Base {
         uint256 tokenPayment = collateralInTokens.mul(settings.liquidateEthPrice()).div(
             TEN_THOUSAND
         );
-        // the pays tokens at x% of collateral price
+        // the liquidator pays x% of the collateral price
         lendingPool.liquidationPayment(tokenPayment, msg.sender);
 
         emit LoanLiquidated(
@@ -303,7 +302,7 @@ contract LoansBase is LoansInterface, Base {
             uint256 collateral,
             uint256 collateralNeededLendingTokens,
             uint256 collateralNeededCollateralTokens,
-            bool requireCollateral
+            bool moreCollateralRequired
         )
     {
         return _getCollateralInfo(loanID);
@@ -321,7 +320,7 @@ contract LoansBase is LoansInterface, Base {
             uint256 collateral,
             uint256 collateralNeededLendingTokens,
             uint256 collateralNeededCollateralTokens,
-            bool requireCollateral
+            bool moreCollateralRequired
         )
     {
         collateral = loans[loanID].collateral;
@@ -332,7 +331,7 @@ contract LoansBase is LoansInterface, Base {
             _getTotalOwed(loanID),
             loans[loanID].loanTerms.collateralRatio
         );
-        requireCollateral = collateralNeededCollateralTokens > collateral;
+        moreCollateralRequired = collateralNeededCollateralTokens > collateral;
     }
 
     function _getCollateralNeededInfo(uint256 totalOwed, uint256 collateralRatio)
@@ -358,9 +357,9 @@ contract LoansBase is LoansInterface, Base {
         address loanTermsConsensusAddress,
         address settingsAddress
     ) internal isNotInitialized() {
-        require(priceOracleAddress != address(0), "PROVIDE_ORACLE_ADDRESS");
-        require(lendingPoolAddress != address(0), "PROVIDE_LENDINGPOOL_ADDRESS");
-        require(loanTermsConsensusAddress != address(0), "PROVIDED_LOAN_TERMS_ADDRESS");
+        priceOracleAddress.requireNotEmpty("PROVIDE_ORACLE_ADDRESS");
+        lendingPoolAddress.requireNotEmpty("PROVIDE_LENDINGPOOL_ADDRESS");
+        loanTermsConsensusAddress.requireNotEmpty("PROVIDED_LOAN_TERMS_ADDRESS");
 
         _initialize(settingsAddress);
 
@@ -408,8 +407,8 @@ contract LoansBase is LoansInterface, Base {
         // wei amount / lending token price in wei * the lending token decimals.
         uint256 aWholeLendingToken = _getAWholeLendingToken();
         uint256 oneLendingTokenPriceWei = uint256(priceOracle.getLatestAnswer());
-        uint256 weiValue = weiAmount.mul(aWholeLendingToken).div(oneLendingTokenPriceWei);
-        return weiValue;
+        uint256 tokenValue = weiAmount.mul(aWholeLendingToken).div(oneLendingTokenPriceWei);
+        return tokenValue;
     }
 
     function _convertTokenToWei(uint256 tokenAmount) internal view returns (uint256) {
@@ -417,10 +416,10 @@ contract LoansBase is LoansInterface, Base {
         // token amount in tokens * lending token price in wei / the lending token decimals.
         uint256 aWholeLendingToken = _getAWholeLendingToken();
         uint256 oneLendingTokenPriceWei = uint256(priceOracle.getLatestAnswer());
-        uint256 tokenValue = tokenAmount.mul(oneLendingTokenPriceWei).div(
+        uint256 weiValue = tokenAmount.mul(oneLendingTokenPriceWei).div(
             aWholeLendingToken
         );
-        return tokenValue;
+        return weiValue;
     }
 
     function getAndIncrementLoanID() internal returns (uint256 newLoanID) {

@@ -49,10 +49,7 @@ contract TokenCollateralLoans is LoansBase {
         whenNotPaused()
         whenLendingPoolNotPaused(address(lendingPool))
     {
-        require(
-            loans[loanID].loanTerms.borrower == borrower,
-            "BORROWER_LOAN_ID_MISMATCH"
-        );
+        borrower.requireEqualTo(loans[loanID].loanTerms.borrower, "BORROWER_LOAN_ID_MISMATCH");
         require(amount > 0, "CANNOT_DEPOSIT_ZERO");
 
         // Update the loan collateral and total. Transfer tokens to this contract.
@@ -118,7 +115,7 @@ contract TokenCollateralLoans is LoansBase {
         address settingsAddress,
         address collateralTokenAddress
     ) external isNotInitialized() {
-        require(collateralTokenAddress != address(0x0), "PROVIDE_COLL_TOKEN_ADDRESS");
+        collateralTokenAddress.requireNotEmpty("PROVIDE_COLL_TOKEN_ADDRESS");
 
         _initialize(
             priceOracleAddress,

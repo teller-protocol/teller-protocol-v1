@@ -44,7 +44,7 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         bytes32 requestHash = _hashRequest(request);
 
         for (uint256 i = 0; i < responses.length; i++) {
-            _processReponse(request, responses[i], requestHash);
+            _processResponse(request, responses[i], requestHash);
         }
 
         uint256 interestAccrued = _getConsensus(
@@ -56,7 +56,7 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         return interestAccrued;
     }
 
-    function _processReponse(
+    function _processResponse(
         ZeroCollateralCommon.InterestRequest memory request,
         ZeroCollateralCommon.InterestResponse memory response,
         bytes32 requestHash
