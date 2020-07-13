@@ -49,7 +49,7 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         bytes32 requestHash = _hashRequest(request);
 
         for (uint256 i = 0; i < responses.length; i++) {
-            _processReponse(request, responses[i], requestHash);
+            _processResponse(request, responses[i], requestHash);
         }
 
         interestRate = _getConsensus(
@@ -71,7 +71,7 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         );
     }
 
-    function _processReponse(
+    function _processResponse(
         ZeroCollateralCommon.LoanRequest memory request,
         ZeroCollateralCommon.LoanResponse memory response,
         bytes32 requestHash

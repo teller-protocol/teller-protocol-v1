@@ -12,7 +12,7 @@ contract NumbersListMock {
         values.addValue(newValue);
     }
 
-    function totalValues() external view returns (uint256) {
+    function valuesCount() external view returns (uint256) {
         return values.count;
     }
 

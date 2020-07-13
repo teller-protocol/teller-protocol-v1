@@ -31,10 +31,10 @@ contract('LendersWithdrawInterestTest', function (accounts) {
     });
 
     withData({
-        _1_0Available_10Requested: [accounts[0], 10, 0, 100, 4, 0, 0],
-        _2_50Available_10Requested: [accounts[1], 10, 50, 100, 3, 10, 40],
-        _3_50Available_100Requested: [accounts[2], 100, 50, 100, 20, 50, 0],
-        _5_50Available_0Requested: [accounts[0], 0, 50, 100, 4, 0, 50],
+        _1_0Available_10Requested: [accounts[0], 10, 0, 100, 4, 0, 0, 'AMOUNT_EXCEEDS_AVAILABLE_AMOUNT', true],
+        _2_50Available_10Requested: [accounts[1], 10, 50, 100, 3, 10, 40, undefined, false],
+        _3_50Available_100Requested: [accounts[2], 100, 50, 100, 20, 50, 0, 'AMOUNT_EXCEEDS_AVAILABLE_AMOUNT', true],
+        _5_50Available_0Requested: [accounts[0], 0, 50, 100, 4, 0, 50, 'CANNOT_WITHDRAW_ZERO', true],
     }, function(
         lenderAddress,
         amountToWithdraw,
@@ -43,6 +43,8 @@ contract('LendersWithdrawInterestTest', function (accounts) {
         timeLastAccrued,
         amountWithdrawnExpected,
         newTotalNotWithdrawn,
+        expectedErrorMessage,
+        mustFail
     ) {    
         it(t('user', 'withdrawInterest', 'Should able to withdraw interest.', false), async function() {
             // Setup
@@ -53,21 +55,29 @@ contract('LendersWithdrawInterestTest', function (accounts) {
                 totalAccruedInterest.toString()
             );
 
-            // Invocation
-            const result = await instance.withdrawInterest(lenderAddress, amountToWithdraw);
+            try {
+                // Invocation
+                const result = await instance.withdrawInterest(lenderAddress, amountToWithdraw);
 
-            // Assertions
-            assert(result);
-            if (amountWithdrawnExpected != 0) {
-                lenders
-                    .accruedInterestWithdrawn(result)
-                    .emitted(lenderAddress, amountWithdrawnExpected);
+                // Assertions
+                assert(!mustFail, 'It should have failed because data is invalid.');
+                assert(result);
+                if (amountWithdrawnExpected != 0) {
+                    lenders
+                        .accruedInterestWithdrawn(result)
+                        .emitted(lenderAddress, amountWithdrawnExpected);
+                }
+
+                const lenderAccruedInterest = await instance.accruedInterest(lenderAddress);
+                assert.equal(lenderAccruedInterest.totalNotWithdrawn.toString(), newTotalNotWithdrawn.toString());
+                assert.equal(lenderAccruedInterest.timeLastAccrued.toString(), timeLastAccrued.toString());
+                assert.equal(lenderAccruedInterest.totalAccruedInterest.toString(), totalAccruedInterest.toString());
+            } catch (error) {
+                // Assertions
+                assert(mustFail);
+                assert(error);
+                assert.equal(error.reason, expectedErrorMessage);
             }
-
-            const lenderAccruedInterest = await instance.accruedInterest(lenderAddress);
-            assert.equal(lenderAccruedInterest.totalNotWithdrawn.toString(), newTotalNotWithdrawn.toString());
-            assert.equal(lenderAccruedInterest.timeLastAccrued.toString(), timeLastAccrued.toString());
-            assert.equal(lenderAccruedInterest.totalAccruedInterest.toString(), totalAccruedInterest.toString());
         });
     });
 });

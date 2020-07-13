@@ -85,7 +85,7 @@ module.exports = async ({accounts, getContracts, processArgs, timer, web3, nonce
 
   await collateralToken.approve(loansInstance.address, initialCollateralAmount, borrowerTxConfig);
 
-  const setLoanTermsResult = await loansInstance.setLoanTerms(
+  const createLoanWithTermsResult = await loansInstance.createLoanWithTerms(
     loanTermsRequest.loanTermsRequest,
     signedResponses,
     initialCollateralAmount,
@@ -97,7 +97,7 @@ module.exports = async ({accounts, getContracts, processArgs, timer, web3, nonce
   const loanIDs = await loansInstance.getBorrowerLoans(borrower);
   const lastLoanID = loanIDs[loanIDs.length - 1];
   loans
-    .loanTermsSet(setLoanTermsResult)
+    .loanTermsSet(createLoanWithTermsResult)
     .emitted(
       lastLoanID,
       borrowerTxConfig.from,

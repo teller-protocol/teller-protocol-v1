@@ -2,11 +2,13 @@
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
 
+// Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
+
 // Smart contracts
 const Consensus = artifacts.require("./base/ConsensusModifiersMock.sol");
 
 contract('ConsensusModifiersTest', function (accounts) {
-    const settingsAddress = accounts[5]
 
     withData({
         _1_not_lenders: [accounts[1], accounts[3], 'Address has no permissions.', true],
@@ -20,8 +22,9 @@ contract('ConsensusModifiersTest', function (accounts) {
         it(t('user', 'new', 'Should (or not) be able to call the function', mustFail), async function() {
             try {
                 // Setup
+                const settingsInstance = await Mock.new();
                 const instance = await Consensus.new();
-                await instance.initialize(callerAddress, settingsAddress)
+                await instance.initialize(callerAddress, settingsInstance.address)
 
                 const result = await instance.externalIsCaller({ from:  msgSender })
 

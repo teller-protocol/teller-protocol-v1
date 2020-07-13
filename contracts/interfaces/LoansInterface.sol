@@ -82,7 +82,7 @@ interface LoansInterface {
 
     function withdrawCollateral(uint256 amount, uint256 loanID) external;
 
-    function setLoanTerms(
+    function createLoanWithTerms(
         ZeroCollateralCommon.LoanRequest calldata request,
         ZeroCollateralCommon.LoanResponse[] calldata responses,
         uint256 collateralAmount

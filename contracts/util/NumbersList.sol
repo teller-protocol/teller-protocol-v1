@@ -26,12 +26,12 @@ library NumbersList {
         self.count = self.count.add(1);
     }
 
-    function totalValues(Values storage self) internal view returns (uint256) {
+    function valuesCount(Values storage self) internal view returns (uint256) {
         return self.count;
     }
 
     function isEmpty(Values storage self) internal view returns (bool) {
-        return totalValues(self) == 0;
+        return valuesCount(self) == 0;
     }
 
     function isFinalized(Values storage self, uint256 totalRequiredValues)
@@ -39,14 +39,14 @@ library NumbersList {
         view
         returns (bool)
     {
-        return totalValues(self) >= totalRequiredValues;
+        return valuesCount(self) >= totalRequiredValues;
     }
 
     function getAverage(Values storage self) internal view returns (uint256) {
-        return isEmpty(self) ? 0 : self.sum.div(totalValues(self));
+        return isEmpty(self) ? 0 : self.sum.div(valuesCount(self));
     }
 
-    function isWithinTolerance(Values storage self, uint256 tolerance)
+    function isWithinTolerance(Values storage self, uint256 tolerancePercentage)
         internal
         view
         returns (bool)
@@ -55,7 +55,9 @@ library NumbersList {
             return false;
         }
         uint256 average = getAverage(self);
-        uint256 toleranceAmount = average.mul(tolerance).div(PERCENTAGE_TO_DECIMAL);
+        uint256 toleranceAmount = average.mul(tolerancePercentage).div(
+            PERCENTAGE_TO_DECIMAL
+        );
 
         uint256 minTolerance = average.sub(toleranceAmount);
         if (self.min < minTolerance) {

@@ -38,15 +38,17 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
     });
 
     withData({
-        _1_to_pay_more_than_owed: [12345678, 40291, 13000000, BigNumber("3000000000000000000")],
-        _2_to_pay_zero: [12345678, 40291, 0, BigNumber("3000000000000000000")],
-        _3_to_less_than_owed: [12345678, 40291, 12345677, BigNumber("3276312217812723563")],
-        _4_to_pay_exact_owed: [12345678, 40291, 12385969, BigNumber("3276312217812723563")],
+        _1_to_pay_more_than_owed: [12345678, 40291, 13000000, BigNumber("3000000000000000000"), undefined, false],
+        _2_to_pay_zero: [12345678, 40291, 0, BigNumber("3000000000000000000"), 'AMOUNT_VALUE_REQUIRED', true],
+        _3_to_less_than_owed: [12345678, 40291, 12345677, BigNumber("3276312217812723563"), undefined, false],
+        _4_to_pay_exact_owed: [12345678, 40291, 12385969, BigNumber("3276312217812723563"), undefined, false],
     }, function(
         loanPrincipalOwed,
         loanInterestOwed,
         amountToPay,
-        loanCollateral
+        loanCollateral,
+        expectedErrorMessage,
+        mustFail
     ) {
         it(t('user', 'repay', 'Should able to repay your loan.', false), async function() {
             // Setup
@@ -60,36 +62,44 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
             const contractBalBefore = await web3.eth.getBalance(instance.address)
             const borrowerBalBefore = await web3.eth.getBalance(loanBorrower)
 
-            await instance.repay(amountToPay, mockLoanID, { from: accounts[0] })
-            
-            const totalAfter = await instance.totalCollateral.call()
-            const contractBalAfter = await web3.eth.getBalance(instance.address)
-            const borrowerBalAfter = await web3.eth.getBalance(loanBorrower)
-
-            let newPrincipalOwed = 0
-            let newInterestOwed = 0
-            if (amountToPay > (loanPrincipalOwed + loanInterestOwed)) {
-                amountToPay = (loanPrincipalOwed + loanInterestOwed)
-            }
-            if (amountToPay < loanPrincipalOwed){
-                newPrincipalOwed = loanPrincipalOwed - amountToPay
-                newInterestOwed = loanInterestOwed
-            } else {
-                newPrincipalOwed = 0
-                newInterestOwed = loanInterestOwed - (amountToPay - loanPrincipalOwed)
-            }
-
-            let loan = await instance.loans.call(mockLoanID)
-
-            assert.equal(loan['principalOwed'].toString(), newPrincipalOwed)
-            assert.equal(loan['interestOwed'].toString(), newInterestOwed)
-
-            if (newPrincipalOwed + newInterestOwed == 0) {
-                assert.equal(parseInt(loan['collateral']), 0)
-                assert.equal(totalCollateral.minus(loanCollateral).toFixed(), totalAfter.toString())
-                assert.equal(BigNumber(contractBalBefore).minus(loanCollateral), contractBalAfter.toString())
-                assert.equal(BigNumber(borrowerBalBefore).plus(loanCollateral), borrowerBalAfter.toString())
-                assert.equal(parseInt(loan['status']), CLOSED)
+            try {
+                await instance.repay(amountToPay, mockLoanID, { from: accounts[0] })
+                
+                // Assertions
+                assert(!mustFail, 'It should have failed because data is invalid.');
+                const totalAfter = await instance.totalCollateral.call()
+                const contractBalAfter = await web3.eth.getBalance(instance.address)
+                const borrowerBalAfter = await web3.eth.getBalance(loanBorrower)
+    
+                let newPrincipalOwed = 0
+                let newInterestOwed = 0
+                if (amountToPay > (loanPrincipalOwed + loanInterestOwed)) {
+                    amountToPay = (loanPrincipalOwed + loanInterestOwed)
+                }
+                if (amountToPay < loanPrincipalOwed){
+                    newPrincipalOwed = loanPrincipalOwed - amountToPay
+                    newInterestOwed = loanInterestOwed
+                } else {
+                    newPrincipalOwed = 0
+                    newInterestOwed = loanInterestOwed - (amountToPay - loanPrincipalOwed)
+                }
+    
+                let loan = await instance.loans.call(mockLoanID)
+    
+                assert.equal(loan['principalOwed'].toString(), newPrincipalOwed)
+                assert.equal(loan['interestOwed'].toString(), newInterestOwed)
+    
+                if (newPrincipalOwed + newInterestOwed == 0) {
+                    assert.equal(parseInt(loan['collateral']), 0)
+                    assert.equal(totalCollateral.minus(loanCollateral).toFixed(), totalAfter.toString())
+                    assert.equal(BigNumber(contractBalBefore).minus(loanCollateral), contractBalAfter.toString())
+                    assert.equal(BigNumber(borrowerBalBefore).plus(loanCollateral), borrowerBalAfter.toString())
+                    assert.equal(parseInt(loan['status']), CLOSED)
+                }
+            } catch (error) {
+                // Assertions
+                assert(mustFail);
+                assert.equal(error.reason, expectedErrorMessage);
             }
         });
     });

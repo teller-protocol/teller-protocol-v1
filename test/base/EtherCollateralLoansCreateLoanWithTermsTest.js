@@ -18,7 +18,7 @@ const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 
-contract('EtherCollateralLoansSetLoanTermsTest', function (accounts) {
+contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
     let instance;
     let loanTermsConsInstance;
     let lendingPoolInstance;
@@ -67,7 +67,7 @@ contract('EtherCollateralLoansSetLoanTermsTest', function (accounts) {
         mockLoanIDCounter,
         msgValue,
     ) {    
-        it(t('user', 'setLoanTerms', 'Should able to set loan terms.', false), async function() {
+        it(t('user', 'createLoanWithTerms', 'Should able to set loan terms.', false), async function() {
             const interestRate = Math.floor((responseOne.interestRate + responseTwo.interestRate) / 2)
             const collateralRatio = Math.floor((responseOne.collateralRatio + responseTwo.collateralRatio) / 2)
             const maxLoanAmount = Math.floor((responseOne.maxLoanAmount + responseTwo.maxLoanAmount) / 2)
@@ -87,7 +87,7 @@ contract('EtherCollateralLoansSetLoanTermsTest', function (accounts) {
             const contractBalBefore = await web3.eth.getBalance(instance.address)
 
             // Invocation
-          const tx = await instance.setLoanTerms(
+          const tx = await instance.createLoanWithTerms(
                 loanRequest,
                 [responseOne, responseTwo],
                 msgValue,

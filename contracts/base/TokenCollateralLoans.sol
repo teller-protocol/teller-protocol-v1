@@ -49,8 +49,8 @@ contract TokenCollateralLoans is LoansBase {
         whenNotPaused()
         whenLendingPoolNotPaused(address(lendingPool))
     {
-        require(
-            loans[loanID].loanTerms.borrower == borrower,
+        borrower.requireEqualTo(
+            loans[loanID].loanTerms.borrower,
             "BORROWER_LOAN_ID_MISMATCH"
         );
         require(amount > 0, "CANNOT_DEPOSIT_ZERO");
@@ -61,7 +61,7 @@ contract TokenCollateralLoans is LoansBase {
         emit CollateralDeposited(loanID, borrower, amount);
     }
 
-    function setLoanTerms(
+    function createLoanWithTerms(
         ZeroCollateralCommon.LoanRequest calldata request,
         ZeroCollateralCommon.LoanResponse[] calldata responses,
         uint256 collateralAmount
@@ -118,7 +118,7 @@ contract TokenCollateralLoans is LoansBase {
         address settingsAddress,
         address collateralTokenAddress
     ) external isNotInitialized() {
-        require(collateralTokenAddress != address(0x0), "PROVIDE_COLL_TOKEN_ADDRESS");
+        collateralTokenAddress.requireNotEmpty("PROVIDE_COLL_TOKEN_ADDRESS");
 
         _initialize(
             priceOracleAddress,

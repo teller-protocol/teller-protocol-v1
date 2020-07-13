@@ -24,7 +24,7 @@ contract('NumbersListTest', function (accounts) {
             }
             
             // Assertions
-            const result = await instance.totalValues();
+            const result = await instance.valuesCount();
             assert.equal(result.toString(), values.length.toString());
         });
     });

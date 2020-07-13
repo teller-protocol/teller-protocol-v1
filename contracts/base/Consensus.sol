@@ -48,7 +48,7 @@ contract Consensus is Base, SignerRole {
         address callerAddress, // loans for LoanTermsConsensus, lenders for InterestConsensus
         address settingAddress
     ) public isNotInitialized() {
-        require(callerAddress != address(0), "MUST_PROVIDE_LENDER_INFO");
+        callerAddress.requireNotEmpty("MUST_PROVIDE_LENDER_INFO");
 
         _initialize(settingAddress);
 

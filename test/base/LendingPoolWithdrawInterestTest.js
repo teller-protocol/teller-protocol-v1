@@ -52,7 +52,7 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
 
     withData({
         _1_basic: [accounts[0], true, 10, 10, 10, false, undefined, false],
-        _2_basic: [accounts[0], true, 40, 30, 25, false, undefined, false],
+        _2_basic: [accounts[0], true, 40, 30, 25, false, 'AMOUNT_EXCEEDS_AVAILABLE_AMOUNT', true],
         _3_basic: [accounts[0], true, 40, 25, 30, false, undefined, false],
         _4_transferFail: [accounts[1], false, 50, 50, 50, false, 'Transfer was not successful.', true],
         _5_notEnoughBalance: [accounts[1], true, 49, 50, 50, true, 'COMPOUND_WITHDRAWAL_ERROR', true],

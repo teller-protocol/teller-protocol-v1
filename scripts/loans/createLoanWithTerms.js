@@ -1,7 +1,7 @@
 // Smart contracts
 
 // Util classes
-const { zerocollateral } = require("../../scripts/utils/contracts");
+const { zerocollateral } = require("../utils/contracts");
 const ProcessArgs = require('../utils/ProcessArgs');
 const Accounts = require('../utils/Accounts');
 const { createLoanTermsRequest, createSignedLoanTermsResponse } = require('../../test/utils/loan-terms-helper');
@@ -64,7 +64,7 @@ module.exports = async (callback) => {
         };
         const signedResponse2 = await createSignedLoanTermsResponse(web3, loanTermsRequest, loanResponseInfo2);
 
-        const result = await loansInstance.setLoanTerms(
+        const result = await loansInstance.createLoanWithTerms(
             loanTermsRequest.loanTermsRequest,
             [signedResponse1, signedResponse2],
             {
