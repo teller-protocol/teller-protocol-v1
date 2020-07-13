@@ -34,7 +34,7 @@ contract('LendersWithdrawInterestTest', function (accounts) {
         _1_0Available_10Requested: [accounts[0], 10, 0, 100, 4, 0, 0, 'AMOUNT_EXCEEDS_AVAILABLE_AMOUNT', true],
         _2_50Available_10Requested: [accounts[1], 10, 50, 100, 3, 10, 40, undefined, false],
         _3_50Available_100Requested: [accounts[2], 100, 50, 100, 20, 50, 0, 'AMOUNT_EXCEEDS_AVAILABLE_AMOUNT', true],
-        _5_50Available_0Requested: [accounts[0], 0, 50, 100, 4, 0, 50, undefined, false],
+        _5_50Available_0Requested: [accounts[0], 0, 50, 100, 4, 0, 50, 'CANNOT_WITHDRAW_ZERO', true],
     }, function(
         lenderAddress,
         amountToWithdraw,

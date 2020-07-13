@@ -122,6 +122,7 @@ contract Lenders is Base, LendersInterface {
         isInitialized()
         returns (uint256)
     {
+        require(amount > 0, "CANNOT_WITHDRAW_ZERO");
         require(
             accruedInterest[recipient].totalNotWithdrawn >= amount,
             "AMOUNT_EXCEEDS_AVAILABLE_AMOUNT"
