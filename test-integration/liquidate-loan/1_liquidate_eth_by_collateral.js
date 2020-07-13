@@ -73,7 +73,7 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
     nonces,
   );
 
-  const setLoanTermsResult = await loansInstance.setLoanTerms(
+  const createLoanWithTermsResult = await loansInstance.createLoanWithTerms(
     loanTermsRequest.loanTermsRequest,
     signedResponses,
     borrowerTxConfigWithValue.value,
@@ -85,7 +85,7 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   const loanIDs = await loansInstance.getBorrowerLoans(borrower);
   const lastLoanID = loanIDs[loanIDs.length - 1];
   loans
-    .loanTermsSet(setLoanTermsResult)
+    .loanTermsSet(createLoanWithTermsResult)
     .emitted(
       lastLoanID,
       borrowerTxConfigWithValue.from,

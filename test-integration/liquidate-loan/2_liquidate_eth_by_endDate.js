@@ -71,7 +71,7 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
     nonces,
   );
   console.log(`Setting loan terms (${signedResponses.length} signed responses)...`);
-  await loansInstance.setLoanTerms(
+  await loansInstance.createLoanWithTerms(
     loanTermsRequest.loanTermsRequest,
     signedResponses,
     borrowerTxConfigWithValue.value,

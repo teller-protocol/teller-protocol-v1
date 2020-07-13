@@ -61,7 +61,7 @@ contract TokenCollateralLoans is LoansBase {
         emit CollateralDeposited(loanID, borrower, amount);
     }
 
-    function setLoanTerms(
+    function createLoanWithTerms(
         ZeroCollateralCommon.LoanRequest calldata request,
         ZeroCollateralCommon.LoanResponse[] calldata responses,
         uint256 collateralAmount

@@ -82,7 +82,7 @@ contract LoansBaseMock is LoansBase {
         external
         payable {}
 
-    function setLoanTerms(
+    function createLoanWithTerms(
         ZeroCollateralCommon.LoanRequest calldata request,
         ZeroCollateralCommon.LoanResponse[] calldata responses,
         uint256 collateralAmount
