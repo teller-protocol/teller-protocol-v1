@@ -52,7 +52,7 @@
   "dependencies": {
     "@chainlink/contracts": "^0.0.5",
     "bignumber.js": "^9.0.0",
-    "openzeppelin-solidity": "2.4",
+    "@openzeppelin/contracts": "2.5.1",
     "truffle-hdwallet-provider": "^1.0.17",
     "web3": "1.0.0-beta.55",
     "web3-provider-engine": "15.0.0",

@@ -16,7 +16,7 @@
 pragma solidity 0.5.17;
 
 // Libraries
-import "openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
+import "@openzeppelin/contracts/lifecycle/Pausable.sol";
 
 // Commons
 import "../util/AddressLib.sol";
@@ -30,6 +30,16 @@ contract Settings is Pausable, SettingsInterface {
     using AddressLib for address;
 
     /** Constants */
+    /**
+        The maximum tolerance is a porcentage with 2 decimals.
+        Examples:
+            350 => 3.5%
+            4000 => 40.00%
+        
+        The max value is 100% => 10000
+    */
+    uint256 internal constant MAX_MAXIMUM_TOLERANCE_VALUE = 10000;
+
     bytes32 public constant REQUIRED_SUBMISSIONS_SETTING = "RequiredSubmissions";
     bytes32 public constant MAXIMUM_TOLERANCE_SETTING = "MaximumTolerance";
     bytes32 public constant RESPONSE_EXPIRY_LENGTH_SETTING = "ResponseExpiryLength";
@@ -132,6 +142,7 @@ contract Settings is Pausable, SettingsInterface {
         whenNotPaused()
     {
         require(maximumTolerance != newMaximumTolerance, "NEW_VALUE_REQUIRED");
+        require(newMaximumTolerance <= MAX_MAXIMUM_TOLERANCE_VALUE, "MAX_TOLERANCE_EXCEEDED");
         uint256 oldMaximumTolerance = maximumTolerance;
         maximumTolerance = newMaximumTolerance;
 

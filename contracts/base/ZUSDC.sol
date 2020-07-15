@@ -21,7 +21,7 @@ import "./ZToken.sol";
 contract ZUSDC is ZToken {
     string private constant NAME = "Zero Collateral USDC";
     string private constant SYMBOL = "zUSDC";
-    uint8 private constant DECIMALS = 18;
+    uint8 private constant DECIMALS = 6;
 
     constructor() public ZToken(NAME, SYMBOL, DECIMALS) {}
 }

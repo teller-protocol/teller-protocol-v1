@@ -19,11 +19,11 @@ pragma experimental ABIEncoderV2;
 
 // Libraries and common
 import "../util/ZeroCollateralCommon.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 // Contracts
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
-import "../base/Base.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
+import "./Base.sol";
 
 // Interfaces
 import "../interfaces/PairAggregatorInterface.sol";

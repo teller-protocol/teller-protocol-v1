@@ -21,7 +21,7 @@ import "../base/Base.sol";
 
 // Libraries
 import "../util/AddressLib.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 // Interfaces
 import "../interfaces/LendersInterface.sol";
