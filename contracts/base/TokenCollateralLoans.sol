@@ -147,12 +147,21 @@ contract TokenCollateralLoans is LoansBase {
         collateralTokenTransferFrom(msg.sender, amount);
     }
 
-    function _requireExpectedBalance(uint256 initialBalance, uint256 expectedAmount) internal view {
+    function _requireExpectedBalance(uint256 initialBalance, uint256 expectedAmount)
+        internal
+        view
+    {
         uint256 finalBalance = ERC20Detailed(collateralToken).balanceOf(address(this));
-        if(finalBalance > initialBalance) {
-            require(finalBalance.sub(initialBalance) == expectedAmount, "INV_BALANCE_AFTER_TRANSFER_FROM");
+        if (finalBalance > initialBalance) {
+            require(
+                finalBalance.sub(initialBalance) == expectedAmount,
+                "INV_BALANCE_AFTER_TRANSFER_FROM"
+            );
         } else {
-            require(initialBalance.sub(finalBalance) == expectedAmount, "INV_BALANCE_AFTER_TRANSFER");
+            require(
+                initialBalance.sub(finalBalance) == expectedAmount,
+                "INV_BALANCE_AFTER_TRANSFER"
+            );
         }
     }
 

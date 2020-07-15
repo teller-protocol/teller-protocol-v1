@@ -142,7 +142,10 @@ contract Settings is Pausable, SettingsInterface {
         whenNotPaused()
     {
         require(maximumTolerance != newMaximumTolerance, "NEW_VALUE_REQUIRED");
-        require(newMaximumTolerance <= MAX_MAXIMUM_TOLERANCE_VALUE, "MAX_TOLERANCE_EXCEEDED");
+        require(
+            newMaximumTolerance <= MAX_MAXIMUM_TOLERANCE_VALUE,
+            "MAX_TOLERANCE_EXCEEDED"
+        );
         uint256 oldMaximumTolerance = maximumTolerance;
         maximumTolerance = newMaximumTolerance;
 
