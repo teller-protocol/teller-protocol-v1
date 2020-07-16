@@ -20,6 +20,7 @@ contract('ConsensusSignatureValidTest', function (accounts) {
             startTime: 345,
             endTime: 736,
             requestTime: 0,
+            consensusAddress: accounts[1],
         },
         accounts[1]
     )
@@ -29,6 +30,7 @@ contract('ConsensusSignatureValidTest', function (accounts) {
             startTime: 0,
             endTime: 0,
             requestTime: 0,
+            consensusAddress: accounts[2],
         },
         NULL_ADDRESS
   )

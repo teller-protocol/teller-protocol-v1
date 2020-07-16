@@ -29,14 +29,11 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
     const lender = accounts[9]
     const endTime = 34567
 
-    let currentTime
+    let currentTime;
+    let interestRequest;
 
-    const baseGasCost = 192160;
-    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 68000);
-
-    const interestRequest = createInterestRequest(lender, 23456, endTime, 45678)
-
-    const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract))
+    const baseGasCost = 201094;
+    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 73000);
 
     let responseOne = createUnsignedInterestResponse(nodeOne, 0, 34676, 1)
     let responseTwo = createUnsignedInterestResponse(nodeTwo, 0, 34642, 1)
@@ -51,6 +48,11 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
     before('Setup the response times and signatures', async () => {
         currentTime = await getLatestTimestamp()
 
+        const consensusAddress = accounts[8];
+
+        interestRequest = createInterestRequest(lender, 23456, endTime, 45678, consensusAddress)
+        const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract))
+
         responseOne.responseTime = currentTime - (2 * ONE_DAY)
         responseTwo.responseTime = currentTime - (25 * ONE_DAY)
         responseThree.responseTime = currentTime - (29 * ONE_DAY)
@@ -60,6 +62,16 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
         responseSeven.responseTime = currentTime - (20 * ONE_DAY)
         responseEight.responseTime = currentTime - (24 * ONE_DAY)
         responseNine.responseTime = currentTime - (26 * ONE_DAY)
+
+        responseOne.consensusAddress = consensusAddress;
+        responseTwo.consensusAddress = consensusAddress;
+        responseThree.consensusAddress = consensusAddress;
+        responseFour.consensusAddress = consensusAddress;
+        responseFive.consensusAddress = consensusAddress;
+        responseSix.consensusAddress = consensusAddress;
+        responseSeven.consensusAddress = consensusAddress;
+        responseEight.consensusAddress = consensusAddress;
+        responseNine.consensusAddress = consensusAddress;
 
         responseOne = await createInterestResponseSig(web3, nodeOne, responseOne, requestHash)
         responseTwo = await createInterestResponseSig(web3, nodeTwo, responseTwo, requestHash)

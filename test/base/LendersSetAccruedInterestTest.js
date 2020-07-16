@@ -21,11 +21,9 @@ contract('LendersSetAccruedInterestTest', function (accounts) {
 
     const lenderAddress = accounts[2]
 
-    const emptyRequest = createInterestRequest(NULL_ADDRESS, 0, 0, 0)
-
-    let responseOne = createUnsignedInterestResponse(accounts[0], 0, 35976, 1)
-
-    let responseTwo = createUnsignedInterestResponse(accounts[1], 0, 34732, 4)
+    let emptyRequest;
+    let responseOne;
+    let responseTwo;
     
     beforeEach('Setup for each test', async () => {
         zTokenInstance = await Mock.new();
@@ -33,6 +31,11 @@ contract('LendersSetAccruedInterestTest', function (accounts) {
         interestConsensusInstance = await Mock.new();
         settingsInstance = await Mock.new();
         instance = await Lenders.new();
+
+        emptyRequest = createInterestRequest(NULL_ADDRESS, 0, 0, 0, interestConsensusInstance.address);
+        responseOne = createUnsignedInterestResponse(accounts[0], 0, 35976, 1, interestConsensusInstance.address);
+        responseTwo = createUnsignedInterestResponse(accounts[1], 0, 34732, 4, interestConsensusInstance.address);
+
         await instance.initialize(
             zTokenInstance.address,
             lendingPoolInstance.address,
@@ -69,6 +72,7 @@ contract('LendersSetAccruedInterestTest', function (accounts) {
         it(t('user', 'setAccruedInterest', 'Should able to set accrued interest.', false), async function() {
             const interestRequest = {
                 lender: lenderAddress,
+                consensusAddress: interestConsensusInstance.address,
                 startTime: startTime,
                 endTime: endTime,
                 requestTime: requestTime,

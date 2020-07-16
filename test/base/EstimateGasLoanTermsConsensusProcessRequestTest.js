@@ -21,8 +21,8 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
     let instance
     let settings
 
-    const baseGasCost = 413814;
-    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 82600);
+    const baseGasCost = 430000;
+    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 88000);
 
     const loansContract = accounts[1]
     const nodeOne = accounts[1]
@@ -38,9 +38,8 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
     const requestNonce = 142
 
     let currentTime
+    let loanRequest;
 
-    const loanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478)
-    const requestHash = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, loansContract))
     let responseOne = createUnsignedLoanResponse(nodeOne, 0, 1400, 6765, BigNumber("91500000000000000000000").toFixed(), 0)
     let responseTwo = createUnsignedLoanResponse(nodeTwo, 0, 1399, 6766, BigNumber("91500000000000000000000").toFixed(), 0)
     let responseThree = createUnsignedLoanResponse(nodeThree, 0, 1397, 6764, BigNumber("91500000000000000000000").toFixed(), 4)
@@ -54,6 +53,11 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
     before('Setup the response times and signatures', async () => {
         currentTime = await getLatestTimestamp()
 
+        const consensusAddress = accounts[8];
+
+        loanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478, consensusAddress)
+        const requestHash = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, loansContract))
+
         responseOne.responseTime = currentTime - (2 * ONE_DAY)
         responseTwo.responseTime = currentTime - (25 * ONE_DAY)
         responseThree.responseTime = currentTime - (29 * ONE_DAY)
@@ -63,6 +67,16 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
         responseSeven.responseTime = currentTime - (22 * ONE_DAY)
         responseEight.responseTime = currentTime - (25 * ONE_DAY)
         responseNine.responseTime = currentTime - (21 * ONE_DAY)
+
+        responseOne.consensusAddress = consensusAddress;
+        responseTwo.consensusAddress = consensusAddress;
+        responseThree.consensusAddress = consensusAddress;
+        responseFour.consensusAddress = consensusAddress;
+        responseFive.consensusAddress = consensusAddress;
+        responseSix.consensusAddress = consensusAddress;
+        responseSeven.consensusAddress = consensusAddress;
+        responseEight.consensusAddress = consensusAddress;
+        responseNine.consensusAddress = consensusAddress;
 
         responseOne = await createLoanResponseSig(web3, nodeOne, responseOne, requestHash)
         responseTwo = await createLoanResponseSig(web3, nodeTwo, responseTwo, requestHash)
@@ -124,7 +138,6 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
                     from: loansContract
                 }
             );
-
             assert(parseInt(result) <= expectedMaxGas);
         })
     })
