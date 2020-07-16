@@ -21,11 +21,11 @@ import "../util/ZeroCollateralCommon.sol";
 import "../util/NumbersList.sol";
 
 // Contracts
-import "@openzeppelin/contracts/access/roles/SignerRole.sol";
+import "./OwnerSignersRole.sol";
 import "../base/Base.sol";
 
 
-contract Consensus is Base, SignerRole {
+contract Consensus is Base, OwnerSignersRole {
     using SafeMath for uint256;
     using NumbersList for NumbersList.Values;
 
