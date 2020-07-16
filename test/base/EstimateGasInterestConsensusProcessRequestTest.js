@@ -31,8 +31,8 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
 
     let currentTime
 
-    const baseGasCost = 192160;
-    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 68000);
+    const baseGasCost = 200000;
+    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 70500);
 
     const interestRequest = createInterestRequest(lender, 23456, endTime, 45678)
 
