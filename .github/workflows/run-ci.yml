@@ -17,7 +17,7 @@ jobs:
       ADDRESS_COUNT_KEY: 5
       DEFAULT_ADDRESS_INDEX_KEY: 0
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
           node-version: '10.15.x'
@@ -33,6 +33,3 @@ jobs:
       - name: Executing Code Coverage Report
         run: |
           yarn test:coverage
-
-
-

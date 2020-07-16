@@ -5,14 +5,14 @@ const { t } = require('./utils/consts');
 const { erc20 } = require('./utils/events');
 
 // Smart contracts
-const SimpleToken = artifacts.require("./mock/util/SimpleToken.sol");
+const Token = artifacts.require("./mock/util/DAIMock.sol");
 
 contract('ERC20TransferTest', function (accounts) {
     const owner = accounts[0];
     let instance;
     
     beforeEach('Setup for each test', async () => {
-        instance = await SimpleToken.new({from: owner});
+        instance = await Token.new({from: owner});
         assert(instance);
         assert(instance.address);
     });
