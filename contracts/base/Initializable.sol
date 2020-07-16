@@ -30,12 +30,12 @@ contract Initializable {
     /** Modifiers */
 
     modifier isNotInitialized() {
-        require(!_isInitialized, "It is already initialized.");
+        require(!_isInitialized, "CONTRACT_ALREADY_INITIALIZED");
         _;
     }
 
     modifier isInitialized() {
-        require(_isInitialized, "It is not initialized.");
+        require(_isInitialized, "CONTRACT_NOT_INITIALIZED");
         _;
     }
 

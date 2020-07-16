@@ -56,7 +56,7 @@ contract LendingPool is Base, LendingPoolInterface {
         @dev It throws a require error if parameter is not equal to loans contract address.
      */
     modifier isLoan() {
-        loans.requireEqualTo(msg.sender, "Address is not Loans contract.");
+        loans.requireEqualTo(msg.sender, "ADDRESS_ISNT_LOANS_CONTRACT");
         _;
     }
 
@@ -81,10 +81,10 @@ contract LendingPool is Base, LendingPoolInterface {
         address cTokenAddress,
         address settingsAddress
     ) external isNotInitialized() {
-        zTokenAddress.requireNotEmpty("zToken address is required.");
-        lendingTokenAddress.requireNotEmpty("Token address is required.");
-        lendersAddress.requireNotEmpty("Lenders address is required.");
-        loansAddress.requireNotEmpty("Loans address is required.");
+        zTokenAddress.requireNotEmpty("ZTOKEN_ADDRESS_IS_REQUIRED");
+        lendingTokenAddress.requireNotEmpty("TOKEN_ADDRESS_IS_REQUIRED");
+        lendersAddress.requireNotEmpty("LENDERS_ADDRESS_IS_REQUIRED");
+        loansAddress.requireNotEmpty("LOANS_ADDRESS_IS_REQUIRED");
 
         _initialize(settingsAddress);
 
@@ -266,7 +266,7 @@ contract LendingPool is Base, LendingPoolInterface {
      */
     function tokenTransfer(address recipient, uint256 amount) private {
         bool transferResult = lendingToken.transfer(recipient, amount);
-        require(transferResult, "Transfer was not successful.");
+        require(transferResult, "LENDING_TRANSFER_FAILED");
     }
 
     /**
@@ -277,7 +277,7 @@ contract LendingPool is Base, LendingPoolInterface {
      */
     function tokenTransferFrom(address from, uint256 amount) private {
         bool transferFromResult = lendingToken.transferFrom(from, address(this), amount);
-        require(transferFromResult, "TransferFrom wasn't successful.");
+        require(transferFromResult, "LENDING_TRANSFER_FROM_FAILED");
     }
 
     /**
@@ -289,6 +289,6 @@ contract LendingPool is Base, LendingPoolInterface {
      */
     function zTokenMint(address to, uint256 amount) private {
         bool mintResult = zToken.mint(to, amount);
-        require(mintResult, "Mint was not successful.");
+        require(mintResult, "ZTOKEN_MINT_FAILED");
     }
 }

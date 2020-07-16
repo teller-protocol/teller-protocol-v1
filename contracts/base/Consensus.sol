@@ -40,7 +40,7 @@ contract Consensus is Base, SignerRole {
     address public caller;
 
     modifier isCaller() {
-        require(caller == msg.sender, "Address has no permissions.");
+        require(caller == msg.sender, "SENDER_HASNT_PERMISSIONS");
         _;
     }
 

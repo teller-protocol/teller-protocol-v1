@@ -41,12 +41,12 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
 
     withData({
         _1_cTokenSupported_basic: [accounts[1], loansInstance, true, true, 10, false, undefined, false],
-        _2_cTokenSupported_transferFromFail: [accounts[1], loansInstance, true, false, 10, false, "TransferFrom wasn't successful.", true],
-        _3_cTokenSupported_notLoansSender: [accounts[1], accounts[2], true, true, 71, false, 'Address is not Loans contract.', true],
+        _2_cTokenSupported_transferFromFail: [accounts[1], loansInstance, true, false, 10, false, "LENDING_TRANSFER_FROM_FAILED", true],
+        _3_cTokenSupported_notLoansSender: [accounts[1], accounts[2], true, true, 71, false, 'ADDRESS_ISNT_LOANS_CONTRACT', true],
         _4_cTokenSupported_compoundFail: [accounts[1], loansInstance, true, true, 10, true, 'COMPOUND_DEPOSIT_ERROR', true],
         _5_cTokenNotSupported_basic: [accounts[1], loansInstance, false, true, 10, false, undefined, false],
-        _6_cTokenNotSupported_transferFromFail: [accounts[1], loansInstance, false, false, 10, false, "TransferFrom wasn't successful.", true],
-        _7_cTokenNotSupported_notLoansSender: [accounts[1], accounts[2], false, true, 71, false, 'Address is not Loans contract.', true],
+        _6_cTokenNotSupported_transferFromFail: [accounts[1], loansInstance, false, false, 10, false, "LENDING_TRANSFER_FROM_FAILED", true],
+        _7_cTokenNotSupported_notLoansSender: [accounts[1], accounts[2], false, true, 71, false, 'ADDRESS_ISNT_LOANS_CONTRACT', true],
     }, function(
         liquidator,
         sender,

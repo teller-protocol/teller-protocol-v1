@@ -34,7 +34,7 @@ contract('LendingPoolWithdrawTest', function (accounts) {
 
     withData({
         _1_basic: [accounts[0], true, 10, false, undefined, false],
-        _2_transferFail: [accounts[1], false, 50, false, 'Transfer was not successful.', true],
+        _2_transferFail: [accounts[1], false, 50, false, 'LENDING_TRANSFER_FAILED', true],
         _3_compoundFail: [accounts[1], true, 50, true, 'COMPOUND_WITHDRAWAL_ERROR', true],
     }, function(
         recipient,

@@ -45,20 +45,20 @@ contract Lenders is Base, LendersInterface {
 
     /** Modifiers */
     modifier isZToken() {
-        require(_areAddressesEqual(zToken, msg.sender), "Address has no permissions.");
+        require(_areAddressesEqual(zToken, msg.sender), "SENDER_ISNT_ZTOKEN");
         _;
     }
 
     modifier isLendingPool() {
         require(
             _areAddressesEqual(lendingPool, msg.sender),
-            "Address has no permissions."
+            "SENDER_ISNT_LENDING_POOL"
         );
         _;
     }
 
     modifier isValid(address anAddress) {
-        anAddress.requireNotEmpty("Address is required.");
+        anAddress.requireNotEmpty("ADDRESS_IS_REQUIRED");
         _;
     }
 
