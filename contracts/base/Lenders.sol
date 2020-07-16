@@ -50,10 +50,7 @@ contract Lenders is Base, LendersInterface {
     }
 
     modifier isLendingPool() {
-        require(
-            _areAddressesEqual(lendingPool, msg.sender),
-            "SENDER_ISNT_LENDING_POOL"
-        );
+        require(_areAddressesEqual(lendingPool, msg.sender), "SENDER_ISNT_LENDING_POOL");
         _;
     }
 
