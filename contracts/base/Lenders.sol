@@ -88,6 +88,7 @@ contract Lenders is Base, LendersInterface {
         ZeroCollateralCommon.InterestResponse[] calldata responses
     ) external isInitialized() whenNotPaused() whenLendingPoolNotPaused(lendingPool) {
         require(
+            accruedInterest[request.lender].timeLastAccrued == 0 ||
             accruedInterest[request.lender].timeLastAccrued == request.startTime,
             "GAP_IN_INTEREST_ACCRUAL"
         );
