@@ -24,10 +24,6 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
     const endTime = 34567
     const lender = accounts[3]
 
-    const interestRequest = createInterestRequest(lender, 23456, endTime, 45678)
-
-    const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract))
-
     withData({
         _1_signer_already_submitted: [   // signer already submitted for this loan
             3600, 3, true, false, false, true, 1, 3600, 3600, 3600, true, 'SIGNER_ALREADY_SUBMITTED'
@@ -67,6 +63,9 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
             instance = await InterestConsensusMock.new()
             await instance.initialize(lendersContract, settings.address)
 
+            const interestRequest = createInterestRequest(lender, 23456, endTime, 45678, instance.address)
+            const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract))
+
             const currentTime = await getLatestTimestamp()
             const responseTime = mockExpiredResponse ?
                 currentTime - THIRTY_DAYS - ONE_DAY :   // thirty one days ago
@@ -87,7 +86,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
                 mockSumOfValues
             )
 
-            let interestResponse = createUnsignedInterestResponse(nodeAddress, responseTime, interest, signerNonce)
+            let interestResponse = createUnsignedInterestResponse(nodeAddress, responseTime, interest, signerNonce, instance.address)
             interestResponse = await createInterestResponseSig(web3, nodeAddress, interestResponse, requestHash)
 
             try {

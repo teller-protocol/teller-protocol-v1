@@ -20,8 +20,9 @@ function hashLoan(loan) {
 function hashInterestResponse(response, requestHash) {
   return ethUtil.keccak256(
     abi.rawEncode(
-      ['uint256', 'uint256', 'uint256', 'bytes32'],
+      ['address', 'uint256', 'uint256', 'uint256', 'bytes32'],
       [
+        response.consensusAddress,
         response.responseTime,
         response.interest,
         response.signature.signerNonce,
@@ -34,10 +35,11 @@ function hashInterestResponse(response, requestHash) {
 function hashInterestRequest(request, caller) {
   return ethUtil.keccak256(
     abi.rawEncode(
-      ['address', 'address', 'uint256', 'uint256', 'uint256'],
+      ['address', 'address', 'address', 'uint256', 'uint256', 'uint256'],
       [
         caller,
         request.lender,
+        request.consensusAddress,
         request.startTime,
         request.endTime,
         request.requestTime
@@ -50,8 +52,9 @@ function hashInterestRequest(request, caller) {
 function hashLoanTermsResponse(response, requestHash) {
   return ethUtil.keccak256(
     abi.rawEncode(
-      ['uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes32'],
+      ['address', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes32'],
       [
+        response.consensusAddress,
         response.responseTime,
         response.interestRate,
         response.collateralRatio,
@@ -66,11 +69,12 @@ function hashLoanTermsResponse(response, requestHash) {
 function hashLoanTermsRequest(request, caller) {
   return ethUtil.keccak256(
     abi.rawEncode(
-      ['address', 'address', 'address', 'uint256', 'uint256', 'uint256', 'uint256'],
+      ['address', 'address', 'address', 'address', 'uint256', 'uint256', 'uint256', 'uint256'],
       [
         caller,
         request.borrower,
         request.recipient,
+        request.consensusAddress,
         request.requestNonce,
         request.amount,
         request.duration,

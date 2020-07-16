@@ -21,90 +21,94 @@ const Settings = artifacts.require("./base/Settings.sol");
 contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
     let instance
     let settings
-
     const loansContract = accounts[1]
     const nodeOne = accounts[2]
     const nodeTwo = accounts[3]
     const nodeThree = accounts[4]
     const nodeFour = accounts[5]
+    const nodeSix = accounts[6]
     const borrower = accounts[9]
     const requestNonce = 142
 
     let currentTime
+    let loanRequest
+    let responseOne = createUnsignedLoanResponse(nodeOne, 0, 1350, 6834, BigNumber("90000000000000000000000").toFixed(), 0, NULL_ADDRESS)
+    let responseTwo = createUnsignedLoanResponse(nodeTwo, 0, 1376, 6666, BigNumber("91500000000000000000000").toFixed(), 0, NULL_ADDRESS)
+    let responseThree = createUnsignedLoanResponse(nodeThree, 0, 1376, 6666, BigNumber("91500000000000000000000").toFixed(), 4, NULL_ADDRESS)
+    let responseFour = createUnsignedLoanResponse(nodeFour, 0, 1398, 7040, BigNumber("92500000000000000000000").toFixed(), 0, NULL_ADDRESS)
+    let responseFive = createUnsignedLoanResponse(nodeThree, 0, 1400, 6840, BigNumber("94000000000000000000000").toFixed(), 0, NULL_ADDRESS)
+    let responseExpired = createUnsignedLoanResponse(nodeSix, 0, 1400, 6840, BigNumber("94000000000000000000000").toFixed(), 0, NULL_ADDRESS)
 
-    const loanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478)
-    const requestHash = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, loansContract))
-
-    let responseOne = createUnsignedLoanResponse(nodeOne, 0, 1350, 6834, BigNumber("90000000000000000000000").toFixed(), 0)
-
-    let responseTwo = createUnsignedLoanResponse(nodeTwo, 0, 1376, 6666, BigNumber("91500000000000000000000").toFixed(), 0)
-
-    let responseThree = createUnsignedLoanResponse(nodeThree, 0, 1376, 6666, BigNumber("91500000000000000000000").toFixed(), 4)
-
-    let responseFour = createUnsignedLoanResponse(nodeFour, 0, 1398, 7040, BigNumber("92500000000000000000000").toFixed(), 0)
-
-    let responseFive = createUnsignedLoanResponse(nodeThree, 0, 1400, 6840, BigNumber("94000000000000000000000").toFixed(), 0)
-
-    before('Setup the response times and signatures', async () => {
+    beforeEach('Setup the response times and signatures', async () => {
+        instance = await LoanTermsConsensus.new()
         currentTime = await getLatestTimestamp()
+
+        loanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478, instance.address)
+
+        responseOne.consensusAddress = instance.address;
+        responseTwo.consensusAddress = instance.address;
+        responseThree.consensusAddress = instance.address;
+        responseFour.consensusAddress = instance.address;
+        responseFive.consensusAddress = instance.address;
+        responseExpired.consensusAddress = instance.address;
 
         responseOne.responseTime = currentTime - (2 * ONE_DAY)
         responseTwo.responseTime = currentTime - (25 * ONE_DAY)
         responseThree.responseTime = currentTime - (29 * ONE_DAY)
         responseFour.responseTime = currentTime - ONE_DAY
         responseFive.responseTime = currentTime - (15 * ONE_DAY)
+        responseExpired.responseTime = currentTime - (31 * ONE_DAY)
+
+        const requestHash = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, loansContract))
 
         responseOne = await createLoanResponseSig(web3, nodeOne, responseOne, requestHash)
         responseTwo = await createLoanResponseSig(web3, nodeTwo, responseTwo, requestHash)
         responseThree = await createLoanResponseSig(web3, nodeThree, responseThree, requestHash)
         responseFour = await createLoanResponseSig(web3, nodeFour, responseFour, requestHash)
         responseFive = await createLoanResponseSig(web3, nodeThree, responseFive, requestHash)
+        responseExpired = await createLoanResponseSig(web3, nodeSix, responseExpired, requestHash)
     })
 
     withData({
         _1_insufficient_responses: [
-            3, 320, [responseOne, responseTwo], false, true, 'INSUFFICIENT_RESPONSES'
+            3, 320, [responseOne, responseTwo], true, 'INSUFFICIENT_RESPONSES'
         ],
         _2_one_response_successful: [
-            1, 320, [responseOne], false, false, undefined
+            1, 320, [responseOne], false, undefined
         ],
         _3_responses_just_over_tolerance: [  
-            4, 310, [responseOne, responseTwo, responseThree, responseFour], false, true, 'RESPONSES_TOO_VARIED'
+            4, 310, [responseOne, responseTwo, responseThree, responseFour], true, 'RESPONSES_TOO_VARIED'
         ],
         _4_responses_just_within_tolerance: [
-            4, 320, [responseOne, responseTwo, responseFour, responseFive], false, false, undefined
+            4, 320, [responseOne, responseTwo, responseFour, responseFive], false, undefined
         ],
         _5_zero_tolerance: [
-            1, 0, [responseTwo, responseThree], false, false, undefined
+            1, 0, [responseTwo, responseThree], false, undefined
         ],
         _6_two_responses_same_signer: [     // responseThree and five have the same signer
-            4, 320, [responseOne, responseThree, responseTwo, responseFive], false, true, 'SIGNER_ALREADY_SUBMITTED'
+            4, 320, [responseOne, responseThree, responseTwo, responseFive], true, 'SIGNER_ALREADY_SUBMITTED'
         ],
-        _7_expired_response: [    // same as test 4, but expiring one response
-            4, 320, [responseOne, responseTwo, responseFour, responseFive], true, true, 'RESPONSE_EXPIRED'
+        _7_expired_response: [
+            4, 320, [responseOne, responseTwo, responseExpired, responseFive], true, 'RESPONSE_EXPIRED'
         ],
     }, function(
         reqSubmissions,
         tolerance,
         responses,
-        responseExpired,
         mustFail,
         expectedErrorMessage,
     ) {    
-        it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
+        it(t('user', 'new', 'Should accept/not accept a nodes response', mustFail), async function() {
             // set up contract
             settings = await Settings.new(reqSubmissions, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500);
-            instance = await LoanTermsConsensus.new()
+            
             await instance.initialize(loansContract, settings.address)
 
             await instance.addSigner(nodeOne)
             await instance.addSigner(nodeTwo)
             await instance.addSigner(nodeThree)
             await instance.addSigner(nodeFour)
-
-            if (responseExpired) {
-                responses[2].responseTime = currentTime - (30 * ONE_DAY)
-            }
+            await instance.addSigner(nodeSix)
 
             try {
                 const result = await instance.processRequest(

@@ -29,13 +29,10 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
 
     const borrowerAddress = accounts[2]
 
-    const emptyRequest = createLoanRequest(NULL_ADDRESS, NULL_ADDRESS, 0, 0, 0, 0)
-
-    const responseOne = createUnsignedLoanResponse(accounts[3], 0, 1234, 6500, 10000, 3)
-
-    const responseTwo = createUnsignedLoanResponse(accounts[4], 0, 1500, 6000, 10000, 2)
-
-    const loanRequest = createLoanRequest(borrowerAddress, NULL_ADDRESS, 3, 12000, 4, 19)
+    let emptyRequest
+    let responseOne
+    let responseTwo
+    let loanRequest
     
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
@@ -49,6 +46,10 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
             loanTermsConsInstance.address,
             settingsInstance.address
         )
+        responseOne = createUnsignedLoanResponse(accounts[3], 0, 1234, 6500, 10000, 3, loanTermsConsInstance.address)
+        responseTwo = createUnsignedLoanResponse(accounts[4], 0, 1500, 6000, 10000, 2, loanTermsConsInstance.address)
+        loanRequest = createLoanRequest(borrowerAddress, NULL_ADDRESS, 3, 12000, 4, 19, loanTermsConsInstance.address)
+        emptyRequest = createLoanRequest(NULL_ADDRESS, NULL_ADDRESS, 0, 0, 0, 0, loanTermsConsInstance.address)
 
         loanTermsConsTemplate = await LoanTermsConsensus.new()
         processRequestEncoding = loanTermsConsTemplate

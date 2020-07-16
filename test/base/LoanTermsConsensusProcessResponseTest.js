@@ -26,10 +26,6 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
     const borrower = accounts[3]
     const requestNonce = 142
 
-    const loanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478)
-
-    const requestHash = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, loansContract))
-
     let mockInterest = {
         min: 1220,
         max: 1420,
@@ -89,6 +85,9 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
             instance = await LoanTermsConsensusMock.new()
             await instance.initialize(loansContract, settings.address)
 
+            const loanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478, instance.address)
+            const requestHash = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, loansContract))
+
             const currentTime = await getLatestTimestamp()
             const responseTime = responseExpired ?
                 currentTime - THIRTY_DAYS - ONE_DAY :   // thirty one days ago
@@ -128,7 +127,7 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
                 )
             }
 
-            let loanResponse = createUnsignedLoanResponse(nodeAddress, responseTime, interestRate, collateralRatio, maxLoanAmount.toFixed(), signerNonce)
+            let loanResponse = createUnsignedLoanResponse(nodeAddress, responseTime, interestRate, collateralRatio, maxLoanAmount.toFixed(), signerNonce, instance.address)
             loanResponse = await createLoanResponseSig(web3, nodeAddress, loanResponse, requestHash)
 
             try {

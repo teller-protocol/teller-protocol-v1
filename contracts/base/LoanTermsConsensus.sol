@@ -114,6 +114,7 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         return
             keccak256(
                 abi.encode(
+                    response.consensusAddress,
                     response.responseTime,
                     response.interestRate,
                     response.collateralRatio,
@@ -135,6 +136,7 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
                     caller,
                     request.borrower,
                     request.recipient,
+                    request.consensusAddress,
                     request.requestNonce,
                     request.amount,
                     request.duration,
