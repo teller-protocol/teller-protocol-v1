@@ -72,7 +72,11 @@ contract TokenCollateralLoansMock is TokenCollateralLoans {
         });
     }
 
-    function _requireExpectedBalance(uint256, uint256) internal view {
+    function _requireExpectedBalance(uint256, uint256, bool) internal view {
         require(requireExpectedBalance, "INV_BALANCE_AFTER_TRANSFER_FROM");
+    }
+
+    function externalRequireExpectedBalance(uint256 initialBalance, uint256 expectedAmount, bool isTransfer) external view {
+        super._requireExpectedBalance(initialBalance, expectedAmount, isTransfer);
     }
 }

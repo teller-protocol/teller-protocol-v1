@@ -23,6 +23,7 @@ library ZeroCollateralCommon {
 
     struct InterestRequest {
         address lender;
+        address consensusAddress;
         uint256 startTime;
         uint256 endTime;
         uint256 requestTime;
@@ -30,6 +31,7 @@ library ZeroCollateralCommon {
 
     struct InterestResponse {
         address signer;
+        address consensusAddress;
         uint256 responseTime;
         uint256 interest;
         Signature signature;
@@ -38,6 +40,7 @@ library ZeroCollateralCommon {
     struct LoanRequest {
         address payable borrower;
         address recipient;
+        address consensusAddress;
         uint256 requestNonce;
         uint256 amount;
         uint256 duration;
@@ -46,6 +49,7 @@ library ZeroCollateralCommon {
 
     struct LoanResponse {
         address signer;
+        address consensusAddress;
         uint256 responseTime;
         uint256 interestRate;
         uint256 collateralRatio;

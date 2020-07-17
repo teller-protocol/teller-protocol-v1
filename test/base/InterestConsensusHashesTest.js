@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, THIRTY_DAYS } = require('../utils/consts');
+const { t } = require('../utils/consts');
 const { hashInterestRequest, hashInterestResponse } = require('../utils/hashes');
 const { createInterestRequest, createUnsignedInterestResponse } = require('../utils/structs');
 const ethUtil = require('ethereumjs-util')
@@ -13,8 +13,6 @@ const InterestConsensusMock = artifacts.require("./mock/base/InterestConsensusMo
 const { NULL_ADDRESS } = require('../utils/consts');
 
 contract('InterestConsensus hashInterestRequest and hashReponse', function (accounts) {
-    const tolerance = 0
-    const submissions = 1
     const lendersAddress = accounts[3]
     let instance
 
@@ -34,7 +32,7 @@ contract('InterestConsensus hashInterestRequest and hashReponse', function (acco
       requestTime,
     ) {    
         it(t('user', 'new', 'Should correctly calculate the hash for a request', false), async function() {
-            const request = createInterestRequest(lender, startTime, endTime, requestTime)
+            const request = createInterestRequest(lender, startTime, endTime, requestTime, instance.address)
 
             let expectedResult = ethUtil.bufferToHex(
                 hashInterestRequest(
@@ -44,7 +42,7 @@ contract('InterestConsensus hashInterestRequest and hashReponse', function (acco
             )
 
             // Invocation
-            const result = await instance.externalHashRequest.call(request);
+            const result = await instance.externalHashRequest(request);
 
             assert.equal(result, expectedResult, 'Result should have been ' + expectedResult);
         });
@@ -60,9 +58,9 @@ contract('InterestConsensus hashInterestRequest and hashReponse', function (acco
         signerNonce,
     ) {    
         it(t('user', 'new', 'Should correctly calculate the hash for a response', false), async function() {
-            const request = createInterestRequest(accounts[3], 2345, 2345, 3456)
+            const request = createInterestRequest(accounts[3], 2345, 2345, 3456, instance.address)
             const requestHash = ethUtil.bufferToHex(hashInterestRequest(request, accounts[4]))
-            const response = createUnsignedInterestResponse(signer, responseTime, interest, signerNonce)
+            const response = createUnsignedInterestResponse(signer, responseTime, interest, signerNonce, instance.address)
 
             const expectedHash = ethUtil.bufferToHex(
                 hashInterestResponse(
@@ -72,10 +70,7 @@ contract('InterestConsensus hashInterestRequest and hashReponse', function (acco
             )
 
             // Invocation
-            const result = await instance.externalHashResponse.call(
-                response,
-                requestHash
-            );
+            const result = await instance.externalHashResponse(response, requestHash);
 
             assert.equal(result, expectedHash, 'Result should have been ' + expectedHash);
         });

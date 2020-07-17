@@ -89,6 +89,7 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         return
             keccak256(
                 abi.encode(
+                    response.consensusAddress,
                     response.responseTime,
                     response.interest,
                     response.signature.signerNonce,
@@ -107,6 +108,7 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
                 abi.encode(
                     caller,
                     request.lender,
+                    request.consensusAddress,
                     request.startTime,
                     request.endTime,
                     request.requestTime
