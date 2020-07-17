@@ -24,6 +24,8 @@ import "./LoansBase.sol";
 contract TokenCollateralLoans is LoansBase {
     /** Constants */
 
+    bool internal constant IS_TRANSFER = true;
+
     /** Properties */
 
     /** Modifiers */
@@ -147,20 +149,20 @@ contract TokenCollateralLoans is LoansBase {
         collateralTokenTransferFrom(msg.sender, amount);
     }
 
-    function _requireExpectedBalance(uint256 initialBalance, uint256 expectedAmount)
+    function _requireExpectedBalance(uint256 initialBalance, uint256 expectedAmount, bool isTransfer)
         internal
         view
     {
         uint256 finalBalance = ERC20Detailed(collateralToken).balanceOf(address(this));
-        if (finalBalance > initialBalance) {
-            require(
-                finalBalance.sub(initialBalance) == expectedAmount,
-                "INV_BALANCE_AFTER_TRANSFER_FROM"
-            );
-        } else {
+        if (isTransfer) {
             require(
                 initialBalance.sub(finalBalance) == expectedAmount,
                 "INV_BALANCE_AFTER_TRANSFER"
+            );
+        } else {
+            require(
+                finalBalance.sub(initialBalance) == expectedAmount,
+                "INV_BALANCE_AFTER_TRANSFER_FROM"
             );
         }
     }
@@ -178,7 +180,7 @@ contract TokenCollateralLoans is LoansBase {
         require(currentBalance >= amount, "NOT_ENOUGH_COLL_TOKENS_BALANCE");
         bool transferResult = ERC20Detailed(collateralToken).transfer(recipient, amount);
         require(transferResult, "COLL_TOKENS_TRANSFER_FAILED");
-        _requireExpectedBalance(currentBalance, amount);
+        _requireExpectedBalance(currentBalance, amount, IS_TRANSFER);
     }
 
     /**
@@ -202,6 +204,6 @@ contract TokenCollateralLoans is LoansBase {
             amount
         );
         require(transferFromResult, "COLL_TOKENS_FROM_TRANSFER_FAILED");
-        _requireExpectedBalance(initialBalance, amount);
+        _requireExpectedBalance(initialBalance, amount, !IS_TRANSFER);
     }
 }
