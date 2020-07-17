@@ -20,6 +20,14 @@ import "../../base/TokenCollateralLoans.sol";
 
 contract TokenCollateralLoansMock is TokenCollateralLoans {
 
+    bool public requireExpectedBalance = true;
+
+    function mockRequireExpectedBalance(bool aRequireExpectedBalance)
+        external
+    {
+        requireExpectedBalance = aRequireExpectedBalance;
+    }
+
     function setLoanIDCounter(uint256 newLoanIdCounter)
         external
     {
@@ -62,5 +70,9 @@ contract TokenCollateralLoansMock is TokenCollateralLoans {
             status: status,
             liquidated: liquidated
         });
+    }
+
+    function _requireExpectedBalance(uint256, uint256) internal view {
+        require(requireExpectedBalance, "INV_BALANCE_AFTER_TRANSFER_FROM");
     }
 }

@@ -15,22 +15,35 @@
 */
 pragma solidity 0.5.17;
 
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "../openzeppelin/SignedSafeMath.sol";
 import "@chainlink/contracts/src/v0.5/interfaces/AggregatorInterface.sol";
 import "../../interfaces/PairAggregatorInterface.sol";
 
 contract ChainlinkPairAggregator is PairAggregatorInterface {
+    using SafeMath for uint256;
+    using SignedSafeMath for int256;
 
     uint256 internal constant TEN = 10;
+    uint256 internal constant MAX_POWER_VALUE = 50;
 
     AggregatorInterface public aggregator;
     uint8 public responseDecimals;
     uint8 public collateralDecimals;
+    uint8 public pendingDecimals;
 
     constructor(address aggregatorAddress, uint8 responseDecimalsValue, uint8 collateralDecimalsValue) public {
         require(aggregatorAddress != address(0x0), "PROVIDE_AGGREGATOR_ADDRESS");
         aggregator = AggregatorInterface(aggregatorAddress);
         responseDecimals = responseDecimalsValue;
         collateralDecimals = collateralDecimalsValue;
+        
+        if( collateralDecimals >= responseDecimals) {
+            pendingDecimals = collateralDecimals - responseDecimals;
+        } else {
+            pendingDecimals = responseDecimals - collateralDecimals;
+        }
+        require(pendingDecimals <= MAX_POWER_VALUE, "MAX_PENDING_DECIMALS_EXCEEDED");
     }
 
     /** External Functions */
@@ -69,11 +82,9 @@ contract ChainlinkPairAggregator is PairAggregatorInterface {
 
     function _normalizeResponse(int256 value) internal view returns (int256) {
         if( collateralDecimals >= responseDecimals) {
-            uint8 pendingDecimals = collateralDecimals - responseDecimals;
-            return value * int256(TEN ** pendingDecimals);
+            return value.mul(int256(TEN ** pendingDecimals));
         } else {
-            uint8 pendingDecimals = responseDecimals - collateralDecimals;
-            return value / int256(TEN ** pendingDecimals);
+            return value.div(int256(TEN ** pendingDecimals));
         }
     }
 }

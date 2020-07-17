@@ -16,12 +16,12 @@
 pragma solidity 0.5.17;
 
 // Libraries
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../util/ZeroCollateralCommon.sol";
 import "../util/NumbersList.sol";
 
 // Contracts
-import "openzeppelin-solidity/contracts/access/roles/SignerRole.sol";
+import "@openzeppelin/contracts/access/roles/SignerRole.sol";
 import "../base/Base.sol";
 
 

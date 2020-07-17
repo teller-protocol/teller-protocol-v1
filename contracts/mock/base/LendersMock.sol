@@ -25,7 +25,7 @@ contract LendersMock is Lenders {
     
     /** State Variables */
 
-    bool public addressesEqual = true;
+    bool public addressesEqual;
 
     /** Constructor */
 
@@ -40,6 +40,10 @@ contract LendersMock is Lenders {
         accruedInterest[lender].timeLastAccrued = timeLastAccrued;
         accruedInterest[lender].totalAccruedInterest = totalAccruedInterest;
         accruedInterest[lender].totalNotWithdrawn = totalNotWithdrawn;
+    }
+
+    function mockAddressesEqual(bool addressesEqualValue) external {
+        addressesEqual = addressesEqualValue;
     }
 
     /** Internal Functions */

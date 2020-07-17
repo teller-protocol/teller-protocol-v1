@@ -21,7 +21,7 @@ pragma solidity 0.5.17;
 import "../util/ZeroCollateralCommon.sol";
 
 // Interfaces
-import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
 import "../interfaces/ZTokenInterface.sol";
@@ -169,9 +169,9 @@ contract LendingPool is Base, LendingPoolInterface {
     }
 
     /**
-        @notice Once a loan is liquidated, it transfers the amount in tokens to the liquidator address.
+        @notice Once a loan is liquidated, it transfers tokens from the liquidator to the lending pool.
         @param amount of tokens to liquidate.
-        @param liquidator address to receive the tokens.
+        @param liquidator address used to liquidate the loan.
      */
     function liquidationPayment(uint256 amount, address liquidator)
         external

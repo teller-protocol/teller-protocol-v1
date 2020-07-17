@@ -67,6 +67,9 @@ contract('SettingsSetSettingTest', function (accounts) {
         _1_basic: [0, 2, undefined, false],
         _2_zero: [0, 0, undefined, false],
         _3_new_value_required: [0, 1, 'NEW_VALUE_REQUIRED', true],
+        _4_basic_2: [0, 5500, undefined, false],
+        _5_max_exceeded: [0, 10001, 'MAX_TOLERANCE_EXCEEDED', true],
+        _6_max_limit: [0, 10000, undefined, false],
     }, function(senderIndex, newValue, expectedErrorMessage, mustFail) {
         it(t('user', 'setMaximumTolerance', 'Should (or not) be able to set a new maximum tolerance value.', mustFail), async function() {
             // Setup

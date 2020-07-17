@@ -1,6 +1,6 @@
 // Smart contracts
 const LoansInterface = artifacts.require("./base/EtherCollateralLoans.sol");
-const ERC20 = artifacts.require("openzeppelin-solidity/contracts/token/ERC20/IERC20.sol");
+const ERC20 = artifacts.require("@openzeppelin/contracts/token/ERC20/IERC20.sol");
 
 // Util classes
 const assert = require('assert');
