@@ -31,7 +31,7 @@ contract Settings is Pausable, SettingsInterface {
 
     /** Constants */
     /**
-        The maximum tolerance is a porcentage with 2 decimals.
+        The maximum tolerance is a percentage with 2 decimals.
         Examples:
             350 => 3.5%
             4000 => 40.00%
