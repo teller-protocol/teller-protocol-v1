@@ -149,10 +149,11 @@ contract TokenCollateralLoans is LoansBase {
         collateralTokenTransferFrom(msg.sender, amount);
     }
 
-    function _requireExpectedBalance(uint256 initialBalance, uint256 expectedAmount, bool isTransfer)
-        internal
-        view
-    {
+    function _requireExpectedBalance(
+        uint256 initialBalance,
+        uint256 expectedAmount,
+        bool isTransfer
+    ) internal view {
         uint256 finalBalance = ERC20Detailed(collateralToken).balanceOf(address(this));
         if (isTransfer) {
             require(
