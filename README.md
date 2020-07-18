@@ -1,19 +1,18 @@
-# Zero Collateral V1 Protocol
+# Teller V1 Protocol
 
-Zero Collateral V1 is a composition of smart contracts, which create the protocol. These contracts enable digital asset holders on the Ethereum blockchain to engage in decentralized, lending and borrowing activities, with down to zero collateral.
+Teller V1 is a composition of smart contracts, which create the protocol. These contracts enable digital asset holders on the Ethereum blockchain to engage in decentralized, lending and borrowing activities, with down to zero collateral.
 
-The protocol is currently in beta and deployed on the Ropsten testnet. We envision the protocol to evolve into a decentralized, community-run project, maintained by a Zero Collateral DAO (Decentralized Autonomous Organization) structure.
+The protocol is currently in beta and deployed on the Ropsten testnet. We envision the protocol to evolve into a decentralized, community-run project, maintained by a DAO (Decentralized Autonomous Organization) structure.
 
 To expand the possibilities of undercollateralized DeFi, we are exploring integrations with [Stratosphere Network](https://www.stratosphere.network/). Interoperability with the Stratosphere Blockchain will enable the project to tie directly into the benefits of major cloud resources while maintaining decentralization.
 
-If you would like to contribute, we encourage you to submit a PR directly or join the open-source team at opensource@fabrx.io.
+If you would like to contribute, we encourage you to submit a PR directly or join the open-source team at hello@teller.finance.
 
 ## Resources
 
-* Website → https://zerocollateral.com/
-* Twitter → https://twitter.com/zer0collateral
-* Blog → https://medium.com/fabrx-blockchain
-* Discord → https://discord.gg/z3AJ9F
+* Website → https://teller.finance/
+* Twitter → https://twitter.com/useteller
+* Discord → https://discord.com/invite/Ujnvh8d
 
 ## Prerequisites
 
