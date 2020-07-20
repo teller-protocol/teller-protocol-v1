@@ -9,6 +9,7 @@ const { createInterestRequest, createUnsignedInterestResponse } = require('../ut
 const { createInterestResponseSig, hashInterestRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
 const { interestConsensus } = require('../utils/events');
+const chains = require('../utils/chains');
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
@@ -29,18 +30,20 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
     let currentTime
     let interestRequest;
 
-    
-
     let responseOne = createUnsignedInterestResponse(nodeOne, 0, 35976, 0)
     let responseTwo = createUnsignedInterestResponse(nodeTwo, 0, 34732, 4)
     let responseThree = createUnsignedInterestResponse(nodeThree, 0, 34732, 4)
     let responseFour = createUnsignedInterestResponse(nodeFour, 0, 34000, 0)
     let responseFive = createUnsignedInterestResponse(nodeThree, 0, 34736, 1)
     let responseExpired = createUnsignedInterestResponse(nodeSix, 0, 34736, 1)
+    let responseInvalidChainId = createUnsignedInterestResponse(nodeThree, 0, 34736, 2)
 
     beforeEach('Setup the response times and signatures', async () => {
         instance = await InterestConsensus.new();
         currentTime = await getLatestTimestamp()
+
+        const chainId = chains.mainnet;
+        const invalidChainId = chains.ropsten;
 
         interestRequest = createInterestRequest(lender, 23456, endTime, 45678, instance.address)
 
@@ -50,6 +53,7 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
         responseFour.consensusAddress = instance.address;
         responseFive.consensusAddress = instance.address;
         responseExpired.consensusAddress = instance.address;
+        responseInvalidChainId.consensusAddress = instance.address;
 
         responseOne.responseTime = currentTime - (2 * ONE_DAY)
         responseTwo.responseTime = currentTime - (25 * ONE_DAY)
@@ -57,15 +61,17 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
         responseFour.responseTime = currentTime - ONE_DAY
         responseFive.responseTime = currentTime - (15 * ONE_DAY)
         responseExpired.responseTime = currentTime - (31 * ONE_DAY)
+        responseInvalidChainId.responseTime = currentTime - (15 * ONE_DAY)
 
-        const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract))
+        const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract, chainId))
 
-        responseOne = await createInterestResponseSig(web3, nodeOne, responseOne, requestHash)
-        responseTwo = await createInterestResponseSig(web3, nodeTwo, responseTwo, requestHash)
-        responseThree = await createInterestResponseSig(web3, nodeThree, responseThree, requestHash)
-        responseFour = await createInterestResponseSig(web3, nodeFour, responseFour, requestHash)
-        responseFive = await createInterestResponseSig(web3, nodeThree, responseFive, requestHash)
-        responseExpired = await createInterestResponseSig(web3, nodeSix, responseExpired, requestHash)
+        responseOne = await createInterestResponseSig(web3, nodeOne, responseOne, requestHash, chainId)
+        responseTwo = await createInterestResponseSig(web3, nodeTwo, responseTwo, requestHash, chainId)
+        responseThree = await createInterestResponseSig(web3, nodeThree, responseThree, requestHash, chainId)
+        responseFour = await createInterestResponseSig(web3, nodeFour, responseFour, requestHash, chainId)
+        responseFive = await createInterestResponseSig(web3, nodeThree, responseFive, requestHash, chainId)
+        responseExpired = await createInterestResponseSig(web3, nodeSix, responseExpired, requestHash, chainId)
+        responseInvalidChainId = await createInterestResponseSig(web3, nodeThree, responseInvalidChainId, requestHash, invalidChainId)
     })
 
     withData({
@@ -89,6 +95,9 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
         ],
         _7_expired_response: [
             4, 320, [responseOne, responseTwo, responseExpired, responseFive], true, 'RESPONSE_EXPIRED'
+        ],
+        _8_responses_invalid_response_chainid: [
+            4, 320, [responseOne, responseTwo, responseFour, responseInvalidChainId], true, 'SIGNATURE_INVALID'
         ],
     }, function(
         reqSubmissions,

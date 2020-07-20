@@ -20,6 +20,8 @@ import "../../base/InterestConsensus.sol";
 
 contract InterestConsensusMock is InterestConsensus {
 
+    uint256 private _mockChainId = 1; // Mainnet
+
     function mockInterestSubmissions(
         address lender,
         uint256 endTime,
@@ -53,6 +55,10 @@ contract InterestConsensusMock is InterestConsensus {
         signerNonceTaken[signer][signerNonce] = taken;
     }
 
+    function mockChainId(uint256 newChainId) external {
+        _mockChainId = newChainId;
+    }
+
     function externalProcessResponse(
         ZeroCollateralCommon.InterestRequest calldata request,
         ZeroCollateralCommon.InterestResponse calldata response,
@@ -64,7 +70,7 @@ contract InterestConsensusMock is InterestConsensus {
     function externalHashResponse(
         ZeroCollateralCommon.InterestResponse calldata response,
         bytes32 requestHash
-    ) external pure returns (bytes32) {
+    ) external view returns (bytes32) {
         return _hashResponse(response, requestHash);
     }
 
@@ -74,4 +80,7 @@ contract InterestConsensusMock is InterestConsensus {
         return _hashRequest(request);
     }
 
+    function _getChainId() internal view returns (uint256) {
+        return _mockChainId;
+    }
 }

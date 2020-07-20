@@ -11,6 +11,7 @@ const { createLoanResponseSig, hashLoanTermsRequest } = require('../utils/hashes
 const ethUtil = require('ethereumjs-util')
 
 const BigNumber = require('bignumber.js');
+const chains = require('../utils/chains');
 
 // Smart contracts
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
@@ -21,8 +22,8 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
     let instance
     let settings
 
-    const baseGasCost = 430000;
-    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 88000);
+    const baseGasCost = 430500;
+    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 89000);
 
     const loansContract = accounts[1]
     const nodeOne = accounts[1]
@@ -40,23 +41,24 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
     let currentTime
     let loanRequest;
 
-    let responseOne = createUnsignedLoanResponse(nodeOne, 0, 1400, 6765, BigNumber("91500000000000000000000").toFixed(), 0)
-    let responseTwo = createUnsignedLoanResponse(nodeTwo, 0, 1399, 6766, BigNumber("91500000000000000000000").toFixed(), 0)
-    let responseThree = createUnsignedLoanResponse(nodeThree, 0, 1397, 6764, BigNumber("91500000000000000000000").toFixed(), 4)
-    let responseFour = createUnsignedLoanResponse(nodeFour, 0, 1398, 6764, BigNumber("91500000000000000000000").toFixed(), 0)
-    let responseFive = createUnsignedLoanResponse(nodeFive, 0, 1400, 6766, BigNumber("91500000000000000000000").toFixed(), 0)
-    let responseSix = createUnsignedLoanResponse(nodeSix, 0, 1400, 6767, BigNumber("91500000000000000000000").toFixed(), 0)
-    let responseSeven = createUnsignedLoanResponse(nodeSeven, 0, 1400, 6767, BigNumber("91500000000000000000000").toFixed(), 0)
-    let responseEight = createUnsignedLoanResponse(nodeEight, 0, 1400, 6767, BigNumber("91500000000000000000000").toFixed(), 0)
-    let responseNine = createUnsignedLoanResponse(nodeNine, 0, 1400, 6767, BigNumber("91500000000000000000000").toFixed(), 0)
+    let responseOne = createUnsignedLoanResponse(nodeOne, 0, 1400, 6765, BigNumber("91500000000000000000000").toFixed(), 0, NULL_ADDRESS)
+    let responseTwo = createUnsignedLoanResponse(nodeTwo, 0, 1399, 6766, BigNumber("91500000000000000000000").toFixed(), 0, NULL_ADDRESS)
+    let responseThree = createUnsignedLoanResponse(nodeThree, 0, 1397, 6764, BigNumber("91500000000000000000000").toFixed(), 4, NULL_ADDRESS)
+    let responseFour = createUnsignedLoanResponse(nodeFour, 0, 1398, 6764, BigNumber("91500000000000000000000").toFixed(), 0, NULL_ADDRESS)
+    let responseFive = createUnsignedLoanResponse(nodeFive, 0, 1400, 6766, BigNumber("91500000000000000000000").toFixed(), 0, NULL_ADDRESS)
+    let responseSix = createUnsignedLoanResponse(nodeSix, 0, 1400, 6767, BigNumber("91500000000000000000000").toFixed(), 0, NULL_ADDRESS)
+    let responseSeven = createUnsignedLoanResponse(nodeSeven, 0, 1400, 6767, BigNumber("91500000000000000000000").toFixed(), 0, NULL_ADDRESS)
+    let responseEight = createUnsignedLoanResponse(nodeEight, 0, 1400, 6767, BigNumber("91500000000000000000000").toFixed(), 0, NULL_ADDRESS)
+    let responseNine = createUnsignedLoanResponse(nodeNine, 0, 1400, 6767, BigNumber("91500000000000000000000").toFixed(), 0, NULL_ADDRESS)
 
     before('Setup the response times and signatures', async () => {
         currentTime = await getLatestTimestamp()
 
         const consensusAddress = accounts[8];
+        const chainId = chains.mainnet;
 
         loanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478, consensusAddress)
-        const requestHash = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, loansContract))
+        const requestHash = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, loansContract, chainId))
 
         responseOne.responseTime = currentTime - (2 * ONE_DAY)
         responseTwo.responseTime = currentTime - (25 * ONE_DAY)
@@ -78,15 +80,15 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
         responseEight.consensusAddress = consensusAddress;
         responseNine.consensusAddress = consensusAddress;
 
-        responseOne = await createLoanResponseSig(web3, nodeOne, responseOne, requestHash)
-        responseTwo = await createLoanResponseSig(web3, nodeTwo, responseTwo, requestHash)
-        responseThree = await createLoanResponseSig(web3, nodeThree, responseThree, requestHash)
-        responseFour = await createLoanResponseSig(web3, nodeFour, responseFour, requestHash)
-        responseFive = await createLoanResponseSig(web3, nodeFive, responseFive, requestHash)
-        responseSix = await createLoanResponseSig(web3, nodeSix, responseSix, requestHash)
-        responseSeven = await createLoanResponseSig(web3, nodeSeven, responseSeven, requestHash)
-        responseEight = await createLoanResponseSig(web3, nodeEight, responseEight, requestHash)
-        responseNine = await createLoanResponseSig(web3, nodeNine, responseNine, requestHash)
+        responseOne = await createLoanResponseSig(web3, nodeOne, responseOne, requestHash, chainId)
+        responseTwo = await createLoanResponseSig(web3, nodeTwo, responseTwo, requestHash, chainId)
+        responseThree = await createLoanResponseSig(web3, nodeThree, responseThree, requestHash, chainId)
+        responseFour = await createLoanResponseSig(web3, nodeFour, responseFour, requestHash, chainId)
+        responseFive = await createLoanResponseSig(web3, nodeFive, responseFive, requestHash, chainId)
+        responseSix = await createLoanResponseSig(web3, nodeSix, responseSix, requestHash, chainId)
+        responseSeven = await createLoanResponseSig(web3, nodeSeven, responseSeven, requestHash, chainId)
+        responseEight = await createLoanResponseSig(web3, nodeEight, responseEight, requestHash, chainId)
+        responseNine = await createLoanResponseSig(web3, nodeNine, responseNine, requestHash, chainId)
     })
 
     withData({

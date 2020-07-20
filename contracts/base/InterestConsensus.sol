@@ -85,7 +85,7 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
     function _hashResponse(
         ZeroCollateralCommon.InterestResponse memory response,
         bytes32 requestHash
-    ) internal pure returns (bytes32) {
+    ) internal view returns (bytes32) {
         return
             keccak256(
                 abi.encode(
@@ -93,6 +93,7 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
                     response.responseTime,
                     response.interest,
                     response.signature.signerNonce,
+                    _getChainId(),
                     requestHash
                 )
             );
@@ -106,12 +107,13 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         return
             keccak256(
                 abi.encode(
-                    caller,
+                    callerAddress,
                     request.lender,
                     request.consensusAddress,
                     request.startTime,
                     request.endTime,
-                    request.requestTime
+                    request.requestTime,
+                    _getChainId()
                 )
             );
     }
