@@ -2,6 +2,7 @@ const _ = require('lodash');
 const assert = require('assert');
 const GetContracts = require('./GetContracts');
 const { minutesToSeconds } = require('../../test/utils/consts');
+const chains = require('../../test/utils/chains');
 
 class ProcessArgs {
     constructor(params = {}, defaultNetwork = 'test') {
@@ -28,6 +29,12 @@ ProcessArgs.prototype.network = function() {
 
 ProcessArgs.prototype.getCurrentConfig = function() {
     return this.appConf;
+}
+
+ProcessArgs.prototype.getChainId = function() {
+    const network = this.network();
+    const id = chains[network.toLowerCase()];
+    return id;
 }
 
 ProcessArgs.prototype.createGetContracts = function(artifacts) {

@@ -3,7 +3,7 @@ const assert = require('assert');
 const { createLoanRequest, createUnsignedLoanResponse, } = require('./structs');
 const { createLoanResponseSig, hashLoanTermsRequest } = require('./hashes');
 
-const createSignedLoanTermsResponse = async (web3, loanTermsRequest, loanTermsResponseInfo) => {
+const createSignedLoanTermsResponse = async (web3, loanTermsRequest, loanTermsResponseInfo, chainId) => {
     const { requestHash } = loanTermsRequest;
     const unsignedLoanTermsResponse = createUnsignedLoanResponse(
         loanTermsResponseInfo.signer,
@@ -18,14 +18,15 @@ const createSignedLoanTermsResponse = async (web3, loanTermsRequest, loanTermsRe
         web3,
         unsignedLoanTermsResponse.signer,
         unsignedLoanTermsResponse,
-        requestHash
+        requestHash,
+        chainId,
     );
 
     return signedResponse;
 };
 
 module.exports = {
-    createLoanTermsRequest: (loanRequestInfo) => {
+    createLoanTermsRequest: (loanRequestInfo, chainId) => {
         const loanTermsRequest = createLoanRequest(
             loanRequestInfo.borrower,
             loanRequestInfo.recipient,
@@ -34,7 +35,7 @@ module.exports = {
             loanRequestInfo.duration,
             loanRequestInfo.requestTime,
         );
-        let requestHash = hashLoanTermsRequest(loanTermsRequest, loanRequestInfo.caller);
+        let requestHash = hashLoanTermsRequest(loanTermsRequest, loanRequestInfo.caller, chainId);
         requestHash = ethUtil.bufferToHex(requestHash);
         return {
             loanTermsRequest,

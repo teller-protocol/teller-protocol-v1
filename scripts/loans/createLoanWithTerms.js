@@ -2,7 +2,7 @@
 
 // Util classes
 const assert = require('assert');
-const { zerocollateral, tokens } = require("../../scripts/utils/contracts");
+const { zerocollateral, tokens } = require("../utils/contracts");
 const { loans: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
 const Timer = require('../utils/Timer');
@@ -18,6 +18,7 @@ module.exports = async (callback) => {
         const timer = new Timer(web3);
         const accounts = new Accounts(web3);
         const appConf = processArgs.getCurrentConfig();
+        const chainId = processArgs.getChainId();
         const { toTxUrl } = appConf.networkConfig;
         const currentTimestamp = await timer.getCurrentTimestamp();
 
@@ -58,7 +59,7 @@ module.exports = async (callback) => {
             requestTime: Math.round(currentTimestamp / 1000),
             caller: loansInstance.address,
         };
-        const loanTermsRequest = createLoanTermsRequest(loanTermsRequestInfo);
+        const loanTermsRequest = createLoanTermsRequest(loanTermsRequestInfo, chainId);
 
         const maxLoanAmountResponse = toDecimals(amount, tokenDecimals.toString()).toFixed(0);
         const loanResponseInfo1 = {
@@ -69,7 +70,7 @@ module.exports = async (callback) => {
             maxLoanAmount: maxLoanAmountResponse,
             signerNonce: nonce
         };
-        const signedResponse1 = await createSignedLoanTermsResponse(web3, loanTermsRequest, loanResponseInfo1);
+        const signedResponse1 = await createSignedLoanTermsResponse(web3, loanTermsRequest, loanResponseInfo1, chainId);
         
         const loanResponseInfo2 = {
             signer: signer2,
@@ -79,7 +80,7 @@ module.exports = async (callback) => {
             maxLoanAmount: maxLoanAmountResponse,
             signerNonce: nonce
         };
-        const signedResponse2 = await createSignedLoanTermsResponse(web3, loanTermsRequest, loanResponseInfo2);
+        const signedResponse2 = await createSignedLoanTermsResponse(web3, loanTermsRequest, loanResponseInfo2, chainId);
 
         if(collateralTokenName !== 'ETH') {
             console.log(`Approving tokens...`);
@@ -91,7 +92,7 @@ module.exports = async (callback) => {
             );
             await collateralTokenInstance.approve(loansInstance.address, collateralAmountWithDecimals, { from: borrower });
         }
-        const result = await loansInstance.setLoanTerms(
+        const result = await loansInstance.createLoanWithTerms(
             loanTermsRequest.loanTermsRequest,
             [signedResponse1, signedResponse2],
             collateralAmountWithDecimals,
