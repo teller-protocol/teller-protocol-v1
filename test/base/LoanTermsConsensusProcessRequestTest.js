@@ -12,6 +12,7 @@ const ethUtil = require('ethereumjs-util')
 const { loanTermsConsensus } = require('../utils/events');
 
 const BigNumber = require('bignumber.js');
+const chains = require('../utils/chains');
 
 // Smart contracts
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
@@ -38,6 +39,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
     let responseFour = createUnsignedLoanResponse(nodeFour, 0, 1398, 7040, BigNumber("92500000000000000000000").toFixed(), 0, NULL_ADDRESS)
     let responseFive = createUnsignedLoanResponse(nodeThree, 0, 1400, 6840, BigNumber("94000000000000000000000").toFixed(), 0, NULL_ADDRESS)
     let responseExpired = createUnsignedLoanResponse(nodeSix, 0, 1400, 6840, BigNumber("94000000000000000000000").toFixed(), 0, NULL_ADDRESS)
+    let responseInvalidChainId = createUnsignedLoanResponse(nodeThree, 0, 1400, 6840, BigNumber("94000000000000000000000").toFixed(), 3, NULL_ADDRESS)
 
     beforeEach('Setup the response times and signatures', async () => {
         instance = await LoanTermsConsensus.new()
@@ -51,6 +53,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
         responseFour.consensusAddress = instance.address;
         responseFive.consensusAddress = instance.address;
         responseExpired.consensusAddress = instance.address;
+        responseInvalidChainId.consensusAddress = instance.address;
 
         responseOne.responseTime = currentTime - (2 * ONE_DAY)
         responseTwo.responseTime = currentTime - (25 * ONE_DAY)
@@ -58,15 +61,19 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
         responseFour.responseTime = currentTime - ONE_DAY
         responseFive.responseTime = currentTime - (15 * ONE_DAY)
         responseExpired.responseTime = currentTime - (31 * ONE_DAY)
+        responseInvalidChainId.responseTime = currentTime - (15 * ONE_DAY)
 
-        const requestHash = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, loansContract))
+        const chainId = chains.mainnet;
+        const invalidChainId = chains.ropsten;
+        const requestHash = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, loansContract, chainId))
 
-        responseOne = await createLoanResponseSig(web3, nodeOne, responseOne, requestHash)
-        responseTwo = await createLoanResponseSig(web3, nodeTwo, responseTwo, requestHash)
-        responseThree = await createLoanResponseSig(web3, nodeThree, responseThree, requestHash)
-        responseFour = await createLoanResponseSig(web3, nodeFour, responseFour, requestHash)
-        responseFive = await createLoanResponseSig(web3, nodeThree, responseFive, requestHash)
-        responseExpired = await createLoanResponseSig(web3, nodeSix, responseExpired, requestHash)
+        responseOne = await createLoanResponseSig(web3, nodeOne, responseOne, requestHash, chainId)
+        responseTwo = await createLoanResponseSig(web3, nodeTwo, responseTwo, requestHash, chainId)
+        responseThree = await createLoanResponseSig(web3, nodeThree, responseThree, requestHash, chainId)
+        responseFour = await createLoanResponseSig(web3, nodeFour, responseFour, requestHash, chainId)
+        responseFive = await createLoanResponseSig(web3, nodeThree, responseFive, requestHash, chainId)
+        responseExpired = await createLoanResponseSig(web3, nodeSix, responseExpired, requestHash, chainId)
+        responseInvalidChainId = await createLoanResponseSig(web3, nodeThree, responseInvalidChainId, requestHash, invalidChainId)
     })
 
     withData({
@@ -90,6 +97,9 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
         ],
         _7_expired_response: [
             4, 320, [responseOne, responseTwo, responseExpired, responseFive], true, 'RESPONSE_EXPIRED'
+        ],
+        _8_responses_invalid_sig_chainid: [
+            4, 320, [responseOne, responseTwo, responseFour, responseInvalidChainId], true, 'SIGNATURE_INVALID'
         ],
     }, function(
         reqSubmissions,

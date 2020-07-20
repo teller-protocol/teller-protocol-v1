@@ -3,11 +3,13 @@ const {
     t,
     getLatestTimestamp,
     ONE_DAY,
-    THIRTY_DAYS
+    THIRTY_DAYS,
+    NULL_ADDRESS
 } = require('../utils/consts');
 const { createInterestRequest, createUnsignedInterestResponse } = require('../utils/structs');
 const { createInterestResponseSig, hashInterestRequest } = require('../utils/hashes');
-const ethUtil = require('ethereumjs-util')
+const ethUtil = require('ethereumjs-util');
+const chains = require('../utils/chains');
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
@@ -35,23 +37,24 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
     const baseGasCost = 201094;
     const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 73500);
 
-    let responseOne = createUnsignedInterestResponse(nodeOne, 0, 34676, 1)
-    let responseTwo = createUnsignedInterestResponse(nodeTwo, 0, 34642, 1)
-    let responseThree = createUnsignedInterestResponse(nodeThree, 0, 34632, 1)
-    let responseFour = createUnsignedInterestResponse(nodeFour, 0, 34620, 1)
-    let responseFive = createUnsignedInterestResponse(nodeFive, 0, 34636, 1)
-    let responseSix = createUnsignedInterestResponse(nodeSix, 0, 34636, 1)
-    let responseSeven = createUnsignedInterestResponse(nodeSeven, 0, 34636, 1)
-    let responseEight = createUnsignedInterestResponse(nodeEight, 0, 34636, 1)
-    let responseNine = createUnsignedInterestResponse(nodeNine, 0, 34636, 1)
+    let responseOne = createUnsignedInterestResponse(nodeOne, 0, 34676, 1, NULL_ADDRESS)
+    let responseTwo = createUnsignedInterestResponse(nodeTwo, 0, 34642, 1, NULL_ADDRESS)
+    let responseThree = createUnsignedInterestResponse(nodeThree, 0, 34632, 1, NULL_ADDRESS)
+    let responseFour = createUnsignedInterestResponse(nodeFour, 0, 34620, 1, NULL_ADDRESS)
+    let responseFive = createUnsignedInterestResponse(nodeFive, 0, 34636, 1, NULL_ADDRESS)
+    let responseSix = createUnsignedInterestResponse(nodeSix, 0, 34636, 1, NULL_ADDRESS)
+    let responseSeven = createUnsignedInterestResponse(nodeSeven, 0, 34636, 1, NULL_ADDRESS)
+    let responseEight = createUnsignedInterestResponse(nodeEight, 0, 34636, 1, NULL_ADDRESS)
+    let responseNine = createUnsignedInterestResponse(nodeNine, 0, 34636, 1, NULL_ADDRESS)
 
     before('Setup the response times and signatures', async () => {
         currentTime = await getLatestTimestamp()
 
         const consensusAddress = accounts[8];
+        const chainId = chains.mainnet;
 
         interestRequest = createInterestRequest(lender, 23456, endTime, 45678, consensusAddress)
-        const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract))
+        const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract, chainId))
 
         responseOne.responseTime = currentTime - (2 * ONE_DAY)
         responseTwo.responseTime = currentTime - (25 * ONE_DAY)
@@ -73,15 +76,15 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
         responseEight.consensusAddress = consensusAddress;
         responseNine.consensusAddress = consensusAddress;
 
-        responseOne = await createInterestResponseSig(web3, nodeOne, responseOne, requestHash)
-        responseTwo = await createInterestResponseSig(web3, nodeTwo, responseTwo, requestHash)
-        responseThree = await createInterestResponseSig(web3, nodeThree, responseThree, requestHash)
-        responseFour = await createInterestResponseSig(web3, nodeFour, responseFour, requestHash)
-        responseFive = await createInterestResponseSig(web3, nodeFive, responseFive, requestHash)
-        responseSix = await createInterestResponseSig(web3, nodeSix, responseSix, requestHash)
-        responseSeven = await createInterestResponseSig(web3, nodeSeven, responseSeven, requestHash)
-        responseEight = await createInterestResponseSig(web3, nodeEight, responseEight, requestHash)
-        responseNine = await createInterestResponseSig(web3, nodeNine, responseNine, requestHash)
+        responseOne = await createInterestResponseSig(web3, nodeOne, responseOne, requestHash, chainId)
+        responseTwo = await createInterestResponseSig(web3, nodeTwo, responseTwo, requestHash, chainId)
+        responseThree = await createInterestResponseSig(web3, nodeThree, responseThree, requestHash, chainId)
+        responseFour = await createInterestResponseSig(web3, nodeFour, responseFour, requestHash, chainId)
+        responseFive = await createInterestResponseSig(web3, nodeFive, responseFive, requestHash, chainId)
+        responseSix = await createInterestResponseSig(web3, nodeSix, responseSix, requestHash, chainId)
+        responseSeven = await createInterestResponseSig(web3, nodeSeven, responseSeven, requestHash, chainId)
+        responseEight = await createInterestResponseSig(web3, nodeEight, responseEight, requestHash, chainId)
+        responseNine = await createInterestResponseSig(web3, nodeNine, responseNine, requestHash, chainId)
     })
 
     withData({

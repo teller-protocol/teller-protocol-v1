@@ -110,7 +110,7 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
     function _hashResponse(
         ZeroCollateralCommon.LoanResponse memory response,
         bytes32 requestHash
-    ) internal pure returns (bytes32) {
+    ) internal view returns (bytes32) {
         return
             keccak256(
                 abi.encode(
@@ -120,6 +120,7 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
                     response.collateralRatio,
                     response.maxLoanAmount,
                     response.signature.signerNonce,
+                    _getChainId(),
                     requestHash
                 )
             );
@@ -133,14 +134,15 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         return
             keccak256(
                 abi.encode(
-                    caller,
+                    callerAddress,
                     request.borrower,
                     request.recipient,
                     request.consensusAddress,
                     request.requestNonce,
                     request.amount,
                     request.duration,
-                    request.requestTime
+                    request.requestTime,
+                    _getChainId()
                 )
             );
     }

@@ -17,42 +17,44 @@ function hashLoan(loan) {
   )
 }
 
-function hashInterestResponse(response, requestHash) {
+function hashInterestResponse(response, requestHash, chainId) {
   return ethUtil.keccak256(
     abi.rawEncode(
-      ['address', 'uint256', 'uint256', 'uint256', 'bytes32'],
+      ['address', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes32'],
       [
         response.consensusAddress,
         response.responseTime,
         response.interest,
         response.signature.signerNonce,
+        chainId,
         requestHash,
       ]
     )
   )
 }
 
-function hashInterestRequest(request, caller) {
+function hashInterestRequest(request, caller, chainId) {
   return ethUtil.keccak256(
     abi.rawEncode(
-      ['address', 'address', 'address', 'uint256', 'uint256', 'uint256'],
+      ['address', 'address', 'address', 'uint256', 'uint256', 'uint256', 'uint256'],
       [
         caller,
         request.lender,
         request.consensusAddress,
         request.startTime,
         request.endTime,
-        request.requestTime
+        request.requestTime,
+        chainId,
       ]
     )
   )
 }
 
 
-function hashLoanTermsResponse(response, requestHash) {
+function hashLoanTermsResponse(response, requestHash, chainId) {
   return ethUtil.keccak256(
     abi.rawEncode(
-      ['address', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes32'],
+      ['address', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes32'],
       [
         response.consensusAddress,
         response.responseTime,
@@ -60,16 +62,17 @@ function hashLoanTermsResponse(response, requestHash) {
         response.collateralRatio,
         response.maxLoanAmount,
         response.signature.signerNonce,
+        chainId,
         requestHash
       ]
     )
   )
 }
 
-function hashLoanTermsRequest(request, caller) {
+function hashLoanTermsRequest(request, caller, chainId) {
   return ethUtil.keccak256(
     abi.rawEncode(
-      ['address', 'address', 'address', 'address', 'uint256', 'uint256', 'uint256', 'uint256'],
+      ['address', 'address', 'address', 'address', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256'],
       [
         caller,
         request.borrower,
@@ -78,7 +81,8 @@ function hashLoanTermsRequest(request, caller) {
         request.requestNonce,
         request.amount,
         request.duration,
-        request.requestTime
+        request.requestTime,
+        chainId,
       ]
     )
   )
@@ -94,8 +98,8 @@ async function signHash(web3, signer, hash) {
   }
 }
 
-async function createInterestResponseSig(web3, signer, interestResponse, requestHash) {
-  const responseHash = hashInterestResponse(interestResponse, requestHash)
+async function createInterestResponseSig(web3, signer, interestResponse, requestHash, chainId) {
+  const responseHash = hashInterestResponse(interestResponse, requestHash, chainId)
   const signature = await web3.eth.sign(ethUtil.bufferToHex(responseHash), signer);
   const { v, r, s } = ethUtil.fromRpcSig(signature)
   interestResponse.signature.v = String(v)
@@ -104,8 +108,8 @@ async function createInterestResponseSig(web3, signer, interestResponse, request
   return interestResponse
 }
 
-async function createLoanResponseSig(web3, signer, loanResponse, requestHash) {
-  const responseHash = hashLoanTermsResponse(loanResponse, requestHash)
+async function createLoanResponseSig(web3, signer, loanResponse, requestHash, chainId) {
+  const responseHash = hashLoanTermsResponse(loanResponse, requestHash, chainId)
   const signature = await web3.eth.sign(ethUtil.bufferToHex(responseHash), signer);
   const { v, r, s } = ethUtil.fromRpcSig(signature)
   loanResponse.signature.v = String(v)

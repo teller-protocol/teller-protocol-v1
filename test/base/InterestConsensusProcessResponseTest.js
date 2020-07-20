@@ -9,6 +9,7 @@ const { createInterestRequest, createUnsignedInterestResponse } = require('../ut
 const { createInterestResponseSig, hashInterestRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
 const { interestConsensus } = require('../utils/events');
+const chains = require('../utils/chains');
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
@@ -26,24 +27,28 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
 
     withData({
         _1_signer_already_submitted: [   // signer already submitted for this loan
-            3600, 3, true, false, false, true, 1, 3600, 3600, 3600, true, 'SIGNER_ALREADY_SUBMITTED'
+            chains.mainnet, 3600, 3, true, false, false, true, 1, 3600, 3600, 3600, true, 'SIGNER_ALREADY_SUBMITTED'
         ],
         _2_signer_nonce_taken: [         // signer nonce is taken already
-            3600, 3, true, false, true, false, 1, 3600, 3600, 3600, true, 'SIGNER_NONCE_TAKEN'
+            chains.mainnet, 3600, 3, true, false, true, false, 1, 3600, 3600, 3600, true, 'SIGNER_NONCE_TAKEN'
         ],
         _3_response_expired: [           // mock an expired response time
-            3600, 3, true, true, false, false, 1, 3600, 3600, 3600, true, 'RESPONSE_EXPIRED'
+            chains.mainnet, 3600, 3, true, true, false, false, 1, 3600, 3600, 3600, true, 'RESPONSE_EXPIRED'
         ],
         _4_signature_invalid: [           // mock the node not being authorized
-            3600, 3, false, false, false, false, 1, 3600, 3600, 3600, true, 'SIGNATURE_INVALID'
+            chains.mainnet, 3600, 3, false, false, false, false, 1, 3600, 3600, 3600, true, 'SIGNATURE_INVALID'
         ],
         _5_first_valid_submission: [      // mock the first valid submission
-            3600, 3, true, false, false, false, 0, 0, 0, 0, false, undefined
+            chains.mainnet, 3600, 3, true, false, false, false, 0, 0, 0, 0, false, undefined
         ],
         _6_later_valid_submission: [      // mock a later submission
-            4016, 3, true, false, false, false, 6, 4015, 3123, 21282, false, undefined
+            chains.mainnet, 4016, 3, true, false, false, false, 6, 4015, 3123, 21282, false, undefined
+        ],
+        _7_first_valid_submission_ropsten: [      // mock the first valid submission
+            chains.ropsten, 4610, 6, true, false, false, false, 0, 0, 0, 0, false, undefined
         ],
     }, function(
+        chainId,
         interest,
         signerNonce,
         nodeIsSignerRole,
@@ -64,7 +69,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
             await instance.initialize(lendersContract, settings.address)
 
             const interestRequest = createInterestRequest(lender, 23456, endTime, 45678, instance.address)
-            const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract))
+            const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract, chainId))
 
             const currentTime = await getLatestTimestamp()
             const responseTime = mockExpiredResponse ?
@@ -85,9 +90,10 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
                 mockMinValue,
                 mockSumOfValues
             )
+            await instance.mockChainId(chainId)
 
             let interestResponse = createUnsignedInterestResponse(nodeAddress, responseTime, interest, signerNonce, instance.address)
-            interestResponse = await createInterestResponseSig(web3, nodeAddress, interestResponse, requestHash)
+            interestResponse = await createInterestResponseSig(web3, nodeAddress, interestResponse, requestHash, chainId)
 
             try {
                 const result = await instance.externalProcessResponse(

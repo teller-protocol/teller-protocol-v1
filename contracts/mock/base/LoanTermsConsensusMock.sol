@@ -20,6 +20,8 @@ import "../../base/LoanTermsConsensus.sol";
 
 contract LoanTermsConsensusMock is LoanTermsConsensus {
 
+    uint256 private _mockChainId = 1; // Mainnet
+
     function mockInterestRateSubmissions(
         address borrower,
         uint256 requestNonce,
@@ -85,6 +87,10 @@ contract LoanTermsConsensusMock is LoanTermsConsensus {
         signerNonceTaken[signer][signerNonce] = taken;
     }
 
+    function mockChainId(uint256 newChainId) external {
+        _mockChainId = newChainId;
+    }
+
     function externalProcessResponse(
         ZeroCollateralCommon.LoanRequest calldata request,
         ZeroCollateralCommon.LoanResponse calldata response,
@@ -96,7 +102,7 @@ contract LoanTermsConsensusMock is LoanTermsConsensus {
     function externalHashResponse(
         ZeroCollateralCommon.LoanResponse calldata response,
         bytes32 requestHash
-    ) external pure returns (bytes32) {
+    ) external view returns (bytes32) {
         return _hashResponse(response, requestHash);
     }
 
@@ -106,4 +112,7 @@ contract LoanTermsConsensusMock is LoanTermsConsensus {
         return _hashRequest(request);
     }
 
+    function _getChainId() internal view returns (uint256) {
+        return _mockChainId;
+    }
 }

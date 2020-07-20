@@ -37,22 +37,22 @@ contract Consensus is Base, OwnerSignersRole {
     mapping(address => mapping(uint256 => bool)) public signerNonceTaken;
 
     // the address with permissions to submit a request for processing
-    address public caller;
+    address public callerAddress;
 
     modifier isCaller() {
-        require(caller == msg.sender, "Address has no permissions.");
+        require(callerAddress == msg.sender, "Address has no permissions.");
         _;
     }
 
     function initialize(
-        address callerAddress, // loans for LoanTermsConsensus, lenders for InterestConsensus
-        address settingAddress
+        address aCallerAddress, // loans for LoanTermsConsensus, lenders for InterestConsensus
+        address aSettingAddress
     ) public isNotInitialized() {
-        callerAddress.requireNotEmpty("MUST_PROVIDE_LENDER_INFO");
+        aCallerAddress.requireNotEmpty("MUST_PROVIDE_LENDER_INFO");
 
-        _initialize(settingAddress);
+        _initialize(aSettingAddress);
 
-        caller = callerAddress;
+        callerAddress = aCallerAddress;
     }
 
     function _signatureValid(
@@ -110,5 +110,14 @@ contract Consensus is Base, OwnerSignersRole {
 
         require(_signatureValid(signature, responseHash, signer), "SIGNATURE_INVALID");
         signerNonceTaken[signer][signature.signerNonce] = true;
+    }
+
+    function _getChainId() internal view returns (uint256) {
+        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
+        uint256 id;
+        assembly {
+            id := chainid()
+        }
+        return id;
     }
 }
