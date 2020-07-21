@@ -1,12 +1,12 @@
 pragma solidity 0.5.17;
 
+
 /**
     @notice This interface defines the functions to work with Oracle feeds.
 
     @author develop@teller.finance
  */
 interface PairAggregatorInterface {
-
     /**
         @notice Gets the current answer from the aggregator.
         @return the latest answer.
