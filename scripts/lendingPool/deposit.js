@@ -8,6 +8,7 @@ const BigNumber = require('bignumber.js');
 const assert = require('assert');
 const ProcessArgs = require('../utils/ProcessArgs');
 const Accounts = require('../utils/Accounts');
+const { COLL_TOKEN_NAME, TOKEN_NAME, SENDER_INDEX, AMOUNT } = require("../utils/cli/names");
 const processArgs = new ProcessArgs(readParams.deposit().argv);
 
 module.exports = async (callback) => {
@@ -18,10 +19,10 @@ module.exports = async (callback) => {
         
         const { toTxUrl } = appConf.networkConfig;
 
-        const collateralTokenName = processArgs.getValue('collTokenName');
-        const tokenName = processArgs.getValue('tokenName');
-        const senderIndex = processArgs.getValue('senderIndex');
-        const depositAmount = processArgs.getValue('amount');
+        const collateralTokenName = processArgs.getValue(COLL_TOKEN_NAME.name);
+        const tokenName = processArgs.getValue(TOKEN_NAME.name);
+        const senderIndex = processArgs.getValue(SENDER_INDEX.name);
+        const depositAmount = processArgs.getValue(AMOUNT.name);
 
         const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.custom(collateralTokenName).lendingPool(tokenName));
         const tokenInstance = await getContracts.getDeployed(tokens.get(tokenName));

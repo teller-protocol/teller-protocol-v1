@@ -31,9 +31,10 @@ contract CERC20Mock is ERC20Mock {
         underlying;
         redeemTokens;
         _mockChange();
-        return 1;
+        return NO_ERROR;
     }
 
+    // https://compound.finance/docs/ctokens#redeem-underlying
     function redeemUnderlying(uint256 redeemAmount) external returns (uint256) {
         uint256 tokenAmount = _getTokensAmount(redeemAmount);
         require(
@@ -47,14 +48,14 @@ contract CERC20Mock is ERC20Mock {
         underlying;
         borrowAmount;
         _mockChange();
-        return 1;
+        return NO_ERROR;
     }
 
     function repayBorrow(uint256 repayAmount) external returns (uint256) {
         underlying;
         repayAmount;
         _mockChange();
-        return 1;
+        return NO_ERROR;
     }
 
     function repayBorrowBehalf(address borrower, uint256 repayAmount)
@@ -64,7 +65,7 @@ contract CERC20Mock is ERC20Mock {
             borrower;
             repayAmount;
             _mockChange();
-            return 1;
+            return NO_ERROR;
         }
 
     function liquidateBorrow(address borrower, uint repayAmount, address cTokenCollateral) external returns (uint) {
@@ -73,7 +74,7 @@ contract CERC20Mock is ERC20Mock {
         repayAmount;
         cTokenCollateral;
         _mockChange();
-        return 1;
+        return NO_ERROR;
     }
 
     /*** Admin Functions ***/
@@ -82,18 +83,31 @@ contract CERC20Mock is ERC20Mock {
         underlying;
         addAmount;
         _mockChange();
-        return 1;
+        return NO_ERROR;
     }
 
     function _getCTokensAmount(uint256 tokenAmount) internal view returns (uint256) {
-        return multiplier * tokenAmount;
+        return _exchangeRateCurrent() * tokenAmount;
     }
 
     function _getTokensAmount(uint256 cTokenAmount) internal view returns (uint256) {
-        return cTokenAmount / multiplier;
+        uint256 exchangeRateCurrent = _exchangeRateCurrent();
+        return exchangeRateCurrent == 0 ? 0 : cTokenAmount / exchangeRateCurrent;
     }
 
     function _mockChange() internal {
         
+    }
+
+    function exchangeRateCurrent() external view returns (uint256) {
+        return _exchangeRateCurrent();
+    }
+
+    function _exchangeRateCurrent() internal view returns (uint256) {
+        return block.number == 0 ? 0 : block.number / multiplier;
+    }
+
+    function balanceOfUnderlying(address account) external view returns (uint256) {
+        return balanceOf(account);
     }
 }

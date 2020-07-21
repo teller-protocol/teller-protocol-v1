@@ -2,6 +2,7 @@ const _ = require('lodash');
 const assert = require('assert');
 const GetContracts = require('./GetContracts');
 const { minutesToSeconds } = require('../../test/utils/consts');
+const chains = require('../../test/utils/chains');
 
 class ProcessArgs {
     constructor(params = {}, defaultNetwork = 'test') {
@@ -18,7 +19,7 @@ class ProcessArgs {
 ProcessArgs.prototype.getValue = function(paramName, defaultValue = undefined) {
     const value = this.params[paramName];
     const defaultValueLabel = defaultValue === undefined ? 'not-provided' : defaultValue;
-    console.log(`Getting value (cli param) (or default '${defaultValueLabel}') for '${paramName}': '${value}'`);
+    console.log(`Getting cli param for '${paramName}': '${value}' (default '${defaultValueLabel}')`);
     return value !== undefined ? value : defaultValue;
 }
 
@@ -30,6 +31,12 @@ ProcessArgs.prototype.getCurrentConfig = function() {
     return this.appConf;
 }
 
+ProcessArgs.prototype.getChainId = function() {
+    const network = this.network();
+    const id = chains[network.toLowerCase()];
+    return id;
+}
+
 ProcessArgs.prototype.createGetContracts = function(artifacts) {
     const appConf = this.getCurrentConfig();
     const getContracts = new GetContracts(artifacts, appConf.networkConfig);
@@ -39,7 +46,7 @@ ProcessArgs.prototype.createGetContracts = function(artifacts) {
 ProcessArgs.prototype.createInitializersConfig = function() {
     return {
         // Used to add signers in the LoanTermsConsensus contracts used for each token (or lending token).
-        tokenNames: this.getValue('tokenName'),
+        tokenNames: this.getValue('tokenNames'),
         // Used to set as min required (responses) submissions when a borrower asks to node validators to sign responses.
         requiredSubmissions: this.getValue('requiredSubmissions'),
         // Used to set as min time window (in seconds) between last time borrower deposited collateral and when the borrower takes out the loan.

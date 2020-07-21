@@ -1,16 +1,13 @@
 // Smart contracts
 
 // Util classes
-const { zerocollateral } = require("../../scripts/utils/contracts");
-const Accounts = require('../utils/Accounts');
+const { zerocollateral, tokens } = require("../../scripts/utils/contracts");
+const { loans: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
-const processArgs = new ProcessArgs();
-
-/** Process parameters: */
-const tokenName = 'USDC';
-const loanId = 1;
-const borrowerIndex = 1;
-const amount = '300000000';
+const Accounts = require('../utils/Accounts');
+const { toDecimals, DEFAULT_DECIMALS } = require('../../test/utils/consts');
+const { COLL_TOKEN_NAME, TOKEN_NAME, BORROWER_INDEX, LOAN_ID, AMOUNT } = require("../utils/cli/names");
+const processArgs = new ProcessArgs(readParams.withdrawCollateral().argv);
 
 module.exports = async (callback) => {
     try {
@@ -18,16 +15,35 @@ module.exports = async (callback) => {
         const appConf = processArgs.getCurrentConfig();
         const { toTxUrl } = appConf.networkConfig;
 
+        const collateralTokenName = processArgs.getValue(COLL_TOKEN_NAME.name);
+        const tokenName = processArgs.getValue(TOKEN_NAME.name);
+        const borrowerIndex = processArgs.getValue(BORROWER_INDEX.name);
+        const loanId = processArgs.getValue(LOAN_ID.name);
+        const collateralAmount = processArgs.getValue(AMOUNT.name);
+
         const getContracts = processArgs.createGetContracts(artifacts);
-        const loansInstance = await getContracts.getDeployed(zerocollateral.loans(tokenName));
+        const loansInstance = await getContracts.getDeployed(zerocollateral.custom(collateralTokenName).loans(tokenName));
+
+        let collateralTokenDecimals = DEFAULT_DECIMALS;
+        if (collateralTokenName !== 'ETH') {
+            const collateralTokenInstance = await getContracts.getDeployed(tokens.get(collateralTokenName));
+            collateralTokenDecimals = await collateralTokenInstance.decimals();
+        }
+        const collateralAmountWithDecimals = toDecimals(collateralAmount, collateralTokenDecimals.toString()).toFixed(0);
 
         const borrower = await accounts.getAt(borrowerIndex);
 
         console.log(`Loan ID:       ${loanId}`);
         console.log(`Borrower:      ${borrowerIndex} => ${borrower}`);
-        console.log(`Amount:        ${amount} WEI`);
+        console.log(`Collateral:    ${collateralAmount} => ${collateralAmountWithDecimals} ${collateralTokenName}`);
 
-        const result = await loansInstance.withdrawCollateral(amount, loanId, { from: borrower });
+        const result = await loansInstance.withdrawCollateral(
+            collateralAmountWithDecimals,
+            loanId,
+            {
+                from: borrower,
+            }
+        );
         console.log(toTxUrl(result));
 
         console.log('>>>> The script finished successfully. <<<<');

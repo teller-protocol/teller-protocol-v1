@@ -1,51 +1,41 @@
 // Smart contracts
-const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 
 // Util classes
-const assert = require('assert');
+const { loanTerms: readParams } = require("../utils/cli-builder");
+const { zerocollateral } = require("../utils/contracts");
+const Accounts = require('../utils/Accounts');
 const ProcessArgs = require('../utils/ProcessArgs');
-const processArgs = new ProcessArgs();
-
-/** Process parameters: */
-const loanTermsConsensusName = 'LoanTermsConsensus_zUSDC'; // LoanTermsConsensus_zDAI or LoanTermsConsensus_zUSDC
-const senderIndex = 0;
-const addressToAddFromIndex = 9;
-const addressToAddToIndex = 14;
+const { COLL_TOKEN_NAME, TOKEN_NAME, SENDER_INDEX, ADDRESSES } = require("../utils/cli/names");
+const processArgs = new ProcessArgs(readParams.addSigners().argv);
 
 module.exports = async (callback) => {
     try {
-        const network = processArgs.network();
-        console.log(`Script will be executed in network ${network}.`)
-        const appConf = require('../../config')(network);
-        const { zerocollateral, toTxUrl } = appConf.networkConfig;
+        const accounts = new Accounts(web3);
+        const collateralTokenName = processArgs.getValue(COLL_TOKEN_NAME.name);
+        const tokenName = processArgs.getValue(TOKEN_NAME.name);
+        const senderIndex = processArgs.getValue(SENDER_INDEX.name);
+        const addresses = processArgs.getValue(ADDRESSES.name);
+        const getContracts = processArgs.createGetContracts(artifacts);
+        const appConf = processArgs.getCurrentConfig();
+        const { toTxUrl } = appConf.networkConfig;
+        
+        const senderTxConfig = await accounts.getTxConfigAt(senderIndex);
 
-        const loanTermsConsensusAddress = zerocollateral[loanTermsConsensusName];
-        assert(loanTermsConsensusAddress, "LoanTermsConsensus address is undefined.");
+        const loanTermsConsensusInstance = await getContracts.getDeployed(
+            zerocollateral.custom(collateralTokenName).loanTermsConsensus(tokenName)
+        );
 
-        const accounts = await web3.eth.getAccounts();
-        assert(accounts, "Accounts must be defined.");
-        const sender = accounts[senderIndex];
-        assert(sender, "Sender must be defined.");
-        const addressToAddFrom = accounts[addressToAddFromIndex];
-        assert(addressToAddFrom, "AddressToAddFrom must be defined.");
-        const addressToAddTo = accounts[addressToAddToIndex];
-        assert(addressToAddTo, "AddressToAddTo must be defined.");
-        const txConfig = { from: sender };
-
-        const loanTermsConsensus = await LoanTermsConsensus.at(loanTermsConsensusAddress);
-
-        for(let currentIndex = addressToAddFromIndex; currentIndex < addressToAddToIndex; currentIndex++) {
-            const addressToAdd = accounts[currentIndex];
-            const isAlreadySigner = await loanTermsConsensus.isSigner(addressToAdd);
+        for (const address of addresses) {
+            const isAlreadySigner = await loanTermsConsensusInstance.isSigner(address);
 
             if (isAlreadySigner.toString() === 'false') {
-                const result = await loanTermsConsensus.addSigner(addressToAdd, txConfig);
+                const result = await loanTermsConsensusInstance.addSigner(address, senderTxConfig);
                 console.log(toTxUrl(result));
     
-                const isSigner = await loanTermsConsensus.isSigner(addressToAdd);
-                console.log(`Has ${addressToAdd} a signer role? ${isSigner.toString()}`);
+                const isSigner = await loanTermsConsensusInstance.isSigner(address);
+                console.log(`Has ${address} a signer role? ${isSigner.toString()}`);
             } else {
-                console.log(`AddressToAdd ${addressToAdd} is already signer in ${loanTermsConsensusName} / ${loanTermsConsensusAddress}`);
+                console.log(`Address ${address} is already signer in loan terms (${tokenName} / ${collateralTokenName})`);
             }
         }
         console.log('>>>> The script finished successfully. <<<<');
