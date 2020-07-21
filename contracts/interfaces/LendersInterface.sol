@@ -3,13 +3,13 @@ pragma experimental ABIEncoderV2;
 
 import "../util/ZeroCollateralCommon.sol";
 
+
 /**
     @notice This interface defines the functions for interactions between lenders and the interests.
 
     @author develop@teller.finance
  */
 interface LendersInterface {
-
     /**
         @notice It tracks the interest amount for a recipient/lender.
         @param recipient address.
