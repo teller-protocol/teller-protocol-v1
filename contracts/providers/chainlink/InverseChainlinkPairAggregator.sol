@@ -26,7 +26,7 @@ contract InverseChainlinkPairAggregator is ChainlinkPairAggregator {
 
     /**
         @notice It overrides the regular ChainlinkPairAggregator. It only inverses the response.
-        @param value to inverse.
+        @param response to inverse.
         @return a inversed value.
      */
     function _normalizeResponse(int256 response) internal view returns (int256) {
