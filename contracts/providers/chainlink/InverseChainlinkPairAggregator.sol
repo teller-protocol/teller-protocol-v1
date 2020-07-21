@@ -1,24 +1,20 @@
-/*
-    Copyright 2020 Fabrx Labs Inc.
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
 pragma solidity 0.5.17;
 
 import "./ChainlinkPairAggregator.sol";
 
+/**
+    @notice This pair aggregator is used to inverse the pair oracle feed.
+    @notice As chainlink doesn't have some price oracles, sometimes instead of getting an oracle for 1 lending token = x collateral tokens, we have to get one for 1 collateral token = x lending tokens. But we still want the price returned as 1 WHOLE lending token, in collateral UNITS.
+    @author develop@teller.finance
+ */
 contract InverseChainlinkPairAggregator is ChainlinkPairAggregator {
 
+    /**
+        @notice It creates a new InverseChainlinkPairAggregator instance.
+        @param aggregatorAddress to use in this Chainlink pair aggregator.
+        @param responseDecimalsValue the decimals included in the Chainlink response.
+        @param collateralDecimalsValue the decimals included in the collateral token.
+    */
     constructor(address aggregatorAddress, uint8 responseDecimalsValue, uint8 collateralDecimalsValue)
         public
         ChainlinkPairAggregator(aggregatorAddress, responseDecimalsValue, collateralDecimalsValue)
@@ -27,10 +23,21 @@ contract InverseChainlinkPairAggregator is ChainlinkPairAggregator {
     /** External Functions */
 
     /** Internal Functions */
+
+    /**
+        @notice It overrides the regular ChainlinkPairAggregator. It only inverses the response.
+        @param value to inverse.
+        @return a inversed value.
+     */
     function _normalizeResponse(int256 response) internal view returns (int256) {
         return _inverseValue(response);
     }
 
+    /**
+        @notice It inverses the value from the Chainlink.
+        @dev See more details in our Gitbook website.
+        @return an inversed value.
+     */
     function _inverseValue(int256 value) internal view returns (int256) {
         return (int256(TEN ** collateralDecimals) * int256(TEN ** responseDecimals)) / value;
     }
