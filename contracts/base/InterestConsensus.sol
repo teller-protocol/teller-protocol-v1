@@ -26,12 +26,30 @@ import "../interfaces/InterestConsensusInterface.sol";
 import "./Consensus.sol";
 
 
+/**
+    @notice This contract processes the node responses to get consensus in the lender interest.
+
+    @author develop@teller.finance
+ */
 contract InterestConsensus is Consensus, InterestConsensusInterface {
     using AddressLib for address;
+
+    /* State Variables */
 
     // mapping of (lender, endTime) to the aggregated node submissions for their request
     mapping(address => mapping(uint256 => NumbersList.Values)) public interestSubmissions;
 
+    /** Modifiers */
+
+    /* Constructor */
+
+    /* External Functions */
+    /**
+        @notice It processes all the node responses for a request in order to get a consensus value.
+        @param request the interest request sent by the lender.
+        @param responses all node responses to process.
+        @return the consensus interest.
+     */
     function processRequest(
         ZeroCollateralCommon.InterestRequest calldata request,
         ZeroCollateralCommon.InterestResponse[] calldata responses
@@ -56,6 +74,13 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         return interestAccrued;
     }
 
+    /** Internal Functions */
+
+    /**
+        @notice It processes a node response.
+        @param request the interest request sent by the lender.
+        @param response a node response.
+     */
     function _processResponse(
         ZeroCollateralCommon.InterestRequest memory request,
         ZeroCollateralCommon.InterestResponse memory response,
@@ -82,6 +107,12 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         );
     }
 
+    /**
+        @notice It creates a hash based on a node response and lender request.
+        @param response a node response.
+        @param requestHash a hash value that represents the lender request.
+        @return a hash value.
+     */
     function _hashResponse(
         ZeroCollateralCommon.InterestResponse memory response,
         bytes32 requestHash
@@ -99,6 +130,11 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
             );
     }
 
+    /**
+        @notice It creates a hash value based on the lender request.
+        @param request the interest request sent by the lender.
+        @return a hash value.
+     */
     function _hashRequest(ZeroCollateralCommon.InterestRequest memory request)
         internal
         view
