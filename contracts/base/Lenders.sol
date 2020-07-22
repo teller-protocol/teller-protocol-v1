@@ -1,18 +1,3 @@
-/*
-    Copyright 2020 Fabrx Labs Inc.
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
@@ -29,6 +14,11 @@ import "../interfaces/ZTokenInterface.sol";
 import "../interfaces/InterestConsensusInterface.sol";
 
 
+/**
+    @notice This contract interacts with the LendingPool contract to ensure token balances and interest owed is kept up to date. It tracks the interest for lenders.
+
+    @author develop@teller.finance
+ */
 contract Lenders is Base, LendersInterface {
     using AddressLib for address;
     using SafeMath for uint256;
@@ -44,11 +34,18 @@ contract Lenders is Base, LendersInterface {
     mapping(address => ZeroCollateralCommon.AccruedInterest) public accruedInterest;
 
     /** Modifiers */
+
+    /**
+        @notice It checks sender is the zToken address.
+     */
     modifier isZToken() {
         require(_areAddressesEqual(zToken, msg.sender), "Address has no permissions.");
         _;
     }
 
+    /**
+        @notice It checks sender is the lending pool address.
+     */
     modifier isLendingPool() {
         require(
             _areAddressesEqual(lendingPool, msg.sender),
@@ -57,6 +54,9 @@ contract Lenders is Base, LendersInterface {
         _;
     }
 
+    /**
+        @notice It checks an address is not empty.
+     */
     modifier isValid(address anAddress) {
         anAddress.requireNotEmpty("Address is required.");
         _;
@@ -66,6 +66,13 @@ contract Lenders is Base, LendersInterface {
 
     /** External Functions */
 
+    /**
+        @notice It initializes this contract instance.
+        @param zTokenAddress zToken contract address.
+        @param lendingPoolAddress lending pool contract address.
+        @param interestConsensusAddress interest consensus contract address.
+        @param settingAddress settings contract address.
+     */
     function initialize(
         address zTokenAddress,
         address lendingPoolAddress,
@@ -83,6 +90,11 @@ contract Lenders is Base, LendersInterface {
         interestConsensus = InterestConsensusInterface(interestConsensusAddress);
     }
 
+    /**
+        @notice It sets the accrued interest for a lender based on the node responses.
+        @param request interest request sent by the lender.
+        @param responses all node responses to get a consensus value for the accrued interest.
+     */
     function setAccruedInterest(
         ZeroCollateralCommon.InterestRequest calldata request,
         ZeroCollateralCommon.InterestResponse[] calldata responses
@@ -116,6 +128,12 @@ contract Lenders is Base, LendersInterface {
         );
     }
 
+    /**
+        @notice It tracks the interest amount for a recipient/lender.
+        @param recipient address.
+        @param amount to track.
+        @return the interest amount to withdraw.
+     */
     function withdrawInterest(address recipient, uint256 amount)
         external
         isLendingPool()
@@ -140,6 +158,12 @@ contract Lenders is Base, LendersInterface {
 
     /** Internal Functions */
 
+    /**
+        @notice It verifies if both param addresses are equal or not.
+        @param leftAddress address to compare.
+        @param rightAddress address to compare.
+        @return true if both addresses are equal. Otherwise it returns false.
+     */
     function _areAddressesEqual(address leftAddress, address rightAddress)
         internal
         view

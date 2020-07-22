@@ -1,18 +1,3 @@
-/*
-    Copyright 2020 Fabrx Labs Inc.
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
 pragma solidity 0.5.17;
 
 // Libraries
@@ -33,6 +18,8 @@ import "./Base.sol";
 
 /**
     @notice The LendingPool contract holds all of the tokens that lenders transfer into the protocol. It is the contract that lenders interact with to deposit and withdraw their tokens including interest. The LendingPool interacts with the Lenders contract to ensure token balances and interest owed is kept up to date.
+
+    @author develop@teller.finance
  */
 contract LendingPool is Base, LendingPoolInterface {
     using AddressLib for address;
@@ -99,6 +86,7 @@ contract LendingPool is Base, LendingPoolInterface {
     /**
         @notice It allows users to deposit tokens into the pool.
         @dev the user must call ERC20.approve function previously.
+        @dev If the cToken is available (not 0x0), it deposits the lending token amount into Compound directly.
         @param amount of tokens to deposit in the pool.
     */
     function deposit(uint256 amount)
@@ -122,6 +110,7 @@ contract LendingPool is Base, LendingPoolInterface {
 
     /**
         @notice It allows any zToken holder to burn their zToken tokens and withdraw their tokens.
+        @dev If the cToken is available (not 0x0), it withdraws the lending tokens from Compound before transferring the tokens to the holder.
         @param amount of tokens to withdraw.
      */
     function withdraw(uint256 amount)
@@ -195,6 +184,7 @@ contract LendingPool is Base, LendingPoolInterface {
         @param amount of tokens to transfer.
         @param borrower address which will receive the tokens.
         @dev This function only can be invoked by the LoansInterface implementation.
+        @dev It withdraws the lending tokens from Compound before transferring tokens to the borrower.
      */
     function createLoan(uint256 amount, address borrower)
         external
@@ -209,6 +199,11 @@ contract LendingPool is Base, LendingPoolInterface {
         tokenTransfer(borrower, amount);
     }
 
+    /**
+        @notice It allows the lenders to withdraw interest.
+        @param amount interest amount to withdraw.
+        @dev It withdraws lending tokens from Compound before transferring the tokens to the lender.
+     */
     function withdrawInterest(uint256 amount)
         external
         isInitialized()
@@ -231,6 +226,10 @@ contract LendingPool is Base, LendingPoolInterface {
 
     /** Internal functions */
 
+    /**
+        @notice It deposits the lending tokens into Compound if the cToken is available (not 0x0).
+        @param amount lending token amount to deposit.
+     */
     function depositToCompound(uint256 amount) internal {
         // approve the cToken contract to take lending tokens
         lendingToken.approve(address(cToken), amount);
@@ -240,6 +239,10 @@ contract LendingPool is Base, LendingPoolInterface {
         require(mintResult == 0, "COMPOUND_DEPOSIT_ERROR");
     }
 
+    /**
+        @notice It withdraws lending tokens from Compound if the cToken is available (not 0x0).
+        @param amount lending token amount to withdraw.
+     */
     function withdrawFromCompound(uint256 amount) internal {
         // this function withdraws 'amount' lending tokens from compound
         // another function exists to withdraw 'amount' cTokens of lending tokens
