@@ -1,18 +1,3 @@
-/*
-    Copyright 2020 Fabrx Labs Inc.
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
 pragma solidity 0.5.17;
 
 // Libraries
@@ -25,6 +10,12 @@ import "./OwnerSignersRole.sol";
 import "../base/Base.sol";
 
 
+/**
+    @notice This contract is used as a base for the consensus contracts.
+    @dev It contains some common internal functions and variables for the consensus contracts.
+
+    @author develop@teller.finance
+ */
 contract Consensus is Base, OwnerSignersRole {
     using SafeMath for uint256;
     using NumbersList for NumbersList.Values;
@@ -39,11 +30,20 @@ contract Consensus is Base, OwnerSignersRole {
     // the address with permissions to submit a request for processing
     address public callerAddress;
 
+    /**
+        @notice Checks whether sender is equal to the caller address.
+        @dev It throws a require error if sender is not equal to caller address.
+     */
     modifier isCaller() {
         require(callerAddress == msg.sender, "Address has no permissions.");
         _;
     }
 
+    /**
+        @notice It initializes this contract setting the parameters.
+        @param aCallerAddress the contract that will call it.
+        @param aSettingAddress the settings contract address.
+     */
     function initialize(
         address aCallerAddress, // loans for LoanTermsConsensus, lenders for InterestConsensus
         address aSettingAddress
@@ -55,6 +55,13 @@ contract Consensus is Base, OwnerSignersRole {
         callerAddress = aCallerAddress;
     }
 
+    /**
+        @notice It validates whether a signature is valid or not, verifying the signer and nonce.
+        @param signature signature to validate.
+        @param dataHash to use to recover the signer.
+        @param expectedSigner the expected signer address.
+        @return true if the expected signer is equal to the signer. Otherwise it returns false.
+     */
     function _signatureValid(
         ZeroCollateralCommon.Signature memory signature,
         bytes32 dataHash,
@@ -76,6 +83,11 @@ contract Consensus is Base, OwnerSignersRole {
         return (signer == expectedSigner);
     }
 
+    /**
+        @notice Gets the consensus value for a list of values (uint values).
+        @notice The values must be in a maximum tolerance range.
+        @return the consensus value.
+     */
     function _getConsensus(NumbersList.Values storage values)
         internal
         view
@@ -89,6 +101,15 @@ contract Consensus is Base, OwnerSignersRole {
         return values.getAverage();
     }
 
+    /**
+        @notice It validates a response
+        @param signer signer address.
+        @param user the user address.
+        @param requestIdentifier identifier for the request.
+        @param responseTime time (in seconds) for the response.
+        @param responseHash a hash value that represents the response.
+        @param signature the signature for the response.
+     */
     function _validateResponse(
         address signer,
         address user,
@@ -112,6 +133,10 @@ contract Consensus is Base, OwnerSignersRole {
         signerNonceTaken[signer][signature.signerNonce] = true;
     }
 
+    /**
+        @notice Gets the current chain id using the opcode 'chainid()'.
+        @return the current chain id.
+     */
     function _getChainId() internal view returns (uint256) {
         this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
         uint256 id;
