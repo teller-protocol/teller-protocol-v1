@@ -12,6 +12,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const Lenders = artifacts.require("./base/Lenders.sol");
 const LendingPool = artifacts.require("./base/LendingPool.sol");
 
+// TODO Which function is testing this test file Transfer or Repay?
 contract('LendingPoolRepayTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);

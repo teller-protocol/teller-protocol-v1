@@ -38,6 +38,8 @@ contract('LendingPoolWithdrawTest', function (accounts) {
         _1_basic: [accounts[0], true, 10, false, undefined, false, 1000],
         _2_transferFail: [accounts[1], false, 50, false, 'Transfer was not successful.', true, 1000],
         _3_compoundFail: [accounts[1], true, 50, true, 'COMPOUND_WITHDRAWAL_ERROR', true, 1000],
+        // TODO Please add new params before 'expectedErrorMessage'. 
+        // The last two params usually are for error handling (expectedErrorMessage, mustFail)
     }, function(
         recipient,
         transfer,

@@ -51,6 +51,8 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
         _2_notLoanSender: [accounts[1], accounts[4], true, 10, false, 'Address is not Loans contract.', true, 1000],
         _3_transferFail: [accounts[1], loansAddress, false, 10, false, 'Transfer was not successful.', true, 1000],
         _4_compoundFails: [accounts[1], loansAddress, true, 10, true, 'COMPOUND_WITHDRAWAL_ERROR', true, 1000]
+        // TODO Please add new params before 'expectedErrorMessage'. 
+        // The last two params usually are for error handling (expectedErrorMessage, mustFail)
     }, function(
         borrower,
         sender,
