@@ -2,7 +2,11 @@ pragma solidity 0.5.17;
 
 import "./NumbersList.sol";
 
-
+/**
+ * @dev Library of structs common across the Teller protocol
+ *
+ * @author develop@teller.finance
+ */
 library ZeroCollateralCommon {
     enum LoanStatus {NonExistent, TermsSet, Active, Closed}
 
@@ -14,6 +18,7 @@ library ZeroCollateralCommon {
         uint256 timeLastAccrued;
     }
 
+    // Represents a user signature
     struct Signature {
         uint256 signerNonce;
         uint8 v;
@@ -21,6 +26,7 @@ library ZeroCollateralCommon {
         bytes32 s;
     }
 
+    // Consensus request object for accruing interest
     struct InterestRequest {
         address lender;
         address consensusAddress;
@@ -29,6 +35,7 @@ library ZeroCollateralCommon {
         uint256 requestTime;
     }
 
+    // Consensus response object for accruing interest
     struct InterestResponse {
         address signer;
         address consensusAddress;
@@ -37,6 +44,7 @@ library ZeroCollateralCommon {
         Signature signature;
     }
 
+    // Borrower request object to take out a loan
     struct LoanRequest {
         address payable borrower;
         address recipient;
@@ -47,6 +55,7 @@ library ZeroCollateralCommon {
         uint256 requestTime;
     }
 
+    // Borrower response object to take out a loan
     struct LoanResponse {
         address signer;
         address consensusAddress;
@@ -57,12 +66,14 @@ library ZeroCollateralCommon {
         Signature signature;
     }
 
+    // Represents loan terms based on consensus values
     struct AccruedLoanTerms {
         NumbersList.Values interestRate;
         NumbersList.Values collateralRatio;
         NumbersList.Values maxLoanAmount;
     }
 
+    // Represents the terms of a loan based on the consensus of a LoanRequest
     struct LoanTerms {
         address payable borrower;
         address recipient;
