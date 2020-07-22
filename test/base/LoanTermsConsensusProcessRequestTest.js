@@ -15,7 +15,7 @@ const BigNumber = require('bignumber.js');
 const chains = require('../utils/chains');
 
 // Smart contracts
-const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
+const LoanTermsConsensus = artifacts.require("./mock/base/LoanTermsConsensusMock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 
 
@@ -78,32 +78,40 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
 
     withData({
         _1_insufficient_responses: [
-            3, 320, [responseOne, responseTwo], true, 'INSUFFICIENT_RESPONSES'
+            3, 320, undefined, undefined, [responseOne, responseTwo], true, 'INSUFFICIENT_RESPONSES'
         ],
         _2_one_response_successful: [
-            1, 320, [responseOne], false, undefined
+            1, 320, undefined, undefined, [responseOne], false, undefined
         ],
         _3_responses_just_over_tolerance: [  
-            4, 310, [responseOne, responseTwo, responseThree, responseFour], true, 'RESPONSES_TOO_VARIED'
+            4, 310, undefined, undefined, [responseOne, responseTwo, responseThree, responseFour], true, 'RESPONSES_TOO_VARIED'
         ],
         _4_responses_just_within_tolerance: [
-            4, 320, [responseOne, responseTwo, responseFour, responseFive], false, undefined
+            4, 320, undefined, undefined, [responseOne, responseTwo, responseFour, responseFive], false, undefined
         ],
         _5_zero_tolerance: [
-            1, 0, [responseTwo, responseThree], false, undefined
+            1, 0, undefined, undefined, [responseTwo, responseThree], false, undefined
         ],
         _6_two_responses_same_signer: [     // responseThree and five have the same signer
-            4, 320, [responseOne, responseThree, responseTwo, responseFive], true, 'SIGNER_ALREADY_SUBMITTED'
+            4, 320, undefined, undefined, [responseOne, responseThree, responseTwo, responseFive], true, 'SIGNER_ALREADY_SUBMITTED'
         ],
         _7_expired_response: [
-            4, 320, [responseOne, responseTwo, responseExpired, responseFive], true, 'RESPONSE_EXPIRED'
+            4, 320, undefined, undefined, [responseOne, responseTwo, responseFour, responseExpired], true, 'RESPONSE_EXPIRED'
         ],
-        _8_responses_invalid_sig_chainid: [
-            4, 320, [responseOne, responseTwo, responseFour, responseInvalidChainId], true, 'SIGNATURE_INVALID'
+        _8_signer_nonce_taken: [
+            3, 320, { nonce: 0, signer: nodeOne }, undefined, [responseFive, responseOne, responseTwo], true, 'SIGNER_NONCE_TAKEN'
+        ],
+        _9_responses_invalid_sig_chainid: [
+            4, 320, undefined, undefined, [responseOne, responseTwo, responseFour, responseInvalidChainId], true, 'SIGNATURE_INVALID'
+        ],
+        _10_borrower_nonce_taken: [
+            3, 360, undefined, { nonce: requestNonce, borrower: borrower }, [responseFive, responseOne, responseTwo], true, 'REQUEST_NONCE_TAKEN'
         ],
     }, function(
         reqSubmissions,
         tolerance,
+        signerNonceTaken,
+        requestNonceTaken,
         responses,
         mustFail,
         expectedErrorMessage,
@@ -119,6 +127,22 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
             await instance.addSigner(nodeThree)
             await instance.addSigner(nodeFour)
             await instance.addSigner(nodeSix)
+
+            if(signerNonceTaken !== undefined)  {
+                await instance.mockSignerNonce(
+                    signerNonceTaken.signer,
+                    signerNonceTaken.nonce,
+                    true
+                );
+            }
+
+            if(requestNonceTaken !== undefined)  {
+                await instance.mockRequestNonce(
+                    requestNonceTaken.borrower,
+                    requestNonceTaken.nonce,
+                    true
+                );
+            }
 
             try {
                 const result = await instance.processRequest(

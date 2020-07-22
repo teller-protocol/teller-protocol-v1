@@ -11,13 +11,14 @@ const Base = artifacts.require("./mock/base/BaseMock.sol");
 contract('BaseInitializeTest', function (accounts) {
 
     withData({
-        _1_basic: [false, undefined, false],
-        _2_notSettings: [true, 'SETTINGS_MUST_BE_PROVIDED', true],
-    }, function(emptySettingsAddress, expectedErrorMessage, mustFail) {
+        _1_valid: [99, undefined, false],
+        _2_settings_empty: [-1, 'SETTINGS_MUST_BE_PROVIDED', true],
+        _3_settings_not_contract: [1, 'SETTINGS_MUST_BE_A_CONTRACT', true],
+    }, function(settingsIndex, expectedErrorMessage, mustFail) {
         it(t('user', 'initialize', 'Should (or not) be able to initialize the new instance.', mustFail), async function() {
             // Setup
             const settingsInstance = await Mock.new();
-            const settingsAddress = emptySettingsAddress ? NULL_ADDRESS : settingsInstance.address;
+            const settingsAddress = settingsIndex === -1 ? NULL_ADDRESS : (settingsIndex === 99 ? settingsInstance.address: accounts[settingsIndex]);
             const instance = await Base.new();
 
             try {

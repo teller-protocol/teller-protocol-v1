@@ -7,6 +7,7 @@ const Accounts = require('../scripts/utils/Accounts');
 const Nonces = require('../scripts/utils/Nonces');
 const { printSeparatorLine } = require('../test/utils/consts');
 const executeInitializers = require('./initializers');
+const chains = require('../test/utils/chains');
 
 const processArgs = new ProcessArgs(readParams().argv);
 const tests = Object.keys(index).map( key => index[key]);
@@ -39,6 +40,7 @@ module.exports = async (callback) => {
             accounts,
             web3,
             nonces,
+            chainId: chains.localGanache,
         };
 
         await executeInitializers(

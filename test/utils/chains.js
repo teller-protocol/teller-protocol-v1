@@ -8,4 +8,5 @@ module.exports = {
     goerli: 5,
     kovan: 42,
     gethPrivate: 1337,
+    localGanache: 1,
 }

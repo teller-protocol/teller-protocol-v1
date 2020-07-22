@@ -30,7 +30,7 @@ contract TokenCollateralLoans is LoansBase {
 
     /** Modifiers */
     modifier noMsgValue() {
-        require(msg.value == 0);
+        require(msg.value == 0, "TOKEN_LOANS_VALUE_MUST_BE_ZERO");
         _;
     }
 
