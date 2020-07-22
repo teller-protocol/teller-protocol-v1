@@ -9,7 +9,6 @@ const {
 } = require('../utils/consts');
 const { loans } = require('../utils/events');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
-const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -20,7 +19,6 @@ const Settings = artifacts.require("./base/Settings.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 
 contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
-    const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
     let instance;
     let loanTermsConsInstance;
     let lendingPoolInstance;
@@ -71,11 +69,6 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
         msgValue,
     ) {    
         it(t('user', 'createLoanWithTerms', 'Should able to set loan terms.', false), async function() {
-            const lendingPoolTokenAddress = accounts[5];
-            const encodeLendingToken = lendingPoolInterfaceEncoder.encodeLendingToken();
-            await lendingPoolInstance.givenMethodReturnAddress(encodeLendingToken, lendingPoolTokenAddress);
-            await settingsInstance.setMaxLendingAmount(lendingPoolTokenAddress, loanRequest.amount);
-
             const interestRate = Math.floor((responseOne.interestRate + responseTwo.interestRate) / 2)
             const collateralRatio = Math.floor((responseOne.collateralRatio + responseTwo.collateralRatio) / 2)
             const maxLoanAmount = Math.floor((responseOne.maxLoanAmount + responseTwo.maxLoanAmount) / 2)

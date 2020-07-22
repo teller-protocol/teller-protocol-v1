@@ -1,31 +1,15 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t, NON_EXISTENT, ACTIVE, TERMS_SET, CLOSED } = require('../utils/consts');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
-
-// Mock contracts
-const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const LoansBaseModifiersMock = artifacts.require("./mock/base/LoansBaseModifiersMock.sol");
 
 contract('LoansBaseModifiersTest', function (accounts) {
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
-    let instance;
-    let settingsInstance;
+    let instance
     
     beforeEach('Setup for each test', async () => {
-        const lendingPoolInstance = await Mock.new();
-        const oracleInstance = await Mock.new();
-        const loanTermsConsInstance = await Mock.new();
-        settingsInstance = await Mock.new()
-        instance = await LoansBaseModifiersMock.new();
-        await instance.initialize(
-            oracleInstance.address,
-            lendingPoolInstance.address,
-            loanTermsConsInstance.address,
-            settingsInstance.address
-        )
+      instance = await LoansBaseModifiersMock.new(accounts[1], accounts[2], accounts[3], 5000);
     });
 
     withData({
@@ -111,36 +95,6 @@ contract('LoansBaseModifiersTest', function (accounts) {
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because loan is not active');
-                assert(result);
-            } catch (error) {
-                // Assertions
-                assert(mustFail);
-                assert(error);
-                assert.equal(error.reason, expectedErrorMessage);
-            }
-        });
-    });
-
-    withData({
-        _1_exceeds: [0, true, 'AMOUNT_EXCEEDS_MAX_AMOUNT', true],
-        _2_not_exceeds: [0, false, undefined, false],
-    }, function(
-        amount,
-        exceedsMaxLendingAmount,
-        expectedErrorMessage,
-        mustFail
-    ) {    
-        it(t('user', 'notExceedsMaxAmount', 'Should able (or not) to test whether amount exceeds the max amount or not.', mustFail), async function() {
-            // Setup
-            const encodeExceedsMaxLendingAmount = settingsInterfaceEncoder.encodeExceedsMaxLendingAmount();
-            await settingsInstance.givenMethodReturnBool(encodeExceedsMaxLendingAmount, exceedsMaxLendingAmount);
-
-            try {
-                // Invocation
-                const result = await instance.externalNotExceedsMaxAmount(amount);
-
-                // Assertions
-                assert(!mustFail, 'It should have failed because amount exceeds max');
                 assert(result);
             } catch (error) {
                 // Assertions

@@ -294,19 +294,5 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-        maxLendingAmountUpdated: tx => {
-            const name = 'MaxLendingAmountUpdated';
-            return {
-                name: name,
-                emitted: (sender, lendingToken, oldValue, newValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.lendingToken.toString(), lendingToken.toString());
-                    assert.equal(ev.oldValue.toString(), oldValue.toString());
-                    assert.equal(ev.newValue, newValue);
-
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
     }
 };
