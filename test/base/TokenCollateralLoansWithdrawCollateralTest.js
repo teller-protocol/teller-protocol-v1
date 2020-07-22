@@ -175,8 +175,6 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
                 const loanTotalOwed = loanPrincipalOwed + loanInterestOwed
                 const withdrawalAllowed = loanCollateral - Math.floor((Math.floor((loanTotalOwed * loanCollateralRatio) / 10000) * oraclePrice) / (10 ** tokenDecimals))
                 const paidOut = Math.min(withdrawalAllowed, withdrawalAmount)
-                console.log(`paidOut            ${paidOut}`);
-                console.log(`withdrawalAllowed  ${withdrawalAllowed}`);
                 loans
                     .collateralWithdrawn(result)
                     .emitted(loanID, loanBorrower, paidOut);
