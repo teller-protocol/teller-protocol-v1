@@ -1,8 +1,12 @@
 const assert = require('assert');
 const DeployerApp = require('./utils/DeployerApp');
 const PoolDeployer = require('./utils/PoolDeployer');
+const { toDecimals, NULL_ADDRESS, DEFAULT_DECIMALS } = require('../test/utils/consts');
+const { DUMMY_ADDRESS } = require('../config/consts');
+
 
 // Official Smart Contracts
+const ERC20 = artifacts.require("openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol");
 const ZDAI = artifacts.require("./base/ZDAI.sol");
 const ZUSDC = artifacts.require("./base/ZUSDC.sol");
 const Settings = artifacts.require("./base/Settings.sol");
@@ -34,7 +38,7 @@ module.exports = async function(deployer, network, accounts) {
   const deployerAccountIndex = env.getDefaultAddressIndex().getOrDefault();
   const deployerAccount = accounts[deployerAccountIndex];
   console.log(`Deployer account index is ${deployerAccountIndex} => ${deployerAccount}`);
-  const { maxGasLimit, tokens, chainlink, compound } = networkConfig;
+  const { maxGasLimit, tokens, chainlink, compound, maxLendingAmounts } = networkConfig;
   assert(maxGasLimit, `Max gas limit for network ${network} is undefined.`);
 
   // Validations
@@ -57,6 +61,24 @@ module.exports = async function(deployer, network, accounts) {
     liquidateEthPrice,
     txConfig
   );
+  const settingsInstance = await Settings.deployed();
+  for (const tokenName of Object.keys(maxLendingAmounts)) {
+    const maxLendingAmountUnit = maxLendingAmounts[tokenName];
+    const tokenAddress = tokens[tokenName];
+    assert(tokenAddress, `MaxLendingAmount: Token address for token ${tokenName} is undefined.`);
+    let decimals = DEFAULT_DECIMALS;
+    if (tokenAddress !== DUMMY_ADDRESS) {
+      const tokenInstance = await ERC20.at(tokenAddress);
+      decimals = await tokenInstance.decimals();
+    }
+    const maxLendingAmountWithDecimals = toDecimals(maxLendingAmountUnit, decimals).toFixed(0);
+    const currentAmount = await settingsInstance.getMaxLendingAmount(tokenAddress);
+    if (currentAmount.toString() !==  maxLendingAmountWithDecimals) {
+      console.log(`Configuring MAX lending amount => ${tokenName} / ${tokenAddress} = ${maxLendingAmountUnit} = ${maxLendingAmountWithDecimals}`);
+      await settingsInstance.setMaxLendingAmount(tokenAddress, maxLendingAmountWithDecimals, txConfig);
+    }
+  }
+
   const aggregators = {};
   
   for (const chainlinkOraclePair of chainlinkOraclesRequired) {

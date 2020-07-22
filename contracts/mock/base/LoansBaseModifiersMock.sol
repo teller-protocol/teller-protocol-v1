@@ -33,4 +33,6 @@ contract LoansBaseModifiersMock is EtherCollateralLoans {
 
     function externalLoanActiveOrSet(uint256 loanID) loanActiveOrSet(loanID) external {}
 
+    function externalNotExceedsMaxAmount(uint256 amount) notExceedsMaxAmount(amount) external {}
+
 }

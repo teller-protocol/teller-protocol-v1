@@ -9,6 +9,13 @@ interface SettingsInterface {
         uint256 newValue
     );
 
+    event MaxLendingAmountUpdated(
+        address indexed sender,
+        address indexed lendingToken,
+        uint256 oldValue,
+        uint256 newValue
+    );
+
     event LendingPoolPaused(address indexed account, address indexed lendingPoolAddress);
 
     event LendingPoolUnpaused(
@@ -47,4 +54,17 @@ interface SettingsInterface {
     function pauseLendingPool(address lendingPoolAddress) external;
 
     function unpauseLendingPool(address lendingPoolAddress) external;
+
+    function setMaxLendingAmount(address lendingTokenAddress, uint256 newMaxLendingAmount)
+        external;
+
+    function getMaxLendingAmount(address lendingTokenAddress)
+        external
+        view
+        returns (uint256);
+
+    function exceedsMaxLendingAmount(address lendingTokenAddress, uint256 amount)
+        external
+        view
+        returns (bool);
 }
