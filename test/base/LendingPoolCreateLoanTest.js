@@ -21,7 +21,7 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
     let interestConsensusInstance;
     let cTokenInstance;
     let loansAddress = accounts[0];
-    
+
     beforeEach('Setup for each test', async () => {
         zTokenInstance = await Mock.new();
         daiInstance = await Mock.new();
@@ -47,10 +47,10 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [accounts[1], loansAddress, true, 10, false, undefined, false],
-        _2_notLoanSender: [accounts[1], accounts[4], true, 10, false, 'Address is not Loans contract.', true],
-        _3_transferFail: [accounts[1], loansAddress, false, 10, false, 'Transfer was not successful.', true],
-        _4_compoundFails: [accounts[1], loansAddress, true, 10, true, 'COMPOUND_WITHDRAWAL_ERROR', true]
+        _1_basic: [accounts[1], loansAddress, true, 10, false, undefined, false, 1000],
+        _2_notLoanSender: [accounts[1], accounts[4], true, 10, false, 'Address is not Loans contract.', true, 1000],
+        _3_transferFail: [accounts[1], loansAddress, false, 10, false, 'Transfer was not successful.', true, 1000],
+        _4_compoundFails: [accounts[1], loansAddress, true, 10, true, 'COMPOUND_WITHDRAWAL_ERROR', true, 1000]
     }, function(
         borrower,
         sender,
@@ -58,17 +58,23 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
         amountToTransfer,
         compoundFails,
         expectedErrorMessage,
-        mustFail
+        mustFail,
+        allowance
     ) {
         it(t('user', 'createLoan', 'Should able (or not) to create loan.', mustFail), async function() {
             // Setup
             const encodeTransfer = erc20InterfaceEncoder.encodeTransfer();
             await daiInstance.givenMethodReturnBool(encodeTransfer, transfer);
-            
+
             const redeemResponse = compoundFails ? 1 : 0
             const encodeRedeemUnderlying = compoundInterfaceEncoder.encodeRedeemUnderlying();
-            await cTokenInstance.givenMethodReturnUint(encodeRedeemUnderlying, redeemResponse)
-            
+            await cTokenInstance.givenMethodReturnUint(encodeRedeemUnderlying, redeemResponse);
+
+            const encodeAllowance = erc20InterfaceEncoder.encodeAllowance();
+            const encodeBalanceOf = erc20InterfaceEncoder.encodeBalanceOf();
+            await daiInstance.givenMethodReturnUint(encodeAllowance, allowance);
+            await daiInstance.givenMethodReturnUint(encodeBalanceOf, allowance);
+
             try {
                 // Invocation
                 const result = await instance.createLoan(amountToTransfer, borrower, { from: sender });

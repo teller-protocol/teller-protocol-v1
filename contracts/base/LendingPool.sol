@@ -260,6 +260,11 @@ contract LendingPool is Base, LendingPoolInterface {
         @dev It throws a require error if 'transfer' invocation fails.
      */
     function tokenTransfer(address recipient, uint256 amount) private {
+        uint256 allowance = lendingToken.balanceOf(address(this));
+        require(
+          allowance >= amount,
+          "INSUFFICIENT_BALANCE"
+        );
         bool transferResult = lendingToken.transfer(recipient, amount);
         require(transferResult, "Transfer was not successful.");
     }
@@ -271,6 +276,11 @@ contract LendingPool is Base, LendingPoolInterface {
         @dev It throws a require error if 'transferFrom' invocation fails.
      */
     function tokenTransferFrom(address from, uint256 amount) private {
+        uint256 allowance = lendingToken.allowance(address(this), from);
+        require(
+          allowance >= amount,
+          "INSUFFICIENT_TOKENS"
+        );
         bool transferFromResult = lendingToken.transferFrom(from, address(this), amount);
         require(transferFromResult, "TransferFrom wasn't successful.");
     }

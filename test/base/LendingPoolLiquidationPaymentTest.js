@@ -23,7 +23,7 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
     let cTokenInstance;
     let settingsInstance;
     let loansInstance = accounts[0];
-    
+
     beforeEach('Setup for each test', async () => {
         zTokenInstance = await Mock.new();
         daiInstance = await Mock.new();
@@ -55,7 +55,8 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
         amountToLiquidate,
         compoundFails,
         expectedErrorMessage,
-        mustFail
+        mustFail,
+        allowance
     ) {
         it(t('user', 'liquidationPayment', 'Should able (or not) to liquidate payment.', mustFail), async function() {
             // Setup
@@ -74,6 +75,9 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
             const redeemResponse = compoundFails ? 1 : 0
             const encodeMint = compoundInterfaceEncoder.encodeMint();
             await cTokenInstance.givenMethodReturnUint(encodeMint, redeemResponse)
+
+            const encodeAllowance = erc20InterfaceEncoder.encodeAllowance();
+            await daiInstance.givenMethodReturnUint(encodeAllowance, allowance);
 
             try {
                 // Invocation
