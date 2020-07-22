@@ -49,10 +49,10 @@ contract('LendingPoolRepayTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [accounts[1], loansAddress, true, 10, false, undefined, false, 1000],
-        _2_notLoan: [accounts[1], accounts[2], true, 10, false, 'Address is not Loans contract.', true, 1000],
-        _3_transferFail: [accounts[1], loansAddress, false, 200, false, "TransferFrom wasn't successful.", true, 1000],
-        _4_compoundFail: [accounts[1], loansAddress, true, 10, true, 'COMPOUND_DEPOSIT_ERROR', true, 1000],
+        _1_basic: [accounts[1], loansAddress, true, 10, false, undefined, false],
+        _2_notLoan: [accounts[1], accounts[2], true, 10, false, 'Address is not Loans contract.', true],
+        _3_transferFail: [accounts[1], loansAddress, false, 200, false, "TransferFrom wasn't successful.", true],
+        _4_compoundFail: [accounts[1], loansAddress, true, 10, true, 'COMPOUND_DEPOSIT_ERROR', true],
     }, function(
         borrower,
         sender,
@@ -60,20 +60,16 @@ contract('LendingPoolRepayTest', function (accounts) {
         amountToRepay,
         compoundFails,
         expectedErrorMessage,
-        mustFail,
-        allowance
+        mustFail
     ) {
-        it(t('user', 'repay', 'Should able (or not) to repay loan.', mustFail), async function() {
+        it(t('user', 'transfer', 'Should able (or not) to transfer.', mustFail), async function() {
             // Setup
             const encodeTransferFrom = erc20InterfaceEncoder.encodeTransferFrom();
             await daiInstance.givenMethodReturnBool(encodeTransferFrom, transferFrom);
 
             const mintResponse = compoundFails ? 1 : 0
             const encodeCompMint = compoundInterfaceEncoder.encodeMint();
-            await cTokenInstance.givenMethodReturnUint(encodeCompMint, mintResponse);
-
-            const encodeAllowance = erc20InterfaceEncoder.encodeAllowance();
-            await daiInstance.givenMethodReturnUint(encodeAllowance, allowance);
+            await cTokenInstance.givenMethodReturnUint(encodeCompMint, mintResponse)
 
             try {
                 // Invocation

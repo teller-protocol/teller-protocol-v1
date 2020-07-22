@@ -22,7 +22,7 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
     let interestConsensusInstance;
     let cTokenInstance;
     let loansInstance = accounts[0];
-    
+
     beforeEach('Setup for each test', async () => {
         zTokenInstance = await Mock.new();
         daiInstance = await Mock.new();
@@ -48,10 +48,10 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [accounts[1], loansInstance, true, 10, false, undefined, false],
-        _2_transferFromFail: [accounts[1], loansInstance, false, 10, false, "TransferFrom wasn't successful.", true],
-        _3_notLoansSender: [accounts[1], accounts[2], true, 71, false, 'Address is not Loans contract.', true],
-        _4_compoundFail: [accounts[1], loansInstance, true, 10, true, 'COMPOUND_DEPOSIT_ERROR', true]
+        _1_basic: [accounts[1], loansInstance, true, 10, false, undefined, false, 1000],
+        _2_transferFromFail: [accounts[1], loansInstance, false, 10, false, "TransferFrom wasn't successful.", true, 1000],
+        _3_notLoansSender: [accounts[1], accounts[2], true, 71, false, 'Address is not Loans contract.', true, 1000],
+        _4_compoundFail: [accounts[1], loansInstance, true, 10, true, 'COMPOUND_DEPOSIT_ERROR', true, 1000]
     }, function(
         liquidator,
         sender,
@@ -59,7 +59,8 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
         amountToLiquidate,
         compoundFails,
         expectedErrorMessage,
-        mustFail
+        mustFail,
+        allowance
     ) {
         it(t('user', 'liquidationPayment', 'Should able (or not) to liquidate payment.', mustFail), async function() {
             // Setup
@@ -69,6 +70,9 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
             const redeemResponse = compoundFails ? 1 : 0
             const encodeMint = compoundInterfaceEncoder.encodeMint();
             await cTokenInstance.givenMethodReturnUint(encodeMint, redeemResponse)
+
+            const encodeAllowance = erc20InterfaceEncoder.encodeAllowance();
+            await daiInstance.givenMethodReturnUint(encodeAllowance, allowance);
 
             try {
                 // Invocation

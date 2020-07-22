@@ -5,6 +5,7 @@ const { lendingPool } = require('../utils/events');
 const { initContracts } = require('../utils/contracts');
 const BurnableInterfaceEncoder = require('../utils/encoders/BurnableInterfaceEncoder');
 const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
+const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -18,6 +19,7 @@ const ZDai = artifacts.require("./base/ZDAI.sol");
 contract('LendingPoolWithdrawTest', function (accounts) {
     const burnableInterfaceEncoder = new BurnableInterfaceEncoder(web3);
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
+    const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     let instance;
     let zTokenInstance;
     let lendingTokenInstance;
@@ -25,7 +27,7 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     let consensusInstance;
     let cTokenInstance;
     let settingsInstance;
-    
+
     beforeEach('Setup for each test', async () => {
         loansInstance = await Mock.new();
         consensusInstance = await Mock.new();
@@ -35,16 +37,17 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [accounts[0], true, 10, false, undefined, false],
-        _2_transferFail: [accounts[1], false, 50, false, 'Transfer was not successful.', true],
-        _3_compoundFail: [accounts[1], true, 50, true, 'COMPOUND_WITHDRAWAL_ERROR', true],
+        _1_basic: [accounts[0], true, 10, false, undefined, false, 1000],
+        _2_transferFail: [accounts[1], false, 50, false, 'Transfer was not successful.', true, 1000],
+        _3_compoundFail: [accounts[1], true, 50, true, 'COMPOUND_WITHDRAWAL_ERROR', true, 1000],
     }, function(
         recipient,
         transfer,
         amountToWithdraw,
         compoundFails,
         expectedErrorMessage,
-        mustFail
+        mustFail,
+        balanceOf
     ) {
         it(t('user', 'withdraw', 'Should able (or not) to withdraw DAIs.', mustFail), async function() {
             // Setup
@@ -56,7 +59,10 @@ contract('LendingPoolWithdrawTest', function (accounts) {
 
             const redeemResponse = compoundFails ? 1 : 0
             const encodeRedeemUnderlying = compoundInterfaceEncoder.encodeRedeemUnderlying();
-            await cTokenInstance.givenMethodReturnUint(encodeRedeemUnderlying, redeemResponse)
+            await cTokenInstance.givenMethodReturnUint(encodeRedeemUnderlying, redeemResponse);
+
+            const encodeBalanceOf = erc20InterfaceEncoder.encodeBalanceOf();
+            await lendingTokenInstance.givenMethodReturnUint(encodeBalanceOf, balanceOf);
 
             try {
                 // Invocation
@@ -81,7 +87,13 @@ contract('LendingPoolWithdrawTest', function (accounts) {
         _1_basic: [accounts[0], 100, accounts[0], 10, undefined, false],
         _2_recipientNotEnoughZDaiBalance: [accounts[0], 99, accounts[0], 100, 'ERC20: burn amount exceeds balance', true],
         _3_recipientNotZDaiBalance: [accounts[0], 100, accounts[1], 10, 'ERC20: burn amount exceeds balance', true],
-    }, function(depositSender, depositAmount, recipient, amountToWithdraw, expectedErrorMessage, mustFail) {
+    }, function(
+        depositSender,
+        depositAmount,
+        recipient,
+        amountToWithdraw,
+        expectedErrorMessage,
+        mustFail) {
         it(t('user', 'withdraw', 'Should able (or not) to withdraw DAIs.', mustFail), async function() {
             // Setup
             zTokenInstance = await ZDai.new();
@@ -90,7 +102,7 @@ contract('LendingPoolWithdrawTest', function (accounts) {
             await initContracts(settingsInstance, cTokenInstance, instance, zTokenInstance, consensusInstance, lendingTokenInstance, loansInstance, Lenders);
             await lendingTokenInstance.approve(instance.address, depositAmount, { from: depositSender });
             await instance.deposit(depositAmount, { from: depositSender });
-            
+
             try {
                 // Invocation
                 const result = await instance.withdraw(amountToWithdraw, { from: recipient });
