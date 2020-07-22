@@ -1,18 +1,3 @@
-/*
-    Copyright 2020 Fabrx Labs Inc.
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
 pragma solidity 0.5.17;
 
 // Libraries
@@ -26,6 +11,11 @@ import "../util/AddressLib.sol";
 import "../interfaces/SettingsInterface.sol";
 
 
+/**
+    @notice This contract manages the configuration of the platform.
+
+    @author develop@teller.finance
+ */
 contract Settings is Pausable, SettingsInterface {
     using AddressLib for address;
 
@@ -40,15 +30,38 @@ contract Settings is Pausable, SettingsInterface {
     */
     uint256 internal constant MAX_MAXIMUM_TOLERANCE_VALUE = 10000;
 
+    /**
+        @notice The setting name for the required subsmission settings.
+     */
     bytes32 public constant REQUIRED_SUBMISSIONS_SETTING = "RequiredSubmissions";
+    /**
+        @notice The setting name for the maximum tolerance settings.
+     */
     bytes32 public constant MAXIMUM_TOLERANCE_SETTING = "MaximumTolerance";
+    /**
+        @notice The setting name for the response expiry length settings.
+     */
     bytes32 public constant RESPONSE_EXPIRY_LENGTH_SETTING = "ResponseExpiryLength";
+    /**
+        @notice The setting name for the safety interval settings.
+     */
     bytes32 public constant SAFETY_INTERVAL_SETTING = "SafetyInterval";
+    /**
+        @notice The setting name for the term expiry time settings.
+     */
     bytes32 public constant TERMS_EXPIRY_TIME_SETTING = "TermsExpiryTime";
+    /**
+        @notice The setting name for the liquidate ETH price settings.
+     */
     bytes32 public constant LIQUIDATE_ETH_PRICE_SETTING = "LiquidateEthPrice";
 
     /* State Variables */
 
+    /**
+        @notice It represents a mapping to identiy the lending pools paused and not paused.
+
+        i.e.: address(lending pool) => true or false.
+     */
     mapping(address => bool) public lendingPoolPaused;
 
     /**
@@ -94,6 +107,15 @@ contract Settings is Pausable, SettingsInterface {
 
     /* Constructor */
 
+    /**
+        @notice It creates a new Settings instance.
+        @param aRequiredSubmissions the initial value for the required submissions setting.
+        @param aMaximumTolerance the initial value for the maximum tolerance setting.
+        @param aResponseExpiryLength the initial value for the response expiry length setting.
+        @param aSafetyInterval the initial value for the safety interval setting.
+        @param aTermsExpiryTime the initial value for the terms expiry time setting.
+        @param aLiquidateEthPrice the initial value for the liquidate ETH price setting.
+     */
     constructor(
         uint256 aRequiredSubmissions,
         uint256 aMaximumTolerance,
@@ -118,6 +140,10 @@ contract Settings is Pausable, SettingsInterface {
 
     /** External Functions */
 
+    /**
+        @notice Sets the required responses to process consensus values.
+        @param newRequiredSubmissions the new required submissions value.
+     */
     function setRequiredSubmissions(uint256 newRequiredSubmissions)
         external
         onlyPauser()
@@ -136,6 +162,15 @@ contract Settings is Pausable, SettingsInterface {
         );
     }
 
+    /**
+        @notice This is the maximum tolerance for the values submitted (by nodes) when they are aggregated (average). It is used in the consensus mechanisms.
+        @notice This is a percentage value with 2 decimal places.
+            i.e. maximumTolerance of 325 => tolerance of 3.25% => 0.0325 of value
+            i.e. maximumTolerance of 0 => It means all the values submitted must be equals.        
+        @dev The max value is 100% => 10000
+        @param newMaximumTolerance new maximum tolerance value.
+        @return the current maximum tolerance value.
+     */
     function setMaximumTolerance(uint256 newMaximumTolerance)
         external
         onlyPauser()
@@ -157,6 +192,10 @@ contract Settings is Pausable, SettingsInterface {
         );
     }
 
+    /**
+        @notice Sets a new value for the response expiry length setting.
+        @param newResponseExpiryLength new response expiry length value.
+     */
     function setResponseExpiryLength(uint256 newResponseExpiryLength)
         external
         onlyPauser()
@@ -175,6 +214,10 @@ contract Settings is Pausable, SettingsInterface {
         );
     }
 
+    /**
+        @notice Sets a new value for the safety interval setting.
+        @param newSafetyInterval new safety interval value.
+    */
     function setSafetyInterval(uint256 newSafetyInterval)
         external
         onlyPauser()
@@ -193,6 +236,10 @@ contract Settings is Pausable, SettingsInterface {
         );
     }
 
+    /**
+        @notice Sets a new value for the terms expiry time setting.
+        @param newTermsExpiryTime new terms expiry time value.
+    */
     function setTermsExpiryTime(uint256 newTermsExpiryTime)
         external
         onlyPauser()
@@ -211,6 +258,10 @@ contract Settings is Pausable, SettingsInterface {
         );
     }
 
+    /**
+        @notice Sets a new value for the liquidate ETH price setting.
+        @param newLiquidateEthPrice new liquidate ETH price value.
+    */
     function setLiquidateEthPrice(uint256 newLiquidateEthPrice)
         external
         onlyPauser()
@@ -229,6 +280,10 @@ contract Settings is Pausable, SettingsInterface {
         );
     }
 
+    /**
+        @notice It pauses a specific lending pool.
+        @param lendingPoolAddress lending pool address to pause.
+     */
     function pauseLendingPool(address lendingPoolAddress)
         external
         onlyPauser()
@@ -242,6 +297,10 @@ contract Settings is Pausable, SettingsInterface {
         emit LendingPoolPaused(msg.sender, lendingPoolAddress);
     }
 
+    /**
+        @notice It unpauses a specific lending pool.
+        @param lendingPoolAddress lending pool address to unpause.
+     */
     function unpauseLendingPool(address lendingPoolAddress)
         external
         onlyPauser()
@@ -255,6 +314,10 @@ contract Settings is Pausable, SettingsInterface {
         emit LendingPoolUnpaused(msg.sender, lendingPoolAddress);
     }
 
+    /**
+        @notice It gets whether the platform is paused or not.
+        @return true if platform is paused. Otherwise it returns false.
+     */
     function isPaused() external view returns (bool) {
         return paused();
     }

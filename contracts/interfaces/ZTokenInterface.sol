@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * See details at: https://github.com/ethereum/solidity/issues/3419#issuecomment-429988401
  *
  * @author develop@teller.finance
-*/
+ */
 // TODO: Change to TToken
 contract ZTokenInterface is IERC20 {
     /**
