@@ -56,6 +56,8 @@ contract('LendingPoolDepositTest', function (accounts) {
         _2_notTransferFromEnoughBalance: [accounts[2], false, true, 100, false, "TransferFrom wasn't successful.", true, 1000],
         _3_notDepositIntoCompound: [accounts[2], true, true, 100, true, "COMPOUND_DEPOSIT_ERROR", true, 1000],
         _4_notMint: [accounts[0], true, false, 60, false, 'Mint was not successful.', true, 1000],
+        // TODO Please add new params before 'expectedErrorMessage'. 
+        // The last two params usually are for error handling (expectedErrorMessage, mustFail)
     }, function(
         recipient,
         transferFrom,

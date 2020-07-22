@@ -52,6 +52,8 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
         _2_transferFromFail: [accounts[1], loansInstance, false, 10, false, "TransferFrom wasn't successful.", true, 1000],
         _3_notLoansSender: [accounts[1], accounts[2], true, 71, false, 'Address is not Loans contract.', true, 1000],
         _4_compoundFail: [accounts[1], loansInstance, true, 10, true, 'COMPOUND_DEPOSIT_ERROR', true, 1000]
+        // TODO Please add new params before 'expectedErrorMessage'. 
+        // The last two params usually are for error handling (expectedErrorMessage, mustFail)
     }, function(
         liquidator,
         sender,
