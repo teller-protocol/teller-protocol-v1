@@ -1,6 +1,0 @@
-const DEFAULT_MAX_AMOUNT = 1000;
-
-module.exports = {
-    DAI: DEFAULT_MAX_AMOUNT,
-    USDC: DEFAULT_MAX_AMOUNT,
-};

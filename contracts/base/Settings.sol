@@ -49,14 +49,6 @@ contract Settings is Pausable, SettingsInterface {
 
     /* State Variables */
 
-    /**
-        It maps a max cap per lending token.
-
-        DAI address => 1000 DAI (max)
-        USDC address => 500 USDC (max)
-     */
-    mapping(address => uint256) public maxLendingAmount;
-
     mapping(address => bool) public lendingPoolPaused;
 
     /**
@@ -261,39 +253,6 @@ contract Settings is Pausable, SettingsInterface {
         lendingPoolPaused[lendingPoolAddress] = false;
 
         emit LendingPoolUnpaused(msg.sender, lendingPoolAddress);
-    }
-
-    function setMaxLendingAmount(address lendingTokenAddress, uint256 newMaxLendingAmount)
-        external
-        onlyPauser()
-    {
-        uint256 oldMaxLendingAmount = maxLendingAmount[lendingTokenAddress];
-        require(oldMaxLendingAmount != newMaxLendingAmount, "NEW_MAX_AMOUNT_REQUIRED");
-
-        maxLendingAmount[lendingTokenAddress] = newMaxLendingAmount;
-
-        emit MaxLendingAmountUpdated(
-            msg.sender,
-            lendingTokenAddress,
-            oldMaxLendingAmount,
-            newMaxLendingAmount
-        );
-    }
-
-    function getMaxLendingAmount(address lendingTokenAddress)
-        external
-        view
-        returns (uint256)
-    {
-        return maxLendingAmount[lendingTokenAddress];
-    }
-
-    function exceedsMaxLendingAmount(address lendingTokenAddress, uint256 amount)
-        external
-        view
-        returns (bool)
-    {
-        return amount > maxLendingAmount[lendingTokenAddress];
     }
 
     function isPaused() external view returns (bool) {

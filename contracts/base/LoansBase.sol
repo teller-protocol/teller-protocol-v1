@@ -71,14 +71,6 @@ contract LoansBase is LoansInterface, Base {
         _;
     }
 
-    modifier notExceedsMaxAmount(uint256 amount) {
-        require(
-            !settings.exceedsMaxLendingAmount(lendingPool.lendingToken(), amount),
-            "AMOUNT_EXCEEDS_MAX_AMOUNT"
-        );
-        _;
-    }
-
     modifier loanTermsSet(uint256 loanID) {
         require(
             loans[loanID].status == ZeroCollateralCommon.LoanStatus.TermsSet,
@@ -462,24 +454,5 @@ contract LoansBase is LoansInterface, Base {
                 status: ZeroCollateralCommon.LoanStatus.TermsSet,
                 liquidated: false
             });
-    }
-
-    function _emitLoanTermsSet(
-        uint256 loanID,
-        ZeroCollateralCommon.LoanRequest memory request,
-        uint256 interestRate,
-        uint256 collateralRatio,
-        uint256 maxLoanAmount
-    ) internal {
-        emit LoanTermsSet(
-            loanID,
-            request.borrower,
-            request.recipient,
-            interestRate,
-            collateralRatio,
-            maxLoanAmount,
-            request.duration,
-            loans[loanID].termsExpiry
-        );
     }
 }

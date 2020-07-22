@@ -54,14 +54,7 @@ contract EtherCollateralLoans is LoansBase {
         ZeroCollateralCommon.LoanRequest calldata request,
         ZeroCollateralCommon.LoanResponse[] calldata responses,
         uint256 collateralAmount
-    )
-        external
-        payable
-        isInitialized()
-        whenNotPaused()
-        isBorrower(request.borrower)
-        notExceedsMaxAmount(request.amount)
-    {
+    ) external payable isInitialized() whenNotPaused() isBorrower(request.borrower) {
         require(msg.value == collateralAmount, "INCORRECT_ETH_AMOUNT");
 
         uint256 loanID = getAndIncrementLoanID();
@@ -86,7 +79,16 @@ contract EtherCollateralLoans is LoansBase {
 
         borrowerLoans[request.borrower].push(loanID);
 
-        _emitLoanTermsSet(loanID, request, interestRate, collateralRatio, maxLoanAmount);
+        emit LoanTermsSet(
+            loanID,
+            request.borrower,
+            request.recipient,
+            interestRate,
+            collateralRatio,
+            maxLoanAmount,
+            request.duration,
+            loans[loanID].termsExpiry
+        );
         if (msg.value > 0) {
             emit CollateralDeposited(loanID, request.borrower, msg.value);
         }

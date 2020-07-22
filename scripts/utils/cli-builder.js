@@ -72,6 +72,31 @@ module.exports = {
             return yargs;
         },
     },
+    tokens: {
+        mint: () => {
+            addTokenName(yargs);
+            addReceiverIndex(yargs);
+            addAmount(yargs);
+            return yargs;
+        },
+        balanceOf: () => {
+            addTokenName(yargs);
+            addAccountIndex(yargs);
+            return yargs;
+        },
+    },
+    ganache: {
+        advanceTime: () => {
+            addNetwork(yargs);
+            addSeconds(yargs);
+            return yargs;
+        },
+        setOraclePrice: () => {
+            addLoansBase(yargs);
+            addNewValue(yargs);
+            return yargs;
+        },
+    },
     loans: {
         getAllLoansFor: () => {
             addLoansBase(yargs);
@@ -88,6 +113,7 @@ module.exports = {
             addLoansBase(yargs);
             addBorrowerIndex(yargs);
             addRecipientIndex(yargs);
+            addDurationDays(yargs);
             addDurationDays(yargs);
             addAmount(yargs);
             addCollAmount(yargs);
@@ -140,6 +166,23 @@ module.exports = {
             addPairBase(yargs);
             addSenderIndex(yargs);
             addAddresses(yargs);
+            return yargs;
+        },        
+    },
+    cTokens: () => {
+        addCTokenName(yargs);
+        return yargs;
+    },
+    settings: {
+        view: () => {
+            addBase(yargs);
+            return yargs;
+        },
+        setNewSetting: () => {
+            addBase(yargs);
+            addNewValue(yargs);
+            addSettingName(yargs);
+            addSenderIndex(yargs);
             return yargs;
         },        
     },
