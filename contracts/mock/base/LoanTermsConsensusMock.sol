@@ -87,6 +87,14 @@ contract LoanTermsConsensusMock is LoanTermsConsensus {
         signerNonceTaken[signer][signerNonce] = taken;
     }
 
+    function mockRequestNonce(
+        address borrower,
+        uint256 borrowerNonce,
+        bool taken
+    ) external {
+        requestNonceTaken[borrower][borrowerNonce] = taken;
+    }
+
     function mockChainId(uint256 newChainId) external {
         _mockChainId = newChainId;
     }

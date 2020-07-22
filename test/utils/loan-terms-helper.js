@@ -11,7 +11,8 @@ const createSignedLoanTermsResponse = async (web3, loanTermsRequest, loanTermsRe
         loanTermsResponseInfo.interestRate,
         loanTermsResponseInfo.collateralRatio,
         loanTermsResponseInfo.maxLoanAmount,
-        loanTermsResponseInfo.signerNonce
+        loanTermsResponseInfo.signerNonce,
+        loanTermsResponseInfo.consensusAddress,
     );
 
     const signedResponse = await createLoanResponseSig(
@@ -34,6 +35,7 @@ module.exports = {
             loanRequestInfo.amount,
             loanRequestInfo.duration,
             loanRequestInfo.requestTime,
+            loanRequestInfo.consensusAddress,
         );
         let requestHash = hashLoanTermsRequest(loanTermsRequest, loanRequestInfo.caller, chainId);
         requestHash = ethUtil.bufferToHex(requestHash);
@@ -49,11 +51,12 @@ module.exports = {
             interestRate: 4000,
             collateralRatio: 6000,
             maxLoanAmount: 20000,
+            consensusAddress: 0x1234...,
             signerNonce, // signerNonce is not provided in template
             signer, // signer is not provided in template
         };
     */
-    createMultipleSignedLoanTermsResponses: async (web3, loanTermsRequest, signers, loanResponseInfoTemplate, nonces) => {
+    createMultipleSignedLoanTermsResponses: async (web3, loanTermsRequest, signers, loanResponseInfoTemplate, nonces, chainId) => {
         assert(signers && signers.length > 0, 'Requires at least one signer.');
         const signedLoanTermsResponses = [];
         for (const signer of signers) {
@@ -62,7 +65,7 @@ module.exports = {
                 signer: signer,
                 signerNonce: nonces.newNonce(signer),
             };
-            const signedResponse = await createSignedLoanTermsResponse(web3, loanTermsRequest, loanResponseInfo);
+            const signedResponse = await createSignedLoanTermsResponse(web3, loanTermsRequest, loanResponseInfo, chainId);
             signedLoanTermsResponses.push(signedResponse);
         }
         return signedLoanTermsResponses;
