@@ -20,7 +20,8 @@ contract('ChainlinkPairAggregatorConstructorTest', function (accounts) {
         _2_emptyChainlink: [false, 0, 18, 'PROVIDE_AGGREGATOR_ADDRESS', true],
         _3_zeroResponseDecimals: [true, 0, 18, undefined, false],
         _4_zeroCollateralDecimals: [true, 18, 0, undefined, false],
-        _5_zeroDecimals: [true, 0, 0, undefined, false]
+        _5_zeroDecimals: [true, 0, 0, undefined, false],
+        _6_big_diff: [true, 5, 56, 'MAX_PENDING_DECIMALS_EXCEEDED', true]
     }, function(
         createChainlinkInstance,
         responseDecimals,
