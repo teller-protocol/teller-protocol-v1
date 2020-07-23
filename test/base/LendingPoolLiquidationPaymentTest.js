@@ -54,9 +54,9 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
         transferFrom,
         amountToLiquidate,
         compoundFails,
+        allowance,
         expectedErrorMessage,
-        mustFail,
-        allowance
+        mustFail
     ) {
         it(t('user', 'liquidationPayment', 'Should able (or not) to liquidate payment.', mustFail), async function() {
             // Setup

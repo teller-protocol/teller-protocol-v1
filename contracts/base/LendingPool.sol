@@ -260,11 +260,11 @@ contract LendingPool is Base, LendingPoolInterface {
         @dev It throws a require error if 'transfer' invocation fails.
      */
     function tokenTransfer(address recipient, uint256 amount) private {
-        //TODO currentBalance instead of allowance
-        uint256 allowance = lendingToken.balanceOf(address(this));
+        //DONE currentBalance instead of allowance
+        uint256 currentBalance = lendingToken.balanceOf(address(this));
         require(
-          allowance >= amount,
-          "INSUFFICIENT_BALANCE"  // TODO maybe LENDING_TOKEN_NOT_ENOUGH_BALANCE or similar (not more than 32 chars)?
+          currentBalance >= amount,
+          "LENDING_TOKEN_NOT_ENOUGH_BALANCE"  // DONE maybe LENDING_TOKEN_NOT_ENOUGH_BALANCE or similar (not more than 32 chars)?
         );
         bool transferResult = lendingToken.transfer(recipient, amount);
         require(transferResult, "Transfer was not successful.");
@@ -278,10 +278,11 @@ contract LendingPool is Base, LendingPoolInterface {
      */
     function tokenTransferFrom(address from, uint256 amount) private {
         // The first param is the  owner and second the spender. That's why the unit tests were failing. :D
-        uint256 allowance = lendingToken.allowance(from, address(this));
+        // If I could putting a slapping my head emoji here I would lol :S
+        uint256 allowance = lendingToken.allowance(address(this), from);
         require(
-          allowance >= amount,
-          "INSUFFICIENT_TOKENS" // TODO "LEND_TOKEN_NOT_ENOUGH_ALLOWANCE" or similar (not more 32 chars).
+          allowance <= amount,
+          "LEND_TOKEN_NOT_ENOUGH_ALLOWANCE" // DONE "LEND_TOKEN_NOT_ENOUGH_ALLOWANCE" or similar (not more 32 chars).
         );
         bool transferFromResult = lendingToken.transferFrom(from, address(this), amount);
         require(transferFromResult, "TransferFrom wasn't successful.");

@@ -55,9 +55,9 @@ contract('LendingPoolRepayTest', function (accounts) {
         transferFrom,
         amountToRepay,
         compoundFails,
+        allowance,
         expectedErrorMessage,
-        mustFail,
-        allowance
+        mustFail
     ) {
         it(t('user', 'repay', 'Should able (or not) to repay loan.', mustFail), async function() {
             // Setup

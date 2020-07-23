@@ -47,11 +47,11 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [accounts[1], loansAddress, true, 10, false, undefined, false, 1000],
-        _2_notLoanSender: [accounts[1], accounts[4], true, 10, false, 'Address is not Loans contract.', true, 1000],
-        _3_transferFail: [accounts[1], loansAddress, false, 10, false, 'Transfer was not successful.', true, 1000],
-        _4_compoundFails: [accounts[1], loansAddress, true, 10, true, 'COMPOUND_WITHDRAWAL_ERROR', true, 1000]
-        // TODO Please add new params before 'expectedErrorMessage'. 
+        _1_basic: [accounts[1], loansAddress, true, 10, false, 1000, undefined, false],
+        _2_notLoanSender: [accounts[1], accounts[4], true, 10, false, 1000, 'Address is not Loans contract.', true],
+        _3_transferFail: [accounts[1], loansAddress, false, 10, false, 1000, 'Transfer was not successful.', true],
+        _4_compoundFails: [accounts[1], loansAddress, true, 10, true, 1000, 'COMPOUND_WITHDRAWAL_ERROR', true]
+        // DONE Please add new params before 'expectedErrorMessage'. 
         // The last two params usually are for error handling (expectedErrorMessage, mustFail)
     }, function(
         borrower,
@@ -59,9 +59,9 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
         transfer,
         amountToTransfer,
         compoundFails,
+        allowance,
         expectedErrorMessage,
-        mustFail,
-        allowance
+        mustFail
     ) {
         it(t('user', 'createLoan', 'Should able (or not) to create loan.', mustFail), async function() {
             // Setup
