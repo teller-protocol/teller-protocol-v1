@@ -54,7 +54,7 @@ contract LoansBase is LoansInterface, Base {
     /**
         @notice Checks if the sender is a borrower or not
         @dev It throws a require error if the sender is not a borrower
-        @param Borrower address to check
+        @param borrower Account address to check
      */
     modifier isBorrower(address borrower) {
         require(msg.sender == borrower, "BORROWER_MUST_BE_SENDER");
@@ -64,7 +64,7 @@ contract LoansBase is LoansInterface, Base {
     /**
         @notice Checks whether the loan is active or not
         @dev Throws a require error if the loan is not active
-        @param ID number of loan to check
+        @param loanID number of loan to check
      */
     modifier loanActive(uint256 loanID) {
         require(
@@ -77,7 +77,7 @@ contract LoansBase is LoansInterface, Base {
     /**
         @notice Checks if the loan has been set or not
         @dev Throws a require error if the loan terms have not been set
-        @param ID number of loan to check
+        @param loanID number of loan to check
      */
     modifier loanTermsSet(uint256 loanID) {
         require(
@@ -90,7 +90,7 @@ contract LoansBase is LoansInterface, Base {
     /**
         @notice Checks whether the loan is active and has been set or not
         @dev Throws a require error if the loan is not active or has not been set
-        @param ID number of loan to check
+        @param loanID number of loan to check
      */
     modifier loanActiveOrSet(uint256 loanID) {
         require(
@@ -103,7 +103,7 @@ contract LoansBase is LoansInterface, Base {
 
     /**
         @notice Get a list of all loans for a borrower
-        @param Borrower address The borrower's address
+        @param borrower The borrower's address
      */
     function getBorrowerLoans(address borrower) external view returns (uint256[] memory) {
         return borrowerLoans[borrower];
@@ -119,8 +119,8 @@ contract LoansBase is LoansInterface, Base {
 
     /**
      * @notice Withdraw collateral from a loan, unless this isn't allowed
-     * @param amount uint256 The amount of collateral token or ether the caller is hoping to withdraw.
-     * @param loanID uint256 The ID of the loan the collateral is for
+     * @param amount The amount of collateral token or ether the caller is hoping to withdraw.
+     * @param loanID The ID of the loan the collateral is for
      */
     function withdrawCollateral(uint256 amount, uint256 loanID)
         external
@@ -211,8 +211,8 @@ contract LoansBase is LoansInterface, Base {
 
     /**
      * @notice Make a payment to a loan
-     * @param amount uint256 The amount of tokens to pay back to the loan
-     * @param loanID uint256 The ID of the loan the payment is for
+     * @param amount The amount of tokens to pay back to the loan
+     * @param loanID The ID of the loan the payment is for
      */
     function repay(uint256 amount, uint256 loanID)
         external
@@ -262,7 +262,7 @@ contract LoansBase is LoansInterface, Base {
 
     /**
      * @notice Liquidate a loan if it is expired or undercollateralised
-     * @param loanID uint256 The ID of the loan to be liquidated
+     * @param loanID The ID of the loan to be liquidated
      */
     function liquidateLoan(uint256 loanID)
         external
@@ -310,7 +310,7 @@ contract LoansBase is LoansInterface, Base {
 
     /**
         @notice Get collateral infomation of a specific loan
-        @param Loan ID of the loan to get info for
+        @param loanID of the loan to get info for
         @return uint256 Collateral needed
         @return uint256 Collaternal needed in Lending tokens
         @return uint256 Collateral needed in Collateral tokens (wei)
@@ -332,16 +332,16 @@ contract LoansBase is LoansInterface, Base {
     /** Internal Functions */
     /**
         @notice Payouts the collateral for a loan
-        @param loanID uint256 ID of loan from which collateral is to be paid out
-        @param amount uint256 Amount of collateral paid out
-        @param recipient address Account address of the recipient of the collateral
+        @param loanID ID of loan from which collateral is to be paid out
+        @param amount Amount of collateral paid out
+        @param recipient Account address of the recipient of the collateral
      */
     function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
         internal;
 
     /**
         @notice Get collateral infomation of a specific loan
-        @param Loan ID of the loan to get info for
+        @param loanID of the loan to get info for
         @return uint256 Collateral needed
         @return uint256 Collaternal needed in Lending tokens
         @return uint256 Collateral needed in Collateral tokens (wei)
@@ -370,8 +370,8 @@ contract LoansBase is LoansInterface, Base {
 
     /**
        @notice Get information on the collateral needed for the loan
-       @param totalOwed uint256 Total amount owed for the loan
-       @param collateralRatio uint256 Collateral ratio set in the loan terms
+       @param totalOwed Total amount owed for the loan
+       @param collateralRatio Collateral ratio set in the loan terms
        @return uint256 Collaternal needed in Lending tokens
        @return uint256 Collateral needed in Collateral tokens (wei)
      */
@@ -394,10 +394,10 @@ contract LoansBase is LoansInterface, Base {
 
     /**
         @notice Initializes the current contract instance setting the required parameters.
-        @param priceOracleAddress address Contract address of the price oracle
-        @param lendingPoolAddress address Contract address of the lending pool
-        @parm loanTermConsensusAddress address Contract adddress for loan term consensus
-        @param settingsAddress address Contract address for the configuration of the platform
+        @param priceOracleAddress Contract address of the price oracle
+        @param lendingPoolAddress Contract address of the lending pool
+        @param loanTermsConsensusAddress Contract adddress for loan term consensus
+        @param settingsAddress Contract address for the configuration of the platform
      */
     function _initialize(
         address priceOracleAddress,
@@ -418,8 +418,8 @@ contract LoansBase is LoansInterface, Base {
 
     /**
         @notice Pays collateral in for the associated loan
-        @param loanID uint256 The ID of the loan the collateral is for
-        @param amount uint256 The amount of collateral to be paid
+        @param loanID The ID of the loan the collateral is for
+        @param amount The amount of collateral to be paid
      */
     function _payInCollateral(uint256 loanID, uint256 amount) internal {
         totalCollateral = totalCollateral.add(amount);
@@ -429,8 +429,8 @@ contract LoansBase is LoansInterface, Base {
 
     /**
         @notice Make a payment towards the prinicial and interest for a specified loan
-        @param loanID uint256 The ID of the loan the payment is for
-        @param amount uint256 The amount of tokens to pay to the loan
+        @param loanID The ID of the loan the payment is for
+        @param toPay The amount of tokens to pay to the loan
      */
     function _payLoan(uint256 loanID, uint256 toPay) internal {
         if (toPay > loans[loanID].principalOwed) {
@@ -445,7 +445,7 @@ contract LoansBase is LoansInterface, Base {
 
     /**
         @notice Returns the total owed amount remaining for a specified loan
-        @param loanID uint256 The ID of the loan to be queried
+        @param loanID The ID of the loan to be queried
         @return uint256 The total amount owed remaining
      */
     function _getTotalOwed(uint256 loanID) internal view returns (uint256) {
@@ -463,8 +463,8 @@ contract LoansBase is LoansInterface, Base {
 
     /**
         @notice Returns the value of collateral
-        @param loanAmount uint256 The total amount of the loan for which collateral is needed
-        @param collateralRatio uint256 Collateral ratio set in the loan terms
+        @param loanAmount The total amount of the loan for which collateral is needed
+        @param collateralRatio Collateral ratio set in the loan terms
         @return uint256 The amount of collateral needed in lending tokens (not wei)
      */
     function _getCollateralNeededInTokens(uint256 loanAmount, uint256 collateralRatio)
@@ -477,7 +477,7 @@ contract LoansBase is LoansInterface, Base {
 
     /**
         @notice Converts the collateral tokens to lending tokens
-        @param weiAmount uin256 The amount of wei to be converted
+        @param weiAmount The amount of wei to be converted
         @return uint256 The value the collateal tokens (wei) in lending tokens (not wei)
      */
     function _convertWeiToToken(uint256 weiAmount) internal view returns (uint256) {
@@ -491,8 +491,8 @@ contract LoansBase is LoansInterface, Base {
     }
 
     /**
-        @param Converts the lending token to collareal tokens
-        @param tokenAmount uint256 The amount in lending tokens (not wei) to be converted
+        @notice Converts the lending token to collareal tokens
+        @param tokenAmount The amount in lending tokens (not wei) to be converted
         @return uint256 The value of lending tokens (not wei) in collateral tokens (wei)
      */
     function _convertTokenToWei(uint256 tokenAmount) internal view returns (uint256) {
@@ -517,11 +517,11 @@ contract LoansBase is LoansInterface, Base {
 
     /**
         @notice Creates a loan with the loan request
-        @param loanID uint256 The ID of the loan
-        @param request ZeroCollateralCommon.LoanRequest Loan request as per the struct of the Teller platform
-        @param interestRate uint256 Interest rate set in the loan terms
-        @param collateralRatio uint256 Collateral ratio set in the loan terms
-        @param maxLoanAmount uint256 Maximum loan amount that can be taken out, set in the loan terms
+        @param loanID The ID of the loan
+        @param request Loan request as per the struct of the Teller platform
+        @param interestRate Interest rate set in the loan terms
+        @param collateralRatio Collateral ratio set in the loan terms
+        @param maxLoanAmount Maximum loan amount that can be taken out, set in the loan terms
         @return memory ZeroCollateralCommon.Loan Loan struct as per the Teller platform
      */
     function createLoan(

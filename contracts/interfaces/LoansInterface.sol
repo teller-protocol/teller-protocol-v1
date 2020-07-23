@@ -12,9 +12,9 @@ import "../util/ZeroCollateralCommon.sol";
 interface LoansInterface {
     /**
         @notice This event is emitted when collateral has been deposited for the loan
-        @param loanId uint256 ID of the loan for which collateral was deposited
-        @param borrower address Account address of the borrower
-        @param depositAmount uint256 Amount of collateral deposited
+        @param loanID ID of the loan for which collateral was deposited
+        @param borrower Account address of the borrower
+        @param depositAmount Amount of collateral deposited
      */
     event CollateralDeposited(
         uint256 indexed loanID,
@@ -24,8 +24,8 @@ interface LoansInterface {
 
     /**
         @notice This event is emitted when collateral has been withdrawn
-        @param loanID uint256 ID of loan from which collateral was withdrawn
-        @param borrower address Account address of the borrower
+        @param loanID ID of loan from which collateral was withdrawn
+        @param borrower Account address of the borrower
      */
     event CollateralWithdrawn(
         uint256 indexed loanID,
@@ -35,12 +35,12 @@ interface LoansInterface {
 
     /**
         @notice This event is emitted when loan terms have been successsfully set
-        @param loanID uint256 ID of loan from which collateral was withdrawn
-        @param borrower address Account address of the borrower
-        @param recipient address Account address of the recipient
-        @param interestRate uint256 Interest rate set in the loan terms
-        @param collateralRatio uint256 Collateral ratio set in the loan terms
-        @param maxLoanAmount uint256 Maximum loan amount that can be taken out, set in the loan terms
+        @param loanID ID of loan from which collateral was withdrawn
+        @param borrower Account address of the borrower
+        @param recipient Account address of the recipient
+        @param interestRate Interest rate set in the loan terms
+        @param collateralRatio Collateral ratio set in the loan terms
+        @param maxLoanAmount Maximum loan amount that can be taken out, set in the loan terms
      */
     event LoanTermsSet(
         uint256 indexed loanID,
@@ -55,9 +55,9 @@ interface LoansInterface {
 
     /**
         @notice This event is emitted when a loan has been successfully taken out
-        @param loanID uint256 ID of loan from which collateral was withdrawn
-        @param borrower address Account address of the borrower
-        @param amountBorrowed uint256 Total amount taken out in the loan
+        @param loanID ID of loan from which collateral was withdrawn
+        @param borrower Account address of the borrower
+        @param amountBorrowed Total amount taken out in the loan
      */
     event LoanTakenOut(
         uint256 indexed loanID,
@@ -67,11 +67,11 @@ interface LoansInterface {
 
     /**
         @notice This event is emitted when a loan has been successfully repaid
-        @param loanID uint256 ID of loan from which collateral was withdrawn
-        @param borrower address Account address of the borrower
-        @param amountPaid uint256 Amount of the loan paid back
-        @param payer address Account address of the payer
-        @param totalOwed uint256 Total amount of the loan to be repaid
+        @param loanID ID of loan from which collateral was withdrawn
+        @param borrower Account address of the borrower
+        @param amountPaid Amount of the loan paid back
+        @param payer Account address of the payer
+        @param totalOwed Total amount of the loan to be repaid
      */
     event LoanRepaid(
         uint256 indexed loanID,
@@ -83,11 +83,11 @@ interface LoansInterface {
 
     /**
         @notice This event is emitted when a loan has been successfully liquidated
-        @param loanID uint256 ID of loan from which collateral was withdrawn
-        @param borrower address Account address of the borrower
-        @param liquidator address Account address of the liquidator
-        @param collateralOut uint256 Collateral that is sent to the liquidator
-        @param tokensIn uint256 Percentage of the collateral price paid by the liquidator to the lending pool
+        @param loanID ID of loan from which collateral was withdrawn
+        @param borrower Account address of the borrower
+        @param liquidator Account address of the liquidator
+        @param collateralOut Collateral that is sent to the liquidator
+        @param tokensIn Percentage of the collateral price paid by the liquidator to the lending pool
      */
     event LoanLiquidated(
         uint256 indexed loanID,
@@ -99,13 +99,13 @@ interface LoansInterface {
 
     /**
         @notice Returns a list of all loans for a borrower
-        @param borrower address Account address of the borrower
+        @param borrower Account address of the borrower
      */
     function getBorrowerLoans(address borrower) external view returns (uint256[] memory);
 
     /**
         @notice Returns the struct of a loan
-        @param loanID uint256 ID of loan from which collateral was withdrawn
+        @param loanID ID of loan from which collateral was withdrawn
      */
     function loans(uint256 loanID)
         external
@@ -113,10 +113,10 @@ interface LoansInterface {
         returns (ZeroCollateralCommon.Loan memory);
 
     /**
-        @param Deposit collateral for a loan, unless it isn't allowed
-        @param borrower address Account address of the borrower
-        @param loanID uint256 ID of loan from which collateral was withdrawn
-        @param amount uint256 Amount to be deposited as collateral
+        @notice Deposit collateral for a loan, unless it isn't allowed
+        @param borrower Account address of the borrower
+        @param loanID ID of loan from which collateral was withdrawn
+        @param amount Amount to be deposited as collateral
      */
     function depositCollateral(address borrower, uint256 loanID, uint256 amount)
         external
@@ -124,16 +124,16 @@ interface LoansInterface {
 
     /**
         @notice Withdraw collateral from a loan, unless this isn't allowed
-        @param amount uint256 The amount of collateral token or ether the caller is hoping to withdraw
-        @param loanID uint256 The ID of the loan the collateral is for
+        @param amount The amount of collateral token or ether the caller is hoping to withdraw
+        @param loanID The ID of the loan the collateral is for
      */
     function withdrawCollateral(uint256 amount, uint256 loanID) external;
 
     /**
         @notice Create a loan with specified terms, if allowed
-        @param ZeroCollateralCommon.LoanRequest request Struct of the protocol loan request
-        @param ZeroCollateralCommon.LoanResponses request List of structs of the protocol loan responses
-        @param collateralAmount uint256 Amount of collateral for the loan
+        @param request Struct of the protocol loan request
+        @param responses List of structs of the protocol loan responses
+        @param collateralAmount Amount of collateral for the loan
      */
     function createLoanWithTerms(
         ZeroCollateralCommon.LoanRequest calldata request,
@@ -143,21 +143,21 @@ interface LoansInterface {
 
     /**
         @notice Take out a loan, if allowed
-        @param loanID uint256 The ID of the loan to be taken out
-        @param amountBorrow uint256 Amount of tokens to be taken out in the loan
+        @param loanID The ID of the loan to be taken out
+        @param amountBorrow Amount of tokens to be taken out in the loan
      */
     function takeOutLoan(uint256 loanID, uint256 amountBorrow) external;
 
     /**
         @notice Make a payment to a specified loan
-        @param amount uint256 The amount of tokens to pay back to the loan
-        @param loanID uint256 The ID of the loan the payment is for
+        @param amount The amount of tokens to pay back to the loan
+        @param loanID The ID of the loan the payment is for
      */
     function repay(uint256 amount, uint256 loanID) external;
 
     /**
         @notice Liquidate a loan if has is expired or undercollateralised
-        @param loanID uint256 The ID of the loan to be liquidated
+        @param loanID The ID of the loan to be liquidated
      */
     function liquidateLoan(uint256 loanID) external;
 
@@ -187,7 +187,7 @@ interface LoansInterface {
 
     /**
         @notice Returns the ID of loans taken out
-        @param uint256 The next available loan ID
+        @return uint256 The next available loan ID
      */
     function loanIDCounter() external view returns (uint256);
 
@@ -199,7 +199,7 @@ interface LoansInterface {
 
     /**
         @notice Get collateral infomation of a specific loan
-        @param Loan ID of the loan to get info for
+        @param loanID ID of the loan to get info for
         @return uint256 Collateral needed
         @return uint256 Collaternal needed in Lending tokens
         @return uint256 Collateral needed in Collateral tokens

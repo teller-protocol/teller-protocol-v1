@@ -15,8 +15,8 @@ contract EtherCollateralLoans is LoansBase {
 
     /**
      * @notice Deposit collateral into a loan
-     * @param borrower address The address of the loan borrower.
-     * @param loanID uint256 The ID of the loan the collateral is for
+     * @param borrower The address of the loan borrower.
+     * @param loanID The ID of the loan the collateral is for
      */
     function depositCollateral(address borrower, uint256 loanID, uint256 amount)
         external
@@ -41,9 +41,9 @@ contract EtherCollateralLoans is LoansBase {
 
     /**
         @notice Creates a loan with the loan request and terms
-        @param ZeroCollateralCommon.LoanRequest request Struct of the protocol loan request
-        @param ZeroCollateralCommon.LoanResponses request List of structs of the protocol loan responses
-        @param collateralAmount uint256 Amount of collateral required for the loan
+        @param request Struct of the protocol loan request
+        @param responses List of structs of the protocol loan responses
+        @param collateralAmount Amount of collateral required for the loan
      */
     function createLoanWithTerms(
         ZeroCollateralCommon.LoanRequest calldata request,
@@ -91,10 +91,10 @@ contract EtherCollateralLoans is LoansBase {
 
     /**
         @notice Initializes the current contract instance setting the required parameters
-        @param priceOracleAddress address Contract address of the price oracle
-        @param lendingPoolAddress address Contract address of the lending pool
-        @parm loanTermConsensusAddress address Contract adddress for loan term consensus
-        @param settingsAddress address Contract address for the configuration of the platform
+        @param priceOracleAddress Contract address of the price oracle
+        @param lendingPoolAddress Contract address of the lending pool
+        @param loanTermsConsensusAddress Contract adddress for loan term consensus
+        @param settingsAddress Contract address for the configuration of the platform
      */
     function initialize(
         address priceOracleAddress,
@@ -113,8 +113,8 @@ contract EtherCollateralLoans is LoansBase {
     /** Internal Functions */
     /**
         @notice Pays out collateral for the associated loan
-        @param loanID uint256 The ID of the loan the collateral is for
-        @param amount uint256 The amount of collateral to be paid
+        @param loanID The ID of the loan the collateral is for
+        @param amount The amount of collateral to be paid
      */
     function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
         internal

@@ -19,8 +19,8 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
 
     /**
         @notice Processes the loan request
-        @param ZeroCollateralCommon.LoanRequest request Struct of the protocol loan request
-        @param ZeroCollateralCommon.LoanResponses request List of structs of the protocol loan responses
+        @param request Struct of the protocol loan request
+        @param responses List of structs of the protocol loan responses
         @return uint256 Interest rate
         @return uint256 Collateral ratio
         @return uint256 Maximum loan amount
@@ -71,8 +71,8 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
 
     /**
         @notice Processes the loan response
-        @param ZeroCollateralCommon.LoanRequest request Struct of the protocol loan request
-        @param ZeroCollateralCommon.LoanResponses request List of structs of the protocol loan responses
+        @param request Struct of the protocol loan request
+        @param response List of structs of the protocol loan responses
         @param requestHash bytes32 Hash of the loan request
      */
     function _processResponse(
@@ -113,8 +113,8 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
 
     /**
         @notice Generates a hash for the loan response
-        @param ZeroCollateralCommon.LoanResponses request Structs of the protocol loan responses
-        @param requestHash bytes32 Hash of the loan request
+        @param response Structs of the protocol loan responses
+        @param requestHash Hash of the loan request
         @return bytes32 Hash of the loan response
      */
     function _hashResponse(
@@ -138,7 +138,7 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
 
     /**
         @notice Generates a hash for the loan request
-        @param ZeroCollateralCommon.LoanRequest request Struct of the protocol loan request
+        @param request Struct of the protocol loan request
         @return bytes32 Hash of the loan request
      */
     function _hashRequest(ZeroCollateralCommon.LoanRequest memory request)

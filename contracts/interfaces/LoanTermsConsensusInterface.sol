@@ -11,12 +11,12 @@ import "../util/ZeroCollateralCommon.sol";
 interface LoanTermsConsensusInterface {
     /**
         @notice This event is emitted when the loan terms have been submitted
-        @param signer adddress Account address of the signatory
-        @param borrower address Account address of the borrowing party
-        @param requestNonce uint256 Nonce used for authentication of the loan request
-        @param interestRate uint256 Interest rate submitted in the loan request
-        @param collateralRatio uint256 Ratio of collateral submitted for the loan
-        @param maxLoanAmount uint256 Maximum loan amount that can be taken out
+        @param signer Account address of the signatory
+        @param borrower Account address of the borrowing party
+        @param requestNonce Nonce used for authentication of the loan request
+        @param interestRate Interest rate submitted in the loan request
+        @param collateralRatio Ratio of collateral submitted for the loan
+        @param maxLoanAmount Maximum loan amount that can be taken out
      */
     event TermsSubmitted(
         address indexed signer,
@@ -29,10 +29,10 @@ interface LoanTermsConsensusInterface {
 
     /**
         @notice This event is emitted when the loan terms have been accepted
-        @param borrower address Account address of the borrowing party
-        @param requestNonce uint256 Accepted interest rate for the loan
-        @param collateralRatio uint256 Ratio of collateral needed for the loan
-        @param maxLoanAmount uint256 Maximum loan amount that the borrower can take out
+        @param borrower Account address of the borrowing party
+        @param requestNonce Accepted interest rate for the loan
+        @param collateralRatio Ratio of collateral needed for the loan
+        @param maxLoanAmount Maximum loan amount that the borrower can take out
      */
     event TermsAccepted(
         address indexed borrower,
@@ -44,8 +44,8 @@ interface LoanTermsConsensusInterface {
 
     /**
         @notice Processes the loan request
-        @param ZeroCollateralCommon.LoanRequest request Struct of the protocol loan request
-        @param ZeroCollateralCommon.LoanResponses request List of structs of the protocol loan responses
+        @param request Struct of the protocol loan request
+        @param responses List of structs of the protocol loan responses
         @return uint256 Interest rate
         @return uint256 Collateral ratio
         @return uint256 Maximum loan amount

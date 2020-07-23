@@ -29,9 +29,9 @@ contract TokenCollateralLoans is LoansBase {
 
     /**
      * @notice Deposit collateral tokens into a loan.
-     * @param borrower address The address of the loan borrower.
-     * @param loanID uint256 The ID of the loan the collateral is for
-     * @param amount to deposit as collateral.
+     * @param borrower The address of the loan borrower.
+     * @param loanID The ID of the loan the collateral is for
+     * @param amount The amount to deposit as collateral.
      */
     function depositCollateral(address borrower, uint256 loanID, uint256 amount)
         external
@@ -56,9 +56,9 @@ contract TokenCollateralLoans is LoansBase {
 
     /**
         @notice Creates a loan with the loan request and terms
-        @param ZeroCollateralCommon.LoanRequest request Struct of the protocol loan request
-        @param ZeroCollateralCommon.LoanResponses request List of structs of the protocol loan responses
-        @param collateralAmount uint256 Amount of collateral required for the loan
+        @param request Struct of the protocol loan request
+        @param responses List of structs of the protocol loan responses
+        @param collateralAmount Amount of collateral required for the loan
      */
     function createLoanWithTerms(
         ZeroCollateralCommon.LoanRequest calldata request,
@@ -112,10 +112,10 @@ contract TokenCollateralLoans is LoansBase {
 
     /**
         @notice Initializes the current contract instance setting the required parameters, if allowed
-        @param priceOracleAddress address Contract address of the price oracle
-        @param lendingPoolAddress address Contract address of the lending pool
-        @parm loanTermConsensusAddress address Contract adddress for loan term consensus
-        @param settingsAddress address Contract address for the configuration of the platform
+        @param priceOracleAddress Contract address of the price oracle
+        @param lendingPoolAddress Contract address of the lending pool
+        @param loanTermsConsensusAddress Contract adddress for loan term consensus
+        @param settingsAddress Contract address for the configuration of the platform
      */
     function initialize(
         address priceOracleAddress,
@@ -139,8 +139,8 @@ contract TokenCollateralLoans is LoansBase {
     /** Internal Function */
     /**
         @notice Pays out collateral for the associated loan
-        @param loanID uint256 The ID of the loan the collateral is for
-        @param amount uint256 The amount of collateral to be paid
+        @param loanID The ID of the loan the collateral is for
+        @param amount The amount of collateral to be paid
      */
     function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
         internal
@@ -152,8 +152,8 @@ contract TokenCollateralLoans is LoansBase {
 
     /**
         @notice Pays collateral in for the associated loan
-        @param loanID uint256 The ID of the loan the collateral is for
-        @param amount uint256 The amount of collateral to be paid
+        @param loanID The ID of the loan the collateral is for
+        @param amount The amount of collateral to be paid
      */
     function _payInCollateral(uint256 loanID, uint256 amount) internal {
         // Update the total collateral and loan collateral
@@ -164,9 +164,9 @@ contract TokenCollateralLoans is LoansBase {
 
     /**
         @notice Checks to ensure the token balance matches the required balance
-        @param initialBalance uint256 The inital balance of tokens
-        @param expectedAmount uint256 The expected balance of tokens
-        @param isTransfer bool If the balance is being checked for a transfer or token allowance
+        @param initialBalance The inital balance of tokens
+        @param expectedAmount The expected balance of tokens
+        @param isTransfer If the balance is being checked for a transfer or token allowance
      */
     function _requireExpectedBalance(
         uint256 initialBalance,
@@ -191,8 +191,8 @@ contract TokenCollateralLoans is LoansBase {
 
     /**
         @notice It transfers an amount of collateral tokens to a specific address.
-        @param recipient address which will receive the tokens.
-        @param amount of tokens to transfer.
+        @param recipient The address which will receive the tokens.
+        @param amount The amount of tokens to transfer.
         @dev It throws a require error if 'transfer' invocation fails.
      */
     function collateralTokenTransfer(address recipient, uint256 amount) private {
@@ -205,8 +205,8 @@ contract TokenCollateralLoans is LoansBase {
 
     /**
         @notice It transfers an amount of collateral tokens from an address to this contract.
-        @param from address where the tokens will transfer from.
-        @param amount to be transferred.
+        @param from The address where the tokens will transfer from.
+        @param amount The amount to be transferred.
         @dev It throws a require error if the allowance is not enough.
         @dev It throws a require error if 'transferFrom' invocation fails.
      */
