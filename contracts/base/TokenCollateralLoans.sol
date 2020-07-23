@@ -1,24 +1,15 @@
-/*
-    Copyright 2020 Fabrx Labs Inc.
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
-
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
 import "./LoansBase.sol";
+
+/**
+    @notice This contract is used as a basis for the creation of loans (not wei) across the platform
+    @notice It implements the LoansBase contract from Teller
+
+    @author develop@teller.finance
+ */
 
 
 contract TokenCollateralLoans is LoansBase {
@@ -63,6 +54,12 @@ contract TokenCollateralLoans is LoansBase {
         emit CollateralDeposited(loanID, borrower, amount);
     }
 
+    /**
+        @notice Creates a loan with the loan request and terms
+        @param ZeroCollateralCommon.LoanRequest request Struct of the protocol loan request
+        @param ZeroCollateralCommon.LoanResponses request List of structs of the protocol loan responses
+        @param collateralAmount uint256 Amount of collateral required for the loan
+     */
     function createLoanWithTerms(
         ZeroCollateralCommon.LoanRequest calldata request,
         ZeroCollateralCommon.LoanResponse[] calldata responses,
@@ -113,6 +110,13 @@ contract TokenCollateralLoans is LoansBase {
         }
     }
 
+    /**
+        @notice Initializes the current contract instance setting the required parameters, if allowed
+        @param priceOracleAddress address Contract address of the price oracle
+        @param lendingPoolAddress address Contract address of the lending pool
+        @parm loanTermConsensusAddress address Contract adddress for loan term consensus
+        @param settingsAddress address Contract address for the configuration of the platform
+     */
     function initialize(
         address priceOracleAddress,
         address lendingPoolAddress,
@@ -133,7 +137,11 @@ contract TokenCollateralLoans is LoansBase {
     }
 
     /** Internal Function */
-
+    /**
+        @notice Pays out collateral for the associated loan
+        @param loanID uint256 The ID of the loan the collateral is for
+        @param amount uint256 The amount of collateral to be paid
+     */
     function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
         internal
     {
@@ -142,6 +150,11 @@ contract TokenCollateralLoans is LoansBase {
         collateralTokenTransfer(recipient, amount);
     }
 
+    /**
+        @notice Pays collateral in for the associated loan
+        @param loanID uint256 The ID of the loan the collateral is for
+        @param amount uint256 The amount of collateral to be paid
+     */
     function _payInCollateral(uint256 loanID, uint256 amount) internal {
         // Update the total collateral and loan collateral
         super._payInCollateral(loanID, amount);
@@ -149,6 +162,12 @@ contract TokenCollateralLoans is LoansBase {
         collateralTokenTransferFrom(msg.sender, amount);
     }
 
+    /**
+        @notice Checks to ensure the token balance matches the required balance
+        @param initialBalance uint256 The inital balance of tokens
+        @param expectedAmount uint256 The expected balance of tokens
+        @param isTransfer bool If the balance is being checked for a transfer or token allowance
+     */
     function _requireExpectedBalance(
         uint256 initialBalance,
         uint256 expectedAmount,
