@@ -13,6 +13,7 @@ const Lenders = artifacts.require("./base/Lenders.sol");
 const LendingPool = artifacts.require("./base/LendingPool.sol");
 
 // TODO Which function is testing this test file Transfer or Repay?
+// Answer - The Repay function which triggers the private tokenTransferFrom function. I can delete this test since the LendingPoolRepayTest does the same 
 contract('LendingPoolRepayTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
@@ -50,16 +51,17 @@ contract('LendingPoolRepayTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [accounts[1], loansAddress, true, 10, false, undefined, false],
-        _2_notLoan: [accounts[1], accounts[2], true, 10, false, 'Address is not Loans contract.', true],
-        _3_transferFail: [accounts[1], loansAddress, false, 200, false, "TransferFrom wasn't successful.", true],
-        _4_compoundFail: [accounts[1], loansAddress, true, 10, true, 'COMPOUND_DEPOSIT_ERROR', true],
+        _1_basic: [accounts[1], loansAddress, true, 10, false, 1, undefined, false],
+        _2_notLoan: [accounts[1], accounts[2], true, 10, false, 1, 'Address is not Loans contract.', true],
+        _3_transferFail: [accounts[1], loansAddress, false, 200, false, 1, "TransferFrom wasn't successful.", true],
+        _4_compoundFail: [accounts[1], loansAddress, true, 10, true, 1, 'COMPOUND_DEPOSIT_ERROR', true],
     }, function(
         borrower,
         sender,
         transferFrom,
         amountToRepay,
         compoundFails,
+        allowance,
         expectedErrorMessage,
         mustFail
     ) {
@@ -70,7 +72,10 @@ contract('LendingPoolRepayTest', function (accounts) {
 
             const mintResponse = compoundFails ? 1 : 0
             const encodeCompMint = compoundInterfaceEncoder.encodeMint();
-            await cTokenInstance.givenMethodReturnUint(encodeCompMint, mintResponse)
+            await cTokenInstance.givenMethodReturnUint(encodeCompMint, mintResponse);
+
+            const encodeAllowance = erc20InterfaceEncoder.encodeAllowance();
+            await daiInstance.givenMethodReturnUint(encodeAllowance, allowance);
 
             try {
                 // Invocation

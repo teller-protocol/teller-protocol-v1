@@ -48,11 +48,11 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [accounts[1], loansInstance, true, 10, false, undefined, false, 1000],
-        _2_transferFromFail: [accounts[1], loansInstance, false, 10, false, "TransferFrom wasn't successful.", true, 1000],
-        _3_notLoansSender: [accounts[1], accounts[2], true, 71, false, 'Address is not Loans contract.', true, 1000],
-        _4_compoundFail: [accounts[1], loansInstance, true, 10, true, 'COMPOUND_DEPOSIT_ERROR', true, 1000]
-        // TODO Please add new params before 'expectedErrorMessage'. 
+        _1_basic: [accounts[1], loansInstance, true, 10, false, 1, undefined, false],
+        _2_transferFromFail: [accounts[1], loansInstance, false, 1, false, 1, "TransferFrom wasn't successful.", true],
+        _3_notLoansSender: [accounts[1], accounts[2], true, 71, false, 1, 'Address is not Loans contract.', true],
+        _4_compoundFail: [accounts[1], loansInstance, true, 10, true, 1, 'COMPOUND_DEPOSIT_ERROR', true]
+        // DONE Please add new params before 'expectedErrorMessage'. 
         // The last two params usually are for error handling (expectedErrorMessage, mustFail)
     }, function(
         liquidator,
@@ -60,9 +60,9 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
         transferFrom,
         amountToLiquidate,
         compoundFails,
+        allowance,
         expectedErrorMessage,
-        mustFail,
-        allowance
+        mustFail
     ) {
         it(t('user', 'liquidationPayment', 'Should able (or not) to liquidate payment.', mustFail), async function() {
             // Setup
