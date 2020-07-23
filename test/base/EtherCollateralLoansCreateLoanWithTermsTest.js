@@ -107,6 +107,10 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
 
             const loan = await instance.loans.call(mockLoanIDCounter)
             
+            const borrowedLoans = await instance.getBorrowerLoans(borrowerAddress);
+
+            assert.equal(borrowedLoans[0], mockLoanIDCounter);
+
             assert.equal(loan['id'].toString(), mockLoanIDCounter)
             assert.equal(loan['loanTerms']['borrower'].toString(), loanRequest.borrower)
             assert.equal(loan['loanTerms']['recipient'].toString(), loanRequest.recipient)
