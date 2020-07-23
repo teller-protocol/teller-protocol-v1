@@ -28,6 +28,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
     const nodeThree = accounts[4]
     const nodeFour = accounts[5]
     const nodeSix = accounts[6]
+    const nodeSeven = accounts[7]
     const borrower = accounts[9]
     const requestNonce = 142
 
@@ -40,12 +41,14 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
     let responseFive = createUnsignedLoanResponse(nodeThree, 0, 1400, 6840, BigNumber("94000000000000000000000").toFixed(), 0, NULL_ADDRESS)
     let responseExpired = createUnsignedLoanResponse(nodeSix, 0, 1400, 6840, BigNumber("94000000000000000000000").toFixed(), 0, NULL_ADDRESS)
     let responseInvalidChainId = createUnsignedLoanResponse(nodeThree, 0, 1400, 6840, BigNumber("94000000000000000000000").toFixed(), 3, NULL_ADDRESS)
+    let responseDuplicateHash = createUnsignedLoanResponse(nodeSeven, 0, 1375, 6704, BigNumber("90000000000000000000000").toFixed(), 0, NULL_ADDRESS)
 
     beforeEach('Setup the response times and signatures', async () => {
         instance = await LoanTermsConsensus.new()
         currentTime = await getLatestTimestamp()
 
         loanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478, instance.address)
+        duplicateLoanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478, instance.address)
 
         responseOne.consensusAddress = instance.address;
         responseTwo.consensusAddress = instance.address;
@@ -191,5 +194,79 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
                 assert.equal(error.reason, expectedErrorMessage);
             }
         })
-    })
+    });
+
+    withData({
+        _9_nonce_taken: [
+            1, 320, [responseOne], true, 'REQUEST_NONCE_TAKEN'
+        ],
+    }, function(
+        reqSubmissions,
+        tolerance,
+        responses,
+        mustFail,
+        expectedErrorMessage,
+    ) {    
+        it(t('user', 'new', 'Should accept/not accept a nodes response', mustFail), async function() {
+            // set up contract
+            settings = await Settings.new(reqSubmissions, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500);
+            
+            await instance.initialize(loansContract, settings.address)
+
+            await instance.addSigner(nodeOne)
+
+            try {
+                await instance.processRequest(
+                    loanRequest,
+                    responses, {
+                       from: loansContract
+                    }
+                );
+                const result = await instance.processRequest(
+                    duplicateLoanRequest,
+                    responses, {
+                       from: loansContract
+                    }
+                );
+
+                assert(!mustFail, 'It should have failed because data is invalid.');
+
+                let totalInterestRate = 0
+                let totalCollateralRatio = 0
+                let totalMaxLoanAmount = BigNumber('0')
+
+                responses.forEach(response => {
+                    loanTermsConsensus
+                        .termsSubmitted(result)
+                        .emitted(
+                            response.signer,
+                            borrower,
+                            requestNonce,
+                            response.interestRate,
+                            response.collateralRatio,
+                            response.maxLoanAmount
+                        );
+
+                    totalInterestRate += response.interestRate;
+                    totalCollateralRatio += response.collateralRatio;
+                    totalMaxLoanAmount = totalMaxLoanAmount.plus(response.maxLoanAmount)
+                })
+
+                loanTermsConsensus
+                    .termsAccepted(result)
+                    .emitted(
+                        borrower,
+                        requestNonce,
+                        Math.floor(totalInterestRate / responses.length),
+                        Math.floor(totalCollateralRatio / responses.length),
+                        totalMaxLoanAmount.div(responses.length).toFixed()
+                    )
+              
+            } catch (error) {
+                if(!mustFail) console.log("ERROR!!!", error)
+                assert(mustFail, 'Should not have failed');
+                assert.equal(error.reason, expectedErrorMessage);
+            }
+        })
+    })  
 })

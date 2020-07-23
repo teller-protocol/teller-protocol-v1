@@ -75,8 +75,9 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
                     ['uint256', 'uint256', 'uint256'],
                     [interestRate.toString(), collateralRatio.toString(), maxLoanAmount.toString()]
                 )
-            );
-            await instance.createLoanWithTerms(
+            )
+            // Invocation
+            const tx = await instance.createLoanWithTerms(
                 loanRequest,
                 [responseOne, responseTwo],
                 msgValue,
