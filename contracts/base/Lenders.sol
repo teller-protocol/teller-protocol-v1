@@ -47,10 +47,7 @@ contract Lenders is Base, LendersInterface {
         @notice It checks sender is the lending pool address.
      */
     modifier isLendingPool() {
-        require(
-            _areAddressesEqual(lendingPool, msg.sender),
-            "SENDER_ISNT_LENDING_POOL"
-        );
+        require(_areAddressesEqual(lendingPool, msg.sender), "SENDER_ISNT_LENDING_POOL");
         _;
     }
 
