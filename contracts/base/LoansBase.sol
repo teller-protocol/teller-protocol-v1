@@ -331,7 +331,7 @@ contract LoansBase is LoansInterface, Base {
 
     /** Internal Functions */
     /**
-        @notice Payouts the collateral for a loan
+        @notice Pays out the collateral for a loan
         @param loanID ID of loan from which collateral is to be paid out
         @param amount Amount of collateral paid out
         @param recipient Account address of the recipient of the collateral
