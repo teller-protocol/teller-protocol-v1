@@ -59,7 +59,6 @@ contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
         collateralAmount,
         currentCollateral,
         transactionValueAmount,
-
         mustFail,
         expectedErrorMessage
     ) {
