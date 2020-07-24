@@ -16,7 +16,6 @@
     "start:ganache": "yarn prepare:ganache:data && ganache-cli --db=\"./test-integration/resources/data/\" -i=\"5777\" -d --gasPrice=\"0x90F560\" --mnemonic=\"blossom spatial metal assault riot bullet truck update forward brave slide way\"",
     "start:ganache:docker": "yarn prepare:ganache:data && cd docker && docker-compose up",
     "start:ganache:docker:empty": "yarn remove:ganache:data && cd docker && docker-compose up",
-    
     "deploy:mainnet": "truffle compile && truffle deploy --network mainnet --reset --to 2",
     "deploy:ropsten": "truffle compile && truffle deploy --network ropsten --reset --to 2",
     "deploy:ganache": "truffle compile && truffle deploy --network ganache --reset --to 2",
@@ -37,7 +36,7 @@
     "husky": "^4.2.3",
     "jsonfile": "^6.0.1",
     "leche": "^2.3.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "mocha": "^7.1.0",
     "prettier": "^2.0.2",
     "prettier-plugin-solidity": "^1.0.0-alpha.46",

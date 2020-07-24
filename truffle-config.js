@@ -57,7 +57,6 @@ module.exports = {
 				'LoanTermsConsensusMock',
 				'LoansBaseModifiersMock',
 				'PairAggregatorMock',
-				'SignedSafeMath' // It is not included due to it is a OpenZeppelin contract.
 			]
 		},
 	},

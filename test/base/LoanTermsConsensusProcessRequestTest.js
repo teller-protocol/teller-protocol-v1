@@ -28,6 +28,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
     const nodeThree = accounts[4]
     const nodeFour = accounts[5]
     const nodeSix = accounts[6]
+    const nodeSeven = accounts[7]
     const borrower = accounts[9]
     const requestNonce = 142
 
@@ -116,7 +117,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
         mustFail,
         expectedErrorMessage,
     ) {    
-        it(t('user', 'new', 'Should accept/not accept a nodes response', mustFail), async function() {
+        it(t('user', 'processRequest', 'Should accept/not accept node request/responses', mustFail), async function() {
             // set up contract
             settings = await Settings.new(reqSubmissions, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500);
             
@@ -191,5 +192,5 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
                 assert.equal(error.reason, expectedErrorMessage);
             }
         })
-    })
+    });
 })
