@@ -279,7 +279,7 @@ contract LendingPool is Base, LendingPoolInterface {
     function tokenTransferFrom(address from, uint256 amount) private {
         // The first param is the  owner and second the spender. That's why the unit tests were failing. :D
         // If I could putting a slapping my head emoji here I would lol :S
-        uint256 allowance = lendingToken.allowance(address(this), from);
+        uint256 allowance = lendingToken.allowance(from, address(this));
         require(
           allowance <= amount,
           "LEND_TOKEN_NOT_ENOUGH_ALLOWANCE" // DONE "LEND_TOKEN_NOT_ENOUGH_ALLOWANCE" or similar (not more 32 chars).
