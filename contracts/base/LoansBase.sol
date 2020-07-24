@@ -15,6 +15,7 @@ import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
 
+
 /**
     @notice This contract is used as a basis for the creation of the different types of loans across the platform
     @notice It implements the Base contract from Teller and the LoansInterface
@@ -26,10 +27,13 @@ contract LoansBase is LoansInterface, Base {
 
     /* State Variables */
 
-    uint256 internal constant TEN = 10; // Used to calculate one whole token.
+    // Used to calculate one whole token.
+    uint256 internal constant TEN = 10;
+
     // Loan length will be inputted in days, with 4 decimal places. i.e. 30 days will be inputted as
     // 300000. Therefore in interest calculations we must divide by 365000
     uint256 internal constant DAYS_PER_YEAR_4DP = 3650000;
+
     // For interestRate, collateral, and liquidation price, 7% is represented as 700. To find the value
     // of something we must divide 700 by 100 to remove decimal places, and another 100 for percentage.
     uint256 internal constant TEN_THOUSAND = 10000;
