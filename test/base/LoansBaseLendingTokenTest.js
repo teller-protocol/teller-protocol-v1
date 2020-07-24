@@ -13,7 +13,6 @@ contract('LoansBaseLendingTokenTest', function (accounts) {
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
     let instance;
     let lendingPoolInstance;
-
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
         const oracleInstance = await Mock.new();

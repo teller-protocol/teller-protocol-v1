@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t } = require('../utils/consts');
+const { t, NULL_ADDRESS } = require('../utils/consts');
 const { lendingPool } = require('../utils/events');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
@@ -22,6 +22,7 @@ contract('LendingPoolRepayTest', function (accounts) {
     let lendersInstance;
     let interestConsensusInstance;
     let cTokenInstance;
+    let settingsInstance;
     let loansAddress = accounts[0];
     
     beforeEach('Setup for each test', async () => {
@@ -30,32 +31,27 @@ contract('LendingPoolRepayTest', function (accounts) {
         instance = await LendingPool.new();
         interestConsensusInstance = await Mock.new();
         cTokenInstance = await Mock.new()
-        const settingsInstance = await Mock.new();
+        settingsInstance = await Mock.new();
 
         lendersInstance = await Lenders.new(
           zTokenInstance.address,
           instance.address,
           interestConsensusInstance.address
         );
-
-        await instance.initialize(
-            zTokenInstance.address,
-            daiInstance.address,
-            lendersInstance.address,
-            loansAddress,
-            cTokenInstance.address,
-            settingsInstance.address,
-        );
     });
 
     withData({
-        _1_basic: [accounts[1], loansAddress, true, 10, false, undefined, false],
-        _2_notLoan: [accounts[1], accounts[2], true, 10, false, 'Address is not Loans contract.', true],
-        _3_transferFail: [accounts[1], loansAddress, false, 200, false, "TransferFrom wasn't successful.", true],
-        _4_compoundFail: [accounts[1], loansAddress, true, 10, true, 'COMPOUND_DEPOSIT_ERROR', true],
+        _1_cTokenSupported_basic: [accounts[1], loansAddress, true, true, 10, false, undefined, false],
+        _2_cTokenSupported_notLoan: [accounts[1], accounts[2], true, true, 10, false, 'Address is not Loans contract.', true],
+        _3_cTokenSupported_transferFail: [accounts[1], loansAddress, true, false, 200, false, "TransferFrom wasn't successful.", true],
+        _4_cTokenSupported_compoundFail: [accounts[1], loansAddress, true, true, 10, true, 'COMPOUND_DEPOSIT_ERROR', true],
+        _6_cTokenNotSupported_basic: [accounts[1], loansAddress, false, true, 10, false, undefined, false],
+        _7_cTokenNotSupported_notLoan: [accounts[1], accounts[2], false, true, 10, false, 'Address is not Loans contract.', true],
+        _8_cTokenNotSupported_transferFail: [accounts[1], loansAddress, false, false, 200, false, "TransferFrom wasn't successful.", true],
     }, function(
         borrower,
         sender,
+        isCTokenSupported,
         transferFrom,
         amountToRepay,
         compoundFails,
@@ -64,6 +60,15 @@ contract('LendingPoolRepayTest', function (accounts) {
     ) {
         it(t('user', 'repay', 'Should able (or not) to repay loan.', mustFail), async function() {
             // Setup
+            const cTokenAddress = isCTokenSupported ? cTokenInstance.address : NULL_ADDRESS;
+            await instance.initialize(
+                zTokenInstance.address,
+                daiInstance.address,
+                lendersInstance.address,
+                loansAddress,
+                cTokenAddress,
+                settingsInstance.address,
+            );
             const encodeTransferFrom = erc20InterfaceEncoder.encodeTransferFrom();
             await daiInstance.givenMethodReturnBool(encodeTransferFrom, transferFrom);
             
