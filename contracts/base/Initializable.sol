@@ -1,18 +1,3 @@
-/*
-    Copyright 2020 Fabrx Labs Inc.
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
 pragma solidity 0.5.17;
 
 
@@ -22,6 +7,12 @@ pragma solidity 0.5.17;
 
 // Interfaces
 
+/**
+    @notice This contract is used to initialize the contract variables using a function (initialize) instead of constructor.
+    @notice It makes the creation process easier avoiding circular dependencies.
+
+    @author develop@teller.finance
+ */
 contract Initializable {
     /* State Variables */
 
@@ -29,11 +20,19 @@ contract Initializable {
 
     /** Modifiers */
 
+    /**
+        @notice Checks whether the contract is initialized or not.
+        @dev It throws a require error if the contract is initialized.
+     */
     modifier isNotInitialized() {
         require(!_isInitialized, "It is already initialized.");
         _;
     }
 
+    /**
+        @notice Checks whether the contract is initialized or not.
+        @dev It throws a require error if the contract is not initialized.
+     */
     modifier isInitialized() {
         require(_isInitialized, "It is not initialized.");
         _;
@@ -43,12 +42,19 @@ contract Initializable {
 
     /** External Functions */
 
+    /**
+        @notice Gets if the contract is initialized.
+        @return true if contract is initialized. Otherwise it returns false.
+     */
     function initialized() external view returns (bool) {
         return _isInitialized;
     }
 
     /** Internal functions */
 
+    /**
+        @notice It initializes this contract.
+     */
     function _initialize() internal {
         _isInitialized = true;
     }

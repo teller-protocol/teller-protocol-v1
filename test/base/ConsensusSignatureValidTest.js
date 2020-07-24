@@ -8,6 +8,7 @@ const ConsensusMock = artifacts.require("./mock/base/ConsensusMock.sol");
 
 // constants
 const { NULL_ADDRESS } = require('../utils/consts');
+const chains = require('../utils/chains');
 
 contract('ConsensusSignatureValidTest', function (accounts) {
     const tolerance = 0
@@ -20,8 +21,10 @@ contract('ConsensusSignatureValidTest', function (accounts) {
             startTime: 345,
             endTime: 736,
             requestTime: 0,
+            consensusAddress: accounts[1],
         },
-        accounts[1]
+        accounts[1],
+        chains.mainnet
     )
     const hashTwo = hashInterestRequest(
         {
@@ -29,8 +32,10 @@ contract('ConsensusSignatureValidTest', function (accounts) {
             startTime: 0,
             endTime: 0,
             requestTime: 0,
+            consensusAddress: accounts[2],
         },
-        NULL_ADDRESS
+        NULL_ADDRESS,
+        chains.mainnet
   )
 
     beforeEach('Setup for each test', async () => {

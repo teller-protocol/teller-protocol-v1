@@ -425,6 +425,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
             const encodeGetLatestAnswer = aggregatorInterfaceEncoder.encodeLatestAnswer();
             await oracleInstance.givenMethodReturnUint(encodeGetLatestAnswer, oraclePrice.toString());
             if(useTokens) {
+                await instance.mockRequireExpectedBalance(true);
                 // Mocking collateral token data
                 await collateralToken.givenMethodReturnUint(
                     erc20InterfaceEncoder.encodeBalanceOf(),
@@ -441,18 +442,20 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
 
             const loanTerms = createLoanTerms(borrower, NULL_ADDRESS, 0, collateralRatio, toDecimals(maxAmount, decimalsConf.lendingTokenDecimals).toString(), 0);
             await instance.setLoan(loanID, loanTerms, 0, 0, toDecimals(collateral, decimalsConf.collateralDecimals), 0, toDecimals(principalOwed, decimalsConf.lendingTokenDecimals), toDecimals(interestOwed, decimalsConf.lendingTokenDecimals), toDecimals(borrowedAmount, decimalsConf.lendingTokenDecimals), ACTIVE, false);
-            // Repay loan to assert changes in the collateral needed.
-            await instance.repay(toDecimals(repayAmount.toString(), decimalsConf.lendingTokenDecimals), loanID, { from: borrower });
+            if(repayAmount > 0) {
+                // Repay loan to assert changes in the collateral needed.
+                await instance.repay(toDecimals(repayAmount.toString(), decimalsConf.lendingTokenDecimals), loanID, { from: borrower });
+            }
 
             // Invocation
             const {
                 collateralNeededLendingTokens: collateralNeededLendingTokensResult,
                 collateralNeededCollateralTokens: collateralNeededCollateralTokensResult,
-                requireCollateral: requireCollateralResult,
+                moreCollateralRequired: moreCollateralRequiredResult,
             } = await instance.getCollateralInfo(loanID);
             
             // Assertions
-            assert.equal(requireCollateralResult, expectedResults.requireCollateral);
+            assert.equal(moreCollateralRequiredResult, expectedResults.requireCollateral);
             assert.equal(collateralNeededCollateralTokensResult.toString(), expectedResults.neededCollInCollTokens);
             assert.equal(collateralNeededLendingTokensResult.toString(), expectedResults.neededCollInLendingTokens);
         })

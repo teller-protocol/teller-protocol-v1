@@ -6,7 +6,7 @@ const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds } = require
 const { createMultipleSignedLoanTermsResponses, createLoanTermsRequest } = require('../../test/utils/loan-terms-helper');
 const assert = require("assert");
 
-module.exports = async ({accounts, getContracts, processArgs, timer, web3, nonces}) => {
+module.exports = async ({accounts, getContracts, processArgs, timer, web3, nonces, chainId}) => {
   console.log('Deposit tokens as collateral.');
   const tokenName = processArgs.getValue('testTokenName');
   const oracleTokenName = 'USD';
@@ -17,6 +17,7 @@ module.exports = async ({accounts, getContracts, processArgs, timer, web3, nonce
   const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.link().lendingPool(tokenName));
   const loansInstance = await getContracts.getDeployed(zerocollateral.link().loans(tokenName));
   const chainlinkOracle = await getContracts.getDeployed(chainlink.custom(collateralTokenName, oracleTokenName));
+  const loanTermConsensusInstance = await getContracts.getDeployed(zerocollateral.link().loanTermsConsensus(tokenName));
 
   const currentTimestamp = parseInt(await timer.getCurrentTimestamp());
   console.log(`Current timestamp: ${currentTimestamp} segs`);
@@ -64,20 +65,24 @@ module.exports = async ({accounts, getContracts, processArgs, timer, web3, nonce
     duration: durationInDays * ONE_DAY,
     requestTime: currentTimestamp,
     caller: loansInstance.address,
+    consensusAddress: loanTermConsensusInstance.address,
   };
   const loanResponseInfoTemplate = {
     responseTime: currentTimestamp - 10,
     interestRate: 4000,
     collateralRatio: 6000,
     maxLoanAmount: maxAmountWei.toFixed(0),
+    consensusAddress: loanTermConsensusInstance.address,
   };
-  const loanTermsRequest = createLoanTermsRequest(loanTermsRequestInfo);
+
+  const loanTermsRequest = createLoanTermsRequest(loanTermsRequestInfo, chainId);
   const signedResponses = await createMultipleSignedLoanTermsResponses(
     web3,
     loanTermsRequest,
     signers,
     loanResponseInfoTemplate,
     nonces,
+    chainId,
   );
   const initialTotalCollateral = await loansInstance.totalCollateral();
   const initialLoansCollateralTokenBalance = await collateralToken.balanceOf(loansInstance.address);
@@ -85,7 +90,7 @@ module.exports = async ({accounts, getContracts, processArgs, timer, web3, nonce
 
   await collateralToken.approve(loansInstance.address, initialCollateralAmount, borrowerTxConfig);
 
-  const setLoanTermsResult = await loansInstance.setLoanTerms(
+  const createLoanWithTermsResult = await loansInstance.createLoanWithTerms(
     loanTermsRequest.loanTermsRequest,
     signedResponses,
     initialCollateralAmount,
@@ -97,7 +102,7 @@ module.exports = async ({accounts, getContracts, processArgs, timer, web3, nonce
   const loanIDs = await loansInstance.getBorrowerLoans(borrower);
   const lastLoanID = loanIDs[loanIDs.length - 1];
   loans
-    .loanTermsSet(setLoanTermsResult)
+    .loanTermsSet(createLoanWithTermsResult)
     .emitted(
       lastLoanID,
       borrowerTxConfig.from,

@@ -1,18 +1,3 @@
-/*
-    Copyright 2020 Fabrx Labs Inc.
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
@@ -26,12 +11,30 @@ import "../interfaces/InterestConsensusInterface.sol";
 import "./Consensus.sol";
 
 
+/**
+    @notice This contract processes the node responses to get consensus in the lender interest.
+
+    @author develop@teller.finance
+ */
 contract InterestConsensus is Consensus, InterestConsensusInterface {
     using AddressLib for address;
+
+    /* State Variables */
 
     // mapping of (lender, endTime) to the aggregated node submissions for their request
     mapping(address => mapping(uint256 => NumbersList.Values)) public interestSubmissions;
 
+    /** Modifiers */
+
+    /* Constructor */
+
+    /* External Functions */
+    /**
+        @notice It processes all the node responses for a request in order to get a consensus value.
+        @param request the interest request sent by the lender.
+        @param responses all node responses to process.
+        @return the consensus interest.
+     */
     function processRequest(
         ZeroCollateralCommon.InterestRequest calldata request,
         ZeroCollateralCommon.InterestResponse[] calldata responses
@@ -44,7 +47,7 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         bytes32 requestHash = _hashRequest(request);
 
         for (uint256 i = 0; i < responses.length; i++) {
-            _processReponse(request, responses[i], requestHash);
+            _processResponse(request, responses[i], requestHash);
         }
 
         uint256 interestAccrued = _getConsensus(
@@ -56,7 +59,14 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         return interestAccrued;
     }
 
-    function _processReponse(
+    /** Internal Functions */
+
+    /**
+        @notice It processes a node response.
+        @param request the interest request sent by the lender.
+        @param response a node response.
+     */
+    function _processResponse(
         ZeroCollateralCommon.InterestRequest memory request,
         ZeroCollateralCommon.InterestResponse memory response,
         bytes32 requestHash
@@ -82,21 +92,34 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         );
     }
 
+    /**
+        @notice It creates a hash based on a node response and lender request.
+        @param response a node response.
+        @param requestHash a hash value that represents the lender request.
+        @return a hash value.
+     */
     function _hashResponse(
         ZeroCollateralCommon.InterestResponse memory response,
         bytes32 requestHash
-    ) internal pure returns (bytes32) {
+    ) internal view returns (bytes32) {
         return
             keccak256(
                 abi.encode(
+                    response.consensusAddress,
                     response.responseTime,
                     response.interest,
                     response.signature.signerNonce,
+                    _getChainId(),
                     requestHash
                 )
             );
     }
 
+    /**
+        @notice It creates a hash value based on the lender request.
+        @param request the interest request sent by the lender.
+        @return a hash value.
+     */
     function _hashRequest(ZeroCollateralCommon.InterestRequest memory request)
         internal
         view
@@ -105,11 +128,13 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         return
             keccak256(
                 abi.encode(
-                    caller,
+                    callerAddress,
                     request.lender,
+                    request.consensusAddress,
                     request.startTime,
                     request.endTime,
-                    request.requestTime
+                    request.requestTime,
+                    _getChainId()
                 )
             );
     }

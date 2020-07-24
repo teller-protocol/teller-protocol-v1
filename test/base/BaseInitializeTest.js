@@ -3,6 +3,7 @@ const withData = require('leche').withData;
 const { t, NULL_ADDRESS } = require('../utils/consts');
 
 // Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const Base = artifacts.require("./mock/base/BaseMock.sol");
@@ -10,11 +11,14 @@ const Base = artifacts.require("./mock/base/BaseMock.sol");
 contract('BaseInitializeTest', function (accounts) {
 
     withData({
-        _1_basic: [accounts[0], undefined, false],
-        _2_notSettings: [NULL_ADDRESS, 'SETTINGS_MUST_BE_PROVIDED', true],
-    }, function(settingsAddress, expectedErrorMessage, mustFail) {
+        _1_valid: [99, undefined, false],
+        _2_settings_empty: [-1, 'SETTINGS_MUST_BE_PROVIDED', true],
+        _3_settings_not_contract: [1, 'SETTINGS_MUST_BE_A_CONTRACT', true],
+    }, function(settingsIndex, expectedErrorMessage, mustFail) {
         it(t('user', 'initialize', 'Should (or not) be able to initialize the new instance.', mustFail), async function() {
             // Setup
+            const settingsInstance = await Mock.new();
+            const settingsAddress = settingsIndex === -1 ? NULL_ADDRESS : (settingsIndex === 99 ? settingsInstance.address: accounts[settingsIndex]);
             const instance = await Base.new();
 
             try {

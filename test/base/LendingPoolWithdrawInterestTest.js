@@ -51,12 +51,14 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [accounts[0], true, 10, 10, 10, false, undefined, false],
-        _2_basic: [accounts[0], true, 40, 30, 25, false, undefined, false],
-        _3_basic: [accounts[0], true, 40, 25, 30, false, undefined, false],
-        _4_transferFail: [accounts[1], false, 50, 50, 50, false, 'Transfer was not successful.', true],
-        _5_notEnoughBalance: [accounts[1], true, 49, 50, 50, true, 'COMPOUND_WITHDRAWAL_ERROR', true],
+        _1_basic: [true, accounts[0], true, 10, 10, 10, false, undefined, false],
+        _2_basic: [true, accounts[0], true, 40, 30, 25, false, 'AMOUNT_EXCEEDS_AVAILABLE_AMOUNT', true],
+        _3_basic: [true, accounts[0], true, 40, 25, 30, false, undefined, false],
+        _4_transferFail: [true, accounts[1], false, 50, 50, 50, false, 'Transfer was not successful.', true],
+        _5_notEnoughBalance: [true, accounts[1], true, 49, 50, 50, true, 'COMPOUND_WITHDRAWAL_ERROR', true],
+        _6_notAddressEqual: [false, accounts[1], true, 49, 50, 50, true, 'Address has no permissions.', true],
     }, function(
+        areAddressesEqual,
         lender,
         transfer,
         currentBalanceOf,
@@ -74,6 +76,7 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
                 totalNotWithdrawn,
                 totalNotWithdrawn
             );
+            await lendersInstance.mockAddressesEqual(areAddressesEqual);
 
             const redeemResponse = compoundFails ? 1 : 0
             const encodeRedeemUnderlying = compoundInterfaceEncoder.encodeRedeemUnderlying();

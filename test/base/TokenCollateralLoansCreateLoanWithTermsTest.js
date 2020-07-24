@@ -50,7 +50,7 @@ const createTermsSetExpectedLoan = (
     };
 };
 
-contract('TokenCollateralLoansSetLoanTermsTest', function (accounts) {
+contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
     let loanTermsConsensusEncoder;
     let collateralToken;
     let instance;
@@ -59,11 +59,11 @@ contract('TokenCollateralLoansSetLoanTermsTest', function (accounts) {
     const timer = new Timer(web3);
     const borrowerAddress = accounts[2];
 
-    const loanRequest = createLoanRequest(borrowerAddress, NULL_ADDRESS, 3, 12000, 4, 19);
-    const emptyRequest = createLoanRequest(NULL_ADDRESS, NULL_ADDRESS, 0, 0, 0, 0);
+    let loanRequest;
+    let emptyRequest;
 
-    const responseOne = createUnsignedLoanResponse(accounts[3], 0, 1234, 6500, 10000, 3);
-    const responseTwo = createUnsignedLoanResponse(accounts[4], 0, 1500, 6000, 10000, 2);
+    let responseOne;
+    let responseTwo;
     
     beforeEach('Setup for each test', async () => {
         collateralToken = await LINKMock.new();
@@ -71,6 +71,13 @@ contract('TokenCollateralLoansSetLoanTermsTest', function (accounts) {
         const lendingPoolInstance = await Mock.new();
         const oracleInstance = await Mock.new();
         const settingsInstance = await Settings.new(1, 1, 1, 1, THIRTY_DAYS, 1)
+
+        loanRequest = createLoanRequest(borrowerAddress, NULL_ADDRESS, 3, 12000, 4, 19, loanTermsConsInstance.address);
+        emptyRequest = createLoanRequest(NULL_ADDRESS, NULL_ADDRESS, 0, 0, 0, 0, loanTermsConsInstance.address);
+
+        responseOne = createUnsignedLoanResponse(accounts[3], 0, 1234, 6500, 10000, 3, loanTermsConsInstance.address);
+        responseTwo = createUnsignedLoanResponse(accounts[4], 0, 1500, 6000, 10000, 2, loanTermsConsInstance.address);
+
         instance = await Loans.new();
         await instance.initialize(
             oracleInstance.address,
@@ -89,7 +96,7 @@ contract('TokenCollateralLoansSetLoanTermsTest', function (accounts) {
         _3_not_enough_balance: [20, 2, 450000, 500000, 500000, 'ERC20: transfer amount exceeds balance', true],
         _4_not_enough_allowance: [22, 3, 500000, 500000, 470000, 'NOT_ENOUGH_COLL_TOKENS_ALLOWANCE', true],
     }, function(loanID, senderIndex, mintAmount, collateralAmount, approveCollateralAmount, expectedErrorMessage, mustFail) {
-        it(t('user', 'setLoanTerms', 'Should able to set loan terms.', mustFail), async function() {
+        it(t('user', 'createLoanWithTerms', 'Should able to set loan terms.', mustFail), async function() {
             const sender = accounts[senderIndex];
             const interestRate = getAverage(responseOne.interestRate, responseTwo.interestRate);
             const collateralRatio = getAverage(responseOne.collateralRatio, responseTwo.collateralRatio);
@@ -109,7 +116,7 @@ contract('TokenCollateralLoansSetLoanTermsTest', function (accounts) {
             // Invocation
             let result;
             try {
-                result = await instance.setLoanTerms(
+                result = await instance.createLoanWithTerms(
                     loanRequest,
                     [responseOne, responseTwo],
                     collateralAmount,

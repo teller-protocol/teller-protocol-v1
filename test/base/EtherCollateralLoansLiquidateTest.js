@@ -2,6 +2,7 @@
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS, ACTIVE, CLOSED, getLatestTimestamp, ONE_HOUR, ONE_DAY } = require('../utils/consts');
 const { createLoanTerms } = require('../utils/structs');
+const Timer = require('../../scripts/utils/Timer');
 const BigNumber = require('bignumber.js');
 
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
@@ -15,7 +16,8 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 
 contract('EtherCollateralLoansLiquidateTest', function (accounts) {
-    BigNumber.set({ DECIMAL_PLACES: 0, ROUNDING_MODE: 3 })
+    BigNumber.set({ DECIMAL_PLACES: 0, ROUNDING_MODE: 3 });
+    const timer = new Timer(web3);
 
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     const pairAggregatorEncoder = new PairAggregatorEncoder(web3);
@@ -53,9 +55,10 @@ contract('EtherCollateralLoansLiquidateTest', function (accounts) {
     });
 
     withData({
-        _1_loan_expired: [1900000000, 32725581, BigNumber("6000000000000000000"), 6512, true, 300000, BigNumber("4721489128502654"), 6, false, undefined],
-        _2_under_collateralised: [1900000000, 32725581, BigNumber("5942423100000000000"), 6512, false, 300000, BigNumber("4721489128502654"), 6, false, undefined],
-        _3_doesnt_need_liquidating: [1900000000, 32725581, BigNumber("6000000000000000000"), 6512, false, 300000, BigNumber("4721489128502654"), 6, true, 'DOESNT_NEED_LIQUIDATION'],
+        _1_loan_expired: [1900000000, 32725581, BigNumber("6000000000000000000"), 6512, true, 300000, BigNumber("4721489128502654"), 6, -400000, false, undefined],
+        _2_under_collateralised: [1900000000, 32725581, BigNumber("5942423100000000000"), 6512, false, 300000, BigNumber("4721489128502654"), 6, -400000, false, undefined],
+        _3_collateralised_and_loan_duration_expired: [1900000000, 32725581, BigNumber("6000000000000000000"), 6512, false, 300000, BigNumber("4721489128502654"), 6, -400000, false, undefined],
+        _4_doesnt_need_liquidating: [1900000000, 32725581, BigNumber("6000000000000000000"), 6512, false, 300000, BigNumber("1000000"), 6, 100, true, 'DOESNT_NEED_LIQUIDATION'],
     }, function (
         loanPrincipalOwed,
         loanInterestOwed,
@@ -65,6 +68,7 @@ contract('EtherCollateralLoansLiquidateTest', function (accounts) {
         loanDuration,
         oraclePrice,
         tokenDecimals,
+        loanStartedSecondsBack,
         mustFail,
         expectedErrorMessage
     ) {
@@ -84,9 +88,11 @@ contract('EtherCollateralLoansLiquidateTest', function (accounts) {
             if (!loanExpired) {
                 loanExpiry += ONE_HOUR
             }
+            const currentTimestampSeconds = await timer.getCurrentTimestampInSeconds();
+            const loanStartTime = currentTimestampSeconds + loanStartedSecondsBack;
 
             const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, loanDuration)
-            await instance.setLoan(mockLoanID, loanTerms, loanExpiry, 0, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, loanTerms.maxLoanAmount, ACTIVE, false)
+            await instance.setLoan(mockLoanID, loanTerms, loanExpiry, loanStartTime, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, loanTerms.maxLoanAmount, ACTIVE, false)
             await instance.setTotalCollateral(totalCollateral)
 
             // give the contract collateral (mock has a fallback)
@@ -94,9 +100,12 @@ contract('EtherCollateralLoansLiquidateTest', function (accounts) {
 
             try {
                 const contractBalBefore = await web3.eth.getBalance(instance.address)
-                const liquidatorBefore = await web3.eth.getBalance(liquidator)
+                const liquidatorBefore = await web3.eth.getBalance(liquidator);
 
-                let tx = await instance.liquidateLoan(mockLoanID, { from: liquidator })
+                const result = await instance.liquidateLoan(mockLoanID, { from: liquidator });
+
+                assert(!mustFail, 'It should have failed because data is invalid.');
+                assert(result);
 
                 const totalAfter = await instance.totalCollateral.call()
                 const contractBalAfter = await web3.eth.getBalance(instance.address)
@@ -112,7 +121,6 @@ contract('EtherCollateralLoansLiquidateTest', function (accounts) {
                 assert.equal(loan['liquidated'], true)
 
             } catch (error) {
-                if (!mustFail) console.log(error)
                 assert(mustFail);
                 assert(error);
                 assert.equal(error.reason, expectedErrorMessage);

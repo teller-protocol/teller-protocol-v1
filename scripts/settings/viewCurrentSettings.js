@@ -1,33 +1,18 @@
 // Smart contracts
-const SettingsInterface = artifacts.require("./interfaces/SettingsInterface.sol");
 
 // Util classes
-const assert = require('assert');
+const { zerocollateral } = require("../../scripts/utils/contracts");
+const { settings: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
-const processArgs = new ProcessArgs();
-
-/** Process parameters: */
-const senderIndex = 0;
+const processArgs = new ProcessArgs(readParams.view().argv);
 
 module.exports = async (callback) => {
     try {
-        const network = processArgs.network();
-        console.log(`Script will be executed in network ${network}.`)
-        const appConf = require('../../config')(network);
-        const { zerocollateral } = appConf.networkConfig;
-
-        const settingsAddress = zerocollateral.Settings;
-        assert(settingsAddress, "Settings address is undefined.");
-
-        const accounts = await web3.eth.getAccounts();
-        assert(accounts, "Accounts must be defined.");
-        const sender = accounts[senderIndex];
-        assert(sender, "Sender must be defined.");
-
-        const settings = await SettingsInterface.at(settingsAddress);
+        const getContracts = processArgs.createGetContracts(artifacts);
+        const settings = await getContracts.getDeployed(zerocollateral.settings());
 
         console.log('='.repeat(70));
-        console.log(`Settings Address: ${settingsAddress}`);
+        console.log(`Settings Address: ${settings.address}`);
         console.log('='.repeat(70));
 
         const currentRequiredSubmissions = await settings.requiredSubmissions();

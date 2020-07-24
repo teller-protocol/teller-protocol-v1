@@ -1,5 +1,4 @@
 const envConfig = require('./config/env')();
-const preamble = require('./docs/preamble');
 
 // Environment Configuration
 const addressCountValue = envConfig.getAddressCount().getOrDefault();
@@ -30,9 +29,6 @@ module.exports = {
 	api_keys: {
 		etherscan: etherscanApiKey,
 	},
-	verify: {
-		preamble,
-	},
 	mocha: {
 		enableTimeouts: false,
 		reporter: 'eth-gas-reporter',
@@ -60,17 +56,19 @@ module.exports = {
 				'ConsensusModifiersMock',
 				'LoanTermsConsensusMock',
 				'LoansBaseModifiersMock',
-				'PairAggregatorMock'
+				'PairAggregatorMock',
 			]
 		},
 	},
 	compilers: {
 		solc: {
 			version: "0.5.17",
-			optimizer: {
-				enabled: true,
-				runs: 200
-			}
+			settings: {
+				optimizer: {
+					enabled: true,
+					runs: 200
+				},
+			},
 		}
 	},
 	networks: {

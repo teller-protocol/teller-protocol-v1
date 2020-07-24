@@ -11,6 +11,7 @@ const { createLoanResponseSig, hashLoanTermsRequest } = require('../utils/hashes
 const ethUtil = require('ethereumjs-util')
 const { loanTermsConsensus } = require('../utils/events');
 const BigNumber = require('bignumber.js');
+const chains = require('../utils/chains');
 
 // Smart contracts
 const LoanTermsConsensusMock = artifacts.require("./mock/base/LoanTermsConsensusMock.sol");
@@ -25,10 +26,6 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
     const tolerance = 0
     const borrower = accounts[3]
     const requestNonce = 142
-
-    const loanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478)
-
-    const requestHash = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, loansContract))
 
     let mockInterest = {
         min: 1220,
@@ -53,24 +50,25 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
 
     withData({
         _1_signer_already_submitted: [   // signer already submitted for this loan
-            1211, 6632, BigNumber("123000000000000000000000"), 3, true, false, false, true, true, true, 'SIGNER_ALREADY_SUBMITTED'
+            chains.mainnet, 1211, 6632, BigNumber("123000000000000000000000"), 3, true, false, false, true, true, true, 'SIGNER_ALREADY_SUBMITTED'
         ],
         _2_signer_nonce_taken: [         // signer nonce is taken already
-            1211, 6632, BigNumber("123000000000000000000000"), 3, true, false, true, false, true, true, 'SIGNER_NONCE_TAKEN'
+            chains.mainnet, 1211, 6632, BigNumber("123000000000000000000000"), 3, true, false, true, false, true, true, 'SIGNER_NONCE_TAKEN'
         ],
         _3_response_expired: [           // mock an expired response time
-            1211, 6632, BigNumber("123000000000000000000000"), 3, true, true, false, false, true, true, 'RESPONSE_EXPIRED'
+            chains.mainnet, 1211, 6632, BigNumber("123000000000000000000000"), 3, true, true, false, false, true, true, 'RESPONSE_EXPIRED'
         ],
         _4_signature_invalid: [           // mock the node not being authorized
-            1211, 6632, BigNumber("123000000000000000000000"), 3, false, false, false, false, true, true, 'SIGNATURE_INVALID'
+            chains.mainnet, 1211, 6632, BigNumber("123000000000000000000000"), 3, false, false, false, false, true, true, 'SIGNATURE_INVALID'
         ],
         _5_first_valid_submission: [      // mock the first valid submission
-            1211, 6632, BigNumber("123000000000000000000000"), 3, true, false, false, false, false, false, undefined
+            chains.mainnet, 1211, 6632, BigNumber("123000000000000000000000"), 3, true, false, false, false, false, false, undefined
         ],
         _6_later_valid_submission: [      // mock a later submission
-            1211, 6632, BigNumber("123000000000000000000000"), 3, true, false, false, false, true, false, undefined
+            chains.mainnet, 1211, 6632, BigNumber("123000000000000000000000"), 3, true, false, false, false, true, false, undefined
         ],
     }, function(
+        chainId,
         interestRate,
         collateralRatio,
         maxLoanAmount,
@@ -89,6 +87,9 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
             instance = await LoanTermsConsensusMock.new()
             await instance.initialize(loansContract, settings.address)
 
+            const loanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478, instance.address)
+            const requestHash = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, loansContract, chains.mainnet))
+
             const currentTime = await getLatestTimestamp()
             const responseTime = responseExpired ?
                 currentTime - THIRTY_DAYS - ONE_DAY :   // thirty one days ago
@@ -100,6 +101,7 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
             }
             await instance.mockHasSubmitted(nodeAddress, borrower, requestNonce, mockHasSubmitted)
             await instance.mockSignerNonce(nodeAddress, signerNonce, mockSignerNonceTaken)
+            await instance.mockChainId(chainId)
 
             if (previousSubmissions) {
                 await instance.mockInterestRateSubmissions(
@@ -128,8 +130,8 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
                 )
             }
 
-            let loanResponse = createUnsignedLoanResponse(nodeAddress, responseTime, interestRate, collateralRatio, maxLoanAmount.toFixed(), signerNonce)
-            loanResponse = await createLoanResponseSig(web3, nodeAddress, loanResponse, requestHash)
+            let loanResponse = createUnsignedLoanResponse(nodeAddress, responseTime, interestRate, collateralRatio, maxLoanAmount.toFixed(), signerNonce, instance.address)
+            loanResponse = await createLoanResponseSig(web3, nodeAddress, loanResponse, requestHash, chainId)
 
             try {
                 const result = await instance.externalProcessResponse(

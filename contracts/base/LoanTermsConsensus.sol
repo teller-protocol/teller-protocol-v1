@@ -1,18 +1,3 @@
-/*
-    Copyright 2020 Fabrx Labs Inc.
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
@@ -23,10 +8,24 @@ import "./Consensus.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 
 
+/**
+    @notice This contract is used to process the loan requests through the Teller protocol
+
+    @author develop@teller.finance
+ */
 contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
+    /* Mappings */
     mapping(address => mapping(uint256 => ZeroCollateralCommon.AccruedLoanTerms)) public termSubmissions;
     mapping(address => mapping(uint256 => bool)) public requestNonceTaken;
 
+    /**
+        @notice Processes the loan request
+        @param request Struct of the protocol loan request
+        @param responses List of structs of the protocol loan responses
+        @return uint256 Interest rate
+        @return uint256 Collateral ratio
+        @return uint256 Maximum loan amount
+     */
     function processRequest(
         ZeroCollateralCommon.LoanRequest calldata request,
         ZeroCollateralCommon.LoanResponse[] calldata responses
@@ -49,7 +48,7 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         bytes32 requestHash = _hashRequest(request);
 
         for (uint256 i = 0; i < responses.length; i++) {
-            _processReponse(request, responses[i], requestHash);
+            _processResponse(request, responses[i], requestHash);
         }
 
         interestRate = _getConsensus(
@@ -71,7 +70,13 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         );
     }
 
-    function _processReponse(
+    /**
+        @notice Processes the loan response
+        @param request Struct of the protocol loan request
+        @param response List of structs of the protocol loan responses
+        @param requestHash bytes32 Hash of the loan request
+     */
+    function _processResponse(
         ZeroCollateralCommon.LoanRequest memory request,
         ZeroCollateralCommon.LoanResponse memory response,
         bytes32 requestHash
@@ -107,23 +112,36 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         );
     }
 
+    /**
+        @notice Generates a hash for the loan response
+        @param response Structs of the protocol loan responses
+        @param requestHash Hash of the loan request
+        @return bytes32 Hash of the loan response
+     */
     function _hashResponse(
         ZeroCollateralCommon.LoanResponse memory response,
         bytes32 requestHash
-    ) internal pure returns (bytes32) {
+    ) internal view returns (bytes32) {
         return
             keccak256(
                 abi.encode(
+                    response.consensusAddress,
                     response.responseTime,
                     response.interestRate,
                     response.collateralRatio,
                     response.maxLoanAmount,
                     response.signature.signerNonce,
+                    _getChainId(),
                     requestHash
                 )
             );
     }
 
+    /**
+        @notice Generates a hash for the loan request
+        @param request Struct of the protocol loan request
+        @return bytes32 Hash of the loan request
+     */
     function _hashRequest(ZeroCollateralCommon.LoanRequest memory request)
         internal
         view
@@ -132,13 +150,15 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         return
             keccak256(
                 abi.encode(
-                    caller,
+                    callerAddress,
                     request.borrower,
                     request.recipient,
+                    request.consensusAddress,
                     request.requestNonce,
                     request.amount,
                     request.duration,
-                    request.requestTime
+                    request.requestTime,
+                    _getChainId()
                 )
             );
     }

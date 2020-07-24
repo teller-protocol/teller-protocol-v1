@@ -7,7 +7,7 @@ const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds, DEFAULT_DE
 const LoanInfoPrinter = require('../../test/utils/printers/LoanInfoPrinter');
 const { createMultipleSignedLoanTermsResponses, createLoanTermsRequest } = require('../../test/utils/loan-terms-helper');
 
-module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonces}) => {
+module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonces, chainId}) => {
   console.log('Liquidate Loan by End Time');
   const tokenName = processArgs.getValue('testTokenName');
   const settingsInstance = await getContracts.getDeployed(zerocollateral.settings());
@@ -15,7 +15,8 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.eth().lendingPool(tokenName));
   const loansInstance = await getContracts.getDeployed(zerocollateral.eth().loans(tokenName));
   const chainlinkOracle = await getContracts.getDeployed(zerocollateral.eth().chainlink.custom(tokenName));
-
+  const loanTermConsensusInstance = await getContracts.getDeployed(zerocollateral.eth().loanTermsConsensus(tokenName));
+  
   const currentTimestamp = await timer.getCurrentTimestamp();
   const borrower = await accounts.getAt(1);
   const liquidatorTxConfig = await accounts.getTxConfigAt(2);
@@ -55,23 +56,26 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
     duration: durationInDays * ONE_DAY,
     requestTime: currentTimestamp,
     caller: loansInstance.address,
+    consensusAddress: loanTermConsensusInstance.address,
   };
   const loanResponseInfoTemplate = {
     responseTime: currentTimestamp - 10,
     interestRate: 4000,
     collateralRatio: 6000,
     maxLoanAmount: maxAmountWei.toFixed(0),
+    consensusAddress: loanTermConsensusInstance.address,
   };
-  const loanTermsRequest = createLoanTermsRequest(loanTermsRequestInfo);
+  const loanTermsRequest = createLoanTermsRequest(loanTermsRequestInfo, chainId);
   const signedResponses = await createMultipleSignedLoanTermsResponses(
     web3,
     loanTermsRequest,
     signers,
     loanResponseInfoTemplate,
     nonces,
+    chainId,
   );
   console.log(`Setting loan terms (${signedResponses.length} signed responses)...`);
-  await loansInstance.setLoanTerms(
+  await loansInstance.createLoanWithTerms(
     loanTermsRequest.loanTermsRequest,
     signedResponses,
     borrowerTxConfigWithValue.value,

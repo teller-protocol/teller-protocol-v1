@@ -1,20 +1,32 @@
 pragma solidity 0.5.17;
 
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 
+/**
+ * @dev Utility library of inline functions on NumbersList.Values
+ *
+ * @author develop@teller.finance
+ */
 library NumbersList {
     using SafeMath for uint256;
 
+    // Given a whole number percentage, multiply by it and then divide by this.
     uint256 private constant PERCENTAGE_TO_DECIMAL = 10000;
 
+    // Holds values to can calculate the threshold of a list of numbers
     struct Values {
-        uint256 count;
-        uint256 max;
-        uint256 min;
-        uint256 sum;
+        uint256 count; // The total number of numbers added
+        uint256 max; // The maximum number that was added
+        uint256 min; // The minimum number that was added
+        uint256 sum; // The total sum of the numbers that were added
     }
 
+    /**
+     * @dev Add to the sum while keeping track of min and max values
+     * @param self The Value this function was called on
+     * @param newValue Number to increment sum by
+     */
     function addValue(Values storage self, uint256 newValue) internal {
         if (self.max < newValue) {
             self.max = newValue;
@@ -26,27 +38,52 @@ library NumbersList {
         self.count = self.count.add(1);
     }
 
-    function totalValues(Values storage self) internal view returns (uint256) {
+    /**
+     * @param self The Value this function was called on
+     * @return the number of times the sum has updated
+     */
+    function valuesCount(Values storage self) internal view returns (uint256) {
         return self.count;
     }
 
+    /**
+     * @dev Checks if the sum has been changed
+     * @param self The Value this function was called on
+     * @return boolean
+     */
     function isEmpty(Values storage self) internal view returns (bool) {
-        return totalValues(self) == 0;
+        return valuesCount(self) == 0;
     }
 
+    /**
+     * @dev Checks if the sum has been changed `totalRequiredValues` times
+     * @param self The Value this function was called on
+     * @param totalRequiredValues The maximum amount of numbers to be added to the sum
+     * @return boolean
+     */
     function isFinalized(Values storage self, uint256 totalRequiredValues)
         internal
         view
         returns (bool)
     {
-        return totalValues(self) >= totalRequiredValues;
+        return valuesCount(self) >= totalRequiredValues;
     }
 
+    /**
+     * @param self The Value this function was called on
+     * @return the average number that was used to calculate the sum
+     */
     function getAverage(Values storage self) internal view returns (uint256) {
-        return isEmpty(self) ? 0 : self.sum.div(totalValues(self));
+        return isEmpty(self) ? 0 : self.sum.div(valuesCount(self));
     }
 
-    function isWithinTolerance(Values storage self, uint256 tolerance)
+    /**
+     * @dev Checks if the min and max numbers are with in the acceptable tolerance
+     * @param self The Value this function was called on
+     * @param tolerancePercentage Acceptable tolerance percentage as a whole number
+     * @return boolean
+     */
+    function isWithinTolerance(Values storage self, uint256 tolerancePercentage)
         internal
         view
         returns (bool)
@@ -55,7 +92,9 @@ library NumbersList {
             return false;
         }
         uint256 average = getAverage(self);
-        uint256 toleranceAmount = average.mul(tolerance).div(PERCENTAGE_TO_DECIMAL);
+        uint256 toleranceAmount = average.mul(tolerancePercentage).div(
+            PERCENTAGE_TO_DECIMAL
+        );
 
         uint256 minTolerance = average.sub(toleranceAmount);
         if (self.min < minTolerance) {

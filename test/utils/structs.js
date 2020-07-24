@@ -1,17 +1,19 @@
 const { NULL_BYTES } = require('./consts');
 
 module.exports = {
-    createInterestRequest:(lender, startTime, endTime, requestTime) => {
+    createInterestRequest:(lender, startTime, endTime, requestTime, consensusAddress,) => {
         return {
             lender: lender,
+            consensusAddress,
             startTime: startTime,
             endTime: endTime,
             requestTime: requestTime,
         }
     },
-    createUnsignedInterestResponse: (signer, responseTime, interest, signerNonce) => {
+    createUnsignedInterestResponse: (signer, responseTime, interest, signerNonce, consensusAddress) => {
         return {
             signer: signer,
+            consensusAddress,
             responseTime: responseTime,
             interest: interest,
             signature: {
@@ -57,9 +59,10 @@ module.exports = {
             duration: duration,
         }
     },
-    createUnsignedLoanResponse: (signer, responseTime, interestRate, collateralRatio, maxLoanAmount, signerNonce) => {
+    createUnsignedLoanResponse: (signer, responseTime, interestRate, collateralRatio, maxLoanAmount, signerNonce, consensusAddress = undefined) => {
         return {
             signer: signer,
+            consensusAddress,
             responseTime: responseTime,
             interestRate: interestRate,
             collateralRatio: collateralRatio,
@@ -72,14 +75,15 @@ module.exports = {
             }
         }
     },
-    createLoanRequest: (borrower, recipient, requestNonce, amount, duration, requestTime) => {
+    createLoanRequest: (borrower, recipient, requestNonce, amount, duration, requestTime, consensusAddress) => {
         return {
             borrower: borrower,
             recipient: recipient,
+            consensusAddress,
             requestNonce: requestNonce,
             amount: amount,
             duration: duration,
-            requestTime: requestTime
+            requestTime: requestTime,
         }
     }
 }

@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, THIRTY_DAYS } = require('../utils/consts');
+const { t } = require('../utils/consts');
 const { hashInterestRequest, hashInterestResponse } = require('../utils/hashes');
 const { createInterestRequest, createUnsignedInterestResponse } = require('../utils/structs');
 const ethUtil = require('ethereumjs-util')
@@ -11,10 +11,9 @@ const InterestConsensusMock = artifacts.require("./mock/base/InterestConsensusMo
 
 // constants
 const { NULL_ADDRESS } = require('../utils/consts');
+const chains = require('../utils/chains');
 
 contract('InterestConsensus hashInterestRequest and hashReponse', function (accounts) {
-    const tolerance = 0
-    const submissions = 1
     const lendersAddress = accounts[3]
     let instance
 
@@ -25,57 +24,62 @@ contract('InterestConsensus hashInterestRequest and hashReponse', function (acco
     })
 
     withData({
-        _1_first_test_hashInterestRequest: [accounts[2], 234764, 344673177, 34467317723],
-        _2_second_test_hashInterestRequest: [NULL_ADDRESS, 0, 0, 0],
+        _1_first_test_hashInterestRequest: [chains.mainnet, accounts[2], 234764, 344673177, 34467317723],
+        _2_first_test_hashInterestRequest: [chains.ropsten, accounts[3], 134764, 354673177, 37467617723],
+        _3_second_test_hashInterestRequest: [chains.ropsten, NULL_ADDRESS, 0, 0, 0],
     }, function(
+        chainId,
         lender,
         startTime,
         endTime,
       requestTime,
     ) {    
         it(t('user', 'new', 'Should correctly calculate the hash for a request', false), async function() {
-            const request = createInterestRequest(lender, startTime, endTime, requestTime)
+            const request = createInterestRequest(lender, startTime, endTime, requestTime, instance.address, chains.mainnet)
 
             let expectedResult = ethUtil.bufferToHex(
                 hashInterestRequest(
                     request,
-                    lendersAddress
+                    lendersAddress,
+                    chainId,
                 )
             )
+            await instance.mockChainId(chainId)
 
             // Invocation
-            const result = await instance.externalHashRequest.call(request);
+            const result = await instance.externalHashRequest(request);
 
             assert.equal(result, expectedResult, 'Result should have been ' + expectedResult);
         });
     });
 
     withData({
-        _1_first_test_hashInterestResponse: [accounts[0], 234764, 344673177, 34467317723],
-        _2_second_test_hashInterestResponse: [NULL_ADDRESS, 0, 0, 0],
+        _1_first_test_hashInterestResponse: [chains.mainnet, accounts[0], 234764, 344673177, 34467317723],
+        _2_first_test_hashInterestResponse: [chains.ropsten, accounts[4], 765189, 344673177, 34657317723],
+        _3_second_test_hashInterestResponse: [chains.mainnet, NULL_ADDRESS, 0, 0, 0],
     }, function(
+        chainId,
         signer,
         responseTime,
         interest,
         signerNonce,
     ) {    
         it(t('user', 'new', 'Should correctly calculate the hash for a response', false), async function() {
-            const request = createInterestRequest(accounts[3], 2345, 2345, 3456)
-            const requestHash = ethUtil.bufferToHex(hashInterestRequest(request, accounts[4]))
-            const response = createUnsignedInterestResponse(signer, responseTime, interest, signerNonce)
+            const request = createInterestRequest(accounts[3], 2345, 2345, 3456, instance.address)
+            const requestHash = ethUtil.bufferToHex(hashInterestRequest(request, accounts[4], chainId))
+            const response = createUnsignedInterestResponse(signer, responseTime, interest, signerNonce, instance.address)
 
             const expectedHash = ethUtil.bufferToHex(
                 hashInterestResponse(
                     response,
-                    requestHash
+                    requestHash,
+                    chainId,
                 )
             )
+            await instance.mockChainId(chainId)
 
             // Invocation
-            const result = await instance.externalHashResponse.call(
-                response,
-                requestHash
-            );
+            const result = await instance.externalHashResponse(response, requestHash);
 
             assert.equal(result, expectedHash, 'Result should have been ' + expectedHash);
         });

@@ -3,6 +3,8 @@ pragma solidity 0.5.17;
 
 /**
     @notice This interface defines the functions for a lending pool that holds all of the tokens that lenders transfer into the protocol.
+
+    @author develop@teller.finance
  */
 interface LendingPoolInterface {
     /**
@@ -47,8 +49,17 @@ interface LendingPoolInterface {
      */
     function createLoan(uint256 amount, address borrower) external;
 
+    /**
+        @notice It allows a lender to withdraw a specific amount of interest.
+        @param amount to withdraw.
+        @dev It throws a require error if amount exceeds the current accrued interest.
+    */
     function withdrawInterest(uint256 amount) external;
 
+    /**
+        @notice It gets the lending token address.
+        @return the ERC20 lending token address.
+    */
     function lendingToken() external view returns (address);
 
     /**
