@@ -1,33 +1,22 @@
-/*
-    Copyright 2020 Fabrx Labs Inc.
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
-
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
 import "./LoansBase.sol";
 
+/**
+    @notice This contract is used as a basis for the creation of Ether based loans across the platform
+    @notice It implements the LoansBase contract from Teller
 
+    @author develop@teller.finance
+ */
 contract EtherCollateralLoans is LoansBase {
     address public collateralToken = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /**
      * @notice Deposit collateral into a loan
-     * @param borrower address The address of the loan borrower.
-     * @param loanID uint256 The ID of the loan the collateral is for
+     * @param borrower The address of the loan borrower.
+     * @param loanID The ID of the loan the collateral is for
      */
     function depositCollateral(address borrower, uint256 loanID, uint256 amount)
         external
@@ -50,6 +39,12 @@ contract EtherCollateralLoans is LoansBase {
         emit CollateralDeposited(loanID, borrower, amount);
     }
 
+    /**
+        @notice Creates a loan with the loan request and terms
+        @param request Struct of the protocol loan request
+        @param responses List of structs of the protocol loan responses
+        @param collateralAmount Amount of collateral required for the loan
+     */
     function createLoanWithTerms(
         ZeroCollateralCommon.LoanRequest calldata request,
         ZeroCollateralCommon.LoanResponse[] calldata responses,
@@ -94,6 +89,13 @@ contract EtherCollateralLoans is LoansBase {
         }
     }
 
+    /**
+        @notice Initializes the current contract instance setting the required parameters
+        @param priceOracleAddress Contract address of the price oracle
+        @param lendingPoolAddress Contract address of the lending pool
+        @param loanTermsConsensusAddress Contract adddress for loan term consensus
+        @param settingsAddress Contract address for the configuration of the platform
+     */
     function initialize(
         address priceOracleAddress,
         address lendingPoolAddress,
@@ -109,7 +111,11 @@ contract EtherCollateralLoans is LoansBase {
     }
 
     /** Internal Functions */
-
+    /**
+        @notice Pays out collateral for the associated loan
+        @param loanID The ID of the loan the collateral is for
+        @param amount The amount of collateral to be paid
+     */
     function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
         internal
     {
