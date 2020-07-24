@@ -7,6 +7,7 @@ import "./Consensus.sol";
 // Interfaces
 import "../interfaces/LoanTermsConsensusInterface.sol";
 
+
 /**
     @notice This contract is used to process the loan requests through the Teller protocol
 

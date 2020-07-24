@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 // Contracts
 import "./LoansBase.sol";
 
+
 /**
     @notice This contract is used as a basis for the creation of Ether based loans across the platform
     @notice It implements the LoansBase contract from Teller

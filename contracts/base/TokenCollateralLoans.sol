@@ -4,14 +4,13 @@ pragma experimental ABIEncoderV2;
 // Contracts
 import "./LoansBase.sol";
 
+
 /**
     @notice This contract is used as a basis for the creation of loans (not wei) across the platform
     @notice It implements the LoansBase contract from Teller
 
     @author develop@teller.finance
  */
-
-
 contract TokenCollateralLoans is LoansBase {
     /** Constants */
 
@@ -20,6 +19,11 @@ contract TokenCollateralLoans is LoansBase {
     /** Properties */
 
     /** Modifiers */
+
+    /**
+        @notice Checks the value in the current transactionn is zero.
+        @dev It throws a require error if value is not zero.
+     */
     modifier noMsgValue() {
         require(msg.value == 0, "TOKEN_LOANS_VALUE_MUST_BE_ZERO");
         _;

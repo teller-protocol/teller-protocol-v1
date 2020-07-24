@@ -3,6 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "../util/ZeroCollateralCommon.sol";
 
+
 /**
     @notice This interface defines the function to process the loan terms through the Teller protocol
 
