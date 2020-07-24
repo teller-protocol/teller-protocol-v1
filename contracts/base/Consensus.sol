@@ -35,7 +35,7 @@ contract Consensus is Base, OwnerSignersRole {
         @dev It throws a require error if sender is not equal to caller address.
      */
     modifier isCaller() {
-        require(callerAddress == msg.sender, "Address has no permissions.");
+        require(callerAddress == msg.sender, "SENDER_HASNT_PERMISSIONS");
         _;
     }
 

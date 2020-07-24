@@ -27,13 +27,13 @@ contract('LendingPoolInitializeTest', function (accounts) {
 
     withData({
         _1_basic: [true, true, true, true, true, true, undefined, false],
-        _2_notZdai: [false, true, true, true, true, true, 'zToken address is required.', true],
-        _3_notDai: [true, false, true, true, true, true, 'Token address is required.', true],
-        _4_notLenderInfo: [true, true, false, true, true, true, 'Lenders address is required.', true],
-        _5_notLoanInfo: [true, true, true, false, true, true, 'Loans address is required.', true],
+        _2_notZdai: [false, true, true, true, true, true, 'ZTOKEN_ADDRESS_IS_REQUIRED', true],
+        _3_notDai: [true, false, true, true, true, true, 'TOKEN_ADDRESS_IS_REQUIRED', true],
+        _4_notLenderInfo: [true, true, false, true, true, true, 'LENDERS_ADDRESS_IS_REQUIRED', true],
+        _5_notLoanInfo: [true, true, true, false, true, true, 'LOANS_ADDRESS_IS_REQUIRED', true],
         _6_notCToken: [true, true, true, true, false, true, undefined, false],
-        _7_notZdai_notLoanInfo: [false, true, true, false, true, true, 'zToken address is required.', true],
-        _8_notDai_notLenderInfo: [true, false, false, true, true, true, 'Token address is required.', true],
+        _7_notZdai_notLoanInfo: [false, true, true, false, true, true, 'ZTOKEN_ADDRESS_IS_REQUIRED', true],
+        _8_notDai_notLenderInfo: [true, false, false, true, true, true, 'TOKEN_ADDRESS_IS_REQUIRED', true],
         _9_notSettings: [true, true, true, true, true, false, 'SETTINGS_MUST_BE_PROVIDED', true],
     }, function(
         createZdai,

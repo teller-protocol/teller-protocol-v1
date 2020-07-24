@@ -11,7 +11,7 @@ const Consensus = artifacts.require("./base/ConsensusModifiersMock.sol");
 contract('ConsensusModifiersTest', function (accounts) {
 
     withData({
-        _1_not_lenders: [accounts[1], accounts[3], 'Address has no permissions.', true],
+        _1_not_lenders: [accounts[1], accounts[3], 'SENDER_HASNT_PERMISSIONS', true],
         _2_lenders: [accounts[1], accounts[1], undefined, false]
     }, function(
         callerAddress,

@@ -53,9 +53,9 @@ contract('LendingPoolDepositTest', function (accounts) {
 
     withData({
         _1_basic: [accounts[0], true, true, 1, false, undefined, false],
-        _2_notTransferFromEnoughBalance: [accounts[2], false, true, 100, false, "TransferFrom wasn't successful.", true],
+        _2_notTransferFromEnoughBalance: [accounts[2], false, true, 100, false, "LENDING_TRANSFER_FROM_FAILED", true],
         _3_notDepositIntoCompound: [accounts[2], true, true, 100, true, "COMPOUND_DEPOSIT_ERROR", true],
-        _4_notMint: [accounts[0], true, false, 60, false, 'Mint was not successful.', true],
+        _4_notMint: [accounts[0], true, false, 60, false, 'ZTOKEN_MINT_FAILED', true],
     }, function(
         recipient,
         transferFrom,

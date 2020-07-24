@@ -16,7 +16,7 @@ contract('InitializeModifiersTest', function (accounts) {
 
     withData({
         _1_notInitialized: [false, undefined, false],
-        _2_initialized: [true, "It is already initialized.", true],
+        _2_initialized: [true, "CONTRACT_ALREADY_INITIALIZED", true],
     }, function(
         callInitialize,
         expectedErrorMessage,
@@ -46,7 +46,7 @@ contract('InitializeModifiersTest', function (accounts) {
 
     withData({
         _1_initialized: [true, undefined, false],
-        _2_notInitialized: [false, "It is not initialized.", true],
+        _2_notInitialized: [false, "CONTRACT_NOT_INITIALIZED", true],
     }, function(
         callInitialize,
         expectedErrorMessage,
