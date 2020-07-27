@@ -52,16 +52,18 @@ contract('LendingPoolDepositTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [accounts[0], true, true, 1, false, undefined, false],
-        _2_notTransferFromEnoughBalance: [accounts[2], false, true, 100, false, "LENDING_TRANSFER_FROM_FAILED", true],
-        _3_notDepositIntoCompound: [accounts[2], true, true, 100, true, "COMPOUND_DEPOSIT_ERROR", true],
-        _4_notMint: [accounts[0], true, false, 60, false, 'ZTOKEN_MINT_FAILED', true],
+        _1_basic: [accounts[0], true, true, 1, false, 1000, undefined, false],
+        _2_notTransferFromEnoughBalance: [accounts[2], false, true, 100, false, 1000, "LENDING_TRANSFER_FROM_FAILED", true],
+        _3_notDepositIntoCompound: [accounts[2], true, true, 100, true, 1000, "COMPOUND_DEPOSIT_ERROR", true],
+        _4_notMint: [accounts[0], true, false, 60, false, 1000, 'ZTOKEN_MINT_FAILED', true],
+        _5_notAllowance: [accounts[0], true, true, 1, false, 0, "LEND_TOKEN_NOT_ENOUGH_ALLOWANCE", true],
     }, function(
         recipient,
         transferFrom,
         mint,
         amountToDeposit,
         compoundFails,
+        allowance,
         expectedErrorMessage,
         mustFail
     ) {
@@ -74,7 +76,10 @@ contract('LendingPoolDepositTest', function (accounts) {
 
             const mintResponse = compoundFails ? 1 : 0
             const encodeCompMint = compoundInterfaceEncoder.encodeMint();
-            await cTokenInstance.givenMethodReturnUint(encodeCompMint, mintResponse)
+            await cTokenInstance.givenMethodReturnUint(encodeCompMint, mintResponse);
+
+            const encodeAllowance = erc20InterfaceEncoder.encodeAllowance();
+            await daiInstance.givenMethodReturnUint(encodeAllowance, allowance);
 
             try {
                 // Invocation
