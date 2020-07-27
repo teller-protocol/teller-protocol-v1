@@ -48,6 +48,7 @@ contract('LendingPoolRepayTest', function (accounts) {
         _6_cTokenNotSupported_basic: [accounts[1], loansAddress, false, true, 10, false, 1000, undefined, false],
         _7_cTokenNotSupported_notLoan: [accounts[1], accounts[2], false, true, 10, false, 1000, 'ADDRESS_ISNT_LOANS_CONTRACT', true],
         _8_cTokenNotSupported_transferFail: [accounts[1], loansAddress, false, false, 200, false, 1000, "LENDING_TRANSFER_FROM_FAILED", true],
+        _9_cTokenNotSupported_allowanceFail: [accounts[1], loansAddress, false, true, 10, false, 0, "LEND_TOKEN_NOT_ENOUGH_ALLOWANCE", true],
     }, function(
         borrower,
         sender,
