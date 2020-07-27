@@ -12,9 +12,9 @@ contract('LendersModifiersTest', function (accounts) {
     
     withData({
         _1_zTokenSender: [accounts[0], accounts[1], accounts[2], accounts[0], undefined, false],
-        _2_lendingPoolSender: [accounts[0], accounts[1], accounts[2], accounts[1], 'Address has no permissions.', true],
-        _3_consensusSender: [accounts[0], accounts[1], accounts[2], accounts[2], 'Address has no permissions.', true],
-        _4_notValidSender: [accounts[0], accounts[1], accounts[2], accounts[3], 'Address has no permissions.', true],
+        _2_lendingPoolSender: [accounts[0], accounts[1], accounts[2], accounts[1], 'SENDER_ISNT_ZTOKEN', true],
+        _3_consensusSender: [accounts[0], accounts[1], accounts[2], accounts[2], 'SENDER_ISNT_ZTOKEN', true],
+        _4_notValidSender: [accounts[0], accounts[1], accounts[2], accounts[3], 'SENDER_ISNT_ZTOKEN', true],
     }, function(
         zTokenAddress,
         lendingPoolAddress,
@@ -46,10 +46,10 @@ contract('LendersModifiersTest', function (accounts) {
     });
 
     withData({
-        _1_zTokenSender: [accounts[0], accounts[1], accounts[2], accounts[0], 'Address has no permissions.', true],
+        _1_zTokenSender: [accounts[0], accounts[1], accounts[2], accounts[0], 'SENDER_ISNT_LENDING_POOL', true],
         _2_lendingPoolSender: [accounts[0], accounts[1], accounts[2], accounts[1], undefined, false],
-        _3_consensusSender: [accounts[0], accounts[1], accounts[2], accounts[2], 'Address has no permissions.', true],
-        _4_notValidSender: [accounts[0], accounts[1], accounts[2], accounts[3], 'Address has no permissions.', true],
+        _3_consensusSender: [accounts[0], accounts[1], accounts[2], accounts[2], 'SENDER_ISNT_LENDING_POOL', true],
+        _4_notValidSender: [accounts[0], accounts[1], accounts[2], accounts[3], 'SENDER_ISNT_LENDING_POOL', true],
     }, function(
         zTokenAddress,
         lendingPoolAddress,
@@ -82,7 +82,7 @@ contract('LendersModifiersTest', function (accounts) {
 
     withData({
         _1_validAddress: [accounts[0], accounts[1], accounts[2], accounts[1], undefined, false],
-        _2_invalidAddress: [accounts[0], accounts[1], accounts[2], NULL_ADDRESS, 'Address is required.', true],
+        _2_invalidAddress: [accounts[0], accounts[1], accounts[2], NULL_ADDRESS, 'ADDRESS_IS_REQUIRED', true],
     }, function(
         zTokenAddress,
         lendingPoolAddress,

@@ -9,3 +9,4 @@ test-integration/resources/data
 .idea
 .coverage_artifacts
 .coverage_contracts
+ignored

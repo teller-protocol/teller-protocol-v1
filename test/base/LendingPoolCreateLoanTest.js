@@ -48,8 +48,8 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
 
     withData({
         _1_basic: [accounts[1], loansAddress, true, 10, false, undefined, false],
-        _2_notLoanSender: [accounts[1], accounts[4], true, 10, false, 'Address is not Loans contract.', true],
-        _3_transferFail: [accounts[1], loansAddress, false, 10, false, 'Transfer was not successful.', true],
+        _2_notLoanSender: [accounts[1], accounts[4], true, 10, false, 'ADDRESS_ISNT_LOANS_CONTRACT', true],
+        _3_transferFail: [accounts[1], loansAddress, false, 10, false, 'LENDING_TRANSFER_FAILED', true],
         _4_compoundFails: [accounts[1], loansAddress, true, 10, true, 'COMPOUND_WITHDRAWAL_ERROR', true]
     }, function(
         borrower,

@@ -31,6 +31,7 @@ module.exports = async function(deployer, network, accounts) {
   const safetyInterval = env.getDefaultSafetyInterval().getOrDefault();
   const liquidateEthPrice = env.getDefaultLiquidateEthPrice().getOrDefault();
   const termsExpiryTime = env.getDefaultTermsExpiryTime().getOrDefault();
+  const maximumLoanDuration = env.getMaximumLoanDuration().getOrDefault();
   const deployerAccountIndex = env.getDefaultAddressIndex().getOrDefault();
   const deployerAccount = accounts[deployerAccountIndex];
   console.log(`Deployer account index is ${deployerAccountIndex} => ${deployerAccount}`);
@@ -55,6 +56,7 @@ module.exports = async function(deployer, network, accounts) {
     safetyInterval,
     termsExpiryTime,
     liquidateEthPrice,
+    maximumLoanDuration,
     txConfig
   );
   const aggregators = {};

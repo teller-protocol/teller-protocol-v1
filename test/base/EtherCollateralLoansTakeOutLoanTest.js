@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, THIRTY_DAYS, getLatestTimestamp, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE } = require('../utils/consts');
+const { t, THIRTY_DAYS, getLatestTimestamp, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE, daysToSeconds } = require('../utils/consts');
 const { createLoanTerms } = require('../utils/structs');
 const { loans } = require('../utils/events');
 
@@ -36,7 +36,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
         lendingPoolInstance = await Mock.new();
         lendingTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
-        const settingsInstance = await Settings.new(1, 1, THIRTY_DAYS, FIVE_MIN, THIRTY_DAYS, 9500);
+        const settingsInstance = await Settings.new(1, 1, THIRTY_DAYS, FIVE_MIN, THIRTY_DAYS, 9500, daysToSeconds(30));
         loanTermsConsInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(

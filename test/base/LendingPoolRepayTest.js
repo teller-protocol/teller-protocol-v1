@@ -42,12 +42,12 @@ contract('LendingPoolRepayTest', function (accounts) {
 
     withData({
         _1_cTokenSupported_basic: [accounts[1], loansAddress, true, true, 10, false, undefined, false],
-        _2_cTokenSupported_notLoan: [accounts[1], accounts[2], true, true, 10, false, 'Address is not Loans contract.', true],
-        _3_cTokenSupported_transferFail: [accounts[1], loansAddress, true, false, 200, false, "TransferFrom wasn't successful.", true],
+        _2_cTokenSupported_notLoan: [accounts[1], accounts[2], true, true, 10, false, 'ADDRESS_ISNT_LOANS_CONTRACT', true],
+        _3_cTokenSupported_transferFail: [accounts[1], loansAddress, true, false, 200, false, "LENDING_TRANSFER_FROM_FAILED", true],
         _4_cTokenSupported_compoundFail: [accounts[1], loansAddress, true, true, 10, true, 'COMPOUND_DEPOSIT_ERROR', true],
         _6_cTokenNotSupported_basic: [accounts[1], loansAddress, false, true, 10, false, undefined, false],
-        _7_cTokenNotSupported_notLoan: [accounts[1], accounts[2], false, true, 10, false, 'Address is not Loans contract.', true],
-        _8_cTokenNotSupported_transferFail: [accounts[1], loansAddress, false, false, 200, false, "TransferFrom wasn't successful.", true],
+        _7_cTokenNotSupported_notLoan: [accounts[1], accounts[2], false, true, 10, false, 'ADDRESS_ISNT_LOANS_CONTRACT', true],
+        _8_cTokenNotSupported_transferFail: [accounts[1], loansAddress, false, false, 200, false, "LENDING_TRANSFER_FROM_FAILED", true],
     }, function(
         borrower,
         sender,
