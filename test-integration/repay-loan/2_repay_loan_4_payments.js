@@ -1,21 +1,23 @@
 // Util classes
 const BigNumber = require('bignumber.js');
-const { zerocollateral, tokens } = require("../../scripts/utils/contracts");
+const { zerocollateral, tokens, chainlink } = require("../../scripts/utils/contracts");
 const { loans, lendingPool } = require('../../test/utils/events');
 const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds, daysToSeconds } = require('../../test/utils/consts');
-const LoanInfoPrinter = require('../../test/utils/printers/LoanInfoPrinter');
 const { createMultipleSignedLoanTermsResponses, createLoanTermsRequest } = require('../../test/utils/loan-terms-helper');
 const assert = require("assert");
 
 module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonces, chainId}) => {
-  console.log('Repay Loan in 3 Payments');
+  console.log('Repay Loan in 4 Payments');
   const tokenName = processArgs.getValue('testTokenName');
+  const oracleTokenName = 'USD';
+  const collateralTokenName = 'LINK';
   const settingsInstance = await getContracts.getDeployed(zerocollateral.settings());
   const token = await getContracts.getDeployed(tokens.get(tokenName));
-  const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.eth().lendingPool(tokenName));
-  const loansInstance = await getContracts.getDeployed(zerocollateral.eth().loans(tokenName));
-  const chainlinkOracle = await getContracts.getDeployed(zerocollateral.eth().chainlink.custom(tokenName));
-  const loanTermConsensusInstance = await getContracts.getDeployed(zerocollateral.eth().loanTermsConsensus(tokenName));
+  const collateralToken = await getContracts.getDeployed(tokens.get(collateralTokenName));
+  const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.link().lendingPool(tokenName));
+  const loansInstance = await getContracts.getDeployed(zerocollateral.link().loans(tokenName));
+  const chainlinkOracle = await getContracts.getDeployed(chainlink.custom(collateralTokenName, oracleTokenName));
+  const loanTermConsensusInstance = await getContracts.getDeployed(zerocollateral.link().loanTermsConsensus(tokenName));
 
   const currentTimestamp = parseInt(await timer.getCurrentTimestamp());
   console.log(`Current timestamp: ${currentTimestamp} segs`);
@@ -25,16 +27,23 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   const initialOraclePrice = toDecimals('0.005', 18); // 1 token = 0.005 ether = 5000000000000000 wei
   const decimals = parseInt(await token.decimals());
   const lendingPoolDepositAmountWei = toDecimals(4000, decimals);
-  const amountWei = toDecimals(1000, decimals);
+  const amountWei = toDecimals(800, decimals);
   const maxAmountWei = toDecimals(2000, decimals);
-  const durationInDays = 30;
+  const durationInDays = 60;
   const signers = await accounts.getAllAt(12, 13);
+  const senderTxConfig = await accounts.getTxConfigAt(1);
+  const collateralTokenDecimals = parseInt(await collateralToken.decimals());
+  const initialCollateralAmount = toDecimals(10000, collateralTokenDecimals);
+  const finalCollateralAmount = toDecimals(100, collateralTokenDecimals);
+  await collateralToken.mint(senderTxConfig.from, initialCollateralAmount, senderTxConfig);
+  await collateralToken.mint(senderTxConfig.from, finalCollateralAmount, senderTxConfig)
   const collateralNeeded = '320486794520547945';
+  
   const borrowerTxConfig = { from: borrower };
   const borrowerTxConfigWithValue = { ...borrowerTxConfig, value: collateralNeeded };
 
   // Sets Initial Oracle Price
-  console.log(`Settings initial oracle price: 1 ${tokenName} = ${initialOraclePrice.toFixed(0)} WEI = ${toUnits(initialOraclePrice, 18)} ETHER`);
+  console.log(`Settings initial oracle price: 1 ${tokenName} = ${initialOraclePrice.toFixed(0)} = ${toUnits(initialOraclePrice, collateralTokenDecimals)} ${collateralTokenName}`);
   await chainlinkOracle.setLatestAnswer(initialOraclePrice);
 
   // Deposit tokens on lending pool.
@@ -75,11 +84,13 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
     chainId,
   );
 
+  await collateralToken.approve(loansInstance.address, initialCollateralAmount, borrowerTxConfig);
+
   const createLoanWithTermsResult = await loansInstance.createLoanWithTerms(
     loanTermsRequest.loanTermsRequest,
     signedResponses,
-    borrowerTxConfigWithValue.value,
-    borrowerTxConfigWithValue
+    initialCollateralAmount,
+    borrowerTxConfig
   );
 
   const termsExpiryTime = await settingsInstance.termsExpiryTime();
@@ -112,18 +123,18 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
 
   // Calculate payment
   console.log(`Making payment for loan id ${lastLoanID}...`);
-  const payment = toDecimals(346.70, decimals).toFixed(0);
+  const payment = toDecimals(212, decimals).toFixed(0);
   console.log('Payment....', payment);
 
-  // Advance time to make first payment 10 days later 
+  // Advance time to make first payment 15 days later 
   console.log(`Advancing time to take out loan (current: ${(await timer.getCurrentDate())})...`);
-  const paymentTimestamp = await timer.getCurrentTimestampInSecondsAndSum(daysToSeconds(10));
+  const paymentTimestamp = await timer.getCurrentTimestampInSecondsAndSum(daysToSeconds(15));
   await timer.advanceBlockAtTime(paymentTimestamp);
 
   // Make 1st payment
   console.log(`Repaying loan id ${lastLoanID}...`);
   console.log('Making 1st payment...');
-  await token.approve(lendingPoolInstance.address, payment, borrowerTxConfig);
+  await token.approve(lendingPoolInstance.address, payment, {from:borrower});
   await loansInstance.repay(payment, lastLoanID, borrowerTxConfig);
   // Check loan status
   const firstLoanStatus = await loansInstance.loans(lastLoanID) 
@@ -134,14 +145,14 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
     'Invalid final loan staus.'
   );
 
-  // Advance time to make first payment 20 days later 
+  // Advance time to make first payment 30 days later 
   console.log(`Advancing time to take out loan (current: ${(await timer.getCurrentDate())})...`);
-  const secondPaymentTimestamp = await timer.getCurrentTimestampInSecondsAndSum(daysToSeconds(10));
+  const secondPaymentTimestamp = await timer.getCurrentTimestampInSecondsAndSum(daysToSeconds(15));
   await timer.advanceBlockAtTime(secondPaymentTimestamp);
 
   // Make 2nd payment
   console.log('Making 2nd payment...');
-  await token.approve(lendingPoolInstance.address, payment, borrowerTxConfig);
+  await token.approve(lendingPoolInstance.address, payment, {from:borrower});
   await loansInstance.repay(payment, lastLoanID, borrowerTxConfig);
   // Check loan status
   const secondLoanStatus = await loansInstance.loans(lastLoanID) 
@@ -152,29 +163,38 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
     'Invalid final loan staus.'
   );
 
-  // Advance time to make first payment 29 days later 
+  // Advance time to make first payment 45 days later 
   console.log(`Advancing time to take out loan (current: ${(await timer.getCurrentDate())})...`);
-  const thirdPaymentTimestamp = await timer.getCurrentTimestampInSecondsAndSum(daysToSeconds(9));
+  const thirdPaymentTimestamp = await timer.getCurrentTimestampInSecondsAndSum(daysToSeconds(15));
   await timer.advanceBlockAtTime(thirdPaymentTimestamp);
 
   // Make 3rd payment
   console.log('Making 3rd payment...');
-  await token.approve(lendingPoolInstance.address, payment, borrowerTxConfig);
+  await token.approve(lendingPoolInstance.address, payment, {from:borrower});
+  await loansInstance.repay(payment, lastLoanID, borrowerTxConfig);
+  // Check loan status
+  const thirdLoanStatus = await loansInstance.loans(lastLoanID) 
+  const thirdLoanStatusResult = thirdLoanStatus.status;
+  assert.equal(
+    thirdLoanStatusResult.toString(),
+    BigNumber((2).toString()),
+    'Invalid final loan staus.'
+  );
+
+  // Advance time to make first payment 55 days later 
+  console.log(`Advancing time to take out loan (current: ${(await timer.getCurrentDate())})...`);
+  const forthPaymentTimestamp = await timer.getCurrentTimestampInSecondsAndSum(daysToSeconds(10));
+  await timer.advanceBlockAtTime(forthPaymentTimestamp);
+
+  // Make 4th payment
+  console.log('Making final payment...');
+  await token.approve(lendingPoolInstance.address, payment, {from:borrower});
   await loansInstance.repay(payment, lastLoanID, borrowerTxConfig);
 
   // Check final loan status 
   const loanStatus = await loansInstance.loans(lastLoanID);
   const finalLoanStatus = loanStatus.status;
   console.log('Status.....', finalLoanStatus.toString());
-
-  const loanInfo = await loansInstance.loans(lastLoanID);
-  const loanPrinter = new LoanInfoPrinter(web3, loanInfo, { tokenName, decimals });
-  const getTotalOwed = loanPrinter.getTotalOwed();
-
-  // I've tried adding the loanRepaid in the events.js. However the finalPaymentResult returned from the loansInstance.repay returns two events. 
-//   loans
-//     .loanRepaid(finalPaymentResult)
-//     .emitted(lastLoanID, borrower, payment, borrower, getTotalOwed);
 
   assert.equal(
       finalLoanStatus.toString(),
