@@ -4,7 +4,8 @@ const {
     getLatestTimestamp,
     ONE_DAY,
     THIRTY_DAYS,
-    NULL_ADDRESS
+    NULL_ADDRESS,
+    daysToSeconds
 } = require('../utils/consts');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
 const { createLoanResponseSig, hashLoanTermsRequest } = require('../utils/hashes');
@@ -119,7 +120,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
     ) {    
         it(t('user', 'processRequest', 'Should accept/not accept node request/responses', mustFail), async function() {
             // set up contract
-            settings = await Settings.new(reqSubmissions, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500);
+            settings = await Settings.new(reqSubmissions, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500, daysToSeconds(30));
             
             await instance.initialize(loansContract, settings.address)
 

@@ -112,6 +112,18 @@ interface SettingsInterface {
     function liquidateEthPrice() external view returns (uint256);
 
     /**
+        @notice Gets current maximum loan duration setting (in seconds).
+        @return the current maximum loan duration value.
+     */
+    function maximumLoanDuration() external view returns (uint256);
+
+    /**
+        @notice Sets a new value for maximum loan duration setting (in seconds).
+        @param newMaximumLoanDuration new maximum loan duration value.
+     */
+    function setMaximumLoanDuration(uint256 newMaximumLoanDuration) external;
+
+    /**
         @notice Sets a new value for the liquidate ETH price setting.
         @param newLiquidateEthPrice new terms expiry time value.
     */

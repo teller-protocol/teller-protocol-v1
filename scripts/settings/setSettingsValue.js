@@ -4,57 +4,14 @@
 const Accounts = require('../utils/Accounts');
 const { zerocollateral } = require("../utils/contracts");
 const { settings: readParams } = require("../utils/cli-builder");
+const getSettingsMaps = require('../../test/utils/settings-map');
 const ProcessArgs = require('../utils/ProcessArgs');
 const { SENDER_INDEX, SETTING_NAME, NEW_VALUE } = require('../utils/cli/names');
 const processArgs = new ProcessArgs(readParams.setNewSetting().argv);
 
-const settingsMap = new Map();
-settingsMap.set(
-    'requiredSubmissions',
-    {
-        get: async (settings) => (await settings.requiredSubmissions()),
-        set: async (settings, newValue, senderTxConfig) => (await settings.setRequiredSubmissions(newValue.toString(), senderTxConfig)),
-    }
-);
-settingsMap.set(
-    'maximumTolerance',
-    {
-        get: async (settings) => (await settings.maximumTolerance()),
-        set: async (settings, newValue, senderTxConfig) => (await settings.setMaximumTolerance(newValue.toString(), senderTxConfig)),
-    }
-);
-settingsMap.set(
-    'responseExpiryLength',
-    {
-        get: async (settings) => (await settings.responseExpiryLength()),
-        set: async (settings, newValue, senderTxConfig) => (await settings.setResponseExpiryLength(newValue.toString(), senderTxConfig)),
-    }
-);
-settingsMap.set(
-    'safetyInterval',
-    {
-        get: async (settings) => (await settings.safetyInterval()),
-        set: async (settings, newValue, senderTxConfig) => (await settings.setSafetyInterval(newValue.toString(), senderTxConfig)),
-    }
-);
-settingsMap.set(
-    'termsExpiryTime',
-    {
-        get: async (settings) => (await settings.termsExpiryTime()),
-        set: async (settings, newValue, senderTxConfig) => (await settings.setTermsExpiryTime(newValue.toString(), senderTxConfig)),
-    }
-);
-settingsMap.set(
-    'liquidateEthPrice',
-    {
-        get: async (settings) => (await settings.liquidateEthPrice()),
-        set: async (settings, newValue, senderTxConfig) => (await settings.setLiquidateEthPrice(newValue.toString(), senderTxConfig)),
-    }
-);
-
-
 module.exports = async (callback) => {
     try {
+        const settingsMap = getSettingsMaps();
         const accounts = new Accounts(web3);
         const getContracts = processArgs.createGetContracts(artifacts);
         const appConf = processArgs.getCurrentConfig();
