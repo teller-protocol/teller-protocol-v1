@@ -170,6 +170,20 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        loanRepaid: tx => {
+            const name = 'LoanRepaid';
+            return {
+                name: name,
+                emitted: (loanID, borrower, amountPaid, payer, totalOwed) => emitted (tx, name, ev => {
+                    assert.equal(ev.loanID.toString(), loanID.toString());
+                    assert.equal(ev.borrower, borrower);
+                    assert.equal(ev.amountPaid.toString(), BigNumber(amountPaid.toString()).toFixed(0));
+                    assert.equal(ev.payer, payer);
+                    assert.equal(ev.totalOwed.toString(), BigNumber(totalOwed).tostring().toFixed(0));
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
         loanLiquidated: tx => {
             const name = 'LoanLiquidated';
             return {
