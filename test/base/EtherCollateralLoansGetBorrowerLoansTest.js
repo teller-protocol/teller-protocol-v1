@@ -4,7 +4,8 @@ const abi = require('ethereumjs-abi')
 const {
   t,
   NULL_ADDRESS,
-  THIRTY_DAYS
+  THIRTY_DAYS,
+  daysToSeconds
 } = require('../utils/consts');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
 
@@ -36,7 +37,7 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
         lendingPoolInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
-        settingsInstance = await Settings.new(1, 1, 1, 1, THIRTY_DAYS, 1)
+        settingsInstance = await Settings.new(1, 1, 1, 1, THIRTY_DAYS, 1, daysToSeconds(30))
         instance = await Loans.new();
         await instance.initialize(
             oracleInstance.address,

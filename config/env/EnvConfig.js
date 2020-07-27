@@ -14,6 +14,7 @@ const DEFAULT_GANACHE_PORT = "8545";
 const DEFAULT_GANACHE_HOST = "127.0.0.1";
 const DEFAULT_GANACHE_NETWORK_ID = "*";
 const DEFAULT_GANACHE_GAS_PRICE = "20";
+const DEFAULT_MAXIMUM_LOAN_DURATION = "5184000"; // 60 days * 24 hours * 60 minutes * 60 seconds
 
 const ADDRESS_COUNT_KEY = 'ADDRESS_COUNT_KEY';
 const DEFAULT_ADDRESS_INDEX_KEY = 'DEFAULT_ADDRESS_INDEX_KEY';
@@ -32,6 +33,7 @@ const DEFAULT_RESPONSE_EXPIRY_KEY = 'DEFAULT_RESPONSE_EXPIRY_KEY'
 const DEFAULT_SAFETY_INTERVAL_KEY = 'DEFAULT_SAFETY_INTERVAL_KEY'
 const DEFAULT_TERMS_EXPIRY_TIME_KEY = 'DEFAULT_TERMS_EXPIRY_TIME_KEY'
 const DEFAULT_LIQUIDATE_ETH_PRICE_KEY = 'DEFAULT_LIQUIDATE_ETH_PRICE_KEY'
+const DEFAULT_MAXIMUM_LOAN_DURATION_KEY = 'DEFAULT_MAXIMUM_LOAN_DURATION'
 
 class EnvConfig {
     constructor() {
@@ -55,6 +57,7 @@ EnvConfig.prototype.initializeConf = function() {
     this.createItem(DEFAULT_SAFETY_INTERVAL_KEY, DEFAULT_SAFETY_INTERVAL, 'This is the time between depositing collateral and taking out a loan.');
     this.createItem(DEFAULT_TERMS_EXPIRY_TIME_KEY, DEFAULT_TERMS_EXPIRY_TIME, 'This is the time after which loan terms will expire.');
     this.createItem(DEFAULT_LIQUIDATE_ETH_PRICE_KEY, DEFAULT_LIQUIDATE_ETH_PRICE, 'This is the percentage of market rate liquidated eth will sell for.');
+    this.createItem(DEFAULT_MAXIMUM_LOAN_DURATION_KEY, DEFAULT_MAXIMUM_LOAN_DURATION, 'It represents the maximum duration for a loan. It is defined in seconds.');
     // Ganache configuration
     this.createItem(GANACHE_HOST, DEFAULT_GANACHE_HOST, 'This is the host used to connect to the Ganache instance.');
     this.createItem(GANACHE_PORT, DEFAULT_GANACHE_PORT, 'This is the port used to connect to the Ganache instance.');
@@ -127,6 +130,10 @@ EnvConfig.prototype.getDefaultTermsExpiryTime = function() {
 EnvConfig.prototype.getDefaultLiquidateEthPrice = function() {
   return this.conf.get(DEFAULT_LIQUIDATE_ETH_PRICE_KEY);
 }
+
+EnvConfig.prototype.getMaximumLoanDuration = function() {
+    return this.conf.get(DEFAULT_MAXIMUM_LOAN_DURATION_KEY);
+  }
 
 EnvConfig.prototype.getGanacheHost = function() {
     return this.conf.get(GANACHE_HOST);
