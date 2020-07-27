@@ -40,13 +40,13 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
     });
 
     withData({
-        _1_cTokenSupported_basic: [accounts[1], loansInstance, true, true, 10, false, undefined, false],
-        _2_cTokenSupported_transferFromFail: [accounts[1], loansInstance, true, false, 10, false, "TransferFrom wasn't successful.", true],
-        _3_cTokenSupported_notLoansSender: [accounts[1], accounts[2], true, true, 71, false, 'Address is not Loans contract.', true],
-        _4_cTokenSupported_compoundFail: [accounts[1], loansInstance, true, true, 10, true, 'COMPOUND_DEPOSIT_ERROR', true],
-        _5_cTokenNotSupported_basic: [accounts[1], loansInstance, false, true, 10, false, undefined, false],
-        _6_cTokenNotSupported_transferFromFail: [accounts[1], loansInstance, false, false, 10, false, "TransferFrom wasn't successful.", true],
-        _7_cTokenNotSupported_notLoansSender: [accounts[1], accounts[2], false, true, 71, false, 'Address is not Loans contract.', true],
+        _1_cTokenSupported_basic: [accounts[1], loansInstance, true, true, 10, false, 1000, undefined, false],
+        _2_cTokenSupported_transferFromFail: [accounts[1], loansInstance, true, false, 10, false, 1000, "TransferFrom wasn't successful.", true],
+        _3_cTokenSupported_notLoansSender: [accounts[1], accounts[2], true, true, 71, false, 1000, 'Address is not Loans contract.', true],
+        _4_cTokenSupported_compoundFail: [accounts[1], loansInstance, true, true, 10, true, 1000, 'COMPOUND_DEPOSIT_ERROR', true],
+        _5_cTokenNotSupported_basic: [accounts[1], loansInstance, false, true, 10, false, 1000, undefined, false],
+        _6_cTokenNotSupported_transferFromFail: [accounts[1], loansInstance, false, false, 10, false, 1000, "TransferFrom wasn't successful.", true],
+        _7_cTokenNotSupported_notLoansSender: [accounts[1], accounts[2], false, true, 71, false, 1000, 'Address is not Loans contract.', true],
     }, function(
         liquidator,
         sender,
@@ -54,6 +54,7 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
         transferFrom,
         amountToLiquidate,
         compoundFails,
+        allowance,
         expectedErrorMessage,
         mustFail
     ) {
@@ -73,7 +74,10 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
 
             const redeemResponse = compoundFails ? 1 : 0
             const encodeMint = compoundInterfaceEncoder.encodeMint();
-            await cTokenInstance.givenMethodReturnUint(encodeMint, redeemResponse)
+            await cTokenInstance.givenMethodReturnUint(encodeMint, redeemResponse);
+
+            const encodeAllowance = erc20InterfaceEncoder.encodeAllowance();
+            await daiInstance.givenMethodReturnUint(encodeAllowance, allowance);
 
             try {
                 // Invocation

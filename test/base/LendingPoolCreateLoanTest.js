@@ -47,16 +47,18 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [accounts[1], loansAddress, true, 10, false, undefined, false],
-        _2_notLoanSender: [accounts[1], accounts[4], true, 10, false, 'Address is not Loans contract.', true],
-        _3_transferFail: [accounts[1], loansAddress, false, 10, false, 'Transfer was not successful.', true],
-        _4_compoundFails: [accounts[1], loansAddress, true, 10, true, 'COMPOUND_WITHDRAWAL_ERROR', true]
+        _1_basic: [accounts[1], loansAddress, true, 10, false, 1000, undefined, false],
+        _2_notLoanSender: [accounts[1], accounts[4], true, 10, false, 1000, 'Address is not Loans contract.', true],
+        _3_transferFail: [accounts[1], loansAddress, false, 10, false, 1000, 'Transfer was not successful.', true],
+        _4_compoundFails: [accounts[1], loansAddress, true, 10, true, 1000, 'COMPOUND_WITHDRAWAL_ERROR', true],
+        _5_balanceFails: [accounts[1], loansAddress, true, 10, false, 0, 'LENDING_TOKEN_NOT_ENOUGH_BALANCE', true],
     }, function(
         borrower,
         sender,
         transfer,
         amountToTransfer,
         compoundFails,
+        balanceOf,
         expectedErrorMessage,
         mustFail
     ) {
@@ -69,6 +71,9 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
             const encodeRedeemUnderlying = compoundInterfaceEncoder.encodeRedeemUnderlying();
             await cTokenInstance.givenMethodReturnUint(encodeRedeemUnderlying, redeemResponse)
             
+            const encodeBalanceOf = erc20InterfaceEncoder.encodeBalanceOf();
+            await daiInstance.givenMethodReturnUint(encodeBalanceOf, balanceOf);
+
             try {
                 // Invocation
                 const result = await instance.createLoan(amountToTransfer, borrower, { from: sender });

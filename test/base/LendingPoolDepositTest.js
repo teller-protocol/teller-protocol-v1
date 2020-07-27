@@ -52,16 +52,18 @@ contract('LendingPoolDepositTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [accounts[0], true, true, 1, false, undefined, false],
-        _2_notTransferFromEnoughBalance: [accounts[2], false, true, 100, false, "TransferFrom wasn't successful.", true],
-        _3_notDepositIntoCompound: [accounts[2], true, true, 100, true, "COMPOUND_DEPOSIT_ERROR", true],
-        _4_notMint: [accounts[0], true, false, 60, false, 'Mint was not successful.', true],
+        _1_basic: [accounts[0], true, true, 1, false, 1, undefined, false],
+        _2_notTransferFromEnoughBalance: [accounts[2], false, true, 100, false, 100, "TransferFrom wasn't successful.", true],
+        _3_notDepositIntoCompound: [accounts[2], true, true, 100, true, 100, "COMPOUND_DEPOSIT_ERROR", true],
+        _4_notMint: [accounts[0], true, false, 60, false, 1000, 'Mint was not successful.', true],
+        _5_notAllowance: [accounts[0], true, true, 1, false, 0, "LEND_TOKEN_NOT_ENOUGH_ALLOWANCE", true],
     }, function(
         recipient,
         transferFrom,
         mint,
         amountToDeposit,
         compoundFails,
+        allowance,
         expectedErrorMessage,
         mustFail
     ) {
@@ -76,10 +78,14 @@ contract('LendingPoolDepositTest', function (accounts) {
             const encodeCompMint = compoundInterfaceEncoder.encodeMint();
             await cTokenInstance.givenMethodReturnUint(encodeCompMint, mintResponse)
 
+            const encodeAllowance = erc20InterfaceEncoder.encodeAllowance();
+            await daiInstance.givenMethodReturnUint(encodeAllowance, allowance);
+
             try {
                 // Invocation
                 const result = await instance.deposit(amountToDeposit, { from: recipient });
-
+                const lendingToken = await instance.lendingToken();
+                console.log('Lendinng token...', lendingToken);
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);

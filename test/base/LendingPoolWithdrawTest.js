@@ -5,6 +5,7 @@ const { lendingPool } = require('../utils/events');
 const { initContracts } = require('../utils/contracts');
 const BurnableInterfaceEncoder = require('../utils/encoders/BurnableInterfaceEncoder');
 const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
+const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -18,6 +19,7 @@ const ZDai = artifacts.require("./base/ZDAI.sol");
 contract('LendingPoolWithdrawTest', function (accounts) {
     const burnableInterfaceEncoder = new BurnableInterfaceEncoder(web3);
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
+    const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     let instance;
     let loansInstance;
     let consensusInstance;
@@ -33,14 +35,15 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [accounts[0], true, 10, false, undefined, false],
-        _2_transferFail: [accounts[1], false, 50, false, 'Transfer was not successful.', true],
-        _3_compoundFail: [accounts[1], true, 50, true, 'COMPOUND_WITHDRAWAL_ERROR', true],
+        _1_basic: [accounts[0], true, 10, false, 1000, undefined, false],
+        _2_transferFail: [accounts[1], false, 50, false, 1000, 'Transfer was not successful.', true],
+        _3_compoundFail: [accounts[1], true, 50, true, 1000, 'COMPOUND_WITHDRAWAL_ERROR', true],
     }, function(
         recipient,
         transfer,
         amountToWithdraw,
         compoundFails,
+        balanceOf,
         expectedErrorMessage,
         mustFail
     ) {
@@ -55,6 +58,9 @@ contract('LendingPoolWithdrawTest', function (accounts) {
             const redeemResponse = compoundFails ? 1 : 0
             const encodeRedeemUnderlying = compoundInterfaceEncoder.encodeRedeemUnderlying();
             await cTokenInstance.givenMethodReturnUint(encodeRedeemUnderlying, redeemResponse)
+
+            const encodeBalanceOf = erc20InterfaceEncoder.encodeBalanceOf();
+            await lendingTokenInstance.givenMethodReturnUint(encodeBalanceOf, balanceOf);
 
             try {
                 // Invocation
