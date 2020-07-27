@@ -52,6 +52,7 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
         _3_transferFail: [accounts[1], loansAddress, false, 10, false, 1000, 'Transfer was not successful.', true],
         _4_compoundFails: [accounts[1], loansAddress, true, 10, true, 1000, 'COMPOUND_WITHDRAWAL_ERROR', true],
         _5_balanceFails: [accounts[1], loansAddress, true, 10, false, 0, 'LENDING_TOKEN_NOT_ENOUGH_BALANCE', true],
+
     }, function(
         borrower,
         sender,

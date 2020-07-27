@@ -1,6 +1,8 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, NON_EXISTENT, ACTIVE, TERMS_SET, CLOSED, NULL_ADDRESS } = require('../utils/consts');
+const { t, NON_EXISTENT, ACTIVE, TERMS_SET, CLOSED, NULL_ADDRESS, daysToSeconds, toDecimals } = require('../utils/consts');
+const { createLoanRequest } = require('../utils/structs');
+const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 // Mock constracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -8,20 +10,23 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 // Smart contracts
 const LoansBaseModifiersMock = artifacts.require("./mock/base/LoansBaseModifiersMock.sol");
 
-const initializeLoans = async (instance, { priceOracle, lendingPool, loanTermsConsensus, settings }) => {
-    await instance.initialize(
-        priceOracle.address,
-        lendingPool.address,
-        loanTermsConsensus.address,
-        settings.address,
-    );
-};
-
 contract('LoansBaseModifiersTest', function (accounts) {
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     let instance
+    let settingsInstance;
     
     beforeEach('Setup for each test', async () => {
-      instance = await LoansBaseModifiersMock.new();
+        const priceOracle = await Mock.new();
+        const lendingPool = await Mock.new();
+        const loanTermsConsensus = await Mock.new();
+        settingsInstance = await Mock.new();
+        instance = await LoansBaseModifiersMock.new();
+        await instance.initialize(
+            priceOracle.address,
+            lendingPool.address,
+            loanTermsConsensus.address,
+            settingsInstance.address,
+        );
     });
 
     withData({
@@ -36,11 +41,6 @@ contract('LoansBaseModifiersTest', function (accounts) {
     ) {    
         it(t('user', 'loanActive(loanID)', 'Should able (or not) to call function with modifier loanActive.', mustFail), async function() {
             // Setup
-            const priceOracle = await Mock.new();
-            const lendingPool = await Mock.new();
-            const loanTermsConsensus = await Mock.new();
-            const settings = await Mock.new();
-            await initializeLoans(instance, { lendingPool, priceOracle, loanTermsConsensus, settings });
             const loanID = 5
             await instance.setLoanStatus(loanID, loanStatus)
 
@@ -72,11 +72,6 @@ contract('LoansBaseModifiersTest', function (accounts) {
     ) {    
         it(t('user', 'loanTermsSet(loanID)', 'Should able (or not) to call function with modifier loanActive.', mustFail), async function() {
             // Setup
-            const priceOracle = await Mock.new();
-            const lendingPool = await Mock.new();
-            const loanTermsConsensus = await Mock.new();
-            const settings = await Mock.new();
-            await initializeLoans(instance, { lendingPool, priceOracle, loanTermsConsensus, settings });
             const loanID = 5
             await instance.setLoanStatus(loanID, loanStatus)
 
@@ -108,11 +103,6 @@ contract('LoansBaseModifiersTest', function (accounts) {
     ) {    
         it(t('user', 'loanActiveOrSet(loanID)', 'Should able (or not) to call function with modifier loanActive.', mustFail), async function() {
             // Setup
-            const priceOracle = await Mock.new();
-            const lendingPool = await Mock.new();
-            const loanTermsConsensus = await Mock.new();
-            const settings = await Mock.new();
-            await initializeLoans(instance, { lendingPool, priceOracle, loanTermsConsensus, settings });
             const loanID = 5
             await instance.setLoanStatus(loanID, loanStatus)
 
@@ -143,11 +133,6 @@ contract('LoansBaseModifiersTest', function (accounts) {
     ) {    
         it(t('user', 'isBorrower', 'Should able (or not) to call function with modifier isBorrower.', mustFail), async function() {
             // Setup
-            const priceOracle = await Mock.new();
-            const lendingPool = await Mock.new();
-            const loanTermsConsensus = await Mock.new();
-            const settings = await Mock.new();
-            await initializeLoans(instance, { lendingPool, priceOracle, loanTermsConsensus, settings });
             const borrowerAddress = borrowerIndex === -1 ? NULL_ADDRESS : accounts[borrowerIndex];
             const senderAddress = senderIndex === -1 ? NULL_ADDRESS : accounts[senderIndex];
 
@@ -157,6 +142,41 @@ contract('LoansBaseModifiersTest', function (accounts) {
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because loan is not active');
+                assert(result);
+            } catch (error) {
+                // Assertions
+                assert(mustFail);
+                assert(error);
+                assert.equal(error.reason, expectedErrorMessage);
+            }
+        });
+    });
+
+    withData({
+        _1_valid: [1, daysToSeconds(10), toDecimals(100, 18), daysToSeconds(60), undefined, false],
+        _2_duration_invalid: [1, daysToSeconds(100), toDecimals(150, 18), daysToSeconds(80), 'DURATION_EXCEEDS_MAX_DURATION', true],
+    }, function(
+        borrowerIndex,
+        duration,
+        amount,
+        maxLoanDurationResponse,
+        expectedErrorMessage,
+        mustFail
+    ) {    
+        it(t('user', 'externalWithValidLoanRequest', 'Should able (or not) to test whether amount exceeds the max amount or not.', mustFail), async function() {
+            // Setup
+            const borrower = accounts[borrowerIndex];
+            const consensusInstance = await Mock.new();
+            const loanRequest = createLoanRequest(borrower, NULL_ADDRESS, 3, amount.toFixed(0), duration, 19, consensusInstance.address);
+            const encodeMaximumLoanDuration = settingsInterfaceEncoder.encodeMaximumLoanDuration();
+            await settingsInstance.givenMethodReturnUint(encodeMaximumLoanDuration, maxLoanDurationResponse);
+
+            try {
+                // Invocation
+                const result = await instance.externalWithValidLoanRequest(loanRequest);
+
+                // Assertions
+                assert(!mustFail, 'It should have failed because amount exceeds max');
                 assert(result);
             } catch (error) {
                 // Assertions

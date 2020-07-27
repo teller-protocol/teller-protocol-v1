@@ -4,7 +4,8 @@ const {
     getLatestTimestamp,
     ONE_DAY,
     THIRTY_DAYS,
-    NULL_ADDRESS
+    NULL_ADDRESS,
+    daysToSeconds
 } = require('../utils/consts');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
 const { createLoanResponseSig, hashLoanTermsRequest } = require('../utils/hashes');
@@ -126,7 +127,7 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
         it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
             // Setup
             const expectedMaxGas = expectedGasCost(responses.length);
-            settings = await Settings.new(responses.length, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500);
+            settings = await Settings.new(responses.length, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500, daysToSeconds(30));
             instance = await LoanTermsConsensus.new()
             await instance.initialize(loansContract, settings.address)
 

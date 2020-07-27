@@ -52,6 +52,7 @@ contract('LendingPoolDepositTest', function (accounts) {
     });
 
     withData({
+
         _1_basic: [accounts[0], true, true, 1, false, 1, undefined, false],
         _2_notTransferFromEnoughBalance: [accounts[2], false, true, 100, false, 100, "TransferFrom wasn't successful.", true],
         _3_notDepositIntoCompound: [accounts[2], true, true, 100, true, 100, "COMPOUND_DEPOSIT_ERROR", true],

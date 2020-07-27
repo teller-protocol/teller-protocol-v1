@@ -105,6 +105,14 @@ contract LoansBase is LoansInterface, Base {
         _;
     }
 
+    modifier withValidLoanRequest(ZeroCollateralCommon.LoanRequest memory loanRequest) {
+        require(
+            settings.maximumLoanDuration() >= loanRequest.duration,
+            "DURATION_EXCEEDS_MAX_DURATION"
+        );
+        _;
+    }
+
     /**
         @notice Get a list of all loans for a borrower
         @param borrower The borrower's address
@@ -557,5 +565,28 @@ contract LoansBase is LoansInterface, Base {
                 status: ZeroCollateralCommon.LoanStatus.TermsSet,
                 liquidated: false
             });
+    }
+
+    function _emitLoanTermsSetAndCollateralDepositedEventsIfApplicable(
+        uint256 loanID,
+        ZeroCollateralCommon.LoanRequest memory request,
+        uint256 interestRate,
+        uint256 collateralRatio,
+        uint256 maxLoanAmount,
+        uint256 depositedAmount
+    ) internal {
+        emit LoanTermsSet(
+            loanID,
+            request.borrower,
+            request.recipient,
+            interestRate,
+            collateralRatio,
+            maxLoanAmount,
+            request.duration,
+            loans[loanID].termsExpiry
+        );
+        if (depositedAmount > 0) {
+            emit CollateralDeposited(loanID, request.borrower, depositedAmount);
+        }
     }
 }

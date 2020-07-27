@@ -54,6 +54,10 @@ contract Settings is Pausable, SettingsInterface {
         @notice The setting name for the liquidate ETH price settings.
      */
     bytes32 public constant LIQUIDATE_ETH_PRICE_SETTING = "LiquidateEthPrice";
+    /**
+        @notice The setting name for the maximum loan duration settings.
+     */
+    bytes32 public constant MAXIMUM_LOAN_DURATION_SETTING = "MaximumLoanDuration";
 
     /* State Variables */
 
@@ -102,6 +106,10 @@ contract Settings is Pausable, SettingsInterface {
         i.e. an ETH liquidation price at 95% is stored as 9500
      */
     uint256 public liquidateEthPrice;
+    /**
+        It represents the maximum duration for a loan. It is defined in seconds.
+     */
+    uint256 public maximumLoanDuration;
 
     /** Modifiers */
 
@@ -115,6 +123,7 @@ contract Settings is Pausable, SettingsInterface {
         @param aSafetyInterval the initial value for the safety interval setting.
         @param aTermsExpiryTime the initial value for the terms expiry time setting.
         @param aLiquidateEthPrice the initial value for the liquidate ETH price setting.
+        @param aMaximumLoanDuration the initial value for the max loan duration setting.
      */
     constructor(
         uint256 aRequiredSubmissions,
@@ -122,13 +131,15 @@ contract Settings is Pausable, SettingsInterface {
         uint256 aResponseExpiryLength,
         uint256 aSafetyInterval,
         uint256 aTermsExpiryTime,
-        uint256 aLiquidateEthPrice
+        uint256 aLiquidateEthPrice,
+        uint256 aMaximumLoanDuration
     ) public {
         require(aRequiredSubmissions > 0, "MUST_PROVIDE_REQUIRED_SUBS");
         require(aResponseExpiryLength > 0, "MUST_PROVIDE_RESPONSE_EXP");
         require(aSafetyInterval > 0, "MUST_PROVIDE_SAFETY_INTERVAL");
         require(aTermsExpiryTime > 0, "MUST_PROVIDE_TERMS_EXPIRY");
         require(aLiquidateEthPrice > 0, "MUST_PROVIDE_ETH_PRICE");
+        require(aMaximumLoanDuration > 0, "MUST_PROVIDE_MAX_LOAN_DURATION");
 
         requiredSubmissions = aRequiredSubmissions;
         maximumTolerance = aMaximumTolerance;
@@ -136,6 +147,7 @@ contract Settings is Pausable, SettingsInterface {
         safetyInterval = aSafetyInterval;
         termsExpiryTime = aTermsExpiryTime;
         liquidateEthPrice = aLiquidateEthPrice;
+        maximumLoanDuration = aMaximumLoanDuration;
     }
 
     /** External Functions */
@@ -277,6 +289,28 @@ contract Settings is Pausable, SettingsInterface {
             msg.sender,
             oldLiquidateEthPrice,
             newLiquidateEthPrice
+        );
+    }
+
+    /**
+        @notice Sets a new value for maximum loan duration setting (in seconds).
+        @param newMaximumLoanDuration new maximum loan duration value.
+     */
+    function setMaximumLoanDuration(uint256 newMaximumLoanDuration)
+        external
+        onlyPauser()
+        whenNotPaused()
+    {
+        require(maximumLoanDuration != newMaximumLoanDuration, "NEW_VALUE_REQUIRED");
+        require(newMaximumLoanDuration > 0, "MUST_PROVIDE_MAXIMUM_LOAN_DURATION");
+        uint256 oldMaximumLoanDuration = maximumLoanDuration;
+        maximumLoanDuration = newMaximumLoanDuration;
+
+        emit SettingUpdated(
+            MAXIMUM_LOAN_DURATION_SETTING,
+            msg.sender,
+            oldMaximumLoanDuration,
+            newMaximumLoanDuration
         );
     }
 

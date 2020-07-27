@@ -25,7 +25,7 @@ contract Initializable {
         @dev It throws a require error if the contract is initialized.
      */
     modifier isNotInitialized() {
-        require(!_isInitialized, "It is already initialized.");
+        require(!_isInitialized, "CONTRACT_ALREADY_INITIALIZED");
         _;
     }
 
@@ -34,7 +34,7 @@ contract Initializable {
         @dev It throws a require error if the contract is not initialized.
      */
     modifier isInitialized() {
-        require(_isInitialized, "It is not initialized.");
+        require(_isInitialized, "CONTRACT_NOT_INITIALIZED");
         _;
     }
 
