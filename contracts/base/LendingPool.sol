@@ -261,7 +261,7 @@ contract LendingPool is Base, LendingPoolInterface {
      */
     function tokenTransfer(address recipient, uint256 amount) private {
         uint256 currentBalance = lendingToken.balanceOf(address(this));
-          require(
+        require(
             currentBalance >= amount,
             "LENDING_TOKEN_NOT_ENOUGH_BALANCE"
           );
@@ -277,7 +277,7 @@ contract LendingPool is Base, LendingPoolInterface {
      */
     function tokenTransferFrom(address from, uint256 amount) private {
         uint256 allowance = lendingToken.allowance(from, address(this));
-          require(
+        require(
             allowance >= amount,
             "LEND_TOKEN_NOT_ENOUGH_ALLOWANCE" 
           );
