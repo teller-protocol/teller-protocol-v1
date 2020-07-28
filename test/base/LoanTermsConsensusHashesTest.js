@@ -27,7 +27,7 @@ contract('LoanTermsConsensus hashRequest and hashReponse', function (accounts) {
 
     withData({
         _1_mainnet_first_test_hashRequest: [chains.mainnet, accounts[2], accounts[1], 234764, 344673177, 34467317723, 234534],
-        _2_ropsten_test_hashRequest: [chains.ropsten, accounts[3], accounts[4], 254864, 345673177, 34467317723, 234534],
+        _2_ropsten_test_hashRequest: [chains.rinkeby, accounts[3], accounts[4], 254864, 345673177, 34467317723, 234534],
         _3_second_test_hashRequest: [chains.mainnet, NULL_ADDRESS, NULL_ADDRESS, 0, 0, 0, 0],
     }, function(
         chainId,

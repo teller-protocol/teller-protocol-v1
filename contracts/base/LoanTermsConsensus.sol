@@ -1,6 +1,9 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
+// Libraries
+import "../util/SignatureLib.sol";
+
 // Contracts
 import "./Consensus.sol";
 
@@ -14,6 +17,8 @@ import "../interfaces/LoanTermsConsensusInterface.sol";
     @author develop@teller.finance
  */
 contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
+    using SignatureLib for SignatureLib;
+
     /* Mappings */
     mapping(address => mapping(uint256 => ZeroCollateralCommon.AccruedLoanTerms)) public termSubmissions;
     mapping(address => mapping(uint256 => bool)) public requestNonceTaken;
@@ -45,7 +50,7 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         );
         requestNonceTaken[request.borrower][request.requestNonce] = true;
 
-        bytes32 requestHash = _hashRequest(request);
+        bytes32 requestHash = SignatureLib.hashLoanTermsRequest(request, callerAddress, _getChainId());
 
         for (uint256 i = 0; i < responses.length; i++) {
             _processResponse(request, responses[i], requestHash);
@@ -81,7 +86,7 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         ZeroCollateralCommon.LoanResponse memory response,
         bytes32 requestHash
     ) internal {
-        bytes32 responseHash = _hashResponse(response, requestHash);
+        bytes32 responseHash = SignatureLib.hashLoanTermsResponse(response, requestHash, _getChainId());
 
         _validateResponse(
             response.signer,
@@ -111,55 +116,16 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
             response.maxLoanAmount
         );
     }
-
     /**
-        @notice Generates a hash for the loan response
-        @param response Structs of the protocol loan responses
-        @param requestHash Hash of the loan request
-        @return bytes32 Hash of the loan response
+        @notice Gets the current chain id using the opcode 'chainid()'.
+        @return the current chain id.
      */
-    function _hashResponse(
-        ZeroCollateralCommon.LoanResponse memory response,
-        bytes32 requestHash
-    ) internal view returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(
-                    response.consensusAddress,
-                    response.responseTime,
-                    response.interestRate,
-                    response.collateralRatio,
-                    response.maxLoanAmount,
-                    response.signature.signerNonce,
-                    _getChainId(),
-                    requestHash
-                )
-            );
-    }
-
-    /**
-        @notice Generates a hash for the loan request
-        @param request Struct of the protocol loan request
-        @return bytes32 Hash of the loan request
-     */
-    function _hashRequest(ZeroCollateralCommon.LoanRequest memory request)
-        internal
-        view
-        returns (bytes32)
-    {
-        return
-            keccak256(
-                abi.encode(
-                    callerAddress,
-                    request.borrower,
-                    request.recipient,
-                    request.consensusAddress,
-                    request.requestNonce,
-                    request.amount,
-                    request.duration,
-                    request.requestTime,
-                    _getChainId()
-                )
-            );
+    function _getChainId() internal view returns (uint256) {
+        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
+        uint256 id;
+        assembly {
+            id := chainid()
+        }
+        return id;
     }
 }

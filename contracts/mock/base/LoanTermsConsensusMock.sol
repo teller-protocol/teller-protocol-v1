@@ -96,13 +96,13 @@ contract LoanTermsConsensusMock is LoanTermsConsensus {
         ZeroCollateralCommon.LoanResponse calldata response,
         bytes32 requestHash
     ) external view returns (bytes32) {
-        return _hashResponse(response, requestHash);
+        return SignatureLib.hashLoanTermsResponse(response, requestHash, _getChainId());
     }
 
     function externalHashRequest(
         ZeroCollateralCommon.LoanRequest calldata request
     ) external view returns (bytes32) {
-        return _hashRequest(request);
+        return SignatureLib.hashLoanTermsRequest(request, callerAddress, _getChainId());
     }
 
     function _getChainId() internal view returns (uint256) {

@@ -3,6 +3,7 @@ pragma experimental ABIEncoderV2;
 
 // Libraries
 import "../util/AddressLib.sol";
+import "../util/SignatureLib.sol";
 
 // Interfaces
 import "../interfaces/InterestConsensusInterface.sol";
@@ -18,6 +19,7 @@ import "./Consensus.sol";
  */
 contract InterestConsensus is Consensus, InterestConsensusInterface {
     using AddressLib for address;
+    using SignatureLib for SignatureLib;
 
     /* State Variables */
 
@@ -44,7 +46,7 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
             "INSUFFICIENT_RESPONSES"
         );
 
-        bytes32 requestHash = _hashRequest(request);
+        bytes32 requestHash = SignatureLib.hashInterestRequest(request, callerAddress, _getChainId());
 
         for (uint256 i = 0; i < responses.length; i++) {
             _processResponse(request, responses[i], requestHash);
@@ -71,7 +73,7 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         ZeroCollateralCommon.InterestResponse memory response,
         bytes32 requestHash
     ) internal {
-        bytes32 responseHash = _hashResponse(response, requestHash);
+        bytes32 responseHash = SignatureLib.hashInterestResponse(response, requestHash, _getChainId());
 
         _validateResponse(
             response.signer,
@@ -90,52 +92,5 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
             request.endTime,
             response.interest
         );
-    }
-
-    /**
-        @notice It creates a hash based on a node response and lender request.
-        @param response a node response.
-        @param requestHash a hash value that represents the lender request.
-        @return a hash value.
-     */
-    function _hashResponse(
-        ZeroCollateralCommon.InterestResponse memory response,
-        bytes32 requestHash
-    ) internal view returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(
-                    response.consensusAddress,
-                    response.responseTime,
-                    response.interest,
-                    response.signature.signerNonce,
-                    _getChainId(),
-                    requestHash
-                )
-            );
-    }
-
-    /**
-        @notice It creates a hash value based on the lender request.
-        @param request the interest request sent by the lender.
-        @return a hash value.
-     */
-    function _hashRequest(ZeroCollateralCommon.InterestRequest memory request)
-        internal
-        view
-        returns (bytes32)
-    {
-        return
-            keccak256(
-                abi.encode(
-                    callerAddress,
-                    request.lender,
-                    request.consensusAddress,
-                    request.startTime,
-                    request.endTime,
-                    request.requestTime,
-                    _getChainId()
-                )
-            );
     }
 }
