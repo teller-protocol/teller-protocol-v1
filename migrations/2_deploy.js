@@ -13,6 +13,8 @@ const TUSDC = artifacts.require("./base/TUSDC.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
 const MarketsState = artifacts.require("./base/MarketsState.sol");
+const EscrowFactory = artifacts.require('./base/EscrowFactory.sol');
+const Escrow = artifacts.require('./base/Escrow.sol');
 const Lenders = artifacts.require("./base/Lenders.sol");
 const EtherCollateralLoans = artifacts.require("./base/EtherCollateralLoans.sol");
 const TokenCollateralLoans = artifacts.require("./base/TokenCollateralLoans.sol");
@@ -68,6 +70,8 @@ module.exports = async function(deployer, network, accounts) {
     { ...networkConfig, txConfig, network, currentBlockNumber, web3 },
     { ERC20 },
   );
+  await deployerApp.deploy(Escrow)
+  await deployerApp.deploy(EscrowFactory, Escrow.address)
 
   await deployerApp.deploy(
     ATMSettings,
