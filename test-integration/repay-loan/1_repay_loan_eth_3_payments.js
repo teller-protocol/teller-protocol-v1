@@ -2,7 +2,7 @@
 const BigNumber = require('bignumber.js');
 const { zerocollateral, tokens } = require("../../scripts/utils/contracts");
 const { loans, lendingPool } = require('../../test/utils/events');
-const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds, daysToSeconds } = require('../../test/utils/consts');
+const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds, daysToSeconds, NON_EXISTENT } = require('../../test/utils/consts');
 const loanStatuses = require('../../test/utils/loanStatus');
 const { createMultipleSignedLoanTermsResponses, createLoanTermsRequest } = require('../../test/utils/loan-terms-helper');
 const assert = require("assert");
@@ -172,16 +172,23 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
 
   // Make 3rd payment
   console.log('Making final payment...');
-  await token.approve(lendingPoolInstance.address, payment, borrowerTxConfig);
+  await token.approve(lendingPoolInstance.address, payment, {from:borrower});
   const repay3_result = await loansInstance.repay(payment, lastLoanID, borrowerTxConfig);
-
-  // Check final loan status 
   totalOwedResult = totalOwedResult.minus(payment);
-  console.log('Expected (after 3# repay) total owed:  ', totalOwedResult.toString());
   loans
     .loanRepaid(repay3_result)
     .emitted(lastLoanID, borrowerTxConfig.from, payment, borrowerTxConfig.from, totalOwedResult.toString());
   const loanStatus = await loansInstance.loans(lastLoanID);
+  assert.equal(
+    loanStatus.principalOwed,
+    NON_EXISTENT,
+    'Incorrect prinicpal owed.'
+  );
+  assert.equal(
+    loanStatus.interestOwed,
+    NON_EXISTENT,
+    'Incorrect interest owed.'
+  );
   assert.equal(
     loanStatus.status.toString(),
     loanStatuses.Closed,
