@@ -47,5 +47,9 @@ contract EtherCollateralLoansMock is EtherCollateralLoans {
         });
     }
 
+    function createEscrow(uint256 loanID) public {
+        escrowFactory.createEscrow(loanID);
+    }
+
     function() external payable {}
 }
