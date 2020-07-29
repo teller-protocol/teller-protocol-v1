@@ -3,6 +3,7 @@ const BigNumber = require('bignumber.js');
 const { zerocollateral, tokens } = require("../../scripts/utils/contracts");
 const { loans, lendingPool } = require('../../test/utils/events');
 const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds, daysToSeconds } = require('../../test/utils/consts');
+const loanStatuses = require('../../test/utils/loanStatus');
 const { createMultipleSignedLoanTermsResponses, createLoanTermsRequest } = require('../../test/utils/loan-terms-helper');
 const assert = require("assert");
 
@@ -111,7 +112,6 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
 
   // Calculate payment
   console.log(`Making payment for loan id ${lastLoanID}...`);
-  console.log('Payment....', payment);
   const initialLoanStatus = await loansInstance.loans(lastLoanID);
   const {
     principalOwed: principalOwedResult,
@@ -125,10 +125,11 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   const paymentTimestamp = await timer.getCurrentTimestampInSecondsAndSum(daysToSeconds(10));
   await timer.advanceBlockAtTime(paymentTimestamp);
 
-  / Make 1st payment
+  // Make 1st payment
   console.log(`Repaying loan id ${lastLoanID}...`);
   console.log('Making 1st payment...');
   await token.approve(lendingPoolInstance.address, payment, {from:borrower});
+  totalOwedResult = totalOwedResult.minus(payment);
   const repay1_result = await loansInstance.repay(payment, lastLoanID, borrowerTxConfig);
   loans
     .loanRepaid(repay1_result)
