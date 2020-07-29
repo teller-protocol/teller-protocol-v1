@@ -179,7 +179,7 @@ module.exports = {
                     assert.equal(ev.borrower, borrower);
                     assert.equal(ev.amountPaid.toString(), BigNumber(amountPaid.toString()).toFixed(0));
                     assert.equal(ev.payer, payer);
-                    assert.equal(ev.totalOwed.toString(), BigNumber(totalOwed).tostring().toFixed(0));
+                    assert.equal(ev.totalOwed.toString(), BigNumber(totalOwed.toString()).toFixed(0));
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
