@@ -3,7 +3,6 @@ const BigNumber = require('bignumber.js');
 const { zerocollateral, tokens } = require("../../scripts/utils/contracts");
 const { loans, lendingPool } = require('../../test/utils/events');
 const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds, daysToSeconds } = require('../../test/utils/consts');
-const LoanInfoPrinter = require('../../test/utils/printers/LoanInfoPrinter');
 const { createMultipleSignedLoanTermsResponses, createLoanTermsRequest } = require('../../test/utils/loan-terms-helper');
 const assert = require("assert");
 
@@ -112,21 +111,31 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
 
   // Calculate payment
   console.log(`Making payment for loan id ${lastLoanID}...`);
-  const payment = toDecimals(346.70, decimals).toFixed(0);
   console.log('Payment....', payment);
-
+  const initialLoanStatus = await loansInstance.loans(lastLoanID);
+  const {
+    principalOwed: principalOwedResult,
+    interestOwed: interestOwedResult,
+  } = initialLoanStatus;
+  let totalOwedResult = BigNumber(principalOwedResult.toString())
+                          .plus(BigNumber(interestOwedResult.toString()));
+  const payment = totalOwedResult.dividedBy(3);
   // Advance time to make first payment 10 days later 
   console.log(`Advancing time to take out loan (current: ${(await timer.getCurrentDate())})...`);
   const paymentTimestamp = await timer.getCurrentTimestampInSecondsAndSum(daysToSeconds(10));
   await timer.advanceBlockAtTime(paymentTimestamp);
 
-  // Make 1st payment
+  / Make 1st payment
   console.log(`Repaying loan id ${lastLoanID}...`);
   console.log('Making 1st payment...');
-  await token.approve(lendingPoolInstance.address, payment, borrowerTxConfig);
-  await loansInstance.repay(payment, lastLoanID, borrowerTxConfig);
+  await token.approve(lendingPoolInstance.address, payment, {from:borrower});
+  const repay1_result = await loansInstance.repay(payment, lastLoanID, borrowerTxConfig);
+  loans
+    .loanRepaid(repay1_result)
+    .emitted(lastLoanID, borrowerTxConfig.from, payment, borrowerTxConfig.from, totalOwedResult.toString());
+
   // Check loan status
-  const firstLoanStatus = await loansInstance.loans(lastLoanID) 
+  const firstLoanStatus = await loansInstance.loans(lastLoanID);
   const firstLoanStatusResult = firstLoanStatus.status;
   assert.equal(
     firstLoanStatusResult.toString(),
@@ -141,15 +150,18 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
 
   // Make 2nd payment
   console.log('Making 2nd payment...');
-  await token.approve(lendingPoolInstance.address, payment, borrowerTxConfig);
-  await loansInstance.repay(payment, lastLoanID, borrowerTxConfig);
+  await token.approve(lendingPoolInstance.address, payment, {from:borrower});
+  totalOwedResult = totalOwedResult.minus(payment);
+  const repay2_result = await loansInstance.repay(payment, lastLoanID, borrowerTxConfig);
   // Check loan status
+  loans
+    .loanRepaid(repay2_result)
+    .emitted(lastLoanID, borrowerTxConfig.from, payment, borrowerTxConfig.from, totalOwedResult.toString());
   const secondLoanStatus = await loansInstance.loans(lastLoanID) 
-  const secondLoanStatusResult = secondLoanStatus.status;
   assert.equal(
-    secondLoanStatusResult.toString(),
-    BigNumber((2).toString()),
-    'Invalid final loan staus.'
+    secondLoanStatus.status.toString(),
+    loanStatuses.Active,
+    'Invalid #2 loan staus.'
   );
 
   // Advance time to make first payment 29 days later 
@@ -158,27 +170,20 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   await timer.advanceBlockAtTime(thirdPaymentTimestamp);
 
   // Make 3rd payment
-  console.log('Making 3rd payment...');
+  console.log('Making final payment...');
   await token.approve(lendingPoolInstance.address, payment, borrowerTxConfig);
-  await loansInstance.repay(payment, lastLoanID, borrowerTxConfig);
+  const repay3_result = await loansInstance.repay(payment, lastLoanID, borrowerTxConfig);
 
   // Check final loan status 
+  totalOwedResult = totalOwedResult.minus(payment);
+  console.log('Expected (after 3# repay) total owed:  ', totalOwedResult.toString());
+  loans
+    .loanRepaid(repay3_result)
+    .emitted(lastLoanID, borrowerTxConfig.from, payment, borrowerTxConfig.from, totalOwedResult.toString());
   const loanStatus = await loansInstance.loans(lastLoanID);
-  const finalLoanStatus = loanStatus.status;
-  console.log('Status.....', finalLoanStatus.toString());
-
-  const loanInfo = await loansInstance.loans(lastLoanID);
-  const loanPrinter = new LoanInfoPrinter(web3, loanInfo, { tokenName, decimals });
-  const getTotalOwed = loanPrinter.getTotalOwed();
-
-  // I've tried adding the loanRepaid in the events.js. However the finalPaymentResult returned from the loansInstance.repay returns two events. 
-//   loans
-//     .loanRepaid(finalPaymentResult)
-//     .emitted(lastLoanID, borrower, payment, borrower, getTotalOwed);
-
   assert.equal(
-      finalLoanStatus.toString(),
-      BigNumber((3).toString()),
-      'Invalid final loan staus.'
+    loanStatus.status.toString(),
+    loanStatuses.Closed,
+    'Invalid final loan staus.'
   );
 };

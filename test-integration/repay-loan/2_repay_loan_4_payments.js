@@ -124,13 +124,6 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
 
   // Calculate payment
   console.log(`Making payment for loan id ${lastLoanID}...`);
-  const payment = toDecimals(212, decimals).toFixed(0);
-  console.log('Payment....', payment);
-
-  // Advance time to make first payment 15 days later 
-  console.log(`Advancing time to take out loan (current: ${(await timer.getCurrentDate())})...`);
-  const paymentTimestamp = await timer.getCurrentTimestampInSecondsAndSum(daysToSeconds(15));
-  await timer.advanceBlockAtTime(paymentTimestamp);
   const initialLoanStatus = await loansInstance.loans(lastLoanID);
   const {
     principalOwed: principalOwedResult,
@@ -138,6 +131,12 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   } = initialLoanStatus;
   let totalOwedResult = BigNumber(principalOwedResult.toString())
                           .plus(BigNumber(interestOwedResult.toString()));
+  const payment = totalOwedResult.dividedBy(4);
+
+  // Advance time to make first payment 15 days later 
+  console.log(`Advancing time to take out loan (current: ${(await timer.getCurrentDate())})...`);
+  const paymentTimestamp = await timer.getCurrentTimestampInSecondsAndSum(daysToSeconds(15));
+  await timer.advanceBlockAtTime(paymentTimestamp);
 
   totalOwedResult = totalOwedResult.minus(payment);
 
