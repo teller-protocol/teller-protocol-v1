@@ -235,6 +235,8 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
 
         loans[loanID].status = TellerCommon.LoanStatus.Active;
 
+        escrowFactory.createEscrow(loanID);
+
         // give the recipient their requested amount of tokens
         if (loans[loanID].loanTerms.recipient != address(0)) {
             lendingPool.createLoan(amountBorrow, loans[loanID].loanTerms.recipient);

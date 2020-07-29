@@ -18,6 +18,18 @@ const notEmitted = (tx, eventName, assertFunction) => {
 }
 
 module.exports = {
+    escrow: {
+        created: tx => {
+            const name = 'EscrowCreated';
+            return {
+                name: name,
+                emitted: (escrowAddress) => emitted(tx, name, ev => {
+                    assert.equal(ev.escrowAddress, escrowAddress);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
     erc20: {
         transfer: tx => {
             const name = 'Transfer';
