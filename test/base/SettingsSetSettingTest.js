@@ -114,6 +114,7 @@ contract('SettingsSetSettingTest', function (accounts) {
         _5_responseExpiryLength: ['responseExpiryLength', 735],
         _6_termsExpiryTime: ['termsExpiryTime', 2225],
         _7_liquidateEthPrice: ['liquidateEthPrice', 9325],
+        _8_startingBlockNumber: ['startingBlockNumber', 1800000],
     }, function(settingKey, currentValue) {
         const { get: getSettingValue, set: setSettingValue, name: getSettingName } = settingsMap.get(settingKey);
         const settingName = getSettingName();

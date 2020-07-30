@@ -372,10 +372,10 @@ contract Settings is Pausable, SettingsInterface {
         onlyPauser()
         whenNotPaused()
     {
-        require(requiredSubmissions != newStartingBlockNumber, "NEW_VALUE_REQUIRED");
+        require(startingBlockNumber != newStartingBlockNumber, "NEW_VALUE_REQUIRED");
         require(newStartingBlockNumber > 0, "MUST_PROVIDE_START_BLOCK_NUMBER");
-        uint256 oldStartingBlockNumber = requiredSubmissions;
-        requiredSubmissions = newStartingBlockNumber;
+        uint256 oldStartingBlockNumber = startingBlockNumber;
+        startingBlockNumber = newStartingBlockNumber;
 
         emit SettingUpdated(
             STARTING_BLOCK_NUMBER_SETTING,
