@@ -65,7 +65,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
     ) {    
         it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
             // set up contract
-            const settings = await Settings.new(submissions, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500, daysToSeconds(30));
+            const settings = await Settings.new(submissions, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500, daysToSeconds(30), 1);
             instance = await InterestConsensusMock.new()
             await instance.initialize(lendersContract, settings.address)
 

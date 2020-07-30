@@ -49,7 +49,7 @@ contract('SettingsCreateAssetSettingsTest', function (accounts) {
             const senderAddress = getSenderAddress(senderIndex);
             const assetAddress = getContractAddress(assetAddressIndex, assetInstance);
             const cTokenAddress = getContractAddress(cTokenAddressIndex, cTokenInstance);
-            const instance = await Settings.new(1, 1, 1, 1, 1, 1, daysToSeconds(30));
+            const instance = await Settings.new(1, 1, 1, 1, 1, 1, daysToSeconds(30), 1);
             if(addPauserRole) {
                 await instance.addPauser(senderAddress, { from: owner });
             }
@@ -119,7 +119,7 @@ contract('SettingsCreateAssetSettingsTest', function (accounts) {
     ) {
         it(t('user', 'createAssetSettings#2', 'Should (or not) be able to create a new asset instance.', mustFail), async function() {
             // Setup
-            const instance = await Settings.new(1, 1, 1, 1, 1, 1, daysToSeconds(30));
+            const instance = await Settings.new(1, 1, 1, 1, 1, 1, daysToSeconds(30), 1);
             const senderAddress = getSenderAddress(senderIndex);
             if(addAsPauserRole) {
                 await instance.addPauser(senderAddress, { from: owner });

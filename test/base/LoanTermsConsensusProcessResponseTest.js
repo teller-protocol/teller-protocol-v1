@@ -84,7 +84,7 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
     ) {    
         it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
             // set up contract
-            settings = await Settings.new(requiredSubs, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500, daysToSeconds(30));
+            settings = await Settings.new(requiredSubs, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500, daysToSeconds(30), 1);
             instance = await LoanTermsConsensusMock.new()
             await instance.initialize(loansContract, settings.address)
 

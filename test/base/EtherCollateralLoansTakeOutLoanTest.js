@@ -36,7 +36,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
         lendingPoolInstance = await Mock.new();
         lendingTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
-        const settingsInstance = await Settings.new(1, 1, THIRTY_DAYS, FIVE_MIN, THIRTY_DAYS, 9500, daysToSeconds(30));
+        const settingsInstance = await Settings.new(1, 1, THIRTY_DAYS, FIVE_MIN, THIRTY_DAYS, 9500, daysToSeconds(30), 1);
         loanTermsConsInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(

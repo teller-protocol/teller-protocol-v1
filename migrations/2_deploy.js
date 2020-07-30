@@ -49,7 +49,10 @@ module.exports = async function(deployer, network, accounts) {
 
   // Creating DeployerApp helper.
   const deployerApp = new DeployerApp(deployer, web3, deployerAccount, network);
-  
+
+  const currentBlockNumber = await web3.eth.getBlockNumber();
+  const startingBlockNumber = env.getStartingBlockNumber(currentBlockNumber);
+  console.log(`Configuring starting block number: ${startingBlockNumber.toString()}`);
   await deployerApp.deploys([ZDAI, ZUSDC], txConfig);
   await deployerApp.deploy(
     Settings,
@@ -60,6 +63,7 @@ module.exports = async function(deployer, network, accounts) {
     termsExpiryTime,
     liquidateEthPrice,
     maximumLoanDuration,
+    startingBlockNumber,
     txConfig
   );
   const settingsInstance = await Settings.deployed();

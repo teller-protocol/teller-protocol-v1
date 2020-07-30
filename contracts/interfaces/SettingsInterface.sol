@@ -155,6 +155,12 @@ interface SettingsInterface {
     function termsExpiryTime() external view returns (uint256);
 
     /**
+        @notice It represents the first block number where the cloud nodes must start to process data.
+        @return this current starting block number.
+     */
+    function startingBlockNumber() external view returns (uint256);
+
+    /**
         @notice Sets a new value for the terms expiry time setting.
         @param newTermsExpiryTime new terms expiry time value.
     */
@@ -184,6 +190,12 @@ interface SettingsInterface {
         @param newLiquidateEthPrice new terms expiry time value.
     */
     function setLiquidateEthPrice(uint256 newLiquidateEthPrice) external;
+
+    /**
+        @notice Sets the starting block number.
+        @param newStartingBlockNumber the new starting block number value.
+     */
+    function setStartingBlockNumber(uint256 newStartingBlockNumber) external;
 
     /**
         @notice It gets whether the platform is paused or not.
