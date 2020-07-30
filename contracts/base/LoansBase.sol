@@ -105,10 +105,23 @@ contract LoansBase is LoansInterface, Base {
         _;
     }
 
+    /**
+        @notice Checks the given loan request is valid.
+        @dev It throws an require error if the duration exceeds the maximum loan duration.
+        @dev It throws an require error if the loan amount exceeds the maximum loan amount for the given asset.
+        @param loanRequest to validate.
+     */
     modifier withValidLoanRequest(ZeroCollateralCommon.LoanRequest memory loanRequest) {
         require(
             settings.maximumLoanDuration() >= loanRequest.duration,
             "DURATION_EXCEEDS_MAX_DURATION"
+        );
+        require(
+            !settings.exceedsMaxLoanAmount(
+                lendingPool.lendingToken(),
+                loanRequest.amount
+            ),
+            "AMOUNT_EXCEEDS_MAX_AMOUNT"
         );
         _;
     }
