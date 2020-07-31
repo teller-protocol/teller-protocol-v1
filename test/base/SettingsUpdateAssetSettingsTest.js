@@ -1,9 +1,10 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, NULL_ADDRESS, daysToSeconds, toDecimals, toBytes32 } = require('../utils/consts');
+const { t, NULL_ADDRESS, toDecimals, toBytes32 } = require('../utils/consts');
 const { createAssetSettings } = require('../utils/asset-settings-helper');
 const { settings } = require('../utils/events');
 const getAssetSettingsMap = require('../utils/asset-settings-map');
+const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -66,7 +67,7 @@ contract('SettingsUpdateAssetSettingsTest', function (accounts) {
             const { set: setAssetSettingValue, get: getAssetSettingValue, name: getAssetSettingName } = assetSettingsMap.get(assetSettingKey);
             const assetSettingName = getAssetSettingName();
             const senderAddress = getSenderAddress(senderIndex);
-            const instance = await Settings.new(1, 1, 1, 1, 1, 1, daysToSeconds(30), 1);
+            const instance = await createTestSettingsInstance(Settings);
 
             const currentAssetsInfo = await createAssetSettings(Mock, instance, owner, previousAssetsInfo);
             const assetAddressToUpdate = assetToUpdateIndex === -1 ? (await Mock.new()).address : currentAssetsInfo[assetToUpdateIndex].assetAddress;
@@ -132,7 +133,7 @@ contract('SettingsUpdateAssetSettingsTest', function (accounts) {
             const { set: setAssetSettingValue, get: getAssetSettingValue, name: getAssetSettingName } = assetSettingsMap.get(assetSettingKey);
             const assetSettingName = getAssetSettingName();
             const senderAddress = getSenderAddress(senderIndex);
-            const instance = await Settings.new(1, 1, 1, 1, 1, 1, daysToSeconds(30), 1);
+            const instance = await createTestSettingsInstance(Settings);
 
             const currentAssetsInfo = await createAssetSettings(Mock, instance, owner, previousAssetsInfo);
             const assetAddressToUpdate = assetToUpdateIndex === -1 ? (await Mock.new()) : currentAssetsInfo[assetToUpdateIndex].assetAddress;

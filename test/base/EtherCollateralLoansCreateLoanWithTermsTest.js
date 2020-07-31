@@ -6,11 +6,11 @@ const {
   NULL_ADDRESS,
   TERMS_SET,
   THIRTY_DAYS,
-  daysToSeconds
 } = require('../utils/consts');
 const { loans } = require('../utils/events');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
 const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
+const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -45,7 +45,12 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
         lendingPoolInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
-        settingsInstance = await Settings.new(1, 1, 1, 1, THIRTY_DAYS, 1, daysToSeconds(30), 1)
+        settingsInstance = await createTestSettingsInstance(
+            Settings,
+            {
+                termsExpiryTime: THIRTY_DAYS
+            }
+        );
         instance = await Loans.new();
         await instance.initialize(
             oracleInstance.address,

@@ -1,4 +1,5 @@
 const withData = require('leche').withData;
+const { createTestSettingsInstance } = require('../utils/settings-helper');
 const { 
     t,
     getLatestTimestamp,
@@ -123,7 +124,16 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
         it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
             // set up contract
             const expectedMaxGas = expectedGasCost(responses.length);
-            const settings = await Settings.new(responses.length, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500, daysToSeconds(30), 1);
+            const settings = await createTestSettingsInstance(
+                Settings,
+                {
+                    requiredSubmissions: responses.length,
+                    maximumTolerance: tolerance,
+                    responseExpiryLength: THIRTY_DAYS,
+                    termsExpiryTime: THIRTY_DAYS,
+                    liquidateEthPrice: 9500,
+                }
+            );
             instance = await InterestConsensus.new();
             await instance.initialize(lendersContract, settings.address);
 

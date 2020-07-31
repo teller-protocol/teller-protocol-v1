@@ -17,6 +17,7 @@ const DEFAULT_GANACHE_NETWORK_ID = "*";
 const DEFAULT_GANACHE_GAS_PRICE = "20";
 const DEFAULT_MAXIMUM_LOAN_DURATION = "5184000"; // 60 days * 24 hours * 60 minutes * 60 seconds
 const DEFAULT_STARTING_BLOCK_OFFSET_NUMBER = 40;
+const DEFAULT_COLLATERAL_BUFFER = 1500;
 
 const ADDRESS_COUNT_KEY = 'ADDRESS_COUNT_KEY';
 const DEFAULT_ADDRESS_INDEX_KEY = 'DEFAULT_ADDRESS_INDEX_KEY';
@@ -37,6 +38,7 @@ const DEFAULT_TERMS_EXPIRY_TIME_KEY = 'DEFAULT_TERMS_EXPIRY_TIME_KEY';
 const DEFAULT_LIQUIDATE_ETH_PRICE_KEY = 'DEFAULT_LIQUIDATE_ETH_PRICE_KEY';
 const DEFAULT_MAXIMUM_LOAN_DURATION_KEY = 'DEFAULT_MAXIMUM_LOAN_DURATION';
 const DEFAULT_STARTING_BLOCK_OFFSET_NUMBER_KEY = 'DEFAULT_STARTING_BLOCK_OFFSET_NUMBER';
+const DEFAULT_COLLATERAL_BUFFER_KEY = 'DEFAULT_COLLATERAL_BUFFER';
 
 class EnvConfig {
     constructor() {
@@ -62,6 +64,7 @@ EnvConfig.prototype.initializeConf = function() {
     this.createItem(DEFAULT_LIQUIDATE_ETH_PRICE_KEY, DEFAULT_LIQUIDATE_ETH_PRICE, 'This is the percentage of market rate liquidated eth will sell for.');
     this.createItem(DEFAULT_MAXIMUM_LOAN_DURATION_KEY, DEFAULT_MAXIMUM_LOAN_DURATION, 'It represents the maximum duration for a loan. It is defined in seconds.');
     this.createItem(DEFAULT_STARTING_BLOCK_OFFSET_NUMBER_KEY, DEFAULT_STARTING_BLOCK_OFFSET_NUMBER, 'It represents the offset between the current block and the starting block number.');
+    this.createItem(DEFAULT_COLLATERAL_BUFFER_KEY, DEFAULT_COLLATERAL_BUFFER, 'It represents the collateral buffer used in the clode nodes to calculate the minimum collateral.');
     // Ganache configuration
     this.createItem(GANACHE_HOST, DEFAULT_GANACHE_HOST, 'This is the host used to connect to the Ganache instance.');
     this.createItem(GANACHE_PORT, DEFAULT_GANACHE_PORT, 'This is the port used to connect to the Ganache instance.');
@@ -149,6 +152,10 @@ EnvConfig.prototype.getStartingBlockNumber = function(currentBlockNumber) {
     return startingBlockNumber.lte(0) ? '1' : startingBlockNumber.toFixed(0);
 }
 
+EnvConfig.prototype.getCollateralBuffer = function() {
+    return this.conf.get(DEFAULT_COLLATERAL_BUFFER_KEY);
+}
+
 EnvConfig.prototype.getGanacheHost = function() {
     return this.conf.get(GANACHE_HOST);
 }
@@ -163,6 +170,22 @@ EnvConfig.prototype.getGanacheNetworkId = function() {
 
 EnvConfig.prototype.getGanacheGasPrice = function() {
     return this.conf.get(GANACHE_GAS_PRICE);
+}
+
+EnvConfig.prototype.createSettingsParams = function(currentBlockNumber) {
+    const startingBlockNumber = this.getStartingBlockNumber(currentBlockNumber);
+    console.log(`Configuring starting block number: ${startingBlockNumber.toString()}`);
+    return {
+        requiredSubmissions: this.getDefaultRequiredSubmissions().getOrDefault(),
+        maximumTolerance: this.getDefaultMaximumTolerance().getOrDefault(),
+        responseExpiryLength: this.getDefaultResponseExpiry().getOrDefault(),
+        safetyInterval: this.getDefaultSafetyInterval().getOrDefault(),
+        termsExpiryTime: this.getDefaultTermsExpiryTime().getOrDefault(),
+        liquidateEthPrice: this.getDefaultLiquidateEthPrice().getOrDefault(),
+        maximumLoanDuration: this.getMaximumLoanDuration().getOrDefault(),
+        startingBlockNumber,
+        collateralBuffer: this.getCollateralBuffer().getOrDefault(),
+    };
 }
 
 module.exports = EnvConfig;
