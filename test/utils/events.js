@@ -331,7 +331,6 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-    }
         assetSettingsCreated: tx => {
             const name = 'AssetSettingsCreated';
             return {
@@ -386,5 +385,5 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-    },
+    }
 };
