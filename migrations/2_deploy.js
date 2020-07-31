@@ -1,6 +1,9 @@
 const assert = require('assert');
 const DeployerApp = require('./utils/DeployerApp');
 const PoolDeployer = require('./utils/PoolDeployer');
+const initSettings = require('./utils/initSettings');
+
+const ERC20 = artifacts.require("@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol");
 
 // Official Smart Contracts
 const ZDAI = artifacts.require("./base/ZDAI.sol");
@@ -59,6 +62,13 @@ module.exports = async function(deployer, network, accounts) {
     maximumLoanDuration,
     txConfig
   );
+  const settingsInstance = await Settings.deployed();
+  await initSettings(
+    settingsInstance,
+    { ...networkConfig, txConfig, network },
+    { ERC20 },
+  );
+
   const aggregators = {};
   
   for (const chainlinkOraclePair of chainlinkOraclesRequired) {

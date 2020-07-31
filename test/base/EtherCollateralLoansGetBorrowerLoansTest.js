@@ -8,6 +8,7 @@ const {
   daysToSeconds
 } = require('../utils/consts');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
+const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -18,6 +19,7 @@ const Settings = artifacts.require("./base/Settings.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 
 contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
+    const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
     let instance;
     let loanTermsConsInstance;
     let lendingPoolInstance;
@@ -25,8 +27,11 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
     let processRequestEncoding;
     let oracleInstance;
     let settingsInstance;
+    let lendingTokenInstance;
 
-    const borrowerAddress = accounts[2]
+    const owner = accounts[0];
+    const borrowerAddress = accounts[2];
+    const AMOUNT_LOAN_REQUEST = 12000;
 
     let emptyRequest
     let responseOne
@@ -34,6 +39,7 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
     let loanRequest
     
     beforeEach('Setup for each test', async () => {
+        lendingTokenInstance = await Mock.new();
         lendingPoolInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
@@ -47,7 +53,7 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
         )
         responseOne = createUnsignedLoanResponse(accounts[3], 0, 1234, 6500, 10000, 3, loanTermsConsInstance.address)
         responseTwo = createUnsignedLoanResponse(accounts[4], 0, 1500, 6000, 10000, 2, loanTermsConsInstance.address)
-        loanRequest = createLoanRequest(borrowerAddress, NULL_ADDRESS, 3, 12000, 4, 19, loanTermsConsInstance.address)
+        loanRequest = createLoanRequest(borrowerAddress, NULL_ADDRESS, 3, AMOUNT_LOAN_REQUEST, 4, 19, loanTermsConsInstance.address)
         emptyRequest = createLoanRequest(NULL_ADDRESS, NULL_ADDRESS, 0, 0, 0, 0, loanTermsConsInstance.address)
 
         loanTermsConsTemplate = await LoanTermsConsensus.new()
@@ -55,13 +61,16 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
             .contract
             .methods
             .processRequest(emptyRequest, [responseOne])
-            .encodeABI()
+            .encodeABI();
+        
+        const encodeLendingToken = lendingPoolInterfaceEncoder.encodeLendingToken();
+        lendingPoolInstance.givenMethodReturnAddress(encodeLendingToken, lendingTokenInstance.address);
     });
 
     withData({
-        _1_valid_no_msg_value: [3, 0],
-        _2_valid_with_msg_value: [17, 500000],
-    }, function(mockLoanIDCounter, msgValue) {
+        _1_valid_no_msg_value: [AMOUNT_LOAN_REQUEST, 3, 0],
+        _2_valid_with_msg_value: [AMOUNT_LOAN_REQUEST, 17, 500000],
+    }, function(assetSettingAmount, mockLoanIDCounter, msgValue) {
         it(t('user', 'getBorrowerLoans', 'Should able to get the borrower loan ids.', false), async function() {
             const interestRate = Math.floor((responseOne.interestRate + responseTwo.interestRate) / 2);
             const collateralRatio = Math.floor((responseOne.collateralRatio + responseTwo.collateralRatio) / 2);
@@ -77,8 +86,16 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
                     [interestRate.toString(), collateralRatio.toString(), maxLoanAmount.toString()]
                 )
             )
-            // Invocation
-            const tx = await instance.createLoanWithTerms(
+            const cTokenInstance = await Mock.new();
+            await settingsInstance.createAssetSettings(
+                lendingTokenInstance.address,
+                cTokenInstance.address,
+                assetSettingAmount,
+                {
+                    from: owner
+                }
+            );
+            await instance.createLoanWithTerms(
                 loanRequest,
                 [responseOne, responseTwo],
                 msgValue,

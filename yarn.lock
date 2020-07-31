@@ -206,6 +206,11 @@
   resolved "https://registry.yarnpkg.com/@sindresorhus/is/-/is-0.14.0.tgz#9fb3a3cf3132328151f353de4632e01e52102bea"
   integrity sha512-9NET910DNaIPngYnLLPeg+Ogzqsi9uM4mSboU5y6p8S5DzMTVEsJZrawi+BoDNUVBa2DhJqQYUFvMDfgU062LQ==
 
+"@solidity-parser/parser@^0.6.0":
+  version "0.6.2"
+  resolved "https://registry.yarnpkg.com/@solidity-parser/parser/-/parser-0.6.2.tgz#49707fc4e06649d39d6b25bdab2e9093d372ce50"
+  integrity sha512-kUVUvrqttndeprLoXjI5arWHeiP3uh4XODAKbG+ZaWHCVQeelxCbnXBeWxZ2BPHdXgH0xR9dU1b916JhDhbgAA==
+
 "@szmarczak/http-timer@^1.1.2":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@szmarczak/http-timer/-/http-timer-1.1.2.tgz#b1665e2c461a2cd92f4c1bbf50d5454de0d4b421"
@@ -6064,11 +6069,12 @@ solhint@^2.1.0:
   optionalDependencies:
     prettier "^1.14.3"
 
-solidity-coverage@^0.7.2:
-  version "0.7.2"
-  resolved "https://registry.yarnpkg.com/solidity-coverage/-/solidity-coverage-0.7.2.tgz#b8b3ade3f03e9d71940bc84fb319ba7706e35a64"
-  integrity sha512-LizgpcrkMRmZdvOmwYN7l/h9ak0Yq/5BuXjEaH0Phds1Gu5hZfHGyvplgWYDFmzLwGB7hZ6d0/IdkdYm4HK0mg==
+solidity-coverage@^0.7.9:
+  version "0.7.9"
+  resolved "https://registry.yarnpkg.com/solidity-coverage/-/solidity-coverage-0.7.9.tgz#6d1c40639066b93c67b21da48f4bc27ae01f0e58"
+  integrity sha512-UWkl0iNmpjuVanPWvZzF6eCAKwbEmmolmzwbN8nU+MexOKO3eW6kVbxBkfEjVa8TuQcLb0F2wdgXJZBRbjpjnA==
   dependencies:
+    "@solidity-parser/parser" "^0.6.0"
     "@truffle/provider" "^0.1.17"
     chalk "^2.4.2"
     death "^1.1.0"
@@ -6085,7 +6091,6 @@ solidity-coverage@^0.7.2:
     recursive-readdir "^2.2.2"
     sc-istanbul "^0.4.5"
     shelljs "^0.8.3"
-    solidity-parser-diligence "^0.4.16"
     web3 "1.2.6"
 
 solidity-parser-antlr@^0.4.11:
@@ -6093,7 +6098,7 @@ solidity-parser-antlr@^0.4.11:
   resolved "https://registry.yarnpkg.com/solidity-parser-antlr/-/solidity-parser-antlr-0.4.11.tgz#af43e1f13b3b88309a875455f5d6e565b05ee5f1"
   integrity sha512-4jtxasNGmyC0midtjH/lTFPZYvTTUMy6agYcF+HoMnzW8+cqo3piFrINb4ZCzpPW+7tTVFCGa5ubP34zOzeuMg==
 
-solidity-parser-diligence@^0.4.16, solidity-parser-diligence@^0.4.17, solidity-parser-diligence@^0.4.18:
+solidity-parser-diligence@^0.4.17, solidity-parser-diligence@^0.4.18:
   version "0.4.18"
   resolved "https://registry.yarnpkg.com/solidity-parser-diligence/-/solidity-parser-diligence-0.4.18.tgz#1ec8c29d320afe048db941828f142dec3e97f657"
   integrity sha512-mauO/qG2v59W9sOn5TYV2dS7+fvFKqIHwiku+TH82e1Yca4H8s6EDG12ZpXO2cmgLlCKX3FOqqC73aYLB8WwNg==
