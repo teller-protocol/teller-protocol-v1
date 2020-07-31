@@ -69,6 +69,10 @@ contract Settings is Pausable, SettingsInterface {
      */
     bytes32 public constant STARTING_BLOCK_NUMBER_SETTING = "StartingBlockNumber";
     /**
+        @notice The setting name for the collateral buffer settings.
+     */
+    bytes32 public constant COLLATERAL_BUFFER_SETTING = "CollateralBuffer";
+    /**
         @notice The asset setting name for the maximum loan amount settings.
      */
     bytes32 public constant MAX_LOAN_AMOUNT_ASSET_SETTING = "MaxLoanAmount";
@@ -155,6 +159,10 @@ contract Settings is Pausable, SettingsInterface {
         It represents the first block number where the cloud nodes must start to process data.
      */
     uint256 public startingBlockNumber;
+    /**
+        It represents the collateral buffer used in the clode nodes to calculate the minimum collateral.
+     */
+    uint256 public collateralBuffer;
 
     /** Modifiers */
 
@@ -170,6 +178,7 @@ contract Settings is Pausable, SettingsInterface {
         @param aLiquidateEthPrice the initial value for the liquidate ETH price setting.
         @param aMaximumLoanDuration the initial value for the max loan duration setting.
         @param aStartingBlockNumber the initial value for the starting block number setting.
+        @param aCollateralBuffer the initial value for the collateral buffer setting.
      */
     constructor(
         uint256 aRequiredSubmissions,
@@ -179,7 +188,8 @@ contract Settings is Pausable, SettingsInterface {
         uint256 aTermsExpiryTime,
         uint256 aLiquidateEthPrice,
         uint256 aMaximumLoanDuration,
-        uint256 aStartingBlockNumber
+        uint256 aStartingBlockNumber,
+        uint256 aCollateralBuffer
     ) public {
         require(aRequiredSubmissions > 0, "MUST_PROVIDE_REQUIRED_SUBS");
         require(aResponseExpiryLength > 0, "MUST_PROVIDE_RESPONSE_EXP");
@@ -188,6 +198,7 @@ contract Settings is Pausable, SettingsInterface {
         require(aLiquidateEthPrice > 0, "MUST_PROVIDE_ETH_PRICE");
         require(aMaximumLoanDuration > 0, "MUST_PROVIDE_MAX_LOAN_DURATION");
         require(aStartingBlockNumber > 0, "MUST_PROVIDE_START_BLOCK_NUMBER");
+        require(aCollateralBuffer > 0, "MUST_PROVIDE_COLLATERAL_BUFFER");
 
         requiredSubmissions = aRequiredSubmissions;
         maximumTolerance = aMaximumTolerance;
@@ -197,6 +208,7 @@ contract Settings is Pausable, SettingsInterface {
         liquidateEthPrice = aLiquidateEthPrice;
         maximumLoanDuration = aMaximumLoanDuration;
         startingBlockNumber = aStartingBlockNumber;
+        collateralBuffer = aCollateralBuffer;
     }
 
     /** External Functions */
@@ -382,6 +394,28 @@ contract Settings is Pausable, SettingsInterface {
             msg.sender,
             oldStartingBlockNumber,
             newStartingBlockNumber
+        );
+    }
+
+    /**
+        @notice Sets the collateral buffer value.
+        @param newCollateralBuffer the new collateral buffer value.
+     */
+    function setCollateralBuffer(uint256 newCollateralBuffer)
+        external
+        onlyPauser()
+        whenNotPaused()
+    {
+        require(collateralBuffer != newCollateralBuffer, "NEW_VALUE_REQUIRED");
+        require(newCollateralBuffer > 0, "MUST_PROVIDE_COLLATERAL_BUFFER");
+        uint256 oldCollateralBuffer = collateralBuffer;
+        collateralBuffer = newCollateralBuffer;
+
+        emit SettingUpdated(
+            COLLATERAL_BUFFER_SETTING,
+            msg.sender,
+            oldCollateralBuffer,
+            newCollateralBuffer
         );
     }
 

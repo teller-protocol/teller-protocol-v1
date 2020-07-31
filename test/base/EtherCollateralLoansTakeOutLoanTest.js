@@ -1,12 +1,13 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, THIRTY_DAYS, getLatestTimestamp, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE, daysToSeconds } = require('../utils/consts');
+const { t, getLatestTimestamp, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE } = require('../utils/consts');
 const { createLoanTerms } = require('../utils/structs');
 const { loans } = require('../utils/events');
 
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const PairAggregatorEncoder = require('../utils/encoders/PairAggregatorEncoder');
 const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
+const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -36,7 +37,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
         lendingPoolInstance = await Mock.new();
         lendingTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
-        const settingsInstance = await Settings.new(1, 1, THIRTY_DAYS, FIVE_MIN, THIRTY_DAYS, 9500, daysToSeconds(30), 1);
+        const settingsInstance = await createTestSettingsInstance(Settings);
         loanTermsConsInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(

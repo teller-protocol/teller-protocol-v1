@@ -155,18 +155,6 @@ interface SettingsInterface {
     function termsExpiryTime() external view returns (uint256);
 
     /**
-        @notice It represents the first block number where the cloud nodes must start to process data.
-        @return this current starting block number.
-     */
-    function startingBlockNumber() external view returns (uint256);
-
-    /**
-        @notice Sets a new value for the terms expiry time setting.
-        @param newTermsExpiryTime new terms expiry time value.
-    */
-    function setTermsExpiryTime(uint256 newTermsExpiryTime) external;
-
-    /**
         @notice It represents the percentage value (with 2 decimal places) to liquidate loans.
             i.e. an ETH liquidation price at 95% is stored as 9500
         @return the current liquidate ETH price.
@@ -178,6 +166,24 @@ interface SettingsInterface {
         @return the current maximum loan duration value.
      */
     function maximumLoanDuration() external view returns (uint256);
+
+    /**
+        @notice It represents the first block number where the cloud nodes must start to process data.
+        @return this current starting block number.
+     */
+    function startingBlockNumber() external view returns (uint256);
+
+    /**
+        @notice It gets the collateral buffer used by the cloud nodes to calculate the minimum collateral.
+        @return this current collateral buffer.
+     */
+    function collateralBuffer() external view returns (uint256);
+
+    /**
+        @notice Sets a new value for the terms expiry time setting.
+        @param newTermsExpiryTime new terms expiry time value.
+    */
+    function setTermsExpiryTime(uint256 newTermsExpiryTime) external;
 
     /**
         @notice Sets a new value for maximum loan duration setting (in seconds).
@@ -196,6 +202,12 @@ interface SettingsInterface {
         @param newStartingBlockNumber the new starting block number value.
      */
     function setStartingBlockNumber(uint256 newStartingBlockNumber) external;
+
+    /**
+        @notice Sets the collateral buffer value.
+        @param newCollateralBuffer the new collateral buffer value.
+     */
+    function setCollateralBuffer(uint256 newCollateralBuffer) external;
 
     /**
         @notice It gets whether the platform is paused or not.

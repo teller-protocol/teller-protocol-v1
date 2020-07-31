@@ -6,8 +6,10 @@ const {
   NULL_ADDRESS,
   TERMS_SET,
   THIRTY_DAYS,
-  daysToSeconds
 } = require('../utils/consts');
+const {
+    createTestSettingsInstance,
+} = require('../utils/settings-helper');
 const { loans } = require('../utils/events');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
 const { assertLoan } = require('../utils/assertions');
@@ -78,7 +80,7 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
         loanTermsConsInstance = await Mock.new();
         const lendingPoolInstance = await Mock.new();
         const oracleInstance = await Mock.new();
-        settingsInstance = await Settings.new(1, 1, 1, 1, THIRTY_DAYS, 1, daysToSeconds(30), 1)
+        settingsInstance = await createTestSettingsInstance(Settings, { termsExpiryTime: THIRTY_DAYS });
 
         loanRequest = createLoanRequest(borrowerAddress, NULL_ADDRESS, 3, AMOUNT_LOAN_REQUEST, 4, 19, loanTermsConsInstance.address);
         emptyRequest = createLoanRequest(NULL_ADDRESS, NULL_ADDRESS, 0, 0, 0, 0, loanTermsConsInstance.address);
