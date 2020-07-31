@@ -1,10 +1,14 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 // Libraries
 import "@openzeppelin/contracts/lifecycle/Pausable.sol";
 
 // Commons
+import "@openzeppelin/contracts/utils/Address.sol";
 import "../util/AddressLib.sol";
+import "../util/AssetSettingsLib.sol";
+import "../util/AddressArrayLib.sol";
 
 // Interfaces
 
@@ -18,6 +22,9 @@ import "../interfaces/SettingsInterface.sol";
  */
 contract Settings is Pausable, SettingsInterface {
     using AddressLib for address;
+    using Address for address;
+    using AssetSettingsLib for AssetSettingsLib.AssetSettings;
+    using AddressArrayLib for address[];
 
     /** Constants */
     /**
@@ -58,11 +65,19 @@ contract Settings is Pausable, SettingsInterface {
         @notice The setting name for the maximum loan duration settings.
      */
     bytes32 public constant MAXIMUM_LOAN_DURATION_SETTING = "MaximumLoanDuration";
+    /**
+        @notice The asset setting name for the maximum loan amount settings.
+     */
+    bytes32 public constant MAX_LOAN_AMOUNT_ASSET_SETTING = "MaxLoanAmount";
+    /**
+        @notice The asset setting name for cToken address settings.
+     */
+    bytes32 public constant CTOKEN_ADDRESS_ASSET_SETTING = "CTokenAddress";
 
     /* State Variables */
 
     /**
-        @notice It represents a mapping to identiy the lending pools paused and not paused.
+        @notice It represents a mapping to identify the lending pools paused and not paused.
 
         i.e.: address(lending pool) => true or false.
      */
@@ -74,6 +89,29 @@ contract Settings is Pausable, SettingsInterface {
         i.e.: "web2" => "1234500" represents "web2" => "01.23.45.00"
      */
     mapping(bytes32 => uint256) public minimumNodeRequirements;
+
+    /**
+        @notice It represents a mapping to configure the asset settings.
+        @notice The key belongs to the asset address. Example: address(DAI) or address(USDC).
+        @notice The value has the asset settings.
+
+        Examples:
+
+        address(DAI) => {
+            cTokenAddress = 0x1234...890
+            maxLoanAmount = 1000 DAI (max)
+        }
+        address(USDC) => {
+            cTokenAddress = 0x2345...901
+            maxLoanAmount = 500 USDC (max)
+        }
+     */
+    mapping(address => AssetSettingsLib.AssetSettings) public assetSettings;
+
+    /**
+        @notice It contains all the current assets.
+     */
+    address[] public assets;
 
     /**
         It represents the total number of submissions required for consensus on a value.
@@ -426,6 +464,127 @@ contract Settings is Pausable, SettingsInterface {
      */
     function isPaused() external view returns (bool) {
         return paused();
+    }
+
+    /**
+        @notice It creates a new asset settings in the platform.
+        @param assetAddress asset address used to create the new setting.
+        @param cTokenAddress cToken address used to configure the asset setting.
+        @param maxLoanAmount the max loan amount used to configure the asset setting.
+     */
+    function createAssetSettings(
+        address assetAddress,
+        address cTokenAddress,
+        uint256 maxLoanAmount
+    ) external onlyPauser() whenNotPaused() {
+        require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
+
+        assetSettings[assetAddress].requireNotExists();
+
+        assetSettings[assetAddress].initialize(cTokenAddress, maxLoanAmount);
+
+        assets.add(assetAddress);
+
+        emit AssetSettingsCreated(msg.sender, assetAddress, cTokenAddress, maxLoanAmount);
+    }
+
+    /**
+        @notice It removes all the asset settings for a specific asset address.
+        @param assetAddress asset address used to remove the asset settings.
+     */
+    function removeAssetSettings(address assetAddress)
+        external
+        onlyPauser()
+        whenNotPaused()
+    {
+        assetAddress.requireNotEmpty("ASSET_ADDRESS_IS_REQUIRED");
+        assetSettings[assetAddress].requireExists();
+
+        delete assetSettings[assetAddress];
+        assets.remove(assetAddress);
+
+        emit AssetSettingsRemoved(msg.sender, assetAddress);
+    }
+
+    /**
+        @notice It updates the maximum loan amount for a specific asset address.
+        @param assetAddress asset address to configure.
+        @param newMaxLoanAmount the new maximum loan amount to configure.
+     */
+    function updateMaxLoanAmount(address assetAddress, uint256 newMaxLoanAmount)
+        external
+        onlyPauser()
+        whenNotPaused()
+    {
+        uint256 oldMaxLoanAmount = assetSettings[assetAddress].maxLoanAmount;
+
+        assetSettings[assetAddress].updateMaxLoanAmount(newMaxLoanAmount);
+
+        emit AssetSettingsUintUpdated(
+            MAX_LOAN_AMOUNT_ASSET_SETTING,
+            msg.sender,
+            assetAddress,
+            oldMaxLoanAmount,
+            newMaxLoanAmount
+        );
+    }
+
+    /**
+        @notice It updates the cToken address for a specific asset address.
+        @param assetAddress asset address to configure.
+        @param newCTokenAddress the new cToken address to configure.
+     */
+    function updateCTokenAddress(address assetAddress, address newCTokenAddress)
+        external
+        onlyPauser()
+        whenNotPaused()
+    {
+        address oldCTokenAddress = assetSettings[assetAddress].cTokenAddress;
+
+        assetSettings[assetAddress].updateCTokenAddress(newCTokenAddress);
+
+        emit AssetSettingsAddressUpdated(
+            CTOKEN_ADDRESS_ASSET_SETTING,
+            msg.sender,
+            assetAddress,
+            oldCTokenAddress,
+            newCTokenAddress
+        );
+    }
+
+    /**
+        @notice Tests whether amount exceeds the current maximum loan amount for a specific asset settings.
+        @param assetAddress asset address to test the setting.
+        @param amount amount to test.
+        @return true if amount exceeds current max loan amout. Otherwise it returns false.
+     */
+    function exceedsMaxLoanAmount(address assetAddress, uint256 amount)
+        external
+        view
+        returns (bool)
+    {
+        return assetSettings[assetAddress].exceedsMaxLoanAmount(amount);
+    }
+
+    /**
+        @notice Gets the current asset addresses list.
+        @return the asset addresses list.
+     */
+    function getAssets() external view returns (address[] memory) {
+        return assets;
+    }
+
+    /**
+        @notice Get the current asset settings for a given asset address.
+        @param assetAddress asset address used to get the current settings.
+        @return the current asset settings.
+     */
+    function getAssetSettings(address assetAddress)
+        external
+        view
+        returns (AssetSettingsLib.AssetSettings memory)
+    {
+        return assetSettings[assetAddress];
     }
 
     /** Internal functions */

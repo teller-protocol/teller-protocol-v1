@@ -1,4 +1,7 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
+
+import "../util/AssetSettingsLib.sol";
 
 
 /**
@@ -75,6 +78,59 @@ interface SettingsInterface {
         bytes32 indexed componentName,
         uint256 previousVersion,
         uint256 newMinVersion
+    );
+
+    /**
+        @notice This event is emitted when an new asset settings is created.
+        @param sender the transaction sender address.
+        @param assetAddress the asset address used to create the settings.
+        @param cTokenAddress cToken address to configure for the asset.
+        @param maxLoanAmount max loan amount to configure for the asset.
+     */
+    event AssetSettingsCreated(
+        address indexed sender,
+        address indexed assetAddress,
+        address cTokenAddress,
+        uint256 maxLoanAmount
+    );
+
+    /**
+        @notice This event is emitted when an asset settings is removed.
+        @param sender the transaction sender address.
+        @param assetAddress the asset address used to remove the settings.
+     */
+    event AssetSettingsRemoved(address indexed sender, address indexed assetAddress);
+
+    /**
+        @notice This event is emitted when an asset settings (address type) is updated.
+        @param assetSettingName asset setting name updated.
+        @param sender the transaction sender address.
+        @param assetAddress the asset address used to update the asset settings.
+        @param oldValue old value used for the asset setting.
+        @param newValue the value updated.
+     */
+    event AssetSettingsAddressUpdated(
+        bytes32 indexed assetSettingName,
+        address indexed sender,
+        address indexed assetAddress,
+        address oldValue,
+        address newValue
+    );
+
+    /**
+        @notice This event is emitted when an asset settings (uint256 type) is updated.
+        @param assetSettingName asset setting name updated.
+        @param sender the transaction sender address.
+        @param assetAddress the asset address used to update the asset settings.
+        @param oldValue old value used for the asset setting.
+        @param newValue the value updated.
+     */
+    event AssetSettingsUintUpdated(
+        bytes32 indexed assetSettingName,
+        address indexed sender,
+        address indexed assetAddress,
+        uint256 oldValue,
+        uint256 newValue
     );
 
     /**
@@ -206,4 +262,63 @@ interface SettingsInterface {
         @param newMinVersion minimum component version supported
      */
     function updateComponentVersion(bytes32 componentName, uint256 newMinVersion) external;
+
+    /**
+        @notice It creates a new asset settings in the platform.
+        @param assetAddress asset address used to create the new setting.
+        @param cTokenAddress cToken address used to configure the asset setting.
+        @param maxLoanAmount the max loan amount used to configure the asset setting.
+     */
+    function createAssetSettings(
+        address assetAddress,
+        address cTokenAddress,
+        uint256 maxLoanAmount
+    ) external;
+
+    /**
+        @notice It removes all the asset settings for a specific asset address.
+        @param assetAddress asset address used to remove the asset settings.
+     */
+    function removeAssetSettings(address assetAddress) external;
+
+    /**
+        @notice It updates the maximum loan amount for a specific asset address.
+        @param assetAddress asset address to configure.
+        @param newMaxLoanAmount the new maximum loan amount to configure.
+     */
+    function updateMaxLoanAmount(address assetAddress, uint256 newMaxLoanAmount) external;
+
+    /**
+        @notice It updates the cToken address for a specific asset address.
+        @param assetAddress asset address to configure.
+        @param newCTokenAddress the new cToken address to configure.
+     */
+    function updateCTokenAddress(address assetAddress, address newCTokenAddress) external;
+
+    /**
+        @notice Gets the current asset addresses list.
+        @return the asset addresses list.
+     */
+    function getAssets() external view returns (address[] memory);
+
+    /**
+        @notice Get the current asset settings for a given asset address.
+        @param assetAddress asset address used to get the current settings.
+        @return the current asset settings.
+     */
+    function getAssetSettings(address assetAddress)
+        external
+        view
+        returns (AssetSettingsLib.AssetSettings memory);
+
+    /**
+        @notice Tests whether amount exceeds the current maximum loan amount for a specific asset settings.
+        @param assetAddress asset address to test the setting.
+        @param amount amount to test.
+        @return true if amount exceeds current max loan amout. Otherwise it returns false.
+     */
+    function exceedsMaxLoanAmount(address assetAddress, uint256 amount)
+        external
+        view
+        returns (bool);
 }

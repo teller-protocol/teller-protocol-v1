@@ -332,4 +332,59 @@ module.exports = {
             };
         },
     }
+        assetSettingsCreated: tx => {
+            const name = 'AssetSettingsCreated';
+            return {
+                name: name,
+                emitted: (sender, assetAddress, cTokenAddress, maxLoanAmount) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.assetAddress.toString(), assetAddress.toString());
+                    assert.equal(ev.cTokenAddress.toString(), cTokenAddress.toString());
+                    assert.equal(ev.maxLoanAmount.toString(), maxLoanAmount.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        assetSettingsAddressUpdated: tx => {
+            const name = 'AssetSettingsAddressUpdated';
+            return {
+                name: name,
+                emitted: (assetSettingName, sender, assetAddress, oldValue, newValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.assetSettingName.toString(), assetSettingName.toString());
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.assetAddress.toString(), assetAddress.toString());
+                    assert.equal(ev.oldValue.toString(), oldValue.toString());
+                    assert.equal(ev.newValue.toString(), newValue.toString());
+
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        assetSettingsUintUpdated: tx => {
+            const name = 'AssetSettingsUintUpdated';
+            return {
+                name: name,
+                emitted: (assetSettingName, sender, assetAddress, oldValue, newValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.assetSettingName.toString(), assetSettingName.toString());
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.assetAddress.toString(), assetAddress.toString());
+                    assert.equal(ev.oldValue.toString(), oldValue.toString());
+                    assert.equal(ev.newValue.toString(), newValue.toString());
+
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        assetSettingsRemoved: tx => {
+            const name = 'AssetSettingsRemoved';
+            return {
+                name: name,
+                emitted: (sender, assetAddress) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.assetAddress.toString(), assetAddress.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
 };
