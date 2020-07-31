@@ -51,6 +51,10 @@ library SignatureLib {
             );
     }
 
+    /**
+        @notice Stores a hash for the interest request in the struct
+        @param self current signature struct
+     */
     function setInterestRequestHash(
         InterestSignature storage self
         )
@@ -137,6 +141,10 @@ library SignatureLib {
             );
     }
 
+    /**
+        @notice Stores a hash for the loan request in the struct
+        @param self current signature struct
+     */
     function setLoanTermsRequestHash(
         LoanSignature storage self
         )
