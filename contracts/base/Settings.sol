@@ -84,7 +84,9 @@ contract Settings is Pausable, SettingsInterface {
 
     /**
         @notice It represents a mapping to configure the asset settings.
-        
+        @notice The key belongs to the asset address. Example: address(DAI) or address(USDC).
+        @notice The value has the asset settings.
+
         Examples:
 
         address(DAI) => {
