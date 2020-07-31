@@ -69,6 +69,13 @@ contract Settings is Pausable, SettingsInterface {
     mapping(address => bool) public lendingPoolPaused;
 
     /**
+        @notice Contains minimum version for each node component.
+
+        i.e.: "web2" => "1234500" represents "web2" => "01.23.45.00"
+     */
+    mapping(bytes32 => uint256) public minimumNodeRequirements;
+
+    /**
         It represents the total number of submissions required for consensus on a value.
      */
     uint256 public requiredSubmissions;
@@ -96,7 +103,7 @@ contract Settings is Pausable, SettingsInterface {
 
     /**
         This represents the time (in seconds) that loan terms will be available after requesting them.
-        After this time, the loan terms will expire and the borrower will need to request it again. 
+        After this time, the loan terms will expire and the borrower will need to request it again.
      */
     uint256 public termsExpiryTime;
 
@@ -178,7 +185,7 @@ contract Settings is Pausable, SettingsInterface {
         @notice This is the maximum tolerance for the values submitted (by nodes) when they are aggregated (average). It is used in the consensus mechanisms.
         @notice This is a percentage value with 2 decimal places.
             i.e. maximumTolerance of 325 => tolerance of 3.25% => 0.0325 of value
-            i.e. maximumTolerance of 0 => It means all the values submitted must be equals.        
+            i.e. maximumTolerance of 0 => It means all the values submitted must be equals.
         @dev The max value is 100% => 10000
         @param newMaximumTolerance new maximum tolerance value.
         @return the current maximum tolerance value.
@@ -311,6 +318,71 @@ contract Settings is Pausable, SettingsInterface {
             msg.sender,
             oldMaximumLoanDuration,
             newMaximumLoanDuration
+        );
+    }
+
+    /**
+        @notice Add a new Node Component with its version.
+        @param componentName name of the component to be added.
+        @param minVersion minimum component version supported.
+     */
+    function addNewComponent(bytes32 componentName, uint256 minVersion)
+        external
+        onlyPauser()
+        whenNotPaused()
+    {
+        require(minVersion > 0, "INVALID_COMPONENT_MINIMUM_VERSION");
+        require(componentName[0] != 0, "MISSING_COMPONENT_NAME");
+        require(minimumNodeRequirements[componentName] == 0, "COMPONENT_ALREADY_EXISTS");
+        minimumNodeRequirements[componentName] = minVersion;
+        emit NodeComponentAdded(
+            msg.sender,
+            componentName,
+            minVersion
+        );
+    }
+
+    /**
+        @notice Remove a Node Component from the list.
+        @param componentName name of the component to be removed.
+     */
+     function removeComponent(bytes32 componentName)
+        external
+        onlyPauser()
+        whenNotPaused()
+     {
+        require(componentName[0] != 0, "MISSING_COMPONENT_NAME");
+        require(minimumNodeRequirements[componentName] > 0, "COMPONENT_NOT_FOUND");
+        uint256 previousVersion = minimumNodeRequirements[componentName];
+        minimumNodeRequirements[componentName] = 0;
+        emit NodeComponentRemoved(
+            msg.sender,
+            componentName,
+            previousVersion
+        );
+     }
+
+    /**
+        @notice Set a new version for a Node Component.
+        @param componentName name of the component to be modified.
+        @param newMinVersion minimum component version supported.
+     */
+    function updateComponentVersion(bytes32 componentName, uint256 newMinVersion)
+        external
+        onlyPauser()
+        whenNotPaused()
+    {
+        require(newMinVersion > 0, "INVALID_COMPONENT_MINIMUM_VERSION");
+        require(componentName[0] != 0, "MISSING_COMPONENT_NAME");
+        require(minimumNodeRequirements[componentName] > 0, "COMPONENT_NOT_FOUND");
+        require(newMinVersion != minimumNodeRequirements[componentName], "PREVIOUS_AND_NEW_VERSION_ARE_EQUAL");
+        uint256 previousVersion = minimumNodeRequirements[componentName];
+        minimumNodeRequirements[componentName] = newMinVersion;
+        emit NodeComponentVersionUpdated(
+            msg.sender,
+            componentName,
+            previousVersion,
+            newMinVersion
         );
     }
 

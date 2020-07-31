@@ -39,6 +39,45 @@ interface SettingsInterface {
     );
 
     /**
+        @notice This event is emmited when a new node component is added.
+        @param account address that added this new component.
+        @param componentName name of the added component.
+        @param minVersion minimum version assigned to this new component.
+     */
+    event NodeComponentAdded(
+        address indexed account,
+        bytes32 indexed componentName,
+        uint256 minVersion
+    );
+
+    /**
+        @notice This event is emmited when a node component is removed.
+        @param account address that removed this component.
+        @param componentName name of the component removed.
+        @param previousVersion previous version this component had before being removed (set = 0).
+     */
+    event NodeComponentRemoved(
+        address indexed account,
+        bytes32 indexed componentName,
+        uint256 previousVersion
+    );
+
+
+    /**
+        @notice This event is emmited when a node component version is updated.
+        @param account address that updated this component version.
+        @param componentName name of the updated node component.
+        @param previousVersion version this node component had before updating it.
+        @param newMinVersion new version set to this node component.
+     */
+    event NodeComponentVersionUpdated(
+        address indexed account,
+        bytes32 indexed componentName,
+        uint256 previousVersion,
+        uint256 newMinVersion
+    );
+
+    /**
         @notice Gets the required responses to process consensus values.
         @return the required submissions value.
      */
@@ -54,7 +93,7 @@ interface SettingsInterface {
         @notice This is the maximum tolerance for the values submitted (by nodes) when they are aggregated (average). It is used in the consensus mechanisms.
         @notice This is a percentage value with 2 decimal places.
             i.e. maximumTolerance of 325 => tolerance of 3.25% => 0.0325 of value
-            i.e. maximumTolerance of 0 => It means all the values submitted must be equals.        
+            i.e. maximumTolerance of 0 => It means all the values submitted must be equals.
         @dev The max value is 100% => 10000
         @return the current maximum tolerance value.
      */
@@ -153,4 +192,18 @@ interface SettingsInterface {
         @param lendingPoolAddress lending pool address to unpause.
      */
     function unpauseLendingPool(address lendingPoolAddress) external;
+
+    /**
+        @notice Add a new Node Component with its version.
+        @param componentName name of the component
+        @param minVersion minimum component version supported
+     */
+    function addNewComponent(bytes32 componentName, uint256 minVersion) external;
+
+    /**
+        @notice Set a new version for a Node Component.
+        @param componentName name of the component
+        @param newMinVersion minimum component version supported
+     */
+    function updateComponentVersion(bytes32 componentName, uint256 newMinVersion) external;
 }

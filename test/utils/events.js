@@ -294,5 +294,42 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        addNewComponent: tx => {
+            const name = 'NodeComponentAdded';
+            return {
+                name: name,
+                emitted: (account, componentName, minVersion) => emitted(tx, name, ev => {
+                    assert.equal(ev.account, account);
+                    assert.equal(ev.minVersion, minVersion); 
+                    assert.equal(ev.componentName.toString(), componentName.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        updateComponentVersion: tx => {
+            const name = 'NodeComponentVersionUpdated';
+            return {
+                name: name,
+                emitted: (account, componentName, previousVersion, newMinVersion) => emitted(tx, name, ev => {
+                    assert.equal(ev.account, account);
+                    assert.equal(ev.componentName.toString(), componentName.toString());
+                    assert.equal(ev.previousVersion, previousVersion);
+                    assert.equal(ev.newMinVersion, newMinVersion);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        removeComponent: tx => {
+            const name = 'NodeComponentRemoved';
+            return {
+                name: name,
+                emitted: (account, componentName, previousVersion) => emitted(tx, name, ev => {
+                    assert.equal(ev.account, account);
+                    assert.equal(ev.componentName.toString(), componentName.toString());
+                    assert.equal(ev.previousVersion, previousVersion);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     }
 };
