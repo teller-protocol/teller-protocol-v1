@@ -1,16 +1,16 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../../util/InterestSignatureLib.sol";
+import "../../util/SignatureLib.sol";
 
-contract InterestSignatureLibMock {
-    using InterestSignatureLib for InterestSignatureLib.Signature;
+contract SignatureLibMock {
+    using SignatureLib for SignatureLib.LoanSignature;
 
-    InterestSignatureLib.Signature public signature;
+    SignatureLib.LoanSignature public signature;
 
     constructor(
-        ZeroCollateralCommon.InterestRequest memory request,
-        ZeroCollateralCommon.InterestResponse memory response,
+        ZeroCollateralCommon.LoanRequest memory request,
+        ZeroCollateralCommon.LoanResponse memory response,
         address callerAddress,
         uint256 chainId
     ) public {
@@ -18,15 +18,15 @@ contract InterestSignatureLibMock {
         signature.response = response;
         signature.callerAddress = callerAddress;
         signature.chainId = chainId;
-        signature.hashInterestRequest();
+        signature.hashLoanTermsRequest();
     }
 
-    function getHashInterestResponse()
+    function getHashLoanTermsResponse()
         public
         view
         returns (bytes32)
     {
-        return signature.hashInterestResponse();
+        return signature.hashLoanTermsResponse();
     }
 
     function getRequestHash()
