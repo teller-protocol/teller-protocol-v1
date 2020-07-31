@@ -31,6 +31,15 @@ contract Consensus is Base, OwnerSignersRole {
     address public callerAddress;
 
     /**
+        @notice It tracks each request nonce value that borrower (in LoanTermsConsensus) or lender (in InterestConsensus) used in the loan terms and interest requests.
+
+        @dev The first key represents the address (borrower or lender depending on the consensus contract).
+        @dev The second key represents the request nonce value.
+        @dev The final value represents whether the nonce value for the given address was used (true) or not (false).
+     */
+    mapping(address => mapping(uint256 => bool)) public requestNonceTaken;
+
+    /**
         @notice Checks whether sender is equal to the caller address.
         @dev It throws a require error if sender is not equal to caller address.
      */

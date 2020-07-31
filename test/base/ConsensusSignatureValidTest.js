@@ -18,6 +18,7 @@ contract('ConsensusSignatureValidTest', function (accounts) {
     const hashOne = hashInterestRequest(
         {
             lender: accounts[2],
+            requestNonce: 4,
             startTime: 345,
             endTime: 736,
             requestTime: 0,
@@ -30,6 +31,7 @@ contract('ConsensusSignatureValidTest', function (accounts) {
         {
             lender: NULL_ADDRESS,
             startTime: 0,
+            requestNonce: 0,
             endTime: 0,
             requestTime: 0,
             consensusAddress: accounts[2],

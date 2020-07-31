@@ -68,4 +68,12 @@ contract InterestConsensusMock is InterestConsensus {
     function _getChainId() internal view returns (uint256) {
         return _mockChainId;
     }
+
+    function mockRequestNonce(
+        address lender,
+        uint256 requestNonce,
+        bool taken
+    ) external {
+        requestNonceTaken[lender][requestNonce] = taken;
+    }
 }

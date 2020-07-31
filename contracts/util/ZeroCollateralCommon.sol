@@ -31,6 +31,7 @@ library ZeroCollateralCommon {
     struct InterestRequest {
         address lender;
         address consensusAddress;
+        uint256 requestNonce;
         uint256 startTime;
         uint256 endTime;
         uint256 requestTime;
