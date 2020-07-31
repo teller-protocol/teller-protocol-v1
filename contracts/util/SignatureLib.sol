@@ -51,18 +51,27 @@ library SignatureLib {
             );
     }
 
+    function setInterestRequestHash(
+        InterestSignature storage self
+        )
+        internal
+    {
+            self.requestHash = gethashInterestRequest(self);
+    }
+
     /**
         @notice It creates a hash value based on the lender request.
         @param self current signature struct
         @return a hash value.
      */
-    function hashInterestRequest(
+    function gethashInterestRequest(
         InterestSignature storage self
         )
         internal
+        view
         returns (bytes32)
     {
-        bytes32 hashedResponse = keccak256(
+        return keccak256(
                 abi.encode(
                     self.callerAddress,
                     self.request.lender,
@@ -73,8 +82,7 @@ library SignatureLib {
                     self.chainId
                 )
             );
-        self.requestHash = hashedResponse;
-        return self.requestHash;
+        
     }
 
     /**
@@ -107,13 +115,14 @@ library SignatureLib {
         @param self current signature struct
         @return bytes32 Hash of the loan request
      */
-    function hashLoanTermsRequest(
+    function gethashLoanTermsRequest(
         LoanSignature storage self
         )
         internal
+        view
         returns (bytes32)
     {
-        bytes32 hashedResponse = keccak256(
+        return keccak256(
                 abi.encode(
                     self.callerAddress,
                     self.request.borrower,
@@ -126,8 +135,14 @@ library SignatureLib {
                     self.chainId
                 )
             );
-        self.requestHash = hashedResponse;
-        return self.requestHash;
+    }
+
+    function setLoanTermsRequestHash(
+        LoanSignature storage self
+        )
+        internal
+    {
+        self.requestHash = gethashLoanTermsRequest(self);
     }
 
  }

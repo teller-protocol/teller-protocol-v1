@@ -18,7 +18,7 @@ contract SignatureLibMock {
         signature.response = response;
         signature.callerAddress = callerAddress;
         signature.chainId = chainId;
-        signature.hashLoanTermsRequest();
+        signature.setLoanTermsRequestHash();
     }
 
     function getHashLoanTermsResponse()
