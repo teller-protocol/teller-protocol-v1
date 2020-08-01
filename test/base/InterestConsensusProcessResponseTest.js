@@ -108,7 +108,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
 
                 interestConsensus
                     .interestSubmitted(result)
-                    .emitted(nodeAddress, lender, endTime, interest);
+                    .emitted(nodeAddress, lender, interestRequest.requestNonce, endTime, interest);
 
                 let submission = await instance.interestSubmissions.call(lender, endTime)
 

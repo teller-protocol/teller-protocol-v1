@@ -142,19 +142,19 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
 
                 assert(!mustFail, 'It should have failed because data is invalid.');
 
-                let totalInterest = 0
+                let totalInterest = 0;
 
                 responses.forEach(response => {
                     interestConsensus
                         .interestSubmitted(result)
-                        .emitted(response.signer, lender, endTime, response.interest);
+                        .emitted(response.signer, lender, interestRequest.requestNonce, endTime, response.interest);
 
                     totalInterest += response.interest;
                 })
 
                 interestConsensus
                     .interestAccepted(result)
-                    .emitted(lender, endTime, Math.floor(totalInterest / responses.length))
+                    .emitted(lender, interestRequest.requestNonce, endTime, Math.floor(totalInterest / responses.length))
               
             } catch (error) {
                 assert(mustFail, 'Should not have failed');
