@@ -226,7 +226,7 @@ interface LoansInterface {
             uint256 collateralNeededCollateralTokens,
             bool requireCollateral
         );
-    
+
     /**
         @notice Updates the current price oracle instance.
         @param newPriceOracle the new price oracle address.

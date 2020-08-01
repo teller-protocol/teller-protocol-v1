@@ -520,7 +520,9 @@ contract LoansBase is LoansInterface, Base {
     function _convertWeiToToken(uint256 weiAmount) internal view returns (uint256) {
         // wei amount / lending token price in wei * the lending token decimals.
         uint256 aWholeLendingToken = ERC20(lendingPool.lendingToken()).getAWholeToken();
-        uint256 oneLendingTokenPriceWei = uint256(PairAggregatorInterface(priceOracle).getLatestAnswer());
+        uint256 oneLendingTokenPriceWei = uint256(
+            PairAggregatorInterface(priceOracle).getLatestAnswer()
+        );
         uint256 tokenValue = weiAmount.mul(aWholeLendingToken).div(
             oneLendingTokenPriceWei
         );
@@ -536,7 +538,9 @@ contract LoansBase is LoansInterface, Base {
         // tokenAmount is in token units, chainlink price is in whole tokens
         // token amount in tokens * lending token price in wei / the lending token decimals.
         uint256 aWholeLendingToken = ERC20(lendingPool.lendingToken()).getAWholeToken();
-        uint256 oneLendingTokenPriceWei = uint256(PairAggregatorInterface(priceOracle).getLatestAnswer());
+        uint256 oneLendingTokenPriceWei = uint256(
+            PairAggregatorInterface(priceOracle).getLatestAnswer()
+        );
         uint256 weiValue = tokenAmount.mul(oneLendingTokenPriceWei).div(
             aWholeLendingToken
         );
