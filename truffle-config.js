@@ -57,6 +57,7 @@ module.exports = {
 				'LoanTermsConsensusMock',
 				'LoansBaseModifiersMock',
 				'PairAggregatorMock',
+				'ERC20LibMock',
 			]
 		},
 	},

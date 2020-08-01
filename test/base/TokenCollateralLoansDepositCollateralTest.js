@@ -115,14 +115,11 @@ contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
     });
 
     withData({
-        _1_deposit_basic: [
-            1, 1, accounts[1], accounts[1], accounts[1], 5000000, true, 5000000, 0, 0, false, undefined
+        _1_not_enough_allowance: [
+            1, 1, accounts[1], accounts[1], accounts[1], 4500000, true, 5000000, 0, 0, true, 'NOT_ENOUGH_TOKENS_ALLOWANCE'
         ],
-        _2_not_enough_allowance: [
-            1, 1, accounts[1], accounts[1], accounts[1], 4500000, true, 5000000, 0, 0, true, 'NOT_ENOUGH_COLL_TOKENS_ALLOWANCE'
-        ],
-        _3_transferFrom_failed: [
-            1, 1, accounts[1], accounts[1], accounts[1], 5000000, false, 5000000, 0, 0, true, 'COLL_TOKENS_FROM_TRANSFER_FAILED'
+        _2_transferFrom_failed: [
+            1, 1, accounts[1], accounts[1], accounts[1], 5000000, false, 5000000, 0, 0, true, 'TOKENS_TRANSFER_FROM_FAILED'
         ],
     }, function(
         lastLoanID,

@@ -14,8 +14,6 @@ import "./LoansBase.sol";
 contract TokenCollateralLoans is LoansBase {
     /** Constants */
 
-    bool internal constant IS_TRANSFER = true;
-
     /** Properties */
 
     /** Modifiers */
@@ -147,7 +145,8 @@ contract TokenCollateralLoans is LoansBase {
     {
         totalCollateral = totalCollateral.sub(amount);
         loans[loanID].collateral = loans[loanID].collateral.sub(amount);
-        collateralTokenTransfer(recipient, amount);
+
+        _collateralTokenTransfer(recipient, amount);
     }
 
     /**
@@ -159,71 +158,24 @@ contract TokenCollateralLoans is LoansBase {
         // Update the total collateral and loan collateral
         super._payInCollateral(loanID, amount);
         // Transfer collateral tokens to this contract.
-        collateralTokenTransferFrom(msg.sender, amount);
+        _collateralTokenTransferFrom(msg.sender, amount);
     }
-
-    /**
-        @notice Checks to ensure the token balance matches the required balance
-        @param initialBalance The inital balance of tokens
-        @param expectedAmount The expected balance of tokens
-        @param isTransfer If the balance is being checked for a transfer or token allowance
-     */
-    function _requireExpectedBalance(
-        uint256 initialBalance,
-        uint256 expectedAmount,
-        bool isTransfer
-    ) internal view {
-        uint256 finalBalance = ERC20Detailed(collateralToken).balanceOf(address(this));
-        if (isTransfer) {
-            require(
-                initialBalance.sub(finalBalance) == expectedAmount,
-                "INV_BALANCE_AFTER_TRANSFER"
-            );
-        } else {
-            require(
-                finalBalance.sub(initialBalance) == expectedAmount,
-                "INV_BALANCE_AFTER_TRANSFER_FROM"
-            );
-        }
-    }
-
-    /** Private Functions */
 
     /**
         @notice It transfers an amount of collateral tokens to a specific address.
         @param recipient The address which will receive the tokens.
         @param amount The amount of tokens to transfer.
-        @dev It throws a require error if 'transfer' invocation fails.
      */
-    function collateralTokenTransfer(address recipient, uint256 amount) private {
-        uint256 currentBalance = ERC20Detailed(collateralToken).balanceOf(address(this));
-        require(currentBalance >= amount, "NOT_ENOUGH_COLL_TOKENS_BALANCE");
-        bool transferResult = ERC20Detailed(collateralToken).transfer(recipient, amount);
-        require(transferResult, "COLL_TOKENS_TRANSFER_FAILED");
-        _requireExpectedBalance(currentBalance, amount, IS_TRANSFER);
+    function _collateralTokenTransfer(address recipient, uint256 amount) internal {
+        ERC20(collateralToken).tokenTransfer(recipient, amount);
     }
 
     /**
         @notice It transfers an amount of collateral tokens from an address to this contract.
         @param from The address where the tokens will transfer from.
         @param amount The amount to be transferred.
-        @dev It throws a require error if the allowance is not enough.
-        @dev It throws a require error if 'transferFrom' invocation fails.
      */
-    function collateralTokenTransferFrom(address from, uint256 amount) private {
-        uint256 currentAllowance = ERC20Detailed(collateralToken).allowance(
-            from,
-            address(this)
-        );
-        require(currentAllowance >= amount, "NOT_ENOUGH_COLL_TOKENS_ALLOWANCE");
-
-        uint256 initialBalance = ERC20Detailed(collateralToken).balanceOf(address(this));
-        bool transferFromResult = ERC20Detailed(collateralToken).transferFrom(
-            from,
-            address(this),
-            amount
-        );
-        require(transferFromResult, "COLL_TOKENS_FROM_TRANSFER_FAILED");
-        _requireExpectedBalance(initialBalance, amount, !IS_TRANSFER);
+    function _collateralTokenTransferFrom(address from, uint256 amount) internal {
+        ERC20(collateralToken).tokenTransferFrom(from, amount);
     }
 }

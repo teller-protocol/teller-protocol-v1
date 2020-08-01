@@ -106,7 +106,7 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
         _2_basic_collateral: [17, 2, AMOUNT_LOAN_REQUEST, 500000, 500000, 500000, undefined, false],
         _3_exceeds_max_loan_amount: [17, 2, (AMOUNT_LOAN_REQUEST - 500), 500000, 500000, 500000, 'AMOUNT_EXCEEDS_MAX_AMOUNT', true],
         _4_not_enough_balance: [20, 2, AMOUNT_LOAN_REQUEST, 450000, 500000, 500000, 'ERC20: transfer amount exceeds balance', true],
-        _5_not_enough_allowance: [22, 3, AMOUNT_LOAN_REQUEST, 500000, 500000, 470000, 'NOT_ENOUGH_COLL_TOKENS_ALLOWANCE', true],
+        _5_not_enough_allowance: [22, 3, AMOUNT_LOAN_REQUEST, 500000, 500000, 470000, 'NOT_ENOUGH_TOKENS_ALLOWANCE', true],
     }, function(loanID, senderIndex, assetSettingMaxAmount, mintAmount, collateralAmount, approveCollateralAmount, expectedErrorMessage, mustFail) {
         it(t('user', 'createLoanWithTerms', 'Should able to set loan terms.', mustFail), async function() {
             const sender = accounts[senderIndex];
