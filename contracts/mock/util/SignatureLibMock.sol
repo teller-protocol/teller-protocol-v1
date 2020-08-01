@@ -9,14 +9,23 @@ contract SignatureLibMock {
 
     SignatureLib.Signature public signature;
 
+    uint256 private _mockChainId = 1; // Mainnet
+
+    function _getChainId() internal view returns (uint256) {
+        return _mockChainId;
+    }
+
+    function mockChainId(uint256 newChainId) external {
+        _mockChainId = newChainId;
+    }
+
     function setInterestReqHash(
         ZeroCollateralCommon.InterestRequest memory request,
-        address callerAddress,
-        uint256 chainId
+        address callerAddress
         )
         public
     {
-        signature.setInterestRequestHash(request, callerAddress, chainId);
+        signature.setInterestRequestHash(request, callerAddress, _mockChainId);
     }
 
     function getHashedInterestRequest(
@@ -37,25 +46,26 @@ contract SignatureLibMock {
         signature.setHashInterestResponse(response);
     }
 
-    function gethashInterestResponse(
+    function getHashInterestResponse(
         ZeroCollateralCommon.InterestResponse memory response
         )
         public
         view
         returns (bytes32)
     {
-        return signature.hashInterestResponse(response);
+        return signature.responseHash;
     }
 
     function setLoanRequestHash(
-        ZeroCollateralCommon.LoanRequest memory request
+        ZeroCollateralCommon.LoanRequest memory request,
+        address callerAddress
         )
         public
     {
-        signature.setLoanRequestHash(request);
+        signature.setLoanRequestHash(request, callerAddress, _mockChainId);
     }
 
-    function gethashedLoanRequest(
+    function getHashedLoanRequest(
         ZeroCollateralCommon.LoanRequest memory request
         )
         public
@@ -73,7 +83,7 @@ contract SignatureLibMock {
         signature.setHashLoanResponse(response);
     }
 
-    function gethashLoanResponse(
+    function getHashedLoanResponse(
         ZeroCollateralCommon.LoanResponse memory response
         )
         public
@@ -82,5 +92,7 @@ contract SignatureLibMock {
     {
         return signature.hashLoanResponse(response);
     }
+
+
 
 }

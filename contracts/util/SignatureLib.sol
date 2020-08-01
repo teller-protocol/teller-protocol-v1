@@ -63,6 +63,21 @@ library SignatureLib {
     }
 
     /**
+        @notice It stores a hash based on a node response and lender request.
+        @param self current signature struct
+        @return a hash value.
+     */
+    function setHashInterestResponse(
+        Signature storage self,
+        ZeroCollateralCommon.InterestResponse memory response
+        )
+        internal
+    {
+        self.responseHash = hashInterestResponse(self, response);
+
+    }
+
+    /**
         @notice It creates a hash based on a node response and lender request.
         @param self current signature struct
         @return a hash value.
@@ -88,32 +103,20 @@ library SignatureLib {
     }
 
     /**
-        @notice It stores a hash based on a node response and lender request.
-        @param self current signature struct
-        @return a hash value.
-     */
-    function setHashInterestResponse(
-        Signature storage self,
-        ZeroCollateralCommon.InterestResponse memory response
-    ) internal
-    {
-        self.responseHash = hashInterestResponse(self, response);
-
-    }
-
-    /**
         @notice Stores a hash for the loan request in the struct
         @param self current signature struct
      */
     function setLoanRequestHash(
         Signature storage self,
-        ZeroCollateralCommon.LoanRequest memory request
+        ZeroCollateralCommon.LoanRequest memory request,
+        address callerAddress,
+        uint256 chainId
         )
         internal
     {
-        self.chainId = _getChainId();
-        self.callerAddress = msg.sender;
-        self.requestHash = hashLoanRequest(self, request);
+            self.chainId = chainId;
+            self.callerAddress = callerAddress;
+            self.requestHash = hashLoanRequest(self, request);
     }
 
     /**
