@@ -148,7 +148,7 @@ library SignatureLib {
     }
 
     /**
-        @notice It creates a hash based on a node response and loan request.
+        @notice It stores a hash based on a node response and loan request.
         @param self current signature struct
         @return a hash value.
      */
@@ -186,18 +186,4 @@ library SignatureLib {
                 )
             );
     }
-
-    /**
-        @notice Gets the current chain id using the opcode 'chainid()'.
-        @return the current chain id.
-     */
-    function _getChainId() internal view returns (uint256) {
-        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
-        uint256 id;
-        assembly {
-            id := chainid()
-        }
-        return id;
-    }
-
  }
