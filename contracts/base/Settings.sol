@@ -373,32 +373,24 @@ contract Settings is Pausable, SettingsInterface {
         require(componentName[0] != 0, "MISSING_COMPONENT_NAME");
         require(minimumNodeRequirements[componentName] == 0, "COMPONENT_ALREADY_EXISTS");
         minimumNodeRequirements[componentName] = minVersion;
-        emit NodeComponentAdded(
-            msg.sender,
-            componentName,
-            minVersion
-        );
+        emit NodeComponentAdded(msg.sender, componentName, minVersion);
     }
 
     /**
         @notice Remove a Node Component from the list.
         @param componentName name of the component to be removed.
      */
-     function removeComponent(bytes32 componentName)
+    function removeComponent(bytes32 componentName)
         external
         onlyPauser()
         whenNotPaused()
-     {
+    {
         require(componentName[0] != 0, "MISSING_COMPONENT_NAME");
         require(minimumNodeRequirements[componentName] > 0, "COMPONENT_NOT_FOUND");
         uint256 previousVersion = minimumNodeRequirements[componentName];
         delete minimumNodeRequirements[componentName];
-        emit NodeComponentRemoved(
-            msg.sender,
-            componentName,
-            previousVersion
-        );
-     }
+        emit NodeComponentRemoved(msg.sender, componentName, previousVersion);
+    }
 
     /**
         @notice Set a new version for a Node Component.
@@ -413,7 +405,10 @@ contract Settings is Pausable, SettingsInterface {
         require(newMinVersion > 0, "INVALID_COMPONENT_MINIMUM_VERSION");
         require(componentName[0] != 0, "MISSING_COMPONENT_NAME");
         require(minimumNodeRequirements[componentName] > 0, "COMPONENT_NOT_FOUND");
-        require(newMinVersion != minimumNodeRequirements[componentName], "PREVIOUS_AND_NEW_VERSION_ARE_EQUAL");
+        require(
+            newMinVersion != minimumNodeRequirements[componentName],
+            "PREVIOUS_AND_NEW_VERSION_ARE_EQUAL"
+        );
         uint256 previousVersion = minimumNodeRequirements[componentName];
         minimumNodeRequirements[componentName] = newMinVersion;
         emit NodeComponentVersionUpdated(

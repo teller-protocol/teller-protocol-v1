@@ -65,7 +65,6 @@ interface SettingsInterface {
         uint256 previousVersion
     );
 
-
     /**
         @notice This event is emmited when a node component version is updated.
         @param account address that updated this component version.
@@ -261,7 +260,8 @@ interface SettingsInterface {
         @param componentName name of the component
         @param newMinVersion minimum component version supported
      */
-    function updateComponentVersion(bytes32 componentName, uint256 newMinVersion) external;
+    function updateComponentVersion(bytes32 componentName, uint256 newMinVersion)
+        external;
 
     /**
         @notice It creates a new asset settings in the platform.
