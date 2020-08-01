@@ -64,7 +64,7 @@ module.exports = async function(deployer, network, accounts) {
   );
   const settingsInstance = await Settings.deployed();
   await initSettings(
-    settingsInstance,
+    settingsInstance, web3, 
     { ...networkConfig, txConfig, network },
     { ERC20 },
   );

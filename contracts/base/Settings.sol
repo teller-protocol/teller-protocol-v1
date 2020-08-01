@@ -392,7 +392,7 @@ contract Settings is Pausable, SettingsInterface {
         require(componentName[0] != 0, "MISSING_COMPONENT_NAME");
         require(minimumNodeRequirements[componentName] > 0, "COMPONENT_NOT_FOUND");
         uint256 previousVersion = minimumNodeRequirements[componentName];
-        minimumNodeRequirements[componentName] = 0;
+        delete minimumNodeRequirements[componentName];
         emit NodeComponentRemoved(
             msg.sender,
             componentName,
