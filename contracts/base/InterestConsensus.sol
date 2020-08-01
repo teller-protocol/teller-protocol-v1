@@ -59,7 +59,12 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
             interestSubmissions[request.lender][request.endTime]
         );
 
-        emit InterestAccepted(request.lender, request.requestNonce, request.endTime, interestAccrued);
+        emit InterestAccepted(
+            request.lender,
+            request.requestNonce,
+            request.endTime,
+            interestAccrued
+        );
 
         return interestAccrued;
     }

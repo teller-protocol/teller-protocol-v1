@@ -33,7 +33,12 @@ interface InterestConsensusInterface {
         @param endTime request end time.
         @param interest consensus interest value.
      */
-    event InterestAccepted(address indexed lender, uint256 requestNonce, uint256 endTime, uint256 interest);
+    event InterestAccepted(
+        address indexed lender,
+        uint256 requestNonce,
+        uint256 endTime,
+        uint256 interest
+    );
 
     /**
         @notice It processes all the node responses for a request in order to get a consensus value.
