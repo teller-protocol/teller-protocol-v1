@@ -23,6 +23,7 @@ contract('SettingsRemoveComponentTest', function (accounts) {
         _1_basic: [0, COMPONENT_NAME, undefined, false],
         _2_notOwner: [2, COMPONENT_NAME, 'PauserRole: caller does not have the Pauser role', true],
         _3_emptyComponentName: [0, '','MISSING_COMPONENT_NAME', true],
+        _4_componentNotFound: [0, 'NonExistingComponent','COMPONENT_NOT_FOUND', true],
     }, function(senderIndex, componentName, expectedErrorMessage, mustFail) {
         it(t('user', 'removeComponent', 'Should (or not) be able to add a new node component.', mustFail), async function() {
             // Setup
