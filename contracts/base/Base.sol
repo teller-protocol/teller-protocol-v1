@@ -67,6 +67,16 @@ contract Base is Initializable, ReentrancyGuard {
         _;
     }
 
+    /**
+        @notice Checks whether a given address is allowed (see Settings#hasPauserRole function) or not.
+        @dev It throws a require error if address is not allowed.
+        @param anAddress account to test.
+     */
+    modifier whenAllowed(address anAddress) {
+        require(_isAllowed(anAddress), "ADDRESS_ISNT_ALLOWED");
+        _;
+    }
+
     /* Constructor */
 
     /** External Functions */
@@ -101,6 +111,15 @@ contract Base is Initializable, ReentrancyGuard {
      */
     function _isPaused() internal view returns (bool) {
         return settings.isPaused();
+    }
+
+    /**
+        @notice Tests whether an account has the pauser role.
+        @param anAddress account to test.
+        @return true if account has the pauser role. Otherwise it returns false.
+     */
+    function _isAllowed(address anAddress) internal view returns (bool) {
+        return settings.hasPauserRole(anAddress);
     }
 
     /** Private functions */

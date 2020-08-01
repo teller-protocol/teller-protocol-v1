@@ -345,4 +345,11 @@ interface SettingsInterface {
         external
         view
         returns (bool);
+
+    /**
+        @notice Tests whether an account has the pauser role.
+        @param account account to test.
+        @return true if account has the pauser role. Otherwise it returns false.
+     */
+    function hasPauserRole(address account) external view returns (bool);
 }

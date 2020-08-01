@@ -44,7 +44,8 @@ contract LoansBase is LoansInterface, Base {
     // At any time, this variable stores the next available loan ID
     uint256 public loanIDCounter;
 
-    PairAggregatorInterface public priceOracle;
+    address public priceOracle;
+
     LendingPoolInterface public lendingPool;
     LoanTermsConsensusInterface public loanTermsConsensus;
 
@@ -353,6 +354,27 @@ contract LoansBase is LoansInterface, Base {
         return _getCollateralInfo(loanID);
     }
 
+    /**
+        @notice Updates the current price oracle instance.
+        @dev It throws a require error if sender is not allowed.
+        @dev It throws a require error if new address is empty (0x0) or not a contract.
+        @param newPriceOracle the new price oracle address.
+     */
+    function setPriceOracle(address newPriceOracle)
+        external
+        isInitialized()
+        whenAllowed(msg.sender)
+    {
+        // New address must be a contract and not empty
+        require(newPriceOracle.isContract(), "ORACLE_MUST_CONTRACT_NOT_EMPTY");
+        address oldPriceOracle = address(priceOracle);
+        oldPriceOracle.requireNotEqualTo(newPriceOracle, "NEW_ORACLE_MUST_BE_PROVIDED");
+
+        priceOracle = newPriceOracle;
+
+        emit PriceOracleUpdated(msg.sender, oldPriceOracle, newPriceOracle);
+    }
+
     /** Internal Functions */
     /**
         @notice Pays out the collateral for a loan
@@ -435,7 +457,7 @@ contract LoansBase is LoansInterface, Base {
 
         _initialize(settingsAddress);
 
-        priceOracle = PairAggregatorInterface(priceOracleAddress);
+        priceOracle = priceOracleAddress;
         lendingPool = LendingPoolInterface(lendingPoolAddress);
         loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
     }
@@ -498,7 +520,7 @@ contract LoansBase is LoansInterface, Base {
     function _convertWeiToToken(uint256 weiAmount) internal view returns (uint256) {
         // wei amount / lending token price in wei * the lending token decimals.
         uint256 aWholeLendingToken = ERC20(lendingPool.lendingToken()).getAWholeToken();
-        uint256 oneLendingTokenPriceWei = uint256(priceOracle.getLatestAnswer());
+        uint256 oneLendingTokenPriceWei = uint256(PairAggregatorInterface(priceOracle).getLatestAnswer());
         uint256 tokenValue = weiAmount.mul(aWholeLendingToken).div(
             oneLendingTokenPriceWei
         );
@@ -514,7 +536,7 @@ contract LoansBase is LoansInterface, Base {
         // tokenAmount is in token units, chainlink price is in whole tokens
         // token amount in tokens * lending token price in wei / the lending token decimals.
         uint256 aWholeLendingToken = ERC20(lendingPool.lendingToken()).getAWholeToken();
-        uint256 oneLendingTokenPriceWei = uint256(priceOracle.getLatestAnswer());
+        uint256 oneLendingTokenPriceWei = uint256(PairAggregatorInterface(priceOracle).getLatestAnswer());
         uint256 weiValue = tokenAmount.mul(oneLendingTokenPriceWei).div(
             aWholeLendingToken
         );
