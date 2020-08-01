@@ -25,12 +25,14 @@ library SignatureLib {
      */
     function setInterestRequestHash(
         Signature storage self,
-        ZeroCollateralCommon.InterestRequest memory request
+        ZeroCollateralCommon.InterestRequest memory request,
+        address callerAddress,
+        uint256 chainId
         )
         internal
     {
-            self.chainId = _getChainId();
-            self.callerAddress = msg.sender;
+            self.chainId = chainId;
+            self.callerAddress = callerAddress;
             self.requestHash = hashInterestRequest(self, request);
     }
 

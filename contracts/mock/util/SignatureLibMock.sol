@@ -4,19 +4,22 @@ pragma experimental ABIEncoderV2;
 import "../../util/SignatureLib.sol";
 
 contract SignatureLibMock {
+    using SafeMath for uint256;
     using SignatureLib for SignatureLib.Signature;
 
     SignatureLib.Signature public signature;
 
     function setInterestReqHash(
-        ZeroCollateralCommon.InterestRequest memory request
+        ZeroCollateralCommon.InterestRequest memory request,
+        address callerAddress,
+        uint256 chainId
         )
         public
     {
-        signature.setInterestRequestHash(request);
+        signature.setInterestRequestHash(request, callerAddress, chainId);
     }
 
-    function gethashedInterestRequest(
+    function getHashedInterestRequest(
         ZeroCollateralCommon.InterestRequest memory request
         )
         public
