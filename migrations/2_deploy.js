@@ -1,7 +1,7 @@
 const assert = require('assert');
 const DeployerApp = require('./utils/DeployerApp');
 const PoolDeployer = require('./utils/PoolDeployer');
-const initSettings = require('./utils/initSettings');
+const initSettings = require('./utils/init_settings/initSettings');
 
 const ERC20 = artifacts.require("@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol");
 

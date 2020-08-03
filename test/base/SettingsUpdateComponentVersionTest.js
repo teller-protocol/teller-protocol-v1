@@ -16,16 +16,16 @@ contract('SettingsUpdateComponentVersionTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         instance = await Settings.new(1, 1, 1, 1, 1, 1, 1);
         // Adding the component we will update
-        instance.addNewComponent(toBytes32(web3, COMPONENT_NAME), INITIAL_VERSION);
+        instance.createComponentVersion(toBytes32(web3, COMPONENT_NAME), INITIAL_VERSION);
     });
 
     withData({
         _1_basic: [0, COMPONENT_NAME, 123, undefined, false],
         _2_notOwner: [2, COMPONENT_NAME, 123, 'PauserRole: caller does not have the Pauser role', true],
-        _3_emptyComponentName: [0, '', 123, 'MISSING_COMPONENT_NAME', true],
+        _3_emptyComponentName: [0, '', 123, 'COMPONENT_NAME_MUST_BE_PROVIDED', true],
         _4_componentNotFound: [0, 'otherComponent', 123, 'COMPONENT_NOT_FOUND', true],
-        _5_invalidComponentVersion: [0, COMPONENT_NAME, 0,'INVALID_COMPONENT_MINIMUM_VERSION', true],
-        _6_sameComponentVersion: [0, COMPONENT_NAME, INITIAL_VERSION, 'PREVIOUS_AND_NEW_VERSION_ARE_EQUAL', true],
+        _5_invalidComponentVersion: [0, COMPONENT_NAME, 0,'INVALID_COMPONENT_VERSION', true],
+        _6_sameComponentVersion: [0, COMPONENT_NAME, INITIAL_VERSION, 'NEW_VERSION_MUST_INCREASE', true],
     }, function(senderIndex, componentName, newMinComponentVersion, expectedErrorMessage, mustFail) {
         it(t('user', 'updateComponentVersion', 'Should (or not) be able to add a new node component.', mustFail), async function() {
             // Setup
@@ -40,7 +40,7 @@ contract('SettingsUpdateComponentVersionTest', function (accounts) {
                 assert(result);
 
                 // Validating successful update
-                const componentVersion = await instance.minimumNodeRequirements(byteComponentName);
+                const componentVersion = await instance.getComponentVersion(byteComponentName);
                 assert.equal(componentVersion, newMinComponentVersion);
                 
                 // Validating events emmited

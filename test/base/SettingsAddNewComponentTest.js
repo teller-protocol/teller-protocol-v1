@@ -8,7 +8,7 @@ const { settings } = require('../utils/events');
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
 
-contract('SettingsAddNewComponentTest', function (accounts) {
+contract('SettingsCreateComponentVersionTest', function (accounts) {
     let instance;
     
     beforeEach('Setup for each test', async () => {
@@ -18,28 +18,28 @@ contract('SettingsAddNewComponentTest', function (accounts) {
     withData({
         _1_basic: [0, 'newComponent', 12345, undefined, false],
         _2_notOwner: [2, 'NewNodeComponent', 3, 'PauserRole: caller does not have the Pauser role', true],
-        _3_emptyComponentName: [0, '', 1, 'MISSING_COMPONENT_NAME', true],
-        _4_invalidComponentVersion: [0, 'NewNodeComponent', 0, 'INVALID_COMPONENT_MINIMUM_VERSION', true],
+        _3_emptyComponentName: [0, '', 1, 'COMPONENT_NAME_MUST_BE_PROVIDED', true],
+        _4_invalidComponentVersion: [0, 'NewNodeComponent', 0, 'INVALID_COMPONENT_VERSION', true],
     }, function(senderIndex, componentName, minComponentVersion, expectedErrorMessage, mustFail) {
-        it(t('user', 'addNewComponent', 'Should (or not) be able to add a new node component.', mustFail), async function() {
+        it(t('user', 'createComponentVersion', 'Should (or not) be able to add a new node component.', mustFail), async function() {
             // Setup
             const sender = accounts[senderIndex];
             const byteComponentName = toBytes32(web3, componentName);
             try {
                 // Invocation
-                const result = await instance.addNewComponent(byteComponentName, minComponentVersion, { from: sender });
+                const result = await instance.createComponentVersion(byteComponentName, minComponentVersion, { from: sender });
                 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
 
                 // Validating state variables were stored
-                const componentVersion = await instance.minimumNodeRequirements(byteComponentName);
+                const componentVersion = await instance.getComponentVersion(byteComponentName);
                 assert.equal(componentVersion, minComponentVersion);
 
                 // Validating events were emitted
                 settings
-                    .addNewComponent(result)
+                    .createComponentVersion(result)
                     .emitted(sender, byteComponentName, minComponentVersion);
 
             } catch (error) {
@@ -54,15 +54,15 @@ contract('SettingsAddNewComponentTest', function (accounts) {
     withData({
         _1_duplicatedComponent: [0, 'newComponent', 12345],
     }, function(senderIndex, componentName, minComponentVersion) {
-        it(t('user', 'addNewComponent#2', 'Should NOT be able to add a new node component twice.', true), async function() {
+        it(t('user', 'createComponentVersion#2', 'Should NOT be able to add a new node component twice.', true), async function() {
             // Setup
             const sender = accounts[senderIndex];
             const byteComponentName = toBytes32(web3, componentName);
-            await instance.addNewComponent(byteComponentName, minComponentVersion, { from: sender });
+            await instance.createComponentVersion(byteComponentName, minComponentVersion, { from: sender });
             
             try {
                 // Invocation
-                await instance.addNewComponent(byteComponentName, minComponentVersion, { from: sender });
+                await instance.createComponentVersion(byteComponentName, minComponentVersion, { from: sender });
                 
                 // Assertions
                 fail('It should have failed because data is invalid.');

@@ -294,8 +294,8 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-        addNewComponent: tx => {
-            const name = 'NodeComponentAdded';
+        createComponentVersion: tx => {
+            const name = 'ComponentVersionCreated';
             return {
                 name: name,
                 emitted: (account, componentName, minVersion) => emitted(tx, name, ev => {
@@ -307,20 +307,20 @@ module.exports = {
             };
         },
         updateComponentVersion: tx => {
-            const name = 'NodeComponentVersionUpdated';
+            const name = 'ComponentVersionUpdated';
             return {
                 name: name,
-                emitted: (account, componentName, previousVersion, newMinVersion) => emitted(tx, name, ev => {
+                emitted: (account, componentName, oldVersion, newVersion) => emitted(tx, name, ev => {
                     assert.equal(ev.account, account);
                     assert.equal(ev.componentName.toString(), componentName.toString());
-                    assert.equal(ev.previousVersion, previousVersion);
-                    assert.equal(ev.newMinVersion, newMinVersion);
+                    assert.equal(ev.oldVersion, oldVersion);
+                    assert.equal(ev.newVersion, newVersion);
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-        removeComponent: tx => {
-            const name = 'NodeComponentRemoved';
+        removeComponentVersion: tx => {
+            const name = 'ComponentVersionRemoved';
             return {
                 name: name,
                 emitted: (account, componentName, previousVersion) => emitted(tx, name, ev => {
