@@ -127,7 +127,7 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
         it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
             // Setup
             const expectedMaxGas = expectedGasCost(responses.length);
-            settings = await Settings.new(responses.length, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500, daysToSeconds(30));
+            settings = await Settings.new(responses.length, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500, daysToSeconds(30), 1);
             instance = await LoanTermsConsensus.new()
             await instance.initialize(loansContract, settings.address)
 

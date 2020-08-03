@@ -29,7 +29,8 @@ contract('SettingsSetSettingTest', function (accounts) {
             INITIAL_VALUE, // Sets SafetyInterval
             INITIAL_VALUE, // Sets TermsExpiryTime
             INITIAL_VALUE, // Sets LiquidateEthPrice
-            INITIAL_MAXIMUM_LOAN_DURATION_VALUE // Sets MaximumLoanDuration
+            INITIAL_MAXIMUM_LOAN_DURATION_VALUE, // Sets MaximumLoanDuration
+            INITIAL_VALUE, // Sets StartingBlockNumber
         );
     });
 
@@ -71,7 +72,11 @@ contract('SettingsSetSettingTest', function (accounts) {
         _2_liquidateEthPrice_not_zero: ['liquidateEthPrice', 0, 1550, 0, 'MUST_PROVIDE_ETH_PRICE', true],
         _3_liquidateEthPrice_equal: ['liquidateEthPrice', 0, 1100, 1100, 'NEW_VALUE_REQUIRED', true],
         _4_liquidateEthPrice_not_owner: ['liquidateEthPrice', 1, 1000, 1200, 'PauserRole: caller does not have the Pauser role', true],
-        //TODO Add Max unit test after merging develop
+    
+        _1_startingBlockNumber_valid: ['startingBlockNumber', 0, 900000, 920000, undefined, false],
+        _2_startingBlockNumber_not_zero: ['startingBlockNumber', 0, 1550, 0, 'MUST_PROVIDE_START_BLOCK_NUMBER', true],
+        _3_startingBlockNumber_equal: ['startingBlockNumber', 0, 1000100, 1000100, 'NEW_VALUE_REQUIRED', true],
+        _4_startingBlockNumber_not_owner: ['startingBlockNumber', 1, 1000, 1200, 'PauserRole: caller does not have the Pauser role', true],
     }, function(settingKey, senderIndex, currentValue, newValue, expectedErrorMessage, mustFail) {
         const { set: setSettingValue, name: getSettingName } = settingsMap.get(settingKey);
         const settingName = getSettingName();
@@ -109,6 +114,7 @@ contract('SettingsSetSettingTest', function (accounts) {
         _5_responseExpiryLength: ['responseExpiryLength', 735],
         _6_termsExpiryTime: ['termsExpiryTime', 2225],
         _7_liquidateEthPrice: ['liquidateEthPrice', 9325],
+        _8_startingBlockNumber: ['startingBlockNumber', 1800000],
     }, function(settingKey, currentValue) {
         const { get: getSettingValue, set: setSettingValue, name: getSettingName } = settingsMap.get(settingKey);
         const settingName = getSettingName();

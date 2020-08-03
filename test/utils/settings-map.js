@@ -58,5 +58,13 @@ module.exports = () => {
             name: () => 'MaximumLoanDuration',
         }
     );
+    settingsMap.set(
+        'startingBlockNumber',
+        {
+            get: async (settings) => (await settings.startingBlockNumber()),
+            set: async (settings, newValue, senderTxConfig) => (await settings.setStartingBlockNumber(newValue.toString(), senderTxConfig)),
+            name: () => 'StartingBlockNumber',
+        }
+    );
     return settingsMap;
 };
