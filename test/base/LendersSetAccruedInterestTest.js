@@ -32,7 +32,7 @@ contract('LendersSetAccruedInterestTest', function (accounts) {
         settingsInstance = await Mock.new();
         instance = await Lenders.new();
 
-        emptyRequest = createInterestRequest(NULL_ADDRESS, 0, 0, 0, interestConsensusInstance.address);
+        emptyRequest = createInterestRequest(NULL_ADDRESS, 6, 0, 0, 0, interestConsensusInstance.address);
         responseOne = createUnsignedInterestResponse(accounts[0], 0, 35976, 1, interestConsensusInstance.address);
         responseTwo = createUnsignedInterestResponse(accounts[1], 0, 34732, 4, interestConsensusInstance.address);
 
@@ -53,13 +53,14 @@ contract('LendersSetAccruedInterestTest', function (accounts) {
 
     withData({
         // startTime is after mockTimeLastAccrued
-        _1_gap_in_accrual: [1234, 1500, 1500, 1200, 0, 0, true, 'GAP_IN_INTEREST_ACCRUAL',],
+        _1_gap_in_accrual: [10, 1234, 1500, 1500, 1200, 0, 0, true, 'GAP_IN_INTEREST_ACCRUAL',],
         // endTime is not after startTime
-        _2_invalid_interval: [1234, 1234, 1500, 1234, 0, 0, true, 'INVALID_INTERVAL',],
+        _2_invalid_interval: [11, 1234, 1234, 1500, 1234, 0, 0, true, 'INVALID_INTERVAL',],
         // requestTime was before the endTime
-        _3_invalid_request: [1234, 1500, 1400, 1234, 0, 0, true, 'INVALID_REQUEST',],
-        _4_valid_request: [1234, 1400, 1500, 1234, 4134, 356, false, undefined],
+        _3_invalid_request: [12, 1234, 1500, 1400, 1234, 0, 0, true, 'INVALID_REQUEST',],
+        _4_valid_request: [13, 1234, 1400, 1500, 1234, 4134, 356, false, undefined],
     }, function(
+        requestNonce,
         startTime,
         endTime,
         requestTime,
@@ -71,6 +72,7 @@ contract('LendersSetAccruedInterestTest', function (accounts) {
     ) {    
         it(t('user', 'setAccruedInterest', 'Should able to set accrued interest.', false), async function() {
             const interestRequest = {
+                requestNonce,
                 lender: lenderAddress,
                 consensusAddress: interestConsensusInstance.address,
                 startTime: startTime,

@@ -14,7 +14,7 @@ const chains = require('../utils/chains');
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
-const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
+const InterestConsensusMock = artifacts.require("./mock/base/InterestConsensusMock.sol");
 
 
 contract('InterestConsensusProcessRequestTest', function (accounts) {
@@ -27,6 +27,7 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
     const nodeSix = accounts[6]
     const lender = accounts[9]
     const endTime = 34567
+    const requestNonce = 5
 
     let currentTime
     let interestRequest;
@@ -40,13 +41,13 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
     let responseInvalidChainId = createUnsignedInterestResponse(nodeThree, 0, 34736, 2)
 
     beforeEach('Setup the response times and signatures', async () => {
-        instance = await InterestConsensus.new();
+        instance = await InterestConsensusMock.new();
         currentTime = await getLatestTimestamp()
 
         const chainId = chains.mainnet;
         const invalidChainId = chains.ropsten;
 
-        interestRequest = createInterestRequest(lender, 23456, endTime, 45678, instance.address)
+        interestRequest = createInterestRequest(lender, requestNonce, 23456, endTime, 45678, instance.address)
 
         responseOne.consensusAddress = instance.address;
         responseTwo.consensusAddress = instance.address;
@@ -77,37 +78,41 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
 
     withData({
         _1_insufficient_responses: [
-            3, 320, [responseOne, responseTwo], true, 'INSUFFICIENT_RESPONSES'
+            undefined, 3, 320, [responseOne, responseTwo], true, 'INTEREST_INSUFFICIENT_RESPONSES'
         ],
         _2_one_response_successful: [
-            1, 320, [responseOne], false, undefined
+            undefined, 1, 320, [responseOne], false, undefined
         ],
         _3_responses_just_over_tolerance: [  // average = 34860, tolerance = 1115, max is 35976 (1 too much)
-            4, 320, [responseOne, responseTwo, responseThree, responseFour], true, 'RESPONSES_TOO_VARIED'
+            undefined, 4, 320, [responseOne, responseTwo, responseThree, responseFour], true, 'RESPONSES_TOO_VARIED'
         ],
         _4_responses_just_within_tolerance: [  // average = 34861, tolerance = 1115, max is 35976 (perfect)
-            4, 320, [responseOne, responseTwo, responseFour, responseFive], false, undefined
+            undefined, 4, 320, [responseOne, responseTwo, responseFour, responseFive], false, undefined
         ],
         _5_zero_tolerance: [
-            1, 0, [responseTwo, responseThree], false, undefined
+            undefined, 1, 0, [responseTwo, responseThree], false, undefined
         ],
         _6_two_responses_same_signer: [     // responseThree and five have the same signer
-            4, 320, [responseOne, responseThree, responseTwo, responseFive], true, 'SIGNER_ALREADY_SUBMITTED'
+            undefined, 4, 320, [responseOne, responseThree, responseTwo, responseFive], true, 'SIGNER_ALREADY_SUBMITTED'
         ],
         _7_expired_response: [
-            4, 320, [responseOne, responseTwo, responseExpired, responseFive], true, 'RESPONSE_EXPIRED'
+            undefined, 4, 320, [responseOne, responseTwo, responseExpired, responseFive], true, 'RESPONSE_EXPIRED'
         ],
         _8_responses_invalid_response_chainid: [
-            4, 320, [responseOne, responseTwo, responseFour, responseInvalidChainId], true, 'SIGNATURE_INVALID'
+            undefined, 4, 320, [responseOne, responseTwo, responseFour, responseInvalidChainId], true, 'SIGNATURE_INVALID'
+        ],
+        _9_responses_invalid_request_nonce_taken: [
+            { nonce: requestNonce, lender: lender }, 3, 320, [responseOne, responseTwo, responseFour], true, 'INTEREST_REQUEST_NONCE_TAKEN'
         ],
     }, function(
+        requestNonceTaken,
         reqSubmissions,
         tolerance,
         responses,
         mustFail,
         expectedErrorMessage,
     ) {    
-        it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
+        it(t('user', 'new', 'Should accept/not accept a nodes response', mustFail), async function() {
             // set up contract
             const settings = await Settings.new(reqSubmissions, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500, daysToSeconds(30));
 
@@ -119,6 +124,14 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
             await instance.addSigner(nodeFour)
             await instance.addSigner(nodeSix)
 
+            if(requestNonceTaken !== undefined)  {
+                await instance.mockRequestNonce(
+                    requestNonceTaken.lender,
+                    requestNonceTaken.nonce,
+                    true
+                );
+            }
+
             try {
                 const result = await instance.processRequest(
                     interestRequest,
@@ -129,19 +142,19 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
 
                 assert(!mustFail, 'It should have failed because data is invalid.');
 
-                let totalInterest = 0
+                let totalInterest = 0;
 
                 responses.forEach(response => {
                     interestConsensus
                         .interestSubmitted(result)
-                        .emitted(response.signer, lender, endTime, response.interest);
+                        .emitted(response.signer, lender, interestRequest.requestNonce, endTime, response.interest);
 
                     totalInterest += response.interest;
                 })
 
                 interestConsensus
                     .interestAccepted(result)
-                    .emitted(lender, endTime, Math.floor(totalInterest / responses.length))
+                    .emitted(lender, interestRequest.requestNonce, endTime, Math.floor(totalInterest / responses.length))
               
             } catch (error) {
                 assert(mustFail, 'Should not have failed');

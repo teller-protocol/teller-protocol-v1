@@ -80,7 +80,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
 
     withData({
         _1_insufficient_responses: [
-            3, 320, undefined, undefined, [responseOne, responseTwo], true, 'INSUFFICIENT_RESPONSES'
+            3, 320, undefined, undefined, [responseOne, responseTwo], true, 'LOANTERM_INSUFFICIENT_RESPONSES'
         ],
         _2_one_response_successful: [
             1, 320, undefined, undefined, [responseOne], false, undefined
@@ -107,7 +107,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
             4, 320, undefined, undefined, [responseOne, responseTwo, responseFour, responseInvalidChainId], true, 'SIGNATURE_INVALID'
         ],
         _10_borrower_nonce_taken: [
-            3, 360, undefined, { nonce: requestNonce, borrower: borrower }, [responseFive, responseOne, responseTwo], true, 'REQUEST_NONCE_TAKEN'
+            3, 360, undefined, { nonce: requestNonce, borrower: borrower }, [responseFive, responseOne, responseTwo], true, 'LOAN_TERMS_REQUEST_NONCE_TAKEN'
         ],
     }, function(
         reqSubmissions,
