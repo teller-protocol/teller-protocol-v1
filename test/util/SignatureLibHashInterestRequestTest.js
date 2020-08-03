@@ -6,7 +6,6 @@ const { createInterestRequest, createUnsignedInterestResponse } = require('../ut
 const ethUtil = require('ethereumjs-util')
 
 // Smart contracts
-const Mock = artifacts.require("./mock/util/Mock.sol");
 const SignatureLibMock = artifacts.require("./mock/util/SignatureLibMock.sol");
 
 // constants
@@ -19,7 +18,6 @@ contract('SignatureLibHashInterestRequestTest', function (accounts) {
 
     beforeEach('Setup for each test', async () => {
         instance = await SignatureLibMock.new();
-        consensusInstance = await Mock.new();
     });
 
     withData({
@@ -95,5 +93,4 @@ contract('SignatureLibHashInterestRequestTest', function (accounts) {
                 );
         });
     });
-    
 });

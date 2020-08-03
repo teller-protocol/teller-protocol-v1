@@ -97,5 +97,4 @@ contract('SignatureLibHashLoanRequestTest', function (accounts) {
                 );
         });
     });
-    
 });
