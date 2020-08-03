@@ -5,12 +5,12 @@ import "../../base/TokenCollateralLoans.sol";
 
 contract TokenCollateralLoansMock is TokenCollateralLoans {
 
-    bool public requireExpectedBalance = true;
+    bool public mockTokenFunctions;
 
-    function mockRequireExpectedBalance(bool aRequireExpectedBalance)
+    function setMockTokenFunctions(bool newMockTokenFunctions)
         external
     {
-        requireExpectedBalance = aRequireExpectedBalance;
+        mockTokenFunctions = newMockTokenFunctions;
     }
 
     function setLoanIDCounter(uint256 newLoanIdCounter)
@@ -57,11 +57,15 @@ contract TokenCollateralLoansMock is TokenCollateralLoans {
         });
     }
 
-    function _requireExpectedBalance(uint256, uint256, bool) internal view {
-        require(requireExpectedBalance, "INV_BALANCE_AFTER_TRANSFER_FROM");
+    function _collateralTokenTransfer(address recipient, uint256 amount) internal {
+        if (!mockTokenFunctions) {
+            super._collateralTokenTransfer(recipient, amount);
+        }
     }
 
-    function externalRequireExpectedBalance(uint256 initialBalance, uint256 expectedAmount, bool isTransfer) external view {
-        super._requireExpectedBalance(initialBalance, expectedAmount, isTransfer);
+    function _collateralTokenTransferFrom(address from, uint256 amount) internal {
+        if (!mockTokenFunctions) {
+            super._collateralTokenTransferFrom(from, amount);
+        }
     }
 }
