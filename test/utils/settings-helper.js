@@ -19,9 +19,7 @@ const TEST_DEFAULT_VALUE = {
 const createSettingsInstance = async (
     Settings,
     params,
-    txConfig,
 ) => {
-    console.log(params);
     const {
         requiredSubmissions,
         maximumTolerance,
@@ -43,7 +41,6 @@ const createSettingsInstance = async (
         maximumLoanDuration,
         startingBlockNumber,
         collateralBuffer,
-        txConfig
     );
     return instance;
 };
