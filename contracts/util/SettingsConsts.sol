@@ -1,5 +1,6 @@
 pragma solidity 0.5.17;
 
+
 // Libraries
 
 // Commons
@@ -10,7 +11,6 @@ pragma solidity 0.5.17;
     @author develop@teller.finance
  */
 contract SettingsConsts {
-
     /** Constants */
 
     /**
@@ -54,5 +54,4 @@ contract SettingsConsts {
         @notice The maximum loan duration setting is defined in seconds.
      */
     bytes32 public constant MAXIMUM_LOAN_DURATION_SETTING = "MaximumLoanDuration";
-
 }

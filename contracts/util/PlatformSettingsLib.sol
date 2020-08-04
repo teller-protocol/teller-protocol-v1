@@ -7,7 +7,6 @@ pragma solidity 0.5.17;
     @author develop@teller.finance
  */
 library PlatformSettingsLib {
-
     /**
         It defines a platform settings. It includes: value, min, and max values.
      */
@@ -17,7 +16,7 @@ library PlatformSettingsLib {
         uint256 max;
         bool exists;
     }
-    
+
     /**
         @notice It creates a new platform setting given a name, min and max values.
         @param value initial value for the setting.
@@ -82,9 +81,7 @@ library PlatformSettingsLib {
         @notice It removes a current platform setting.
         @param self the current platform setting to remove.
      */
-    function remove(PlatformSetting storage self)
-        internal
-    {
+    function remove(PlatformSetting storage self) internal {
         requireExists(self);
         self.value = 0;
         self.min = 0;

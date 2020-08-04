@@ -40,7 +40,8 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         ZeroCollateralCommon.InterestResponse[] calldata responses
     ) external isInitialized() isCaller() returns (uint256) {
         require(
-            responses.length >= settings.getPlatformSettingValue(REQUIRED_SUBMISSIONS_SETTING),
+            responses.length >=
+                settings.getPlatformSettingValue(REQUIRED_SUBMISSIONS_SETTING),
             "INTEREST_INSUFFICIENT_RESPONSES"
         );
         require(

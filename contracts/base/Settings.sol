@@ -97,20 +97,16 @@ contract Settings is Pausable, SettingsInterface {
         @param minValue the min value for the setting.
         @param maxValue the max value for the setting.
      */
-    function createPlatformSetting(bytes32 settingName, uint256 value, uint256 minValue, uint256 maxValue)
-        external
-        onlyPauser()
-    {
-        require(settingName !=  "", "SETTING_NAME_MUST_BE_PROVIDED");
+    function createPlatformSetting(
+        bytes32 settingName,
+        uint256 value,
+        uint256 minValue,
+        uint256 maxValue
+    ) external onlyPauser() {
+        require(settingName != "", "SETTING_NAME_MUST_BE_PROVIDED");
         platformSettings[settingName].initialize(value, minValue, maxValue);
 
-        emit PlatformSettingCreated(
-            settingName,
-            msg.sender,
-            value,
-            minValue,
-            maxValue
-        );
+        emit PlatformSettingCreated(settingName, msg.sender, value, minValue, maxValue);
     }
 
     /**
@@ -126,28 +122,17 @@ contract Settings is Pausable, SettingsInterface {
     {
         uint256 oldValue = platformSettings[settingName].update(newValue);
 
-        emit PlatformSettingUpdated(
-            settingName,
-            msg.sender,
-            oldValue,
-            newValue
-        );
+        emit PlatformSettingUpdated(settingName, msg.sender, oldValue, newValue);
     }
 
     /**
         @notice Removes a current platform setting given a setting name.
         @param settingName to remove.
      */
-    function removePlatformSetting(bytes32 settingName)
-        external
-        onlyPauser()
-    {
+    function removePlatformSetting(bytes32 settingName) external onlyPauser() {
         platformSettings[settingName].remove();
 
-        emit PlatformSettingRemoved(
-            settingName,
-            msg.sender
-        );
+        emit PlatformSettingRemoved(settingName, msg.sender);
     }
 
     /**
@@ -244,11 +229,7 @@ contract Settings is Pausable, SettingsInterface {
         @param settingName setting name to test.
         @return true if the setting is already configured. Otherwise it returns false.
      */
-    function hasPlatformSetting(bytes32 settingName)
-        external
-        view
-        returns (bool)
-    {
+    function hasPlatformSetting(bytes32 settingName) external view returns (bool) {
         return _getPlatformSetting(settingName).exists;
     }
 
