@@ -168,8 +168,8 @@ contract('LoansBaseModifiersTest', function (accounts) {
             const borrower = accounts[borrowerIndex];
             const consensusInstance = await Mock.new();
             const loanRequest = createLoanRequest(borrower, NULL_ADDRESS, 3, amount.toFixed(0), duration, 19, consensusInstance.address);
-            const encodeMaximumLoanDuration = settingsInterfaceEncoder.encodeMaximumLoanDuration();
-            await settingsInstance.givenMethodReturnUint(encodeMaximumLoanDuration, maxLoanDurationResponse);
+            const encodeGetPlatformSettingValue = settingsInterfaceEncoder.encodeGetPlatformSettingValue();
+            await settingsInstance.givenMethodReturnUint(encodeGetPlatformSettingValue, maxLoanDurationResponse);
 
             try {
                 // Invocation

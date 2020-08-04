@@ -4,7 +4,23 @@
 const { zerocollateral } = require("../../scripts/utils/contracts");
 const { settings: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
+const { printPlatformSetting } = require("../../test/utils/settings-helper");
+const platformSettingsNames = require("../../test/utils/platformSettingsNames");
+const { toBytes32 } = require("../../test/utils/consts");
 const processArgs = new ProcessArgs(readParams.view().argv);
+
+const callAndPrintPlatformSetting = async (settings, settingName, { web3 }) => {
+    const settingNameBytes32 = toBytes32(web3, settingName);
+    const platformSettingResult = await settings.getPlatformSetting(settingNameBytes32);
+    
+    printPlatformSetting(
+        platformSettingResult,
+        {
+            settingName,
+            settingNameBytes32,
+        }
+    );
+};
 
 module.exports = async (callback) => {
     try {
@@ -15,23 +31,14 @@ module.exports = async (callback) => {
         console.log(`Settings Address: ${settings.address}`);
         console.log('='.repeat(70));
 
-        const currentRequiredSubmissions = await settings.requiredSubmissions();
-        console.log(`Required Submissions:      ${currentRequiredSubmissions.toString()}`);
-
-        const maximumTolerance = await settings.maximumTolerance();
-        console.log(`Max. Tolerance:            ${maximumTolerance.toString()}`);
-
-        const responseExpiryLength = await settings.responseExpiryLength();
-        console.log(`Response Expiry Length:    ${responseExpiryLength.toString()}`);
-
-        const safetyInterval = await settings.safetyInterval();
-        console.log(`Safety Interval:           ${safetyInterval.toString()} (seconds) = ${parseInt(safetyInterval) / 60} (minutes)`);
-
-        const termsExpiryTime = await settings.termsExpiryTime();
-        console.log(`Terms Expiry Time:         ${termsExpiryTime.toString()} (seconds) = ${parseInt(termsExpiryTime) / 60} (minutes)`);
-
-        const liquidateEthPrice = await settings.liquidateEthPrice();
-        console.log(`Liquidate Ether Price (%): ${liquidateEthPrice.toString()} (two decimals)`);
+        for (const [, settingName] of Object.entries(platformSettingsNames)) {
+            console.log(settingName);
+            await callAndPrintPlatformSetting(
+                settings,
+                settingName,
+                { web3 }
+            );
+        }
 
         console.log('>>>> The script finished successfully. <<<<');
         callback();

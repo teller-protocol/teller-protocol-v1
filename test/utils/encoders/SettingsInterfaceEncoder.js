@@ -7,12 +7,8 @@ class SettingsInterfaceEncoder {
     }
 }
 
-SettingsInterfaceEncoder.prototype.encodeTermsExpiryTime = function() {
-    return encode(this.web3, 'termsExpiryTime()');
-}
-
-SettingsInterfaceEncoder.prototype.encodeMaximumLoanDuration = function() {
-    return encode(this.web3, 'maximumLoanDuration()');
+SettingsInterfaceEncoder.prototype.encodeGetPlatformSettingValue = function() {
+    return encode(this.web3, 'getPlatformSettingValue(bytes32)');
 }
 
 SettingsInterfaceEncoder.prototype.encodeHasPauserRole = function() {

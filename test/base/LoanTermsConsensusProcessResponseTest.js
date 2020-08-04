@@ -6,8 +6,8 @@ const {
     THIRTY_DAYS,
     NULL_ADDRESS,
     ONE_DAY,
-    daysToSeconds
 } = require('../utils/consts');
+const settingsNames = require('../utils/platformSettingsNames');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
 const { createLoanResponseSig, hashLoanTermsRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
@@ -88,11 +88,11 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
             settings = await createTestSettingsInstance(
                 Settings, 
                 {
-                    requiredSubmissions: requiredSubs,
-                    maximumTolerance: tolerance,
-                    responseExpiryLength: THIRTY_DAYS,
-                    termsExpiryTime: THIRTY_DAYS,
-                    liquidateEthPrice: 9500,
+                    [settingsNames.RequiredSubmissions]: requiredSubs,
+                    [settingsNames.MaximumTolerance]: tolerance,
+                    [settingsNames.ResponseExpiryLength]: THIRTY_DAYS,
+                    [settingsNames.TermsExpiryTime]: THIRTY_DAYS,
+                    [settingsNames.LiquidateEthPrice]: 9500,
                 }
             );
             instance = await LoanTermsConsensusMock.new()
