@@ -16,7 +16,6 @@ import "../interfaces/LoanTermsConsensusInterface.sol";
 contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
     /* Mappings */
     mapping(address => mapping(uint256 => ZeroCollateralCommon.AccruedLoanTerms)) public termSubmissions;
-    mapping(address => mapping(uint256 => bool)) public requestNonceTaken;
 
     /**
         @notice Processes the loan request
@@ -37,11 +36,11 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
     {
         require(
             responses.length >= settings.requiredSubmissions(),
-            "INSUFFICIENT_RESPONSES"
+            "LOANTERM_INSUFFICIENT_RESPONSES"
         );
         require(
             !requestNonceTaken[request.borrower][request.requestNonce],
-            "REQUEST_NONCE_TAKEN"
+            "LOAN_TERMS_REQUEST_NONCE_TAKEN"
         );
         requestNonceTaken[request.borrower][request.requestNonce] = true;
 

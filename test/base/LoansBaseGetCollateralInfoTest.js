@@ -425,7 +425,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
             const encodeGetLatestAnswer = aggregatorInterfaceEncoder.encodeLatestAnswer();
             await oracleInstance.givenMethodReturnUint(encodeGetLatestAnswer, oraclePrice.toString());
             if(useTokens) {
-                await instance.mockRequireExpectedBalance(true);
+                await instance.setMockTokenFunctions(true);
                 // Mocking collateral token data
                 await collateralToken.givenMethodReturnUint(
                     erc20InterfaceEncoder.encodeBalanceOf(),

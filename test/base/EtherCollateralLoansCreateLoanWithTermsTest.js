@@ -45,7 +45,7 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
         lendingPoolInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
-        settingsInstance = await Settings.new(1, 1, 1, 1, THIRTY_DAYS, 1, daysToSeconds(30))
+        settingsInstance = await Settings.new(1, 1, 1, 1, THIRTY_DAYS, 1, daysToSeconds(30), 1)
         instance = await Loans.new();
         await instance.initialize(
             oracleInstance.address,

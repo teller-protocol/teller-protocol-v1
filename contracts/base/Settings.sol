@@ -11,7 +11,6 @@ import "../util/AssetSettingsLib.sol";
 import "../util/AddressArrayLib.sol";
 
 // Interfaces
-
 import "../interfaces/SettingsInterface.sol";
 
 
@@ -65,6 +64,10 @@ contract Settings is Pausable, SettingsInterface {
         @notice The setting name for the maximum loan duration settings.
      */
     bytes32 public constant MAXIMUM_LOAN_DURATION_SETTING = "MaximumLoanDuration";
+    /**
+        @notice The setting name for the starting block number settings.
+     */
+    bytes32 public constant STARTING_BLOCK_NUMBER_SETTING = "StartingBlockNumber";
     /**
         @notice The asset setting name for the maximum loan amount settings.
      */
@@ -155,6 +158,10 @@ contract Settings is Pausable, SettingsInterface {
         It represents the maximum duration for a loan. It is defined in seconds.
      */
     uint256 public maximumLoanDuration;
+    /**
+        It represents the first block number where the cloud nodes must start to process data.
+     */
+    uint256 public startingBlockNumber;
 
     /** Modifiers */
 
@@ -169,6 +176,7 @@ contract Settings is Pausable, SettingsInterface {
         @param aTermsExpiryTime the initial value for the terms expiry time setting.
         @param aLiquidateEthPrice the initial value for the liquidate ETH price setting.
         @param aMaximumLoanDuration the initial value for the max loan duration setting.
+        @param aStartingBlockNumber the initial value for the starting block number setting.
      */
     constructor(
         uint256 aRequiredSubmissions,
@@ -177,7 +185,8 @@ contract Settings is Pausable, SettingsInterface {
         uint256 aSafetyInterval,
         uint256 aTermsExpiryTime,
         uint256 aLiquidateEthPrice,
-        uint256 aMaximumLoanDuration
+        uint256 aMaximumLoanDuration,
+        uint256 aStartingBlockNumber
     ) public {
         require(aRequiredSubmissions > 0, "MUST_PROVIDE_REQUIRED_SUBS");
         require(aResponseExpiryLength > 0, "MUST_PROVIDE_RESPONSE_EXP");
@@ -185,6 +194,7 @@ contract Settings is Pausable, SettingsInterface {
         require(aTermsExpiryTime > 0, "MUST_PROVIDE_TERMS_EXPIRY");
         require(aLiquidateEthPrice > 0, "MUST_PROVIDE_ETH_PRICE");
         require(aMaximumLoanDuration > 0, "MUST_PROVIDE_MAX_LOAN_DURATION");
+        require(aStartingBlockNumber > 0, "MUST_PROVIDE_START_BLOCK_NUMBER");
 
         requiredSubmissions = aRequiredSubmissions;
         maximumTolerance = aMaximumTolerance;
@@ -193,6 +203,7 @@ contract Settings is Pausable, SettingsInterface {
         termsExpiryTime = aTermsExpiryTime;
         liquidateEthPrice = aLiquidateEthPrice;
         maximumLoanDuration = aMaximumLoanDuration;
+        startingBlockNumber = aStartingBlockNumber;
     }
 
     /** External Functions */
@@ -425,6 +436,28 @@ contract Settings is Pausable, SettingsInterface {
             componentName,
             oldVersion,
             newVersion
+        );
+    }
+
+    /**
+        @notice Sets the starting block number.
+        @param newStartingBlockNumber the new starting block number value.
+     */
+    function setStartingBlockNumber(uint256 newStartingBlockNumber)
+        external
+        onlyPauser()
+        whenNotPaused()
+    {
+        require(startingBlockNumber != newStartingBlockNumber, "NEW_VALUE_REQUIRED");
+        require(newStartingBlockNumber > 0, "MUST_PROVIDE_START_BLOCK_NUMBER");
+        uint256 oldStartingBlockNumber = startingBlockNumber;
+        startingBlockNumber = newStartingBlockNumber;
+
+        emit SettingUpdated(
+            STARTING_BLOCK_NUMBER_SETTING,
+            msg.sender,
+            oldStartingBlockNumber,
+            newStartingBlockNumber
         );
     }
 
