@@ -35,7 +35,8 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         returns (uint256 interestRate, uint256 collateralRatio, uint256 maxLoanAmount)
     {
         require(
-            responses.length >= settings.getPlatformSettingValue(REQUIRED_SUBMISSIONS_SETTING),
+            responses.length >=
+                settings.getPlatformSettingValue(REQUIRED_SUBMISSIONS_SETTING),
             "LOANTERM_INSUFFICIENT_RESPONSES"
         );
         require(

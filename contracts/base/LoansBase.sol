@@ -114,7 +114,8 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
      */
     modifier withValidLoanRequest(ZeroCollateralCommon.LoanRequest memory loanRequest) {
         require(
-            settings.getPlatformSettingValue(MAXIMUM_LOAN_DURATION_SETTING) >= loanRequest.duration,
+            settings.getPlatformSettingValue(MAXIMUM_LOAN_DURATION_SETTING) >=
+                loanRequest.duration,
             "DURATION_EXCEEDS_MAX_DURATION"
         );
         require(
@@ -204,7 +205,8 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         require(loans[loanID].termsExpiry >= now, "LOAN_TERMS_EXPIRED");
 
         require(
-            loans[loanID].lastCollateralIn <= now.sub(settings.getPlatformSettingValue(SAFETY_INTERVAL_SETTING)),
+            loans[loanID].lastCollateralIn <=
+                now.sub(settings.getPlatformSettingValue(SAFETY_INTERVAL_SETTING)),
             "COLLATERAL_DEPOSITED_RECENTLY"
         );
 
@@ -319,9 +321,9 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         // the caller gets the collateral from the loan
         _payOutCollateral(loanID, loanCollateral, msg.sender);
 
-        uint256 tokenPayment = collateralInTokens.mul(settings.getPlatformSettingValue(LIQUIDATE_ETH_PRICE_SETTING)).div(
-            TEN_THOUSAND
-        );
+        uint256 tokenPayment = collateralInTokens
+            .mul(settings.getPlatformSettingValue(LIQUIDATE_ETH_PRICE_SETTING))
+            .div(TEN_THOUSAND);
         // the liquidator pays x% of the collateral price
         lendingPool.liquidationPayment(tokenPayment, msg.sender);
 
@@ -573,7 +575,9 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         uint256 collateralRatio,
         uint256 maxLoanAmount
     ) internal view returns (ZeroCollateralCommon.Loan memory) {
-        uint256 termsExpiry = now.add(settings.getPlatformSettingValue(TERMS_EXPIRY_TIME_SETTING));
+        uint256 termsExpiry = now.add(
+            settings.getPlatformSettingValue(TERMS_EXPIRY_TIME_SETTING)
+        );
         return
             ZeroCollateralCommon.Loan({
                 id: loanID,

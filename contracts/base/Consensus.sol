@@ -104,7 +104,9 @@ contract Consensus is Base, OwnerSignersRole, SettingsConsts {
         returns (uint256)
     {
         require(
-            values.isWithinTolerance(settings.getPlatformSettingValue(MAXIMUM_TOLERANCE_SETTING)),
+            values.isWithinTolerance(
+                settings.getPlatformSettingValue(MAXIMUM_TOLERANCE_SETTING)
+            ),
             "RESPONSES_TOO_VARIED"
         );
 
@@ -135,7 +137,8 @@ contract Consensus is Base, OwnerSignersRole, SettingsConsts {
         hasSubmitted[signer][user][requestIdentifier] = true;
 
         require(
-            responseTime >= now.sub(settings.getPlatformSettingValue(RESPONSE_EXPIRY_LENGTH_SETTING)),
+            responseTime >=
+                now.sub(settings.getPlatformSettingValue(RESPONSE_EXPIRY_LENGTH_SETTING)),
             "RESPONSE_EXPIRED"
         );
 

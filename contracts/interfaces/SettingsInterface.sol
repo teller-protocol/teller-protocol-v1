@@ -11,7 +11,6 @@ import "../util/PlatformSettingsLib.sol";
     @author develop@teller.finance
  */
 interface SettingsInterface {
-
     /**
         @notice This event is emitted when a new platform setting is created.
         @param settingName new setting name.
@@ -31,10 +30,7 @@ interface SettingsInterface {
         @param settingName setting name removed.
         @param sender address that removed it.
      */
-    event PlatformSettingRemoved(
-        bytes32 indexed settingName,
-        address indexed sender
-    );
+    event PlatformSettingRemoved(bytes32 indexed settingName, address indexed sender);
 
     /**
         @notice This event is emitted when a platform setting is updated.
@@ -165,8 +161,12 @@ interface SettingsInterface {
         @param minValue the min value for the setting.
         @param maxValue the max value for the setting.
      */
-    function createPlatformSetting(bytes32 settingName, uint256 value, uint256 minValue, uint256 maxValue)
-        external;
+    function createPlatformSetting(
+        bytes32 settingName,
+        uint256 value,
+        uint256 minValue,
+        uint256 maxValue
+    ) external;
 
     /**
         @notice It updates an existent platform setting given a setting name.
@@ -192,26 +192,20 @@ interface SettingsInterface {
         external
         view
         returns (PlatformSettingsLib.PlatformSetting memory);
-    
+
     /**
         @notice It gets the current platform setting value for a given setting name
         @param settingName to get.
         @return the current platform setting value.
      */
-    function getPlatformSettingValue(bytes32 settingName)
-        external
-        view
-        returns (uint256);
+    function getPlatformSettingValue(bytes32 settingName) external view returns (uint256);
 
     /**
         @notice It tests whether a setting name is already configured.
         @param settingName setting name to test.
         @return true if the setting is already configured. Otherwise it returns false.
      */
-    function hasPlatformSetting(bytes32 settingName)
-        external
-        view
-        returns (bool);
+    function hasPlatformSetting(bytes32 settingName) external view returns (bool);
 
     /**
         @notice It gets whether the platform is paused or not.
