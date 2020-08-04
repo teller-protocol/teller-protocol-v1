@@ -14,7 +14,7 @@ contract('SettingsUpdateComponentVersionTest', function (accounts) {
     const INITIAL_VERSION = 12;
 
     beforeEach('Setup for each test', async () => {
-        instance = await Settings.new(1, 1, 1, 1, 1, 1, 1);
+        instance = await Settings.new(1, 1, 1, 1, 1, 1, 1, 1);
         // Adding the component we will update
         instance.createComponentVersion(toBytes32(web3, COMPONENT_NAME), INITIAL_VERSION);
     });
