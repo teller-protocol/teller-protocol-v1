@@ -43,22 +43,15 @@ module.exports = async function(deployer, network, accounts) {
 
   // Creating DeployerApp helper.
   const deployerApp = new DeployerApp(deployer, web3, deployerAccount, network);
-
   const currentBlockNumber = await web3.eth.getBlockNumber();
 
   await deployerApp.deploys([ZDAI, ZUSDC], txConfig);
-  console.log(`Deployed tokens: ZDAI [${ZDAI.address}] ZUSDC [${ZUSDC.address}] `)
-  const settingsInstance = await createEnvSettingsInstance(
-    deployerApp,
-    Settings,
-    network,
-    currentBlockNumber,
-    txConfig
-  );
+  console.log(`Deployed tokens: ZDAI [${ZDAI.address}] ZUSDC [${ZUSDC.address}] `);
+  await deployerApp.deploy(Settings, txConfig);
+  const settingsInstance = await Settings.deployed();
   await initSettings(
-    settingsInstance, 
-    web3, 
-    { ...networkConfig, txConfig, network },
+    settingsInstance,
+    { ...networkConfig, txConfig, network, currentBlockNumber, web3 },
     { ERC20 },
   );
 

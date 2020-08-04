@@ -308,20 +308,6 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-        settingUpdated: tx => {
-            const name = 'SettingUpdated';
-            return {
-                name: name,
-                emitted: (settingName, sender, oldValue, newValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.settingName.toString(), settingName.toString());
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.oldValue.toString(), oldValue.toString());
-                    assert.equal(ev.newValue, newValue);
-
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
         createComponentVersion: tx => {
             const name = 'ComponentVersionCreated';
             return {
@@ -413,5 +399,43 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-    }
+        platformSettingCreated: tx => {
+            const name = 'PlatformSettingCreated';
+            return {
+                name: name,
+                emitted: (settingName, sender, value, minValue, maxValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.settingName.toString(), settingName.toString());
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.value.toString(), value.toString());
+                    assert.equal(ev.minValue.toString(), minValue.toString());
+                    assert.equal(ev.maxValue.toString(), maxValue.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        platformSettingUpdated: tx => {
+            const name = 'PlatformSettingUpdated';
+            return {
+                name: name,
+                emitted: (settingName, sender, oldValue, newValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.settingName.toString(), settingName.toString());
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.oldValue.toString(), oldValue.toString());
+                    assert.equal(ev.newValue.toString(), newValue.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        platformSettingRemoved: tx => {
+            const name = 'PlatformSettingRemoved';
+            return {
+                name: name,
+                emitted: (settingName, sender) => emitted(tx, name, ev => {
+                    assert.equal(ev.settingName.toString(), settingName.toString());
+                    assert.equal(ev.sender.toString(), sender.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
 };
