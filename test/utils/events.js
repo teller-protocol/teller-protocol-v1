@@ -204,6 +204,18 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        priceOracleUpdated: tx => {
+            const name = 'PriceOracleUpdated';
+            return {
+                name: name,
+                emitted: (sender, oldPriceOracle, newPriceOracle) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.oldPriceOracle, oldPriceOracle);
+                    assert.equal(ev.newPriceOracle, newPriceOracle);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     },
     interestConsensus: {
         interestSubmitted: tx => {

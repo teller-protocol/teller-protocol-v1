@@ -3,10 +3,9 @@ module.exports = {
     chainlink: require('./chainlink'),
     compound: require('./compound'),
     tokens: require('./tokens'),
-    maxGasLimit: 11000000,
     assetSettings: require('./assetSettings'),
     nodeComponentsVersions: require('./nodeComponentsVersions'),
-
+    maxGasLimit: 11500000,
     toTxUrl: ({ tx }) => {
         return `not-supported-url`;
     },

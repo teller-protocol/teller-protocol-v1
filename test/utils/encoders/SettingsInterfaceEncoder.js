@@ -15,4 +15,8 @@ SettingsInterfaceEncoder.prototype.encodeMaximumLoanDuration = function() {
     return encode(this.web3, 'maximumLoanDuration()');
 }
 
+SettingsInterfaceEncoder.prototype.encodeHasPauserRole = function() {
+    return encode(this.web3, 'hasPauserRole(address)');
+}
+
 module.exports = SettingsInterfaceEncoder;

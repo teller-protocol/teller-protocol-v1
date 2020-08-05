@@ -58,6 +58,8 @@ module.exports = {
 				'LoansBaseModifiersMock',
 				'PairAggregatorMock',
 				'ERC20LibMock',
+				'CUSDCMock',
+				'CDAIMock',
 			]
 		},
 	},

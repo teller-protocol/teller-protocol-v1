@@ -5,7 +5,6 @@ module.exports = {
     tokens: require('./tokens'),
     assetSettings: require('./assetSettings'),
     nodeComponentsVersions: require('./nodeComponentsVersions'),
-
     maxGasLimit: 6000000,
     toTxUrl: ({ tx }) => {
         return `not-supported-url`;
