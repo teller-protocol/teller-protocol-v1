@@ -24,8 +24,7 @@ contract('SettingsUpdateComponentVersionTest', function (accounts) {
         _2_notOwner: [2, COMPONENT_NAME, 123, 'PauserRole: caller does not have the Pauser role', true],
         _3_emptyComponentName: [0, '', 123, 'COMPONENT_NAME_MUST_BE_PROVIDED', true],
         _4_componentNotFound: [0, 'otherComponent', 123, 'COMPONENT_NOT_FOUND', true],
-        _5_invalidComponentVersion: [0, COMPONENT_NAME, 0,'INVALID_COMPONENT_VERSION', true],
-        _6_sameComponentVersion: [0, COMPONENT_NAME, INITIAL_VERSION, 'NEW_VERSION_MUST_INCREASE', true],
+        _5_sameComponentVersion: [0, COMPONENT_NAME, INITIAL_VERSION, 'NEW_VERSION_MUST_INCREASE', true],
     }, function(senderIndex, componentName, newMinComponentVersion, expectedErrorMessage, mustFail) {
         it(t('user', 'updateComponentVersion', 'Should (or not) be able to add a new node component.', mustFail), async function() {
             // Setup

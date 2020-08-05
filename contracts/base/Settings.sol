@@ -422,7 +422,6 @@ contract Settings is Pausable, SettingsInterface {
         onlyPauser()
         whenNotPaused()
     {
-        require(newVersion > 0, "INVALID_COMPONENT_VERSION");
         require(componentName != "", "COMPONENT_NAME_MUST_BE_PROVIDED");
         require(componentVersions[componentName] > 0, "COMPONENT_NOT_FOUND");
         require(
