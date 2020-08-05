@@ -54,6 +54,7 @@ module.exports = async function(deployer, network, accounts) {
   const startingBlockNumber = env.getStartingBlockNumber(currentBlockNumber);
   console.log(`Configuring starting block number: ${startingBlockNumber.toString()}`);
   await deployerApp.deploys([ZDAI, ZUSDC], txConfig);
+  console.log(`Deployed tokens: ZDAI [${ZDAI.address}] ZUSDC [${ZUSDC.address}] `)
   await deployerApp.deploy(
     Settings,
     requiredSubmissions,
