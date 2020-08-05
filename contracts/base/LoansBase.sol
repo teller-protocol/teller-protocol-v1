@@ -4,10 +4,11 @@ pragma experimental ABIEncoderV2;
 // Libraries and common
 import "../util/ZeroCollateralCommon.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "../util/ERC20Lib.sol";
 
 // Contracts
-import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
 import "./Base.sol";
+import "../providers/openzeppelin/ERC20.sol";
 
 // Interfaces
 import "../interfaces/PairAggregatorInterface.sol";
@@ -24,11 +25,9 @@ import "../interfaces/LoansInterface.sol";
  */
 contract LoansBase is LoansInterface, Base {
     using SafeMath for uint256;
+    using ERC20Lib for ERC20;
 
     /* State Variables */
-
-    // Used to calculate one whole token.
-    uint256 internal constant TEN = 10;
 
     // Loan length will be inputted in days, with 4 decimal places. i.e. 30 days will be inputted as
     // 300000. Therefore in interest calculations we must divide by 365000
@@ -478,15 +477,6 @@ contract LoansBase is LoansInterface, Base {
     }
 
     /**
-        @notice Returns a calculated whole lending token
-        @return uint256 A whole lending token calcuated using token case units
-     */
-    function _getAWholeLendingToken() internal view returns (uint256) {
-        uint8 decimals = ERC20Detailed(lendingPool.lendingToken()).decimals();
-        return TEN**decimals;
-    }
-
-    /**
         @notice Returns the value of collateral
         @param loanAmount The total amount of the loan for which collateral is needed
         @param collateralRatio Collateral ratio set in the loan terms
@@ -507,7 +497,7 @@ contract LoansBase is LoansInterface, Base {
      */
     function _convertWeiToToken(uint256 weiAmount) internal view returns (uint256) {
         // wei amount / lending token price in wei * the lending token decimals.
-        uint256 aWholeLendingToken = _getAWholeLendingToken();
+        uint256 aWholeLendingToken = ERC20(lendingPool.lendingToken()).getAWholeToken();
         uint256 oneLendingTokenPriceWei = uint256(priceOracle.getLatestAnswer());
         uint256 tokenValue = weiAmount.mul(aWholeLendingToken).div(
             oneLendingTokenPriceWei
@@ -523,7 +513,7 @@ contract LoansBase is LoansInterface, Base {
     function _convertTokenToWei(uint256 tokenAmount) internal view returns (uint256) {
         // tokenAmount is in token units, chainlink price is in whole tokens
         // token amount in tokens * lending token price in wei / the lending token decimals.
-        uint256 aWholeLendingToken = _getAWholeLendingToken();
+        uint256 aWholeLendingToken = ERC20(lendingPool.lendingToken()).getAWholeToken();
         uint256 oneLendingTokenPriceWei = uint256(priceOracle.getLatestAnswer());
         uint256 weiValue = tokenAmount.mul(oneLendingTokenPriceWei).div(
             aWholeLendingToken

@@ -65,6 +65,10 @@ contract Settings is Pausable, SettingsInterface {
      */
     bytes32 public constant MAXIMUM_LOAN_DURATION_SETTING = "MaximumLoanDuration";
     /**
+        @notice The setting name for the starting block number settings.
+     */
+    bytes32 public constant STARTING_BLOCK_NUMBER_SETTING = "StartingBlockNumber";
+    /**
         @notice The asset setting name for the maximum loan amount settings.
      */
     bytes32 public constant MAX_LOAN_AMOUNT_ASSET_SETTING = "MaxLoanAmount";
@@ -81,6 +85,13 @@ contract Settings is Pausable, SettingsInterface {
         i.e.: address(lending pool) => true or false.
      */
     mapping(address => bool) public lendingPoolPaused;
+
+    /**
+        @notice Contains minimum version for each node component.
+
+        i.e.: "web2" => "12345" represents "web2" => "01.23.45"
+     */
+    mapping(bytes32 => uint32) public componentVersions;
 
     /**
         @notice It represents a mapping to configure the asset settings.
@@ -133,7 +144,7 @@ contract Settings is Pausable, SettingsInterface {
 
     /**
         This represents the time (in seconds) that loan terms will be available after requesting them.
-        After this time, the loan terms will expire and the borrower will need to request it again. 
+        After this time, the loan terms will expire and the borrower will need to request it again.
      */
     uint256 public termsExpiryTime;
 
@@ -147,6 +158,10 @@ contract Settings is Pausable, SettingsInterface {
         It represents the maximum duration for a loan. It is defined in seconds.
      */
     uint256 public maximumLoanDuration;
+    /**
+        It represents the first block number where the cloud nodes must start to process data.
+     */
+    uint256 public startingBlockNumber;
 
     /** Modifiers */
 
@@ -161,6 +176,7 @@ contract Settings is Pausable, SettingsInterface {
         @param aTermsExpiryTime the initial value for the terms expiry time setting.
         @param aLiquidateEthPrice the initial value for the liquidate ETH price setting.
         @param aMaximumLoanDuration the initial value for the max loan duration setting.
+        @param aStartingBlockNumber the initial value for the starting block number setting.
      */
     constructor(
         uint256 aRequiredSubmissions,
@@ -169,7 +185,8 @@ contract Settings is Pausable, SettingsInterface {
         uint256 aSafetyInterval,
         uint256 aTermsExpiryTime,
         uint256 aLiquidateEthPrice,
-        uint256 aMaximumLoanDuration
+        uint256 aMaximumLoanDuration,
+        uint256 aStartingBlockNumber
     ) public {
         require(aRequiredSubmissions > 0, "MUST_PROVIDE_REQUIRED_SUBS");
         require(aResponseExpiryLength > 0, "MUST_PROVIDE_RESPONSE_EXP");
@@ -177,6 +194,7 @@ contract Settings is Pausable, SettingsInterface {
         require(aTermsExpiryTime > 0, "MUST_PROVIDE_TERMS_EXPIRY");
         require(aLiquidateEthPrice > 0, "MUST_PROVIDE_ETH_PRICE");
         require(aMaximumLoanDuration > 0, "MUST_PROVIDE_MAX_LOAN_DURATION");
+        require(aStartingBlockNumber > 0, "MUST_PROVIDE_START_BLOCK_NUMBER");
 
         requiredSubmissions = aRequiredSubmissions;
         maximumTolerance = aMaximumTolerance;
@@ -185,6 +203,7 @@ contract Settings is Pausable, SettingsInterface {
         termsExpiryTime = aTermsExpiryTime;
         liquidateEthPrice = aLiquidateEthPrice;
         maximumLoanDuration = aMaximumLoanDuration;
+        startingBlockNumber = aStartingBlockNumber;
     }
 
     /** External Functions */
@@ -215,7 +234,7 @@ contract Settings is Pausable, SettingsInterface {
         @notice This is the maximum tolerance for the values submitted (by nodes) when they are aggregated (average). It is used in the consensus mechanisms.
         @notice This is a percentage value with 2 decimal places.
             i.e. maximumTolerance of 325 => tolerance of 3.25% => 0.0325 of value
-            i.e. maximumTolerance of 0 => It means all the values submitted must be equals.        
+            i.e. maximumTolerance of 0 => It means all the values submitted must be equals.
         @dev The max value is 100% => 10000
         @param newMaximumTolerance new maximum tolerance value.
         @return the current maximum tolerance value.
@@ -348,6 +367,91 @@ contract Settings is Pausable, SettingsInterface {
             msg.sender,
             oldMaximumLoanDuration,
             newMaximumLoanDuration
+        );
+    }
+
+    /**
+        @notice Add a new Node Component with its version.
+        @dev We will allow Node components to be created while the Settings contract is paused,
+            as this could be needed to unpause the contract.
+        @param componentName name of the component to be added.
+        @param minVersion minimum component version supported.
+     */
+    function createComponentVersion(bytes32 componentName, uint32 minVersion)
+        external
+        onlyPauser()
+    {
+        require(minVersion > 0, "INVALID_COMPONENT_VERSION");
+        require(componentName != "", "COMPONENT_NAME_MUST_BE_PROVIDED");
+        require(componentVersions[componentName] == 0, "COMPONENT_ALREADY_EXISTS");
+        componentVersions[componentName] = minVersion;
+        emit ComponentVersionCreated(msg.sender, componentName, minVersion);
+    }
+
+    /**
+        @notice Remove a Node Component from the list.
+        @dev We will allow Node components to be removed while the Settings contract is paused,
+            as this could be needed to unpause the contract.
+        @param componentName name of the component to be removed.
+     */
+    function removeComponentVersion(bytes32 componentName) external onlyPauser() {
+        require(componentName != "", "COMPONENT_NAME_MUST_BE_PROVIDED");
+        require(componentVersions[componentName] > 0, "COMPONENT_NOT_FOUND");
+        uint32 previousVersion = componentVersions[componentName];
+        delete componentVersions[componentName];
+        emit ComponentVersionRemoved(msg.sender, componentName, previousVersion);
+    }
+
+    /**
+        @notice Get the version of a specific node component.
+        @param componentName name of the component to return the version.
+        @return version of the node component if exists or zero 0 if not found.
+     */
+    function getComponentVersion(bytes32 componentName) external view returns (uint32) {
+        return componentVersions[componentName];
+    }
+
+    /**
+        @notice Set a new version for a Node Component.
+        @dev We will allow Node components to be updated while the Settings contract is paused,
+            as this could be needed to unpause the contract.
+        @param componentName name of the component to be modified.
+        @param newVersion minimum component version supported.
+     */
+    function updateComponentVersion(bytes32 componentName, uint32 newVersion)
+        external
+        onlyPauser()
+    {
+        require(componentName != "", "COMPONENT_NAME_MUST_BE_PROVIDED");
+        require(componentVersions[componentName] > 0, "COMPONENT_NOT_FOUND");
+        require(
+            newVersion > componentVersions[componentName],
+            "NEW_VERSION_MUST_INCREASE"
+        );
+        uint32 oldVersion = componentVersions[componentName];
+        componentVersions[componentName] = newVersion;
+        emit ComponentVersionUpdated(msg.sender, componentName, oldVersion, newVersion);
+    }
+
+    /**
+        @notice Sets the starting block number.
+        @param newStartingBlockNumber the new starting block number value.
+     */
+    function setStartingBlockNumber(uint256 newStartingBlockNumber)
+        external
+        onlyPauser()
+        whenNotPaused()
+    {
+        require(startingBlockNumber != newStartingBlockNumber, "NEW_VALUE_REQUIRED");
+        require(newStartingBlockNumber > 0, "MUST_PROVIDE_START_BLOCK_NUMBER");
+        uint256 oldStartingBlockNumber = startingBlockNumber;
+        startingBlockNumber = newStartingBlockNumber;
+
+        emit SettingUpdated(
+            STARTING_BLOCK_NUMBER_SETTING,
+            msg.sender,
+            oldStartingBlockNumber,
+            newStartingBlockNumber
         );
     }
 

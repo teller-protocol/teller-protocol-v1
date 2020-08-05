@@ -36,11 +36,12 @@ function hashInterestResponse(response, requestHash, chainId) {
 function hashInterestRequest(request, caller, chainId) {
   return ethUtil.keccak256(
     abi.rawEncode(
-      ['address', 'address', 'address', 'uint256', 'uint256', 'uint256', 'uint256'],
+      ['address', 'address', 'address', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256'],
       [
         caller,
         request.lender,
         request.consensusAddress,
+        request.requestNonce,
         request.startTime,
         request.endTime,
         request.requestTime,

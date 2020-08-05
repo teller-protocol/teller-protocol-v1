@@ -12,7 +12,7 @@ contract('SettingsPauseLendingPoolTest', function (accounts) {
     let instance;
     
     beforeEach('Setup for each test', async () => {
-        instance = await Settings.new(1, 1, 1, 1, 1, 1, daysToSeconds(30));
+        instance = await Settings.new(1, 1, 1, 1, 1, 1, daysToSeconds(30), 1);
     });
 
     withData({

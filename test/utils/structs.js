@@ -1,10 +1,11 @@
 const { NULL_BYTES } = require('./consts');
 
 module.exports = {
-    createInterestRequest:(lender, startTime, endTime, requestTime, consensusAddress,) => {
+    createInterestRequest:(lender, requestNonce, startTime, endTime, requestTime, consensusAddress,) => {
         return {
             lender: lender,
             consensusAddress,
+            requestNonce,
             startTime: startTime,
             endTime: endTime,
             requestTime: requestTime,

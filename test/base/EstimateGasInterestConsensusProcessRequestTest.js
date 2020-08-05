@@ -35,7 +35,7 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
     let currentTime;
     let interestRequest;
 
-    const baseGasCost = 202500;
+    const baseGasCost = 227000;
     const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 73500);
 
     let responseOne = createUnsignedInterestResponse(nodeOne, 0, 34676, 1, NULL_ADDRESS)
@@ -54,7 +54,7 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
         const consensusAddress = accounts[8];
         const chainId = chains.mainnet;
 
-        interestRequest = createInterestRequest(lender, 23456, endTime, 45678, consensusAddress)
+        interestRequest = createInterestRequest(lender, 1, 23456, endTime, 45678, consensusAddress)
         const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract, chainId))
 
         responseOne.responseTime = currentTime - (2 * ONE_DAY)
@@ -123,7 +123,7 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
         it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
             // set up contract
             const expectedMaxGas = expectedGasCost(responses.length);
-            const settings = await Settings.new(responses.length, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500, daysToSeconds(30));
+            const settings = await Settings.new(responses.length, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500, daysToSeconds(30), 1);
             instance = await InterestConsensus.new();
             await instance.initialize(lendersContract, settings.address);
 

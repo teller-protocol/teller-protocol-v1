@@ -210,13 +210,14 @@ module.exports = {
             const name = 'InterestSubmitted';
             return {
                 name: name,
-                emitted: (signer, lender, endTime, interest) => truffleAssert.eventEmitted(tx, name, ev => {
+                emitted: (signer, lender, requestNonce, endTime, interest) => truffleAssert.eventEmitted(tx, name, ev => {
                     return (
-                        ev.signer == signer && 
-                        ev.lender == lender &&
-                        ev.endTime.toString() == endTime.toString() &&
-                        ev.interest.toString() == interest.toString()
-                    )
+                        ev.signer.toString() === signer.toString() && 
+                        ev.lender.toString() === lender.toString() &&
+                        ev.requestNonce.toString() === requestNonce.toString() &&
+                        ev.endTime.toString() === endTime.toString() &&
+                        ev.interest.toString() === interest.toString()
+                    );
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -225,11 +226,12 @@ module.exports = {
             const name = 'InterestAccepted';
             return {
                 name: name,
-                emitted: (lender, endTime, interest) => truffleAssert.eventEmitted(tx, name, ev => {
+                emitted: (lender, requestNonce, endTime, interest) => truffleAssert.eventEmitted(tx, name, ev => {
                     return (
-                        ev.lender == lender && 
-                        ev.endTime.toString() == endTime.toString() &&
-                        ev.interest.toString() == interest.toString()
+                        ev.lender === lender && 
+                        ev.requestNonce.toString() === requestNonce.toString() &&
+                        ev.endTime.toString() === endTime.toString() &&
+                        ev.interest.toString() === interest.toString()
                     )
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
@@ -243,12 +245,12 @@ module.exports = {
                 name: name,
                 emitted: (signer, borrower, requestNonce, interestRate, collateralRatio, maxLoanAmount) => truffleAssert.eventEmitted(tx, name, ev => {
                     return (
-                        ev.signer == signer && 
-                        ev.borrower == borrower &&
-                        ev.requestNonce.toString() == requestNonce.toString() &&
-                        ev.interestRate.toString() == interestRate.toString() &&
-                        ev.collateralRatio.toString() == collateralRatio.toString() &&
-                        ev.maxLoanAmount.toString() == maxLoanAmount.toString()
+                        ev.signer === signer && 
+                        ev.borrower === borrower &&
+                        ev.requestNonce.toString() === requestNonce.toString() &&
+                        ev.interestRate.toString() === interestRate.toString() &&
+                        ev.collateralRatio.toString() === collateralRatio.toString() &&
+                        ev.maxLoanAmount.toString() === maxLoanAmount.toString()
                     )
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
@@ -260,11 +262,11 @@ module.exports = {
                 name: name,
                 emitted: (borrower, requestNonce, interestRate, collateralRatio, maxLoanAmount) => truffleAssert.eventEmitted(tx, name, ev => {
                   return (
-                        ev.borrower == borrower &&
-                        ev.requestNonce.toString() == requestNonce.toString() &&
-                        ev.interestRate.toString() == interestRate.toString() &&
-                        ev.collateralRatio.toString() == collateralRatio.toString() &&
-                        ev.maxLoanAmount.toString() == maxLoanAmount.toString()
+                        ev.borrower === borrower &&
+                        ev.requestNonce.toString() === requestNonce.toString() &&
+                        ev.interestRate.toString() === interestRate.toString() &&
+                        ev.collateralRatio.toString() === collateralRatio.toString() &&
+                        ev.maxLoanAmount.toString() === maxLoanAmount.toString()
                     )
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
@@ -304,6 +306,43 @@ module.exports = {
                     assert.equal(ev.oldValue.toString(), oldValue.toString());
                     assert.equal(ev.newValue, newValue);
 
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        createComponentVersion: tx => {
+            const name = 'ComponentVersionCreated';
+            return {
+                name: name,
+                emitted: (account, componentName, minVersion) => emitted(tx, name, ev => {
+                    assert.equal(ev.account, account);
+                    assert.equal(ev.minVersion, minVersion); 
+                    assert.equal(ev.componentName.toString(), componentName.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        updateComponentVersion: tx => {
+            const name = 'ComponentVersionUpdated';
+            return {
+                name: name,
+                emitted: (account, componentName, oldVersion, newVersion) => emitted(tx, name, ev => {
+                    assert.equal(ev.account, account);
+                    assert.equal(ev.componentName.toString(), componentName.toString());
+                    assert.equal(ev.oldVersion, oldVersion);
+                    assert.equal(ev.newVersion, newVersion);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        removeComponentVersion: tx => {
+            const name = 'ComponentVersionRemoved';
+            return {
+                name: name,
+                emitted: (account, componentName, previousVersion) => emitted(tx, name, ev => {
+                    assert.equal(ev.account, account);
+                    assert.equal(ev.componentName.toString(), componentName.toString());
+                    assert.equal(ev.previousVersion, previousVersion);
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -362,5 +401,5 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-    },
+    }
 };

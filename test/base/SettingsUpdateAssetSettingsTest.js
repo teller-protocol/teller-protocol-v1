@@ -66,7 +66,7 @@ contract('SettingsUpdateAssetSettingsTest', function (accounts) {
             const { set: setAssetSettingValue, get: getAssetSettingValue, name: getAssetSettingName } = assetSettingsMap.get(assetSettingKey);
             const assetSettingName = getAssetSettingName();
             const senderAddress = getSenderAddress(senderIndex);
-            const instance = await Settings.new(1, 1, 1, 1, 1, 1, daysToSeconds(30));
+            const instance = await Settings.new(1, 1, 1, 1, 1, 1, daysToSeconds(30), 1);
 
             const currentAssetsInfo = await createAssetSettings(Mock, instance, owner, previousAssetsInfo);
             const assetAddressToUpdate = assetToUpdateIndex === -1 ? (await Mock.new()).address : currentAssetsInfo[assetToUpdateIndex].assetAddress;
@@ -132,7 +132,7 @@ contract('SettingsUpdateAssetSettingsTest', function (accounts) {
             const { set: setAssetSettingValue, get: getAssetSettingValue, name: getAssetSettingName } = assetSettingsMap.get(assetSettingKey);
             const assetSettingName = getAssetSettingName();
             const senderAddress = getSenderAddress(senderIndex);
-            const instance = await Settings.new(1, 1, 1, 1, 1, 1, daysToSeconds(30));
+            const instance = await Settings.new(1, 1, 1, 1, 1, 1, daysToSeconds(30), 1);
 
             const currentAssetsInfo = await createAssetSettings(Mock, instance, owner, previousAssetsInfo);
             const assetAddressToUpdate = assetToUpdateIndex === -1 ? (await Mock.new()) : currentAssetsInfo[assetToUpdateIndex].assetAddress;

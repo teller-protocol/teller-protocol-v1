@@ -41,8 +41,13 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
     ) external isInitialized() isCaller() returns (uint256) {
         require(
             responses.length >= settings.requiredSubmissions(),
-            "INSUFFICIENT_RESPONSES"
+            "INTEREST_INSUFFICIENT_RESPONSES"
         );
+        require(
+            !requestNonceTaken[request.lender][request.requestNonce],
+            "INTEREST_REQUEST_NONCE_TAKEN"
+        );
+        requestNonceTaken[request.lender][request.requestNonce] = true;
 
         bytes32 requestHash = _hashRequest(request);
 
@@ -54,7 +59,12 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
             interestSubmissions[request.lender][request.endTime]
         );
 
-        emit InterestAccepted(request.lender, request.endTime, interestAccrued);
+        emit InterestAccepted(
+            request.lender,
+            request.requestNonce,
+            request.endTime,
+            interestAccrued
+        );
 
         return interestAccrued;
     }
@@ -87,6 +97,7 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         emit InterestSubmitted(
             response.signer,
             request.lender,
+            request.requestNonce,
             request.endTime,
             response.interest
         );
@@ -131,6 +142,7 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
                     callerAddress,
                     request.lender,
                     request.consensusAddress,
+                    request.requestNonce,
                     request.startTime,
                     request.endTime,
                     request.requestTime,

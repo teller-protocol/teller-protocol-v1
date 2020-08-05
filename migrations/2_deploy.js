@@ -1,7 +1,7 @@
 const assert = require('assert');
 const DeployerApp = require('./utils/DeployerApp');
 const PoolDeployer = require('./utils/PoolDeployer');
-const initSettings = require('./utils/initSettings');
+const initSettings = require('./utils/init_settings/initSettings');
 
 const ERC20 = artifacts.require("@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol");
 
@@ -49,7 +49,10 @@ module.exports = async function(deployer, network, accounts) {
 
   // Creating DeployerApp helper.
   const deployerApp = new DeployerApp(deployer, web3, deployerAccount, network);
-  
+
+  const currentBlockNumber = await web3.eth.getBlockNumber();
+  const startingBlockNumber = env.getStartingBlockNumber(currentBlockNumber);
+  console.log(`Configuring starting block number: ${startingBlockNumber.toString()}`);
   await deployerApp.deploys([ZDAI, ZUSDC], txConfig);
   await deployerApp.deploy(
     Settings,
@@ -60,11 +63,13 @@ module.exports = async function(deployer, network, accounts) {
     termsExpiryTime,
     liquidateEthPrice,
     maximumLoanDuration,
+    startingBlockNumber,
     txConfig
   );
   const settingsInstance = await Settings.deployed();
   await initSettings(
-    settingsInstance,
+    settingsInstance, 
+    web3, 
     { ...networkConfig, txConfig, network },
     { ERC20 },
   );

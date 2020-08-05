@@ -9,4 +9,11 @@ module.exports = {
         This is used as a default amount to configure max lending amount.
      */
     DEFAULT_MAX_AMOUNT: 1000,
+
+    /**
+     * Represents the initial version of the Node Component.
+     * 
+     * e.g.: 10000 => represents : 1.00.00
+     */
+    INITIAL_NODE_COMPONENT_VERSION: 10000,
 }
