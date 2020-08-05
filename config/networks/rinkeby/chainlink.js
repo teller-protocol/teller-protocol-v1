@@ -1,21 +1,24 @@
+// See more details here: https://docs.chain.link/docs/reference-contracts
 
 module.exports = {
     USDC_ETH: {
-        address: '0xdE54467873c3BCAA76421061036053e371721708',
-        inversed: false,
-        collateralDecimals: 18, // ETH
-        responseDecimals: 18,
-    },
-    DAI_ETH: {
-        address: '0x037E8F2125bF532F3e228991e051c8A7253B642c',
-        inversed: false,
-        collateralDecimals: 18, // ETH
-        responseDecimals: 18,
-    },
-    LINK_USD: {
-        address: '0x32dbd3214aC75223e27e575C53944307914F7a90',
+        //As Chainlink does NOT support USDC/ETH (as on Ropsten), we use the pair ETH/USD: 0x0bF4e7bf3e1f6D6Dc29AA516A33134985cC3A5aA
+        address: '0x0bF4e7bf3e1f6D6Dc29AA516A33134985cC3A5aA',
         inversed: true,
         collateralDecimals: 18, // ETH
+        responseDecimals: 8,
+    },
+    DAI_ETH: {
+        //As Chainlink does NOT support DAI/ETH (as on Ropsten), we use the pair ETH/USD: 0x0bF4e7bf3e1f6D6Dc29AA516A33134985cC3A5aA
+        address: '0x0bF4e7bf3e1f6D6Dc29AA516A33134985cC3A5aA',
+        inversed: true,
+        collateralDecimals: 18, // ETH
+        responseDecimals: 8,
+    },
+    LINK_USD: {
+        address: '0x0853E36EeAd0eAA08D61E94237168696383869DD',
+        inversed: true,
+        collateralDecimals: 18, // LINK
         responseDecimals: 8,
     },
 };
