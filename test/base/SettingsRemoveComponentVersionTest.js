@@ -25,7 +25,7 @@ contract('SettingsRemoveComponentVersionTest', function (accounts) {
         _3_emptyComponentName: [0, '','COMPONENT_NAME_MUST_BE_PROVIDED', true],
         _4_componentNotFound: [0, 'NonExistingComponent','COMPONENT_NOT_FOUND', true],
     }, function(senderIndex, componentName, expectedErrorMessage, mustFail) {
-        it(t('user', 'removeComponentVersion', 'Should (or not) be able to add a new node component.', mustFail), async function() {
+        it(t('Pauser user', 'removeComponentVersion', 'Should (or not) be able to remove a component version.', mustFail), async function() {
             // Setup
             const sender = accounts[senderIndex];
             const byteComponentName = toBytes32(web3, componentName);
@@ -55,4 +55,40 @@ contract('SettingsRemoveComponentVersionTest', function (accounts) {
         });
     });
 
+
+    withData({
+        _1_dontHaltOnPause: [0, COMPONENT_NAME, undefined, false],
+    }, function(senderIndex, componentName, expectedErrorMessage, mustFail) {
+        it(t('Pauser user', 'removeComponentVersion#2', 'Should be able to remove a component version while PAUSED.', mustFail), async function() {
+            // Setup
+            const sender = accounts[senderIndex];
+            const byteComponentName = toBytes32(web3, componentName);
+            // Pausing Settings contract
+            await instance.pause();
+
+            try {
+                // Invocation
+                const result = await instance.removeComponentVersion(byteComponentName, { from: sender });
+                
+                // Assertions
+                assert(!mustFail, 'It should have failed because data is invalid.');
+                assert(result);
+                
+                // Validating state variables were modified
+                const componentVersion = await instance.getComponentVersion(byteComponentName);
+                assert.equal(componentVersion, NOT_PRESENT);
+                
+                // Validating events were emitted
+                settings
+                    .removeComponentVersion(result)
+                    .emitted(sender, byteComponentName, INITIAL_VERSION);
+
+            } catch (error) {
+                // Assertions
+                assert(mustFail);
+                assert(error);
+                assert.equal(error.reason, expectedErrorMessage);
+            }
+        });
+    });
 });

@@ -372,13 +372,14 @@ contract Settings is Pausable, SettingsInterface {
 
     /**
         @notice Add a new Node Component with its version.
+        @dev We will allow Node components to be created while the Settings contract is paused,
+            as this could be needed to unpause the contract.
         @param componentName name of the component to be added.
         @param minVersion minimum component version supported.
      */
     function createComponentVersion(bytes32 componentName, uint32 minVersion)
         external
         onlyPauser()
-        whenNotPaused()
     {
         require(minVersion > 0, "INVALID_COMPONENT_VERSION");
         require(componentName != "", "COMPONENT_NAME_MUST_BE_PROVIDED");
@@ -389,13 +390,11 @@ contract Settings is Pausable, SettingsInterface {
 
     /**
         @notice Remove a Node Component from the list.
+        @dev We will allow Node components to be removed while the Settings contract is paused,
+            as this could be needed to unpause the contract.
         @param componentName name of the component to be removed.
      */
-    function removeComponentVersion(bytes32 componentName)
-        external
-        onlyPauser()
-        whenNotPaused()
-    {
+    function removeComponentVersion(bytes32 componentName) external onlyPauser() {
         require(componentName != "", "COMPONENT_NAME_MUST_BE_PROVIDED");
         require(componentVersions[componentName] > 0, "COMPONENT_NOT_FOUND");
         uint32 previousVersion = componentVersions[componentName];
@@ -414,13 +413,14 @@ contract Settings is Pausable, SettingsInterface {
 
     /**
         @notice Set a new version for a Node Component.
+        @dev We will allow Node components to be updated while the Settings contract is paused,
+            as this could be needed to unpause the contract.
         @param componentName name of the component to be modified.
         @param newVersion minimum component version supported.
      */
     function updateComponentVersion(bytes32 componentName, uint32 newVersion)
         external
         onlyPauser()
-        whenNotPaused()
     {
         require(componentName != "", "COMPONENT_NAME_MUST_BE_PROVIDED");
         require(componentVersions[componentName] > 0, "COMPONENT_NOT_FOUND");
@@ -430,12 +430,7 @@ contract Settings is Pausable, SettingsInterface {
         );
         uint32 oldVersion = componentVersions[componentName];
         componentVersions[componentName] = newVersion;
-        emit ComponentVersionUpdated(
-            msg.sender,
-            componentName,
-            oldVersion,
-            newVersion
-        );
+        emit ComponentVersionUpdated(msg.sender, componentName, oldVersion, newVersion);
     }
 
     /**
