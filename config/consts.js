@@ -13,7 +13,6 @@ module.exports = {
     /**
      * Represents the initial version of the Node Component.
      * 
-     * e.g.: 1000000 => represents : 1.00.00.00
      * e.g.: 10000 => represents : 1.00.00
      */
     INITIAL_NODE_COMPONENT_VERSION: 10000,

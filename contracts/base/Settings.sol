@@ -89,9 +89,9 @@ contract Settings is Pausable, SettingsInterface {
     /**
         @notice Contains minimum version for each node component.
 
-        i.e.: "web2" => "1234500" represents "web2" => "01.23.45.00"
+        i.e.: "web2" => "12345" represents "web2" => "01.23.45"
      */
-    mapping(bytes32 => uint32) public minimumNodeRequirements;
+    mapping(bytes32 => uint32) public componentVersions;
 
     /**
         @notice It represents a mapping to configure the asset settings.
@@ -381,9 +381,9 @@ contract Settings is Pausable, SettingsInterface {
         whenNotPaused()
     {
         require(minVersion > 0, "INVALID_COMPONENT_VERSION");
-        require(componentName[0] != 0, "COMPONENT_NAME_MUST_BE_PROVIDED");
-        require(minimumNodeRequirements[componentName] == 0, "COMPONENT_ALREADY_EXISTS");
-        minimumNodeRequirements[componentName] = minVersion;
+        require(componentName != "", "COMPONENT_NAME_MUST_BE_PROVIDED");
+        require(componentVersions[componentName] == 0, "COMPONENT_ALREADY_EXISTS");
+        componentVersions[componentName] = minVersion;
         emit ComponentVersionCreated(msg.sender, componentName, minVersion);
     }
 
@@ -397,9 +397,9 @@ contract Settings is Pausable, SettingsInterface {
         whenNotPaused()
     {
         require(componentName != "", "COMPONENT_NAME_MUST_BE_PROVIDED");
-        require(minimumNodeRequirements[componentName] > 0, "COMPONENT_NOT_FOUND");
-        uint32 previousVersion = minimumNodeRequirements[componentName];
-        delete minimumNodeRequirements[componentName];
+        require(componentVersions[componentName] > 0, "COMPONENT_NOT_FOUND");
+        uint32 previousVersion = componentVersions[componentName];
+        delete componentVersions[componentName];
         emit ComponentVersionRemoved(msg.sender, componentName, previousVersion);
     }
 
@@ -409,7 +409,7 @@ contract Settings is Pausable, SettingsInterface {
         @return version of the node component if exists or zero 0 if not found.
      */
     function getComponentVersion(bytes32 componentName) external view returns (uint32) {
-        return minimumNodeRequirements[componentName];
+        return componentVersions[componentName];
     }
 
     /**
@@ -424,13 +424,13 @@ contract Settings is Pausable, SettingsInterface {
     {
         require(newVersion > 0, "INVALID_COMPONENT_VERSION");
         require(componentName != "", "COMPONENT_NAME_MUST_BE_PROVIDED");
-        require(minimumNodeRequirements[componentName] > 0, "COMPONENT_NOT_FOUND");
+        require(componentVersions[componentName] > 0, "COMPONENT_NOT_FOUND");
         require(
-            newVersion > minimumNodeRequirements[componentName],
+            newVersion > componentVersions[componentName],
             "NEW_VERSION_MUST_INCREASE"
         );
-        uint32 oldVersion = minimumNodeRequirements[componentName];
-        minimumNodeRequirements[componentName] = newVersion;
+        uint32 oldVersion = componentVersions[componentName];
+        componentVersions[componentName] = newVersion;
         emit ComponentVersionUpdated(
             msg.sender,
             componentName,

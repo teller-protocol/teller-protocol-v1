@@ -1,6 +1,6 @@
 const MOCK_NETWORKS = ['test', 'soliditycoverage'];
 const initAssetSettings = require('./initAssetSettings')
-const initNodeComponentsSettings = require('./initNodeComponentsSettings')
+const initNodeComponentsSettings = require('./initComponentsVersions')
 
 module.exports = async function (
     settingsInstance, web3, {
