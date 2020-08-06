@@ -66,5 +66,13 @@ module.exports = () => {
             name: () => 'StartingBlockNumber',
         }
     );
+    settingsMap.set(
+        'collateralBuffer',
+        {
+            get: async (settings) => (await settings.collateralBuffer()),
+            set: async (settings, newValue, senderTxConfig) => (await settings.setCollateralBuffer(newValue.toString(), senderTxConfig)),
+            name: () => 'CollateralBuffer',
+        }
+    );
     return settingsMap;
 };
