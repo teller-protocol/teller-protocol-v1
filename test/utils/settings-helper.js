@@ -2,7 +2,7 @@ const TEST_SETTINGS_VALUES = require('../../config/networks/test/platformSetting
 const {
     daysToSeconds,
 } = require('./consts');
-const initPlatformSettings = require('../../migrations/utils/initPlatformSettings');
+const initPlatformSettings = require('../../migrations/utils/init_settings/initPlatformSettings');
 
 const INITIAL_VALUE = 1;
 const TEST_DEFAULT_VALUE = {

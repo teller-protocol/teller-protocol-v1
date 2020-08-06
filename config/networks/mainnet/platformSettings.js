@@ -101,7 +101,7 @@ module.exports = {
     [settingsNames.StartingBlockNumber]: {
         // As it depends on the current block number, it must be configured manually.
         processOnDeployment: false,
-        value: 40,
+        value: undefined, // It is calculated
         min: 0,
         max: MAX_VALUE_STRING,
     },
