@@ -69,11 +69,14 @@ contract('SettingsRemovePlatformSettingTest', function (accounts) {
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
 
+                const previousSetting = previousSettings.find( (item) => item.name === platformNameToRemove);
+
                 settings
                     .platformSettingRemoved(result)
                     .emitted(
                         platformNameToRemoveBytes32,
                         sender,
+                        previousSetting.value,
                     );
                 
                 const platformSettingResult = await instance.getPlatformSetting(

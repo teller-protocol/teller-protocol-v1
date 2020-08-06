@@ -30,7 +30,11 @@ interface SettingsInterface {
         @param settingName setting name removed.
         @param sender address that removed it.
      */
-    event PlatformSettingRemoved(bytes32 indexed settingName, address indexed sender);
+    event PlatformSettingRemoved(
+        bytes32 indexed settingName,
+        uint256 lastValue,
+        address indexed sender
+    );
 
     /**
         @notice This event is emitted when a platform setting is updated.
