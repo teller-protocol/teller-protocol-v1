@@ -430,8 +430,9 @@ module.exports = {
             const name = 'PlatformSettingRemoved';
             return {
                 name: name,
-                emitted: (settingName, sender) => emitted(tx, name, ev => {
+                emitted: (settingName, sender, lastValue) => emitted(tx, name, ev => {
                     assert.equal(ev.settingName.toString(), settingName.toString());
+                    assert.equal(ev.lastValue.toString(), lastValue.toString());
                     assert.equal(ev.sender.toString(), sender.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)

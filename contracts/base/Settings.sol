@@ -133,9 +133,10 @@ contract Settings is Pausable, SettingsInterface {
         @param settingName to remove.
      */
     function removePlatformSetting(bytes32 settingName) external onlyPauser() {
+        uint256 oldValue = platformSettings[settingName].value;
         platformSettings[settingName].remove();
 
-        emit PlatformSettingRemoved(settingName, msg.sender);
+        emit PlatformSettingRemoved(settingName, oldValue, msg.sender);
     }
 
     /**
