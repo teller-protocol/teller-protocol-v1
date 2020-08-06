@@ -4,6 +4,17 @@ const { toBytes32 } = require('../../test/utils/consts');
 const settingsNames = require('../../test/utils/platformSettingsNames');
 const BigNumber = require('bignumber.js');
 
+const validatePlatformSetting = async (settingsInstance, web3, platformSettingName, { min, max, value, processOnDeployment }) => {
+    const platformSettingResult = await settingsInstance.getPlatformSetting(toBytes32(web3, platformSettingName));
+    assert.equal(platformSettingResult.exists.toString(), 'true', `Platform setting ${platformSettingName} must exist.`);
+    if(value !== undefined) {
+        assert.equal(platformSettingResult.value.toString(), value.toString(), `Platform setting ${platformSettingName} value must equal to ${value.toString()} (Current: ${platformSettingResult.value.toString()}).`);
+    }
+    assert.equal(platformSettingResult.min.toString(), min.toString(), `Platform setting ${platformSettingName} min must equal to ${min.toString()} (Current: ${platformSettingResult.min.toString()}).`);
+    assert.equal(platformSettingResult.max.toString(), max.toString(), `Platform setting ${platformSettingName} max must equal to ${min.toString()} (Current: ${platformSettingResult.max.toString()}).`);
+    assert.equal(processOnDeployment.toString(), 'false', `Platform setting ${platformSettingName} processOnDeployment must be false.`);
+};
+
 const configureStartingBlockNumber = async (settingsName, settingsInstance, { platformSettings, currentBlockNumber, web3, verbose}) => {
     const settingValueConfig = platformSettings[settingsName];
     assert(!_.isUndefined(settingValueConfig), `Settings value for ${settingsName} must be provided.`);
@@ -77,4 +88,16 @@ module.exports = async function(
         assert.equal(platformSettingResult.min.toString(), min.toString(), `Platform setting ${platformSettingName} min must equal to ${min.toString()} (Current: ${platformSettingResult.min.toString()}).`);
         assert.equal(platformSettingResult.max.toString(), max.toString(), `Platform setting ${platformSettingName} max must equal to ${min.toString()} (Current: ${platformSettingResult.max.toString()}).`);
     }
+
+    await validatePlatformSetting(
+        settingsInstance,
+        web3,
+        settingsNames.StartingBlockNumber,
+        {
+            ...platformSettings[settingsNames.StartingBlockNumber],
+            // As the value for StartingBlockNumber value is calculated, we only validate it exists.
+            value: undefined,
+        },
+    );
+    
 }
