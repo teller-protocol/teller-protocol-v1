@@ -7,7 +7,7 @@ const Accounts = require('../utils/Accounts');
 const ProcessArgs = require('../utils/ProcessArgs');
 const { toUnits } = require("../../test/utils/consts");
 const { TOKEN_NAME, ACCOUNT_INDEX } = require("../utils/cli/names");
-const processArgs = new ProcessArgs(readParams.mint().argv);
+const processArgs = new ProcessArgs(readParams.balanceOf().argv);
 
 module.exports = async (callback) => {
     try {

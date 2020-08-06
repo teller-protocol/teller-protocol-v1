@@ -1,42 +1,41 @@
 // Smart contracts
-const IAggregator = artifacts.require("@chainlink/contracts/src/v0.5/interfaces/AggregatorInterface.sol");
 
 // Util classes
 const assert = require('assert');
+const { oracle: readParams } = require("../utils/cli-builder");
+const { chainlink } = require("../utils/contracts");
 const ProcessArgs = require('../utils/ProcessArgs');
-const { toUnits } = require('../../test/utils/consts');
-const processArgs = new ProcessArgs();
+const { toUnits } = require("../../test/utils/consts");
+const { TOKEN_NAME, COLL_TOKEN_NAME, BACK_ROUNDS } = require("../utils/cli/names");
 
-const sourceTokenName = 'LINK'.toUpperCase();
-const targetTokenName = 'USD'.toUpperCase();
-const back = 1;
+const processArgs = new ProcessArgs(readParams.getPrices().argv);
 
 module.exports = async (callback) => {
     try {
-        const network = processArgs.network();
-        console.log(`Script will be executed in network ${network}.`)
-        const appConf = require('../../config')(network);
-        const { chainlink } = appConf.networkConfig;
+        const { chainlink: chainlinkConf } = processArgs.appConf.networkConfig;
+        const collTokenName = processArgs.getValue(COLL_TOKEN_NAME.name);
+        const tokenName = processArgs.getValue(TOKEN_NAME.name);
+        const roundsBack = processArgs.getValue(BACK_ROUNDS.name);
 
-        const aggregatorInfo = chainlink[`${sourceTokenName}_${targetTokenName}`];
+        const getContracts = processArgs.createGetContracts(artifacts);        
+        const aggregator = await getContracts.getDeployed(chainlink.custom(tokenName, collTokenName));
+
+        const aggregatorInfo = chainlinkConf[`${tokenName}_${collTokenName}`];
         assert(aggregatorInfo, "Aggregator info is undefined.");
 
-        console.log(`Using Chainlink Oracle address: '${aggregatorInfo.address}'`);
-        const aggregator = await IAggregator.at(aggregatorInfo.address);
-
-        console.log(`Chainlink Aggregator => ${sourceTokenName} / ${targetTokenName}: `);
+        console.log(`Chainlink Aggregator => ${tokenName} / ${collTokenName}: `);
         console.log(`${'-'.repeat(60)}`);
 
         const getLatestAnswerResult = await aggregator.latestAnswer();
-        console.log(`Lastest Answer:        1 ${sourceTokenName} = ${getLatestAnswerResult.toString()} = ${toUnits(getLatestAnswerResult.toString(), aggregatorInfo.responseDecimals)} ${targetTokenName}`);
+        console.log(`Lastest Answer:        1 ${tokenName} = ${getLatestAnswerResult.toString()} = ${toUnits(getLatestAnswerResult.toString(), aggregatorInfo.responseDecimals)} ${collTokenName}`);
 
         const getLatestTimestampResult = parseInt(await aggregator.latestTimestamp()) * 1000;
         console.log(`Latest Timestamp:      ${getLatestTimestampResult} ms = ${new Date(getLatestTimestampResult).toISOString()}`);
 
-        const getAnswerResult = await aggregator.getAnswer(back);
-        console.log(`Previous Answer:       1 ${sourceTokenName} = ${getAnswerResult.toString()} = ${toUnits(getAnswerResult.toString(), aggregatorInfo.responseDecimals)} ${targetTokenName}`);
+        const getAnswerResult = await aggregator.getAnswer(roundsBack);
+        console.log(`Previous Answer:       1 ${tokenName} = ${getAnswerResult.toString()} = ${toUnits(getAnswerResult.toString(), aggregatorInfo.responseDecimals)} ${collTokenName}`);
 
-        const getTimestampResult = parseInt(await aggregator.getTimestamp(back)) * 1000;
+        const getTimestampResult = parseInt(await aggregator.getTimestamp(roundsBack)) * 1000;
         console.log(`Previous Timestamp:    ${getTimestampResult.toString()} ms = ${new Date(getTimestampResult).toISOString()}`);
         console.log(`${'-'.repeat(60)}`);
         console.log('>>>> The script finished successfully. <<<<');

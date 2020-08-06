@@ -181,4 +181,9 @@ module.exports = {
         alias: 'MIV',
         default: 0,
     },
+    BACK_ROUNDS: {
+        name: 'backRounds',
+        alias: 'BR',
+        default: 1,
+    },
 };

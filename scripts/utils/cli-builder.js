@@ -31,6 +31,7 @@ const {
     addTestTokenName,
     addMinValue,
     addMaxValue,
+    addBackRounds,
 } = require("./cli/params");
 
 const addBase = (yargs) => {
@@ -235,5 +236,45 @@ module.exports = {
             addMaxLoanAmount(yargs);
             return yargs;
         },
+        pausePlatform: () => {
+            addBase(yargs);
+            addSenderIndex(yargs);
+            return yargs;
+        },
+        unpausePlatform: () => {
+            addBase(yargs);
+            addSenderIndex(yargs);
+            return yargs;
+        },
+        pauseLendingPool: () => {
+            addBase(yargs);
+            addTokenName(yargs);
+            addCollTokenName(yargs);
+            addSenderIndex(yargs);
+            return yargs;
+        },
+        unpauseLendingPool: () => {
+            addBase(yargs);
+            addTokenName(yargs);
+            addCollTokenName(yargs);
+            addSenderIndex(yargs);
+            return yargs;
+        },
     },
+    oracle: {
+        getPrices: () => {
+            addTokenName(yargs);
+            addCollTokenName(yargs);
+            addBackRounds(yargs);
+            return yargs;
+        },
+    },
+    chainlink: {
+        getPrices: () => {
+            addTokenName(yargs);
+            addCollTokenName(yargs);
+            addBackRounds(yargs);
+            return yargs;
+        },
+    }
 };

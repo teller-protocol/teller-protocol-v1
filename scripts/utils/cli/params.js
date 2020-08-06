@@ -32,6 +32,7 @@ const {
   MAX_LOAN_AMOUNT,
   MIN_VALUE,
   MAX_VALUE,
+  BACK_ROUNDS,
 } = require("./names");
 
 const newOption = (argv, name, alias, type, description, defaultValue) => {
@@ -319,6 +320,17 @@ module.exports.addCollAmount = (yargs, defaultParam = COLL_AMOUNT.default) => {
     COLL_AMOUNT.alias,
     "number",
     `Amount to send as collateral. By default ${defaultParam}`,
+    defaultParam
+  );
+};
+
+module.exports.addBackRounds = (yargs, defaultParam = BACK_ROUNDS.default) => {
+  newOption(
+    yargs,
+    BACK_ROUNDS.name,
+    BACK_ROUNDS.alias,
+    "number",
+    `Total back rounds to get an oracle price. By default ${defaultParam}`,
     defaultParam
   );
 };
