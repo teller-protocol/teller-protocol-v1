@@ -1,20 +1,31 @@
 const MOCK_NETWORKS = ['test', 'soliditycoverage'];
-const initAssetSettings = require('./initAssetSettings')
-const initNodeComponentsSettings = require('./initComponentsVersions')
+const initAssetSettings = require('./initAssetSettings');
+const initPlatformSettings = require('./initPlatformSettings');
+const initNodeComponentsSettings = require('./initComponentsVersions');
 
 module.exports = async function (
-    settingsInstance, web3, {
+    settingsInstance, {
         nodeComponentsVersions,
         assetSettings,
+        platformSettings,
         tokens,
         compound,
         txConfig,
         network,
+        currentBlockNumber,
+        web3,
     }, {
         ERC20
     },
 ) {
-    console.log('Initializing platform settings.');
+    console.log('Initializing settings.');
+
+    await initPlatformSettings(
+        settingsInstance,
+        { platformSettings, currentBlockNumber, web3, verbose: true },
+        { },
+    );
+
     // Initializing node components
     await initNodeComponentsSettings(settingsInstance, nodeComponentsVersions, web3);
 
@@ -24,9 +35,9 @@ module.exports = async function (
             As we validate (in contracts):
                 - Some address (ex: cToken address) must be a contract address.
 
-            We don't initialize the settings in the mock networks (test, and soliditycoverage) because they are dummy addresses (not contracts).
+            We don't initialize the asset settings in the mock networks (test, and soliditycoverage) because they are dummy addresses (not contracts).
         */
-        console.log('Mock network detected. Platform settings is not configured.');
+        console.log('Mock network detected. Asset settings are not configured.');
         return;
     }
     await initAssetSettings(

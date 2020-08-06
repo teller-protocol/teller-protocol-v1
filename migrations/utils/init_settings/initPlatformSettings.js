@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const assert = require('assert');
-const { toBytes32 } = require('../../test/utils/consts');
-const settingsNames = require('../../test/utils/platformSettingsNames');
+const { toBytes32 } = require('../../../test/utils/consts');
+const settingsNames = require('../../../test/utils/platformSettingsNames');
 const BigNumber = require('bignumber.js');
 
 const validatePlatformSetting = async (settingsInstance, web3, platformSettingName, { min, max, value, processOnDeployment }) => {
@@ -16,19 +16,22 @@ const validatePlatformSetting = async (settingsInstance, web3, platformSettingNa
 };
 
 const configureStartingBlockNumber = async (settingsName, settingsInstance, { platformSettings, currentBlockNumber, web3, verbose}) => {
+    const offsetBlockNumberSetting = platformSettings[settingsNames.StartingBlockOffsetNumber];
+    assert(!_.isUndefined(offsetBlockNumberSetting.value), `StartingBlockOffsetNumber value must be defined.`);
+
     const settingValueConfig = platformSettings[settingsName];
     assert(!_.isUndefined(settingValueConfig), `Settings value for ${settingsName} must be provided.`);
 
     const { value, min, max, processOnDeployment } = settingValueConfig;
-    assert(!_.isUndefined(value), `Platform setting value for ${settingsName} must be provided.`);
+    assert(_.isUndefined(value), `Platform setting value for ${settingsName} must be undefined (it is calculated).`);
     assert(!_.isUndefined(min), `Platform setting min value for ${settingsName} must be provided.`);
     assert(!_.isUndefined(max), `Platform setting max value for ${settingsName} must be provided.`);
     assert(!processOnDeployment, `Platform setting 'processOnDeployment' for ${settingsName} must be provided and 'false'.`);
 
-    const startingBlockNumber = BigNumber(currentBlockNumber.toString()).minus(value);
+    const startingBlockNumber = BigNumber(currentBlockNumber.toString()).minus(offsetBlockNumberSetting.value);
     const startingBlockNumberValue = startingBlockNumber.lte(0) ? '0' : startingBlockNumber.toFixed(0);
 
-    if (verbose) console.log(`Configuring platform setting value ${settingsName}. Value: ${value} - min: ${min} - max: ${max}`);
+    if (verbose) console.log(`Configuring platform setting ${settingsName}. Value: ${startingBlockNumberValue} (Current Block: ${currentBlockNumber} - Offset: ${offsetBlockNumberSetting.value}) - min: ${min} - max: ${max}`);
 
     await settingsInstance.createPlatformSetting(
         toBytes32(web3, settingsName),
@@ -46,7 +49,6 @@ module.exports = async function(
     if (verbose) console.log('Configuring platform settings.')
     for (const platformSettingName of Object.keys(platformSettings)) {
         const { value, min, max, processOnDeployment } = platformSettings[platformSettingName];
-        assert(!_.isUndefined(value), `Platform setting for ${platformSettingName} must be provided.`);
         assert(!_.isUndefined(min), `Platform setting min value for ${platformSettingName} must be provided.`);
         assert(!_.isUndefined(max), `Platform setting max value for ${platformSettingName} must be provided.`);
         assert(!_.isUndefined(processOnDeployment), `Platform setting 'processOnDeployment' for ${platformSettingName} must be provided.`);
@@ -55,6 +57,7 @@ module.exports = async function(
             if (verbose) console.log(`Platform setting value ${platformSettingName} is not processed. It will be configured manually.`);
             continue;
         }
+        assert(!_.isUndefined(value), `Platform setting for ${platformSettingName} must be provided.`);
         if (verbose) console.log(`Configuring platform setting ${platformSettingName}. Value: ${value} - min: ${min} - max: ${max}`);
 
         await settingsInstance.createPlatformSetting(

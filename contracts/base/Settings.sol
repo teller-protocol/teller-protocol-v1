@@ -17,6 +17,9 @@ import "../interfaces/SettingsInterface.sol";
 
 /**
     @notice This contract manages the configuration of the platform.
+    @dev The platform settings functions (create, update, and remove) don't include the whenNotPaused() modifier because we might need to use them in both cases (when the platform is paused and not paused).
+        Example:
+            - There is a potential issue and before analyzing it, we pause the platform to avoid funds losses. Finally, as result of the analysis, we decided to update a platform setting (or create a new one for the cloud nodes). In this scenario, if the modifier is present, we couldn't update the setting (because the platform is paused).
 
     @author develop@teller.finance
  */
