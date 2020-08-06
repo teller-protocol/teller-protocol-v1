@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const { NULL_ADDRESS } = require('../../test/utils/consts');
 
 class GetContracts {
     constructor(artifacts, networkConf) {
@@ -22,6 +23,15 @@ GetContracts.prototype.getInfo = function({contractName, keyName, addressOnPrope
         }
     }
     throw new Error(`Contract ${contractName} not found.`);
+}
+
+GetContracts.prototype.getAddressOrEmpty = function({contractName, keyName, addressOnProperty = 'address'}) {
+    try {
+        const info = this.getInfo({ contractName, keyName, addressOnProperty });
+        return info.address;
+    } catch (error) {
+        return NULL_ADDRESS;
+    }
 }
 
 GetContracts.prototype.getDeployed = async function({ keyName, contractName, addressOnProperty = 'address', artifactName = undefined}) {

@@ -29,6 +29,8 @@ const {
     addRequiredSubmissions,
     addSafetyInterval,
     addTestTokenName,
+    addMinValue,
+    addMaxValue,
 } = require("./cli/params");
 
 const addBase = (yargs) => {
@@ -165,6 +167,12 @@ module.exports = {
             addAmount(yargs);
             return yargs;
         },
+        updateOraclePriceAddress: () => {
+            addLoansBase(yargs);
+            addSenderIndex(yargs);
+            addNewValue(yargs);
+            return yargs;
+        },
     },
     loanTerms: {
         addSigners: () => {
@@ -183,11 +191,48 @@ module.exports = {
             addBase(yargs);
             return yargs;
         },
-        setNewSetting: () => {
+        updatePlatformSetting: () => {
             addBase(yargs);
             addNewValue(yargs);
             addSettingName(yargs);
             addSenderIndex(yargs);
+            return yargs;
+        },
+        createPlatformSetting: () => {
+            addBase(yargs);
+            addNewValue(yargs);
+            addMinValue(yargs);
+            addMaxValue(yargs);
+            addSettingName(yargs);
+            addSenderIndex(yargs);
+            return yargs;
+        },
+        removePlatformSetting: () => {
+            addBase(yargs);
+            addSettingName(yargs);
+            addSenderIndex(yargs);
+            return yargs;
+        },
+        updateAssetSetting: () => {
+            addBase(yargs);
+            addNewValue(yargs);
+            addTokenName(yargs);
+            addAssetSettingName(yargs);
+            addSenderIndex(yargs);
+            return yargs;
+        },
+        removeAssetSetting: () => {
+            addBase(yargs);
+            addTokenName(yargs);
+            addSenderIndex(yargs);
+            return yargs;
+        },
+        createAssetSetting: () => {
+            addBase(yargs);
+            addTokenName(yargs);
+            addSenderIndex(yargs);
+            addCTokenName(yargs);
+            addMaxLoanAmount(yargs);
             return yargs;
         },
     },

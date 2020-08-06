@@ -61,6 +61,11 @@ module.exports = {
         alias: 'SN',
         default: undefined,
     },
+    ASSET_SETTING_NAME: {
+        name: 'assetSettingName',
+        alias: 'ASN',
+        default: undefined,
+    },
     CTOKEN_NAME: {
         name: 'cTokenName',
         alias: 'CTN',
@@ -160,5 +165,20 @@ module.exports = {
         name: 'testTokenName',
         alias: 'TTN',
         default: DEFAULT_TEST_TOKEN_NAME,
-    },    
+    },
+    MAX_LOAN_AMOUNT: {
+        name: 'maxLoanAmount',
+        alias: 'MLA',
+        default: undefined,
+    },
+    MAX_VALUE: {
+        name: 'maxValue',
+        alias: 'MAV',
+        default: undefined,
+    },
+    MIN_VALUE: {
+        name: 'minValue',
+        alias: 'MIV',
+        default: 0,
+    },
 };
