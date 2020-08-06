@@ -1,6 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
+const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
 const BaseMock = artifacts.require("./mock/base/BaseMock.sol");
@@ -14,7 +15,7 @@ contract('BaseWhenAllowedTest', function (accounts) {
     let instance;
 
     beforeEach('Setup for each test', async () => {
-        settings = await Settings.new(1, 1, 1, 1, 1, 1, 1, 1);
+        settings = await createTestSettingsInstance(Settings);
         instance = await BaseMock.new();
         await instance.externalInitialize(settings.address);
     });
