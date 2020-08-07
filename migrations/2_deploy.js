@@ -46,6 +46,7 @@ module.exports = async function(deployer, network, accounts) {
 
   await deployerApp.deploys([ZDAI, ZUSDC], txConfig);
   console.log(`Deployed tokens: ZDAI [${ZDAI.address}] ZUSDC [${ZUSDC.address}] `);
+
   await deployerApp.deploy(Settings, txConfig);
   const settingsInstance = await Settings.deployed();
   await initSettings(
