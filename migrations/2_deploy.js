@@ -47,7 +47,7 @@ module.exports = async function(deployer, network, accounts) {
   const currentBlockNumber = await web3.eth.getBlockNumber();
 
   await deployerApp.deploys([ZDAI, ZUSDC], txConfig);
-
+  console.log(`Deployed tokens: ZDAI [${ZDAI.address}] ZUSDC [${ZUSDC.address}] `)
   const settingsInstance = await createEnvSettingsInstance(
     deployerApp,
     Settings,

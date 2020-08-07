@@ -35,14 +35,4 @@ contract ZToken is ZTokenInterface, ERC20Detailed, ERC20Mintable {
         return true;
     }
 
-    /**
-     * @notice Increase account supply of specified token amount
-     * @param account The account to mint tokens for
-     * @param amount The amount of tokens to mint
-     * @return true if successful
-     */
-    function mint(address account, uint256 amount) public returns (bool) {
-        _mint(account, amount);
-        return true;
-    }
 }
