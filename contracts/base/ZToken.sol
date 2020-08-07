@@ -34,5 +34,4 @@ contract ZToken is ZTokenInterface, ERC20Detailed, ERC20Mintable {
         _burn(account, amount);
         return true;
     }
-
 }
