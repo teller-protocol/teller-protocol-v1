@@ -34,7 +34,7 @@ module.exports = async function (
         const decimals = await tokenInstance.decimals();
         const maxLoanAmountWithDecimals = toDecimals(tokenConfig.maxLoanAmount, decimals);
 
-        console.log(`Configuring asset: ${tokenName} (${tokenAddress}) / ${tokenConfig.cToken} (${cTokenAddress}) / Max Loan Amount: ${tokenConfig.maxLoanAmount} (${maxLoanAmountWithDecimals.toFixed(0)})`);
+        console.log(`Configuring asset: ${tokenName} (${tokenAddress}) / ${tokenConfig.cToken} (${cTokenAddress}) / Max Loan Amount: ${tokenConfig.maxLoanAmount} (${decimals} decimals / ${maxLoanAmountWithDecimals.toFixed(0)})`);
         await settingsInstance.createAssetSettings(
             tokenAddress,
             cTokenAddress,

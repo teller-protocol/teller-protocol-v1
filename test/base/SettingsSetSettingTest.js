@@ -3,10 +3,9 @@ const withData = require('leche').withData;
 const {
     t,
     toBytes32,
-    NULL_ADDRESS,
-    daysToSeconds,
 } = require('../utils/consts');
 const getSettingsMaps = require('../utils/settings-map');
+const { createTestSettingsInstance } = require('../utils/settings-helper');
 const { settings } = require('../utils/events');
 
 // Mock contracts
@@ -16,22 +15,11 @@ const Settings = artifacts.require("./base/Settings.sol");
 
 contract('SettingsSetSettingTest', function (accounts) {
     const settingsMap = getSettingsMaps();
-    const INITIAL_VALUE = 1;
-    const INITIAL_MAXIMUM_LOAN_DURATION_VALUE = daysToSeconds(30);
     const owner = accounts[0];
     let instance;
     
     beforeEach('Setup for each test', async () => {
-        instance = await Settings.new(
-            INITIAL_VALUE, // Sets RequiredSubmissions
-            INITIAL_VALUE, // Sets MaximumTolerance
-            INITIAL_VALUE, // Sets ResponseExpiryLength
-            INITIAL_VALUE, // Sets SafetyInterval
-            INITIAL_VALUE, // Sets TermsExpiryTime
-            INITIAL_VALUE, // Sets LiquidateEthPrice
-            INITIAL_MAXIMUM_LOAN_DURATION_VALUE, // Sets MaximumLoanDuration
-            INITIAL_VALUE, // Sets StartingBlockNumber
-        );
+        instance = await createTestSettingsInstance(Settings);
     });
 
     withData({
@@ -77,6 +65,11 @@ contract('SettingsSetSettingTest', function (accounts) {
         _2_startingBlockNumber_not_zero: ['startingBlockNumber', 0, 1550, 0, 'MUST_PROVIDE_START_BLOCK_NUMBER', true],
         _3_startingBlockNumber_equal: ['startingBlockNumber', 0, 1000100, 1000100, 'NEW_VALUE_REQUIRED', true],
         _4_startingBlockNumber_not_owner: ['startingBlockNumber', 1, 1000, 1200, 'PauserRole: caller does not have the Pauser role', true],
+
+        _1_collateralBuffer_valid: ['collateralBuffer', 0, 1500, 9200, undefined, false],
+        _2_collateralBuffer_not_zero: ['collateralBuffer', 0, 1550, 0, 'MUST_PROVIDE_COLLATERAL_BUFFER', true],
+        _3_collateralBuffer_equal: ['collateralBuffer', 0, 1000, 1000, 'NEW_VALUE_REQUIRED', true],
+        _4_collateralBuffer_not_owner: ['collateralBuffer', 1, 1000, 1500, 'PauserRole: caller does not have the Pauser role', true],
     }, function(settingKey, senderIndex, currentValue, newValue, expectedErrorMessage, mustFail) {
         const { set: setSettingValue, name: getSettingName } = settingsMap.get(settingKey);
         const settingName = getSettingName();
@@ -115,6 +108,7 @@ contract('SettingsSetSettingTest', function (accounts) {
         _6_termsExpiryTime: ['termsExpiryTime', 2225],
         _7_liquidateEthPrice: ['liquidateEthPrice', 9325],
         _8_startingBlockNumber: ['startingBlockNumber', 1800000],
+        _9_collateralBuffer: ['collateralBuffer', 1510],
     }, function(settingKey, currentValue) {
         const { get: getSettingValue, set: setSettingValue, name: getSettingName } = settingsMap.get(settingKey);
         const settingName = getSettingName();

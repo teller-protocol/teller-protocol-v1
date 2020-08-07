@@ -1,8 +1,9 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, NULL_ADDRESS, daysToSeconds, toDecimals } = require('../utils/consts');
+const { t, NULL_ADDRESS, toDecimals } = require('../utils/consts');
 const { createAssetSettings } = require('../utils/asset-settings-helper');
 const { settings } = require('../utils/events');
+const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -64,7 +65,7 @@ contract('SettingsRemoveAssetSettingsTest', function (accounts) {
     ) {
         it(t('user', 'removeAssetSettings', 'Should (or not) be able to remove a asset setting.', mustFail), async function() {
             // Setup
-            const instance = await Settings.new(1, 1, 1, 1, 1, 1, daysToSeconds(30), 1);
+            const instance = await createTestSettingsInstance(Settings);
             
             const senderAddress = getSenderAddress(senderIndex);
             if(addAsPauserRole) {
