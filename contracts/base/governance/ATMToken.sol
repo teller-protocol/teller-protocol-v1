@@ -104,13 +104,14 @@ contract ATMTestToken is ERC20Detailed, Pausable, ERC20Mintable {
       * @param account The account for which vesting is to be revoked
       *
      */
-     function revokeVesting(address account) public onlyPauser() whenNotPaused() {
+     function revokeVesting(address account) public onlyPauser() whenNotPaused() returns (bool) {
          require(account != address(0), 'Address cannot be zero');
          VestingTokens memory vestingTokens = _vestingBalances[account];
          uint256 revokedAmount = vestingTokens.amount;
          uint256 revokedDeadline = vestingTokens.deadline;
          delete _vestingBalances[account];
          emit RevokeVesting(account, revokedAmount, revokedDeadline);
+         return true;
      }
 
     /**
