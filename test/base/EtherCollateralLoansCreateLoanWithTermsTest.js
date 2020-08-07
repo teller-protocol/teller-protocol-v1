@@ -1,6 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const abi = require('ethereumjs-abi')
+const settingsNames = require('../utils/platformSettingsNames');
 const {
   t,
   NULL_ADDRESS,
@@ -48,7 +49,7 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
         settingsInstance = await createTestSettingsInstance(
             Settings,
             {
-                termsExpiryTime: THIRTY_DAYS
+                [settingsNames.TermsExpiryTime]: THIRTY_DAYS
             }
         );
         instance = await Loans.new();

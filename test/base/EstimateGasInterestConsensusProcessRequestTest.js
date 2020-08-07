@@ -1,12 +1,12 @@
 const withData = require('leche').withData;
 const { createTestSettingsInstance } = require('../utils/settings-helper');
+const settingsNames = require('../utils/platformSettingsNames');
 const { 
     t,
     getLatestTimestamp,
     ONE_DAY,
     THIRTY_DAYS,
     NULL_ADDRESS,
-    daysToSeconds
 } = require('../utils/consts');
 const { createInterestRequest, createUnsignedInterestResponse } = require('../utils/structs');
 const { createInterestResponseSig, hashInterestRequest } = require('../utils/hashes');
@@ -36,8 +36,8 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
     let currentTime;
     let interestRequest;
 
-    const baseGasCost = 227000;
-    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 73500);
+    const baseGasCost = 238000;
+    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 77000);
 
     let responseOne = createUnsignedInterestResponse(nodeOne, 0, 34676, 1, NULL_ADDRESS)
     let responseTwo = createUnsignedInterestResponse(nodeTwo, 0, 34642, 1, NULL_ADDRESS)
@@ -127,11 +127,11 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
             const settings = await createTestSettingsInstance(
                 Settings,
                 {
-                    requiredSubmissions: responses.length,
-                    maximumTolerance: tolerance,
-                    responseExpiryLength: THIRTY_DAYS,
-                    termsExpiryTime: THIRTY_DAYS,
-                    liquidateEthPrice: 9500,
+                    [settingsNames.RequiredSubmissions]: responses.length,
+                    [settingsNames.MaximumTolerance]: tolerance,
+                    [settingsNames.ResponseExpiryLength]: THIRTY_DAYS,
+                    [settingsNames.TermsExpiryTime]: THIRTY_DAYS,
+                    [settingsNames.LiquidateEthPrice]: 9500,
                 }
             );
             instance = await InterestConsensus.new();

@@ -1,23 +1,13 @@
 require('dotenv').config();
 const EnvValue = require('./EnvValue');
-const BigNumber = require('bignumber.js');
 
 const DEFAULT_GAS_WEI = "4600000";
 const DEFAULT_ADDRESS_COUNT = "10";
 const DEFAULT_ADDRESS_INDEX = "0";
-const DEFAULT_REQUIRED_SUBMISSIONS = "7";
-const DEFAULT_MAXIMUM_TOLERANCE = "0";
-const DEFAULT_RESPONSE_EXPIRY = "2592000"; // 30 days
-const DEFAULT_SAFETY_INTERVAL = "300" // 5 minutes
-const DEFAULT_TERMS_EXPIRY_TIME = "2592000"; // 30 days
-const DEFAULT_LIQUIDATE_ETH_PRICE = "9500"; // 95%
 const DEFAULT_GANACHE_PORT = "8545";
 const DEFAULT_GANACHE_HOST = "127.0.0.1";
 const DEFAULT_GANACHE_NETWORK_ID = "*";
 const DEFAULT_GANACHE_GAS_PRICE = "20";
-const DEFAULT_MAXIMUM_LOAN_DURATION = "5184000"; // 60 days * 24 hours * 60 minutes * 60 seconds
-const DEFAULT_STARTING_BLOCK_OFFSET_NUMBER = 40;
-const DEFAULT_COLLATERAL_BUFFER = 1500;
 
 const ADDRESS_COUNT_KEY = 'ADDRESS_COUNT_KEY';
 const DEFAULT_ADDRESS_INDEX_KEY = 'DEFAULT_ADDRESS_INDEX_KEY';
@@ -30,15 +20,6 @@ const GANACHE_PORT = 'GANACHE_PORT';
 const GANACHE_HOST = 'GANACHE_HOST';
 const GANACHE_NETWORK_ID = 'GANACHE_NETWORK';
 const GANACHE_GAS_PRICE = 'GANACHE_GAS_PRICE';
-const DEFAULT_REQUIRED_SUBMISSIONS_KEY = 'DEFAULT_REQUIRED_SUBMISSIONS_KEY';
-const DEFAULT_MAXIMUM_TOLERANCE_KEY = 'DEFAULT_MAXIMUM_TOLERANCE_KEY';
-const DEFAULT_RESPONSE_EXPIRY_KEY = 'DEFAULT_RESPONSE_EXPIRY_KEY';
-const DEFAULT_SAFETY_INTERVAL_KEY = 'DEFAULT_SAFETY_INTERVAL_KEY';
-const DEFAULT_TERMS_EXPIRY_TIME_KEY = 'DEFAULT_TERMS_EXPIRY_TIME_KEY';
-const DEFAULT_LIQUIDATE_ETH_PRICE_KEY = 'DEFAULT_LIQUIDATE_ETH_PRICE_KEY';
-const DEFAULT_MAXIMUM_LOAN_DURATION_KEY = 'DEFAULT_MAXIMUM_LOAN_DURATION';
-const DEFAULT_STARTING_BLOCK_OFFSET_NUMBER_KEY = 'DEFAULT_STARTING_BLOCK_OFFSET_NUMBER';
-const DEFAULT_COLLATERAL_BUFFER_KEY = 'DEFAULT_COLLATERAL_BUFFER';
 
 class EnvConfig {
     constructor() {
@@ -56,15 +37,6 @@ EnvConfig.prototype.initializeConf = function() {
     this.createItem(GAS_PRICE_GWEI_KEY, undefined, 'Default gas price value in gwei.');
     this.createItem(INFURA_KEY, undefined, 'Infura provider key is used to deploy smart contracts.');
     this.createItem(ETHERSCAN_API_KEY, undefined, 'Etherscan.io key is used to verify smart contracts.');
-    this.createItem(DEFAULT_REQUIRED_SUBMISSIONS_KEY, DEFAULT_REQUIRED_SUBMISSIONS, 'This is the default number of node submissions for consensus.');
-    this.createItem(DEFAULT_MAXIMUM_TOLERANCE_KEY, DEFAULT_MAXIMUM_TOLERANCE, 'This is the maximum tolerance of difference in node submissions.');
-    this.createItem(DEFAULT_RESPONSE_EXPIRY_KEY, DEFAULT_RESPONSE_EXPIRY, 'This is the time after which node responses expire.');
-    this.createItem(DEFAULT_SAFETY_INTERVAL_KEY, DEFAULT_SAFETY_INTERVAL, 'This is the time between depositing collateral and taking out a loan.');
-    this.createItem(DEFAULT_TERMS_EXPIRY_TIME_KEY, DEFAULT_TERMS_EXPIRY_TIME, 'This is the time after which loan terms will expire.');
-    this.createItem(DEFAULT_LIQUIDATE_ETH_PRICE_KEY, DEFAULT_LIQUIDATE_ETH_PRICE, 'This is the percentage of market rate liquidated eth will sell for.');
-    this.createItem(DEFAULT_MAXIMUM_LOAN_DURATION_KEY, DEFAULT_MAXIMUM_LOAN_DURATION, 'It represents the maximum duration for a loan. It is defined in seconds.');
-    this.createItem(DEFAULT_STARTING_BLOCK_OFFSET_NUMBER_KEY, DEFAULT_STARTING_BLOCK_OFFSET_NUMBER, 'It represents the offset between the current block and the starting block number.');
-    this.createItem(DEFAULT_COLLATERAL_BUFFER_KEY, DEFAULT_COLLATERAL_BUFFER, 'It represents the collateral buffer used in the clode nodes to calculate the minimum collateral.');
     // Ganache configuration
     this.createItem(GANACHE_HOST, DEFAULT_GANACHE_HOST, 'This is the host used to connect to the Ganache instance.');
     this.createItem(GANACHE_PORT, DEFAULT_GANACHE_PORT, 'This is the port used to connect to the Ganache instance.');
@@ -114,48 +86,6 @@ EnvConfig.prototype.validate = function() {
     }
 }
 
-EnvConfig.prototype.getDefaultRequiredSubmissions = function() {
-  return this.conf.get(DEFAULT_REQUIRED_SUBMISSIONS_KEY);
-}
-
-EnvConfig.prototype.getDefaultMaximumTolerance = function() {
-  return this.conf.get(DEFAULT_MAXIMUM_TOLERANCE_KEY);
-}
-
-EnvConfig.prototype.getDefaultResponseExpiry = function() {
-  return this.conf.get(DEFAULT_RESPONSE_EXPIRY_KEY);
-}
-
-EnvConfig.prototype.getDefaultSafetyInterval = function() {
-  return this.conf.get(DEFAULT_SAFETY_INTERVAL_KEY);
-}
-
-EnvConfig.prototype.getDefaultTermsExpiryTime = function() {
-  return this.conf.get(DEFAULT_TERMS_EXPIRY_TIME_KEY);
-}
-
-EnvConfig.prototype.getDefaultLiquidateEthPrice = function() {
-  return this.conf.get(DEFAULT_LIQUIDATE_ETH_PRICE_KEY);
-}
-
-EnvConfig.prototype.getMaximumLoanDuration = function() {
-    return this.conf.get(DEFAULT_MAXIMUM_LOAN_DURATION_KEY);
-}
-
-EnvConfig.prototype.getStartingBlockOffsetNumber = function() {
-    return this.conf.get(DEFAULT_STARTING_BLOCK_OFFSET_NUMBER_KEY);
-}
-
-EnvConfig.prototype.getStartingBlockNumber = function(currentBlockNumber) {
-    const offsetNumber = this.getStartingBlockOffsetNumber().getOrDefault();
-    const startingBlockNumber = BigNumber(currentBlockNumber.toString()).minus(offsetNumber);
-    return startingBlockNumber.lte(0) ? '1' : startingBlockNumber.toFixed(0);
-}
-
-EnvConfig.prototype.getCollateralBuffer = function() {
-    return this.conf.get(DEFAULT_COLLATERAL_BUFFER_KEY);
-}
-
 EnvConfig.prototype.getGanacheHost = function() {
     return this.conf.get(GANACHE_HOST);
 }
@@ -170,22 +100,6 @@ EnvConfig.prototype.getGanacheNetworkId = function() {
 
 EnvConfig.prototype.getGanacheGasPrice = function() {
     return this.conf.get(GANACHE_GAS_PRICE);
-}
-
-EnvConfig.prototype.createSettingsParams = function(currentBlockNumber) {
-    const startingBlockNumber = this.getStartingBlockNumber(currentBlockNumber);
-    console.log(`Configuring starting block number: ${startingBlockNumber.toString()}`);
-    return {
-        requiredSubmissions: this.getDefaultRequiredSubmissions().getOrDefault(),
-        maximumTolerance: this.getDefaultMaximumTolerance().getOrDefault(),
-        responseExpiryLength: this.getDefaultResponseExpiry().getOrDefault(),
-        safetyInterval: this.getDefaultSafetyInterval().getOrDefault(),
-        termsExpiryTime: this.getDefaultTermsExpiryTime().getOrDefault(),
-        liquidateEthPrice: this.getDefaultLiquidateEthPrice().getOrDefault(),
-        maximumLoanDuration: this.getMaximumLoanDuration().getOrDefault(),
-        startingBlockNumber,
-        collateralBuffer: this.getCollateralBuffer().getOrDefault(),
-    };
 }
 
 module.exports = EnvConfig;

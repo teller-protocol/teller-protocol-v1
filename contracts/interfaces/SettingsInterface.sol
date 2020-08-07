@@ -2,6 +2,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 import "../util/AssetSettingsLib.sol";
+import "../util/PlatformSettingsLib.sol";
 
 
 /**
@@ -11,13 +12,38 @@ import "../util/AssetSettingsLib.sol";
  */
 interface SettingsInterface {
     /**
-        @notice This event is emitted when a setting is updated.
-        @param settingName setting name updated.
+        @notice This event is emitted when a new platform setting is created.
+        @param settingName new setting name.
+        @param sender address that created it.
+        @param value value for the new setting.
+     */
+    event PlatformSettingCreated(
+        bytes32 indexed settingName,
+        address indexed sender,
+        uint256 value,
+        uint256 minValue,
+        uint256 maxValue
+    );
+
+    /**
+        @notice This event is emitted when a current platform setting is removed.
+        @param settingName setting name removed.
+        @param sender address that removed it.
+     */
+    event PlatformSettingRemoved(
+        bytes32 indexed settingName,
+        uint256 lastValue,
+        address indexed sender
+    );
+
+    /**
+        @notice This event is emitted when a platform setting is updated.
+        @param settingName settings name updated.
         @param sender address that updated it.
         @param oldValue old value for the setting.
         @param newValue new value for the setting.
      */
-    event SettingUpdated(
+    event PlatformSettingUpdated(
         bytes32 indexed settingName,
         address indexed sender,
         uint256 oldValue,
@@ -133,119 +159,57 @@ interface SettingsInterface {
     );
 
     /**
-        @notice Gets the required responses to process consensus values.
-        @return the required submissions value.
+        @notice It creates a new platform setting given a setting name, value, min and max values.
+        @param settingName setting name to create.
+        @param value the initial value for the given setting name.
+        @param minValue the min value for the setting.
+        @param maxValue the max value for the setting.
      */
-    function requiredSubmissions() external view returns (uint256);
+    function createPlatformSetting(
+        bytes32 settingName,
+        uint256 value,
+        uint256 minValue,
+        uint256 maxValue
+    ) external;
 
     /**
-        @notice Sets the required responses to process consensus values.
-        @param newRequiredSubmissions the new required submissions value.
+        @notice It updates an existent platform setting given a setting name.
+        @notice It only allows to update the value (not the min or max values).
+        @notice In case you need to update the min or max values, you need to remove it, and create it again.
+        @param settingName setting name to update.
+        @param newValue the new value to set.
      */
-    function setRequiredSubmissions(uint256 newRequiredSubmissions) external;
+    function updatePlatformSetting(bytes32 settingName, uint256 newValue) external;
 
     /**
-        @notice This is the maximum tolerance for the values submitted (by nodes) when they are aggregated (average). It is used in the consensus mechanisms.
-        @notice This is a percentage value with 2 decimal places.
-            i.e. maximumTolerance of 325 => tolerance of 3.25% => 0.0325 of value
-            i.e. maximumTolerance of 0 => It means all the values submitted must be equals.
-        @dev The max value is 100% => 10000
-        @return the current maximum tolerance value.
+        @notice Removes a current platform setting given a setting name.
+        @param settingName to remove.
      */
-    function maximumTolerance() external view returns (uint256);
+    function removePlatformSetting(bytes32 settingName) external;
 
     /**
-        @notice Sets a new value for maximum tolerance setting.
-        @param newMaximumTolerance new maximum tolerance value.
+        @notice It gets the current platform setting for a given setting name
+        @param settingName to get.
+        @return the current platform setting.
      */
-    function setMaximumTolerance(uint256 newMaximumTolerance) external;
+    function getPlatformSetting(bytes32 settingName)
+        external
+        view
+        returns (PlatformSettingsLib.PlatformSetting memory);
 
     /**
-        @notice This is the maximum time (in seconds) a node has to submit a response. After that time, the response is considered expired.
-        @return the current expiry length value.
+        @notice It gets the current platform setting value for a given setting name
+        @param settingName to get.
+        @return the current platform setting value.
      */
-    function responseExpiryLength() external view returns (uint256);
+    function getPlatformSettingValue(bytes32 settingName) external view returns (uint256);
 
     /**
-        @notice Sets a new value for the response expiry length setting.
-        @param newResponseExpiryLength new response expiry length value.
+        @notice It tests whether a setting name is already configured.
+        @param settingName setting name to test.
+        @return true if the setting is already configured. Otherwise it returns false.
      */
-    function setResponseExpiryLength(uint256 newResponseExpiryLength) external;
-
-    /**
-        @notice This is the minimum time you need to wait (in seconds) between the last time you deposit collateral and you take out the loan.
-        @notice It is used to avoid potential attacks using Flash Loans (AAVE) or Flash Swaps (Uniswap V2).
-        @return the current safety interval value.
-     */
-    function safetyInterval() external view returns (uint256);
-
-    /**
-        @notice Sets a new value for the safety interval setting.
-        @param newSafetyInterval new safety interval value.
-    */
-    function setSafetyInterval(uint256 newSafetyInterval) external;
-
-    /**
-        @notice This represents the time (in seconds) that loan terms will be available after requesting them.
-        @notice After this time, the loan terms will expire and the borrower will need to request it again.
-        @return the current terms expiry time.
-     */
-    function termsExpiryTime() external view returns (uint256);
-
-    /**
-        @notice It represents the percentage value (with 2 decimal places) to liquidate loans.
-            i.e. an ETH liquidation price at 95% is stored as 9500
-        @return the current liquidate ETH price.
-     */
-    function liquidateEthPrice() external view returns (uint256);
-
-    /**
-        @notice Gets current maximum loan duration setting (in seconds).
-        @return the current maximum loan duration value.
-     */
-    function maximumLoanDuration() external view returns (uint256);
-
-    /**
-        @notice It represents the first block number where the cloud nodes must start to process data.
-        @return this current starting block number.
-     */
-    function startingBlockNumber() external view returns (uint256);
-
-    /**
-        @notice It gets the collateral buffer used by the cloud nodes to calculate the minimum collateral.
-        @return this current collateral buffer.
-     */
-    function collateralBuffer() external view returns (uint256);
-
-    /**
-        @notice Sets a new value for the terms expiry time setting.
-        @param newTermsExpiryTime new terms expiry time value.
-    */
-    function setTermsExpiryTime(uint256 newTermsExpiryTime) external;
-
-    /**
-        @notice Sets a new value for maximum loan duration setting (in seconds).
-        @param newMaximumLoanDuration new maximum loan duration value.
-     */
-    function setMaximumLoanDuration(uint256 newMaximumLoanDuration) external;
-
-    /**
-        @notice Sets a new value for the liquidate ETH price setting.
-        @param newLiquidateEthPrice new terms expiry time value.
-    */
-    function setLiquidateEthPrice(uint256 newLiquidateEthPrice) external;
-
-    /**
-        @notice Sets the starting block number.
-        @param newStartingBlockNumber the new starting block number value.
-     */
-    function setStartingBlockNumber(uint256 newStartingBlockNumber) external;
-
-    /**
-        @notice Sets the collateral buffer value.
-        @param newCollateralBuffer the new collateral buffer value.
-     */
-    function setCollateralBuffer(uint256 newCollateralBuffer) external;
+    function hasPlatformSetting(bytes32 settingName) external view returns (bool);
 
     /**
         @notice It gets whether the platform is paused or not.

@@ -3,6 +3,7 @@ pragma experimental ABIEncoderV2;
 
 // Libraries and common
 import "../util/ZeroCollateralCommon.sol";
+import "../util/SettingsConsts.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../util/ERC20Lib.sol";
 
@@ -23,7 +24,7 @@ import "../interfaces/LoansInterface.sol";
 
     @author develop@teller.finance
  */
-contract LoansBase is LoansInterface, Base {
+contract LoansBase is LoansInterface, Base, SettingsConsts {
     using SafeMath for uint256;
     using ERC20Lib for ERC20;
 
@@ -113,7 +114,8 @@ contract LoansBase is LoansInterface, Base {
      */
     modifier withValidLoanRequest(ZeroCollateralCommon.LoanRequest memory loanRequest) {
         require(
-            settings.maximumLoanDuration() >= loanRequest.duration,
+            settings.getPlatformSettingValue(MAXIMUM_LOAN_DURATION_SETTING) >=
+                loanRequest.duration,
             "DURATION_EXCEEDS_MAX_DURATION"
         );
         require(
@@ -203,7 +205,8 @@ contract LoansBase is LoansInterface, Base {
         require(loans[loanID].termsExpiry >= now, "LOAN_TERMS_EXPIRED");
 
         require(
-            loans[loanID].lastCollateralIn <= now.sub(settings.safetyInterval()),
+            loans[loanID].lastCollateralIn <=
+                now.sub(settings.getPlatformSettingValue(SAFETY_INTERVAL_SETTING)),
             "COLLATERAL_DEPOSITED_RECENTLY"
         );
 
@@ -318,9 +321,9 @@ contract LoansBase is LoansInterface, Base {
         // the caller gets the collateral from the loan
         _payOutCollateral(loanID, loanCollateral, msg.sender);
 
-        uint256 tokenPayment = collateralInTokens.mul(settings.liquidateEthPrice()).div(
-            TEN_THOUSAND
-        );
+        uint256 tokenPayment = collateralInTokens
+            .mul(settings.getPlatformSettingValue(LIQUIDATE_ETH_PRICE_SETTING))
+            .div(TEN_THOUSAND);
         // the liquidator pays x% of the collateral price
         lendingPool.liquidationPayment(tokenPayment, msg.sender);
 
@@ -572,7 +575,9 @@ contract LoansBase is LoansInterface, Base {
         uint256 collateralRatio,
         uint256 maxLoanAmount
     ) internal view returns (ZeroCollateralCommon.Loan memory) {
-        uint256 termsExpiry = now.add(settings.termsExpiryTime());
+        uint256 termsExpiry = now.add(
+            settings.getPlatformSettingValue(TERMS_EXPIRY_TIME_SETTING)
+        );
         return
             ZeroCollateralCommon.Loan({
                 id: loanID,

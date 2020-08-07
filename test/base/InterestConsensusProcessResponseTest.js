@@ -5,6 +5,7 @@ const {
     THIRTY_DAYS,
     ONE_DAY,
 } = require('../utils/consts');
+const settingsNames = require('../utils/platformSettingsNames');
 const { createInterestRequest, createUnsignedInterestResponse } = require('../utils/structs');
 const { createInterestResponseSig, hashInterestRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
@@ -69,11 +70,11 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
             const settings = await createTestSettingsInstance(
                 Settings,
                 {
-                    requiredSubmissions: submissions,
-                    maximumTolerance: tolerance,
-                    responseExpiryLength: THIRTY_DAYS,
-                    termsExpiryTime: THIRTY_DAYS,
-                    liquidateEthPrice: 9500,
+                    [settingsNames.RequiredSubmissions]: submissions,
+                    [settingsNames.MaximumTolerance]: tolerance,
+                    [settingsNames.ResponseExpiryLength]: THIRTY_DAYS,
+                    [settingsNames.TermsExpiryTime]: THIRTY_DAYS,
+                    [settingsNames.LiquidateEthPrice]: 9500,
                 }
             );
             instance = await InterestConsensusMock.new()

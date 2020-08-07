@@ -6,6 +6,7 @@ const {
     THIRTY_DAYS,
     NULL_ADDRESS,
 } = require('../utils/consts');
+const settingsNames = require('../utils/platformSettingsNames');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
 const { createLoanResponseSig, hashLoanTermsRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
@@ -21,10 +22,9 @@ const Settings = artifacts.require("./base/Settings.sol");
 
 contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) {
     let instance
-    let settings
 
-    const baseGasCost = 431250;
-    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 89000);
+    const baseGasCost = 449000;
+    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 92500);
 
     const loansContract = accounts[1]
     const nodeOne = accounts[1]
@@ -130,11 +130,11 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
             const settings = await createTestSettingsInstance(
                 Settings,
                 {
-                    requiredSubmissions: responses.length,
-                    maximumTolerance: tolerance,
-                    responseExpiryLength: THIRTY_DAYS,
-                    termsExpiryTime: THIRTY_DAYS,
-                    liquidateEthPrice: 9500,
+                    [settingsNames.RequiredSubmissions]: responses.length,
+                    [settingsNames.MaximumTolerance]: tolerance,
+                    [settingsNames.ResponseExpiryLength]: THIRTY_DAYS,
+                    [settingsNames.TermsExpiryTime]: THIRTY_DAYS,
+                    [settingsNames.LiquidateEthPrice]: 9500,
                 }
             );
             instance = await LoanTermsConsensus.new()
