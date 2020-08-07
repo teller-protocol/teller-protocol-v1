@@ -3,8 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/Consensus.sol";
 
+
 contract ConsensusModifiersMock is Consensus {
-
-    function externalIsCaller() isCaller() external {}
-
+    function externalIsCaller() external isCaller() {}
 }

@@ -2,6 +2,7 @@ pragma solidity 0.5.17;
 
 import "../../util/AddressArrayLib.sol";
 
+
 contract AddressArrayLibMock {
     using AddressArrayLib for address[];
 

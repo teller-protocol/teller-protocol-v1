@@ -3,11 +3,9 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/EtherCollateralLoans.sol";
 
-contract EtherCollateralLoansMock is EtherCollateralLoans {
 
-    function setLoanIDCounter(uint256 newLoanIdCounter)
-        external
-    {
+contract EtherCollateralLoansMock is EtherCollateralLoans {
+    function setLoanIDCounter(uint256 newLoanIdCounter) external {
         loanIDCounter = newLoanIdCounter;
     }
 

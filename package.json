@@ -21,7 +21,7 @@
     "deploy:rinkeby": "truffle compile && truffle deploy --network rinkeby --reset --to 2",
     "deploy:ganache": "truffle compile && truffle deploy --network ganache --reset --to 2",
     "deploy:ganache:mock": "truffle compile && truffle deploy --network ganache --reset -f 3 --to 3",
-    "format:prettier": "prettier --write contracts/**/*.sol",
+    "format:prettier": "prettier --write contracts/**/**/**/**/**.sol",
     "format:prettier:print": "prettier contracts/**/*.sol",
     "verify:ropsten": "truffle run verify LendingPool Lenders ChainlinkPairAggregator EtherCollateralLoans TokenCollateralLoans ZDAI ZUSDC InterestConsensus LoanTermsConsensus Settings --network ropsten"
   },
