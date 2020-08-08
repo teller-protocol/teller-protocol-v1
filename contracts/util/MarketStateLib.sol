@@ -49,6 +49,13 @@ library MarketStateLib {
 
     /**
         @notice It gets the current supply-to-debt (StD) ratio for a given market.
+        @notice The formula to calculate StD ratio is:
+            
+            StD = (SUM(total borrowed) - SUM(total repaid)) / SUM(total supplied)
+
+        @notice The value has 2 decimal places.
+            Example:
+                100 => 1%
         @param self the current market state reference.
         @return the supply-to-debt ratio value.
      */
@@ -64,6 +71,10 @@ library MarketStateLib {
 
     /**
         @notice It gets the supply-to-debt (StD) ratio for a given market, including a new loan amount.
+        @notice The formula to calculate StD ratio (including a new loan amount) is:
+            
+            StD = (SUM(total borrowed) - SUM(total repaid) + NewLoanAmount) / SUM(total supplied)
+
         @param self the current market state reference.
         @param loanAmount a new loan amount to consider in the ratio.
         @return the supply-to-debt ratio value.
@@ -77,8 +88,11 @@ library MarketStateLib {
             return 0;
         }
         return
-            self.totalBorrowed.sub(self.totalRepaid).add(loanAmount).mul(TO_PERCENTAGE).div(
-                self.totalSupplied
-            );
+            self
+                .totalBorrowed
+                .sub(self.totalRepaid)
+                .add(loanAmount)
+                .mul(TO_PERCENTAGE)
+                .div(self.totalSupplied);
     }
 }
