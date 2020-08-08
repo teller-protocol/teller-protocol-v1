@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/lifecycle/Pausable.sol";
 
 contract ATMToken is ERC20Detailed, Pausable, ERC20Mintable {
     /**
-      *  @dev ATMTestToken implements an ERC20 token with a supply cap and a vesting scheduling
+      *  @dev ATMToken implements an ERC20 token with a supply cap and a vesting scheduling
      */
 
     // State Variables
