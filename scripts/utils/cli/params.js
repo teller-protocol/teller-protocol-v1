@@ -141,7 +141,7 @@ module.exports.addMaxValue = (yargs, defaultParam = MAX_VALUE.default) => {
     MAX_VALUE.name,
     MAX_VALUE.alias,
     "string",
-    `Min value to set in the settings. By default: ${defaultParam}`,
+    `Max value to set in the settings. By default: ${defaultParam}`,
     defaultParam
   );
 };
