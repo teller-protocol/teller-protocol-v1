@@ -6,12 +6,12 @@ import "@openzeppelin/contracts/token/ERC20/ERC20Mintable.sol";
 import "@openzeppelin/contracts/lifecycle/Pausable.sol";
 
 /**
-  *  @title ATM Test Token for Teller DAO
+  *  @title ATM Token for Teller DAO
   *
   *  @author develop@teller.finance
  */
 
-contract ATMTestToken is ERC20Detailed, Pausable, ERC20Mintable {
+contract ATMToken is ERC20Detailed, Pausable, ERC20Mintable {
     /**
       *  @dev ATMTestToken implements an ERC20 token with a supply cap and a vesting scheduling
      */

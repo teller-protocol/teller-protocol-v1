@@ -4,7 +4,7 @@ const { t, NULL_ADDRESS  } = require('../utils/consts');
 const Timer = require('../../scripts/utils/Timer');
 
 // Smart contracts
-const ATMTestToken = artifacts.require("./ATMTestToken.sol");
+const ATMToken = artifacts.require("./ATMToken.sol");
 
 contract('ATMTokenTest', function (accounts) {
     let instance;
@@ -14,7 +14,7 @@ contract('ATMTokenTest', function (accounts) {
     const timer = new Timer(web3);
 
     beforeEach('Setup for each test', async () => {
-        instance = await ATMTestToken.new(10000);
+        instance = await ATMToken.new(10000);
     });
 
     withData({
