@@ -89,4 +89,12 @@ module.exports = {
     printSeparatorLine: (length = 100, separator = '-') => {
         console.log(`\n${separator.repeat(length)}\n`);
     },
+    createMocks: async (Mock, total) => {
+        const result = [];
+        for (const index of _.range(0, total)) {
+            const mock = await Mock.new();
+            result.push(mock.address);
+        }
+        return result;
+    },
 }

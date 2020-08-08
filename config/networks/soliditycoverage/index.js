@@ -6,7 +6,7 @@ module.exports = {
     assetSettings: require('./assetSettings'),
     nodeComponentsVersions: require('./nodeComponentsVersions'),
     platformSettings: require('./platformSettings'),
-    maxGasLimit: 11500000,
+    maxGasLimit: 12000000,
     toTxUrl: ({ tx }) => {
         return `not-supported-url`;
     },
