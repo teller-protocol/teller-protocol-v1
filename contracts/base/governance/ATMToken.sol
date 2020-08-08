@@ -7,7 +7,8 @@ import "@openzeppelin/contracts/lifecycle/Pausable.sol";
 
 /**
   *  @title ATM Test Token for Teller DAO
-  *  @author developer@teller.finance
+  *
+  *  @author develop@teller.finance
  */
 
 contract ATMTestToken is ERC20Detailed, Pausable, ERC20Mintable {
@@ -40,13 +41,13 @@ contract ATMTestToken is ERC20Detailed, Pausable, ERC20Mintable {
     ) public
       ERC20Detailed("ATMToken", "ATM", 18)
     {
-        require(cap > 0, "ERC20Capped: cap is 0");
         _cap = cap;
     }
 
     // Functions
     /**
-     * @dev Returns the cap on the token's total supply.
+     * @dev Returns the cap on the token's total supply
+     * @return The supply capped amount
      */
     function cap() public view returns (uint256) {
         return _cap;
@@ -102,10 +103,11 @@ contract ATMTestToken is ERC20Detailed, Pausable, ERC20Mintable {
     /**
       * @notice Revokes the amount vested to an account
       * @param account The account for which vesting is to be revoked
+      * @return true if successful
       *
      */
-     function revokeVesting(address account) public onlyPauser() whenNotPaused() returns (bool) {
-         require(account != address(0), 'Address cannot be zero');
+     function revokeVesting(address account) public onlyPauser() whenNotPaused() returns (bool){
+         require(_vestingBalances[account].amount > 0, "Account does not have a vesting balance!");
          VestingTokens memory vestingTokens = _vestingBalances[account];
          uint256 revokedAmount = vestingTokens.amount;
          uint256 revokedDeadline = vestingTokens.deadline;
@@ -117,22 +119,24 @@ contract ATMTestToken is ERC20Detailed, Pausable, ERC20Mintable {
     /**
      *  @notice Checks if account has a vesting schedule
      *  @param account The account being checked
+     *  @return true if successful
      * 
      */
      function isVested(address account) public returns (bool) {
-         require(_vestingBalances[account].amount > 0);
+         require(_vestingBalances[account].amount > 0, "Account does not have a vesting balance!");
          return true;
      }
 
     /**
      *  @notice Withdrawl of tokens upon completion of vesting period
-     *
+     *  @return true if successful
      *
      */
      function withdrawVested() public returns (bool) {
         VestingTokens storage vestingTokens = _vestingBalances[msg.sender];
+        require(vestingTokens.amount > 0, "Account does not have a vesting balance!");
         _beforeTokenTransfer(address(0), vestingTokens.beneficiary, vestingTokens.amount);
-        require(vestingTokens.deadline <= block.timestamp, 'Vesting deadline has not passed');
+        require(vestingTokens.deadline <= block.timestamp, "Vesting deadline has not passed");
         uint256 claimedAmount = vestingTokens.amount;
         _mint(vestingTokens.beneficiary, claimedAmount);
         vestingTokens.amount = 0;
