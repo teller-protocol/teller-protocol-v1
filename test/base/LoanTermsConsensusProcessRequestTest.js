@@ -5,8 +5,8 @@ const {
     ONE_DAY,
     THIRTY_DAYS,
     NULL_ADDRESS,
-    daysToSeconds
 } = require('../utils/consts');
+const settingsNames = require('../utils/platformSettingsNames');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
 const { createLoanResponseSig, hashLoanTermsRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
@@ -14,6 +14,7 @@ const { loanTermsConsensus } = require('../utils/events');
 
 const BigNumber = require('bignumber.js');
 const chains = require('../utils/chains');
+const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Smart contracts
 const LoanTermsConsensus = artifacts.require("./mock/base/LoanTermsConsensusMock.sol");
@@ -120,7 +121,16 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
     ) {    
         it(t('user', 'processRequest', 'Should accept/not accept node request/responses', mustFail), async function() {
             // set up contract
-            settings = await Settings.new(reqSubmissions, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500, daysToSeconds(30), 1);
+            settings = await createTestSettingsInstance(
+                Settings,
+                {
+                    [settingsNames.RequiredSubmissions]: reqSubmissions,
+                    [settingsNames.MaximumTolerance]: tolerance,
+                    [settingsNames.ResponseExpiryLength]: THIRTY_DAYS,
+                    [settingsNames.TermsExpiryTime]: THIRTY_DAYS,
+                    [settingsNames.LiquidateEthPrice]: 9500,
+                }
+            );
             
             await instance.initialize(loansContract, settings.address)
 

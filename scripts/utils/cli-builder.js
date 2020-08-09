@@ -1,5 +1,35 @@
-const yargs = require('yargs');
-const { addNetwork, addTokenName, addCollTokenName, addSenderIndex, addAmount, addNewValue, addLoanId, addSettingName, addCTokenName, addBorrowerIndex, addRecipientIndex, addDurationDays, addReceiverIndex, addInitialLoanId, addFinalLoanId, addAddresses, addNonce, addCollAmount, addSeconds, addBorrower, addAccountIndex, addRevert, addInitialNonce, addSignerAddress, addSignerUrl, addTokenNames, addRequiredSubmissions, addSafetyInterval, addTestTokenName } = require('./cli/params');
+const yargs = require("yargs");
+const {
+    addNetwork,
+    addTokenName,
+    addCollTokenName,
+    addSenderIndex,
+    addAmount,
+    addNewValue,
+    addLoanId,
+    addSettingName,
+    addCTokenName,
+    addBorrowerIndex,
+    addRecipientIndex,
+    addDurationDays,
+    addReceiverIndex,
+    addInitialLoanId,
+    addFinalLoanId,
+    addAddresses,
+    addNonce,
+    addCollAmount,
+    addSeconds,
+    addBorrower,
+    addAccountIndex,
+    addRevert,
+    addInitialNonce,
+    addSignerAddress,
+    addSignerUrl,
+    addTokenNames,
+    addRequiredSubmissions,
+    addSafetyInterval,
+    addTestTokenName,
+} = require("./cli/params");
 
 const addBase = (yargs) => {
     addNetwork(yargs);
@@ -12,13 +42,13 @@ const addPairBase = (yargs) => {
 };
 
 const addLendingPoolBase = (yargs) => {
-    yargs.scriptName("yarn exec ./scripts/lendingPool/*.js");
-    addPairBase(yargs);
+  yargs.scriptName("yarn exec ./scripts/lendingPool/*.js");
+  addPairBase(yargs);
 };
 
 const addLoansBase = (yargs) => {
-    yargs.scriptName("yarn exec ./scripts/loans/*.js");
-    addPairBase(yargs);
+  yargs.scriptName("yarn exec ./scripts/loans/*.js");
+  addPairBase(yargs);
 };
 
 module.exports = {
@@ -44,31 +74,6 @@ module.exports = {
             addLendingPoolBase(yargs);
             addSenderIndex(yargs);
             addAmount(yargs);
-            return yargs;
-        },
-    },
-    tokens: {
-        mint: () => {
-            addTokenName(yargs);
-            addReceiverIndex(yargs);
-            addAmount(yargs);
-            return yargs;
-        },
-        balanceOf: () => {
-            addTokenName(yargs);
-            addAccountIndex(yargs);
-            return yargs;
-        },
-    },
-    ganache: {
-        advanceTime: () => {
-            addNetwork(yargs);
-            addSeconds(yargs);
-            return yargs;
-        },
-        setOraclePrice: () => {
-            addLoansBase(yargs);
-            addNewValue(yargs);
             return yargs;
         },
     },
@@ -159,7 +164,7 @@ module.exports = {
             addLoanId(yargs);
             addAmount(yargs);
             return yargs;
-        }
+        },
     },
     loanTerms: {
         addSigners: () => {
@@ -167,28 +172,11 @@ module.exports = {
             addSenderIndex(yargs);
             addAddresses(yargs);
             return yargs;
-        },        
-    },
-    cTokens: () => {
-        addCTokenName(yargs);
-        return yargs;
-    },
-    settings: {
-        view: () => {
-            addBase(yargs);
-            return yargs;
         },
-        setNewSetting: () => {
-            addBase(yargs);
-            addNewValue(yargs);
-            addSettingName(yargs);
-            addSenderIndex(yargs);
-            return yargs;
-        },        
     },
     cTokens: () => {
-        addCTokenName(yargs);
-        return yargs;
+            addCTokenName(yargs);
+            return yargs;
     },
     settings: {
         view: () => {

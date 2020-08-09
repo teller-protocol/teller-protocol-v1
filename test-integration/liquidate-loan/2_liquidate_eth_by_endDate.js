@@ -3,9 +3,10 @@ const assert = require('assert');
 const BigNumber = require('bignumber.js');
 const { zerocollateral, tokens, chainlink } = require("../../scripts/utils/contracts");
 const { loans, lendingPool } = require('../../test/utils/events');
-const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds, DEFAULT_DECIMALS } = require('../../test/utils/consts');
+const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds, DEFAULT_DECIMALS, toBytes32 } = require('../../test/utils/consts');
 const LoanInfoPrinter = require('../../test/utils/printers/LoanInfoPrinter');
 const { createMultipleSignedLoanTermsResponses, createLoanTermsRequest } = require('../../test/utils/loan-terms-helper');
+const platformSettingsNames = require('../../test/utils/platformSettingsNames');
 
 module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonces, chainId}) => {
   console.log('Liquidate Loan by End Time');
@@ -104,7 +105,7 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   console.log(`Liquidating loan id ${lastLoanID}...`);
 
   const initialTotalCollateral = await loansInstance.totalCollateral();
-  const liquidateEthPrice = await settingsInstance.liquidateEthPrice();
+  const liquidateEthPrice = await settingsInstance.getPlatformSettingValue(toBytes32(web3, platformSettingsNames.LiquidateEthPrice));
   const {
     collateralNeededLendingTokens,
   } = await loansInstance.getCollateralInfo(lastLoanID);

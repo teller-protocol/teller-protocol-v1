@@ -18,6 +18,7 @@
     "start:ganache:docker:empty": "yarn remove:ganache:data && cd docker && docker-compose up",
     "deploy:mainnet": "truffle compile && truffle deploy --network mainnet --reset --to 2",
     "deploy:ropsten": "truffle compile && truffle deploy --network ropsten --reset --to 2",
+    "deploy:rinkeby": "truffle compile && truffle deploy --network rinkeby --reset --to 2",
     "deploy:ganache": "truffle compile && truffle deploy --network ganache --reset --to 2",
     "deploy:ganache:mock": "truffle compile && truffle deploy --network ganache --reset -f 3 --to 3",
     "format:prettier": "prettier --write contracts/**/*.sol",
@@ -50,8 +51,9 @@
   },
   "dependencies": {
     "@chainlink/contracts": "^0.0.5",
-    "bignumber.js": "^9.0.0",
     "@openzeppelin/contracts": "2.5.1",
+    "bignumber.js": "^9.0.0",
+    "elliptic": "^6.5.3",
     "truffle-hdwallet-provider": "^1.0.17",
     "web3": "1.0.0-beta.55",
     "web3-provider-engine": "15.0.0",

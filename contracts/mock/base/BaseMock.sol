@@ -15,4 +15,6 @@ contract BaseMock is Base {
     function externalInitialize(address settingsAddress) external {
         super._initialize(settingsAddress);
     }
+
+    function externalWhenAllowed(address anAddress) external whenAllowed(anAddress) {}
 }

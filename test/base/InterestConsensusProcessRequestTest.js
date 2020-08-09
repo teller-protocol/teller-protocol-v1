@@ -4,13 +4,14 @@ const {
     getLatestTimestamp,
     ONE_DAY,
     THIRTY_DAYS,
-    daysToSeconds
 } = require('../utils/consts');
+const settingsNames = require('../utils/platformSettingsNames');
 const { createInterestRequest, createUnsignedInterestResponse } = require('../utils/structs');
 const { createInterestResponseSig, hashInterestRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
 const { interestConsensus } = require('../utils/events');
 const chains = require('../utils/chains');
+const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
@@ -114,7 +115,16 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
     ) {    
         it(t('user', 'new', 'Should accept/not accept a nodes response', mustFail), async function() {
             // set up contract
-            const settings = await Settings.new(reqSubmissions, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500, daysToSeconds(30), 1);
+            const settings = await createTestSettingsInstance(
+                Settings,
+                {
+                    [settingsNames.RequiredSubmissions]: reqSubmissions,
+                    [settingsNames.MaximumTolerance]: tolerance,
+                    [settingsNames.ResponseExpiryLength]: THIRTY_DAYS,
+                    [settingsNames.TermsExpiryTime]: THIRTY_DAYS,
+                    [settingsNames.LiquidateEthPrice]: 9500,
+                }
+            );
 
             await instance.initialize(lendersContract, settings.address);
 

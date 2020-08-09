@@ -99,6 +99,17 @@ interface LoansInterface {
     );
 
     /**
+        @notice This event is emitted when a the price oracle instance is updated.
+        @param oldPriceOracle the previous price oracle address.
+        @param newPriceOracle the new price oracle address.
+     */
+    event PriceOracleUpdated(
+        address indexed sender,
+        address indexed oldPriceOracle,
+        address indexed newPriceOracle
+    );
+
+    /**
         @notice Returns a list of all loans for a borrower
         @param borrower Account address of the borrower
      */
@@ -215,4 +226,10 @@ interface LoansInterface {
             uint256 collateralNeededCollateralTokens,
             bool requireCollateral
         );
+
+    /**
+        @notice Updates the current price oracle instance.
+        @param newPriceOracle the new price oracle address.
+     */
+    function setPriceOracle(address newPriceOracle) external;
 }

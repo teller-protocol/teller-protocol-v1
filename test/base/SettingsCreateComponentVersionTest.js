@@ -2,6 +2,7 @@
 const withData = require('leche').withData;
 const { t, toBytes32 } = require('../utils/consts');
 const { settings } = require('../utils/events');
+const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
 
@@ -12,7 +13,7 @@ contract('SettingsCreateComponentVersionTest', function (accounts) {
     let instance;
     
     beforeEach('Setup for each test', async () => {
-        instance = await Settings.new(1, 1, 1, 1, 1, 1, 1, 1);
+        instance = await createTestSettingsInstance(Settings);
     });
 
     withData({

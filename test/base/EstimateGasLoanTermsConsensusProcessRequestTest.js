@@ -5,14 +5,15 @@ const {
     ONE_DAY,
     THIRTY_DAYS,
     NULL_ADDRESS,
-    daysToSeconds
 } = require('../utils/consts');
+const settingsNames = require('../utils/platformSettingsNames');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
 const { createLoanResponseSig, hashLoanTermsRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
 
 const BigNumber = require('bignumber.js');
 const chains = require('../utils/chains');
+const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Smart contracts
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
@@ -21,10 +22,9 @@ const Settings = artifacts.require("./base/Settings.sol");
 
 contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) {
     let instance
-    let settings
 
-    const baseGasCost = 431250;
-    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 89000);
+    const baseGasCost = 449000;
+    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 92500);
 
     const loansContract = accounts[1]
     const nodeOne = accounts[1]
@@ -127,7 +127,16 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
         it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
             // Setup
             const expectedMaxGas = expectedGasCost(responses.length);
-            settings = await Settings.new(responses.length, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500, daysToSeconds(30), 1);
+            const settings = await createTestSettingsInstance(
+                Settings,
+                {
+                    [settingsNames.RequiredSubmissions]: responses.length,
+                    [settingsNames.MaximumTolerance]: tolerance,
+                    [settingsNames.ResponseExpiryLength]: THIRTY_DAYS,
+                    [settingsNames.TermsExpiryTime]: THIRTY_DAYS,
+                    [settingsNames.LiquidateEthPrice]: 9500,
+                }
+            );
             instance = await LoanTermsConsensus.new()
             await instance.initialize(loansContract, settings.address)
 

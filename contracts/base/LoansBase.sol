@@ -3,6 +3,7 @@ pragma experimental ABIEncoderV2;
 
 // Libraries and common
 import "../util/ZeroCollateralCommon.sol";
+import "../util/SettingsConsts.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../util/ERC20Lib.sol";
 
@@ -23,7 +24,7 @@ import "../interfaces/LoansInterface.sol";
 
     @author develop@teller.finance
  */
-contract LoansBase is LoansInterface, Base {
+contract LoansBase is LoansInterface, Base, SettingsConsts {
     using SafeMath for uint256;
     using ERC20Lib for ERC20;
 
@@ -44,7 +45,8 @@ contract LoansBase is LoansInterface, Base {
     // At any time, this variable stores the next available loan ID
     uint256 public loanIDCounter;
 
-    PairAggregatorInterface public priceOracle;
+    address public priceOracle;
+
     LendingPoolInterface public lendingPool;
     LoanTermsConsensusInterface public loanTermsConsensus;
 
@@ -112,7 +114,8 @@ contract LoansBase is LoansInterface, Base {
      */
     modifier withValidLoanRequest(ZeroCollateralCommon.LoanRequest memory loanRequest) {
         require(
-            settings.maximumLoanDuration() >= loanRequest.duration,
+            settings.getPlatformSettingValue(MAXIMUM_LOAN_DURATION_SETTING) >=
+                loanRequest.duration,
             "DURATION_EXCEEDS_MAX_DURATION"
         );
         require(
@@ -202,7 +205,8 @@ contract LoansBase is LoansInterface, Base {
         require(loans[loanID].termsExpiry >= now, "LOAN_TERMS_EXPIRED");
 
         require(
-            loans[loanID].lastCollateralIn <= now.sub(settings.safetyInterval()),
+            loans[loanID].lastCollateralIn <=
+                now.sub(settings.getPlatformSettingValue(SAFETY_INTERVAL_SETTING)),
             "COLLATERAL_DEPOSITED_RECENTLY"
         );
 
@@ -317,9 +321,9 @@ contract LoansBase is LoansInterface, Base {
         // the caller gets the collateral from the loan
         _payOutCollateral(loanID, loanCollateral, msg.sender);
 
-        uint256 tokenPayment = collateralInTokens.mul(settings.liquidateEthPrice()).div(
-            TEN_THOUSAND
-        );
+        uint256 tokenPayment = collateralInTokens
+            .mul(settings.getPlatformSettingValue(LIQUIDATE_ETH_PRICE_SETTING))
+            .div(TEN_THOUSAND);
         // the liquidator pays x% of the collateral price
         lendingPool.liquidationPayment(tokenPayment, msg.sender);
 
@@ -351,6 +355,27 @@ contract LoansBase is LoansInterface, Base {
         )
     {
         return _getCollateralInfo(loanID);
+    }
+
+    /**
+        @notice Updates the current price oracle instance.
+        @dev It throws a require error if sender is not allowed.
+        @dev It throws a require error if new address is empty (0x0) or not a contract.
+        @param newPriceOracle the new price oracle address.
+     */
+    function setPriceOracle(address newPriceOracle)
+        external
+        isInitialized()
+        whenAllowed(msg.sender)
+    {
+        // New address must be a contract and not empty
+        require(newPriceOracle.isContract(), "ORACLE_MUST_CONTRACT_NOT_EMPTY");
+        address oldPriceOracle = address(priceOracle);
+        oldPriceOracle.requireNotEqualTo(newPriceOracle, "NEW_ORACLE_MUST_BE_PROVIDED");
+
+        priceOracle = newPriceOracle;
+
+        emit PriceOracleUpdated(msg.sender, oldPriceOracle, newPriceOracle);
     }
 
     /** Internal Functions */
@@ -435,7 +460,7 @@ contract LoansBase is LoansInterface, Base {
 
         _initialize(settingsAddress);
 
-        priceOracle = PairAggregatorInterface(priceOracleAddress);
+        priceOracle = priceOracleAddress;
         lendingPool = LendingPoolInterface(lendingPoolAddress);
         loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
     }
@@ -498,7 +523,9 @@ contract LoansBase is LoansInterface, Base {
     function _convertWeiToToken(uint256 weiAmount) internal view returns (uint256) {
         // wei amount / lending token price in wei * the lending token decimals.
         uint256 aWholeLendingToken = ERC20(lendingPool.lendingToken()).getAWholeToken();
-        uint256 oneLendingTokenPriceWei = uint256(priceOracle.getLatestAnswer());
+        uint256 oneLendingTokenPriceWei = uint256(
+            PairAggregatorInterface(priceOracle).getLatestAnswer()
+        );
         uint256 tokenValue = weiAmount.mul(aWholeLendingToken).div(
             oneLendingTokenPriceWei
         );
@@ -514,7 +541,9 @@ contract LoansBase is LoansInterface, Base {
         // tokenAmount is in token units, chainlink price is in whole tokens
         // token amount in tokens * lending token price in wei / the lending token decimals.
         uint256 aWholeLendingToken = ERC20(lendingPool.lendingToken()).getAWholeToken();
-        uint256 oneLendingTokenPriceWei = uint256(priceOracle.getLatestAnswer());
+        uint256 oneLendingTokenPriceWei = uint256(
+            PairAggregatorInterface(priceOracle).getLatestAnswer()
+        );
         uint256 weiValue = tokenAmount.mul(oneLendingTokenPriceWei).div(
             aWholeLendingToken
         );
@@ -546,7 +575,9 @@ contract LoansBase is LoansInterface, Base {
         uint256 collateralRatio,
         uint256 maxLoanAmount
     ) internal view returns (ZeroCollateralCommon.Loan memory) {
-        uint256 termsExpiry = now.add(settings.termsExpiryTime());
+        uint256 termsExpiry = now.add(
+            settings.getPlatformSettingValue(TERMS_EXPIRY_TIME_SETTING)
+        );
         return
             ZeroCollateralCommon.Loan({
                 id: loanID,
