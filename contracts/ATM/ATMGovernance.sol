@@ -61,7 +61,8 @@ contract ATMGovernance is Pausable, SignerRole, IATMGovernance {
      */
     function updateGeneralSetting(bytes32 settingName, uint256 newValue)
         external
-        // onlySigner 
+        onlySigner
+        whenNotPaused 
     {
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
         uint256 oldVersion = generalSettings[settingName];
