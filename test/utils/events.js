@@ -2,6 +2,7 @@
 const BigNumber = require('bignumber.js');
 const truffleAssert = require('truffle-assertions');
 const assert = require('assert');
+const { AssertionError } = require('assert');
 
 const emitted = (tx, eventName, assertFunction) => {
     truffleAssert.eventEmitted(tx, eventName, event => {
@@ -273,6 +274,53 @@ module.exports = {
             };
         },
     },
+    atmToken: {
+        newCap: tx => {
+            const name = 'NewCap';
+            return {
+                name: name,
+                emitted: (newCap) => emitted(tx, name, ev => {
+                    assert.equal(ev.newCap, newCap);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        newVesting: tx => {
+            const name = "NewVesting";
+            return {
+                name: name,
+                emitted: (beneficiary, amount, deadline) => emitted(tx, name, ev => {
+                    assert.equal(ev.beneficiary, beneficiary);
+                    assert.equal(ev.amount, amount);
+                    assert.equal(ev.deadline, deadline);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        vestingClaimed: tx => {
+            const name = "VestingClaimed";
+            return {
+                name: name,
+                emitted: (beneficiary, amount) => emitted(tx, name, ev => {
+                    assert.equal(ev.beneficiary, beneficiary);
+                    assert.equal(ev.amount, amount);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        revokeVesting: tx => {
+            const name = "RevokeVesting";
+            return {
+                name: name,
+                emitted: (beneficiary, amount, deadline) => emitted(tx, name, ev => {
+                    assert.equal(ev.beneficiary, beneficiary);
+                    assert.equal(ev.amount, amount);
+                    assert.equal(ev.deadline, deadline);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction) 
+            };
+        },
+    },
     settings: {
         lendingPoolPaused: tx => {
             const name = 'LendingPoolPaused';
@@ -381,6 +429,7 @@ module.exports = {
                 name: name,
                 emitted: (assetSettingName, sender, assetAddress, oldValue, newValue) => emitted(tx, name, ev => {
                     assert.equal(ev.assetSettingName.toString(), assetSettingName.toString());
+                    const name = 'AssetSettingsRemoved';
                     assert.equal(ev.sender, sender);
                     assert.equal(ev.assetAddress.toString(), assetAddress.toString());
                     assert.equal(ev.oldValue.toString(), oldValue.toString());

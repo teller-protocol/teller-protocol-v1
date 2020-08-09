@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20Mintable.sol";
 import "@openzeppelin/contracts/lifecycle/Pausable.sol";
+import "./ATMTokenInterface.sol";
 
 /**
   *  @title ATM Token for Teller DAO
@@ -11,31 +12,25 @@ import "@openzeppelin/contracts/lifecycle/Pausable.sol";
   *  @author develop@teller.finance
  */
 
-contract ATMToken is ERC20Detailed, Pausable, ERC20Mintable {
+contract ATMToken is ATMTokenInterface, ERC20Detailed, Pausable, ERC20Mintable {
     /**
-      *  @dev ATMToken implements an ERC20 token with a supply cap and a vesting scheduling
+      *  @notice ATMToken implements an ERC20 token with a supply cap and a vesting scheduling
      */
 
-    // State Variables
+    /* State Variables */
     uint256 private _cap;
 
-    // Struct
+    /* Structs */
     struct VestingTokens {
         address beneficiary;
         uint256 amount;
         uint256 deadline;
     }
 
-    // Mappings
+    /* Mappings */
     mapping (address => VestingTokens) private _vestingBalances;
 
-    // Events
-    event NewCap(uint256 newcap);
-    event NewVesting(address beneficiary, uint256 amount, uint256 deadline);
-    event VestingClaimed(address beneficiary, uint256 amount);
-    event RevokeVesting(address beneficiary, uint256 amount, uint256 deadline);
-
-    // Constructor
+    /* Constructor */
     constructor (
         uint256 cap
     ) public
@@ -44,9 +39,9 @@ contract ATMToken is ERC20Detailed, Pausable, ERC20Mintable {
         _cap = cap;
     }
 
-    // Functions
+    /* Functions */
     /**
-     * @dev Returns the cap on the token's total supply
+     * @notice Returns the cap on the token's total supply
      * @return The supply capped amount
      */
     function cap() public view returns (uint256) {
@@ -54,13 +49,24 @@ contract ATMToken is ERC20Detailed, Pausable, ERC20Mintable {
     }
 
     /**
-     * @dev Sets a new cap on the token's total supply.
-     * @param newcap The new capped amount of tokens
+     * @notice Sets a new cap on the token's total supply.
+     * @param newCap The new capped amount of tokens
      */
-    function setCap(uint256 newcap) external onlyPauser() whenNotPaused() {
-        _cap = newcap;
+    function setCap(uint256 newCap) public onlyPauser() whenNotPaused() {
+        _cap = newCap;
         emit NewCap(_cap);
     }
+
+    /**
+     *  @notice Checks if account has a vesting schedule
+     *  @param account The account being checked
+     *  @return true if successful
+     * 
+     */
+    function isVested(address account) public returns (bool) {
+        require(_vestingBalances[account].amount > 0, "ACCOUNT_DOESNT_HAVE_VESTING");
+        return true;
+     }
 
     /**
      * @notice Increase account supply of specified token amount
@@ -69,13 +75,13 @@ contract ATMToken is ERC20Detailed, Pausable, ERC20Mintable {
      * @return true if successful
      */
     function mint(address account, uint256 amount) public onlyPauser() whenNotPaused() returns (bool) {
-        require(account != address(0), "ERC20: mint to the zero address");
+        require(account != address(0), "MINT_TO_ZERO_ADDRESS");
         _beforeTokenTransfer(address(0), account, amount);
         _mint(account, amount);
         return true;
     }
 
-    /** @dev Creates `amount` tokens and assigns them to `account`, increasing
+    /** @notice Creates `amount` tokens and assigns them to `account`, increasing
      * the total supply.
      *
      * Includes a vesting period before address is allowed to use tokens
@@ -91,7 +97,7 @@ contract ATMToken is ERC20Detailed, Pausable, ERC20Mintable {
      * @param vestingTime The length of the vesting period (in seconds)
      */
     function mintVesting(address account, uint256 amount, uint256 vestingTime) public onlyPauser() whenNotPaused() {
-        require(account != address(0), "ERC20: mint to the zero address");
+        require(account != address(0), "MINT_TO_ZERO_ADDRESS");
 
         _beforeTokenTransfer(address(0), account, amount);
         // Should the totalsupply be updated here to avoid cap errors on successful vesting?
@@ -106,24 +112,13 @@ contract ATMToken is ERC20Detailed, Pausable, ERC20Mintable {
       * @return true if successful
       *
      */
-     function revokeVesting(address account) public onlyPauser() whenNotPaused() returns (bool){
-         require(_vestingBalances[account].amount > 0, "Account does not have a vesting balance!");
+    function revokeVesting(address account) public onlyPauser() whenNotPaused() returns (bool){
+         require(_vestingBalances[account].amount > 0, "ACCOUNT_DOESNT_HAVE_VESTING");
          VestingTokens memory vestingTokens = _vestingBalances[account];
          uint256 revokedAmount = vestingTokens.amount;
          uint256 revokedDeadline = vestingTokens.deadline;
-         delete _vestingBalances[account];
          emit RevokeVesting(account, revokedAmount, revokedDeadline);
-         return true;
-     }
-
-    /**
-     *  @notice Checks if account has a vesting schedule
-     *  @param account The account being checked
-     *  @return true if successful
-     * 
-     */
-     function isVested(address account) public returns (bool) {
-         require(_vestingBalances[account].amount > 0, "Account does not have a vesting balance!");
+         delete _vestingBalances[account];
          return true;
      }
 
@@ -132,11 +127,11 @@ contract ATMToken is ERC20Detailed, Pausable, ERC20Mintable {
      *  @return true if successful
      *
      */
-     function withdrawVested() public returns (bool) {
+    function withdrawVested() public returns (bool) {
+        require(_vestingBalances[msg.sender].amount > 0, "ACCOUNT_DOESNT_HAVE_VESTING");
         VestingTokens storage vestingTokens = _vestingBalances[msg.sender];
-        require(vestingTokens.amount > 0, "Account does not have a vesting balance!");
         _beforeTokenTransfer(address(0), vestingTokens.beneficiary, vestingTokens.amount);
-        require(vestingTokens.deadline <= block.timestamp, "Vesting deadline has not passed");
+        require(vestingTokens.deadline <= block.timestamp, "VESTING_DEADLINE_NOT_PASSSED");
         uint256 claimedAmount = vestingTokens.amount;
         _mint(vestingTokens.beneficiary, claimedAmount);
         vestingTokens.amount = 0;
@@ -146,15 +141,13 @@ contract ATMToken is ERC20Detailed, Pausable, ERC20Mintable {
      }
 
     /**
-     * @dev See {ERC20-_beforeTokenTransfer}.
+     * @notice See {ERC20-_beforeTokenTransfer}.
      *
      * Requirements:
      *
      * - minted tokens must not cause the total supply to go over the cap.
      */
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal {
-        if (from == address(0)) { // When minting tokens
-            require(totalSupply().add(amount) <= _cap, "ERC20Capped: cap exceeded");
-        }
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal returns (bool){
+        require(from == address(0) && totalSupply().add(amount) <= _cap, "ERC20_CAP_EXCEEDED"); // When minting tokens
     }
 }
