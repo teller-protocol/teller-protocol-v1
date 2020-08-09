@@ -439,4 +439,19 @@ module.exports = {
             };
         },
     },
+    atmGovernance: {
+        generalSettingAdded: tx => {
+            const name = 'GeneralSettingAdded';
+            return {
+                name: name,
+                emitted: (sender, settingName, settingValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.signer, sender);
+                    assert.equal(ev.settingName, settingName);
+                    assert.equal(ev.settingValue, settingValue);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    
+    }
 };

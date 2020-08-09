@@ -81,7 +81,8 @@ interface IATMGovernance {
         @param signer transaction sender address.
         @param asset asset address this setting was removed for.
         @param settingName name of the removed setting.
-        @param settingValue value of the removed setting.
+        @param oldValue previous value of the removed setting.
+        @param newValue new value of the removed setting.
      */
     event AssetMarketSettingRemoved(
         address indexed signer,
@@ -145,85 +146,97 @@ interface IATMGovernance {
      */
     function addGeneralSetting(bytes32 settingName, uint256 settingValue) external;
 
-    /**
-        @notice Updates an existing General Setting on this ATM.
-        @param settingName name of the setting to be modified.
-        @param newValue new value to be set for this settingName. 
-     */
-    function updateGeneralSetting(bytes32 settingName, uint256 newValue) external;
+    // /**
+    //     @notice Updates an existing General Setting on this ATM.
+    //     @param settingName name of the setting to be modified.
+    //     @param newValue new value to be set for this settingName. 
+    //  */
+    // function updateGeneralSetting(bytes32 settingName, uint256 newValue) external;
 
-    /**
-        @notice Removes a General Setting from this ATM.
-        @param settingName name of the setting to be removed.
-     */
-    function removeGeneralSetting(bytes32 settingName) external;
 
+    // /**
+    //     @notice Removes a General Setting from this ATM.
+    //     @param settingName name of the setting to be removed.
+    //  */
+    // function removeGeneralSetting(bytes32 settingName) external;
+
+    // /**
+    //     @notice Adds a new Asset Setting from a specific Market on this ATM.
+    //     @param asset market specific asset address.
+    //     @param settingName name of the setting to be added.
+    //     @param settingValue value of the setting to be added.
+    //  */
+    // function addAssetMarketSetting(address asset, bytes32 settingName, uint256 settingValue) external;
+
+    // /**
+    //     @notice Updates an existing Asset Setting from a specific Market on this ATM.
+    //     @param asset market specific asset address.
+    //     @param settingName name of the setting to be added.
+    //     @param settingValue value of the setting to be added.
+    //  */
+    // function updateAssetMarketSetting(address asset, bytes32 settingName, uint256 settingValue) external;
+
+    // /**
+    //     @notice Removes an existing Asset Setting from a specific Market on this ATM.
+    //     @param asset market specific asset address.
+    //     @param settingName name of the setting to be added.
+    //  */
+    // function removeAssetMarketSetting(address asset, bytes32 settingName) external;
+
+    // /**
+    //     @notice Adds a new Data Provider on a specific Data Type array.
+    //     @param dataTypeIndex array index for this Data Type.
+    //     @param dataProvider data provider address.
+    //  */
+    // function addDataProvider(uint8 dataTypeIndex, address dataProvider) external;
+    
+    // /**
+    //     @notice Updates an existing Data Provider on a specific Data Type array.
+    //     @param dataTypeIndex array index for this Data Type.
+    //     @param oldProvider previous data provider address.
+    //     @param newProvider new data provider address.
+    //  */
+    // function updateDataProvider(uint8 dataTypeIndex, address oldProvider, address newProvider) external;
+    
+    // /**
+    //     @notice Removes an existing Data Provider on a specific Data Type array.
+    //     @param dataTypeIndex array index for this Data Type.
+    //     @param dataProvider data provider address.
+    //  */
+    // function removeDataProvider(uint8 dataTypeIndex, address dataProvider) external;
+
+    // /**
+    //     @notice Sets the CRA - Credit Risk Algorithm to be used on this specific ATM.
+    //             CRA is represented by a Github commit hash of the newly proposed algorithm.
+    //  */
+    // function setCRA(string calldata cra) external;
+
+    /* External Constant functions */
 
     /**
         @notice Returns a General Setting value from this ATM.
         @param settingName name of the setting to be returned.
      */
-    function getGeneralSetting(bytes32 settingName) external returns (uint256);
+    function getGeneralSetting(bytes32 settingName) external view returns (uint256);
 
-    /**
-        @notice Adds a new Asset Setting from a specific Market on this ATM.
-        @param asset market specific asset address.
-        @param settingName name of the setting to be added.
-        @param settingValue value of the setting to be added.
-     */
-    function addAssetMarketSetting(address asset, bytes32 settingName, uint256 settingValue) external;
+    // /**
+    //     @notice Returns an existing Asset Setting value from a specific Market on this ATM.
+    //     @param asset market specific asset address.
+    //     @param settingName name of the setting to be returned.
+    //  */
+    // function getAssetMarketSetting(address asset, bytes32 settingName) external view returns (uint256);
 
-
-    /**
-        @notice Updates an existing Asset Setting from a specific Market on this ATM.
-        @param asset market specific asset address.
-        @param settingName name of the setting to be added.
-        @param settingValue value of the setting to be added.
-     */
-    function updateAssetMarketSetting(address asset, bytes32 settingName, uint256 settingValue) external;
-
-
-    /**
-        @notice Removes an existing Asset Setting from a specific Market on this ATM.
-        @param asset market specific asset address.
-        @param settingName name of the setting to be added.
-     */
-    function removeAssetMarketSetting(address asset, bytes32 settingName) external;
-
-    /**
-        @notice Returns an existing Asset Setting value from a specific Market on this ATM.
-        @param asset market specific asset address.
-        @param settingName name of the setting to be returned.
-     */
-    function getAssetMarketSetting(address asset, bytes32 settingName) external returns (uint256);
-
-    /**
-        @notice Adds a new Data Provider on a specific Data Type array.
-        @param dataTypeIndex array index for this Data Type.
-        @param dataProvider data provider address.
-     */
-    function addDataProvider(uint8 dataTypeIndex, address dataProvider) external;
+    // /**
+    //     @notice Returns a Data Provider on a specific Data Type array.
+    //     @param dataTypeIndex array index for this Data Type.
+    //     @param dataProviderIndex data provider index number.
+    //  */
+    // function getDataProvider(uint8 dataTypeIndex, uint8 dataProviderIndex) external view returns (address);
     
-    /**
-        @notice Updates an existing Data Provider on a specific Data Type array.
-        @param dataTypeIndex array index for this Data Type.
-        @param oldProvider previous data provider address.
-        @param newProvider new data provider address.
-     */
-    function updateDataProvider(uint8 dataTypeIndex, address oldProvider, address newProvider) external;
-    
-    /**
-        @notice Removes an existing Data Provider on a specific Data Type array.
-        @param dataTypeIndex array index for this Data Type.
-        @param dataProvider data provider address.
-     */
-    function removeDataProvider(uint8 dataTypeIndex, address dataProvider) external;
-    
+    // /**
+    //     @notice Returns current CRA - Credit Risk Algorithm that is being used on this specific ATM.
+    //             CRA is represented by a Github commit hash of the newly proposed algorithm.
+    //  */
+    // function getCRA() external view returns(string memory);
 
-    /**
-        @notice Sets the CRA - Credit Risk Algorithm to be used on this specific ATM.
-                CRA is represented by a Github commit hash of the newly proposed algorithm.
-     */
-    function setCRA(string cra) external;
-
-}
+  }

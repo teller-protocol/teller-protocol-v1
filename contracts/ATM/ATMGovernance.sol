@@ -1,6 +1,6 @@
 pragma solidity 0.5.17;
 
-// Libraries
+// External Libraries
 import "@openzeppelin/contracts/lifecycle/Pausable.sol";
 
 // Common
@@ -16,10 +16,11 @@ import "./IATMGovernance.sol";
     @notice This contract is used to modify Risk Settings, CRA or DataProviders for a specific ATM.
     @author develop@teller.finance
  */
-contract ATMGovernance is Pausable, SignerRole, ATMGovernanceInterface {
-
+contract ATMGovernance is Pausable, SignerRole, IATMGovernance {    
     
-    // List of general ATM settings
+    using AddressArrayLib for address[];
+    
+    // List of general ATM settings. We accept properties equal to zero.
     // e.g.: supplyToDebtRatio  => percentage 50.44 = 5044
     mapping(bytes32 => uint256) public generalSettings;
 
@@ -36,19 +37,49 @@ contract ATMGovernance is Pausable, SignerRole, ATMGovernanceInterface {
     // Unique CRA - Credit Risk Algorithm github hash to use in this ATM 
     string public cra;    
 
+
     /**
-        @notice Add a new General Setting to this ATM.
-        @param settingName the name of the general setting.
-        @param settingValue the value of the general setting.
+        @notice Adds a new General Setting to this ATM.
+        @param settingName name of the setting to be added.
+        @param settingValue value of the setting to be added.
      */
-    function addGeneralSettings(bytes32 settingName, uint256 settingValue)
+    function addGeneralSetting(bytes32 settingName, uint256 settingValue)
         external
         onlySigner
+        whenNotPaused
     {
-        require(settingValue > 0, "INVALID_GENERAL_SETTING_VALUE");
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
         require(generalSettings[settingName] == 0, "GENERAL_SETTING_ALREADY_EXISTS");
         generalSettings[settingName] = settingValue;
-        emit GeneralSettingCreated(msg.sender, settingName, settingValue);
+        emit GeneralSettingAdded(msg.sender, settingName, settingValue);
     }    
+    
+    /**
+        @notice Updates an existing General Setting on this ATM.
+        @param settingName name of the setting to be modified.
+        @param newValue new value to be set for this settingName. 
+     */
+    function updateGeneralSetting(bytes32 settingName, uint256 newValue)
+        external
+        // onlySigner 
+    {
+        require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
+        uint256 oldVersion = generalSettings[settingName];
+        generalSettings[settingName] = newValue;
+        emit GeneralSettingUpdated(msg.sender, settingName, oldVersion, newValue);
+    }
+
+    /**
+        @notice Returns a General Setting value from this ATM.
+        @param settingName name of the setting to be returned.
+     */
+    function getGeneralSetting(bytes32 settingName)
+        external
+        view
+        returns (uint256)
+    {
+        return generalSettings[settingName];
+    }
+
+
 }

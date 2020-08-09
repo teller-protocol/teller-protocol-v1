@@ -15,6 +15,9 @@ const TokenCollateralLoans = artifacts.require("./base/TokenCollateralLoans.sol"
 const LendingPool = artifacts.require("./base/LendingPool.sol");
 const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
+// ATM Smart contracts
+const ATMGovernance = artifacts.require("./ATM/ATMGovernance.sol");
+// External providers
 const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
 const InverseChainlinkPairAggregator = artifacts.require("./providers/chainlink/InverseChainlinkPairAggregator.sol");
 
@@ -47,6 +50,10 @@ module.exports = async function(deployer, network, accounts) {
   await deployerApp.deploys([ZDAI, ZUSDC], txConfig);
   console.log(`Deployed tokens: ZDAI [${ZDAI.address}] ZUSDC [${ZUSDC.address}] `);
 
+  // ATM Deployments
+  await deployerApp.deploy(ATMGovernance, txConfig);
+
+  // Settings Deployments
   await deployerApp.deploy(Settings, txConfig);
   const settingsInstance = await Settings.deployed();
   await initSettings(
