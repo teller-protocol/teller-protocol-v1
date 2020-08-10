@@ -72,8 +72,6 @@ module.exports = async function(deployer, network, accounts) {
     { ...networkConfig, escrowFactory, txConfig, network, currentBlockNumber, web3 },
     { ERC20 },
   );
-  await deployerApp.deploy(Escrow)
-  await deployerApp.deploy(EscrowFactory, Escrow.address)
 
   await deployerApp.deploy(
     ATMSettings,
