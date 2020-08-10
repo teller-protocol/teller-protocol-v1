@@ -11,6 +11,7 @@ import "../interfaces/SettingsInterface.sol";
 import "../atm/ATMGovernanceFactoryInterface.sol";
 import "./ATMSettingsInterface.sol";
 
+
 /**
     @notice It manages the settings for the ATMs.
 
