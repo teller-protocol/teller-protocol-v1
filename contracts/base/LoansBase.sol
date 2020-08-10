@@ -17,6 +17,7 @@ import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
 
+
 /**
     @notice This contract is used as a basis for the creation of the different types of loans across the platform
     @notice It implements the Base contract from Teller and the LoansInterface
