@@ -1,5 +1,6 @@
 pragma solidity 0.5.17;
 
+
 // Libraries
 
 // Commons
@@ -10,7 +11,6 @@ pragma solidity 0.5.17;
     @author develop@teller.finance
  */
 interface ATMSettingsInterface {
-
     /** Events */
 
     /**
@@ -18,20 +18,14 @@ interface ATMSettingsInterface {
         @param atm paused ATM address.
         @param account address that paused the ATM.
      */
-    event ATMPaused(
-        address indexed atm,
-        address indexed account
-    );
+    event ATMPaused(address indexed atm, address indexed account);
 
     /**
         @notice This event is emitted when an ATM is unpaused.
         @param atm unpaused ATM address.
         @param account address that unpaused the ATM.
      */
-    event ATMUnpaused(
-        address indexed atm,
-        address indexed account
-    );
+    event ATMUnpaused(address indexed atm, address indexed account);
 
     /**
         @notice This event is emitted when the setting for a Market/ATM is set.
@@ -110,7 +104,11 @@ interface ATMSettingsInterface {
         @param collateralToken collateral token address.
         @param atmAddress ATM address to set.
      */
-    function setATMToMarket(address borrowedToken, address collateralToken, address atmAddress) external;
+    function setATMToMarket(
+        address borrowedToken,
+        address collateralToken,
+        address atmAddress
+    ) external;
 
     /**
         @notice Updates a new ATM for a given market (borrowed token and collateral token).
@@ -118,7 +116,11 @@ interface ATMSettingsInterface {
         @param collateralToken collateral token address.
         @param newAtmAddress the new ATM address to update.
      */
-    function updateATMToMarket(address borrowedToken, address collateralToken, address newAtmAddress) external;
+    function updateATMToMarket(
+        address borrowedToken,
+        address collateralToken,
+        address newAtmAddress
+    ) external;
 
     /**
         @notice Removes the ATM address for a given market (borrowed token and collateral token).
@@ -133,7 +135,10 @@ interface ATMSettingsInterface {
         @param collateralToken collateral token address.
         @return the ATM address configured for a given market.
      */
-    function getATMForMarket(address borrowedToken, address collateralToken) external view returns (address);
+    function getATMForMarket(address borrowedToken, address collateralToken)
+        external
+        view
+        returns (address);
 
     /**
         @notice Tests whether an ATM is configured for a given market (borrowed token and collateral token) or not.
@@ -142,5 +147,9 @@ interface ATMSettingsInterface {
         @param atmAddress ATM address to test.
         @return true if the ATM is configured for the market. Otherwise it returns false.
      */
-    function isATMForMarket(address borrowedToken, address collateralToken, address atmAddress) external view returns (bool);
+    function isATMForMarket(
+        address borrowedToken,
+        address collateralToken,
+        address atmAddress
+    ) external view returns (bool);
 }
