@@ -58,6 +58,9 @@ module.exports = async function(deployer, network, accounts) {
   await deployerApp.deploys([TDAI, TUSDC], txConfig);
   console.log(`Deployed tokens: TDAI [${TDAI.address}] TUSDC [${TUSDC.address}] `);  
 
+  await deployerApp.deploy(Escrow)
+  const escrowFactory = await deployerApp.deploy(EscrowFactory, Escrow.address)
+  
   // Settings Deployments
   await deployerApp.deploy(MarketsState, txConfig);
   const marketsStateInstance = await MarketsState.deployed();
@@ -66,11 +69,9 @@ module.exports = async function(deployer, network, accounts) {
   await settingsInstance.initialize(txConfig.from);
   await initSettings(
     settingsInstance,
-    { ...networkConfig, txConfig, network, currentBlockNumber, web3 },
+    { ...networkConfig, escrowFactory, txConfig, network, currentBlockNumber, web3 },
     { ERC20 },
   );
-  await deployerApp.deploy(Escrow)
-  await deployerApp.deploy(EscrowFactory, Escrow.address)
 
   await deployerApp.deploy(
     ATMSettings,

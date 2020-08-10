@@ -2,6 +2,7 @@
 const BigNumber = require('bignumber.js');
 const truffleAssert = require('truffle-assertions');
 const assert = require('assert');
+const { expectEvent } = require('openzeppelin-test-helpers')
 
 const emitted = (tx, eventName, assertFunction) => {
     truffleAssert.eventEmitted(tx, eventName, event => {
@@ -19,13 +20,18 @@ const notEmitted = (tx, eventName, assertFunction) => {
 
 module.exports = {
     escrow: {
-        created: tx => {
+        created: (tx, Factory) => {
             const name = 'EscrowCreated';
             return {
                 name: name,
-                emitted: (escrowAddress) => emitted(tx, name, ev => {
-                    assert.equal(ev.escrowAddress, escrowAddress);
-                }),
+                emitted: async (borrower, loansAddress, loanID, escrowAddress) => {
+                    await expectEvent.inTransaction(tx.tx, Factory, name, {
+                        borrower,
+                        loansAddress,
+                        loanID,
+                        escrowAddress
+                    })
+                },
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
@@ -478,6 +484,18 @@ module.exports = {
                     assert.equal(ev.settingName.toString(), settingName.toString());
                     assert.equal(ev.lastValue.toString(), lastValue.toString());
                     assert.equal(ev.sender.toString(), sender.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        escrowFactoryUpdated: tx => {
+            const name = 'EscrowFactoryUpdated';
+            return {
+                name: name,
+                emitted: (sender, oldValue, newValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.oldValue.toString(), oldValue.toString());
+                    assert.equal(ev.newValue.toString(), newValue.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };

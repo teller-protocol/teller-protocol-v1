@@ -16,21 +16,25 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
+// Libraries
+import "@openzeppelin/contracts/lifecycle/Pausable.sol";
+
 // Interfaces
 import "../interfaces/EscrowFactoryInterface.sol";
 import "../interfaces/LoansInterface.sol";
 
-// Libraries
-import "../util/AddressLib.sol";
-
-
 // Commons
+import "../util/AddressLib.sol";
+import "../interfaces/EscrowInterface.sol";
+
 
 /**
  *
  */
-contract EscrowFactory is EscrowFactoryInterface {
+contract EscrowFactory is Pausable, EscrowFactoryInterface {
     using AddressLib for address;
+
+    mapping(address => bool) public whitelistedDapps;
 
     address public escrowLibrary;
 
@@ -45,7 +49,11 @@ contract EscrowFactory is EscrowFactoryInterface {
             cloneAddress := create2(0, add(bytecode, 0x20), mload(bytecode), salt)
         }
 
-        emit EscrowCreated(cloneAddress);
+        EscrowInterface escrow = EscrowInterface(cloneAddress);
+        escrow._initialize(msg.sender, loanID);
+
+        address borrower = LoansInterface(msg.sender).loans(loanID).loanTerms.borrower;
+        emit EscrowCreated(borrower, msg.sender, loanID, cloneAddress);
     }
 
     function computeEscrowSalt(uint256 loanID) public returns (bytes32) {
@@ -83,26 +91,19 @@ contract EscrowFactory is EscrowFactoryInterface {
         return address(bytes20(data << 96));
     }
 
-    function isClone(address query) internal view returns (bool result) {
-        bytes20 targetBytes = bytes20(escrowLibrary);
-        assembly {
-            let clone := mload(0x40)
-            mstore(
-                clone,
-                0x363d3d373d3d3d363d7300000000000000000000000000000000000000000000
-            )
-            mstore(add(clone, 0xa), targetBytes)
-            mstore(
-                add(clone, 0x1e),
-                0x5af43d82803e903d91602b57fd5bf30000000000000000000000000000000000
-            )
+    function isDappWhitelisted(address dapp) public view returns (bool) {
+        return whitelistedDapps[dapp];
+    }
 
-            let other := add(clone, 0x40)
-            extcodecopy(query, other, 0, 0x2d)
-            result := and(
-                eq(mload(clone), mload(other)),
-                eq(mload(add(clone, 0xd)), mload(add(other, 0xd)))
-            )
-        }
+    function addDapp(address dapp) external onlyPauser() {
+        require(!isDappWhitelisted(dapp), 'DAPP_ALREADY_EXIST');
+
+        whitelistedDapps[dapp] = true;
+    }
+
+    function removeDapp(address dapp) external onlyPauser() {
+        require(isDappWhitelisted(dapp), 'DAPP_NOT_EXIST');
+
+        whitelistedDapps[dapp] = false;
     }
 }

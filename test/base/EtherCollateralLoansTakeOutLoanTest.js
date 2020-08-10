@@ -15,6 +15,8 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
 const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
+const Escrow = artifacts.require("./base/Escrow.sol");
+const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
 
 contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
@@ -40,6 +42,10 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
         const marketsInstance = await Mock.new();
         const atmSettingsInstance = await Mock.new();
         const settingsInstance = await createTestSettingsInstance(Settings);
+        const escrowLibrary = await Escrow.new();
+        const escrowFactory = await EscrowFactory.new(escrowLibrary.address);
+        await settingsInstance.setEscrowFactory(escrowFactory.address)
+
         loanTermsConsInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(
