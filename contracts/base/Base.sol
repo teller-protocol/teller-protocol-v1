@@ -10,6 +10,7 @@ import "./Initializable.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
+import "../interfaces/MarketsStateInterface.sol";
 
 
 /**
@@ -26,6 +27,7 @@ contract Base is Initializable, ReentrancyGuard {
     /* State Variables */
 
     SettingsInterface public settings;
+    MarketsStateInterface public markets;
 
     /** Modifiers */
 

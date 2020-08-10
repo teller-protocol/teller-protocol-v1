@@ -38,6 +38,19 @@ interface MarketsStateInterface {
     ) external;
 
     /**
+        @notice It decreases the supply amount for a given market.
+        @notice This function is called every new withdraw (Lenders) is done.
+        @param borrowedAsset borrowed asset address.
+        @param collateralAsset collateral asset address.
+        @param amount amount to decrease.
+     */
+    function decreaseSupply(
+        address borrowedAsset,
+        address collateralAsset,
+        uint256 amount
+    ) external;
+
+    /**
         @notice It increases the borrowed amount for a given market.
         @notice This function is called every new loan is taken out.
         @param borrowedAsset borrowed asset address.

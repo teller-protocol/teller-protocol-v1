@@ -17,7 +17,6 @@ import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
 
-
 /**
     @notice This contract is used as a basis for the creation of the different types of loans across the platform
     @notice It implements the Base contract from Teller and the LoansInterface
@@ -49,7 +48,6 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
 
     LendingPoolInterface public lendingPool;
     LoanTermsConsensusInterface public loanTermsConsensus;
-
     mapping(address => uint256[]) public borrowerLoans;
 
     mapping(uint256 => ZeroCollateralCommon.Loan) public loans;
@@ -234,6 +232,12 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
             lendingPool.createLoan(amountBorrow, loans[loanID].loanTerms.borrower);
         }
 
+        markets.increaseBorrow(
+            lendingPool.lendingToken(),
+            this.collateralToken(),
+            amountBorrow
+        );
+
         emit LoanTakenOut(loanID, loans[loanID].loanTerms.borrower, amountBorrow);
     }
 
@@ -278,6 +282,12 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
 
         // collect the money from the payer
         lendingPool.repay(toPay, msg.sender);
+
+        markets.increaseRepayment(
+            lendingPool.lendingToken(),
+            this.collateralToken(),
+            toPay
+        );
 
         emit LoanRepaid(
             loanID,
