@@ -11,7 +11,6 @@ import "../interfaces/SettingsInterface.sol";
 import "../atm/ATMGovernanceFactoryInterface.sol";
 import "./ATMSettingsInterface.sol";
 
-
 /**
     @notice It manages the settings for the ATMs.
 
@@ -19,7 +18,6 @@ import "./ATMSettingsInterface.sol";
  */
 contract ATMSettings is ATMSettingsInterface {
     using Address for address;
-
     /** Constants */
 
     /* State Variables */
