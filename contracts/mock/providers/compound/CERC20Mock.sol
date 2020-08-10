@@ -7,7 +7,7 @@ contract CERC20Mock is ERC20Mock {
     uint8 public constant CTOKEN_DECIMALS = 8;
     uint256 public constant NO_ERROR = 0;
 
-    ERC20Detailed public underlying;
+    IERC20 public underlying;
     uint256 public multiplier;
 
     constructor(
@@ -19,12 +19,13 @@ contract CERC20Mock is ERC20Mock {
     ) public ERC20Mock(aName, aSymbol, aDecimals, 0) {
         require(underlyingToken != address(0x0), "PROVIDE_UNDERLYIG_TOKEN");
         require(multiplierValue > 0, "PROVIDE_MULTIPLIER");
-        underlying = ERC20Detailed(underlyingToken);
+        underlying = IERC20(underlyingToken);
         multiplier = multiplierValue;
     }
 
     function mint(uint256 mintAmount) external returns (uint256) {
         uint256 cAmount = _getCTokensAmount(mintAmount);
+        underlying.transferFrom(msg.sender, address(this), mintAmount);
         require(super.mint(msg.sender, cAmount), "CTOKEN_MINT_FAILED");
         return NO_ERROR;
     }
@@ -40,6 +41,7 @@ contract CERC20Mock is ERC20Mock {
     function redeemUnderlying(uint256 redeemAmount) external returns (uint256) {
         uint256 tokenAmount = _getTokensAmount(redeemAmount);
         require(super.transfer(msg.sender, tokenAmount), "UNDERLYING_TRANSFER_FAILED");
+        super.burn(redeemAmount);
         return NO_ERROR;
     }
 
