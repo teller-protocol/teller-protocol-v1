@@ -39,6 +39,15 @@ library MarketStateLib {
     }
 
     /**
+        @notice It decreases the supply amount for a given market.
+        @param self the current market state reference.
+        @param amount amount to add.
+     */
+    function decreaseSupply(MarketState storage self, uint256 amount) internal {
+        self.totalSupplied = self.totalSupplied.sub(amount);
+    }
+
+    /**
         @notice It increases the borrowed amount for a given market.
         @param self the current market state reference.
         @param amount amount to add.

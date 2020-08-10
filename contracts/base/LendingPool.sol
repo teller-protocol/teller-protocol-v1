@@ -9,6 +9,7 @@ import "../util/ZeroCollateralCommon.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
+import "../interfaces/LoansInterface.sol";
 import "../interfaces/ZTokenInterface.sol";
 import "../providers/compound/CErc20Interface.sol";
 
@@ -103,6 +104,12 @@ contract LendingPool is Base, LendingPoolInterface {
         // Mint zToken tokens
         zTokenMint(msg.sender, amount);
 
+        markets.increaseSupply(
+            address(lendingToken),
+            LoansInterface(loans).collateralToken(),
+            amount
+        );
+
         // Emit event
         emit TokenDeposited(msg.sender, amount);
     }
@@ -127,6 +134,12 @@ contract LendingPool is Base, LendingPoolInterface {
 
         // Transfers tokens
         tokenTransfer(msg.sender, amount);
+
+        markets.decreaseSupply(
+            address(lendingToken),
+            LoansInterface(loans).collateralToken(),
+            amount
+        );
 
         // Emit event.
         emit TokenWithdrawn(msg.sender, amount);
