@@ -36,6 +36,19 @@ module.exports = {
             };
         },
     },
+    dapps: {
+        action: tx => {
+            const name = 'DappAction';
+            return {
+                name: name,
+                emitted: (dappName, action) => emitted(tx, name, ev => {
+                    assert.equal(ev.dappName.toString(), dappName.toString());
+                    assert.equal(ev.action.toString(), action.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
     erc20: {
         transfer: tx => {
             const name = 'Transfer';
