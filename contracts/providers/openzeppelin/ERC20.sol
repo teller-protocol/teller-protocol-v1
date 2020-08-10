@@ -2,6 +2,7 @@ pragma solidity 0.5.17;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+
 /**
     @notice This contract represents an ERC20 token. It uses the interface IERC20 (from OpenZeppelin).
     @dev The purpose is to centralize all the common functions for a token including name, symbol and decimals.
@@ -10,7 +11,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
     @author develop@teller.finance
  */
 contract ERC20 is IERC20 {
-
     /**
      * @dev Returns the name of the token.
      */

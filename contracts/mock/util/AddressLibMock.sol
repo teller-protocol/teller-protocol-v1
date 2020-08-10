@@ -2,6 +2,7 @@ pragma solidity 0.5.17;
 
 import "../../util/AddressLib.sol";
 
+
 contract AddressLibMock {
     using AddressLib for address;
 
@@ -34,17 +35,11 @@ contract AddressLibMock {
         self.requireEmpty(REQUIRE_EMPTY_ERROR_MESSAGE);
     }
 
-    function requireEqualTo(address left, address right)
-        external
-        pure
-    {
+    function requireEqualTo(address left, address right) external pure {
         left.requireEqualTo(right, REQUIRE_EQUAL_TO_ERROR_MESSAGE);
     }
 
-    function requireNotEqualTo(address left, address right)
-        external
-        pure
-    {
+    function requireNotEqualTo(address left, address right) external pure {
         left.requireNotEqualTo(right, REQUIRE_NOT_EQUAL_TO_ERROR_MESSAGE);
     }
 }

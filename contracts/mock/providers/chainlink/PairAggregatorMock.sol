@@ -2,8 +2,8 @@ pragma solidity 0.5.17;
 
 import "@chainlink/contracts/src/v0.5/interfaces/AggregatorInterface.sol";
 
-contract PairAggregatorMock is AggregatorInterface {
 
+contract PairAggregatorMock is AggregatorInterface {
     struct PriceRound {
         uint256 timestamp;
         int256 price;
@@ -12,7 +12,7 @@ contract PairAggregatorMock is AggregatorInterface {
 
     uint256 public latestRound;
     // round => price mapping
-    mapping (uint256 => PriceRound) private prices;
+    mapping(uint256 => PriceRound) private prices;
 
     constructor(int256 initialPrice) public {
         latestRound = 1;

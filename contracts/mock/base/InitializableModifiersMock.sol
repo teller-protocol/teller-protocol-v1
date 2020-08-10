@@ -2,21 +2,20 @@ pragma solidity 0.5.17;
 
 import "../../base/Initializable.sol";
 
+
 /**
     This contract is created ONLY for testing purposes.
  */
 contract InitializableModifiersMock is Initializable {
-    
     /** State Variables */
 
     /** Constructor */
 
-    function externalIsNotInitialized() isNotInitialized() external {}
+    function externalIsNotInitialized() external isNotInitialized() {}
 
-    function externalIsInitialized() isInitialized() external {}
+    function externalIsInitialized() external isInitialized() {}
 
     function externalInitialize() external {
         _initialize();
     }
-
 }

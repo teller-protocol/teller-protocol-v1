@@ -3,20 +3,29 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/LoansBase.sol";
 
-contract LoansBaseMock is LoansBase {
 
+contract LoansBaseMock is LoansBase {
     function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
-        internal {}
+        internal
+    {}
 
     function externalPayLoan(uint256 loanID, uint256 toPay) external {
         _payLoan(loanID, toPay);
     }
 
-    function externalConvertWeiToToken(uint256 weiAmount) external view returns (uint256) {
+    function externalConvertWeiToToken(uint256 weiAmount)
+        external
+        view
+        returns (uint256)
+    {
         return _convertWeiToToken(weiAmount);
     }
 
-    function externalConvertTokenToWei(uint256 tokenAmount) external view returns (uint256) {
+    function externalConvertTokenToWei(uint256 tokenAmount)
+        external
+        view
+        returns (uint256)
+    {
         return _convertTokenToWei(tokenAmount);
     }
 
@@ -65,7 +74,8 @@ contract LoansBaseMock is LoansBase {
 
     function depositCollateral(address borrower, uint256 loanID, uint256 amount)
         external
-        payable {}
+        payable
+    {}
 
     function createLoanWithTerms(
         ZeroCollateralCommon.LoanRequest calldata request,

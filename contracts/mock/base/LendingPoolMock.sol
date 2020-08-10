@@ -4,8 +4,8 @@ pragma solidity 0.5.17;
 
 import "../../interfaces/LendingPoolInterface.sol";
 
-contract LendingPoolMock is LendingPoolInterface {
 
+contract LendingPoolMock is LendingPoolInterface {
     function deposit(uint256) external {}
 
     function withdraw(uint256 amount) external {}

@@ -3,22 +3,26 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/EtherCollateralLoans.sol";
 
+
 /**
     This contract is created ONLY for testing purposes.
  */
 contract LoansBaseModifiersMock is EtherCollateralLoans {
-
-    function setLoanStatus(uint256 loanID, ZeroCollateralCommon.LoanStatus status) external {
+    function setLoanStatus(uint256 loanID, ZeroCollateralCommon.LoanStatus status)
+        external
+    {
         loans[loanID].status = status;
     }
 
-    function externalLoanActive(uint256 loanID) loanActive(loanID) external {}
+    function externalLoanActive(uint256 loanID) external loanActive(loanID) {}
 
-    function externalLoanTermsSet(uint256 loanID) loanTermsSet(loanID) external {}
+    function externalLoanTermsSet(uint256 loanID) external loanTermsSet(loanID) {}
 
-    function externalLoanActiveOrSet(uint256 loanID) loanActiveOrSet(loanID) external {}
+    function externalLoanActiveOrSet(uint256 loanID) external loanActiveOrSet(loanID) {}
 
-    function externalIsBorrower(address anAddress) isBorrower(anAddress) external {}
+    function externalIsBorrower(address anAddress) external isBorrower(anAddress) {}
 
-    function externalWithValidLoanRequest(ZeroCollateralCommon.LoanRequest calldata loanRequest) withValidLoanRequest(loanRequest) external {}
+    function externalWithValidLoanRequest(
+        ZeroCollateralCommon.LoanRequest calldata loanRequest
+    ) external withValidLoanRequest(loanRequest) {}
 }
