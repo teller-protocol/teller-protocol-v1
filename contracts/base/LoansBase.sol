@@ -235,14 +235,17 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
 
         loans[loanID].status = TellerCommon.LoanStatus.Active;
 
-        escrowFactory.createEscrow(loanID);
+        address escrow = settings.getEscrowFactory().createEscrow(loanID);
 
-        // give the recipient their requested amount of tokens
-        if (loans[loanID].loanTerms.recipient != address(0)) {
-            lendingPool.createLoan(amountBorrow, loans[loanID].loanTerms.recipient);
-        } else {
-            lendingPool.createLoan(amountBorrow, loans[loanID].loanTerms.borrower);
-        }
+//        // give the recipient their requested amount of tokens
+//        if (loans[loanID].loanTerms.recipient != address(0)) {
+//            lendingPool.createLoan(amountBorrow, loans[loanID].loanTerms.recipient);
+//        } else {
+//            lendingPool.createLoan(amountBorrow, loans[loanID].loanTerms.borrower);
+//        }
+
+        // NOTE: Only send loan to escrow contract for now
+        lendingPool.createLoan(amountBorrow, escrow);
 
         markets.increaseBorrow(
             lendingPool.lendingToken(),

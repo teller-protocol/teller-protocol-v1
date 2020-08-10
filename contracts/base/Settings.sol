@@ -13,6 +13,7 @@ import "../util/AddressArrayLib.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
+import "../interfaces/EscrowFactoryInterface.sol";
 
 
 /**
@@ -79,6 +80,8 @@ contract Settings is Pausable, SettingsInterface {
         - The value is the platform setting. It includes the value, minimum and maximum values.
      */
     mapping(bytes32 => PlatformSettingsLib.PlatformSetting) public platformSettings;
+
+    EscrowFactoryInterface public escrowFactory;
 
     /** Modifiers */
 
@@ -337,6 +340,25 @@ contract Settings is Pausable, SettingsInterface {
      */
     function hasPauserRole(address account) external view returns (bool) {
         return isPauser(account);
+    }
+
+    /**
+        @notice Sets a new escrow factory contract.
+        @param escrowFactoryAddress contract address of new escrow factory.
+     */
+    function setEscrowFactory(address escrowFactoryAddress) external onlyPauser() whenNotPaused() {
+        address oldValue = address(escrowFactory);
+        escrowFactory = EscrowFactoryInterface(escrowFactoryAddress);
+
+        emit EscrowFactoryUpdated(msg.sender, oldValue, escrowFactoryAddress);
+    }
+
+    /**
+        @notice Get the current escrow factory contract.
+        @return the current escrow factory contract.
+     */
+    function getEscrowFactory() external view returns (EscrowFactoryInterface) {
+        return escrowFactory;
     }
 
     /** Internal functions */

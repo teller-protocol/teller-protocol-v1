@@ -3,6 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "../util/AssetSettingsLib.sol";
 import "../util/PlatformSettingsLib.sol";
+import "./EscrowFactoryInterface.sol";
 
 
 /**
@@ -118,6 +119,12 @@ interface SettingsInterface {
         address indexed assetAddress,
         uint256 oldValue,
         uint256 newValue
+    );
+
+    event EscrowFactoryUpdated(
+        address indexed sender,
+        address oldValue,
+        address newValue
     );
 
     /**
@@ -263,4 +270,10 @@ interface SettingsInterface {
         @return true if account has the pauser role. Otherwise it returns false.
      */
     function hasPauserRole(address account) external view returns (bool);
+
+    /**
+        @notice Get the current escrow factory contract.
+        @return the current escrow factory contract.
+     */
+    function getEscrowFactory() external view returns (EscrowFactoryInterface);
 }
