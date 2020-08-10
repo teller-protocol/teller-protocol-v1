@@ -1,40 +1,34 @@
 // Smart contracts
-const Settings = artifacts.require("./base/Settings.sol");
 
 // Util classes
-const assert = require('assert');
+const Accounts = require('../utils/Accounts');
+const { zerocollateral } = require("../utils/contracts");
+const { settings: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
-const processArgs = new ProcessArgs();
+const { SENDER_INDEX } = require('../utils/cli/names');
+const processArgs = new ProcessArgs(readParams.unpausePlatform().argv);
 
 /** Process parameters: */
-const senderIndex = 0;
 
 module.exports = async (callback) => {
     try {
-        const network = processArgs.network();
-        console.log(`Script will be executed in network ${network}.`)
-        const appConf = require('../../config')(network);
-        const { zerocollateral, toTxUrl } = appConf.networkConfig;
+        const accounts = new Accounts(web3);
+        const getContracts = processArgs.createGetContracts(artifacts);
+        const appConf = processArgs.getCurrentConfig();
+        const { toTxUrl } = appConf.networkConfig;
+        const senderIndex = processArgs.getValue(SENDER_INDEX.name);
 
-        const settingsAddress = zerocollateral.Settings;
-        assert(settingsAddress, "Settings address is undefined.");
+        const settings = await getContracts.getDeployed(zerocollateral.settings());
 
-        const accounts = await web3.eth.getAccounts();
-        assert(accounts, "Accounts must be defined.");
-        const sender = accounts[senderIndex];
-        assert(sender, "Sender must be defined.");
+        const senderTxConfig = await accounts.getTxConfigAt(senderIndex);
 
-        const txConfig = { from: sender };
-
-        const settings = await Settings.at(settingsAddress);
-
-        const currentPaused = await settings.isPaused(txConfig);
+        const currentPaused = await settings.isPaused();
         console.log(`Paused:   ${currentPaused.toString()}`);
 
-        const result = await settings.unpause(txConfig);
+        const result = await settings.unpause(senderTxConfig);
         console.log(toTxUrl(result));
 
-        const updatedPaused = await settings.isPaused(txConfig);
+        const updatedPaused = await settings.isPaused();
         console.log(`Updated Paused:   ${updatedPaused.toString()}`);
 
         console.log('>>>> The script finished successfully. <<<<');

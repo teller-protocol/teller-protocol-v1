@@ -23,4 +23,10 @@ const createAssetSettings = async (MockReference, instance, sender, previousAsse
 
 module.exports = {
     createAssetSettings,
+    printAssetSettings: ({cTokenAddress, maxLoanAmount}, {assetName, assetAddress, assetSettingName, assetSettingNameBytes32}) => {
+        console.log(`Asset Setting Name: ${assetSettingName} / ${assetSettingNameBytes32}`);
+        console.log(`Asset Name / Address:      ${assetName} / ${assetAddress}`);
+        console.log(`cToken Address:            ${cTokenAddress}`);
+        console.log(`Max Loan Amount:           ${maxLoanAmount}`);
+    },
 };

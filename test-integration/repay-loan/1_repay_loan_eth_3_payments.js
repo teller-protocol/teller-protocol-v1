@@ -2,10 +2,11 @@
 const BigNumber = require('bignumber.js');
 const { zerocollateral, tokens } = require("../../scripts/utils/contracts");
 const { loans, lendingPool } = require('../../test/utils/events');
-const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds, daysToSeconds, NON_EXISTENT } = require('../../test/utils/consts');
+const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds, daysToSeconds, NON_EXISTENT, toBytes32 } = require('../../test/utils/consts');
 const loanStatuses = require('../../test/utils/loanStatus');
 const { createMultipleSignedLoanTermsResponses, createLoanTermsRequest } = require('../../test/utils/loan-terms-helper');
 const assert = require("assert");
+const platformSettingsNames = require('../../test/utils/platformSettingsNames');
 
 module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonces, chainId}) => {
   console.log('Repay Loan in 3 Payments');
@@ -82,7 +83,7 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
     borrowerTxConfigWithValue
   );
 
-  const termsExpiryTime = await settingsInstance.termsExpiryTime();
+  const termsExpiryTime = await settingsInstance.getPlatformSettingValue(toBytes32(web3, platformSettingsNames.TermsExpiryTime));
   const expiryTermsExpected = await timer.getCurrentTimestampInSecondsAndSum(termsExpiryTime);
   const loanIDs = await loansInstance.getBorrowerLoans(borrower);
   const lastLoanID = loanIDs[loanIDs.length - 1];
