@@ -41,8 +41,8 @@ contract('MarketsStateGetMarketTest', function (accounts) {
                 newAmount(1000, actions.Supply, 0, 1),
                 newAmount(500, actions.Borrow, 0, 1),
                 newAmount(500, actions.Repay, 0, 1),
-                newAmount(500, actions.Repay, 0, 1),
                 newAmount(1500, actions.Borrow, 0, 1),
+                newAmount(500, actions.Repay, 0, 1),
             ], 0, 1, newExpected(2000, 1000, 2000)
         ],
         // (2500 borrow - 0 repay) / 2500 Supply = 1
