@@ -439,4 +439,68 @@ module.exports = {
             };
         },
     },
+    atmSettings: {
+        atmPaused: tx => {
+            const name = 'ATMPaused';
+            return {
+                name: name,
+                emitted: (atm, account) => emitted(tx, name, ev => {
+                    assert.equal(ev.atm.toString(), atm.toString());
+                    assert.equal(ev.account.toString(), account.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        atmUnpaused: tx => {
+            const name = 'ATMUnpaused';
+            return {
+                name: name,
+                emitted: (atm, account) => emitted(tx, name, ev => {
+                    assert.equal(ev.atm.toString(), atm.toString());
+                    assert.equal(ev.account.toString(), account.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        marketToAtmUpdated: tx => {
+            const name = 'MarketToAtmUpdated';
+            return {
+                name: name,
+                emitted: (borrowedToken, collateralToken, oldAtm, newAtm, account) => emitted(tx, name, ev => {
+                    assert.equal(ev.borrowedToken.toString(), borrowedToken.toString());
+                    assert.equal(ev.collateralToken.toString(), collateralToken.toString());
+                    assert.equal(ev.oldAtm.toString(), oldAtm.toString());
+                    assert.equal(ev.newAtm.toString(), newAtm.toString());
+                    assert.equal(ev.account.toString(), account.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        marketToAtmSet: tx => {
+            const name = 'MarketToAtmSet';
+            return {
+                name: name,
+                emitted: (borrowedToken, collateralToken, atm, account) => emitted(tx, name, ev => {
+                    assert.equal(ev.borrowedToken.toString(), borrowedToken.toString());
+                    assert.equal(ev.collateralToken.toString(), collateralToken.toString());
+                    assert.equal(ev.atm.toString(), atm.toString());
+                    assert.equal(ev.account.toString(), account.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        marketToAtmRemoved: tx => {
+            const name = 'MarketToAtmRemoved';
+            return {
+                name: name,
+                emitted: (borrowedToken, collateralToken, oldAtm, account) => emitted(tx, name, ev => {
+                    assert.equal(ev.borrowedToken.toString(), borrowedToken.toString());
+                    assert.equal(ev.collateralToken.toString(), collateralToken.toString());
+                    assert.equal(ev.oldAtm.toString(), oldAtm.toString());
+                    assert.equal(ev.account.toString(), account.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
 };

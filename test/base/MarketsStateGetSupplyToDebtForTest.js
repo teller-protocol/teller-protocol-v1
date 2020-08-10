@@ -80,7 +80,7 @@ contract('MarketsStateGetSupplyToDebtForTest', function (accounts) {
                 collateralAsssetToTest,
                 newLoanAmount
             );
-            console.log(result.toString());
+
             // Assertions
             assert.equal(result.toString(), expectedResult.toString());
             
