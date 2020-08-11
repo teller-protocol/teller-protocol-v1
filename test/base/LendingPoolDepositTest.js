@@ -31,6 +31,7 @@ contract('LendingPoolDepositTest', function (accounts) {
     let interestConsensusInstance;
     let cTokenInstance;
     let settingsInstance;
+    let marketsInstance;
 
     beforeEach('Setup for each test', async () => {
         zTokenInstance = await Mock.new();
@@ -39,12 +40,14 @@ contract('LendingPoolDepositTest', function (accounts) {
         interestConsensusInstance = await Mock.new();
         instance = await LendingPool.new();
         settingsInstance = await Mock.new();
-        cTokenInstance = await Mock.new()
+        cTokenInstance = await Mock.new();
+        marketsInstance = await Mock.new();
 
         lendersInstance = await Lenders.new(
             zTokenInstance.address,
             instance.address,
-            interestConsensusInstance.address
+            interestConsensusInstance.address,
+            marketsInstance.address,
         );
 
         await instance.initialize(
@@ -54,6 +57,7 @@ contract('LendingPoolDepositTest', function (accounts) {
             loansInstance.address,
             cTokenInstance.address,
             settingsInstance.address,
+            marketsInstance.address,
         );
     });
 
@@ -122,10 +126,14 @@ contract('LendingPoolDepositTest', function (accounts) {
             // Overriding instances created during beforeEach() as a real ZToken instance
             // is needed for this test. 
             zTokenInstance = await ZToken.new("ZToken Name", "ZTN", 0);
-            lendersInstance = await Lenders.new(
+            lendersInstance = await Lenders.new();
+
+            await lendersInstance.initialize(
                 zTokenInstance.address,
                 instance.address,
-                interestConsensusInstance.address
+                interestConsensusInstance.address,
+                settingsInstance.address,
+                marketsInstance.address,
             );
             instance = await LendingPool.new();
             await instance.initialize(
@@ -135,6 +143,7 @@ contract('LendingPoolDepositTest', function (accounts) {
                 loansInstance.address,
                 cTokenInstance.address,
                 settingsInstance.address,
+                marketsInstance.address,
             );
 
             const encodeTransferFrom = erc20InterfaceEncoder.encodeTransferFrom();

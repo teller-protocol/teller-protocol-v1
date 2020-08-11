@@ -59,6 +59,7 @@ contract LendingPool is Base, LendingPoolInterface {
         @param lendersAddress Lenders contract address.
         @param loansAddress Loans contract address.
         @param settingsAddress Settings contract address.
+        @param marketsAddress Markets state conntract address.
         @dev It throws a require error if the contract is already initialized.
      */
     function initialize(
@@ -67,14 +68,15 @@ contract LendingPool is Base, LendingPoolInterface {
         address lendersAddress,
         address loansAddress,
         address cTokenAddress,
-        address settingsAddress
+        address settingsAddress,
+        address marketsAddress
     ) external isNotInitialized() {
         zTokenAddress.requireNotEmpty("ZTOKEN_ADDRESS_IS_REQUIRED");
         lendingTokenAddress.requireNotEmpty("TOKEN_ADDRESS_IS_REQUIRED");
         lendersAddress.requireNotEmpty("LENDERS_ADDRESS_IS_REQUIRED");
         loansAddress.requireNotEmpty("LOANS_ADDRESS_IS_REQUIRED");
 
-        _initialize(settingsAddress);
+        _initialize(settingsAddress, marketsAddress);
 
         zToken = ZTokenInterface(zTokenAddress);
         lendingToken = IERC20(lendingTokenAddress);

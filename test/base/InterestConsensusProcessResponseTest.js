@@ -13,6 +13,9 @@ const { interestConsensus } = require('../utils/events');
 const chains = require('../utils/chains');
 const { createTestSettingsInstance } = require('../utils/settings-helper');
 
+// Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
+
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
 const InterestConsensusMock = artifacts.require("./mock/base/InterestConsensusMock.sol");
@@ -77,8 +80,9 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
                     [settingsNames.LiquidateEthPrice]: 9500,
                 }
             );
+            const marketsInstance = await Mock.new();
             instance = await InterestConsensusMock.new()
-            await instance.initialize(lendersContract, settings.address)
+            await instance.initialize(lendersContract, settings.address, marketsInstance.address);
 
             const interestRequest = createInterestRequest(lender, requestNonce, 23456, endTime, 45678, instance.address)
             const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract, chainId))

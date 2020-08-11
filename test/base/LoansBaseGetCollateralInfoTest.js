@@ -29,6 +29,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
     let lendingTokenInstance;
     let collateralToken;
     let settingsInstance;
+    let marketsInstance;
     
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
@@ -37,6 +38,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
         settingsInstance = await Mock.new();
+        marketsInstance = await Mock.new();
     });
 
     const buildLoanInfo = (loanID, borrower, collateralRatio, collateral, principalOwed, interestOwed) => {
@@ -67,6 +69,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
                  loanTermsConsInstance.address,
                  settingsInstance.address,
                  collateralToken.address,
+                 marketsInstance.address,
              )
         } else {
             instance = await Loans.new();
@@ -74,7 +77,8 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
                  aggregator.address,
                  lendingPoolInstance.address,
                  loanTermsConsInstance.address,
-                 settingsInstance.address
+                 settingsInstance.address,
+                 marketsInstance.address,
              );
         }
 

@@ -19,8 +19,9 @@ contract('InterestConsensus hashInterestRequest and hashReponse', function (acco
 
     beforeEach('Setup for each test', async () => {
         const settings = await Mock.new();
+        const marketsInstance = await Mock.new();
         instance = await InterestConsensusMock.new()
-        await instance.initialize(lendersAddress, settings.address);
+        await instance.initialize(lendersAddress, settings.address, marketsInstance.address);
     })
 
     withData({

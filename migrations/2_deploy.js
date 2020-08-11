@@ -9,6 +9,7 @@ const ERC20 = artifacts.require("@openzeppelin/contracts/token/ERC20/ERC20Detail
 const ZDAI = artifacts.require("./base/ZDAI.sol");
 const ZUSDC = artifacts.require("./base/ZUSDC.sol");
 const Settings = artifacts.require("./base/Settings.sol");
+const MarketsState = artifacts.require("./base/MarketsState.sol");
 const Lenders = artifacts.require("./base/Lenders.sol");
 const EtherCollateralLoans = artifacts.require("./base/EtherCollateralLoans.sol");
 const TokenCollateralLoans = artifacts.require("./base/TokenCollateralLoans.sol");
@@ -45,8 +46,9 @@ module.exports = async function(deployer, network, accounts) {
   const currentBlockNumber = await web3.eth.getBlockNumber();
 
   await deployerApp.deploys([ZDAI, ZUSDC], txConfig);
-  console.log(`Deployed tokens: ZDAI [${ZDAI.address}] ZUSDC [${ZUSDC.address}] `);
-
+  console.log(`Deployed tokens: ZDAI [${ZDAI.address}] ZUSDC [${ZUSDC.address}] `);  
+  
+  await deployerApp.deploy(MarketsState, txConfig);
   await deployerApp.deploy(Settings, txConfig);
   const settingsInstance = await Settings.deployed();
   await initSettings(
@@ -101,27 +103,39 @@ module.exports = async function(deployer, network, accounts) {
 
   await poolDeployer.deployPool(
     { tokenName: 'DAI', collateralName: 'ETH' },
-    EtherCollateralLoans,
-    ZDAI,
+    {
+      Loans: EtherCollateralLoans,
+      TToken: ZDAI,
+      MarketsState,
+    },
     txConfig
   );
   await poolDeployer.deployPool(
     { tokenName: 'USDC', collateralName: 'ETH' },
-    EtherCollateralLoans,
-    ZUSDC,
+    {
+      Loans: EtherCollateralLoans,
+      TToken: ZUSDC,
+      MarketsState
+    },
     txConfig
   );
 
   await poolDeployer.deployPool(
     { tokenName: 'DAI', collateralName: 'LINK', aggregatorName: 'LINK_USD' },
-    TokenCollateralLoans,
-    ZDAI,
+    {
+      Loans: TokenCollateralLoans,
+      TToken: ZDAI,
+      MarketsState
+    },
     txConfig
   );
   await poolDeployer.deployPool(
     { tokenName: 'USDC', collateralName: 'LINK', aggregatorName: 'LINK_USD' },
-    TokenCollateralLoans,
-    ZUSDC,
+    {
+      Loans: TokenCollateralLoans,
+      TToken: ZUSDC,
+      MarketsState
+    },
     txConfig
   );
 

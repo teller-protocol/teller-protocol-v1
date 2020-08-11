@@ -69,18 +69,20 @@ contract Lenders is Base, LendersInterface {
         @param lendingPoolAddress lending pool contract address.
         @param interestConsensusAddress interest consensus contract address.
         @param settingAddress settings contract address.
+        @param marketsAddress markets contract address.
      */
     function initialize(
         address zTokenAddress,
         address lendingPoolAddress,
         address interestConsensusAddress,
-        address settingAddress
+        address settingAddress,
+        address marketsAddress
     ) external isNotInitialized() {
         zTokenAddress.requireNotEmpty("ZTOKEN_MUST_BE_PROVIDED");
         lendingPoolAddress.requireNotEmpty("LENDING_POOL_MUST_BE_PROVIDED");
         interestConsensusAddress.requireNotEmpty("CONSENSUS_MUST_BE_PROVIDED");
 
-        _initialize(settingAddress);
+        _initialize(settingAddress, marketsAddress);
 
         zToken = zTokenAddress;
         lendingPool = lendingPoolAddress;
