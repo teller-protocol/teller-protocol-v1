@@ -2,6 +2,7 @@
 const withData = require('leche').withData;
 const { t, toBytes32 } = require('../utils/consts');
 const { settings } = require('../utils/events');
+const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
 
@@ -15,7 +16,7 @@ contract('SettingsRemoveComponentVersionTest', function (accounts) {
     const NOT_PRESENT = 0;
 
     beforeEach('Setup for each test', async () => {
-        instance = await Settings.new(1, 1, 1, 1, 1, 1, 1, 1);
+        instance = await createTestSettingsInstance(Settings);
         instance.createComponentVersion(toBytes32(web3, COMPONENT_NAME), INITIAL_VERSION);
     });
 

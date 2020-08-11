@@ -58,6 +58,8 @@ module.exports = {
 				'LoansBaseModifiersMock',
 				'PairAggregatorMock',
 				'ERC20LibMock',
+				'CUSDCMock',
+				'CDAIMock',
 			]
 		},
 	},
@@ -93,6 +95,20 @@ module.exports = {
 			gas: gasKeyValue,
 			gasPrice: web3.utils.toWei(gasPriceKeyValue, 'gwei'),
 			network_id: '3',
+			skipDryRun: true,
+		},
+		rinkeby: {
+			provider: function() {
+				return new HDWalletProvider(
+					mnemonicKeyValue,
+					`https://rinkeby.infura.io/v3/${infuraKeyValue}`,
+					defaultAddressIndex,
+					addressCountValue
+				);
+			},
+			gas: gasKeyValue,
+			gasPrice: web3.utils.toWei(gasPriceKeyValue, 'gwei'),
+			network_id: '4',
 			skipDryRun: true,
 		},
 	}

@@ -1,12 +1,13 @@
 const withData = require('leche').withData;
+const { createTestSettingsInstance } = require('../utils/settings-helper');
 const {
     t,
     getLatestTimestamp,
     THIRTY_DAYS,
     NULL_ADDRESS,
     ONE_DAY,
-    daysToSeconds
 } = require('../utils/consts');
+const settingsNames = require('../utils/platformSettingsNames');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
 const { createLoanResponseSig, hashLoanTermsRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
@@ -82,9 +83,18 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
         mustFail,
         expectedErrorMessage,
     ) {    
-        it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
+        it(t('user', 'processResponse', 'Should accept/not accept a nodes response', false), async function() {
             // set up contract
-            settings = await Settings.new(requiredSubs, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500, daysToSeconds(30), 1);
+            settings = await createTestSettingsInstance(
+                Settings, 
+                {
+                    [settingsNames.RequiredSubmissions]: requiredSubs,
+                    [settingsNames.MaximumTolerance]: tolerance,
+                    [settingsNames.ResponseExpiryLength]: THIRTY_DAYS,
+                    [settingsNames.TermsExpiryTime]: THIRTY_DAYS,
+                    [settingsNames.LiquidateEthPrice]: 9500,
+                }
+            );
             instance = await LoanTermsConsensusMock.new()
             await instance.initialize(loansContract, settings.address)
 

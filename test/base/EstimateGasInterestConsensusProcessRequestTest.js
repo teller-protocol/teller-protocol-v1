@@ -1,11 +1,12 @@
 const withData = require('leche').withData;
+const { createTestSettingsInstance } = require('../utils/settings-helper');
+const settingsNames = require('../utils/platformSettingsNames');
 const { 
     t,
     getLatestTimestamp,
     ONE_DAY,
     THIRTY_DAYS,
     NULL_ADDRESS,
-    daysToSeconds
 } = require('../utils/consts');
 const { createInterestRequest, createUnsignedInterestResponse } = require('../utils/structs');
 const { createInterestResponseSig, hashInterestRequest } = require('../utils/hashes');
@@ -35,8 +36,8 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
     let currentTime;
     let interestRequest;
 
-    const baseGasCost = 227000;
-    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 73500);
+    const baseGasCost = 238000;
+    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 77000);
 
     let responseOne = createUnsignedInterestResponse(nodeOne, 0, 34676, 1, NULL_ADDRESS)
     let responseTwo = createUnsignedInterestResponse(nodeTwo, 0, 34642, 1, NULL_ADDRESS)
@@ -123,7 +124,16 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
         it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
             // set up contract
             const expectedMaxGas = expectedGasCost(responses.length);
-            const settings = await Settings.new(responses.length, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500, daysToSeconds(30), 1);
+            const settings = await createTestSettingsInstance(
+                Settings,
+                {
+                    [settingsNames.RequiredSubmissions]: responses.length,
+                    [settingsNames.MaximumTolerance]: tolerance,
+                    [settingsNames.ResponseExpiryLength]: THIRTY_DAYS,
+                    [settingsNames.TermsExpiryTime]: THIRTY_DAYS,
+                    [settingsNames.LiquidateEthPrice]: 9500,
+                }
+            );
             instance = await InterestConsensus.new();
             await instance.initialize(lendersContract, settings.address);
 
