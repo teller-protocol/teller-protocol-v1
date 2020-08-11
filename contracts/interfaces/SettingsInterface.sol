@@ -68,44 +68,6 @@ interface SettingsInterface {
     );
 
     /**
-        @notice This event is emmited when a new node component is added.
-        @param account address that added this new component.
-        @param componentName name of the added component.
-        @param minVersion minimum version assigned to this new component.
-     */
-    event ComponentVersionCreated(
-        address indexed account,
-        bytes32 indexed componentName,
-        uint32 minVersion
-    );
-
-    /**
-        @notice This event is emmited when a node component is removed.
-        @param account address that removed this component.
-        @param componentName name of the component removed.
-        @param previousVersion previous version this component had before being removed (set = 0).
-     */
-    event ComponentVersionRemoved(
-        address indexed account,
-        bytes32 indexed componentName,
-        uint32 previousVersion
-    );
-
-    /**
-        @notice This event is emmited when a node component version is updated.
-        @param account address that updated this component version.
-        @param componentName name of the updated node component.
-        @param oldVersion version this node component had before updating it.
-        @param newVersion new version set to this node component.
-     */
-    event ComponentVersionUpdated(
-        address indexed account,
-        bytes32 indexed componentName,
-        uint32 oldVersion,
-        uint32 newVersion
-    );
-
-    /**
         @notice This event is emitted when an new asset settings is created.
         @param sender the transaction sender address.
         @param assetAddress the asset address used to create the settings.
@@ -235,33 +197,6 @@ interface SettingsInterface {
         @param lendingPoolAddress lending pool address to unpause.
      */
     function unpauseLendingPool(address lendingPoolAddress) external;
-
-    /**
-        @notice Add a new Node Component with its version.
-        @param componentName name of the component
-        @param minVersion minimum component version supported
-     */
-    function createComponentVersion(bytes32 componentName, uint32 minVersion) external;
-
-    /**
-        @notice Set a new version for a Node Component.
-        @param componentName name of the component
-        @param newVersion minimum component version supported
-     */
-    function updateComponentVersion(bytes32 componentName, uint32 newVersion) external;
-
-    /**
-        @notice Remove a Node Component from the list.
-        @param componentName name of the component to be removed.
-     */
-    function removeComponentVersion(bytes32 componentName) external;
-
-    /**
-        @notice Get the version of a specific node component.
-        @param componentName name of the component to return the version.
-        @return minimum version of the node component if exists or zero 0 if not found.
-     */
-    function getComponentVersion(bytes32 componentName) external view returns (uint32);
 
     /**
         @notice It creates a new asset settings in the platform.

@@ -308,43 +308,6 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-        createComponentVersion: tx => {
-            const name = 'ComponentVersionCreated';
-            return {
-                name: name,
-                emitted: (account, componentName, minVersion) => emitted(tx, name, ev => {
-                    assert.equal(ev.account, account);
-                    assert.equal(ev.minVersion, minVersion); 
-                    assert.equal(ev.componentName.toString(), componentName.toString());
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
-        updateComponentVersion: tx => {
-            const name = 'ComponentVersionUpdated';
-            return {
-                name: name,
-                emitted: (account, componentName, oldVersion, newVersion) => emitted(tx, name, ev => {
-                    assert.equal(ev.account, account);
-                    assert.equal(ev.componentName.toString(), componentName.toString());
-                    assert.equal(ev.oldVersion, oldVersion);
-                    assert.equal(ev.newVersion, newVersion);
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
-        removeComponentVersion: tx => {
-            const name = 'ComponentVersionRemoved';
-            return {
-                name: name,
-                emitted: (account, componentName, previousVersion) => emitted(tx, name, ev => {
-                    assert.equal(ev.account, account);
-                    assert.equal(ev.componentName.toString(), componentName.toString());
-                    assert.equal(ev.previousVersion, previousVersion);
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
         assetSettingsCreated: tx => {
             const name = 'AssetSettingsCreated';
             return {

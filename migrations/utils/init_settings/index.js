@@ -1,11 +1,9 @@
 const MOCK_NETWORKS = ['test', 'soliditycoverage'];
 const initAssetSettings = require('./initAssetSettings');
 const initPlatformSettings = require('./initPlatformSettings');
-const initNodeComponentsSettings = require('./initComponentsVersions');
 
 module.exports = async function (
     settingsInstance, {
-        nodeComponentsVersions,
         assetSettings,
         platformSettings,
         tokens,
@@ -25,9 +23,6 @@ module.exports = async function (
         { platformSettings, currentBlockNumber, web3, verbose: true },
         { },
     );
-
-    // Initializing node components
-    await initNodeComponentsSettings(settingsInstance, nodeComponentsVersions, web3);
 
     const isMockNetwork = MOCK_NETWORKS.indexOf(network) > -1;
     if (isMockNetwork) {

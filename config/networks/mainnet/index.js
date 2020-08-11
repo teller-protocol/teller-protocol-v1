@@ -4,7 +4,6 @@ module.exports = {
     compound: require('./compound'),
     dao: require('./dao'),
     assetSettings: require('./assetSettings'),
-    nodeComponentsVersions: require('./nodeComponentsVersions'),
     platformSettings: require('./platformSettings'),
     maxGasLimit: 3500000,
     toTxUrl: ({ tx }) => {
