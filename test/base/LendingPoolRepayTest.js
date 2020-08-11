@@ -75,6 +75,7 @@ contract('LendingPoolRepayTest', function (accounts) {
                 cTokenAddress,
                 settingsInstance.address,
                 marketsInstance.address,
+                NULL_ADDRESS,
             );
             const encodeTransferFrom = erc20InterfaceEncoder.encodeTransferFrom();
             await daiInstance.givenMethodReturnBool(encodeTransferFrom, transferFrom);

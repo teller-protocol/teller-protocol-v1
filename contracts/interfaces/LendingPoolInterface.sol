@@ -63,6 +63,18 @@ interface LendingPoolInterface {
     function lendingToken() external view returns (address);
 
     /**
+        @notice Gets the current interest validator. By default it is 0x0.
+        @return the interest validator contract address or empty address (0x0). 
+     */
+    function interestValidator() external view returns (address);
+
+    /**
+        @notice Update the current interest validator address.
+        @param newInterestValidator the new interest validator address.
+     */
+    function setInterestValidator(address newInterestValidator) external;
+
+    /**
         @notice This event is emitted when an user deposits tokens into the pool.
         @param sender address.
         @param amount of tokens.
@@ -96,4 +108,16 @@ interface LendingPoolInterface {
         @param amount of tokens.
      */
     event PaymentLiquidated(address indexed liquidator, uint256 amount);
+
+    /**
+        @notice This event is emitted when the interest validator is updated.
+        @param sender account that sends the transaction.
+        @param oldInterestValidator the old validator address.
+        @param newInterestValidator the new validator address.
+     */
+    event InterestValidatorUpdated(
+        address indexed sender,
+        address indexed oldInterestValidator,
+        address indexed newInterestValidator
+    );
 }

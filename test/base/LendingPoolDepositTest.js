@@ -1,7 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const {
-    t
+    t, NULL_ADDRESS
 } = require('../utils/consts');
 const {
     lendingPool
@@ -43,10 +43,12 @@ contract('LendingPoolDepositTest', function (accounts) {
         cTokenInstance = await Mock.new();
         marketsInstance = await Mock.new();
 
-        lendersInstance = await Lenders.new(
+        lendersInstance = await Lenders.new();
+        await lendersInstance.initialize(
             zTokenInstance.address,
             instance.address,
             interestConsensusInstance.address,
+            settingsInstance.address,
             marketsInstance.address,
         );
 
@@ -58,6 +60,7 @@ contract('LendingPoolDepositTest', function (accounts) {
             cTokenInstance.address,
             settingsInstance.address,
             marketsInstance.address,
+            NULL_ADDRESS,
         );
     });
 
@@ -144,6 +147,7 @@ contract('LendingPoolDepositTest', function (accounts) {
                 cTokenInstance.address,
                 settingsInstance.address,
                 marketsInstance.address,
+                NULL_ADDRESS,
             );
 
             const encodeTransferFrom = erc20InterfaceEncoder.encodeTransferFrom();

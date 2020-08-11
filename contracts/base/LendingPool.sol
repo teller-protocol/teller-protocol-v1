@@ -11,6 +11,7 @@ import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
 import "../interfaces/LoansInterface.sol";
 import "../interfaces/ZTokenInterface.sol";
+import "../interfaces/InterestValidatorInterface.sol";
 import "../providers/compound/CErc20Interface.sol";
 
 // Contracts
@@ -23,8 +24,6 @@ import "./Base.sol";
     @author develop@teller.finance
  */
 contract LendingPool is Base, LendingPoolInterface {
-    using AddressLib for address;
-
     /* State Variables */
 
     IERC20 public lendingToken;
@@ -34,6 +33,8 @@ contract LendingPool is Base, LendingPoolInterface {
     ZTokenInterface public zToken;
 
     LendersInterface public lenders;
+
+    InterestValidatorInterface public interestValidator;
 
     address public loans;
 
@@ -51,39 +52,6 @@ contract LendingPool is Base, LendingPoolInterface {
     /* Constructor */
 
     /** External Functions */
-
-    /**
-        @notice It initializes the contract state variables.
-        @param zTokenAddress zToken token address.
-        @param lendingTokenAddress ERC20 token address.
-        @param lendersAddress Lenders contract address.
-        @param loansAddress Loans contract address.
-        @param settingsAddress Settings contract address.
-        @param marketsAddress Markets state conntract address.
-        @dev It throws a require error if the contract is already initialized.
-     */
-    function initialize(
-        address zTokenAddress,
-        address lendingTokenAddress,
-        address lendersAddress,
-        address loansAddress,
-        address cTokenAddress,
-        address settingsAddress,
-        address marketsAddress
-    ) external isNotInitialized() {
-        zTokenAddress.requireNotEmpty("ZTOKEN_ADDRESS_IS_REQUIRED");
-        lendingTokenAddress.requireNotEmpty("TOKEN_ADDRESS_IS_REQUIRED");
-        lendersAddress.requireNotEmpty("LENDERS_ADDRESS_IS_REQUIRED");
-        loansAddress.requireNotEmpty("LOANS_ADDRESS_IS_REQUIRED");
-
-        _initialize(settingsAddress, marketsAddress);
-
-        zToken = ZTokenInterface(zTokenAddress);
-        lendingToken = IERC20(lendingTokenAddress);
-        lenders = LendersInterface(lendersAddress);
-        loans = loansAddress;
-        cToken = cTokenAddress;
-    }
 
     /**
         @notice It allows users to deposit tokens into the pool.
@@ -225,6 +193,16 @@ contract LendingPool is Base, LendingPoolInterface {
         whenLendingPoolNotPaused(address(this))
     {
         address lender = msg.sender;
+        require(
+            address(interestValidator) == address(0x0) ||
+                interestValidator.isInterestValid(
+                    address(lendingToken),
+                    LoansInterface(loans).collateralToken(),
+                    lender,
+                    amount
+                ),
+            "INTEREST_TO_WITHDRAW_IS_INVALID"
+        );
 
         // update the lenders record, returning the actual amount to withdraw
         uint256 amountToWithdraw = lenders.withdrawInterest(lender, amount);
@@ -238,8 +216,76 @@ contract LendingPool is Base, LendingPoolInterface {
         emit InterestWithdrawn(lender, amountToWithdraw);
     }
 
+    /**
+        @notice Update the current interest validator address.
+        @param newInterestValidator the new interest validator address.
+     */
+    function setInterestValidator(address newInterestValidator)
+        external
+        whenAllowed(msg.sender)
+    {
+        require(newInterestValidator.isContract(), "VALIDATOR_MUST_CONTRACT_NT_EMPTY");
+        address oldInterestValidator = address(interestValidator);
+        oldInterestValidator.requireNotEqualTo(
+            newInterestValidator,
+            "NEW_VALIDATOR_MUST_BE_PROVIDED"
+        );
+
+        interestValidator = InterestValidatorInterface(newInterestValidator);
+
+        emit InterestValidatorUpdated(
+            msg.sender,
+            oldInterestValidator,
+            newInterestValidator
+        );
+    }
+
+    /**
+        @notice It initializes the contract state variables.
+        @param zTokenAddress zToken token address.
+        @param lendingTokenAddress ERC20 token address.
+        @param lendersAddress Lenders contract address.
+        @param loansAddress Loans contract address.
+        @param settingsAddress Settings contract address.
+        @param marketsAddress Markets state conntract address.
+        @param interestValidatorAddress Interest validator address. It can be 0x0.
+        @dev It throws a require error if the contract is already initialized.
+     */
+    function initialize(
+        address zTokenAddress,
+        address lendingTokenAddress,
+        address lendersAddress,
+        address loansAddress,
+        address cTokenAddress,
+        address settingsAddress,
+        address marketsAddress,
+        address interestValidatorAddress
+    ) external isNotInitialized() {
+        zTokenAddress.requireNotEmpty("ZTOKEN_ADDRESS_IS_REQUIRED");
+        lendingTokenAddress.requireNotEmpty("TOKEN_ADDRESS_IS_REQUIRED");
+        lendersAddress.requireNotEmpty("LENDERS_ADDRESS_IS_REQUIRED");
+        loansAddress.requireNotEmpty("LOANS_ADDRESS_IS_REQUIRED");
+        require(
+            interestValidatorAddress.isEmpty() || interestValidatorAddress.isContract(),
+            "VAL_MUST_BE_EMPTY_OR_CONTRACT"
+        );
+
+        _initialize(settingsAddress, marketsAddress);
+
+        zToken = ZTokenInterface(zTokenAddress);
+        lendingToken = IERC20(lendingTokenAddress);
+        lenders = LendersInterface(lendersAddress);
+        loans = loansAddress;
+        cToken = cTokenAddress;
+        interestValidator = InterestValidatorInterface(interestValidatorAddress);
+    }
+
     /** Internal functions */
 
+    /**
+        @notice It deposits a given amount of tokens to Compound only if the cToken is not empty.
+        @param amount amount to deposit.
+     */
     function _depositToCompoundIfSupported(uint256 amount) internal {
         if (_isCTokenNotSupported()) {
             return;
@@ -252,6 +298,10 @@ contract LendingPool is Base, LendingPoolInterface {
         require(mintResult == 0, "COMPOUND_DEPOSIT_ERROR");
     }
 
+    /**
+        @notice It withdraws a given amount of tokens if the cToken is defined (not 0x0).
+        @param amount amount of tokens to withdraw.
+     */
     function _withdrawFromCompoundIfSupported(uint256 amount) internal {
         if (_isCTokenNotSupported()) {
             return;
@@ -262,6 +312,10 @@ contract LendingPool is Base, LendingPoolInterface {
         require(redeemResult == 0, "COMPOUND_WITHDRAWAL_ERROR");
     }
 
+    /**
+        @notice It tests whether cToken address is defined (not 0x0) or not.
+        @return true if the cToken address is not 0x0. Otherwise it returns false.
+     */
     function _isCTokenNotSupported() internal view returns (bool) {
         return address(cToken) == address(0x0);
     }
