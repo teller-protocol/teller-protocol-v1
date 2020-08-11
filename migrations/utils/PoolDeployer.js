@@ -112,6 +112,15 @@ PoolDeployer.prototype.deployPool = async function(
         MarketsState.address,
     );
 
+    const dependsOnMarketsState = [
+        LendingPool, Loans,
+    ];
+    for (const contract of dependsOnMarketsState) {
+        const deployed = await contract.deployed();
+        console.log(`Adding ${contract.contract_name} / ${deployed.address} in markets state (${MarketsState.address})`);
+        marketsStateInstance.addWhitelisted(contract.address, txConfig);
+    }
+
     const initializables = [
         Lenders, LendingPool, InterestConsensus, Loans, LoanTermsConsensus
     ];
