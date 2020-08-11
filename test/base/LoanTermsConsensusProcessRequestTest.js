@@ -16,6 +16,9 @@ const BigNumber = require('bignumber.js');
 const chains = require('../utils/chains');
 const { createTestSettingsInstance } = require('../utils/settings-helper');
 
+// Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
+
 // Smart contracts
 const LoanTermsConsensus = artifacts.require("./mock/base/LoanTermsConsensusMock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
@@ -121,6 +124,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
     ) {    
         it(t('user', 'processRequest', 'Should accept/not accept node request/responses', mustFail), async function() {
             // set up contract
+            const markets = await Mock.new();
             settings = await createTestSettingsInstance(
                 Settings,
                 {
@@ -132,7 +136,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
                 }
             );
             
-            await instance.initialize(loansContract, settings.address)
+            await instance.initialize(loansContract, settings.address, markets.address);
 
             await instance.addSigner(nodeOne)
             await instance.addSigner(nodeTwo)

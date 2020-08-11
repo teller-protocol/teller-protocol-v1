@@ -15,6 +15,9 @@ const { loanTermsConsensus } = require('../utils/events');
 const BigNumber = require('bignumber.js');
 const chains = require('../utils/chains');
 
+// Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
+
 // Smart contracts
 const LoanTermsConsensusMock = artifacts.require("./mock/base/LoanTermsConsensusMock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
@@ -85,6 +88,7 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
     ) {    
         it(t('user', 'processResponse', 'Should accept/not accept a nodes response', false), async function() {
             // set up contract
+            const markets = await Mock.new();
             settings = await createTestSettingsInstance(
                 Settings, 
                 {
@@ -96,7 +100,7 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
                 }
             );
             instance = await LoanTermsConsensusMock.new()
-            await instance.initialize(loansContract, settings.address)
+            await instance.initialize(loansContract, settings.address, markets.address);
 
             const loanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478, instance.address)
             const requestHash = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, loansContract, chains.mainnet))

@@ -15,6 +15,7 @@ contract('LendersSetAccruedInterestTest', function (accounts) {
     let instance;
     let zTokenInstance;
     let lendingPoolInstance;
+    let marketsInstance;
     let interestConsensusInstance;
     let interestConsensusTemplate;
     let processRequestEncoding;
@@ -30,6 +31,7 @@ contract('LendersSetAccruedInterestTest', function (accounts) {
         lendingPoolInstance = await Mock.new();
         interestConsensusInstance = await Mock.new();
         settingsInstance = await Mock.new();
+        marketsInstance = await Mock.new();
         instance = await Lenders.new();
 
         emptyRequest = createInterestRequest(NULL_ADDRESS, 6, 0, 0, 0, interestConsensusInstance.address);
@@ -41,6 +43,7 @@ contract('LendersSetAccruedInterestTest', function (accounts) {
             lendingPoolInstance.address,
             interestConsensusInstance.address,
             settingsInstance.address,
+            marketsInstance.address,
         );
 
         interestConsensusTemplate = await InterestConsensus.new()

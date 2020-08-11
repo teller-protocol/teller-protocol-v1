@@ -49,7 +49,6 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
 
     LendingPoolInterface public lendingPool;
     LoanTermsConsensusInterface public loanTermsConsensus;
-
     mapping(address => uint256[]) public borrowerLoans;
 
     mapping(uint256 => ZeroCollateralCommon.Loan) public loans;
@@ -234,6 +233,12 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
             lendingPool.createLoan(amountBorrow, loans[loanID].loanTerms.borrower);
         }
 
+        markets.increaseBorrow(
+            lendingPool.lendingToken(),
+            this.collateralToken(),
+            amountBorrow
+        );
+
         emit LoanTakenOut(loanID, loans[loanID].loanTerms.borrower, amountBorrow);
     }
 
@@ -278,6 +283,12 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
 
         // collect the money from the payer
         lendingPool.repay(toPay, msg.sender);
+
+        markets.increaseRepayment(
+            lendingPool.lendingToken(),
+            this.collateralToken(),
+            toPay
+        );
 
         emit LoanRepaid(
             loanID,
@@ -447,18 +458,20 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         @param lendingPoolAddress Contract address of the lending pool
         @param loanTermsConsensusAddress Contract adddress for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
+        @param marketsAddress Contract address to store market data.
      */
     function _initialize(
         address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
-        address settingsAddress
+        address settingsAddress,
+        address marketsAddress
     ) internal isNotInitialized() {
         priceOracleAddress.requireNotEmpty("PROVIDE_ORACLE_ADDRESS");
         lendingPoolAddress.requireNotEmpty("PROVIDE_LENDINGPOOL_ADDRESS");
         loanTermsConsensusAddress.requireNotEmpty("PROVIDED_LOAN_TERMS_ADDRESS");
 
-        _initialize(settingsAddress);
+        _initialize(settingsAddress, marketsAddress);
 
         priceOracle = priceOracleAddress;
         lendingPool = LendingPoolInterface(lendingPoolAddress);

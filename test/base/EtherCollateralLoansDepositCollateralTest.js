@@ -17,6 +17,7 @@ contract('EtherCollateralLoansDepositCollateralTest', function (accounts) {
     let loanTermsConsInstance;
     let lendingPoolInstance;
     let settingsInstance;
+    let marketsInstance;
 
     const mockLoanID = 7
     
@@ -25,12 +26,14 @@ contract('EtherCollateralLoansDepositCollateralTest', function (accounts) {
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
         settingsInstance = await Mock.new()
+        marketsInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(
             oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
-            settingsInstance.address
+            settingsInstance.address,
+            marketsInstance.address
         )
     });
 

@@ -15,6 +15,9 @@ const BigNumber = require('bignumber.js');
 const chains = require('../utils/chains');
 const { createTestSettingsInstance } = require('../utils/settings-helper');
 
+// Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
+
 // Smart contracts
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 const Settings = artifacts.require("./base/Settings.sol");
@@ -137,8 +140,9 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
                     [settingsNames.LiquidateEthPrice]: 9500,
                 }
             );
-            instance = await LoanTermsConsensus.new()
-            await instance.initialize(loansContract, settings.address)
+            const marketsInstance = await Mock.new();
+            instance = await LoanTermsConsensus.new();
+            await instance.initialize(loansContract, settings.address, marketsInstance.address);
 
             for (const response of responses) {
                 await instance.addSigner(response.signer)

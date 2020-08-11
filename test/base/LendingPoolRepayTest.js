@@ -32,11 +32,15 @@ contract('LendingPoolRepayTest', function (accounts) {
         interestConsensusInstance = await Mock.new();
         cTokenInstance = await Mock.new()
         settingsInstance = await Mock.new();
+        marketsInstance = await Mock.new();
 
-        lendersInstance = await Lenders.new(
-          zTokenInstance.address,
-          instance.address,
-          interestConsensusInstance.address
+        lendersInstance = await Lenders.new();
+        await lendersInstance.initialize(
+            zTokenInstance.address,
+            instance.address,
+            interestConsensusInstance.address,
+            settingsInstance.address,
+            marketsInstance.address,
         );
     });
 
@@ -70,6 +74,7 @@ contract('LendingPoolRepayTest', function (accounts) {
                 loansAddress,
                 cTokenAddress,
                 settingsInstance.address,
+                marketsInstance.address,
             );
             const encodeTransferFrom = erc20InterfaceEncoder.encodeTransferFrom();
             await daiInstance.givenMethodReturnBool(encodeTransferFrom, transferFrom);

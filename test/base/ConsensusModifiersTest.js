@@ -19,12 +19,13 @@ contract('ConsensusModifiersTest', function (accounts) {
         expectedErrorMessage,
         mustFail
     ) {    
-        it(t('user', 'new', 'Should (or not) be able to call the function', mustFail), async function() {
+        it(t('user', 'isCaller', 'Should (or not) be able to call the function', mustFail), async function() {
             try {
                 // Setup
                 const settingsInstance = await Mock.new();
+                const marketsInstance = await Mock.new();
                 const instance = await Consensus.new();
-                await instance.initialize(callerAddress, settingsInstance.address)
+                await instance.initialize(callerAddress, settingsInstance.address, marketsInstance.address);
 
                 const result = await instance.externalIsCaller({ from:  msgSender })
 

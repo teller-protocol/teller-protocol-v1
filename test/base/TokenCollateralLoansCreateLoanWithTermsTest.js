@@ -63,6 +63,7 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
     let instance;
     let loanTermsConsInstance;
     let settingsInstance;
+    let marketsInstance;
 
     const timer = new Timer(web3);
     const owner = accounts[0];
@@ -76,6 +77,7 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
     let responseTwo;
     
     beforeEach('Setup for each test', async () => {
+        marketsInstance = await Mock.new();
         lendingTokenInstance = await Mock.new();
         collateralToken = await LINKMock.new();
         loanTermsConsInstance = await Mock.new();
@@ -96,6 +98,7 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
             loanTermsConsInstance.address,
             settingsInstance.address,
             collateralToken.address,
+            marketsInstance.address,
         );
         const loanTermsConsensus = await LoanTermsConsensus.new();
         loanTermsConsensusEncoder = new LoanTermsConsensusEncoder(web3, loanTermsConsensus);

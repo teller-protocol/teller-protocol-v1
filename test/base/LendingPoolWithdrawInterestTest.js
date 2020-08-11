@@ -23,6 +23,7 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
     let settingsInstance;
     let cTokenInstance;
     let lendersInstance;
+    let marketsInstance;
     
     beforeEach('Setup for each test', async () => {
         loansInstance = await Mock.new();
@@ -32,6 +33,7 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
         lendingTokenInstance = await Mock.new();
         cTokenInstance = await Mock.new()
         lendersInstance = await Lenders.new();
+        marketsInstance = await Lenders.new();
         
         instance = await LendingPool.new();
         await lendersInstance.initialize(
@@ -39,6 +41,7 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
             instance.address,
             consensusInstance.address,
             settingsInstance.address,
+            marketsInstance.address,
         );
     });
 
@@ -76,6 +79,7 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
                 loansInstance.address,
                 cTokenAddress,
                 settingsInstance.address,
+                marketsInstance.address,
             );
             await lendersInstance.mockLenderInfo(
                 lender,

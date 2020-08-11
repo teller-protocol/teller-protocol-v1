@@ -10,16 +10,16 @@ class PoolDeployer {
 
 PoolDeployer.prototype.deployPool = async function(
     { tokenName, collateralName, aggregatorName = `${tokenName.toUpperCase()}_${collateralName.toUpperCase()}`},
-    Loans,
-    ZToken,
+    { Loans, TToken, MarketsState },
     txConfig
 ) {
     assert(aggregatorName, 'Aggregator name is undefined.');
     assert(tokenName, 'Token name is undefined.');
     assert(collateralName, 'Collateral token name is undefined.');
-    const zTokenInstance = await ZToken.deployed();
+    const zTokenInstance = await TToken.deployed();
     const zTokenName = await zTokenInstance.symbol();
     console.log(`Deploying pool (collateral ${collateralName}) for token ${tokenName}...`);
+    console.log(`Using MarketsState address ${MarketsState.address}.`);
     const {
         tokens,
         aggregators,
@@ -52,6 +52,7 @@ PoolDeployer.prototype.deployPool = async function(
     await this.deployer.deployWith(`${collateralName.toUpperCase()}_LoanTermsConsensus_${zTokenName}`, LoanTermsConsensus, txConfig);
     await this.deployer.deployWith(`${collateralName.toUpperCase()}_Loans_${zTokenName}`, Loans, txConfig);
     
+    const marketsStateInstance = await MarketsState.deployed();
     const lenderInstance = await Lenders.deployed();
     const lendingPoolInstance = await LendingPool.deployed();
     const settingsInstance = await Settings.deployed();
@@ -65,6 +66,7 @@ PoolDeployer.prototype.deployPool = async function(
             LendingPool.address,
             LoanTermsConsensus.address,
             Settings.address,
+            MarketsState.address,
         );
     } else {
         const collateralAddress = tokens[collateralName.toUpperCase()];
@@ -75,35 +77,49 @@ PoolDeployer.prototype.deployPool = async function(
             LoanTermsConsensus.address,
             Settings.address,
             collateralAddress,
+            MarketsState.address,
         );
     }
     await lenderInstance.initialize(
-        ZToken.address,
+        TToken.address,
         LendingPool.address,
         InterestConsensus.address,
         Settings.address,
+        MarketsState.address,
     );
     
     await lendingPoolInstance.initialize(
-        ZToken.address,
+        TToken.address,
         tokenAddress,
         Lenders.address,
         Loans.address,
         cTokenAddress,
         settingsInstance.address,
+        MarketsState.address,
     );
   
     await zTokenInstance.addMinter(LendingPool.address, txConfig);
   
     await interestConsensus.initialize(
         Lenders.address,
-        settingsInstance.address
+        settingsInstance.address,
+        MarketsState.address,
     );
 
     await loanTermConsensus.initialize(
         Loans.address,
-        settingsInstance.address
+        settingsInstance.address,
+        MarketsState.address,
     );
+
+    const dependsOnMarketsState = [
+        LendingPool, Loans,
+    ];
+    for (const contract of dependsOnMarketsState) {
+        const deployed = await contract.deployed();
+        console.log(`Adding ${contract.contract_name} / ${deployed.address} in markets state (${MarketsState.address})`);
+        marketsStateInstance.addWhitelisted(contract.address, txConfig);
+    }
 
     const initializables = [
         Lenders, LendingPool, InterestConsensus, Loans, LoanTermsConsensus

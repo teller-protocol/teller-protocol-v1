@@ -53,14 +53,16 @@ contract Consensus is Base, OwnerSignersRole, SettingsConsts {
         @notice It initializes this contract setting the parameters.
         @param aCallerAddress the contract that will call it.
         @param aSettingAddress the settings contract address.
+        @param aMarketsAddress the markets state address.
      */
     function initialize(
         address aCallerAddress, // loans for LoanTermsConsensus, lenders for InterestConsensus
-        address aSettingAddress
+        address aSettingAddress,
+        address aMarketsAddress
     ) public isNotInitialized() {
         aCallerAddress.requireNotEmpty("MUST_PROVIDE_LENDER_INFO");
 
-        _initialize(aSettingAddress);
+        _initialize(aSettingAddress, aMarketsAddress);
 
         callerAddress = aCallerAddress;
     }
