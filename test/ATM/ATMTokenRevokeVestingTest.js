@@ -15,27 +15,34 @@ contract('ATMTokenRevokeVestingTest', function (accounts) {
     const timer = new Timer(web3);
 
     beforeEach('Setup for each test', async () => {
-        instance = await ATMToken.new(10000);
+        instance = await ATMToken.new(
+                                "ATMToken",
+                                "ATMT",
+                                18,
+                                10000,
+                                50
+                            );
     });
 
     withData({
-        _1_revoke_vested_basic: [daoMember1, 1000, 7000, undefined, false],
-        _2_revoke_vested_no_amount: [daoMember2, 1000, 7000, "ACCOUNT_DOESNT_HAVE_VESTING", true]
+        _1_revoke_vested_basic: [daoMember1, 1000, 3000, 7000, undefined, false],
+        _2_revoke_vested_no_amount: [daoMember2, 1000, 1750, 7000, "ACCOUNT_DOESNT_HAVE_VESTING", true]
         
     },function(
         receipent,
         amount,
+        cliff,
         vestingPeriod,
         expectedErrorMessage,
         mustFail
     ) {
         it(t('agent', 'revokeVesting', 'Should or be able to revoke correctly', mustFail), async function() {
         // Setup
-        await instance.mintVesting(daoMember1, amount, vestingPeriod, { from: daoAgent });
+        await instance.mintVesting(daoMember1, amount, cliff, vestingPeriod, { from: daoAgent });
         const deadline = await timer.getCurrentTimestampInSecondsAndSum(vestingPeriod);
             try {
                 // Invocation
-                const result = await instance.revokeVesting(receipent, { from: daoAgent });
+                const result = await instance.revokeVesting(receipent, 0, { from: daoAgent });
                 // Assertions
                 assert(!mustFail, 'It should have failed because the account is not vested');
                 atmToken

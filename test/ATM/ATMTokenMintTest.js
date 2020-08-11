@@ -1,7 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS  } = require('../utils/consts');
-const { atmToken } = require('../utils/events');
 
 // Smart contracts
 const ATMToken = artifacts.require("./ATMToken.sol");
@@ -12,7 +11,13 @@ contract('ATMTokenMintTest', function (accounts) {
     const daoMember1 = accounts[2];
 
     beforeEach('Setup for each test', async () => {
-        instance = await ATMToken.new(10000);
+        instance = await ATMToken.new(
+                                "ATMToken",
+                                "ATMT",
+                                18,
+                                10000,
+                                50
+                            );
     });
 
     withData({

@@ -12,12 +12,18 @@ contract('ATMTokenTest', function (accounts) {
     const daoMember1 = accounts[2];
 
     beforeEach('Setup for each test', async () => {
-        instance = await ATMToken.new(10000);
+        instance = await ATMToken.new(
+                                "ATMToken",
+                                "ATMT",
+                                18,
+                                10000,
+                                50
+                            );
     });
 
     withData({
         _1_set_supply_cap_basic: [70000, daoAgent, undefined, false],
-        _2_set_supply_cap_invalid_sender: [100000, daoMember1, 'PauserRole: caller does not have the Pauser role', true]
+        _2_set_supply_cap_invalid_sender: [100000, daoMember1, 'CALLER_IS_NOT_AGENT', true]
     },function(
         newCap,
         sender,

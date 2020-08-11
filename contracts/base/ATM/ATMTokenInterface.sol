@@ -80,32 +80,24 @@ pragma solidity 0.5.17;
      *
      * @param account The account which tokens will be assigned to
      * @param amount The amount of tokens to be assigned
+     * @param cliff The length of time (in seconds) after which the tokens will start vesting
      * @param vestingTime The length of the vesting period (in seconds)
      */
-    function mintVesting(address account, uint256 amount, uint256 vestingTime) external;
+    function mintVesting(address account, uint256 amount, uint256 cliff, uint256 vestingTime) external;
 
     /**
       * @notice Revokes the amount vested to an account
       * @param account The account for which vesting is to be revoked
-      * @return true if successful
+      * @param vestingId The Id of the vesting being revoked
       *
      */
-     function revokeVesting(address account) external returns (bool);
-
-     /**
-     *  @notice Checks if account has a vesting schedule
-     *  @param account The account being checked
-     *  @return true if successful
-     * 
-     */
-     function isVested(address account) external returns (bool);
+     function revokeVesting(address account, uint256 vestingId) external;
 
     /**
      *  @notice Withdrawl of tokens upon completion of vesting period
-     *  @return true if successful
      *
      */
-     function withdrawVested() external returns (bool);
+     function withdrawVested() external;
 
 
  }

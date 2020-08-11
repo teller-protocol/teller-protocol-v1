@@ -15,16 +15,23 @@ contract('ATMTokenWithdrawVestedTest', function (accounts) {
     const timer = new Timer(web3);
 
     beforeEach('Setup for each test', async () => {
-        instance = await ATMToken.new(10000);
+        instance = await ATMToken.new(
+                                "ATMToken",
+                                "ATMT",
+                                18,
+                                10000,
+                                50
+                            );
     });
 
     withData({
-        _1_claim_vested_basic: [daoMember2, 1000, 7000, 7001, undefined, false],
-        _2_claim_vested_before_deadline: [daoMember2, 1000, 7000, 5000, 'VESTING_DEADLINE_NOT_PASSSED', true],
-        _3_claim_vested_no_amount: [daoMember1, 1000, 7000, 8000, 'ACCOUNT_DOESNT_HAVE_VESTING', true]
+        _1_claim_vested_basic: [daoMember2, 1000, 2500, 7000, 7001, undefined, false],
+        _2_claim_vested_before_deadline_after_cliff: [daoMember2, 1000, 3000, 7000, 5000, undefined, false],
+        _3_claim_vested_no_amount: [daoMember1, 1000, 4000, 7000, 8000, 'ACCOUNT_DOESNT_HAVE_VESTING', true]
     },function(
         receipent,
         amount,
+        cliff,
         vestingPeriod,
         claimTime,
         expectedErrorMessage,
@@ -33,7 +40,7 @@ contract('ATMTokenWithdrawVestedTest', function (accounts) {
         it(t('user', 'withdrawVested', 'Should or should not be able to claim correctly', mustFail), async function() {
 
         // Setup 
-        await instance.mintVesting(daoMember2, amount, vestingPeriod, { from: daoAgent });
+        await instance.mintVesting(daoMember2, amount, cliff, vestingPeriod, { from: daoAgent });
             
             try {
                 // Invocation

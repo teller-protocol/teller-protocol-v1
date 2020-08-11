@@ -2,7 +2,6 @@
 const BigNumber = require('bignumber.js');
 const truffleAssert = require('truffle-assertions');
 const assert = require('assert');
-const { AssertionError } = require('assert');
 
 const emitted = (tx, eventName, assertFunction) => {
     truffleAssert.eventEmitted(tx, eventName, event => {
@@ -429,7 +428,6 @@ module.exports = {
                 name: name,
                 emitted: (assetSettingName, sender, assetAddress, oldValue, newValue) => emitted(tx, name, ev => {
                     assert.equal(ev.assetSettingName.toString(), assetSettingName.toString());
-                    const name = 'AssetSettingsRemoved';
                     assert.equal(ev.sender, sender);
                     assert.equal(ev.assetAddress.toString(), assetAddress.toString());
                     assert.equal(ev.oldValue.toString(), oldValue.toString());

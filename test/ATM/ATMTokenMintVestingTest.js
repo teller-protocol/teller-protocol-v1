@@ -9,42 +9,46 @@ const ATMToken = artifacts.require("./ATMToken.sol");
 contract('ATMTokenMintVestingTest', function (accounts) {
     let instance;
     const daoAgent = accounts[0];
-    const daoMember1 = accounts[2];
     const daoMember2 = accounts[3];
 
     beforeEach('Setup for each test', async () => {
-        instance = await ATMToken.new(10000);
+        instance = await ATMToken.new(
+                                "ATMToken",
+                                "ATMT",
+                                18,
+                                10000,
+                                1
+                            );
     });
 
     withData({
-        _1_mint_vesting_basic: [daoMember2, 1000, 7000, undefined, false],
-        _2_mint_vesting_above_cap: [daoMember2, 21000, 7000, 'ERC20_CAP_EXCEEDED', true],
-        _3_mint_vesting_zero_address: [NULL_ADDRESS, 3000, 60000, "MINT_TO_ZERO_ADDRESS", true],
-        _4_mint_vesting_incorrect_address: [daoMember1, 1000, 7000, 'ACCOUNT_DOESNT_HAVE_VESTING', true],
+        _1_mint_vesting_basic: [daoMember2, 1000, 3000, 7000, false, undefined, false],
+        _2_mint_vesting_above_cap: [daoMember2, 21000, 2000, 7000, false,  'ERC20_CAP_EXCEEDED', true],
+        _3_mint_vesting_zero_address: [NULL_ADDRESS, 3000, 10000, 60000, false, "MINT_TO_ZERO_ADDRESS", true],
+        _4_mint_vesting_above_allowed_max_vestings: [daoMember2, 1000, 3000, 6000, true, "MAX_VESTINGS_REACHED!", true],
     },function(
         receipent,
         amount,
+        cliff,
         vestingPeriod,
+        multipleVestings,
         expectedErrorMessage,
         mustFail
     ) {
         it(t('agent', 'mintVesting', 'Should or should not be able to mint correctly', mustFail), async function() {
-
+        
             try {
                 // Invocation
-                let vested;
-                const result = await instance.mintVesting(receipent, amount, vestingPeriod, { from: daoAgent });
-                if (receipent == daoMember1) {
-                    vested = await instance.isVested(daoMember2);
-                } else {
-                    vested = await instance.isVested(receipent);
+                let result;
+                result = await instance.mintVesting(receipent, amount, cliff, vestingPeriod, { from: daoAgent });
+                if (multipleVestings) {
+                    result = await instance.mintVesting(receipent, amount, cliff, vestingPeriod, { from: daoAgent });
                 }
-                // Assertions
-                assert(!mustFail, 'It should have failed because the amount is greater than the cap');
-                assert(vested);
                 atmToken
                     .newVesting(result)
                     .emitted(receipent, amount, vestingPeriod);
+                // Assertions
+                assert(!mustFail, 'It should have failed because the amount is greater than the cap');
             } catch (error) {
                 // Assertions
                 assert(mustFail);
