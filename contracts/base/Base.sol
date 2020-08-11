@@ -88,14 +88,18 @@ contract Base is Initializable, ReentrancyGuard {
     /**
         @notice It initializes the current contract instance setting the required parameters.
         @param settingsAddress settings contract address.
+        @param marketsAddress markets state contract address.
      */
-    function _initialize(address settingsAddress) internal isNotInitialized() {
+    function _initialize(address settingsAddress, address marketsAddress) internal isNotInitialized() {
         settingsAddress.requireNotEmpty("SETTINGS_MUST_BE_PROVIDED");
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
+        marketsAddress.requireNotEmpty("MARKETS_MUST_BE_PROVIDED");
+        require(marketsAddress.isContract(), "MARKETS_MUST_BE_A_CONTRACT");
 
         _initialize();
 
         settings = SettingsInterface(settingsAddress);
+        markets = MarketsStateInterface(marketsAddress);
     }
 
     /**

@@ -5,6 +5,7 @@ const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
 const BaseMock = artifacts.require("./mock/base/BaseMock.sol");
+const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
@@ -16,8 +17,9 @@ contract('BaseWhenAllowedTest', function (accounts) {
 
     beforeEach('Setup for each test', async () => {
         settings = await createTestSettingsInstance(Settings);
+        const markets = await Mock.new();
         instance = await BaseMock.new();
-        await instance.externalInitialize(settings.address);
+        await instance.externalInitialize(settings.address, markets.address);
     });
 
     withData({

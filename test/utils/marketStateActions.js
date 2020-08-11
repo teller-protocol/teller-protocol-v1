@@ -7,17 +7,19 @@ const actions = {
 module.exports = {
     ...actions,
     execute: async (instance, type, { borrowedAssset, collateralAssset, amount }, txConfig) => {
+        let result;
         if(type === actions.Inc_Supply) {
-            await instance.increaseSupply(borrowedAssset, collateralAssset, amount, txConfig);
+            result = await instance.increaseSupply(borrowedAssset, collateralAssset, amount, txConfig);
         }
         if(type === actions.Dec_Supply) {
-            await instance.decreaseSupply(borrowedAssset, collateralAssset, amount, txConfig);
+            result = await instance.decreaseSupply(borrowedAssset, collateralAssset, amount, txConfig);
         }
         if(type === actions.Borrow) {
-            await instance.increaseBorrow(borrowedAssset, collateralAssset, amount, txConfig);
+            result = await instance.increaseBorrow(borrowedAssset, collateralAssset, amount, txConfig);
         }
         if(type === actions.Repay) {
-            await instance.increaseRepayment(borrowedAssset, collateralAssset, amount, txConfig);
+            result = await instance.increaseRepayment(borrowedAssset, collateralAssset, amount, txConfig);
         }
+        return result;
     },
 }

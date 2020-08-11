@@ -20,9 +20,10 @@ contract('LoanTermsConsensus hashRequest and hashReponse', function (accounts) {
 
     beforeEach('Setup for each test', async () => {
         const settingsInstance = await Mock.new();
+        const marketsInstance = await Mock.new();
         consensusInstance = await Mock.new();
-        instance = await LoanTermsConsensusMock.new()
-        await instance.initialize(loansAddress, settingsInstance.address)
+        instance = await LoanTermsConsensusMock.new();
+        await instance.initialize(loansAddress, settingsInstance.address, marketsInstance.address);
     })
 
     withData({

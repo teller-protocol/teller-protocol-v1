@@ -44,6 +44,7 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         lendingTokenInstance = await Mock.new();
         lendingPoolInstance = await Mock.new();
+        marketsInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
         settingsInstance = await createTestSettingsInstance(
@@ -57,7 +58,8 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
             oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
-            settingsInstance.address
+            settingsInstance.address,
+            marketsInstance.address,
         )
         responseOne = createUnsignedLoanResponse(accounts[3], 0, 1234, 6500, 10000, 3, loanTermsConsInstance.address)
         responseTwo = createUnsignedLoanResponse(accounts[4], 0, 1500, 6000, 10000, 2, loanTermsConsInstance.address)

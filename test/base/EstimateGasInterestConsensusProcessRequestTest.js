@@ -13,6 +13,9 @@ const { createInterestResponseSig, hashInterestRequest } = require('../utils/has
 const ethUtil = require('ethereumjs-util');
 const chains = require('../utils/chains');
 
+// Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
+
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
 const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
@@ -134,8 +137,9 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
                     [settingsNames.LiquidateEthPrice]: 9500,
                 }
             );
+            const marketsInstance = await Mock.new();
             instance = await InterestConsensus.new();
-            await instance.initialize(lendersContract, settings.address);
+            await instance.initialize(lendersContract, settings.address, marketsInstance.address);
 
             for (const response of responses) {
                 await instance.addSigner(response.signer)
