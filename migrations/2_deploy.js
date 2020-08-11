@@ -51,7 +51,7 @@ module.exports = async function(deployer, network, accounts) {
   console.log(`Deployed tokens: ZDAI [${ZDAI.address}] ZUSDC [${ZUSDC.address}] `);
 
   // ATM Deployments
-  await deployerApp.deploy(ATMGovernance, txConfig);
+  await deployerApp.deploy(ATMGovernance, txConfig); // TODO: add Gnosis multisig as signer/pauser (not the DAO for now)
 
   // Settings Deployments
   await deployerApp.deploy(Settings, txConfig);

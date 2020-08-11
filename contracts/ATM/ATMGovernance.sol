@@ -17,18 +17,19 @@ import "./IATMGovernance.sol";
     @author develop@teller.finance
  */
 contract ATMGovernance is Pausable, SignerRole, IATMGovernance {    
-    
+    // TODO: REMOVE PAUSABLE
+
     using AddressArrayLib for address[];
     
-    // List of general ATM settings. We accept properties equal to zero.
-    // e.g.: supplyToDebtRatio  => percentage 50.44 = 5044
+    // List of general ATM settings. We don't accept settings equal to zero.
+    // Example: supplyToDebtRatio  => 5044 = percentage 50.44
+    // Example: supplyToDebtRatio => 1 = percentage 00.01
     mapping(bytes32 => uint256) public generalSettings;
 
 
     // List of Market specific Asset settings on this ATM
     // Asset address => Asset setting name => Asset setting value
     mapping(address => mapping(bytes32 => uint256)) public assetMarketSettings;
-
 
     // List of ATM Data providers 
     // max 256 data providers per ATM
@@ -48,6 +49,7 @@ contract ATMGovernance is Pausable, SignerRole, IATMGovernance {
         onlySigner
         whenNotPaused
     {
+        require(settingValue > 0, "GENERAL_SETTING_MUST_BE_POSITIVE");
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
         require(generalSettings[settingName] == 0, "GENERAL_SETTING_ALREADY_EXISTS");
         generalSettings[settingName] = settingValue;
@@ -64,6 +66,7 @@ contract ATMGovernance is Pausable, SignerRole, IATMGovernance {
         onlySigner
         whenNotPaused 
     {
+        require(newValue > 0, "GENERAL_SETTING_MUST_BE_POSITIVE");
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
         uint256 oldVersion = generalSettings[settingName];
         generalSettings[settingName] = newValue;
@@ -80,6 +83,22 @@ contract ATMGovernance is Pausable, SignerRole, IATMGovernance {
         returns (uint256)
     {
         return generalSettings[settingName];
+    }
+
+ /**
+        @notice Removes a General Setting from this ATM.
+        @param settingName name of the setting to be removed.
+     */
+    function removeGeneralSetting(bytes32 settingName)
+        external 
+        onlySigner
+        whenNotPaused
+    {
+        require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
+        require(generalSettings[settingName] > 0, "GENERAL_SETTING_NOT_FOUND");
+        uint256 previousValue = generalSettings[settingName];
+        delete generalSettings[settingName];
+        emit GeneralSettingRemoved(msg.sender, settingName, previousValue);
     }
 
 

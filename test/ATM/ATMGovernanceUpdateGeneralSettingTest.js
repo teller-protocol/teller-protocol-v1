@@ -30,8 +30,9 @@ contract('ATMGovernanceUpdateGeneralSettingTest', function (accounts) {
         _1_basic: [0, SETTING_NAME, SETTING_NEW_VALUE, false, undefined, false],
         _2_notSigner: [2, SETTING_NAME, SETTING_NEW_VALUE, false, 'SignerRole: caller does not have the Signer role', true],
         _3_emptySettingName: [0, EMPTY_SETTING_NAME, SETTING_NEW_VALUE, false, 'GENERAL_SETTING_MUST_BE_PROVIDED', true],
-        _4_wrongNameFormat: [0, "nameNotBytes32", SETTING_NEW_VALUE, false, 'invalid bytes32 value', true],
-        _5_notUpdatesWhenPaused: [0, SETTING_NAME, SETTING_NEW_VALUE, true, 'Pausable: paused', true],
+        _4_invalidValueZero: [0, SETTING_NAME, 0, false, 'GENERAL_SETTING_MUST_BE_POSITIVE', true],
+        _5_wrongNameFormat: [0, "nameNotBytes32", SETTING_NEW_VALUE, false, 'invalid bytes32 value', true],
+        _6_notUpdatesWhenPaused: [0, SETTING_NAME, SETTING_NEW_VALUE, true, 'Pausable: paused', true],
     }, function(senderIndex, settingName, settingValue, isPaused, expectedErrorMessage, mustFail) {
         it(t('user', 'updateGeneralSetting', 'Should (or not) be able to update a general setting.', mustFail), async function() {
             // Setup

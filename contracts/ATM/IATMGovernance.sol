@@ -146,19 +146,19 @@ interface IATMGovernance {
      */
     function addGeneralSetting(bytes32 settingName, uint256 settingValue) external;
 
-    // /**
-    //     @notice Updates an existing General Setting on this ATM.
-    //     @param settingName name of the setting to be modified.
-    //     @param newValue new value to be set for this settingName. 
-    //  */
-    // function updateGeneralSetting(bytes32 settingName, uint256 newValue) external;
+    /**
+        @notice Updates an existing General Setting on this ATM.
+        @param settingName name of the setting to be modified.
+        @param newValue new value to be set for this settingName. 
+     */
+    function updateGeneralSetting(bytes32 settingName, uint256 newValue) external;
 
 
-    // /**
-    //     @notice Removes a General Setting from this ATM.
-    //     @param settingName name of the setting to be removed.
-    //  */
-    // function removeGeneralSetting(bytes32 settingName) external;
+    /**
+        @notice Removes a General Setting from this ATM.
+        @param settingName name of the setting to be removed.
+     */
+    function removeGeneralSetting(bytes32 settingName) external;
 
     // /**
     //     @notice Adds a new Asset Setting from a specific Market on this ATM.
