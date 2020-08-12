@@ -1,6 +1,6 @@
 
 module.exports = {
-    CDAI: '0x6D7F0754FFeb405d23C51CE938289d4835bE3b14',
+    CDAI: '0xdb5Ed4605C11822811a39F94314fDb8F0fb59A2C',
     // DAI used by Compound.finance
     DAI: '0xc2118d4d90b274016cB7a54c03EF52E6c537D957',
     // USDC used by Compound.finance
