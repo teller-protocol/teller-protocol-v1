@@ -3,8 +3,9 @@
     "node_version": "10.15.3", 
     "solc": "0.5.17", 
     "use_yarn": true,
+    "exclude_informational": true,
+    "truffle_version": "truffle@5.1.16",
     "slither": {
-        "target": ".",
-        "exclude_informational": true
+        "target": "."
     }
 }
