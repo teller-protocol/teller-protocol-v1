@@ -160,13 +160,13 @@ interface IATMGovernance {
      */
     function removeGeneralSetting(bytes32 settingName) external;
 
-    // /**
-    //     @notice Adds a new Asset Setting from a specific Market on this ATM.
-    //     @param asset market specific asset address.
-    //     @param settingName name of the setting to be added.
-    //     @param settingValue value of the setting to be added.
-    //  */
-    // function addAssetMarketSetting(address asset, bytes32 settingName, uint256 settingValue) external;
+    /**
+        @notice Adds a new Asset Setting from a specific Market on this ATM.
+        @param asset market specific asset address.
+        @param settingName name of the setting to be added.
+        @param settingValue value of the setting to be added.
+     */
+    function addAssetMarketSetting(address asset, bytes32 settingName, uint256 settingValue) external;
 
     // /**
     //     @notice Updates an existing Asset Setting from a specific Market on this ATM.
@@ -219,12 +219,12 @@ interface IATMGovernance {
      */
     function getGeneralSetting(bytes32 settingName) external view returns (uint256);
 
-    // /**
-    //     @notice Returns an existing Asset Setting value from a specific Market on this ATM.
-    //     @param asset market specific asset address.
-    //     @param settingName name of the setting to be returned.
-    //  */
-    // function getAssetMarketSetting(address asset, bytes32 settingName) external view returns (uint256);
+    /**
+        @notice Returns an existing Asset Setting value from a specific Market on this ATM.
+        @param asset market specific asset address.
+        @param settingName name of the setting to be returned.
+     */
+    function getAssetMarketSetting(address asset, bytes32 settingName) external view returns (uint256);
 
     // /**
     //     @notice Returns a Data Provider on a specific Data Type array.
