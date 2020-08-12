@@ -44,7 +44,8 @@ contract LoansBaseModifiersMock is EtherCollateralLoans {
 
     function externalIsBorrower(address anAddress) external isBorrower(anAddress) {}
 
-    function externalWithValidLoanRequest(
-        TellerCommon.LoanRequest calldata loanRequest
-    ) external withValidLoanRequest(loanRequest) {}
+    function externalWithValidLoanRequest(TellerCommon.LoanRequest calldata loanRequest)
+        external
+        withValidLoanRequest(loanRequest)
+    {}
 }

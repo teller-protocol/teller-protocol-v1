@@ -92,10 +92,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         @param loanID number of loan to check
      */
     modifier loanTermsSet(uint256 loanID) {
-        require(
-            loans[loanID].status == TellerCommon.LoanStatus.TermsSet,
-            "LOAN_NOT_SET"
-        );
+        require(loans[loanID].status == TellerCommon.LoanStatus.TermsSet, "LOAN_NOT_SET");
         _;
     }
 

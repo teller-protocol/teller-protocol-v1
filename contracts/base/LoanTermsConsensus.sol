@@ -129,10 +129,11 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         @param requestHash Hash of the loan request
         @return bytes32 Hash of the loan response
      */
-    function _hashResponse(
-        TellerCommon.LoanResponse memory response,
-        bytes32 requestHash
-    ) internal view returns (bytes32) {
+    function _hashResponse(TellerCommon.LoanResponse memory response, bytes32 requestHash)
+        internal
+        view
+        returns (bytes32)
+    {
         return
             keccak256(
                 abi.encode(

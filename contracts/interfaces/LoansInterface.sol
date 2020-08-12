@@ -119,10 +119,7 @@ interface LoansInterface {
         @notice Returns the struct of a loan
         @param loanID ID of loan from which collateral was withdrawn
      */
-    function loans(uint256 loanID)
-        external
-        view
-        returns (TellerCommon.Loan memory);
+    function loans(uint256 loanID) external view returns (TellerCommon.Loan memory);
 
     /**
         @notice Deposit collateral for a loan, unless it isn't allowed
