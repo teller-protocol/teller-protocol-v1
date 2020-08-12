@@ -4,6 +4,7 @@
     "solc": "0.5.17", 
     "use_yarn": true,
     "slither": {
-        "target": "."
+        "target": ".",
+        "exclude_informational": true
     }
 }
