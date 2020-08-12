@@ -4,8 +4,25 @@
     "solc": "0.5.17", 
     "use_yarn": true,
     "exclude_informational": true,
-    "truffle_version": "truffle@5.1.16",
+    "custom_unit_test": {
+        "enabled": true, 
+        "commands": [
+            {
+                "command": ["/bin/bash", "-c", "echo SUCCESSFUL COMMAND!!"], 
+                "expected": "{RETURN_CODE} == 0"
+            }, 
+            {
+                "command": ["/bin/bash", "-c", "echo FAILING COMMAND!"], 
+                "expected": "{RETURN_CODE} != 0"
+            }, 
+            {
+                "command": ["/bin/bash", "-c", "echo NEVER EXECUTED COMMAND!"], 
+                "expected": "{RETURN_CODE} == 0"
+            }
+        ]
+    }, 
     "slither": {
-        "target": "."
+        "target": ".",
+        "truffle_version": "truffle@5.1.16"
     }
 }
