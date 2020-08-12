@@ -1,0 +1,6 @@
+{
+    "cwd": "contracts", 
+    "node_version": "10.15.3", 
+    "solc": "0.5.17", 
+    "use_yarn": true
+}
