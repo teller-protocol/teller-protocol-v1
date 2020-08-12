@@ -17,7 +17,7 @@ contract('LendingPoolRepayTest', function (accounts) {
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
 
     let instance;
-    let zTokenInstance;
+    let tTokenInstance;
     let daiInstance;
     let lendersInstance;
     let interestConsensusInstance;
@@ -26,7 +26,7 @@ contract('LendingPoolRepayTest', function (accounts) {
     let loansAddress = accounts[0];
     
     beforeEach('Setup for each test', async () => {
-        zTokenInstance = await Mock.new();
+        tTokenInstance = await Mock.new();
         daiInstance = await Mock.new();
         instance = await LendingPool.new();
         interestConsensusInstance = await Mock.new();
@@ -36,7 +36,7 @@ contract('LendingPoolRepayTest', function (accounts) {
 
         lendersInstance = await Lenders.new();
         await lendersInstance.initialize(
-            zTokenInstance.address,
+            tTokenInstance.address,
             instance.address,
             interestConsensusInstance.address,
             settingsInstance.address,
@@ -68,7 +68,7 @@ contract('LendingPoolRepayTest', function (accounts) {
             // Setup
             const cTokenAddress = isCTokenSupported ? cTokenInstance.address : NULL_ADDRESS;
             await instance.initialize(
-                zTokenInstance.address,
+                tTokenInstance.address,
                 daiInstance.address,
                 lendersInstance.address,
                 loansAddress,

@@ -1,7 +1,7 @@
 // Smart contracts
 
 // Util classes
-const { zerocollateral, tokens } = require("../utils/contracts");
+const { teller, tokens } = require("../utils/contracts");
 const { printFullLoan, printOraclePrice } = require("../../test/utils/printer");
 const { loans: readParams } = require("../utils/cli-builder");
 const { getOracleAggregatorInfo, getDecimals } = require("../../test/utils/collateral-helper");
@@ -19,7 +19,7 @@ module.exports = async (callback) => {
         const startLoanId = processArgs.getValue(INITIAL_LOAN_ID.name);
         const endLoanId = processArgs.getValue(FINAL_LOAN_ID.name);
 
-        const loansInstance = await getContracts.getDeployed(zerocollateral.custom(collateralTokenName).loans(tokenName));
+        const loansInstance = await getContracts.getDeployed(teller.custom(collateralTokenName).loans(tokenName));
 
         const tokenInstance = await getContracts.getDeployed(tokens.get(tokenName));
         const tokenDecimals = parseInt(await tokenInstance.decimals());

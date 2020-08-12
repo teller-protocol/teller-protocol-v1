@@ -36,8 +36,8 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         @return the consensus interest.
      */
     function processRequest(
-        ZeroCollateralCommon.InterestRequest calldata request,
-        ZeroCollateralCommon.InterestResponse[] calldata responses
+        TellerCommon.InterestRequest calldata request,
+        TellerCommon.InterestResponse[] calldata responses
     ) external isInitialized() isCaller() returns (uint256) {
         require(
             responses.length >=
@@ -78,8 +78,8 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         @param response a node response.
      */
     function _processResponse(
-        ZeroCollateralCommon.InterestRequest memory request,
-        ZeroCollateralCommon.InterestResponse memory response,
+        TellerCommon.InterestRequest memory request,
+        TellerCommon.InterestResponse memory response,
         bytes32 requestHash
     ) internal {
         bytes32 responseHash = _hashResponse(response, requestHash);
@@ -111,7 +111,7 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         @return a hash value.
      */
     function _hashResponse(
-        ZeroCollateralCommon.InterestResponse memory response,
+        TellerCommon.InterestResponse memory response,
         bytes32 requestHash
     ) internal view returns (bytes32) {
         return
@@ -132,7 +132,7 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         @param request the interest request sent by the lender.
         @return a hash value.
      */
-    function _hashRequest(ZeroCollateralCommon.InterestRequest memory request)
+    function _hashRequest(TellerCommon.InterestRequest memory request)
         internal
         view
         returns (bytes32)

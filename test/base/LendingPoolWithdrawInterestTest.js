@@ -18,7 +18,7 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
     const interestValidatorInterfaceEncoder = new InterestValidatorInterfaceEncoder(web3);
     let instance;
-    let zTokenInstance;
+    let tTokenInstance;
     let lendingTokenInstance;
     let loansInstance;
     let consensusInstance;
@@ -32,7 +32,7 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
         loansInstance = await Mock.new();
         consensusInstance = await Mock.new();
         settingsInstance = await Mock.new();
-        zTokenInstance = await Mock.new();
+        tTokenInstance = await Mock.new();
         lendingTokenInstance = await Mock.new();
         cTokenInstance = await Mock.new()
         lendersInstance = await Lenders.new();
@@ -41,7 +41,7 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
         
         instance = await LendingPool.new();
         await lendersInstance.initialize(
-            zTokenInstance.address,
+            tTokenInstance.address,
             instance.address,
             consensusInstance.address,
             settingsInstance.address,
@@ -83,7 +83,7 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
             const encodeIsInterestValid = interestValidatorInterfaceEncoder.encodeIsInterestValid();
             await interestValidatorInstance.givenMethodReturnBool(encodeIsInterestValid, interestValidatorInfo.isValid);
             await instance.initialize(
-                zTokenInstance.address,
+                tTokenInstance.address,
                 lendingTokenInstance.address,
                 lendersInstance.address,
                 loansInstance.address,

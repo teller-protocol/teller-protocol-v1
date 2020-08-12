@@ -12,7 +12,7 @@ contract LendersModifiersMock is Lenders {
 
     /** External Functions */
 
-    function externalIsZToken() external isZToken() {}
+    function externalIsTToken() external isTToken() {}
 
     function externalIsLendingPool() external isLendingPool() {}
 

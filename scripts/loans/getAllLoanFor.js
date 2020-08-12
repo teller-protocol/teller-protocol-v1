@@ -1,7 +1,7 @@
 // Smart contracts
 
 // Util classes
-const { zerocollateral } = require("../../scripts/utils/contracts");
+const { teller } = require("../../scripts/utils/contracts");
 const { loans: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
 const { COLL_TOKEN_NAME, TOKEN_NAME, BORROWER } = require("../utils/cli/names");
@@ -13,7 +13,7 @@ module.exports = async (callback) => {
         const tokenName = processArgs.getValue(TOKEN_NAME.name);
         const borroweAddress = processArgs.getValue(BORROWER.name);
         const getContracts = processArgs.createGetContracts(artifacts);
-        const loansInstance = await getContracts.getDeployed(zerocollateral.custom(collateralTokenName).loans(tokenName));
+        const loansInstance = await getContracts.getDeployed(teller.custom(collateralTokenName).loans(tokenName));
         
         const loanIds = await loansInstance.getBorrowerLoans(borroweAddress);
         

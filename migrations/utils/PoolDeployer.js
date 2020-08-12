@@ -17,8 +17,8 @@ PoolDeployer.prototype.deployPool = async function(
     assert(aggregatorName, 'Aggregator name is undefined.');
     assert(tokenName, 'Token name is undefined.');
     assert(collateralName, 'Collateral token name is undefined.');
-    const zTokenInstance = await TToken.deployed();
-    const zTokenName = await zTokenInstance.symbol();
+    const tTokenInstance = await TToken.deployed();
+    const tTokenName = await tTokenInstance.symbol();
     console.log(`Deploying pool (collateral ${collateralName}) for token ${tokenName}...`);
     console.log(`Using MarketsState address ${MarketsState.address}.`);
     console.log(`Using ATMSettings address ${ATMSettings.address}.`);
@@ -56,23 +56,23 @@ PoolDeployer.prototype.deployPool = async function(
     const upgradableArgs = [ txConfig.from, '0x' ]
     let contractName
 
-    contractName = `${collateralName.toUpperCase()}_LendingPool_${zTokenName}`
+    contractName = `${collateralName.toUpperCase()}_LendingPool_${tTokenName}`
     const lendingPoolInstance = await this.deployer.deployWithUpgradeable(contractName, LendingPool, ...upgradableArgs, txConfig);
     lendingPoolInstance.contractName = contractName
 
-    contractName = `${collateralName.toUpperCase()}_InterestConsensus_${zTokenName}`
+    contractName = `${collateralName.toUpperCase()}_InterestConsensus_${tTokenName}`
     const interestConsensusInstance = await this.deployer.deployWithUpgradeable(contractName, InterestConsensus, ...upgradableArgs, txConfig);
     interestConsensusInstance.contractName = contractName
 
-    contractName = `${collateralName.toUpperCase()}_Lenders_${zTokenName}`
+    contractName = `${collateralName.toUpperCase()}_Lenders_${tTokenName}`
     const lendersInstance = await this.deployer.deployWithUpgradeable(contractName, Lenders, ...upgradableArgs, txConfig);
     lendersInstance.contractName = contractName
 
-    contractName = `${collateralName.toUpperCase()}_LoanTermsConsensus_${zTokenName}`
+    contractName = `${collateralName.toUpperCase()}_LoanTermsConsensus_${tTokenName}`
     const loanTermsConsensusInstance = await this.deployer.deployWithUpgradeable(contractName, LoanTermsConsensus, ...upgradableArgs, txConfig);
     loanTermsConsensusInstance.contractName = contractName
 
-    contractName = `${collateralName.toUpperCase()}_Loans_${zTokenName}`
+    contractName = `${collateralName.toUpperCase()}_Loans_${tTokenName}`
     const loansInstance = await this.deployer.deployWithUpgradeable(contractName, Loans, ...upgradableArgs, txConfig);
     loansInstance.contractName = contractName
 
@@ -133,7 +133,7 @@ PoolDeployer.prototype.deployPool = async function(
         );
     }
 
-    await zTokenInstance.addMinter(lendingPoolInstance.address, txConfig);
+    await tTokenInstance.addMinter(lendingPoolInstance.address, txConfig);
 
     const dependsOnMarketsState = [
         lendingPoolInstance, loansInstance,

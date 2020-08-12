@@ -1,7 +1,6 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../util/ZeroCollateralCommon.sol";
 import "../util/MarketStateLib.sol";
 
 

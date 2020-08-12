@@ -2,7 +2,7 @@
 
 // Util classes
 const assert = require('assert');
-const { zerocollateral } = require("../utils/contracts");
+const { teller } = require("../utils/contracts");
 const { loans: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
 const Accounts = require('../utils/Accounts');
@@ -22,7 +22,7 @@ module.exports = async (callback) => {
         assert(newValue, 'New oracle address must be defined.');
 
         const getContracts = processArgs.createGetContracts(artifacts);
-        const loansInstance = await getContracts.getDeployed(zerocollateral.custom(collateralTokenName).loans(tokenName));
+        const loansInstance = await getContracts.getDeployed(teller.custom(collateralTokenName).loans(tokenName));
 
         const sender = await accounts.getAt(senderIndex);
 

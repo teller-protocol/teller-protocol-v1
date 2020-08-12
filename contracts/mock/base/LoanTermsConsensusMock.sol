@@ -85,21 +85,21 @@ contract LoanTermsConsensusMock is LoanTermsConsensus {
     }
 
     function externalProcessResponse(
-        ZeroCollateralCommon.LoanRequest calldata request,
-        ZeroCollateralCommon.LoanResponse calldata response,
+        TellerCommon.LoanRequest calldata request,
+        TellerCommon.LoanResponse calldata response,
         bytes32 requestHash
     ) external {
         _processResponse(request, response, requestHash);
     }
 
     function externalHashResponse(
-        ZeroCollateralCommon.LoanResponse calldata response,
+        TellerCommon.LoanResponse calldata response,
         bytes32 requestHash
     ) external view returns (bytes32) {
         return _hashResponse(response, requestHash);
     }
 
-    function externalHashRequest(ZeroCollateralCommon.LoanRequest calldata request)
+    function externalHashRequest(TellerCommon.LoanRequest calldata request)
         external
         view
         returns (bytes32)

@@ -15,10 +15,10 @@ interface LendingPoolInterface {
     function deposit(uint256 amount) external;
 
     /**
-        @notice It allows any zToken holder to burn their zToken tokens and withdraw their tokens.
+        @notice It allows any tToken holder to burn their tToken tokens and withdraw their tokens.
         @param amount of tokens to withdraw.
         @dev It throws a require error if the contract hasn't enough tokens balance.
-        @dev It throws a require error if the holder hasn't enough zToken balance.
+        @dev It throws a require error if the holder hasn't enough tToken balance.
      */
     function withdraw(uint256 amount) external;
 

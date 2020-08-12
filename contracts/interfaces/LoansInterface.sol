@@ -1,7 +1,7 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../util/ZeroCollateralCommon.sol";
+import "../util/TellerCommon.sol";
 
 
 /**
@@ -122,7 +122,7 @@ interface LoansInterface {
     function loans(uint256 loanID)
         external
         view
-        returns (ZeroCollateralCommon.Loan memory);
+        returns (TellerCommon.Loan memory);
 
     /**
         @notice Deposit collateral for a loan, unless it isn't allowed
@@ -148,8 +148,8 @@ interface LoansInterface {
         @param collateralAmount Amount of collateral for the loan
      */
     function createLoanWithTerms(
-        ZeroCollateralCommon.LoanRequest calldata request,
-        ZeroCollateralCommon.LoanResponse[] calldata responses,
+        TellerCommon.LoanRequest calldata request,
+        TellerCommon.LoanResponse[] calldata responses,
         uint256 collateralAmount
     ) external payable;
 
