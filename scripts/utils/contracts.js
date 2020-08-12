@@ -5,7 +5,7 @@ const LINK = 'LINK';
 const internalLoans = (collateralToken, tokenName, artifactName = 'Loans') => {
     return {
         keyName: TELLER_KEY,
-        contractName: `${collateralToken.toUpperCase()}_Loans_z${tokenName.toUpperCase()}`,
+        contractName: `${collateralToken.toUpperCase()}_Loans_t${tokenName.toUpperCase()}`,
         artifactName,
     }
 };
@@ -19,28 +19,28 @@ const internalOracle = (sourceToken, targetToken, artifactName = 'ChainlinkPairA
 const internalLendingPool = (collateralToken, tokenName, artifactName = 'LendingPool') => {
     return {
         keyName: TELLER_KEY,
-        contractName: `${collateralToken.toUpperCase()}_LendingPool_z${tokenName.toUpperCase()}`,
+        contractName: `${collateralToken.toUpperCase()}_LendingPool_t${tokenName.toUpperCase()}`,
         artifactName,
     };
 };
 const internalInterestConsensus = (collateralToken, tokenName, artifactName = 'InterestConsensus') => {
     return {
         keyName: TELLER_KEY,
-        contractName: `${collateralToken.toUpperCase()}_InterestConsensus_z${tokenName.toUpperCase()}`,
+        contractName: `${collateralToken.toUpperCase()}_InterestConsensus_t${tokenName.toUpperCase()}`,
         artifactName,
     };
 };
 const internalLoanTermsConsensus = (collateralToken, tokenName, artifactName = 'LoanTermsConsensus') => {
     return {
         keyName: TELLER_KEY,
-        contractName: `${collateralToken.toUpperCase()}_LoanTermsConsensus_z${tokenName.toUpperCase()}`,
+        contractName: `${collateralToken.toUpperCase()}_LoanTermsConsensus_t${tokenName.toUpperCase()}`,
         artifactName,
     };
 };
 const internalLenders = (collateralToken, tokenName, artifactName = 'Lenders') => {
     return {
         keyName: TELLER_KEY,
-        contractName: `${collateralToken.toUpperCase()}_Lenders_z${tokenName.toUpperCase()}`,
+        contractName: `${collateralToken.toUpperCase()}_Lenders_t${tokenName.toUpperCase()}`,
         artifactName,
     };
 };
