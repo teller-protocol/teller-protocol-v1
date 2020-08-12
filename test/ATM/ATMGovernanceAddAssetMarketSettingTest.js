@@ -56,10 +56,9 @@ contract('ATMGovernanceAddAssetMarketSettingTest', function (accounts) {
                 // Validating events were emitted
                 atmGovernance
                     .assetMarketSettingAdded(result)
-                    .emitted(sender, asset, settingName, settingValue);
+                    .emitted(sender, assetAddress, settingName, settingValue);
 
             } catch (error) {
-                console.log(error);
                 // Assertions
                 assert(mustFail);
                 assert(error);
@@ -96,7 +95,7 @@ contract('ATMGovernanceAddAssetMarketSettingTest', function (accounts) {
         });
     });
 
-   // Testing addresses
+   // Testing address type
     withData({
         _1_nullAsset: [0, NULL_ADDRESS, SETTING_NAME, SETTING_VALUE, 'ASSET_ADDRESS_IS_REQUIRED', true],
         _1_notContractAddress: [0, DUMMY_ADDRESS, SETTING_NAME, SETTING_VALUE, 'ASSET_MUST_BE_A_CONTRACT', true],

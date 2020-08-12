@@ -115,6 +115,23 @@ contract ATMGovernance is Pausable, SignerRole, IATMGovernance {
     }
 
 
+    /**
+        @notice Removes an existing Asset Setting from a specific Market on this ATM.
+        @param asset market specific asset address.
+        @param settingName name of the setting to be added.
+     */
+    function removeAssetMarketSetting(address asset, bytes32 settingName)
+        external
+        onlySigner
+        whenNotPaused
+    {
+        require(settingName != "", "ASSET_SETTING_MUST_BE_PROVIDED");
+        require(assetMarketSettings[asset][settingName] > 0, "ASSET_SETTING_NOT_FOUND");
+        uint256 oldValue = assetMarketSettings[asset][settingName];
+        delete assetMarketSettings[asset][settingName];
+        emit AssetMarketSettingRemoved(msg.sender, asset, settingName, oldValue);
+    }
+
     /* External Constant functions */
 
     /**

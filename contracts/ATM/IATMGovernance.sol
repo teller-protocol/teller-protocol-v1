@@ -82,14 +82,12 @@ interface IATMGovernance {
         @param asset asset address this setting was removed for.
         @param settingName name of the removed setting.
         @param oldValue previous value of the removed setting.
-        @param newValue new value of the removed setting.
      */
     event AssetMarketSettingRemoved(
         address indexed signer,
         address indexed asset,
         bytes32 indexed settingName,
-        uint256 oldValue,
-        uint256 newValue
+        uint256 oldValue
     );
 
     /**
@@ -176,12 +174,12 @@ interface IATMGovernance {
     //  */
     // function updateAssetMarketSetting(address asset, bytes32 settingName, uint256 settingValue) external;
 
-    // /**
-    //     @notice Removes an existing Asset Setting from a specific Market on this ATM.
-    //     @param asset market specific asset address.
-    //     @param settingName name of the setting to be added.
-    //  */
-    // function removeAssetMarketSetting(address asset, bytes32 settingName) external;
+    /**
+        @notice Removes an existing Asset Setting from a specific Market on this ATM.
+        @param asset market specific asset address.
+        @param settingName name of the setting to be added.
+     */
+    function removeAssetMarketSetting(address asset, bytes32 settingName) external;
 
     // /**
     //     @notice Adds a new Data Provider on a specific Data Type array.
