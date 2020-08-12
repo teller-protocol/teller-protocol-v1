@@ -503,5 +503,19 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        assetMarketSettingUpdated: tx => {
+            const name = 'AssetMarketSettingUpdated';
+            return {
+                name: name,
+                emitted: (signer, asset, settingName, oldValue, newValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.signer, signer);
+                    assert.equal(ev.asset, asset);
+                    assert.equal(ev.settingName, settingName);
+                    assert.equal(ev.oldValue, oldValue);
+                    assert.equal(ev.newValue, newValue);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     }
 };

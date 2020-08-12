@@ -1,7 +1,12 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, toBytes32 } = require('../utils/consts');
-const { atmGovernance } = require('../utils/events');
+const {
+    t,
+    toBytes32
+} = require('../utils/consts');
+const {
+    atmGovernance
+} = require('../utils/events');
 
 // Mock contracts
 
@@ -10,13 +15,13 @@ const ATMGovernance = artifacts.require("./ATM/ATMGovernance.sol");
 
 contract('ATMGovernanceAddGeneralSettingTest', function (accounts) {
     let instance;
-    
+
     beforeEach('Setup for each test', async () => {
         instance = await ATMGovernance.new();
     });
 
     // Testing values
-    const SETTING_NAME = toBytes32(web3, 'supplyToDebtRatio'); 
+    const SETTING_NAME = toBytes32(web3, 'supplyToDebtRatio');
     const SETTING_VALUE = 5044;
     const EMPTY_SETTING_NAME = toBytes32(web3, '');
 
@@ -27,28 +32,32 @@ contract('ATMGovernanceAddGeneralSettingTest', function (accounts) {
         _4_wrongNameFormat: [0, "nameNotBytes32", SETTING_VALUE, false, 'invalid bytes32 value', true],
         _5_notAddingWhenPaused: [0, SETTING_NAME, SETTING_VALUE, true, 'Pausable: paused', true],
         _6_notPauserTryPausing: [2, SETTING_NAME, SETTING_VALUE, true, 'PauserRole: caller does not have the Pauser role', true],
-    }, function(senderIndex, settingName, settingValue, isPaused, expectedErrorMessage, mustFail) {
-        it(t('user', 'addGeneralSetting', 'Should (or not) be able to add a general setting.', mustFail), async function() {
+    }, function (senderIndex, settingName, settingValue, isPaused, expectedErrorMessage, mustFail) {
+        it(t('user', 'addGeneralSetting', 'Should (or not) be able to add a general setting.', mustFail), async function () {
             // Setup
             const sender = accounts[senderIndex];
-            
+
             try {
                 // Pausable testing
                 if (isPaused) {
-                    await instance.pause({ from: sender })
+                    await instance.pause({
+                        from: sender
+                    })
                 }
                 // Invocation
-                const result = await instance.addGeneralSetting(settingName, settingValue, { from: sender });
-                
-                
+                const result = await instance.addGeneralSetting(settingName, settingValue, {
+                    from: sender
+                });
+
+
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
-                
+
                 // Validating state variables were modified
                 const aSettingValue = await instance.getGeneralSetting(SETTING_NAME);
                 assert.equal(aSettingValue, SETTING_VALUE);
-                
+
                 // Validating events were emitted
                 atmGovernance
                     .generalSettingAdded(result)
@@ -65,20 +74,24 @@ contract('ATMGovernanceAddGeneralSettingTest', function (accounts) {
 
     withData({
         _1_duplicateAdd: [0, SETTING_NAME, SETTING_VALUE, 'GENERAL_SETTING_ALREADY_EXISTS', true],
-    }, function(senderIndex, settingName, settingValue, expectedErrorMessage, mustFail) {
-        it(t('user', 'addGeneralSetting#2', 'Should not be able to add a general setting twice.', mustFail), async function() {
+    }, function (senderIndex, settingName, settingValue, expectedErrorMessage, mustFail) {
+        it(t('user', 'addGeneralSetting#2', 'Should not be able to add a general setting twice.', mustFail), async function () {
             // Setup
             const sender = accounts[senderIndex];
-            
+
             try {
                 // Invocation
-                const result1 = await instance.addGeneralSetting(settingName, settingValue, { from: sender });
+                const result1 = await instance.addGeneralSetting(settingName, settingValue, {
+                    from: sender
+                });
                 // Trying to add the same settingName a second time
-                const result2 = await instance.addGeneralSetting(settingName, settingValue, { from: sender });
+                const result2 = await instance.addGeneralSetting(settingName, settingValue, {
+                    from: sender
+                });
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
-                
+
             } catch (error) {
                 // Assertions
                 assert(mustFail);
@@ -89,5 +102,5 @@ contract('ATMGovernanceAddGeneralSettingTest', function (accounts) {
     });
 
 
-    
+
 });

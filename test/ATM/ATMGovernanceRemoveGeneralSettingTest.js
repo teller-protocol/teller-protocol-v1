@@ -1,7 +1,12 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, toBytes32 } = require('../utils/consts');
-const { atmGovernance } = require('../utils/events');
+const {
+    t,
+    toBytes32
+} = require('../utils/consts');
+const {
+    atmGovernance
+} = require('../utils/events');
 
 // Mock contracts
 
@@ -10,14 +15,14 @@ const ATMGovernance = artifacts.require("./ATM/ATMGovernance.sol");
 
 contract('ATMGovernanceRemoveGeneralSettingTest', function (accounts) {
     let instance;
-    
+
     beforeEach('Setup for each test', async () => {
         instance = await ATMGovernance.new();
     });
 
     // Testing values
-    const SETTING_NAME = toBytes32(web3, 'supplyToDebtRatio'); 
-    const NON_EXISTING_NAME = toBytes32(web3, 'NON-EXISTING'); 
+    const SETTING_NAME = toBytes32(web3, 'supplyToDebtRatio');
+    const NON_EXISTING_NAME = toBytes32(web3, 'NON-EXISTING');
     const SETTING_VALUE = 5044;
     const EMPTY_SETTING_NAME = toBytes32(web3, '');
     const NOT_FOUND = 0;
@@ -30,36 +35,42 @@ contract('ATMGovernanceRemoveGeneralSettingTest', function (accounts) {
         _5_wrongNameFormat: [0, "nameNotBytes32", false, 'invalid bytes32 value', true],
         _6_notRemovingWhenPaused: [0, SETTING_NAME, true, 'Pausable: paused', true],
         _7_notPauserTryPausing: [2, SETTING_NAME, true, 'PauserRole: caller does not have the Pauser role', true],
-    }, function(senderIndex, settingName, isPaused, expectedErrorMessage, mustFail) {
-        it(t('user', 'removeGeneralSetting', 'Should (or not) be able to add a general setting.', mustFail), async function() {
+    }, function (senderIndex, settingName, isPaused, expectedErrorMessage, mustFail) {
+        it(t('user', 'removeGeneralSetting', 'Should (or not) be able to add a general setting.', mustFail), async function () {
             // Setup
             const sender = accounts[senderIndex];
             const validSigner = accounts[0];
-            
+
             try {
                 // Precondition
-                await instance.addGeneralSetting(SETTING_NAME, SETTING_VALUE, { from: validSigner });
-                
+                await instance.addGeneralSetting(SETTING_NAME, SETTING_VALUE, {
+                    from: validSigner
+                });
+
                 // Pausable testing
                 if (isPaused) {
-                    await instance.pause({ from: sender })
+                    await instance.pause({
+                        from: sender
+                    })
                 }
                 // Invocation
-                const result = await instance.removeGeneralSetting(settingName, { from: sender });
-                
-                
+                const result = await instance.removeGeneralSetting(settingName, {
+                    from: sender
+                });
+
+
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
-                
+
                 // Validating state variables were modified
                 const shouldFail = await instance.getGeneralSetting(SETTING_NAME);
                 assert.equal(shouldFail, NOT_FOUND);
 
                 // Validating events were emitted
                 atmGovernance
-                .generalSettingRemoved(result)
-                .emitted(sender, SETTING_NAME, SETTING_VALUE);
+                    .generalSettingRemoved(result)
+                    .emitted(sender, SETTING_NAME, SETTING_VALUE);
             } catch (error) {
                 // Assertions
                 assert(mustFail);
@@ -69,5 +80,5 @@ contract('ATMGovernanceRemoveGeneralSettingTest', function (accounts) {
         });
     });
 
-    
+
 });

@@ -114,6 +114,28 @@ contract ATMGovernance is Pausable, SignerRole, IATMGovernance {
         emit AssetMarketSettingAdded(msg.sender, asset, settingName, settingValue);
     }
 
+    /**
+        @notice Updates an existing Asset Setting from a specific Market on this ATM.
+        @param asset market specific asset address.
+        @param settingName name of the setting to be added.
+        @param newValue value of the setting to be added.
+     */
+    function updateAssetMarketSetting(address asset, bytes32 settingName, uint256 newValue)
+        external
+        onlySigner
+        whenNotPaused
+    {
+        require(settingName != "", "ASSET_SETTING_MUST_BE_PROVIDED");
+        require(assetMarketSettings[asset][settingName] > 0, "ASSET_SETTING_NOT_FOUND");
+        require(
+            newValue != assetMarketSettings[asset][settingName],
+            "NEW_VALUE_SAME_AS_OLD"
+        );
+        uint256 oldValue = assetMarketSettings[asset][settingName];
+        assetMarketSettings[asset][settingName] = newValue;
+        emit AssetMarketSettingUpdated(msg.sender, asset, settingName, oldValue, newValue);
+    }
+
 
     /**
         @notice Removes an existing Asset Setting from a specific Market on this ATM.

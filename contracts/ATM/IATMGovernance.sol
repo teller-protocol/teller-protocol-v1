@@ -166,13 +166,13 @@ interface IATMGovernance {
      */
     function addAssetMarketSetting(address asset, bytes32 settingName, uint256 settingValue) external;
 
-    // /**
-    //     @notice Updates an existing Asset Setting from a specific Market on this ATM.
-    //     @param asset market specific asset address.
-    //     @param settingName name of the setting to be added.
-    //     @param settingValue value of the setting to be added.
-    //  */
-    // function updateAssetMarketSetting(address asset, bytes32 settingName, uint256 settingValue) external;
+    /**
+        @notice Updates an existing Asset Setting from a specific Market on this ATM.
+        @param asset market specific asset address.
+        @param settingName name of the setting to be added.
+        @param newValue value of the setting to be added.
+     */
+    function updateAssetMarketSetting(address asset, bytes32 settingName, uint256 newValue) external;
 
     /**
         @notice Removes an existing Asset Setting from a specific Market on this ATM.
