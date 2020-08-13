@@ -6,14 +6,9 @@
     "use_yarn": true,
     "exclude_informational": true,
     "custom_unit_test": {
-        "enabled": true, 
-        "commands": [
-            {
-                "command": ["truffle test"]
-            }
-        ]
+        "enabled": false
     }, 
     "slither": {
-        "target": "test"
+        "target": "."
     }
 }
