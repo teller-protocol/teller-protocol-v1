@@ -13,11 +13,12 @@ import "@openzeppelin/contracts/access/roles/SignerRole.sol";
 // Interfaces
 import "./IATMGovernance.sol";
 
+
 /**
     @notice This contract is used to modify Risk Settings, CRA or DataProviders for a specific ATM.
     @author develop@teller.finance
  */
-contract ATMGovernance is SignerRole, IATMGovernance {    
+contract ATMGovernance is SignerRole, IATMGovernance {
     // TODO: Inject Settings
 
     using AddressArrayLib for address[];
@@ -27,22 +28,21 @@ contract ATMGovernance is SignerRole, IATMGovernance {
     /* Constants */
 
     /* State Variables */
-    
+
     // List of general ATM settings. We don't accept settings equal to zero.
     // Example: supplyToDebtRatio  => 5044 = percentage 50.44
     // Example: supplyToDebtRatio => 1 = percentage 00.01
     mapping(bytes32 => uint256) public generalSettings;
 
-
     // List of Market specific Asset settings on this ATM
     // Asset address => Asset setting name => Asset setting value
     mapping(address => mapping(bytes32 => uint256)) public assetMarketSettings;
 
-    // List of ATM Data providers per data type 
+    // List of ATM Data providers per data type
     mapping(uint8 => address[]) public dataProviders;
 
-    // Unique CRA - Credit Risk Algorithm github hash to use in this ATM 
-    string public cra;    
+    // Unique CRA - Credit Risk Algorithm github hash to use in this ATM
+    string public cra;
 
     /* External Functions */
 
@@ -60,8 +60,8 @@ contract ATMGovernance is SignerRole, IATMGovernance {
         require(generalSettings[settingName] == 0, "GENERAL_SETTING_ALREADY_EXISTS");
         generalSettings[settingName] = settingValue;
         emit GeneralSettingAdded(msg.sender, settingName, settingValue);
-    }    
-    
+    }
+
     /**
         @notice Updates an existing General Setting on this ATM.
         @param settingName name of the setting to be modified.
@@ -83,10 +83,7 @@ contract ATMGovernance is SignerRole, IATMGovernance {
         @notice Removes a General Setting from this ATM.
         @param settingName name of the setting to be removed.
      */
-    function removeGeneralSetting(bytes32 settingName)
-        external 
-        onlySigner()
-    {
+    function removeGeneralSetting(bytes32 settingName) external onlySigner() {
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
         require(generalSettings[settingName] > 0, "GENERAL_SETTING_NOT_FOUND");
         uint256 previousValue = generalSettings[settingName];
@@ -100,15 +97,19 @@ contract ATMGovernance is SignerRole, IATMGovernance {
         @param settingName name of the setting to be added.
         @param settingValue value of the setting to be added.
      */
-    function addAssetMarketSetting(address asset, bytes32 settingName, uint256 settingValue)
-        external
-        onlySigner()
-    {
+    function addAssetMarketSetting(
+        address asset,
+        bytes32 settingName,
+        uint256 settingValue
+    ) external onlySigner() {
         asset.requireNotEmpty("ASSET_ADDRESS_IS_REQUIRED");
         require(asset.isContract(), "ASSET_MUST_BE_A_CONTRACT");
         require(settingValue > 0, "ASSET_SETTING_MUST_BE_POSITIVE");
         require(settingName != "", "ASSET_SETTING_MUST_BE_PROVIDED");
-        require(assetMarketSettings[asset][settingName] == 0, "ASSET_SETTING_ALREADY_EXISTS");
+        require(
+            assetMarketSettings[asset][settingName] == 0,
+            "ASSET_SETTING_ALREADY_EXISTS"
+        );
         assetMarketSettings[asset][settingName] = settingValue;
         emit AssetMarketSettingAdded(msg.sender, asset, settingName, settingValue);
     }
@@ -119,10 +120,11 @@ contract ATMGovernance is SignerRole, IATMGovernance {
         @param settingName name of the setting to be added.
         @param newValue value of the setting to be added.
      */
-    function updateAssetMarketSetting(address asset, bytes32 settingName, uint256 newValue)
-        external
-        onlySigner()
-    {
+    function updateAssetMarketSetting(
+        address asset,
+        bytes32 settingName,
+        uint256 newValue
+    ) external onlySigner() {
         require(settingName != "", "ASSET_SETTING_MUST_BE_PROVIDED");
         require(assetMarketSettings[asset][settingName] > 0, "ASSET_SETTING_NOT_FOUND");
         require(
@@ -131,9 +133,14 @@ contract ATMGovernance is SignerRole, IATMGovernance {
         );
         uint256 oldValue = assetMarketSettings[asset][settingName];
         assetMarketSettings[asset][settingName] = newValue;
-        emit AssetMarketSettingUpdated(msg.sender, asset, settingName, oldValue, newValue);
+        emit AssetMarketSettingUpdated(
+            msg.sender,
+            asset,
+            settingName,
+            oldValue,
+            newValue
+        );
     }
-
 
     /**
         @notice Removes an existing Asset Setting from a specific Market on this ATM.
@@ -151,7 +158,6 @@ contract ATMGovernance is SignerRole, IATMGovernance {
         emit AssetMarketSettingRemoved(msg.sender, asset, settingName, oldValue);
     }
 
-
     /**
         @notice Adds a new Data Provider on a specific Data Type array.
             This function would accept duplicated data providers for the same data type.
@@ -166,24 +172,25 @@ contract ATMGovernance is SignerRole, IATMGovernance {
         dataProviders[dataTypeIndex].add(dataProvider);
         emit DataProviderAdded(msg.sender, dataTypeIndex, dataProvider);
     }
-  
+
     /**
         @notice Updates an existing Data Provider on a specific Data Type array.
         @param dataTypeIndex array index for this Data Type.
         @param oldProviderIndex previous data provider index.
         @param newProvider new data provider address.
      */
-    function updateDataProvider(uint8 dataTypeIndex, uint256 oldProviderIndex, address newProvider)
-        external
-        onlySigner()
-    {
+    function updateDataProvider(
+        uint8 dataTypeIndex,
+        uint256 oldProviderIndex,
+        address newProvider
+    ) external onlySigner() {
         require(newProvider.isContract(), "DATA_PROVIDER_MUST_BE_A_CONTRACT");
         address oldProvider = dataProviders[dataTypeIndex][oldProviderIndex];
         require(oldProvider != newProvider, "DATA_PROVIDER_SAME_OLD");
         dataProviders[dataTypeIndex][oldProviderIndex] = newProvider;
         emit DataProviderUpdated(msg.sender, dataTypeIndex, oldProvider, newProvider);
     }
-    
+
     /**
         @notice Removes an existing Data Provider on a specific Data Type array.
         @param dataTypeIndex array index for this Data Type.
@@ -193,27 +200,34 @@ contract ATMGovernance is SignerRole, IATMGovernance {
         external
         onlySigner()
     {
-        require(dataProviders[dataTypeIndex].length > dataProviderIndex, "DATA_PROVIDER_OUT_RANGE");
+        require(
+            dataProviders[dataTypeIndex].length > dataProviderIndex,
+            "DATA_PROVIDER_OUT_RANGE"
+        );
         address oldDataProvider = dataProviders[dataTypeIndex][dataProviderIndex];
         dataProviders[dataTypeIndex].removeAt(dataProviderIndex);
-        emit DataProviderRemoved(msg.sender, dataTypeIndex, dataProviderIndex, oldDataProvider);
+        emit DataProviderRemoved(
+            msg.sender,
+            dataTypeIndex,
+            dataProviderIndex,
+            oldDataProvider
+        );
     }
 
     /**
         @notice Sets the CRA - Credit Risk Algorithm to be used on this specific ATM.
                 CRA is represented by a Github commit hash of the newly proposed algorithm.
      */
-    function setCRA(string calldata _cra)
-        external
-        onlySigner()
-    {
+    function setCRA(string calldata _cra) external onlySigner() {
         bytes memory tempEmptyStringTest = bytes(_cra);
         require(tempEmptyStringTest.length > 0, "CRA_CANT_BE_EMPTY");
-        require(keccak256(abi.encodePacked(cra)) != keccak256(abi.encodePacked(_cra)), "CRA_SAME_AS_OLD");
+        require(
+            keccak256(abi.encodePacked(cra)) != keccak256(abi.encodePacked(_cra)),
+            "CRA_SAME_AS_OLD"
+        );
         cra = _cra;
         emit CRASet(msg.sender, cra);
     }
-
 
     /* External Constant functions */
 
@@ -221,11 +235,7 @@ contract ATMGovernance is SignerRole, IATMGovernance {
         @notice Returns a General Setting value from this ATM.
         @param settingName name of the setting to be returned.
      */
-    function getGeneralSetting(bytes32 settingName)
-        external
-        view
-        returns (uint256)
-    {
+    function getGeneralSetting(bytes32 settingName) external view returns (uint256) {
         return generalSettings[settingName];
     }
 
@@ -252,21 +262,18 @@ contract ATMGovernance is SignerRole, IATMGovernance {
         view
         returns (address)
     {
-        require(dataProviders[dataTypeIndex].length > dataProviderIndex, "DATA_PROVIDER_NOT_FOUND");
+        require(
+            dataProviders[dataTypeIndex].length > dataProviderIndex,
+            "DATA_PROVIDER_NOT_FOUND"
+        );
         return dataProviders[dataTypeIndex][dataProviderIndex];
     }
- 
+
     /**
         @notice Returns current CRA - Credit Risk Algorithm that is being used on this specific ATM.
                 CRA is represented by a Github commit hash of the newly proposed algorithm.
      */
-    function getCRA()
-        external
-        view
-        returns(string memory)
-    {
+    function getCRA() external view returns (string memory) {
         return cra;
     }
-
-
 }

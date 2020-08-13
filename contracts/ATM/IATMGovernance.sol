@@ -1,5 +1,6 @@
 pragma solidity 0.5.17;
 
+
 /**
     @notice This interface defines available functions for an ATMGovernace.
 
@@ -135,10 +136,7 @@ interface IATMGovernance {
         @param signer transaction sender address.
         @param craCommitHash github commit hash with the new CRA implementation.
      */
-    event CRASet(
-        address indexed signer, 
-        string craCommitHash
-    );
+    event CRASet(address indexed signer, string craCommitHash);
 
     /* External Functions */
 
@@ -156,7 +154,6 @@ interface IATMGovernance {
      */
     function updateGeneralSetting(bytes32 settingName, uint256 newValue) external;
 
-
     /**
         @notice Removes a General Setting from this ATM.
         @param settingName name of the setting to be removed.
@@ -169,7 +166,11 @@ interface IATMGovernance {
         @param settingName name of the setting to be added.
         @param settingValue value of the setting to be added.
      */
-    function addAssetMarketSetting(address asset, bytes32 settingName, uint256 settingValue) external;
+    function addAssetMarketSetting(
+        address asset,
+        bytes32 settingName,
+        uint256 settingValue
+    ) external;
 
     /**
         @notice Updates an existing Asset Setting from a specific Market on this ATM.
@@ -177,7 +178,11 @@ interface IATMGovernance {
         @param settingName name of the setting to be added.
         @param newValue value of the setting to be added.
      */
-    function updateAssetMarketSetting(address asset, bytes32 settingName, uint256 newValue) external;
+    function updateAssetMarketSetting(
+        address asset,
+        bytes32 settingName,
+        uint256 newValue
+    ) external;
 
     /**
         @notice Removes an existing Asset Setting from a specific Market on this ATM.
@@ -193,15 +198,19 @@ interface IATMGovernance {
         @param dataProvider data provider address.
      */
     function addDataProvider(uint8 dataTypeIndex, address dataProvider) external;
-    
+
     /**
         @notice Updates an existing Data Provider on a specific Data Type array.
         @param dataTypeIndex array index for this Data Type.
         @param oldProvider previous data provider index.
         @param newProvider new data provider address.
      */
-    function updateDataProvider(uint8 dataTypeIndex, uint256 oldProvider, address newProvider) external;
-    
+    function updateDataProvider(
+        uint8 dataTypeIndex,
+        uint256 oldProvider,
+        address newProvider
+    ) external;
+
     /**
         @notice Removes an existing Data Provider on a specific Data Type array.
         @param dataTypeIndex array index for this Data Type.
@@ -228,19 +237,24 @@ interface IATMGovernance {
         @param asset market specific asset address.
         @param settingName name of the setting to be returned.
      */
-    function getAssetMarketSetting(address asset, bytes32 settingName) external view returns (uint256);
+    function getAssetMarketSetting(address asset, bytes32 settingName)
+        external
+        view
+        returns (uint256);
 
     /**
         @notice Returns a Data Provider on a specific Data Type array.
         @param dataTypeIndex array index for this Data Type.
         @param dataProviderIndex data provider index number.
      */
-    function getDataProvider(uint8 dataTypeIndex, uint256 dataProviderIndex) external view returns (address);
-    
+    function getDataProvider(uint8 dataTypeIndex, uint256 dataProviderIndex)
+        external
+        view
+        returns (address);
+
     /**
         @notice Returns current CRA - Credit Risk Algorithm that is being used on this specific ATM.
                 CRA is represented by a Github commit hash of the newly proposed algorithm.
      */
-    function getCRA() external view returns(string memory);
-
-  }
+    function getCRA() external view returns (string memory);
+}
