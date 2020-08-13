@@ -1,6 +1,6 @@
 const { DUMMY_ADDRESS } = require('../../consts');
 
 module.exports = {
-    CDAI: '0x6CE27497A64fFFb5517AA4aeE908b1E7EB63B9fF',
-    CUSDC: '0x20572e4c090f15667cf7378e16fad2ea0e2f3eff',
+    CDAI: '0xdb5Ed4605C11822811a39F94314fDb8F0fb59A2C',
+    CUSDC: '0x8aF93cae804cC220D1A608d4FA54D1b6ca5EB361',
 };
