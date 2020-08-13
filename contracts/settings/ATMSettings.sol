@@ -109,7 +109,7 @@ contract ATMSettings is ATMSettingsInterface {
 
         atmPaused[atmAddress] = false;
 
-        emit ATMUnpaused(msg.sender,  atmAddress);
+        emit ATMUnpaused(msg.sender, atmAddress);
     }
 
     /**
