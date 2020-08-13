@@ -54,4 +54,9 @@ contract SettingsConsts {
         @notice The maximum loan duration setting is defined in seconds.
      */
     bytes32 public constant MAXIMUM_LOAN_DURATION_SETTING = "MaximumLoanDuration";
+    /**
+        @notice The setting name for the request loan terms rate limit settings.
+        @notice The request loan terms rate limit setting is defined in seconds.
+     */
+    bytes32 public constant REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING = "RequestLoanTermsRateLimit";
 }

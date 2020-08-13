@@ -106,5 +106,13 @@ module.exports = {
         min: 0,
         max: MAX_VALUE_STRING,
     },
-    
+    /**
+        It represents the minimum time window (in seconds) between each request (from a borrower address) to calculate the accrue interest.
+     */
+    [settingsNames.RequestLoanTermsRateLimit]: {
+        processOnDeployment: true,
+        value: 30, // 30 Seconds ONLY for testnets
+        min: 0,
+        max: MAX_VALUE_STRING,
+    },
 };

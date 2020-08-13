@@ -68,6 +68,12 @@ contract LoanTermsConsensusMock is LoanTermsConsensus {
         signerNonceTaken[signer][signerNonce] = taken;
     }
 
+    function mockBorrowerToLastLoanTermRequest(address borrower, uint256 lastTime)
+        external
+    {
+        borrowerToLastLoanTermRequest[borrower] = lastTime;
+    }
+
     function mockRequestNonce(address borrower, uint256 borrowerNonce, bool taken)
         external
     {
@@ -103,5 +109,12 @@ contract LoanTermsConsensusMock is LoanTermsConsensus {
 
     function _getChainId() internal view returns (uint256) {
         return _mockChainId;
+    }
+
+    function externalRequireRequestLoanTermsRateLimit(
+        ZeroCollateralCommon.LoanRequest calldata request
+    ) external view returns (bool) {
+        super._requireRequestLoanTermsRateLimit(request);
+        return true;
     }
 }
