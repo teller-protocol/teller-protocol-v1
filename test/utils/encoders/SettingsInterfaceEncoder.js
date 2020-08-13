@@ -15,4 +15,8 @@ SettingsInterfaceEncoder.prototype.encodeHasPauserRole = function() {
     return encode(this.web3, 'hasPauserRole(address)');
 }
 
+SettingsInterfaceEncoder.prototype.encodeIsPaused = function() {
+    return encode(this.web3, 'isPaused()');
+}
+
 module.exports = SettingsInterfaceEncoder;
