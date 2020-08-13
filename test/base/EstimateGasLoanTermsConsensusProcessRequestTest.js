@@ -26,7 +26,7 @@ const Settings = artifacts.require("./base/Settings.sol");
 contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) {
     let instance
 
-    const baseGasCost = 449000;
+    const baseGasCost = 472500;
     const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 92500);
 
     const loansContract = accounts[1]
