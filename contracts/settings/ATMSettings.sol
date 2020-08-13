@@ -33,7 +33,7 @@ contract ATMSettings is ATMSettingsInterface {
 
         i.e.: address(ATM) => true or false.
      */
-    mapping(address => bool) public atmToPaused;
+    mapping(address => bool) public atmPaused;
 
     /**
         @notice It represents a mapping to identify the ATM used in a given market.
@@ -89,9 +89,9 @@ contract ATMSettings is ATMSettingsInterface {
         withValidATM(atmAddress)
     {
         require(settings.isPaused() == false, "PLATFORM_IS_ALREADY_PAUSED");
-        require(atmToPaused[atmAddress] == false, "ATM_IS_ALREADY_PAUSED");
+        require(atmPaused[atmAddress] == false, "ATM_IS_ALREADY_PAUSED");
 
-        atmToPaused[atmAddress] = true;
+        atmPaused[atmAddress] = true;
 
         emit ATMPaused(atmAddress, msg.sender);
     }
@@ -106,9 +106,9 @@ contract ATMSettings is ATMSettingsInterface {
         withValidATM(atmAddress)
     {
         require(settings.isPaused() == false, "PLATFORM_IS_PAUSED");
-        require(atmToPaused[atmAddress] == true, "ATM_IS_NOT_PAUSED");
+        require(atmPaused[atmAddress] == true, "ATM_IS_NOT_PAUSED");
 
-        atmToPaused[atmAddress] = false;
+        atmPaused[atmAddress] = false;
 
         emit ATMUnpaused(atmAddress, msg.sender);
     }
@@ -119,7 +119,7 @@ contract ATMSettings is ATMSettingsInterface {
         @return true if ATM is paused. Otherwise it returns false.
      */
     function isATMPaused(address atmAddress) external view returns (bool) {
-        return settings.isPaused() || atmToPaused[atmAddress];
+        return settings.isPaused() || atmPaused[atmAddress];
     }
 
     /**
