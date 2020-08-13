@@ -25,7 +25,7 @@ interface ATMSettingsInterface {
         @param atm unpaused ATM address.
         @param account address that unpaused the ATM.
      */
-    event ATMUnpaused(address indexed atm, address indexed account);
+    event ATMUnpaused(address indexed account, address indexed atm);
 
     /**
         @notice This event is emitted when the setting for a Market/ATM is set.

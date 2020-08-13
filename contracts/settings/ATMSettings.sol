@@ -79,7 +79,7 @@ contract ATMSettings is ATMSettingsInterface {
     /** External Functions */
 
     /**
-        @notice It pauses an given ATM.
+        @notice It pauses a given ATM.
         @param atmAddress ATM address to pause.
      */
     function pauseATM(address atmAddress)
@@ -96,7 +96,7 @@ contract ATMSettings is ATMSettingsInterface {
     }
 
     /**
-        @notice It unpauses an given ATM.
+        @notice It unpauses a given ATM.
         @param atmAddress ATM address to unpause.
      */
     function unpauseATM(address atmAddress)
@@ -109,7 +109,7 @@ contract ATMSettings is ATMSettingsInterface {
 
         atmPaused[atmAddress] = false;
 
-        emit ATMUnpaused(atmAddress, msg.sender);
+        emit ATMUnpaused(msg.sender,  atmAddress);
     }
 
     /**
