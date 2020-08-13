@@ -12,7 +12,7 @@
         "target": ".",
         "commands_before": [
             {
-                "command": ["yarn", "install"]
+                "command": ["npm", "install"]
             }
         ]
     }
