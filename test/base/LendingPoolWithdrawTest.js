@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t } = require('../utils/consts');
+const { t, NULL_ADDRESS } = require('../utils/consts');
 const { lendingPool } = require('../utils/events');
 const { initContracts } = require('../utils/contracts');
 const BurnableInterfaceEncoder = require('../utils/encoders/BurnableInterfaceEncoder');
@@ -54,7 +54,18 @@ contract('LendingPoolWithdrawTest', function (accounts) {
             // Setup
             const zTokenInstance = await Mock.new();
             const lendingTokenInstance = await Mock.new();
-            await initContracts(settingsInstance, cTokenInstance, instance, zTokenInstance, consensusInstance, lendingTokenInstance, loansInstance, marketsInstance, Lenders);
+            await initContracts(
+                settingsInstance,
+                cTokenInstance,
+                instance,
+                zTokenInstance,
+                consensusInstance,
+                lendingTokenInstance,
+                loansInstance,
+                marketsInstance,
+                NULL_ADDRESS,
+                Lenders,
+            );
             const encodeTransfer = burnableInterfaceEncoder.encodeTransfer();
             await lendingTokenInstance.givenMethodReturnBool(encodeTransfer, transfer);
 
@@ -94,7 +105,18 @@ contract('LendingPoolWithdrawTest', function (accounts) {
             const zTokenInstance = await ZDai.new();
             const lendingTokenInstance = await Token.new();
             await zTokenInstance.addMinter(instance.address);
-            await initContracts(settingsInstance, cTokenInstance, instance, zTokenInstance, consensusInstance, lendingTokenInstance, loansInstance, marketsInstance, Lenders);
+            await initContracts(
+                settingsInstance,
+                cTokenInstance,
+                instance,
+                zTokenInstance,
+                consensusInstance,
+                lendingTokenInstance,
+                loansInstance,
+                marketsInstance,
+                NULL_ADDRESS,
+                Lenders,
+            );
             await lendingTokenInstance.approve(instance.address, depositAmount, { from: depositSender });
             await instance.deposit(depositAmount, { from: depositSender });
             

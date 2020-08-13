@@ -64,32 +64,6 @@ contract Lenders is Base, LendersInterface {
     /** External Functions */
 
     /**
-        @notice It initializes this contract instance.
-        @param zTokenAddress zToken contract address.
-        @param lendingPoolAddress lending pool contract address.
-        @param interestConsensusAddress interest consensus contract address.
-        @param settingAddress settings contract address.
-        @param marketsAddress markets contract address.
-     */
-    function initialize(
-        address zTokenAddress,
-        address lendingPoolAddress,
-        address interestConsensusAddress,
-        address settingAddress,
-        address marketsAddress
-    ) external isNotInitialized() {
-        zTokenAddress.requireNotEmpty("ZTOKEN_MUST_BE_PROVIDED");
-        lendingPoolAddress.requireNotEmpty("LENDING_POOL_MUST_BE_PROVIDED");
-        interestConsensusAddress.requireNotEmpty("CONSENSUS_MUST_BE_PROVIDED");
-
-        _initialize(settingAddress, marketsAddress);
-
-        zToken = zTokenAddress;
-        lendingPool = lendingPoolAddress;
-        interestConsensus = InterestConsensusInterface(interestConsensusAddress);
-    }
-
-    /**
         @notice It sets the accrued interest for a lender based on the node responses.
         @param request interest request sent by the lender.
         @param responses all node responses to get a consensus value for the accrued interest.
@@ -153,6 +127,32 @@ contract Lenders is Base, LendersInterface {
         emit AccruedInterestWithdrawn(recipient, amount);
 
         return amount;
+    }
+
+    /**
+        @notice It initializes this contract instance.
+        @param zTokenAddress zToken contract address.
+        @param lendingPoolAddress lending pool contract address.
+        @param interestConsensusAddress interest consensus contract address.
+        @param settingAddress settings contract address.
+        @param marketsAddress markets contract address.
+     */
+    function initialize(
+        address zTokenAddress,
+        address lendingPoolAddress,
+        address interestConsensusAddress,
+        address settingAddress,
+        address marketsAddress
+    ) external isNotInitialized() {
+        zTokenAddress.requireNotEmpty("ZTOKEN_MUST_BE_PROVIDED");
+        lendingPoolAddress.requireNotEmpty("LENDING_POOL_MUST_BE_PROVIDED");
+        interestConsensusAddress.requireNotEmpty("CONSENSUS_MUST_BE_PROVIDED");
+
+        _initialize(settingAddress, marketsAddress);
+
+        zToken = zTokenAddress;
+        lendingPool = lendingPoolAddress;
+        interestConsensus = InterestConsensusInterface(interestConsensusAddress);
     }
 
     /** Internal Functions */

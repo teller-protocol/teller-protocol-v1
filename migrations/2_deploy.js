@@ -110,12 +110,15 @@ module.exports = async function(deployer, network, accounts) {
   };
   const poolDeployer = new PoolDeployer(deployerApp, deployConfig, artifacts);
 
+  const InterestValidator = undefined; // The first version will be undefined (or 0x0).
+
   await poolDeployer.deployPool(
     { tokenName: 'DAI', collateralName: 'ETH' },
     {
       Loans: EtherCollateralLoans,
       TToken: ZDAI,
       MarketsState,
+      InterestValidator,
     },
     txConfig
   );
@@ -124,7 +127,8 @@ module.exports = async function(deployer, network, accounts) {
     {
       Loans: EtherCollateralLoans,
       TToken: ZUSDC,
-      MarketsState
+      MarketsState,
+      InterestValidator,
     },
     txConfig
   );
@@ -134,7 +138,8 @@ module.exports = async function(deployer, network, accounts) {
     {
       Loans: TokenCollateralLoans,
       TToken: ZDAI,
-      MarketsState
+      MarketsState,
+      InterestValidator,
     },
     txConfig
   );
@@ -143,7 +148,8 @@ module.exports = async function(deployer, network, accounts) {
     {
       Loans: TokenCollateralLoans,
       TToken: ZUSDC,
-      MarketsState
+      MarketsState,
+      InterestValidator,
     },
     txConfig
   );

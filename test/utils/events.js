@@ -115,6 +115,18 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        interestValidatorUpdated: tx => {
+            const name = 'InterestValidatorUpdated';
+            return {
+                name: name,
+                emitted: (sender, oldInterestValidator, newInterestValidator) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.oldInterestValidator.toString(), oldInterestValidator.toString());
+                    assert.equal(ev.newInterestValidator.toString(), newInterestValidator.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     },
     loans: {
         loanTermsSet: tx => {

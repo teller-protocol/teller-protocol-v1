@@ -1,4 +1,5 @@
 const assert = require('assert');
+const { NULL_ADDRESS } = require('../../test/utils/consts');
 
 class PoolDeployer {
     constructor(deployer, deployConfig, artifacts) {
@@ -10,7 +11,7 @@ class PoolDeployer {
 
 PoolDeployer.prototype.deployPool = async function(
     { tokenName, collateralName, aggregatorName = `${tokenName.toUpperCase()}_${collateralName.toUpperCase()}`},
-    { Loans, TToken, MarketsState },
+    { Loans, TToken, MarketsState, InterestValidator },
     txConfig
 ) {
     assert(aggregatorName, 'Aggregator name is undefined.');
@@ -87,7 +88,9 @@ PoolDeployer.prototype.deployPool = async function(
         Settings.address,
         MarketsState.address,
     );
-    
+
+    const interestValidatorAddress = InterestValidator === undefined ? NULL_ADDRESS : InterestValidator.address;
+    console.log(`Lending pool is using interest validator ${interestValidatorAddress}.`)
     await lendingPoolInstance.initialize(
         TToken.address,
         tokenAddress,
@@ -96,6 +99,7 @@ PoolDeployer.prototype.deployPool = async function(
         cTokenAddress,
         settingsInstance.address,
         MarketsState.address,
+        interestValidatorAddress,
     );
   
     await zTokenInstance.addMinter(LendingPool.address, txConfig);
@@ -130,6 +134,10 @@ PoolDeployer.prototype.deployPool = async function(
         const result = await deployed.initialized();
         assert(result, `${initializable.contract_name} is NOT initialized.`);
     }
+
+    console.log('');
+    console.log('--- Pool deployment ends ---');
+    console.log('');
 }
 
 module.exports = PoolDeployer;

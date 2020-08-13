@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t } = require('../utils/consts');
+const { t, NULL_ADDRESS } = require('../utils/consts');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
 
@@ -46,6 +46,7 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
             cTokenInstance.address,
             settingsInstance.address,
             marketsInstance.address,
+            NULL_ADDRESS,
         );
     });
 
