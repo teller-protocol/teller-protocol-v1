@@ -19,8 +19,6 @@ import "./IATMGovernance.sol";
     @author develop@teller.finance
  */
 contract ATMGovernance is SignerRole, IATMGovernance {
-    // TODO: Inject Settings
-
     using AddressArrayLib for address[];
     using AddressLib for address;
     using Address for address;
@@ -173,7 +171,12 @@ contract ATMGovernance is SignerRole, IATMGovernance {
         require(dataProvider.isContract(), "DATA_PROVIDER_MUST_BE_A_CONTRACT");
         dataProviders[dataTypeIndex].add(dataProvider);
         uint256 amountDataProviders = dataProviders[dataTypeIndex].length;
-        emit DataProviderAdded(msg.sender, dataTypeIndex, amountDataProviders, dataProvider);
+        emit DataProviderAdded(
+            msg.sender,
+            dataTypeIndex,
+            amountDataProviders,
+            dataProvider
+        );
     }
 
     /**
@@ -195,7 +198,13 @@ contract ATMGovernance is SignerRole, IATMGovernance {
         address oldProvider = dataProviders[dataTypeIndex][providerIndex];
         require(oldProvider != newProvider, "DATA_PROVIDER_SAME_OLD");
         dataProviders[dataTypeIndex][providerIndex] = newProvider;
-        emit DataProviderUpdated(msg.sender, dataTypeIndex, providerIndex, oldProvider, newProvider);
+        emit DataProviderUpdated(
+            msg.sender,
+            dataTypeIndex,
+            providerIndex,
+            oldProvider,
+            newProvider
+        );
     }
 
     /**
