@@ -179,14 +179,20 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         @param request the new request.
         @dev It throws a require error if the request rate limit exceeds the maximum.
      */
-    function _requireRequestLoanTermsRateLimit(ZeroCollateralCommon.LoanRequest memory request) internal view {
+    function _requireRequestLoanTermsRateLimit(
+        ZeroCollateralCommon.LoanRequest memory request
+    ) internal view {
         // In case it is the first time that borrower requests loan terms, we don't validate the rate limit.
-        if(borrowerToLastLoanTermRequest[request.borrower] == 0) {
+        if (borrowerToLastLoanTermRequest[request.borrower] == 0) {
             return;
         }
-        uint256 requestLoanTermsRateLimit = settings.getPlatformSettingValue(REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING);
+        uint256 requestLoanTermsRateLimit = settings.getPlatformSettingValue(
+            REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING
+        );
         require(
-            borrowerToLastLoanTermRequest[request.borrower].add(requestLoanTermsRateLimit) <= now,
+            borrowerToLastLoanTermRequest[request.borrower].add(
+                requestLoanTermsRateLimit
+            ) <= now,
             "REQS_LOAN_TERMS_LMT_EXCEEDS_MAX"
         );
     }
