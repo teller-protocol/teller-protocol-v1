@@ -36,6 +36,8 @@ contract ATMGovernance is SignerRole, IATMGovernance {
 
     // List of Market specific Asset settings on this ATM
     // Asset address => Asset setting name => Asset setting value
+    // Example 1: USDC address => Risk Premium => 2500 (25%)
+    // Example 2: DAI address => Risk Premium => 3500 (35%)
     mapping(address => mapping(bytes32 => uint256)) public assetMarketSettings;
 
     // List of ATM Data providers per data type
