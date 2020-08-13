@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 // Libraries
 
 // Commons
-import "@openzeppelin/contracts/utils/Address.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
