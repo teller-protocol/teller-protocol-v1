@@ -7,8 +7,6 @@ const AdminUpgradeabilityProxy = artifacts.require("./base/UpgradeableProxy.sol"
 const UpgradableV1 = artifacts.require("./mock/upgradable/UpgradableV1.sol");
 const UpgradableV2 = artifacts.require("./mock/upgradable/UpgradableV2.sol");
 
-const Mock = artifacts.require("./mock/util/Mock.sol");
-
 contract("UpgradeableProxyTest", function(accounts) {
     let v1LibraryInstance;
     let v2LibraryInstance;
@@ -27,7 +25,7 @@ contract("UpgradeableProxyTest", function(accounts) {
         _2_successful: [ accounts[0], accounts[0], false, false, null ],
         _3_initialize_after_constructor: [ accounts[0], accounts[0], true, false, null ]
     }, function(caller, admin, initAfter, mustFail, expectedErrorMessage) {
-        it(t("user", "transfer", "Should be able transfer tokens.", mustFail), async function() {
+        it(t("admin", "upgradeTo", "Should be able to (or not) upgrade the functionality of a contract.", mustFail), async function() {
             try {
                 // Setup
                 const initData = initAfter ? "0x" : v1InitData;
