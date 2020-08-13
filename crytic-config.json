@@ -8,5 +8,4 @@
     "truffle_version": "truffle@5.1.16", 
     "use_yarn": true,
     "exclude_informational": true
-    }
 }
