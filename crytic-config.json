@@ -4,7 +4,10 @@
     "solc": "0.5.17",
     "truffle_version": "truffle@5.1.16", 
     "use_yarn": true,
-    "exclude_informational": true, 
+    "exclude_informational": true,
+    "custom_unit_test": {
+        "enabled": false
+    }, 
     "slither": {
         "target": "."
     }
