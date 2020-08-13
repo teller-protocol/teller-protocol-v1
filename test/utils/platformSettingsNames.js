@@ -22,4 +22,7 @@ module.exports = {
     StartingBlockOffsetNumber: 'StartingBlockOffsetNumber',
     // The setting name for the starting block number settings.
     StartingBlockNumber: 'StartingBlockNumber',
+    // The setting name for the request loan terms rate limit settings.
+    RequestLoanTermsRateLimit: 'RequestLoanTermsRateLimit',
+
 }

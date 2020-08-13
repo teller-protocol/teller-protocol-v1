@@ -18,6 +18,15 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
     mapping(address => mapping(uint256 => ZeroCollateralCommon.AccruedLoanTerms)) public termSubmissions;
 
     /**
+        This mapping identify the last request timestamp for a given borrower address.
+
+            Example:    address(0x123...789) = timestamp(now)
+        
+        It is used as rate limit per borrower address.
+     */
+    mapping(address => uint256) public borrowerToLastLoanTermRequest;
+
+    /**
         @notice Processes the loan request
         @param request Struct of the protocol loan request
         @param responses List of structs of the protocol loan responses
@@ -39,6 +48,7 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
                 settings.getPlatformSettingValue(REQUIRED_SUBMISSIONS_SETTING),
             "LOANTERM_INSUFFICIENT_RESPONSES"
         );
+        _requireRequestLoanTermsRateLimit(request);
         require(
             !requestNonceTaken[request.borrower][request.requestNonce],
             "LOAN_TERMS_REQUEST_NONCE_TAKEN"
@@ -60,6 +70,7 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         maxLoanAmount = _getConsensus(
             termSubmissions[request.borrower][request.requestNonce].maxLoanAmount
         );
+        borrowerToLastLoanTermRequest[request.borrower] = now;
 
         emit TermsAccepted(
             request.borrower,
@@ -161,5 +172,22 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
                     _getChainId()
                 )
             );
+    }
+
+    /**
+        @notice It validates whether the time window between the last loan terms request and current one exceeds the maximum rate limit.
+        @param request the new request.
+        @dev It throws a require error if the request rate limit exceeds the maximum.
+     */
+    function _requireRequestLoanTermsRateLimit(ZeroCollateralCommon.LoanRequest memory request) internal view {
+        // In case it is the first time that borrower requests loan terms, we don't validate the rate limit.
+        if(borrowerToLastLoanTermRequest[request.borrower] == 0) {
+            return;
+        }
+        uint256 requestLoanTermsRateLimit = settings.getPlatformSettingValue(REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING);
+        require(
+            borrowerToLastLoanTermRequest[request.borrower].add(requestLoanTermsRateLimit) <= now,
+            "REQS_LOAN_TERMS_LMT_EXCEEDS_MAX"
+        );
     }
 }

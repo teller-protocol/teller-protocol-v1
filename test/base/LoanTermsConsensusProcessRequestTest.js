@@ -33,7 +33,6 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
     const nodeThree = accounts[4]
     const nodeFour = accounts[5]
     const nodeSix = accounts[6]
-    const nodeSeven = accounts[7]
     const borrower = accounts[9]
     const requestNonce = 142
 
@@ -159,6 +158,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
                     true
                 );
             }
+            const currentRequestLoanTermsTimestamp = await getLatestTimestamp();
 
             try {
                 const result = await instance.processRequest(
@@ -169,6 +169,9 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
                 );
 
                 assert(!mustFail, 'It should have failed because data is invalid.');
+
+                const lastLoanTermRequest = await instance.borrowerToLastLoanTermRequest(borrower);
+                assert.equal(currentRequestLoanTermsTimestamp.toString(), lastLoanTermRequest.toString(), 'Last request loan terms timestamp must be equals.');
 
                 let totalInterestRate = 0
                 let totalCollateralRatio = 0
