@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 // Libraries and common
 import "../util/ZeroCollateralCommon.sol";
 import "../util/SettingsConsts.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../util/ERC20Lib.sol";
 
 // Contracts

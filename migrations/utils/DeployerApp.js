@@ -3,14 +3,21 @@ const jsonfile = require('jsonfile');
 const MOCK_NETWORKS = ["test", "ganache"];
 
 class DeployerApp {
-    constructor(deployer, web3, account, network, mockNetworks = MOCK_NETWORKS) {
+    constructor(deployer, web3, account, AdminUpgradeabilityProxy, network, mockNetworks = MOCK_NETWORKS) {
         this.data = new Map();
         this.web3 = web3;
         this.account = account;
+        this.AdminUpgradeabilityProxy = AdminUpgradeabilityProxy
         this.contracts = [];
         this.deployer = deployer;
         this.network = network.toLowerCase();
         this.mockNetworks = mockNetworks.map( network => network.toLowerCase());
+    }
+
+    async deployWithUpgradeable(contractName, contract, admin, data, ...params) {
+        await this.deployWith(contractName, contract, ...params)
+        await this.deployWith(`${contractName} - Upgradable Proxy`, this.AdminUpgradeabilityProxy, contract.address, admin, data, ...params)
+        return contract.at(this.AdminUpgradeabilityProxy.address)
     }
 }
 

@@ -12,8 +12,6 @@ import "./LoansBase.sol";
     @author develop@teller.finance
  */
 contract EtherCollateralLoans is LoansBase {
-    address public collateralToken = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
     /**
      * @notice Deposit collateral into a loan
      * @param borrower The address of the loan borrower.
@@ -114,6 +112,8 @@ contract EtherCollateralLoans is LoansBase {
             settingsAddress,
             marketsAddress
         );
+
+        collateralToken = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     }
 
     /** Internal Functions */
