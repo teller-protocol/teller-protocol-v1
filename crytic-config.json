@@ -9,6 +9,11 @@
         "enabled": true
     }, 
     "slither": {
-        "target": "."
+        "target": ".",
+        "commands_before": [
+            {
+                "command": ["yarn", "install"]
+            }
+        ]
     }
 }
