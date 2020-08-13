@@ -1,22 +1,20 @@
 pragma solidity 0.5.17;
 
+
 /**
     @notice This interface defines the available functions and events for the ATM Token
 
     @author develop@teller.finance
  */
 
- interface ATMTokenInterface {
+interface ATMTokenInterface {
+    /* Events */
 
-     /* Events */
-
-     /**
+    /**
         @notice Emitted when a new supply cap has been set
         @param newCap The new supply cap 
       */
-    event NewCap(
-        uint256 newCap
-        );
+    event NewCap(uint256 newCap);
 
     /**
         @notice Emitted when an address has been granted a vesting schedule
@@ -24,21 +22,14 @@ pragma solidity 0.5.17;
         @param amount The amount of tokens being granted
         @param deadline The length of time before when the tokens can be claimed
      */
-    event NewVesting(
-        address beneficiary,
-        uint256 amount,
-        uint256 deadline
-        );
+    event NewVesting(address beneficiary, uint256 amount, uint256 deadline);
 
     /**
         @notice Emitted when a vested amount has been claimed
         @param beneficiary The address claiming the vested amount
         @param amount The amount that was claimed
      */
-    event VestingClaimed(
-        address beneficiary,
-        uint256 amount
-        );
+    event VestingClaimed(address beneficiary, uint256 amount);
 
     /**
         @notice Emitted when an account has had its vesting revoked
@@ -46,13 +37,10 @@ pragma solidity 0.5.17;
         @param amount The amount being revoked
         @param deadline The previously set vesting deadline 
      */
-    event RevokeVesting(
-        address beneficiary,
-        uint256 amount,
-        uint256 deadline
-        );
+    event RevokeVesting(address beneficiary, uint256 amount, uint256 deadline);
 
-    /* External Functions */ 
+    /* External Functions */
+
     /**
      * @notice Sets a new cap on the token's total supply.
      * @param newcap The new capped amount of tokens
@@ -83,21 +71,24 @@ pragma solidity 0.5.17;
      * @param cliff The length of time (in seconds) after which the tokens will start vesting
      * @param vestingTime The length of the vesting period (in seconds)
      */
-    function mintVesting(address account, uint256 amount, uint256 cliff, uint256 vestingTime) external;
+    function mintVesting(
+        address account,
+        uint256 amount,
+        uint256 cliff,
+        uint256 vestingTime
+    ) external;
 
     /**
-      * @notice Revokes the amount vested to an account
-      * @param account The account for which vesting is to be revoked
-      * @param vestingId The Id of the vesting being revoked
-      *
+     * @notice Revokes the amount vested to an account
+     * @param account The account for which vesting is to be revoked
+     * @param vestingId The Id of the vesting being revoked
+     *
      */
-     function revokeVesting(address account, uint256 vestingId) external;
+    function revokeVesting(address account, uint256 vestingId) external;
 
     /**
      *  @notice Withdrawl of tokens upon completion of vesting period
      *
      */
-     function withdrawVested() external;
-
-
- }
+    function withdrawVested() external;
+}
