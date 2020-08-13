@@ -29,11 +29,9 @@ contract('ATMGovernanceRemoveAssetMarketSettingTest', function (accounts) {
     const EMPTY_SETTING_NAME = toBytes32(web3, '');
 
     withData({
-        _1_basic: [0, SETTING_NAME, false, undefined, false],
-        _2_notSigner: [2, SETTING_NAME, false, 'SignerRole: caller does not have the Signer role', true],
-        _3_notRemovingWhenPaused: [0, SETTING_NAME, true, 'Pausable: paused', true],
-        _4_notPauserTryPausing: [2, SETTING_NAME, true, 'PauserRole: caller does not have the Pauser role', true],
-    }, function (senderIndex, settingName, isPaused, expectedErrorMessage, mustFail) {
+        _1_basic: [0, SETTING_NAME, undefined, false],
+        _2_notSigner: [2, SETTING_NAME, 'SignerRole: caller does not have the Signer role', true],
+    }, function (senderIndex, settingName, expectedErrorMessage, mustFail) {
         it(t('user', 'removeAssetMarketSetting#1', 'Should (or not) be able to remove an asset market setting.', mustFail), async function () {
             // Setup
             const sender = accounts[senderIndex];
@@ -47,12 +45,7 @@ contract('ATMGovernanceRemoveAssetMarketSettingTest', function (accounts) {
             });
 
             try {
-                // Pausable testing
-                if (isPaused) {
-                    await instance.pause({
-                        from: sender
-                    })
-                }
+    
                 // Invocation
                 const result = await instance.removeAssetMarketSetting(assetAddress, settingName, {
                     from: sender

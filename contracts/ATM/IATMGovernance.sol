@@ -94,38 +94,40 @@ interface IATMGovernance {
         @notice Emitted when a new Data Provider was added to this ATM.
         @param signer transaction sender address.
         @param dataTypeIndex index of this data type.
-        @param dataProviderAddress address of the added Data Provider.
+        @param dataProvider address of the added Data Provider.
      */
     event DataProviderAdded(
         address indexed signer,
         uint8 indexed dataTypeIndex,
-        address dataProviderAddress
+        address dataProvider
     );
 
     /**
         @notice Emitted when a Data Provider was updated on this ATM.
         @param signer transaction sender address.
         @param dataTypeIndex index of this data type.
-        @param oldAddress previous address of the Data Provider.
-        @param newAddress new address of the Data Provider.
+        @param oldDataProvider previous address of the Data Provider.
+        @param newDataProvider new address of the Data Provider.
      */
     event DataProviderUpdated(
         address indexed signer,
         uint8 indexed dataTypeIndex,
-        address oldAddress,
-        address newAddress
+        address oldDataProvider,
+        address newDataProvider
     );
 
     /**
         @notice Emitted when a Data Provider was removed on this ATM.
         @param signer transaction sender address.
         @param dataTypeIndex index of this data type.
-        @param dataProviderAddress address of the Data Provider.
+        @param dataProviderIndex index of this data provider inside this data type.
+        @param dataProvider address of the Data Provider.
      */
     event DataProviderRemoved(
         address indexed signer,
         uint8 indexed dataTypeIndex,
-        address dataProviderAddress
+        uint256 indexed dataProviderIndex,
+        address dataProvider
     );
 
     /**
@@ -133,7 +135,10 @@ interface IATMGovernance {
         @param signer transaction sender address.
         @param craCommitHash github commit hash with the new CRA implementation.
      */
-    event CRASet(address indexed signer, string indexed craCommitHash);
+    event CRASet(
+        address indexed signer, 
+        string craCommitHash
+    );
 
     /* External Functions */
 
@@ -181,33 +186,34 @@ interface IATMGovernance {
      */
     function removeAssetMarketSetting(address asset, bytes32 settingName) external;
 
-    // /**
-    //     @notice Adds a new Data Provider on a specific Data Type array.
-    //     @param dataTypeIndex array index for this Data Type.
-    //     @param dataProvider data provider address.
-    //  */
-    // function addDataProvider(uint8 dataTypeIndex, address dataProvider) external;
+    /**
+        @notice Adds a new Data Provider on a specific Data Type array.
+            This function would accept duplicated data providers for the same data type.
+        @param dataTypeIndex array index for this Data Type.
+        @param dataProvider data provider address.
+     */
+    function addDataProvider(uint8 dataTypeIndex, address dataProvider) external;
     
-    // /**
-    //     @notice Updates an existing Data Provider on a specific Data Type array.
-    //     @param dataTypeIndex array index for this Data Type.
-    //     @param oldProvider previous data provider address.
-    //     @param newProvider new data provider address.
-    //  */
-    // function updateDataProvider(uint8 dataTypeIndex, address oldProvider, address newProvider) external;
+    /**
+        @notice Updates an existing Data Provider on a specific Data Type array.
+        @param dataTypeIndex array index for this Data Type.
+        @param oldProvider previous data provider index.
+        @param newProvider new data provider address.
+     */
+    function updateDataProvider(uint8 dataTypeIndex, uint256 oldProvider, address newProvider) external;
     
-    // /**
-    //     @notice Removes an existing Data Provider on a specific Data Type array.
-    //     @param dataTypeIndex array index for this Data Type.
-    //     @param dataProvider data provider address.
-    //  */
-    // function removeDataProvider(uint8 dataTypeIndex, address dataProvider) external;
+    /**
+        @notice Removes an existing Data Provider on a specific Data Type array.
+        @param dataTypeIndex array index for this Data Type.
+        @param dataProvider data provider index.
+     */
+    function removeDataProvider(uint8 dataTypeIndex, uint256 dataProvider) external;
 
-    // /**
-    //     @notice Sets the CRA - Credit Risk Algorithm to be used on this specific ATM.
-    //             CRA is represented by a Github commit hash of the newly proposed algorithm.
-    //  */
-    // function setCRA(string calldata cra) external;
+    /**
+        @notice Sets the CRA - Credit Risk Algorithm to be used on this specific ATM.
+                CRA is represented by a Github commit hash of the newly proposed algorithm.
+     */
+    function setCRA(string calldata cra) external;
 
     /* External Constant functions */
 
@@ -224,17 +230,17 @@ interface IATMGovernance {
      */
     function getAssetMarketSetting(address asset, bytes32 settingName) external view returns (uint256);
 
-    // /**
-    //     @notice Returns a Data Provider on a specific Data Type array.
-    //     @param dataTypeIndex array index for this Data Type.
-    //     @param dataProviderIndex data provider index number.
-    //  */
-    // function getDataProvider(uint8 dataTypeIndex, uint8 dataProviderIndex) external view returns (address);
+    /**
+        @notice Returns a Data Provider on a specific Data Type array.
+        @param dataTypeIndex array index for this Data Type.
+        @param dataProviderIndex data provider index number.
+     */
+    function getDataProvider(uint8 dataTypeIndex, uint256 dataProviderIndex) external view returns (address);
     
-    // /**
-    //     @notice Returns current CRA - Credit Risk Algorithm that is being used on this specific ATM.
-    //             CRA is represented by a Github commit hash of the newly proposed algorithm.
-    //  */
-    // function getCRA() external view returns(string memory);
+    /**
+        @notice Returns current CRA - Credit Risk Algorithm that is being used on this specific ATM.
+                CRA is represented by a Github commit hash of the newly proposed algorithm.
+     */
+    function getCRA() external view returns(string memory);
 
   }

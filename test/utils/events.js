@@ -517,5 +517,54 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        dataProviderAdded: tx => {
+            const name = 'DataProviderAdded';
+            return {
+                name: name,
+                emitted: (signer, index, dataProvider) => emitted(tx, name, ev => {
+                    assert.equal(ev.signer, signer);
+                    assert.equal(ev.dataTypeIndex, index);
+                    assert.equal(ev.dataProvider, dataProvider);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        dataProviderUpdated: tx => {
+            const name = 'DataProviderUpdated';
+            return {
+                name: name,
+                emitted: (signer, dataTypeIndex, oldDataProvider, newDataProvider) => emitted(tx, name, ev => {
+                    assert.equal(ev.signer, signer);
+                    assert.equal(ev.dataTypeIndex, dataTypeIndex);
+                    assert.equal(ev.oldDataProvider, oldDataProvider);
+                    assert.equal(ev.newDataProvider, newDataProvider);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        dataProviderRemoved: tx => {
+            const name = 'DataProviderRemoved';
+            return {
+                name: name,
+                emitted: (signer, dataTypeIndex, dataProviderIndex, dataProvider) => emitted(tx, name, ev => {
+                    assert.equal(ev.signer, signer);
+                    assert.equal(ev.dataTypeIndex, dataTypeIndex);
+                    assert.equal(ev.dataProviderIndex, dataProviderIndex);
+                    assert.equal(ev.dataProvider, dataProvider);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        CRASet: tx => {
+            const name = 'CRASet';
+            return {
+                name: name,
+                emitted: (signer, cra) => emitted(tx, name, ev => {
+                    assert.equal(ev.signer, signer);
+                    assert.equal(ev.craCommitHash.toString(), cra.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     }
 };

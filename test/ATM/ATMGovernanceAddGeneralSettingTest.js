@@ -26,24 +26,17 @@ contract('ATMGovernanceAddGeneralSettingTest', function (accounts) {
     const EMPTY_SETTING_NAME = toBytes32(web3, '');
 
     withData({
-        _1_basic: [0, SETTING_NAME, SETTING_VALUE, false, undefined, false],
-        _2_notSigner: [2, SETTING_NAME, SETTING_VALUE, false, 'SignerRole: caller does not have the Signer role', true],
-        _3_emptySettingName: [0, EMPTY_SETTING_NAME, SETTING_VALUE, false, 'GENERAL_SETTING_MUST_BE_PROVIDED', true],
-        _4_wrongNameFormat: [0, "nameNotBytes32", SETTING_VALUE, false, 'invalid bytes32 value', true],
-        _5_notAddingWhenPaused: [0, SETTING_NAME, SETTING_VALUE, true, 'Pausable: paused', true],
-        _6_notPauserTryPausing: [2, SETTING_NAME, SETTING_VALUE, true, 'PauserRole: caller does not have the Pauser role', true],
-    }, function (senderIndex, settingName, settingValue, isPaused, expectedErrorMessage, mustFail) {
-        it(t('user', 'addGeneralSetting', 'Should (or not) be able to add a general setting.', mustFail), async function () {
+        _1_basic: [0, SETTING_NAME, SETTING_VALUE, undefined, false],
+        _2_notSigner: [2, SETTING_NAME, SETTING_VALUE, 'SignerRole: caller does not have the Signer role', true],
+        _3_emptySettingName: [0, EMPTY_SETTING_NAME, SETTING_VALUE, 'GENERAL_SETTING_MUST_BE_PROVIDED', true],
+        _4_wrongNameFormat: [0, "nameNotBytes32", SETTING_VALUE, 'invalid bytes32 value', true],
+    }, function (senderIndex, settingName, settingValue, expectedErrorMessage, mustFail) {
+        it(t('user', 'addGeneralSetting#1', 'Should (or not) be able to add a general setting.', mustFail), async function () {
             // Setup
             const sender = accounts[senderIndex];
 
             try {
-                // Pausable testing
-                if (isPaused) {
-                    await instance.pause({
-                        from: sender
-                    })
-                }
+
                 // Invocation
                 const result = await instance.addGeneralSetting(settingName, settingValue, {
                     from: sender

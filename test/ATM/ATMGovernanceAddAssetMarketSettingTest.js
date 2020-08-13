@@ -32,26 +32,19 @@ contract('ATMGovernanceAddAssetMarketSettingTest', function (accounts) {
     const EMPTY_SETTING_NAME = toBytes32(web3, '');
 
     withData({
-        _1_basic: [0, SETTING_NAME, SETTING_VALUE, false, undefined, false],
-        _2_notSigner: [2, SETTING_NAME, SETTING_VALUE, false, 'SignerRole: caller does not have the Signer role', true],
-        _3_emptySettingName: [0, EMPTY_SETTING_NAME, SETTING_VALUE, false, 'ASSET_SETTING_MUST_BE_PROVIDED', true],
-        _4_invalidSettingValue: [0, EMPTY_SETTING_NAME, INVALID_SETTING_VALUE, false, 'ASSET_SETTING_MUST_BE_POSITIVE', true],
-        _5_wrongNameFormat: [0, "nameNotBytes32", SETTING_VALUE, false, 'invalid bytes32 value', true],
-        _6_notAddingWhenPaused: [0, SETTING_NAME, SETTING_VALUE, true, 'Pausable: paused', true],
-        _7_notPauserTryPausing: [2, SETTING_NAME, SETTING_VALUE, true, 'PauserRole: caller does not have the Pauser role', true],
-    }, function (senderIndex, settingName, settingValue, isPaused, expectedErrorMessage, mustFail) {
-        it(t('user', 'addAssetMarketSetting', 'Should (or not) be able to add an asset market setting.', mustFail), async function () {
+        _1_basic: [0, SETTING_NAME, SETTING_VALUE, undefined, false],
+        _2_notSigner: [2, SETTING_NAME, SETTING_VALUE, 'SignerRole: caller does not have the Signer role', true],
+        _3_emptySettingName: [0, EMPTY_SETTING_NAME, SETTING_VALUE, 'ASSET_SETTING_MUST_BE_PROVIDED', true],
+        _4_invalidSettingValue: [0, EMPTY_SETTING_NAME, INVALID_SETTING_VALUE, 'ASSET_SETTING_MUST_BE_POSITIVE', true],
+        _5_wrongNameFormat: [0, "nameNotBytes32", SETTING_VALUE, 'invalid bytes32 value', true],
+    }, function (senderIndex, settingName, settingValue, expectedErrorMessage, mustFail) {
+        it(t('user', 'addAssetMarketSetting#1', 'Should (or not) be able to add an asset market setting.', mustFail), async function () {
             // Setup
             const sender = accounts[senderIndex];
             const assetContract = await Mock.new();
             const assetAddress = assetContract.address;
             try {
-                // Pausable testing
-                if (isPaused) {
-                    await instance.pause({
-                        from: sender
-                    })
-                }
+ 
                 // Invocation
                 const result = await instance.addAssetMarketSetting(assetAddress, settingName, settingValue, {
                     from: sender

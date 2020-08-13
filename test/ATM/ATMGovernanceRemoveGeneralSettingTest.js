@@ -28,14 +28,12 @@ contract('ATMGovernanceRemoveGeneralSettingTest', function (accounts) {
     const NOT_FOUND = 0;
 
     withData({
-        _1_basic: [0, SETTING_NAME, false, undefined, false],
-        _2_notSigner: [2, SETTING_NAME, false, 'SignerRole: caller does not have the Signer role', true],
-        _3_emptySettingName: [0, EMPTY_SETTING_NAME, false, 'GENERAL_SETTING_MUST_BE_PROVIDED', true],
-        _4_settingNotFound: [0, NON_EXISTING_NAME, false, 'GENERAL_SETTING_NOT_FOUND', true],
-        _5_wrongNameFormat: [0, "nameNotBytes32", false, 'invalid bytes32 value', true],
-        _6_notRemovingWhenPaused: [0, SETTING_NAME, true, 'Pausable: paused', true],
-        _7_notPauserTryPausing: [2, SETTING_NAME, true, 'PauserRole: caller does not have the Pauser role', true],
-    }, function (senderIndex, settingName, isPaused, expectedErrorMessage, mustFail) {
+        _1_basic: [0, SETTING_NAME, undefined, false],
+        _2_notSigner: [2, SETTING_NAME, 'SignerRole: caller does not have the Signer role', true],
+        _3_emptySettingName: [0, EMPTY_SETTING_NAME, 'GENERAL_SETTING_MUST_BE_PROVIDED', true],
+        _4_settingNotFound: [0, NON_EXISTING_NAME, 'GENERAL_SETTING_NOT_FOUND', true],
+        _5_wrongNameFormat: [0, "nameNotBytes32", 'invalid bytes32 value', true],
+    }, function (senderIndex, settingName, expectedErrorMessage, mustFail) {
         it(t('user', 'removeGeneralSetting', 'Should (or not) be able to add a general setting.', mustFail), async function () {
             // Setup
             const sender = accounts[senderIndex];
@@ -47,12 +45,6 @@ contract('ATMGovernanceRemoveGeneralSettingTest', function (accounts) {
                     from: validSigner
                 });
 
-                // Pausable testing
-                if (isPaused) {
-                    await instance.pause({
-                        from: sender
-                    })
-                }
                 // Invocation
                 const result = await instance.removeGeneralSetting(settingName, {
                     from: sender

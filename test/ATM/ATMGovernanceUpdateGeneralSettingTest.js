@@ -34,24 +34,17 @@ contract('ATMGovernanceUpdateGeneralSettingTest', function (accounts) {
 
 
     withData({
-        _1_basic: [0, SETTING_NAME, SETTING_NEW_VALUE, false, undefined, false],
-        _2_notSigner: [2, SETTING_NAME, SETTING_NEW_VALUE, false, 'SignerRole: caller does not have the Signer role', true],
-        _3_emptySettingName: [0, EMPTY_SETTING_NAME, SETTING_NEW_VALUE, false, 'GENERAL_SETTING_MUST_BE_PROVIDED', true],
-        _4_invalidValueZero: [0, SETTING_NAME, 0, false, 'GENERAL_SETTING_MUST_BE_POSITIVE', true],
-        _5_wrongNameFormat: [0, "nameNotBytes32", SETTING_NEW_VALUE, false, 'invalid bytes32 value', true],
-        _6_notUpdatesWhenPaused: [0, SETTING_NAME, SETTING_NEW_VALUE, true, 'Pausable: paused', true],
-    }, function (senderIndex, settingName, settingValue, isPaused, expectedErrorMessage, mustFail) {
+        _1_basic: [0, SETTING_NAME, SETTING_NEW_VALUE, undefined, false],
+        _2_notSigner: [2, SETTING_NAME, SETTING_NEW_VALUE, 'SignerRole: caller does not have the Signer role', true],
+        _3_emptySettingName: [0, EMPTY_SETTING_NAME, SETTING_NEW_VALUE, 'GENERAL_SETTING_MUST_BE_PROVIDED', true],
+        _4_invalidValueZero: [0, SETTING_NAME, 0, 'GENERAL_SETTING_MUST_BE_POSITIVE', true],
+        _5_wrongNameFormat: [0, "nameNotBytes32", SETTING_NEW_VALUE, 'invalid bytes32 value', true],
+    }, function (senderIndex, settingName, settingValue, expectedErrorMessage, mustFail) {
         it(t('user', 'updateGeneralSetting', 'Should (or not) be able to update a general setting.', mustFail), async function () {
             // Setup
             const sender = accounts[senderIndex];
 
             try {
-                // Pausable testing
-                if (isPaused) {
-                    await instance.pause({
-                        from: sender
-                    })
-                }
                 // Invocation
                 const result = await instance.updateGeneralSetting(settingName, settingValue, {
                     from: sender

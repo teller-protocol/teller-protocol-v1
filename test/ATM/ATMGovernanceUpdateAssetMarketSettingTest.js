@@ -34,12 +34,10 @@ contract('ATMGovernanceUpdateAssetMarketSettingTest', function (accounts) {
     const EMPTY_SETTING_NAME = toBytes32(web3, '');
 
     withData({
-        _1_basic: [0, SETTING_NAME, SETTING_NEW_VALUE, false, undefined, false],
-        _2_notSigner: [2, SETTING_NAME, SETTING_NEW_VALUE, false, 'SignerRole: caller does not have the Signer role', true],
-        _3_sameOldValue: [0, SETTING_NAME, SETTING_OLD_VALUE, false, 'NEW_VALUE_SAME_AS_OLD', true],
-        _4_notUpdatingWhenPaused: [0, SETTING_NAME, SETTING_NEW_VALUE, true, 'Pausable: paused', true],
-        _5_notPauserTryPausing: [2, SETTING_NAME, SETTING_NEW_VALUE, true, 'PauserRole: caller does not have the Pauser role', true],
-    }, function (senderIndex, settingName, newValue, isPaused, expectedErrorMessage, mustFail) {
+        _1_basic: [0, SETTING_NAME, SETTING_NEW_VALUE, undefined, false],
+        _2_notSigner: [2, SETTING_NAME, SETTING_NEW_VALUE, 'SignerRole: caller does not have the Signer role', true],
+        _3_sameOldValue: [0, SETTING_NAME, SETTING_OLD_VALUE, 'NEW_VALUE_SAME_AS_OLD', true],
+    }, function (senderIndex, settingName, newValue, expectedErrorMessage, mustFail) {
         it(t('user', 'updateAssetMarketSetting#1', 'Should (or not) be able to update an asset market setting.', mustFail), async function () {
             // Setup
             const sender = accounts[senderIndex];
@@ -51,10 +49,6 @@ contract('ATMGovernanceUpdateAssetMarketSettingTest', function (accounts) {
             await instance.addAssetMarketSetting(assetAddress, settingName, SETTING_OLD_VALUE, {from: validSender});
 
             try {
-                // Pausable testing
-                if (isPaused) {
-                    await instance.pause({from: sender})
-                }
                 // Invocation
                 const result = await instance.updateAssetMarketSetting(assetAddress, settingName, newValue, {from: sender});
 
