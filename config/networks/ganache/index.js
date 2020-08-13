@@ -5,7 +5,6 @@ module.exports = {
     tokens: require('./tokens'),
     zerocollateral: require('./zerocollateral'),
     assetSettings: require('./assetSettings'),
-    nodeComponentsVersions: require('./nodeComponentsVersions'),
     platformSettings: require('./platformSettings'),
     maxGasLimit: 6721975,
     toTxUrl: ({ tx }) => {
