@@ -74,7 +74,7 @@ contract ATMGovernance is SignerRole, IATMGovernance {
         require(newValue > 0, "GENERAL_SETTING_MUST_BE_POSITIVE");
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
         uint256 oldValue = generalSettings[settingName];
-        require(oldValue != newValue, "GENERAL_SETTING_EQUAL_PREVIOUS"); // TODO: TEST
+        require(oldValue != newValue, "GENERAL_SETTING_EQUAL_PREVIOUS");
         generalSettings[settingName] = newValue;
         emit GeneralSettingUpdated(msg.sender, settingName, oldValue, newValue);
     }
