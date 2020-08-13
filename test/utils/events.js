@@ -521,9 +521,10 @@ module.exports = {
             const name = 'DataProviderAdded';
             return {
                 name: name,
-                emitted: (signer, index, dataProvider) => emitted(tx, name, ev => {
+                emitted: (signer, index, amountDataProviders, dataProvider) => emitted(tx, name, ev => {
                     assert.equal(ev.signer, signer);
                     assert.equal(ev.dataTypeIndex, index);
+                    assert.equal(ev.amountDataProviders, amountDataProviders);
                     assert.equal(ev.dataProvider, dataProvider);
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
@@ -533,9 +534,10 @@ module.exports = {
             const name = 'DataProviderUpdated';
             return {
                 name: name,
-                emitted: (signer, dataTypeIndex, oldDataProvider, newDataProvider) => emitted(tx, name, ev => {
+                emitted: (signer, dataTypeIndex, providerIndex, oldDataProvider, newDataProvider) => emitted(tx, name, ev => {
                     assert.equal(ev.signer, signer);
                     assert.equal(ev.dataTypeIndex, dataTypeIndex);
+                    assert.equal(ev.dataProviderIndex, providerIndex);
                     assert.equal(ev.oldDataProvider, oldDataProvider);
                     assert.equal(ev.newDataProvider, newDataProvider);
                 }),

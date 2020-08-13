@@ -95,11 +95,13 @@ interface IATMGovernance {
         @notice Emitted when a new Data Provider was added to this ATM.
         @param signer transaction sender address.
         @param dataTypeIndex index of this data type.
+        @param amountDataProviders amount of data providers for this data type.
         @param dataProvider address of the added Data Provider.
      */
     event DataProviderAdded(
         address indexed signer,
         uint8 indexed dataTypeIndex,
+        uint256 amountDataProviders,
         address dataProvider
     );
 
@@ -107,12 +109,14 @@ interface IATMGovernance {
         @notice Emitted when a Data Provider was updated on this ATM.
         @param signer transaction sender address.
         @param dataTypeIndex index of this data type.
+        @param dataProviderIndex index of this data provider.
         @param oldDataProvider previous address of the Data Provider.
         @param newDataProvider new address of the Data Provider.
      */
     event DataProviderUpdated(
         address indexed signer,
         uint8 indexed dataTypeIndex,
+        uint256 indexed dataProviderIndex,
         address oldDataProvider,
         address newDataProvider
     );
@@ -202,12 +206,12 @@ interface IATMGovernance {
     /**
         @notice Updates an existing Data Provider on a specific Data Type array.
         @param dataTypeIndex array index for this Data Type.
-        @param oldProvider previous data provider index.
+        @param providerIndex previous data provider index.
         @param newProvider new data provider address.
      */
     function updateDataProvider(
         uint8 dataTypeIndex,
-        uint256 oldProvider,
+        uint256 providerIndex,
         address newProvider
     ) external;
 

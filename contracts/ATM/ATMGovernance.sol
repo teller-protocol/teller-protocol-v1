@@ -172,25 +172,30 @@ contract ATMGovernance is SignerRole, IATMGovernance {
     {
         require(dataProvider.isContract(), "DATA_PROVIDER_MUST_BE_A_CONTRACT");
         dataProviders[dataTypeIndex].add(dataProvider);
-        emit DataProviderAdded(msg.sender, dataTypeIndex, dataProvider);
+        uint256 amountDataProviders = dataProviders[dataTypeIndex].length;
+        emit DataProviderAdded(msg.sender, dataTypeIndex, amountDataProviders, dataProvider);
     }
 
     /**
         @notice Updates an existing Data Provider on a specific Data Type array.
         @param dataTypeIndex array index for this Data Type.
-        @param oldProviderIndex previous data provider index.
+        @param providerIndex previous data provider index.
         @param newProvider new data provider address.
      */
     function updateDataProvider(
         uint8 dataTypeIndex,
-        uint256 oldProviderIndex,
+        uint256 providerIndex,
         address newProvider
     ) external onlySigner() {
+        require(
+            dataProviders[dataTypeIndex].length > providerIndex,
+            "DATA_PROVIDER_OUT_RANGE"
+        );
         require(newProvider.isContract(), "DATA_PROVIDER_MUST_BE_A_CONTRACT");
-        address oldProvider = dataProviders[dataTypeIndex][oldProviderIndex];
+        address oldProvider = dataProviders[dataTypeIndex][providerIndex];
         require(oldProvider != newProvider, "DATA_PROVIDER_SAME_OLD");
-        dataProviders[dataTypeIndex][oldProviderIndex] = newProvider;
-        emit DataProviderUpdated(msg.sender, dataTypeIndex, oldProvider, newProvider);
+        dataProviders[dataTypeIndex][providerIndex] = newProvider;
+        emit DataProviderUpdated(msg.sender, dataTypeIndex, providerIndex, oldProvider, newProvider);
     }
 
     /**
@@ -264,11 +269,10 @@ contract ATMGovernance is SignerRole, IATMGovernance {
         view
         returns (address)
     {
-        require(
-            dataProviders[dataTypeIndex].length > dataProviderIndex,
-            "DATA_PROVIDER_NOT_FOUND"
-        );
-        return dataProviders[dataTypeIndex][dataProviderIndex];
+        if (dataProviders[dataTypeIndex].length > dataProviderIndex) {
+            return dataProviders[dataTypeIndex][dataProviderIndex];
+        }
+        return address(0x0);
     }
 
     /**
