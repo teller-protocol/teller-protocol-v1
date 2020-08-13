@@ -27,6 +27,7 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
     let oracleInstance;
     let settingsInstance;
     let lendingTokenInstance;
+    let marketsInstance;
 
     const owner = accounts[0];
     const borrowerAddress = accounts[2];
@@ -42,13 +43,15 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
         lendingPoolInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
+        marketsInstance = await Mock.new();
         settingsInstance = await createTestSettingsInstance(Settings);
         instance = await Loans.new();
         await instance.initialize(
             oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
-            settingsInstance.address
+            settingsInstance.address,
+            marketsInstance.address,
         )
         responseOne = createUnsignedLoanResponse(accounts[3], 0, 1234, 6500, 10000, 3, loanTermsConsInstance.address)
         responseTwo = createUnsignedLoanResponse(accounts[4], 0, 1500, 6000, 10000, 2, loanTermsConsInstance.address)

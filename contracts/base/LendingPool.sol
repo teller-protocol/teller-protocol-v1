@@ -9,6 +9,7 @@ import "../util/ZeroCollateralCommon.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
+import "../interfaces/LoansInterface.sol";
 import "../interfaces/ZTokenInterface.sol";
 import "../providers/compound/CErc20Interface.sol";
 
@@ -58,6 +59,7 @@ contract LendingPool is Base, LendingPoolInterface {
         @param lendersAddress Lenders contract address.
         @param loansAddress Loans contract address.
         @param settingsAddress Settings contract address.
+        @param marketsAddress Markets state conntract address.
         @dev It throws a require error if the contract is already initialized.
      */
     function initialize(
@@ -66,14 +68,15 @@ contract LendingPool is Base, LendingPoolInterface {
         address lendersAddress,
         address loansAddress,
         address cTokenAddress,
-        address settingsAddress
+        address settingsAddress,
+        address marketsAddress
     ) external isNotInitialized() {
         zTokenAddress.requireNotEmpty("ZTOKEN_ADDRESS_IS_REQUIRED");
         lendingTokenAddress.requireNotEmpty("TOKEN_ADDRESS_IS_REQUIRED");
         lendersAddress.requireNotEmpty("LENDERS_ADDRESS_IS_REQUIRED");
         loansAddress.requireNotEmpty("LOANS_ADDRESS_IS_REQUIRED");
 
-        _initialize(settingsAddress);
+        _initialize(settingsAddress, marketsAddress);
 
         zToken = ZTokenInterface(zTokenAddress);
         lendingToken = IERC20(lendingTokenAddress);
@@ -103,6 +106,12 @@ contract LendingPool is Base, LendingPoolInterface {
         // Mint zToken tokens
         zTokenMint(msg.sender, amount);
 
+        markets.increaseSupply(
+            address(lendingToken),
+            LoansInterface(loans).collateralToken(),
+            amount
+        );
+
         // Emit event
         emit TokenDeposited(msg.sender, amount);
     }
@@ -127,6 +136,12 @@ contract LendingPool is Base, LendingPoolInterface {
 
         // Transfers tokens
         tokenTransfer(msg.sender, amount);
+
+        markets.decreaseSupply(
+            address(lendingToken),
+            LoansInterface(loans).collateralToken(),
+            amount
+        );
 
         // Emit event.
         emit TokenWithdrawn(msg.sender, amount);

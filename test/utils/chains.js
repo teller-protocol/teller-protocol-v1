@@ -9,4 +9,5 @@ module.exports = {
     kovan: 42,
     gethPrivate: 1337,
     localGanache: 1,
+    ganache: 1,
 }

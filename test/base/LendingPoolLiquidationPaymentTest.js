@@ -22,6 +22,7 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
     let interestConsensusInstance;
     let cTokenInstance;
     let settingsInstance;
+    let marketsInstance;
     let loansInstance = accounts[0];
     
     beforeEach('Setup for each test', async () => {
@@ -31,11 +32,15 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
         interestConsensusInstance = await Mock.new();
         cTokenInstance = await Mock.new()
         settingsInstance = await Mock.new();
+        marketsInstance = await Mock.new();
+        lendersInstance = await Lenders.new();
 
-        lendersInstance = await Lenders.new(
+        await lendersInstance.initialize(
           zTokenInstance.address,
           instance.address,
-          interestConsensusInstance.address
+          interestConsensusInstance.address,
+          settingsInstance.address,
+          marketsInstance.address,
         );
     });
 
@@ -68,6 +73,7 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
                 loansInstance,
                 cTokenAddress,
                 settingsInstance.address,
+                marketsInstance.address,
             );
             const encodeTransferFrom = erc20InterfaceEncoder.encodeTransferFrom();
             await daiInstance.givenMethodReturnBool(encodeTransferFrom, transferFrom);

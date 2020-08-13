@@ -46,7 +46,7 @@ module.exports = {
      */
     [settingsNames.SafetyInterval]: {
         processOnDeployment: true,
-        value: minutesToSeconds(5),
+        value: minutesToSeconds(1),
         min: 0,
         max: MAX_VALUE_STRING,
     },

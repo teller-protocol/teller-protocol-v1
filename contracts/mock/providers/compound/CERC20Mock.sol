@@ -2,16 +2,21 @@ pragma solidity 0.5.17;
 
 import "../../token/ERC20Mock.sol";
 
+
 contract CERC20Mock is ERC20Mock {
-    uint8 constant public CTOKEN_DECIMALS = 8;
-    uint256 constant public NO_ERROR = 0;
+    uint8 public constant CTOKEN_DECIMALS = 8;
+    uint256 public constant NO_ERROR = 0;
 
     ERC20Detailed public underlying;
     uint256 public multiplier;
 
-    constructor(string memory aName, string memory aSymbol, uint8 aDecimals, address underlyingToken, uint256 multiplierValue)
-        public
-        ERC20Mock(aName, aSymbol, aDecimals, 0) {
+    constructor(
+        string memory aName,
+        string memory aSymbol,
+        uint8 aDecimals,
+        address underlyingToken,
+        uint256 multiplierValue
+    ) public ERC20Mock(aName, aSymbol, aDecimals, 0) {
         require(underlyingToken != address(0x0), "PROVIDE_UNDERLYIG_TOKEN");
         require(multiplierValue > 0, "PROVIDE_MULTIPLIER");
         underlying = ERC20Detailed(underlyingToken);
@@ -20,10 +25,7 @@ contract CERC20Mock is ERC20Mock {
 
     function mint(uint256 mintAmount) external returns (uint256) {
         uint256 cAmount = _getCTokensAmount(mintAmount);
-        require(
-            super.mint(msg.sender, cAmount),
-            "CTOKEN_MINT_FAILED"
-        );
+        require(super.mint(msg.sender, cAmount), "CTOKEN_MINT_FAILED");
         return NO_ERROR;
     }
 
@@ -37,10 +39,7 @@ contract CERC20Mock is ERC20Mock {
     // https://compound.finance/docs/ctokens#redeem-underlying
     function redeemUnderlying(uint256 redeemAmount) external returns (uint256) {
         uint256 tokenAmount = _getTokensAmount(redeemAmount);
-        require(
-            super.transfer(msg.sender, tokenAmount),
-            "UNDERLYING_TRANSFER_FAILED"
-        );
+        require(super.transfer(msg.sender, tokenAmount), "UNDERLYING_TRANSFER_FAILED");
         return NO_ERROR;
     }
 
@@ -60,15 +59,20 @@ contract CERC20Mock is ERC20Mock {
 
     function repayBorrowBehalf(address borrower, uint256 repayAmount)
         external
-        returns (uint256) {
-            underlying;
-            borrower;
-            repayAmount;
-            _mockChange();
-            return NO_ERROR;
-        }
+        returns (uint256)
+    {
+        underlying;
+        borrower;
+        repayAmount;
+        _mockChange();
+        return NO_ERROR;
+    }
 
-    function liquidateBorrow(address borrower, uint repayAmount, address cTokenCollateral) external returns (uint) {
+    function liquidateBorrow(
+        address borrower,
+        uint256 repayAmount,
+        address cTokenCollateral
+    ) external returns (uint256) {
         underlying;
         borrower;
         repayAmount;
@@ -95,9 +99,7 @@ contract CERC20Mock is ERC20Mock {
         return exchangeRateCurrent == 0 ? 0 : cTokenAmount / exchangeRateCurrent;
     }
 
-    function _mockChange() internal {
-        
-    }
+    function _mockChange() internal {}
 
     function exchangeRateCurrent() external view returns (uint256) {
         return _exchangeRateCurrent();

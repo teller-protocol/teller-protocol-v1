@@ -25,12 +25,14 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     let consensusInstance;
     let cTokenInstance;
     let settingsInstance;
+    let marketsInstance;
     
     beforeEach('Setup for each test', async () => {
         loansInstance = await Mock.new();
         consensusInstance = await Mock.new();
         settingsInstance = await Mock.new();
-        cTokenInstance = await Mock.new()
+        cTokenInstance = await Mock.new();
+        marketsInstance = await Mock.new();
         instance = await LendingPool.new();
     });
 
@@ -52,7 +54,7 @@ contract('LendingPoolWithdrawTest', function (accounts) {
             // Setup
             const zTokenInstance = await Mock.new();
             const lendingTokenInstance = await Mock.new();
-            await initContracts(settingsInstance, cTokenInstance, instance, zTokenInstance, consensusInstance, lendingTokenInstance, loansInstance, Lenders);
+            await initContracts(settingsInstance, cTokenInstance, instance, zTokenInstance, consensusInstance, lendingTokenInstance, loansInstance, marketsInstance, Lenders);
             const encodeTransfer = burnableInterfaceEncoder.encodeTransfer();
             await lendingTokenInstance.givenMethodReturnBool(encodeTransfer, transfer);
 
@@ -92,7 +94,7 @@ contract('LendingPoolWithdrawTest', function (accounts) {
             const zTokenInstance = await ZDai.new();
             const lendingTokenInstance = await Token.new();
             await zTokenInstance.addMinter(instance.address);
-            await initContracts(settingsInstance, cTokenInstance, instance, zTokenInstance, consensusInstance, lendingTokenInstance, loansInstance, Lenders);
+            await initContracts(settingsInstance, cTokenInstance, instance, zTokenInstance, consensusInstance, lendingTokenInstance, loansInstance, marketsInstance, Lenders);
             await lendingTokenInstance.approve(instance.address, depositAmount, { from: depositSender });
             await instance.deposit(depositAmount, { from: depositSender });
             

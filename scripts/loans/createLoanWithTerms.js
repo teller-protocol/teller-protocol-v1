@@ -18,7 +18,7 @@ module.exports = async (callback) => {
         const timer = new Timer(web3);
         const accounts = new Accounts(web3);
         const appConf = processArgs.getCurrentConfig();
-        const chainId = processArgs.getChainId();
+        const chainId = processArgs.getChainId().toString();
         const { toTxUrl } = appConf.networkConfig;
         const currentTimestamp = await timer.getCurrentTimestamp();
 
@@ -36,6 +36,7 @@ module.exports = async (callback) => {
         const tokenInstance = await getContracts.getDeployed(tokens.get(tokenName));
         const tokenDecimals = await tokenInstance.decimals();
 
+        const consensusAddress = await loansInstance.loanTermsConsensus();
         let collateralTokenDecimals = 18;
         if (collateralTokenName !== 'ETH') {
             const collateralTokenInstance = await getContracts.getDeployed(tokens.get(collateralTokenName));
@@ -58,6 +59,7 @@ module.exports = async (callback) => {
             duration: durationInDays * ONE_DAY,
             requestTime: Math.round(currentTimestamp / 1000),
             caller: loansInstance.address,
+            consensusAddress,
         };
         const loanTermsRequest = createLoanTermsRequest(loanTermsRequestInfo, chainId);
 
@@ -68,7 +70,8 @@ module.exports = async (callback) => {
             interestRate: 4000,
             collateralRatio: 6000,
             maxLoanAmount: maxLoanAmountResponse,
-            signerNonce: nonce
+            signerNonce: nonce,
+            consensusAddress,
         };
         const signedResponse1 = await createSignedLoanTermsResponse(web3, loanTermsRequest, loanResponseInfo1, chainId);
         
@@ -78,7 +81,8 @@ module.exports = async (callback) => {
             interestRate: 4000,
             collateralRatio: 6000,
             maxLoanAmount: maxLoanAmountResponse,
-            signerNonce: nonce
+            signerNonce: nonce,
+            consensusAddress,
         };
         const signedResponse2 = await createSignedLoanTermsResponse(web3, loanTermsRequest, loanResponseInfo2, chainId);
 

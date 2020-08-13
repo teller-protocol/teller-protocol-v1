@@ -7,6 +7,7 @@ const {
   NEW_VALUE,
   LOAN_ID,
   SETTING_NAME,
+  ASSET_SETTING_NAME,
   RECEIVER_INDEX,
   CTOKEN_NAME,
   BORROWER_INDEX,
@@ -28,6 +29,10 @@ const {
   REQUIRED_SUBMISSIONS,
   SAFETY_INTERVAL,
   TEST_TOKEN_NAME,
+  MAX_LOAN_AMOUNT,
+  MIN_VALUE,
+  MAX_VALUE,
+  BACK_ROUNDS,
 } = require("./names");
 
 const newOption = (argv, name, alias, type, description, defaultValue) => {
@@ -124,8 +129,30 @@ module.exports.addNewValue = (yargs, defaultParam = NEW_VALUE.default) => {
     yargs,
     NEW_VALUE.name,
     NEW_VALUE.alias,
-    "number",
+    "string",
     `New value to se in the settings. By default: ${defaultParam}`,
+    defaultParam
+  );
+};
+
+module.exports.addMaxValue = (yargs, defaultParam = MAX_VALUE.default) => {
+  newOption(
+    yargs,
+    MAX_VALUE.name,
+    MAX_VALUE.alias,
+    "string",
+    `Max value to set in the settings. By default: ${defaultParam}`,
+    defaultParam
+  );
+};
+
+module.exports.addMinValue = (yargs, defaultParam = MIN_VALUE.default) => {
+  newOption(
+    yargs,
+    MIN_VALUE.name,
+    MIN_VALUE.alias,
+    "string",
+    `Min value to set in the settings. By default: ${defaultParam}`,
     defaultParam
   );
 };
@@ -155,6 +182,20 @@ module.exports.addSettingName = (
   );
 };
 
+module.exports.addAssetSettingName = (
+  yargs,
+  defaultParam = ASSET_SETTING_NAME.default
+) => {
+  newOption(
+    yargs,
+    ASSET_SETTING_NAME.name,
+    ASSET_SETTING_NAME.alias,
+    "string",
+    `Asset setting name to configure. By default  ${defaultParam}`,
+    defaultParam
+  );
+};
+
 module.exports.addCTokenName = (yargs, defaultParam = CTOKEN_NAME.default) => {
   newOption(
     yargs,
@@ -162,6 +203,17 @@ module.exports.addCTokenName = (yargs, defaultParam = CTOKEN_NAME.default) => {
     CTOKEN_NAME.alias,
     "string",
     `CToken name to use in the transaction. By default ${defaultParam}`,
+    defaultParam
+  );
+};
+
+module.exports.addMaxLoanAmount = (yargs, defaultParam = MAX_LOAN_AMOUNT.default) => {
+  newOption(
+    yargs,
+    MAX_LOAN_AMOUNT.name,
+    MAX_LOAN_AMOUNT.alias,
+    "number",
+    `Max loan amount to use in the transaction. By default ${defaultParam}`,
     defaultParam
   );
 };
@@ -268,6 +320,17 @@ module.exports.addCollAmount = (yargs, defaultParam = COLL_AMOUNT.default) => {
     COLL_AMOUNT.alias,
     "number",
     `Amount to send as collateral. By default ${defaultParam}`,
+    defaultParam
+  );
+};
+
+module.exports.addBackRounds = (yargs, defaultParam = BACK_ROUNDS.default) => {
+  newOption(
+    yargs,
+    BACK_ROUNDS.name,
+    BACK_ROUNDS.alias,
+    "number",
+    `Total back rounds to get an oracle price. By default ${defaultParam}`,
     defaultParam
   );
 };

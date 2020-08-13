@@ -3,8 +3,8 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/InterestConsensus.sol";
 
-contract InterestConsensusMock is InterestConsensus {
 
+contract InterestConsensusMock is InterestConsensus {
     uint256 private _mockChainId = 1; // Mainnet
 
     function mockInterestSubmissions(
@@ -32,11 +32,7 @@ contract InterestConsensusMock is InterestConsensus {
         hasSubmitted[signer][lender][blockNumber] = hasSub;
     }
 
-    function mockSignerNonce(
-        address signer,
-        uint256 signerNonce,
-        bool taken
-    ) external {
+    function mockSignerNonce(address signer, uint256 signerNonce, bool taken) external {
         signerNonceTaken[signer][signerNonce] = taken;
     }
 
@@ -59,9 +55,11 @@ contract InterestConsensusMock is InterestConsensus {
         return _hashResponse(response, requestHash);
     }
 
-    function externalHashRequest(
-        ZeroCollateralCommon.InterestRequest calldata request
-    ) external view returns (bytes32) {
+    function externalHashRequest(ZeroCollateralCommon.InterestRequest calldata request)
+        external
+        view
+        returns (bytes32)
+    {
         return _hashRequest(request);
     }
 
@@ -69,11 +67,7 @@ contract InterestConsensusMock is InterestConsensus {
         return _mockChainId;
     }
 
-    function mockRequestNonce(
-        address lender,
-        uint256 requestNonce,
-        bool taken
-    ) external {
+    function mockRequestNonce(address lender, uint256 requestNonce, bool taken) external {
         requestNonceTaken[lender][requestNonce] = taken;
     }
 }

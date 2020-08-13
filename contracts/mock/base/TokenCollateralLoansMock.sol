@@ -3,19 +3,15 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/TokenCollateralLoans.sol";
 
-contract TokenCollateralLoansMock is TokenCollateralLoans {
 
+contract TokenCollateralLoansMock is TokenCollateralLoans {
     bool public mockTokenFunctions;
 
-    function setMockTokenFunctions(bool newMockTokenFunctions)
-        external
-    {
+    function setMockTokenFunctions(bool newMockTokenFunctions) external {
         mockTokenFunctions = newMockTokenFunctions;
     }
 
-    function setLoanIDCounter(uint256 newLoanIdCounter)
-        external
-    {
+    function setLoanIDCounter(uint256 newLoanIdCounter) external {
         loanIDCounter = newLoanIdCounter;
     }
 

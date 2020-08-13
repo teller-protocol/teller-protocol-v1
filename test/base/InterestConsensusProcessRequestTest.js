@@ -13,6 +13,9 @@ const { interestConsensus } = require('../utils/events');
 const chains = require('../utils/chains');
 const { createTestSettingsInstance } = require('../utils/settings-helper');
 
+// Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
+
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
 const InterestConsensusMock = artifacts.require("./mock/base/InterestConsensusMock.sol");
@@ -115,6 +118,7 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
     ) {    
         it(t('user', 'new', 'Should accept/not accept a nodes response', mustFail), async function() {
             // set up contract
+            const marketsInstance = await Mock.new();
             const settings = await createTestSettingsInstance(
                 Settings,
                 {
@@ -126,7 +130,7 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
                 }
             );
 
-            await instance.initialize(lendersContract, settings.address);
+            await instance.initialize(lendersContract, settings.address, marketsInstance.address);
 
             await instance.addSigner(nodeOne)
             await instance.addSigner(nodeTwo)
