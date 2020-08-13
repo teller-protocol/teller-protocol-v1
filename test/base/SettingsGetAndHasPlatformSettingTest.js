@@ -5,6 +5,7 @@ const {
     toBytes32,
 } = require('../utils/consts');
 const settingsNames = require('../utils/platformSettingsNames');
+const { createTestSettingsInstance } = require("../utils/settings-helper");
 
 // Mock contracts
 
@@ -16,7 +17,7 @@ contract('SettingsGetAndHasPlatformSettingTest', function (accounts) {
     let instance;
     
     beforeEach('Setup for each test', async () => {
-        instance = await Settings.new();
+        instance = await createTestSettingsInstance(Settings);
     });
 
     const newSetting = (value, min = 0, max = value * 2) => ({value, min, max});

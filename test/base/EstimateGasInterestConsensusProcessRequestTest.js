@@ -151,7 +151,7 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
                     from: lendersContract
                 }
             );
-            assert(parseInt(result) <= expectedMaxGas);
+            assert(parseInt(result) <= expectedMaxGas, 'Expected max gas less than result.');
         })
     })
 })

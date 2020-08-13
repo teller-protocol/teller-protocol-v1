@@ -1,4 +1,5 @@
 // JS Libraries
+const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
 const {
     t,
@@ -16,7 +17,7 @@ contract('SettingsRemovePlatformSettingTest', function (accounts) {
     let instance;
     
     beforeEach('Setup for each test', async () => {
-        instance = await Settings.new();
+        instance = await createTestSettingsInstance(Settings);
     });
 
     const newSetting = (name, value, min = 0, max = value * 2) => ({name, nameBytes32: toBytes32(web3, name), value, min, max});

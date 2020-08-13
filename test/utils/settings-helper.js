@@ -28,11 +28,16 @@ const createSettingsInstance = async (
     const proxy = await AdminUpgradeabilityProxy.new(settingsInstance.address, from, '0x')
     const instance = await Settings.at(proxy.address)
     await instance.initialize(from)
-    await initPlatformSettings(
-        instance,
-        params,
-        {},
-    );
+
+    const shouldInitPlatformSettings = typeof params === 'object'
+    if (shouldInitPlatformSettings) {
+        await initPlatformSettings(
+            instance,
+            params,
+            {},
+        );
+    }
+
     return instance;
 };
 
@@ -50,16 +55,16 @@ const overrideDefaultTestValues = (params) => {
 
 module.exports = {
     TEST_DEFAULT_VALUE,
-    createTestSettingsInstance: async (Settings, params = {}) => {
+    // NOTE: Pass an object as `params` to init platform settings
+    createTestSettingsInstance: async (Settings, params) => {
         // It overrides the TEST default values using a {settingName: newValue} object.
         // See examples using this 'createTestSettingsInstance' function.
-        const values = overrideDefaultTestValues(params);
-        
-        const instance = await createSettingsInstance(
-            Settings,
-            { platformSettings: values, currentBlockNumber: 0, web3, verbose: false, }
-        );
-        return instance;
+        if (typeof params === 'object') {
+            const values = overrideDefaultTestValues(params);
+            params = { platformSettings: values, currentBlockNumber: 0, web3, verbose: false, }
+        }
+
+        return await createSettingsInstance(Settings, params);
     },
     printPlatformSetting: ({value, min, max, exists}, { settingName, settingNameBytes32 }) => {
         console.log(`Setting Name / Bytes32:    ${settingName} / ${settingNameBytes32}`);
