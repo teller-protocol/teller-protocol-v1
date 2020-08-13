@@ -285,6 +285,53 @@ module.exports = {
             };
         },
     },
+    atmToken: {
+        newCap: tx => {
+            const name = 'NewCap';
+            return {
+                name: name,
+                emitted: (newCap) => emitted(tx, name, ev => {
+                    assert.equal(ev.newCap, newCap);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        newVesting: tx => {
+            const name = "NewVesting";
+            return {
+                name: name,
+                emitted: (beneficiary, amount, deadline) => emitted(tx, name, ev => {
+                    assert.equal(ev.beneficiary, beneficiary);
+                    assert.equal(ev.amount, amount);
+                    assert.equal(ev.deadline, deadline);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        vestingClaimed: tx => {
+            const name = "VestingClaimed";
+            return {
+                name: name,
+                emitted: (beneficiary, amount) => emitted(tx, name, ev => {
+                    assert.equal(ev.beneficiary, beneficiary);
+                    assert.equal(ev.amount, amount);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        revokeVesting: tx => {
+            const name = "RevokeVesting";
+            return {
+                name: name,
+                emitted: (beneficiary, amount, deadline) => emitted(tx, name, ev => {
+                    assert.equal(ev.beneficiary, beneficiary);
+                    assert.equal(ev.amount, amount);
+                    assert.equal(ev.deadline, deadline);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction) 
+            };
+        },
+    },
     settings: {
         lendingPoolPaused: tx => {
             const name = 'LendingPoolPaused';
