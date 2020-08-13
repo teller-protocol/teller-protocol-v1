@@ -25,7 +25,7 @@ contract ATMGovernanceFactory is SignerRole {
     mapping (address => bool) public atmProxies;
 
     // List of ATM instances
-    address[] public atmProxies;
+    address[] public atmProxiesList;
 
     // List of ATM Token instances
     // ATMToken address => ATM address
