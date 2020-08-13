@@ -24,8 +24,8 @@ contract('ATMTokenMintVestingTest', function (accounts) {
     withData({
         _1_mint_vesting_basic: [daoMember2, 1000, 3000, 7000, false, undefined, false],
         _2_mint_vesting_above_cap: [daoMember2, 21000, 2000, 7000, false,  'ERC20_CAP_EXCEEDED', true],
-        _3_mint_vesting_zero_address: [NULL_ADDRESS, 3000, 10000, 60000, false, "MINT_TO_ZERO_ADDRESS", true],
-        _4_mint_vesting_above_allowed_max_vestings: [daoMember2, 1000, 3000, 6000, true, "MAX_VESTINGS_REACHED!", true],
+        _3_mint_vesting_zero_address: [NULL_ADDRESS, 3000, 10000, 60000, false, "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED", true],
+        _4_mint_vesting_above_allowed_max_vestings: [daoMember2, 1000, 3000, 6000, true, "MAX_VESTINGS_REACHED", true],
     },function(
         receipent,
         amount,

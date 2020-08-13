@@ -23,7 +23,7 @@ contract('ATMTokenMintTest', function (accounts) {
     withData({
         _1_mint_no_vesting_basic: [daoMember1, 2000, undefined, false],
         _2_mint_no_vesting_above_cap: [daoMember1, 11000, 'ERC20_CAP_EXCEEDED', true],
-        _3_mint_no_vesting_zero_address: [NULL_ADDRESS, 3000, "MINT_TO_ZERO_ADDRESS", true]
+        _3_mint_no_vesting_zero_address: [NULL_ADDRESS, 3000, "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED", true]
     },function(
         receipent,
         amount,

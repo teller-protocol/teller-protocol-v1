@@ -1,5 +1,4 @@
 pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
 
 /* Import */ 
 import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
@@ -25,7 +24,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
         @dev Throws an error if the sender is not the owner
      */
     modifier onlyOwner() {
-         require(msg.sender == _owner, "CALLER_IS_NOT_AGENT");
+         require(msg.sender == _owner, "CALLER_IS_NOT_OWNER");
          _;
      }
 
@@ -44,7 +43,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
     }
 
     /* Mappings */
-    mapping (address => mapping(uint256 => VestingTokens)) private _vestingBalances;
+    mapping (address => mapping(uint256 => VestingTokens)) private _vestingBalances; // Mapping user address to vestings id, which in turn is mapped to the VestingTokens struct
     mapping (address => uint256) public vestingsCount;
     mapping (address => uint256) public assignedTokens;
 
@@ -59,6 +58,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
         ERC20Detailed(_name, _symbol, _decimals)
         public
     {
+        require(cap > 0, "CAP_CANNOT_BE_ZERO");
         _cap = cap;
         _maxVestingsPerWallet = maxVestingsPerWallet;
         _owner = msg.sender;
@@ -70,7 +70,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
      * @return The supply capped amount
      */
     function cap() 
-        public
+        external
         view
         returns (uint256) 
     {
@@ -84,7 +84,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
     function setCap(
         uint256 newCap
     ) 
-        public
+        external
         onlyOwner()
     {
         _cap = newCap;
@@ -105,8 +105,8 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
         onlyOwner()
         returns (bool)
     {
-        require(account != address(0), "MINT_TO_ZERO_ADDRESS");
-        _beforeTokenTransfer(address(0), account, amount);
+        require(account != address(0x0), "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED");
+        _beforeTokenTransfer(address(0x0), account, amount);
         _mint(account, amount);
         return true;
     }
@@ -136,9 +136,9 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
         public
         onlyOwner()
     {
-        require(account != address(0), "MINT_TO_ZERO_ADDRESS");
-        require(vestingsCount[account] < _maxVestingsPerWallet, "MAX_VESTINGS_REACHED!");
-        _beforeTokenTransfer(address(0), account, amount);
+        require(account != address(0x0), "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED");
+        require(vestingsCount[account] < _maxVestingsPerWallet, "MAX_VESTINGS_REACHED");
+        _beforeTokenTransfer(address(0x0), account, amount);
         uint256 vestingId = vestingsCount[account]++;
         vestingsCount[account]+=1;
         VestingTokens memory vestingTokens = VestingTokens(

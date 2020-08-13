@@ -6,7 +6,7 @@ const { atmToken } = require('../utils/events');
 // Smart contracts
 const ATMToken = artifacts.require("./ATMToken.sol");
 
-contract('ATMTokenTest', function (accounts) {
+contract('ATMTokenSetCapTest', function (accounts) {
     let instance;
     const daoAgent = accounts[0];
     const daoMember1 = accounts[2];
@@ -23,7 +23,7 @@ contract('ATMTokenTest', function (accounts) {
 
     withData({
         _1_set_supply_cap_basic: [70000, daoAgent, undefined, false],
-        _2_set_supply_cap_invalid_sender: [100000, daoMember1, 'CALLER_IS_NOT_AGENT', true]
+        _2_set_supply_cap_invalid_sender: [100000, daoMember1, 'CALLER_IS_NOT_OWNER', true]
     },function(
         newCap,
         sender,
