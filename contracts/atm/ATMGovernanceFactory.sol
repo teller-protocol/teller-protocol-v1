@@ -14,7 +14,7 @@ import "../base/TInitializable.sol";
 //import "../atm/ATMToken.sol";
 
 // Interfaces
-//import "./IATMGovernance.sol";
+import "./IATMGovernance.sol";
 import "../atm/ATMGovernanceFactoryInterface.sol";
 import "../interfaces/SettingsInterface.sol";
 
@@ -61,8 +61,6 @@ contract ATMGovernanceFactory is ATMGovernanceFactoryInterface, TInitializable {
         //     // )
         // ATMToken token = new ATMToken();
         // ATMGovernance instance = new ATMGovernance();
-        // instance.initialize(token);
-        // atms.add(instance);
 
         address newATMGovernance = address(0x0);
         address newATMToken = address(0x0);
