@@ -23,10 +23,7 @@ import "../interfaces/SettingsInterface.sol";
     @notice This contract will create upgradeable ATM instances.
     @author develop@teller.finance
  */
-contract ATMGovernanceFactory is
-    ATMGovernanceFactoryInterface,
-    TInitializable
-{
+contract ATMGovernanceFactory is ATMGovernanceFactoryInterface, TInitializable {
     using AddressArrayLib for address[];
     using AddressLib for address;
     using Address for address;
@@ -69,25 +66,17 @@ contract ATMGovernanceFactory is
 
         address newATMGovernance = address(0x0);
         address newATMToken = address(0x0);
-        
+
         atms[newATMGovernance] = true;
         atmsList.add(newATMGovernance);
-        
+
         // Emit new ATM created event.
-        emit ATMCreated(
-            msg.sender,
-            newATMGovernance,
-            newATMToken
-        );
+        emit ATMCreated(msg.sender, newATMGovernance, newATMToken);
     }
 
-    function initialize(address settingsAddress)
-        external
-        onlyOwner()
-        isNotInitialized()
-    {
+    function initialize(address settingsAddress) external onlyOwner() isNotInitialized() {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
-        
+
         _initialize();
 
         settings = SettingsInterface(settingsAddress);
