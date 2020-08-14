@@ -28,20 +28,33 @@ contract ATMGovernanceFactory is ATMGovernanceFactoryInterface, TInitializable {
     using AddressLib for address;
     using Address for address;
 
-    // Map of ATM instances
-    // ATMProxy address => isATM
+    /**
+        @notice It defines whether an ATM address exists or not.
+            Example:
+                address(0x1234...890) => true
+                address(0x2345...890) => false
+     */
     mapping(address => bool) public atms;
 
     // List of ATM instances
     address[] public atmsList;
+
+    SettingsInterface public settings;
 
     modifier onlyOwner() {
         require(settings.hasPauserRole(msg.sender) == true, "SENDER_ISNT_ALLOWED");
         _;
     }
 
-    SettingsInterface public settings;
-
+    /**
+        @notice It creates a new ATM instance.
+        @param name ATM token name.
+        @param symbol ATM token symbol
+        @param decimals ATM token decimals 
+        @param cap ATM token max cap.
+        @param maxVestingsPerWallet max vestings per wallet for the ATM token.
+        @return the new ATM governance instance address.
+     */
     function createATM(
         string calldata name,
         string calldata symbol,
@@ -97,6 +110,10 @@ contract ATMGovernanceFactory is ATMGovernanceFactoryInterface, TInitializable {
         return atms[atmAddress];
     }
 
+    /**
+        @notice Gets the ATMs list.
+        @return the list of ATMs.
+     */
     function getATMs() external view returns (address[] memory) {
         return atmsList;
     }
@@ -113,6 +130,10 @@ contract ATMGovernanceFactory is ATMGovernanceFactoryInterface, TInitializable {
         settings = SettingsInterface(settingsAddress);
     }
 
+    /**
+        @notice It updates the current settings.
+        @param newSettingsAddress the new setting address.
+     */
     function setSettings(address newSettingsAddress) external onlyOwner() {
         require(newSettingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
         address oldSettingsAddress = address(settings);
