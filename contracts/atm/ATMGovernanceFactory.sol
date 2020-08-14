@@ -4,14 +4,14 @@ pragma solidity 0.5.17;
 //import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Common
-//import "./ATMGovernance.sol";
-//import "../util/AddressLib.sol";
+import "./ATMGovernance.sol";
 import "../util/AddressArrayLib.sol";
 import "../base/TInitializable.sol";
+import "../base/UpgradeableProxy.sol";
 
 // Contracts
 //import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/SignerRole.sol";
-//import "../atm/ATMToken.sol";
+import "../atm/ATMToken.sol";
 
 // Interfaces
 import "./IATMGovernance.sol";
@@ -50,18 +50,7 @@ contract ATMGovernanceFactory is ATMGovernanceFactoryInterface, TInitializable {
         uint256 maxVestingsPerWallet
     ) external onlyOwner() isInitialized() returns (address) {
         address owner = msg.sender;
-        // Deploy ATM base contract
-        // Create new ATM proxy
-        // Set ATM v1
-        //     //  constructor(
-        //     // string memory _name,
-        //     // string memory _symbol,
-        //     // uint8 _decimals,
-        //     // uint256 cap,
-        //     // uint256 maxVestingsPerWallet
-        //     // )
-        // ATMToken token = new ATMToken();
-        // ATMGovernance instance = new ATMGovernance();
+
         bytes memory atmTokenInitData = abi.encodeWithSignature(
             "initialize(string,string,uint8,uint256,uint256)",
             name,
@@ -70,23 +59,45 @@ contract ATMGovernanceFactory is ATMGovernanceFactoryInterface, TInitializable {
             cap,
             maxVestingsPerWallet
         );
-        address newATMToken = address(0x0);
+
+        ATMToken atmTokenLogic = new ATMToken();
+        UpgradeableProxy atmTokenProxy = new UpgradeableProxy(address(atmTokenLogic), owner, atmTokenInitData);
+        address atmTokenProxyAddress = address(atmTokenProxy);
 
         bytes memory atmGovernanceInitData = abi.encodeWithSignature(
-            "initialize(address, address)",
-            newATMToken,
+            "initialize(address,address)",
+            atmTokenProxy,
             owner
         );
-        address newATMGovernance = address(0x0);
+        ATMGovernance atmGovernanceLogic = new ATMGovernance();
+        UpgradeableProxy atmGovernanceProxy = new UpgradeableProxy(address(atmGovernanceLogic), owner, atmGovernanceInitData);
+        address atmGovernanceProxyAddress = address(atmGovernanceProxy);
 
-        atms[newATMGovernance] = true;
-        atmsList.add(newATMGovernance);
+        atms[atmGovernanceProxyAddress] = true;
+        atmsList.add(atmGovernanceProxyAddress);
 
         // Emit new ATM created event.
-        emit ATMCreated(msg.sender, newATMGovernance, newATMToken);
+        emit ATMCreated(msg.sender, atmGovernanceProxyAddress, atmTokenProxyAddress);
     }
 
-    function initialize(address settingsAddress) external onlyOwner() isNotInitialized() {
+    /**
+        @notice Tests whether an address is an ATM instance or not.
+        @param atmAddress address to test.
+        @return true if the given address is an ATM. Otherwise it returns false.
+     */
+    function isATM(address atmAddress) external view returns (bool) {
+        return atms[atmAddress];
+    }
+
+    function getATMs() external view returns (address[] memory) {
+        return atmsList;
+    }
+
+    /**
+        @notice It initializes this ATM Governance Factory instance.
+        @param settingsAddress settings address.
+     */
+    function initialize(address settingsAddress) external isNotInitialized() {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
 
         _initialize();

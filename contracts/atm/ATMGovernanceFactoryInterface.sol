@@ -58,9 +58,21 @@ interface ATMGovernanceFactoryInterface {
     ) external returns (address);
 
     /**
+        @notice It updates the current settings.
+        @param newSettingsAddress the new setting address.
+     */
+    function setSettings(address newSettingsAddress) external;
+
+    /**
         @notice Tests whether an address is an ATM instance or not.
         @param atmAddress address to test.
         @return true if the given address is an ATM. Otherwise it returns false.
      */
     function isATM(address atmAddress) external view returns (bool);
+
+    /**
+        @notice Gets the ATMs list.
+        @return the list of ATMs.
+     */
+    function getATMs() external view returns (address[] memory);
 }

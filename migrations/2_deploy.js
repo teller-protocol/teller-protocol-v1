@@ -2,11 +2,10 @@ const assert = require('assert');
 const DeployerApp = require('./utils/DeployerApp');
 const PoolDeployer = require('./utils/PoolDeployer');
 const initSettings = require('./utils/init_settings');
+const initATMs = require('./utils/init_settings/initATMs');
 
 const ERC20 = artifacts.require("@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol");
 const AdminUpgradeabilityProxy = artifacts.require("./base/UpgradeableProxy.sol");
-
-const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Official Smart Contracts
 const TDAI = artifacts.require("./base/TDAI.sol");
@@ -21,6 +20,7 @@ const LendingPool = artifacts.require("./base/LendingPool.sol");
 const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 // ATM Smart contracts
+const ATMGovernanceFactory = artifacts.require("./atm/ATMGovernanceFactory.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 // External providers
 const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
@@ -39,7 +39,7 @@ module.exports = async function(deployer, network, accounts) {
   const deployerAccountIndex = env.getDefaultAddressIndex().getOrDefault();
   const deployerAccount = accounts[deployerAccountIndex];
   console.log(`Deployer account index is ${deployerAccountIndex} => ${deployerAccount}`);
-  const { maxGasLimit, tokens, chainlink, signers, compound } = networkConfig;
+  const { maxGasLimit, tokens, chainlink, signers, compound, atms } = networkConfig;
   assert(maxGasLimit, `Max gas limit for network ${network} is undefined.`);
 
   // Validations
@@ -69,10 +69,20 @@ module.exports = async function(deployer, network, accounts) {
     { ERC20 },
   );
 
-  const atmGovernanceFactory = await Mock.new(); // TODO Mocking the ATMGovernanceFactory instance for now.
+  await deployerApp.deploy(ATMGovernanceFactory, txConfig);
+  const atmGovernanceFactoryInstance = await ATMGovernanceFactory.deployed();
+  await atmGovernanceFactoryInstance.initialize(settingsInstance.address, txConfig);
+  console.log(`ATM Governance Factory deployed at: ${atmGovernanceFactoryInstance.address}`);
+
+  await initATMs(
+    { atmFactory: atmGovernanceFactoryInstance },
+    { atms, txConfig },
+    {},
+  );
+
   await deployerApp.deploy(
     ATMSettings,
-    atmGovernanceFactory.address,
+    atmGovernanceFactoryInstance.address,
     Settings.address,
     txConfig
   );

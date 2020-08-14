@@ -7,6 +7,7 @@ module.exports = {
     assetSettings: require('./assetSettings'),
     platformSettings: require('./platformSettings'),
     signers: require('./signers'),
+    atms: require('./atms'),
     maxGasLimit: 6721975,
     toTxUrl: ({ tx }) => {
         return `not-supported-url`;
