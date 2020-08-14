@@ -21,7 +21,7 @@ const LendingPool = artifacts.require("./base/LendingPool.sol");
 const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 // ATM Smart contracts
-const ATMGovernance = artifacts.require("./ATM/ATMGovernance.sol");
+const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 // External providers
 const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
 const InverseChainlinkPairAggregator = artifacts.require("./providers/chainlink/InverseChainlinkPairAggregator.sol");

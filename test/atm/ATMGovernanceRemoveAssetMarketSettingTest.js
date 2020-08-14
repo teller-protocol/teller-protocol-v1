@@ -12,7 +12,7 @@ const {
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const ATMGovernance = artifacts.require("./ATM/ATMGovernance.sol");
+const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 
 contract('ATMGovernanceRemoveAssetMarketSettingTest', function (accounts) {
     let instance;
