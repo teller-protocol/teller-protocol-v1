@@ -5,7 +5,6 @@ import "../../base/LoansBase.sol";
 
 
 contract LoansBaseMock is LoansBase {
-
     function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
         internal
     {}
@@ -30,7 +29,11 @@ contract LoansBaseMock is LoansBase {
         return _convertTokenToWei(tokenAmount);
     }
 
-    function externalIsSupplyToDebtRatioValid(uint256 newLoanAmount) external view returns (bool) {
+    function externalIsSupplyToDebtRatioValid(uint256 newLoanAmount)
+        external
+        view
+        returns (bool)
+    {
         return super._isSupplyToDebtRatioValid(newLoanAmount);
     }
 

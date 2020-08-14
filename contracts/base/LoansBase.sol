@@ -19,6 +19,7 @@ import "../interfaces/LoansInterface.sol";
 import "../settings/ATMSettingsInterface.sol";
 import "../atm/IATMGovernance.sol";
 
+
 /**
     @notice This contract is used as a basis for the creation of the different types of loans across the platform
     @notice It implements the Base contract from Teller and the LoansInterface
@@ -249,7 +250,6 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
             this.collateralToken(),
             amountBorrow
         );
-
 
         emit LoanTakenOut(loanID, loans[loanID].loanTerms.borrower, amountBorrow);
     }
@@ -658,18 +658,23 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         @param newLoanAmount the new loan amount to consider o the StD ratio.
         @return true if the ratio is valid. Otherwise it returns false.
      */
-    function _isSupplyToDebtRatioValid(uint256 newLoanAmount) internal view returns (bool){
+    function _isSupplyToDebtRatioValid(uint256 newLoanAmount)
+        internal
+        view
+        returns (bool)
+    {
         address atmAddressForMarket = atmSettings.getATMForMarket(
             lendingPool.lendingToken(),
             collateralToken
         );
         require(atmAddressForMarket != address(0x0), "ATM_NOT_FOUND_FOR_MARKET");
-        uint256 supplyToDebtMarketLimit = IATMGovernance(atmAddressForMarket).getGeneralSetting(SUPPLY_TO_DEBT_ATM_SETTING);
+        uint256 supplyToDebtMarketLimit = IATMGovernance(atmAddressForMarket)
+            .getGeneralSetting(SUPPLY_TO_DEBT_ATM_SETTING);
         uint256 currentSupplyToDebtMarket = markets.getSupplyToDebtFor(
-                lendingPool.lendingToken(),
-                collateralToken,
-                newLoanAmount
-            );
+            lendingPool.lendingToken(),
+            collateralToken,
+            newLoanAmount
+        );
         return currentSupplyToDebtMarket <= supplyToDebtMarketLimit;
     }
 }
