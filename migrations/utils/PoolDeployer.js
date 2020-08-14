@@ -154,7 +154,6 @@ PoolDeployer.prototype.deployPool = async function(
         assert(result, `${initializable.contractName} is NOT initialized.`);
     }
 
-    console.log(`TX Config: ${JSON.stringify(txConfig)}`);
     await initSignerAddresses(
         { loanTermsConsensusInstance, interestConsensusInstance },
         { signers, txConfig },

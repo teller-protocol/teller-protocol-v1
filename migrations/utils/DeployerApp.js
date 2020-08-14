@@ -15,10 +15,8 @@ class DeployerApp {
     }
 
     async deployWithUpgradeable(contractName, contract, admin, data, ...params) {
-        console.log(...params);
         await this.deployWith(contractName, contract, ...params)
         await this.deployWith(`${contractName}_Proxy`, this.AdminUpgradeabilityProxy, contract.address, admin, data, ...params)
-        //return contract.at(contract.address)
         return contract.at(this.AdminUpgradeabilityProxy.address)
     }
 }

@@ -22,8 +22,9 @@ module.exports = async function(
     { signers, txConfig, },
     { },
 ) {
-    console.log('Configuring signer address in consensus contracts.')
-    for (const signerKey of Object.keys(signers)) {
+    const signerKeys = Object.keys(signers);
+    console.log(`Configuring ${signerKeys.length} signer address in consensus contracts.`);
+    for (const signerKey of signerKeys) {
         const signerAddress = signers[signerKey];
         assert(!_.isUndefined(signerAddress), `Signer address is undefined for key ${signerKey}.`);
 
