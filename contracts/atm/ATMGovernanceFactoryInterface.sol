@@ -10,14 +10,26 @@ interface ATMGovernanceFactoryInterface {
 
     /**
         @notice This event is emitted when a new ATM instance is created.
-        @param atmAddress new ATM instance address.
         @param creator creator address.
-        @param supplyToDebt initial supply to debt ratio value.
+        @param atmGovernanceAddress new ATM Governance instance address.
+        @param atmTokenAddress new ATM Token instance address.
      */
-    event ATMGovernanceCreated(
-        address indexed atmAddress,
+    event ATMCreated(
         address indexed creator,
-        uint256 supplyToDebt
+        address indexed atmGovernanceAddress,
+        address indexed atmTokenAddress
+    );
+
+    /**
+        @notice This event is emitted when the setting is updated.
+        @param sender address that sent the transaction.
+        @param oldSettings the old settings address.
+        @param newSettings the new settings address.
+     */
+    event SettingsUpdated(
+        address indexed sender,
+        address oldSettings,
+        address newSettings
     );
 
     /* State Variables */

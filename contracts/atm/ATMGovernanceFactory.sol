@@ -7,7 +7,7 @@ pragma solidity 0.5.17;
 //import "./ATMGovernance.sol";
 //import "../util/AddressLib.sol";
 import "../util/AddressArrayLib.sol";
-//import "../base/TInitializable.sol";
+import "../base/TInitializable.sol";
 
 // Contracts
 //import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/SignerRole.sol";
@@ -24,7 +24,8 @@ import "../interfaces/SettingsInterface.sol";
     @author develop@teller.finance
  */
 contract ATMGovernanceFactory is
-    ATMGovernanceFactoryInterface //TInitializable
+    ATMGovernanceFactoryInterface,
+    TInitializable
 {
     using AddressArrayLib for address[];
     using AddressLib for address;
@@ -35,15 +36,7 @@ contract ATMGovernanceFactory is
     mapping(address => bool) public atms;
 
     // List of ATM instances
-    address[] public atmList;
-
-    event SettingsUpdated(
-        address indexed signer,
-        address oldSettings,
-        address newSettings
-    );
-
-    event ATMAdded(address indexed signer, address indexed atm, address indexed atmToken);
+    address[] public atmsList;
 
     modifier onlyOwner() {
         require(settings.hasPauserRole(msg.sender) == true, "SENDER_ISNT_ALLOWED");
@@ -58,7 +51,7 @@ contract ATMGovernanceFactory is
         uint8 decimals,
         uint256 cap,
         uint256 maxVestingsPerWallet
-    ) external onlyOwner() returns (address) {
+    ) external onlyOwner() isInitialized() returns (address) {
         // Deploy ATM base contract
         // Create new ATM proxy
         // Set ATM v1
@@ -73,16 +66,29 @@ contract ATMGovernanceFactory is
         // ATMGovernance instance = new ATMGovernance();
         // instance.initialize(token);
         // atms.add(instance);
-        // atmList.add(instance);
-        // // emit event new ATM
+
+        address newATMGovernance = address(0x0);
+        address newATMToken = address(0x0);
+        
+        atms[newATMGovernance] = true;
+        atmsList.add(newATMGovernance);
+        
+        // Emit new ATM created event.
+        emit ATMCreated(
+            msg.sender,
+            newATMGovernance,
+            newATMToken
+        );
     }
 
     function initialize(address settingsAddress)
         external
-        onlyOwner() //isNotInitialized()
+        onlyOwner()
+        isNotInitialized()
     {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
-        //_initialize();
+        
+        _initialize();
 
         settings = SettingsInterface(settingsAddress);
     }
