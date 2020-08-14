@@ -180,9 +180,10 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         @param request the new request.
         @dev It throws a require error if the request rate limit exceeds the maximum.
      */
-    function _requireRequestLoanTermsRateLimit(
-        TellerCommon.LoanRequest memory request
-    ) internal view {
+    function _requireRequestLoanTermsRateLimit(TellerCommon.LoanRequest memory request)
+        internal
+        view
+    {
         // In case it is the first time that borrower requests loan terms, we don't validate the rate limit.
         if (borrowerToLastLoanTermRequest[request.borrower] == 0) {
             return;
