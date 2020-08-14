@@ -1,14 +1,14 @@
 pragma solidity 0.5.17;
 
 // External Libraries
-import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Common
 import "../util/AddressArrayLib.sol";
 import "../util/AddressLib.sol";
 
 // Contracts
-import "@openzeppelin/contracts/access/roles/SignerRole.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/SignerRole.sol";
 
 // Interfaces
 import "./IATMGovernance.sol";
@@ -43,6 +43,9 @@ contract ATMGovernance is SignerRole, IATMGovernance {
 
     // Unique CRA - Credit Risk Algorithm github hash to use in this ATM
     string public cra;
+
+    // ATM Governance token address
+    address public atmToken;
 
     /* External Functions */
 
@@ -233,6 +236,7 @@ contract ATMGovernance is SignerRole, IATMGovernance {
     /**
         @notice Sets the CRA - Credit Risk Algorithm to be used on this specific ATM.
                 CRA is represented by a Github commit hash of the newly proposed algorithm.
+        @param _cra Credit Risk Algorithm github commit hash.
      */
     function setCRA(string calldata _cra) external onlySigner() {
         bytes memory tempEmptyStringTest = bytes(_cra);
@@ -244,6 +248,22 @@ contract ATMGovernance is SignerRole, IATMGovernance {
         cra = _cra;
         emit CRASet(msg.sender, cra);
     }
+
+
+    /**
+        @notice Updates this ATM Token address.
+        @param atmToken new atm token address. 
+     */
+    function setATMToken(address _atmToken)
+        external
+        onlySigner()
+    {
+        require(_atmToken.isContract(), "TOKEN_ADDRESS_MUST_BE_A_CONTRACT");
+        address oldAtmToken = atmToken;
+        atmToken = _atmToken;
+        emit ATMTokenUpdated(msg.signer, oldAtmToken, atmToken);
+    }
+
 
     /* External Constant functions */
 
@@ -290,5 +310,12 @@ contract ATMGovernance is SignerRole, IATMGovernance {
      */
     function getCRA() external view returns (string memory) {
         return cra;
+    }
+   
+    /**
+        @notice Returns this ATM governance token address.
+     */
+    function getATMToken() external view returns (address) {
+        return atmToken;
     }
 }

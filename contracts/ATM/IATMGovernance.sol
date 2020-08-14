@@ -141,6 +141,14 @@ interface IATMGovernance {
         @param craCommitHash github commit hash with the new CRA implementation.
      */
     event CRASet(address indexed signer, string craCommitHash);
+    
+    /**
+        @notice Emitted when an ATM Token is set to this ATM instance.
+        @param signer transaction sender address.
+        @param oldAtmToken previous atm governance token address.
+        @param newAtmToken new atm governance token address.
+     */
+    event ATMTokenUpdated(address indexed signer, address oldAtmToken, address newAtmToken);
 
     /* External Functions */
 
@@ -225,8 +233,15 @@ interface IATMGovernance {
     /**
         @notice Sets the CRA - Credit Risk Algorithm to be used on this specific ATM.
                 CRA is represented by a Github commit hash of the newly proposed algorithm.
+        @param cra credit risk algorithm commit hash. 
      */
     function setCRA(string calldata cra) external;
+
+    /**
+        @notice Updates this ATM Token address.
+        @param atmToken new atm token address. 
+     */
+    function setATMToken(address atmToken) external;
 
     /* External Constant functions */
 
@@ -261,4 +276,9 @@ interface IATMGovernance {
                 CRA is represented by a Github commit hash of the newly proposed algorithm.
      */
     function getCRA() external view returns (string memory);
+
+    /**
+        @notice Returns current ATM governance token address. 
+     */
+    function getATMToken() external view returns (address);
 }
