@@ -178,10 +178,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
      *
      * - minted tokens must not cause the total supply to go over the cap.
      */
-    function _beforeTokenTransfer(address from, address, uint256 amount)
-        internal
-        view
-    {
+    function _beforeTokenTransfer(address from, address, uint256 amount) internal view {
         require(
             from == address(0) && totalSupply().add(amount) <= _cap,
             "ERC20_CAP_EXCEEDED"
