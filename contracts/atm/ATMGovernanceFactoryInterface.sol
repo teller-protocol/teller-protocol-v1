@@ -30,10 +30,20 @@ interface ATMGovernanceFactoryInterface {
 
     /**
         @notice It creates a new ATM instance.
-        @param supplyToDebt initial supply to debt ratio value.
-        @return the new ATM instance address.
+        @param name ATM token name.
+        @param symbol ATM token symbol
+        @param decimals ATM token decimals 
+        @param cap ATM token max cap.
+        @param maxVestingsPerWallet max vestings per wallet for the ATM token.
+        @return the new ATM governance instance address.
      */
-    function createATM(uint256 supplyToDebt) external returns (address);
+    function createATM(
+        string calldata name,
+        string calldata symbol,
+        uint8 decimals,
+        uint256 cap,
+        uint256 maxVestingsPerWallet
+    ) external returns (address);
 
     /**
         @notice Tests whether an address is an ATM instance or not.

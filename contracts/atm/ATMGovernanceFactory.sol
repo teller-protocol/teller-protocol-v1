@@ -1,27 +1,28 @@
 pragma solidity 0.5.17;
 
 // External Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+//import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Common
-import "./ATMGovernance.sol";
-import "../base/ATM/ATMToken.sol";
-import "../util/AddressLib.sol";
+//import "./ATMGovernance.sol";
+//import "../util/AddressLib.sol";
 import "../util/AddressArrayLib.sol";
-import "../base/TInitializable.sol";
+//import "../base/TInitializable.sol";
 
 // Contracts
-import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/SignerRole.sol";
+//import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/SignerRole.sol";
+//import "../atm/ATMToken.sol";
 
 // Interfaces
-import "./IATMGovernance.sol";
-import "../settings/ATMSettingsInterface.sol";
+//import "./IATMGovernance.sol";
+import "../atm/ATMGovernanceFactoryInterface.sol";
+import "../interfaces/SettingsInterface.sol";
 
 /**
     @notice This contract will create upgradeable ATM instances.
     @author develop@teller.finance
  */
-contract ATMGovernanceFactory is SignerRole, TInitializable {
+contract ATMGovernanceFactory is ATMGovernanceFactoryInterface {//TInitializable
     using AddressArrayLib for address[];
     using AddressLib for address;
     using Address for address;
@@ -45,12 +46,26 @@ contract ATMGovernanceFactory is SignerRole, TInitializable {
         address indexed atmToken
     );
 
-    ATMSettingsInterface private settings;
+    modifier onlyOwner() {
+        require(
+            settings.hasPauserRole(msg.sender) == true,
+            "SENDER_ISNT_ALLOWED"
+        );
+        _;
+    }
 
+    SettingsInterface public settings;
 
-    function createATM()
+    function createATM(
+        string calldata name,
+        string calldata symbol,
+        uint8 decimals,
+        uint256 cap,
+        uint256 maxVestingsPerWallet
+    )
         external
-        onlySigner()
+        onlyOwner()
+        returns (address)
     {
         // Deploy ATM base contract
         // Create new ATM proxy
@@ -71,24 +86,28 @@ contract ATMGovernanceFactory is SignerRole, TInitializable {
     }
 
 
-    function initialize(address _settings)
+    function initialize(address settingsAddress)
         external
-        onlySigner()
-        isNotInitialized()
+        onlyOwner()
+        //isNotInitialized()
     {
-        _initialize();
-        _setSettings(_settings);
-        // emit event
+        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
+        //_initialize();
+        
+        settings = SettingsInterface(settingsAddress);
     }
 
-    function _setSettings(address _settings)
-        internal
-        onlySigner()
+    function setSettings(address newSettingsAddress)
+        external
+        onlyOwner()
     {
-        require(_settings.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
-        address oldSettings = settings;
-        settings = _settings;
-        emit SettingsUpdated(msg.signer, oldSettings, settings);
+        require(newSettingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
+        address oldSettingsAddress = address(settings);
+        oldSettingsAddress.requireNotEqualTo(newSettingsAddress, "NEW_SETTINGS_MUST_BE_PROVIDED");
+        
+        settings = SettingsInterface(newSettingsAddress);
+
+        emit SettingsUpdated(msg.sender, oldSettingsAddress, newSettingsAddress);
     }
 
 } 
