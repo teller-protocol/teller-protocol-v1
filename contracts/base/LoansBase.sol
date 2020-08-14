@@ -17,7 +17,7 @@ import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
 import "../settings/ATMSettingsInterface.sol";
-import "../ATM/IATMGovernance.sol";
+import "../atms/IATMGovernance.sol";
 
 
 /**

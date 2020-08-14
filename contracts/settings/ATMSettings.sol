@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
-import "../ATM/ATMGovernanceFactoryInterface.sol";
+import "../atms/ATMGovernanceFactoryInterface.sol";
 import "./ATMSettingsInterface.sol";
 
 
