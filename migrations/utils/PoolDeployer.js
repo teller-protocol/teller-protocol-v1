@@ -50,6 +50,7 @@ PoolDeployer.prototype.deployPool = async function(
 
     const marketsStateInstance = await MarketsState.deployed();
     const settingsInstance = await Settings.deployed();
+    const atmSettingsInstance = await ATMSettings.deployed();
 
     // Upgradable proxy contract, proxy admin address
     const upgradableArgs = [ txConfig.from, '0x' ]
@@ -116,6 +117,7 @@ PoolDeployer.prototype.deployPool = async function(
             loanTermsConsensusInstance.address,
             settingsInstance.address,
             marketsStateInstance.address,
+            atmSettingsInstance.address,
         );
     } else {
         const collateralAddress = tokens[collateralName.toUpperCase()];
@@ -127,6 +129,7 @@ PoolDeployer.prototype.deployPool = async function(
             settingsInstance.address,
             collateralAddress,
             marketsStateInstance.address,
+            atmSettingsInstance.address,
         );
     }
 
