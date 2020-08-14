@@ -58,7 +58,7 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
     function addGeneralSetting(bytes32 settingName, uint256 settingValue)
         external
         onlySigner()
-        // TODO Do we need to add isInitialized() (the same for other functions)?
+    // TODO Do we need to add isInitialized() (the same for other functions)?
     {
         require(settingValue > 0, "GENERAL_SETTING_MUST_BE_POSITIVE");
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
@@ -251,24 +251,17 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
         emit CRASet(msg.sender, cra);
     }
 
-
     /**
         @notice Updates this ATM Token address.
         @param newAtmToken new atm token address. 
      */
-    function setATMToken(address newAtmToken)
-        external
-        onlySigner()
-    {
+    function setATMToken(address newAtmToken) external onlySigner() {
         require(newAtmToken.isContract(), "NEW_ATM_TOKEN_MUST_BE_A_CONTRACT");
         address oldAtmToken = atmToken;
-        oldAtmToken.requireNotEqualTo(
-            newAtmToken,
-            "NEW_ATM_TOKEN_MUST_BE_PROVIDED"
-        );
-        
+        oldAtmToken.requireNotEqualTo(newAtmToken, "NEW_ATM_TOKEN_MUST_BE_PROVIDED");
+
         atmToken = newAtmToken;
-        
+
         emit ATMTokenUpdated(msg.sender, oldAtmToken, newAtmToken);
     }
 
@@ -335,7 +328,7 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
     function getCRA() external view returns (string memory) {
         return cra;
     }
-   
+
     /**
         @notice Returns this ATM governance token address.
      */

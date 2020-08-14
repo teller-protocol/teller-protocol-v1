@@ -72,9 +72,12 @@ contract ATMGovernanceFactory is ATMGovernanceFactoryInterface, TInitializable {
         );
         address newATMToken = address(0x0);
 
-        bytes memory atmGovernanceInitData = abi.encodeWithSignature("initialize(address, address)", newATMToken, owner);
+        bytes memory atmGovernanceInitData = abi.encodeWithSignature(
+            "initialize(address, address)",
+            newATMToken,
+            owner
+        );
         address newATMGovernance = address(0x0);
-        
 
         atms[newATMGovernance] = true;
         atmsList.add(newATMGovernance);
