@@ -61,7 +61,11 @@ contract ATMGovernanceFactory is ATMGovernanceFactoryInterface, TInitializable {
         );
 
         ATMToken atmTokenLogic = new ATMToken();
-        UpgradeableProxy atmTokenProxy = new UpgradeableProxy(address(atmTokenLogic), owner, atmTokenInitData);
+        UpgradeableProxy atmTokenProxy = new UpgradeableProxy(
+            address(atmTokenLogic),
+            owner,
+            atmTokenInitData
+        );
         address atmTokenProxyAddress = address(atmTokenProxy);
 
         bytes memory atmGovernanceInitData = abi.encodeWithSignature(
@@ -70,7 +74,11 @@ contract ATMGovernanceFactory is ATMGovernanceFactoryInterface, TInitializable {
             owner
         );
         ATMGovernance atmGovernanceLogic = new ATMGovernance();
-        UpgradeableProxy atmGovernanceProxy = new UpgradeableProxy(address(atmGovernanceLogic), owner, atmGovernanceInitData);
+        UpgradeableProxy atmGovernanceProxy = new UpgradeableProxy(
+            address(atmGovernanceLogic),
+            owner,
+            atmGovernanceInitData
+        );
         address atmGovernanceProxyAddress = address(atmGovernanceProxy);
 
         atms[atmGovernanceProxyAddress] = true;
