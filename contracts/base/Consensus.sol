@@ -62,6 +62,7 @@ contract Consensus is Base, OwnerSignersRole, SettingsConsts {
     ) public isNotInitialized() {
         aCallerAddress.requireNotEmpty("MUST_PROVIDE_LENDER_INFO");
 
+        Ownable.initialize(msg.sender);
         _initialize(aSettingAddress, aMarketsAddress);
 
         callerAddress = aCallerAddress;
