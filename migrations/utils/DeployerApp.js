@@ -16,7 +16,7 @@ class DeployerApp {
 
     async deployWithUpgradeable(contractName, contract, admin, data, ...params) {
         await this.deployWith(contractName, contract, ...params)
-        await this.deployWith(`${contractName} - Upgradable Proxy`, this.AdminUpgradeabilityProxy, contract.address, admin, data, ...params)
+        await this.deployWith(`${contractName}_Proxy`, this.AdminUpgradeabilityProxy, contract.address, admin, data, ...params)
         return contract.at(this.AdminUpgradeabilityProxy.address)
     }
 }
