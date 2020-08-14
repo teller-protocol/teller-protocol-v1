@@ -2,11 +2,13 @@ pragma solidity 0.5.17;
 
 /* Import */
 
-import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20Mintable.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Burnable.sol";
 import "./ATMTokenInterface.sol";
 
+
+import "../base/TInitializable.sol";
 
 /**
  *  @title ATM Token for Teller DAO
@@ -14,7 +16,7 @@ import "./ATMTokenInterface.sol";
  *  @author develop@teller.finance
  */
 
-contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burnable {
+contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burnable, TInitializable {
     /**
      *  @notice ATMToken implements an ERC20 token with a supply cap and a vesting scheduling
      */
