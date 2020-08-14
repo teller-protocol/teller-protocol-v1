@@ -178,7 +178,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
      *
      * - minted tokens must not cause the total supply to go over the cap.
      */
-    function _beforeTokenTransfer(address from, address to, uint256 amount)
+    function _beforeTokenTransfer(address from, address, uint256 amount)
         internal
         view
         returns (bool)
@@ -232,7 +232,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
         uint256 start,
         uint256 cliff,
         uint256 deadline
-    ) internal view returns (uint256) {
+    ) internal pure returns (uint256) {
         if (time >= deadline) {
             return 0;
         } else if (time < cliff) {
