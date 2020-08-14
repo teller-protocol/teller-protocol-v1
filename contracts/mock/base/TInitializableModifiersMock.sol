@@ -1,12 +1,12 @@
 pragma solidity 0.5.17;
 
-import "../../base/Initializable.sol";
+import "../../base/TInitializable.sol";
 
 
 /**
     This contract is created ONLY for testing purposes.
  */
-contract InitializableModifiersMock is Initializable {
+contract TInitializableModifiersMock is TInitializable {
     /** State Variables */
 
     /** Constructor */

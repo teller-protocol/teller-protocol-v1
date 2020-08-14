@@ -6,7 +6,7 @@ import "../base/Base.sol";
 
 // Libraries
 import "../util/AddressLib.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
 // Interfaces
 import "../interfaces/LendersInterface.sol";

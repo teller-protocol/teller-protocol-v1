@@ -13,7 +13,7 @@ pragma solidity 0.5.17;
 
     @author develop@teller.finance
  */
-contract Initializable {
+contract TInitializable {
     /* State Variables */
 
     bool private _isInitialized;
