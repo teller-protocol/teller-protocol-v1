@@ -7,8 +7,8 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mint
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Burnable.sol";
 import "./ATMTokenInterface.sol";
 
-
 import "../base/TInitializable.sol";
+
 
 /**
  *  @title ATM Token for Teller DAO
@@ -16,7 +16,13 @@ import "../base/TInitializable.sol";
  *  @author develop@teller.finance
  */
 
-contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burnable, TInitializable {
+contract ATMToken is
+    ATMTokenInterface,
+    ERC20Detailed,
+    ERC20Mintable,
+    ERC20Burnable,
+    TInitializable
+{
     /**
      *  @notice ATMToken implements an ERC20 token with a supply cap and a vesting scheduling
      */
