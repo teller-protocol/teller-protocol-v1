@@ -77,7 +77,9 @@ contract ATMGovernanceFactory is
         // // emit event new ATM
     }
 
-    function initialize(address settingsAddress) external onlyOwner() //isNotInitialized()
+    function initialize(address settingsAddress)
+        external
+        onlyOwner() //isNotInitialized()
     {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
         //_initialize();
