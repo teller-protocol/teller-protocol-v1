@@ -57,21 +57,22 @@ contract ATMToken is
     mapping(address => uint256) public vestingsCount;
     mapping(address => uint256) public assignedTokens;
 
-    /* Constructor */
-    constructor(
-        string memory _name,
-        string memory _symbol,
-        uint8 _decimals,
+    /* Functions */
+
+    function initialize(
+        string memory name,
+        string memory symbol,
+        uint8 decimals,
         uint256 cap,
         uint256 maxVestingsPerWallet
-    ) public ERC20Detailed(_name, _symbol, _decimals) {
+    ) public initializer {
         require(cap > 0, "CAP_CANNOT_BE_ZERO");
+        super.initialize(name, symbol, decimals);
         _cap = cap;
         _maxVestingsPerWallet = maxVestingsPerWallet;
         _owner = msg.sender;
     }
 
-    /* Functions */
     /**
      * @notice Returns the cap on the token's total supply
      * @return The supply capped amount
