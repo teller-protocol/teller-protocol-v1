@@ -70,7 +70,7 @@ const customCollateralToken = (collateralToken) => {
         lendingPool: (tokenName, artifactName = 'LendingPool') => {
             return internalLendingPool(collToken, tokenName, artifactName);
         },
-        interestConsensus: (tokenName, artifactName = 'LendingPool') => {
+        interestConsensus: (tokenName, artifactName = 'InterestConsensus') => {
             return internalInterestConsensus(collToken, tokenName, artifactName);
         },
         loanTermsConsensus: (tokenName, artifactName = 'LoanTermsConsensus') => {

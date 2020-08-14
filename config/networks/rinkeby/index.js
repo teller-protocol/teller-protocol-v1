@@ -6,6 +6,7 @@ module.exports = {
     zerocollateral: require('./zerocollateral'),
     assetSettings: require('./assetSettings'),
     platformSettings: require('./platformSettings'),
+    signers: require('./signers'),
     maxGasLimit: 7000000,
     toTxUrl: ({ tx }) => {
         return `https://rinkeby.etherscan.io/tx/${tx}`;

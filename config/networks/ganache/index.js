@@ -6,6 +6,7 @@ module.exports = {
     zerocollateral: require('./zerocollateral'),
     assetSettings: require('./assetSettings'),
     platformSettings: require('./platformSettings'),
+    signers: require('./signers'),
     maxGasLimit: 6721975,
     toTxUrl: ({ tx }) => {
         return `not-supported-url`;
