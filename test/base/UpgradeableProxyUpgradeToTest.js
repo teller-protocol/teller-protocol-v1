@@ -9,7 +9,7 @@ const UpgradableV2 = artifacts.require("./mock/upgradable/UpgradableV2.sol");
 
 const DAI = artifacts.require("./mock/token/DAIMock.sol");
 
-contract("UpgradeableProxyTest", function(accounts) {
+contract("UpgradeableProxyUpgradeToTest", function(accounts) {
     let dai;
     let v1LibraryInstance;
     let v2LibraryInstance;
