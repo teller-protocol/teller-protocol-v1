@@ -11,14 +11,26 @@ interface IATMGovernance {
 
     /**
         @notice Emitted when a new ATM General Setting was added.
-        @param signer transaction sender address.
+        @param sender transaction sender address.
         @param settingName name of the newly added setting.
         @param settingValue value of the newly added setting.  
      */
     event GeneralSettingAdded(
-        address indexed signer,
+        address indexed sender,
         bytes32 indexed settingName,
         uint256 settingValue
+    );
+
+    /**
+        @notice Emitted when the ATM Token is updated.
+        @param sender transaction sender address.
+        @param oldAtmToken old ATM token address.
+        @param newAtmToken new ATM token address.
+     */
+    event ATMTokenUpdated(
+        address indexed sender,
+        address indexed oldAtmToken,
+        address indexed newAtmToken
     );
 
     /**

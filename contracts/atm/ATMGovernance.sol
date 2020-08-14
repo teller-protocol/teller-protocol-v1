@@ -48,18 +48,7 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
     // ATM Governance token address
     address public atmToken;
 
-    
-    
     /* External Functions */
-    function initialize(address _atmToken)
-        external
-        onlySigner()
-        isNotInitialized()
-    {
-        _initialize();
-        _setToken(_atmToken);
-        // emit event
-    }
 
     /**
         @notice Adds a new General Setting to this ATM.
@@ -69,6 +58,7 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
     function addGeneralSetting(bytes32 settingName, uint256 settingValue)
         external
         onlySigner()
+        // TODO Do we need to add isInitialized() (the same for other functions)?
     {
         require(settingValue > 0, "GENERAL_SETTING_MUST_BE_POSITIVE");
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
@@ -264,23 +254,39 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
 
     /**
         @notice Updates this ATM Token address.
-        @param atmToken new atm token address. 
+        @param newAtmToken new atm token address. 
      */
-    function setATMToken(address _atmToken)
+    function setATMToken(address newAtmToken)
         external
         onlySigner()
     {
-        _setToken(_atmToken);
+        require(newAtmToken.isContract(), "NEW_ATM_TOKEN_MUST_BE_A_CONTRACT");
+        address oldAtmToken = atmToken;
+        oldAtmToken.requireNotEqualTo(
+            newAtmToken,
+            "NEW_ATM_TOKEN_MUST_BE_PROVIDED"
+        );
+        
+        atmToken = newAtmToken;
+        
+        emit ATMTokenUpdated(msg.sender, oldAtmToken, newAtmToken);
     }
 
-    function _setToken(address _atmToken)
-        internal
-        onlySigner()
+    /**
+        @notice It initializes this ATM Governance instance.
+        @param atmTokenAddress the ATM token address associated with this ATM Governance.
+        @param ownerAddress the owner address for this ATM Governance.
+     */
+    function initialize(address atmTokenAddress, address ownerAddress)
+        public
+        isNotInitialized()
     {
-        require(_atmToken.isContract(), "TOKEN_ADDRESS_MUST_BE_A_CONTRACT");
-        address oldAtmToken = atmToken;
-        atmToken = _atmToken;
-        emit ATMTokenUpdated(msg.signer, oldAtmToken, atmToken);
+        require(atmTokenAddress.isContract(), "ATM_TOKEN_MUST_BE_A_CONTRACT");
+
+        super.initialize(ownerAddress);
+        TInitializable._initialize();
+
+        atmToken = atmTokenAddress;
     }
 
     /* External Constant functions */

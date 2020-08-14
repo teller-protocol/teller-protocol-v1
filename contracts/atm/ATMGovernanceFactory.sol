@@ -49,6 +49,7 @@ contract ATMGovernanceFactory is ATMGovernanceFactoryInterface, TInitializable {
         uint256 cap,
         uint256 maxVestingsPerWallet
     ) external onlyOwner() isInitialized() returns (address) {
+        address owner = msg.sender;
         // Deploy ATM base contract
         // Create new ATM proxy
         // Set ATM v1
@@ -61,9 +62,19 @@ contract ATMGovernanceFactory is ATMGovernanceFactoryInterface, TInitializable {
         //     // )
         // ATMToken token = new ATMToken();
         // ATMGovernance instance = new ATMGovernance();
-
-        address newATMGovernance = address(0x0);
+        bytes memory atmTokenInitData = abi.encodeWithSignature(
+            "initialize(string,string,uint8,uint256,uint256)",
+            name,
+            symbol,
+            decimals,
+            cap,
+            maxVestingsPerWallet
+        );
         address newATMToken = address(0x0);
+
+        bytes memory atmGovernanceInitData = abi.encodeWithSignature("initialize(address, address)", newATMToken, owner);
+        address newATMGovernance = address(0x0);
+        
 
         atms[newATMGovernance] = true;
         atmsList.add(newATMGovernance);
