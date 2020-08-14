@@ -27,6 +27,7 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
     let loanTermsConsInstance;
     let settingsInstance;
     let marketsInstance;
+    let atmSettingsInstance;
 
     beforeEach('Setup for each test', async () => {
         lendingTokenInstance = await Mock.new();
@@ -35,6 +36,7 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
         loanTermsConsInstance = await Mock.new();
         settingsInstance = await Mock.new()
         marketsInstance = await Mock.new();
+        atmSettingsInstance = await Mock.new();
         instance = await Loans.new();
 
         const encodeLendingToken = lendingPoolInterfaceEncoder.encodeLendingToken();
@@ -70,6 +72,7 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
                 settingsInstance.address,
                 collateralToken.address,
                 marketsInstance.address,
+                atmSettingsInstance.address,
             )
 
             const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, 0)
@@ -149,6 +152,7 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
                 settingsInstance.address,
                 collateralToken.address,
                 marketsInstance.address,
+                atmSettingsInstance.address,
             )
 
             const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, 0)

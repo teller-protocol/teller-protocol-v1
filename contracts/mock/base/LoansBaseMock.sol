@@ -5,6 +5,7 @@ import "../../base/LoansBase.sol";
 
 
 contract LoansBaseMock is LoansBase {
+
     function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
         internal
     {}
@@ -27,6 +28,10 @@ contract LoansBaseMock is LoansBase {
         returns (uint256)
     {
         return _convertTokenToWei(tokenAmount);
+    }
+
+    function externalIsSupplyToDebtRatioValid(uint256 newLoanAmount) external view returns (bool) {
+        return super._isSupplyToDebtRatioValid(newLoanAmount);
     }
 
     function setLoan(
@@ -63,14 +68,16 @@ contract LoansBaseMock is LoansBase {
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
-        address marketsAddress
+        address marketsAddress,
+        address atmSettingsAddress
     ) external isNotInitialized() {
         _initialize(
             priceOracleAddress,
             lendingPoolAddress,
             loanTermsConsensusAddress,
             settingsAddress,
-            marketsAddress
+            marketsAddress,
+            atmSettingsAddress
         );
     }
 
