@@ -2,7 +2,7 @@
 
 // Util classes
 const Accounts = require('../utils/Accounts');
-const { zerocollateral, tokens } = require("../utils/contracts");
+const { teller, tokens } = require("../utils/contracts");
 const { settings: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
 const { SENDER_INDEX, TOKEN_NAME } = require('../utils/cli/names');
@@ -18,7 +18,7 @@ module.exports = async (callback) => {
         const senderIndex = processArgs.getValue(SENDER_INDEX.name);
         const assetName = processArgs.getValue(TOKEN_NAME.name);
 
-        const settings = await getContracts.getDeployed(zerocollateral.settings());
+        const settings = await getContracts.getDeployed(teller.settings());
         const tokenInstance = await getContracts.getDeployed(tokens.get(assetName));
         const assetAddress = tokenInstance.address;
 

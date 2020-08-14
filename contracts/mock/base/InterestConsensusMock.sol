@@ -41,21 +41,21 @@ contract InterestConsensusMock is InterestConsensus {
     }
 
     function externalProcessResponse(
-        ZeroCollateralCommon.InterestRequest calldata request,
-        ZeroCollateralCommon.InterestResponse calldata response,
+        TellerCommon.InterestRequest calldata request,
+        TellerCommon.InterestResponse calldata response,
         bytes32 requestHash
     ) external {
         _processResponse(request, response, requestHash);
     }
 
     function externalHashResponse(
-        ZeroCollateralCommon.InterestResponse calldata response,
+        TellerCommon.InterestResponse calldata response,
         bytes32 requestHash
     ) external view returns (bytes32) {
         return _hashResponse(response, requestHash);
     }
 
-    function externalHashRequest(ZeroCollateralCommon.InterestRequest calldata request)
+    function externalHashRequest(TellerCommon.InterestRequest calldata request)
         external
         view
         returns (bytes32)

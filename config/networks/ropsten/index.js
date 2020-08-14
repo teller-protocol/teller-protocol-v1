@@ -4,7 +4,7 @@ module.exports = {
     compound: require('./compound'),
     dao: require('./dao'),
     tokens: require('./tokens'),
-    zerocollateral: require('./zerocollateral'),
+    teller: require('./teller'),
     assetSettings: require('./assetSettings'),
     platformSettings: require('./platformSettings'),
     maxGasLimit: 7000000,

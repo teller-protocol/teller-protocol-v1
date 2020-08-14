@@ -2,7 +2,7 @@
 
 // Util classes
 const assert = require('assert');
-const { zerocollateral, tokens } = require("../utils/contracts");
+const { teller, tokens } = require("../utils/contracts");
 const { loans: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
 const Timer = require('../utils/Timer');
@@ -32,7 +32,7 @@ module.exports = async (callback) => {
         const nonce = processArgs.getValue(NONCE.name);
 
         const getContracts = processArgs.createGetContracts(artifacts);
-        const loansInstance = await getContracts.getDeployed(zerocollateral.custom(collateralTokenName).loans(tokenName));
+        const loansInstance = await getContracts.getDeployed(teller.custom(collateralTokenName).loans(tokenName));
         const tokenInstance = await getContracts.getDeployed(tokens.get(tokenName));
         const tokenDecimals = await tokenInstance.decimals();
 

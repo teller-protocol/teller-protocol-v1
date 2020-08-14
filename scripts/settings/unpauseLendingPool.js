@@ -1,7 +1,7 @@
 // Smart contracts
 
 // Util classes
-const { zerocollateral } = require("../utils/contracts");
+const { teller } = require("../utils/contracts");
 const Accounts = require('../utils/Accounts');
 const ProcessArgs = require('../utils/ProcessArgs');
 
@@ -21,8 +21,8 @@ module.exports = async (callback) => {
         const senderTxConfig = await accounts.getTxConfigAt(senderIndex);
 
         const getContracts = processArgs.createGetContracts(artifacts);
-        const lendingPool = await getContracts.getDeployed(zerocollateral.custom(collateralTokenName).lendingPool(tokenName));
-        const settings = await getContracts.getDeployed(zerocollateral.settings());
+        const lendingPool = await getContracts.getDeployed(teller.custom(collateralTokenName).lendingPool(tokenName));
+        const settings = await getContracts.getDeployed(teller.settings());
 
         console.log(`LendingPool:   ${lendingPool.address}`);
         console.log(`Market:        ${tokenName} / ${collateralTokenName}`);

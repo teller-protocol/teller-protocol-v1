@@ -1,12 +1,12 @@
 // Util classes
-const { zerocollateral } = require("../../scripts/utils/contracts");
+const { teller } = require("../../scripts/utils/contracts");
 const platformSettingsNames = require("../../test/utils/platformSettingsNames");
 const { toBytes32 } = require("../../test/utils/consts");
 
 module.exports = async (initConfig, { accounts, getContracts, web3 }) => {
   console.log('Updating platform settings...');
   const txConfig = await accounts.getTxConfigAt(0);
-  const settings = await getContracts.getDeployed(zerocollateral.settings());
+  const settings = await getContracts.getDeployed(teller.settings());
   const {
     requiredSubmissions,
     safetyInterval,

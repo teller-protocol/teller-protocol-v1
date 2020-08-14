@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20Mintable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
-import "../interfaces/ZTokenInterface.sol";
+import "../interfaces/TTokenInterface.sol";
 
 
 /**
@@ -10,8 +10,7 @@ import "../interfaces/ZTokenInterface.sol";
  *
  * @author develop@teller.finance
  */
-// TODO: Change to TToken
-contract ZToken is ZTokenInterface, ERC20Detailed, ERC20Mintable {
+contract TToken is TTokenInterface, ERC20Detailed, ERC20Mintable {
     /* Constructor */
     /**
      * @param name The name of the token

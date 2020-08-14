@@ -9,8 +9,8 @@ const AdminUpgradeabilityProxy = artifacts.require("./base/UpgradeableProxy.sol"
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Official Smart Contracts
-const ZDAI = artifacts.require("./base/ZDAI.sol");
-const ZUSDC = artifacts.require("./base/ZUSDC.sol");
+const TDAI = artifacts.require("./base/TDAI.sol");
+const TUSDC = artifacts.require("./base/TUSDC.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
 const MarketsState = artifacts.require("./base/MarketsState.sol");
@@ -52,9 +52,8 @@ module.exports = async function(deployer, network, accounts) {
   const deployerApp = new DeployerApp(deployer, web3, deployerAccount, AdminUpgradeabilityProxy, network);
   const currentBlockNumber = await web3.eth.getBlockNumber();
 
-  await deployerApp.deploys([ZDAI, ZUSDC], txConfig);
-
-  console.log(`Deployed tokens: ZDAI [${ZDAI.address}] ZUSDC [${ZUSDC.address}] `);
+  await deployerApp.deploys([TDAI, TUSDC], txConfig);
+  console.log(`Deployed tokens: TDAI [${TDAI.address}] TUSDC [${TUSDC.address}] `);  
 
   // ATM Deployments
   await deployerApp.deploy(ATMGovernance, txConfig); // TODO: add Gnosis multisig as signer/pauser (not the DAO for now)
@@ -129,7 +128,7 @@ module.exports = async function(deployer, network, accounts) {
     { tokenName: 'DAI', collateralName: 'ETH' },
     {
       Loans: EtherCollateralLoans,
-      TToken: ZDAI,
+      TToken: TDAI,
       MarketsState,
       InterestValidator,
       ATMSettings,
@@ -140,7 +139,7 @@ module.exports = async function(deployer, network, accounts) {
     { tokenName: 'USDC', collateralName: 'ETH' },
     {
       Loans: EtherCollateralLoans,
-      TToken: ZUSDC,
+      TToken: TUSDC,
       MarketsState,
       InterestValidator,
       ATMSettings,
@@ -152,7 +151,7 @@ module.exports = async function(deployer, network, accounts) {
     { tokenName: 'DAI', collateralName: 'LINK', aggregatorName: 'LINK_USD' },
     {
       Loans: TokenCollateralLoans,
-      TToken: ZDAI,
+      TToken: TDAI,
       MarketsState,
       InterestValidator,
       ATMSettings,
@@ -163,7 +162,7 @@ module.exports = async function(deployer, network, accounts) {
     { tokenName: 'USDC', collateralName: 'LINK', aggregatorName: 'LINK_USD' },
     {
       Loans: TokenCollateralLoans,
-      TToken: ZUSDC,
+      TToken: TUSDC,
       MarketsState,
       InterestValidator,
       ATMSettings,

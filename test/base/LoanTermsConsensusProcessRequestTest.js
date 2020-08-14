@@ -171,7 +171,14 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
                 assert(!mustFail, 'It should have failed because data is invalid.');
 
                 const lastLoanTermRequest = await instance.borrowerToLastLoanTermRequest(borrower);
-                assert.equal(currentRequestLoanTermsTimestamp.toString(), lastLoanTermRequest.toString(), 'Last request loan terms timestamp must be equals.');
+                assert(
+                    // due to the full unit tests suite takes time to execute, it is possible that there is a very small difference in the times.
+                    parseInt(currentRequestLoanTermsTimestamp.toString()) == parseInt(lastLoanTermRequest.toString())
+                    || parseInt(currentRequestLoanTermsTimestamp.toString()) == parseInt(lastLoanTermRequest.toString()) + 1
+                    || parseInt(currentRequestLoanTermsTimestamp.toString()) + 1 == parseInt(lastLoanTermRequest.toString())
+                    ,
+                    'Last request loan terms timestamp must be equals.'
+                );
 
                 let totalInterestRate = 0
                 let totalCollateralRatio = 0

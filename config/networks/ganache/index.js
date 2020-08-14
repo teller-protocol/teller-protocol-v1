@@ -3,7 +3,7 @@ module.exports = {
     chainlink: require('./chainlink'),
     compound: require('./compound'),
     tokens: require('./tokens'),
-    zerocollateral: require('./zerocollateral'),
+    teller: require('./teller'),
     assetSettings: require('./assetSettings'),
     platformSettings: require('./platformSettings'),
     maxGasLimit: 6721975,

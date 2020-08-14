@@ -63,8 +63,8 @@ contract TokenCollateralLoans is LoansBase {
         @param collateralAmount Amount of collateral required for the loan
      */
     function createLoanWithTerms(
-        ZeroCollateralCommon.LoanRequest calldata request,
-        ZeroCollateralCommon.LoanResponse[] calldata responses,
+        TellerCommon.LoanRequest calldata request,
+        TellerCommon.LoanResponse[] calldata responses,
         uint256 collateralAmount
     )
         external

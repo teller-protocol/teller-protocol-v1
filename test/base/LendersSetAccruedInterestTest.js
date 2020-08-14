@@ -13,7 +13,7 @@ const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
 
 contract('LendersSetAccruedInterestTest', function (accounts) {
     let instance;
-    let zTokenInstance;
+    let tTokenInstance;
     let lendingPoolInstance;
     let marketsInstance;
     let interestConsensusInstance;
@@ -27,7 +27,7 @@ contract('LendersSetAccruedInterestTest', function (accounts) {
     let responseTwo;
     
     beforeEach('Setup for each test', async () => {
-        zTokenInstance = await Mock.new();
+        tTokenInstance = await Mock.new();
         lendingPoolInstance = await Mock.new();
         interestConsensusInstance = await Mock.new();
         settingsInstance = await Mock.new();
@@ -39,7 +39,7 @@ contract('LendersSetAccruedInterestTest', function (accounts) {
         responseTwo = createUnsignedInterestResponse(accounts[1], 0, 34732, 4, interestConsensusInstance.address);
 
         await instance.initialize(
-            zTokenInstance.address,
+            tTokenInstance.address,
             lendingPoolInstance.address,
             interestConsensusInstance.address,
             settingsInstance.address,

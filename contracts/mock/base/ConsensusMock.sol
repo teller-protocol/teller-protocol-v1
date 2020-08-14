@@ -6,7 +6,7 @@ import "../../base/Consensus.sol";
 
 contract ConsensusMock is Consensus {
     function externalSignatureValid(
-        ZeroCollateralCommon.Signature calldata signature,
+        TellerCommon.Signature calldata signature,
         bytes32 dataHash,
         address expectedSigner
     ) external view returns (bool) {

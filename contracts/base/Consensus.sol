@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "../util/ZeroCollateralCommon.sol";
+import "../util/TellerCommon.sol";
 import "../util/NumbersList.sol";
 import "../util/SettingsConsts.sol";
 
@@ -75,7 +75,7 @@ contract Consensus is Base, OwnerSignersRole, SettingsConsts {
         @return true if the expected signer is equal to the signer. Otherwise it returns false.
      */
     function _signatureValid(
-        ZeroCollateralCommon.Signature memory signature,
+        TellerCommon.Signature memory signature,
         bytes32 dataHash,
         address expectedSigner
     ) internal view returns (bool) {
@@ -130,7 +130,7 @@ contract Consensus is Base, OwnerSignersRole, SettingsConsts {
         uint256 requestIdentifier,
         uint256 responseTime,
         bytes32 responseHash,
-        ZeroCollateralCommon.Signature memory signature
+        TellerCommon.Signature memory signature
     ) internal {
         require(
             !hasSubmitted[signer][user][requestIdentifier],

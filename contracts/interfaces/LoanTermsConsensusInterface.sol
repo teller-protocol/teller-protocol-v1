@@ -1,7 +1,7 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../util/ZeroCollateralCommon.sol";
+import "../util/TellerCommon.sol";
 
 
 /**
@@ -52,7 +52,7 @@ interface LoanTermsConsensusInterface {
         @return uint256 Maximum loan amount
      */
     function processRequest(
-        ZeroCollateralCommon.LoanRequest calldata request,
-        ZeroCollateralCommon.LoanResponse[] calldata responses
+        TellerCommon.LoanRequest calldata request,
+        TellerCommon.LoanResponse[] calldata responses
     ) external returns (uint256, uint256, uint256);
 }

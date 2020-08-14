@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Libraries and common
-import "../util/ZeroCollateralCommon.sol";
+import "../util/TellerCommon.sol";
 import "../util/SettingsConsts.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../util/ERC20Lib.sol";
@@ -59,7 +59,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
 
     mapping(address => uint256[]) public borrowerLoans;
 
-    mapping(uint256 => ZeroCollateralCommon.Loan) public loans;
+    mapping(uint256 => TellerCommon.Loan) public loans;
 
     /* Modifiers */
 
@@ -80,7 +80,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
      */
     modifier loanActive(uint256 loanID) {
         require(
-            loans[loanID].status == ZeroCollateralCommon.LoanStatus.Active,
+            loans[loanID].status == TellerCommon.LoanStatus.Active,
             "LOAN_NOT_ACTIVE"
         );
         _;
@@ -92,10 +92,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         @param loanID number of loan to check
      */
     modifier loanTermsSet(uint256 loanID) {
-        require(
-            loans[loanID].status == ZeroCollateralCommon.LoanStatus.TermsSet,
-            "LOAN_NOT_SET"
-        );
+        require(loans[loanID].status == TellerCommon.LoanStatus.TermsSet, "LOAN_NOT_SET");
         _;
     }
 
@@ -106,8 +103,8 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
      */
     modifier loanActiveOrSet(uint256 loanID) {
         require(
-            loans[loanID].status == ZeroCollateralCommon.LoanStatus.TermsSet ||
-                loans[loanID].status == ZeroCollateralCommon.LoanStatus.Active,
+            loans[loanID].status == TellerCommon.LoanStatus.TermsSet ||
+                loans[loanID].status == TellerCommon.LoanStatus.Active,
             "LOAN_NOT_ACTIVE_OR_SET"
         );
         _;
@@ -119,7 +116,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         @dev It throws an require error if the loan amount exceeds the maximum loan amount for the given asset.
         @param loanRequest to validate.
      */
-    modifier withValidLoanRequest(ZeroCollateralCommon.LoanRequest memory loanRequest) {
+    modifier withValidLoanRequest(TellerCommon.LoanRequest memory loanRequest) {
         require(
             settings.getPlatformSettingValue(MAXIMUM_LOAN_DURATION_SETTING) >=
                 loanRequest.duration,
@@ -236,7 +233,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
 
         loans[loanID].loanStartTime = now;
 
-        loans[loanID].status = ZeroCollateralCommon.LoanStatus.Active;
+        loans[loanID].status = TellerCommon.LoanStatus.Active;
 
         // give the recipient their requested amount of tokens
         if (loans[loanID].loanTerms.recipient != address(0)) {
@@ -281,7 +278,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
 
         // if the loan is now fully paid, close it and return collateral
         if (totalOwed == 0) {
-            loans[loanID].status = ZeroCollateralCommon.LoanStatus.Closed;
+            loans[loanID].status = TellerCommon.LoanStatus.Closed;
 
             uint256 collateralAmount = loans[loanID].collateral;
             _payOutCollateral(loanID, collateralAmount, loans[loanID].loanTerms.borrower);
@@ -336,7 +333,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         // to liquidate it must be undercollateralised, or expired
         require(moreCollateralRequired || loanEndTime < now, "DOESNT_NEED_LIQUIDATION");
 
-        loans[loanID].status = ZeroCollateralCommon.LoanStatus.Closed;
+        loans[loanID].status = TellerCommon.LoanStatus.Closed;
         loans[loanID].liquidated = true;
 
         uint256 collateralInTokens = _convertWeiToToken(loanCollateral);
@@ -595,22 +592,22 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         @param interestRate Interest rate set in the loan terms
         @param collateralRatio Collateral ratio set in the loan terms
         @param maxLoanAmount Maximum loan amount that can be taken out, set in the loan terms
-        @return memory ZeroCollateralCommon.Loan Loan struct as per the Teller platform
+        @return memory TellerCommon.Loan Loan struct as per the Teller platform
      */
     function createLoan(
         uint256 loanID,
-        ZeroCollateralCommon.LoanRequest memory request,
+        TellerCommon.LoanRequest memory request,
         uint256 interestRate,
         uint256 collateralRatio,
         uint256 maxLoanAmount
-    ) internal view returns (ZeroCollateralCommon.Loan memory) {
+    ) internal view returns (TellerCommon.Loan memory) {
         uint256 termsExpiry = now.add(
             settings.getPlatformSettingValue(TERMS_EXPIRY_TIME_SETTING)
         );
         return
-            ZeroCollateralCommon.Loan({
+            TellerCommon.Loan({
                 id: loanID,
-                loanTerms: ZeroCollateralCommon.LoanTerms({
+                loanTerms: TellerCommon.LoanTerms({
                     borrower: request.borrower,
                     recipient: request.recipient,
                     interestRate: interestRate,
@@ -625,14 +622,14 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
                 principalOwed: 0,
                 interestOwed: 0,
                 borrowedAmount: 0,
-                status: ZeroCollateralCommon.LoanStatus.TermsSet,
+                status: TellerCommon.LoanStatus.TermsSet,
                 liquidated: false
             });
     }
 
     function _emitLoanTermsSetAndCollateralDepositedEventsIfApplicable(
         uint256 loanID,
-        ZeroCollateralCommon.LoanRequest memory request,
+        TellerCommon.LoanRequest memory request,
         uint256 interestRate,
         uint256 collateralRatio,
         uint256 maxLoanAmount,

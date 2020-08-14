@@ -19,12 +19,12 @@ contract('LendingPoolInitializeTest', function (accounts) {
 
     withData({
         _1_basic: [2, 3, 4, 5, 6, 7, 8, 9, undefined, false],
-        _2_notZdai: [-1, 3, 4, 5, 6, 7, 8, 9, 'ZTOKEN_ADDRESS_IS_REQUIRED', true],
+        _2_notTdai: [-1, 3, 4, 5, 6, 7, 8, 9, 'TTOKEN_ADDRESS_IS_REQUIRED', true],
         _3_notDai: [2, -1, 4, 5, 6, 7, 8, 9, 'TOKEN_ADDRESS_IS_REQUIRED', true],
         _4_notLenderInfo: [2, 3, -1, 5, 6, 7, 8, 9, 'LENDERS_ADDRESS_IS_REQUIRED', true],
         _5_notLoanInfo: [2, 3, 4, -1, 6, 7, 8, 9, 'LOANS_ADDRESS_IS_REQUIRED', true],
         _6_notCToken: [2, 3, 4, 5, -1, 7, 8, 9, undefined, false],
-        _7_notZdai_notLoanInfo: [-1, 3, 4, -1, 6, 7, 8, 9, 'ZTOKEN_ADDRESS_IS_REQUIRED', true],
+        _7_notTdai_notLoanInfo: [-1, 3, 4, -1, 6, 7, 8, 9, 'TTOKEN_ADDRESS_IS_REQUIRED', true],
         _8_notDai_notLenderInfo: [2, -1, -1, 5, 6, 7, 8, 9, 'TOKEN_ADDRESS_IS_REQUIRED', true],
         _9_notSettings: [2, 3, 4, 5, 6, -1, 8, 9, 'SETTINGS_MUST_BE_PROVIDED', true],
         _10_notMarkets: [2, 3, 4, 5, 6, 7, -1, 9, 'MARKETS_MUST_BE_PROVIDED', true],
@@ -33,7 +33,7 @@ contract('LendingPoolInitializeTest', function (accounts) {
         _13_notInterestValidator_not_contract: [2, 3, 4, 5, 6, 7, 8, 99, 'VAL_MUST_BE_EMPTY_OR_CONTRACT', true],
         _14_notInterestValidator_not_contract_2: [2, 3, 4, 5, 6, 7, 8, 9, undefined, false],
     }, function(
-        zdaiIndex,
+        tdaiIndex,
         daiIndex,
         lenderInfoIndex,
         loanInfoIndex,
@@ -47,19 +47,19 @@ contract('LendingPoolInitializeTest', function (accounts) {
         it(t('user', 'initialize', 'Should (or not) be able to create a new instance.', mustFail), async function() {
             // Setup
             const lendingPoolInstance = await LendingPool.new();
-            const zTokenAddress = getInstance(mocks, zdaiIndex, 2);
+            const tTokenAddress = getInstance(mocks, tdaiIndex, 2);
             const daiAddress = getInstance(mocks, daiIndex, 3);
             const lendersAddress = getInstance(mocks, lenderInfoIndex, 4)
             const loanInfoAddress = getInstance(mocks, loanInfoIndex, 5)
             const cTokenAddress = getInstance(mocks, cTokenIndex, 6);
             const settingsAddress = getInstance(mocks, settingsIndex, 7);
-            const marketsAddress = getInstance(mocks, marketsIndex, 7);
-            const interestValidatorAddress = getInstance(mocks, interestValidatorIndex, 8);
+            const marketsAddress = getInstance(mocks, marketsIndex, 8);
+            const interestValidatorAddress = getInstance(mocks, interestValidatorIndex, 9);
 
             try {
                 // Invocation
                 const result = await lendingPoolInstance.initialize(
-                    zTokenAddress,
+                    tTokenAddress,
                     daiAddress,
                     lendersAddress,
                     loanInfoAddress,
@@ -67,7 +67,7 @@ contract('LendingPoolInitializeTest', function (accounts) {
                     settingsAddress,
                     marketsAddress,
                     interestValidatorAddress,
-                );;
+                );
                 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');

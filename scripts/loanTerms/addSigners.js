@@ -2,7 +2,7 @@
 
 // Util classes
 const { loanTerms: readParams } = require("../utils/cli-builder");
-const { zerocollateral } = require("../utils/contracts");
+const { teller } = require("../utils/contracts");
 const Accounts = require('../utils/Accounts');
 const ProcessArgs = require('../utils/ProcessArgs');
 const { COLL_TOKEN_NAME, TOKEN_NAME, SENDER_INDEX, ADDRESSES } = require("../utils/cli/names");
@@ -22,7 +22,7 @@ module.exports = async (callback) => {
         const senderTxConfig = await accounts.getTxConfigAt(senderIndex);
 
         const loanTermsConsensusInstance = await getContracts.getDeployed(
-            zerocollateral.custom(collateralTokenName).loanTermsConsensus(tokenName)
+            teller.custom(collateralTokenName).loanTermsConsensus(tokenName)
         );
 
         for (const address of addresses) {

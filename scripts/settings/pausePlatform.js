@@ -2,7 +2,7 @@
 
 // Util classes
 const Accounts = require('../utils/Accounts');
-const { zerocollateral } = require("../utils/contracts");
+const { teller } = require("../utils/contracts");
 const { settings: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
 const { SENDER_INDEX } = require('../utils/cli/names');
@@ -18,7 +18,7 @@ module.exports = async (callback) => {
         const { toTxUrl } = appConf.networkConfig;
         const senderIndex = processArgs.getValue(SENDER_INDEX.name);
 
-        const settings = await getContracts.getDeployed(zerocollateral.settings());
+        const settings = await getContracts.getDeployed(teller.settings());
 
         const senderTxConfig = await accounts.getTxConfigAt(senderIndex);
 

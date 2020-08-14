@@ -3,7 +3,7 @@
 // Util classes
 const { loans: readParams } = require("../utils/cli-builder");
 const { toDecimals } = require('../../test/utils/consts');
-const { zerocollateral, tokens } = require("../../scripts/utils/contracts");
+const { teller, tokens } = require("../../scripts/utils/contracts");
 const ProcessArgs = require('../utils/ProcessArgs');
 const Accounts = require('../utils/Accounts');
 const { COLL_TOKEN_NAME, TOKEN_NAME, SENDER_INDEX, LOAN_ID, AMOUNT } = require('../utils/cli/names');
@@ -22,7 +22,7 @@ module.exports = async (callback) => {
         const loanAmount = processArgs.getValue(AMOUNT.name);
 
         const getContracts = processArgs.createGetContracts(artifacts);
-        const loansInstance = await getContracts.getDeployed(zerocollateral.custom(collateralTokenName).loans(tokenName));
+        const loansInstance = await getContracts.getDeployed(teller.custom(collateralTokenName).loans(tokenName));
 
         const lendingTokenInstance = await getContracts.getDeployed(tokens.get(tokenName));
         const lendingTokenDecimals = await lendingTokenInstance.decimals();

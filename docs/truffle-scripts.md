@@ -21,7 +21,7 @@ Before continuing, please make sure you checked the following items:
 
 - Complete the [Get Started](./../README.md#readme-get-started) steps (in [README](./../README.md) file).
 - Review your `.env` file, especially, the MNEMONIC_KEY variable. The scripts will use the accounts based on the mnemonic you defined in your `.env` file. If you want to use Ganache, [remember to keep the default value](./../README.md#readme-create-env-file).
-- Currently, we aren't supporting all the testnets. We have a sub-folder within `/config/networks` for each network. So, please, first check whether we are supporting the network you want to use (a *zerocollateral.js* file should be within the network folder). **If the  *zerocollateral.js* doesn't exist, we are not supporting that network.**
+- Currently, we aren't supporting all the testnets. We have a sub-folder within `/config/networks` for each network. So, please, first check whether we are supporting the network you want to use (a *teller.js* file should be within the network folder). **If the  *teller.js* doesn't exist, we are not supporting that network.**
 
 > We are working hard to support more networks as soon as possible.
 
@@ -60,7 +60,7 @@ Currently, we are supporting some networks defined within the folder `/config/ne
 ![Networks](./images/scripts/networks-config.png)
 
 As you can see, each network has a subfolder. Each one has several files (protocol names) that contain the specific addresses we use in our smart contracts.
-Finally, each network folder contains a **zerocollateral.js** file that has all the deployed contract addresses (*in the current network*).
+Finally, each network folder contains a **teller.js** file that has all the deployed contract addresses (*in the current network*).
 
 > * The networks are configured in the Truffle config file. Please, see details ```./truffle-config.js``` file (section ```networks```).
 > * If the contracts have not been deployed on the network you are looking for, please contact any team member.
