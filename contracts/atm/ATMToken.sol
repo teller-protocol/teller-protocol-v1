@@ -181,7 +181,6 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
     function _beforeTokenTransfer(address from, address, uint256 amount)
         internal
         view
-        returns (bool)
     {
         require(
             from == address(0) && totalSupply().add(amount) <= _cap,
