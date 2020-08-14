@@ -6,7 +6,7 @@ const { atmGovernance } = require('../utils/events');
 // Mock contracts
 
 // Smart contracts
-const ATMGovernance = artifacts.require("./ATM/ATMGovernance.sol");
+const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 
 contract('ATMGovernanceSetCraTest', function (accounts) {
     let instance;

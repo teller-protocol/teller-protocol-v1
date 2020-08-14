@@ -16,6 +16,7 @@ contract('LoansBasePayLoanTest', function (accounts) {
     let lendingPoolInstance;
     let settingsInstance;
     let marketsInstance;
+    let atmSettingsInstance;
 
     const mockLoanID = 7
     
@@ -25,6 +26,7 @@ contract('LoansBasePayLoanTest', function (accounts) {
         loanTermsConsInstance = await Mock.new();
         settingsInstance = await Mock.new();
         marketsInstance = await Mock.new();
+        atmSettingsInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(
             oracleInstance.address,
@@ -32,6 +34,7 @@ contract('LoansBasePayLoanTest', function (accounts) {
             loanTermsConsInstance.address,
             settingsInstance.address,
             marketsInstance.address,
+            atmSettingsInstance.address,
         )
     });
 

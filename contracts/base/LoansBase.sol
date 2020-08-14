@@ -16,6 +16,8 @@ import "../interfaces/PairAggregatorInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
+import "../settings/ATMSettingsInterface.sol";
+import "../atm/IATMGovernance.sol";
 
 
 /**
@@ -38,6 +40,8 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
     // of something we must divide 700 by 100 to remove decimal places, and another 100 for percentage.
     uint256 internal constant TEN_THOUSAND = 10000;
 
+    bytes32 internal constant SUPPLY_TO_DEBT_ATM_SETTING = "SupplyToDebt";
+
     uint256 public totalCollateral;
 
     address public collateralToken;
@@ -48,7 +52,11 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
     address public priceOracle;
 
     LendingPoolInterface public lendingPool;
+
     LoanTermsConsensusInterface public loanTermsConsensus;
+
+    ATMSettingsInterface public atmSettings;
+
     mapping(address => uint256[]) public borrowerLoans;
 
     mapping(uint256 => ZeroCollateralCommon.Loan) public loans;
@@ -123,6 +131,10 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
                 loanRequest.amount
             ),
             "AMOUNT_EXCEEDS_MAX_AMOUNT"
+        );
+        require(
+            _isSupplyToDebtRatioValid(loanRequest.amount),
+            "SUPPLY_TO_DEBT_EXCEEDS_MAX"
         );
         _;
     }
@@ -459,23 +471,27 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         @param loanTermsConsensusAddress Contract adddress for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
         @param marketsAddress Contract address to store market data.
+        @param atmSettingsAddress Contract address to get ATM settings data.
      */
     function _initialize(
         address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
-        address marketsAddress
+        address marketsAddress,
+        address atmSettingsAddress
     ) internal isNotInitialized() {
         priceOracleAddress.requireNotEmpty("PROVIDE_ORACLE_ADDRESS");
         lendingPoolAddress.requireNotEmpty("PROVIDE_LENDINGPOOL_ADDRESS");
         loanTermsConsensusAddress.requireNotEmpty("PROVIDED_LOAN_TERMS_ADDRESS");
+        atmSettingsAddress.requireNotEmpty("PROVIDED_ATM_SETTINGS_ADDRESS");
 
         _initialize(settingsAddress, marketsAddress);
 
         priceOracle = priceOracleAddress;
         lendingPool = LendingPoolInterface(lendingPoolAddress);
         loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
+        atmSettings = ATMSettingsInterface(atmSettingsAddress);
     }
 
     /**
@@ -635,5 +651,30 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         if (depositedAmount > 0) {
             emit CollateralDeposited(loanID, request.borrower, depositedAmount);
         }
+    }
+
+    /**
+        @notice It validates whether supply to debt (StD) ratio is valid including the loan amount.
+        @param newLoanAmount the new loan amount to consider o the StD ratio.
+        @return true if the ratio is valid. Otherwise it returns false.
+     */
+    function _isSupplyToDebtRatioValid(uint256 newLoanAmount)
+        internal
+        view
+        returns (bool)
+    {
+        address atmAddressForMarket = atmSettings.getATMForMarket(
+            lendingPool.lendingToken(),
+            collateralToken
+        );
+        require(atmAddressForMarket != address(0x0), "ATM_NOT_FOUND_FOR_MARKET");
+        uint256 supplyToDebtMarketLimit = IATMGovernance(atmAddressForMarket)
+            .getGeneralSetting(SUPPLY_TO_DEBT_ATM_SETTING);
+        uint256 currentSupplyToDebtMarket = markets.getSupplyToDebtFor(
+            lendingPool.lendingToken(),
+            collateralToken,
+            newLoanAmount
+        );
+        return currentSupplyToDebtMarket <= supplyToDebtMarketLimit;
     }
 }

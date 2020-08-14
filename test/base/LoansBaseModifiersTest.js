@@ -20,6 +20,7 @@ contract('LoansBaseModifiersTest', function (accounts) {
         const lendingPool = await Mock.new();
         const loanTermsConsensus = await Mock.new();
         const markets = await Mock.new();
+        const atmSettings = await Mock.new();
         settingsInstance = await Mock.new();
         instance = await LoansBaseModifiersMock.new();
         await instance.initialize(
@@ -28,6 +29,7 @@ contract('LoansBaseModifiersTest', function (accounts) {
             loanTermsConsensus.address,
             settingsInstance.address,
             markets.address,
+            atmSettings.address,
         );
     });
 
@@ -155,13 +157,15 @@ contract('LoansBaseModifiersTest', function (accounts) {
     });
 
     withData({
-        _1_valid: [1, daysToSeconds(10), toDecimals(100, 18), daysToSeconds(60), undefined, false],
-        _2_duration_invalid: [1, daysToSeconds(100), toDecimals(150, 18), daysToSeconds(80), 'DURATION_EXCEEDS_MAX_DURATION', true],
+        _1_valid: [1, daysToSeconds(10), toDecimals(100, 18), daysToSeconds(60), true, undefined, false],
+        _2_duration_invalid: [1, daysToSeconds(100), toDecimals(150, 18), daysToSeconds(80), true, 'DURATION_EXCEEDS_MAX_DURATION', true],
+        _3_std_invalid: [1, daysToSeconds(10), toDecimals(100, 18), daysToSeconds(60), false, 'SUPPLY_TO_DEBT_EXCEEDS_MAX', true],
     }, function(
         borrowerIndex,
         duration,
         amount,
         maxLoanDurationResponse,
+        isSupplyToDebtRatioValidResponse,
         expectedErrorMessage,
         mustFail
     ) {    
@@ -172,6 +176,7 @@ contract('LoansBaseModifiersTest', function (accounts) {
             const loanRequest = createLoanRequest(borrower, NULL_ADDRESS, 3, amount.toFixed(0), duration, 19, consensusInstance.address);
             const encodeGetPlatformSettingValue = settingsInterfaceEncoder.encodeGetPlatformSettingValue();
             await settingsInstance.givenMethodReturnUint(encodeGetPlatformSettingValue, maxLoanDurationResponse);
+            await instance.setMockIsSupplyToDebtRatioValid(true, isSupplyToDebtRatioValidResponse);
 
             try {
                 // Invocation

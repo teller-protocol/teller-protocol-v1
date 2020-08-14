@@ -17,6 +17,7 @@ const { assertLoan } = require('../utils/assertions');
 const Timer = require('../../scripts/utils/Timer');
 const LoanTermsConsensusEncoder = require('../utils/encoders/LoanTermsConsensusEncoder');
 const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
+const ATMSettingsInterfaceEncoder = require('../utils/encoders/ATMSettingsInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -57,6 +58,7 @@ const createTermsSetExpectedLoan = (
 
 contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
+    const atmSettingsInterfaceEncoder = new ATMSettingsInterfaceEncoder(web3);
     let loanTermsConsensusEncoder;
     let collateralToken;
     let lendingTokenInstance;
@@ -64,6 +66,7 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
     let loanTermsConsInstance;
     let settingsInstance;
     let marketsInstance;
+    let atmSettingsInstance;
 
     const timer = new Timer(web3);
     const owner = accounts[0];
@@ -78,6 +81,7 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
     
     beforeEach('Setup for each test', async () => {
         marketsInstance = await Mock.new();
+        atmSettingsInstance = await Mock.new();
         lendingTokenInstance = await Mock.new();
         collateralToken = await LINKMock.new();
         loanTermsConsInstance = await Mock.new();
@@ -99,12 +103,19 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
             settingsInstance.address,
             collateralToken.address,
             marketsInstance.address,
+            atmSettingsInstance.address,
         );
         const loanTermsConsensus = await LoanTermsConsensus.new();
         loanTermsConsensusEncoder = new LoanTermsConsensusEncoder(web3, loanTermsConsensus);
 
         const encodeLendingToken = lendingPoolInterfaceEncoder.encodeLendingToken();
         lendingPoolInstance.givenMethodReturnAddress(encodeLendingToken, lendingTokenInstance.address);
+
+        const atmForMarketInstance = await Mock.new();
+        atmSettingsInstance.givenMethodReturnAddress(
+            atmSettingsInterfaceEncoder.encodeGetATMForMarket(),
+            atmForMarketInstance.address
+        );
     });
 
     withData({

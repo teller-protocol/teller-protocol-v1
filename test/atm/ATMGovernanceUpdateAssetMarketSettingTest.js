@@ -5,6 +5,10 @@ const {
     toBytes32
 } = require('../utils/consts');
 const {
+    DUMMY_ADDRESS,
+    NULL_ADDRESS
+} = require('../../test/utils/consts');
+const {
     atmGovernance
 } = require('../utils/events');
 
@@ -12,9 +16,9 @@ const {
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const ATMGovernance = artifacts.require("./ATM/ATMGovernance.sol");
+const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 
-contract('ATMGovernanceRemoveAssetMarketSettingTest', function (accounts) {
+contract('ATMGovernanceUpdateAssetMarketSettingTest', function (accounts) {
     let instance;
 
     beforeEach('Setup for each test', async () => {
@@ -24,15 +28,17 @@ contract('ATMGovernanceRemoveAssetMarketSettingTest', function (accounts) {
     // Testing values
     const SETTING_NAME = toBytes32(web3, 'supplyToDebtRatio');
     const NOT_INSERTED_SETTING_NAME = toBytes32(web3, 'neverAdded');
-    const SETTING_VALUE = 5044;
+    const SETTING_OLD_VALUE = 5044;
+    const SETTING_NEW_VALUE = 1111;
     const SETTING_NOT_FOUND = 0;
     const EMPTY_SETTING_NAME = toBytes32(web3, '');
 
     withData({
-        _1_basic: [0, SETTING_NAME, undefined, false],
-        _2_notSigner: [2, SETTING_NAME, 'SignerRole: caller does not have the Signer role', true],
-    }, function (senderIndex, settingName, expectedErrorMessage, mustFail) {
-        it(t('user', 'removeAssetMarketSetting#1', 'Should (or not) be able to remove an asset market setting.', mustFail), async function () {
+        _1_basic: [0, SETTING_NAME, SETTING_NEW_VALUE, undefined, false],
+        _2_notSigner: [2, SETTING_NAME, SETTING_NEW_VALUE, 'SignerRole: caller does not have the Signer role', true],
+        _3_sameOldValue: [0, SETTING_NAME, SETTING_OLD_VALUE, 'NEW_VALUE_SAME_AS_OLD', true],
+    }, function (senderIndex, settingName, newValue, expectedErrorMessage, mustFail) {
+        it(t('user', 'updateAssetMarketSetting#1', 'Should (or not) be able to update an asset market setting.', mustFail), async function () {
             // Setup
             const sender = accounts[senderIndex];
             const validSender = accounts[0];
@@ -40,16 +46,11 @@ contract('ATMGovernanceRemoveAssetMarketSettingTest', function (accounts) {
             const assetAddress = assetContract.address;
 
             // Precondition
-            await instance.addAssetMarketSetting(assetAddress, settingName, SETTING_VALUE, {
-                from: validSender
-            });
+            await instance.addAssetMarketSetting(assetAddress, settingName, SETTING_OLD_VALUE, {from: validSender});
 
             try {
-    
                 // Invocation
-                const result = await instance.removeAssetMarketSetting(assetAddress, settingName, {
-                    from: sender
-                });
+                const result = await instance.updateAssetMarketSetting(assetAddress, settingName, newValue, {from: sender});
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
@@ -57,12 +58,12 @@ contract('ATMGovernanceRemoveAssetMarketSettingTest', function (accounts) {
 
                 // Validating state variables were modified
                 const aSettingValue = await instance.getAssetMarketSetting(assetAddress, settingName);
-                assert.equal(aSettingValue, SETTING_NOT_FOUND);
+                assert.equal(aSettingValue, newValue);
 
                 // Validating events were emitted
                 atmGovernance
-                    .assetMarketSettingRemoved(result)
-                    .emitted(sender, assetAddress, settingName, SETTING_VALUE);
+                    .assetMarketSettingUpdated(result)
+                    .emitted(sender, assetAddress, settingName, SETTING_OLD_VALUE, newValue);
 
             } catch (error) {
                 // Assertions
@@ -78,7 +79,7 @@ contract('ATMGovernanceRemoveAssetMarketSettingTest', function (accounts) {
         _2_settingNotFound: [0, NOT_INSERTED_SETTING_NAME, 'ASSET_SETTING_NOT_FOUND', true],
         _3_wrongNameFormat: [0, "nameNotBytes32", 'invalid bytes32 value', true],
     }, function (senderIndex, settingName, expectedErrorMessage, mustFail) {
-        it(t('user', 'removeAssetMarketSetting#2', 'Should (or not) be able to remove an asset market setting.', mustFail), async function () {
+        it(t('user', 'updateAssetMarketSetting#2', 'Should (or not) be able to update an asset market setting.', mustFail), async function () {
             // Setup
             const sender = accounts[senderIndex];
             const assetContract = await Mock.new();
@@ -86,9 +87,7 @@ contract('ATMGovernanceRemoveAssetMarketSettingTest', function (accounts) {
 
             try {
                 // Invocation
-                const result = await instance.removeAssetMarketSetting(assetAddress, settingName, {
-                    from: sender
-                });
+                const result = await instance.updateAssetMarketSetting(assetAddress, settingName, SETTING_OLD_VALUE, {from: sender});
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
@@ -102,7 +101,6 @@ contract('ATMGovernanceRemoveAssetMarketSettingTest', function (accounts) {
             }
         });
     });
-
 
 
 });

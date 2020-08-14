@@ -11,7 +11,7 @@ class PoolDeployer {
 
 PoolDeployer.prototype.deployPool = async function(
     { tokenName, collateralName, aggregatorName = `${tokenName.toUpperCase()}_${collateralName.toUpperCase()}`},
-    { Loans, TToken, MarketsState, InterestValidator },
+    { Loans, TToken, MarketsState, InterestValidator, ATMSettings },
     txConfig
 ) {
     assert(aggregatorName, 'Aggregator name is undefined.');
@@ -21,6 +21,7 @@ PoolDeployer.prototype.deployPool = async function(
     const zTokenName = await zTokenInstance.symbol();
     console.log(`Deploying pool (collateral ${collateralName}) for token ${tokenName}...`);
     console.log(`Using MarketsState address ${MarketsState.address}.`);
+    console.log(`Using ATMSettings address ${ATMSettings.address}.`);
     const {
         tokens,
         aggregators,
@@ -49,6 +50,7 @@ PoolDeployer.prototype.deployPool = async function(
 
     const marketsStateInstance = await MarketsState.deployed();
     const settingsInstance = await Settings.deployed();
+    const atmSettingsInstance = await ATMSettings.deployed();
 
     // Upgradable proxy contract, proxy admin address
     const upgradableArgs = [ txConfig.from, '0x' ]
@@ -115,6 +117,7 @@ PoolDeployer.prototype.deployPool = async function(
             loanTermsConsensusInstance.address,
             settingsInstance.address,
             marketsStateInstance.address,
+            atmSettingsInstance.address,
         );
     } else {
         const collateralAddress = tokens[collateralName.toUpperCase()];
@@ -126,6 +129,7 @@ PoolDeployer.prototype.deployPool = async function(
             settingsInstance.address,
             collateralAddress,
             marketsStateInstance.address,
+            atmSettingsInstance.address,
         );
     }
 
