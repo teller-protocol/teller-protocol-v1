@@ -13,7 +13,8 @@ contract('OwnerSignersRoleTest', function (accounts) {
     let instance;
 
     beforeEach('Setup for each test', async () => {
-        instance = await OwnerSignersRole.new()
+        instance = await OwnerSignersRole.new();
+        await instance.initialize(owner);
     })
 
     withData({
