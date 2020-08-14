@@ -1,7 +1,7 @@
 pragma solidity 0.5.17;
 
 // Libraries
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../util/ZeroCollateralCommon.sol";
 import "../util/NumbersList.sol";
 import "../util/SettingsConsts.sol";

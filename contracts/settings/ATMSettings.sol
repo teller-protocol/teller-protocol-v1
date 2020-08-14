@@ -4,11 +4,10 @@ pragma experimental ABIEncoderV2;
 // Libraries
 
 // Commons
-import "@openzeppelin/contracts/utils/Address.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
-import "../atm/ATMGovernanceFactoryInterface.sol";
+import "../ATM/ATMGovernanceFactoryInterface.sol";
 import "./ATMSettingsInterface.sol";
 
 

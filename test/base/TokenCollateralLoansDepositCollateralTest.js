@@ -24,13 +24,15 @@ contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
     let loanTermsConsInstance;
     let settingsInstance;
     let marketsInstance;
+    let atmSettingsInstance;
     
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
-        settingsInstance = await Mock.new()
-        marketsInstance = await Mock.new()
+        settingsInstance = await Mock.new();
+        marketsInstance = await Mock.new();
+        atmSettingsInstance = await Mock.new();
         instance = await Loans.new();
     });
 
@@ -74,6 +76,7 @@ contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
                 settingsInstance.address,
                 collateralToken.address,
                 marketsInstance.address,
+                atmSettingsInstance.address,
             );
 
             const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, 0, 0, 0)
@@ -148,6 +151,7 @@ contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
                 settingsInstance.address,
                 collateralToken.address,
                 marketsInstance.address,
+                atmSettingsInstance.address,
             );
             const encodeAllowance = erc20InterfaceEncoder.encodeAllowance();
             await collateralToken.givenMethodReturnUint(encodeAllowance, currentAllowance);

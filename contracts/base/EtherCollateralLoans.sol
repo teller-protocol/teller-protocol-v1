@@ -12,8 +12,6 @@ import "./LoansBase.sol";
     @author develop@teller.finance
  */
 contract EtherCollateralLoans is LoansBase {
-    address public collateralToken = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
     /**
      * @notice Deposit collateral into a loan
      * @param borrower The address of the loan borrower.
@@ -99,21 +97,26 @@ contract EtherCollateralLoans is LoansBase {
         @param loanTermsConsensusAddress Contract adddress for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
         @param marketsAddress Contract address to store the market data.
+        @param atmSettingsAddress Contract address to get ATM settings data.
      */
     function initialize(
         address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
-        address marketsAddress
+        address marketsAddress,
+        address atmSettingsAddress
     ) external isNotInitialized() {
         _initialize(
             priceOracleAddress,
             lendingPoolAddress,
             loanTermsConsensusAddress,
             settingsAddress,
-            marketsAddress
+            marketsAddress,
+            atmSettingsAddress
         );
+
+        collateralToken = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     }
 
     /** Internal Functions */

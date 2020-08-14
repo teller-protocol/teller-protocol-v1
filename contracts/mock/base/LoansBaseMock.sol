@@ -29,6 +29,14 @@ contract LoansBaseMock is LoansBase {
         return _convertTokenToWei(tokenAmount);
     }
 
+    function externalIsSupplyToDebtRatioValid(uint256 newLoanAmount)
+        external
+        view
+        returns (bool)
+    {
+        return super._isSupplyToDebtRatioValid(newLoanAmount);
+    }
+
     function setLoan(
         uint256 id,
         ZeroCollateralCommon.LoanTerms calldata loanTerms,
@@ -63,14 +71,16 @@ contract LoansBaseMock is LoansBase {
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
-        address marketsAddress
+        address marketsAddress,
+        address atmSettingsAddress
     ) external isNotInitialized() {
         _initialize(
             priceOracleAddress,
             lendingPoolAddress,
             loanTermsConsensusAddress,
             settingsAddress,
-            marketsAddress
+            marketsAddress,
+            atmSettingsAddress
         );
     }
 

@@ -38,6 +38,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
         lendingTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
         const marketsInstance = await Mock.new();
+        const atmSettingsInstance = await Mock.new();
         const settingsInstance = await createTestSettingsInstance(Settings);
         loanTermsConsInstance = await Mock.new();
         instance = await Loans.new();
@@ -47,6 +48,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
             loanTermsConsInstance.address,
             settingsInstance.address,
             marketsInstance.address,
+            atmSettingsInstance.address,
         );
 
         // encode lending token address

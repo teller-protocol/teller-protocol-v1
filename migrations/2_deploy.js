@@ -4,11 +4,15 @@ const PoolDeployer = require('./utils/PoolDeployer');
 const initSettings = require('./utils/init_settings');
 
 const ERC20 = artifacts.require("@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol");
+const AdminUpgradeabilityProxy = artifacts.require("./base/UpgradeableProxy.sol");
+
+const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Official Smart Contracts
 const ZDAI = artifacts.require("./base/ZDAI.sol");
 const ZUSDC = artifacts.require("./base/ZUSDC.sol");
 const Settings = artifacts.require("./base/Settings.sol");
+const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
 const MarketsState = artifacts.require("./base/MarketsState.sol");
 const Lenders = artifacts.require("./base/Lenders.sol");
 const EtherCollateralLoans = artifacts.require("./base/EtherCollateralLoans.sol");
@@ -45,7 +49,7 @@ module.exports = async function(deployer, network, accounts) {
   const txConfig = { gas: maxGasLimit, from: deployerAccount };
 
   // Creating DeployerApp helper.
-  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, network);
+  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, AdminUpgradeabilityProxy, network);
   const currentBlockNumber = await web3.eth.getBlockNumber();
 
   await deployerApp.deploys([ZDAI, ZUSDC], txConfig);
@@ -58,13 +62,22 @@ module.exports = async function(deployer, network, accounts) {
   // Settings Deployments
   await deployerApp.deploy(MarketsState, txConfig);
 
-  await deployerApp.deploy(Settings, txConfig);
-  const settingsInstance = await Settings.deployed();
+  const settingsInstance = await deployerApp.deployWithUpgradeable('Settings', Settings, txConfig.from, '0x')
+  await settingsInstance.initialize(txConfig.from)
   await initSettings(
     settingsInstance,
     { ...networkConfig, txConfig, network, currentBlockNumber, web3 },
     { ERC20 },
   );
+
+  const atmGovernanceFactory = await Mock.new(); // TODO Mocking the ATMGovernanceFactory instance for now.
+  await deployerApp.deploy(
+    ATMSettings,
+    atmGovernanceFactory.address,
+    Settings.address,
+    txConfig
+  );
+  console.log(`ATM settings deployed at: ${ATMSettings.address}`);
 
   const aggregators = {};
   
@@ -119,6 +132,7 @@ module.exports = async function(deployer, network, accounts) {
       TToken: ZDAI,
       MarketsState,
       InterestValidator,
+      ATMSettings,
     },
     txConfig
   );
@@ -129,6 +143,7 @@ module.exports = async function(deployer, network, accounts) {
       TToken: ZUSDC,
       MarketsState,
       InterestValidator,
+      ATMSettings,
     },
     txConfig
   );
@@ -140,6 +155,7 @@ module.exports = async function(deployer, network, accounts) {
       TToken: ZDAI,
       MarketsState,
       InterestValidator,
+      ATMSettings,
     },
     txConfig
   );
@@ -150,6 +166,7 @@ module.exports = async function(deployer, network, accounts) {
       TToken: ZUSDC,
       MarketsState,
       InterestValidator,
+      ATMSettings,
     },
     txConfig
   );

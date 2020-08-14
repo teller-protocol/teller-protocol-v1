@@ -39,8 +39,8 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
     let currentTime;
     let interestRequest;
 
-    const baseGasCost = 238000;
-    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 77000);
+    const baseGasCost = 244000;
+    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 79000);
 
     let responseOne = createUnsignedInterestResponse(nodeOne, 0, 34676, 1, NULL_ADDRESS)
     let responseTwo = createUnsignedInterestResponse(nodeTwo, 0, 34642, 1, NULL_ADDRESS)
@@ -151,7 +151,7 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
                     from: lendersContract
                 }
             );
-            assert(parseInt(result) <= expectedMaxGas);
+            assert(parseInt(result) <= expectedMaxGas, 'Expected max gas less than result.');
         })
     })
 })
