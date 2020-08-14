@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 // Common
 import "../util/AddressArrayLib.sol";
 import "../util/AddressLib.sol";
+import "../base/TInitializable.sol";
 
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/SignerRole.sol";
@@ -18,7 +19,7 @@ import "./IATMGovernance.sol";
     @notice This contract is used to modify Risk Settings, CRA or DataProviders for a specific ATM.
     @author develop@teller.finance
  */
-contract ATMGovernance is SignerRole, IATMGovernance {
+contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
     using AddressArrayLib for address[];
     using AddressLib for address;
     using Address for address;
@@ -47,7 +48,18 @@ contract ATMGovernance is SignerRole, IATMGovernance {
     // ATM Governance token address
     address public atmToken;
 
+    
+    
     /* External Functions */
+    function initialize(address _atmToken)
+        external
+        onlySigner()
+        isNotInitialized()
+    {
+        _initialize();
+        _setToken(_atmToken);
+        // emit event
+    }
 
     /**
         @notice Adds a new General Setting to this ATM.
@@ -258,12 +270,18 @@ contract ATMGovernance is SignerRole, IATMGovernance {
         external
         onlySigner()
     {
+        _setToken(_atmToken);
+    }
+
+    function _setToken(address _atmToken)
+        internal
+        onlySigner()
+    {
         require(_atmToken.isContract(), "TOKEN_ADDRESS_MUST_BE_A_CONTRACT");
         address oldAtmToken = atmToken;
         atmToken = _atmToken;
         emit ATMTokenUpdated(msg.signer, oldAtmToken, atmToken);
     }
-
 
     /* External Constant functions */
 
