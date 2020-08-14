@@ -1,5 +1,6 @@
 const assert = require('assert');
 const { NULL_ADDRESS } = require('../../test/utils/consts');
+const initSignerAddresses = require('../utils/init_settings/initSignerAddresses');
 
 class PoolDeployer {
     constructor(deployer, deployConfig, artifacts) {
@@ -25,6 +26,7 @@ PoolDeployer.prototype.deployPool = async function(
     const {
         tokens,
         aggregators,
+        signers,
         cTokens
     } = this.deployConfig;
     const tokenAddress = tokens[tokenName.toUpperCase()];
@@ -151,6 +153,12 @@ PoolDeployer.prototype.deployPool = async function(
         const result = await initializable.initialized(txConfig);
         assert(result, `${initializable.contractName} is NOT initialized.`);
     }
+
+    await initSignerAddresses(
+        { loanTermsConsensusInstance, interestConsensusInstance },
+        { signers, txConfig },
+        { },
+    );
 
     console.log('');
     console.log('--- Pool deployment ends ---');

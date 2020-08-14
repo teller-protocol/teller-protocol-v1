@@ -7,6 +7,7 @@ module.exports = {
     teller: require('./teller'),
     assetSettings: require('./assetSettings'),
     platformSettings: require('./platformSettings'),
+    signers: require('./signers'),
     maxGasLimit: 7000000,
     toTxUrl: ({ tx }) => {
         return `https://ropsten.etherscan.io/tx/${tx}`;

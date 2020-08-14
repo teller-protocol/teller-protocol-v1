@@ -80,7 +80,7 @@ module.exports = async function(
         const { value, min, max, processOnDeployment } = platformSettings[platformSettingName];
         
         if(!processOnDeployment) {
-            if (verbose) console.log(`Platform setting value ${platformSettingName} is not processed. It will be configured manually.`);
+            // Some setting are created manually.
             continue;
         }
 
