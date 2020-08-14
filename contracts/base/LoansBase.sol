@@ -654,7 +654,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
     }
 
     /**
-        @notice It validates whether supply tod debt (StD) ratio is valid including the loan amount.
+        @notice It validates whether supply to debt (StD) ratio is valid including the loan amount.
         @param newLoanAmount the new loan amount to consider o the StD ratio.
         @return true if the ratio is valid. Otherwise it returns false.
      */
