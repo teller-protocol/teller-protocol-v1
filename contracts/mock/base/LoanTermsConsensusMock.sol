@@ -112,7 +112,7 @@ contract LoanTermsConsensusMock is LoanTermsConsensus {
     }
 
     function externalRequireRequestLoanTermsRateLimit(
-        ZeroCollateralCommon.LoanRequest calldata request
+        TellerCommon.LoanRequest calldata request
     ) external view returns (bool) {
         super._requireRequestLoanTermsRateLimit(request);
         return true;
