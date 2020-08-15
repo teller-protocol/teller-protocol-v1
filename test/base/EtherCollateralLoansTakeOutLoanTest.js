@@ -95,7 +95,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
               termsExpiry += FIVE_MIN
             }
 
-            let lastCollateralIn = timeNow
+            let lastCollateralIn = timeNow + FIVE_MIN
             if (!collateralTooRecent) {
               lastCollateralIn -= FIVE_MIN
             }
@@ -107,6 +107,11 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
             try {
                 // Invocation
                 const tx = await instance.takeOutLoan(mockLoanID, amountToBorrow, { from: borrower });
+
+                // Assertions
+                assert(!mustFail, 'It should have failed because data is invalid.');
+                assert(tx);
+
                 const txTime = (await web3.eth.getBlock(tx.receipt.blockNumber)).timestamp
                 const interestOwed = Math.floor(amountToBorrow * 1475 * loanDuration / 10000 / 3650000)
                 const loan = await instance.loans.call(mockLoanID)

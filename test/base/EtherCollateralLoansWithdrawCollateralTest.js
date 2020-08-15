@@ -94,6 +94,9 @@ contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
 
                 const tx = await instance.withdrawCollateral(withdrawalAmount, mockLoanID, { from: msgSender })
                 
+                // Assertions
+                assert(!mustFail, 'It should have failed because data is invalid.');
+                assert(tx);
                 const totalAfter = await instance.totalCollateral.call()
                 const contractBalAfter = await web3.eth.getBalance(instance.address)
 
