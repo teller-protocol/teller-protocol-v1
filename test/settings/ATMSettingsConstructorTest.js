@@ -17,7 +17,7 @@ contract('ATMSettingsConstructorTest', function (accounts) {
 
     withData({
         _1_basic: [4, undefined, false],
-        _3_empty_settings: [-1, 'SETTINGS_MUST_BE_PROVIDED', true],
+        _2_empty_settings: [-1, 'SETTINGS_MUST_BE_PROVIDED', true],
     }, function(settingsIndex, expectedErrorMessage, mustFail) {
         it(t('user', 'new', 'Should be able to create a new instance or not.', mustFail), async function() {
             // Setup
