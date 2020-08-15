@@ -111,5 +111,19 @@ module.exports = {
 			network_id: '4',
 			skipDryRun: true,
 		},
+		mainnet: {
+			provider: function() {
+				return new HDWalletProvider(
+					mnemonicKeyValue,
+					`https://mainnet.infura.io/v3/${infuraKeyValue}`,
+					defaultAddressIndex,
+					addressCountValue
+				);
+			},
+			gas: gasKeyValue,
+			gasPrice: web3.utils.toWei(gasPriceKeyValue, 'gwei'),
+			network_id: '1',
+			skipDryRun: false,
+		},
 	}
 }

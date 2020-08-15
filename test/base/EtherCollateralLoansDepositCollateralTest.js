@@ -66,6 +66,10 @@ contract('EtherCollateralLoansDepositCollateralTest', function (accounts) {
                 const totalBefore = await instance.totalCollateral.call()
 
                 let tx = await instance.depositCollateral(specifiedBorrower, mockLoanID, ethAmount, { value: msgValue })
+
+                // Assertions
+                assert(!mustFail, 'It should have failed because data is invalid.');
+                assert(tx);
                 let txTimestamp = (await web3.eth.getBlock(tx.receipt.blockNumber)).timestamp
 
                 loans

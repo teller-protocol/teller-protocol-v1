@@ -5,7 +5,7 @@ module.exports = {
             name: 'ATM Token Test',
             symbol: 'ATMTest',
             decimals: 18,
-            maxCap: 100000000000,
+            maxCap: 100000000,
             maxVestingsPerWallet: 50,
         },
         supplyToDebt: 5000,

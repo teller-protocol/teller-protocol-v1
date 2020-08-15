@@ -36,7 +36,7 @@ module.exports = {
     */
     [settingsNames.ResponseExpiryLength]: {
         processOnDeployment: true,
-        value: daysToSeconds(30),
+        value: minutesToSeconds(5),
         min: 0,
         max: MAX_VALUE_STRING,
     },
