@@ -1,4 +1,5 @@
 // JS Libraries
+const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
 const {
     t,
@@ -17,7 +18,7 @@ contract('SettingsCreatePlatformSettingTest', function (accounts) {
     let instance;
     
     beforeEach('Setup for each test', async () => {
-        instance = await Settings.new();
+        instance = await createTestSettingsInstance(Settings);
     });
 
     const newSetting = (name, value, min = 0, max = value * 2) => ({name, nameBytes32: toBytes32(web3, name), value, min, max});
@@ -70,7 +71,7 @@ contract('SettingsCreatePlatformSettingTest', function (accounts) {
             [],
             0, newSetting('myCustomSettingC', 9000, -1, 10000), 'VALUE_MUST_BE_GT_MIN_VALUE', true
         ],
-        _1_invalid_empty_name: [
+        _11_invalid_empty_name: [
             [], 0, newSetting('', 1000, 1001, 9000), 'SETTING_NAME_MUST_BE_PROVIDED', true
         ],
     }, function(previousSettings, senderIndex, newValue, expectedErrorMessage, mustFail) {

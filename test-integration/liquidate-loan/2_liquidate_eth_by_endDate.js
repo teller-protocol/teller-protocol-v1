@@ -1,7 +1,7 @@
 // Util classes
 const assert = require('assert');
 const BigNumber = require('bignumber.js');
-const { zerocollateral, tokens, chainlink } = require("../../scripts/utils/contracts");
+const { teller, tokens, chainlink } = require("../../scripts/utils/contracts");
 const { loans, lendingPool } = require('../../test/utils/events');
 const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds, DEFAULT_DECIMALS, toBytes32 } = require('../../test/utils/consts');
 const LoanInfoPrinter = require('../../test/utils/printers/LoanInfoPrinter');
@@ -11,12 +11,12 @@ const platformSettingsNames = require('../../test/utils/platformSettingsNames');
 module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonces, chainId}) => {
   console.log('Liquidate Loan by End Time');
   const tokenName = processArgs.getValue('testTokenName');
-  const settingsInstance = await getContracts.getDeployed(zerocollateral.settings());
+  const settingsInstance = await getContracts.getDeployed(teller.settings());
   const token = await getContracts.getDeployed(tokens.get(tokenName));
-  const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.eth().lendingPool(tokenName));
-  const loansInstance = await getContracts.getDeployed(zerocollateral.eth().loans(tokenName));
-  const chainlinkOracle = await getContracts.getDeployed(zerocollateral.eth().chainlink.custom(tokenName));
-  const loanTermConsensusInstance = await getContracts.getDeployed(zerocollateral.eth().loanTermsConsensus(tokenName));
+  const lendingPoolInstance = await getContracts.getDeployed(teller.eth().lendingPool(tokenName));
+  const loansInstance = await getContracts.getDeployed(teller.eth().loans(tokenName));
+  const chainlinkOracle = await getContracts.getDeployed(teller.eth().chainlink.custom(tokenName));
+  const loanTermConsensusInstance = await getContracts.getDeployed(teller.eth().loanTermsConsensus(tokenName));
   
   const currentTimestamp = await timer.getCurrentTimestamp();
   const borrower = await accounts.getAt(1);

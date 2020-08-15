@@ -2,7 +2,7 @@
 
 // Util classes
 const { loans: readParams } = require("../utils/cli-builder");
-const { zerocollateral, tokens } = require("../utils/contracts");
+const { teller, tokens } = require("../utils/contracts");
 const { printFullLoan, printOraclePrice } = require("../../test/utils/printer");
 const { getOracleAggregatorInfo, getDecimals } = require("../../test/utils/collateral-helper");
 const ProcessArgs = require('../utils/ProcessArgs');
@@ -18,7 +18,7 @@ module.exports = async (callback) => {
         const collateralTokenDecimals = await getDecimals(getContracts, collateralTokenName);
         const oracleInstance = await getContracts.getDeployed(getOracleAggregatorInfo(tokenName, collateralTokenName));
 
-        const loansInstance = await getContracts.getDeployed(zerocollateral.custom(collateralTokenName).loans(tokenName));
+        const loansInstance = await getContracts.getDeployed(teller.custom(collateralTokenName).loans(tokenName));
         const tokenInstance = await getContracts.getDeployed(tokens.get(tokenName));
 
         const loanIDCounter = await loansInstance.loanIDCounter();

@@ -1,5 +1,5 @@
 {
-  "name": "zero-collateral-v1",
+  "name": "teller-protocol-v1",
   "version": "1.0.0",
   "license": "MIT",
   "main": "truffle-config.js",
@@ -22,8 +22,8 @@
     "deploy:ganache": "truffle compile && truffle deploy --network ganache --reset --to 2",
     "deploy:ganache:mock": "truffle compile && truffle deploy --network ganache --reset -f 3 --to 3",
     "format:prettier": "prettier --write contracts/**/**/**/**/**.sol",
-    "format:prettier:print": "prettier contracts/**/*.sol",
-    "verify:ropsten": "truffle run verify LendingPool Lenders ChainlinkPairAggregator EtherCollateralLoans TokenCollateralLoans ZDAI ZUSDC InterestConsensus LoanTermsConsensus Settings --network ropsten"
+    "format:prettier:print": "prettier contracts/**/**/**/**/**.sol",
+    "verify:ropsten": "truffle run verify ChainlinkPairAggregator InverseChainlinkPairAggregator EtherCollateralLoans InterestConsensus Lenders LendingPool LoanTermsConsensus MarketsState Settings TDAI TokenCollateralLoans TUSDC --network ropsten"
   },
   "devDependencies": {
     "@gnosis.pm/mock-contract": "^3.0.7",
@@ -52,6 +52,8 @@
   "dependencies": {
     "@chainlink/contracts": "^0.0.5",
     "@openzeppelin/contracts": "2.5.1",
+    "@openzeppelin/contracts-ethereum-package": "2.5.0",
+    "@openzeppelin/upgrades": "^2.8.0",
     "bignumber.js": "^9.0.0",
     "elliptic": "^6.5.3",
     "truffle-hdwallet-provider": "^1.0.17",

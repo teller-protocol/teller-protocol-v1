@@ -15,7 +15,7 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
     let instance;
-    let zTokenInstance;
+    let tTokenInstance;
     let daiInstance;
     let lendersInstance;
     let interestConsensusInstance;
@@ -23,7 +23,7 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
     let loansAddress = accounts[0];
     
     beforeEach('Setup for each test', async () => {
-        zTokenInstance = await Mock.new();
+        tTokenInstance = await Mock.new();
         daiInstance = await Mock.new();
         interestConsensusInstance = await Mock.new();
         cTokenInstance = await Mock.new();
@@ -32,14 +32,14 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
         instance = await LendingPool.new();
 
         lendersInstance = await Lenders.new(
-          zTokenInstance.address,
+          tTokenInstance.address,
           instance.address,
           interestConsensusInstance.address,
           marketsInstance.address,
         );
 
         await instance.initialize(
-            zTokenInstance.address,
+            tTokenInstance.address,
             daiInstance.address,
             lendersInstance.address,
             loansAddress,

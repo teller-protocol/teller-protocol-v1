@@ -8,7 +8,7 @@ import "./NumbersList.sol";
  *
  * @author develop@teller.finance
  */
-library ZeroCollateralCommon {
+library TellerCommon {
     enum LoanStatus {NonExistent, TermsSet, Active, Closed}
 
     // The amount of interest owed to a borrower

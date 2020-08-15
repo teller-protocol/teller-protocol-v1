@@ -1,12 +1,12 @@
 pragma solidity 0.5.17;
 
 // Libraries
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "../util/AddressLib.sol";
 
 // Commons
-import "./Initializable.sol";
+import "./TInitializable.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
@@ -16,11 +16,11 @@ import "../interfaces/MarketsStateInterface.sol";
 /**
     @notice This contract is used as a base contract for most most of the contracts in the platform.
     @notice It allows contracts to have access to the platform settings, and common modifiers.
-    @notice It implements the reentrancy guard from Open Zeppelin and the initializable pattern.
+    @notice It implements the reentrancy guard from Open Zeppelin and the TInitializable pattern.
 
     @author develop@teller.finance.
  */
-contract Base is Initializable, ReentrancyGuard {
+contract Base is TInitializable, ReentrancyGuard {
     using AddressLib for address;
     using Address for address;
 

@@ -19,7 +19,7 @@ contract('LendingPoolSetInterestValidatorTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         const loansInstance = await Mock.new();
         settingsInstance = await Mock.new();
-        const zTokenInstance = await Mock.new();
+        const tTokenInstance = await Mock.new();
         const lendingTokenInstance = await Mock.new();
         const cTokenInstance = await Mock.new()
         const lendersInstance = await Mock.new();
@@ -28,7 +28,7 @@ contract('LendingPoolSetInterestValidatorTest', function (accounts) {
         
         instance = await LendingPool.new();
         await instance.initialize(
-            zTokenInstance.address,
+            tTokenInstance.address,
             lendingTokenInstance.address,
             lendersInstance.address,
             loansInstance.address,

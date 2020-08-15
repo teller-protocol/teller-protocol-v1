@@ -1,4 +1,4 @@
-const { zerocollateral, tokens } = require("../../scripts/utils/contracts");
+const { teller, tokens } = require("../../scripts/utils/contracts");
 const { DEFAULT_DECIMALS } = require("./consts");
 
 const collTokensOracleMap = new Map();
@@ -10,7 +10,7 @@ module.exports = {
     getOraclePairsFor,
     getOracleAggregatorInfo: (tokenName, collTokenName, artifactName = 'ChainlinkPairAggregator') => {
         const { source, target } = getOraclePairsFor(tokenName, collTokenName);
-        const oracleAggregator = zerocollateral.oracles().custom(source, target, artifactName);
+        const oracleAggregator = teller.oracles().custom(source, target, artifactName);
         return {
             ...oracleAggregator,
             pair: { source, target },

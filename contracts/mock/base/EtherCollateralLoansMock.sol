@@ -19,7 +19,7 @@ contract EtherCollateralLoansMock is EtherCollateralLoans {
 
     function setLoan(
         uint256 id,
-        ZeroCollateralCommon.LoanTerms calldata loanTerms,
+        TellerCommon.LoanTerms calldata loanTerms,
         uint256 termsExpiry,
         uint256 loanStartTime,
         uint256 collateral,
@@ -27,12 +27,12 @@ contract EtherCollateralLoansMock is EtherCollateralLoans {
         uint256 principalOwed,
         uint256 interestOwed,
         uint256 borrowedAmount,
-        ZeroCollateralCommon.LoanStatus status,
+        TellerCommon.LoanStatus status,
         bool liquidated
     ) external {
         require(loanTerms.maxLoanAmount >= borrowedAmount, "BORROWED_AMOUNT_EXCEEDS_MAX");
         totalCollateral += collateral;
-        loans[id] = ZeroCollateralCommon.Loan({
+        loans[id] = TellerCommon.Loan({
             id: id,
             loanTerms: loanTerms,
             termsExpiry: termsExpiry,

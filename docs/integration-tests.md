@@ -11,18 +11,18 @@ It includes:
 
 Before describing the steps, please, check you already have cloned the following repositories:
 
-- **[Smart contracts](https://github.com/Zero-Collateral/zero-collateral-v1):** *This is the current repository. It contains all the official smart contracts and configuration for all networks (including Ganache, mainnet, and testnet) where the platform was deployed.*.
+- **[Smart contracts](https://github.com/teller-protocol/teller-protocol-v1):** *This is the current repository. It contains all the official smart contracts and configuration for all networks (including Ganache, mainnet, and testnet) where the platform was deployed.*.
 
-  - ```git clone git@github.com:Zero-Collateral/zero-collateral-v1.git```
+  - ```git clone git@github.com:teller-protocol/teller-protocol-v1.git```
 
-- **[Subgraph](https://github.com/Zero-Collateral/subgraph.git):** *This repository is based on [The Graph protocol](https://thegraph.com), and listens all the smart contract events, and save the data into a GraphQL server.*
+- **[Subgraph](https://github.com/teller-protocol/subgraph.git):** *This repository is based on [The Graph protocol](https://thegraph.com), and listens all the smart contract events, and save the data into a GraphQL server.*
 
-  - ```git clone git@github.com:Zero-Collateral/subgraph.git```
+  - ```git clone git@github.com:teller-protocol/subgraph.git```
   - ```yarn install``` in the root folder.
 
-- **[Our own TheGraph node](https://github.com/Zero-Collateral/graph-node)**: *This repository is used to create a local TheGraph node using a script (.sh) file. So, it can be executed repeatedly without the need to remove the data generated in the Docker volume folders.*
+- **[Our own TheGraph node](https://github.com/teller-protocol/graph-node)**: *This repository is used to create a local TheGraph node using a script (.sh) file. So, it can be executed repeatedly without the need to remove the data generated in the Docker volume folders.*
 
-  - ```git clone git@github.com:Zero-Collateral/graph-node.git```
+  - ```git clone git@github.com:teller-protocol/graph-node.git```
 
 ## Prerequisites
 
@@ -94,7 +94,7 @@ yarn deploy:ganache
 > You might see an error in the console with the following message:
 >
 > ```sh
-> ✖ Error removing the subgraph: subgraph name not found: zero-collateral/zero-collateral
+> ✖ Error removing the subgraph: subgraph name not found: teller-protocol/teller-protocol
 > error Command failed with exit code 1.
 > ```
 >
@@ -106,7 +106,7 @@ As result, you should see:
 
 Congrats! You already finished the configuration!
 
-You can visit the [local URL](http://127.0.0.1:8000/subgraphs/name/zero-collateral/zero-collateral/graphql) to access to the The Graph UI. It is very simple, but you can execute GraphQL queries to get data from your smart contract events.
+You can visit the [local URL](http://127.0.0.1:8000/subgraphs/name/teller-protocol/teller-protocol/graphql) to access to the The Graph UI. It is very simple, but you can execute GraphQL queries to get data from your smart contract events.
 
 Now, you are ready to run the integration tests. In a new command window, go to the folder where you cloned the **Smart Contracts** repository, and in the **root** folder, execute::
 
@@ -116,7 +116,7 @@ As result, you will see:
 
 ![Run Integration Tests](./images/integration-tests/run-integration-tests.png)
 
-Now, you can click on the [URL](http://127.0.0.1:8000/subgraphs/name/zero-collateral/zero-collateral/graphql) where the subgraph was deployed, and execute queries.
+Now, you can click on the [URL](http://127.0.0.1:8000/subgraphs/name/teller-protocol/teller-protocol/graphql) where the subgraph was deployed, and execute queries.
 
 ![TheGraph Localhost](./images/integration-tests/thegraph-localhost.png)
 

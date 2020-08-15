@@ -11,21 +11,21 @@ const Lenders = artifacts.require("./mock/base/LendersMock.sol");
 
 contract('LendersWithdrawInterestTest', function (accounts) {
     let instance;
-    let zTokenInstance;
+    let tTokenInstance;
     let lendingPoolInstance;
     let interestConsensusInstance;
     let settingsInstance;
     let marketsInstance;
     
     beforeEach('Setup for each test', async () => {
-        zTokenInstance = await Mock.new();
+        tTokenInstance = await Mock.new();
         lendingPoolInstance = await Mock.new();
         interestConsensusInstance = await Mock.new();
         settingsInstance = await Mock.new();
         marketsInstance = await Mock.new();
         instance = await Lenders.new();
         await instance.initialize(
-            zTokenInstance.address,
+            tTokenInstance.address,
             lendingPoolInstance.address,
             interestConsensusInstance.address,
             settingsInstance.address,

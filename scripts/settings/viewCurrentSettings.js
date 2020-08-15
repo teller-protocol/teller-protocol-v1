@@ -1,7 +1,7 @@
 // Smart contracts
 
 // Util classes
-const { zerocollateral } = require("../../scripts/utils/contracts");
+const { teller } = require("../../scripts/utils/contracts");
 const { settings: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
 const { printPlatformSetting } = require("../../test/utils/settings-helper");
@@ -25,7 +25,7 @@ const callAndPrintPlatformSetting = async (settings, settingName, { web3 }) => {
 module.exports = async (callback) => {
     try {
         const getContracts = processArgs.createGetContracts(artifacts);
-        const settings = await getContracts.getDeployed(zerocollateral.settings());
+        const settings = await getContracts.getDeployed(teller.settings());
 
         console.log('='.repeat(70));
         console.log(`Settings Address: ${settings.address}`);

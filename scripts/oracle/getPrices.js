@@ -2,7 +2,7 @@
 
 // Util classes
 const { oracle: readParams } = require("../utils/cli-builder");
-const { tokens, zerocollateral } = require("../../scripts/utils/contracts");
+const { tokens, teller } = require("../../scripts/utils/contracts");
 const ProcessArgs = require('../utils/ProcessArgs');
 const { toUnits } = require("../../test/utils/consts");
 const { TOKEN_NAME, COLL_TOKEN_NAME, BACK_ROUNDS } = require("../utils/cli/names");
@@ -17,7 +17,7 @@ module.exports = async (callback) => {
         const roundsBack = processArgs.getValue(BACK_ROUNDS.name);
 
         const getContracts = processArgs.createGetContracts(artifacts);        
-        const chainlinkAggregatorAggregator = await getContracts.getDeployed(zerocollateral.oracles().custom(tokenName, collTokenName));
+        const chainlinkAggregatorAggregator = await getContracts.getDeployed(teller.oracles().custom(tokenName, collTokenName));
         const targetToken = collTokenName.toUpperCase() === 'ETH' ?  undefined: await getContracts.getDeployed(tokens.get(collTokenName));
 
         const targetTokenDecimals = targetToken === undefined ? 18: await targetToken.decimals();

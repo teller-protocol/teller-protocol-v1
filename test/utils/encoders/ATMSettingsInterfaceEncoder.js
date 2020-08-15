@@ -13,6 +13,9 @@ ATMSettingsInterfaceEncoder.prototype.encodeIsATMForMarket = function() {
 
 ATMSettingsInterfaceEncoder.prototype.encodeIsATMPaused = function() {
     return encode(this.web3, 'isATMPaused(address)');
+
+ATMSettingsInterfaceEncoder.prototype.encodeGetATMForMarket = function() {
+    return encode(this.web3, 'getATMForMarket(address,address)');
 }
 
 module.exports = ATMSettingsInterfaceEncoder;

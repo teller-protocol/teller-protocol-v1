@@ -11,6 +11,7 @@ const {
 const { loans } = require('../utils/events');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
 const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
+const ATMSettingsInterfaceEncoder = require('../utils/encoders/ATMSettingsInterfaceEncoder');
 const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
@@ -23,6 +24,7 @@ const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 
 contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
+    const atmSettingsInterfaceEncoder = new ATMSettingsInterfaceEncoder(web3);
     let instance;
     let loanTermsConsInstance;
     let lendingPoolInstance;
@@ -31,6 +33,7 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
     let oracleInstance;
     let settingsInstance;
     let lendingTokenInstance;
+    let atmSettingsInstance;
 
     const owner = accounts[0];
     const borrowerAddress = accounts[2];
@@ -47,6 +50,7 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
         marketsInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
+        atmSettingsInstance = await Mock.new();
         settingsInstance = await createTestSettingsInstance(
             Settings,
             {
@@ -60,6 +64,7 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
             loanTermsConsInstance.address,
             settingsInstance.address,
             marketsInstance.address,
+            atmSettingsInstance.address,
         )
         responseOne = createUnsignedLoanResponse(accounts[3], 0, 1234, 6500, 10000, 3, loanTermsConsInstance.address)
         responseTwo = createUnsignedLoanResponse(accounts[4], 0, 1500, 6000, 10000, 2, loanTermsConsInstance.address)
@@ -75,6 +80,12 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
 
         const encodeLendingToken = lendingPoolInterfaceEncoder.encodeLendingToken();
         lendingPoolInstance.givenMethodReturnAddress(encodeLendingToken, lendingTokenInstance.address);
+
+        const atmForMarketInstance = await Mock.new();
+        atmSettingsInstance.givenMethodReturnAddress(
+            atmSettingsInterfaceEncoder.encodeGetATMForMarket(),
+            atmForMarketInstance.address
+        );
     });
 
     withData({

@@ -29,9 +29,17 @@ contract LoansBaseMock is LoansBase {
         return _convertTokenToWei(tokenAmount);
     }
 
+    function externalIsSupplyToDebtRatioValid(uint256 newLoanAmount)
+        external
+        view
+        returns (bool)
+    {
+        return super._isSupplyToDebtRatioValid(newLoanAmount);
+    }
+
     function setLoan(
         uint256 id,
-        ZeroCollateralCommon.LoanTerms calldata loanTerms,
+        TellerCommon.LoanTerms calldata loanTerms,
         uint256 termsExpiry,
         uint256 loanStartTime,
         uint256 collateral,
@@ -39,11 +47,11 @@ contract LoansBaseMock is LoansBase {
         uint256 principalOwed,
         uint256 interestOwed,
         uint256 borrowedAmount,
-        ZeroCollateralCommon.LoanStatus status,
+        TellerCommon.LoanStatus status,
         bool liquidated
     ) external {
         require(loanTerms.maxLoanAmount >= borrowedAmount, "BORROWED_AMOUNT_EXCEEDS_MAX");
-        loans[id] = ZeroCollateralCommon.Loan({
+        loans[id] = TellerCommon.Loan({
             id: id,
             loanTerms: loanTerms,
             termsExpiry: termsExpiry,
@@ -63,14 +71,16 @@ contract LoansBaseMock is LoansBase {
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
-        address marketsAddress
+        address marketsAddress,
+        address atmSettingsAddress
     ) external isNotInitialized() {
         _initialize(
             priceOracleAddress,
             lendingPoolAddress,
             loanTermsConsensusAddress,
             settingsAddress,
-            marketsAddress
+            marketsAddress,
+            atmSettingsAddress
         );
     }
 
@@ -80,8 +90,8 @@ contract LoansBaseMock is LoansBase {
     {}
 
     function createLoanWithTerms(
-        ZeroCollateralCommon.LoanRequest calldata request,
-        ZeroCollateralCommon.LoanResponse[] calldata responses,
+        TellerCommon.LoanRequest calldata request,
+        TellerCommon.LoanResponse[] calldata responses,
         uint256 collateralAmount
     ) external payable {}
 }

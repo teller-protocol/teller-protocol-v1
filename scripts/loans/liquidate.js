@@ -2,7 +2,7 @@
 
 // Util classes
 const { loans: readParams } = require("../utils/cli-builder");
-const { zerocollateral } = require("../utils/contracts");
+const { teller } = require("../utils/contracts");
 const ProcessArgs = require('../utils/ProcessArgs');
 const Accounts = require('../utils/Accounts');
 const processArgs = new ProcessArgs(readParams.liquidate().argv);
@@ -17,7 +17,7 @@ module.exports = async (callback) => {
         const { toTxUrl } = appConf.networkConfig;
 
         const getContracts = processArgs.createGetContracts(artifacts);
-        const loansInstance = await getContracts.getDeployed(zerocollateral.loans(tokenName));
+        const loansInstance = await getContracts.getDeployed(teller.loans(tokenName));
 
         const sender = await accounts.getAt(senderIndex);
         const txConfig = { from: sender };

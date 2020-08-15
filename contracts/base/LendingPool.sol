@@ -3,14 +3,14 @@ pragma solidity 0.5.17;
 // Libraries
 
 // Commons
-import "../util/ZeroCollateralCommon.sol";
+import "../util/TellerCommon.sol";
 
 // Interfaces
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
 import "../interfaces/LoansInterface.sol";
-import "../interfaces/ZTokenInterface.sol";
+import "../interfaces/TTokenInterface.sol";
 import "../interfaces/InterestValidatorInterface.sol";
 import "../providers/compound/CErc20Interface.sol";
 
@@ -30,7 +30,7 @@ contract LendingPool is Base, LendingPoolInterface {
 
     address public cToken;
 
-    ZTokenInterface public zToken;
+    TTokenInterface public tToken;
 
     LendersInterface public lenders;
 
@@ -71,8 +71,8 @@ contract LendingPool is Base, LendingPoolInterface {
         // deposit them straight into compound
         _depositToCompoundIfSupported(amount);
 
-        // Mint zToken tokens
-        zTokenMint(msg.sender, amount);
+        // Mint tToken tokens
+        tTokenMint(msg.sender, amount);
 
         markets.increaseSupply(
             address(lendingToken),
@@ -85,7 +85,7 @@ contract LendingPool is Base, LendingPoolInterface {
     }
 
     /**
-        @notice It allows any zToken holder to burn their zToken tokens and withdraw their tokens.
+        @notice It allows any tToken holder to burn their tToken tokens and withdraw their tokens.
         @dev If the cToken is available (not 0x0), it withdraws the lending tokens from Compound before transferring the tokens to the holder.
         @param amount of tokens to withdraw.
      */
@@ -96,8 +96,8 @@ contract LendingPool is Base, LendingPoolInterface {
         whenLendingPoolNotPaused(address(this))
         nonReentrant()
     {
-        // Burn zToken tokens.
-        zToken.burn(msg.sender, amount);
+        // Burn tToken tokens.
+        tToken.burn(msg.sender, amount);
 
         // Withdraw the tokens from compound
         _withdrawFromCompoundIfSupported(amount);
@@ -242,7 +242,7 @@ contract LendingPool is Base, LendingPoolInterface {
 
     /**
         @notice It initializes the contract state variables.
-        @param zTokenAddress zToken token address.
+        @param tTokenAddress tToken token address.
         @param lendingTokenAddress ERC20 token address.
         @param lendersAddress Lenders contract address.
         @param loansAddress Loans contract address.
@@ -252,7 +252,7 @@ contract LendingPool is Base, LendingPoolInterface {
         @dev It throws a require error if the contract is already initialized.
      */
     function initialize(
-        address zTokenAddress,
+        address tTokenAddress,
         address lendingTokenAddress,
         address lendersAddress,
         address loansAddress,
@@ -261,7 +261,7 @@ contract LendingPool is Base, LendingPoolInterface {
         address marketsAddress,
         address interestValidatorAddress
     ) external isNotInitialized() {
-        zTokenAddress.requireNotEmpty("ZTOKEN_ADDRESS_IS_REQUIRED");
+        tTokenAddress.requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
         lendingTokenAddress.requireNotEmpty("TOKEN_ADDRESS_IS_REQUIRED");
         lendersAddress.requireNotEmpty("LENDERS_ADDRESS_IS_REQUIRED");
         loansAddress.requireNotEmpty("LOANS_ADDRESS_IS_REQUIRED");
@@ -272,7 +272,7 @@ contract LendingPool is Base, LendingPoolInterface {
 
         _initialize(settingsAddress, marketsAddress);
 
-        zToken = ZTokenInterface(zTokenAddress);
+        tToken = TTokenInterface(tTokenAddress);
         lendingToken = IERC20(lendingTokenAddress);
         lenders = LendersInterface(lendersAddress);
         loans = loansAddress;
@@ -349,14 +349,14 @@ contract LendingPool is Base, LendingPoolInterface {
     }
 
     /**
-        @notice It mints zToken tokens, and send them to a specific address.
+        @notice It mints tToken tokens, and send them to a specific address.
         @param to address which will receive the minted tokens.
         @param amount to be minted.
-        @dev This contract must has a Minter Role in zToken (mintable) token.
+        @dev This contract must has a Minter Role in tToken (mintable) token.
         @dev It throws a require error if mint invocation fails.
      */
-    function zTokenMint(address to, uint256 amount) private {
-        bool mintResult = zToken.mint(to, amount);
-        require(mintResult, "ZTOKEN_MINT_FAILED");
+    function tTokenMint(address to, uint256 amount) private {
+        bool mintResult = tToken.mint(to, amount);
+        require(mintResult, "TTOKEN_MINT_FAILED");
     }
 }

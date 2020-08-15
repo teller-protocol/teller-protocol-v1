@@ -5,6 +5,7 @@ module.exports = {
     tokens: require('./tokens'),
     assetSettings: require('./assetSettings'),
     platformSettings: require('./platformSettings'),
+    signers: require('./signers'),
     maxGasLimit: 12500000,
     toTxUrl: ({ tx }) => {
         return `not-supported-url`;

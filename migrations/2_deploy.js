@@ -4,11 +4,15 @@ const PoolDeployer = require('./utils/PoolDeployer');
 const initSettings = require('./utils/init_settings');
 
 const ERC20 = artifacts.require("@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol");
+const AdminUpgradeabilityProxy = artifacts.require("./base/UpgradeableProxy.sol");
+
+const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Official Smart Contracts
-const ZDAI = artifacts.require("./base/ZDAI.sol");
-const ZUSDC = artifacts.require("./base/ZUSDC.sol");
+const TDAI = artifacts.require("./base/TDAI.sol");
+const TUSDC = artifacts.require("./base/TUSDC.sol");
 const Settings = artifacts.require("./base/Settings.sol");
+const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
 const MarketsState = artifacts.require("./base/MarketsState.sol");
 const Lenders = artifacts.require("./base/Lenders.sol");
 const EtherCollateralLoans = artifacts.require("./base/EtherCollateralLoans.sol");
@@ -17,7 +21,7 @@ const LendingPool = artifacts.require("./base/LendingPool.sol");
 const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 // ATM Smart contracts
-const ATMGovernance = artifacts.require("./ATM/ATMGovernance.sol");
+const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 // External providers
 const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
 const InverseChainlinkPairAggregator = artifacts.require("./providers/chainlink/InverseChainlinkPairAggregator.sol");
@@ -35,7 +39,7 @@ module.exports = async function(deployer, network, accounts) {
   const deployerAccountIndex = env.getDefaultAddressIndex().getOrDefault();
   const deployerAccount = accounts[deployerAccountIndex];
   console.log(`Deployer account index is ${deployerAccountIndex} => ${deployerAccount}`);
-  const { maxGasLimit, tokens, chainlink, compound } = networkConfig;
+  const { maxGasLimit, tokens, chainlink, signers, compound } = networkConfig;
   assert(maxGasLimit, `Max gas limit for network ${network} is undefined.`);
 
   // Validations
@@ -45,12 +49,11 @@ module.exports = async function(deployer, network, accounts) {
   const txConfig = { gas: maxGasLimit, from: deployerAccount };
 
   // Creating DeployerApp helper.
-  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, network);
+  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, AdminUpgradeabilityProxy, network);
   const currentBlockNumber = await web3.eth.getBlockNumber();
 
-  await deployerApp.deploys([ZDAI, ZUSDC], txConfig);
-
-  console.log(`Deployed tokens: ZDAI [${ZDAI.address}] ZUSDC [${ZUSDC.address}] `);
+  await deployerApp.deploys([TDAI, TUSDC], txConfig);
+  console.log(`Deployed tokens: TDAI [${TDAI.address}] TUSDC [${TUSDC.address}] `);  
 
   // ATM Deployments
   await deployerApp.deploy(ATMGovernance, txConfig); // TODO: add Gnosis multisig as signer/pauser (not the DAO for now)
@@ -58,13 +61,22 @@ module.exports = async function(deployer, network, accounts) {
   // Settings Deployments
   await deployerApp.deploy(MarketsState, txConfig);
 
-  await deployerApp.deploy(Settings, txConfig);
-  const settingsInstance = await Settings.deployed();
+  const settingsInstance = await deployerApp.deployWithUpgradeable('Settings', Settings, txConfig.from, '0x')
+  await settingsInstance.initialize(txConfig.from)
   await initSettings(
     settingsInstance,
     { ...networkConfig, txConfig, network, currentBlockNumber, web3 },
     { ERC20 },
   );
+
+  const atmGovernanceFactory = await Mock.new(); // TODO Mocking the ATMGovernanceFactory instance for now.
+  await deployerApp.deploy(
+    ATMSettings,
+    atmGovernanceFactory.address,
+    Settings.address,
+    txConfig
+  );
+  console.log(`ATM settings deployed at: ${ATMSettings.address}`);
 
   const aggregators = {};
   
@@ -98,6 +110,7 @@ module.exports = async function(deployer, network, accounts) {
   const deployConfig = {
     tokens,
     aggregators,
+    signers,
     cTokens: compound,
   };
 
@@ -116,9 +129,10 @@ module.exports = async function(deployer, network, accounts) {
     { tokenName: 'DAI', collateralName: 'ETH' },
     {
       Loans: EtherCollateralLoans,
-      TToken: ZDAI,
+      TToken: TDAI,
       MarketsState,
       InterestValidator,
+      ATMSettings,
     },
     txConfig
   );
@@ -126,9 +140,10 @@ module.exports = async function(deployer, network, accounts) {
     { tokenName: 'USDC', collateralName: 'ETH' },
     {
       Loans: EtherCollateralLoans,
-      TToken: ZUSDC,
+      TToken: TUSDC,
       MarketsState,
       InterestValidator,
+      ATMSettings,
     },
     txConfig
   );
@@ -137,9 +152,10 @@ module.exports = async function(deployer, network, accounts) {
     { tokenName: 'DAI', collateralName: 'LINK', aggregatorName: 'LINK_USD' },
     {
       Loans: TokenCollateralLoans,
-      TToken: ZDAI,
+      TToken: TDAI,
       MarketsState,
       InterestValidator,
+      ATMSettings,
     },
     txConfig
   );
@@ -147,9 +163,10 @@ module.exports = async function(deployer, network, accounts) {
     { tokenName: 'USDC', collateralName: 'LINK', aggregatorName: 'LINK_USD' },
     {
       Loans: TokenCollateralLoans,
-      TToken: ZUSDC,
+      TToken: TUSDC,
       MarketsState,
       InterestValidator,
+      ATMSettings,
     },
     txConfig
   );

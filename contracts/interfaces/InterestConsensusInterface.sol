@@ -1,7 +1,7 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../util/ZeroCollateralCommon.sol";
+import "../util/TellerCommon.sol";
 
 
 /**
@@ -47,7 +47,7 @@ interface InterestConsensusInterface {
         @return the consensus interest.
      */
     function processRequest(
-        ZeroCollateralCommon.InterestRequest calldata request,
-        ZeroCollateralCommon.InterestResponse[] calldata responses
+        TellerCommon.InterestRequest calldata request,
+        TellerCommon.InterestResponse[] calldata responses
     ) external returns (uint256);
 }

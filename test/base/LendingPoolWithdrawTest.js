@@ -14,7 +14,7 @@ const Token = artifacts.require("./mock/token/DAIMock.sol");
 // Smart contracts
 const Lenders = artifacts.require("./base/Lenders.sol");
 const LendingPool = artifacts.require("./base/LendingPool.sol");
-const ZDai = artifacts.require("./base/ZDAI.sol");
+const TDAI = artifacts.require("./base/TDAI.sol");
 
 contract('LendingPoolWithdrawTest', function (accounts) {
     const burnableInterfaceEncoder = new BurnableInterfaceEncoder(web3);
@@ -52,13 +52,13 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     ) {
         it(t('user', 'withdraw', 'Should able (or not) to withdraw DAIs.', mustFail), async function() {
             // Setup
-            const zTokenInstance = await Mock.new();
+            const tTokenInstance = await Mock.new();
             const lendingTokenInstance = await Mock.new();
             await initContracts(
                 settingsInstance,
                 cTokenInstance,
                 instance,
-                zTokenInstance,
+                tTokenInstance,
                 consensusInstance,
                 lendingTokenInstance,
                 loansInstance,
@@ -97,19 +97,19 @@ contract('LendingPoolWithdrawTest', function (accounts) {
 
     withData({
         _1_basic: [accounts[0], 100, accounts[0], 10, undefined, false],
-        _2_recipientNotEnoughZDaiBalance: [accounts[0], 99, accounts[0], 100, 'ERC20: burn amount exceeds balance', true],
-        _3_recipientNotZDaiBalance: [accounts[0], 100, accounts[1], 10, 'ERC20: burn amount exceeds balance', true],
+        _2_recipientNotEnoughTDaiBalance: [accounts[0], 99, accounts[0], 100, 'ERC20: burn amount exceeds balance', true],
+        _3_recipientNotTDaiBalance: [accounts[0], 100, accounts[1], 10, 'ERC20: burn amount exceeds balance', true],
     }, function(depositSender, depositAmount, recipient, amountToWithdraw, expectedErrorMessage, mustFail) {
         it(t('user', 'withdraw', 'Should able (or not) to withdraw DAIs.', mustFail), async function() {
             // Setup
-            const zTokenInstance = await ZDai.new();
+            const tTokenInstance = await TDAI.new();
             const lendingTokenInstance = await Token.new();
-            await zTokenInstance.addMinter(instance.address);
+            await tTokenInstance.addMinter(instance.address);
             await initContracts(
                 settingsInstance,
                 cTokenInstance,
                 instance,
-                zTokenInstance,
+                tTokenInstance,
                 consensusInstance,
                 lendingTokenInstance,
                 loansInstance,
