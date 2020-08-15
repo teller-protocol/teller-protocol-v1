@@ -4,7 +4,7 @@ const {
 } = require('./consts');
 const initPlatformSettings = require('../../migrations/utils/init_settings/initPlatformSettings');
 
-const AdminUpgradeabilityProxy = artifacts.require("./base/UpgradeableProxy.sol");
+const UpgradeableProxy = artifacts.require("./base/UpgradeableProxy.sol");
 
 const INITIAL_VALUE = 1;
 const TEST_DEFAULT_VALUE = {
@@ -25,7 +25,7 @@ const createSettingsInstance = async (
 ) => {
     const { from } = Settings.class_defaults
     const settingsInstance = await Settings.new();
-    const proxy = await AdminUpgradeabilityProxy.new(settingsInstance.address, from, '0x')
+    const proxy = await UpgradeableProxy.new(settingsInstance.address, from, '0x')
     const instance = await Settings.at(proxy.address)
     await instance.initialize(from)
 

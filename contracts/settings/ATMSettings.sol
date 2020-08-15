@@ -7,8 +7,8 @@ pragma experimental ABIEncoderV2;
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
-import "../atm/ATMGovernanceFactoryInterface.sol";
-import "./ATMSettingsInterface.sol";
+import "../atm/IATMFactory.sol";
+import "./IATMSettings.sol";
 
 
 /**
@@ -16,15 +16,17 @@ import "./ATMSettingsInterface.sol";
 
     @author develop@teller.finance
  */
-contract ATMSettings is ATMSettingsInterface {
+contract ATMSettings is IATMSettings {
     using Address for address;
     /** Constants */
+
+    address internal constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /* State Variables */
 
     SettingsInterface public settings;
 
-    ATMGovernanceFactoryInterface public atmGovernanceFactory;
+    IATMFactory public atmFactory;
 
     /**
         @notice It represents a mapping to identify whether a ATM is paused or not.
@@ -58,20 +60,20 @@ contract ATMSettings is ATMSettingsInterface {
         @param anAddress address to test.
      */
     modifier withValidATM(address anAddress) {
-        require(atmGovernanceFactory.isATM(anAddress) == true, "ADDRESS_ISNT_ATM");
+        require(atmFactory.isATM(anAddress) == true, "ADDRESS_ISNT_ATM");
         _;
     }
 
     /* Constructor */
 
-    constructor(address atmGovernanceFactoryAddress, address settingsAddress) public {
+    constructor(address atmFactoryAddress, address settingsAddress) public {
         require(
-            atmGovernanceFactoryAddress != address(0x0),
+            atmFactoryAddress != address(0x0),
             "ATM_GOV_FACTORY_MUST_BE_PROVIDED"
         );
         require(settingsAddress != address(0x0), "SETTINGS_MUST_BE_PROVIDED");
 
-        atmGovernanceFactory = ATMGovernanceFactoryInterface(atmGovernanceFactoryAddress);
+        atmFactory = IATMFactory(atmFactoryAddress);
         settings = SettingsInterface(settingsAddress);
     }
 
@@ -132,7 +134,10 @@ contract ATMSettings is ATMSettingsInterface {
         address atmAddress
     ) external withPauserRole() withValidATM(atmAddress) {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
-        require(collateralToken.isContract() == true, "COLL_TOKEN_MUST_BE_CONTRACT");
+        require(
+            collateralToken == ETH_ADDRESS || collateralToken.isContract() == true,
+            "COLL_TOKEN_MUST_BE_CONTRACT"
+        );
         require(
             marketToAtm[borrowedToken][collateralToken] == address(0x0),
             "ATM_TO_MARKET_ALREADY_EXIST"
@@ -155,7 +160,10 @@ contract ATMSettings is ATMSettingsInterface {
         address newAtmAddress
     ) external withPauserRole() withValidATM(newAtmAddress) {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
-        require(collateralToken.isContract() == true, "COLL_TOKEN_MUST_BE_CONTRACT");
+        require(
+            collateralToken == ETH_ADDRESS || collateralToken.isContract() == true,
+            "COLL_TOKEN_MUST_BE_CONTRACT"
+        );
         require(
             marketToAtm[borrowedToken][collateralToken] != address(0x0),
             "ATM_TO_MARKET_NOT_EXIST"
@@ -188,7 +196,10 @@ contract ATMSettings is ATMSettingsInterface {
         withPauserRole()
     {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
-        require(collateralToken.isContract() == true, "COLL_TOKEN_MUST_BE_CONTRACT");
+        require(
+            collateralToken == ETH_ADDRESS || collateralToken.isContract() == true,
+            "COLL_TOKEN_MUST_BE_CONTRACT"
+        );
         require(
             marketToAtm[borrowedToken][collateralToken] != address(0x0),
             "ATM_TO_MARKET_NOT_EXIST"

@@ -1,14 +1,15 @@
 pragma solidity 0.5.17;
 
 // External Libraries
-import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Common
 import "../util/AddressArrayLib.sol";
 import "../util/AddressLib.sol";
+import "../base/TInitializable.sol";
 
 // Contracts
-import "@openzeppelin/contracts/access/roles/SignerRole.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/SignerRole.sol";
 
 // Interfaces
 import "./IATMGovernance.sol";
@@ -18,7 +19,7 @@ import "./IATMGovernance.sol";
     @notice This contract is used to modify Risk Settings, CRA or DataProviders for a specific ATM.
     @author develop@teller.finance
  */
-contract ATMGovernance is SignerRole, IATMGovernance {
+contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
     using AddressArrayLib for address[];
     using AddressLib for address;
     using Address for address;
@@ -44,6 +45,9 @@ contract ATMGovernance is SignerRole, IATMGovernance {
     // Unique CRA - Credit Risk Algorithm github hash to use in this ATM
     string public cra;
 
+    // ATM Governance token address
+    address public atmToken;
+
     /* External Functions */
 
     /**
@@ -54,6 +58,7 @@ contract ATMGovernance is SignerRole, IATMGovernance {
     function addGeneralSetting(bytes32 settingName, uint256 settingValue)
         external
         onlySigner()
+    // TODO Do we need to add isInitialized() (the same for other functions)?
     {
         require(settingValue > 0, "GENERAL_SETTING_MUST_BE_POSITIVE");
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
@@ -233,6 +238,7 @@ contract ATMGovernance is SignerRole, IATMGovernance {
     /**
         @notice Sets the CRA - Credit Risk Algorithm to be used on this specific ATM.
                 CRA is represented by a Github commit hash of the newly proposed algorithm.
+        @param _cra Credit Risk Algorithm github commit hash.
      */
     function setCRA(string calldata _cra) external onlySigner() {
         bytes memory tempEmptyStringTest = bytes(_cra);
@@ -243,6 +249,37 @@ contract ATMGovernance is SignerRole, IATMGovernance {
         );
         cra = _cra;
         emit CRASet(msg.sender, cra);
+    }
+
+    /**
+        @notice Updates this ATM Token address.
+        @param newAtmToken new atm token address. 
+     */
+    function setATMToken(address newAtmToken) external onlySigner() {
+        require(newAtmToken.isContract(), "NEW_ATM_TOKEN_MUST_BE_A_CONTRACT");
+        address oldAtmToken = atmToken;
+        oldAtmToken.requireNotEqualTo(newAtmToken, "NEW_ATM_TOKEN_MUST_BE_PROVIDED");
+
+        atmToken = newAtmToken;
+
+        emit ATMTokenUpdated(msg.sender, oldAtmToken, newAtmToken);
+    }
+
+    /**
+        @notice It initializes this ATM Governance instance.
+        @param atmTokenAddress the ATM token address associated with this ATM Governance.
+        @param ownerAddress the owner address for this ATM Governance.
+     */
+    function initialize(address atmTokenAddress, address ownerAddress)
+        public
+        isNotInitialized()
+    {
+        require(atmTokenAddress.isContract(), "ATM_TOKEN_MUST_BE_A_CONTRACT");
+
+        super.initialize(ownerAddress);
+        TInitializable._initialize();
+
+        atmToken = atmTokenAddress;
     }
 
     /* External Constant functions */
@@ -290,5 +327,12 @@ contract ATMGovernance is SignerRole, IATMGovernance {
      */
     function getCRA() external view returns (string memory) {
         return cra;
+    }
+
+    /**
+        @notice Returns this ATM governance token address.
+     */
+    function getATMToken() external view returns (address) {
+        return atmToken;
     }
 }

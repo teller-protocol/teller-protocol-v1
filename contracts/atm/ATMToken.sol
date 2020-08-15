@@ -2,10 +2,12 @@ pragma solidity 0.5.17;
 
 /* Import */
 
-import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20Mintable.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Burnable.sol";
 import "./ATMTokenInterface.sol";
+
+import "../base/TInitializable.sol";
 
 
 /**
@@ -14,7 +16,13 @@ import "./ATMTokenInterface.sol";
  *  @author develop@teller.finance
  */
 
-contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burnable {
+contract ATMToken is
+    ATMTokenInterface,
+    ERC20Detailed,
+    ERC20Mintable,
+    ERC20Burnable,
+    TInitializable
+{
     /**
      *  @notice ATMToken implements an ERC20 token with a supply cap and a vesting scheduling
      */
@@ -49,21 +57,22 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
     mapping(address => uint256) public vestingsCount;
     mapping(address => uint256) public assignedTokens;
 
-    /* Constructor */
-    constructor(
-        string memory _name,
-        string memory _symbol,
-        uint8 _decimals,
+    /* Functions */
+
+    function initialize(
+        string memory name,
+        string memory symbol,
+        uint8 decimals,
         uint256 cap,
         uint256 maxVestingsPerWallet
-    ) public ERC20Detailed(_name, _symbol, _decimals) {
+    ) public initializer {
         require(cap > 0, "CAP_CANNOT_BE_ZERO");
+        super.initialize(name, symbol, decimals);
         _cap = cap;
         _maxVestingsPerWallet = maxVestingsPerWallet;
         _owner = msg.sender;
     }
 
-    /* Functions */
     /**
      * @notice Returns the cap on the token's total supply
      * @return The supply capped amount

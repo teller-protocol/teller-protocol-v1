@@ -3,7 +3,7 @@ const withData = require("leche").withData;
 const { t } = require("../utils/consts");
 
 // Smart contracts
-const AdminUpgradeabilityProxy = artifacts.require("./base/UpgradeableProxy.sol");
+const UpgradeableProxy = artifacts.require("./base/UpgradeableProxy.sol");
 const UpgradableV1 = artifacts.require("./mock/upgradable/UpgradableV1.sol");
 const UpgradableV2 = artifacts.require("./mock/upgradable/UpgradableV2.sol");
 
@@ -36,7 +36,7 @@ contract("UpgradeableProxyUpgradeToTest", function(accounts) {
             try {
                 // Setup
                 const initData = initAfter ? "0x" : v1InitData;
-                const proxy = await AdminUpgradeabilityProxy.new(v1LibraryInstance.address, admin, initData);
+                const proxy = await UpgradeableProxy.new(v1LibraryInstance.address, admin, initData);
                 const v1 = await UpgradableV1.at(proxy.address);
                 const v2 = await UpgradableV2.at(proxy.address);
 
@@ -74,7 +74,7 @@ contract("UpgradeableProxyUpgradeToTest", function(accounts) {
     }, function(admin, ethORtoken, balance, incrementsToSend, recipient) {
         it(t("proxy", "balance", "Should be able to keep it's ETH and token balance even after an upgrade.", false), async function() {
             // Setup
-            const proxy = await AdminUpgradeabilityProxy.new(v1LibraryInstance.address, admin, v1InitData);
+            const proxy = await UpgradeableProxy.new(v1LibraryInstance.address, admin, v1InitData);
             const v1 = await UpgradableV1.at(proxy.address);
             const v2 = await UpgradableV2.at(proxy.address);
 

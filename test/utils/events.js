@@ -467,7 +467,7 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, settingName, settingValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.signer, sender);
+                    assert.equal(ev.sender, sender);
                     assert.equal(ev.settingName, settingName);
                     assert.equal(ev.settingValue, settingValue);
                 }),
@@ -479,7 +479,7 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, settingName, oldValue, newValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.signer, sender);
+                    assert.equal(ev.sender, sender);
                     assert.equal(ev.settingName, settingName);
                     assert.equal(ev.oldValue, oldValue);
                     assert.equal(ev.newValue, newValue);
@@ -492,7 +492,7 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, settingName, settingValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.signer, sender);
+                    assert.equal(ev.sender, sender);
                     assert.equal(ev.settingName, settingName);
                     assert.equal(ev.settingValue, settingValue);
                 }),
@@ -503,8 +503,8 @@ module.exports = {
             const name = 'AssetMarketSettingAdded';
             return {
                 name: name,
-                emitted: (signer, asset, settingName, settingValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.signer, signer);
+                emitted: (sender, asset, settingName, settingValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
                     assert.equal(ev.asset, asset);
                     assert.equal(ev.settingName, settingName);
                     assert.equal(ev.settingValue, settingValue);
@@ -516,8 +516,8 @@ module.exports = {
             const name = 'AssetMarketSettingRemoved';
             return {
                 name: name,
-                emitted: (signer, asset, settingName, settingValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.signer, signer);
+                emitted: (sender, asset, settingName, settingValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
                     assert.equal(ev.asset, asset);
                     assert.equal(ev.settingName, settingName);
                     assert.equal(ev.oldValue, settingValue);
@@ -529,8 +529,8 @@ module.exports = {
             const name = 'AssetMarketSettingUpdated';
             return {
                 name: name,
-                emitted: (signer, asset, settingName, oldValue, newValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.signer, signer);
+                emitted: (sender, asset, settingName, oldValue, newValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
                     assert.equal(ev.asset, asset);
                     assert.equal(ev.settingName, settingName);
                     assert.equal(ev.oldValue, oldValue);
@@ -543,8 +543,8 @@ module.exports = {
             const name = 'DataProviderAdded';
             return {
                 name: name,
-                emitted: (signer, index, amountDataProviders, dataProvider) => emitted(tx, name, ev => {
-                    assert.equal(ev.signer, signer);
+                emitted: (sender, index, amountDataProviders, dataProvider) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
                     assert.equal(ev.dataTypeIndex, index);
                     assert.equal(ev.amountDataProviders, amountDataProviders);
                     assert.equal(ev.dataProvider, dataProvider);
@@ -556,8 +556,8 @@ module.exports = {
             const name = 'DataProviderUpdated';
             return {
                 name: name,
-                emitted: (signer, dataTypeIndex, providerIndex, oldDataProvider, newDataProvider) => emitted(tx, name, ev => {
-                    assert.equal(ev.signer, signer);
+                emitted: (sender, dataTypeIndex, providerIndex, oldDataProvider, newDataProvider) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
                     assert.equal(ev.dataTypeIndex, dataTypeIndex);
                     assert.equal(ev.dataProviderIndex, providerIndex);
                     assert.equal(ev.oldDataProvider, oldDataProvider);
@@ -570,8 +570,8 @@ module.exports = {
             const name = 'DataProviderRemoved';
             return {
                 name: name,
-                emitted: (signer, dataTypeIndex, dataProviderIndex, dataProvider) => emitted(tx, name, ev => {
-                    assert.equal(ev.signer, signer);
+                emitted: (sender, dataTypeIndex, dataProviderIndex, dataProvider) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
                     assert.equal(ev.dataTypeIndex, dataTypeIndex);
                     assert.equal(ev.dataProviderIndex, dataProviderIndex);
                     assert.equal(ev.dataProvider, dataProvider);
@@ -583,8 +583,8 @@ module.exports = {
             const name = 'CRASet';
             return {
                 name: name,
-                emitted: (signer, cra) => emitted(tx, name, ev => {
-                    assert.equal(ev.signer, signer);
+                emitted: (sender, cra) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
                     assert.equal(ev.craCommitHash.toString(), cra.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
@@ -650,6 +650,20 @@ module.exports = {
                     assert.equal(ev.collateralToken.toString(), collateralToken.toString());
                     assert.equal(ev.oldAtm.toString(), oldAtm.toString());
                     assert.equal(ev.account.toString(), account.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
+    atmFactory: {
+        atmCreated: tx => {
+            const name = 'ATMCreated';
+            return {
+                name: name,
+                emitted: (sender, atm, token) => emitted(tx, name, ev => {
+                    assert.equal(ev.creator, sender);
+                    assert.equal(ev.atmGovernanceAddress, atm);
+                    assert.equal(ev.atmTokenAddress, token);
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };

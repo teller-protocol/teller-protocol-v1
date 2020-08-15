@@ -7,6 +7,7 @@ module.exports = {
     assetSettings: require('./assetSettings'),
     platformSettings: require('./platformSettings'),
     signers: require('./signers'),
+    atms: require('./atms'),
     maxGasLimit: 3500000,
     toTxUrl: ({ tx }) => {
         return `https://www.etherscan.io/tx/${tx}`;

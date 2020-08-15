@@ -2,11 +2,10 @@ const assert = require('assert');
 const DeployerApp = require('./utils/DeployerApp');
 const PoolDeployer = require('./utils/PoolDeployer');
 const initSettings = require('./utils/init_settings');
+const initATMs = require('./utils/init_settings/initATMs');
 
 const ERC20 = artifacts.require("@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol");
-const AdminUpgradeabilityProxy = artifacts.require("./base/UpgradeableProxy.sol");
-
-const Mock = artifacts.require("./mock/util/Mock.sol");
+const UpgradeableProxy = artifacts.require("./base/UpgradeableProxy.sol");
 
 // Official Smart Contracts
 const TDAI = artifacts.require("./base/TDAI.sol");
@@ -21,6 +20,7 @@ const LendingPool = artifacts.require("./base/LendingPool.sol");
 const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 // ATM Smart contracts
+const ATMFactory = artifacts.require("./atm/ATMFactory.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 // External providers
 const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
@@ -39,7 +39,7 @@ module.exports = async function(deployer, network, accounts) {
   const deployerAccountIndex = env.getDefaultAddressIndex().getOrDefault();
   const deployerAccount = accounts[deployerAccountIndex];
   console.log(`Deployer account index is ${deployerAccountIndex} => ${deployerAccount}`);
-  const { maxGasLimit, tokens, chainlink, signers, compound } = networkConfig;
+  const { maxGasLimit, tokens, chainlink, signers, compound, atms } = networkConfig;
   assert(maxGasLimit, `Max gas limit for network ${network} is undefined.`);
 
   // Validations
@@ -49,34 +49,44 @@ module.exports = async function(deployer, network, accounts) {
   const txConfig = { gas: maxGasLimit, from: deployerAccount };
 
   // Creating DeployerApp helper.
-  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, AdminUpgradeabilityProxy, network);
+  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, UpgradeableProxy, network);
   const currentBlockNumber = await web3.eth.getBlockNumber();
 
   await deployerApp.deploys([TDAI, TUSDC], txConfig);
   console.log(`Deployed tokens: TDAI [${TDAI.address}] TUSDC [${TUSDC.address}] `);  
 
-  // ATM Deployments
-  await deployerApp.deploy(ATMGovernance, txConfig); // TODO: add Gnosis multisig as signer/pauser (not the DAO for now)
-
   // Settings Deployments
   await deployerApp.deploy(MarketsState, txConfig);
+  const marketsStateInstance = await MarketsState.deployed();
 
   const settingsInstance = await deployerApp.deployWithUpgradeable('Settings', Settings, txConfig.from, '0x')
-  await settingsInstance.initialize(txConfig.from)
+  await settingsInstance.initialize(txConfig.from);
+  console.log(`Settings Pausable: ${txConfig.from}`);
   await initSettings(
     settingsInstance,
     { ...networkConfig, txConfig, network, currentBlockNumber, web3 },
     { ERC20 },
   );
 
-  const atmGovernanceFactory = await Mock.new(); // TODO Mocking the ATMGovernanceFactory instance for now.
+  await deployerApp.deploy(ATMFactory, txConfig);
+  const atmFactoryInstance = await ATMFactory.deployed();
+  await atmFactoryInstance.initialize(settingsInstance.address, txConfig);
+  console.log(`ATM Governance Factory deployed at: ${atmFactoryInstance.address}`);
+
   await deployerApp.deploy(
     ATMSettings,
-    atmGovernanceFactory.address,
-    Settings.address,
+    atmFactoryInstance.address,
+    settingsInstance.address,
     txConfig
   );
-  console.log(`ATM settings deployed at: ${ATMSettings.address}`);
+  const atmSettingsInstance = await ATMSettings.deployed();
+  console.log(`ATM settings deployed at: ${atmSettingsInstance.address}`);
+
+  await initATMs(
+    { atmFactory: atmFactoryInstance, atmSettings: atmSettingsInstance },
+    { atms, tokens, txConfig, web3 },
+    { ATMGovernance },
+  );
 
   const aggregators = {};
   
@@ -119,21 +129,22 @@ module.exports = async function(deployer, network, accounts) {
     LendingPool,
     InterestConsensus,
     LoanTermsConsensus,
-    Settings,
   };
   const poolDeployer = new PoolDeployer(deployerApp, deployConfig, artifacts);
 
-  const InterestValidator = undefined; // The first version will be undefined (or 0x0).
-
+  const instances = {
+    marketsStateInstance,
+    settingsInstance,
+    atmSettingsInstance,
+    interestValidatorInstance: undefined, // The first version will be undefined (or 0x0).
+  };
   await poolDeployer.deployPool(
     { tokenName: 'DAI', collateralName: 'ETH' },
     {
       Loans: EtherCollateralLoans,
       TToken: TDAI,
-      MarketsState,
-      InterestValidator,
-      ATMSettings,
     },
+    instances,
     txConfig
   );
   await poolDeployer.deployPool(
@@ -141,10 +152,8 @@ module.exports = async function(deployer, network, accounts) {
     {
       Loans: EtherCollateralLoans,
       TToken: TUSDC,
-      MarketsState,
-      InterestValidator,
-      ATMSettings,
     },
+    instances,
     txConfig
   );
 
@@ -153,10 +162,8 @@ module.exports = async function(deployer, network, accounts) {
     {
       Loans: TokenCollateralLoans,
       TToken: TDAI,
-      MarketsState,
-      InterestValidator,
-      ATMSettings,
     },
+    instances,
     txConfig
   );
   await poolDeployer.deployPool(
@@ -164,10 +171,8 @@ module.exports = async function(deployer, network, accounts) {
     {
       Loans: TokenCollateralLoans,
       TToken: TUSDC,
-      MarketsState,
-      InterestValidator,
-      ATMSettings,
     },
+    instances,
     txConfig
   );
 

@@ -30,9 +30,7 @@ contract LoansBaseModifiersMock is EtherCollateralLoans {
         return returnIsSupplyToDebtRatioValid;
     }
 
-    function setLoanStatus(uint256 loanID, TellerCommon.LoanStatus status)
-        external
-    {
+    function setLoanStatus(uint256 loanID, TellerCommon.LoanStatus status) external {
         loans[loanID].status = status;
     }
 

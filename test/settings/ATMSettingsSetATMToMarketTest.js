@@ -2,7 +2,7 @@
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS, createMocks } = require('../utils/consts');
 const { atmSettings } = require('../utils/events');
-const ATMGovernanceFactoryInterfaceEncoder = require('../utils/encoders/ATMGovernanceFactoryInterfaceEncoder');
+const IATMFactoryEncoder = require('../utils/encoders/IATMFactoryEncoder');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 // Mock contracts
@@ -12,7 +12,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
 
 contract('ATMSettingsSetATMToMarketTest', function (accounts) {
-    const atmFactoryInterfaceEncoder = new ATMGovernanceFactoryInterfaceEncoder(web3);
+    const atmFactoryInterfaceEncoder = new IATMFactoryEncoder(web3);
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     const owner = accounts[0];
     let instance;

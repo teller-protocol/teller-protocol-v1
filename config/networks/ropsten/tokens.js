@@ -1,5 +1,7 @@
+const { ETH_ADDRESS } = require("../../consts");
 
 module.exports = {
+    ETH: ETH_ADDRESS,
     // DAI used by Compound.finance
     DAI: '0xc2118d4d90b274016cB7a54c03EF52E6c537D957',
     // USDC used by Compound.finance
