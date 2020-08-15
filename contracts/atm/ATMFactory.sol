@@ -12,6 +12,7 @@ import "../base/UpgradeableProxy.sol";
 // Interfaces
 import "../atm/IATMFactory.sol";
 import "../interfaces/SettingsInterface.sol";
+import "../settings/IATMSettings.sol";
 
 
 /**
@@ -31,10 +32,14 @@ contract ATMFactory is IATMFactory, TInitializable {
      */
     mapping(address => bool) public atms;
 
+    mapping(address => address) public atmTokens;
+
     // List of ATM instances
     address[] public atmsList;
 
     SettingsInterface public settings;
+
+    IATMSettings public atmSettings;
 
     modifier onlyOwner() {
         require(settings.hasPauserRole(msg.sender) == true, "SENDER_ISNT_ALLOWED");
@@ -63,29 +68,8 @@ contract ATMFactory is IATMFactory, TInitializable {
     ) external onlyOwner() isInitialized() returns (address) {
         address owner = msg.sender;
 
-        bytes memory atmTokenInitData = abi.encodeWithSignature(
-            "initialize(string,string,uint8,uint256,uint256,address,address)",
-            name,
-            symbol,
-            decimals,
-            cap,
-            maxVestingsPerWallet,
-            owner, // TODO Change it.
-            owner // TODO Change it.
-        );
-        //address atmSettingsAddress,
-        //address atm
-
-        UpgradeableProxy atmTokenProxy = new UpgradeableProxy(
-            atmTokenLogic,
-            owner,
-            atmTokenInitData
-        );
-        address atmTokenProxyAddress = address(atmTokenProxy);
-
         bytes memory atmGovernanceInitData = abi.encodeWithSignature(
-            "initialize(address,address)",
-            atmTokenProxy,
+            "initialize(address)",
             owner
         );
         UpgradeableProxy atmGovernanceProxy = new UpgradeableProxy(
@@ -95,7 +79,26 @@ contract ATMFactory is IATMFactory, TInitializable {
         );
         address atmGovernanceProxyAddress = address(atmGovernanceProxy);
 
+        bytes memory atmTokenInitData = abi.encodeWithSignature(
+            "initialize(string,string,uint8,uint256,uint256,address,address)",
+            name,
+            symbol,
+            decimals,
+            cap,
+            maxVestingsPerWallet,
+            address(atmSettings),
+            atmGovernanceProxyAddress
+        );
+
+        UpgradeableProxy atmTokenProxy = new UpgradeableProxy(
+            atmTokenLogic,
+            owner,
+            atmTokenInitData
+        );
+        address atmTokenProxyAddress = address(atmTokenProxy);
+
         atms[atmGovernanceProxyAddress] = true;
+        atmTokens[atmGovernanceProxyAddress] = atmTokenProxyAddress;
         atmsList.add(atmGovernanceProxyAddress);
 
         // Emit new ATM created event.
@@ -106,13 +109,16 @@ contract ATMFactory is IATMFactory, TInitializable {
     /**
         @notice It initializes this ATM Governance Factory instance.
         @param settingsAddress settings address.
+        @param atmSettingsAddress the ATM settings address.
      */
-    function initialize(address settingsAddress) external isNotInitialized() {
+    function initialize(address settingsAddress, address atmSettingsAddress) external isNotInitialized() {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
+        require(atmSettingsAddress.isContract(), "ATM_SETTINGS_MUST_BE_A_CONTRACT");
 
         _initialize();
 
         settings = SettingsInterface(settingsAddress);
+        atmSettings = IATMSettings(atmSettingsAddress);
     }
 
     /**
@@ -122,6 +128,18 @@ contract ATMFactory is IATMFactory, TInitializable {
      */
     function isATM(address atmAddress) external view returns (bool) {
         return atms[atmAddress];
+    }
+
+    function getATMToken(address atmAddress) external view returns (address) {
+        return atmTokens[atmAddress];
+    }
+
+    function getATMSettings() external view returns (address) {
+        return address(atmSettings);
+    }
+
+    function getSettings() external view returns (address) {
+        return address(settings);
     }
 
     /**
@@ -147,5 +165,18 @@ contract ATMFactory is IATMFactory, TInitializable {
         settings = SettingsInterface(newSettingsAddress);
 
         emit SettingsUpdated(msg.sender, oldSettingsAddress, newSettingsAddress);
+    }
+
+    function setATMSettings(address newATMSettingsAddress) external onlyOwner() {
+        require(newATMSettingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
+        address oldATMSettingsAddress = address(atmSettings);
+        oldATMSettingsAddress.requireNotEqualTo(
+            newATMSettingsAddress,
+            "NEW_ATM_SETTINGS_NOT_PROVIDED"
+        );
+
+        atmSettings = IATMSettings(newATMSettingsAddress);
+
+        emit ATMSettingsUpdated(msg.sender, oldATMSettingsAddress, newATMSettingsAddress);
     }
 }

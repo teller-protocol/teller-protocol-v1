@@ -32,6 +32,18 @@ interface IATMFactory {
         address newSettings
     );
 
+    /**
+        @notice This event is emitted when the ATM setting is updated.
+        @param sender address that sent the transaction.
+        @param oldATMSettings the old ATM settings address.
+        @param newATMSettings the new ATM settings address.
+     */
+    event ATMSettingsUpdated(
+        address indexed sender,
+        address oldATMSettings,
+        address newATMSettings
+    );
+
     /* State Variables */
 
     /** Modifiers */
@@ -67,6 +79,8 @@ interface IATMFactory {
      */
     function setSettings(address newSettingsAddress) external;
 
+    function setATMSettings(address newATMSettingsAddress) external;
+
     /**
         @notice Tests whether an address is an ATM instance or not.
         @param atmAddress address to test.
@@ -79,4 +93,10 @@ interface IATMFactory {
         @return the list of ATMs.
      */
     function getATMs() external view returns (address[] memory);
+
+    function getATMSettings() external view returns (address);
+
+    function getSettings() external view returns (address);
+
+    function getATMToken(address atmAddress) external view returns (address);
 }
