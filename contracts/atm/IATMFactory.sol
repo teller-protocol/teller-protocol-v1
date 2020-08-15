@@ -32,6 +32,18 @@ interface IATMFactory {
         address newSettings
     );
 
+    /**
+        @notice This event is emitted when the ATM setting is updated.
+        @param sender address that sent the transaction.
+        @param oldATMSettings the old ATM settings address.
+        @param newATMSettings the new ATM settings address.
+     */
+    event ATMSettingsUpdated(
+        address indexed sender,
+        address oldATMSettings,
+        address newATMSettings
+    );
+
     /* State Variables */
 
     /** Modifiers */
@@ -47,6 +59,8 @@ interface IATMFactory {
         @param decimals ATM token decimals 
         @param cap ATM token max cap.
         @param maxVestingsPerWallet max vestings per wallet for the ATM token.
+        @param atmGovernanceLogic the atm governance instance address.
+        @param atmTokenLogic the atm token instance address.
         @return the new ATM governance instance address.
      */
     function createATM(
@@ -54,7 +68,9 @@ interface IATMFactory {
         string calldata symbol,
         uint8 decimals,
         uint256 cap,
-        uint256 maxVestingsPerWallet
+        uint256 maxVestingsPerWallet,
+        address atmGovernanceLogic,
+        address atmTokenLogic
     ) external returns (address);
 
     /**
@@ -62,6 +78,8 @@ interface IATMFactory {
         @param newSettingsAddress the new setting address.
      */
     function setSettings(address newSettingsAddress) external;
+
+    function setATMSettings(address newATMSettingsAddress) external;
 
     /**
         @notice Tests whether an address is an ATM instance or not.
@@ -75,4 +93,10 @@ interface IATMFactory {
         @return the list of ATMs.
      */
     function getATMs() external view returns (address[] memory);
+
+    function getATMSettings() external view returns (address);
+
+    function getSettings() external view returns (address);
+
+    function getATMToken(address atmAddress) external view returns (address);
 }

@@ -2,18 +2,35 @@
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS  } = require('../utils/consts');
 const { atmToken } = require('../utils/events');
+const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
+
+ // Mock contracts
+ const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const ATMToken = artifacts.require("./ATMToken.sol");
 
 contract('ATMTokenSetCapTest', function (accounts) {
+    const atmSettingsEncoder = new IATMSettingsEncoder(web3);
+    let atmSettingsInstance;
+    let atmInstance;
     let instance;
     const daoAgent = accounts[0];
     const daoMember1 = accounts[2];
 
     beforeEach('Setup for each test', async () => {
+        atmSettingsInstance = await Mock.new();
+        atmInstance = await Mock.new();
         instance = await ATMToken.new();
-        await instance.initialize("ATMToken", "ATMT", 18, 10000, 50);
+        await instance.initialize(
+                            "ATMToken",
+                            "ATMT",
+                            18, 
+                            10000, 
+                            50,
+                            atmSettingsInstance.address,
+                            atmInstance.address
+                        );
     });
 
     withData({
@@ -26,6 +43,10 @@ contract('ATMTokenSetCapTest', function (accounts) {
         mustFail
     ) {
         it(t('agent', 'setCap', 'Should or should not be able to set cap correctly', mustFail), async function() {
+            await atmSettingsInstance.givenMethodReturnBool(
+                atmSettingsEncoder.encodeIsATMPaused(),
+                false
+            );
 
             try {
                 // Invocation

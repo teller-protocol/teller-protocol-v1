@@ -39,6 +39,12 @@ interface ATMTokenInterface {
      */
     event RevokeVesting(address beneficiary, uint256 amount, uint256 deadline);
 
+    /**
+    @notice Emitted when a snapshot is created
+    @param id The id of the created snapshot
+    */
+    event Snapshot(uint256 id);
+
     /* External Functions */
 
     /**
@@ -91,4 +97,20 @@ interface ATMTokenInterface {
      *
      */
     function withdrawVested() external;
+
+    /**
+        @notice Returns the balance of an account at the time a snapshot was created
+        @param account The account which is being queried
+        @param snapshotId The id of the snapshot being queried
+     */
+    function balanceOfAt(address account, uint256 snapshotId)
+        external
+        view
+        returns (uint256);
+
+    /**
+        @notice Returns the total supply at the time a snapshot was created
+        @param snapshotId The id of the snapshot being queried
+     */
+    function totalSupplyAt(uint256 snapshotId) external view returns (uint256);
 }

@@ -22,18 +22,6 @@ interface IATMGovernance {
     );
 
     /**
-        @notice Emitted when the ATM Token is updated.
-        @param sender transaction sender address.
-        @param oldAtmToken old ATM token address.
-        @param newAtmToken new ATM token address.
-     */
-    event ATMTokenUpdated(
-        address indexed sender,
-        address indexed oldAtmToken,
-        address indexed newAtmToken
-    );
-
-    /**
         @notice Emitted when an ATM General Setting was updated.
         @param sender transaction sender address.
         @param settingName name of the newly added setting.

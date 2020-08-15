@@ -22,6 +22,7 @@ const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 // ATM Smart contracts
 const ATMFactory = artifacts.require("./atm/ATMFactory.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
+const ATMToken = artifacts.require("./atm/ATMToken.sol");
 // External providers
 const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
 const InverseChainlinkPairAggregator = artifacts.require("./providers/chainlink/InverseChainlinkPairAggregator.sol");
@@ -68,24 +69,26 @@ module.exports = async function(deployer, network, accounts) {
     { ERC20 },
   );
 
-  await deployerApp.deploy(ATMFactory, txConfig);
-  const atmFactoryInstance = await ATMFactory.deployed();
-  await atmFactoryInstance.initialize(settingsInstance.address, txConfig);
-  console.log(`ATM Governance Factory deployed at: ${atmFactoryInstance.address}`);
-
   await deployerApp.deploy(
     ATMSettings,
-    atmFactoryInstance.address,
     settingsInstance.address,
     txConfig
   );
   const atmSettingsInstance = await ATMSettings.deployed();
   console.log(`ATM settings deployed at: ${atmSettingsInstance.address}`);
 
+  const atmFactoryInstance = await deployerApp.deployWithUpgradeable('ATMFactory', ATMFactory, txConfig.from, '0x')
+  await atmFactoryInstance.initialize(
+    settingsInstance.address,
+    atmSettingsInstance.address,
+    txConfig
+  );
+  console.log(`ATM Governance Factory (Proxy) deployed at: ${atmFactoryInstance.address}`);
+
   await initATMs(
     { atmFactory: atmFactoryInstance, atmSettings: atmSettingsInstance },
-    { atms, tokens, txConfig, web3 },
-    { ATMGovernance },
+    { atms, tokens, txConfig, web3, deployerApp },
+    { ATMGovernance, ATMToken },
   );
 
   const aggregators = {};

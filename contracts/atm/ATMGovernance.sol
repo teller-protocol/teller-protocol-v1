@@ -45,9 +45,6 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
     // Unique CRA - Credit Risk Algorithm github hash to use in this ATM
     string public cra;
 
-    // ATM Governance token address
-    address public atmToken;
-
     /* External Functions */
 
     /**
@@ -252,34 +249,12 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
     }
 
     /**
-        @notice Updates this ATM Token address.
-        @param newAtmToken new atm token address. 
-     */
-    function setATMToken(address newAtmToken) external onlySigner() {
-        require(newAtmToken.isContract(), "NEW_ATM_TOKEN_MUST_BE_A_CONTRACT");
-        address oldAtmToken = atmToken;
-        oldAtmToken.requireNotEqualTo(newAtmToken, "NEW_ATM_TOKEN_MUST_BE_PROVIDED");
-
-        atmToken = newAtmToken;
-
-        emit ATMTokenUpdated(msg.sender, oldAtmToken, newAtmToken);
-    }
-
-    /**
         @notice It initializes this ATM Governance instance.
-        @param atmTokenAddress the ATM token address associated with this ATM Governance.
         @param ownerAddress the owner address for this ATM Governance.
      */
-    function initialize(address atmTokenAddress, address ownerAddress)
-        public
-        isNotInitialized()
-    {
-        require(atmTokenAddress.isContract(), "ATM_TOKEN_MUST_BE_A_CONTRACT");
-
-        super.initialize(ownerAddress);
+    function initialize(address ownerAddress) public isNotInitialized() {
+        SignerRole.initialize(ownerAddress);
         TInitializable._initialize();
-
-        atmToken = atmTokenAddress;
     }
 
     /* External Constant functions */
@@ -327,12 +302,5 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
      */
     function getCRA() external view returns (string memory) {
         return cra;
-    }
-
-    /**
-        @notice Returns this ATM governance token address.
-     */
-    function getATMToken() external view returns (address) {
-        return atmToken;
     }
 }

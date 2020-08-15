@@ -1,7 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS, createMocks } = require('../utils/consts');
-const IATMFactoryEncoder = require('../utils/encoders/IATMFactoryEncoder');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 // Mock contracts
@@ -11,19 +10,16 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
 
 contract('ATMSettingsIsATMPausedTest', function (accounts) {
-    const IatmFactoryEncoder = new IATMFactoryEncoder(web3);
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     const owner = accounts[0];
     let instance;
-    let atmFactory;
     let settings;
     let mocks;
     
     beforeEach('Setup for each test', async () => {
         mocks = await createMocks(Mock, 10);
-        atmFactory = await Mock.new();
         settings = await Mock.new();
-        instance = await ATMSettings.new(atmFactory.address, settings.address);
+        instance = await ATMSettings.new(settings.address);
     });
 
     withData({
@@ -32,7 +28,6 @@ contract('ATMSettingsIsATMPausedTest', function (accounts) {
     }, function(previousATMs, atmIndex, expectedResult) {
         it(t('user', 'isATMPaused', 'Should be able to test whether an ATM is paused or not.', false), async function() {
             // Setup
-            await atmFactory.givenMethodReturnBool(IatmFactoryEncoder.encodeIsATM(), true);
             await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeHasPauserRole(), true);
             await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), false);
             for (const previousATMIndex of previousATMs) {

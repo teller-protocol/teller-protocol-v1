@@ -24,8 +24,7 @@ contract('ATMGovernanceAddAssetMarketSettingTest', function (accounts) {
 
     beforeEach('Setup for each test', async () => {
         instance = await ATMGovernance.new();
-        const atmToken = await Mock.new();
-        await instance.initialize(atmToken.address, owner);
+        await instance.initialize(owner);
     });
 
     // Testing values

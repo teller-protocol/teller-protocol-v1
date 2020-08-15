@@ -7,7 +7,6 @@ pragma experimental ABIEncoderV2;
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
-import "../atm/IATMFactory.sol";
 import "./IATMSettings.sol";
 
 
@@ -25,8 +24,6 @@ contract ATMSettings is IATMSettings {
     /* State Variables */
 
     SettingsInterface public settings;
-
-    IATMFactory public atmFactory;
 
     /**
         @notice It represents a mapping to identify whether a ATM is paused or not.
@@ -54,26 +51,11 @@ contract ATMSettings is IATMSettings {
         _;
     }
 
-    /**
-        @notice It checks whether an address is a valid ATM address or not.
-        @dev It throws a require error if the address is not a valid ATM address.
-        @param anAddress address to test.
-     */
-    modifier withValidATM(address anAddress) {
-        require(atmFactory.isATM(anAddress) == true, "ADDRESS_ISNT_ATM");
-        _;
-    }
-
     /* Constructor */
 
-    constructor(address atmFactoryAddress, address settingsAddress) public {
-        require(
-            atmFactoryAddress != address(0x0),
-            "ATM_GOV_FACTORY_MUST_BE_PROVIDED"
-        );
+    constructor(address settingsAddress) public {
         require(settingsAddress != address(0x0), "SETTINGS_MUST_BE_PROVIDED");
 
-        atmFactory = IATMFactory(atmFactoryAddress);
         settings = SettingsInterface(settingsAddress);
     }
 
@@ -83,11 +65,7 @@ contract ATMSettings is IATMSettings {
         @notice It pauses a given ATM.
         @param atmAddress ATM address to pause.
      */
-    function pauseATM(address atmAddress)
-        external
-        withPauserRole()
-        withValidATM(atmAddress)
-    {
+    function pauseATM(address atmAddress) external withPauserRole() {
         require(settings.isPaused() == false, "PLATFORM_IS_ALREADY_PAUSED");
         require(atmPaused[atmAddress] == false, "ATM_IS_ALREADY_PAUSED");
 
@@ -100,11 +78,7 @@ contract ATMSettings is IATMSettings {
         @notice It unpauses a given ATM.
         @param atmAddress ATM address to unpause.
      */
-    function unpauseATM(address atmAddress)
-        external
-        withPauserRole()
-        withValidATM(atmAddress)
-    {
+    function unpauseATM(address atmAddress) external withPauserRole() {
         require(settings.isPaused() == false, "PLATFORM_IS_PAUSED");
         require(atmPaused[atmAddress] == true, "ATM_IS_NOT_PAUSED");
 
@@ -132,7 +106,7 @@ contract ATMSettings is IATMSettings {
         address borrowedToken,
         address collateralToken,
         address atmAddress
-    ) external withPauserRole() withValidATM(atmAddress) {
+    ) external withPauserRole() {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
             collateralToken == ETH_ADDRESS || collateralToken.isContract() == true,
@@ -158,7 +132,7 @@ contract ATMSettings is IATMSettings {
         address borrowedToken,
         address collateralToken,
         address newAtmAddress
-    ) external withPauserRole() withValidATM(newAtmAddress) {
+    ) external withPauserRole() {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
             collateralToken == ETH_ADDRESS || collateralToken.isContract() == true,
