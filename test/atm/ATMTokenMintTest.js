@@ -1,7 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS  } = require('../utils/consts');
-const ATMSettingsInterfaceEncoder = require('../utils/encoders/ATMSettingsInterfaceEncoder');
+const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -10,7 +10,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const ATMToken = artifacts.require("./ATMToken.sol");
 
 contract('ATMTokenMintTest', function (accounts) {
-    const atmSettingsInterfaceEncoder = new ATMSettingsInterfaceEncoder(web3);
+    const atmSettingsEncoder = new IATMSettingsEncoder(web3);
     let atmSettingsInstance;
     let atmInstance;
     let instance;
@@ -44,7 +44,7 @@ contract('ATMTokenMintTest', function (accounts) {
     ) {
         it(t('agent', 'mint', 'Should or should not be able to mint correctly', mustFail), async function() {
             await atmSettingsInstance.givenMethodReturnBool(
-                atmSettingsInterfaceEncoder.encodeIsATMPaused(),
+                atmSettingsEncoder.encodeIsATMPaused(),
                 false
             );
 

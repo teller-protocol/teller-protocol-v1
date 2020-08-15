@@ -3,7 +3,7 @@ const withData = require('leche').withData;
 const { t, NULL_ADDRESS  } = require('../utils/consts');
 const Timer = require('../../scripts/utils/Timer');
 const { atmToken } = require('../utils/events');
-const ATMSettingsInterfaceEncoder = require('../utils/encoders/ATMSettingsInterfaceEncoder');
+const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 
  // Mock contracts
  const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -12,7 +12,7 @@ const ATMSettingsInterfaceEncoder = require('../utils/encoders/ATMSettingsInterf
 const ATMToken = artifacts.require("./ATMToken.sol");
 
 contract('ATMTokenWithdrawVestedTest', function (accounts) {
-    const atmSettingsInterfaceEncoder = new ATMSettingsInterfaceEncoder(web3);
+    const atmSettingsEncoder = new IATMSettingsEncoder(web3);
     let atmSettingsInstance;
     let atmInstance;
     let instance;
@@ -54,7 +54,7 @@ contract('ATMTokenWithdrawVestedTest', function (accounts) {
         // Setup 
         await instance.mintVesting(daoMember2, amount, cliff, vestingPeriod, { from: daoAgent });
         await atmSettingsInstance.givenMethodReturnBool(
-            atmSettingsInterfaceEncoder.encodeIsATMPaused(),
+            atmSettingsEncoder.encodeIsATMPaused(),
             false
         );
             

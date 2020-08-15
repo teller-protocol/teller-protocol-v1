@@ -22,6 +22,7 @@ const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 // ATM Smart contracts
 const ATMFactory = artifacts.require("./atm/ATMFactory.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
+const ATMToken = artifacts.require("./atm/ATMToken.sol");
 // External providers
 const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
 const InverseChainlinkPairAggregator = artifacts.require("./providers/chainlink/InverseChainlinkPairAggregator.sol");
@@ -84,8 +85,8 @@ module.exports = async function(deployer, network, accounts) {
 
   await initATMs(
     { atmFactory: atmFactoryInstance, atmSettings: atmSettingsInstance },
-    { atms, tokens, txConfig, web3 },
-    { ATMGovernance },
+    { atms, tokens, txConfig, web3, deployerApp },
+    { ATMGovernance, ATMToken },
   );
 
   const aggregators = {};

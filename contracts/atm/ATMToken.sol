@@ -9,7 +9,7 @@ import "./ATMTokenInterface.sol";
 
 import "../base/TInitializable.sol";
 import "@openzeppelin/contracts/utils/Arrays.sol";
-import "../settings/ATMSettingsInterface.sol";
+import "../settings/IATMSettings.sol";
 
 
 /**
@@ -56,7 +56,7 @@ contract ATMToken is
     address private _owner;
     Snapshots private _totalSupplySnapshots;
     uint256 private _currentSnapshotId;
-    ATMSettingsInterface public settings;
+    IATMSettings public settings;
     address public atmAddress;
 
     /* Structs */
@@ -95,7 +95,7 @@ contract ATMToken is
         _cap = cap;
         _maxVestingsPerWallet = maxVestingsPerWallet;
         _owner = msg.sender;
-        settings = ATMSettingsInterface(atmSettingsAddress);
+        settings = IATMSettings(atmSettingsAddress);
         atmAddress = atm;
     }
 

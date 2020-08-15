@@ -47,6 +47,8 @@ interface IATMFactory {
         @param decimals ATM token decimals 
         @param cap ATM token max cap.
         @param maxVestingsPerWallet max vestings per wallet for the ATM token.
+        @param atmGovernanceLogic the atm governance instance address.
+        @param atmTokenLogic the atm token instance address.
         @return the new ATM governance instance address.
      */
     function createATM(
@@ -54,7 +56,9 @@ interface IATMFactory {
         string calldata symbol,
         uint8 decimals,
         uint256 cap,
-        uint256 maxVestingsPerWallet
+        uint256 maxVestingsPerWallet,
+        address atmGovernanceLogic,
+        address atmTokenLogic
     ) external returns (address);
 
     /**
