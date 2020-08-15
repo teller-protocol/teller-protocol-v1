@@ -2,7 +2,6 @@
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS, createMocks } = require('../utils/consts');
 const { atmSettings } = require('../utils/events');
-const IATMFactoryEncoder = require('../utils/encoders/IATMFactoryEncoder');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 // Mock contracts
@@ -12,33 +11,27 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
 
 contract('ATMSettingsPauseATMTest', function (accounts) {
-    const atmFactoryInterfaceEncoder = new IATMFactoryEncoder(web3);
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     const owner = accounts[0];
     let instance;
-    let atmFactory;
     let settings;
     let mocks;
     
     beforeEach('Setup for each test', async () => {
         mocks = await createMocks(Mock, 10);
-        atmFactory = await Mock.new();
         settings = await Mock.new();
-        instance = await ATMSettings.new(atmFactory.address, settings.address);
+        instance = await ATMSettings.new(settings.address);
     });
 
     withData({
         _1_basic: [[], 0, 1, true, true, false, undefined, false],
         _2_basic_previous_atms: [[1, 2, 3], 5, 1, true, true, false, undefined, false],
-        _3_invalid_atm: [[], 0, 1, false, true, false, 'ADDRESS_ISNT_ATM', true],
-        _4_invalid_atm_previous: [[1, 5, 3], 0, 1, false, true, false, 'ADDRESS_ISNT_ATM', true],
-        _5_sender_not_pauser_role: [[], 0, 1, true, false, false, 'SENDER_HASNT_PAUSER_ROLE', true],
-        _6_platform_already_paused: [[], 0, 1, true, true, true, 'PLATFORM_IS_ALREADY_PAUSED', true],
-        _7_atm_already_paused: [[1, 2], 2, 1, true, true, false, 'ATM_IS_ALREADY_PAUSED', true],
+        _3_sender_not_pauser_role: [[], 0, 1, true, false, false, 'SENDER_HASNT_PAUSER_ROLE', true],
+        _4_platform_already_paused: [[], 0, 1, true, true, true, 'PLATFORM_IS_ALREADY_PAUSED', true],
+        _5_atm_already_paused: [[1, 2], 2, 1, true, true, false, 'ATM_IS_ALREADY_PAUSED', true],
     }, function(previousATMs, atmIndex, senderIndex, encodeIsATM, encodeHasPauserRole, encodeIsPaused, expectedErrorMessage, mustFail) {
         it(t('user', 'pauseATM', 'Should (or not) be able to pause an ATM.', mustFail), async function() {
             // Setup
-            await atmFactory.givenMethodReturnBool(atmFactoryInterfaceEncoder.encodeIsATM(), true);
             await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeHasPauserRole(), true);
             await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), false);
             for (const previousATMIndex of previousATMs) {
@@ -46,7 +39,6 @@ contract('ATMSettingsPauseATMTest', function (accounts) {
             }
             const sender = accounts[senderIndex];
             const atmAddress = atmIndex === -1 ? NULL_ADDRESS : mocks[atmIndex];
-            await atmFactory.givenMethodReturnBool(atmFactoryInterfaceEncoder.encodeIsATM(), encodeIsATM);
             await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeHasPauserRole(), encodeHasPauserRole);
             await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), encodeIsPaused);
 
