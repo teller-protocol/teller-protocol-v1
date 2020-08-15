@@ -2,6 +2,9 @@
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
 
+// Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
+
 // Smart contracts
 const ATMToken = artifacts.require('./ATMToken.sol');
 
@@ -22,8 +25,18 @@ contract('ATMTokenInitializeTest', function (accounts) {
         it(t('user', 'initialize', 'Should or should not be able to create a new instance.', mustFail), async function() {
             // Setup
             const instance = await ATMToken.new();
+            const atmSettingsInstance = await Mock.new();
+            const atmInstance = await Mock.new()
             try {
-                const result = await instance.initialize(name, symbol, decimals, cap, maxVestings);
+                const result = await instance.initialize(
+                                                name,
+                                                symbol,
+                                                decimals,
+                                                cap,
+                                                maxVestings,
+                                                atmSettingsInstance.address,
+                                                atmInstance.address
+                                            );
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');

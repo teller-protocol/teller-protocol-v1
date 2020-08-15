@@ -3,11 +3,18 @@ const withData = require('leche').withData;
 const { t, NULL_ADDRESS  } = require('../utils/consts');
 const Timer = require('../../scripts/utils/Timer');
 const { atmToken } = require('../utils/events');
+const ATMSettingsInterfaceEncoder = require('../utils/encoders/ATMSettingsInterfaceEncoder');
+
+ // Mock contracts
+ const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const ATMToken = artifacts.require("./ATMToken.sol");
 
 contract('ATMTokenWithdrawVestedTest', function (accounts) {
+    const atmSettingsInterfaceEncoder = new ATMSettingsInterfaceEncoder(web3);
+    let atmSettingsInstance;
+    let atmInstance;
     let instance;
     const daoAgent = accounts[0];
     const daoMember1 = accounts[2];
@@ -15,8 +22,18 @@ contract('ATMTokenWithdrawVestedTest', function (accounts) {
     const timer = new Timer(web3);
 
     beforeEach('Setup for each test', async () => {
+        atmSettingsInstance = await Mock.new();
+        atmInstance = await Mock.new();
         instance = await ATMToken.new();
-        await instance.initialize("ATMToken", "ATMT", 18, 10000, 50);
+        await instance.initialize(
+                            "ATMToken",
+                            "ATMT",
+                            18,
+                            10000,
+                            50,
+                            atmSettingsInstance.address,
+                            atmInstance.address
+                        );
     });
 
     withData({
@@ -36,6 +53,10 @@ contract('ATMTokenWithdrawVestedTest', function (accounts) {
 
         // Setup 
         await instance.mintVesting(daoMember2, amount, cliff, vestingPeriod, { from: daoAgent });
+        await atmSettingsInstance.givenMethodReturnBool(
+            atmSettingsInterfaceEncoder.encodeIsATMPaused(),
+            false
+        );
             
             try {
                 // Invocation
