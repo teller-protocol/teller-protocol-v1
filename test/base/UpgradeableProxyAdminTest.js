@@ -3,7 +3,7 @@ const withData = require("leche").withData;
 const { t } = require("../utils/consts");
 
 // Smart contracts
-const AdminUpgradeabilityProxy = artifacts.require("./base/UpgradeableProxy.sol");
+const UpgradeableProxy = artifacts.require("./base/UpgradeableProxy.sol");
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -20,7 +20,7 @@ contract("UpgradeableProxyAdminTest", function(accounts) {
     }, function(caller, admin) {
         it(t("user", "admin", "Should be able to get the current admin.", false), async function() {
             // Setup
-            const proxy = await AdminUpgradeabilityProxy.new(library.address, admin, '0x');
+            const proxy = await UpgradeableProxy.new(library.address, admin, '0x');
 
             // Invocation
             const proxyAdmin = await proxy.admin.call({ from: caller })

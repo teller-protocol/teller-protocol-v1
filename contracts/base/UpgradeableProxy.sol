@@ -1,5 +1,6 @@
-import "@openzeppelin/upgrades/contracts/upgradeability/AdminUpgradeabilityProxy.sol";
+pragma solidity 0.5.17;
 
+import "@openzeppelin/upgrades/contracts/upgradeability/AdminUpgradeabilityProxy.sol";
 
 contract UpgradeableProxy is AdminUpgradeabilityProxy {
     /**

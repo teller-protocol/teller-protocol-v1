@@ -1,6 +1,6 @@
 const assert = require('assert');
 const DeployerApp = require('./utils/DeployerApp');
-const AdminUpgradeabilityProxy = artifacts.require("./base/UpgradeableProxy.sol");
+const UpgradeableProxy = artifacts.require("./base/UpgradeableProxy.sol");
 
 // Mock Smart Contracts
 const DAIMock = artifacts.require("./mock/token/DAIMock.sol");
@@ -26,7 +26,7 @@ module.exports = async function(deployer, network, accounts) {
   const txConfig = { gas: maxGasLimit, from: deployerAccount };
 
   // Creating DeployerApp helper.
-  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, AdminUpgradeabilityProxy, network);
+  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, UpgradeableProxy, network);
   
   await deployerApp.deployMockIfWith('DAI', DAIMock, txConfig);
   await deployerApp.deployMockIfWith('USDC', USDCMock, txConfig);

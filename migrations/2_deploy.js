@@ -5,7 +5,7 @@ const initSettings = require('./utils/init_settings');
 const initATMs = require('./utils/init_settings/initATMs');
 
 const ERC20 = artifacts.require("@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol");
-const AdminUpgradeabilityProxy = artifacts.require("./base/UpgradeableProxy.sol");
+const UpgradeableProxy = artifacts.require("./base/UpgradeableProxy.sol");
 
 // Official Smart Contracts
 const TDAI = artifacts.require("./base/TDAI.sol");
@@ -49,7 +49,7 @@ module.exports = async function(deployer, network, accounts) {
   const txConfig = { gas: maxGasLimit, from: deployerAccount };
 
   // Creating DeployerApp helper.
-  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, AdminUpgradeabilityProxy, network);
+  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, UpgradeableProxy, network);
   const currentBlockNumber = await web3.eth.getBlockNumber();
 
   await deployerApp.deploys([TDAI, TUSDC], txConfig);
