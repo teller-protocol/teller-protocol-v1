@@ -1,7 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS } = require('../utils/consts');
-const ATMSettingsInterfaceEncoder = require('../utils/encoders/ATMSettingsInterfaceEncoder');
+const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 const MarketsStateInterfaceEncoder = require('../utils/encoders/MarketsStateInterfaceEncoder');
 const ATMGovernanceInterfaceEncoder = require('../utils/encoders/ATMGovernanceInterfaceEncoder');
 
@@ -12,7 +12,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 
 contract('LoansBaseIsSupplyToDebtRatioValidTest', function (accounts) {
-    const atmSettingsInterfaceEncoder = new ATMSettingsInterfaceEncoder(web3);
+    const IAtmSettingsEncoder = new IATMSettingsEncoder(web3);
     const marketsStateInterfaceEncoder = new MarketsStateInterfaceEncoder(web3);
     const atmGovernanceInterfaceEncoder = new ATMGovernanceInterfaceEncoder(web3);
     let instance;
@@ -60,7 +60,7 @@ contract('LoansBaseIsSupplyToDebtRatioValidTest', function (accounts) {
             const atmGovernanceInstance = await Mock.new();
             const atmGovernanceAddress = useEmptyATMGovernanceAddress ? NULL_ADDRESS : atmGovernanceInstance.address;
             await atmSettingsInstance.givenMethodReturnAddress(
-                atmSettingsInterfaceEncoder.encodeGetATMForMarket(),
+                IAtmSettingsEncoder.encodeGetATMForMarket(),
                 atmGovernanceAddress,
             );
             await atmGovernanceInstance.givenMethodReturnUint(

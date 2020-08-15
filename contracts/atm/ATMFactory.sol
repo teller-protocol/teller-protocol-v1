@@ -1,7 +1,6 @@
 pragma solidity 0.5.17;
 
 // External Libraries
-//import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Common
 import "./ATMGovernance.sol";
@@ -10,12 +9,11 @@ import "../base/TInitializable.sol";
 import "../base/UpgradeableProxy.sol";
 
 // Contracts
-//import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/SignerRole.sol";
 import "../atm/ATMToken.sol";
 
 // Interfaces
 import "./IATMGovernance.sol";
-import "../atm/ATMGovernanceFactoryInterface.sol";
+import "../atm/IATMFactory.sol";
 import "../interfaces/SettingsInterface.sol";
 
 
@@ -23,7 +21,7 @@ import "../interfaces/SettingsInterface.sol";
     @notice This contract will create upgradeable ATM instances.
     @author develop@teller.finance
  */
-contract ATMGovernanceFactory is ATMGovernanceFactoryInterface, TInitializable {
+contract ATMFactory is IATMFactory, TInitializable {
     using AddressArrayLib for address[];
     using AddressLib for address;
     using Address for address;
@@ -101,6 +99,18 @@ contract ATMGovernanceFactory is ATMGovernanceFactoryInterface, TInitializable {
         emit ATMCreated(msg.sender, atmGovernanceProxyAddress, atmTokenProxyAddress);
     }
 
+     /**
+        @notice It initializes this ATM Governance Factory instance.
+        @param settingsAddress settings address.
+     */
+    function initialize(address settingsAddress) external isNotInitialized() {
+        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
+
+        _initialize();
+
+        settings = SettingsInterface(settingsAddress);
+    }
+
     /**
         @notice Tests whether an address is an ATM instance or not.
         @param atmAddress address to test.
@@ -116,18 +126,6 @@ contract ATMGovernanceFactory is ATMGovernanceFactoryInterface, TInitializable {
      */
     function getATMs() external view returns (address[] memory) {
         return atmsList;
-    }
-
-    /**
-        @notice It initializes this ATM Governance Factory instance.
-        @param settingsAddress settings address.
-     */
-    function initialize(address settingsAddress) external isNotInitialized() {
-        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
-
-        _initialize();
-
-        settings = SettingsInterface(settingsAddress);
     }
 
     /**

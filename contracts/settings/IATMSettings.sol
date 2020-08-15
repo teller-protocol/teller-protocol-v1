@@ -10,7 +10,7 @@ pragma solidity 0.5.17;
     @notice It manages the settings for the ATMs.
     @author develop@teller.finance
  */
-interface ATMSettingsInterface {
+interface IATMSettings {
     /** Events */
 
     /**

@@ -7,8 +7,8 @@ pragma experimental ABIEncoderV2;
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
-import "../atm/ATMGovernanceFactoryInterface.sol";
-import "./ATMSettingsInterface.sol";
+import "../atm/IATMFactory.sol";
+import "./IATMSettings.sol";
 
 
 /**
@@ -16,7 +16,7 @@ import "./ATMSettingsInterface.sol";
 
     @author develop@teller.finance
  */
-contract ATMSettings is ATMSettingsInterface {
+contract ATMSettings is IATMSettings {
     using Address for address;
     /** Constants */
 
@@ -26,7 +26,7 @@ contract ATMSettings is ATMSettingsInterface {
 
     SettingsInterface public settings;
 
-    ATMGovernanceFactoryInterface public atmGovernanceFactory;
+    IATMFactory public atmFactory;
 
     /**
         @notice It represents a mapping to identify whether a ATM is paused or not.
@@ -60,20 +60,20 @@ contract ATMSettings is ATMSettingsInterface {
         @param anAddress address to test.
      */
     modifier withValidATM(address anAddress) {
-        require(atmGovernanceFactory.isATM(anAddress) == true, "ADDRESS_ISNT_ATM");
+        require(atmFactory.isATM(anAddress) == true, "ADDRESS_ISNT_ATM");
         _;
     }
 
     /* Constructor */
 
-    constructor(address atmGovernanceFactoryAddress, address settingsAddress) public {
+    constructor(address atmFactoryAddress, address settingsAddress) public {
         require(
-            atmGovernanceFactoryAddress != address(0x0),
+            atmFactoryAddress != address(0x0),
             "ATM_GOV_FACTORY_MUST_BE_PROVIDED"
         );
         require(settingsAddress != address(0x0), "SETTINGS_MUST_BE_PROVIDED");
 
-        atmGovernanceFactory = ATMGovernanceFactoryInterface(atmGovernanceFactoryAddress);
+        atmFactory = IATMFactory(atmFactoryAddress);
         settings = SettingsInterface(settingsAddress);
     }
 
