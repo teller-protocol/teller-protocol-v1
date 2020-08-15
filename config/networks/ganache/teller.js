@@ -5,7 +5,7 @@ module.exports = {
     MarketsState: '0x4a35A40398a62EB9AED8c685B1939179479CBA71',
     Settings: '0xb0033d3C700D7a9612f7AEf6ed2DC1CC0De2c774',
     Settings_Proxy: '0xcf0E4520FC68EbA1F18Cbb1Bb0998132E6033068',
-    ATMGovernanceFactory: '0xdF654eDcEa3AD6Eaac1bBd7Cdad7992035aa7c3f',
+    ATMFactory: '0xdF654eDcEa3AD6Eaac1bBd7Cdad7992035aa7c3f',
     ATMSettings: '0xa45cE49B98e8d8bdd5ba865d09e74D3aa20990b0',
     ChainlinkPairAggregator_DAI_ETH: '0xE27F5E8bc1D23ba06F44032C5Be3c7ea05c792A1',
     ChainlinkPairAggregator_USDC_ETH: '0x5A20697c77aC6234c687C88a7119e9A2BB3e6674',

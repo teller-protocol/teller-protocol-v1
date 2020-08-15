@@ -16,7 +16,7 @@ import "../interfaces/PairAggregatorInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
-import "../settings/ATMSettingsInterface.sol";
+import "../settings/IATMSettings.sol";
 import "../atm/IATMGovernance.sol";
 
 
@@ -55,7 +55,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
 
     LoanTermsConsensusInterface public loanTermsConsensus;
 
-    ATMSettingsInterface public atmSettings;
+    IATMSettings public atmSettings;
 
     mapping(address => uint256[]) public borrowerLoans;
 
@@ -488,7 +488,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         priceOracle = priceOracleAddress;
         lendingPool = LendingPoolInterface(lendingPoolAddress);
         loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
-        atmSettings = ATMSettingsInterface(atmSettingsAddress);
+        atmSettings = IATMSettings(atmSettingsAddress);
     }
 
     /**

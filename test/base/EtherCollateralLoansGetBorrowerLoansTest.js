@@ -7,7 +7,7 @@ const {
 } = require('../utils/consts');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
 const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
-const ATMSettingsInterfaceEncoder = require('../utils/encoders/ATMSettingsInterfaceEncoder');
+const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
@@ -20,7 +20,7 @@ const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 
 contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
-    const atmSettingsInterfaceEncoder = new ATMSettingsInterfaceEncoder(web3);
+    const IAtmSettingsEncoder = new IATMSettingsEncoder(web3);
     let instance;
     let loanTermsConsInstance;
     let lendingPoolInstance;
@@ -75,7 +75,7 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
 
         const atmForMarketInstance = await Mock.new();
         atmSettingsInstance.givenMethodReturnAddress(
-            atmSettingsInterfaceEncoder.encodeGetATMForMarket(),
+            IAtmSettingsEncoder.encodeGetATMForMarket(),
             atmForMarketInstance.address
         );
     });

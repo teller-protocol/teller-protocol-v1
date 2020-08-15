@@ -5,7 +5,7 @@ pragma solidity 0.5.17;
     @notice This interface defines the functions to create the ATM instances.
     @author develop@teller.finance
  */
-interface ATMGovernanceFactoryInterface {
+interface IATMFactory {
     /** Events */
 
     /**

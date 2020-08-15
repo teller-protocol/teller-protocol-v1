@@ -655,4 +655,18 @@ module.exports = {
             };
         },
     },
+    atmFactory: {
+        atmCreated: tx => {
+            const name = 'ATMCreated';
+            return {
+                name: name,
+                emitted: (sender, settingName, settingValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.settingName, settingName);
+                    assert.equal(ev.settingValue, settingValue);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
 };
