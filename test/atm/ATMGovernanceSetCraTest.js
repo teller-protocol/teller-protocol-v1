@@ -4,7 +4,6 @@ const { t } = require('../utils/consts');
 const { atmGovernance } = require('../utils/events');
 
 // Mock contracts
-const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
@@ -15,8 +14,7 @@ contract('ATMGovernanceSetCraTest', function (accounts) {
 
     beforeEach('Setup for each test', async () => {
         instance = await ATMGovernance.new();
-        const atmToken = await Mock.new();
-        await instance.initialize(atmToken.address, owner);
+        await instance.initialize(owner);
     });
 
     // Testing values

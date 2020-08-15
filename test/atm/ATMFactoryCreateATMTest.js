@@ -3,6 +3,9 @@ const withData = require("leche").withData;
 const { t } = require("../utils/consts");
 const { atmFactory } = require('../utils/events');
 
+// Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
+
 // Smart contracts
 const ATMFactory = artifacts.require("./atm/ATMFactory.sol");
 const Settings = artifacts.require("./base/Settings.sol");
@@ -19,7 +22,8 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
         const settings = await Settings.new();
         await settings.initialize(admin);
         instance = await ATMFactory.new();
-        await instance.initialize(settings.address);
+        const atmSettings = await Mock.new();
+        await instance.initialize(settings.address, atmSettings.address);
     });
 
     withData({
@@ -30,6 +34,8 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
         it(t("admin", "createATM", "Should be able to create an ATM.", mustFail), async function() {
             // Setup
             const sender = accounts[senderIndex];
+            const atmToken = await Mock.new();
+            const atmGovernance = await Mock.new();
             try {
                 
                 // Invocation 
@@ -38,8 +44,10 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
                     symbol,
                     decimals,
                     cap,
-                    maxVesting
-                    , {from : sender }
+                    maxVesting,
+                    atmGovernance.address,
+                    atmToken.address,
+                    {from : sender }
                 );
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
@@ -53,16 +61,14 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
                 const isATM = await instance.isATM(newATM);
                 assert(isATM);
 
-                // Validating ATM Token instance creation
-                const atmInstance = await ATMGovernance.at(newATM);
-                const atmToken = await atmInstance.getATMToken();
-
                 // Validating events were emitted
+                const atmTokenExpected = await instance.getATMToken(newATM);
                 atmFactory
                     .atmCreated(result)
-                    .emitted(sender, newATM, atmToken);
+                    .emitted(sender, newATM, atmTokenExpected);
                 
             } catch (error) {
+                console.log(error);
                 assert(mustFail);
                 assert(error);
                 assert.equal(error.reason, expectedErrorMessage);
