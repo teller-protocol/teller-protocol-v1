@@ -12,17 +12,25 @@ class PoolDeployer {
 
 PoolDeployer.prototype.deployPool = async function(
     { tokenName, collateralName, aggregatorName = `${tokenName.toUpperCase()}_${collateralName.toUpperCase()}`},
-    { Loans, TToken, MarketsState, InterestValidator, ATMSettings },
+    { Loans, TToken },
+    instances,
     txConfig
 ) {
+    const {
+        marketsStateInstance,
+        settingsInstance,
+        atmSettingsInstance,
+        interestValidatorInstance,
+    } = instances;
+
     assert(aggregatorName, 'Aggregator name is undefined.');
     assert(tokenName, 'Token name is undefined.');
     assert(collateralName, 'Collateral token name is undefined.');
     const tTokenInstance = await TToken.deployed();
     const tTokenName = await tTokenInstance.symbol();
     console.log(`Deploying pool (collateral ${collateralName}) for token ${tokenName}...`);
-    console.log(`Using MarketsState address ${MarketsState.address}.`);
-    console.log(`Using ATMSettings address ${ATMSettings.address}.`);
+    console.log(`Using MarketsState address ${marketsStateInstance.address}.`);
+    console.log(`Using ATMSettings address ${atmSettingsInstance.address}.`);
     const {
         tokens,
         aggregators,
@@ -47,12 +55,7 @@ PoolDeployer.prototype.deployPool = async function(
         InterestConsensus,
         Lenders,
         LoanTermsConsensus,
-        Settings,
     } = this.artifacts;
-
-    const marketsStateInstance = await MarketsState.deployed();
-    const settingsInstance = await Settings.deployed();
-    const atmSettingsInstance = await ATMSettings.deployed();
 
     // Upgradable proxy contract, proxy admin address
     const upgradableArgs = [ txConfig.from, '0x' ]
@@ -78,7 +81,7 @@ PoolDeployer.prototype.deployPool = async function(
     const loansInstance = await this.deployer.deployWithUpgradeable(contractName, Loans, ...upgradableArgs, txConfig);
     loansInstance.contractName = contractName
 
-    const interestValidatorAddress = InterestValidator === undefined ? NULL_ADDRESS : InterestValidator.address;
+    const interestValidatorAddress = interestValidatorInstance === undefined ? NULL_ADDRESS : interestValidatorInstance.address;
     console.log(`Lending pool is using interest validator ${interestValidatorAddress}.`)
 
     await lendingPoolInstance.initialize(

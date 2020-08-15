@@ -57,6 +57,7 @@ module.exports = async function(deployer, network, accounts) {
 
   // Settings Deployments
   await deployerApp.deploy(MarketsState, txConfig);
+  const marketsStateInstance = await MarketsState.deployed();
 
   const settingsInstance = await deployerApp.deployWithUpgradeable('Settings', Settings, txConfig.from, '0x')
   await settingsInstance.initialize(txConfig.from);
@@ -128,21 +129,22 @@ module.exports = async function(deployer, network, accounts) {
     LendingPool,
     InterestConsensus,
     LoanTermsConsensus,
-    Settings,
   };
   const poolDeployer = new PoolDeployer(deployerApp, deployConfig, artifacts);
 
-  const InterestValidator = undefined; // The first version will be undefined (or 0x0).
-
+  const instances = {
+    marketsStateInstance,
+    settingsInstance,
+    atmSettingsInstance,
+    interestValidatorInstance: undefined, // The first version will be undefined (or 0x0).
+  };
   await poolDeployer.deployPool(
     { tokenName: 'DAI', collateralName: 'ETH' },
     {
       Loans: EtherCollateralLoans,
       TToken: TDAI,
-      MarketsState,
-      InterestValidator,
-      ATMSettings,
     },
+    instances,
     txConfig
   );
   await poolDeployer.deployPool(
@@ -150,10 +152,8 @@ module.exports = async function(deployer, network, accounts) {
     {
       Loans: EtherCollateralLoans,
       TToken: TUSDC,
-      MarketsState,
-      InterestValidator,
-      ATMSettings,
     },
+    instances,
     txConfig
   );
 
@@ -162,10 +162,8 @@ module.exports = async function(deployer, network, accounts) {
     {
       Loans: TokenCollateralLoans,
       TToken: TDAI,
-      MarketsState,
-      InterestValidator,
-      ATMSettings,
     },
+    instances,
     txConfig
   );
   await poolDeployer.deployPool(
@@ -173,10 +171,8 @@ module.exports = async function(deployer, network, accounts) {
     {
       Loans: TokenCollateralLoans,
       TToken: TUSDC,
-      MarketsState,
-      InterestValidator,
-      ATMSettings,
     },
+    instances,
     txConfig
   );
 
