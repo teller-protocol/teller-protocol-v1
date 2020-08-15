@@ -103,11 +103,7 @@ contract ATMToken is
      * @notice Returns the cap on the token's total supply
      * @return The supply capped amount
      */
-    function cap() 
-        external
-        view
-        returns (uint256)
-    {
+    function cap() external view returns (uint256) {
         return _cap;
     }
 
@@ -115,13 +111,7 @@ contract ATMToken is
      * @notice Sets a new cap on the token's total supply.
      * @param newCap The new capped amount of tokens
      */
-    function setCap(
-        uint256 newCap
-    )
-        external
-        onlyOwner()
-        whenNotPaused()
-    {
+    function setCap(uint256 newCap) external onlyOwner() whenNotPaused() {
         _cap = newCap;
         emit NewCap(_cap);
     }
@@ -132,10 +122,7 @@ contract ATMToken is
      * @param amount The amount of tokens to mint
      * @return true if successful
      */
-    function mint(
-        address account,
-        uint256 amount
-    ) 
+    function mint(address account, uint256 amount)
         public
         onlyOwner()
         whenNotPaused()
@@ -171,11 +158,7 @@ contract ATMToken is
         uint256 amount,
         uint256 cliff,
         uint256 vestingTime
-    ) 
-        public
-        onlyOwner()
-        whenNotPaused()
-    {
+    ) public onlyOwner() whenNotPaused() {
         require(account != address(0x0), "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED");
         require(vestingsCount[account] < _maxVestingsPerWallet, "MAX_VESTINGS_REACHED");
         _beforeTokenTransfer(address(0x0), account, amount);
@@ -203,10 +186,7 @@ contract ATMToken is
      * @param vestingId The Id of the vesting being revoked
      *
      */
-    function revokeVesting(
-        address account,
-        uint256 vestingId
-    ) 
+    function revokeVesting(address account, uint256 vestingId)
         public
         onlyOwner()
         whenNotPaused()
@@ -235,10 +215,7 @@ contract ATMToken is
      *  @return true if successful
      *
      */
-    function withdrawVested() 
-        public
-        whenNotPaused()
-    {
+    function withdrawVested() public whenNotPaused() {
         require(assignedTokens[msg.sender] > 0, "ACCOUNT_DOESNT_HAVE_VESTING");
 
         uint256 transferableTokens = _transferableTokens(msg.sender, block.timestamp);
@@ -401,5 +378,4 @@ contract ATMToken is
         snapshots.ids.push(currentId);
         snapshots.values.push(currentValue);
     }
-
 }
