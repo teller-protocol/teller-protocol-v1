@@ -67,10 +67,7 @@ contract ATMSettings is IATMSettings {
     /* Constructor */
 
     constructor(address atmFactoryAddress, address settingsAddress) public {
-        require(
-            atmFactoryAddress != address(0x0),
-            "ATM_GOV_FACTORY_MUST_BE_PROVIDED"
-        );
+        require(atmFactoryAddress != address(0x0), "ATM_GOV_FACTORY_MUST_BE_PROVIDED");
         require(settingsAddress != address(0x0), "SETTINGS_MUST_BE_PROVIDED");
 
         atmFactory = IATMFactory(atmFactoryAddress);

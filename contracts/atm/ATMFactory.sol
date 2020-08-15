@@ -100,7 +100,7 @@ contract ATMFactory is IATMFactory, TInitializable {
         return atmGovernanceProxyAddress;
     }
 
-     /**
+    /**
         @notice It initializes this ATM Governance Factory instance.
         @param settingsAddress settings address.
      */
