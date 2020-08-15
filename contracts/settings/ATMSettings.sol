@@ -65,10 +65,7 @@ contract ATMSettings is IATMSettings {
         @notice It pauses a given ATM.
         @param atmAddress ATM address to pause.
      */
-    function pauseATM(address atmAddress)
-        external
-        withPauserRole()
-    {
+    function pauseATM(address atmAddress) external withPauserRole() {
         require(settings.isPaused() == false, "PLATFORM_IS_ALREADY_PAUSED");
         require(atmPaused[atmAddress] == false, "ATM_IS_ALREADY_PAUSED");
 
@@ -81,10 +78,7 @@ contract ATMSettings is IATMSettings {
         @notice It unpauses a given ATM.
         @param atmAddress ATM address to unpause.
      */
-    function unpauseATM(address atmAddress)
-        external
-        withPauserRole()
-    {
+    function unpauseATM(address atmAddress) external withPauserRole() {
         require(settings.isPaused() == false, "PLATFORM_IS_PAUSED");
         require(atmPaused[atmAddress] == true, "ATM_IS_NOT_PAUSED");
 

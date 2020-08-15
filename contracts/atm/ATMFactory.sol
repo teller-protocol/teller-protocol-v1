@@ -111,7 +111,10 @@ contract ATMFactory is IATMFactory, TInitializable {
         @param settingsAddress settings address.
         @param atmSettingsAddress the ATM settings address.
      */
-    function initialize(address settingsAddress, address atmSettingsAddress) external isNotInitialized() {
+    function initialize(address settingsAddress, address atmSettingsAddress)
+        external
+        isNotInitialized()
+    {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
         require(atmSettingsAddress.isContract(), "ATM_SETTINGS_MUST_BE_A_CONTRACT");
 

@@ -252,10 +252,7 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
         @notice It initializes this ATM Governance instance.
         @param ownerAddress the owner address for this ATM Governance.
      */
-    function initialize(address ownerAddress)
-        public
-        isNotInitialized()
-    {
+    function initialize(address ownerAddress) public isNotInitialized() {
         SignerRole.initialize(ownerAddress);
         TInitializable._initialize();
     }
