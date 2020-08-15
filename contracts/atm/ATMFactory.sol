@@ -70,8 +70,8 @@ contract ATMFactory is IATMFactory, TInitializable {
             decimals,
             cap,
             maxVestingsPerWallet,
-            owner, // TODO Change it. 
-            owner // TODO Change it. 
+            owner, // TODO Change it.
+            owner // TODO Change it.
         );
         //address atmSettingsAddress,
         //address atm
