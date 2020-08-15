@@ -7,6 +7,14 @@ class IATMSettingsEncoder {
     }
 }
 
+IATMSettingsEncoder.prototype.encodeIsATMForMarket = function() {
+    return encode(this.web3, 'isATMForMarket(address, address, address)');
+}
+
+IATMSettingsEncoder.prototype.encodeIsATMPaused = function() {
+    return encode(this.web3, 'isATMPaused(address)');
+}
+
 IATMSettingsEncoder.prototype.encodeGetATMForMarket = function() {
     return encode(this.web3, 'getATMForMarket(address,address)');
 }

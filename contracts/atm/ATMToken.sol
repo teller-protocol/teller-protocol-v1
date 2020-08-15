@@ -8,6 +8,8 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Burn
 import "./ATMTokenInterface.sol";
 
 import "../base/TInitializable.sol";
+import "@openzeppelin/contracts/utils/Arrays.sol";
+import "../settings/ATMSettingsInterface.sol";
 
 
 /**
@@ -27,6 +29,7 @@ contract ATMToken is
      *  @notice ATMToken implements an ERC20 token with a supply cap and a vesting scheduling
      */
     using SafeMath for uint256;
+    using Arrays for uint256[];
 
     /* Modifiers */
     /**
@@ -38,10 +41,23 @@ contract ATMToken is
         _;
     }
 
+    /**
+        @notice Checks if the platform is paused or not
+        @dev Throws an error is the Teller platform is paused
+     */
+    modifier whenNotPaused() {
+        require(!settings.isATMPaused(atmAddress), "ATM_IS_PAUSED");
+        _;
+    }
+
     /* State Variables */
     uint256 private _cap;
     uint256 private _maxVestingsPerWallet;
     address private _owner;
+    Snapshots private _totalSupplySnapshots;
+    uint256 private _currentSnapshotId;
+    ATMSettingsInterface public settings;
+    address public atmAddress;
 
     /* Structs */
     struct VestingTokens {
@@ -52,10 +68,16 @@ contract ATMToken is
         uint256 deadline;
     }
 
+    struct Snapshots {
+        uint256[] ids;
+        uint256[] values;
+    }
+
     /* Mappings */
     mapping(address => mapping(uint256 => VestingTokens)) private _vestingBalances; // Mapping user address to vestings id, which in turn is mapped to the VestingTokens struct
     mapping(address => uint256) public vestingsCount;
     mapping(address => uint256) public assignedTokens;
+    mapping(address => Snapshots) private _accountBalanceSnapshots;
 
     /* Functions */
 
@@ -64,20 +86,28 @@ contract ATMToken is
         string memory symbol,
         uint8 decimals,
         uint256 cap,
-        uint256 maxVestingsPerWallet
+        uint256 maxVestingsPerWallet,
+        address atmSettingsAddress,
+        address atm
     ) public initializer {
         require(cap > 0, "CAP_CANNOT_BE_ZERO");
         super.initialize(name, symbol, decimals);
         _cap = cap;
         _maxVestingsPerWallet = maxVestingsPerWallet;
         _owner = msg.sender;
+        settings = ATMSettingsInterface(atmSettingsAddress);
+        atmAddress = atm;
     }
 
     /**
      * @notice Returns the cap on the token's total supply
      * @return The supply capped amount
      */
-    function cap() external view returns (uint256) {
+    function cap() 
+        external
+        view
+        returns (uint256)
+    {
         return _cap;
     }
 
@@ -85,7 +115,13 @@ contract ATMToken is
      * @notice Sets a new cap on the token's total supply.
      * @param newCap The new capped amount of tokens
      */
-    function setCap(uint256 newCap) external onlyOwner() {
+    function setCap(
+        uint256 newCap
+    )
+        external
+        onlyOwner()
+        whenNotPaused()
+    {
         _cap = newCap;
         emit NewCap(_cap);
     }
@@ -96,10 +132,21 @@ contract ATMToken is
      * @param amount The amount of tokens to mint
      * @return true if successful
      */
-    function mint(address account, uint256 amount) public onlyOwner() returns (bool) {
+    function mint(
+        address account,
+        uint256 amount
+    ) 
+        public
+        onlyOwner()
+        whenNotPaused()
+        returns (bool)
+    {
         require(account != address(0x0), "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED");
         _beforeTokenTransfer(address(0x0), account, amount);
         _mint(account, amount);
+        _snapshot();
+        _updateAccountSnapshot(account);
+        _updateTotalSupplySnapshot();
         return true;
     }
 
@@ -124,7 +171,11 @@ contract ATMToken is
         uint256 amount,
         uint256 cliff,
         uint256 vestingTime
-    ) public onlyOwner() {
+    ) 
+        public
+        onlyOwner()
+        whenNotPaused()
+    {
         require(account != address(0x0), "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED");
         require(vestingsCount[account] < _maxVestingsPerWallet, "MAX_VESTINGS_REACHED");
         _beforeTokenTransfer(address(0x0), account, amount);
@@ -138,6 +189,9 @@ contract ATMToken is
             block.timestamp + vestingTime
         );
         _mint(address(this), amount);
+        _snapshot();
+        _updateAccountSnapshot(address(this));
+        _updateTotalSupplySnapshot();
         assignedTokens[account] += amount;
         _vestingBalances[account][vestingId] = vestingTokens;
         emit NewVesting(account, amount, vestingTime);
@@ -149,7 +203,14 @@ contract ATMToken is
      * @param vestingId The Id of the vesting being revoked
      *
      */
-    function revokeVesting(address account, uint256 vestingId) public onlyOwner() {
+    function revokeVesting(
+        address account,
+        uint256 vestingId
+    ) 
+        public
+        onlyOwner()
+        whenNotPaused()
+    {
         require(assignedTokens[account] > 0, "ACCOUNT_DOESNT_HAVE_VESTING");
         VestingTokens memory vestingTokens = _vestingBalances[account][vestingId];
 
@@ -162,6 +223,9 @@ contract ATMToken is
         );
         assignedTokens[account] -= unvestedTokens;
         _burn(address(this), unvestedTokens);
+        _snapshot();
+        _updateAccountSnapshot(address(this));
+        _updateTotalSupplySnapshot();
         emit RevokeVesting(account, unvestedTokens, vestingTokens.deadline);
         delete _vestingBalances[account][vestingId];
     }
@@ -171,11 +235,17 @@ contract ATMToken is
      *  @return true if successful
      *
      */
-    function withdrawVested() public {
+    function withdrawVested() 
+        public
+        whenNotPaused()
+    {
         require(assignedTokens[msg.sender] > 0, "ACCOUNT_DOESNT_HAVE_VESTING");
 
         uint256 transferableTokens = _transferableTokens(msg.sender, block.timestamp);
         approve(msg.sender, transferableTokens);
+        _snapshot();
+        _updateAccountSnapshot(msg.sender);
+        _updateAccountSnapshot(address(this));
         assignedTokens[msg.sender] -= transferableTokens;
         emit VestingClaimed(msg.sender, transferableTokens);
     }
@@ -247,4 +317,89 @@ contract ATMToken is
             return amount.sub(eligibleTokens);
         }
     }
+
+    /**
+        @notice Creates a new snapshot and returns its snapshot id
+        @return The id of the snapshot created
+     */
+    function _snapshot() internal returns (uint256) {
+        _currentSnapshotId = _currentSnapshotId.add(1);
+        uint256 currentId = _currentSnapshotId;
+        emit Snapshot(currentId);
+        return currentId;
+    }
+
+    /**
+        @notice Returns the balance of an account at the time a snapshot was created
+        @param account The account which is being queried
+        @param snapshotId The id of the snapshot being queried
+     */
+    function balanceOfAt(address account, uint256 snapshotId)
+        external
+        view
+        returns (uint256)
+    {
+        (bool snapshotted, uint256 value) = _valueAt(
+            snapshotId,
+            _accountBalanceSnapshots[account]
+        );
+
+        return snapshotted ? value : balanceOf(account);
+    }
+
+    /**
+        @notice Returns the total supply at the time a snapshot was created
+        @param snapshotId The id of the snapshot being queried
+     */
+    function totalSupplyAt(uint256 snapshotId) external view returns (uint256) {
+        (bool snapshotted, uint256 value) = _valueAt(snapshotId, _totalSupplySnapshots);
+
+        return snapshotted ? value : totalSupply();
+    }
+
+    /**
+        @notice Returns the element from the id array with the index of the smallest value that is larger if not found, unless it doesn't exist
+        @param snapshotId The id of the snapshot being createc
+        @param snapshots The struct of the snapshots being queried
+     */
+    function _valueAt(uint256 snapshotId, Snapshots storage snapshots)
+        private
+        view
+        returns (bool, uint256)
+    {
+        uint256 index = snapshots.ids.findUpperBound(snapshotId);
+
+        if (index == snapshots.ids.length) {
+            return (false, 0);
+        } else {
+            return (true, snapshots.values[index]);
+        }
+    }
+
+    /**
+        @notice Creates a snapshot of a given account
+        @param account The account for which the snapshot is being created
+     */
+    function _updateAccountSnapshot(address account) private {
+        _updateSnapshot(_accountBalanceSnapshots[account], balanceOf(account));
+    }
+
+    /**
+        @notice Creates a snapshot of the total supply of tokens
+     */
+    function _updateTotalSupplySnapshot() private {
+        _updateSnapshot(_totalSupplySnapshots, totalSupply());
+    }
+
+    /**
+        @notice Updates the given snapshot struct with the latest snapshot
+        @param snapshots The snapshot struct being updated
+        @param currentValue The current value at the time of snapshot creation
+     */
+    function _updateSnapshot(Snapshots storage snapshots, uint256 currentValue) private {
+        uint256 currentId = _currentSnapshotId;
+        snapshots.ids.push(currentId);
+        snapshots.values.push(currentValue);
+    }
+
 }
