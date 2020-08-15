@@ -1,6 +1,7 @@
 // JS Libraries
 const withData = require("leche").withData;
 const { t, toBytes32 } = require("../utils/consts");
+const { settingsABI } = require("../../migrations/utils/encodeAbis");
 
 // Smart contracts
 const UpgradeableProxy = artifacts.require("./base/UpgradeableProxy.sol");
@@ -14,18 +15,29 @@ contract("UpgradeableProxySettingsUpgradeToTest", function(accounts) {
     });
 
     withData({
-        _1_basic: [ accounts[1], accounts[0], false, "aaaaa" ],
-
-    }, function(caller, admin, mustFail, expectedErrorMessage) {
-        it(t("admin", "upgradeTo", "Should be able to (or not) upgrade the functionality of a contract.", mustFail), async function() {
+        _1_valid_using_initData: [accounts[1], accounts[0], true, false, false, false, undefined ],
+        _2_valid_using_initialize: [accounts[1], accounts[0], false, true, false, false, undefined ],
+        _3_invalid_using_both: [accounts[1], accounts[0], true, true, true, true, 'Contract instance has already been initialized' ],
+        _4_valid_using_initialize_and_original_initialize: [accounts[1], accounts[0], false, true, true, false, undefined ],
+    }, function(caller, admin, doInitData, doCallInitialize, doCallOriginalInitialize, mustFail, expectedErrorMessage) {
+        it(t("admin", "initialize", "Should be able to (or not) initialize a contract / proxy.", mustFail), async function() {
             try {
                 // Setup
-                const initData = '0x';
                 const settings = await Settings.new();
+
+                let initData = '0x';
+                if (doInitData) {
+                    initData = settingsABI.encodeInitData(web3, caller);
+                }
                 const proxy = await UpgradeableProxy.new(settings.address, admin, initData);
                 const settingsOfProxy = await Settings.at(proxy.address);
-                await settingsOfProxy.initialize(caller);
+                if(doCallInitialize) {
+                    await settingsOfProxy.initialize(caller);
+                }
                 const settingsOfSettings = await Settings.at(settings.address);
+                if(doCallOriginalInitialize) {
+                    await settingsOfSettings.initialize(caller);   
+                }
                 
                 // Invocation
                 await settingsOfProxy.createPlatformSetting(
@@ -38,10 +50,12 @@ contract("UpgradeableProxySettingsUpgradeToTest", function(accounts) {
 
                 const settingsOfProxyIsPauser = await settingsOfProxy.isPauser(caller);
                 assert.equal(settingsOfProxyIsPauser, true);
-                const settingsOfSettingsIsPauser = await settingsOfSettings.isPauser(caller);
-                assert.equal(settingsOfSettingsIsPauser, true);
+                if(doCallOriginalInitialize) {
+                    const settingsOfSettingsIsPauser = await settingsOfSettings.isPauser(caller);
+                    console.log(`settingsOfSettingsIsPauser:    ${settingsOfSettingsIsPauser}`);
+                    assert.equal(settingsOfSettingsIsPauser, true);
+                }
             } catch (error) {
-                console.log(error);
                 assert(mustFail);
                 assert(error);
                 assert.equal(error.reason, expectedErrorMessage);

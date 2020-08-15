@@ -1,5 +1,4 @@
 const jsonfile = require('jsonfile');
-
 const MOCK_NETWORKS = ["test", "ganache"];
 
 class DeployerApp {
@@ -14,11 +13,16 @@ class DeployerApp {
         this.mockNetworks = mockNetworks.map( network => network.toLowerCase());
     }
 
-    async deployWithUpgradeable(contractName, contract, admin, data, ...params) {
-        await this.deployWith(contractName, contract, ...params)
-        await this.deployWith(`${contractName}_Proxy`, this.AdminUpgradeabilityProxy, contract.address, admin, data, ...params)
-        return contract.at(this.AdminUpgradeabilityProxy.address)
-    }
+}
+
+/**
+    This function deploys two contract: 1- The original and 2- An UpgradeableProxy (with the reference to the original).
+    After deploying a proxy, we MUST call the initialize function with the parameters it needs.
+ */
+DeployerApp.prototype.deployWithUpgradeable = async function(contractName, contract, admin, initData, ...params) {
+    await this.deployWith(contractName, contract, ...params)
+    await this.deployWith(`${contractName}_Proxy`, this.AdminUpgradeabilityProxy, contract.address, admin, initData, ...params)
+    return contract.at(this.AdminUpgradeabilityProxy.address)
 }
 
 DeployerApp.prototype.deployWith = async function(contractName, contract, ...params) {
