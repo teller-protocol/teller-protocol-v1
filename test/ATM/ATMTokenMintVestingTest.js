@@ -2,22 +2,30 @@
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS  } = require('../utils/consts');
 const { atmToken } = require('../utils/events');
+const SettingsInterfaceEncoder = require('../utils/encoders/settingsInterfaceEncoder');
+
+// Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const ATMToken = artifacts.require("./ATMToken.sol");
 
 contract('ATMTokenMintVestingTest', function (accounts) {
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     let instance;
+    let settingsInstance;
     const daoAgent = accounts[0];
     const daoMember2 = accounts[3];
 
     beforeEach('Setup for each test', async () => {
+        settingsInstance = await Mock.new();
         instance = await ATMToken.new(
-                                "ATMToken",
-                                "ATMT",
-                                18,
-                                10000,
-                                1
+                                    "ATMToken",
+                                    "ATMT",
+                                    18,
+                                    10000,
+                                    1,
+                                    settingsInstance.address
                             );
     });
 
@@ -36,7 +44,11 @@ contract('ATMTokenMintVestingTest', function (accounts) {
         mustFail
     ) {
         it(t('agent', 'mintVesting', 'Should or should not be able to mint correctly', mustFail), async function() {
-        
+            await settingsInstance.givenMethodReturnBool(
+                settingsInterfaceEncoder.encodeIsPaused(),
+                false
+            );
+
             try {
                 // Invocation
                 let result;

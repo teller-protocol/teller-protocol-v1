@@ -343,6 +343,16 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction) 
             };
         },
+        snapshot: tx => {
+            const name = 'Snapshot';
+            return {
+                name: name,
+                emitted: (id) => emitted(tx, name, ev => {
+                    assert.equal(ev.id, id);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     },
     settings: {
         lendingPoolPaused: tx => {

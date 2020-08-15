@@ -3,24 +3,32 @@ const withData = require('leche').withData;
 const { t, NULL_ADDRESS  } = require('../utils/consts');
 const { atmToken } = require('../utils/events');
 const Timer = require('../../scripts/utils/Timer');
+const SettingsInterfaceEncoder = require('../utils/encoders/settingsInterfaceEncoder');
+
+// Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const ATMToken = artifacts.require("./ATMToken.sol");
 
 contract('ATMTokenRevokeVestingTest', function (accounts) {
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     let instance;
+    let settingsInstance;
     const daoAgent = accounts[0];
     const daoMember1 = accounts[2];
     const daoMember2 = accounts[3];
     const timer = new Timer(web3);
 
     beforeEach('Setup for each test', async () => {
+        settingsInstance = await Mock.new();
         instance = await ATMToken.new(
-                                "ATMToken",
-                                "ATMT",
-                                18,
-                                10000,
-                                50
+                                    "ATMToken",
+                                    "ATMT",
+                                    18,
+                                    100000,
+                                    50,
+                                    settingsInstance.address
                             );
     });
 
@@ -40,6 +48,11 @@ contract('ATMTokenRevokeVestingTest', function (accounts) {
         // Setup
         await instance.mintVesting(daoMember1, amount, cliff, vestingPeriod, { from: daoAgent });
         const deadline = await timer.getCurrentTimestampInSecondsAndSum(vestingPeriod);
+        await settingsInstance.givenMethodReturnBool(
+            settingsInterfaceEncoder.encodeIsPaused(),
+            false
+        );
+
             try {
                 // Invocation
                 const result = await instance.revokeVesting(receipent, 0, { from: daoAgent });

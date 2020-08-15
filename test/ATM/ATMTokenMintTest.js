@@ -1,22 +1,30 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS  } = require('../utils/consts');
+const SettingsInterfaceEncoder = require('../utils/encoders/settingsInterfaceEncoder');
+
+// Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const ATMToken = artifacts.require("./ATMToken.sol");
 
 contract('ATMTokenMintTest', function (accounts) {
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    let settingsInstance;
     let instance;
     const daoAgent = accounts[0];
-    const daoMember1 = accounts[2];
+    const daoMember1 = accounts[1];
 
     beforeEach('Setup for each test', async () => {
+        settingsInstance = await Mock.new();
         instance = await ATMToken.new(
-                                "ATMToken",
-                                "ATMT",
-                                18,
-                                10000,
-                                50
+                                    "ATMToken",
+                                    "ATMT",
+                                    18,
+                                    10000,
+                                    50,
+                                    settingsInstance.address
                             );
     });
 
@@ -31,6 +39,10 @@ contract('ATMTokenMintTest', function (accounts) {
         mustFail
     ) {
         it(t('agent', 'mint', 'Should or should not be able to mint correctly', mustFail), async function() {
+            await settingsInstance.givenMethodReturnBool(
+                settingsInterfaceEncoder.encodeIsPaused(),
+                false
+            );
 
             try {
                 // Invocation
