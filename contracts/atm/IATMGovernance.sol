@@ -35,13 +35,13 @@ interface IATMGovernance {
 
     /**
         @notice Emitted when an ATM General Setting was updated.
-        @param signer transaction sender address.
+        @param sender transaction sender address.
         @param settingName name of the newly added setting.
         @param oldValue previous value of this setting.  
         @param newValue new value of this setting.  
      */
     event GeneralSettingUpdated(
-        address indexed signer,
+        address indexed sender,
         bytes32 indexed settingName,
         uint256 oldValue,
         uint256 newValue
@@ -49,25 +49,25 @@ interface IATMGovernance {
 
     /**
         @notice Emitted when an ATM General Setting was removed.
-        @param signer transaction sender address.
+        @param sender transaction sender address.
         @param settingName name of the setting removed.
         @param settingValue value of the setting removed.  
      */
     event GeneralSettingRemoved(
-        address indexed signer,
+        address indexed sender,
         bytes32 indexed settingName,
         uint256 settingValue
     );
 
     /**
         @notice Emitted when a new Asset Setting was added for an specific Market.
-        @param signer transaction sender address.
+        @param sender transaction sender address.
         @param asset asset address this setting was created for.
         @param settingName name of the added setting.
         @param settingValue value of the added setting.
      */
     event AssetMarketSettingAdded(
-        address indexed signer,
+        address indexed sender,
         address indexed asset,
         bytes32 indexed settingName,
         uint256 settingValue
@@ -75,14 +75,14 @@ interface IATMGovernance {
 
     /**
         @notice Emitted when an Asset Setting was updated for an specific Market.
-        @param signer transaction sender address.
+        @param sender transaction sender address.
         @param asset asset address this setting was updated for.
         @param settingName name of the updated setting.
         @param oldValue previous value of this setting.
         @param newValue new value of this setting.
      */
     event AssetMarketSettingUpdated(
-        address indexed signer,
+        address indexed sender,
         address indexed asset,
         bytes32 indexed settingName,
         uint256 oldValue,
@@ -91,13 +91,13 @@ interface IATMGovernance {
 
     /**
         @notice Emitted when an Asset Setting was removed for an specific Market.
-        @param signer transaction sender address.
+        @param sender transaction sender address.
         @param asset asset address this setting was removed for.
         @param settingName name of the removed setting.
         @param oldValue previous value of the removed setting.
      */
     event AssetMarketSettingRemoved(
-        address indexed signer,
+        address indexed sender,
         address indexed asset,
         bytes32 indexed settingName,
         uint256 oldValue
@@ -105,13 +105,13 @@ interface IATMGovernance {
 
     /**
         @notice Emitted when a new Data Provider was added to this ATM.
-        @param signer transaction sender address.
+        @param sender transaction sender address.
         @param dataTypeIndex index of this data type.
         @param amountDataProviders amount of data providers for this data type.
         @param dataProvider address of the added Data Provider.
      */
     event DataProviderAdded(
-        address indexed signer,
+        address indexed sender,
         uint8 indexed dataTypeIndex,
         uint256 amountDataProviders,
         address dataProvider
@@ -119,14 +119,14 @@ interface IATMGovernance {
 
     /**
         @notice Emitted when a Data Provider was updated on this ATM.
-        @param signer transaction sender address.
+        @param sender transaction sender address.
         @param dataTypeIndex index of this data type.
         @param dataProviderIndex index of this data provider.
         @param oldDataProvider previous address of the Data Provider.
         @param newDataProvider new address of the Data Provider.
      */
     event DataProviderUpdated(
-        address indexed signer,
+        address indexed sender,
         uint8 indexed dataTypeIndex,
         uint256 indexed dataProviderIndex,
         address oldDataProvider,
@@ -135,13 +135,13 @@ interface IATMGovernance {
 
     /**
         @notice Emitted when a Data Provider was removed on this ATM.
-        @param signer transaction sender address.
+        @param sender transaction sender address.
         @param dataTypeIndex index of this data type.
         @param dataProviderIndex index of this data provider inside this data type.
         @param dataProvider address of the Data Provider.
      */
     event DataProviderRemoved(
-        address indexed signer,
+        address indexed sender,
         uint8 indexed dataTypeIndex,
         uint256 indexed dataProviderIndex,
         address dataProvider
@@ -149,10 +149,10 @@ interface IATMGovernance {
 
     /**
         @notice Emitted when a new CRA - Credit Risk Algorithm is set.
-        @param signer transaction sender address.
+        @param sender transaction sender address.
         @param craCommitHash github commit hash with the new CRA implementation.
      */
-    event CRASet(address indexed signer, string craCommitHash);
+    event CRASet(address indexed sender, string craCommitHash);
 
     /* External Functions */
 

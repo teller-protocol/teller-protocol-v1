@@ -1,11 +1,12 @@
 const _ = require('lodash');
 const assert = require('assert');
-const { atmGovernance } = require('../../../test/utils/events');
+const { toBytes32 } = require('../../../test/utils/consts');
+const atmGovernanceSettingsNames = require('../../../test/utils/atmGovernanceSettingsNames');
 
 
 module.exports = async function(
-    { atmFactory },
-    { atms, txConfig, },
+    { atmFactory, atmSettings, },
+    { atms, tokens, txConfig, web3 },
     { ATMGovernance },
 ) {
     const atmKeys = Object.keys(atms);
@@ -17,6 +18,7 @@ module.exports = async function(
             name,
             token,
             supplyToDebt,
+            markets,
         } = atmInfo;
 
         await atmFactory.createATM(
@@ -29,8 +31,33 @@ module.exports = async function(
         );
 
         const atmsList = await atmFactory.getATMs();
-        const lastATM = atmsList[atmsList.length - 1];
-        console.log(`Last ATM: ${lastATM}`);
+        const lastATMGovernanceAddress = atmsList[atmsList.length - 1];
+        console.log(`New ATM created (for key: ${name}) at address ${lastATMGovernanceAddress}.`);
+
+        const atmGovernanceInstance = await ATMGovernance.at(lastATMGovernanceAddress);
         
+        console.log(`Configuring ATM ${lastATMGovernanceAddress}: SupplyToDebt = ${supplyToDebt}`);
+        await atmGovernanceInstance.addGeneralSetting(
+            toBytes32(web3, atmGovernanceSettingsNames.SupplyToDebt),
+            supplyToDebt,
+            txConfig,
+        );
+
+        for (const market of markets) {
+            const {
+                borrowedToken, collateralToken,
+            } = market;
+            const borrowedTokenAddress = tokens[borrowedToken.toUpperCase()];
+            const collateralTokenAddress = tokens[collateralToken.toUpperCase()];
+            assert(borrowedTokenAddress, `Token ${borrowedToken} is undefined.`);
+            assert(collateralTokenAddress, `Token ${collateralToken} is undefined.`);
+            console.log(`Configuring market ${borrowedToken}/${collateralToken} for ATM ${name} / ${lastATMGovernanceAddress}.`);
+            await atmSettings.setATMToMarket(
+                borrowedTokenAddress,
+                collateralTokenAddress,
+                lastATMGovernanceAddress,
+                txConfig,
+            );
+        }
     }
 }

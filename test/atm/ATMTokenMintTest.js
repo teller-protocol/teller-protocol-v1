@@ -11,13 +11,8 @@ contract('ATMTokenMintTest', function (accounts) {
     const daoMember1 = accounts[2];
 
     beforeEach('Setup for each test', async () => {
-        instance = await ATMToken.new(
-                                "ATMToken",
-                                "ATMT",
-                                18,
-                                10000,
-                                50
-                            );
+        instance = await ATMToken.new();
+        await instance.initialize("ATMToken", "ATMT", 18, 10000, 50);
     });
 
     withData({

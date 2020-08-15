@@ -4,6 +4,10 @@ const MAX_VALUE = (new BigNumber(2).pow(256)).minus(1);
 const maxValueString = MAX_VALUE.toFixed(0);
 
 module.exports = {
+    /**
+        As default this address is used to represent ETH (for example in Uniswap).
+     */
+    ETH_ADDRESS: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     /*
         This address is ONLY used in network configurations where:
         1 - We have't deployed the contracts yet. Examples: mainnet.

@@ -55,14 +55,12 @@ module.exports = async function(deployer, network, accounts) {
   await deployerApp.deploys([TDAI, TUSDC], txConfig);
   console.log(`Deployed tokens: TDAI [${TDAI.address}] TUSDC [${TUSDC.address}] `);  
 
-  // ATM Deployments
-  await deployerApp.deploy(ATMGovernance, txConfig); // TODO: add Gnosis multisig as signer/pauser (not the DAO for now)
-
   // Settings Deployments
   await deployerApp.deploy(MarketsState, txConfig);
 
   const settingsInstance = await deployerApp.deployWithUpgradeable('Settings', Settings, txConfig.from, '0x')
-  await settingsInstance.initialize(txConfig.from)
+  await settingsInstance.initialize(txConfig.from);
+  console.log(`Settings Pausable: ${txConfig.from}`);
   await initSettings(
     settingsInstance,
     { ...networkConfig, txConfig, network, currentBlockNumber, web3 },
@@ -74,19 +72,20 @@ module.exports = async function(deployer, network, accounts) {
   await atmGovernanceFactoryInstance.initialize(settingsInstance.address, txConfig);
   console.log(`ATM Governance Factory deployed at: ${atmGovernanceFactoryInstance.address}`);
 
-  await initATMs(
-    { atmFactory: atmGovernanceFactoryInstance },
-    { atms, txConfig },
-    {},
-  );
-
   await deployerApp.deploy(
     ATMSettings,
     atmGovernanceFactoryInstance.address,
-    Settings.address,
+    settingsInstance.address,
     txConfig
   );
-  console.log(`ATM settings deployed at: ${ATMSettings.address}`);
+  const atmSettingsInstance = await ATMSettings.deployed();
+  console.log(`ATM settings deployed at: ${atmSettingsInstance.address}`);
+
+  await initATMs(
+    { atmFactory: atmGovernanceFactoryInstance, atmSettings: atmSettingsInstance },
+    { atms, tokens, txConfig, web3 },
+    { ATMGovernance },
+  );
 
   const aggregators = {};
   

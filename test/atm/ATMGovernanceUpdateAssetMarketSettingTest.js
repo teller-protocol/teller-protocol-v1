@@ -19,10 +19,13 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 
 contract('ATMGovernanceUpdateAssetMarketSettingTest', function (accounts) {
+    const owner = accounts[0];
     let instance;
 
     beforeEach('Setup for each test', async () => {
         instance = await ATMGovernance.new();
+        const atmToken = await Mock.new();
+        await instance.initialize(atmToken.address, owner);
     });
 
     // Testing values
@@ -30,7 +33,6 @@ contract('ATMGovernanceUpdateAssetMarketSettingTest', function (accounts) {
     const NOT_INSERTED_SETTING_NAME = toBytes32(web3, 'neverAdded');
     const SETTING_OLD_VALUE = 5044;
     const SETTING_NEW_VALUE = 1111;
-    const SETTING_NOT_FOUND = 0;
     const EMPTY_SETTING_NAME = toBytes32(web3, '');
 
     withData({

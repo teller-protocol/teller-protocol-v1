@@ -19,10 +19,13 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 
 contract('ATMGovernanceAddAssetMarketSettingTest', function (accounts) {
+    const owner = accounts[0];
     let instance;
 
     beforeEach('Setup for each test', async () => {
         instance = await ATMGovernance.new();
+        const atmToken = await Mock.new();
+        await instance.initialize(atmToken.address, owner);
     });
 
     // Testing values

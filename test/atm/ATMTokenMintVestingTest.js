@@ -12,13 +12,8 @@ contract('ATMTokenMintVestingTest', function (accounts) {
     const daoMember2 = accounts[3];
 
     beforeEach('Setup for each test', async () => {
-        instance = await ATMToken.new(
-                                "ATMToken",
-                                "ATMT",
-                                18,
-                                10000,
-                                1
-                            );
+        instance = await ATMToken.new();
+        await instance.initialize("ATMToken", "ATMT", 18, 10000, 1);
     });
 
     withData({
@@ -39,8 +34,7 @@ contract('ATMTokenMintVestingTest', function (accounts) {
         
             try {
                 // Invocation
-                let result;
-                result = await instance.mintVesting(receipent, amount, cliff, vestingPeriod, { from: daoAgent });
+                let result = await instance.mintVesting(receipent, amount, cliff, vestingPeriod, { from: daoAgent });
                 if (multipleVestings) {
                     result = await instance.mintVesting(receipent, amount, cliff, vestingPeriod, { from: daoAgent });
                 }

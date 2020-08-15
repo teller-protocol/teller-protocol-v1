@@ -5,7 +5,7 @@ const { t } = require('../utils/consts');
 // Smart contracts
 const ATMToken = artifacts.require('./ATMToken.sol');
 
-contract('ATMTokenConstructorTest', function (accounts) {
+contract('ATMTokenInitializeTest', function (accounts) {
 
     withData({
         _1_initialize_basic: ['ATMToken', 'ATMT', 18, 10000, 50, undefined, false],
@@ -19,16 +19,11 @@ contract('ATMTokenConstructorTest', function (accounts) {
         expectedErrorMessage,
         mustFail
     ) {
-        it(t('user', 'new', 'Should or should not be able to create a new instance.', mustFail), async function() {
-
+        it(t('user', 'initialize', 'Should or should not be able to create a new instance.', mustFail), async function() {
+            // Setup
+            const instance = await ATMToken.new();
             try {
-                const result = await ATMToken.new(
-                                        name,
-                                        symbol,
-                                        decimals,
-                                        cap,
-                                        maxVestings
-                                    );
+                const result = await instance.initialize(name, symbol, decimals, cap, maxVestings);
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
