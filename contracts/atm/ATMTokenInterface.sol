@@ -103,7 +103,10 @@ interface ATMTokenInterface {
         @param account The account which is being queried
         @param snapshotId The id of the snapshot being queried
      */
-    function balanceOfAt(address account, uint256 snapshotId) external view returns (uint256);
+    function balanceOfAt(address account, uint256 snapshotId)
+        external
+        view
+        returns (uint256);
 
     /**
         @notice Returns the total supply at the time a snapshot was created

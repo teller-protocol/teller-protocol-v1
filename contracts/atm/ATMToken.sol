@@ -9,6 +9,7 @@ import "./ATMTokenInterface.sol";
 import "@openzeppelin/contracts/utils/Arrays.sol";
 import "../interfaces/SettingsInterface.sol";
 
+
 /**
  *  @title ATM Token for Teller DAO
  *
@@ -39,7 +40,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
     modifier whenNotPaused() {
         require(!settings.isPaused(), "PLATFORM_IS_PAUSED");
         _;
-    } 
+    }
 
     /* State Variables */
     uint256 private _cap;
@@ -92,11 +93,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
      * @notice Returns the cap on the token's total supply
      * @return The supply capped amount
      */
-    function cap() 
-        external 
-        view 
-        returns (uint256) 
-    {
+    function cap() external view returns (uint256) {
         return _cap;
     }
 
@@ -104,13 +101,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
      * @notice Sets a new cap on the token's total supply.
      * @param newCap The new capped amount of tokens
      */
-    function setCap(
-        uint256 newCap
-    ) 
-        external
-        onlyOwner()
-        whenNotPaused()
-    {
+    function setCap(uint256 newCap) external onlyOwner() whenNotPaused() {
         _cap = newCap;
         emit NewCap(_cap);
     }
@@ -121,10 +112,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
      * @param amount The amount of tokens to mint
      * @return true if successful
      */
-    function mint(
-        address account,
-        uint256 amount
-    ) 
+    function mint(address account, uint256 amount)
         public
         onlyOwner()
         whenNotPaused()
@@ -160,11 +148,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
         uint256 amount,
         uint256 cliff,
         uint256 vestingTime
-    ) 
-        public 
-        onlyOwner()
-        whenNotPaused()
-    {
+    ) public onlyOwner() whenNotPaused() {
         require(account != address(0x0), "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED");
         require(vestingsCount[account] < _maxVestingsPerWallet, "MAX_VESTINGS_REACHED");
         _beforeTokenTransfer(address(0x0), account, amount);
@@ -192,11 +176,8 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
      * @param vestingId The Id of the vesting being revoked
      *
      */
-    function revokeVesting(
-        address account,
-        uint256 vestingId
-    ) 
-        public 
+    function revokeVesting(address account, uint256 vestingId)
+        public
         onlyOwner()
         whenNotPaused()
     {
@@ -223,10 +204,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
      *  @return true if successful
      *
      */
-    function withdrawVested()
-        public
-        whenNotPaused()
-    {
+    function withdrawVested() public whenNotPaused() {
         require(assignedTokens[msg.sender] > 0, "ACCOUNT_DOESNT_HAVE_VESTING");
 
         uint256 transferableTokens = _transferableTokens(msg.sender, block.timestamp);
@@ -245,11 +223,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
      *
      * - minted tokens must not cause the total supply to go over the cap.
      */
-    function _beforeTokenTransfer(
-        address from,
-        address,
-        uint256 amount
-    )
+    function _beforeTokenTransfer(address from, address, uint256 amount)
         internal
         view
         returns (bool)
@@ -266,10 +240,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
      * @param _time The
      * @return The amount of tokens eligible for withdrawal
      */
-    function _transferableTokens(
-        address _account,
-        uint256 _time
-    )
+    function _transferableTokens(address _account, uint256 _time)
         internal
         view
         returns (uint256)
@@ -306,11 +277,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
         uint256 start,
         uint256 cliff,
         uint256 deadline
-    )
-        internal
-        pure
-        returns (uint256) 
-    {
+    ) internal pure returns (uint256) {
         if (time >= deadline) {
             return 0;
         } else if (time < cliff) {
@@ -325,10 +292,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
         @notice Creates a new snapshot and returns its snapshot id
         @return The id of the snapshot created
      */
-    function _snapshot()
-        internal
-        returns (uint256) 
-    {
+    function _snapshot() internal returns (uint256) {
         _currentSnapshotId = _currentSnapshotId.add(1);
         uint256 currentId = _currentSnapshotId;
         emit Snapshot(currentId);
@@ -340,16 +304,16 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
         @param account The account which is being queried
         @param snapshotId The id of the snapshot being queried
      */
-    function balanceOfAt(
-        address account,
-        uint256 snapshotId
-    )
+    function balanceOfAt(address account, uint256 snapshotId)
         external
         view
         returns (uint256)
     {
-        (bool snapshotted, uint256 value) = _valueAt(snapshotId, _accountBalanceSnapshots[account]);
-        
+        (bool snapshotted, uint256 value) = _valueAt(
+            snapshotId,
+            _accountBalanceSnapshots[account]
+        );
+
         return snapshotted ? value : balanceOf(account);
     }
 
@@ -357,13 +321,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
         @notice Returns the total supply at the time a snapshot was created
         @param snapshotId The id of the snapshot being queried
      */
-    function totalSupplyAt(
-        uint256 snapshotId
-    )
-        external
-        view
-        returns (uint256)
-    {
+    function totalSupplyAt(uint256 snapshotId) external view returns (uint256) {
         (bool snapshotted, uint256 value) = _valueAt(snapshotId, _totalSupplySnapshots);
 
         return snapshotted ? value : totalSupply();
@@ -374,10 +332,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
         @param snapshotId The id of the snapshot being createc
         @param snapshots The struct of the snapshots being queried
      */
-    function _valueAt(
-        uint256 snapshotId,
-        Snapshots storage snapshots
-    )
+    function _valueAt(uint256 snapshotId, Snapshots storage snapshots)
         private
         view
         returns (bool, uint256)
@@ -395,20 +350,14 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
         @notice Creates a snapshot of a given account
         @param account The account for which the snapshot is being created
      */
-    function _updateAccountSnapshot(
-        address account
-    )
-        private
-    {
+    function _updateAccountSnapshot(address account) private {
         _updateSnapshot(_accountBalanceSnapshots[account], balanceOf(account));
     }
 
     /**
         @notice Creates a snapshot of the total supply of tokens
      */
-    function _updateTotalSupplySnapshot()
-        private
-    {
+    function _updateTotalSupplySnapshot() private {
         _updateSnapshot(_totalSupplySnapshots, totalSupply());
     }
 
@@ -417,15 +366,9 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
         @param snapshots The snapshot struct being updated
         @param currentValue The current value at the time of snapshot creation
      */
-    function _updateSnapshot(
-        Snapshots storage snapshots,
-        uint256 currentValue
-    )
-        private
-    {
+    function _updateSnapshot(Snapshots storage snapshots, uint256 currentValue) private {
         uint256 currentId = _currentSnapshotId;
         snapshots.ids.push(currentId);
         snapshots.values.push(currentValue);
     }
-
 }
