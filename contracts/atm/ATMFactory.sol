@@ -97,6 +97,7 @@ contract ATMFactory is IATMFactory, TInitializable {
 
         // Emit new ATM created event.
         emit ATMCreated(msg.sender, atmGovernanceProxyAddress, atmTokenProxyAddress);
+        return atmGovernanceProxyAddress;
     }
 
      /**

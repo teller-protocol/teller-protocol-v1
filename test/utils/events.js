@@ -660,10 +660,10 @@ module.exports = {
             const name = 'ATMCreated';
             return {
                 name: name,
-                emitted: (sender, settingName, settingValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.settingName, settingName);
-                    assert.equal(ev.settingValue, settingValue);
+                emitted: (sender, atm, token) => emitted(tx, name, ev => {
+                    assert.equal(ev.creator, sender);
+                    assert.equal(ev.atmGovernanceAddress, atm);
+                    assert.equal(ev.atmTokenAddress, token);
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
