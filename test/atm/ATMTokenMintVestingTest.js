@@ -2,7 +2,7 @@
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS  } = require('../utils/consts');
 const { atmToken } = require('../utils/events');
-const SettingsInterfaceEncoder = require('../utils/encoders/settingsInterfaceEncoder');
+const ATMSettingsInterfaceEncoder = require('../utils/encoders/ATMSettingsInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -11,21 +11,24 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const ATMToken = artifacts.require("./ATMToken.sol");
 
 contract('ATMTokenMintVestingTest', function (accounts) {
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const atmSettingsInterfaceEncoder = new ATMSettingsInterfaceEncoder(web3);
+    let atmSettingsInstance;
+    let atmInstance;
     let instance;
-    let settingsInstance;
     const daoAgent = accounts[0];
     const daoMember2 = accounts[3];
 
     beforeEach('Setup for each test', async () => {
-        settingsInstance = await Mock.new();
+        atmSettingsInstance = await Mock.new();
+        atmInstance = await Mock.new();
         instance = await ATMToken.new(
                                     "ATMToken",
                                     "ATMT",
                                     18,
                                     10000,
                                     1,
-                                    settingsInstance.address
+                                    atmSettingsInstance.address,
+                                    atmInstance.address
                             );
     });
 
@@ -44,8 +47,8 @@ contract('ATMTokenMintVestingTest', function (accounts) {
         mustFail
     ) {
         it(t('agent', 'mintVesting', 'Should or should not be able to mint correctly', mustFail), async function() {
-            await settingsInstance.givenMethodReturnBool(
-                settingsInterfaceEncoder.encodeIsPaused(),
+            await atmSettingsInstance.givenMethodReturnBool(
+                atmSettingsInterfaceEncoder.encodeIsATMPaused(),
                 false
             );
 

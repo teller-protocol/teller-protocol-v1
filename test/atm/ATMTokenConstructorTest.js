@@ -23,7 +23,8 @@ contract('ATMTokenConstructorTest', function (accounts) {
         mustFail
     ) {
         it(t('user', 'new', 'Should or should not be able to create a new instance.', mustFail), async function() {
-            settingsInstance = await Mock.new();
+            const atmSettingsInstance = await Mock.new();
+            const atmInstance = await Mock.new()
             try {
                 const result = await ATMToken.new(
                                         name,
@@ -31,7 +32,8 @@ contract('ATMTokenConstructorTest', function (accounts) {
                                         decimals,
                                         cap,
                                         maxVestings,
-                                        settingsInstance.address
+                                        atmSettingsInstance.address,
+                                        atmInstance.address
                                     );
 
                 // Assertions

@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20Mintable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
 import "./ATMTokenInterface.sol";
 import "@openzeppelin/contracts/utils/Arrays.sol";
-import "../interfaces/SettingsInterface.sol";
+import "../settings/ATMSettingsInterface.sol";
 
 
 /**
@@ -38,7 +38,7 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
         @dev Throws an error is the Teller platform is paused
      */
     modifier whenNotPaused() {
-        require(!settings.isPaused(), "PLATFORM_IS_PAUSED");
+        require(!settings.isATMPaused(atmAddress), "ATM_IS_PAUSED");
         _;
     }
 
@@ -70,7 +70,8 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
     /* State Variables */
     Snapshots private _totalSupplySnapshots;
     uint256 private _currentSnapshotId;
-    SettingsInterface public settings;
+    ATMSettingsInterface public settings;
+    address public atmAddress;
 
     /* Constructor */
     constructor(
@@ -79,13 +80,15 @@ contract ATMToken is ATMTokenInterface, ERC20Detailed, ERC20Mintable, ERC20Burna
         uint8 _decimals,
         uint256 cap,
         uint256 maxVestingsPerWallet,
-        address settingsAddress
+        address settingsAddress,
+        address atm
     ) public ERC20Detailed(_name, _symbol, _decimals) {
         require(cap > 0, "CAP_CANNOT_BE_ZERO");
         _cap = cap;
         _maxVestingsPerWallet = maxVestingsPerWallet;
         _owner = msg.sender;
-        settings = SettingsInterface(settingsAddress);
+        settings = ATMSettingsInterface(settingsAddress);
+        atmAddress = atm;
     }
 
     /* Functions */
