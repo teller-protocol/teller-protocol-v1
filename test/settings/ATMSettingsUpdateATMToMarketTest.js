@@ -2,7 +2,6 @@
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS, createMocks } = require('../utils/consts');
 const { atmSettings } = require('../utils/events');
-const IATMFactoryEncoder = require('../utils/encoders/IATMFactoryEncoder');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 // Mock contracts
@@ -12,19 +11,16 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
 
 contract('ATMSettingsUpdateATMToMarketTest', function (accounts) {
-    const atmFactoryInterfaceEncoder = new IATMFactoryEncoder(web3);
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     const owner = accounts[0];
     let instance;
-    let atmFactory;
     let settings;
     let mocks;
     
     beforeEach('Setup for each test', async () => {
         mocks = await createMocks(Mock, 10);
-        atmFactory = await Mock.new();
         settings = await Mock.new();
-        instance = await ATMSettings.new(atmFactory.address, settings.address);
+        instance = await ATMSettings.new(settings.address);
     });
 
     const newAtM = (borrowedTokenIndex, collateralTokenIndex, atmAddressIndex) => ({borrowedTokenIndex, collateralTokenIndex, atmAddressIndex});
@@ -39,7 +35,6 @@ contract('ATMSettingsUpdateATMToMarketTest', function (accounts) {
     }, function(previousATMToMarkets, atmToMarket, senderIndex, encodeIsATM, encodeHasPauserRole, encodeIsPaused, expectedErrorMessage, mustFail) {
         it(t('user', 'updateATMToMarket', 'Should (or not) be able to update an ATM from a market.', mustFail), async function() {
             // Setup
-            await atmFactory.givenMethodReturnBool(atmFactoryInterfaceEncoder.encodeIsATM(), true);
             await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeHasPauserRole(), true);
             await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), false);
             for (const previousATMIndex of previousATMToMarkets) {
@@ -52,7 +47,6 @@ contract('ATMSettingsUpdateATMToMarketTest', function (accounts) {
             }
             const sender = accounts[senderIndex];
             const atmAddress = atmToMarket.atmAddressIndex === -1 ? NULL_ADDRESS : mocks[atmToMarket.atmAddressIndex];
-            await atmFactory.givenMethodReturnBool(atmFactoryInterfaceEncoder.encodeIsATM(), encodeIsATM);
             await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeHasPauserRole(), encodeHasPauserRole);
             await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), encodeIsPaused);
             const borrowedToken = atmToMarket.borrowedTokenIndex === 99 ? accounts[0] : mocks[atmToMarket.borrowedTokenIndex];
