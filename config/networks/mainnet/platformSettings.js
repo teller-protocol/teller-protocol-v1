@@ -14,7 +14,7 @@ module.exports = {
     */
     [settingsNames.RequiredSubmissions]: {
         processOnDeployment: true,
-        value: 5,
+        value: 1,
         min: 0,
         max: MAX_VALUE_STRING,
     },
@@ -36,7 +36,7 @@ module.exports = {
     */
     [settingsNames.ResponseExpiryLength]: {
         processOnDeployment: true,
-        value: daysToSeconds(30),
+        value: minutesToSeconds(15),
         min: 0,
         max: MAX_VALUE_STRING,
     },
