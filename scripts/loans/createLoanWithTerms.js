@@ -113,7 +113,7 @@ module.exports = async (callback) => {
         console.log();
         console.log('To take out the loan, execute: ');
         const truffleCommand = 'truffle exec ./scripts/loans/takeOutLoan.js';
-        console.log(`${truffleCommand} --network ${processArgs.network()} --loanID ${lastLoanID} --tokenName ${tokenName} --collTokenName ${collateralTokenName} --senderIndex ${borrowerIndex} --amount ${amount}`);
+        console.log(`${truffleCommand} --network ${processArgs.network()} --loanId ${lastLoanID} --tokenName ${tokenName} --collTokenName ${collateralTokenName} --senderIndex ${borrowerIndex} --amount ${amount}`);
 
         console.log(toTxUrl(result));
 
