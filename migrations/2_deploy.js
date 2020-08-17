@@ -62,7 +62,6 @@ module.exports = async function(deployer, network, accounts) {
 
   const settingsInstance = await deployerApp.deployWithUpgradeable('Settings', Settings, txConfig.from, '0x')
   await settingsInstance.initialize(txConfig.from);
-  console.log(`Settings Pausable: ${txConfig.from}`);
   await initSettings(
     settingsInstance,
     { ...networkConfig, txConfig, network, currentBlockNumber, web3 },
@@ -116,7 +115,7 @@ module.exports = async function(deployer, network, accounts) {
       collateralDecimals,
       txConfig
     );
-    console.log(`New aggregator (Inversed? ${inversed}) for ${chainlinkOraclePair} (Collateral Decimals: ${collateralDecimals} / Response Decimals: ${responseDecimals}): ${ChainlinkPairAggregator.address} (using Chainlink Oracle address ${address})`);
+    console.log(`New aggregator (Inversed? ${inversed}) for ${chainlinkOraclePair} (Collateral Decimals: ${collateralDecimals} / Response Decimals: ${responseDecimals}): ${ChainlinkPairAggregatorReference.address} (using Chainlink Oracle address ${address})`);
     aggregators[chainlinkOraclePair] = ChainlinkPairAggregator.address;
   }
 

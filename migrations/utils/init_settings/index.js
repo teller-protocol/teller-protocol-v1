@@ -20,7 +20,7 @@ module.exports = async function (
 
     await initPlatformSettings(
         settingsInstance,
-        { platformSettings, currentBlockNumber, web3, verbose: true },
+        { platformSettings, currentBlockNumber, txConfig, web3, verbose: true },
         { },
     );
 
