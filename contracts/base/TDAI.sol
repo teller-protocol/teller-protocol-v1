@@ -10,8 +10,8 @@ import "./TToken.sol";
  */
 contract TDAI is TToken {
     /* State Variables */
-    string private constant NAME = "Teller DAITest";
-    string private constant SYMBOL = "tDAITest";
+    string private constant NAME = "Teller DAI";
+    string private constant SYMBOL = "tDAI";
     uint8 private constant DECIMALS = 18;
 
     /* Constructor */
