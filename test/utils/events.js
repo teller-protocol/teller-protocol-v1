@@ -115,6 +115,18 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        interestValidatorUpdated: tx => {
+            const name = 'InterestValidatorUpdated';
+            return {
+                name: name,
+                emitted: (sender, oldInterestValidator, newInterestValidator) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.oldInterestValidator.toString(), oldInterestValidator.toString());
+                    assert.equal(ev.newInterestValidator.toString(), newInterestValidator.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     },
     loans: {
         loanTermsSet: tx => {
@@ -170,6 +182,20 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        loanRepaid: tx => {
+            const name = 'LoanRepaid';
+            return {
+                name: name,
+                emitted: (loanID, borrower, amountPaid, payer, totalOwed) => emitted (tx, name, ev => {
+                    assert.equal(ev.loanID.toString(), loanID.toString());
+                    assert.equal(ev.borrower, borrower);
+                    assert.equal(ev.amountPaid.toString(), BigNumber(amountPaid.toString()).toFixed(0));
+                    assert.equal(ev.payer, payer);
+                    assert.equal(ev.totalOwed.toString(), BigNumber(totalOwed.toString()).toFixed(0));
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
         loanLiquidated: tx => {
             const name = 'LoanLiquidated';
             return {
@@ -190,19 +216,32 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        priceOracleUpdated: tx => {
+            const name = 'PriceOracleUpdated';
+            return {
+                name: name,
+                emitted: (sender, oldPriceOracle, newPriceOracle) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.oldPriceOracle, oldPriceOracle);
+                    assert.equal(ev.newPriceOracle, newPriceOracle);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     },
     interestConsensus: {
         interestSubmitted: tx => {
             const name = 'InterestSubmitted';
             return {
                 name: name,
-                emitted: (signer, lender, endTime, interest) => truffleAssert.eventEmitted(tx, name, ev => {
+                emitted: (signer, lender, requestNonce, endTime, interest) => truffleAssert.eventEmitted(tx, name, ev => {
                     return (
-                        ev.signer == signer && 
-                        ev.lender == lender &&
-                        ev.endTime.toString() == endTime.toString() &&
-                        ev.interest.toString() == interest.toString()
-                    )
+                        ev.signer.toString() === signer.toString() && 
+                        ev.lender.toString() === lender.toString() &&
+                        ev.requestNonce.toString() === requestNonce.toString() &&
+                        ev.endTime.toString() === endTime.toString() &&
+                        ev.interest.toString() === interest.toString()
+                    );
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -211,11 +250,12 @@ module.exports = {
             const name = 'InterestAccepted';
             return {
                 name: name,
-                emitted: (lender, endTime, interest) => truffleAssert.eventEmitted(tx, name, ev => {
+                emitted: (lender, requestNonce, endTime, interest) => truffleAssert.eventEmitted(tx, name, ev => {
                     return (
-                        ev.lender == lender && 
-                        ev.endTime.toString() == endTime.toString() &&
-                        ev.interest.toString() == interest.toString()
+                        ev.lender === lender && 
+                        ev.requestNonce.toString() === requestNonce.toString() &&
+                        ev.endTime.toString() === endTime.toString() &&
+                        ev.interest.toString() === interest.toString()
                     )
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
@@ -229,12 +269,12 @@ module.exports = {
                 name: name,
                 emitted: (signer, borrower, requestNonce, interestRate, collateralRatio, maxLoanAmount) => truffleAssert.eventEmitted(tx, name, ev => {
                     return (
-                        ev.signer == signer && 
-                        ev.borrower == borrower &&
-                        ev.requestNonce.toString() == requestNonce.toString() &&
-                        ev.interestRate.toString() == interestRate.toString() &&
-                        ev.collateralRatio.toString() == collateralRatio.toString() &&
-                        ev.maxLoanAmount.toString() == maxLoanAmount.toString()
+                        ev.signer === signer && 
+                        ev.borrower === borrower &&
+                        ev.requestNonce.toString() === requestNonce.toString() &&
+                        ev.interestRate.toString() === interestRate.toString() &&
+                        ev.collateralRatio.toString() === collateralRatio.toString() &&
+                        ev.maxLoanAmount.toString() === maxLoanAmount.toString()
                     )
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
@@ -246,12 +286,69 @@ module.exports = {
                 name: name,
                 emitted: (borrower, requestNonce, interestRate, collateralRatio, maxLoanAmount) => truffleAssert.eventEmitted(tx, name, ev => {
                   return (
-                        ev.borrower == borrower &&
-                        ev.requestNonce.toString() == requestNonce.toString() &&
-                        ev.interestRate.toString() == interestRate.toString() &&
-                        ev.collateralRatio.toString() == collateralRatio.toString() &&
-                        ev.maxLoanAmount.toString() == maxLoanAmount.toString()
+                        ev.borrower === borrower &&
+                        ev.requestNonce.toString() === requestNonce.toString() &&
+                        ev.interestRate.toString() === interestRate.toString() &&
+                        ev.collateralRatio.toString() === collateralRatio.toString() &&
+                        ev.maxLoanAmount.toString() === maxLoanAmount.toString()
                     )
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
+    atmToken: {
+        newCap: tx => {
+            const name = 'NewCap';
+            return {
+                name: name,
+                emitted: (newCap) => emitted(tx, name, ev => {
+                    assert.equal(ev.newCap, newCap);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        newVesting: tx => {
+            const name = "NewVesting";
+            return {
+                name: name,
+                emitted: (beneficiary, amount, deadline) => emitted(tx, name, ev => {
+                    assert.equal(ev.beneficiary, beneficiary);
+                    assert.equal(ev.amount, amount);
+                    assert.equal(ev.deadline, deadline);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        vestingClaimed: tx => {
+            const name = "VestingClaimed";
+            return {
+                name: name,
+                emitted: (beneficiary, amount) => emitted(tx, name, ev => {
+                    assert.equal(ev.beneficiary, beneficiary);
+                    assert.equal(ev.amount, amount);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        revokeVesting: tx => {
+            const name = "RevokeVesting";
+            return {
+                name: name,
+                emitted: (beneficiary, amount, deadline) => emitted(tx, name, ev => {
+                    assert.equal(ev.beneficiary, beneficiary);
+                    assert.equal(ev.amount, amount);
+                    assert.equal(ev.deadline, deadline);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction) 
+            };
+        },
+        snapshot: tx => {
+            const name = 'Snapshot';
+            return {
+                name: name,
+                emitted: (id) => emitted(tx, name, ev => {
+                    assert.equal(ev.id, id);
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -280,19 +377,306 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-        settingUpdated: tx => {
-            const name = 'SettingUpdated';
+        assetSettingsCreated: tx => {
+            const name = 'AssetSettingsCreated';
             return {
                 name: name,
-                emitted: (settingName, sender, oldValue, newValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.settingName.toString(), settingName.toString());
+                emitted: (sender, assetAddress, cTokenAddress, maxLoanAmount) => emitted(tx, name, ev => {
                     assert.equal(ev.sender, sender);
+                    assert.equal(ev.assetAddress.toString(), assetAddress.toString());
+                    assert.equal(ev.cTokenAddress.toString(), cTokenAddress.toString());
+                    assert.equal(ev.maxLoanAmount.toString(), maxLoanAmount.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        assetSettingsAddressUpdated: tx => {
+            const name = 'AssetSettingsAddressUpdated';
+            return {
+                name: name,
+                emitted: (assetSettingName, sender, assetAddress, oldValue, newValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.assetSettingName.toString(), assetSettingName.toString());
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.assetAddress.toString(), assetAddress.toString());
                     assert.equal(ev.oldValue.toString(), oldValue.toString());
-                    assert.equal(ev.newValue, newValue);
+                    assert.equal(ev.newValue.toString(), newValue.toString());
 
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-    }
+        assetSettingsUintUpdated: tx => {
+            const name = 'AssetSettingsUintUpdated';
+            return {
+                name: name,
+                emitted: (assetSettingName, sender, assetAddress, oldValue, newValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.assetSettingName.toString(), assetSettingName.toString());
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.assetAddress.toString(), assetAddress.toString());
+                    assert.equal(ev.oldValue.toString(), oldValue.toString());
+                    assert.equal(ev.newValue.toString(), newValue.toString());
+
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        assetSettingsRemoved: tx => {
+            const name = 'AssetSettingsRemoved';
+            return {
+                name: name,
+                emitted: (sender, assetAddress) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.assetAddress.toString(), assetAddress.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        platformSettingCreated: tx => {
+            const name = 'PlatformSettingCreated';
+            return {
+                name: name,
+                emitted: (settingName, sender, value, minValue, maxValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.settingName.toString(), settingName.toString());
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.value.toString(), value.toString());
+                    assert.equal(ev.minValue.toString(), minValue.toString());
+                    assert.equal(ev.maxValue.toString(), maxValue.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        platformSettingUpdated: tx => {
+            const name = 'PlatformSettingUpdated';
+            return {
+                name: name,
+                emitted: (settingName, sender, oldValue, newValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.settingName.toString(), settingName.toString());
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.oldValue.toString(), oldValue.toString());
+                    assert.equal(ev.newValue.toString(), newValue.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        platformSettingRemoved: tx => {
+            const name = 'PlatformSettingRemoved';
+            return {
+                name: name,
+                emitted: (settingName, sender, lastValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.settingName.toString(), settingName.toString());
+                    assert.equal(ev.lastValue.toString(), lastValue.toString());
+                    assert.equal(ev.sender.toString(), sender.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
+    atmGovernance: {
+        generalSettingAdded: tx => {
+            const name = 'GeneralSettingAdded';
+            return {
+                name: name,
+                emitted: (sender, settingName, settingValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.settingName, settingName);
+                    assert.equal(ev.settingValue, settingValue);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        generalSettingUpdated: tx => {
+            const name = 'GeneralSettingUpdated';
+            return {
+                name: name,
+                emitted: (sender, settingName, oldValue, newValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.settingName, settingName);
+                    assert.equal(ev.oldValue, oldValue);
+                    assert.equal(ev.newValue, newValue);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        generalSettingRemoved: tx => {
+            const name = 'GeneralSettingRemoved';
+            return {
+                name: name,
+                emitted: (sender, settingName, settingValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.settingName, settingName);
+                    assert.equal(ev.settingValue, settingValue);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        assetMarketSettingAdded: tx => {
+            const name = 'AssetMarketSettingAdded';
+            return {
+                name: name,
+                emitted: (sender, asset, settingName, settingValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.asset, asset);
+                    assert.equal(ev.settingName, settingName);
+                    assert.equal(ev.settingValue, settingValue);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        assetMarketSettingRemoved: tx => {
+            const name = 'AssetMarketSettingRemoved';
+            return {
+                name: name,
+                emitted: (sender, asset, settingName, settingValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.asset, asset);
+                    assert.equal(ev.settingName, settingName);
+                    assert.equal(ev.oldValue, settingValue);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        assetMarketSettingUpdated: tx => {
+            const name = 'AssetMarketSettingUpdated';
+            return {
+                name: name,
+                emitted: (sender, asset, settingName, oldValue, newValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.asset, asset);
+                    assert.equal(ev.settingName, settingName);
+                    assert.equal(ev.oldValue, oldValue);
+                    assert.equal(ev.newValue, newValue);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        dataProviderAdded: tx => {
+            const name = 'DataProviderAdded';
+            return {
+                name: name,
+                emitted: (sender, index, amountDataProviders, dataProvider) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.dataTypeIndex, index);
+                    assert.equal(ev.amountDataProviders, amountDataProviders);
+                    assert.equal(ev.dataProvider, dataProvider);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        dataProviderUpdated: tx => {
+            const name = 'DataProviderUpdated';
+            return {
+                name: name,
+                emitted: (sender, dataTypeIndex, providerIndex, oldDataProvider, newDataProvider) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.dataTypeIndex, dataTypeIndex);
+                    assert.equal(ev.dataProviderIndex, providerIndex);
+                    assert.equal(ev.oldDataProvider, oldDataProvider);
+                    assert.equal(ev.newDataProvider, newDataProvider);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        dataProviderRemoved: tx => {
+            const name = 'DataProviderRemoved';
+            return {
+                name: name,
+                emitted: (sender, dataTypeIndex, dataProviderIndex, dataProvider) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.dataTypeIndex, dataTypeIndex);
+                    assert.equal(ev.dataProviderIndex, dataProviderIndex);
+                    assert.equal(ev.dataProvider, dataProvider);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        CRASet: tx => {
+            const name = 'CRASet';
+            return {
+                name: name,
+                emitted: (sender, cra) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.craCommitHash.toString(), cra.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
+    atmSettings: {
+        atmPaused: tx => {
+            const name = 'ATMPaused';
+            return {
+                name: name,
+                emitted: (atm, account) => emitted(tx, name, ev => {
+                    assert.equal(ev.atm.toString(), atm.toString());
+                    assert.equal(ev.account.toString(), account.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        atmUnpaused: tx => {
+            const name = 'ATMUnpaused';
+            return {
+                name: name,
+                emitted: (atm, account) => emitted(tx, name, ev => {
+                    assert.equal(ev.atm.toString(), atm.toString());
+                    assert.equal(ev.account.toString(), account.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        marketToAtmUpdated: tx => {
+            const name = 'MarketToAtmUpdated';
+            return {
+                name: name,
+                emitted: (borrowedToken, collateralToken, oldAtm, newAtm, account) => emitted(tx, name, ev => {
+                    assert.equal(ev.borrowedToken.toString(), borrowedToken.toString());
+                    assert.equal(ev.collateralToken.toString(), collateralToken.toString());
+                    assert.equal(ev.oldAtm.toString(), oldAtm.toString());
+                    assert.equal(ev.newAtm.toString(), newAtm.toString());
+                    assert.equal(ev.account.toString(), account.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        marketToAtmSet: tx => {
+            const name = 'MarketToAtmSet';
+            return {
+                name: name,
+                emitted: (borrowedToken, collateralToken, atm, account) => emitted(tx, name, ev => {
+                    assert.equal(ev.borrowedToken.toString(), borrowedToken.toString());
+                    assert.equal(ev.collateralToken.toString(), collateralToken.toString());
+                    assert.equal(ev.atm.toString(), atm.toString());
+                    assert.equal(ev.account.toString(), account.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        marketToAtmRemoved: tx => {
+            const name = 'MarketToAtmRemoved';
+            return {
+                name: name,
+                emitted: (borrowedToken, collateralToken, oldAtm, account) => emitted(tx, name, ev => {
+                    assert.equal(ev.borrowedToken.toString(), borrowedToken.toString());
+                    assert.equal(ev.collateralToken.toString(), collateralToken.toString());
+                    assert.equal(ev.oldAtm.toString(), oldAtm.toString());
+                    assert.equal(ev.account.toString(), account.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
+    atmFactory: {
+        atmCreated: tx => {
+            const name = 'ATMCreated';
+            return {
+                name: name,
+                emitted: (sender, atm, token) => emitted(tx, name, ev => {
+                    assert.equal(ev.creator, sender);
+                    assert.equal(ev.atmGovernanceAddress, atm);
+                    assert.equal(ev.atmTokenAddress, token);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
 };

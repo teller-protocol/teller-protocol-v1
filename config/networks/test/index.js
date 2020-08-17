@@ -3,7 +3,11 @@ module.exports = {
     chainlink: require('./chainlink'),
     compound: require('./compound'),
     tokens: require('./tokens'),
-    maxGasLimit: 6000000,
+    assetSettings: require('./assetSettings'),
+    platformSettings: require('./platformSettings'),
+    signers: require('./signers'),
+    atms: require('./atms'),
+    maxGasLimit: 6500000,
     toTxUrl: ({ tx }) => {
         return `not-supported-url`;
     },

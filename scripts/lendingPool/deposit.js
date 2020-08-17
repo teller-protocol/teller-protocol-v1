@@ -1,7 +1,7 @@
 // Smart contracts
 
 // Util classes
-const {zerocollateral, tokens} = require("../../scripts/utils/contracts");
+const {teller, tokens} = require("../../scripts/utils/contracts");
 const { toTokenDecimals } = require("../../test/utils/consts");
 const { lendingPool: readParams } = require("../utils/cli-builder");
 const BigNumber = require('bignumber.js');
@@ -24,7 +24,7 @@ module.exports = async (callback) => {
         const senderIndex = processArgs.getValue(SENDER_INDEX.name);
         const depositAmount = processArgs.getValue(AMOUNT.name);
 
-        const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.custom(collateralTokenName).lendingPool(tokenName));
+        const lendingPoolInstance = await getContracts.getDeployed(teller.custom(collateralTokenName).lendingPool(tokenName));
         const tokenInstance = await getContracts.getDeployed(tokens.get(tokenName));
         const depositAmountWithDecimals = await toTokenDecimals(tokenInstance, depositAmount);
 

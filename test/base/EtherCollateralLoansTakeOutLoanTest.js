@@ -1,12 +1,13 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, THIRTY_DAYS, getLatestTimestamp, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE } = require('../utils/consts');
+const { t, getLatestTimestamp, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE } = require('../utils/consts');
 const { createLoanTerms } = require('../utils/structs');
 const { loans } = require('../utils/events');
 
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const PairAggregatorEncoder = require('../utils/encoders/PairAggregatorEncoder');
 const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
+const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -36,7 +37,9 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
         lendingPoolInstance = await Mock.new();
         lendingTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
-        const settingsInstance = await Settings.new(1, 1, THIRTY_DAYS, FIVE_MIN, THIRTY_DAYS, 9500);
+        const marketsInstance = await Mock.new();
+        const atmSettingsInstance = await Mock.new();
+        const settingsInstance = await createTestSettingsInstance(Settings);
         loanTermsConsInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(
@@ -44,6 +47,8 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,
+            marketsInstance.address,
+            atmSettingsInstance.address,
         );
 
         // encode lending token address
@@ -90,7 +95,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
               termsExpiry += FIVE_MIN
             }
 
-            let lastCollateralIn = timeNow
+            let lastCollateralIn = timeNow + FIVE_MIN
             if (!collateralTooRecent) {
               lastCollateralIn -= FIVE_MIN
             }
@@ -102,6 +107,11 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
             try {
                 // Invocation
                 const tx = await instance.takeOutLoan(mockLoanID, amountToBorrow, { from: borrower });
+
+                // Assertions
+                assert(!mustFail, 'It should have failed because data is invalid.');
+                assert(tx);
+
                 const txTime = (await web3.eth.getBlock(tx.receipt.blockNumber)).timestamp
                 const interestOwed = Math.floor(amountToBorrow * 1475 * loanDuration / 10000 / 3650000)
                 const loan = await instance.loans.call(mockLoanID)

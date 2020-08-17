@@ -19,23 +19,25 @@ contract('InterestConsensus hashInterestRequest and hashReponse', function (acco
 
     beforeEach('Setup for each test', async () => {
         const settings = await Mock.new();
+        const marketsInstance = await Mock.new();
         instance = await InterestConsensusMock.new()
-        await instance.initialize(lendersAddress, settings.address);
+        await instance.initialize(lendersAddress, settings.address, marketsInstance.address);
     })
 
     withData({
-        _1_first_test_hashInterestRequest: [chains.mainnet, accounts[2], 234764, 344673177, 34467317723],
-        _2_first_test_hashInterestRequest: [chains.ropsten, accounts[3], 134764, 354673177, 37467617723],
-        _3_second_test_hashInterestRequest: [chains.ropsten, NULL_ADDRESS, 0, 0, 0],
+        _1_first_test_hashInterestRequest: [chains.mainnet, 1, accounts[2], 234764, 344673177, 34467317723],
+        _2_first_test_hashInterestRequest: [chains.ropsten, 2, accounts[3], 134764, 354673177, 37467617723],
+        _3_second_test_hashInterestRequest: [chains.ropsten, 3, NULL_ADDRESS, 0, 0, 0],
     }, function(
         chainId,
+        requestNonce,
         lender,
         startTime,
         endTime,
       requestTime,
     ) {    
         it(t('user', 'new', 'Should correctly calculate the hash for a request', false), async function() {
-            const request = createInterestRequest(lender, startTime, endTime, requestTime, instance.address, chains.mainnet)
+            const request = createInterestRequest(lender, requestNonce, startTime, endTime, requestTime, instance.address, chains.mainnet)
 
             let expectedResult = ethUtil.bufferToHex(
                 hashInterestRequest(
@@ -54,18 +56,19 @@ contract('InterestConsensus hashInterestRequest and hashReponse', function (acco
     });
 
     withData({
-        _1_first_test_hashInterestResponse: [chains.mainnet, accounts[0], 234764, 344673177, 34467317723],
-        _2_first_test_hashInterestResponse: [chains.ropsten, accounts[4], 765189, 344673177, 34657317723],
-        _3_second_test_hashInterestResponse: [chains.mainnet, NULL_ADDRESS, 0, 0, 0],
+        _1_first_test_hashInterestResponse: [chains.mainnet, 4, accounts[0], 234764, 344673177, 34467317723],
+        _2_first_test_hashInterestResponse: [chains.ropsten, 5, accounts[4], 765189, 344673177, 34657317723],
+        _3_second_test_hashInterestResponse: [chains.mainnet, 6, NULL_ADDRESS, 0, 0, 0],
     }, function(
         chainId,
+        requestNonce,
         signer,
         responseTime,
         interest,
         signerNonce,
     ) {    
         it(t('user', 'new', 'Should correctly calculate the hash for a response', false), async function() {
-            const request = createInterestRequest(accounts[3], 2345, 2345, 3456, instance.address)
+            const request = createInterestRequest(accounts[3], requestNonce, 2345, 2345, 3456, instance.address)
             const requestHash = ethUtil.bufferToHex(hashInterestRequest(request, accounts[4], chainId))
             const response = createUnsignedInterestResponse(signer, responseTime, interest, signerNonce, instance.address)
 

@@ -12,8 +12,6 @@ import "./LoansBase.sol";
     @author develop@teller.finance
  */
 contract EtherCollateralLoans is LoansBase {
-    address public collateralToken = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
     /**
      * @notice Deposit collateral into a loan
      * @param borrower The address of the loan borrower.
@@ -47,10 +45,17 @@ contract EtherCollateralLoans is LoansBase {
         @param collateralAmount Amount of collateral required for the loan
      */
     function createLoanWithTerms(
-        ZeroCollateralCommon.LoanRequest calldata request,
-        ZeroCollateralCommon.LoanResponse[] calldata responses,
+        TellerCommon.LoanRequest calldata request,
+        TellerCommon.LoanResponse[] calldata responses,
         uint256 collateralAmount
-    ) external payable isInitialized() whenNotPaused() isBorrower(request.borrower) {
+    )
+        external
+        payable
+        isInitialized()
+        whenNotPaused()
+        isBorrower(request.borrower)
+        withValidLoanRequest(request)
+    {
         require(msg.value == collateralAmount, "INCORRECT_ETH_AMOUNT");
 
         uint256 loanID = getAndIncrementLoanID();
@@ -75,19 +80,14 @@ contract EtherCollateralLoans is LoansBase {
 
         borrowerLoans[request.borrower].push(loanID);
 
-        emit LoanTermsSet(
+        _emitLoanTermsSetAndCollateralDepositedEventsIfApplicable(
             loanID,
-            request.borrower,
-            request.recipient,
+            request,
             interestRate,
             collateralRatio,
             maxLoanAmount,
-            request.duration,
-            loans[loanID].termsExpiry
+            msg.value
         );
-        if (msg.value > 0) {
-            emit CollateralDeposited(loanID, request.borrower, msg.value);
-        }
     }
 
     /**
@@ -96,19 +96,27 @@ contract EtherCollateralLoans is LoansBase {
         @param lendingPoolAddress Contract address of the lending pool
         @param loanTermsConsensusAddress Contract adddress for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
+        @param marketsAddress Contract address to store the market data.
+        @param atmSettingsAddress Contract address to get ATM settings data.
      */
     function initialize(
         address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
-        address settingsAddress
+        address settingsAddress,
+        address marketsAddress,
+        address atmSettingsAddress
     ) external isNotInitialized() {
         _initialize(
             priceOracleAddress,
             lendingPoolAddress,
             loanTermsConsensusAddress,
-            settingsAddress
+            settingsAddress,
+            marketsAddress,
+            atmSettingsAddress
         );
+
+        collateralToken = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     }
 
     /** Internal Functions */

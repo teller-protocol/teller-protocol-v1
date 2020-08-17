@@ -23,12 +23,16 @@ contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
     let oracleInstance;
     let loanTermsConsInstance;
     let settingsInstance;
+    let marketsInstance;
+    let atmSettingsInstance;
     
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
-        settingsInstance = await Mock.new()
+        settingsInstance = await Mock.new();
+        marketsInstance = await Mock.new();
+        atmSettingsInstance = await Mock.new();
         instance = await Loans.new();
     });
 
@@ -71,6 +75,8 @@ contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
                 loanTermsConsInstance.address,
                 settingsInstance.address,
                 collateralToken.address,
+                marketsInstance.address,
+                atmSettingsInstance.address,
             );
 
             const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, 0, 0, 0)
@@ -115,14 +121,11 @@ contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
     });
 
     withData({
-        _1_deposit_basic: [
-            1, 1, accounts[1], accounts[1], accounts[1], 5000000, true, 5000000, 0, 0, false, undefined
+        _1_not_enough_allowance: [
+            1, 1, accounts[1], accounts[1], accounts[1], 4500000, true, 5000000, 0, 0, true, 'NOT_ENOUGH_TOKENS_ALLOWANCE'
         ],
-        _2_not_enough_allowance: [
-            1, 1, accounts[1], accounts[1], accounts[1], 4500000, true, 5000000, 0, 0, true, 'NOT_ENOUGH_COLL_TOKENS_ALLOWANCE'
-        ],
-        _3_transferFrom_failed: [
-            1, 1, accounts[1], accounts[1], accounts[1], 5000000, false, 5000000, 0, 0, true, 'COLL_TOKENS_FROM_TRANSFER_FAILED'
+        _2_transferFrom_failed: [
+            1, 1, accounts[1], accounts[1], accounts[1], 5000000, false, 5000000, 0, 0, true, 'TOKENS_TRANSFER_FROM_FAILED'
         ],
     }, function(
         lastLoanID,
@@ -147,6 +150,8 @@ contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
                 loanTermsConsInstance.address,
                 settingsInstance.address,
                 collateralToken.address,
+                marketsInstance.address,
+                atmSettingsInstance.address,
             );
             const encodeAllowance = erc20InterfaceEncoder.encodeAllowance();
             await collateralToken.givenMethodReturnUint(encodeAllowance, currentAllowance);

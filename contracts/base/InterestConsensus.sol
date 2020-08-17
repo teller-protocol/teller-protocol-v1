@@ -36,13 +36,19 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         @return the consensus interest.
      */
     function processRequest(
-        ZeroCollateralCommon.InterestRequest calldata request,
-        ZeroCollateralCommon.InterestResponse[] calldata responses
+        TellerCommon.InterestRequest calldata request,
+        TellerCommon.InterestResponse[] calldata responses
     ) external isInitialized() isCaller() returns (uint256) {
         require(
-            responses.length >= settings.requiredSubmissions(),
-            "INSUFFICIENT_RESPONSES"
+            responses.length >=
+                settings.getPlatformSettingValue(REQUIRED_SUBMISSIONS_SETTING),
+            "INTEREST_INSUFFICIENT_RESPONSES"
         );
+        require(
+            !requestNonceTaken[request.lender][request.requestNonce],
+            "INTEREST_REQUEST_NONCE_TAKEN"
+        );
+        requestNonceTaken[request.lender][request.requestNonce] = true;
 
         bytes32 requestHash = _hashRequest(request);
 
@@ -54,7 +60,12 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
             interestSubmissions[request.lender][request.endTime]
         );
 
-        emit InterestAccepted(request.lender, request.endTime, interestAccrued);
+        emit InterestAccepted(
+            request.lender,
+            request.requestNonce,
+            request.endTime,
+            interestAccrued
+        );
 
         return interestAccrued;
     }
@@ -67,8 +78,8 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         @param response a node response.
      */
     function _processResponse(
-        ZeroCollateralCommon.InterestRequest memory request,
-        ZeroCollateralCommon.InterestResponse memory response,
+        TellerCommon.InterestRequest memory request,
+        TellerCommon.InterestResponse memory response,
         bytes32 requestHash
     ) internal {
         bytes32 responseHash = _hashResponse(response, requestHash);
@@ -87,6 +98,7 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         emit InterestSubmitted(
             response.signer,
             request.lender,
+            request.requestNonce,
             request.endTime,
             response.interest
         );
@@ -99,7 +111,7 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         @return a hash value.
      */
     function _hashResponse(
-        ZeroCollateralCommon.InterestResponse memory response,
+        TellerCommon.InterestResponse memory response,
         bytes32 requestHash
     ) internal view returns (bytes32) {
         return
@@ -120,7 +132,7 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
         @param request the interest request sent by the lender.
         @return a hash value.
      */
-    function _hashRequest(ZeroCollateralCommon.InterestRequest memory request)
+    function _hashRequest(TellerCommon.InterestRequest memory request)
         internal
         view
         returns (bytes32)
@@ -131,6 +143,7 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
                     callerAddress,
                     request.lender,
                     request.consensusAddress,
+                    request.requestNonce,
                     request.startTime,
                     request.endTime,
                     request.requestTime,

@@ -4,8 +4,9 @@ const {
     getLatestTimestamp,
     ONE_DAY,
     THIRTY_DAYS,
-    NULL_ADDRESS
+    NULL_ADDRESS,
 } = require('../utils/consts');
+const settingsNames = require('../utils/platformSettingsNames');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
 const { createLoanResponseSig, hashLoanTermsRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
@@ -13,6 +14,10 @@ const { loanTermsConsensus } = require('../utils/events');
 
 const BigNumber = require('bignumber.js');
 const chains = require('../utils/chains');
+const { createTestSettingsInstance } = require('../utils/settings-helper');
+
+// Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const LoanTermsConsensus = artifacts.require("./mock/base/LoanTermsConsensusMock.sol");
@@ -28,7 +33,6 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
     const nodeThree = accounts[4]
     const nodeFour = accounts[5]
     const nodeSix = accounts[6]
-    const nodeSeven = accounts[7]
     const borrower = accounts[9]
     const requestNonce = 142
 
@@ -79,7 +83,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
 
     withData({
         _1_insufficient_responses: [
-            3, 320, undefined, undefined, [responseOne, responseTwo], true, 'INSUFFICIENT_RESPONSES'
+            3, 320, undefined, undefined, [responseOne, responseTwo], true, 'LOANTERM_INSUFFICIENT_RESPONSES'
         ],
         _2_one_response_successful: [
             1, 320, undefined, undefined, [responseOne], false, undefined
@@ -106,7 +110,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
             4, 320, undefined, undefined, [responseOne, responseTwo, responseFour, responseInvalidChainId], true, 'SIGNATURE_INVALID'
         ],
         _10_borrower_nonce_taken: [
-            3, 360, undefined, { nonce: requestNonce, borrower: borrower }, [responseFive, responseOne, responseTwo], true, 'REQUEST_NONCE_TAKEN'
+            3, 360, undefined, { nonce: requestNonce, borrower: borrower }, [responseFive, responseOne, responseTwo], true, 'LOAN_TERMS_REQUEST_NONCE_TAKEN'
         ],
     }, function(
         reqSubmissions,
@@ -119,9 +123,19 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
     ) {    
         it(t('user', 'processRequest', 'Should accept/not accept node request/responses', mustFail), async function() {
             // set up contract
-            settings = await Settings.new(reqSubmissions, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500);
+            const markets = await Mock.new();
+            settings = await createTestSettingsInstance(
+                Settings,
+                {
+                    [settingsNames.RequiredSubmissions]: reqSubmissions,
+                    [settingsNames.MaximumTolerance]: tolerance,
+                    [settingsNames.ResponseExpiryLength]: THIRTY_DAYS,
+                    [settingsNames.TermsExpiryTime]: THIRTY_DAYS,
+                    [settingsNames.LiquidateEthPrice]: 9500,
+                }
+            );
             
-            await instance.initialize(loansContract, settings.address)
+            await instance.initialize(loansContract, settings.address, markets.address);
 
             await instance.addSigner(nodeOne)
             await instance.addSigner(nodeTwo)
@@ -144,6 +158,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
                     true
                 );
             }
+            const currentRequestLoanTermsTimestamp = await getLatestTimestamp();
 
             try {
                 const result = await instance.processRequest(
@@ -154,6 +169,16 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
                 );
 
                 assert(!mustFail, 'It should have failed because data is invalid.');
+
+                const lastLoanTermRequest = await instance.borrowerToLastLoanTermRequest(borrower);
+                assert(
+                    // due to the full unit tests suite takes time to execute, it is possible that there is a very small difference in the times.
+                    parseInt(currentRequestLoanTermsTimestamp.toString()) == parseInt(lastLoanTermRequest.toString())
+                    || parseInt(currentRequestLoanTermsTimestamp.toString()) == parseInt(lastLoanTermRequest.toString()) + 1
+                    || parseInt(currentRequestLoanTermsTimestamp.toString()) + 1 == parseInt(lastLoanTermRequest.toString())
+                    ,
+                    'Last request loan terms timestamp must be equals.'
+                );
 
                 let totalInterestRate = 0
                 let totalCollateralRatio = 0

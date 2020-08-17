@@ -11,7 +11,7 @@ const Consensus = artifacts.require("./base/ConsensusModifiersMock.sol");
 contract('ConsensusModifiersTest', function (accounts) {
 
     withData({
-        _1_not_lenders: [accounts[1], accounts[3], 'Address has no permissions.', true],
+        _1_not_lenders: [accounts[1], accounts[3], 'SENDER_HASNT_PERMISSIONS', true],
         _2_lenders: [accounts[1], accounts[1], undefined, false]
     }, function(
         callerAddress,
@@ -19,12 +19,13 @@ contract('ConsensusModifiersTest', function (accounts) {
         expectedErrorMessage,
         mustFail
     ) {    
-        it(t('user', 'new', 'Should (or not) be able to call the function', mustFail), async function() {
+        it(t('user', 'isCaller', 'Should (or not) be able to call the function', mustFail), async function() {
             try {
                 // Setup
                 const settingsInstance = await Mock.new();
+                const marketsInstance = await Mock.new();
                 const instance = await Consensus.new();
-                await instance.initialize(callerAddress, settingsInstance.address)
+                await instance.initialize(callerAddress, settingsInstance.address, marketsInstance.address);
 
                 const result = await instance.externalIsCaller({ from:  msgSender })
 

@@ -3,11 +3,11 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/Lenders.sol";
 
+
 /**
     This contract is created ONLY for testing purposes.
  */
 contract LendersMock is Lenders {
-    
     /** State Variables */
 
     bool public addressesEqual;
@@ -33,11 +33,7 @@ contract LendersMock is Lenders {
 
     /** Internal Functions */
 
-    function _areAddressesEqual(address, address)
-        internal
-        view
-        returns (bool)
-    {
+    function _areAddressesEqual(address, address) internal view returns (bool) {
         return addressesEqual;
     }
 }

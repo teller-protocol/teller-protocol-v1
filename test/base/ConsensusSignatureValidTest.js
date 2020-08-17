@@ -4,6 +4,7 @@ const { t } = require('../utils/consts');
 const { hashInterestRequest, signHash } = require('../utils/hashes');
 
 // Smart contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
 const ConsensusMock = artifacts.require("./mock/base/ConsensusMock.sol");
 
 // constants
@@ -11,13 +12,12 @@ const { NULL_ADDRESS } = require('../utils/consts');
 const chains = require('../utils/chains');
 
 contract('ConsensusSignatureValidTest', function (accounts) {
-    const tolerance = 0
-    const submissions = 1
-    let instance
+    let instance;
 
     const hashOne = hashInterestRequest(
         {
             lender: accounts[2],
+            requestNonce: 4,
             startTime: 345,
             endTime: 736,
             requestTime: 0,
@@ -30,6 +30,7 @@ contract('ConsensusSignatureValidTest', function (accounts) {
         {
             lender: NULL_ADDRESS,
             startTime: 0,
+            requestNonce: 0,
             endTime: 0,
             requestTime: 0,
             consensusAddress: accounts[2],
@@ -39,7 +40,15 @@ contract('ConsensusSignatureValidTest', function (accounts) {
   )
 
     beforeEach('Setup for each test', async () => {
-        instance = await ConsensusMock.new(submissions, tolerance)
+        instance = await ConsensusMock.new();
+        const aCaller = await Mock.new();
+        const aSetting = await Mock.new();
+        const aMarkets = await Mock.new();
+        await instance.initialize(
+            aCaller.address,
+            aSetting.address,
+            aMarkets.address,
+        );
     })
 
     withData({

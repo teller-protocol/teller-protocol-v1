@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, NULL_ADDRESS } = require('../utils/consts');
+const { t, NULL_ADDRESS, createMocks } = require('../utils/consts');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -9,49 +9,50 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const Lenders = artifacts.require("./base/Lenders.sol");
 
 contract('LendersInitializeTest', function (accounts) {
-    let zTokenInstance;
-    let lendingPoolInstance;
-    let interestConsensusInstance;
-    let settingsInstance;
     let instance;
+    let mocks;
 
     beforeEach('Setup for each test', async () => {
-        zTokenInstance = await Mock.new();
-        lendingPoolInstance = await Mock.new();
-        interestConsensusInstance = await Mock.new();
-        settingsInstance = await Mock.new();
+        mocks = await createMocks(Mock, 10);
         instance = await Lenders.new();
     });
 
+    const getInstance = (refs, index, accountIndex) => index === -1 ? NULL_ADDRESS: index === 99 ? accounts[accountIndex] : refs[index];
+
     withData({
-        _1_basic: [true, true, true, true, undefined, false],
-        _2_notzTokenInstance: [false, true, true, true, 'ZTOKEN_MUST_BE_PROVIDED', true],
-        _3_notLendingPoolInstance: [true, false, true, true, 'LENDING_POOL_MUST_BE_PROVIDED', true],
-        _4_notConsensusInstance: [true, true, false, true, 'CONSENSUS_MUST_BE_PROVIDED', true],
-        _5_notzTokenInstance_notLendingPoolInstance: [false, false, true, true, 'ZTOKEN_MUST_BE_PROVIDED', true],
-        _6_notSettingsInstance: [true, true, true, false, 'SETTINGS_MUST_BE_PROVIDED', true],
+        _1_basic: [2, 3, 4, 5, 6, undefined, false],
+        _2_notTTokenInstance: [-1, 3, 4, 5, 6, 'TTOKEN_MUST_BE_PROVIDED', true],
+        _3_notLendingPoolInstance: [2, -1, 4, 5, 6, 'LENDING_POOL_MUST_BE_PROVIDED', true],
+        _4_notConsensusInstance: [2, 3, -1, 5, 6, 'CONSENSUS_MUST_BE_PROVIDED', true],
+        _5_notTTokenInstance_notLendingPoolInstance: [-1, 3, -1, 5, 6, 'TTOKEN_MUST_BE_PROVIDED', true],
+        _6_notSettingsInstance: [2, 3, 4, -1, 6, 'SETTINGS_MUST_BE_PROVIDED', true],
+        _7_notMarkets: [2, 3, 4, 5, -1, 'MARKETS_MUST_BE_PROVIDED', true],
+        _8_notMarkets_not_contract: [2, 3, 4, 5, 99, 'MARKETS_MUST_BE_A_CONTRACT', true],
     }, function(
-        createzTokenInstance,
-        createLendingPoolInstance,
-        createConsensusInstance,
-        createSettingsInstance,
+        tokenIndex,
+        lendingPoolIndex,
+        consensusIndex,
+        settingsIndex,
+        marketsIndex,
         expectedErrorMessage,
         mustFail
     ) {    
         it(t('user', 'new', 'Should (or not) be able to create a new instance.', mustFail), async function() {
             // Setup
-            const zTokenAddress = createzTokenInstance ? zTokenInstance.address : NULL_ADDRESS;
-            const lendingPoolAddress = createLendingPoolInstance ? lendingPoolInstance.address : NULL_ADDRESS;
-            const consensusAddress = createConsensusInstance ? interestConsensusInstance.address : NULL_ADDRESS;
-            const settingsAddress = createSettingsInstance ? settingsInstance.address : NULL_ADDRESS;
+            const tTokenAddress = getInstance(mocks, tokenIndex, 2);
+            const lendingPoolAddress = getInstance(mocks, lendingPoolIndex, 3);
+            const consensusAddress = getInstance(mocks, consensusIndex, 4);
+            const settingsAddress = getInstance(mocks, settingsIndex, 5);
+            const marketsAddress = getInstance(mocks, marketsIndex, 6);
 
             try {
                 // Invocation
                 const result = await instance.initialize(
-                    zTokenAddress,
+                    tTokenAddress,
                     lendingPoolAddress,
                     consensusAddress,
                     settingsAddress,
+                    marketsAddress,
                 );
                 
                 // Assertions

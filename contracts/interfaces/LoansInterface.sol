@@ -1,7 +1,7 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../util/ZeroCollateralCommon.sol";
+import "../util/TellerCommon.sol";
 
 
 /**
@@ -99,6 +99,17 @@ interface LoansInterface {
     );
 
     /**
+        @notice This event is emitted when a the price oracle instance is updated.
+        @param oldPriceOracle the previous price oracle address.
+        @param newPriceOracle the new price oracle address.
+     */
+    event PriceOracleUpdated(
+        address indexed sender,
+        address indexed oldPriceOracle,
+        address indexed newPriceOracle
+    );
+
+    /**
         @notice Returns a list of all loans for a borrower
         @param borrower Account address of the borrower
      */
@@ -108,10 +119,7 @@ interface LoansInterface {
         @notice Returns the struct of a loan
         @param loanID ID of loan from which collateral was withdrawn
      */
-    function loans(uint256 loanID)
-        external
-        view
-        returns (ZeroCollateralCommon.Loan memory);
+    function loans(uint256 loanID) external view returns (TellerCommon.Loan memory);
 
     /**
         @notice Deposit collateral for a loan, unless it isn't allowed
@@ -137,8 +145,8 @@ interface LoansInterface {
         @param collateralAmount Amount of collateral for the loan
      */
     function createLoanWithTerms(
-        ZeroCollateralCommon.LoanRequest calldata request,
-        ZeroCollateralCommon.LoanResponse[] calldata responses,
+        TellerCommon.LoanRequest calldata request,
+        TellerCommon.LoanResponse[] calldata responses,
         uint256 collateralAmount
     ) external payable;
 
@@ -215,4 +223,10 @@ interface LoansInterface {
             uint256 collateralNeededCollateralTokens,
             bool requireCollateral
         );
+
+    /**
+        @notice Updates the current price oracle instance.
+        @param newPriceOracle the new price oracle address.
+     */
+    function setPriceOracle(address newPriceOracle) external;
 }

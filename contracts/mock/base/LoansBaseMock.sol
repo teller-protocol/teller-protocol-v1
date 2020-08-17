@@ -3,26 +3,43 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/LoansBase.sol";
 
-contract LoansBaseMock is LoansBase {
 
+contract LoansBaseMock is LoansBase {
     function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
-        internal {}
+        internal
+    {}
 
     function externalPayLoan(uint256 loanID, uint256 toPay) external {
         _payLoan(loanID, toPay);
     }
 
-    function externalConvertWeiToToken(uint256 weiAmount) external view returns (uint256) {
+    function externalConvertWeiToToken(uint256 weiAmount)
+        external
+        view
+        returns (uint256)
+    {
         return _convertWeiToToken(weiAmount);
     }
 
-    function externalConvertTokenToWei(uint256 tokenAmount) external view returns (uint256) {
+    function externalConvertTokenToWei(uint256 tokenAmount)
+        external
+        view
+        returns (uint256)
+    {
         return _convertTokenToWei(tokenAmount);
+    }
+
+    function externalIsSupplyToDebtRatioValid(uint256 newLoanAmount)
+        external
+        view
+        returns (bool)
+    {
+        return super._isSupplyToDebtRatioValid(newLoanAmount);
     }
 
     function setLoan(
         uint256 id,
-        ZeroCollateralCommon.LoanTerms calldata loanTerms,
+        TellerCommon.LoanTerms calldata loanTerms,
         uint256 termsExpiry,
         uint256 loanStartTime,
         uint256 collateral,
@@ -30,11 +47,11 @@ contract LoansBaseMock is LoansBase {
         uint256 principalOwed,
         uint256 interestOwed,
         uint256 borrowedAmount,
-        ZeroCollateralCommon.LoanStatus status,
+        TellerCommon.LoanStatus status,
         bool liquidated
     ) external {
         require(loanTerms.maxLoanAmount >= borrowedAmount, "BORROWED_AMOUNT_EXCEEDS_MAX");
-        loans[id] = ZeroCollateralCommon.Loan({
+        loans[id] = TellerCommon.Loan({
             id: id,
             loanTerms: loanTerms,
             termsExpiry: termsExpiry,
@@ -53,23 +70,28 @@ contract LoansBaseMock is LoansBase {
         address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
-        address settingsAddress
+        address settingsAddress,
+        address marketsAddress,
+        address atmSettingsAddress
     ) external isNotInitialized() {
         _initialize(
             priceOracleAddress,
             lendingPoolAddress,
             loanTermsConsensusAddress,
-            settingsAddress
+            settingsAddress,
+            marketsAddress,
+            atmSettingsAddress
         );
     }
 
     function depositCollateral(address borrower, uint256 loanID, uint256 amount)
         external
-        payable {}
+        payable
+    {}
 
     function createLoanWithTerms(
-        ZeroCollateralCommon.LoanRequest calldata request,
-        ZeroCollateralCommon.LoanResponse[] calldata responses,
+        TellerCommon.LoanRequest calldata request,
+        TellerCommon.LoanResponse[] calldata responses,
         uint256 collateralAmount
     ) external payable {}
 }

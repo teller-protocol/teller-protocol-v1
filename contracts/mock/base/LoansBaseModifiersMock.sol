@@ -3,21 +3,47 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/EtherCollateralLoans.sol";
 
+
 /**
     This contract is created ONLY for testing purposes.
  */
 contract LoansBaseModifiersMock is EtherCollateralLoans {
+    bool public mockIsSupplyToDebtRatioValid;
+    bool public returnIsSupplyToDebtRatioValid;
 
-    function setLoanStatus(uint256 loanID, ZeroCollateralCommon.LoanStatus status) external {
+    function setMockIsSupplyToDebtRatioValid(
+        bool result,
+        bool aResponseIsSupplyToDebtRatioValid
+    ) external {
+        mockIsSupplyToDebtRatioValid = result;
+        returnIsSupplyToDebtRatioValid = aResponseIsSupplyToDebtRatioValid;
+    }
+
+    function _isSupplyToDebtRatioValid(uint256 newLoanAmount)
+        internal
+        view
+        returns (bool)
+    {
+        if (!mockIsSupplyToDebtRatioValid) {
+            return super._isSupplyToDebtRatioValid(newLoanAmount);
+        }
+        return returnIsSupplyToDebtRatioValid;
+    }
+
+    function setLoanStatus(uint256 loanID, TellerCommon.LoanStatus status) external {
         loans[loanID].status = status;
     }
 
-    function externalLoanActive(uint256 loanID) loanActive(loanID) external {}
+    function externalLoanActive(uint256 loanID) external loanActive(loanID) {}
 
-    function externalLoanTermsSet(uint256 loanID) loanTermsSet(loanID) external {}
+    function externalLoanTermsSet(uint256 loanID) external loanTermsSet(loanID) {}
 
-    function externalLoanActiveOrSet(uint256 loanID) loanActiveOrSet(loanID) external {}
+    function externalLoanActiveOrSet(uint256 loanID) external loanActiveOrSet(loanID) {}
 
-    function externalIsBorrower(address anAddress) isBorrower(anAddress) external {}
+    function externalIsBorrower(address anAddress) external isBorrower(anAddress) {}
 
+    function externalWithValidLoanRequest(TellerCommon.LoanRequest calldata loanRequest)
+        external
+        withValidLoanRequest(loanRequest)
+    {}
 }

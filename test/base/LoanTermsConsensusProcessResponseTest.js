@@ -1,17 +1,22 @@
 const withData = require('leche').withData;
+const { createTestSettingsInstance } = require('../utils/settings-helper');
 const {
     t,
     getLatestTimestamp,
     THIRTY_DAYS,
     NULL_ADDRESS,
-    ONE_DAY
+    ONE_DAY,
 } = require('../utils/consts');
+const settingsNames = require('../utils/platformSettingsNames');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
 const { createLoanResponseSig, hashLoanTermsRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
 const { loanTermsConsensus } = require('../utils/events');
 const BigNumber = require('bignumber.js');
 const chains = require('../utils/chains');
+
+// Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const LoanTermsConsensusMock = artifacts.require("./mock/base/LoanTermsConsensusMock.sol");
@@ -81,11 +86,21 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
         mustFail,
         expectedErrorMessage,
     ) {    
-        it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
+        it(t('user', 'processResponse', 'Should accept/not accept a nodes response', false), async function() {
             // set up contract
-            settings = await Settings.new(requiredSubs, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500);
+            const markets = await Mock.new();
+            settings = await createTestSettingsInstance(
+                Settings, 
+                {
+                    [settingsNames.RequiredSubmissions]: requiredSubs,
+                    [settingsNames.MaximumTolerance]: tolerance,
+                    [settingsNames.ResponseExpiryLength]: THIRTY_DAYS,
+                    [settingsNames.TermsExpiryTime]: THIRTY_DAYS,
+                    [settingsNames.LiquidateEthPrice]: 9500,
+                }
+            );
             instance = await LoanTermsConsensusMock.new()
-            await instance.initialize(loansContract, settings.address)
+            await instance.initialize(loansContract, settings.address, markets.address);
 
             const loanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478, instance.address)
             const requestHash = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, loansContract, chains.mainnet))

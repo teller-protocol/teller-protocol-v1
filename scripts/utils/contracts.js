@@ -1,53 +1,53 @@
-const ZERO_COLLATERAL_KEY = 'zerocollateral';
+const TELLER_KEY = 'teller';
 const ETH = 'ETH';
 const LINK = 'LINK';
 
 const internalLoans = (collateralToken, tokenName, artifactName = 'Loans') => {
     return {
-        keyName: ZERO_COLLATERAL_KEY,
-        contractName: `${collateralToken.toUpperCase()}_Loans_z${tokenName.toUpperCase()}`,
+        keyName: TELLER_KEY,
+        contractName: `${collateralToken.toUpperCase()}_Loans_t${tokenName.toUpperCase()}_Proxy`,
         artifactName,
     }
 };
 const internalOracle = (sourceToken, targetToken, artifactName = 'ChainlinkPairAggregator') => {
     return {
-        keyName: ZERO_COLLATERAL_KEY,
+        keyName: TELLER_KEY,
         contractName: `ChainlinkPairAggregator_${sourceToken.toUpperCase()}_${targetToken.toUpperCase()}`,
         artifactName,
     };
 };
 const internalLendingPool = (collateralToken, tokenName, artifactName = 'LendingPool') => {
     return {
-        keyName: ZERO_COLLATERAL_KEY,
-        contractName: `${collateralToken.toUpperCase()}_LendingPool_z${tokenName.toUpperCase()}`,
+        keyName: TELLER_KEY,
+        contractName: `${collateralToken.toUpperCase()}_LendingPool_t${tokenName.toUpperCase()}_Proxy`,
         artifactName,
     };
 };
 const internalInterestConsensus = (collateralToken, tokenName, artifactName = 'InterestConsensus') => {
     return {
-        keyName: ZERO_COLLATERAL_KEY,
-        contractName: `${collateralToken.toUpperCase()}_InterestConsensus_z${tokenName.toUpperCase()}`,
+        keyName: TELLER_KEY,
+        contractName: `${collateralToken.toUpperCase()}_InterestConsensus_t${tokenName.toUpperCase()}_Proxy`,
         artifactName,
     };
 };
 const internalLoanTermsConsensus = (collateralToken, tokenName, artifactName = 'LoanTermsConsensus') => {
     return {
-        keyName: ZERO_COLLATERAL_KEY,
-        contractName: `${collateralToken.toUpperCase()}_LoanTermsConsensus_z${tokenName.toUpperCase()}`,
+        keyName: TELLER_KEY,
+        contractName: `${collateralToken.toUpperCase()}_LoanTermsConsensus_t${tokenName.toUpperCase()}_Proxy`,
         artifactName,
     };
 };
 const internalLenders = (collateralToken, tokenName, artifactName = 'Lenders') => {
     return {
-        keyName: ZERO_COLLATERAL_KEY,
-        contractName: `${collateralToken.toUpperCase()}_Lenders_z${tokenName.toUpperCase()}`,
+        keyName: TELLER_KEY,
+        contractName: `${collateralToken.toUpperCase()}_Lenders_t${tokenName.toUpperCase()}_Proxy`,
         artifactName,
     };
 };
-const ztoken = (tokenName) => {
+const ttoken = (tokenName) => {
     return {
-        keyName: ZERO_COLLATERAL_KEY,
-        contractName: `Z${tokenName.toUpperCase()}`,
+        keyName: TELLER_KEY,
+        contractName: `T${tokenName.toUpperCase()}`,
         artifactName: undefined,
     };
 };
@@ -70,7 +70,7 @@ const customCollateralToken = (collateralToken) => {
         lendingPool: (tokenName, artifactName = 'LendingPool') => {
             return internalLendingPool(collToken, tokenName, artifactName);
         },
-        interestConsensus: (tokenName, artifactName = 'LendingPool') => {
+        interestConsensus: (tokenName, artifactName = 'InterestConsensus') => {
             return internalInterestConsensus(collToken, tokenName, artifactName);
         },
         loanTermsConsensus: (tokenName, artifactName = 'LoanTermsConsensus') => {
@@ -87,8 +87,8 @@ const customCollateralToken = (collateralToken) => {
     };
 }
 module.exports = {
-    zerocollateral: {
-        ztoken,
+    teller: {
+        ttoken,
         eth: () => customCollateralToken(ETH),
         link: () => customCollateralToken(LINK),
         custom: (collateralToken) => customCollateralToken(collateralToken),
@@ -102,9 +102,9 @@ module.exports = {
         }),
         settings: () => {
             return {
-                keyName: ZERO_COLLATERAL_KEY,
-                contractName: 'Settings',
-                artifactName: undefined,
+                keyName: TELLER_KEY,
+                contractName: 'Settings_Proxy',
+                artifactName: 'Settings',
             };
         }
     },

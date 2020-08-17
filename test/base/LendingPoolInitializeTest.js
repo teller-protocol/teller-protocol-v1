@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, NULL_ADDRESS } = require('../utils/consts');
+const { t, NULL_ADDRESS, createMocks } = require('../utils/consts');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -9,62 +9,65 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const LendingPool = artifacts.require("./base/LendingPool.sol");
 
 contract('LendingPoolInitializeTest', function (accounts) {
-    let zTokenInstance;
-    let daiInstance;
-    let lendersInstance;
-    let loansInstance;
-    let settingsInstance;
-    let cTokenInstance;
+    let mocks;
 
     beforeEach('Setup for each test', async () => {
-        zTokenInstance = await Mock.new();
-        daiInstance = await Mock.new();
-        lendersInstance = await Mock.new();
-        loansInstance = await Mock.new();
-        cTokenInstance = await Mock.new();
-        settingsInstance = await Mock.new();
+        mocks = await createMocks(Mock, 20);
     });
 
+    const getInstance = (refs, index, accountIndex) => index === -1 ? NULL_ADDRESS: index === 99 ? accounts[accountIndex] : refs[index];
+
     withData({
-        _1_basic: [true, true, true, true, true, true, undefined, false],
-        _2_notZdai: [false, true, true, true, true, true, 'zToken address is required.', true],
-        _3_notDai: [true, false, true, true, true, true, 'Token address is required.', true],
-        _4_notLenderInfo: [true, true, false, true, true, true, 'Lenders address is required.', true],
-        _5_notLoanInfo: [true, true, true, false, true, true, 'Loans address is required.', true],
-        _6_notCToken: [true, true, true, true, false, true, 'CToken address is required.', true],
-        _7_notZdai_notLoanInfo: [false, true, true, false, true, true, 'zToken address is required.', true],
-        _8_notDai_notLenderInfo: [true, false, false, true, true, true, 'Token address is required.', true],
-        _9_notSettings: [true, true, true, true, true, false, 'SETTINGS_MUST_BE_PROVIDED', true],
+        _1_basic: [2, 3, 4, 5, 6, 7, 8, 9, undefined, false],
+        _2_notTdai: [-1, 3, 4, 5, 6, 7, 8, 9, 'TTOKEN_ADDRESS_IS_REQUIRED', true],
+        _3_notDai: [2, -1, 4, 5, 6, 7, 8, 9, 'TOKEN_ADDRESS_IS_REQUIRED', true],
+        _4_notLenderInfo: [2, 3, -1, 5, 6, 7, 8, 9, 'LENDERS_ADDRESS_IS_REQUIRED', true],
+        _5_notLoanInfo: [2, 3, 4, -1, 6, 7, 8, 9, 'LOANS_ADDRESS_IS_REQUIRED', true],
+        _6_notCToken: [2, 3, 4, 5, -1, 7, 8, 9, undefined, false],
+        _7_notTdai_notLoanInfo: [-1, 3, 4, -1, 6, 7, 8, 9, 'TTOKEN_ADDRESS_IS_REQUIRED', true],
+        _8_notDai_notLenderInfo: [2, -1, -1, 5, 6, 7, 8, 9, 'TOKEN_ADDRESS_IS_REQUIRED', true],
+        _9_notSettings: [2, 3, 4, 5, 6, -1, 8, 9, 'SETTINGS_MUST_BE_PROVIDED', true],
+        _10_notMarkets: [2, 3, 4, 5, 6, 7, -1, 9, 'MARKETS_MUST_BE_PROVIDED', true],
+        _11_notMarkets_not_contract: [2, 3, 4, 5, 6, 7, 99, 9, 'MARKETS_MUST_BE_A_CONTRACT', true],
+        _12_notInterestValidator: [2, 3, 4, 5, 6, 7, 8, -1, undefined, false],
+        _13_notInterestValidator_not_contract: [2, 3, 4, 5, 6, 7, 8, 99, 'VAL_MUST_BE_EMPTY_OR_CONTRACT', true],
+        _14_notInterestValidator_not_contract_2: [2, 3, 4, 5, 6, 7, 8, 9, undefined, false],
     }, function(
-        createZdai,
-        createDai,
-        createLenderInfo,
-        createLoanInfo,
-        createCToken,
-        createSettings,
+        tdaiIndex,
+        daiIndex,
+        lenderInfoIndex,
+        loanInfoIndex,
+        cTokenIndex,
+        settingsIndex,
+        marketsIndex,
+        interestValidatorIndex,
         expectedErrorMessage,
         mustFail
     ) {    
         it(t('user', 'initialize', 'Should (or not) be able to create a new instance.', mustFail), async function() {
             // Setup
             const lendingPoolInstance = await LendingPool.new();
-            const zTokenAddress = createZdai ? zTokenInstance.address : NULL_ADDRESS;
-            const daiAddress = createDai ? daiInstance.address : NULL_ADDRESS;
-            const lendersAddress = createLenderInfo ? lendersInstance.address : NULL_ADDRESS;
-            const loanInfoAddress = createLoanInfo ? loansInstance.address : NULL_ADDRESS;
-            const cTokenAddress = createCToken ? cTokenInstance.address : NULL_ADDRESS;
-            const settingsAddress = createSettings ? settingsInstance.address : NULL_ADDRESS;
+            const tTokenAddress = getInstance(mocks, tdaiIndex, 2);
+            const daiAddress = getInstance(mocks, daiIndex, 3);
+            const lendersAddress = getInstance(mocks, lenderInfoIndex, 4)
+            const loanInfoAddress = getInstance(mocks, loanInfoIndex, 5)
+            const cTokenAddress = getInstance(mocks, cTokenIndex, 6);
+            const settingsAddress = getInstance(mocks, settingsIndex, 7);
+            const marketsAddress = getInstance(mocks, marketsIndex, 8);
+            const interestValidatorAddress = getInstance(mocks, interestValidatorIndex, 9);
 
             try {
                 // Invocation
                 const result = await lendingPoolInstance.initialize(
-                    zTokenAddress,
+                    tTokenAddress,
                     daiAddress,
                     lendersAddress,
                     loanInfoAddress,
                     cTokenAddress,
                     settingsAddress,
-                );;
+                    marketsAddress,
+                    interestValidatorAddress,
+                );
                 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');

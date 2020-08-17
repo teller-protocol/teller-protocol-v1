@@ -15,8 +15,16 @@ import "../interfaces/LoanTermsConsensusInterface.sol";
  */
 contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
     /* Mappings */
-    mapping(address => mapping(uint256 => ZeroCollateralCommon.AccruedLoanTerms)) public termSubmissions;
-    mapping(address => mapping(uint256 => bool)) public requestNonceTaken;
+    mapping(address => mapping(uint256 => TellerCommon.AccruedLoanTerms)) public termSubmissions;
+
+    /**
+        This mapping identify the last request timestamp for a given borrower address.
+
+            Example:    address(0x123...789) = timestamp(now)
+        
+        It is used as rate limit per borrower address.
+     */
+    mapping(address => uint256) public borrowerToLastLoanTermRequest;
 
     /**
         @notice Processes the loan request
@@ -27,8 +35,8 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         @return uint256 Maximum loan amount
      */
     function processRequest(
-        ZeroCollateralCommon.LoanRequest calldata request,
-        ZeroCollateralCommon.LoanResponse[] calldata responses
+        TellerCommon.LoanRequest calldata request,
+        TellerCommon.LoanResponse[] calldata responses
     )
         external
         isInitialized()
@@ -36,12 +44,14 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         returns (uint256 interestRate, uint256 collateralRatio, uint256 maxLoanAmount)
     {
         require(
-            responses.length >= settings.requiredSubmissions(),
-            "INSUFFICIENT_RESPONSES"
+            responses.length >=
+                settings.getPlatformSettingValue(REQUIRED_SUBMISSIONS_SETTING),
+            "LOANTERM_INSUFFICIENT_RESPONSES"
         );
+        _requireRequestLoanTermsRateLimit(request);
         require(
             !requestNonceTaken[request.borrower][request.requestNonce],
-            "REQUEST_NONCE_TAKEN"
+            "LOAN_TERMS_REQUEST_NONCE_TAKEN"
         );
         requestNonceTaken[request.borrower][request.requestNonce] = true;
 
@@ -60,6 +70,7 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         maxLoanAmount = _getConsensus(
             termSubmissions[request.borrower][request.requestNonce].maxLoanAmount
         );
+        borrowerToLastLoanTermRequest[request.borrower] = now;
 
         emit TermsAccepted(
             request.borrower,
@@ -77,8 +88,8 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         @param requestHash bytes32 Hash of the loan request
      */
     function _processResponse(
-        ZeroCollateralCommon.LoanRequest memory request,
-        ZeroCollateralCommon.LoanResponse memory response,
+        TellerCommon.LoanRequest memory request,
+        TellerCommon.LoanResponse memory response,
         bytes32 requestHash
     ) internal {
         bytes32 responseHash = _hashResponse(response, requestHash);
@@ -118,10 +129,11 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         @param requestHash Hash of the loan request
         @return bytes32 Hash of the loan response
      */
-    function _hashResponse(
-        ZeroCollateralCommon.LoanResponse memory response,
-        bytes32 requestHash
-    ) internal view returns (bytes32) {
+    function _hashResponse(TellerCommon.LoanResponse memory response, bytes32 requestHash)
+        internal
+        view
+        returns (bytes32)
+    {
         return
             keccak256(
                 abi.encode(
@@ -142,7 +154,7 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         @param request Struct of the protocol loan request
         @return bytes32 Hash of the loan request
      */
-    function _hashRequest(ZeroCollateralCommon.LoanRequest memory request)
+    function _hashRequest(TellerCommon.LoanRequest memory request)
         internal
         view
         returns (bytes32)
@@ -161,5 +173,29 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
                     _getChainId()
                 )
             );
+    }
+
+    /**
+        @notice It validates whether the time window between the last loan terms request and current one exceeds the maximum rate limit.
+        @param request the new request.
+        @dev It throws a require error if the request rate limit exceeds the maximum.
+     */
+    function _requireRequestLoanTermsRateLimit(TellerCommon.LoanRequest memory request)
+        internal
+        view
+    {
+        // In case it is the first time that borrower requests loan terms, we don't validate the rate limit.
+        if (borrowerToLastLoanTermRequest[request.borrower] == 0) {
+            return;
+        }
+        uint256 requestLoanTermsRateLimit = settings.getPlatformSettingValue(
+            REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING
+        );
+        require(
+            borrowerToLastLoanTermRequest[request.borrower].add(
+                requestLoanTermsRateLimit
+            ) <= now,
+            "REQS_LOAN_TERMS_LMT_EXCEEDS_MAX"
+        );
     }
 }

@@ -2,18 +2,22 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Libraries and common
-import "../util/ZeroCollateralCommon.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "../util/TellerCommon.sol";
+import "../util/SettingsConsts.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "../util/ERC20Lib.sol";
 
 // Contracts
-import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
 import "./Base.sol";
+import "../providers/openzeppelin/ERC20.sol";
 
 // Interfaces
 import "../interfaces/PairAggregatorInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
+import "../settings/IATMSettings.sol";
+import "../atm/IATMGovernance.sol";
 
 
 /**
@@ -22,13 +26,11 @@ import "../interfaces/LoansInterface.sol";
 
     @author develop@teller.finance
  */
-contract LoansBase is LoansInterface, Base {
+contract LoansBase is LoansInterface, Base, SettingsConsts {
     using SafeMath for uint256;
+    using ERC20Lib for ERC20;
 
     /* State Variables */
-
-    // Used to calculate one whole token.
-    uint256 internal constant TEN = 10;
 
     // Loan length will be inputted in days, with 4 decimal places. i.e. 30 days will be inputted as
     // 300000. Therefore in interest calculations we must divide by 365000
@@ -38,6 +40,8 @@ contract LoansBase is LoansInterface, Base {
     // of something we must divide 700 by 100 to remove decimal places, and another 100 for percentage.
     uint256 internal constant TEN_THOUSAND = 10000;
 
+    bytes32 internal constant SUPPLY_TO_DEBT_ATM_SETTING = "SupplyToDebt";
+
     uint256 public totalCollateral;
 
     address public collateralToken;
@@ -45,13 +49,17 @@ contract LoansBase is LoansInterface, Base {
     // At any time, this variable stores the next available loan ID
     uint256 public loanIDCounter;
 
-    PairAggregatorInterface public priceOracle;
+    address public priceOracle;
+
     LendingPoolInterface public lendingPool;
+
     LoanTermsConsensusInterface public loanTermsConsensus;
+
+    IATMSettings public atmSettings;
 
     mapping(address => uint256[]) public borrowerLoans;
 
-    mapping(uint256 => ZeroCollateralCommon.Loan) public loans;
+    mapping(uint256 => TellerCommon.Loan) public loans;
 
     /* Modifiers */
 
@@ -72,7 +80,7 @@ contract LoansBase is LoansInterface, Base {
      */
     modifier loanActive(uint256 loanID) {
         require(
-            loans[loanID].status == ZeroCollateralCommon.LoanStatus.Active,
+            loans[loanID].status == TellerCommon.LoanStatus.Active,
             "LOAN_NOT_ACTIVE"
         );
         _;
@@ -84,10 +92,7 @@ contract LoansBase is LoansInterface, Base {
         @param loanID number of loan to check
      */
     modifier loanTermsSet(uint256 loanID) {
-        require(
-            loans[loanID].status == ZeroCollateralCommon.LoanStatus.TermsSet,
-            "LOAN_NOT_SET"
-        );
+        require(loans[loanID].status == TellerCommon.LoanStatus.TermsSet, "LOAN_NOT_SET");
         _;
     }
 
@@ -98,9 +103,35 @@ contract LoansBase is LoansInterface, Base {
      */
     modifier loanActiveOrSet(uint256 loanID) {
         require(
-            loans[loanID].status == ZeroCollateralCommon.LoanStatus.TermsSet ||
-                loans[loanID].status == ZeroCollateralCommon.LoanStatus.Active,
+            loans[loanID].status == TellerCommon.LoanStatus.TermsSet ||
+                loans[loanID].status == TellerCommon.LoanStatus.Active,
             "LOAN_NOT_ACTIVE_OR_SET"
+        );
+        _;
+    }
+
+    /**
+        @notice Checks the given loan request is valid.
+        @dev It throws an require error if the duration exceeds the maximum loan duration.
+        @dev It throws an require error if the loan amount exceeds the maximum loan amount for the given asset.
+        @param loanRequest to validate.
+     */
+    modifier withValidLoanRequest(TellerCommon.LoanRequest memory loanRequest) {
+        require(
+            settings.getPlatformSettingValue(MAXIMUM_LOAN_DURATION_SETTING) >=
+                loanRequest.duration,
+            "DURATION_EXCEEDS_MAX_DURATION"
+        );
+        require(
+            !settings.exceedsMaxLoanAmount(
+                lendingPool.lendingToken(),
+                loanRequest.amount
+            ),
+            "AMOUNT_EXCEEDS_MAX_AMOUNT"
+        );
+        require(
+            _isSupplyToDebtRatioValid(loanRequest.amount),
+            "SUPPLY_TO_DEBT_EXCEEDS_MAX"
         );
         _;
     }
@@ -182,7 +213,8 @@ contract LoansBase is LoansInterface, Base {
         require(loans[loanID].termsExpiry >= now, "LOAN_TERMS_EXPIRED");
 
         require(
-            loans[loanID].lastCollateralIn <= now.sub(settings.safetyInterval()),
+            loans[loanID].lastCollateralIn <=
+                now.sub(settings.getPlatformSettingValue(SAFETY_INTERVAL_SETTING)),
             "COLLATERAL_DEPOSITED_RECENTLY"
         );
 
@@ -201,7 +233,7 @@ contract LoansBase is LoansInterface, Base {
 
         loans[loanID].loanStartTime = now;
 
-        loans[loanID].status = ZeroCollateralCommon.LoanStatus.Active;
+        loans[loanID].status = TellerCommon.LoanStatus.Active;
 
         // give the recipient their requested amount of tokens
         if (loans[loanID].loanTerms.recipient != address(0)) {
@@ -209,6 +241,12 @@ contract LoansBase is LoansInterface, Base {
         } else {
             lendingPool.createLoan(amountBorrow, loans[loanID].loanTerms.borrower);
         }
+
+        markets.increaseBorrow(
+            lendingPool.lendingToken(),
+            this.collateralToken(),
+            amountBorrow
+        );
 
         emit LoanTakenOut(loanID, loans[loanID].loanTerms.borrower, amountBorrow);
     }
@@ -240,7 +278,7 @@ contract LoansBase is LoansInterface, Base {
 
         // if the loan is now fully paid, close it and return collateral
         if (totalOwed == 0) {
-            loans[loanID].status = ZeroCollateralCommon.LoanStatus.Closed;
+            loans[loanID].status = TellerCommon.LoanStatus.Closed;
 
             uint256 collateralAmount = loans[loanID].collateral;
             _payOutCollateral(loanID, collateralAmount, loans[loanID].loanTerms.borrower);
@@ -254,6 +292,12 @@ contract LoansBase is LoansInterface, Base {
 
         // collect the money from the payer
         lendingPool.repay(toPay, msg.sender);
+
+        markets.increaseRepayment(
+            lendingPool.lendingToken(),
+            this.collateralToken(),
+            toPay
+        );
 
         emit LoanRepaid(
             loanID,
@@ -289,7 +333,7 @@ contract LoansBase is LoansInterface, Base {
         // to liquidate it must be undercollateralised, or expired
         require(moreCollateralRequired || loanEndTime < now, "DOESNT_NEED_LIQUIDATION");
 
-        loans[loanID].status = ZeroCollateralCommon.LoanStatus.Closed;
+        loans[loanID].status = TellerCommon.LoanStatus.Closed;
         loans[loanID].liquidated = true;
 
         uint256 collateralInTokens = _convertWeiToToken(loanCollateral);
@@ -297,9 +341,9 @@ contract LoansBase is LoansInterface, Base {
         // the caller gets the collateral from the loan
         _payOutCollateral(loanID, loanCollateral, msg.sender);
 
-        uint256 tokenPayment = collateralInTokens.mul(settings.liquidateEthPrice()).div(
-            TEN_THOUSAND
-        );
+        uint256 tokenPayment = collateralInTokens
+            .mul(settings.getPlatformSettingValue(LIQUIDATE_ETH_PRICE_SETTING))
+            .div(TEN_THOUSAND);
         // the liquidator pays x% of the collateral price
         lendingPool.liquidationPayment(tokenPayment, msg.sender);
 
@@ -331,6 +375,27 @@ contract LoansBase is LoansInterface, Base {
         )
     {
         return _getCollateralInfo(loanID);
+    }
+
+    /**
+        @notice Updates the current price oracle instance.
+        @dev It throws a require error if sender is not allowed.
+        @dev It throws a require error if new address is empty (0x0) or not a contract.
+        @param newPriceOracle the new price oracle address.
+     */
+    function setPriceOracle(address newPriceOracle)
+        external
+        isInitialized()
+        whenAllowed(msg.sender)
+    {
+        // New address must be a contract and not empty
+        require(newPriceOracle.isContract(), "ORACLE_MUST_CONTRACT_NOT_EMPTY");
+        address oldPriceOracle = address(priceOracle);
+        oldPriceOracle.requireNotEqualTo(newPriceOracle, "NEW_ORACLE_MUST_BE_PROVIDED");
+
+        priceOracle = newPriceOracle;
+
+        emit PriceOracleUpdated(msg.sender, oldPriceOracle, newPriceOracle);
     }
 
     /** Internal Functions */
@@ -402,22 +467,28 @@ contract LoansBase is LoansInterface, Base {
         @param lendingPoolAddress Contract address of the lending pool
         @param loanTermsConsensusAddress Contract adddress for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
+        @param marketsAddress Contract address to store market data.
+        @param atmSettingsAddress Contract address to get ATM settings data.
      */
     function _initialize(
         address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
-        address settingsAddress
+        address settingsAddress,
+        address marketsAddress,
+        address atmSettingsAddress
     ) internal isNotInitialized() {
         priceOracleAddress.requireNotEmpty("PROVIDE_ORACLE_ADDRESS");
         lendingPoolAddress.requireNotEmpty("PROVIDE_LENDINGPOOL_ADDRESS");
         loanTermsConsensusAddress.requireNotEmpty("PROVIDED_LOAN_TERMS_ADDRESS");
+        atmSettingsAddress.requireNotEmpty("PROVIDED_ATM_SETTINGS_ADDRESS");
 
-        _initialize(settingsAddress);
+        _initialize(settingsAddress, marketsAddress);
 
-        priceOracle = PairAggregatorInterface(priceOracleAddress);
+        priceOracle = priceOracleAddress;
         lendingPool = LendingPoolInterface(lendingPoolAddress);
         loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
+        atmSettings = IATMSettings(atmSettingsAddress);
     }
 
     /**
@@ -457,15 +528,6 @@ contract LoansBase is LoansInterface, Base {
     }
 
     /**
-        @notice Returns a calculated whole lending token
-        @return uint256 A whole lending token calcuated using token case units
-     */
-    function _getAWholeLendingToken() internal view returns (uint256) {
-        uint8 decimals = ERC20Detailed(lendingPool.lendingToken()).decimals();
-        return TEN**decimals;
-    }
-
-    /**
         @notice Returns the value of collateral
         @param loanAmount The total amount of the loan for which collateral is needed
         @param collateralRatio Collateral ratio set in the loan terms
@@ -486,8 +548,10 @@ contract LoansBase is LoansInterface, Base {
      */
     function _convertWeiToToken(uint256 weiAmount) internal view returns (uint256) {
         // wei amount / lending token price in wei * the lending token decimals.
-        uint256 aWholeLendingToken = _getAWholeLendingToken();
-        uint256 oneLendingTokenPriceWei = uint256(priceOracle.getLatestAnswer());
+        uint256 aWholeLendingToken = ERC20(lendingPool.lendingToken()).getAWholeToken();
+        uint256 oneLendingTokenPriceWei = uint256(
+            PairAggregatorInterface(priceOracle).getLatestAnswer()
+        );
         uint256 tokenValue = weiAmount.mul(aWholeLendingToken).div(
             oneLendingTokenPriceWei
         );
@@ -502,8 +566,10 @@ contract LoansBase is LoansInterface, Base {
     function _convertTokenToWei(uint256 tokenAmount) internal view returns (uint256) {
         // tokenAmount is in token units, chainlink price is in whole tokens
         // token amount in tokens * lending token price in wei / the lending token decimals.
-        uint256 aWholeLendingToken = _getAWholeLendingToken();
-        uint256 oneLendingTokenPriceWei = uint256(priceOracle.getLatestAnswer());
+        uint256 aWholeLendingToken = ERC20(lendingPool.lendingToken()).getAWholeToken();
+        uint256 oneLendingTokenPriceWei = uint256(
+            PairAggregatorInterface(priceOracle).getLatestAnswer()
+        );
         uint256 weiValue = tokenAmount.mul(oneLendingTokenPriceWei).div(
             aWholeLendingToken
         );
@@ -526,20 +592,22 @@ contract LoansBase is LoansInterface, Base {
         @param interestRate Interest rate set in the loan terms
         @param collateralRatio Collateral ratio set in the loan terms
         @param maxLoanAmount Maximum loan amount that can be taken out, set in the loan terms
-        @return memory ZeroCollateralCommon.Loan Loan struct as per the Teller platform
+        @return memory TellerCommon.Loan Loan struct as per the Teller platform
      */
     function createLoan(
         uint256 loanID,
-        ZeroCollateralCommon.LoanRequest memory request,
+        TellerCommon.LoanRequest memory request,
         uint256 interestRate,
         uint256 collateralRatio,
         uint256 maxLoanAmount
-    ) internal view returns (ZeroCollateralCommon.Loan memory) {
-        uint256 termsExpiry = now.add(settings.termsExpiryTime());
+    ) internal view returns (TellerCommon.Loan memory) {
+        uint256 termsExpiry = now.add(
+            settings.getPlatformSettingValue(TERMS_EXPIRY_TIME_SETTING)
+        );
         return
-            ZeroCollateralCommon.Loan({
+            TellerCommon.Loan({
                 id: loanID,
-                loanTerms: ZeroCollateralCommon.LoanTerms({
+                loanTerms: TellerCommon.LoanTerms({
                     borrower: request.borrower,
                     recipient: request.recipient,
                     interestRate: interestRate,
@@ -554,8 +622,56 @@ contract LoansBase is LoansInterface, Base {
                 principalOwed: 0,
                 interestOwed: 0,
                 borrowedAmount: 0,
-                status: ZeroCollateralCommon.LoanStatus.TermsSet,
+                status: TellerCommon.LoanStatus.TermsSet,
                 liquidated: false
             });
+    }
+
+    function _emitLoanTermsSetAndCollateralDepositedEventsIfApplicable(
+        uint256 loanID,
+        TellerCommon.LoanRequest memory request,
+        uint256 interestRate,
+        uint256 collateralRatio,
+        uint256 maxLoanAmount,
+        uint256 depositedAmount
+    ) internal {
+        emit LoanTermsSet(
+            loanID,
+            request.borrower,
+            request.recipient,
+            interestRate,
+            collateralRatio,
+            maxLoanAmount,
+            request.duration,
+            loans[loanID].termsExpiry
+        );
+        if (depositedAmount > 0) {
+            emit CollateralDeposited(loanID, request.borrower, depositedAmount);
+        }
+    }
+
+    /**
+        @notice It validates whether supply to debt (StD) ratio is valid including the loan amount.
+        @param newLoanAmount the new loan amount to consider o the StD ratio.
+        @return true if the ratio is valid. Otherwise it returns false.
+     */
+    function _isSupplyToDebtRatioValid(uint256 newLoanAmount)
+        internal
+        view
+        returns (bool)
+    {
+        address atmAddressForMarket = atmSettings.getATMForMarket(
+            lendingPool.lendingToken(),
+            collateralToken
+        );
+        require(atmAddressForMarket != address(0x0), "ATM_NOT_FOUND_FOR_MARKET");
+        uint256 supplyToDebtMarketLimit = IATMGovernance(atmAddressForMarket)
+            .getGeneralSetting(SUPPLY_TO_DEBT_ATM_SETTING);
+        uint256 currentSupplyToDebtMarket = markets.getSupplyToDebtFor(
+            lendingPool.lendingToken(),
+            collateralToken,
+            newLoanAmount
+        );
+        return currentSupplyToDebtMarket <= supplyToDebtMarketLimit;
     }
 }

@@ -3,19 +3,18 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/Lenders.sol";
 
+
 /**
     This contract is created ONLY for testing purposes.
  */
 contract LendersModifiersMock is Lenders {
-
     /** Constructor */
 
     /** External Functions */
 
-    function externalIsZToken() isZToken() external {}
+    function externalIsTToken() external isTToken() {}
 
-    function externalIsLendingPool() isLendingPool() external {}
+    function externalIsLendingPool() external isLendingPool() {}
 
-    function externalIsValid(address anAddress) isValid(anAddress) external {}
-
+    function externalIsValid(address anAddress) external isValid(anAddress) {}
 }

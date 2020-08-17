@@ -29,6 +29,8 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
     let lendingTokenInstance;
     let collateralToken;
     let settingsInstance;
+    let marketsInstance;
+    let atmSettingsInstance;
     
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
@@ -37,6 +39,8 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
         settingsInstance = await Mock.new();
+        marketsInstance = await Mock.new();
+        atmSettingsInstance = await Mock.new();
     });
 
     const buildLoanInfo = (loanID, borrower, collateralRatio, collateral, principalOwed, interestOwed) => {
@@ -67,6 +71,8 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
                  loanTermsConsInstance.address,
                  settingsInstance.address,
                  collateralToken.address,
+                 marketsInstance.address,
+                 atmSettingsInstance.address,
              )
         } else {
             instance = await Loans.new();
@@ -74,7 +80,9 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
                  aggregator.address,
                  lendingPoolInstance.address,
                  loanTermsConsInstance.address,
-                 settingsInstance.address
+                 settingsInstance.address,
+                 marketsInstance.address,
+                 atmSettingsInstance.address,
              );
         }
 
@@ -425,7 +433,7 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
             const encodeGetLatestAnswer = aggregatorInterfaceEncoder.encodeLatestAnswer();
             await oracleInstance.givenMethodReturnUint(encodeGetLatestAnswer, oraclePrice.toString());
             if(useTokens) {
-                await instance.mockRequireExpectedBalance(true);
+                await instance.setMockTokenFunctions(true);
                 // Mocking collateral token data
                 await collateralToken.givenMethodReturnUint(
                     erc20InterfaceEncoder.encodeBalanceOf(),

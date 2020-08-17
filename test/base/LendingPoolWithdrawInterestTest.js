@@ -1,9 +1,10 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t } = require('../utils/consts');
+const { t, NULL_ADDRESS } = require('../utils/consts');
 const { lendingPool } = require('../utils/events');
 const BurnableInterfaceEncoder = require('../utils/encoders/BurnableInterfaceEncoder');
 const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
+const InterestValidatorInterfaceEncoder = require('../utils/encoders/InterestValidatorInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -15,61 +16,82 @@ const LendingPool = artifacts.require("./base/LendingPool.sol");
 contract('LendingPoolWithdrawInterestTest', function (accounts) {
     const burnableInterfaceEncoder = new BurnableInterfaceEncoder(web3);
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
+    const interestValidatorInterfaceEncoder = new InterestValidatorInterfaceEncoder(web3);
     let instance;
-    let zTokenInstance;
+    let tTokenInstance;
     let lendingTokenInstance;
     let loansInstance;
     let consensusInstance;
     let settingsInstance;
     let cTokenInstance;
     let lendersInstance;
+    let marketsInstance;
+    let interestValidatorInstance;
     
     beforeEach('Setup for each test', async () => {
         loansInstance = await Mock.new();
         consensusInstance = await Mock.new();
         settingsInstance = await Mock.new();
-        zTokenInstance = await Mock.new();
+        tTokenInstance = await Mock.new();
         lendingTokenInstance = await Mock.new();
         cTokenInstance = await Mock.new()
         lendersInstance = await Lenders.new();
+        marketsInstance = await Mock.new();
+        interestValidatorInstance = await Mock.new();
         
         instance = await LendingPool.new();
         await lendersInstance.initialize(
-            zTokenInstance.address,
+            tTokenInstance.address,
             instance.address,
             consensusInstance.address,
             settingsInstance.address,
-        );
-        await instance.initialize(
-            zTokenInstance.address,
-            lendingTokenInstance.address,
-            lendersInstance.address,
-            loansInstance.address,
-            cTokenInstance.address,
-            settingsInstance.address,
+            marketsInstance.address,
         );
     });
 
     withData({
-        _1_basic: [true, accounts[0], true, 10, 10, 10, false, undefined, false],
-        _2_basic: [true, accounts[0], true, 40, 30, 25, false, 'AMOUNT_EXCEEDS_AVAILABLE_AMOUNT', true],
-        _3_basic: [true, accounts[0], true, 40, 25, 30, false, undefined, false],
-        _4_transferFail: [true, accounts[1], false, 50, 50, 50, false, 'Transfer was not successful.', true],
-        _5_notEnoughBalance: [true, accounts[1], true, 49, 50, 50, true, 'COMPOUND_WITHDRAWAL_ERROR', true],
-        _6_notAddressEqual: [false, accounts[1], true, 49, 50, 50, true, 'Address has no permissions.', true],
+        _1_cTokenSupported_basic: [true, accounts[0], true, true, 10, 10, 10, false, { supported: false, isValid: true }, undefined, false],
+        _2_cTokenSupported_basic: [true, accounts[0], true, true, 40, 30, 25, false, { supported: false, isValid: true }, 'AMOUNT_EXCEEDS_AVAILABLE_AMOUNT', true],
+        _3_cTokenSupported_basic: [true, accounts[0], true, true, 40, 25, 30, false, { supported: false, isValid: true }, undefined, false],
+        _4_cTokenSupported_transferFail: [true, accounts[1], true, false, 50, 50, 50, false, { supported: false, isValid: true }, 'LENDING_TRANSFER_FAILED', true],
+        _5_cTokenSupported_notEnoughBalance: [true, accounts[1], true, true, 49, 50, 50, true, { supported: false, isValid: true }, 'COMPOUND_WITHDRAWAL_ERROR', true],
+        _6_cTokenSupported_notEqualAddresses: [false, accounts[1], true, true, 49, 50, 50, true, { supported: false, isValid: true }, 'SENDER_ISNT_LENDING_POOL', true],
+        _7_cTokenNotSupported_basic: [true, accounts[0], false, true, 10, 10, 10, false, { supported: false, isValid: true }, undefined, false],
+        _8_cTokenNotSupported_basic: [true, accounts[0], false, true, 40, 30, 25, false, { supported: false, isValid: true }, 'AMOUNT_EXCEEDS_AVAILABLE_AMOUNT', true],
+        _9_cTokenNotSupported_basic: [true, accounts[0], false, true, 40, 25, 30, false, { supported: false, isValid: true }, undefined, false],
+        _10_cTokenNotSupported_transferFail: [true, accounts[1], false, false, 50, 50, 50, false, { supported: false, isValid: true }, 'LENDING_TRANSFER_FAILED', true],
+        _11_cTokenNotSupported_notEqualAddresses: [false, accounts[1], true, true, 49, 50, 50, false, { supported: false, isValid: true }, 'SENDER_ISNT_LENDING_POOL', true],
+        _12_validatorSupportedAndValid_valid: [true, accounts[0], true, true, 40, 25, 30, false, { supported: true, isValid: true }, undefined, false],
+        _13_validatorSupportedAndNotValid_invalid: [true, accounts[0], true, true, 40, 25, 30, false, { supported: true, isValid: false }, 'INTEREST_TO_WITHDRAW_IS_INVALID', true],
     }, function(
         areAddressesEqual,
         lender,
+        isCTokenSupported,
         transfer,
         currentBalanceOf,
         amountToWithdraw,
         totalNotWithdrawn,
         compoundFails,
+        interestValidatorInfo,
         expectedErrorMessage,
         mustFail
     ) {
         it(t('user', 'withdrawInterest', 'Should able (or not) to withdraw the interest.', mustFail), async function() {
             // Setup
+            const cTokenAddress = isCTokenSupported ? cTokenInstance.address : NULL_ADDRESS;
+            const interestValidatorAddress = interestValidatorInfo.supported ? interestValidatorInstance.address : NULL_ADDRESS; 
+            const encodeIsInterestValid = interestValidatorInterfaceEncoder.encodeIsInterestValid();
+            await interestValidatorInstance.givenMethodReturnBool(encodeIsInterestValid, interestValidatorInfo.isValid);
+            await instance.initialize(
+                tTokenInstance.address,
+                lendingTokenInstance.address,
+                lendersInstance.address,
+                loansInstance.address,
+                cTokenAddress,
+                settingsInstance.address,
+                marketsInstance.address,
+                interestValidatorAddress,
+            );
             await lendersInstance.mockLenderInfo(
                 lender,
                 Math.floor(Date.now() / 1000),

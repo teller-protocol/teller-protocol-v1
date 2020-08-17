@@ -1,23 +1,24 @@
 // Util classes
 const BigNumber = require('bignumber.js');
-const { zerocollateral, tokens, chainlink } = require("../../scripts/utils/contracts");
+const { teller, tokens, chainlink } = require("../../scripts/utils/contracts");
 const { loans, lendingPool } = require('../../test/utils/events');
-const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds } = require('../../test/utils/consts');
+const { toDecimals, toUnits, NULL_ADDRESS, ONE_DAY, minutesToSeconds, toBytes32 } = require('../../test/utils/consts');
 const { createMultipleSignedLoanTermsResponses, createLoanTermsRequest } = require('../../test/utils/loan-terms-helper');
 const assert = require("assert");
+const platformSettingsNames = require('../../test/utils/platformSettingsNames');
 
 module.exports = async ({accounts, getContracts, processArgs, timer, web3, nonces, chainId}) => {
   console.log('Deposit tokens as collateral.');
   const tokenName = processArgs.getValue('testTokenName');
   const oracleTokenName = 'USD';
   const collateralTokenName = 'LINK';
-  const settingsInstance = await getContracts.getDeployed(zerocollateral.settings());
+  const settingsInstance = await getContracts.getDeployed(teller.settings());
   const token = await getContracts.getDeployed(tokens.get(tokenName));
   const collateralToken = await getContracts.getDeployed(tokens.get(collateralTokenName));
-  const lendingPoolInstance = await getContracts.getDeployed(zerocollateral.link().lendingPool(tokenName));
-  const loansInstance = await getContracts.getDeployed(zerocollateral.link().loans(tokenName));
+  const lendingPoolInstance = await getContracts.getDeployed(teller.link().lendingPool(tokenName));
+  const loansInstance = await getContracts.getDeployed(teller.link().loans(tokenName));
   const chainlinkOracle = await getContracts.getDeployed(chainlink.custom(collateralTokenName, oracleTokenName));
-  const loanTermConsensusInstance = await getContracts.getDeployed(zerocollateral.link().loanTermsConsensus(tokenName));
+  const loanTermConsensusInstance = await getContracts.getDeployed(teller.link().loanTermsConsensus(tokenName));
 
   const currentTimestamp = parseInt(await timer.getCurrentTimestamp());
   console.log(`Current timestamp: ${currentTimestamp} segs`);
@@ -97,7 +98,7 @@ module.exports = async ({accounts, getContracts, processArgs, timer, web3, nonce
     borrowerTxConfig
   );
 
-  const termsExpiryTime = await settingsInstance.termsExpiryTime();
+  const termsExpiryTime = await settingsInstance.getPlatformSettingValue(toBytes32(web3, platformSettingsNames.TermsExpiryTime));
   const expiryTermsExpected = await timer.getCurrentTimestampInSecondsAndSum(termsExpiryTime);
   const loanIDs = await loansInstance.getBorrowerLoans(borrower);
   const lastLoanID = loanIDs[loanIDs.length - 1];

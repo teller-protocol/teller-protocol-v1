@@ -3,8 +3,8 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/LoanTermsConsensus.sol";
 
-contract LoanTermsConsensusMock is LoanTermsConsensus {
 
+contract LoanTermsConsensusMock is LoanTermsConsensus {
     uint256 private _mockChainId = 1; // Mainnet
 
     function mockInterestRateSubmissions(
@@ -64,19 +64,19 @@ contract LoanTermsConsensusMock is LoanTermsConsensus {
         hasSubmitted[signer][lender][blockNumber] = hasSub;
     }
 
-    function mockSignerNonce(
-        address signer,
-        uint256 signerNonce,
-        bool taken
-    ) external {
+    function mockSignerNonce(address signer, uint256 signerNonce, bool taken) external {
         signerNonceTaken[signer][signerNonce] = taken;
     }
 
-    function mockRequestNonce(
-        address borrower,
-        uint256 borrowerNonce,
-        bool taken
-    ) external {
+    function mockBorrowerToLastLoanTermRequest(address borrower, uint256 lastTime)
+        external
+    {
+        borrowerToLastLoanTermRequest[borrower] = lastTime;
+    }
+
+    function mockRequestNonce(address borrower, uint256 borrowerNonce, bool taken)
+        external
+    {
         requestNonceTaken[borrower][borrowerNonce] = taken;
     }
 
@@ -85,27 +85,36 @@ contract LoanTermsConsensusMock is LoanTermsConsensus {
     }
 
     function externalProcessResponse(
-        ZeroCollateralCommon.LoanRequest calldata request,
-        ZeroCollateralCommon.LoanResponse calldata response,
+        TellerCommon.LoanRequest calldata request,
+        TellerCommon.LoanResponse calldata response,
         bytes32 requestHash
     ) external {
         _processResponse(request, response, requestHash);
     }
 
     function externalHashResponse(
-        ZeroCollateralCommon.LoanResponse calldata response,
+        TellerCommon.LoanResponse calldata response,
         bytes32 requestHash
     ) external view returns (bytes32) {
         return _hashResponse(response, requestHash);
     }
 
-    function externalHashRequest(
-        ZeroCollateralCommon.LoanRequest calldata request
-    ) external view returns (bytes32) {
+    function externalHashRequest(TellerCommon.LoanRequest calldata request)
+        external
+        view
+        returns (bytes32)
+    {
         return _hashRequest(request);
     }
 
     function _getChainId() internal view returns (uint256) {
         return _mockChainId;
+    }
+
+    function externalRequireRequestLoanTermsRateLimit(
+        TellerCommon.LoanRequest calldata request
+    ) external view returns (bool) {
+        super._requireRequestLoanTermsRateLimit(request);
+        return true;
     }
 }

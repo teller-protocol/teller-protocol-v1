@@ -1,14 +1,18 @@
 // JS Libraries
 const withData = require('leche').withData;
 const abi = require('ethereumjs-abi')
+const settingsNames = require('../utils/platformSettingsNames');
 const {
   t,
   NULL_ADDRESS,
   TERMS_SET,
-  THIRTY_DAYS
+  THIRTY_DAYS,
 } = require('../utils/consts');
 const { loans } = require('../utils/events');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
+const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
+const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
+const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -19,6 +23,8 @@ const Settings = artifacts.require("./base/Settings.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 
 contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
+    const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
+    const IAtmSettingsEncoder = new IATMSettingsEncoder(web3);
     let instance;
     let loanTermsConsInstance;
     let lendingPoolInstance;
@@ -26,8 +32,12 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
     let processRequestEncoding;
     let oracleInstance;
     let settingsInstance;
+    let lendingTokenInstance;
+    let atmSettingsInstance;
 
-    const borrowerAddress = accounts[2]
+    const owner = accounts[0];
+    const borrowerAddress = accounts[2];
+    const AMOUNT_LOAN_REQUEST = 12000;
 
     let emptyRequest
     let responseOne
@@ -35,20 +45,30 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
     let loanRequest
     
     beforeEach('Setup for each test', async () => {
+        lendingTokenInstance = await Mock.new();
         lendingPoolInstance = await Mock.new();
+        marketsInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
-        settingsInstance = await Settings.new(1, 1, 1, 1, THIRTY_DAYS, 1)
+        atmSettingsInstance = await Mock.new();
+        settingsInstance = await createTestSettingsInstance(
+            Settings,
+            {
+                [settingsNames.TermsExpiryTime]: THIRTY_DAYS
+            }
+        );
         instance = await Loans.new();
         await instance.initialize(
             oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
-            settingsInstance.address
+            settingsInstance.address,
+            marketsInstance.address,
+            atmSettingsInstance.address,
         )
         responseOne = createUnsignedLoanResponse(accounts[3], 0, 1234, 6500, 10000, 3, loanTermsConsInstance.address)
         responseTwo = createUnsignedLoanResponse(accounts[4], 0, 1500, 6000, 10000, 2, loanTermsConsInstance.address)
-        loanRequest = createLoanRequest(borrowerAddress, NULL_ADDRESS, 3, 12000, 4, 19, loanTermsConsInstance.address)
+        loanRequest = createLoanRequest(borrowerAddress, NULL_ADDRESS, 3, AMOUNT_LOAN_REQUEST, 4, 19, loanTermsConsInstance.address)
         emptyRequest = createLoanRequest(NULL_ADDRESS, NULL_ADDRESS, 0, 0, 0, 0, loanTermsConsInstance.address)
 
         loanTermsConsTemplate = await LoanTermsConsensus.new()
@@ -56,16 +76,28 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
             .contract
             .methods
             .processRequest(emptyRequest, [responseOne])
-            .encodeABI()
+            .encodeABI();
+
+        const encodeLendingToken = lendingPoolInterfaceEncoder.encodeLendingToken();
+        lendingPoolInstance.givenMethodReturnAddress(encodeLendingToken, lendingTokenInstance.address);
+
+        const atmForMarketInstance = await Mock.new();
+        atmSettingsInstance.givenMethodReturnAddress(
+            IAtmSettingsEncoder.encodeGetATMForMarket(),
+            atmForMarketInstance.address
+        );
     });
 
     withData({
-        _1_no_msg_value: [3, 0, 0, undefined, false],
-        _2_with_msg_value: [17, 500000, 500000, undefined, false],
-        _3_msg_value_collateral_param_not_match_1: [17, 0, 500000, 'INCORRECT_ETH_AMOUNT', true],
-        _4_msg_value_collateral_param_not_match_2: [17, 500000, 0, 'INCORRECT_ETH_AMOUNT', true],
-        _5_msg_value_collateral_param_not_match_3: [17, 200000, 200001, 'INCORRECT_ETH_AMOUNT', true],
+        _1_no_msg_value: [AMOUNT_LOAN_REQUEST, 3, 0, 0, undefined, false],
+        _2_with_msg_value: [AMOUNT_LOAN_REQUEST, 17, 500000, 500000, undefined, false],
+        _3_msg_value_collateral_param_not_match_1: [AMOUNT_LOAN_REQUEST, 17, 0, 500000, 'INCORRECT_ETH_AMOUNT', true],
+        _4_msg_value_collateral_param_not_match_2: [AMOUNT_LOAN_REQUEST, 17, 500000, 0, 'INCORRECT_ETH_AMOUNT', true],
+        _5_msg_value_collateral_param_not_match_3: [AMOUNT_LOAN_REQUEST, 17, 200000, 200001, 'INCORRECT_ETH_AMOUNT', true],
+        _6_no_msg_value_exceeds_max_amount: [AMOUNT_LOAN_REQUEST - 400, 3, 0, 0, 'AMOUNT_EXCEEDS_MAX_AMOUNT', true],
+        _7_with_msg_value_exceeds_max_amount: [AMOUNT_LOAN_REQUEST - 1, 17, 500000, 500000, 'AMOUNT_EXCEEDS_MAX_AMOUNT', true],
     }, function(
+        assetSettingMaxAmount,
         mockLoanIDCounter,
         initialCollateral,
         msgValue,
@@ -78,6 +110,16 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
             const maxLoanAmount = Math.floor((responseOne.maxLoanAmount + responseTwo.maxLoanAmount) / 2)
 
             await instance.setLoanIDCounter(mockLoanIDCounter)
+
+            const cTokenInstance = await Mock.new();
+            await settingsInstance.createAssetSettings(
+                lendingTokenInstance.address,
+                cTokenInstance.address,
+                assetSettingMaxAmount,
+                {
+                    from: owner
+                }
+            );
 
             // mock consensus response
             await loanTermsConsInstance.givenMethodReturn(

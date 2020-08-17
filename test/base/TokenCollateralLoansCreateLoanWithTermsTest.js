@@ -5,13 +5,19 @@ const {
   t,
   NULL_ADDRESS,
   TERMS_SET,
-  THIRTY_DAYS
+  THIRTY_DAYS,
 } = require('../utils/consts');
+const settingsNames = require('../utils/platformSettingsNames');
+const {
+    createTestSettingsInstance,
+} = require('../utils/settings-helper');
 const { loans } = require('../utils/events');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
 const { assertLoan } = require('../utils/assertions');
 const Timer = require('../../scripts/utils/Timer');
 const LoanTermsConsensusEncoder = require('../utils/encoders/LoanTermsConsensusEncoder');
+const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
+const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -51,13 +57,21 @@ const createTermsSetExpectedLoan = (
 };
 
 contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
+    const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
+    const IATmSettingsEncoder = new IATMSettingsEncoder(web3);
     let loanTermsConsensusEncoder;
     let collateralToken;
+    let lendingTokenInstance;
     let instance;
     let loanTermsConsInstance;
+    let settingsInstance;
+    let marketsInstance;
+    let atmSettingsInstance;
 
     const timer = new Timer(web3);
+    const owner = accounts[0];
     const borrowerAddress = accounts[2];
+    const AMOUNT_LOAN_REQUEST = 12000;
 
     let loanRequest;
     let emptyRequest;
@@ -66,13 +80,16 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
     let responseTwo;
     
     beforeEach('Setup for each test', async () => {
+        marketsInstance = await Mock.new();
+        atmSettingsInstance = await Mock.new();
+        lendingTokenInstance = await Mock.new();
         collateralToken = await LINKMock.new();
         loanTermsConsInstance = await Mock.new();
         const lendingPoolInstance = await Mock.new();
         const oracleInstance = await Mock.new();
-        const settingsInstance = await Settings.new(1, 1, 1, 1, THIRTY_DAYS, 1)
+        settingsInstance = await createTestSettingsInstance(Settings, { [settingsNames.TermsExpiryTime]: THIRTY_DAYS });
 
-        loanRequest = createLoanRequest(borrowerAddress, NULL_ADDRESS, 3, 12000, 4, 19, loanTermsConsInstance.address);
+        loanRequest = createLoanRequest(borrowerAddress, NULL_ADDRESS, 3, AMOUNT_LOAN_REQUEST, 4, 19, loanTermsConsInstance.address);
         emptyRequest = createLoanRequest(NULL_ADDRESS, NULL_ADDRESS, 0, 0, 0, 0, loanTermsConsInstance.address);
 
         responseOne = createUnsignedLoanResponse(accounts[3], 0, 1234, 6500, 10000, 3, loanTermsConsInstance.address);
@@ -85,23 +102,44 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
             loanTermsConsInstance.address,
             settingsInstance.address,
             collateralToken.address,
+            marketsInstance.address,
+            atmSettingsInstance.address,
         );
         const loanTermsConsensus = await LoanTermsConsensus.new();
         loanTermsConsensusEncoder = new LoanTermsConsensusEncoder(web3, loanTermsConsensus);
+
+        const encodeLendingToken = lendingPoolInterfaceEncoder.encodeLendingToken();
+        lendingPoolInstance.givenMethodReturnAddress(encodeLendingToken, lendingTokenInstance.address);
+
+        const atmForMarketInstance = await Mock.new();
+        atmSettingsInstance.givenMethodReturnAddress(
+            IATmSettingsEncoder.encodeGetATMForMarket(),
+            atmForMarketInstance.address
+        );
     });
 
     withData({
-        _1_without_collateral: [3, 2, 0, 0, 0, undefined, false],
-        _2_basic_collateral: [17, 2, 500000, 500000, 500000, undefined, false],
-        _3_not_enough_balance: [20, 2, 450000, 500000, 500000, 'ERC20: transfer amount exceeds balance', true],
-        _4_not_enough_allowance: [22, 3, 500000, 500000, 470000, 'NOT_ENOUGH_COLL_TOKENS_ALLOWANCE', true],
-    }, function(loanID, senderIndex, mintAmount, collateralAmount, approveCollateralAmount, expectedErrorMessage, mustFail) {
+        _1_without_collateral: [3, 2, AMOUNT_LOAN_REQUEST, 0, 0, 0, undefined, false],
+        _2_basic_collateral: [17, 2, AMOUNT_LOAN_REQUEST, 500000, 500000, 500000, undefined, false],
+        _3_exceeds_max_loan_amount: [17, 2, (AMOUNT_LOAN_REQUEST - 500), 500000, 500000, 500000, 'AMOUNT_EXCEEDS_MAX_AMOUNT', true],
+        _4_not_enough_balance: [20, 2, AMOUNT_LOAN_REQUEST, 450000, 500000, 500000, 'ERC20: transfer amount exceeds balance', true],
+        _5_not_enough_allowance: [22, 3, AMOUNT_LOAN_REQUEST, 500000, 500000, 470000, 'NOT_ENOUGH_TOKENS_ALLOWANCE', true],
+    }, function(loanID, senderIndex, assetSettingMaxAmount, mintAmount, collateralAmount, approveCollateralAmount, expectedErrorMessage, mustFail) {
         it(t('user', 'createLoanWithTerms', 'Should able to set loan terms.', mustFail), async function() {
             const sender = accounts[senderIndex];
             const interestRate = getAverage(responseOne.interestRate, responseTwo.interestRate);
             const collateralRatio = getAverage(responseOne.collateralRatio, responseTwo.collateralRatio);
             const maxLoanAmount = getAverage(responseOne.maxLoanAmount, responseTwo.maxLoanAmount);
 
+            const cTokenInstance = await Mock.new();
+            await settingsInstance.createAssetSettings(
+                lendingTokenInstance.address,
+                cTokenInstance.address,
+                assetSettingMaxAmount,
+                {
+                    from: owner
+                }
+            );
             await instance.setLoanIDCounter(loanID);
 
             await loanTermsConsInstance.givenMethodReturn(

@@ -2,8 +2,13 @@ module.exports = {
     network: 'mainnet',
     chainlink: require('./chainlink'),
     compound: require('./compound'),
-    dao: require('./dao'),
-    maxGasLimit: 3500000,
+    tokens: require('./tokens'),
+    teller: require('./teller'),
+    assetSettings: require('./assetSettings'),
+    platformSettings: require('./platformSettings'),
+    signers: require('./signers'),
+    atms: require('./atms'),
+    maxGasLimit: 6000000,
     toTxUrl: ({ tx }) => {
         return `https://www.etherscan.io/tx/${tx}`;
     },

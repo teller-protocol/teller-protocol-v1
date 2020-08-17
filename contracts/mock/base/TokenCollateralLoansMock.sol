@@ -3,19 +3,15 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/TokenCollateralLoans.sol";
 
+
 contract TokenCollateralLoansMock is TokenCollateralLoans {
+    bool public mockTokenFunctions;
 
-    bool public requireExpectedBalance = true;
-
-    function mockRequireExpectedBalance(bool aRequireExpectedBalance)
-        external
-    {
-        requireExpectedBalance = aRequireExpectedBalance;
+    function setMockTokenFunctions(bool newMockTokenFunctions) external {
+        mockTokenFunctions = newMockTokenFunctions;
     }
 
-    function setLoanIDCounter(uint256 newLoanIdCounter)
-        external
-    {
+    function setLoanIDCounter(uint256 newLoanIdCounter) external {
         loanIDCounter = newLoanIdCounter;
     }
 
@@ -29,7 +25,7 @@ contract TokenCollateralLoansMock is TokenCollateralLoans {
 
     function setLoan(
         uint256 id,
-        ZeroCollateralCommon.LoanTerms calldata loanTerms,
+        TellerCommon.LoanTerms calldata loanTerms,
         uint256 termsExpiry,
         uint256 loanStartTime,
         uint256 collateral,
@@ -37,12 +33,12 @@ contract TokenCollateralLoansMock is TokenCollateralLoans {
         uint256 principalOwed,
         uint256 interestOwed,
         uint256 borrowedAmount,
-        ZeroCollateralCommon.LoanStatus status,
+        TellerCommon.LoanStatus status,
         bool liquidated
     ) external {
         require(loanTerms.maxLoanAmount >= borrowedAmount, "BORROWED_AMOUNT_EXCEEDS_MAX");
         totalCollateral += collateral;
-        loans[id] = ZeroCollateralCommon.Loan({
+        loans[id] = TellerCommon.Loan({
             id: id,
             loanTerms: loanTerms,
             termsExpiry: termsExpiry,
@@ -57,11 +53,15 @@ contract TokenCollateralLoansMock is TokenCollateralLoans {
         });
     }
 
-    function _requireExpectedBalance(uint256, uint256, bool) internal view {
-        require(requireExpectedBalance, "INV_BALANCE_AFTER_TRANSFER_FROM");
+    function _collateralTokenTransfer(address recipient, uint256 amount) internal {
+        if (!mockTokenFunctions) {
+            super._collateralTokenTransfer(recipient, amount);
+        }
     }
 
-    function externalRequireExpectedBalance(uint256 initialBalance, uint256 expectedAmount, bool isTransfer) external view {
-        super._requireExpectedBalance(initialBalance, expectedAmount, isTransfer);
+    function _collateralTokenTransferFrom(address from, uint256 amount) internal {
+        if (!mockTokenFunctions) {
+            super._collateralTokenTransferFrom(from, amount);
+        }
     }
 }

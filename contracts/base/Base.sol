@@ -1,31 +1,33 @@
 pragma solidity 0.5.17;
 
 // Libraries
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "../util/AddressLib.sol";
 
 // Commons
-import "./Initializable.sol";
+import "./TInitializable.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
+import "../interfaces/MarketsStateInterface.sol";
 
 
 /**
     @notice This contract is used as a base contract for most most of the contracts in the platform.
     @notice It allows contracts to have access to the platform settings, and common modifiers.
-    @notice It implements the reentrancy guard from Open Zeppelin and the initializable pattern.
+    @notice It implements the reentrancy guard from Open Zeppelin and the TInitializable pattern.
 
     @author develop@teller.finance.
  */
-contract Base is Initializable, ReentrancyGuard {
+contract Base is TInitializable, ReentrancyGuard {
     using AddressLib for address;
     using Address for address;
 
     /* State Variables */
 
     SettingsInterface public settings;
+    MarketsStateInterface public markets;
 
     /** Modifiers */
 
@@ -67,6 +69,16 @@ contract Base is Initializable, ReentrancyGuard {
         _;
     }
 
+    /**
+        @notice Checks whether a given address is allowed (see Settings#hasPauserRole function) or not.
+        @dev It throws a require error if address is not allowed.
+        @param anAddress account to test.
+     */
+    modifier whenAllowed(address anAddress) {
+        require(settings.hasPauserRole(anAddress), "ADDRESS_ISNT_ALLOWED");
+        _;
+    }
+
     /* Constructor */
 
     /** External Functions */
@@ -76,14 +88,21 @@ contract Base is Initializable, ReentrancyGuard {
     /**
         @notice It initializes the current contract instance setting the required parameters.
         @param settingsAddress settings contract address.
+        @param marketsAddress markets state contract address.
      */
-    function _initialize(address settingsAddress) internal isNotInitialized() {
+    function _initialize(address settingsAddress, address marketsAddress)
+        internal
+        isNotInitialized()
+    {
         settingsAddress.requireNotEmpty("SETTINGS_MUST_BE_PROVIDED");
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
+        marketsAddress.requireNotEmpty("MARKETS_MUST_BE_PROVIDED");
+        require(marketsAddress.isContract(), "MARKETS_MUST_BE_A_CONTRACT");
 
         _initialize();
 
         settings = SettingsInterface(settingsAddress);
+        markets = MarketsStateInterface(marketsAddress);
     }
 
     /**

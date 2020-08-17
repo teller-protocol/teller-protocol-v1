@@ -26,6 +26,8 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
     let lendingPoolInstance;
     let loanTermsConsInstance;
     let settingsInstance;
+    let marketsInstance;
+    let atmSettingsInstance;
 
     beforeEach('Setup for each test', async () => {
         lendingTokenInstance = await Mock.new();
@@ -33,6 +35,8 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
         lendingPoolInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
         settingsInstance = await Mock.new()
+        marketsInstance = await Mock.new();
+        atmSettingsInstance = await Mock.new();
         instance = await Loans.new();
 
         const encodeLendingToken = lendingPoolInterfaceEncoder.encodeLendingToken();
@@ -67,6 +71,8 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
                 loanTermsConsInstance.address,
                 settingsInstance.address,
                 collateralToken.address,
+                marketsInstance.address,
+                atmSettingsInstance.address,
             )
 
             const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, 0)
@@ -117,9 +123,8 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
     });
 
     withData({
-        _1_valid: [true, 4918, 1, accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 4918, false, undefined],
-        _2_not_enough_balance: [true, 4917, 1, accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 4918, true, 'NOT_ENOUGH_COLL_TOKENS_BALANCE'],
-        _3_transfer_fail: [false, 4918, 1, accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 10000, true, 'COLL_TOKENS_TRANSFER_FAILED'],
+        _1_not_enough_balance: [true, 4917, 1, accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 4918, true, 'NOT_ENOUGH_TOKENS_BALANCE'],
+        _2_transfer_fail: [false, 4918, 1, accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 10000, true, 'TOKENS_TRANSFER_FAILED'],
     }, function(
         transferResult,
         currentBalance,
@@ -146,6 +151,8 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
                 loanTermsConsInstance.address,
                 settingsInstance.address,
                 collateralToken.address,
+                marketsInstance.address,
+                atmSettingsInstance.address,
             )
 
             const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, 0)

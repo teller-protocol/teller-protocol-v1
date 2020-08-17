@@ -4,14 +4,19 @@ const {
     getLatestTimestamp,
     ONE_DAY,
     THIRTY_DAYS,
-    NULL_ADDRESS
+    NULL_ADDRESS,
 } = require('../utils/consts');
+const settingsNames = require('../utils/platformSettingsNames');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
 const { createLoanResponseSig, hashLoanTermsRequest } = require('../utils/hashes');
 const ethUtil = require('ethereumjs-util')
 
 const BigNumber = require('bignumber.js');
 const chains = require('../utils/chains');
+const { createTestSettingsInstance } = require('../utils/settings-helper');
+
+// Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
@@ -20,10 +25,9 @@ const Settings = artifacts.require("./base/Settings.sol");
 
 contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) {
     let instance
-    let settings
 
-    const baseGasCost = 430500;
-    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 89000);
+    const baseGasCost = 482000;
+    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 95000);
 
     const loansContract = accounts[1]
     const nodeOne = accounts[1]
@@ -126,9 +130,19 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
         it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
             // Setup
             const expectedMaxGas = expectedGasCost(responses.length);
-            settings = await Settings.new(responses.length, tolerance, THIRTY_DAYS, 1, THIRTY_DAYS, 9500);
-            instance = await LoanTermsConsensus.new()
-            await instance.initialize(loansContract, settings.address)
+            const settings = await createTestSettingsInstance(
+                Settings,
+                {
+                    [settingsNames.RequiredSubmissions]: responses.length,
+                    [settingsNames.MaximumTolerance]: tolerance,
+                    [settingsNames.ResponseExpiryLength]: THIRTY_DAYS,
+                    [settingsNames.TermsExpiryTime]: THIRTY_DAYS,
+                    [settingsNames.LiquidateEthPrice]: 9500,
+                }
+            );
+            const marketsInstance = await Mock.new();
+            instance = await LoanTermsConsensus.new();
+            await instance.initialize(loansContract, settings.address, marketsInstance.address);
 
             for (const response of responses) {
                 await instance.addSigner(response.signer)
@@ -140,7 +154,7 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
                     from: loansContract
                 }
             );
-            assert(parseInt(result) <= expectedMaxGas);
+            assert(parseInt(result) <= expectedMaxGas, 'Expected max gas less than result.');
         })
     })
 })

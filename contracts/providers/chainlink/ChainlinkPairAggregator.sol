@@ -1,9 +1,10 @@
 pragma solidity 0.5.17;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../openzeppelin/SignedSafeMath.sol";
 import "@chainlink/contracts/src/v0.5/interfaces/AggregatorInterface.sol";
 import "../../interfaces/PairAggregatorInterface.sol";
+
 
 /**
     @notice This is a Chainlink Oracle wrapper implementation. It uses the AggregatorInterface from Chainlink to get data.
@@ -28,13 +29,17 @@ contract ChainlinkPairAggregator is PairAggregatorInterface {
         @param responseDecimalsValue the decimals included in the Chainlink response.
         @param collateralDecimalsValue the decimals included in the collateral token.
     */
-    constructor(address aggregatorAddress, uint8 responseDecimalsValue, uint8 collateralDecimalsValue) public {
+    constructor(
+        address aggregatorAddress,
+        uint8 responseDecimalsValue,
+        uint8 collateralDecimalsValue
+    ) public {
         require(aggregatorAddress != address(0x0), "PROVIDE_AGGREGATOR_ADDRESS");
         aggregator = AggregatorInterface(aggregatorAddress);
         responseDecimals = responseDecimalsValue;
         collateralDecimals = collateralDecimalsValue;
-        
-        if( collateralDecimals >= responseDecimals) {
+
+        if (collateralDecimals >= responseDecimals) {
             pendingDecimals = collateralDecimals - responseDecimals;
         } else {
             pendingDecimals = responseDecimals - collateralDecimals;
@@ -109,10 +114,10 @@ contract ChainlinkPairAggregator is PairAggregatorInterface {
         @return a normalized value.
      */
     function _normalizeResponse(int256 value) internal view returns (int256) {
-        if( collateralDecimals >= responseDecimals) {
-            return value.mul(int256(TEN ** pendingDecimals));
+        if (collateralDecimals >= responseDecimals) {
+            return value.mul(int256(TEN**pendingDecimals));
         } else {
-            return value.div(int256(TEN ** pendingDecimals));
+            return value.div(int256(TEN**pendingDecimals));
         }
     }
 }

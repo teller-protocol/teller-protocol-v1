@@ -8,6 +8,7 @@ const TERMS_EXPIRY_TIME = 'TermsExpiryTime';
 const LIQUIDATE_ETH_PRICE = 'LiquidateEthPrice';
 const DEFAULT_DECIMALS = 18;
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
+const DUMMY_ADDRESS = '0x0000000000000000000000000000000000000123';
 const NULL_BYTES = '0x0000000000000000000000000000000000000000000000000000000000000000'
 const ZERO = new BigNumber(0);
 const NETWORK_PROVIDER = 'http://127.0.0.1:7545';
@@ -26,6 +27,7 @@ const toDecimals = (amount, decimals) => {
 }
 
 module.exports = {
+    DUMMY_ADDRESS,
     NON_EXISTENT,
     TERMS_SET,
     ACTIVE,
@@ -88,5 +90,13 @@ module.exports = {
     },
     printSeparatorLine: (length = 100, separator = '-') => {
         console.log(`\n${separator.repeat(length)}\n`);
+    },
+    createMocks: async (Mock, total) => {
+        const result = [];
+        for (const index of _.range(0, total)) {
+            const mock = await Mock.new();
+            result.push(mock.address);
+        }
+        return result;
     },
 }

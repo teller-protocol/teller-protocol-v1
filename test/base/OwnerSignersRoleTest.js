@@ -1,9 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, THIRTY_DAYS } = require('../utils/consts');
-const { hashInterestRequest, hashInterestResponse } = require('../utils/hashes');
-const { createInterestRequest, createUnsignedInterestResponse } = require('../utils/structs');
-const ethUtil = require('ethereumjs-util')
+const { t } = require('../utils/consts');
 
 // Smart contracts
 const OwnerSignersRole = artifacts.require("./base/OwnerSignersRole.sol");
@@ -16,7 +13,8 @@ contract('OwnerSignersRoleTest', function (accounts) {
     let instance;
 
     beforeEach('Setup for each test', async () => {
-        instance = await OwnerSignersRole.new()
+        instance = await OwnerSignersRole.new();
+        await instance.initialize(owner);
     })
 
     withData({

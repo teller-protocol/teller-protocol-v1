@@ -1,283 +1,170 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 // Libraries
-import "@openzeppelin/contracts/lifecycle/Pausable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/lifecycle/Pausable.sol";
 
 // Commons
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "../util/AddressLib.sol";
+import "../util/AssetSettingsLib.sol";
+import "../util/PlatformSettingsLib.sol";
+import "../util/AddressArrayLib.sol";
 
 // Interfaces
-
 import "../interfaces/SettingsInterface.sol";
 
 
 /**
     @notice This contract manages the configuration of the platform.
+    @dev The platform settings functions (create, update, and remove) don't include the whenNotPaused() modifier because we might need to use them in both cases (when the platform is paused and not paused).
+        Example:
+            - There is a potential issue and before analyzing it, we pause the platform to avoid funds losses. Finally, as result of the analysis, we decided to update a platform setting (or create a new one for the cloud nodes). In this scenario, if the modifier is present, we couldn't update the setting (because the platform is paused).
 
     @author develop@teller.finance
  */
 contract Settings is Pausable, SettingsInterface {
     using AddressLib for address;
+    using Address for address;
+    using AssetSettingsLib for AssetSettingsLib.AssetSettings;
+    using AddressArrayLib for address[];
+    using PlatformSettingsLib for PlatformSettingsLib.PlatformSetting;
 
     /** Constants */
     /**
-        The maximum tolerance is a percentage with 2 decimals.
-        Examples:
-            350 => 3.5%
-            4000 => 40.00%
-        
-        The max value is 100% => 10000
-    */
-    uint256 internal constant MAX_MAXIMUM_TOLERANCE_VALUE = 10000;
-
-    /**
-        @notice The setting name for the required subsmission settings.
+        @notice The asset setting name for the maximum loan amount settings.
      */
-    bytes32 public constant REQUIRED_SUBMISSIONS_SETTING = "RequiredSubmissions";
+    bytes32 public constant MAX_LOAN_AMOUNT_ASSET_SETTING = "MaxLoanAmount";
     /**
-        @notice The setting name for the maximum tolerance settings.
+        @notice The asset setting name for cToken address settings.
      */
-    bytes32 public constant MAXIMUM_TOLERANCE_SETTING = "MaximumTolerance";
-    /**
-        @notice The setting name for the response expiry length settings.
-     */
-    bytes32 public constant RESPONSE_EXPIRY_LENGTH_SETTING = "ResponseExpiryLength";
-    /**
-        @notice The setting name for the safety interval settings.
-     */
-    bytes32 public constant SAFETY_INTERVAL_SETTING = "SafetyInterval";
-    /**
-        @notice The setting name for the term expiry time settings.
-     */
-    bytes32 public constant TERMS_EXPIRY_TIME_SETTING = "TermsExpiryTime";
-    /**
-        @notice The setting name for the liquidate ETH price settings.
-     */
-    bytes32 public constant LIQUIDATE_ETH_PRICE_SETTING = "LiquidateEthPrice";
+    bytes32 public constant CTOKEN_ADDRESS_ASSET_SETTING = "CTokenAddress";
 
     /* State Variables */
 
     /**
-        @notice It represents a mapping to identiy the lending pools paused and not paused.
+        @notice It represents a mapping to identify the lending pools paused and not paused.
 
         i.e.: address(lending pool) => true or false.
      */
     mapping(address => bool) public lendingPoolPaused;
 
     /**
-        It represents the total number of submissions required for consensus on a value.
+        @notice It represents a mapping to configure the asset settings.
+        @notice The key belongs to the asset address. Example: address(DAI) or address(USDC).
+        @notice The value has the asset settings.
+
+        Examples:
+
+        address(DAI) => {
+            cTokenAddress = 0x1234...890
+            maxLoanAmount = 1000 DAI (max)
+        }
+        address(USDC) => {
+            cTokenAddress = 0x2345...901
+            maxLoanAmount = 500 USDC (max)
+        }
      */
-    uint256 public requiredSubmissions;
+    mapping(address => AssetSettingsLib.AssetSettings) public assetSettings;
 
     /**
-        This is the maximum tolerance (a percentage) when the values submitted for the nodes are aggregated.
-        It is used to calculate the collateral ratio, interest rate, and others.
- 
-        This is a percentage with 2 decimal places.
-        i.e. maximumTolerance of 325 => tolerance of 3.25% => 0.0325 of value
-        i.e. maximumTolerance of 0 => It means all the values submitted must be equals.
+        @notice It contains all the current assets.
      */
-    uint256 public maximumTolerance;
+    address[] public assets;
 
     /**
-        This is the maximum time (in seconds) a node has to submit a response. After that time, the response is considered expired.
-     */
-    uint256 public responseExpiryLength;
+        @notice This mapping represents the platform settings where:
 
-    /**
-        This is the minimum time you need to wait (in seconds) between the last time you deposit collateral and you take out the loan.
-        It is used to avoid potential attacks using Flash Loans (AAVE) or Flash Swaps (Uniswap V2).
+        - The key is the platform setting name.
+        - The value is the platform setting. It includes the value, minimum and maximum values.
      */
-    uint256 public safetyInterval;
-
-    /**
-        This represents the time (in seconds) that loan terms will be available after requesting them.
-        After this time, the loan terms will expire and the borrower will need to request it again. 
-     */
-    uint256 public termsExpiryTime;
-
-    /**
-        It represents the percentage value (with 2 decimal places) to liquidate loans.
-        
-        i.e. an ETH liquidation price at 95% is stored as 9500
-     */
-    uint256 public liquidateEthPrice;
+    mapping(bytes32 => PlatformSettingsLib.PlatformSetting) public platformSettings;
 
     /** Modifiers */
 
     /* Constructor */
 
-    /**
-        @notice It creates a new Settings instance.
-        @param aRequiredSubmissions the initial value for the required submissions setting.
-        @param aMaximumTolerance the initial value for the maximum tolerance setting.
-        @param aResponseExpiryLength the initial value for the response expiry length setting.
-        @param aSafetyInterval the initial value for the safety interval setting.
-        @param aTermsExpiryTime the initial value for the terms expiry time setting.
-        @param aLiquidateEthPrice the initial value for the liquidate ETH price setting.
-     */
-    constructor(
-        uint256 aRequiredSubmissions,
-        uint256 aMaximumTolerance,
-        uint256 aResponseExpiryLength,
-        uint256 aSafetyInterval,
-        uint256 aTermsExpiryTime,
-        uint256 aLiquidateEthPrice
-    ) public {
-        require(aRequiredSubmissions > 0, "MUST_PROVIDE_REQUIRED_SUBS");
-        require(aResponseExpiryLength > 0, "MUST_PROVIDE_RESPONSE_EXP");
-        require(aSafetyInterval > 0, "MUST_PROVIDE_SAFETY_INTERVAL");
-        require(aTermsExpiryTime > 0, "MUST_PROVIDE_TERMS_EXPIRY");
-        require(aLiquidateEthPrice > 0, "MUST_PROVIDE_ETH_PRICE");
-
-        requiredSubmissions = aRequiredSubmissions;
-        maximumTolerance = aMaximumTolerance;
-        responseExpiryLength = aResponseExpiryLength;
-        safetyInterval = aSafetyInterval;
-        termsExpiryTime = aTermsExpiryTime;
-        liquidateEthPrice = aLiquidateEthPrice;
-    }
-
     /** External Functions */
 
     /**
-        @notice Sets the required responses to process consensus values.
-        @param newRequiredSubmissions the new required submissions value.
+        @notice It creates a new platform setting given a setting name, value, min and max values.
+        @param settingName setting name to create.
+        @param value the initial value for the given setting name.
+        @param minValue the min value for the setting.
+        @param maxValue the max value for the setting.
      */
-    function setRequiredSubmissions(uint256 newRequiredSubmissions)
-        external
-        onlyPauser()
-        whenNotPaused()
-    {
-        require(requiredSubmissions != newRequiredSubmissions, "NEW_VALUE_REQUIRED");
-        require(newRequiredSubmissions > 0, "MUST_PROVIDE_REQUIRED_SUBS");
-        uint256 oldRequiredSubmissions = requiredSubmissions;
-        requiredSubmissions = newRequiredSubmissions;
+    function createPlatformSetting(
+        bytes32 settingName,
+        uint256 value,
+        uint256 minValue,
+        uint256 maxValue
+    ) external onlyPauser() {
+        require(settingName != "", "SETTING_NAME_MUST_BE_PROVIDED");
+        platformSettings[settingName].initialize(value, minValue, maxValue);
 
-        emit SettingUpdated(
-            REQUIRED_SUBMISSIONS_SETTING,
-            msg.sender,
-            oldRequiredSubmissions,
-            newRequiredSubmissions
-        );
+        emit PlatformSettingCreated(settingName, msg.sender, value, minValue, maxValue);
     }
 
     /**
-        @notice This is the maximum tolerance for the values submitted (by nodes) when they are aggregated (average). It is used in the consensus mechanisms.
-        @notice This is a percentage value with 2 decimal places.
-            i.e. maximumTolerance of 325 => tolerance of 3.25% => 0.0325 of value
-            i.e. maximumTolerance of 0 => It means all the values submitted must be equals.        
-        @dev The max value is 100% => 10000
-        @param newMaximumTolerance new maximum tolerance value.
-        @return the current maximum tolerance value.
+        @notice It updates an existent platform setting given a setting name.
+        @notice It only allows to update the value (not the min or max values).
+        @notice In case you need to update the min or max values, you need to remove it, and create it again.
+        @param settingName setting name to update.
+        @param newValue the new value to set.
      */
-    function setMaximumTolerance(uint256 newMaximumTolerance)
+    function updatePlatformSetting(bytes32 settingName, uint256 newValue)
         external
         onlyPauser()
-        whenNotPaused()
     {
-        require(maximumTolerance != newMaximumTolerance, "NEW_VALUE_REQUIRED");
-        require(
-            newMaximumTolerance <= MAX_MAXIMUM_TOLERANCE_VALUE,
-            "MAX_TOLERANCE_EXCEEDED"
-        );
-        uint256 oldMaximumTolerance = maximumTolerance;
-        maximumTolerance = newMaximumTolerance;
+        uint256 oldValue = platformSettings[settingName].update(newValue);
 
-        emit SettingUpdated(
-            MAXIMUM_TOLERANCE_SETTING,
-            msg.sender,
-            oldMaximumTolerance,
-            newMaximumTolerance
-        );
+        emit PlatformSettingUpdated(settingName, msg.sender, oldValue, newValue);
     }
 
     /**
-        @notice Sets a new value for the response expiry length setting.
-        @param newResponseExpiryLength new response expiry length value.
+        @notice Removes a current platform setting given a setting name.
+        @param settingName to remove.
      */
-    function setResponseExpiryLength(uint256 newResponseExpiryLength)
-        external
-        onlyPauser()
-        whenNotPaused()
-    {
-        require(responseExpiryLength != newResponseExpiryLength, "NEW_VALUE_REQUIRED");
-        require(newResponseExpiryLength > 0, "MUST_PROVIDE_RESPONSE_EXP");
-        uint256 oldResponseExpiryLength = responseExpiryLength;
-        responseExpiryLength = newResponseExpiryLength;
+    function removePlatformSetting(bytes32 settingName) external onlyPauser() {
+        uint256 oldValue = platformSettings[settingName].value;
+        platformSettings[settingName].remove();
 
-        emit SettingUpdated(
-            RESPONSE_EXPIRY_LENGTH_SETTING,
-            msg.sender,
-            oldResponseExpiryLength,
-            newResponseExpiryLength
-        );
+        emit PlatformSettingRemoved(settingName, oldValue, msg.sender);
     }
 
     /**
-        @notice Sets a new value for the safety interval setting.
-        @param newSafetyInterval new safety interval value.
-    */
-    function setSafetyInterval(uint256 newSafetyInterval)
+        @notice It gets the current platform setting for a given setting name
+        @param settingName to get.
+        @return the current platform setting.
+     */
+    function getPlatformSetting(bytes32 settingName)
         external
-        onlyPauser()
-        whenNotPaused()
+        view
+        returns (PlatformSettingsLib.PlatformSetting memory)
     {
-        require(safetyInterval != newSafetyInterval, "NEW_VALUE_REQUIRED");
-        require(newSafetyInterval > 0, "MUST_PROVIDE_SAFETY_INTERVAL");
-        uint256 oldSafetyInterval = safetyInterval;
-        safetyInterval = newSafetyInterval;
-
-        emit SettingUpdated(
-            SAFETY_INTERVAL_SETTING,
-            msg.sender,
-            oldSafetyInterval,
-            newSafetyInterval
-        );
+        return _getPlatformSetting(settingName);
     }
 
     /**
-        @notice Sets a new value for the terms expiry time setting.
-        @param newTermsExpiryTime new terms expiry time value.
-    */
-    function setTermsExpiryTime(uint256 newTermsExpiryTime)
+        @notice It gets the current platform setting value for a given setting name
+        @param settingName to get.
+        @return the current platform setting value.
+     */
+    function getPlatformSettingValue(bytes32 settingName)
         external
-        onlyPauser()
-        whenNotPaused()
+        view
+        returns (uint256)
     {
-        require(termsExpiryTime != newTermsExpiryTime, "NEW_VALUE_REQUIRED");
-        require(newTermsExpiryTime > 0, "MUST_PROVIDE_TERMS_EXPIRY");
-        uint256 oldTermsExpiryTime = termsExpiryTime;
-        termsExpiryTime = newTermsExpiryTime;
-
-        emit SettingUpdated(
-            TERMS_EXPIRY_TIME_SETTING,
-            msg.sender,
-            oldTermsExpiryTime,
-            newTermsExpiryTime
-        );
+        return _getPlatformSetting(settingName).value;
     }
 
     /**
-        @notice Sets a new value for the liquidate ETH price setting.
-        @param newLiquidateEthPrice new liquidate ETH price value.
-    */
-    function setLiquidateEthPrice(uint256 newLiquidateEthPrice)
-        external
-        onlyPauser()
-        whenNotPaused()
-    {
-        require(liquidateEthPrice != newLiquidateEthPrice, "NEW_VALUE_REQUIRED");
-        require(newLiquidateEthPrice > 0, "MUST_PROVIDE_ETH_PRICE");
-        uint256 oldLiquidateEthPrice = liquidateEthPrice;
-        liquidateEthPrice = newLiquidateEthPrice;
-
-        emit SettingUpdated(
-            LIQUIDATE_ETH_PRICE_SETTING,
-            msg.sender,
-            oldLiquidateEthPrice,
-            newLiquidateEthPrice
-        );
+        @notice It tests whether a setting name is already configured.
+        @param settingName setting name to test.
+        @return true if the setting is already configured. Otherwise it returns false.
+     */
+    function hasPlatformSetting(bytes32 settingName) external view returns (bool) {
+        return _getPlatformSetting(settingName).exists;
     }
 
     /**
@@ -322,7 +209,150 @@ contract Settings is Pausable, SettingsInterface {
         return paused();
     }
 
+    /**
+        @notice It creates a new asset settings in the platform.
+        @param assetAddress asset address used to create the new setting.
+        @param cTokenAddress cToken address used to configure the asset setting.
+        @param maxLoanAmount the max loan amount used to configure the asset setting.
+     */
+    function createAssetSettings(
+        address assetAddress,
+        address cTokenAddress,
+        uint256 maxLoanAmount
+    ) external onlyPauser() whenNotPaused() {
+        require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
+
+        assetSettings[assetAddress].requireNotExists();
+
+        assetSettings[assetAddress].initialize(cTokenAddress, maxLoanAmount);
+
+        assets.add(assetAddress);
+
+        emit AssetSettingsCreated(msg.sender, assetAddress, cTokenAddress, maxLoanAmount);
+    }
+
+    /**
+        @notice It removes all the asset settings for a specific asset address.
+        @param assetAddress asset address used to remove the asset settings.
+     */
+    function removeAssetSettings(address assetAddress)
+        external
+        onlyPauser()
+        whenNotPaused()
+    {
+        assetAddress.requireNotEmpty("ASSET_ADDRESS_IS_REQUIRED");
+        assetSettings[assetAddress].requireExists();
+
+        delete assetSettings[assetAddress];
+        assets.remove(assetAddress);
+
+        emit AssetSettingsRemoved(msg.sender, assetAddress);
+    }
+
+    /**
+        @notice It updates the maximum loan amount for a specific asset address.
+        @param assetAddress asset address to configure.
+        @param newMaxLoanAmount the new maximum loan amount to configure.
+     */
+    function updateMaxLoanAmount(address assetAddress, uint256 newMaxLoanAmount)
+        external
+        onlyPauser()
+        whenNotPaused()
+    {
+        uint256 oldMaxLoanAmount = assetSettings[assetAddress].maxLoanAmount;
+
+        assetSettings[assetAddress].updateMaxLoanAmount(newMaxLoanAmount);
+
+        emit AssetSettingsUintUpdated(
+            MAX_LOAN_AMOUNT_ASSET_SETTING,
+            msg.sender,
+            assetAddress,
+            oldMaxLoanAmount,
+            newMaxLoanAmount
+        );
+    }
+
+    /**
+        @notice It updates the cToken address for a specific asset address.
+        @param assetAddress asset address to configure.
+        @param newCTokenAddress the new cToken address to configure.
+     */
+    function updateCTokenAddress(address assetAddress, address newCTokenAddress)
+        external
+        onlyPauser()
+        whenNotPaused()
+    {
+        address oldCTokenAddress = assetSettings[assetAddress].cTokenAddress;
+
+        assetSettings[assetAddress].updateCTokenAddress(newCTokenAddress);
+
+        emit AssetSettingsAddressUpdated(
+            CTOKEN_ADDRESS_ASSET_SETTING,
+            msg.sender,
+            assetAddress,
+            oldCTokenAddress,
+            newCTokenAddress
+        );
+    }
+
+    /**
+        @notice Tests whether amount exceeds the current maximum loan amount for a specific asset settings.
+        @param assetAddress asset address to test the setting.
+        @param amount amount to test.
+        @return true if amount exceeds current max loan amout. Otherwise it returns false.
+     */
+    function exceedsMaxLoanAmount(address assetAddress, uint256 amount)
+        external
+        view
+        returns (bool)
+    {
+        return assetSettings[assetAddress].exceedsMaxLoanAmount(amount);
+    }
+
+    /**
+        @notice Gets the current asset addresses list.
+        @return the asset addresses list.
+     */
+    function getAssets() external view returns (address[] memory) {
+        return assets;
+    }
+
+    /**
+        @notice Get the current asset settings for a given asset address.
+        @param assetAddress asset address used to get the current settings.
+        @return the current asset settings.
+     */
+    function getAssetSettings(address assetAddress)
+        external
+        view
+        returns (AssetSettingsLib.AssetSettings memory)
+    {
+        return assetSettings[assetAddress];
+    }
+
+    /**
+        @notice Tests whether an account has the pauser role.
+        @param account account to test.
+        @return true if account has the pauser role. Otherwise it returns false.
+     */
+    function hasPauserRole(address account) external view returns (bool) {
+        return isPauser(account);
+    }
+
     /** Internal functions */
+
+    /**
+        @notice It gets the platform setting for a given setting name.
+        @param settingName the setting name to look for.
+        @return the current platform setting for the given setting name.
+     */
+    function _getPlatformSetting(bytes32 settingName)
+        internal
+        view
+        returns (PlatformSettingsLib.PlatformSetting memory)
+    {
+        return platformSettings[settingName];
+    }
 
     /** Private functions */
 }

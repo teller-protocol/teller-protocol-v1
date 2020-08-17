@@ -1,9 +1,10 @@
 pragma solidity 0.5.17;
 
 // Libraries
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "../util/ZeroCollateralCommon.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "../util/TellerCommon.sol";
 import "../util/NumbersList.sol";
+import "../util/SettingsConsts.sol";
 
 // Contracts
 import "./OwnerSignersRole.sol";
@@ -16,7 +17,7 @@ import "../base/Base.sol";
 
     @author develop@teller.finance
  */
-contract Consensus is Base, OwnerSignersRole {
+contract Consensus is Base, OwnerSignersRole, SettingsConsts {
     using SafeMath for uint256;
     using NumbersList for NumbersList.Values;
 
@@ -31,11 +32,20 @@ contract Consensus is Base, OwnerSignersRole {
     address public callerAddress;
 
     /**
+        @notice It tracks each request nonce value that borrower (in LoanTermsConsensus) or lender (in InterestConsensus) used in the loan terms and interest requests.
+
+        @dev The first key represents the address (borrower or lender depending on the consensus contract).
+        @dev The second key represents the request nonce value.
+        @dev The final value represents whether the nonce value for the given address was used (true) or not (false).
+     */
+    mapping(address => mapping(uint256 => bool)) public requestNonceTaken;
+
+    /**
         @notice Checks whether sender is equal to the caller address.
         @dev It throws a require error if sender is not equal to caller address.
      */
     modifier isCaller() {
-        require(callerAddress == msg.sender, "Address has no permissions.");
+        require(callerAddress == msg.sender, "SENDER_HASNT_PERMISSIONS");
         _;
     }
 
@@ -43,14 +53,17 @@ contract Consensus is Base, OwnerSignersRole {
         @notice It initializes this contract setting the parameters.
         @param aCallerAddress the contract that will call it.
         @param aSettingAddress the settings contract address.
+        @param aMarketsAddress the markets state address.
      */
     function initialize(
         address aCallerAddress, // loans for LoanTermsConsensus, lenders for InterestConsensus
-        address aSettingAddress
+        address aSettingAddress,
+        address aMarketsAddress
     ) public isNotInitialized() {
         aCallerAddress.requireNotEmpty("MUST_PROVIDE_LENDER_INFO");
 
-        _initialize(aSettingAddress);
+        Ownable.initialize(msg.sender);
+        _initialize(aSettingAddress, aMarketsAddress);
 
         callerAddress = aCallerAddress;
     }
@@ -63,7 +76,7 @@ contract Consensus is Base, OwnerSignersRole {
         @return true if the expected signer is equal to the signer. Otherwise it returns false.
      */
     function _signatureValid(
-        ZeroCollateralCommon.Signature memory signature,
+        TellerCommon.Signature memory signature,
         bytes32 dataHash,
         address expectedSigner
     ) internal view returns (bool) {
@@ -94,7 +107,9 @@ contract Consensus is Base, OwnerSignersRole {
         returns (uint256)
     {
         require(
-            values.isWithinTolerance(settings.maximumTolerance()),
+            values.isWithinTolerance(
+                settings.getPlatformSettingValue(MAXIMUM_TOLERANCE_SETTING)
+            ),
             "RESPONSES_TOO_VARIED"
         );
 
@@ -116,7 +131,7 @@ contract Consensus is Base, OwnerSignersRole {
         uint256 requestIdentifier,
         uint256 responseTime,
         bytes32 responseHash,
-        ZeroCollateralCommon.Signature memory signature
+        TellerCommon.Signature memory signature
     ) internal {
         require(
             !hasSubmitted[signer][user][requestIdentifier],
@@ -125,7 +140,8 @@ contract Consensus is Base, OwnerSignersRole {
         hasSubmitted[signer][user][requestIdentifier] = true;
 
         require(
-            responseTime >= now.sub(settings.responseExpiryLength()),
+            responseTime >=
+                now.sub(settings.getPlatformSettingValue(RESPONSE_EXPIRY_LENGTH_SETTING)),
             "RESPONSE_EXPIRED"
         );
 

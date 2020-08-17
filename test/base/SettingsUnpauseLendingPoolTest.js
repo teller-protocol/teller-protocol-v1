@@ -1,6 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS } = require('../utils/consts');
+const { createTestSettingsInstance } = require('../utils/settings-helper');
 const { settings } = require('../utils/events');
 
 // Mock contracts
@@ -13,7 +14,7 @@ contract('SettingsUnpauseLendingPoolTest', function (accounts) {
     let instance;
     
     beforeEach('Setup for each test', async () => {
-        instance = await Settings.new(1, 1, 1, 1, 1, 1);
+        instance = await createTestSettingsInstance(Settings);
     });
 
     withData({

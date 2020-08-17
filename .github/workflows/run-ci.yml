@@ -27,9 +27,6 @@ jobs:
       - name: Compiling Smart Contracts
         run: |
           ./node_modules/.bin/truffle compile
-      - name: Executing Unit tests
-        run: |
-          yarn test
       - name: Executing Code Coverage Report
         run: |
           yarn test:coverage

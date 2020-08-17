@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t } = require('../utils/consts');
+const { t, NULL_ADDRESS } = require('../utils/consts');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
 
@@ -15,7 +15,7 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
     let instance;
-    let zTokenInstance;
+    let tTokenInstance;
     let daiInstance;
     let lendersInstance;
     let interestConsensusInstance;
@@ -23,40 +23,46 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
     let loansAddress = accounts[0];
     
     beforeEach('Setup for each test', async () => {
-        zTokenInstance = await Mock.new();
+        tTokenInstance = await Mock.new();
         daiInstance = await Mock.new();
         interestConsensusInstance = await Mock.new();
-        cTokenInstance = await Mock.new()
+        cTokenInstance = await Mock.new();
+        const marketsInstance = await Mock.new();
         const settingsInstance = await Mock.new();
         instance = await LendingPool.new();
 
         lendersInstance = await Lenders.new(
-          zTokenInstance.address,
+          tTokenInstance.address,
           instance.address,
-          interestConsensusInstance.address
+          interestConsensusInstance.address,
+          marketsInstance.address,
         );
 
         await instance.initialize(
-            zTokenInstance.address,
+            tTokenInstance.address,
             daiInstance.address,
             lendersInstance.address,
             loansAddress,
             cTokenInstance.address,
-            settingsInstance.address
+            settingsInstance.address,
+            marketsInstance.address,
+            NULL_ADDRESS,
         );
     });
 
     withData({
-        _1_basic: [accounts[1], loansAddress, true, 10, false, undefined, false],
-        _2_notLoanSender: [accounts[1], accounts[4], true, 10, false, 'Address is not Loans contract.', true],
-        _3_transferFail: [accounts[1], loansAddress, false, 10, false, 'Transfer was not successful.', true],
-        _4_compoundFails: [accounts[1], loansAddress, true, 10, true, 'COMPOUND_WITHDRAWAL_ERROR', true]
+        _1_basic: [accounts[1], loansAddress, true, 10, false, 1000, undefined, false],
+        _2_notLoanSender: [accounts[1], accounts[4], true, 10, false, 1000, 'ADDRESS_ISNT_LOANS_CONTRACT', true],
+        _3_transferFail: [accounts[1], loansAddress, false, 10, false, 1000, 'LENDING_TRANSFER_FAILED', true],
+        _4_compoundFails: [accounts[1], loansAddress, true, 10, true, 1000, 'COMPOUND_WITHDRAWAL_ERROR', true],
+        _5_balanceFails: [accounts[1], loansAddress, true, 10, false, 0, 'LENDING_TOKEN_NOT_ENOUGH_BALANCE', true],
     }, function(
         borrower,
         sender,
         transfer,
         amountToTransfer,
         compoundFails,
+        balanceOf,
         expectedErrorMessage,
         mustFail
     ) {
@@ -67,7 +73,10 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
             
             const redeemResponse = compoundFails ? 1 : 0
             const encodeRedeemUnderlying = compoundInterfaceEncoder.encodeRedeemUnderlying();
-            await cTokenInstance.givenMethodReturnUint(encodeRedeemUnderlying, redeemResponse)
+            await cTokenInstance.givenMethodReturnUint(encodeRedeemUnderlying, redeemResponse);
+
+            const encodeBalanceOf = erc20InterfaceEncoder.encodeBalanceOf();
+            await daiInstance.givenMethodReturnUint(encodeBalanceOf, balanceOf);
             
             try {
                 // Invocation

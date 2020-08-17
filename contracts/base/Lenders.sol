@@ -6,11 +6,10 @@ import "../base/Base.sol";
 
 // Libraries
 import "../util/AddressLib.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
 // Interfaces
 import "../interfaces/LendersInterface.sol";
-import "../interfaces/ZTokenInterface.sol";
 import "../interfaces/InterestConsensusInterface.sol";
 
 
@@ -28,18 +27,18 @@ contract Lenders is Base, LendersInterface {
     address public lendingPool;
     InterestConsensusInterface public interestConsensus;
 
-    address public zToken;
+    address public tToken;
 
     // The total interest that has not yet been withdrawn by a lender
-    mapping(address => ZeroCollateralCommon.AccruedInterest) public accruedInterest;
+    mapping(address => TellerCommon.AccruedInterest) public accruedInterest;
 
     /** Modifiers */
 
     /**
-        @notice It checks sender is the zToken address.
+        @notice It checks sender is the tToken address.
      */
-    modifier isZToken() {
-        require(_areAddressesEqual(zToken, msg.sender), "Address has no permissions.");
+    modifier isTToken() {
+        require(_areAddressesEqual(tToken, msg.sender), "SENDER_ISNT_TTOKEN");
         _;
     }
 
@@ -47,10 +46,7 @@ contract Lenders is Base, LendersInterface {
         @notice It checks sender is the lending pool address.
      */
     modifier isLendingPool() {
-        require(
-            _areAddressesEqual(lendingPool, msg.sender),
-            "Address has no permissions."
-        );
+        require(_areAddressesEqual(lendingPool, msg.sender), "SENDER_ISNT_LENDING_POOL");
         _;
     }
 
@@ -58,7 +54,7 @@ contract Lenders is Base, LendersInterface {
         @notice It checks an address is not empty.
      */
     modifier isValid(address anAddress) {
-        anAddress.requireNotEmpty("Address is required.");
+        anAddress.requireNotEmpty("ADDRESS_IS_REQUIRED");
         _;
     }
 
@@ -67,37 +63,13 @@ contract Lenders is Base, LendersInterface {
     /** External Functions */
 
     /**
-        @notice It initializes this contract instance.
-        @param zTokenAddress zToken contract address.
-        @param lendingPoolAddress lending pool contract address.
-        @param interestConsensusAddress interest consensus contract address.
-        @param settingAddress settings contract address.
-     */
-    function initialize(
-        address zTokenAddress,
-        address lendingPoolAddress,
-        address interestConsensusAddress,
-        address settingAddress
-    ) external isNotInitialized() {
-        zTokenAddress.requireNotEmpty("ZTOKEN_MUST_BE_PROVIDED");
-        lendingPoolAddress.requireNotEmpty("LENDING_POOL_MUST_BE_PROVIDED");
-        interestConsensusAddress.requireNotEmpty("CONSENSUS_MUST_BE_PROVIDED");
-
-        _initialize(settingAddress);
-
-        zToken = zTokenAddress;
-        lendingPool = lendingPoolAddress;
-        interestConsensus = InterestConsensusInterface(interestConsensusAddress);
-    }
-
-    /**
         @notice It sets the accrued interest for a lender based on the node responses.
         @param request interest request sent by the lender.
         @param responses all node responses to get a consensus value for the accrued interest.
      */
     function setAccruedInterest(
-        ZeroCollateralCommon.InterestRequest calldata request,
-        ZeroCollateralCommon.InterestResponse[] calldata responses
+        TellerCommon.InterestRequest calldata request,
+        TellerCommon.InterestResponse[] calldata responses
     ) external isInitialized() whenNotPaused() whenLendingPoolNotPaused(lendingPool) {
         require(
             accruedInterest[request.lender].timeLastAccrued == 0 ||
@@ -154,6 +126,32 @@ contract Lenders is Base, LendersInterface {
         emit AccruedInterestWithdrawn(recipient, amount);
 
         return amount;
+    }
+
+    /**
+        @notice It initializes this contract instance.
+        @param tTokenAddress tToken contract address.
+        @param lendingPoolAddress lending pool contract address.
+        @param interestConsensusAddress interest consensus contract address.
+        @param settingAddress settings contract address.
+        @param marketsAddress markets contract address.
+     */
+    function initialize(
+        address tTokenAddress,
+        address lendingPoolAddress,
+        address interestConsensusAddress,
+        address settingAddress,
+        address marketsAddress
+    ) external isNotInitialized() {
+        tTokenAddress.requireNotEmpty("TTOKEN_MUST_BE_PROVIDED");
+        lendingPoolAddress.requireNotEmpty("LENDING_POOL_MUST_BE_PROVIDED");
+        interestConsensusAddress.requireNotEmpty("CONSENSUS_MUST_BE_PROVIDED");
+
+        _initialize(settingAddress, marketsAddress);
+
+        tToken = tTokenAddress;
+        lendingPool = lendingPoolAddress;
+        interestConsensus = InterestConsensusInterface(interestConsensusAddress);
     }
 
     /** Internal Functions */

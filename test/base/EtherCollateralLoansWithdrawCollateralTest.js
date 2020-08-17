@@ -25,6 +25,8 @@ contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
     let lendingPoolInstance;
     let lendingTokenInstance;
     let settingsInstance;
+    let marketsInstance;
+    let atmSettingsInstance;
 
     const mockLoanID = 7
     
@@ -33,13 +35,17 @@ contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
         lendingTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
-        settingsInstance = await Mock.new()
+        settingsInstance = await Mock.new();
+        marketsInstance = await Mock.new();
+        atmSettingsInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(
             oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
-            settingsInstance.address
+            settingsInstance.address,
+            marketsInstance.address,
+            atmSettingsInstance.address,
         )
 
         // encode lending token address
@@ -88,6 +94,9 @@ contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
 
                 const tx = await instance.withdrawCollateral(withdrawalAmount, mockLoanID, { from: msgSender })
                 
+                // Assertions
+                assert(!mustFail, 'It should have failed because data is invalid.');
+                assert(tx);
                 const totalAfter = await instance.totalCollateral.call()
                 const contractBalAfter = await web3.eth.getBalance(instance.address)
 

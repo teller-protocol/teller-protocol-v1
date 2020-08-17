@@ -1,7 +1,7 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../util/ZeroCollateralCommon.sol";
+import "../util/TellerCommon.sol";
 
 
 /**
@@ -26,8 +26,8 @@ interface LendersInterface {
         @param responses node responses to get a consensus value for the interest.
      */
     function setAccruedInterest(
-        ZeroCollateralCommon.InterestRequest calldata request,
-        ZeroCollateralCommon.InterestResponse[] calldata responses
+        TellerCommon.InterestRequest calldata request,
+        TellerCommon.InterestResponse[] calldata responses
     ) external;
 
     /**
