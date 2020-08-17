@@ -1,8 +1,8 @@
 const assert = require('assert');
-const DeployerApp = require('./utils/DeployerApp');
-const PoolDeployer = require('./utils/PoolDeployer');
+const DeployerApp = require('../utils/DeployerApp');
+const PoolDeployer = require('../utils/PoolDeployer');
 
-const tellerMainnet = require('../config/networks/mainnet/teller');
+const tellerMainnet = require('../../config/networks/mainnet/teller');
 
 const UpgradeableProxy = artifacts.require("./base/UpgradeableProxy.sol");
 
@@ -25,7 +25,7 @@ const chainlinkOraclesRequired = ['DAI_ETH', 'USDC_ETH', 'LINK_USD'];
 module.exports = async function(deployer, network, accounts) {
   console.log(`Deploying smart contracts to '${network}'.`)
   // Getting network configuration.
-  const appConfig = require('../config')(network);
+  const appConfig = require('../../config')(network);
   const { networkConfig, env } = appConfig;
 
   // Getting configuration values.

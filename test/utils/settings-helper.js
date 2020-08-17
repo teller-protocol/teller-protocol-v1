@@ -27,13 +27,14 @@ const createSettingsInstance = async (
     const settingsInstance = await Settings.new();
     const proxy = await UpgradeableProxy.new(settingsInstance.address, from, '0x')
     const instance = await Settings.at(proxy.address)
-    await instance.initialize(from)
+    await instance.initialize(from);
 
+    const txConfig = { from };
     const shouldInitPlatformSettings = typeof params === 'object'
     if (shouldInitPlatformSettings) {
         await initPlatformSettings(
             instance,
-            params,
+            { ...params, txConfig, },
             {},
         );
     }

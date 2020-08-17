@@ -8,7 +8,7 @@
     "lint-sol": "yarn solhint -f table \"./contracts/**/*.sol\"",
     "lint-js": "yarn eslint -f table \"./test/**/*.js\"",
     "test": "truffle test",
-    "test:coverage": "node --max-old-space-size=8192 ./node_modules/.bin/truffle run coverage --to 3",
+    "test:coverage": "node --max-old-space-size=8192 ./node_modules/.bin/truffle run coverage",
     "test:ganache": "yarn compile && truffle exec ./test-integration/main.js --network ganache",
     "remove:ganache:data": "rm -f -r ./test-integration/resources/data",
     "unzip:ganache:data": "unzip ./test-integration/resources/data.zip -d ./test-integration/resources",
