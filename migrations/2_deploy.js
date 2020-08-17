@@ -116,7 +116,7 @@ module.exports = async function(deployer, network, accounts) {
       txConfig
     );
     console.log(`New aggregator (Inversed? ${inversed}) for ${chainlinkOraclePair} (Collateral Decimals: ${collateralDecimals} / Response Decimals: ${responseDecimals}): ${ChainlinkPairAggregatorReference.address} (using Chainlink Oracle address ${address})`);
-    aggregators[chainlinkOraclePair] = ChainlinkPairAggregator.address;
+    aggregators[chainlinkOraclePair] = ChainlinkPairAggregatorReference.address;
   }
 
   const deployConfig = {

@@ -16,7 +16,6 @@ const TokenCollateralLoans = artifacts.require("./base/TokenCollateralLoans.sol"
 const LendingPool = artifacts.require("./base/LendingPool.sol");
 const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
-// ATM Smart contracts
 
 // External providers
 const tokensRequired = ['DAI', 'USDC', 'LINK'];
