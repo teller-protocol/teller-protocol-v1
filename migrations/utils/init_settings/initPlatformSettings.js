@@ -15,7 +15,7 @@ const validatePlatformSetting = async (settingsInstance, web3, platformSettingNa
     assert.equal(processOnDeployment.toString(), 'false', `Platform setting ${platformSettingName} processOnDeployment must be false.`);
 };
 
-const configureStartingBlockNumber = async (settingsName, settingsInstance, { platformSettings, currentBlockNumber, web3, verbose}) => {
+const configureStartingBlockNumber = async (settingsName, settingsInstance, { platformSettings, currentBlockNumber, web3, txConfig, verbose}) => {
     const offsetBlockNumberSetting = platformSettings[settingsNames.StartingBlockOffsetNumber];
     assert(!_.isUndefined(offsetBlockNumberSetting.value), `StartingBlockOffsetNumber value must be defined.`);
 
@@ -38,12 +38,13 @@ const configureStartingBlockNumber = async (settingsName, settingsInstance, { pl
         startingBlockNumberValue,
         min,
         max,
+        txConfig,
     );
 };
 
 module.exports = async function(
     settingsInstance,
-    { platformSettings, currentBlockNumber, web3, verbose = true },
+    { platformSettings, currentBlockNumber, web3, txConfig, verbose = true },
     { },
 ) {
     if (verbose) console.log('Configuring platform settings.')
@@ -65,6 +66,7 @@ module.exports = async function(
             value,
             min,
             max,
+            txConfig,
         );
     }
 
@@ -72,7 +74,7 @@ module.exports = async function(
     await configureStartingBlockNumber(
         settingsNames.StartingBlockNumber,
         settingsInstance,
-        {platformSettings, currentBlockNumber, web3, verbose}
+        {platformSettings, currentBlockNumber, web3, txConfig, verbose}
     );
 
     // Validating all the platform settings are configured.

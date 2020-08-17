@@ -83,7 +83,7 @@ PoolDeployer.prototype.deployPool = async function(
 
     const interestValidatorAddress = interestValidatorInstance === undefined ? NULL_ADDRESS : interestValidatorInstance.address;
     console.log(`Lending pool is using interest validator ${interestValidatorAddress}.`)
-
+    console.log(`Lending pool: initializing...`);
     await lendingPoolInstance.initialize(
         TToken.address,
         tokenAddress,
@@ -95,12 +95,14 @@ PoolDeployer.prototype.deployPool = async function(
         interestValidatorAddress,
     );
 
+    console.log(`InterestConsensus: initializing...`);
     await interestConsensusInstance.initialize(
         lendersInstance.address,
         settingsInstance.address,
         marketsStateInstance.address,
     );
 
+    console.log(`Lenders: initializing...`);
     await lendersInstance.initialize(
         TToken.address,
         lendingPoolInstance.address,
@@ -109,6 +111,7 @@ PoolDeployer.prototype.deployPool = async function(
         marketsStateInstance.address,
     );
 
+    console.log(`LoanTermsConsensus: initializing...`);
     await loanTermsConsensusInstance.initialize(
         loansInstance.address,
         settingsInstance.address,
@@ -116,6 +119,7 @@ PoolDeployer.prototype.deployPool = async function(
     );
 
     if (collateralName === 'ETH') {
+        console.log(`EtherCollateralLoans: initializing...`);
         await loansInstance.initialize(
             aggregatorAddress,
             lendingPoolInstance.address,
@@ -125,6 +129,7 @@ PoolDeployer.prototype.deployPool = async function(
             atmSettingsInstance.address,
         );
     } else {
+        console.log(`TokenCollateralLoans: initializing...`);
         const collateralAddress = tokens[collateralName.toUpperCase()];
         assert(collateralAddress, `Address for collateral token ${collateralName.toUpperCase()} is undefined.`);
         await loansInstance.initialize(
@@ -138,6 +143,7 @@ PoolDeployer.prototype.deployPool = async function(
         );
     }
 
+    console.log(`tToken: Adding as minter LendingPool (${lendingPoolInstance.address}).`);
     await tTokenInstance.addMinter(lendingPoolInstance.address, txConfig);
 
     const dependsOnMarketsState = [
