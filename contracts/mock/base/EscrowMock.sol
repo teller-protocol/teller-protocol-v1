@@ -3,19 +3,16 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/Escrow.sol";
 
+
 contract EscrowMock is Escrow {
     bool internal __isBorrower;
 
-    function isBorrower() internal returns (bool) {
+    function _isBorrower() internal view returns (bool) {
         return __isBorrower;
     }
 
-    function setBorrower(bool _isBorrower) external {
-        __isBorrower = _isBorrower;
-    }
-
-    function initialize() external {
-        _initialize();
+    function setBorrower(bool isBorrower) external {
+        __isBorrower = isBorrower;
     }
 
     function setFactory(address _factory) external {

@@ -4,10 +4,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "../../../util/AddressLib.sol";
 
-import "./DappBase.sol";
+import "./IDApp.sol";
 
 
-contract Uniswap is DappBase {
+contract Uniswap is IDApp {
     using AddressLib for address;
 
     IUniswapV2Router02 public router;
@@ -16,35 +16,29 @@ contract Uniswap is DappBase {
         router = IUniswapV2Router02(_router);
     }
 
-    function swap(address[] memory path, uint256 sourceAmount, uint256 minDestination) internal {
-        require(path.length >= 2, 'UNISWAP_PATH_TOO_SHORT');
+    function swap(address[] memory path, uint256 sourceAmount, uint256 minDestination)
+        internal
+    {
+        require(path.length >= 2, "UNISWAP_PATH_TOO_SHORT");
         address source = path[0];
         address destination = path[path.length - 1];
 
-        source.requireNotEqualTo(destination, 'UNISWAP_SOURCE_AND_DESTINATION_SAME');
-        require(minDestination > 0, 'UNISWAP_MIN_DESTINATION_ZERO');
+        source.requireNotEqualTo(destination, "UNISWAP_SOURCE_AND_DESTINATION_SAME");
+        require(minDestination > 0, "UNISWAP_MIN_DESTINATION_ZERO");
 
         // TODO: check destination amount >= minDestination
         if (source == address(0x0)) {
-            require(address(this).balance >= sourceAmount, 'UNISWAP_INSUFFICIENT_SOURCE');
+            require(address(this).balance >= sourceAmount, "UNISWAP_INSUFFICIENT_SOURCE");
 
-            router.swapExactETHForTokens(
-                0,
-                path,
-                address(this),
-                now
-            );
+            router.swapExactETHForTokens(0, path, address(this), now);
         } else {
-            require(IERC20(source).balanceOf(address(this)) >= sourceAmount, 'UNISWAP_INSUFFICIENT_SOURCE');
+            require(
+                IERC20(source).balanceOf(address(this)) >= sourceAmount,
+                "UNISWAP_INSUFFICIENT_SOURCE"
+            );
 
             if (destination == address(0x0)) {
-                router.swapExactTokensForETH(
-                    sourceAmount,
-                    0,
-                    path,
-                    address(this),
-                    now
-                );
+                router.swapExactTokensForETH(sourceAmount, 0, path, address(this), now);
             } else {
                 router.swapExactTokensForTokens(
                     sourceAmount,
@@ -56,31 +50,32 @@ contract Uniswap is DappBase {
             }
         }
 
-        emit DappAction('Uniswap', 'swap');
+        emit DappAction("Uniswap", "swap");
     }
 }
 
+
 interface IUniswapV2Router02 {
     function swapExactTokensForTokens(
-        uint amountIn,
-        uint amountOutMin,
+        uint256 amountIn,
+        uint256 amountOutMin,
         address[] calldata path,
         address to,
-        uint deadline
-    ) external returns (uint[] memory amounts);
+        uint256 deadline
+    ) external returns (uint256[] memory amounts);
 
     function swapExactTokensForETH(
-        uint amountIn,
-        uint amountOutMin,
+        uint256 amountIn,
+        uint256 amountOutMin,
         address[] calldata path,
         address to,
-        uint deadline
-    ) external returns (uint[] memory amounts);
+        uint256 deadline
+    ) external returns (uint256[] memory amounts);
 
     function swapExactETHForTokens(
-        uint amountOutMin,
+        uint256 amountOutMin,
         address[] calldata path,
         address to,
-        uint deadline
-    ) external payable returns (uint[] memory amounts);
+        uint256 deadline
+    ) external payable returns (uint256[] memory amounts);
 }

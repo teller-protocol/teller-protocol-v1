@@ -9,5 +9,10 @@ interface EscrowFactoryInterface {
 
     function createEscrow(uint256 loanID) external returns (address);
 
-    event EscrowCreated(address borrower, address loansAddress, uint256 loanID, address escrowAddress);
+    event EscrowCreated(
+        address borrower,
+        address loansAddress,
+        uint256 loanID,
+        address escrowAddress
+    );
 }
