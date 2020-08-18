@@ -346,7 +346,11 @@ contract Settings is Pausable, SettingsInterface {
         @notice Sets a new escrow factory contract.
         @param escrowFactoryAddress contract address of new escrow factory.
      */
-    function setEscrowFactory(address escrowFactoryAddress) external onlyPauser() whenNotPaused() {
+    function setEscrowFactory(address escrowFactoryAddress)
+        external
+        onlyPauser()
+        whenNotPaused()
+    {
         address oldValue = address(escrowFactory);
         escrowFactory = EscrowFactoryInterface(escrowFactoryAddress);
 
