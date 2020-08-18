@@ -678,5 +678,29 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        atmSettingsUpdated: tx => {
+            const name = "ATMSettingsUpdated";
+            return {
+                name: name,
+                emitted: (sender, oldATMSettings, newATMSettings) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.oldATMSettings.toString(), oldATMSettings.toString());
+                    assert.equal(ev.newATMSettings.toString(), newATMSettings.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        settingsUpdated: tx => {
+            const name = "SettingsUpdated";
+            return {
+                name: name,
+                emitted: (sender, oldSettings, newSettings) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.oldSettings.toString(), oldSettings.toString());
+                    assert.equal(ev.newSettings.toString(), newSettings.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     },
 };
