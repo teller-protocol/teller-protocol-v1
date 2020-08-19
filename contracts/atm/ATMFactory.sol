@@ -133,14 +133,27 @@ contract ATMFactory is IATMFactory, TInitializable {
         return atms[atmAddress];
     }
 
+    /**
+        @notice Returns the atm token address of a given associated atm address.
+        @param atmAddress ATM address to test
+        @return Address of the associated ATM Token
+     */
     function getATMToken(address atmAddress) external view returns (address) {
         return atmTokens[atmAddress];
     }
 
+    /**
+        @notice Returns the address of the ATM Settings contract.
+        @return Address of the ATM settings contract
+     */
     function getATMSettings() external view returns (address) {
         return address(atmSettings);
     }
 
+    /**
+        @notice Returns the address of the Settings contract
+        @return Address of the settings contract
+     */
     function getSettings() external view returns (address) {
         return address(settings);
     }
@@ -170,6 +183,10 @@ contract ATMFactory is IATMFactory, TInitializable {
         emit SettingsUpdated(msg.sender, oldSettingsAddress, newSettingsAddress);
     }
 
+    /**
+        @notice It updates the current atm settings.
+        @param newATMSettingsAddress The new settings address.
+     */
     function setATMSettings(address newATMSettingsAddress) external onlyOwner() {
         require(newATMSettingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
         address oldATMSettingsAddress = address(atmSettings);
