@@ -39,7 +39,6 @@ contract("ATMFactoryInitializeTest", function (accounts) {
             }
 
             try {
-                console.log(settingsAddress, atmSettingsAddress);
                 // Invocation
                 const instance = await ATMFactory.new();
                 await instance.initialize(settingsAddress, atmSettingsAddress);
