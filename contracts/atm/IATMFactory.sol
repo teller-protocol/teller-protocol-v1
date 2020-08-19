@@ -79,6 +79,10 @@ interface IATMFactory {
      */
     function setSettings(address newSettingsAddress) external;
 
+    /**
+        @notice It updates the current atm settings.
+        @param newATMSettingsAddress The new settings address.
+     */
     function setATMSettings(address newATMSettingsAddress) external;
 
     /**
@@ -94,9 +98,22 @@ interface IATMFactory {
      */
     function getATMs() external view returns (address[] memory);
 
+    /**
+        @notice Returns the address of the ATM Settings contract.
+        @return Address of the ATM settings contract
+     */
     function getATMSettings() external view returns (address);
 
+    /**
+        @notice Returns the address of the Settings contract
+        @return Address of the settings contract
+     */
     function getSettings() external view returns (address);
 
+    /**
+        @notice Returns the atm token address of a given associated atm address.
+        @param atmAddress ATM address to test
+        @return Address of the associated ATM Token
+     */
     function getATMToken(address atmAddress) external view returns (address);
 }
