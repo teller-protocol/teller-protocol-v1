@@ -768,40 +768,13 @@ module.exports = {
             };
         },
     },
-    escrowFactory: {
-        escrowCreated: (tx, Factory) => {
-            const name = 'EscrowCreated';
+    upgradeable: {
+        upgraded: tx => {
+            const name = "Upgraded";
             return {
                 name: name,
-                emitted: async (borrower, loansAddress, loanID, escrowAddress) => {
-                    await expectEvent.inTransaction(tx.tx, Factory, name, {
-                        borrower,
-                        loansAddress,
-                        loanID,
-                        escrowAddress
-                    });
-                },
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
-        newDAppAdded: tx => {
-            const name = 'NewDAppAdded';
-            return {
-                name: name,
-                emitted: (sender, dapp) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender.toString(), sender.toString());
-                    assert.equal(ev.dapp.toString(), dapp.toString());
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
-        dappRemoved: tx => {
-            const name = 'DAppRemoved';
-            return {
-                name: name,
-                emitted: (sender, dapp) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender.toString(), sender.toString());
-                    assert.equal(ev.dapp.toString(), dapp.toString());
+                emitted: (implementation) => emitted(tx, name, ev => {
+                    assert.equal(ev.implementation, implementation);
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };

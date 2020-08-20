@@ -1,4 +1,5 @@
 // JS Libraries
+const { upgradeable } = require("../utils/events");
 const withData = require("leche").withData;
 const { t } = require("../utils/consts");
 
@@ -51,7 +52,7 @@ contract("UpgradeableProxyUpgradeToTest", function(accounts) {
                 const v1Value = await v1.value.call();
                 assert.equal(initValue.toString(), v1Value.toString(), "Initial values do not match");
 
-                await proxy.upgradeTo(v2LibraryInstance.address, { from: caller });
+                const result = await proxy.upgradeTo(v2LibraryInstance.address, { from: caller });
                 const implementationV2 = await proxy.implementation.call();
                 assert.equal(implementationV2.toLowerCase(), v2LibraryInstance.address.toLowerCase(), "V2 implementation addresses do not match");
 
@@ -60,6 +61,10 @@ contract("UpgradeableProxyUpgradeToTest", function(accounts) {
 
                 const updatedValue = await v1.value.call();
                 assert.equal(updatedValue.toString(), newValue.toString(), "Updated values do not match");
+
+                upgradeable
+                    .upgraded(result)
+                    .emitted(v2LibraryInstance.address);
             } catch (error) {
                 assert(mustFail);
                 assert(error);
@@ -108,7 +113,7 @@ contract("UpgradeableProxyUpgradeToTest", function(accounts) {
 
             await proxy.upgradeTo(v2LibraryInstance.address, { from: admin });
             const implementationV2 = await proxy.implementation.call();
-            assert.equal(implementationV2.toLowerCase(), v2LibraryInstance.address.toLowerCase(), "V2 implementation addresses do not match");
+            assert.equal(implementationV2, v2LibraryInstance.address, "V2 implementation addresses do not match");
 
             const v2Sender = accounts[6]
             let v2SenderBeforeBalance = await getBalance(v2Sender)
