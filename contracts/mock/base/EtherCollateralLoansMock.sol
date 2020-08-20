@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/EtherCollateralLoans.sol";
 
-
 contract EtherCollateralLoansMock is EtherCollateralLoans {
     function setLoanIDCounter(uint256 newLoanIdCounter) external {
         loanIDCounter = newLoanIdCounter;
@@ -47,8 +46,12 @@ contract EtherCollateralLoansMock is EtherCollateralLoans {
         });
     }
 
-    function createEscrow(uint256 loanID) public {
-        settings.getEscrowFactory().createEscrow(loanID);
+    function createEscrow(address borrower, uint256 loanID) public {
+        settings.getEscrowFactory().createEscrow(borrower, loanID);
+    }
+
+    function externalCreateEscrow(uint256 loanID) external returns (address) {
+        return super._createEscrow(loanID);
     }
 
     function() external payable {}

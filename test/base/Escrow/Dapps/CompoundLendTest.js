@@ -37,12 +37,18 @@ contract("CompoundLendTest", function(accounts) {
     expectedErrorMessage
   ) {
     it(t("escrow", "lend", "Should be able (or not) to lend tokens on Compound", mustFail), async function() {
+      // Setup
+      if (balance > 0) {
+        await dai.mint(compound.address, balance)
+      }
       try {
-        if (balance > 0) {
-          await dai.mint(compound.address, balance)
-        }
 
+        // Invocation
         const result = await compound.callLend(cDai.address, amount);
+
+        // Assertions
+        assert(!mustFail);
+
         dapps
           .action(result)
           .emitted(toBytes32(web3, 'Compound'), toBytes32(web3, 'lend'))
@@ -53,8 +59,6 @@ contract("CompoundLendTest", function(accounts) {
         const tokenBalance = await dai.balanceOf(compound.address)
         const expectedBalance = balance - amount
         assert.equal(tokenBalance.toString(), expectedBalance.toString(), 'Token balance invalid after lend')
-
-        assert(!mustFail);
       } catch (error) {
         assert(mustFail, error.message);
         assert(error);

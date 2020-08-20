@@ -43,7 +43,9 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
         const atmSettingsInstance = await Mock.new();
         const settingsInstance = await createTestSettingsInstance(Settings);
         const escrowLibrary = await Escrow.new();
-        const escrowFactory = await EscrowFactory.new(escrowLibrary.address);
+        const escrowFactory = await EscrowFactory.new();
+
+        await escrowFactory.initialize(settingsInstance.address, escrowLibrary.address);
         await settingsInstance.setEscrowFactory(escrowFactory.address)
 
         loanTermsConsInstance = await Mock.new();

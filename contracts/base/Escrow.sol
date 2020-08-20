@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 // Contracts
 import "./TInitializable.sol";
-import "./Escrow/EscrowStorage.sol";
 
 // Interfaces
 import "../interfaces/EscrowFactoryInterface.sol";
@@ -14,41 +13,66 @@ import "../interfaces/LoansInterface.sol";
 import "../util/AddressLib.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
-
-// Commons
-
-contract Escrow is TInitializable, EscrowInterface, EscrowStorage {
+/**
+    @notice This contract is used by borrowers to call DApp functions (using delegate calls).
+    @notice In order to call a DApp function, the DApp must be added in the EscrowFactory instance.
+    @dev The current DApp implementations are: Uniswap and Compound.
+ */
+contract Escrow is TInitializable, EscrowInterface {
     using Address for address;
     using Address for address payable;
     using AddressLib for address;
     using AddressLib for address payable;
 
+    /**
+        @notice This is the escrow factory instance.
+        @dev It is used to validate the dapps are valid.
+     */
     EscrowFactoryInterface public factory;
+
+    /**
+        @notice It is the current loans contract instance.
+     */
     LoansInterface public loans;
+
+    /**
+        @notice This loan id refers the loan in the loans contract.
+        @notice This loan was taken out by a borrower.
+     */
     uint256 public loanID;
 
+    /**
+        @notice This struct defines the dapp address and data to execute in the callDapp function.
+        @dev It is executed using a delegatecall.
+     */
     struct DappData {
         address location;
         bytes data;
     }
 
+    /**
+        @notice It checks whether the sender is the borrower or not.
+        @dev It throws a require error if the sender is not the borrower associated to the current loan id.
+     */
     modifier onlyBorrower() {
         require(_isBorrower(), "CALLER_NOT_BORROWER");
         _;
     }
 
+    /**
+        @notice It calls a given dapp using a delegatecall function by a borrower owned the current loan id associated to this escrow contract.
+        @param dappData the current dapp data to be executed.
+     */
     function callDapp(DappData calldata dappData)
         external
         isInitialized()
         onlyBorrower()
     {
-        require(factory.isDappWhitelisted(dappData.location), "DAPP_NOT_WHITELISTED");
+        require(factory.isDapp(dappData.location), "DAPP_NOT_WHITELISTED");
 
-        (bool success, bytes memory result) = dappData.location.delegatecall(
-            dappData.data
-        );
+        (bool success, ) = dappData.location.delegatecall(dappData.data);
 
-        require(success, string(result));
+        require(success, "DAPP_CALL_FAILED");
     }
 
     /**
@@ -68,7 +92,6 @@ contract Escrow is TInitializable, EscrowInterface, EscrowStorage {
         factory = EscrowFactoryInterface(msg.sender);
         loans = LoansInterface(loansAddress);
         loanID = aLoanID;
-        borrowedAsset = IERC20(loans.lendingToken());
     }
 
     /** Internal Functions */

@@ -15,7 +15,6 @@ import "../util/AddressArrayLib.sol";
 import "../interfaces/SettingsInterface.sol";
 import "../interfaces/EscrowFactoryInterface.sol";
 
-
 /**
     @notice This contract manages the configuration of the platform.
     @dev The platform settings functions (create, update, and remove) don't include the whenNotPaused() modifier because we might need to use them in both cases (when the platform is paused and not paused).
@@ -344,17 +343,23 @@ contract Settings is Pausable, SettingsInterface {
 
     /**
         @notice Sets a new escrow factory contract.
-        @param escrowFactoryAddress contract address of new escrow factory.
+        @param newEscrowFactoryAddress contract address of new escrow factory.
      */
-    function setEscrowFactory(address escrowFactoryAddress)
+    function setEscrowFactory(address newEscrowFactoryAddress)
         external
         onlyPauser()
         whenNotPaused()
     {
+        require(newEscrowFactoryAddress.isContract(), "NEW_FACTORY_MUST_BE_CONTRACT");
         address oldValue = address(escrowFactory);
-        escrowFactory = EscrowFactoryInterface(escrowFactoryAddress);
+        newEscrowFactoryAddress.requireNotEqualTo(
+            oldValue,
+            "NEW_ESCROW_FACTORY_MUST_BE_NEW"
+        );
 
-        emit EscrowFactoryUpdated(msg.sender, oldValue, escrowFactoryAddress);
+        escrowFactory = EscrowFactoryInterface(newEscrowFactoryAddress);
+
+        emit EscrowFactoryUpdated(msg.sender, oldValue, newEscrowFactoryAddress);
     }
 
     /**

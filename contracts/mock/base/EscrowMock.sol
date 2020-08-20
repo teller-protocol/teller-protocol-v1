@@ -3,19 +3,33 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/Escrow.sol";
 
-
 contract EscrowMock is Escrow {
-    bool internal __isBorrower;
+    bool private _mockIsBorrower;
+    bool public isBorrower;
+
+    function mockIsBorrower(bool mockIsABorrower, bool isABorrower) external {
+        _mockIsBorrower = mockIsABorrower;
+        isBorrower = isABorrower;
+    }
+
+    function mockInitialize(
+        address factoryAddress,
+        address loansAddress,
+        uint256 aLoanID
+    ) external {
+        _initialize();
+        factory = EscrowFactoryInterface(factoryAddress);
+        loans = LoansInterface(loansAddress);
+        loanID = aLoanID;
+    }
 
     function _isBorrower() internal view returns (bool) {
-        return __isBorrower;
+        if (_mockIsBorrower) {
+            return isBorrower;
+        } else {
+            return super._isBorrower();
+        }
     }
 
-    function setBorrower(bool isBorrower) external {
-        __isBorrower = isBorrower;
-    }
-
-    function setFactory(address _factory) external {
-        factory = EscrowFactoryInterface(_factory);
-    }
+    function externalIsBorrower() external onlyBorrower() {}
 }
