@@ -10,6 +10,7 @@ import "../interfaces/EscrowInterface.sol";
 import "../interfaces/LoansInterface.sol";
 
 // Libraries
+import "../util/TellerCommon.sol";
 import "../util/AddressLib.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
@@ -54,15 +55,6 @@ contract Escrow is TInitializable, EscrowInterface {
     uint256 public loanID;
 
     /**
-        @notice This struct defines the dapp address and data to execute in the callDapp function.
-        @dev It is executed using a delegatecall.
-     */
-    struct DappData {
-        address location;
-        bytes data;
-    }
-
-    /**
         @notice It checks whether the sender is the borrower or not.
         @dev It throws a require error if the sender is not the borrower associated to the current loan id.
      */
@@ -75,7 +67,7 @@ contract Escrow is TInitializable, EscrowInterface {
         @notice It calls a given dapp using a delegatecall function by a borrower owned the current loan id associated to this escrow contract.
         @param dappData the current dapp data to be executed.
      */
-    function callDapp(DappData calldata dappData)
+    function callDapp(TellerCommon.DappData calldata dappData)
         external
         isInitialized()
         onlyBorrower()
