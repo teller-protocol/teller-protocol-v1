@@ -5,19 +5,21 @@ const { generateEscrowCloneAddressFromFactory } = require('../../utils/generateE
 const assert = require('assert');
 
 // Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const Escrow = artifacts.require("./base/Escrow.sol");
-const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
+const EscrowFactoryMock = artifacts.require("./mock/base/EscrowFactoryMock.sol");
 
 contract('EscrowFactoryComputeAddressTest', function (accounts) {
-  let expectedEscrowAddress;
   let escrow;
   let escrowFactory;
 
   beforeEach(async () => {
     escrow = await Escrow.new();
-    escrowFactory = await EscrowFactory.new(escrow.address);
+    escrowFactory = await EscrowFactoryMock.new();
+    const settings = await Mock.new();
+    await escrowFactory.initialize(settings.address, escrow.address);
   })
 
   withData({
@@ -30,12 +32,16 @@ contract('EscrowFactoryComputeAddressTest', function (accounts) {
     mustFail,
     expectedErrorMessage
   ) {
-    it(t('loans factory', 'computeEscrowAddress', 'Should be able to compute escrow clone contract address.', false), async function() {
+    it(t('escrowFactory', 'computeEscrowAddress', 'Should be able to compute an escrow contract address.', mustFail), async function() {
+      // Setup
+      const expectedEscrowAddress = generateEscrowCloneAddressFromFactory(generateCaller, loanID, escrowFactory.address, escrow.address)
+
       try {
-        const computedEscrowAddress = await escrowFactory.computeEscrowAddress.call(loanID, { from: caller })
+        // Invocation
+        const computedEscrowAddress = await escrowFactory.externalComputeEscrowAddress(loanID, { from: caller });
 
-        expectedEscrowAddress = generateEscrowCloneAddressFromFactory(generateCaller, loanID, escrowFactory.address, escrow.address)
-
+        // Assertions
+        assert(!mustFail, 'It should have failed because data is invalid.');
         generateCaller === caller
           ? assert.equal(computedEscrowAddress, expectedEscrowAddress)
           : assert.notEqual(computedEscrowAddress, expectedEscrowAddress)

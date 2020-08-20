@@ -68,7 +68,6 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
                     .emitted(sender, newATM, atmTokenExpected);
                 
             } catch (error) {
-                console.log(error);
                 assert(mustFail);
                 assert(error);
                 assert.equal(error.reason, expectedErrorMessage);

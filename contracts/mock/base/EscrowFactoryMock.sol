@@ -2,12 +2,14 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 import "../../base/EscrowFactory.sol";
-
+import "../../base/Escrow.sol";
 
 contract EscrowFactoryMock is EscrowFactory {
-    constructor(address _escrowLibrary) public EscrowFactory(_escrowLibrary) {}
-
-    function enableDapp(address dapp) external {
-        whitelistedDapps[dapp] = true;
+    function externalComputeEscrowAddress(uint256 loanID)
+        external
+        view
+        returns (address result)
+    {
+        return super._computeEscrowAddress(loanID);
     }
 }

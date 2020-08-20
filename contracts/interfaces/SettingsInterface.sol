@@ -5,7 +5,6 @@ import "../util/AssetSettingsLib.sol";
 import "../util/PlatformSettingsLib.sol";
 import "./EscrowFactoryInterface.sol";
 
-
 /**
     @notice This interface defines all function to manage the platform configuration.
 
@@ -121,6 +120,12 @@ interface SettingsInterface {
         uint256 newValue
     );
 
+    /**
+        @notice This event is emitted when the escrow factory is updated.
+        @param sender the transaction sender address.
+        @param oldValue the old value used for the escrow factory address.
+        @param newValue the value updated.
+     */
     event EscrowFactoryUpdated(
         address indexed sender,
         address oldValue,
@@ -276,4 +281,10 @@ interface SettingsInterface {
         @return the current escrow factory contract.
      */
     function getEscrowFactory() external view returns (EscrowFactoryInterface);
+
+    /**
+        @notice Sets a new escrow factory contract.
+        @param newEscrowFactoryAddress contract address of new escrow factory.
+     */
+    function setEscrowFactory(address newEscrowFactoryAddress) external;
 }

@@ -58,20 +58,31 @@ module.exports = async function(deployer, network, accounts) {
   await deployerApp.deploys([TDAI, TUSDC], txConfig);
   console.log(`Deployed tokens: TDAI [${TDAI.address}] TUSDC [${TUSDC.address}] `);  
 
-  await deployerApp.deploy(Escrow)
-  const escrowFactory = await deployerApp.deploy(EscrowFactory, Escrow.address)
-  
+  await deployerApp.deploy(Escrow, txConfig);
+  console.log(`Escrow contract address deployed at: ${Escrow.address}.`);
+  const escrowFactoryInstance = await deployerApp.deployWithUpgradeable('EscrowFactory', EscrowFactory, txConfig.from, '0x');
+
   // Settings Deployments
   await deployerApp.deploy(MarketsState, txConfig);
   const marketsStateInstance = await MarketsState.deployed();
 
-  const settingsInstance = await deployerApp.deployWithUpgradeable('Settings', Settings, txConfig.from, '0x')
+  const settingsInstance = await deployerApp.deployWithUpgradeable('Settings', Settings, txConfig.from, '0x');
   await settingsInstance.initialize(txConfig.from);
   await initSettings(
     settingsInstance,
-    { ...networkConfig, escrowFactory, txConfig, network, currentBlockNumber, web3 },
+    {
+      ...networkConfig,
+      escrowFactory: escrowFactoryInstance,
+      txConfig,
+      network,
+      currentBlockNumber,
+      web3 
+    },
     { ERC20 },
   );
+
+  console.log(`EscrowFactory: Initializing...`);
+  await escrowFactoryInstance.initialize(settingsInstance.address, Escrow.address, txConfig);
 
   await deployerApp.deploy(
     ATMSettings,

@@ -1,6 +1,5 @@
 pragma solidity 0.5.17;
 
-
 interface IDApp {
     /**
         @notice This event is emitted when a Dapp executes an action.
