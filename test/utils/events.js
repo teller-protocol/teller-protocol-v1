@@ -703,4 +703,16 @@ module.exports = {
             };
         },
     },
+    upgradeable: {
+        upgraded: tx => {
+            const name = "Upgraded";
+            return {
+                name: name,
+                emitted: (implementation) => emitted(tx, name, ev => {
+                    assert.equal(ev.implementation, implementation);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
 };
