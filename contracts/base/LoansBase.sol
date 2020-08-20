@@ -19,6 +19,17 @@ import "../interfaces/LoansInterface.sol";
 import "../settings/IATMSettings.sol";
 import "../atm/IATMGovernance.sol";
 
+/*****************************************************************************************************/
+/**                                             WARNING                                             **/
+/**                              THIS CONTRACT IS AN UPGRADEABLE BASE!                              **/
+/**  ---------------------------------------------------------------------------------------------  **/
+/**  Do NOT change the order of, PREPEND, or APPEND any storage variables to this or new versions   **/
+/**  of this contract as this will cause a ripple affect to the storage slots of all child          **/
+/**  contracts that inherit from this contract to be overwritten on the deployed proxy contract!!   **/
+/**                                                                                                 **/
+/**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
+/**  more information.                                                                              **/
+/*****************************************************************************************************/
 /**
     @notice This contract is used as a basis for the creation of the different types of loans across the platform
     @notice It implements the Base contract from Teller and the LoansInterface
