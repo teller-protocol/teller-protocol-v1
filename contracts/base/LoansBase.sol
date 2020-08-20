@@ -19,7 +19,17 @@ import "../interfaces/LoansInterface.sol";
 import "../settings/IATMSettings.sol";
 import "../atm/IATMGovernance.sol";
 
-
+/*****************************************************************************************************/
+/**                                             WARNING                                             **/
+/**                              THIS CONTRACT IS AN UPGRADEABLE BASE!                              **/
+/**  ---------------------------------------------------------------------------------------------  **/
+/**  Do NOT change the order of, PREPEND, or APPEND any storage variables to this or new versions   **/
+/**  of this contract as this will cause a ripple affect to the storage slots of all child          **/
+/**  contracts that inherit from this contract to be overwritten on the deployed proxy contract!!   **/
+/**                                                                                                 **/
+/**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
+/**  more information.                                                                              **/
+/*****************************************************************************************************/
 /**
     @notice This contract is used as a basis for the creation of the different types of loans across the platform
     @notice It implements the Base contract from Teller and the LoansInterface
@@ -235,16 +245,9 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
 
         loans[loanID].status = TellerCommon.LoanStatus.Active;
 
-        address escrow = settings.getEscrowFactory().createEscrow(loanID);
+        address escrow = _createEscrow(loanID);
 
-//        // give the recipient their requested amount of tokens
-//        if (loans[loanID].loanTerms.recipient != address(0)) {
-//            lendingPool.createLoan(amountBorrow, loans[loanID].loanTerms.recipient);
-//        } else {
-//            lendingPool.createLoan(amountBorrow, loans[loanID].loanTerms.borrower);
-//        }
-
-        // NOTE: Only send loan to escrow contract for now
+        // We only send the loan to escrow contract for now.
         lendingPool.createLoan(amountBorrow, escrow);
 
         markets.increaseBorrow(
@@ -410,8 +413,11 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         @param amount Amount of collateral paid out
         @param recipient Account address of the recipient of the collateral
      */
-    function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
-        internal;
+    function _payOutCollateral(
+        uint256 loanID,
+        uint256 amount,
+        address payable recipient
+    ) internal;
 
     /**
         @notice Get collateral infomation of a specific loan
@@ -678,5 +684,18 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
             newLoanAmount
         );
         return currentSupplyToDebtMarket <= supplyToDebtMarketLimit;
+    }
+
+    /**
+        @notice It creates an Escrow contract instance for a given loan id.
+        @param loanID loan id associated to the Escrow contract.
+        @return the new Escrow contract address.
+     */
+    function _createEscrow(uint256 loanID) internal returns (address) {
+        return
+            settings.getEscrowFactory().createEscrow(
+                loans[loanID].loanTerms.borrower,
+                loanID
+            );
     }
 }

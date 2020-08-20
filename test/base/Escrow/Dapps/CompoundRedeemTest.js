@@ -42,18 +42,22 @@ contract("CompoundRedeemTest", function(accounts) {
     expectedErrorMessage
   ) {
     it(t("escrow", "redeem", "Should be able (or not) to redeem tokens on Compound", mustFail), async function() {
+      // Setup
+      if (underlyingBalance > 0) {
+        await dai.mint(compound.address, underlyingBalance)
+        await compound.callLend(cDai.address, underlyingBalance);
+
+        const nextTimestamp = await timer.getCurrentTimestampInSecondsAndSum(minutesToSeconds(2));
+        await timer.advanceBlockAtTime(nextTimestamp)
+      }
+      const cBalanceBeforeRedeem = await cDai.balanceOf(compound.address)
+
       try {
-        if (underlyingBalance > 0) {
-          await dai.mint(compound.address, underlyingBalance)
-          await compound.callLend(cDai.address, underlyingBalance);
-
-          const nextTimestamp = await timer.getCurrentTimestampInSecondsAndSum(minutesToSeconds(2));
-          await timer.advanceBlockAtTime(nextTimestamp)
-        }
-
-        const cBalanceBeforeRedeem = await cDai.balanceOf(compound.address)
-
+        // Invocation
         const result = await compound.callRedeem(cDai.address, amount);
+
+        // Assertions
+        assert(!mustFail);
         dapps
           .action(result)
           .emitted(toBytes32(web3, 'Compound'), toBytes32(web3, 'redeem'))
@@ -61,8 +65,6 @@ contract("CompoundRedeemTest", function(accounts) {
         const cBalance = await cDai.balanceOf(compound.address)
         const expectedBalance = cBalanceBeforeRedeem - amount
         assert.equal(cBalance.toString(), expectedBalance.toString(), 'CToken balance not empty after redeem')
-
-        assert(!mustFail);
       } catch (error) {
         assert(mustFail, error.message);
         assert(error);

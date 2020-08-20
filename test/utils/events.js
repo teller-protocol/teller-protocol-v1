@@ -2,7 +2,7 @@
 const BigNumber = require('bignumber.js');
 const truffleAssert = require('truffle-assertions');
 const assert = require('assert');
-const { expectEvent } = require('openzeppelin-test-helpers')
+const { expectEvent } = require('openzeppelin-test-helpers');
 
 const emitted = (tx, eventName, assertFunction) => {
     truffleAssert.eventEmitted(tx, eventName, event => {
@@ -19,23 +19,6 @@ const notEmitted = (tx, eventName, assertFunction) => {
 }
 
 module.exports = {
-    escrow: {
-        created: (tx, Factory) => {
-            const name = 'EscrowCreated';
-            return {
-                name: name,
-                emitted: async (borrower, loansAddress, loanID, escrowAddress) => {
-                    await expectEvent.inTransaction(tx.tx, Factory, name, {
-                        borrower,
-                        loansAddress,
-                        loanID,
-                        escrowAddress
-                    })
-                },
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
-    },
     dapps: {
         action: tx => {
             const name = 'DappAction';
@@ -717,6 +700,108 @@ module.exports = {
                     assert.equal(ev.creator, sender);
                     assert.equal(ev.atmGovernanceAddress, atm);
                     assert.equal(ev.atmTokenAddress, token);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        atmSettingsUpdated: tx => {
+            const name = "ATMSettingsUpdated";
+            return {
+                name: name,
+                emitted: (sender, oldATMSettings, newATMSettings) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.oldATMSettings.toString(), oldATMSettings.toString());
+                    assert.equal(ev.newATMSettings.toString(), newATMSettings.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        settingsUpdated: tx => {
+            const name = "SettingsUpdated";
+            return {
+                name: name,
+                emitted: (sender, oldSettings, newSettings) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.oldSettings.toString(), oldSettings.toString());
+                    assert.equal(ev.newSettings.toString(), newSettings.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
+    escrowFactory: {
+        escrowCreated: (tx, Factory) => {
+            const name = 'EscrowCreated';
+            return {
+                name: name,
+                emitted: async (borrower, loansAddress, loanID, escrowAddress) => {
+                    await expectEvent.inTransaction(tx.tx, Factory, name, {
+                        borrower,
+                        loansAddress,
+                        loanID,
+                        escrowAddress
+                    });
+                },
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        newDAppAdded: tx => {
+            const name = 'NewDAppAdded';
+            return {
+                name: name,
+                emitted: (sender, dapp) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.dapp.toString(), dapp.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        dappRemoved: tx => {
+            const name = 'DAppRemoved';
+            return {
+                name: name,
+                emitted: (sender, dapp) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.dapp.toString(), dapp.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
+    escrowFactory: {
+        escrowCreated: (tx, Factory) => {
+            const name = 'EscrowCreated';
+            return {
+                name: name,
+                emitted: async (borrower, loansAddress, loanID, escrowAddress) => {
+                    await expectEvent.inTransaction(tx.tx, Factory, name, {
+                        borrower,
+                        loansAddress,
+                        loanID,
+                        escrowAddress
+                    });
+                },
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        newDAppAdded: tx => {
+            const name = 'NewDAppAdded';
+            return {
+                name: name,
+                emitted: (sender, dapp) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.dapp.toString(), dapp.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        dappRemoved: tx => {
+            const name = 'DAppRemoved';
+            return {
+                name: name,
+                emitted: (sender, dapp) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.dapp.toString(), dapp.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
