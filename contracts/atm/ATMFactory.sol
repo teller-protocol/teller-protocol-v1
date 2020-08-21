@@ -14,7 +14,6 @@ import "../atm/IATMFactory.sol";
 import "../interfaces/SettingsInterface.sol";
 import "../settings/IATMSettings.sol";
 
-
 /**
     @notice This contract will create upgradeable ATM instances.
     @author develop@teller.finance
@@ -42,7 +41,7 @@ contract ATMFactory is IATMFactory, TInitializable {
     IATMSettings public atmSettings;
 
     address public atmGovernanceTemplate;
-    
+
     address public atmTokenTemplate;
 
     modifier onlyOwner() {
@@ -152,7 +151,10 @@ contract ATMFactory is IATMFactory, TInitializable {
         @notice It sets a new ATM token template to be used in the proxy (see createATM function).
         @param newATMTokenTemplateAddress the new ATM token template address.
      */
-    function setATMTokenTemplate(address newATMTokenTemplateAddress) external onlyOwner() {
+    function setATMTokenTemplate(address newATMTokenTemplateAddress)
+        external
+        onlyOwner()
+    {
         require(newATMTokenTemplateAddress.isContract(), "ATM_TOKEN_MUST_BE_A_CONTRACT");
         address oldATMTokenTemplate = atmTokenTemplate;
         oldATMTokenTemplate.requireNotEqualTo(
@@ -162,15 +164,25 @@ contract ATMFactory is IATMFactory, TInitializable {
 
         atmTokenTemplate = newATMTokenTemplateAddress;
 
-        emit ATMTokenTemplateUpdated(msg.sender, oldATMTokenTemplate, newATMTokenTemplateAddress);
+        emit ATMTokenTemplateUpdated(
+            msg.sender,
+            oldATMTokenTemplate,
+            newATMTokenTemplateAddress
+        );
     }
 
     /**
         @notice It sets a new ATM governance template to be used in the proxy (see createATM function).
         @param newATMGovernanceTemplateAddress the new ATM governance template address.
      */
-    function setATMGovernanceTemplate(address newATMGovernanceTemplateAddress) external onlyOwner() {
-        require(newATMGovernanceTemplateAddress.isContract(), "ATM_GOV_MUST_BE_A_CONTRACT");
+    function setATMGovernanceTemplate(address newATMGovernanceTemplateAddress)
+        external
+        onlyOwner()
+    {
+        require(
+            newATMGovernanceTemplateAddress.isContract(),
+            "ATM_GOV_MUST_BE_A_CONTRACT"
+        );
         address oldATMGovernanceTemplate = atmGovernanceTemplate;
         oldATMGovernanceTemplate.requireNotEqualTo(
             newATMGovernanceTemplateAddress,
@@ -179,7 +191,11 @@ contract ATMFactory is IATMFactory, TInitializable {
 
         atmGovernanceTemplate = newATMGovernanceTemplateAddress;
 
-        emit ATMGovernanceTemplateUpdated(msg.sender, oldATMGovernanceTemplate, newATMGovernanceTemplateAddress);
+        emit ATMGovernanceTemplateUpdated(
+            msg.sender,
+            oldATMGovernanceTemplate,
+            newATMGovernanceTemplateAddress
+        );
     }
 
     /**
@@ -211,10 +227,7 @@ contract ATMFactory is IATMFactory, TInitializable {
         address atmSettingsAddress,
         address atmTokenTemplateAddress,
         address atmGovernanceTemplateAddress
-    )
-        external
-        isNotInitialized()
-    {
+    ) external isNotInitialized() {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
         require(atmSettingsAddress.isContract(), "ATM_SETTINGS_MUST_BE_A_CONTRACT");
         require(atmTokenTemplateAddress.isContract(), "ATM_TOKEN_MUST_BE_A_CONTRACT");
