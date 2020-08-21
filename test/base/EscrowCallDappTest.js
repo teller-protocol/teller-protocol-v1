@@ -51,6 +51,7 @@ contract('EscrowCallDappTest', function (accounts) {
       if (initialize) {
         await escrow.mockInitialize(
           instance.address,
+          settingsInstance.address,
           loans.address,
           loanID
         );

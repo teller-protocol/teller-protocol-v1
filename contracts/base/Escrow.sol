@@ -13,6 +13,7 @@ import "../interfaces/LoansInterface.sol";
 import "../util/TellerCommon.sol";
 import "../util/AddressLib.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "../interfaces/SettingsInterface.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -36,6 +37,11 @@ contract Escrow is TInitializable, EscrowInterface {
     using Address for address payable;
     using AddressLib for address;
     using AddressLib for address payable;
+
+    /**
+        @notice The platform settings.
+     */
+    SettingsInterface public settings;
 
     /**
         @notice This is the escrow factory instance.
@@ -79,26 +85,29 @@ contract Escrow is TInitializable, EscrowInterface {
         require(success, "DAPP_CALL_FAILED");
     }
 
+    /** Internal Functions */
+
     /**
-        @notice It initialzes this Escrow contract.
+        @notice It initializes this Escrow contract. Should only be called from the constructor of the UpgradeableEscrowProxy.
+        @param settingsAddress the Settings contract address.
         @param loansAddress the Loans contract address.
         @param aLoanID the loanID associated to this Escrow contract.
      */
-    function initialize(address loansAddress, uint256 aLoanID)
-        external
+    function _initialize(address settingsAddress, address loansAddress, uint256 aLoanID)
+        internal
         isNotInitialized()
     {
+        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
         require(loansAddress.isContract(), "LOANS_MUST_BE_A_CONTRACT");
         require(msg.sender.isContract(), "SENDER_MUST_BE_A_CONTRACT");
 
         _initialize();
 
+        settings = SettingsInterface(settingsAddress);
         factory = EscrowFactoryInterface(msg.sender);
         loans = LoansInterface(loansAddress);
         loanID = aLoanID;
     }
-
-    /** Internal Functions */
 
     /**
         @notice It checks whether the sender is the loans borrower or not.

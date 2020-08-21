@@ -21,8 +21,8 @@ contract('EscrowFactoryInitializeTest', async function (accounts) {
         _1_valid: [1, 2, undefined, false],
         _2_invalid_empty_settings_address: [-1, 3, 'SETTINGS_MUST_BE_A_CONTRACT', true],
         _3_invalid_not_contract_settings_address: [99, 3, 'SETTINGS_MUST_BE_A_CONTRACT', true],
-        _2_invalid_empty_escrow_address: [4, -1, 'ESCROW_LIB_MUST_BE_A_CONTRACT', true],
-        _3_invalid_not_contract_escrow_address: [2, 99, 'ESCROW_LIB_MUST_BE_A_CONTRACT', true],
+        _2_invalid_empty_escrow_address: [4, -1, 'ESCROW_LOGIC_MUST_BE_CONTRACT', true],
+        _3_invalid_not_contract_escrow_address: [2, 99, 'ESCROW_LOGIC_MUST_BE_CONTRACT', true],
     }, function(settingsIndex, escrowIndex, expectedErrorMessage, mustFail) {
         it(t('owner', 'initialize', 'Should be able to initialize an instance.', mustFail), async function() {
             // Setup

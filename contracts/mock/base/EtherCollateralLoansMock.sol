@@ -46,12 +46,16 @@ contract EtherCollateralLoansMock is EtherCollateralLoans {
         });
     }
 
-    function createEscrow(address borrower, uint256 loanID) public {
-        settings.getEscrowFactory().createEscrow(borrower, loanID);
+    function createEscrow(address borrower, uint256 loanID) public returns (address) {
+        return settings.getEscrowFactory().createEscrow(borrower, loanID);
     }
 
     function externalCreateEscrow(uint256 loanID) external returns (address) {
         return super._createEscrow(loanID);
+    }
+
+    function externalSetSettings(address settingsAddress) external {
+        settings = SettingsInterface(settingsAddress);
     }
 
     function() external payable {}

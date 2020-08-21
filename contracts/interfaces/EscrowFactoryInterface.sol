@@ -10,6 +10,11 @@ import "./LoansInterface.sol";
  */
 interface EscrowFactoryInterface {
     /**
+        This grabs the current logic that is being used by all Escrow contracts.
+     */
+    function escrowLogic() external view returns (address);
+
+    /**
         @notice It tests whether a dapp address exists in the factory or not.
         @param dapp dapp address to test.
         @return true if the dapp address already exists. Otherwise it returns false.
@@ -20,11 +25,11 @@ interface EscrowFactoryInterface {
         @notice It creates an Escrow contract for a given loan id.
         @param borrower borrower address associated to the loan.
         @param loanID loan id to associate to the new escrow instance.
-        @return the new escrow instance address.
+        @return the new escrow instance.
      */
     function createEscrow(address borrower, uint256 loanID)
         external
-        returns (address newEscrowAddress);
+        returns (address);
 
     /**
         @notice It adds a new dapp to the factory.
@@ -56,6 +61,18 @@ interface EscrowFactoryInterface {
         address indexed loansAddress,
         uint256 indexed loanID,
         address escrowAddress
+    );
+
+    /**
+        @notice This event is emitted when the logic implementation for all Escrow contracts have been upgraded.
+        @param sender address who upgraded the Escrow logic.
+        @param oldLogic the old Escrow logic implementation.
+        @param newLogic the new Escrow logic implementation.
+     */
+    event EscrowLogicUpgraded(
+        address sender,
+        address oldLogic,
+        address newLogic
     );
 
     /**

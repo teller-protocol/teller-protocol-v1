@@ -16,11 +16,12 @@ const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
 
 contract('EscrowIsBorrowerTest', function (accounts) {
   let escrowFactory;
+  let settingsInstance;
   let instance;
   let loans;
 
   before(async () => {
-    const settingsInstance = await Mock.new();
+    settingsInstance = await Mock.new();
 
     const oracleInstance = await Mock.new();
     const lendingPoolInstance = await Mock.new();
@@ -58,7 +59,7 @@ contract('EscrowIsBorrowerTest', function (accounts) {
         const loanTerms = createLoanTerms(borrower, NULL_ADDRESS, 0, 0, 0, 0);
         await loans.setLoan(loanID, loanTerms, 0, 0, 123456, 0, 0, 0, loanTerms.maxLoanAmount, ACTIVE, false);
 
-        await instance.mockInitialize(escrowFactory.address, loans.address, loanID);
+        await instance.mockInitialize(escrowFactory.address, settingsInstance.address, loans.address, loanID);
 
         // Invocation
         const result = await instance.externalIsBorrower({ from: sender });
