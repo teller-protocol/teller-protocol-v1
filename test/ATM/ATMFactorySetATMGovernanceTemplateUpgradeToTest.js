@@ -1,7 +1,7 @@
 // JS Libraries
 const withData = require("leche").withData;
 const { t, createMocks } = require("../utils/consts");
-const { assert } = require("chai");
+const assert = require("assert");
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
