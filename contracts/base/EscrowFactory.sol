@@ -172,6 +172,8 @@ contract EscrowFactory is Pausable, TInitializable, EscrowFactoryInterface {
         @param newLogic the new Escrow logic implementation.
      */
     function upgradeEscrowLogic(address newLogic) public onlyPauser() isInitialized() {
+        require(newLogic.isContract(), "ESCROW_LOGIC_MUST_BE_A_CONTRACT");
+
         address oldLogic = escrowLogic;
         escrowLogic = newLogic;
         emit EscrowLogicUpgraded(msg.sender, oldLogic, newLogic);
