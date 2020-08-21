@@ -702,18 +702,6 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-    },
-    upgradeable: {
-        upgraded: tx => {
-            const name = "Upgraded";
-            return {
-                name: name,
-                emitted: (implementation) => emitted(tx, name, ev => {
-                    assert.equal(ev.implementation, implementation);
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
         atmTokenTemplateUpdated: tx => {
             const name = "ATMTokenTemplateUpdated";
             return {
@@ -734,6 +722,18 @@ module.exports = {
                     assert.equal(ev.sender, sender);
                     assert.equal(ev.oldATMGovernanceTemplate.toString(), oldATMGovernanceTemplate.toString());
                     assert.equal(ev.newATMGovernanceTemplate.toString(), newATMGovernanceTemplate.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
+    upgradeable: {
+        upgraded: tx => {
+            const name = "Upgraded";
+            return {
+                name: name,
+                emitted: (implementation) => emitted(tx, name, ev => {
+                    assert.equal(ev.implementation, implementation);
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
