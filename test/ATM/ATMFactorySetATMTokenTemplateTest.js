@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require("leche").withData;
-const { t, NULL_ADDRESS } = require("../utils/consts");
+const { t, NULL_ADDRESS, createMocks } = require("../utils/consts");
 const { atmFactory } = require("../utils/events");
 
 // Mock contracts
@@ -10,13 +10,15 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const ATMFactory = artifacts.require("./atm/ATMFactory.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 
-contract("ATMFactorySetSettingsTest", function (accounts) {
-    const ADMIN_INDEX = 1;
+contract("ATMFactorySetATMTokenTemplateTest", function (accounts) {
+    const ADMIN_INDEX = 0;
     let admin;
     let instance;
     let initialSettingsAddress;
+    let mocks;
 
     beforeEach("Setup for each test", async () => {
+        mocks = await createMocks(Mock, 10);
         admin = accounts[ADMIN_INDEX];
         const settings = await Settings.new();
         await settings.initialize(admin);
@@ -33,47 +35,47 @@ contract("ATMFactorySetSettingsTest", function (accounts) {
         initialSettingsAddress = await instance.getSettings();
     });
 
+    const getInstance = (refs, index, accountIndex) => index === -1 ? NULL_ADDRESS: index === 99 ? accounts[accountIndex] : refs[index];
+
     withData({
-        _1_basic: [0, undefined, false],
-        _2_not_contract: [1, "SETTINGS_MUST_BE_A_CONTRACT", true],
-        _3_old_settings: [2, "NEW_SETTINGS_MUST_BE_PROVIDED", true]
+        _1_basic: [0, 2, undefined, false],
+        _2_not_contract: [0, 99, "ATM_TOKEN_MUST_BE_A_CONTRACT", true],
+        _3_not_empty: [0, -1, "ATM_TOKEN_MUST_BE_A_CONTRACT", true],
+        _4_same_old: [0, 100, "NEW_ATM_TOKEN_MUST_BE_PROVIDED", true],
+        _5_not_owner: [1, 2, 'SENDER_ISNT_ALLOWED', true],
     }, function(
-        contractIndex,
+        senderIndex,
+        atmTokenTemplateIndex,
         expectedErrorMessage,
         mustFail
     ) {
-        it(t("admin", "setSettings", "Should be able to update Settings", mustFail), async function() {
+        it(t("admin", "setATMTokenTemplate", "Should be able (or not) to set atm token template", mustFail), async function() {
             // Setup
-            let newSettings;
-            if (contractIndex == 0) {
-                newSettings = await Mock.new();
-                newSettingsAddress = newSettings.address;
-            } else if (contractIndex == 1) {
-                newSettingsAddress = NULL_ADDRESS;
-            } else if (contractIndex == 2) {
-                newSettingsAddress = initialSettingsAddress;
-            }
+            const sender = accounts[senderIndex];
+            const oldATMTokenTemplate = await Mock.new();
+            await instance.setATMTokenTemplate(oldATMTokenTemplate.address, { from: admin });
+            const atmTokenTemplateAddress = atmTokenTemplateIndex === 100 ? oldATMTokenTemplate.address : getInstance(mocks, atmTokenTemplateIndex, 2);
 
             try {
                 // Invocation
-                const result = await instance.setSettings(newSettingsAddress, { from:admin });
+                const result = await instance.setATMTokenTemplate(atmTokenTemplateAddress, { from: sender });
                 
                 // Assertions
                 assert(!mustFail, "It should have failed because data is invalid.");
                 assert(result);
 
                 // Validating state changes
-                const currentSettings = await instance.getSettings();
+                const newATMTokenTemplate = await instance.atmTokenTemplate();
                 assert.equal(
-                    currentSettings,
-                    newSettingsAddress,
-                    "Settings were not updated"
+                    newATMTokenTemplate,
+                    atmTokenTemplateAddress,
+                    "ATM Token Template was not updated."
                 );
 
                 // Validating events were emitted
                 atmFactory
-                    .settingsUpdated(result)
-                    .emitted(admin, initialSettingsAddress, newSettingsAddress);
+                    .atmTokenTemplateUpdated(result)
+                    .emitted(sender, oldATMTokenTemplate.address, newATMTokenTemplate);
             } catch (error) {
                 assert(mustFail);
                 assert(error);

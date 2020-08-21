@@ -24,7 +24,14 @@ contract("ATMFactorySetATMSettingsTest", function(accounts) {
         await settings.initialize(admin);
         instance = await ATMFactory.new();
         const atmSettings = await Mock.new();
-        await instance.initialize(settings.address, atmSettings.address);
+        const atmTokenTemplate = await Mock.new();
+        const atmGovernanceTemplate = await Mock.new();
+        await instance.initialize(
+            settings.address,
+            atmSettings.address,
+            atmTokenTemplate.address,
+            atmGovernanceTemplate.address,
+        );
         initialATMSettings = await instance.getATMSettings();
     });
 

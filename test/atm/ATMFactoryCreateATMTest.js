@@ -19,23 +19,28 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
 
     beforeEach("Setup for each test", async () => {
         admin = accounts[ADMIN_INDEX];
+        const atmSettings = await Mock.new();
         const settings = await Settings.new();
         await settings.initialize(admin);
         instance = await ATMFactory.new();
-        const atmSettings = await Mock.new();
-        await instance.initialize(settings.address, atmSettings.address);
+        
+        const atmTokenTemplate = await Mock.new();
+        const atmGovernanceTemplate = await Mock.new();
+        await instance.initialize(
+            settings.address,
+            atmSettings.address,
+            atmTokenTemplate.address,
+            atmGovernanceTemplate.address,
+        );
     });
 
     withData({
         _1_basic: [ ADMIN_INDEX, "TokenName", "TKN", 18, 1000, 20000, undefined, false ],
         _2_notAdmin: [ 0, "TokenName", "TKN", 18, 1000, 20000, true, "SENDER_ISNT_ALLOWED" ],
-
     }, function(senderIndex, name, symbol, decimals, cap, maxVesting, mustFail, expectedErrorMessage) {
         it(t("admin", "createATM", "Should be able to create an ATM.", mustFail), async function() {
             // Setup
             const sender = accounts[senderIndex];
-            const atmToken = await Mock.new();
-            const atmGovernance = await Mock.new();
             try {
                 
                 // Invocation 
@@ -45,8 +50,6 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
                     decimals,
                     cap,
                     maxVesting,
-                    atmGovernance.address,
-                    atmToken.address,
                     {from : sender }
                 );
                 // Assertions
@@ -68,7 +71,6 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
                     .emitted(sender, newATM, atmTokenExpected);
                 
             } catch (error) {
-                console.log(error);
                 assert(mustFail);
                 assert(error);
                 assert.equal(error.reason, expectedErrorMessage);

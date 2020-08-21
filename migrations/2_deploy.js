@@ -76,18 +76,26 @@ module.exports = async function(deployer, network, accounts) {
   const atmSettingsInstance = await ATMSettings.deployed();
   console.log(`ATM settings deployed at: ${atmSettingsInstance.address}`);
 
+  // As they are used as template (for the UpgradeableProxy) in the ATMFactory.createATM function, we don't need to call initialize function.
+  await deployerApp.deploy(ATMGovernance, txConfig);
+  const atmGovernanceTemplateInstance = await ATMGovernance.deployed();
+  await deployerApp.deploy(ATMToken, txConfig);
+  const atmTokenTemplateInstance = await ATMToken.deployed();
+
   const atmFactoryInstance = await deployerApp.deployWithUpgradeable('ATMFactory', ATMFactory, txConfig.from, '0x')
   await atmFactoryInstance.initialize(
     settingsInstance.address,
     atmSettingsInstance.address,
+    atmTokenTemplateInstance.address,
+    atmGovernanceTemplateInstance.address,
     txConfig
   );
   console.log(`ATM Governance Factory (Proxy) deployed at: ${atmFactoryInstance.address}`);
 
   await initATMs(
     { atmFactory: atmFactoryInstance, atmSettings: atmSettingsInstance },
-    { atms, tokens, txConfig, web3, deployerApp },
-    { ATMGovernance, ATMToken },
+    { atms, tokens, txConfig, web3 },
+    { ATMGovernance },
   );
 
   const aggregators = {};

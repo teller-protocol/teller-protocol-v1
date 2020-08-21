@@ -714,5 +714,29 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        atmTokenTemplateUpdated: tx => {
+            const name = "ATMTokenTemplateUpdated";
+            return {
+                name: name,
+                emitted: (sender, oldATMTokenTemplate, newATMTokenTemplate) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.oldATMTokenTemplate.toString(), oldATMTokenTemplate.toString());
+                    assert.equal(ev.newATMTokenTemplate.toString(), newATMTokenTemplate.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        atmGovernanceTemplateUpdated: tx => {
+            const name = "ATMGovernanceTemplateUpdated";
+            return {
+                name: name,
+                emitted: (sender, oldATMGovernanceTemplate, newATMGovernanceTemplate) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.oldATMGovernanceTemplate.toString(), oldATMGovernanceTemplate.toString());
+                    assert.equal(ev.newATMGovernanceTemplate.toString(), newATMGovernanceTemplate.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     },
 };

@@ -33,6 +33,30 @@ interface IATMFactory {
     );
 
     /**
+        @notice This event is emitted when the ATM governance template is updated.
+        @param sender address that sent the transaction.
+        @param oldATMGovernanceTemplate the old ATM governance template address.
+        @param newATMGovernanceTemplate the new ATM governance template address.
+     */
+    event ATMGovernanceTemplateUpdated(
+        address indexed sender,
+        address indexed oldATMGovernanceTemplate,
+        address indexed newATMGovernanceTemplate
+    );
+
+    /**
+        @notice This event is emitted when the ATM token template is updated.
+        @param sender address that sent the transaction.
+        @param oldATMTokenTemplate the old ATM token template address.
+        @param newATMTokenTemplate the new ATM token template address.
+     */
+    event ATMTokenTemplateUpdated(
+        address indexed sender,
+        address indexed oldATMTokenTemplate,
+        address indexed newATMTokenTemplate
+    );
+
+    /**
         @notice This event is emitted when the ATM setting is updated.
         @param sender address that sent the transaction.
         @param oldATMSettings the old ATM settings address.
@@ -59,8 +83,6 @@ interface IATMFactory {
         @param decimals ATM token decimals 
         @param cap ATM token max cap.
         @param maxVestingsPerWallet max vestings per wallet for the ATM token.
-        @param atmGovernanceLogic the atm governance instance address.
-        @param atmTokenLogic the atm token instance address.
         @return the new ATM governance instance address.
      */
     function createATM(
@@ -68,9 +90,7 @@ interface IATMFactory {
         string calldata symbol,
         uint8 decimals,
         uint256 cap,
-        uint256 maxVestingsPerWallet,
-        address atmGovernanceLogic,
-        address atmTokenLogic
+        uint256 maxVestingsPerWallet
     ) external returns (address);
 
     /**
@@ -116,4 +136,16 @@ interface IATMFactory {
         @return Address of the associated ATM Token
      */
     function getATMToken(address atmAddress) external view returns (address);
+
+    /**
+        @notice It sets a new ATM token template to be used in the proxy (see createATM function).
+        @param newATMTokenTemplateAddress the new ATM token template address.
+     */
+    function setATMTokenTemplate(address newATMTokenTemplateAddress) external;
+
+    /**
+        @notice It sets a new ATM governance template to be used in the proxy (see createATM function).
+        @param newATMGovernanceTemplateAddress the new ATM governance template address.
+     */
+    function setATMGovernanceTemplate(address newATMGovernanceTemplateAddress) external;
 }

@@ -6,8 +6,8 @@ const atmGovernanceSettingsNames = require('../../../test/utils/atmGovernanceSet
 
 module.exports = async function(
     { atmFactory, atmSettings, },
-    { atms, tokens, txConfig, web3, deployerApp },
-    { ATMGovernance, ATMToken },
+    { atms, tokens, txConfig, web3 },
+    { ATMGovernance },
 ) {
     const atmKeys = Object.keys(atms);
     console.log(`Creating ${atmKeys.length} ATMs.`);
@@ -21,20 +21,12 @@ module.exports = async function(
             markets,
         } = atmInfo;
 
-        await deployerApp.deploy(ATMGovernance, txConfig);
-        await deployerApp.deploy(ATMToken, txConfig);
-
-        const atmGovernanceInstance = await ATMGovernance.deployed();
-        const atmTokenInstance = await ATMToken.deployed();
-
         await atmFactory.createATM(
             token.name,
             token.symbol,
             token.decimals,
             token.maxCap,
             token.maxVestingsPerWallet,
-            atmGovernanceInstance.address,
-            atmTokenInstance.address,
             txConfig,
         );
 
