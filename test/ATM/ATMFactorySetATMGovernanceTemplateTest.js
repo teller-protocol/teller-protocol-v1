@@ -65,7 +65,7 @@ contract("ATMFactorySetATMGovernanceTemplateTest", function (accounts) {
                 assert(result);
 
                 // Validating state changes
-                const newATMGovernanceTemplate = await instance.atmGovernanceTemplate();
+                const newATMGovernanceTemplate = await instance.getATMGovernanceTemplate();
                 assert.equal(
                     newATMGovernanceTemplate,
                     atmGovernanceTemplateAddress,

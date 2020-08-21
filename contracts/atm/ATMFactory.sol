@@ -123,6 +123,22 @@ contract ATMFactory is IATMFactory, TInitializable {
     }
 
     /**
+        @notice It gets the current ATM Governance template used to create a new ATMGovernance proxy instance.
+        @return the current ATM governance template address.
+     */
+    function getATMGovernanceTemplate() external view returns (address) {
+        return address(atmGovernanceTemplate);
+    }
+
+    /**
+        @notice It gets the current ATM Token template used to create a new ATMToken proxy instance.
+        @return the current ATM token template address.
+     */
+    function getATMTokenTemplate() external view returns (address) {
+        return address(atmTokenTemplate);
+    }
+
+    /**
         @notice Gets the ATMs list.
         @return the list of ATMs.
      */

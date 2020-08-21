@@ -147,4 +147,16 @@ interface IATMFactory {
         @param newATMGovernanceTemplateAddress the new ATM governance template address.
      */
     function setATMGovernanceTemplate(address newATMGovernanceTemplateAddress) external;
+
+    /**
+        @notice It gets the current ATM Governance template used to create a new ATMGovernance proxy instance.
+        @return the current ATM governance template address.
+     */
+    function getATMGovernanceTemplate() external view returns (address);
+
+    /**
+        @notice It gets the current ATM Token template used to create a new ATMToken proxy instance.
+        @return the current ATM token template address.
+     */
+    function getATMTokenTemplate() external view returns (address);
 }
