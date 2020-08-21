@@ -33,7 +33,7 @@ contract("ATMFactorySetATMGovernanceTemplateUpgradeToTest", function (accounts) 
             atmTokenTemplate.address,
             atmGovernanceTemplate.address,
         );
-        initialSettingsAddress = await instance.getSettings();
+        initialSettingsAddress = await instance.settings();
     });
 
     const newATM = (name, symbol = name, decimals = 18, cap = 10000000000, maxVesting = 10) => ({name, symbol, decimals, cap, maxVesting});

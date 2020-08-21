@@ -107,38 +107,6 @@ contract ATMFactory is IATMFactory, TInitializable {
     }
 
     /**
-        @notice Returns the address of the ATM Settings contract.
-        @return Address of the ATM settings contract
-     */
-    function getATMSettings() external view returns (address) {
-        return address(atmSettings);
-    }
-
-    /**
-        @notice Returns the address of the Settings contract
-        @return Address of the settings contract
-     */
-    function getSettings() external view returns (address) {
-        return address(settings);
-    }
-
-    /**
-        @notice It gets the current ATM Governance template used to create a new ATMGovernance proxy instance.
-        @return the current ATM governance template address.
-     */
-    function getATMGovernanceTemplate() external view returns (address) {
-        return address(atmGovernanceTemplate);
-    }
-
-    /**
-        @notice It gets the current ATM Token template used to create a new ATMToken proxy instance.
-        @return the current ATM token template address.
-     */
-    function getATMTokenTemplate() external view returns (address) {
-        return address(atmTokenTemplate);
-    }
-
-    /**
         @notice Gets the ATMs list.
         @return the list of ATMs.
      */

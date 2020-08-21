@@ -54,13 +54,13 @@ contract("ATMFactoryInitializeTest", function (accounts) {
                 assert(!mustFail, "It should have failed bacause data is invalid.");
 
                 // Validating state changes
-                const currentSettings = await instance.getSettings();
+                const currentSettings = await instance.settings();
                 assert.equal(
                     currentSettings,
                     settingsAddress,
                     "Settings was not set correctly"
                 );
-                const currentATMSettings = await instance.getATMSettings();
+                const currentATMSettings = await instance.atmSettings();
                 assert.equal(
                     currentATMSettings,
                     atmSettingsAddress,

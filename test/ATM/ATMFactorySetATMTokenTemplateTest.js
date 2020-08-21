@@ -32,7 +32,7 @@ contract("ATMFactorySetATMTokenTemplateTest", function (accounts) {
             atmTokenTemplate.address,
             atmGovernanceTemplate.address,
         );
-        initialSettingsAddress = await instance.getSettings();
+        initialSettingsAddress = await instance.settings();
     });
 
     const getInstance = (refs, index, accountIndex) => index === -1 ? NULL_ADDRESS: index === 99 ? accounts[accountIndex] : refs[index];
@@ -65,7 +65,7 @@ contract("ATMFactorySetATMTokenTemplateTest", function (accounts) {
                 assert(result);
 
                 // Validating state changes
-                const newATMTokenTemplate = await instance.getATMTokenTemplate();
+                const newATMTokenTemplate = await instance.atmTokenTemplate();
                 assert.equal(
                     newATMTokenTemplate,
                     atmTokenTemplateAddress,

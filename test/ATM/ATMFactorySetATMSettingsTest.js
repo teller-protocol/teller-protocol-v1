@@ -32,7 +32,7 @@ contract("ATMFactorySetATMSettingsTest", function(accounts) {
             atmTokenTemplate.address,
             atmGovernanceTemplate.address,
         );
-        initialATMSettings = await instance.getATMSettings();
+        initialATMSettings = await instance.atmSettings();
     });
 
     withData({
@@ -64,7 +64,7 @@ contract("ATMFactorySetATMSettingsTest", function(accounts) {
                 assert(result);
 
                 // Validating state changes
-                const currentATMSettings = await instance.getATMSettings();
+                const currentATMSettings = await instance.atmSettings();
                 assert.equal(
                     currentATMSettings,
                     newATMSettingsAddress,

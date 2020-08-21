@@ -118,18 +118,6 @@ interface IATMFactory {
     function getATMs() external view returns (address[] memory);
 
     /**
-        @notice Returns the address of the ATM Settings contract.
-        @return Address of the ATM settings contract
-     */
-    function getATMSettings() external view returns (address);
-
-    /**
-        @notice Returns the address of the Settings contract
-        @return Address of the settings contract
-     */
-    function getSettings() external view returns (address);
-
-    /**
         @notice Returns the atm token address of a given associated atm address.
         @param atmAddress ATM address to test
         @return Address of the associated ATM Token
@@ -152,11 +140,11 @@ interface IATMFactory {
         @notice It gets the current ATM Governance template used to create a new ATMGovernance proxy instance.
         @return the current ATM governance template address.
      */
-    function getATMGovernanceTemplate() external view returns (address);
+    function atmGovernanceTemplate() external view returns (address);
 
     /**
         @notice It gets the current ATM Token template used to create a new ATMToken proxy instance.
         @return the current ATM token template address.
      */
-    function getATMTokenTemplate() external view returns (address);
+    function atmTokenTemplate() external view returns (address);
 }

@@ -2,9 +2,8 @@ pragma solidity 0.5.17;
 
 // Interfaces
 import "../../atm/ATMGovernance.sol";
-import "./IATMGovernanceMockV2.sol";
 
-contract ATMGovernanceMockV2 is ATMGovernance, IATMGovernanceMockV2 {
+contract ATMGovernanceMockV2 is ATMGovernance {
     
     /* Constants */
 
