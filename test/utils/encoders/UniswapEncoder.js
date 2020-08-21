@@ -5,18 +5,17 @@ class UniswapEncoder {
         this.web3 = web3
         assert(web3, 'Web3 instance is required.')
     }
-
-    encodeRouterTokensForTokens() {
-        return encode(this.web3, 'swapExactTokensForTokens(uint,uint,address[],address,uint)')
-    }
-
-    encodeRouterTokensForETH() {
-        return encode(this.web3, 'swapExactTokensForETH(uint,uint,address[],address,uint)')
-    }
-
-    encodeRouterETHForTokens() {
-        return encode(this.web3, 'swapExactETHForTokens(uint,address[],address,uint)')
-    }
+}
+UniswapEncoder.prototype.encodeSwapExactTokensForTokens = function() {
+    return encode(this.web3, 'swapExactTokensForTokens(uint,uint,address[],address,uint)')
 }
 
-module.exports = UniswapEncoder
+UniswapEncoder.prototype.encodeSwapExactTokensForETH = function() {
+    return encode(this.web3, 'swapExactTokensForETH(uint,uint,address[],address,uint)')
+}
+
+UniswapEncoder.prototype.encodeSwapExactETHForTokens = function() {
+    return encode(this.web3, 'swapExactETHForTokens(uint,address[],address,uint)')
+}
+
+module.exports = UniswapEncoder;
