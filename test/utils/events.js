@@ -36,14 +36,18 @@ module.exports = {
             };
         },
     },
-    dapps: {
-        action: tx => {
-            const name = 'DappAction';
+    uniswap: {
+        uniswapSwapped: tx => {
+            const name = 'UniswapSwapped';
             return {
                 name: name,
-                emitted: (dappName, action) => emitted(tx, name, ev => {
-                    assert.equal(ev.dappName.toString(), dappName.toString());
-                    assert.equal(ev.action.toString(), action.toString());
+                emitted: (from, to, sourceElement, receivedElement, sourceAmount, receivedAmount) => emitted(tx, name, ev => {
+                    assert.equal(ev.from, from);
+                    assert.equal(ev.to, to);
+                    assert.equal(ev.sourceElement, sourceElement);
+                    assert.equal(ev.receivedElement, receivedElement);
+                    assert.equal(ev.sourceAmount, sourceAmount);
+                    assert.equal(ev.receivedAmount, receivedAmount);
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
