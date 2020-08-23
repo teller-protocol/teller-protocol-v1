@@ -1,10 +1,9 @@
 // JS Libraries
 const { withData } = require("leche");
-const { t, toBytes32 } = require("../../../utils/consts");
-const { dapps } = require('../../../utils/events');
+const { t } = require("../../../utils/consts");
+const { compound } = require('../../../utils/events');
 
 // Mock contracts
-const Mock = artifacts.require("./mock/util/Mock.sol");
 const CDAI = artifacts.require("./mock/providers/compound/CDAIMock.sol");
 const DAI = artifacts.require("./mock/token/DAIMock.sol");
 
@@ -12,49 +11,61 @@ const DAI = artifacts.require("./mock/token/DAIMock.sol");
 const Compound = artifacts.require("./mock/base/Escrow/Dapps/CompoundMock.sol");
 
 contract("CompoundLendTest", function(accounts) {
-  let compound;
+  const SIMULATE_COMPOUND_RETURN_ERROR = 88888888;
+  const SIMULATE_COMPOUND_ACTION_ERROR = 77777777;
+
+  let instance;
   let cDai;
   let dai;
 
-  before(async () => {
-    compound = await Compound.new()
-
+  beforeEach(async () => {
+    instance = await Compound.new();  
     dai = await DAI.new();
     cDai = await CDAI.new(dai.address, 2);
   });
 
-  beforeEach(async () => {
-  });
-
   withData({
-    _1_insufficient_underlying: [ 100, 0, 0, true, "COMPOUND_INSUFFICIENT_UNDERLYING" ],
-    _2_successful_lend: [ 80, 100, 0, false, null ],
+    _1_successful_lend: [ 80, 100, false, null ],
+    _2_insufficient_underlying: [ 100, 0, true, "COMPOUND_INSUFFICIENT_UNDERLYING" ],
+    _3_compound_return_error: [ SIMULATE_COMPOUND_RETURN_ERROR, SIMULATE_COMPOUND_RETURN_ERROR, true, "COMPOUND_DEPOSIT_ERROR" ],
+    _4_compound_mint_error: [ SIMULATE_COMPOUND_ACTION_ERROR, SIMULATE_COMPOUND_ACTION_ERROR, true, "COMPOUND_BALANCE_NOT_INCREASED" ],
   }, function(
     amount,
     balance,
-    mintResponse,
     mustFail,
     expectedErrorMessage
   ) {
-    it(t("escrow", "lend", "Should be able (or not) to lend tokens on Compound", mustFail), async function() {
+    it(t("compound", "lend", "Should be able (or not) to lend tokens on Compound", mustFail), async function() {
+      // Setup
+      const sender = accounts[0];
+      if (balance > 0) {
+        await dai.mint(instance.address, balance)
+      }
+
       try {
-        if (balance > 0) {
-          await dai.mint(compound.address, balance)
-        }
+        // Invocation
+        const result = await instance.callLend(cDai.address, amount, {from: sender});
+        assert(!mustFail, 'It should have failed because data is invalid.');
 
-        const result = await compound.callLend(cDai.address, amount);
-        dapps
-          .action(result)
-          .emitted(toBytes32(web3, 'Compound'), toBytes32(web3, 'lend'))
+        // Validating events emmited 
+        compound
+          .compoundLended(result)
+          .emitted(
+            sender,
+            instance.address,
+            cDai.address,
+            dai.address,
+            amount
+          );
 
-        const cTokenBalance = await cDai.balanceOf(compound.address)
+        // Validating state changes
+        const cTokenBalance = await cDai.balanceOf(instance.address)
         assert(cTokenBalance > 0, 'Unable to lend token')
 
-        const tokenBalance = await dai.balanceOf(compound.address)
+        const tokenBalance = await dai.balanceOf(instance.address)
         const expectedBalance = balance - amount
         assert.equal(tokenBalance.toString(), expectedBalance.toString(), 'Token balance invalid after lend')
 
-        assert(!mustFail);
       } catch (error) {
         assert(mustFail, error.message);
         assert(error);
