@@ -26,5 +26,11 @@ contract UniswapMock is Uniswap {
     ) external {
         swap(routerAddress, path, sourceAmount, minDestination);
     }
+    
+    function updateWethAddress(
+        address canonicalWeth
+    ) external {
+        _updateWethAddress(canonicalWeth);
+    }
 
 }
