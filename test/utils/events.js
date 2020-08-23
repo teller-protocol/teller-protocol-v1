@@ -36,6 +36,36 @@ module.exports = {
             };
         },
     },
+    compound: {
+        compoundLended: tx => {
+            const name = 'CompoundLended';
+            return {
+                name: name,
+                emitted: (sender, dapp, cToken, underlyingToken, amount) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.dappAddress, dapp);
+                    assert.equal(ev.cToken, cToken);
+                    assert.equal(ev.underlyingToken, underlyingToken);
+                    assert.equal(ev.amount, amount);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        compoundRedeemed: tx => {
+            const name = 'CompoundRedeemed';
+            return {
+                name: name,
+                emitted: (sender, dapp, cToken, underlyingToken, amount) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.dappAddress, dapp);
+                    assert.equal(ev.cToken, cToken);
+                    assert.equal(ev.underlyingToken, underlyingToken);
+                    assert.equal(ev.amount, amount);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },        
+    },
     erc20: {
         transfer: tx => {
             const name = 'Transfer';
