@@ -1,10 +1,9 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, ETH_ADDRESS } = require("../../../utils/consts");
+const { t, ETH_ADDRESS, DUMMY_ADDRESS } = require("../../../utils/consts");
 const { uniswap } = require('../../../utils/events');
 const { assert } = require('chai');
 // Mock contracts
-const Mock = artifacts.require("./mock/util/Mock.sol");
 const DAI = artifacts.require("./mock/token/DAIMock.sol");
 const USDC = artifacts.require("./mock/token/USDCMock.sol");
 const WETH = artifacts.require("./mock/token/WETHMock.sol");
@@ -32,20 +31,22 @@ contract("UniswapSwapTest", function(accounts) {
   });
 
   withData({
-    _1_ethForTokens: [ 0, [ 'eth', 'dai' ], 50, 50, 4, false, null ],    
-    _2_pathTooShort: [ 0, [ 'eth' ], 0, 0, 0, true, "UNISWAP_PATH_TOO_SHORT" ],
-    _3_sourceAndDestinationSame: [ 0, [ 'dai', 'dai' ], 0, 0, 0, true, "UNISWAP_SOURCE_AND_DESTINATION_SAME" ],
-    _4_minDestinationZero: [ 0, [ 'eth', 'dai' ], 0, 0, 0, true, "UNISWAP_MIN_DESTINATION_ZERO" ],
-    _5_insufficientSourceEth: [ 0, [ 'eth', 'usdc' ], 50, 0, 1, true, "UNISWAP_INSUFFICIENT_ETH" ],
-    _6_insufficientSourceToken: [ 0, [ 'dai', 'usdc' ], 50, 0, 1, true, "UNISWAP_INSUFFICIENT_TOKENS" ],
-    _7_ethForTokensUniswapError: [ 0, [ 'eth', 'dai' ], 50, 50, SIMULATE_UNISWAP_RESPONSE_ERROR, true, "UNISWAP_ERROR_SWAPPING" ],
-    _8_ethForTokensBalanceError: [ 0, [ 'eth', 'dai' ], 50, 50, DONT_ALTER_BALANCE, true, "UNISWAP_BALANCE_NOT_INCREASED" ],
-  }, function(
+    _1_ethForTokens: [ 0, [ 'eth', 'dai' ], 50, 50, 4, true, false, null ],    
+    _2_routerIsNotContract: [ 0, [ 'eth' ], 0, 0, 0, false, true, "ROUTER_MUST_BE_A_CONTRACT" ],
+    _3_pathTooShort: [ 0, [ 'eth' ], 0, 0, 0, true, true, "UNISWAP_PATH_TOO_SHORT" ],
+    _4_sourceAndDestinationSame: [ 0, [ 'dai', 'dai' ], 0, 0, 0, true, true, "UNISWAP_SOURCE_AND_DESTINATION_SAME" ],
+    _5_minDestinationZero: [ 0, [ 'eth', 'dai' ], 0, 0, 0, true, true, "UNISWAP_MIN_DESTINATION_ZERO" ],
+    _6_insufficientSourceEth: [ 0, [ 'eth', 'usdc' ], 50, 0, 1, true, true, "UNISWAP_INSUFFICIENT_ETH" ],
+    _7_insufficientSourceToken: [ 0, [ 'dai', 'usdc' ], 50, 0, 1, true, true, "UNISWAP_INSUFFICIENT_TOKENS" ],
+    _8_ethForTokensUniswapError: [ 0, [ 'eth', 'dai' ], 50, 50, SIMULATE_UNISWAP_RESPONSE_ERROR, true, true, "UNISWAP_ERROR_SWAPPING" ],
+    _9_ethForTokensBalanceError: [ 0, [ 'eth', 'dai' ], 50, 50, DONT_ALTER_BALANCE, true, true, "UNISWAP_BALANCE_NOT_INCREASED" ],
+   }, function(
     senderAccount,
     path,
     sourceAmount,
     sourceBalance,
     minDestination,
+    routerIsContract,
     mustFail,
     expectedErrorMessage
   ) {
@@ -63,6 +64,9 @@ contract("UniswapSwapTest", function(accounts) {
       const sender = accounts[senderAccount];
       path = path.map((name) => name === 'eth' ? ETH_ADDRESS : name === 'dai' ? dai.address : usdc.address);
 
+      if (!routerIsContract) {
+        uniswapV2Router02.address = DUMMY_ADDRESS;
+      }
       try {
 
         // Invocation using Mock as proxy to access internal functions
@@ -189,6 +193,7 @@ contract("UniswapSwapTest", function(accounts) {
       }
     });
   });
+
 
 
 });
