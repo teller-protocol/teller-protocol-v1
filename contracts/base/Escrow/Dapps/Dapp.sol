@@ -8,9 +8,9 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "../../../util/AddressLib.sol";
 
 // Interfaces
-import "./IDapp.sol";
+import "./IDApp.sol";
 
-contract Dapp is IDapp {
+contract Dapp is IDApp {
     using Address for address;
     using AddressLib for address;
 
