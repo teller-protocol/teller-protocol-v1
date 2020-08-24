@@ -8,7 +8,7 @@ contract CompoundMock is Compound {
         lend(cTokenAddress, amount);
     }
 
-    function callRedeem(address cTokenAddress) external {
+    function callRedeemAll(address cTokenAddress) external {
         redeem(cTokenAddress);
     }
 

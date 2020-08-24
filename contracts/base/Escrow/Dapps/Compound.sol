@@ -26,12 +26,16 @@ import "../../../providers/compound/CErc20Interface.sol";
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
-    @notice This contract is used to define Compound dApp actions available. All dapp 
+    @notice This contract is used to define Compound dApp actions available. All dapp actions are invoked via 
+        delegatecalls from Escrow contract, so this contract's state is really Escrow. 
     @author develop@teller.finance
  */
  contract Compound is Dapp, ICompound {
     using AddressLib for address;
 
+    /* State Variables */
+    // State is shared with Escrow contract as it uses delegateCall() to interact with this contract.
+   
     /**
         @notice Returns this contract's balance for the specified token.
         @param cTokenAddress token address.
@@ -68,7 +72,8 @@ import "../../../providers/compound/CErc20Interface.sol";
         require(result == 0, "COMPOUND_DEPOSIT_ERROR");
         uint256 balanceAfterMint = cToken.balanceOf(address(this));
         require(balanceAfterMint >= (balanceBeforeMint + amount), "COMPOUND_BALANCE_NOT_INCREASED");
-        emit CompoundLended(msg.sender, address(this), cTokenAddress, address(underlying), amount);
+        uint256 underlyingBalance = underlying.balanceOf(address(this));
+        emit CompoundLended(msg.sender, address(this), amount, cTokenAddress, balanceAfterMint, address(underlying), underlyingBalance);
     }
 
     /**
@@ -80,12 +85,13 @@ import "../../../providers/compound/CErc20Interface.sol";
         require(_balance(cTokenAddress) >= amount, "COMPOUND_INSUFFICIENT_BALANCE");
         CErc20Interface cToken = CErc20Interface(cTokenAddress);
         IERC20 underlying = IERC20(cToken.underlying());
-        uint256 balanceBeforeMint = underlying.balanceOf(address(this));
+        uint256 balanceBeforeRedeem = underlying.balanceOf(address(this));
         uint256 result = cToken.redeemUnderlying(amount);
         require(result == 0, "COMPOUND_WITHDRAWAL_ERROR");
-        uint256 balanceAfterMint = underlying.balanceOf(address(this));
-        require(balanceAfterMint >= (balanceBeforeMint + amount), "COMPOUND_BALANCE_NOT_INCREASED");
-        emit CompoundRedeemed(msg.sender, address(this), cTokenAddress, address(cToken.underlying()), balanceBeforeMint + amount);
+        uint256 underlyingBalanceAfterRedeem = underlying.balanceOf(address(this));
+        uint256 cTokenBalanceAfterRedeem = cToken.balanceOf(address(this));
+        require(underlyingBalanceAfterRedeem >= (balanceBeforeRedeem + amount), "COMPOUND_BALANCE_NOT_INCREASED");
+        emit CompoundRedeemed(msg.sender, address(this), amount, cTokenAddress, cTokenBalanceAfterRedeem, address(underlying), underlyingBalanceAfterRedeem);
     }
 
     /**

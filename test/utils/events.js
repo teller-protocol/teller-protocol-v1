@@ -41,12 +41,14 @@ module.exports = {
             const name = 'CompoundLended';
             return {
                 name: name,
-                emitted: (sender, dapp, cToken, underlyingToken, amount) => emitted(tx, name, ev => {
+                emitted: (sender, dapp, amount, cToken, cTokenBalance, underlyingToken, underlyingBalance) => emitted(tx, name, ev => {
                     assert.equal(ev.sender, sender);
                     assert.equal(ev.dappAddress, dapp);
-                    assert.equal(ev.cToken, cToken);
+                    assert.equal(ev.amount.toString(), amount.toString());
+                    assert.equal(ev.cToken, cToken); 
+                    assert.equal(ev.cTokenBalance.toString(), cTokenBalance.toString());
                     assert.equal(ev.underlyingToken, underlyingToken);
-                    assert.equal(ev.amount, amount);
+                    assert.equal(ev.underlyingBalance.toString(), underlyingBalance.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -55,12 +57,14 @@ module.exports = {
             const name = 'CompoundRedeemed';
             return {
                 name: name,
-                emitted: (sender, dapp, cToken, underlyingToken, amount) => emitted(tx, name, ev => {
+                emitted: (sender, dapp, amount, cToken, cTokenBalance, underlyingToken, underlyingBalance) => emitted(tx, name, ev => {
                     assert.equal(ev.sender, sender);
                     assert.equal(ev.dappAddress, dapp);
+                    assert.equal(ev.amount.toString(), amount.toString());
                     assert.equal(ev.cToken, cToken);
+                    assert.equal(ev.cTokenBalance.toString(), cTokenBalance.toString());
                     assert.equal(ev.underlyingToken, underlyingToken);
-                    assert.equal(ev.amount, amount);
+                    assert.equal(ev.underlyingBalance.toString(), underlyingBalance.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };

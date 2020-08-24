@@ -5,37 +5,42 @@ pragma solidity 0.5.17;
  */
 interface ICompound {
      /**
-        @notice This event is emitted every time Compound lend is invoked.
+        @notice This event is emitted every time Compound lend is invoked successfully.
         @param sender the sender of this transaction.
         @param dappAddress address of the compound app.
+        @param amount amount of cTokens to Lend.
         @param cToken compound token address.
+        @param cTokenBalance cTokens balance after Lend.
         @param underlyingToken address of the underlying token.
-        @param amount the amount to redeem. 
+        @param underlyingBalance underlying token balance after Lend. 
      */
     event CompoundLended(
         address indexed sender,
         address indexed dappAddress,
+        uint256 amount,
         address indexed cToken,
+        uint256 cTokenBalance,
         address underlyingToken,
-        uint256 amount 
+        uint256 underlyingBalance
     );
 
     /**
-        @notice This event is emitted every time Compound redeem is invoked.
+        @notice This event is emitted every time Compound redeem is invoked successfully.
         @param sender the sender of this transaction.
         @param dappAddress address of the compound app.
+        @param amount amount of cTokens to Redeem.
         @param cToken compound token address.
+        @param cTokenBalance cTokens balance after Redeem.
         @param underlyingToken address of the underlying token.
-        @param amount the amount to redeem. 
+        @param underlyingBalance underlying token balance after Redeem. 
      */
     event CompoundRedeemed(
         address indexed sender,
         address indexed dappAddress,
+        uint256 amount,
         address indexed cToken,
+        uint256 cTokenBalance,
         address underlyingToken,
-        uint256 amount
+        uint256 underlyingBalance
     );
-
-
-
 }
