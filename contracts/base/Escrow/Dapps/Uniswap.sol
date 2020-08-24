@@ -15,26 +15,27 @@ import "./IUniswap.sol";
 import "./IUniswapV2Router02.sol";
 
 /**
-    @notice This contract is used to define Uniswap dApp actions available.
+    @notice This contract is used to define Uniswap dApp actions available. All dapp actions are invoked via 
+        delegatecalls from Escrow contract, so this contract's state is really Escrow.
     @author develop@teller.finance
  */
 contract Uniswap is Dapp, IUniswap {
     using AddressLib for address;
     using Address for address;
 
-    /* Constants */
-    uint8 public constant NO_MINIMUM_OUTPUT_REQUIRED = 0;
-
-
     /* State Variables */
     // State is shared with Escrow contract as it uses delegateCall() to interact with this contract.
     
     /**
-        @notice Swaps ETH or Tokens for Tokens or ETH using different Uniswap Router v 02 methods.
+        @notice Swaps ETH/Tokens for Tokens/ETH using different Uniswap v2 Router 02 methods.
         @param routerAddress address of the Uniswap Router v02.
         @param path An array of token addresses. path.length must be >= 2. Pools for each consecutive pair of addresses must exist and have liquidity.
         @param sourceAmount amount of source element (ETH or Tokens) to swap.
         @param minDestination The minimum amount of output tokens that must be received for the transaction not to revert.
+        @dev This function mainly invokes 3 Uniswap external functions:
+            https://uniswap.org/docs/v2/smart-contracts/router02/#swapexactethfortokens
+            https://uniswap.org/docs/v2/smart-contracts/router02/#swapexacttokensforeth
+            https://uniswap.org/docs/v2/smart-contracts/router02/#swapexacttokensfortokens
      */
     function swap(
         address routerAddress,

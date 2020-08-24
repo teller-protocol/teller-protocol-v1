@@ -2,6 +2,7 @@
 const { withData } = require("leche");
 const { t } = require("../../../utils/consts");
 const { compound } = require('../../../utils/events');
+const { assert } = require("chai");
 
 // Mock contracts
 const CDAI = artifacts.require("./mock/providers/compound/CDAIMock.sol");
@@ -47,24 +48,27 @@ contract("CompoundLendTest", function(accounts) {
         const result = await instance.callLend(cDai.address, amount, {from: sender});
         assert(!mustFail, 'It should have failed because data is invalid.');
 
-        // Validating events emmited 
+        // Validating state changes
+        const cTokenBalance = await cDai.balanceOf(instance.address)
+        assert(cTokenBalance > 0, 'Unable to lend token')
+        const cTokenContractBalance = await instance.balance(cDai.address)
+        assert.equal(cTokenBalance.toString(), cTokenContractBalance.toString(), "Contract balance error");
+        const tokenBalance = await dai.balanceOf(instance.address)
+        const expectedBalance = balance - amount
+        assert.equal(tokenBalance.toString(), expectedBalance.toString(), 'Token balance invalid after lend')
+
+        // Validating events emmited correctly
         compound
           .compoundLended(result)
           .emitted(
             sender,
             instance.address,
+            amount,
             cDai.address,
+            cTokenContractBalance,
             dai.address,
-            amount
+            tokenBalance
           );
-
-        // Validating state changes
-        const cTokenBalance = await cDai.balanceOf(instance.address)
-        assert(cTokenBalance > 0, 'Unable to lend token')
-
-        const tokenBalance = await dai.balanceOf(instance.address)
-        const expectedBalance = balance - amount
-        assert.equal(tokenBalance.toString(), expectedBalance.toString(), 'Token balance invalid after lend')
 
       } catch (error) {
         assert(mustFail, error.message);
