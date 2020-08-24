@@ -13,8 +13,9 @@ const DAI = artifacts.require("./mock/token/DAIMock.sol");
 const Compound = artifacts.require("./mock/base/Escrow/Dapps/CompoundMock.sol");
 
 contract("CompoundRedeemTest", function(accounts) {
-  const SIMULATE_COMPOUND_RETURN_ERROR = 88888888;
-  const SIMULATE_COMPOUND_ACTION_ERROR = 77777777;
+  const SIMULATE_COMPOUND_REDEEM_UNDERLYING_RETURN_ERROR = 66666666;
+  const SIMULATE_COMPOUND_REDEEM_UNDERLYING_ERROR = 55555555;
+
 
   let instance;
   let cDai;
@@ -29,10 +30,10 @@ contract("CompoundRedeemTest", function(accounts) {
   });
 
   withData({
-    //_1_successful_redeem: [ 80, 100, false, null ],
-    //_2_insufficient_balance: [ 100, 0, true, "COMPOUND_INSUFFICIENT_BALANCE" ],
-    _3_compound_return_error: [ SIMULATE_COMPOUND_RETURN_ERROR, SIMULATE_COMPOUND_RETURN_ERROR, true, "COMPOUND_WITHDRAWAL_ERROR" ],
-    _4_compound_redeem_error: [ SIMULATE_COMPOUND_ACTION_ERROR, SIMULATE_COMPOUND_ACTION_ERROR, true, "COMPOUND_BALANCE_NOT_INCREASED" ],
+    _1_successful_redeem: [ 80, 100, false, null ],
+    _2_insufficient_balance: [ 100, 0, true, "COMPOUND_INSUFFICIENT_BALANCE" ],
+    _3_compound_return_error: [ SIMULATE_COMPOUND_REDEEM_UNDERLYING_ERROR, SIMULATE_COMPOUND_REDEEM_UNDERLYING_ERROR, true, "COMPOUND_BALANCE_NOT_INCREASED" ],
+    _4_compound_redeem_error: [ SIMULATE_COMPOUND_REDEEM_UNDERLYING_RETURN_ERROR, SIMULATE_COMPOUND_REDEEM_UNDERLYING_RETURN_ERROR, true, "COMPOUND_WITHDRAWAL_ERROR" ],
    }, function(
     amount,
     underlyingBalance,
@@ -44,8 +45,6 @@ contract("CompoundRedeemTest", function(accounts) {
       const sender = accounts[0];
       if (underlyingBalance > 0) {
         await dai.mint(instance.address, underlyingBalance);
-        // const b = await dai.balanceOf(instance.address)
-        // console.log("after mint:" + b.toString());
         await instance.callLend(cDai.address, underlyingBalance);
 
         const nextTimestamp = await timer.getCurrentTimestampInSecondsAndSum(minutesToSeconds(2));
@@ -56,12 +55,7 @@ contract("CompoundRedeemTest", function(accounts) {
         console.log(instance.address); 
 
         const cBalanceBeforeRedeem = await cDai.balanceOf(instance.address)
-      /*  const balanceBeforeRedeem = await dai.balanceOf(instance.address)
-        const bal = await dai.balanceOf(sender)
-        console.log(cBalanceBeforeRedeem.toString());
-        console.log(balanceBeforeRedeem.toString());
-        console.log(bal.toString());
-*/
+     
         // Invocation
         const result = await instance.callRedeem(cDai.address, amount, {from: sender});
         assert(!mustFail, 'It should have failed because data is invalid.');
@@ -79,15 +73,9 @@ contract("CompoundRedeemTest", function(accounts) {
 
         // Validating state changes
         const cBalance = await cDai.balanceOf(instance.address)
-       /* const balance = await dai.balanceOf(instance.address)
-        const sbalance = await dai.balanceOf(sender)
-        console.log("cOld:" + cBalanceBeforeRedeem.toString() + " cNew:" + cBalance.toString());
-        console.log("Old:" + balanceBeforeRedeem.toString() + " New:" + balance.toString());
-        console.log("sOld:" + bal.toString() + " sNew:" + sbalance.toString());
-        */const expectedBalance = cBalanceBeforeRedeem - amount
+        const expectedBalance = cBalanceBeforeRedeem - amount
         assert.equal(cBalance.toString(), expectedBalance.toString(), 'CToken balance not empty after redeem')
       } catch (error) {
-        console.log(error);
         assert(mustFail, error.message);
         assert(error);
         assert.equal(error.reason, expectedErrorMessage);

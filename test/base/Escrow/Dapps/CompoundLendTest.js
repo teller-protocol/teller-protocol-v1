@@ -11,8 +11,8 @@ const DAI = artifacts.require("./mock/token/DAIMock.sol");
 const Compound = artifacts.require("./mock/base/Escrow/Dapps/CompoundMock.sol");
 
 contract("CompoundLendTest", function(accounts) {
-  const SIMULATE_COMPOUND_RETURN_ERROR = 88888888;
-  const SIMULATE_COMPOUND_ACTION_ERROR = 77777777;
+  const SIMULATE_COMPOUND_MINT_RETURN_ERROR = 88888888;
+  const SIMULATE_COMPOUND_MINT_ERROR = 77777777;
 
   let instance;
   let cDai;
@@ -27,8 +27,8 @@ contract("CompoundLendTest", function(accounts) {
   withData({
     _1_successful_lend: [ 80, 100, false, null ],
     _2_insufficient_underlying: [ 100, 0, true, "COMPOUND_INSUFFICIENT_UNDERLYING" ],
-    _3_compound_return_error: [ SIMULATE_COMPOUND_RETURN_ERROR, SIMULATE_COMPOUND_RETURN_ERROR, true, "COMPOUND_DEPOSIT_ERROR" ],
-    _4_compound_mint_error: [ SIMULATE_COMPOUND_ACTION_ERROR, SIMULATE_COMPOUND_ACTION_ERROR, true, "COMPOUND_BALANCE_NOT_INCREASED" ],
+    _3_compound_return_error: [ SIMULATE_COMPOUND_MINT_RETURN_ERROR, SIMULATE_COMPOUND_MINT_RETURN_ERROR, true, "COMPOUND_DEPOSIT_ERROR" ],
+    _4_compound_mint_error: [ SIMULATE_COMPOUND_MINT_ERROR, SIMULATE_COMPOUND_MINT_ERROR, true, "COMPOUND_BALANCE_NOT_INCREASED" ],
   }, function(
     amount,
     balance,
