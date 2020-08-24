@@ -2,8 +2,11 @@ pragma solidity 0.5.17;
 
 // Contracts
 import "@openzeppelin/upgrades/contracts/upgradeability/Proxy.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 contract BaseProxy is Proxy {
+    using Address for address;
+
     constructor() public payable {
     }
 
@@ -26,6 +29,8 @@ contract BaseProxy is Proxy {
         @return encoded bytes returned from the delegatecall
      */
     function _delegateToWith(address _implementation, bytes memory _data) internal returns (bytes memory) {
+        require(_implementation.isContract(), "PROXY_DELEGATE_TO_IMPLEMENTATION_MUST_BE_A_CONTRACT");
+
         (bool success, bytes memory data) = _implementation.delegatecall(_data);
         require(success);
         return data;
