@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
-import "./UpgradeableEscrowProxy.sol";
+import "./EscrowProxy.sol";
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/lifecycle/Pausable.sol";
@@ -35,7 +35,7 @@ import "./TInitializable.sol";
 
     @author develop@teller.finance
  */
-contract EscrowFactory is Pausable, TInitializable, EscrowFactoryInterface {
+contract EscrowFactory is TInitializable, EscrowFactoryInterface {
     using AddressArrayLib for address[];
     using AddressLib for address;
     using Address for address;
@@ -67,6 +67,11 @@ contract EscrowFactory is Pausable, TInitializable, EscrowFactoryInterface {
 
     /* Modifiers */
 
+    modifier onlyPauser() {
+        settings.requirePauserRole(msg.sender);
+        _;
+    }
+
     /**
         @notice It checks whether the platform is paused or not.
         @dev It throws a require error if the platform is used.
@@ -93,7 +98,7 @@ contract EscrowFactory is Pausable, TInitializable, EscrowFactoryInterface {
         require(loansAddress.isContract(), "CALLER_MUST_BE_CONTRACT");
         borrower.requireNotEmpty("BORROWER_MUSTNT_BE_EMPTY");
 
-        UpgradeableEscrowProxy escrow = new UpgradeableEscrowProxy(
+        EscrowProxy escrow = new EscrowProxy(
             address(settings),
             loansAddress,
             loanID
@@ -161,10 +166,9 @@ contract EscrowFactory is Pausable, TInitializable, EscrowFactoryInterface {
         require(escrowLogicAddress.isContract(), "ESCROW_LOGIC_MUST_BE_CONTRACT");
 
         TInitializable._initialize();
-        Pausable.initialize(msg.sender);
 
-        upgradeEscrowLogic(escrowLogicAddress);
         settings = SettingsInterface(settingsAddress);
+        upgradeEscrowLogic(escrowLogicAddress);
     }
 
     /**

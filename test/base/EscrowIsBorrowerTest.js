@@ -59,7 +59,7 @@ contract('EscrowIsBorrowerTest', function (accounts) {
         const loanTerms = createLoanTerms(borrower, NULL_ADDRESS, 0, 0, 0, 0);
         await loans.setLoan(loanID, loanTerms, 0, 0, 123456, 0, 0, 0, loanTerms.maxLoanAmount, ACTIVE, false);
 
-        await instance.mockInitialize(escrowFactory.address, settingsInstance.address, loans.address, loanID);
+        await instance.mockInitialize(settingsInstance.address, loans.address, loanID);
 
         // Invocation
         const result = await instance.externalIsBorrower({ from: sender });

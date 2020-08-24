@@ -277,6 +277,12 @@ interface SettingsInterface {
     function hasPauserRole(address account) external view returns (bool);
 
     /**
+        @notice Requires an account to have the pauser role.
+        @param account account to test.
+     */
+    function requirePauserRole(address account) external view;
+
+    /**
         @notice Get the current escrow factory contract.
         @return the current escrow factory contract.
      */

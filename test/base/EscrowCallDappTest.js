@@ -31,11 +31,10 @@ contract('EscrowCallDappTest', function (accounts) {
   })
 
   withData({
-    _1_not_initialized: [2, false, true, true, false, true, 'CONTRACT_NOT_INITIALIZED'],
-    _2_not_borrower: [3, true, true, false, false, true, 'CALLER_NOT_BORROWER'],
-    _3_without_dapp_whitelisted: [4, true, false, true, false, true, 'DAPP_NOT_WHITELISTED'],
-    _4_with_invalid_function_signature: [5, true, true, true, true, true, 'DAPP_CALL_FAILED'],
-    _5_successful: [6, true, true, true, false, false, null],
+    _1_not_borrower: [3, true, true, false, false, true, 'CALLER_NOT_BORROWER'],
+    _2_without_dapp_whitelisted: [4, true, false, true, false, true, 'DAPP_NOT_WHITELISTED'],
+    _3_with_invalid_function_signature: [5, true, true, true, true, true, 'DAPP_CALL_FAILED'],
+    _4_successful: [6, true, true, true, false, false, null],
   }, function(
     loanID,
     initialize,
@@ -50,7 +49,6 @@ contract('EscrowCallDappTest', function (accounts) {
       const dapp = await DappMock.new();
       if (initialize) {
         await escrow.mockInitialize(
-          instance.address,
           settingsInstance.address,
           loans.address,
           loanID

@@ -8,6 +8,7 @@ const assert = require('assert');
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
+const Settings = artifacts.require("./base/Settings.sol");
 const Escrow = artifacts.require("./base/Escrow.sol");
 const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
 
@@ -20,7 +21,8 @@ contract('EscrowFactoryRemoveDAppTest', function (accounts) {
   beforeEach(async () => {
     escrow = await Escrow.new();
     instance = await EscrowFactory.new();
-    const settings = await Mock.new();
+    const settings = await Settings.new();
+    await settings.initialize(owner);
     await instance.initialize(settings.address, escrow.address, { from: owner });
 
     mocks = await createMocks(Mock, 10);
@@ -32,7 +34,7 @@ contract('EscrowFactoryRemoveDAppTest', function (accounts) {
     _1_basic: [[1, 2], accounts[0], 2, false, null],
     _2_not_exist: [[3, 4], accounts[0], 5, true, 'DAPP_NOT_EXIST'],
     _3_invalid_empty_dapp_address: [[1, 2], accounts[0], -1, true, 'DAPP_ISNT_A_CONTRACT'],
-    _4_not_owner: [[1, 2], accounts[5], 3, true, 'PauserRole: caller does not have the Pauser role'],
+    _4_not_pauser: [[1, 2], accounts[5], 3, true, 'NOT_PAUSER'],
   }, function(
     previousDaapIndexes,
     caller,

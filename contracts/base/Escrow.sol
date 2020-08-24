@@ -2,18 +2,12 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
-import "./TInitializable.sol";
 
 // Interfaces
-import "../interfaces/EscrowFactoryInterface.sol";
 import "../interfaces/EscrowInterface.sol";
-import "../interfaces/LoansInterface.sol";
 
 // Libraries
-import "../util/TellerCommon.sol";
-import "../util/AddressLib.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
-import "../interfaces/SettingsInterface.sol";
+import "./BaseEscrow.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -32,34 +26,7 @@ import "../interfaces/SettingsInterface.sol";
 
     @author develop@teller.finance
  */
-contract Escrow is TInitializable, EscrowInterface {
-    using Address for address;
-    using Address for address payable;
-    using AddressLib for address;
-    using AddressLib for address payable;
-
-    /**
-        @notice The platform settings.
-     */
-    SettingsInterface public settings;
-
-    /**
-        @notice This is the escrow factory instance.
-        @dev It is used to validate the dapps are valid.
-     */
-    EscrowFactoryInterface public factory;
-
-    /**
-        @notice It is the current loans contract instance.
-     */
-    LoansInterface public loans;
-
-    /**
-        @notice This loan id refers the loan in the loans contract.
-        @notice This loan was taken out by a borrower.
-     */
-    uint256 public loanID;
-
+contract Escrow is BaseEscrow, EscrowInterface {
     /**
         @notice It checks whether the sender is the borrower or not.
         @dev It throws a require error if the sender is not the borrower associated to the current loan id.
@@ -75,10 +42,9 @@ contract Escrow is TInitializable, EscrowInterface {
      */
     function callDapp(TellerCommon.DappData calldata dappData)
         external
-        isInitialized()
         onlyBorrower()
     {
-        require(factory.isDapp(dappData.location), "DAPP_NOT_WHITELISTED");
+        require(settings.getEscrowFactory().isDapp(dappData.location), "DAPP_NOT_WHITELISTED");
 
         (bool success, ) = dappData.location.delegatecall(dappData.data);
 
@@ -86,28 +52,6 @@ contract Escrow is TInitializable, EscrowInterface {
     }
 
     /** Internal Functions */
-
-    /**
-        @notice It initializes this Escrow contract. Should only be called from the constructor of the UpgradeableEscrowProxy.
-        @param settingsAddress the Settings contract address.
-        @param loansAddress the Loans contract address.
-        @param aLoanID the loanID associated to this Escrow contract.
-     */
-    function _initialize(address settingsAddress, address loansAddress, uint256 aLoanID)
-        internal
-        isNotInitialized()
-    {
-        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
-        require(loansAddress.isContract(), "LOANS_MUST_BE_A_CONTRACT");
-        require(msg.sender.isContract(), "SENDER_MUST_BE_A_CONTRACT");
-
-        _initialize();
-
-        settings = SettingsInterface(settingsAddress);
-        factory = EscrowFactoryInterface(msg.sender);
-        loans = LoansInterface(loansAddress);
-        loanID = aLoanID;
-    }
 
     /**
         @notice It checks whether the sender is the loans borrower or not.

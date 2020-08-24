@@ -13,13 +13,10 @@ contract EscrowMock is Escrow {
     }
 
     function mockInitialize(
-        address factoryAddress,
         address settingsAddress,
         address loansAddress,
         uint256 aLoanID
     ) external {
-        _initialize();
-        factory = EscrowFactoryInterface(factoryAddress);
         settings = SettingsInterface(settingsAddress);
         loans = LoansInterface(loansAddress);
         loanID = aLoanID;
