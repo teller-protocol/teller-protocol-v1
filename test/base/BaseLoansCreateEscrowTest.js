@@ -62,9 +62,9 @@ contract('BaseLoansCreateEscrowTest', function (accounts) {
 
         // Invocation
         let escrowAddress
-        try {
+        // If the test must fail from the resulting transaction, then the call to the function (not a transaction) will also fail but as a different Error object
+        if (!mustFail)
           escrowAddress = await loans.externalCreateEscrow.call(loanID);
-        } catch {}
         const result = await loans.externalCreateEscrow(loanID);
 
         // Assertions

@@ -1,6 +1,7 @@
 // JS Libraries
+const { createLoanTerms } = require("../utils/structs");
 const withData = require("leche").withData;
-const { t } = require("../utils/consts");
+const { t, NULL_ADDRESS, ACTIVE } = require("../utils/consts");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 
 // Smart contracts
@@ -35,33 +36,48 @@ contract("EscrowProxyTest", function(accounts) {
     });
 
     withData({
-        _1_implementation_function_multiply: [ accounts[7], 5, 3, false, null ],
-        _2_implementation_function_revert: [ accounts[7], 0, 0, true, 'IMPLEMENTATION_FUNCTION_SHOULD_REVERT' ],
-    }, function(borrower, num1, num2, mustFail, expectedErrorMessage) {
+        _1_implementation_function_multiply: [ 7, 5, 3, false, null ],
+    }, function(borrowerIndex, num1, num2, mustFail, expectedErrorMessage) {
         it(t("user", "implementation", "Should be able to use the current implementation address from the factory.", mustFail), async function() {
-            try {
-                // Setup
-                const result = await loans.createEscrow(borrower, mockLoanID)
-                const receipt = await web3.eth.getTransactionReceipt(result.tx)
-                const events = await EscrowFactory.decodeLogs(receipt.logs)
-                const proxy = await EscrowProxy.at(events[0].args.escrowAddress)
-                const escrow = await EscrowMock.at(events[0].args.escrowAddress)
+            // Setup
+            const borrower = borrowerIndex === -1 ? NULL_ADDRESS : accounts[borrowerIndex];
+            const loanTerms = createLoanTerms(borrower, NULL_ADDRESS, 0, 0, 0, 0);
+            await loans.setLoan(mockLoanID, loanTerms, 0, 0, 123456, 0, 0, 0, loanTerms.maxLoanAmount, ACTIVE, false);
 
+            const result = await loans.externalCreateEscrow(mockLoanID)
+            const receipt = await web3.eth.getTransactionReceipt(result.tx)
+            const events = await EscrowFactory.decodeLogs(receipt.logs)
+            const proxy = await EscrowProxy.at(events[0].args.escrowAddress)
+            const escrow = await EscrowMock.at(events[0].args.escrowAddress)
+
+            async function testFunction() {
+                const expectedValue = num1 * num2;
+                const value = await escrow.testImplementationFunctionMultiply.call(num1, num2);
+                assert(value.toString(), expectedValue.toString(), "Incorrect response from implementation.")
+
+                return true
+            }
+
+            try {
                 // Invocation
                 const proxyImplementationV1 = await proxy.implementation.call()
                 assert.equal(libraryV1.address, proxyImplementationV1)
+
+                let v1Success
+                try {
+                    v1Success = await testFunction()
+                } catch (err) {
+                    v1Success = false
+                }
+                assert(!v1Success, 'Should NOT have been able to call function on v1 implementation.')
 
                 await factory.upgradeEscrowLogic(libraryV2.address)
                 const proxyImplementationV2 = await proxy.implementation.call()
                 assert.equal(libraryV2.address, proxyImplementationV2)
 
-                if (mustFail) {
-                    await escrow.testImplementationFunctionRevert(expectedErrorMessage)
-                } else {
-                    const expectedValue = num1 * num2;
-                    const value = await escrow.testImplementationFunctionMultiply.call(num1, num2);
-                    assert(value.toString(), expectedValue.toString(), "Incorrect response from implementation.")
-                }
+                let v2Success = false
+                v2Success = await testFunction()
+                assert(v2Success, 'Should have been able to call function on v2 implementation.')
             } catch (error) {
                 assert(mustFail);
                 assert(error);

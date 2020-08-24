@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t } = require('../utils/consts');
+const { t, createMocks } = require('../utils/consts');
 const { escrowFactory } = require('../utils/events');
 const assert = require('assert');
 
@@ -8,44 +8,50 @@ const assert = require('assert');
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
+const Settings = artifacts.require("./base/Settings.sol");
 const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
 
 contract('EscrowFactoryUpgradeEscrowLogicTest', function (accounts) {
   const ownerIndex = 0;
-  let escrowV1;
-  let escrowV2;
+  let mocks = [];
   let instance;
 
   beforeEach(async () => {
-    escrowV1 = await Mock.new();
-    escrowV2 = await Mock.new();
+    mocks = await createMocks(Mock, 2)
 
     instance = await EscrowFactory.new();
-    const settings = await Mock.new();
-    await instance.initialize(settings.address, escrowV1.address, { from: accounts[ownerIndex] });
+    const settings = await Settings.new();
+    await settings.initialize(accounts[ownerIndex]);
+    await instance.initialize(settings.address, mocks[0], { from: accounts[ownerIndex] });
   })
 
   withData({
-    _1_basic: [accounts[ownerIndex], false, null],
-    _2_not_owner: [accounts[ownerIndex + 1], true, 'PauserRole: caller does not have the Pauser role'],
+    _1_basic: [accounts[ownerIndex], 1, false, null],
+    _2_not_pauser: [accounts[ownerIndex + 1], 1, true, 'NOT_PAUSER'],
+    _3_same_logic: [accounts[ownerIndex], 0, true, 'NEW_ESCROW_LOGIC_SAME'],
+    _4_not_contract: [accounts[ownerIndex], 99, true, 'ESCROW_LOGIC_MUST_BE_A_CONTRACT']
   }, function(
     caller,
+    upgradeLogicIndex,
     mustFail,
     expectedErrorMessage
   ) {
-    it(t('escrowFactory', 'upgradeEscrowLogic', 'Should be able (or not) to remove a dapp.', mustFail), async function() {
+    it(t('escrowFactory', 'upgradeEscrowLogic', 'Should be able (or not) to upgrade the current Escrow logic implementation.', mustFail), async function() {
       try {
         const v1Logic = await instance.escrowLogic.call();
-        assert.equal(escrowV1.address, v1Logic, "V1 logic does not match")
+        assert.equal(mocks[0], v1Logic, "V1 logic does not match")
 
-        const result = await instance.upgradeEscrowLogic(escrowV2.address, { from: caller });
+        const v2LogicAddress = upgradeLogicIndex === 99 ? caller : mocks[upgradeLogicIndex]
+        const result = await instance.upgradeEscrowLogic(v2LogicAddress, { from: caller });
 
         const v2Logic = await instance.escrowLogic.call();
-        assert.equal(escrowV2.address, v2Logic, "V2 logic does not match")
+        assert.equal(v2LogicAddress, v2Logic, "V2 logic does not match")
+
+        assert(!mustFail);
 
         escrowFactory
           .escrowLogicUpgraded(result)
-          .emitted(caller, escrowV1.address, escrowV2.address);
+          .emitted(caller, mocks[0], v2LogicAddress);
       } catch (error) {
         assert(mustFail);
         assert(error);

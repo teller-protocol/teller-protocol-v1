@@ -93,7 +93,6 @@ contract EscrowFactory is TInitializable, EscrowFactoryInterface {
         isInitialized()
         returns (address escrowAddress)
     {
-        // TODO: Verify this is a Loans contract somehow
         address loansAddress = msg.sender;
         require(loansAddress.isContract(), "CALLER_MUST_BE_CONTRACT");
         borrower.requireNotEmpty("BORROWER_MUSTNT_BE_EMPTY");
@@ -159,31 +158,41 @@ contract EscrowFactory is TInitializable, EscrowFactoryInterface {
         @param escrowLogicAddress the escrow contract address.
      */
     function initialize(address settingsAddress, address escrowLogicAddress)
-        public
+        external
         isNotInitialized()
     {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
         require(escrowLogicAddress.isContract(), "ESCROW_LOGIC_MUST_BE_CONTRACT");
 
-        TInitializable._initialize();
+        _initialize();
 
         settings = SettingsInterface(settingsAddress);
-        upgradeEscrowLogic(escrowLogicAddress);
+        _upgradeEscrowLogic(escrowLogicAddress);
     }
 
     /**
-        @notice It sets defines the new logic to be used for all Escrow contracts.
+        @notice It upgrades the logic to be used for all Escrow contracts.
         @param newLogic the new Escrow logic implementation.
      */
-    function upgradeEscrowLogic(address newLogic) public onlyPauser() isInitialized() {
-        require(newLogic.isContract(), "ESCROW_LOGIC_MUST_BE_A_CONTRACT");
-
-        address oldLogic = escrowLogic;
-        escrowLogic = newLogic;
-        emit EscrowLogicUpgraded(msg.sender, oldLogic, newLogic);
+    function upgradeEscrowLogic(address newLogic) external {
+        _upgradeEscrowLogic(newLogic);
     }
 
     /** Internal Functions */
+
+    /**
+        @notice It upgrades the logic to be used for all Escrow contracts.
+        @param newLogic the new Escrow logic implementation.
+     */
+    function _upgradeEscrowLogic(address newLogic) internal onlyPauser() isInitialized() {
+        require(newLogic.isContract(), "ESCROW_LOGIC_MUST_BE_A_CONTRACT");
+
+        address oldLogic = escrowLogic;
+        require(newLogic != oldLogic, "NEW_ESCROW_LOGIC_SAME");
+
+        escrowLogic = newLogic;
+        emit EscrowLogicUpgraded(msg.sender, oldLogic, newLogic);
+    }
 
     /**
         @notice It tests whether an address is a dapp or not.

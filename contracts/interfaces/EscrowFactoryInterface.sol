@@ -1,5 +1,4 @@
 pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
 
 import "./LoansInterface.sol";
 
@@ -48,6 +47,12 @@ interface EscrowFactoryInterface {
         @return an array of dapps (addresses).
      */
     function getDapps() external view returns (address[] memory);
+
+    /**
+        @notice It upgrades the logic to be used for all Escrow contracts.
+        @param newLogic the new Escrow logic implementation.
+     */
+    function upgradeEscrowLogic(address newLogic) external;
 
     /**
         @notice This event is emitted when a new Escrow contract is created.
