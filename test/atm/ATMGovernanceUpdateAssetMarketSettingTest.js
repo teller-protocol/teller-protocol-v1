@@ -1,12 +1,10 @@
 // JS Libraries
+const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
 const {
     t,
-    toBytes32
-} = require('../utils/consts');
-const {
-    DUMMY_ADDRESS,
-    NULL_ADDRESS
+    toBytes32,
+    encode
 } = require('../utils/consts');
 const {
     atmGovernance
@@ -17,14 +15,21 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
+const Settings = artifacts.require("./base/Settings.sol");
 
 contract('ATMGovernanceUpdateAssetMarketSettingTest', function (accounts) {
-    const owner = accounts[0];
     let instance;
 
     beforeEach('Setup for each test', async () => {
+        const settings = await createTestSettingsInstance(Settings);
+        const atmSettings = await Mock.new();
+        await atmSettings.givenMethodReturnAddress(
+            encode(web3, 'settings()'),
+            settings.address
+        );
+
         instance = await ATMGovernance.new();
-        await instance.initialize(owner);
+        await instance.initialize(atmSettings.address);
     });
 
     // Testing values
@@ -36,7 +41,7 @@ contract('ATMGovernanceUpdateAssetMarketSettingTest', function (accounts) {
 
     withData({
         _1_basic: [0, SETTING_NAME, SETTING_NEW_VALUE, undefined, false],
-        _2_notSigner: [2, SETTING_NAME, SETTING_NEW_VALUE, 'SignerRole: caller does not have the Signer role', true],
+        _2_notSigner: [2, SETTING_NAME, SETTING_NEW_VALUE, 'ONLY_SIGNER', true],
         _3_sameOldValue: [0, SETTING_NAME, SETTING_OLD_VALUE, 'NEW_VALUE_SAME_AS_OLD', true],
     }, function (senderIndex, settingName, newValue, expectedErrorMessage, mustFail) {
         it(t('user', 'updateAssetMarketSetting#1', 'Should (or not) be able to update an asset market setting.', mustFail), async function () {

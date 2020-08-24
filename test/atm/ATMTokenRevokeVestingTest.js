@@ -1,6 +1,7 @@
 // JS Libraries
+const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
-const { t, NULL_ADDRESS  } = require('../utils/consts');
+const { t, encode  } = require('../utils/consts');
 const { atmToken } = require('../utils/events');
 const Timer = require('../../scripts/utils/Timer');
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
@@ -10,6 +11,7 @@ const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 
 // Smart contracts
 const ATMToken = artifacts.require("./ATMToken.sol");
+const Settings = artifacts.require("./base/Settings.sol");
 
 contract('ATMTokenRevokeVestingTest', function (accounts) {
     const atmSettingsEncoder = new IATMSettingsEncoder(web3);
@@ -22,7 +24,12 @@ contract('ATMTokenRevokeVestingTest', function (accounts) {
     const timer = new Timer(web3);
 
     beforeEach('Setup for each test', async () => {
+        const settings = await createTestSettingsInstance(Settings);
         atmSettingsInstance = await Mock.new();
+        await atmSettingsInstance.givenMethodReturnAddress(
+            encode(web3, 'settings()'),
+            settings.address
+        );
         atmInstance = await Mock.new();
         instance = await ATMToken.new();
         await instance.initialize(

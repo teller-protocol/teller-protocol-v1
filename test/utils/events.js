@@ -702,26 +702,26 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-        atmTokenTemplateUpdated: tx => {
-            const name = "ATMTokenTemplateUpdated";
+        atmTokenLogicUpdated: tx => {
+            const name = "ATMTokenLogicUpdated";
             return {
                 name: name,
-                emitted: (sender, oldATMTokenTemplate, newATMTokenTemplate) => emitted(tx, name, ev => {
+                emitted: (sender, oldATMTokenLogic, newATMTokenLogic) => emitted(tx, name, ev => {
                     assert.equal(ev.sender, sender);
-                    assert.equal(ev.oldATMTokenTemplate.toString(), oldATMTokenTemplate.toString());
-                    assert.equal(ev.newATMTokenTemplate.toString(), newATMTokenTemplate.toString());
+                    assert.equal(ev.oldATMTokenLogic.toString(), oldATMTokenLogic.toString());
+                    assert.equal(ev.newATMTokenLogic.toString(), newATMTokenLogic.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-        atmGovernanceTemplateUpdated: tx => {
-            const name = "ATMGovernanceTemplateUpdated";
+        atmGovernanceLogicUpdated: tx => {
+            const name = "ATMGovernanceLogicUpdated";
             return {
                 name: name,
-                emitted: (sender, oldATMGovernanceTemplate, newATMGovernanceTemplate) => emitted(tx, name, ev => {
+                emitted: (sender, oldATMGovernanceLogic, newATMGovernanceLogic) => emitted(tx, name, ev => {
                     assert.equal(ev.sender, sender);
-                    assert.equal(ev.oldATMGovernanceTemplate.toString(), oldATMGovernanceTemplate.toString());
-                    assert.equal(ev.newATMGovernanceTemplate.toString(), newATMGovernanceTemplate.toString());
+                    assert.equal(ev.oldATMGovernanceLogic.toString(), oldATMGovernanceLogic.toString());
+                    assert.equal(ev.newATMGovernanceLogic.toString(), newATMGovernanceLogic.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };

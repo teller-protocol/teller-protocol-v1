@@ -19,8 +19,14 @@ contract('ATMSettingsSetATMToMarketTest', function (accounts) {
     
     beforeEach('Setup for each test', async () => {
         mocks = await createMocks(Mock, 10);
+
         settings = await Mock.new();
-        instance = await ATMSettings.new(settings.address);
+        await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeHasPauserRole(), true);
+        await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), false);
+
+        const atmTokenLogic = await Mock.new();
+        const atmGovernanceLogic = await Mock.new();
+        instance = await ATMSettings.new(settings.address, atmTokenLogic.address, atmGovernanceLogic.address);
     });
 
     const newAtM = (borrowedTokenIndex, collateralTokenIndex, atmAddressIndex) => ({borrowedTokenIndex, collateralTokenIndex, atmAddressIndex});
@@ -34,8 +40,6 @@ contract('ATMSettingsSetATMToMarketTest', function (accounts) {
     }, function(previousATMToMarkets, atmToMarket, senderIndex, encodeIsATM, encodeHasPauserRole, encodeIsPaused, expectedErrorMessage, mustFail) {
         it(t('user', 'setATMToMarket', 'Should (or not) be able to set ATM to a market.', mustFail), async function() {
             // Setup
-            await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeHasPauserRole(), true);
-            await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), false);
             for (const previousATMIndex of previousATMToMarkets) {
                 await instance.setATMToMarket(
                     mocks[previousATMIndex.borrowedTokenIndex],

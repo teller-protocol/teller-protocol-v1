@@ -1,12 +1,14 @@
 // JS Libraries
+const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
-const { t } = require('../utils/consts');
+const { t, encode } = require('../utils/consts');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const ATMToken = artifacts.require('./ATMToken.sol');
+const Settings = artifacts.require("./base/Settings.sol");
 
 contract('ATMTokenInitializeTest', function (accounts) {
 
@@ -18,14 +20,21 @@ contract('ATMTokenInitializeTest', function (accounts) {
         symbol,
         decimals,
         cap,
-        maxVestings,
+        maxVesting,
         expectedErrorMessage,
         mustFail
     ) {
         it(t('user', 'initialize', 'Should or should not be able to create a new instance.', mustFail), async function() {
             // Setup
             const instance = await ATMToken.new();
+
+            const settings = await createTestSettingsInstance(Settings);
             const atmSettingsInstance = await Mock.new();
+            await atmSettingsInstance.givenMethodReturnAddress(
+                encode(web3, 'settings()'),
+                settings.address
+            );
+
             const atmInstance = await Mock.new()
             try {
                 const result = await instance.initialize(
@@ -33,7 +42,7 @@ contract('ATMTokenInitializeTest', function (accounts) {
                                                 symbol,
                                                 decimals,
                                                 cap,
-                                                maxVestings,
+                                                maxVesting,
                                                 atmSettingsInstance.address,
                                                 atmInstance.address
                                             );

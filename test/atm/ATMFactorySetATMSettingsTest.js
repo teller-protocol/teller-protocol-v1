@@ -10,7 +10,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const ATMFactory = artifacts.require("./atm/ATMFactory.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 
-contract("ATMFactorySetATMSettingsTest", function(accounts) {
+contract("ATMSettingsSetATMSettingsTest", function(accounts) {
     const ADMIN_INDEX = 1;
     let newATMSettings;
     let newATMSettingsAddress;
@@ -24,13 +24,9 @@ contract("ATMFactorySetATMSettingsTest", function(accounts) {
         await settings.initialize(admin);
         instance = await ATMFactory.new();
         const atmSettings = await Mock.new();
-        const atmTokenTemplate = await Mock.new();
-        const atmGovernanceTemplate = await Mock.new();
         await instance.initialize(
             settings.address,
             atmSettings.address,
-            atmTokenTemplate.address,
-            atmGovernanceTemplate.address,
         );
         initialATMSettings = await instance.atmSettings();
     });

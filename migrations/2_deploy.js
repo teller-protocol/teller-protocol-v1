@@ -60,7 +60,7 @@ module.exports = async function(deployer, network, accounts) {
   await deployerApp.deploy(MarketsState, txConfig);
   const marketsStateInstance = await MarketsState.deployed();
 
-  const settingsInstance = await deployerApp.deployWithUpgradeable('Settings', Settings, txConfig.from, '0x')
+  const settingsInstance = await deployerApp.deployWithUpgradeable('Settings', Settings, txConfig.from, '0x', txConfig)
   await settingsInstance.initialize(txConfig.from);
   await initSettings(
     settingsInstance,
@@ -68,26 +68,26 @@ module.exports = async function(deployer, network, accounts) {
     { ERC20 },
   );
 
+  // As they are used as logic template for their proxies, we don't need to call initialize function here.
+  await deployerApp.deploy(ATMGovernance, txConfig);
+  const atmGovernanceLogicInstance = await ATMGovernance.deployed();
+  await deployerApp.deploy(ATMToken, txConfig);
+  const atmTokenLogicInstance = await ATMToken.deployed();
+
   await deployerApp.deploy(
     ATMSettings,
     settingsInstance.address,
+    atmTokenLogicInstance.address,
+    atmGovernanceLogicInstance.address,
     txConfig
   );
   const atmSettingsInstance = await ATMSettings.deployed();
   console.log(`ATM settings deployed at: ${atmSettingsInstance.address}`);
 
-  // As they are used as template (for the UpgradeableProxy) in the ATMFactory.createATM function, we don't need to call initialize function.
-  await deployerApp.deploy(ATMGovernance, txConfig);
-  const atmGovernanceTemplateInstance = await ATMGovernance.deployed();
-  await deployerApp.deploy(ATMToken, txConfig);
-  const atmTokenTemplateInstance = await ATMToken.deployed();
-
-  const atmFactoryInstance = await deployerApp.deployWithUpgradeable('ATMFactory', ATMFactory, txConfig.from, '0x')
+  const atmFactoryInstance = await deployerApp.deployWithUpgradeable('ATMFactory', ATMFactory, txConfig.from, '0x', txConfig)
   await atmFactoryInstance.initialize(
     settingsInstance.address,
     atmSettingsInstance.address,
-    atmTokenTemplateInstance.address,
-    atmGovernanceTemplateInstance.address,
     txConfig
   );
   console.log(`ATM Governance Factory (Proxy) deployed at: ${atmFactoryInstance.address}`);

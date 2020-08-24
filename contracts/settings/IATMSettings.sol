@@ -1,5 +1,7 @@
 pragma solidity 0.5.17;
 
+import "../interfaces/SettingsInterface.sol";
+
 
 // Libraries
 
@@ -71,6 +73,30 @@ interface IATMSettings {
         address account
     );
 
+    /**
+        @notice This event is emitted when the ATM token template is updated.
+        @param sender address that sent the transaction.
+        @param oldATMTokenLogic the old ATM token template address.
+        @param newATMTokenLogic the new ATM token template address.
+     */
+    event ATMTokenLogicUpdated(
+        address indexed sender,
+        address indexed oldATMTokenLogic,
+        address indexed newATMTokenLogic
+    );
+
+    /**
+        @notice This event is emitted when the ATM governance template is updated.
+        @param sender address that sent the transaction.
+        @param oldATMGovernanceLogic the old ATM governance template address.
+        @param newATMGovernanceLogic the new ATM governance template address.
+     */
+    event ATMGovernanceLogicUpdated(
+        address indexed sender,
+        address indexed oldATMGovernanceLogic,
+        address indexed newATMGovernanceLogic
+    );
+
     /* State Variables */
 
     /** Modifiers */
@@ -78,6 +104,12 @@ interface IATMSettings {
     /* Constructor */
 
     /** External Functions */
+
+    function settings() external view returns (SettingsInterface);
+
+    function atmTokenLogic() external view returns (address);
+
+    function atmGovernanceLogic() external view returns (address);
 
     /**
         @notice It pauses an given ATM.

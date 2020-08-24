@@ -16,7 +16,9 @@ import "./IATMSettings.sol";
     @author develop@teller.finance
  */
 contract ATMSettings is IATMSettings {
+    using AddressLib for address;
     using Address for address;
+
     /** Constants */
 
     address internal constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -40,6 +42,10 @@ contract ATMSettings is IATMSettings {
      */
     mapping(address => mapping(address => address)) public marketToAtm;
 
+    address public atmTokenLogic;
+
+    address public atmGovernanceLogic;
+
     /** Modifiers */
 
     /**
@@ -53,13 +59,70 @@ contract ATMSettings is IATMSettings {
 
     /* Constructor */
 
-    constructor(address settingsAddress) public {
-        require(settingsAddress != address(0x0), "SETTINGS_MUST_BE_PROVIDED");
+    constructor(
+        address settingsAddress,
+        address atmTokenLogicAddress,
+        address atmGovernanceLogicAddress
+    ) public {
+        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
 
         settings = SettingsInterface(settingsAddress);
+        setATMTokenLogic(atmTokenLogicAddress);
+        setATMGovernanceLogic(atmGovernanceLogicAddress);
     }
 
     /** External Functions */
+
+    /**
+        @notice It sets a new ATM token template to be used in the proxy (see createATM function).
+        @param newATMTokenLogicAddress the new ATM token template address.
+     */
+    function setATMTokenLogic(address newATMTokenLogicAddress)
+        public
+        withPauserRole()
+    {
+        require(newATMTokenLogicAddress.isContract(), "ATM_TOKEN_MUST_BE_A_CONTRACT");
+        address oldATMTokenLogic = atmTokenLogic;
+        oldATMTokenLogic.requireNotEqualTo(
+            newATMTokenLogicAddress,
+            "NEW_ATM_TOKEN_MUST_BE_PROVIDED"
+        );
+
+        atmTokenLogic = newATMTokenLogicAddress;
+
+        emit ATMTokenLogicUpdated(
+            msg.sender,
+            oldATMTokenLogic,
+            newATMTokenLogicAddress
+        );
+    }
+
+    /**
+        @notice It sets a new ATM governance template to be used in the proxy (see createATM function).
+        @param newATMGovernanceLogicAddress the new ATM governance template address.
+     */
+    function setATMGovernanceLogic(address newATMGovernanceLogicAddress)
+        public
+        withPauserRole()
+    {
+        require(
+            newATMGovernanceLogicAddress.isContract(),
+            "ATM_GOV_MUST_BE_A_CONTRACT"
+        );
+        address oldATMGovernanceLogic = atmGovernanceLogic;
+        oldATMGovernanceLogic.requireNotEqualTo(
+            newATMGovernanceLogicAddress,
+            "NEW_ATM_GOV_MUST_BE_PROVIDED"
+        );
+
+        atmGovernanceLogic = newATMGovernanceLogicAddress;
+
+        emit ATMGovernanceLogicUpdated(
+            msg.sender,
+            oldATMGovernanceLogic,
+            newATMGovernanceLogicAddress
+        );
+    }
 
     /**
         @notice It pauses a given ATM.

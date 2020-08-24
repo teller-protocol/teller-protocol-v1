@@ -9,17 +9,18 @@ import "../util/AddressLib.sol";
 import "../base/TInitializable.sol";
 
 // Contracts
-import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/SignerRole.sol";
+import "./BaseATM.sol";
 
 // Interfaces
-import "./IATMGovernance.sol";
+import "./ATMGovernanceInterface.sol";
+import "../settings/IATMSettings.sol";
 
 
 /**
     @notice This contract is used to modify Risk Settings, CRA or DataProviders for a specific ATM.
     @author develop@teller.finance
  */
-contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
+contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
     using AddressArrayLib for address[];
     using AddressLib for address;
     using Address for address;
@@ -250,11 +251,14 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
 
     /**
         @notice It initializes this ATM Governance instance.
-        @param ownerAddress the owner address for this ATM Governance.
+        @param atmSettingsAddress ATM Settings address for proxy to grab current logic implementation.
      */
-    function initialize(address ownerAddress) public isNotInitialized() {
-        SignerRole.initialize(ownerAddress);
+    function initialize(address atmSettingsAddress) public isNotInitialized() {
+        require(atmSettingsAddress.isContract(), "ATM_SETTINGS_MUST_BE_A_CONTRACT");
+
         TInitializable._initialize();
+
+        atmSettings = IATMSettings(atmSettingsAddress);
     }
 
     /* External Constant functions */

@@ -26,7 +26,7 @@ module.exports = async function(
             token.symbol,
             token.decimals,
             token.maxCap,
-            token.maxVestingsPerWallet,
+            token.maxVestingPerWallet,
             txConfig,
         );
 

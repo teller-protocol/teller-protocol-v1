@@ -18,16 +18,12 @@ contract("ATMFactoryInitializeTest", function (accounts) {
     const getInstance = (refs, index, accountIndex) => index === -1 ? NULL_ADDRESS: index === 99 ? accounts[accountIndex] : refs[index];
 
     withData({
-        _1_basic: [1, 2, 3, 4, undefined, false],
-        _2_no_settings: [99, 2, 3, 4, "SETTINGS_MUST_BE_A_CONTRACT", true],
-        _3_no_atmSettings: [1, 99, 3, 4, "ATM_SETTINGS_MUST_BE_A_CONTRACT", true],
-        _4_no_atmTokenTemplate: [1, 2, 99, 4, "ATM_TOKEN_MUST_BE_A_CONTRACT", true],
-        _5_no_atmTokenTemplate: [1, 2, 3, 99, "ATM_GOV_MUST_BE_A_CONTRACT", true],
+        _1_basic: [1, 2, undefined, false],
+        _2_no_settings: [99, 2, "SETTINGS_MUST_BE_A_CONTRACT", true],
+        _3_no_atmSettings: [1, 99, "ATM_SETTINGS_MUST_BE_A_CONTRACT", true],
     }, function(
         settingsIndex,
         atmSettingsIndex,
-        atmTokenTemplateIndex,
-        atmGovernanceTemplateIndex,
         expectedErrorMessage,
         mustFail
     ) {
@@ -37,16 +33,12 @@ contract("ATMFactoryInitializeTest", function (accounts) {
             const instance = await ATMFactory.new();
             const settingsAddress = getInstance(mocks, settingsIndex, 2);
             const atmSettingsAddress = getInstance(mocks, atmSettingsIndex, 3);
-            const atmTokenTemplateAddress = getInstance(mocks, atmTokenTemplateIndex, 4);
-            const atmGovernanceTemplateAddress = getInstance(mocks, atmGovernanceTemplateIndex, 5);
 
             try {
                 // Invocation
                 await instance.initialize(
                     settingsAddress,
                     atmSettingsAddress,
-                    atmTokenTemplateAddress,
-                    atmGovernanceTemplateAddress,
                     { from: sender }
                 );
                 
