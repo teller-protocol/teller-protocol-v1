@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, ETH_ADDRESS, DUMMY_ADDRESS } = require("../../../utils/consts");
+const { t, DUMMY_ADDRESS } = require("../../../utils/consts");
 const { uniswap } = require('../../../utils/events');
 const { assert } = require('chai');
 // Mock contracts
@@ -27,19 +27,19 @@ contract("UniswapSwapTest", function(accounts) {
     weth = await WETH.new(); // Used only as Output
     uniswapV2Router02 = await UniswapRouter.new();
     instance = await Uniswap.new();
-    instance.updateWethAddress(weth.address);
   });
 
   withData({
-    _1_ethForTokens: [ 0, [ 'eth', 'dai' ], 50, 50, 4, true, false, null ],    
-    _2_routerIsNotContract: [ 0, [ 'eth' ], 0, 0, 0, false, true, "ROUTER_MUST_BE_A_CONTRACT" ],
-    _3_pathTooShort: [ 0, [ 'eth' ], 0, 0, 0, true, true, "UNISWAP_PATH_TOO_SHORT" ],
-    _4_sourceAndDestinationSame: [ 0, [ 'dai', 'dai' ], 0, 0, 0, true, true, "UNISWAP_SOURCE_AND_DESTINATION_SAME" ],
-    _5_minDestinationZero: [ 0, [ 'eth', 'dai' ], 0, 0, 0, true, true, "UNISWAP_MIN_DESTINATION_ZERO" ],
-    _6_insufficientSourceEth: [ 0, [ 'eth', 'usdc' ], 50, 0, 1, true, true, "UNISWAP_INSUFFICIENT_ETH" ],
-    _7_insufficientSourceToken: [ 0, [ 'dai', 'usdc' ], 50, 0, 1, true, true, "UNISWAP_INSUFFICIENT_TOKENS" ],
-    _8_ethForTokensUniswapError: [ 0, [ 'eth', 'dai' ], 50, 50, SIMULATE_UNISWAP_RESPONSE_ERROR, true, true, "UNISWAP_ERROR_SWAPPING" ],
-    _9_ethForTokensBalanceError: [ 0, [ 'eth', 'dai' ], 50, 50, DONT_ALTER_BALANCE, true, true, "UNISWAP_BALANCE_NOT_INCREASED" ],
+    _1_ethForTokens: [ 0, [ 'eth', 'dai' ], 50, 50, 4, true, true, false, null ],    
+    _2_wethIsNotContract: [ 0, [ 'eth' ], 0, 0, 0, true, false, true, "CANONICAL_WETH_MUST_BE_CONTRACT" ],
+    _3_routerIsNotContract: [ 0, [ 'eth' ], 0, 0, 0, false, true, true, "ROUTER_MUST_BE_A_CONTRACT" ],
+    _4_pathTooShort: [ 0, [ 'eth' ], 0, 0, 0, true, true, true, "UNISWAP_PATH_TOO_SHORT" ],
+    _5_sourceAndDestinationSame: [ 0, [ 'dai', 'dai' ], 0, 0, 0, true, true, true, "UNISWAP_SOURCE_AND_DESTINATION_SAME" ],
+    _6_minDestinationZero: [ 0, [ 'eth', 'dai' ], 0, 0, 0, true, true, true, "UNISWAP_MIN_DESTINATION_ZERO" ],
+    _7_insufficientSourceEth: [ 0, [ 'eth', 'usdc' ], 50, 0, 1, true, true, true, "UNISWAP_INSUFFICIENT_ETH" ],
+    _8_insufficientSourceToken: [ 0, [ 'dai', 'usdc' ], 50, 0, 1, true, true, true, "UNISWAP_INSUFFICIENT_TOKENS" ],
+    _9_ethForTokensUniswapError: [ 0, [ 'eth', 'dai' ], 50, 50, SIMULATE_UNISWAP_RESPONSE_ERROR, true, true, true, "UNISWAP_ERROR_SWAPPING" ],
+    _9_ethForTokensBalanceError: [ 0, [ 'eth', 'dai' ], 50, 50, DONT_ALTER_BALANCE, true, true, true, "UNISWAP_BALANCE_NOT_INCREASED" ],
    }, function(
     senderAccount,
     path,
@@ -47,6 +47,7 @@ contract("UniswapSwapTest", function(accounts) {
     sourceBalance,
     minDestination,
     routerIsContract,
+    wethIsContract,
     mustFail,
     expectedErrorMessage
   ) {
@@ -62,18 +63,16 @@ contract("UniswapSwapTest", function(accounts) {
         }
       }
       const sender = accounts[senderAccount];
-      path = path.map((name) => name === 'eth' ? ETH_ADDRESS : name === 'dai' ? dai.address : usdc.address);
-
-      if (!routerIsContract) {
-        uniswapV2Router02.address = DUMMY_ADDRESS;
-      }
+      path = path.map((name) => name === 'eth' ? weth.address : name === 'dai' ? dai.address : usdc.address);
+      !routerIsContract ? uniswapV2Router02.address = DUMMY_ADDRESS : null;
+      !wethIsContract ? weth.address = DUMMY_ADDRESS : null;
       try {
 
         // Invocation using Mock as proxy to access internal functions
-        const result = await instance.callSwap(uniswapV2Router02.address, path, sourceAmount , minDestination, {from: sender});
+        const result = await instance.callSwap(weth.address, uniswapV2Router02.address, path, sourceAmount , minDestination, {from: sender});
         assert(!mustFail, 'It should have failed because data is invalid.');
 
-        // State updates are validated inside the dApp contract
+        // State updates are validated inside the dApp contract and events emitted
 
         // Validating state updates and events
         uniswap
@@ -118,14 +117,14 @@ contract("UniswapSwapTest", function(accounts) {
         ? dai.mint(instance.address, sourceBalance)
         : usdc.mint(instance.address, sourceBalance)
       path = path.map( (name) => 
-           name === 'eth' ? ETH_ADDRESS 
+           name === 'eth' ? weth.address 
          : name === 'dai' ? dai.address 
          : name === 'usdc' ? usdc.address 
          : weth.address
       );
        try {
          // Invocation using Mock as proxy for internal functions
-         const result = await instance.callSwap(uniswapV2Router02.address, path, sourceAmount, minDestination, { from: sender });
+         const result = await instance.callSwap(weth.address, uniswapV2Router02.address, path, sourceAmount, minDestination, { from: sender });
          assert(!mustFail, 'It should have failed because data is invalid.');
  
          // Validating state updates and events
@@ -171,7 +170,7 @@ contract("UniswapSwapTest", function(accounts) {
       path = path.map((name) => name === 'dai' ? dai.address : usdc.address)
       try {
         // Invocation using Mock as proxy for internal functions
-        const result = await instance.callSwap(uniswapV2Router02.address, path, sourceAmount, minDestination, {from: sender});
+        const result = await instance.callSwap(weth.address, uniswapV2Router02.address, path, sourceAmount, minDestination, {from: sender});
         assert(!mustFail, 'It should have failed because data is invalid.');
 
         // Validating state updates and events

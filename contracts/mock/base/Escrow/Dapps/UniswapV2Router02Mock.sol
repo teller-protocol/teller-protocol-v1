@@ -1,6 +1,6 @@
 pragma solidity 0.5.17;
 
-import "../../../../base/Escrow/Dapps/IUniswapV2Router02.sol";
+import "../../../../providers/uniswap/IUniswapV2Router02.sol";
 import "../../../../mock/token/ERC20Mock.sol";
 
 

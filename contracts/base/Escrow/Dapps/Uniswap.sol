@@ -8,11 +8,10 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "../../../util/AddressLib.sol";
 
 // Contracts
-import "./Dapp.sol";
 
 // Interfaces
 import "./IUniswap.sol";
-import "./IUniswapV2Router02.sol";
+import "../../../providers/uniswap/IUniswapV2Router02.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -30,7 +29,7 @@ import "./IUniswapV2Router02.sol";
         delegatecalls from Escrow contract, so this contract's state is really Escrow.
     @author develop@teller.finance
  */
-contract Uniswap is Dapp, IUniswap {
+contract Uniswap is IUniswap {
     using AddressLib for address;
     using Address for address;
 
@@ -39,6 +38,7 @@ contract Uniswap is Dapp, IUniswap {
     
     /**
         @notice Swaps ETH/Tokens for Tokens/ETH using different Uniswap v2 Router 02 methods.
+        @param canonicalWeth address of the canonical WETH in the current network.
         @param routerAddress address of the Uniswap Router v02.
         @param path An array of token addresses. path.length must be >= 2. Pools for each consecutive pair of addresses must exist and have liquidity.
         @param sourceAmount amount of source element (ETH or Tokens) to swap.
@@ -49,11 +49,13 @@ contract Uniswap is Dapp, IUniswap {
             https://uniswap.org/docs/v2/smart-contracts/router02/#swapexacttokensfortokens
      */
     function swap(
+        address canonicalWeth,
         address routerAddress,
         address[] memory path,
         uint sourceAmount,
         uint minDestination
     ) internal {
+        require(canonicalWeth.isContract(), "CANONICAL_WETH_MUST_BE_CONTRACT");
         require(routerAddress.isContract(), "ROUTER_MUST_BE_A_CONTRACT");
         IUniswapV2Router02 router = IUniswapV2Router02(routerAddress);
 
@@ -68,7 +70,7 @@ contract Uniswap is Dapp, IUniswap {
         uint256 balanceBeforeSwap = 0;
         uint256 balanceAfterSwap = 0;
         balanceBeforeSwap = IERC20(destination).balanceOf(address(this));
-        if (ETH_ADDRESS == source) {
+        if (source == canonicalWeth) {
             require(address(this).balance >= sourceAmount, "UNISWAP_INSUFFICIENT_ETH");
             amounts = router.swapExactETHForTokens.value(sourceAmount)(
                 minDestination,
@@ -82,7 +84,7 @@ contract Uniswap is Dapp, IUniswap {
                 "UNISWAP_INSUFFICIENT_TOKENS"
             );
             IERC20(source).approve(routerAddress, sourceAmount);
-            if (destination == wethAddress) {
+            if (destination == canonicalWeth) {
                 amounts = router.swapExactTokensForETH(
                     sourceAmount,
                     minDestination,

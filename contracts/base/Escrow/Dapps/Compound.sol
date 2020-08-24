@@ -6,8 +6,6 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.so
 // Common
 import "../../../util/AddressLib.sol";
 
-// Contracts
-import "./Dapp.sol";
 
 // Interfaces
 import "./ICompound.sol";
@@ -30,7 +28,7 @@ import "../../../providers/compound/CErc20Interface.sol";
         delegatecalls from Escrow contract, so this contract's state is really Escrow. 
     @author develop@teller.finance
  */
- contract Compound is Dapp, ICompound {
+ contract Compound is ICompound {
     using AddressLib for address;
 
     /* State Variables */
