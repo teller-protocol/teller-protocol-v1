@@ -36,6 +36,8 @@ contract Uniswap is IUniswap {
     /* State Variables */
     // State is shared with Escrow contract as it uses delegateCall() to interact with this contract.
     
+     function() external payable {}
+     
     /**
         @notice Swaps ETH/Tokens for Tokens/ETH using different Uniswap v2 Router 02 methods.
         @param canonicalWeth address of the canonical WETH in the current network.
@@ -54,7 +56,7 @@ contract Uniswap is IUniswap {
         address[] memory path,
         uint sourceAmount,
         uint minDestination
-    ) internal {
+    ) public {
         require(canonicalWeth.isContract(), "CANONICAL_WETH_MUST_BE_CONTRACT");
         require(routerAddress.isContract(), "ROUTER_MUST_BE_A_CONTRACT");
         IUniswapV2Router02 router = IUniswapV2Router02(routerAddress);

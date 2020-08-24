@@ -34,30 +34,13 @@ import "../../../providers/compound/CErc20Interface.sol";
     /* State Variables */
     // State is shared with Escrow contract as it uses delegateCall() to interact with this contract.
    
-    /**
-        @notice Returns this contract's balance for the specified token.
-        @param cTokenAddress token address.
-        @return this contract's balance.
-     */
-    function balance(address cTokenAddress) public view returns (uint256) {
-        return _balance(cTokenAddress);
-    }
-
-    /**
-        @notice Helper function to return this contract's balance for the specified token.
-        @param cToken token address.
-        @return this contract's balance.
-     */
-    function _balance(address cToken) internal view returns (uint256) {
-        return CErc20Interface(cToken).balanceOf(address(this));
-    }
-
+  
     /**
         @notice To lend we first have to approve the cToken to access the token balance then mint. 
         @param cTokenAddress address of the token.
         @param amount amount of tokens to mint. 
     */
-    function lend(address cTokenAddress, uint256 amount) internal {
+    function lend(address cTokenAddress, uint256 amount) public {
         CErc20Interface cToken = CErc20Interface(cTokenAddress);
         uint256 balanceBeforeMint = cToken.balanceOf(address(this));
         IERC20 underlying = IERC20(cToken.underlying());
@@ -79,7 +62,7 @@ import "../../../providers/compound/CErc20Interface.sol";
         @param cTokenAddress address of the token.
         @param amount amount of underlying tokens to redeem.
     */
-    function redeem(address cTokenAddress, uint256 amount) internal {
+    function redeem(address cTokenAddress, uint256 amount) public {
         require(_balance(cTokenAddress) >= amount, "COMPOUND_INSUFFICIENT_BALANCE");
         CErc20Interface cToken = CErc20Interface(cTokenAddress);
         IERC20 underlying = IERC20(cToken.underlying());
@@ -96,8 +79,26 @@ import "../../../providers/compound/CErc20Interface.sol";
         @notice This function redeems complete token balance.
         @param cTokenAddress address of the token.
     */
-    function redeem(address cTokenAddress) internal {
+    function redeemAll(address cTokenAddress) public {
         uint256 amount = _balance(cTokenAddress);
         redeem(cTokenAddress, amount);
+    }
+
+    /**
+        @notice Returns this contract's balance for the specified token.
+        @param cTokenAddress token address.
+        @return this contract's balance.
+     */
+    function balance(address cTokenAddress) public view returns (uint256) {
+        return _balance(cTokenAddress);
+    }
+
+    /**
+        @notice Helper function to return this contract's balance for the specified token.
+        @param cToken token address.
+        @return this contract's balance.
+     */
+    function _balance(address cToken) internal view returns (uint256) {
+        return CErc20Interface(cToken).balanceOf(address(this));
     }
 }

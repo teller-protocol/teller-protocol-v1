@@ -11,7 +11,7 @@ const CDAI = artifacts.require("./mock/providers/compound/CDAIMock.sol");
 const DAI = artifacts.require("./mock/token/DAIMock.sol");
 
 // Smart contracts
-const Compound = artifacts.require("./mock/base/Escrow/Dapps/CompoundMock.sol");
+const Compound = artifacts.require("../base/Escrow/Dapps/Compound.sol");
 
 contract("CompoundRedeemTest", function(accounts) {
   const SIMULATE_COMPOUND_REDEEM_UNDERLYING_RETURN_ERROR = 66666666;
@@ -48,7 +48,7 @@ contract("CompoundRedeemTest", function(accounts) {
       const sender = accounts[0];
       if (underlyingBalance > 0) {
         await dai.mint(instance.address, underlyingBalance);
-        await instance.callLend(cDai.address, underlyingBalance); 
+        await instance.lend(cDai.address, underlyingBalance); 
 
         const nextTimestamp = await timer.getCurrentTimestampInSecondsAndSum(minutesToSeconds(2));
         await timer.advanceBlockAtTime(nextTimestamp)
@@ -59,9 +59,9 @@ contract("CompoundRedeemTest", function(accounts) {
         let result;
         if (redeemAll) {
           amount = cBalanceBeforeRedeem;
-          result = await instance.callRedeemAll(cDai.address, {from: sender});
+          result = await instance.redeemAll(cDai.address, {from: sender});
         } else {
-          result = await instance.callRedeem(cDai.address, amount, {from: sender});
+          result = await instance.redeem(cDai.address, amount, {from: sender});
         }
         assert(!mustFail, 'It should have failed because data is invalid.');
 

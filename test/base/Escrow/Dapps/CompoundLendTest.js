@@ -9,7 +9,7 @@ const CDAI = artifacts.require("./mock/providers/compound/CDAIMock.sol");
 const DAI = artifacts.require("./mock/token/DAIMock.sol");
 
 // Smart contracts
-const Compound = artifacts.require("./mock/base/Escrow/Dapps/CompoundMock.sol");
+const Compound = artifacts.require("../base/Escrow/Dapps/Compound.sol");
 
 contract("CompoundLendTest", function(accounts) {
   const SIMULATE_COMPOUND_MINT_RETURN_ERROR = 88888888;
@@ -45,7 +45,7 @@ contract("CompoundLendTest", function(accounts) {
 
       try {
         // Invocation
-        const result = await instance.callLend(cDai.address, amount, {from: sender});
+        const result = await instance.lend(cDai.address, amount, {from: sender});
         assert(!mustFail, 'It should have failed because data is invalid.');
 
         // Validating state changes
