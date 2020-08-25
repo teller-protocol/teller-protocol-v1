@@ -4,6 +4,12 @@ pragma solidity 0.5.17;
 import "@openzeppelin/upgrades/contracts/upgradeability/Proxy.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
+/**
+    @notice It is the base Proxy contract for all other Proxy contracts.
+    @dev It makes the current logic implementation address publicly available.
+
+    @author develop@teller.finance
+ */
 contract BaseProxy is Proxy {
     using Address for address;
 

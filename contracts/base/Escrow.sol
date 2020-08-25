@@ -21,6 +21,7 @@ import "./BaseEscrow.sol";
 /*****************************************************************************************************/
 /**
     @notice This contract is used by borrowers to call DApp functions (using delegate calls).
+    @notice This contract should only be constructed using it's upgradeable Proxy contract.
     @notice In order to call a DApp function, the DApp must be added in the EscrowFactory instance.
     @dev The current DApp implementations are: Uniswap and Compound.
 
