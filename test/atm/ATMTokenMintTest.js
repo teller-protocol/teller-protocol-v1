@@ -40,10 +40,12 @@ contract('ATMTokenMintTest', function (accounts) {
     });
 
     withData({
-        _1_mint_no_vesting_basic: [daoMember1, 2000, undefined, false],
-        _2_mint_no_vesting_above_cap: [daoMember1, 11000, 'ERC20_CAP_EXCEEDED', true],
-        _3_mint_no_vesting_zero_address: [NULL_ADDRESS, 3000, "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED", true]
+        _1_basic: [daoAgent, daoMember1, 2000, undefined, false],
+        _2_above_cap: [daoAgent, daoMember1, 11000, 'ERC20_CAP_EXCEEDED', true],
+        _3_zero_address: [daoAgent, NULL_ADDRESS, 3000, "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED", true],
+        _4_invalid_sender: [daoMember1, daoMember1, 2000, 'ONLY_PAUSER', true],
     },function(
+        sender,
         receipent,
         amount,
         expectedErrorMessage,
@@ -57,7 +59,7 @@ contract('ATMTokenMintTest', function (accounts) {
 
             try {
                 // Invocation
-                await instance.mint(receipent, amount, { from: daoAgent });
+                await instance.mint(receipent, amount, { from: sender });
                 const result = await instance.totalSupply();
                 // Assertions
                 assert(!mustFail, 'It should have failed because the amount is greater than the cap');

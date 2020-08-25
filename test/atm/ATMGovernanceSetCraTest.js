@@ -32,7 +32,7 @@ contract('ATMGovernanceSetCraTest', function (accounts) {
 
     withData({
         _1_basic: [0, CRA_INITIAL_VALUE, false, undefined, false],
-        _2_notSigner: [2, CRA_INITIAL_VALUE, false,  'ONLY_SIGNER', true],
+        _2_notSigner: [2, CRA_INITIAL_VALUE, false,  'ONLY_PAUSER', true],
         _3_notEmpty: [0, EMPTY_CRA, false, 'CRA_CANT_BE_EMPTY', true],
         _3_sameAsOld: [0, CRA_INITIAL_VALUE, true, 'CRA_SAME_AS_OLD', true],
     }, function (senderIndex, cra, repeatInsert, expectedErrorMessage, mustFail) {

@@ -85,11 +85,7 @@ module.exports = async function(deployer, network, accounts) {
   console.log(`ATM settings deployed at: ${atmSettingsInstance.address}`);
 
   const atmFactoryInstance = await deployerApp.deployWithUpgradeable('ATMFactory', ATMFactory, txConfig.from, '0x', txConfig)
-  await atmFactoryInstance.initialize(
-    settingsInstance.address,
-    atmSettingsInstance.address,
-    txConfig
-  );
+  await atmFactoryInstance.initialize(atmSettingsInstance.address, txConfig);
   console.log(`ATM Governance Factory (Proxy) deployed at: ${atmFactoryInstance.address}`);
 
   await initATMs(

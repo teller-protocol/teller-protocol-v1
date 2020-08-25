@@ -41,7 +41,7 @@ contract('ATMGovernanceRemoveAssetMarketSettingTest', function (accounts) {
 
     withData({
         _1_basic: [0, SETTING_NAME, undefined, false],
-        _2_notSigner: [2, SETTING_NAME, 'ONLY_SIGNER', true],
+        _2_notSigner: [2, SETTING_NAME, 'ONLY_PAUSER', true],
     }, function (senderIndex, settingName, expectedErrorMessage, mustFail) {
         it(t('user', 'removeAssetMarketSetting#1', 'Should (or not) be able to remove an asset market setting.', mustFail), async function () {
             // Setup

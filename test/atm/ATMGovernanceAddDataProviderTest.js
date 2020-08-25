@@ -33,7 +33,7 @@ contract('ATMGovernanceAddDataProviderTest', function (accounts) {
 
     withData({
         _1_basic: [0, DATA_TYPE_INDEX, undefined, false],
-        _2_notSigner: [2, DATA_TYPE_INDEX, 'ONLY_SIGNER', true],
+        _2_notSigner: [2, DATA_TYPE_INDEX, 'ONLY_PAUSER', true],
      }, function (senderIndex, dataTypeIndex, expectedErrorMessage, mustFail) {
         it(t('user', 'addDataProvider#1', 'Should (or not) be able to add a data provider.', mustFail), async function () {
             // Setup

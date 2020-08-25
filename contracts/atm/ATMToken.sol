@@ -107,7 +107,7 @@ contract ATMToken is
      * @notice Sets a new cap on the token's total supply.
      * @param newCap The new capped amount of tokens
      */
-    function setCap(uint256 newCap) external onlySigner() whenNotPaused() {
+    function setCap(uint256 newCap) external onlyPauser() whenNotPaused() {
         _cap = newCap;
         emit NewCap(_cap);
     }
@@ -120,7 +120,7 @@ contract ATMToken is
      */
     function mint(address account, uint256 amount)
         public
-        onlySigner()
+        onlyPauser()
         whenNotPaused()
         returns (bool)
     {
@@ -154,7 +154,7 @@ contract ATMToken is
         uint256 amount,
         uint256 cliff,
         uint256 vestingTime
-    ) public onlySigner() whenNotPaused() {
+    ) public onlyPauser() whenNotPaused() {
         require(account != address(0x0), "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED");
         require(vestingCount[account] < _maxVestingPerWallet, "MAX_VESTINGS_REACHED");
         _beforeTokenTransfer(address(0x0), account, amount);
@@ -184,7 +184,7 @@ contract ATMToken is
      */
     function revokeVesting(address account, uint256 vestingId)
         public
-        onlySigner()
+        onlyPauser()
         whenNotPaused()
     {
         require(assignedTokens[account] > 0, "ACCOUNT_DOESNT_HAVE_VESTING");

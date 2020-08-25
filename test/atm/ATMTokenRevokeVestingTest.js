@@ -44,10 +44,11 @@ contract('ATMTokenRevokeVestingTest', function (accounts) {
     });
 
     withData({
-        _1_revoke_vested_basic: [daoMember1, 1000, 3000, 7000, undefined, false],
-        _2_revoke_vested_no_amount: [daoMember2, 1000, 1750, 7000, "ACCOUNT_DOESNT_HAVE_VESTING", true]
-        
+        _1_revoke_vested_basic: [daoAgent, daoMember1, 1000, 3000, 7000, undefined, false],
+        _2_revoke_vested_no_amount: [daoAgent, daoMember2, 1000, 1750, 7000, "ACCOUNT_DOESNT_HAVE_VESTING", true],
+        _3_revoke_vested_invalid_sender: [daoMember1, daoMember2, 1000, 1750, 7000, "ONLY_PAUSER", true],
     },function(
+        sender,
         receipent,
         amount,
         cliff,
@@ -66,7 +67,7 @@ contract('ATMTokenRevokeVestingTest', function (accounts) {
 
             try {
                 // Invocation
-                const result = await instance.revokeVesting(receipent, 0, { from: daoAgent });
+                const result = await instance.revokeVesting(receipent, 0, { from: sender });
                 // Assertions
                 assert(!mustFail, 'It should have failed because the account is not vested');
                 atmToken

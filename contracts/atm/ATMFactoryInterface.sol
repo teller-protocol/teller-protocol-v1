@@ -20,18 +20,6 @@ interface ATMFactoryInterface {
     );
 
     /**
-        @notice This event is emitted when the setting is updated.
-        @param sender address that sent the transaction.
-        @param oldSettings the old settings address.
-        @param newSettings the new settings address.
-     */
-    event SettingsUpdated(
-        address indexed sender,
-        address oldSettings,
-        address newSettings
-    );
-
-    /**
         @notice This event is emitted when the ATM setting is updated.
         @param sender address that sent the transaction.
         @param oldATMSettings the old ATM settings address.
@@ -67,12 +55,6 @@ interface ATMFactoryInterface {
         uint256 cap,
         uint256 maxVestingPerWallet
     ) external returns (address);
-
-    /**
-        @notice It updates the current settings.
-        @param newSettingsAddress the new setting address.
-     */
-    function setSettings(address newSettingsAddress) external;
 
     /**
         @notice It updates the current atm settings.

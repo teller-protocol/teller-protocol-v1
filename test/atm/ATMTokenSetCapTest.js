@@ -41,8 +41,8 @@ contract('ATMTokenSetCapTest', function (accounts) {
     });
 
     withData({
-        _1_set_supply_cap_basic: [70000, daoAgent, undefined, false],
-        _2_set_supply_cap_invalid_sender: [100000, daoMember1, 'ONLY_SIGNER', true]
+        _1_basic: [70000, daoAgent, undefined, false],
+        _2_invalid_sender: [100000, daoMember1, 'ONLY_PAUSER', true]
     },function(
         newCap,
         sender,

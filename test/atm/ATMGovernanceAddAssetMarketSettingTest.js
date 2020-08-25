@@ -44,7 +44,7 @@ contract('ATMGovernanceAddAssetMarketSettingTest', function (accounts) {
 
     withData({
         _1_basic: [0, SETTING_NAME, SETTING_VALUE, undefined, false],
-        _2_notSigner: [2, SETTING_NAME, SETTING_VALUE, 'ONLY_SIGNER', true],
+        _2_notSigner: [2, SETTING_NAME, SETTING_VALUE, 'ONLY_PAUSER', true],
         _3_emptySettingName: [0, EMPTY_SETTING_NAME, SETTING_VALUE, 'ASSET_SETTING_MUST_BE_PROVIDED', true],
         _4_invalidSettingValue: [0, EMPTY_SETTING_NAME, INVALID_SETTING_VALUE, 'ASSET_SETTING_MUST_BE_POSITIVE', true],
         _5_wrongNameFormat: [0, "nameNotBytes32", SETTING_VALUE, 'invalid bytes32 value', true],

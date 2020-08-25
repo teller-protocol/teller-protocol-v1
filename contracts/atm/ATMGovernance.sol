@@ -55,7 +55,7 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
      */
     function addGeneralSetting(bytes32 settingName, uint256 settingValue)
         external
-        onlySigner()
+        onlyPauser()
     // TODO Do we need to add isInitialized() (the same for other functions)?
     {
         require(settingValue > 0, "GENERAL_SETTING_MUST_BE_POSITIVE");
@@ -72,7 +72,7 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
      */
     function updateGeneralSetting(bytes32 settingName, uint256 newValue)
         external
-        onlySigner()
+        onlyPauser()
     {
         require(newValue > 0, "GENERAL_SETTING_MUST_BE_POSITIVE");
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
@@ -86,7 +86,7 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
         @notice Removes a General Setting from this ATM.
         @param settingName name of the setting to be removed.
      */
-    function removeGeneralSetting(bytes32 settingName) external onlySigner() {
+    function removeGeneralSetting(bytes32 settingName) external onlyPauser() {
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
         require(generalSettings[settingName] > 0, "GENERAL_SETTING_NOT_FOUND");
         uint256 previousValue = generalSettings[settingName];
@@ -104,7 +104,7 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
         address asset,
         bytes32 settingName,
         uint256 settingValue
-    ) external onlySigner() {
+    ) external onlyPauser() {
         asset.requireNotEmpty("ASSET_ADDRESS_IS_REQUIRED");
         require(asset.isContract(), "ASSET_MUST_BE_A_CONTRACT");
         require(settingValue > 0, "ASSET_SETTING_MUST_BE_POSITIVE");
@@ -127,7 +127,7 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
         address asset,
         bytes32 settingName,
         uint256 newValue
-    ) external onlySigner() {
+    ) external onlyPauser() {
         require(settingName != "", "ASSET_SETTING_MUST_BE_PROVIDED");
         require(assetMarketSettings[asset][settingName] > 0, "ASSET_SETTING_NOT_FOUND");
         require(
@@ -152,7 +152,7 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
      */
     function removeAssetMarketSetting(address asset, bytes32 settingName)
         external
-        onlySigner()
+        onlyPauser()
     {
         require(settingName != "", "ASSET_SETTING_MUST_BE_PROVIDED");
         require(assetMarketSettings[asset][settingName] > 0, "ASSET_SETTING_NOT_FOUND");
@@ -169,7 +169,7 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
      */
     function addDataProvider(uint8 dataTypeIndex, address dataProvider)
         external
-        onlySigner()
+        onlyPauser()
     {
         require(dataProvider.isContract(), "DATA_PROVIDER_MUST_BE_A_CONTRACT");
         dataProviders[dataTypeIndex].add(dataProvider);
@@ -192,7 +192,7 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
         uint8 dataTypeIndex,
         uint256 providerIndex,
         address newProvider
-    ) external onlySigner() {
+    ) external onlyPauser() {
         require(
             dataProviders[dataTypeIndex].length > providerIndex,
             "DATA_PROVIDER_OUT_RANGE"
@@ -217,7 +217,7 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
      */
     function removeDataProvider(uint8 dataTypeIndex, uint256 dataProviderIndex)
         external
-        onlySigner()
+        onlyPauser()
     {
         require(
             dataProviders[dataTypeIndex].length > dataProviderIndex,
@@ -238,7 +238,7 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
                 CRA is represented by a Github commit hash of the newly proposed algorithm.
         @param _cra Credit Risk Algorithm github commit hash.
      */
-    function setCRA(string calldata _cra) external onlySigner() {
+    function setCRA(string calldata _cra) external onlyPauser() {
         bytes memory tempEmptyStringTest = bytes(_cra);
         require(tempEmptyStringTest.length > 0, "CRA_CANT_BE_EMPTY");
         require(

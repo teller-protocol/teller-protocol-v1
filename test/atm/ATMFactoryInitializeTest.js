@@ -12,17 +12,15 @@ contract("ATMFactoryInitializeTest", function (accounts) {
     let mocks;
 
     beforeEach("Setup for each test", async () => {
-        mocks = await createMocks(Mock, 20);
+        mocks = await createMocks(Mock, 10);
     });
 
     const getInstance = (refs, index, accountIndex) => index === -1 ? NULL_ADDRESS: index === 99 ? accounts[accountIndex] : refs[index];
 
     withData({
-        _1_basic: [1, 2, undefined, false],
-        _2_no_settings: [99, 2, "SETTINGS_MUST_BE_A_CONTRACT", true],
-        _3_no_atmSettings: [1, 99, "ATM_SETTINGS_MUST_BE_A_CONTRACT", true],
+        _1_basic: [1, undefined, false],
+        _2_no_atm_settings: [99, "ATM_SETTINGS_MUST_BE_A_CONTRACT", true],
     }, function(
-        settingsIndex,
         atmSettingsIndex,
         expectedErrorMessage,
         mustFail
@@ -31,13 +29,11 @@ contract("ATMFactoryInitializeTest", function (accounts) {
             // Setup 
             const sender = accounts[0];
             const instance = await ATMFactory.new();
-            const settingsAddress = getInstance(mocks, settingsIndex, 2);
-            const atmSettingsAddress = getInstance(mocks, atmSettingsIndex, 3);
+            const atmSettingsAddress = getInstance(mocks, atmSettingsIndex, 2);
 
             try {
                 // Invocation
                 await instance.initialize(
-                    settingsAddress,
                     atmSettingsAddress,
                     { from: sender }
                 );
@@ -46,12 +42,6 @@ contract("ATMFactoryInitializeTest", function (accounts) {
                 assert(!mustFail, "It should have failed bacause data is invalid.");
 
                 // Validating state changes
-                const currentSettings = await instance.settings();
-                assert.equal(
-                    currentSettings,
-                    settingsAddress,
-                    "Settings was not set correctly"
-                );
                 const currentATMSettings = await instance.atmSettings();
                 assert.equal(
                     currentATMSettings,

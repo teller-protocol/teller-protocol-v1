@@ -33,7 +33,7 @@ contract('ATMGovernanceUpdateDataProviderTest', function (accounts) {
 
     withData({
         _1_basic: [0, DATA_TYPE_INDEX, DATA_PROVIDER_INDEX, false, undefined, false],
-        _2_notSigner: [2, DATA_TYPE_INDEX, DATA_PROVIDER_INDEX, false, 'ONLY_SIGNER', true],
+        _2_notSigner: [2, DATA_TYPE_INDEX, DATA_PROVIDER_INDEX, false, 'ONLY_PAUSER', true],
         _3_dataProviderNotFound: [0, DATA_TYPE_INDEX, INVALID_DATA_PROVIDER_INDEX, false, "DATA_PROVIDER_OUT_RANGE", true],
         _4_sameOldProvider: [0, DATA_TYPE_INDEX, DATA_PROVIDER_INDEX, true, 'DATA_PROVIDER_SAME_OLD', true],
      }, function (senderIndex, dataTypeIndex, dataProviderIndex, repeatProvider, expectedErrorMessage, mustFail) {

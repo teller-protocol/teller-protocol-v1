@@ -41,7 +41,7 @@ contract('ATMGovernanceRemoveGeneralSettingTest', function (accounts) {
 
     withData({
         _1_basic: [0, SETTING_NAME, undefined, false],
-        _2_notSigner: [2, SETTING_NAME, 'ONLY_SIGNER', true],
+        _2_notSigner: [2, SETTING_NAME, 'ONLY_PAUSER', true],
         _3_emptySettingName: [0, EMPTY_SETTING_NAME, 'GENERAL_SETTING_MUST_BE_PROVIDED', true],
         _4_settingNotFound: [0, NON_EXISTING_NAME, 'GENERAL_SETTING_NOT_FOUND', true],
         _5_wrongNameFormat: [0, "nameNotBytes32", 'invalid bytes32 value', true],

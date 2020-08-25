@@ -1,7 +1,7 @@
 // JS Libraries
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require("leche").withData;
-const { t, encode } = require("../utils/consts");
+const { t } = require("../utils/consts");
 const { atmFactory } = require('../utils/events');
 
 // Mock contracts
@@ -25,15 +25,12 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
         const atmSettings = await ATMSettings.new(settings.address, atmTokenLogic.address, atmGovernanceLogic.address);
 
         instance = await ATMFactory.new();
-        await instance.initialize(
-            settings.address,
-            atmSettings.address,
-        );
+        await instance.initialize(atmSettings.address);
     });
 
     withData({
         _1_basic: [ 0, "TokenName", "TKN", 18, 1000, 20000, undefined, false ],
-        _2_notAdmin: [ 1, "TokenName", "TKN", 18, 1000, 20000, true, "SENDER_ISNT_ALLOWED" ],
+        _2_invalid_sender: [ 1, "TokenName", "TKN", 18, 1000, 20000, true, "ONLY_PAUSER" ],
     }, function(senderIndex, name, symbol, decimals, cap, maxVesting, mustFail, expectedErrorMessage) {
         it(t("admin", "createATM", "Should be able to create an ATM.", mustFail), async function() {
             // Setup

@@ -41,11 +41,13 @@ contract('ATMTokenMintVestingTest', function (accounts) {
     });
 
     withData({
-        _1_mint_vesting_basic: [daoMember2, 1000, 3000, 7000, false, undefined, false],
-        _2_mint_vesting_above_cap: [daoMember2, 21000, 2000, 7000, false,  'ERC20_CAP_EXCEEDED', true],
-        _3_mint_vesting_zero_address: [NULL_ADDRESS, 3000, 10000, 60000, false, "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED", true],
-        _4_mint_vesting_above_allowed_max_vesting: [daoMember2, 1000, 3000, 6000, true, "MAX_VESTINGS_REACHED", true],
+        _1_mint_vesting_basic: [daoAgent, daoMember2, 1000, 3000, 7000, false, undefined, false],
+        _2_mint_vesting_above_cap: [daoAgent, daoMember2, 21000, 2000, 7000, false,  'ERC20_CAP_EXCEEDED', true],
+        _3_mint_vesting_zero_address: [daoAgent, NULL_ADDRESS, 3000, 10000, 60000, false, "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED", true],
+        _4_mint_vesting_above_allowed_max_vesting: [daoAgent, daoMember2, 1000, 3000, 6000, true, "MAX_VESTINGS_REACHED", true],
+        _5_mint_vesting_invalid_sender: [daoMember2, daoMember2, 1000, 3000, 7000, false, 'ONLY_PAUSER', true],
     },function(
+        sender,
         receipent,
         amount,
         cliff,
@@ -62,9 +64,9 @@ contract('ATMTokenMintVestingTest', function (accounts) {
         
             try {
                 // Invocation
-                let result = await instance.mintVesting(receipent, amount, cliff, vestingPeriod, { from: daoAgent });
+                let result = await instance.mintVesting(receipent, amount, cliff, vestingPeriod, { from: sender });
                 if (multipleVesting) {
-                    result = await instance.mintVesting(receipent, amount, cliff, vestingPeriod, { from: daoAgent });
+                    result = await instance.mintVesting(receipent, amount, cliff, vestingPeriod, { from: sender });
                 }
                 atmToken
                     .newVesting(result)

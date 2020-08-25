@@ -41,7 +41,7 @@ contract('ATMGovernanceUpdateAssetMarketSettingTest', function (accounts) {
 
     withData({
         _1_basic: [0, SETTING_NAME, SETTING_NEW_VALUE, undefined, false],
-        _2_notSigner: [2, SETTING_NAME, SETTING_NEW_VALUE, 'ONLY_SIGNER', true],
+        _2_notSigner: [2, SETTING_NAME, SETTING_NEW_VALUE, 'ONLY_PAUSER', true],
         _3_sameOldValue: [0, SETTING_NAME, SETTING_OLD_VALUE, 'NEW_VALUE_SAME_AS_OLD', true],
     }, function (senderIndex, settingName, newValue, expectedErrorMessage, mustFail) {
         it(t('user', 'updateAssetMarketSetting#1', 'Should (or not) be able to update an asset market setting.', mustFail), async function () {

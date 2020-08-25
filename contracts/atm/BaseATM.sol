@@ -5,8 +5,8 @@ import "../settings/IATMSettings.sol";
 contract BaseATM {
     IATMSettings public atmSettings;
 
-    modifier onlySigner() {
-        require(atmSettings.settings().hasPauserRole(msg.sender), "ONLY_SIGNER");
+    modifier onlyPauser() {
+        require(atmSettings.settings().hasPauserRole(msg.sender), "ONLY_PAUSER");
         _;
     }
 }
