@@ -14,7 +14,7 @@ const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
-contract("EscrowProxyTest", function(accounts) {
+contract("EscrowProxyImplementationTest", function(accounts) {
     let libraryV1
     let libraryV2
     let factory
@@ -75,8 +75,7 @@ contract("EscrowProxyTest", function(accounts) {
                 const proxyImplementationV2 = await proxy.implementation.call()
                 assert.equal(libraryV2.address, proxyImplementationV2)
 
-                let v2Success = false
-                v2Success = await testFunction()
+                const v2Success = await testFunction()
                 assert(v2Success, 'Should have been able to call function on v2 implementation.')
             } catch (error) {
                 assert(mustFail);

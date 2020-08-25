@@ -37,17 +37,19 @@ contract('EscrowFactoryUpgradeEscrowLogicTest', function (accounts) {
     expectedErrorMessage
   ) {
     it(t('escrowFactory', 'upgradeEscrowLogic', 'Should be able (or not) to upgrade the current Escrow logic implementation.', mustFail), async function() {
-      try {
-        const v1Logic = await instance.escrowLogic.call();
-        assert.equal(mocks[0], v1Logic, "V1 logic does not match")
+      // Setup
+      const v1Logic = await instance.escrowLogic.call();
+      assert.equal(mocks[0], v1Logic, "V1 logic does not match");
+      const v2LogicAddress = upgradeLogicIndex === 99 ? caller : mocks[upgradeLogicIndex];
 
-        const v2LogicAddress = upgradeLogicIndex === 99 ? caller : mocks[upgradeLogicIndex]
+      try {
+        // Invocation
         const result = await instance.upgradeEscrowLogic(v2LogicAddress, { from: caller });
 
+        // Assertions
+        assert(!mustFail);
         const v2Logic = await instance.escrowLogic.call();
         assert.equal(v2LogicAddress, v2Logic, "V2 logic does not match")
-
-        assert(!mustFail);
 
         escrowFactory
           .escrowLogicUpgraded(result)

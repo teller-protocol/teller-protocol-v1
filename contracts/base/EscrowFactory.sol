@@ -174,7 +174,7 @@ contract EscrowFactory is TInitializable, EscrowFactoryInterface {
         @notice It upgrades the logic to be used for all Escrow contracts.
         @param newLogic the new Escrow logic implementation.
      */
-    function upgradeEscrowLogic(address newLogic) external {
+    function upgradeEscrowLogic(address newLogic) external onlyPauser() isInitialized() {
         _upgradeEscrowLogic(newLogic);
     }
 
@@ -184,7 +184,7 @@ contract EscrowFactory is TInitializable, EscrowFactoryInterface {
         @notice It upgrades the logic to be used for all Escrow contracts.
         @param newLogic the new Escrow logic implementation.
      */
-    function _upgradeEscrowLogic(address newLogic) internal onlyPauser() isInitialized() {
+    function _upgradeEscrowLogic(address newLogic) internal {
         require(newLogic.isContract(), "ESCROW_LOGIC_MUST_BE_A_CONTRACT");
 
         address oldLogic = escrowLogic;
