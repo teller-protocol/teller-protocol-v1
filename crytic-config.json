@@ -2,5 +2,6 @@
     "node_version": "10.15.3", 
     "solc": "0.5.17",
     "use_yarn": true,
+    "exclude_informational": true,
     "slither": {"target": "contracts"}
 }
