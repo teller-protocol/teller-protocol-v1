@@ -125,9 +125,9 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   const initialTotalCollateral = await loansInstance.totalCollateral();
   const liquidateEthPrice = await settingsInstance.getPlatformSettingValue(toBytes32(web3, platformSettingsNames.LiquidateEthPrice));
   const {
-    collateralNeededLendingTokens,
+    neededInLendingTokens,
   } = await loansInstance.getCollateralInfo(lastLoanID);
-  const transferAmountToLiquidate = BigNumber(collateralNeededLendingTokens.toString()).times(liquidateEthPrice).div(10000);
+  const transferAmountToLiquidate = BigNumber(neededInLendingTokens.toString()).times(liquidateEthPrice).div(10000);
 
   await token.mint(liquidatorTxConfig.from, transferAmountToLiquidate.toFixed(0));
 

@@ -457,15 +457,15 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
 
             // Invocation
             const {
-                collateralNeededLendingTokens: collateralNeededLendingTokensResult,
-                collateralNeededCollateralTokens: collateralNeededCollateralTokensResult,
+                neededInLendingTokens: neededInLendingTokensResult,
+                neededInCollateralTokens: neededInCollateralTokensResult,
                 moreCollateralRequired: moreCollateralRequiredResult,
             } = await instance.getCollateralInfo(loanID);
             
             // Assertions
             assert.equal(moreCollateralRequiredResult, expectedResults.requireCollateral);
-            assert.equal(collateralNeededCollateralTokensResult.toString(), expectedResults.neededCollInCollTokens);
-            assert.equal(collateralNeededLendingTokensResult.toString(), expectedResults.neededCollInLendingTokens);
+            assert.equal(neededInCollateralTokensResult.toString(), expectedResults.neededCollInCollTokens);
+            assert.equal(neededInLendingTokensResult.toString(), expectedResults.neededCollInLendingTokens);
         })
 
     })

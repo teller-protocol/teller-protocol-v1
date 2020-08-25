@@ -100,6 +100,13 @@ library TellerCommon {
         bool liquidated;
     }
 
+    struct LoanCollateralInfo {
+        uint256 collateral;
+        uint256 neededInLendingTokens;
+        uint256 neededInCollateralTokens;
+        bool moreCollateralRequired;
+    }
+
     /**
         @notice This struct defines the dapp address and data to execute in the callDapp function.
         @dev It is executed using a delegatecall in the Escrow contract.
