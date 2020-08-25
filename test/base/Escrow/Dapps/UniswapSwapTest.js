@@ -69,7 +69,7 @@ contract("UniswapSwapTest", function(accounts) {
       try {
 
         // Invocation using Mock as proxy to access internal functions
-        const result = await instance.callSwap(weth.address, uniswapV2Router02.address, path, sourceAmount , minDestination, {from: sender});
+        const result = await instance.swap(weth.address, uniswapV2Router02.address, path, sourceAmount , minDestination, {from: sender});
         assert(!mustFail, 'It should have failed because data is invalid.');
 
         // State updates are validated inside the dApp contract and events emitted

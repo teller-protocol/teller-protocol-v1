@@ -1,6 +1,30 @@
 pragma solidity 0.5.17;
 
+/**
+    @notice This defines the functions available to use in the Uniswap Dapp.
+    @author develop@teller.finance
+ */
 interface IUniswap {
+
+    /**
+        @notice Swaps ETH/Tokens for Tokens/ETH using the Uniswap protocol.
+        @param canonicalWeth address of the canonical WETH in the current network.
+        @param routerAddress address of the Uniswap Router.
+        @param path An array of token addresses. path.length must be >= 2. Pools for each consecutive pair of addresses must exist and have liquidity.
+        @param sourceAmount amount of source element (ETH or Tokens) to swap.
+        @param minDestination The minimum amount of output tokens that must be received for the transaction not to revert.
+        @dev This function mainly invokes 3 Uniswap external functions:
+            https://uniswap.org/docs/v2/smart-contracts/router02/#swapexactethfortokens
+            https://uniswap.org/docs/v2/smart-contracts/router02/#swapexacttokensforeth
+            https://uniswap.org/docs/v2/smart-contracts/router02/#swapexacttokensfortokens
+     */
+    function swap(
+        address canonicalWeth,
+        address routerAddress,
+        address[] calldata path,
+        uint sourceAmount,
+        uint minDestination
+    ) external;
 
     /**
         @notice Event emmitted every time a successful swap has taken place. 

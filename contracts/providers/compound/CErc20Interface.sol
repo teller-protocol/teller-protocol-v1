@@ -74,8 +74,6 @@ interface CErc20Interface {
 
     function decimals() external view returns (uint8);
 
-    // function liquidateBorrow(address borrower, uint repayAmount, CTokenInterface cTokenCollateral) external returns (uint);
-    
     function balanceOf(address account) external view returns (uint256);
 
     /**

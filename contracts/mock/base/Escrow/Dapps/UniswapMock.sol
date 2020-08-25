@@ -8,15 +8,4 @@ import "../../../../base/Escrow/Dapps/Uniswap.sol";
 contract UniswapMock is Uniswap {
 
     function() external payable {}
-
-    function callSwap(
-        address weth,
-        address router,
-        address[] calldata path,
-        uint256 sourceAmount,
-        uint256 minDestination
-    ) external {
-        swap(weth, router, path, sourceAmount, minDestination);
-    }
-
 }

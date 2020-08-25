@@ -16,7 +16,7 @@ contract UniswapV2Router02Mock is IUniswapV2Router02 {
         @dev We are using amountOutMin special numbers as flags to change behaviour.
      */
     function swapExactTokensForTokens(
-        uint256 amountIn,
+        uint256,
         uint256 amountOutMin,
         address[] calldata path,
         address to,
@@ -38,7 +38,7 @@ contract UniswapV2Router02Mock is IUniswapV2Router02 {
         @dev We are using amountOutMin special numbers as flags to change behaviour.
      */
     function swapExactTokensForETH(
-        uint256 amountIn,
+        uint256,
         uint256 amountOutMin,
         address[] calldata path,
         address to,
@@ -76,7 +76,7 @@ contract UniswapV2Router02Mock is IUniswapV2Router02 {
         uint256 amountOutMin,
         address[] memory path,
         address to,
-        uint256 deadline
+        uint256
     ) 
         internal 
         returns (uint256[] memory amounts)
