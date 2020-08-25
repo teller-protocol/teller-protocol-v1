@@ -1,4 +1,5 @@
 // JS Libraries
+const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require("leche").withData;
 const { t } = require("../utils/consts");
 const { atmFactory } = require('../utils/events');
@@ -9,33 +10,31 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 // Smart contracts
 const ATMFactory = artifacts.require("./atm/ATMFactory.sol");
 const Settings = artifacts.require("./base/Settings.sol");
+const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
+const ATMToken = artifacts.require("./atm/ATMToken.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 
 contract("ATMFactoryCreateATMTest", function(accounts) {
-    const ADMIN_INDEX = 1; 
-
     let instance;
-    let admin;
 
     beforeEach("Setup for each test", async () => {
-        admin = accounts[ADMIN_INDEX];
-        const settings = await Settings.new();
-        await settings.initialize(admin);
+        const atmTokenLogic = await ATMToken.new();
+        const atmGovernanceLogic = await ATMGovernance.new();
+
+        const settings = await createTestSettingsInstance(Settings);
+        const atmSettings = await ATMSettings.new(settings.address, atmTokenLogic.address, atmGovernanceLogic.address);
+
         instance = await ATMFactory.new();
-        const atmSettings = await Mock.new();
-        await instance.initialize(settings.address, atmSettings.address);
+        await instance.initialize(atmSettings.address);
     });
 
     withData({
-        _1_basic: [ ADMIN_INDEX, "TokenName", "TKN", 18, 1000, 20000, undefined, false ],
-        _2_notAdmin: [ 0, "TokenName", "TKN", 18, 1000, 20000, true, "SENDER_ISNT_ALLOWED" ],
-
+        _1_basic: [ 0, "TokenName", "TKN", 18, 1000, 20000, undefined, false ],
+        _2_invalid_sender: [ 1, "TokenName", "TKN", 18, 1000, 20000, true, "ONLY_PAUSER" ],
     }, function(senderIndex, name, symbol, decimals, cap, maxVesting, mustFail, expectedErrorMessage) {
         it(t("admin", "createATM", "Should be able to create an ATM.", mustFail), async function() {
             // Setup
             const sender = accounts[senderIndex];
-            const atmToken = await Mock.new();
-            const atmGovernance = await Mock.new();
             try {
                 
                 // Invocation 
@@ -45,8 +44,6 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
                     decimals,
                     cap,
                     maxVesting,
-                    atmGovernance.address,
-                    atmToken.address,
                     {from : sender }
                 );
                 // Assertions
@@ -68,7 +65,6 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
                     .emitted(sender, newATM, atmTokenExpected);
                 
             } catch (error) {
-                console.log(error);
                 assert(mustFail);
                 assert(error);
                 assert.equal(error.reason, expectedErrorMessage);

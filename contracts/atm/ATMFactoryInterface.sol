@@ -1,11 +1,10 @@
 pragma solidity 0.5.17;
 
-
 /**
     @notice This interface defines the functions to create the ATM instances.
     @author develop@teller.finance
  */
-interface IATMFactory {
+interface ATMFactoryInterface {
     /** Events */
 
     /**
@@ -18,18 +17,6 @@ interface IATMFactory {
         address indexed creator,
         address indexed atmGovernanceAddress,
         address indexed atmTokenAddress
-    );
-
-    /**
-        @notice This event is emitted when the setting is updated.
-        @param sender address that sent the transaction.
-        @param oldSettings the old settings address.
-        @param newSettings the new settings address.
-     */
-    event SettingsUpdated(
-        address indexed sender,
-        address oldSettings,
-        address newSettings
     );
 
     /**
@@ -58,9 +45,7 @@ interface IATMFactory {
         @param symbol ATM token symbol
         @param decimals ATM token decimals 
         @param cap ATM token max cap.
-        @param maxVestingsPerWallet max vestings per wallet for the ATM token.
-        @param atmGovernanceLogic the atm governance instance address.
-        @param atmTokenLogic the atm token instance address.
+        @param maxVestingPerWallet max vesting per wallet for the ATM token.
         @return the new ATM governance instance address.
      */
     function createATM(
@@ -68,16 +53,8 @@ interface IATMFactory {
         string calldata symbol,
         uint8 decimals,
         uint256 cap,
-        uint256 maxVestingsPerWallet,
-        address atmGovernanceLogic,
-        address atmTokenLogic
+        uint256 maxVestingPerWallet
     ) external returns (address);
-
-    /**
-        @notice It updates the current settings.
-        @param newSettingsAddress the new setting address.
-     */
-    function setSettings(address newSettingsAddress) external;
 
     /**
         @notice It updates the current atm settings.
@@ -97,18 +74,6 @@ interface IATMFactory {
         @return the list of ATMs.
      */
     function getATMs() external view returns (address[] memory);
-
-    /**
-        @notice Returns the address of the ATM Settings contract.
-        @return Address of the ATM settings contract
-     */
-    function getATMSettings() external view returns (address);
-
-    /**
-        @notice Returns the address of the Settings contract
-        @return Address of the settings contract
-     */
-    function getSettings() external view returns (address);
 
     /**
         @notice Returns the atm token address of a given associated atm address.

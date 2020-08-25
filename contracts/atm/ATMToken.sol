@@ -10,8 +10,18 @@ import "./ATMTokenInterface.sol";
 import "../base/TInitializable.sol";
 import "@openzeppelin/contracts/utils/Arrays.sol";
 import "../settings/IATMSettings.sol";
+import "./BaseATM.sol";
 
-
+/*****************************************************************************************************/
+/**                                             WARNING                                             **/
+/**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
+/**  ---------------------------------------------------------------------------------------------  **/
+/**  Do NOT change the order of or PREPEND any storage variables to this or new versions of this    **/
+/**  contract as this will cause the the storage slots to be overwritten on the proxy contract!!    **/
+/**                                                                                                 **/
+/**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
+/**  more information.                                                                              **/
+/*****************************************************************************************************/
 /**
  *  @title ATM Token for Teller DAO
  *
@@ -19,6 +29,7 @@ import "../settings/IATMSettings.sol";
  */
 
 contract ATMToken is
+    BaseATM,
     ATMTokenInterface,
     ERC20Detailed,
     ERC20Mintable,
@@ -30,33 +41,24 @@ contract ATMToken is
      */
     using SafeMath for uint256;
     using Arrays for uint256[];
+    using Address for address;
 
     /* Modifiers */
-    /**
-        @notice Checks if sender is owner
-        @dev Throws an error if the sender is not the owner
-     */
-    modifier onlyOwner() {
-        require(msg.sender == _owner, "CALLER_IS_NOT_OWNER");
-        _;
-    }
 
     /**
         @notice Checks if the platform is paused or not
         @dev Throws an error is the Teller platform is paused
      */
     modifier whenNotPaused() {
-        require(!settings.isATMPaused(atmAddress), "ATM_IS_PAUSED");
+        require(!atmSettings.isATMPaused(atmAddress), "ATM_IS_PAUSED");
         _;
     }
 
     /* State Variables */
     uint256 private _cap;
-    uint256 private _maxVestingsPerWallet;
-    address private _owner;
+    uint256 private _maxVestingPerWallet;
     Snapshots private _totalSupplySnapshots;
     uint256 private _currentSnapshotId;
-    IATMSettings public settings;
     address public atmAddress;
 
     /* Structs */
@@ -74,28 +76,41 @@ contract ATMToken is
     }
 
     /* Mappings */
-    mapping(address => mapping(uint256 => VestingTokens)) private _vestingBalances; // Mapping user address to vestings id, which in turn is mapped to the VestingTokens struct
-    mapping(address => uint256) public vestingsCount;
+    mapping(address => mapping(uint256 => VestingTokens)) private _vestingBalances; // Mapping user address to vesting id, which in turn is mapped to the VestingTokens struct
+    mapping(address => uint256) public vestingCount;
     mapping(address => uint256) public assignedTokens;
     mapping(address => Snapshots) private _accountBalanceSnapshots;
 
     /* Functions */
 
+    /**
+        @notice It initializes this token instance. It should only be called from the ATMTokenProxy constructor!
+        @param name The name of the ATM token
+        @param symbol The symbol of the ATM token
+        @param decimals The amount of decimals for ATM token
+        @param cap The maximum number of tokens available
+        @param maxVestingPerWallet The maximum number of times a wallet can mint their vesting
+        @param atmSettingsAddress The ATMSettings address
+        @param atm The ATMGovernance address for this token
+     */
     function initialize(
         string memory name,
         string memory symbol,
         uint8 decimals,
         uint256 cap,
-        uint256 maxVestingsPerWallet,
+        uint256 maxVestingPerWallet,
         address atmSettingsAddress,
         address atm
     ) public initializer {
+        require(atmSettingsAddress.isContract(), "ATM_SETTINGS_MUST_BE_A_CONTRACT");
         require(cap > 0, "CAP_CANNOT_BE_ZERO");
-        super.initialize(name, symbol, decimals);
+
+        ERC20Detailed.initialize(name, symbol, decimals);
+        TInitializable._initialize();
+
         _cap = cap;
-        _maxVestingsPerWallet = maxVestingsPerWallet;
-        _owner = msg.sender;
-        settings = IATMSettings(atmSettingsAddress);
+        _maxVestingPerWallet = maxVestingPerWallet;
+        atmSettings = IATMSettings(atmSettingsAddress);
         atmAddress = atm;
     }
 
@@ -111,7 +126,7 @@ contract ATMToken is
      * @notice Sets a new cap on the token's total supply.
      * @param newCap The new capped amount of tokens
      */
-    function setCap(uint256 newCap) external onlyOwner() whenNotPaused() {
+    function setCap(uint256 newCap) external onlyPauser() whenNotPaused() {
         _cap = newCap;
         emit NewCap(_cap);
     }
@@ -124,7 +139,7 @@ contract ATMToken is
      */
     function mint(address account, uint256 amount)
         public
-        onlyOwner()
+        onlyPauser()
         whenNotPaused()
         returns (bool)
     {
@@ -158,12 +173,12 @@ contract ATMToken is
         uint256 amount,
         uint256 cliff,
         uint256 vestingTime
-    ) public onlyOwner() whenNotPaused() {
+    ) public onlyPauser() whenNotPaused() {
         require(account != address(0x0), "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED");
-        require(vestingsCount[account] < _maxVestingsPerWallet, "MAX_VESTINGS_REACHED");
+        require(vestingCount[account] < _maxVestingPerWallet, "MAX_VESTINGS_REACHED");
         _beforeTokenTransfer(address(0x0), account, amount);
-        uint256 vestingId = vestingsCount[account]++;
-        vestingsCount[account] += 1;
+        uint256 vestingId = vestingCount[account]++;
+        vestingCount[account] += 1;
         VestingTokens memory vestingTokens = VestingTokens(
             account,
             amount,
@@ -188,7 +203,7 @@ contract ATMToken is
      */
     function revokeVesting(address account, uint256 vestingId)
         public
-        onlyOwner()
+        onlyPauser()
         whenNotPaused()
     {
         require(assignedTokens[account] > 0, "ACCOUNT_DOESNT_HAVE_VESTING");
@@ -252,10 +267,10 @@ contract ATMToken is
         view
         returns (uint256)
     {
-        uint256 totalVestings = vestingsCount[_account];
+        uint256 totalVesting = vestingCount[_account];
         uint256 totalAssigned = assignedTokens[_account];
         uint256 nonTransferable = 0;
-        for (uint256 i = 0; i < totalVestings; i++) {
+        for (uint256 i = 0; i < totalVesting; i++) {
             VestingTokens storage vestingTokens = _vestingBalances[_account][i];
             nonTransferable = _returnUnvestedTokens(
                 vestingTokens.amount,

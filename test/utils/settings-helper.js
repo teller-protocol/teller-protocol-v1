@@ -23,7 +23,7 @@ const createSettingsInstance = async (
     Settings,
     params,
 ) => {
-    const { from } = Settings.class_defaults
+    const { from } = Settings.class_defaults;
     const settingsInstance = await Settings.new();
     const proxy = await UpgradeableProxy.new(settingsInstance.address, from, '0x')
     const instance = await Settings.at(proxy.address)

@@ -1,4 +1,6 @@
 // JS Libraries
+const IATMSettingsEncoder = require("../utils/encoders/IATMSettingsEncoder");
+const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
 const { atmGovernance } = require('../utils/events');
@@ -8,14 +10,22 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
+const Settings = artifacts.require("./base/Settings.sol");
 
 contract('ATMGovernanceAddDataProviderTest', function (accounts) {
-    const owner = accounts[0];
+    const encoder = new IATMSettingsEncoder(web3)
     let instance;
 
     beforeEach('Setup for each test', async () => {
+        const settings = await createTestSettingsInstance(Settings);
+        const atmSettings = await Mock.new();
+        await atmSettings.givenMethodReturnAddress(
+            encoder.encodeSettings(),
+            settings.address
+        );
+
         instance = await ATMGovernance.new();
-        await instance.initialize(owner);
+        await instance.initialize(atmSettings.address);
     });
 
     // Testing values
@@ -25,7 +35,7 @@ contract('ATMGovernanceAddDataProviderTest', function (accounts) {
 
     withData({
         _1_basic: [0, DATA_TYPE_INDEX, undefined, false],
-        _2_notSigner: [2, DATA_TYPE_INDEX, 'SignerRole: caller does not have the Signer role', true],
+        _2_notSigner: [2, DATA_TYPE_INDEX, 'ONLY_PAUSER', true],
      }, function (senderIndex, dataTypeIndex, expectedErrorMessage, mustFail) {
         it(t('user', 'addDataProvider#1', 'Should (or not) be able to add a data provider.', mustFail), async function () {
             // Setup

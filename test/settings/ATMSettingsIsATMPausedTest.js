@@ -18,8 +18,14 @@ contract('ATMSettingsIsATMPausedTest', function (accounts) {
     
     beforeEach('Setup for each test', async () => {
         mocks = await createMocks(Mock, 10);
+
         settings = await Mock.new();
-        instance = await ATMSettings.new(settings.address);
+        await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeHasPauserRole(), true);
+        await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), false);
+
+        const atmTokenLogic = await Mock.new();
+        const atmGovernanceLogic = await Mock.new();
+        instance = await ATMSettings.new(settings.address, atmTokenLogic.address, atmGovernanceLogic.address);
     });
 
     withData({
@@ -28,8 +34,6 @@ contract('ATMSettingsIsATMPausedTest', function (accounts) {
     }, function(previousATMs, atmIndex, expectedResult) {
         it(t('user', 'isATMPaused', 'Should be able to test whether an ATM is paused or not.', false), async function() {
             // Setup
-            await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeHasPauserRole(), true);
-            await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), false);
             for (const previousATMIndex of previousATMs) {
                 await instance.pauseATM(mocks[previousATMIndex], { from: owner });
             }
@@ -37,7 +41,7 @@ contract('ATMSettingsIsATMPausedTest', function (accounts) {
 
             // Invocation
             const result = await instance.isATMPaused(atmAddress);
-            
+
             // Assertions
             assert.equal(result, expectedResult);
         });

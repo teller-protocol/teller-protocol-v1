@@ -19,21 +19,25 @@ contract('ATMSettingsUnpauseATMTest', function (accounts) {
     
     beforeEach('Setup for each test', async () => {
         mocks = await createMocks(Mock, 10);
+
         settings = await Mock.new();
-        instance = await ATMSettings.new(settings.address);
+        await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeHasPauserRole(), true);
+        await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), false);
+
+        const atmTokenLogic = await Mock.new();
+        const atmGovernanceLogic = await Mock.new();
+        instance = await ATMSettings.new(settings.address, atmTokenLogic.address, atmGovernanceLogic.address);
     });
 
     withData({
         _1_basic_previous_atm: [[0, 2, 4], 0, 1, true, true, false, undefined, false],
         _2_basic: [[0], 0, 1, true, true, false, undefined, false],
-        _3_sender_not_pauser_role: [[], 0, 1, true, false, true, 'SENDER_HASNT_PAUSER_ROLE', true],
+        _3_sender_not_pauser_role: [[], 0, 1, true, false, true, 'ONLY_PAUSER', true],
         _4_platform_already_paused: [[1, 2, 3], 0, 1, true, true, true, 'PLATFORM_IS_PAUSED', true],
         _5_atm_not_paused: [[1, 2], 3, 1, true, true, false, 'ATM_IS_NOT_PAUSED', true],
     }, function(previousATMs, atmIndex, senderIndex, encodeIsATM, encodeHasPauserRole, encodeIsPaused, expectedErrorMessage, mustFail) {
         it(t('user', 'unpauseATM', 'Should (or not) be able to unpause an ATM.', mustFail), async function() {
             // Setup
-            await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeHasPauserRole(), true);
-            await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), false);
             for (const previousATMIndex of previousATMs) {
                 await instance.pauseATM(mocks[previousATMIndex], { from: owner });
             }

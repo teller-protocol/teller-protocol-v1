@@ -1,6 +1,7 @@
 // JS Libraries
+const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
-const { t, NULL_ADDRESS  } = require('../utils/consts');
+const { t  } = require('../utils/consts');
 const { atmToken } = require('../utils/events');
 const Timer = require('../../scripts/utils/Timer');
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
@@ -10,6 +11,7 @@ const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 
 // Smart contracts
 const ATMToken = artifacts.require("./ATMToken.sol");
+const Settings = artifacts.require("./base/Settings.sol");
 
 contract('ATMTokenRevokeVestingTest', function (accounts) {
     const atmSettingsEncoder = new IATMSettingsEncoder(web3);
@@ -22,7 +24,12 @@ contract('ATMTokenRevokeVestingTest', function (accounts) {
     const timer = new Timer(web3);
 
     beforeEach('Setup for each test', async () => {
+        const settings = await createTestSettingsInstance(Settings);
         atmSettingsInstance = await Mock.new();
+        await atmSettingsInstance.givenMethodReturnAddress(
+            atmSettingsEncoder.encodeSettings(),
+            settings.address
+        );
         atmInstance = await Mock.new();
         instance = await ATMToken.new();
         await instance.initialize(
@@ -37,10 +44,11 @@ contract('ATMTokenRevokeVestingTest', function (accounts) {
     });
 
     withData({
-        _1_revoke_vested_basic: [daoMember1, 1000, 3000, 7000, undefined, false],
-        _2_revoke_vested_no_amount: [daoMember2, 1000, 1750, 7000, "ACCOUNT_DOESNT_HAVE_VESTING", true]
-        
+        _1_revoke_vested_basic: [daoAgent, daoMember1, 1000, 3000, 7000, undefined, false],
+        _2_revoke_vested_no_amount: [daoAgent, daoMember2, 1000, 1750, 7000, "ACCOUNT_DOESNT_HAVE_VESTING", true],
+        _3_revoke_vested_invalid_sender: [daoMember1, daoMember2, 1000, 1750, 7000, "ONLY_PAUSER", true],
     },function(
+        sender,
         receipent,
         amount,
         cliff,
@@ -59,7 +67,7 @@ contract('ATMTokenRevokeVestingTest', function (accounts) {
 
             try {
                 // Invocation
-                const result = await instance.revokeVesting(receipent, 0, { from: daoAgent });
+                const result = await instance.revokeVesting(receipent, 0, { from: sender });
                 // Assertions
                 assert(!mustFail, 'It should have failed because the account is not vested');
                 atmToken
