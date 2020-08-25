@@ -1,6 +1,7 @@
 // JS Libraries
+const IATMSettingsEncoder = require("../utils/encoders/IATMSettingsEncoder");
 const withData = require('leche').withData;
-const { t, encode } = require('../utils/consts');
+const { t } = require('../utils/consts');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -10,6 +11,7 @@ const ATMGovernance = artifacts.require('./base/atm/ATMGovernance.sol');
 const ATMGovernanceProxy = artifacts.require('./base/atm/ATMGovernanceProxy.sol');
 
 contract('ATMGovernanceProxyConstructorTest', function (accounts) {
+    const encoder = new IATMSettingsEncoder(web3)
     let atmGovernance
     let atmSettings
 
@@ -18,13 +20,13 @@ contract('ATMGovernanceProxyConstructorTest', function (accounts) {
 
         atmSettings = await Mock.new();
         await atmSettings.givenMethodReturnAddress(
-            encode(web3, 'atmGovernanceLogic()'),
+            encoder.encodeAtmGovernanceLogic(),
             atmGovernance.address
         );
     })
 
     withData({
-        _1_initialize_basic: [accounts[0]],
+        _1_initialize_basic: [null, false],
     }, function (
         expectedErrorMessage,
         mustFail

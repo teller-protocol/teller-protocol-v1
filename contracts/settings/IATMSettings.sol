@@ -105,10 +105,19 @@ interface IATMSettings {
 
     /** External Functions */
 
+    /**
+        @notice It represents the protocol Settings contract.
+     */
     function settings() external view returns (SettingsInterface);
 
+    /**
+        @notice It fetches the current logic implementation address for ATM Tokens.
+     */
     function atmTokenLogic() external view returns (address);
 
+    /**
+        @notice It fetches the current logic implementation address for ATM Governance.
+     */
     function atmGovernanceLogic() external view returns (address);
 
     /**

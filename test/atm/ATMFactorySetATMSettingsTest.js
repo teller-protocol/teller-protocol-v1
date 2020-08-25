@@ -11,7 +11,7 @@ const ATMFactory = artifacts.require("./atm/ATMFactory.sol");
 const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 
-contract("ATMSettingsSetATMSettingsTest", function(accounts) {
+contract("ATMFactorySetATMSettingsTest", function(accounts) {
     const ADMIN_INDEX = 1;
     const admin = accounts[ADMIN_INDEX];
     let instance;

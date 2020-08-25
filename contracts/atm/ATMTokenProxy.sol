@@ -2,7 +2,20 @@ pragma solidity 0.5.17;
 
 import "./BaseATMProxy.sol";
 
+/**
+    @notice It is the Proxy contract for ATM Tokens.
+ */
 contract ATMTokenProxy is BaseATMProxy {
+    /**
+        @notice This constructor forwards the parameters to the implementation logic contract defined in ATMSettings.
+        @param name The name of the ATM token
+        @param symbol The symbol of the ATM token
+        @param decimals The amount of decimals for ATM token
+        @param cap The maximum number of tokens available
+        @param maxVestingPerWallet The maximum number of times a wallet can mint their vesting
+        @param atmSettingsAddress The ATMSettings address
+        @param atm The ATMGovernance address for this token
+     */
     constructor(
         string memory name,
         string memory symbol,

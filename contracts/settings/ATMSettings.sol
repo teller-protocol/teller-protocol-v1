@@ -25,6 +25,9 @@ contract ATMSettings is IATMSettings {
 
     /* State Variables */
 
+    /**
+        @notice It represents the protocol Settings contract.
+     */
     SettingsInterface public settings;
 
     /**
@@ -42,8 +45,14 @@ contract ATMSettings is IATMSettings {
      */
     mapping(address => mapping(address => address)) public marketToAtm;
 
+    /**
+        @notice It stores the current logic implementation address for ATM Tokens.
+     */
     address public atmTokenLogic;
 
+    /**
+        @notice It stores the current logic implementation address for ATM Governance.
+     */
     address public atmGovernanceLogic;
 
     /** Modifiers */

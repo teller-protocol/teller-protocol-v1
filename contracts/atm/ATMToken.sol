@@ -12,7 +12,16 @@ import "@openzeppelin/contracts/utils/Arrays.sol";
 import "../settings/IATMSettings.sol";
 import "./BaseATM.sol";
 
-
+/*****************************************************************************************************/
+/**                                             WARNING                                             **/
+/**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
+/**  ---------------------------------------------------------------------------------------------  **/
+/**  Do NOT change the order of or PREPEND any storage variables to this or new versions of this    **/
+/**  contract as this will cause the the storage slots to be overwritten on the proxy contract!!    **/
+/**                                                                                                 **/
+/**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
+/**  more information.                                                                              **/
+/*****************************************************************************************************/
 /**
  *  @title ATM Token for Teller DAO
  *
@@ -74,6 +83,16 @@ contract ATMToken is
 
     /* Functions */
 
+    /**
+        @notice It initializes this token instance. It should only be called from the ATMTokenProxy constructor!
+        @param name The name of the ATM token
+        @param symbol The symbol of the ATM token
+        @param decimals The amount of decimals for ATM token
+        @param cap The maximum number of tokens available
+        @param maxVestingPerWallet The maximum number of times a wallet can mint their vesting
+        @param atmSettingsAddress The ATMSettings address
+        @param atm The ATMGovernance address for this token
+     */
     function initialize(
         string memory name,
         string memory symbol,

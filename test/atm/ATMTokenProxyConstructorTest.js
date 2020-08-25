@@ -1,6 +1,7 @@
 // JS Libraries
+const ATMTokenEncoder = require("../utils/encoders/ATMTokenEncoder");
 const withData = require('leche').withData;
-const { t, encode } = require('../utils/consts');
+const { t } = require('../utils/consts');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -10,6 +11,7 @@ const ATMToken = artifacts.require('./base/atm/ATMToken.sol');
 const ATMTokenProxy = artifacts.require('./base/atm/ATMTokenProxy.sol');
 
 contract('ATMTokenProxyConstructorTest', function (accounts) {
+    const encoder = new ATMTokenEncoder(web3)
     let atmToken
     let atmGovernance;
     let atmSettings
@@ -20,7 +22,7 @@ contract('ATMTokenProxyConstructorTest', function (accounts) {
 
         atmSettings = await Mock.new();
         await atmSettings.givenMethodReturnAddress(
-            encode(web3, 'atmTokenLogic()'),
+            encoder.encodeAtmTokenLogic(),
             atmToken.address
         );
     })

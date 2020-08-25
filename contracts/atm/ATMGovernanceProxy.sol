@@ -2,7 +2,14 @@ pragma solidity 0.5.17;
 
 import "./BaseATMProxy.sol";
 
+/**
+    @notice It is the Proxy contract for ATM Governance.
+ */
 contract ATMGovernanceProxy is BaseATMProxy {
+    /**
+        @notice This constructor forwards the parameters to the implementation logic contract defined in ATMSettings.
+        @param atmSettingsAddress The ATMSettings address
+     */
     constructor(address atmSettingsAddress) public payable {
         bytes memory initData = abi.encodeWithSignature("initialize(address)", atmSettingsAddress);
         address logic = _getImplementation(atmSettingsAddress);

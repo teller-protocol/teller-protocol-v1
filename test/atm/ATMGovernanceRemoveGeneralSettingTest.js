@@ -1,10 +1,10 @@
 // JS Libraries
+const IATMSettingsEncoder = require("../utils/encoders/IATMSettingsEncoder");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
 const {
     t,
-    toBytes32,
-    encode
+    toBytes32
 } = require('../utils/consts');
 const {
     atmGovernance
@@ -18,13 +18,14 @@ const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 
 contract('ATMGovernanceRemoveGeneralSettingTest', function (accounts) {
+    const encoder = new IATMSettingsEncoder(web3)
     let instance;
 
     beforeEach('Setup for each test', async () => {
         const settings = await createTestSettingsInstance(Settings);
         const atmSettings = await Mock.new();
         await atmSettings.givenMethodReturnAddress(
-            encode(web3, 'settings()'),
+            encoder.encodeSettings(),
             settings.address
         );
 

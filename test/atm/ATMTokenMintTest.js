@@ -1,7 +1,7 @@
 // JS Libraries
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
-const { t, encode, NULL_ADDRESS  } = require('../utils/consts');
+const { t, NULL_ADDRESS  } = require('../utils/consts');
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 
 // Mock contracts
@@ -23,7 +23,7 @@ contract('ATMTokenMintTest', function (accounts) {
         const settings = await createTestSettingsInstance(Settings);
         atmSettingsInstance = await Mock.new();
         await atmSettingsInstance.givenMethodReturnAddress(
-            encode(web3, 'settings()'),
+            atmSettingsEncoder.encodeSettings(),
             settings.address
         );
         atmInstance = await Mock.new();
