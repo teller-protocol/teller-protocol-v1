@@ -19,18 +19,56 @@ const notEmitted = (tx, eventName, assertFunction) => {
 }
 
 module.exports = {
-    dapps: {
-        action: tx => {
-            const name = 'DappAction';
+    uniswap: {
+        uniswapSwapped: tx => {
+            const name = 'UniswapSwapped';
             return {
                 name: name,
-                emitted: (dappName, action) => emitted(tx, name, ev => {
-                    assert.equal(ev.dappName.toString(), dappName.toString());
-                    assert.equal(ev.action.toString(), action.toString());
+                emitted: (from, to, sourceElement, receivedElement, sourceAmount, receivedAmount) => emitted(tx, name, ev => {
+                    assert.equal(ev.from, from);
+                    assert.equal(ev.to, to);
+                    assert.equal(ev.sourceElement, sourceElement);
+                    assert.equal(ev.receivedElement, receivedElement);
+                    assert.equal(ev.sourceAmount, sourceAmount);
+                    assert.equal(ev.receivedAmount, receivedAmount);
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+    },
+    compound: {
+        compoundLended: tx => {
+            const name = 'CompoundLended';
+            return {
+                name: name,
+                emitted: (sender, dapp, amount, cToken, cTokenBalance, underlyingToken, underlyingBalance) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.dappAddress, dapp);
+                    assert.equal(ev.amount.toString(), amount.toString());
+                    assert.equal(ev.cToken, cToken); 
+                    assert.equal(ev.cTokenBalance.toString(), cTokenBalance.toString());
+                    assert.equal(ev.underlyingToken, underlyingToken);
+                    assert.equal(ev.underlyingBalance.toString(), underlyingBalance.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        compoundRedeemed: tx => {
+            const name = 'CompoundRedeemed';
+            return {
+                name: name,
+                emitted: (sender, dapp, amount, cToken, cTokenBalance, underlyingToken, underlyingBalance) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.dappAddress, dapp);
+                    assert.equal(ev.amount.toString(), amount.toString());
+                    assert.equal(ev.cToken, cToken);
+                    assert.equal(ev.cTokenBalance.toString(), cTokenBalance.toString());
+                    assert.equal(ev.underlyingToken, underlyingToken);
+                    assert.equal(ev.underlyingBalance.toString(), underlyingBalance.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },        
     },
     erc20: {
         transfer: tx => {

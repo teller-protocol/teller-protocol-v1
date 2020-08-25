@@ -2,17 +2,10 @@ pragma solidity 0.5.17;
 
 import "../../../../base/Escrow/Dapps/Uniswap.sol";
 
-
+/**
+    @notice This mock is used to expose a payable fallback function on tests.f
+ */
 contract UniswapMock is Uniswap {
-    constructor(address _router) public Uniswap(_router) {}
-
-    function callSwap(
-        address[] calldata path,
-        uint256 sourceAmount,
-        uint256 minDestination
-    ) external {
-        swap(path, sourceAmount, minDestination);
-    }
 
     function() external payable {}
 }
