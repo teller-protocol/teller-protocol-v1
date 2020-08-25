@@ -36,8 +36,6 @@ contract Uniswap is IUniswap {
     /* State Variables */
     // State is shared with Escrow contract as it uses delegateCall() to interact with this contract.
     
-     function() external payable {}
-     
     /**
         @notice Swaps ETH/Tokens for Tokens/ETH using different Uniswap v2 Router 02 methods.
         @param canonicalWeth address of the canonical WETH in the current network.

@@ -9,7 +9,7 @@ const USDC = artifacts.require("./mock/token/USDCMock.sol");
 const WETH = artifacts.require("./mock/token/WETHMock.sol");
 // Smart contracts
 
-const Uniswap = artifacts.require("../base/Escrow/Dapps/Uniswap.sol");
+const Uniswap = artifacts.require("../mock/base/Escrow/Dapps/UniswapMock.sol");
 const UniswapRouter = artifacts.require("./mock/base/Escrow/Dapps/UniswapV2Router02Mock.sol");
 
 contract("UniswapSwapTest", function(accounts) {
@@ -40,7 +40,7 @@ contract("UniswapSwapTest", function(accounts) {
     _8_insufficientSourceToken: [ 0, [ 'dai', 'usdc' ], 50, 0, 1, true, true, true, "UNISWAP_INSUFFICIENT_TOKENS" ],
     _9_ethForTokensUniswapError: [ 0, [ 'eth', 'dai' ], 50, 50, SIMULATE_UNISWAP_RESPONSE_ERROR, true, true, true, "UNISWAP_ERROR_SWAPPING" ],
     _10_ethForTokensBalanceError: [ 0, [ 'eth', 'dai' ], 50, 50, DONT_ALTER_BALANCE, true, true, true, "UNISWAP_BALANCE_NOT_INCREASED" ],
-   }, function(
+  }, function(
     senderAccount,
     path,
     sourceAmount,
@@ -69,7 +69,7 @@ contract("UniswapSwapTest", function(accounts) {
       try {
 
         // Invocation using Mock as proxy to access internal functions
-        const result = await instance.swap(weth.address, uniswapV2Router02.address, path, sourceAmount , minDestination, {from: sender});
+        const result = await instance.callSwap(weth.address, uniswapV2Router02.address, path, sourceAmount , minDestination, {from: sender});
         assert(!mustFail, 'It should have failed because data is invalid.');
 
         // State updates are validated inside the dApp contract and events emitted
