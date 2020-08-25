@@ -20,7 +20,7 @@ contract('TokenCollateralLoansInitializeTest', function (accounts) {
     withData({
         _1_basic: [2, 3, 4, 5, 6, 7, 8, undefined, false],
         _2_not_oracle: [-1, 3, 4, 5, 6, 7, 8, 'PROVIDE_ORACLE_ADDRESS', true],
-        _3_not_lendingpool: [2, -1, 4, 5, 6, 7, 8, 'PROVIDE_LENDINGPOOL_ADDRESS', true],
+        _3_not_lendingpool: [2, -1, 4, 5, 6, 7, 8, 'PROVIDE_LENDING_POOL_ADDRESS', true],
         _4_not_loanTerms: [2, 3, -1, 5, 6, 7, 8, 'PROVIDED_LOAN_TERMS_ADDRESS', true],
         _5_not_settings: [2, 3, 4, -1, 6, 7, 8, 'SETTINGS_MUST_BE_PROVIDED', true],
         _6_not_collateralToken: [2, 3, 4, 5, -1, 7, 8, 'PROVIDE_COLL_TOKEN_ADDRESS', true],

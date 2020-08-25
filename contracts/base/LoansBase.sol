@@ -18,6 +18,7 @@ import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
 import "../settings/IATMSettings.sol";
 import "../atm/ATMGovernanceInterface.sol";
+import "../util/TellerCommon.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -179,10 +180,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         require(amount > 0, "CANNOT_WITHDRAW_ZERO");
 
         // Find the minimum collateral amount this loan is allowed in tokens or ether.
-        uint256 collateralNeededToken = _getCollateralNeededInTokens(
-            _getTotalOwed(loanID),
-            loans[loanID].loanTerms.collateralRatio
-        );
+        uint256 collateralNeededToken = _getCollateralNeededInTokens(loanID);
         uint256 collateralNeededWei = _convertTokenToWei(collateralNeededToken);
 
         // Withdrawal amount holds the amount of excess collateral in the loan
@@ -237,9 +235,9 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
             .div(DAYS_PER_YEAR_4DP);
 
         // check that enough collateral has been provided for this loan
-        (, , , bool moreCollateralRequired) = _getCollateralInfo(loanID);
+        TellerCommon.LoanCollateralInfo memory collateralInfo = _getCollateralInfo(loanID);
 
-        require(!moreCollateralRequired, "MORE_COLLATERAL_REQUIRED");
+        require(!collateralInfo.moreCollateralRequired, "MORE_COLLATERAL_REQUIRED");
 
         loans[loanID].loanStartTime = now;
         loans[loanID].status = TellerCommon.LoanStatus.Active;
@@ -320,7 +318,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
     }
 
     /**
-     * @notice Liquidate a loan if it is expired or undercollateralised
+     * @notice Liquidate a loan if it is expired or under collateralized
      * @param loanID The ID of the loan to be liquidated
      */
     function liquidateLoan(uint256 loanID)
@@ -331,26 +329,16 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         whenLendingPoolNotPaused(address(lendingPool))
         nonReentrant()
     {
-        // calculate the amount of collateral the loan needs in tokens
-        (uint256 loanCollateral, , , bool moreCollateralRequired) = _getCollateralInfo(
-            loanID
-        );
-
-        // calculate when the loan should end
-        uint256 loanEndTime = loans[loanID].loanStartTime.add(
-            loans[loanID].loanTerms.duration
-        );
-
-        // to liquidate it must be undercollateralised, or expired
-        require(moreCollateralRequired || loanEndTime < now, "DOESNT_NEED_LIQUIDATION");
+        require(canLiquidateLoan(loanID), "DOESNT_NEED_LIQUIDATION");
 
         loans[loanID].status = TellerCommon.LoanStatus.Closed;
         loans[loanID].liquidated = true;
 
-        uint256 collateralInTokens = _convertWeiToToken(loanCollateral);
+        uint256 collateral = loans[loanID].collateral;
+        uint256 collateralInTokens = _convertWeiToToken(collateral);
 
         // the caller gets the collateral from the loan
-        _payOutCollateral(loanID, loanCollateral, msg.sender);
+        _payOutCollateral(loanID, collateral, msg.sender);
 
         uint256 tokenPayment = collateralInTokens
             .mul(settings.getPlatformSettingValue(LIQUIDATE_ETH_PRICE_SETTING))
@@ -362,29 +350,40 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
             loanID,
             loans[loanID].loanTerms.borrower,
             msg.sender,
-            loanCollateral,
+            collateral,
             tokenPayment
         );
     }
 
     /**
-        @notice Get collateral infomation of a specific loan
-        @param loanID of the loan to get info for
-        @return uint256 Collateral needed
-        @return uint256 Collaternal needed in Lending tokens
-        @return uint256 Collateral needed in Collateral tokens (wei)
-        @return bool If more collateral is needed or not
+        @notice A loan can be liquidated if it is: under collateralized or expired
+        @param loanID The ID of the loan to check
+        @return bool weather the loan can be liquidated
      */
-    function getCollateralInfo(uint256 loanID)
-        external
+    function canLiquidateLoan(uint256 loanID)
+        public
         view
-        returns (
-            uint256 collateral,
-            uint256 collateralNeededLendingTokens,
-            uint256 collateralNeededCollateralTokens,
-            bool moreCollateralRequired
-        )
+        loanActive(loanID)
+        whenNotPaused()
+        whenLendingPoolNotPaused(address(lendingPool))
+        returns (bool)
     {
+        // calculate the amount of collateral the loan needs in tokens
+        TellerCommon.LoanCollateralInfo memory collateralInfo = _getCollateralInfo(loanID);
+        if (collateralInfo.moreCollateralRequired) return true;
+
+        // calculate when the loan should end
+        uint256 startTime = loans[loanID].loanStartTime;
+        uint256 duration = loans[loanID].loanTerms.duration;
+        return startTime.add(duration) < now;
+    }
+
+    /**
+        @notice Get collateral information of a specific loan
+        @param loanID of the loan to get info for
+        @return memory TellerCommon.LoanCollateralInfo Collateral information of the loan
+     */
+    function getCollateralInfo(uint256 loanID) external view returns (TellerCommon.LoanCollateralInfo memory) {
         return _getCollateralInfo(loanID);
     }
 
@@ -423,54 +422,41 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
     ) internal;
 
     /**
-        @notice Get collateral infomation of a specific loan
+        @notice Get collateral information of a specific loan
         @param loanID of the loan to get info for
-        @return uint256 Collateral needed
-        @return uint256 Collaternal needed in Lending tokens
-        @return uint256 Collateral needed in Collateral tokens (wei)
-        @return bool If more collateral is needed or not
+        @return memory TellerCommon.LoanCollateralInfo Collateral information of the loan
      */
     function _getCollateralInfo(uint256 loanID)
         internal
         view
-        returns (
-            uint256 collateral,
-            uint256 collateralNeededLendingTokens,
-            uint256 collateralNeededCollateralTokens,
-            bool moreCollateralRequired
-        )
+        returns (TellerCommon.LoanCollateralInfo memory)
     {
-        collateral = loans[loanID].collateral;
-        (
-            collateralNeededLendingTokens,
-            collateralNeededCollateralTokens
-        ) = _getCollateralNeededInfo(
-            _getTotalOwed(loanID),
-            loans[loanID].loanTerms.collateralRatio
-        );
-        moreCollateralRequired = collateralNeededCollateralTokens > collateral;
+        uint256 collateral = loans[loanID].collateral;
+        (uint256 neededInLending, uint256 neededInCollateral) = _getCollateralNeededInfo(loanID);
+        return TellerCommon.LoanCollateralInfo({
+            collateral: collateral,
+            neededInLendingTokens: neededInLending,
+            neededInCollateralTokens: neededInCollateral,
+            moreCollateralRequired: neededInCollateral > collateral
+        });
     }
 
     /**
-       @notice Get information on the collateral needed for the loan
-       @param totalOwed Total amount owed for the loan
-       @param collateralRatio Collateral ratio set in the loan terms
-       @return uint256 Collaternal needed in Lending tokens
-       @return uint256 Collateral needed in Collateral tokens (wei)
+        @notice Get information on the collateral needed for the loan
+        @param loanID The loan ID to get collateral info for
+        @return uint256 Collateral needed in Lending tokens
+        @return uint256 Collateral needed in Collateral tokens (wei)
      */
-    function _getCollateralNeededInfo(uint256 totalOwed, uint256 collateralRatio)
+    function _getCollateralNeededInfo(uint256 loanID)
         internal
         view
         returns (
-            uint256 collateralNeededLendingTokens,
-            uint256 collateralNeededCollateralTokens
+            uint256 neededInLendingTokens,
+            uint256 neededInCollateralTokens
         )
     {
         // Get collateral needed in lending tokens.
-        uint256 collateralNeededToken = _getCollateralNeededInTokens(
-            totalOwed,
-            collateralRatio
-        );
+        uint256 collateralNeededToken = _getCollateralNeededInTokens(loanID);
         // Convert collateral (in lending tokens) into collateral tokens.
         return (collateralNeededToken, _convertTokenToWei(collateralNeededToken));
     }
@@ -479,7 +465,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         @notice Initializes the current contract instance setting the required parameters.
         @param priceOracleAddress Contract address of the price oracle
         @param lendingPoolAddress Contract address of the lending pool
-        @param loanTermsConsensusAddress Contract adddress for loan term consensus
+        @param loanTermsConsensusAddress Contract address for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
         @param marketsAddress Contract address to store market data.
         @param atmSettingsAddress Contract address to get ATM settings data.
@@ -493,7 +479,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         address atmSettingsAddress
     ) internal isNotInitialized() {
         priceOracleAddress.requireNotEmpty("PROVIDE_ORACLE_ADDRESS");
-        lendingPoolAddress.requireNotEmpty("PROVIDE_LENDINGPOOL_ADDRESS");
+        lendingPoolAddress.requireNotEmpty("PROVIDE_LENDING_POOL_ADDRESS");
         loanTermsConsensusAddress.requireNotEmpty("PROVIDED_LOAN_TERMS_ADDRESS");
         atmSettingsAddress.requireNotEmpty("PROVIDED_ATM_SETTINGS_ADDRESS");
 
@@ -517,7 +503,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
     }
 
     /**
-        @notice Make a payment towards the prinicial and interest for a specified loan
+        @notice Make a payment towards the principal and interest for a specified loan
         @param loanID The ID of the loan the payment is for
         @param toPay The amount of tokens to pay to the loan
      */
@@ -543,22 +529,23 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
 
     /**
         @notice Returns the value of collateral
-        @param loanAmount The total amount of the loan for which collateral is needed
-        @param collateralRatio Collateral ratio set in the loan terms
+        @param loanID The loan ID to get collateral info for
         @return uint256 The amount of collateral needed in lending tokens (not wei)
      */
-    function _getCollateralNeededInTokens(uint256 loanAmount, uint256 collateralRatio)
+    function _getCollateralNeededInTokens(uint256 loanID)
         internal
-        pure
+        view
         returns (uint256)
     {
+        uint256 loanAmount = _getTotalOwed(loanID);
+        uint256 collateralRatio = loans[loanID].loanTerms.collateralRatio;
         return loanAmount.mul(collateralRatio).div(TEN_THOUSAND);
     }
 
     /**
         @notice Converts the collateral tokens to lending tokens
         @param weiAmount The amount of wei to be converted
-        @return uint256 The value the collateal tokens (wei) in lending tokens (not wei)
+        @return uint256 The value the collateral tokens (wei) in lending tokens (not wei)
      */
     function _convertWeiToToken(uint256 weiAmount) internal view returns (uint256) {
         // wei amount / lending token price in wei * the lending token decimals.
@@ -573,7 +560,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
     }
 
     /**
-        @notice Converts the lending token to collareal tokens
+        @notice Converts the lending token to collateral tokens
         @param tokenAmount The amount in lending tokens (not wei) to be converted
         @return uint256 The value of lending tokens (not wei) in collateral tokens (wei)
      */
