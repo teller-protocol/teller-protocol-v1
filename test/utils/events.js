@@ -767,6 +767,18 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        escrowLogicUpgraded: tx => {
+            const name = 'EscrowLogicUpgraded';
+            return {
+                name: name,
+                emitted: (sender, oldLogic, newLogic) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.oldLogic.toString(), oldLogic.toString());
+                    assert.equal(ev.newLogic.toString(), newLogic.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     },
     upgradeable: {
         upgraded: tx => {

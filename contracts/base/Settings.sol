@@ -347,8 +347,16 @@ contract Settings is Pausable, SettingsInterface {
         @param account account to test.
         @return true if account has the pauser role. Otherwise it returns false.
      */
-    function hasPauserRole(address account) external view returns (bool) {
+    function hasPauserRole(address account) public view returns (bool) {
         return isPauser(account);
+    }
+
+    /**
+        @notice Requires an account to have the pauser role.
+        @param account account to test.
+     */
+    function requirePauserRole(address account) public view {
+        require(hasPauserRole(account), "NOT_PAUSER");
     }
 
     /**

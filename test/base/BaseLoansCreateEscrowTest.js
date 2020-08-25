@@ -1,6 +1,5 @@
 // JS Libraries
 const { createTestSettingsInstance } = require("../utils/settings-helper");
-const { generateEscrowCloneAddressFromFactory } = require("../../utils/generateEscrowCloneAddress");
 const { NULL_ADDRESS } = require("../utils/consts");
 const { createLoanTerms } = require("../utils/structs");
 const { ACTIVE } = require("../utils/consts");
@@ -22,7 +21,7 @@ contract('BaseLoansCreateEscrowTest', function (accounts) {
   let escrowLibrary;
   let loans;
 
-  before(async () => {
+  beforeEach(async () => {
     const settingsInstance = await createTestSettingsInstance(Settings);
 
     const oracleInstance = await Mock.new();
@@ -60,9 +59,12 @@ contract('BaseLoansCreateEscrowTest', function (accounts) {
         const borrower = borrowerIndex === -1 ? NULL_ADDRESS : accounts[borrowerIndex];
         const loanTerms = createLoanTerms(borrower, NULL_ADDRESS, 0, 0, 0, 0);
         await loans.setLoan(loanID, loanTerms, 0, 0, 123456, 0, 0, 0, loanTerms.maxLoanAmount, ACTIVE, false);
-        const generatedEscrowAddress = generateEscrowCloneAddressFromFactory(loans.address, loanID, instance.address, escrowLibrary.address)
 
         // Invocation
+        let escrowAddress
+        // If the test must fail from the resulting transaction, then the call to the function (not a transaction) will also fail but as a different Error object
+        if (!mustFail)
+          escrowAddress = await loans.externalCreateEscrow.call(loanID);
         const result = await loans.externalCreateEscrow(loanID);
 
         // Assertions
@@ -70,7 +72,7 @@ contract('BaseLoansCreateEscrowTest', function (accounts) {
 
         await escrowFactory
           .escrowCreated(result, EscrowFactory)
-          .emitted(borrower, loans.address, loanID.toString(), generatedEscrowAddress);
+          .emitted(borrower, loans.address, loanID.toString(), escrowAddress);
       } catch (error) {
         assert(mustFail, error);
         assert(error);

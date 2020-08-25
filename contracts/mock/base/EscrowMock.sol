@@ -13,12 +13,11 @@ contract EscrowMock is Escrow {
     }
 
     function mockInitialize(
-        address factoryAddress,
+        address settingsAddress,
         address loansAddress,
         uint256 aLoanID
     ) external {
-        _initialize();
-        factory = EscrowFactoryInterface(factoryAddress);
+        settings = SettingsInterface(settingsAddress);
         loans = LoansInterface(loansAddress);
         loanID = aLoanID;
     }
@@ -32,4 +31,8 @@ contract EscrowMock is Escrow {
     }
 
     function externalIsBorrower() external onlyBorrower() {}
+
+    function testImplementationFunctionMultiply(uint256 num1, uint256 num2) external returns (uint256) {
+        return num1 * num2;
+    }
 }

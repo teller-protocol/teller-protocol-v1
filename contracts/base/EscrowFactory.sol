@@ -1,6 +1,9 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
+// Contracts
+import "./EscrowProxy.sol";
+
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/lifecycle/Pausable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
@@ -32,7 +35,7 @@ import "./TInitializable.sol";
 
     @author develop@teller.finance
  */
-contract EscrowFactory is Pausable, TInitializable, EscrowFactoryInterface {
+contract EscrowFactory is TInitializable, EscrowFactoryInterface {
     using AddressArrayLib for address[];
     using AddressLib for address;
     using Address for address;
@@ -58,11 +61,16 @@ contract EscrowFactory is Pausable, TInitializable, EscrowFactoryInterface {
     address[] public dappsList;
 
     /**
-        This is used to get the Escrow byte code.
+        This defines the current logic that is being used by all Escrow contracts.
      */
-    address public escrowLibrary;
+    address public escrowLogic;
 
     /* Modifiers */
+
+    modifier onlyPauser() {
+        settings.requirePauserRole(msg.sender);
+        _;
+    }
 
     /**
         @notice It checks whether the platform is paused or not.
@@ -73,27 +81,30 @@ contract EscrowFactory is Pausable, TInitializable, EscrowFactoryInterface {
         _;
     }
 
-    // TODO Who can call this function?
     /**
         @notice It creates an Escrow contract for a given loan id.
         @param borrower borrower address associated to the loan.
         @param loanID loan id to associate to the new escrow instance.
-        @return the new escrow instance address.
+        @return the new escrow instance.
      */
     function createEscrow(address borrower, uint256 loanID)
         external
         isNotPaused()
         isInitialized()
-        returns (address newEscrowAddress)
+        returns (address escrowAddress)
     {
+        address loansAddress = msg.sender;
+        require(loansAddress.isContract(), "CALLER_MUST_BE_CONTRACT");
         borrower.requireNotEmpty("BORROWER_MUSTNT_BE_EMPTY");
-        // TODO Add require msg.sender is a contract?
 
-        newEscrowAddress = _createEscrowAddress(loanID);
-        EscrowInterface escrow = EscrowInterface(newEscrowAddress);
-        escrow.initialize(msg.sender, loanID);
+        EscrowProxy escrow = new EscrowProxy(
+            address(settings),
+            loansAddress,
+            loanID
+        );
+        escrowAddress = address(escrow);
 
-        emit EscrowCreated(borrower, msg.sender, loanID, newEscrowAddress);
+        emit EscrowCreated(borrower, loansAddress, loanID, escrowAddress);
     }
 
     /**
@@ -144,74 +155,43 @@ contract EscrowFactory is Pausable, TInitializable, EscrowFactoryInterface {
     /**
         @notice It initializes this escrow contract factory instance.
         @param settingsAddress the settings contract address.
-        @param escrowLibraryAddress the escrow contract address.
+        @param escrowLogicAddress the escrow contract address.
      */
-    function initialize(address settingsAddress, address escrowLibraryAddress)
-        public
+    function initialize(address settingsAddress, address escrowLogicAddress)
+        external
         isNotInitialized()
     {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
-        require(escrowLibraryAddress.isContract(), "ESCROW_LIB_MUST_BE_A_CONTRACT");
+        require(escrowLogicAddress.isContract(), "ESCROW_LOGIC_MUST_BE_CONTRACT");
 
-        TInitializable._initialize();
-        Pausable.initialize(msg.sender);
+        _initialize();
 
-        escrowLibrary = escrowLibraryAddress;
         settings = SettingsInterface(settingsAddress);
+        _upgradeEscrowLogic(escrowLogicAddress);
+    }
+
+    /**
+        @notice It upgrades the logic to be used for all Escrow contracts.
+        @param newLogic the new Escrow logic implementation.
+     */
+    function upgradeEscrowLogic(address newLogic) external onlyPauser() isInitialized() {
+        _upgradeEscrowLogic(newLogic);
     }
 
     /** Internal Functions */
 
     /**
-        @notice Computes a salt value given a loan id and sender address.
-        @return the computed salt value.
+        @notice It upgrades the logic to be used for all Escrow contracts.
+        @param newLogic the new Escrow logic implementation.
      */
-    function _computeEscrowSalt(uint256 loanID) internal view returns (bytes32) {
-        return keccak256(abi.encodePacked(msg.sender, loanID));
-    }
+    function _upgradeEscrowLogic(address newLogic) internal {
+        require(newLogic.isContract(), "ESCROW_LOGIC_MUST_BE_A_CONTRACT");
 
-    /**
-        @notice Gets the Escrow contract bytecode given the escrow contract address.
-        @return the escrow contract bytecode.
-     */
-    function _getEscrowBytecode() internal view returns (bytes memory) {
-        bytes20 targetBytes = bytes20(escrowLibrary);
+        address oldLogic = escrowLogic;
+        require(newLogic != oldLogic, "NEW_ESCROW_LOGIC_SAME");
 
-        bytes memory bytecode = new bytes(0x37);
-        assembly {
-            mstore(
-                add(bytecode, 0x20),
-                0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000000000000000000000
-            )
-            mstore(add(bytecode, 0x34), targetBytes)
-            mstore(
-                add(bytecode, 0x48),
-                0x5af43d82803e903d91602b57fd5bf30000000000000000000000000000000000
-            )
-        }
-
-        return bytecode;
-    }
-
-    /**
-        @notice Computes an escrow contract address given a loan id.
-        @param loanID loan id to compute the escrow address.
-        @return the escrow contract address.
-     */
-    function _computeEscrowAddress(uint256 loanID)
-        internal
-        view
-        returns (address result)
-    {
-        bytes32 data = keccak256(
-            abi.encodePacked(
-                bytes1(0xff),
-                address(this),
-                _computeEscrowSalt(loanID),
-                keccak256(_getEscrowBytecode())
-            )
-        );
-        return address(bytes20(data << 96));
+        escrowLogic = newLogic;
+        emit EscrowLogicUpgraded(msg.sender, oldLogic, newLogic);
     }
 
     /**
@@ -221,21 +201,5 @@ contract EscrowFactory is Pausable, TInitializable, EscrowFactoryInterface {
      */
     function _isDapp(address dapp) internal view returns (bool) {
         return dapps[dapp];
-    }
-
-    /**
-        @notice It creates a new Escrow contract instance.
-        @param loanID loan ID associated to this escrow contract.
-        @return the new escrow contract address.
-     */
-    function _createEscrowAddress(uint256 loanID)
-        internal
-        returns (address newEscrowAddress)
-    {
-        bytes32 salt = _computeEscrowSalt(loanID);
-        bytes memory bytecode = _getEscrowBytecode();
-        assembly {
-            newEscrowAddress := create2(0, add(bytecode, 0x20), mload(bytecode), salt)
-        }
     }
 }
