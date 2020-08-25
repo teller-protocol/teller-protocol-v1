@@ -61,8 +61,8 @@ contract ATMSettings is IATMSettings {
         @notice It checks whether sender address has the pauser role or not.
         @dev It throws a require error if sender hasn't the pauser role.
      */
-    modifier withPauserRole() {
-        require(settings.hasPauserRole(msg.sender), "SENDER_HASNT_PAUSER_ROLE");
+    modifier onlyPauser() {
+        require(settings.hasPauserRole(msg.sender), "ONLY_PAUSER");
         _;
     }
 
@@ -88,7 +88,7 @@ contract ATMSettings is IATMSettings {
      */
     function setATMTokenLogic(address newATMTokenLogicAddress)
         external
-        withPauserRole()
+        onlyPauser()
     {
         _setATMTokenLogic(newATMTokenLogicAddress);
     }
@@ -99,7 +99,7 @@ contract ATMSettings is IATMSettings {
      */
     function setATMGovernanceLogic(address newATMGovernanceLogicAddress)
         external
-        withPauserRole()
+        onlyPauser()
     {
         _setATMGovernanceLogic(newATMGovernanceLogicAddress);
     }
@@ -108,7 +108,7 @@ contract ATMSettings is IATMSettings {
         @notice It pauses a given ATM.
         @param atmAddress ATM address to pause.
      */
-    function pauseATM(address atmAddress) external withPauserRole() {
+    function pauseATM(address atmAddress) external onlyPauser() {
         require(settings.isPaused() == false, "PLATFORM_IS_ALREADY_PAUSED");
         require(atmPaused[atmAddress] == false, "ATM_IS_ALREADY_PAUSED");
 
@@ -121,7 +121,7 @@ contract ATMSettings is IATMSettings {
         @notice It unpauses a given ATM.
         @param atmAddress ATM address to unpause.
      */
-    function unpauseATM(address atmAddress) external withPauserRole() {
+    function unpauseATM(address atmAddress) external onlyPauser() {
         require(settings.isPaused() == false, "PLATFORM_IS_PAUSED");
         require(atmPaused[atmAddress] == true, "ATM_IS_NOT_PAUSED");
 
@@ -149,7 +149,7 @@ contract ATMSettings is IATMSettings {
         address borrowedToken,
         address collateralToken,
         address atmAddress
-    ) external withPauserRole() {
+    ) external onlyPauser() {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
             collateralToken == ETH_ADDRESS || collateralToken.isContract() == true,
@@ -175,7 +175,7 @@ contract ATMSettings is IATMSettings {
         address borrowedToken,
         address collateralToken,
         address newAtmAddress
-    ) external withPauserRole() {
+    ) external onlyPauser() {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
             collateralToken == ETH_ADDRESS || collateralToken.isContract() == true,
@@ -210,7 +210,7 @@ contract ATMSettings is IATMSettings {
      */
     function removeATMToMarket(address borrowedToken, address collateralToken)
         external
-        withPauserRole()
+        onlyPauser()
     {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(

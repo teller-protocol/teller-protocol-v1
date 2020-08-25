@@ -38,7 +38,7 @@ contract("ATMSettingsSetATMTokenLogicTest", function (accounts) {
         _1_basic: [0, atmTokenLogicIndex + 1, undefined, false],
         _2_not_contract: [0, 99, "ATM_TOKEN_MUST_BE_A_CONTRACT", true],
         _4_same_old: [0, atmTokenLogicIndex, "NEW_ATM_TOKEN_MUST_BE_PROVIDED", true],
-        _5_not_pauser: [ADMIN_INDEX + 1, atmTokenLogicIndex + 1, 'SENDER_HASNT_PAUSER_ROLE', true],
+        _5_not_pauser: [ADMIN_INDEX + 1, atmTokenLogicIndex + 1, 'ONLY_PAUSER', true],
     }, function(
         senderIndex,
         newAtmTokenLogicIndex,

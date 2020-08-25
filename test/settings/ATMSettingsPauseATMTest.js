@@ -32,7 +32,7 @@ contract('ATMSettingsPauseATMTest', function (accounts) {
     withData({
         _1_basic: [[], 0, 1, true, true, false, undefined, false],
         _2_basic_previous_atms: [[1, 2, 3], 5, 1, true, true, false, undefined, false],
-        _3_sender_not_pauser_role: [[], 0, 1, true, false, false, 'SENDER_HASNT_PAUSER_ROLE', true],
+        _3_sender_not_pauser_role: [[], 0, 1, true, false, false, 'ONLY_PAUSER', true],
         _4_platform_already_paused: [[], 0, 1, true, true, true, 'PLATFORM_IS_ALREADY_PAUSED', true],
         _5_atm_already_paused: [[1, 2], 2, 1, true, true, false, 'ATM_IS_ALREADY_PAUSED', true],
     }, function(previousATMs, atmIndex, senderIndex, encodeIsATM, encodeHasPauserRole, encodeIsPaused, expectedErrorMessage, mustFail) {

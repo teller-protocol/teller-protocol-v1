@@ -36,7 +36,7 @@ contract('ATMSettingsUpdateATMToMarketTest', function (accounts) {
         _2_invalid_not_exist: [[newAtM(0, 1, 2)], newAtM(1, 1, 2), 0, true, true, false, 'ATM_TO_MARKET_NOT_EXIST', true],
         _3_borrowed_token_not_contract: [[newAtM(3, 1, 0)], newAtM(99, 2, 3), 0, true, true, false, 'BORROWED_TOKEN_MUST_BE_CONTRACT', true],
         _4_collateral_token_not_contract: [[newAtM(3, 1, 0)], newAtM(1, 99, 3), 0, true, true, false, 'COLL_TOKEN_MUST_BE_CONTRACT', true],
-        _5_sender_not_pauser: [[newAtM(2, 3, 1)], newAtM(2, 3, 1), 1, true, false, false, 'SENDER_HASNT_PAUSER_ROLE', true],
+        _5_sender_not_pauser: [[newAtM(2, 3, 1)], newAtM(2, 3, 1), 1, true, false, false, 'ONLY_PAUSER', true],
         _6_same_value: [[newAtM(0, 1, 2)], newAtM(0, 1, 2), 0, true, true, false, 'PROVIDE_NEW_ATM_FOR_MARKET', true],
     }, function(previousATMToMarkets, atmToMarket, senderIndex, encodeIsATM, encodeHasPauserRole, encodeIsPaused, expectedErrorMessage, mustFail) {
         it(t('user', 'updateATMToMarket', 'Should (or not) be able to update an ATM from a market.', mustFail), async function() {

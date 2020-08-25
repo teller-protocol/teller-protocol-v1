@@ -38,7 +38,7 @@ contract("ATMSettingsSetATMGovernanceLogicTest", function (accounts) {
         _1_basic: [0, atmGovernanceLogicIndex + 1, undefined, false],
         _2_not_contract: [0, 99, "ATM_GOV_MUST_BE_A_CONTRACT", true],
         _4_same_old: [0, atmGovernanceLogicIndex, "NEW_ATM_GOV_MUST_BE_PROVIDED", true],
-        _5_not_pauser: [ADMIN_INDEX + 1, atmGovernanceLogicIndex + 1, 'SENDER_HASNT_PAUSER_ROLE', true],
+        _5_not_pauser: [ADMIN_INDEX + 1, atmGovernanceLogicIndex + 1, 'ONLY_PAUSER', true],
     }, function(
         senderIndex,
         newAtmGovernanceLogicIndex,
