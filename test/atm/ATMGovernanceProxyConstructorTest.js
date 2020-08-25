@@ -34,14 +34,16 @@ contract('ATMGovernanceProxyConstructorTest', function (accounts) {
         it(t('user', 'constructor', 'Should be able to create and initialize contract.', mustFail), async function() {
             // Setup
             try {
+                // Invocation
                 const proxy = await ATMGovernanceProxy.new(atmSettings.address)
-                const atmGovernance = await ATMGovernance.at(proxy.address)
 
                 // Assertions
-                const isInitialized = await atmGovernance.initialized.call()
+                const atmGovernance = await ATMGovernance.at(proxy.address)
+                assert(!mustFail, 'It should have failed because data is invalid.')
+                const isInitialized = await atmGovernance.initialized()
                 assert(isInitialized, 'Contract not initialized.')
 
-                const atmSettingsAddress = await atmGovernance.atmSettings.call()
+                const atmSettingsAddress = await atmGovernance.atmSettings()
                 assert.equal(atmSettings.address, atmSettingsAddress, 'ATMSettings address not set.')
             } catch (error) {
                 // Assertions

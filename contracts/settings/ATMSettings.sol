@@ -76,8 +76,8 @@ contract ATMSettings is IATMSettings {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
 
         settings = SettingsInterface(settingsAddress);
-        setATMTokenLogic(atmTokenLogicAddress);
-        setATMGovernanceLogic(atmGovernanceLogicAddress);
+        _setATMTokenLogic(atmTokenLogicAddress);
+        _setATMGovernanceLogic(atmGovernanceLogicAddress);
     }
 
     /** External Functions */
@@ -87,23 +87,10 @@ contract ATMSettings is IATMSettings {
         @param newATMTokenLogicAddress the new ATM token template address.
      */
     function setATMTokenLogic(address newATMTokenLogicAddress)
-        public
+        external
         withPauserRole()
     {
-        require(newATMTokenLogicAddress.isContract(), "ATM_TOKEN_MUST_BE_A_CONTRACT");
-        address oldATMTokenLogic = atmTokenLogic;
-        oldATMTokenLogic.requireNotEqualTo(
-            newATMTokenLogicAddress,
-            "NEW_ATM_TOKEN_MUST_BE_PROVIDED"
-        );
-
-        atmTokenLogic = newATMTokenLogicAddress;
-
-        emit ATMTokenLogicUpdated(
-            msg.sender,
-            oldATMTokenLogic,
-            newATMTokenLogicAddress
-        );
+        _setATMTokenLogic(newATMTokenLogicAddress);
     }
 
     /**
@@ -111,26 +98,10 @@ contract ATMSettings is IATMSettings {
         @param newATMGovernanceLogicAddress the new ATM governance template address.
      */
     function setATMGovernanceLogic(address newATMGovernanceLogicAddress)
-        public
+        external
         withPauserRole()
     {
-        require(
-            newATMGovernanceLogicAddress.isContract(),
-            "ATM_GOV_MUST_BE_A_CONTRACT"
-        );
-        address oldATMGovernanceLogic = atmGovernanceLogic;
-        oldATMGovernanceLogic.requireNotEqualTo(
-            newATMGovernanceLogicAddress,
-            "NEW_ATM_GOV_MUST_BE_PROVIDED"
-        );
-
-        atmGovernanceLogic = newATMGovernanceLogicAddress;
-
-        emit ATMGovernanceLogicUpdated(
-            msg.sender,
-            oldATMGovernanceLogic,
-            newATMGovernanceLogicAddress
-        );
+        _setATMGovernanceLogic(newATMGovernanceLogicAddress);
     }
 
     /**
@@ -293,6 +264,53 @@ contract ATMSettings is IATMSettings {
     }
 
     /** Internal functions */
+
+    /**
+        @notice It sets a new ATM token template to be used in the proxy (see createATM function).
+        @param newATMTokenLogicAddress the new ATM token template address.
+     */
+    function _setATMTokenLogic(address newATMTokenLogicAddress) internal {
+        require(newATMTokenLogicAddress.isContract(), "ATM_TOKEN_MUST_BE_A_CONTRACT");
+        address oldATMTokenLogic = atmTokenLogic;
+        oldATMTokenLogic.requireNotEqualTo(
+            newATMTokenLogicAddress,
+            "NEW_ATM_TOKEN_MUST_BE_PROVIDED"
+        );
+
+        atmTokenLogic = newATMTokenLogicAddress;
+
+        emit ATMTokenLogicUpdated(
+            msg.sender,
+            oldATMTokenLogic,
+            newATMTokenLogicAddress
+        );
+    }
+
+    /**
+        @notice It sets a new ATM governance template to be used in the proxy (see createATM function).
+        @param newATMGovernanceLogicAddress the new ATM governance template address.
+     */
+    function _setATMGovernanceLogic(address newATMGovernanceLogicAddress)
+        internal
+    {
+        require(
+            newATMGovernanceLogicAddress.isContract(),
+            "ATM_GOV_MUST_BE_A_CONTRACT"
+        );
+        address oldATMGovernanceLogic = atmGovernanceLogic;
+        oldATMGovernanceLogic.requireNotEqualTo(
+            newATMGovernanceLogicAddress,
+            "NEW_ATM_GOV_MUST_BE_PROVIDED"
+        );
+
+        atmGovernanceLogic = newATMGovernanceLogicAddress;
+
+        emit ATMGovernanceLogicUpdated(
+            msg.sender,
+            oldATMGovernanceLogic,
+            newATMGovernanceLogicAddress
+        );
+    }
 
     /** Private functions */
 }

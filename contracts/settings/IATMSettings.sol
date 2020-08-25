@@ -152,6 +152,18 @@ interface IATMSettings {
     ) external;
 
     /**
+        @notice It sets a new ATM token template to be used in the proxy (see createATM function).
+        @param newATMTokenLogicAddress the new ATM token template address.
+     */
+    function setATMTokenLogic(address newATMTokenLogicAddress) external;
+
+    /**
+        @notice It sets a new ATM governance template to be used in the proxy (see createATM function).
+        @param newATMGovernanceLogicAddress the new ATM governance template address.
+     */
+    function setATMGovernanceLogic(address newATMGovernanceLogicAddress) external;
+
+    /**
         @notice Updates a new ATM for a given market (borrowed token and collateral token).
         @param borrowedToken borrowed token address.
         @param collateralToken collateral token address.

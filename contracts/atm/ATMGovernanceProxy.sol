@@ -4,6 +4,8 @@ import "./BaseATMProxy.sol";
 
 /**
     @notice It is the Proxy contract for ATM Governance.
+
+    @author develop@teller.finance
  */
 contract ATMGovernanceProxy is BaseATMProxy {
     /**

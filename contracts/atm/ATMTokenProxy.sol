@@ -3,7 +3,9 @@ pragma solidity 0.5.17;
 import "./BaseATMProxy.sol";
 
 /**
-    @notice It is the Proxy contract for ATM Tokens.
+ * @notice It is the Proxy contract for ATM Tokens.
+ *
+ * @author develop@teller.finance
  */
 contract ATMTokenProxy is BaseATMProxy {
     /**

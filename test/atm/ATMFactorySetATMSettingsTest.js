@@ -1,6 +1,7 @@
 // JS Libraries
 const withData = require("leche").withData;
 const { t, NULL_ADDRESS } = require("../utils/consts");
+const { createTestSettingsInstance } = require("../utils/settings-helper");
 const { atmFactory } = require("../utils/events");
 
 // Mock contracts
@@ -12,16 +13,16 @@ const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 
 contract("ATMFactorySetATMSettingsTest", function(accounts) {
-    const ADMIN_INDEX = 1;
+    const ADMIN_INDEX = 0;
     const admin = accounts[ADMIN_INDEX];
+    let settings;
     let instance;
     let initialATMSettings;
     let atmTokenLogic;
     let atmGovernanceLogic;
 
     beforeEach("Setup for each test", async () => {
-        const settings = await Settings.new();
-        await settings.initialize(admin);
+        settings = await createTestSettingsInstance(Settings);
 
         atmTokenLogic = await Mock.new();
         atmGovernanceLogic = await Mock.new();
@@ -51,7 +52,7 @@ contract("ATMFactorySetATMSettingsTest", function(accounts) {
             // Setup
             let newATMSettingsAddress;
             if (contractIndex == 0) {
-                let newATMSettings = await ATMSettings.new(
+                const newATMSettings = await ATMSettings.new(
                     settings.address,
                     atmTokenLogic.address,
                     atmGovernanceLogic.address

@@ -5,6 +5,8 @@ import "./BaseATM.sol";
 
 /**
     @notice It is the base Proxy contract for all ATM contracts.
+
+    @author develop@teller.finance
  */
 contract BaseATMProxy is BaseProxy, BaseATM {
     /** Internal Functions **/
