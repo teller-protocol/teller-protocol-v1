@@ -3,7 +3,6 @@ yarn-error.log
 coverage.json
 coverage
 build
-.env
 .DS_Store
 test-integration/resources/data
 .idea
