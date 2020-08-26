@@ -122,16 +122,17 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
 
                 const txTime = (await web3.eth.getBlock(tx.receipt.blockNumber)).timestamp
                 const interestOwed = Math.floor(amountToBorrow * 1475 * loanDuration / 10000 / 3650000)
-                const loan = await instance.loans.call(mockLoanID)
+                const loan = await instance.loans(mockLoanID)
 
-                assert.equal(loan['loanStartTime'].toString(), txTime)
-                assert.equal(loan['principalOwed'].toString(), amountToBorrow)
-                assert.equal(loan['interestOwed'].toString(), interestOwed)
-                assert.equal(loan['status'].toString(), ACTIVE)
+                assert.equal(loan.loanStartTime.toString(), txTime)
+                assert.equal(loan.principalOwed.toString(), amountToBorrow)
+                assert.equal(loan.interestOwed.toString(), interestOwed)
+                assert.equal(loan.status.toString(), ACTIVE)
+                assert(loan.escrow.toString() !== NULL_ADDRESS)
 
                 loans
                     .loanTakenOut(tx)
-                    .emitted(mockLoanID, borrower, amountToBorrow)
+                    .emitted(mockLoanID, borrower, loan.escrow, amountToBorrow)
 
             } catch (error) {
                 assert(mustFail);

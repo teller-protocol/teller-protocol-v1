@@ -107,9 +107,10 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   // Take out a loan.
   console.log(`Taking out loan id ${lastLoanID}...`);
   const takeOutLoanResult = await loansInstance.takeOutLoan(lastLoanID, amountWei, borrowerTxConfig);
+  const { escrow } = await loansInstance.loans(lastLoanID);
   loans
     .loanTakenOut(takeOutLoanResult)
-    .emitted(lastLoanID, borrowerTxConfig.from, amountWei.toFixed(0));
+    .emitted(lastLoanID, borrowerTxConfig.from, escrow, amountWei.toFixed(0));
 
   // Calculate payment
   console.log(`Making payment for loan id ${lastLoanID}...`);

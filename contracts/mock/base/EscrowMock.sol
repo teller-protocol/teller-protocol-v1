@@ -32,7 +32,7 @@ contract EscrowMock is Escrow {
 
     function externalIsBorrower() external onlyBorrower() {}
 
-    function testImplementationFunctionMultiply(uint256 num1, uint256 num2) external returns (uint256) {
+    function testImplementationFunctionMultiply(uint256 num1, uint256 num2) external pure returns (uint256) {
         return num1 * num2;
     }
 }

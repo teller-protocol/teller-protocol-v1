@@ -58,11 +58,13 @@ interface LoansInterface {
         @notice This event is emitted when a loan has been successfully taken out
         @param loanID ID of loan from which collateral was withdrawn
         @param borrower Account address of the borrower
+        @param escrow Escrow address associated to this loan
         @param amountBorrowed Total amount taken out in the loan
      */
     event LoanTakenOut(
         uint256 indexed loanID,
         address indexed borrower,
+        address indexed escrow,
         uint256 amountBorrowed
     );
 
