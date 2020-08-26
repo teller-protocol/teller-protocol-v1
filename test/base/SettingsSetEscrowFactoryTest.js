@@ -26,9 +26,9 @@ contract('SettingsSetEscrowFactoryTest', function (accounts) {
         _1_basic: [0, 2, false, undefined, false],
         _2_paused: [0, 3, true, "Pausable: paused", true],
         _3_notOwner: [2, 4, false, 'PauserRole: caller does not have the Pauser role', true],
-        _4_empty: [0, -1, false, 'NEW_FACTORY_MUST_BE_CONTRACT', true],
-        _5_not_contract: [0, 99, false, 'NEW_FACTORY_MUST_BE_CONTRACT', true],
-        _6_same: [0, 100, false, 'NEW_ESCROW_FACTORY_MUST_BE_NEW', true],
+        _4_empty: [0, -1, false, 'NEW_ADDRESS_MUST_BE_CONTRACT', true],
+        _5_not_contract: [0, 99, false, 'NEW_ADDRESS_MUST_BE_CONTRACT', true],
+        _6_same: [0, 100, false, 'NEW_ADDRESS_MUST_BE_NEW', true],
     }, function(senderIndex, newEscrowFactoryIndex, pause, expectedErrorMessage, mustFail) {
         it(t('user', 'setEscrowFactory', 'Should (or not) be able to set the platform escrow factory.', mustFail), async function() {
             // Setup
@@ -37,7 +37,7 @@ contract('SettingsSetEscrowFactoryTest', function (accounts) {
                 const currentEscrowFactory = await Mock.new();
                 await instance.setEscrowFactory(currentEscrowFactory.address, { from: owner });
             }
-            const settingsEscrowFactoryAddressOld = await instance.getEscrowFactory();
+            const settingsEscrowFactoryAddressOld = await instance.escrowFactory();
             const newEscrowFactoryAddress = newEscrowFactoryIndex === 100 ? settingsEscrowFactoryAddressOld : getInstance(mocks, newEscrowFactoryIndex, 2);
             if (pause) {
                 await instance.pause();
@@ -51,7 +51,7 @@ contract('SettingsSetEscrowFactoryTest', function (accounts) {
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
 
-                const settingsEscrowFactoryAddress = await instance.getEscrowFactory();
+                const settingsEscrowFactoryAddress = await instance.escrowFactory();
                 assert.equal(
                     newEscrowFactoryAddress.toLowerCase(),
                     settingsEscrowFactoryAddress.toLowerCase(),

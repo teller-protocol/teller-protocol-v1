@@ -1,17 +1,21 @@
 pragma solidity 0.5.17;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "../openzeppelin/SignedSafeMath.sol";
-import "@chainlink/contracts/src/v0.5/interfaces/AggregatorInterface.sol";
+// Contracts
+import "./BaseChainlinkPairAggregator.sol";
+
+// Interfaces
 import "../../interfaces/PairAggregatorInterface.sol";
 
+// Libraries
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "../openzeppelin/SignedSafeMath.sol";
 
 /**
     @notice This is a Chainlink Oracle wrapper implementation. It uses the AggregatorInterface from Chainlink to get data.
 
     @author develop@teller.finance
  */
-contract ChainlinkPairAggregator is PairAggregatorInterface {
+contract ChainlinkPairAggregator is BaseChainlinkPairAggregator, PairAggregatorInterface, TInitializable {
     using SafeMath for uint256;
     using SignedSafeMath for int256;
 
@@ -22,30 +26,6 @@ contract ChainlinkPairAggregator is PairAggregatorInterface {
     uint8 public responseDecimals;
     uint8 public collateralDecimals;
     uint8 public pendingDecimals;
-
-    /**
-        @notice It creates a new ChainlinkPairAggregator instance.
-        @param aggregatorAddress to use in this Chainlink pair aggregator.
-        @param responseDecimalsValue the decimals included in the Chainlink response.
-        @param collateralDecimalsValue the decimals included in the collateral token.
-    */
-    constructor(
-        address aggregatorAddress,
-        uint8 responseDecimalsValue,
-        uint8 collateralDecimalsValue
-    ) public {
-        require(aggregatorAddress != address(0x0), "PROVIDE_AGGREGATOR_ADDRESS");
-        aggregator = AggregatorInterface(aggregatorAddress);
-        responseDecimals = responseDecimalsValue;
-        collateralDecimals = collateralDecimalsValue;
-
-        if (collateralDecimals >= responseDecimals) {
-            pendingDecimals = collateralDecimals - responseDecimals;
-        } else {
-            pendingDecimals = responseDecimals - collateralDecimals;
-        }
-        require(pendingDecimals <= MAX_POWER_VALUE, "MAX_PENDING_DECIMALS_EXCEEDED");
-    }
 
     /** External Functions */
 
@@ -119,5 +99,35 @@ contract ChainlinkPairAggregator is PairAggregatorInterface {
         } else {
             return value.div(int256(TEN**pendingDecimals));
         }
+    }
+
+    /**
+        @notice It creates a new ChainlinkPairAggregator instance.
+        @param aggregatorAddress to use in this Chainlink pair aggregator.
+        @param responseDecimalsValue the decimals included in the Chainlink response.
+        @param collateralDecimalsValue the decimals included in the collateral token.
+    */
+    function initialize(
+        address aggregatorAddress,
+        uint8 responseDecimalsValue,
+        uint8 collateralDecimalsValue
+    )
+        public
+        isNotInitialized()
+    {
+        require(aggregatorAddress.isContract(), "AGGREGATOR_NOT_CONTRACT");
+
+        _initialize();
+
+        aggregator = AggregatorInterface(aggregatorAddress);
+        responseDecimals = responseDecimalsValue;
+        collateralDecimals = collateralDecimalsValue;
+
+        if (collateralDecimals >= responseDecimals) {
+            pendingDecimals = collateralDecimals - responseDecimals;
+        } else {
+            pendingDecimals = responseDecimals - collateralDecimals;
+        }
+        require(pendingDecimals <= MAX_POWER_VALUE, "MAX_PENDING_DECIMALS_EXCEEDED");
     }
 }

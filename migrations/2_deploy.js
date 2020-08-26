@@ -26,6 +26,7 @@ const ATMFactory = artifacts.require("./atm/ATMFactory.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 const ATMToken = artifacts.require("./atm/ATMToken.sol");
 // External providers
+const ChainlinkPairAggregatorRegistry = artifacts.require("./providers/chainlink/ChainlinkPairAggregatorRegistry.sol");
 const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
 const InverseChainlinkPairAggregator = artifacts.require("./providers/chainlink/InverseChainlinkPairAggregator.sol");
 
@@ -105,7 +106,17 @@ module.exports = async function(deployer, network, accounts) {
   );
 
   const aggregators = {};
-  
+
+  await deployerApp.deploy(ChainlinkPairAggregator, txConfig)
+  await deployerApp.deploy(InverseChainlinkPairAggregator, txConfig)
+  // cannot get the web3 contract from the truffle contract
+  const pairAggregregatorRegistryInitData = new web3.eth.Contract(ChainlinkPairAggregatorRegistry.abi)
+      .methods
+      .initialize(settingsInstance.address, ChainlinkPairAggregator.address, InverseChainlinkPairAggregator.address)
+      .encodeABI()
+  const chainlinkPairAggregatorRegistry = await deployerApp.deployWithUpgradeable('ChainlinkPairAggregatorRegistry', ChainlinkPairAggregatorRegistry, txConfig.from, pairAggregregatorRegistryInitData, txConfig)
+  await settingsInstance.setChainlinkPairAggregatorRegistry(chainlinkPairAggregatorRegistry.address)
+
   for (const chainlinkOraclePair of chainlinkOraclesRequired) {
     const chainlinkOracleInfo = chainlink[chainlinkOraclePair];
     const {
@@ -115,22 +126,34 @@ module.exports = async function(deployer, network, accounts) {
       inversed,
     } = chainlinkOracleInfo;
 
-    const ChainlinkPairAggregatorReference = inversed ? InverseChainlinkPairAggregator : ChainlinkPairAggregator;
-    let chainlinkPairAggregatorName =  `ChainlinkPairAggregator_${chainlinkOraclePair.toUpperCase()}`;
-    if(inversed) {
-      const pairs = chainlinkOraclePair.split('_');
-      chainlinkPairAggregatorName =  `ChainlinkPairAggregator_${pairs[1].toUpperCase()}_${pairs[0]}`;
-    }
-    await deployerApp.deployWith(
-      chainlinkPairAggregatorName,
-      ChainlinkPairAggregatorReference,
-      address,
+    const [ baseSymbol, quoteSymbol ] = chainlinkOraclePair.split('_');
+    const registerRequest = {
+      baseSymbol,
+      quoteSymbol,
+      chainlinkAggregatorAddress: address,
+      inverse: inversed,
       responseDecimals,
-      collateralDecimals,
-      txConfig
-    );
-    console.log(`New aggregator (Inversed? ${inversed}) for ${chainlinkOraclePair} (Collateral Decimals: ${collateralDecimals} / Response Decimals: ${responseDecimals}): ${ChainlinkPairAggregatorReference.address} (using Chainlink Oracle address ${address})`);
-    aggregators[chainlinkOraclePair] = ChainlinkPairAggregatorReference.address;
+      collateralDecimals
+    }
+    const aggregatorAddress = await chainlinkPairAggregatorRegistry.register.call(registerRequest, txConfig)
+    await chainlinkPairAggregatorRegistry.register(registerRequest, txConfig)
+
+    // const ChainlinkPairAggregatorReference = inversed ? InverseChainlinkPairAggregator : ChainlinkPairAggregator;
+    // let chainlinkPairAggregatorName =  `ChainlinkPairAggregator_${chainlinkOraclePair.toUpperCase()}`;
+    // if(inversed) {
+    //   const pairs = chainlinkOraclePair.split('_');
+    //   chainlinkPairAggregatorName =  `ChainlinkPairAggregator_${pairs[1].toUpperCase()}_${pairs[0]}`;
+    // }
+    // await deployerApp.deployWith(
+    //   chainlinkPairAggregatorName,
+    //   ChainlinkPairAggregatorReference,
+    //   address,
+    //   responseDecimals,
+    //   collateralDecimals,
+    //   txConfig
+    // );
+    console.log(`New aggregator (Inversed? ${inversed}) for ${chainlinkOraclePair} (Collateral Decimals: ${collateralDecimals} / Response Decimals: ${responseDecimals}): ${aggregatorAddress} (using Chainlink Oracle address ${address})`);
+    aggregators[chainlinkOraclePair] = aggregatorAddress;
   }
 
   const deployConfig = {

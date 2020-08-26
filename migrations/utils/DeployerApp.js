@@ -20,7 +20,7 @@ class DeployerApp {
     After deploying a proxy, we MUST call the initialize function with the parameters it needs.
  */
 DeployerApp.prototype.deployWithUpgradeable = async function(contractName, contract, admin, initData, ...params) {
-    await this.deployWith(contractName, contract, ...params)
+    await this.deployWith(contractName, contract)
     await this.deployWith(`${contractName}_Proxy`, this.UpgradeableProxy, contract.address, admin, initData, ...params)
     return contract.at(this.UpgradeableProxy.address)
 }

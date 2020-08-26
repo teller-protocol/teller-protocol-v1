@@ -6,28 +6,23 @@ import "./BaseEscrow.sol";
 
 
 /**
-    @notice It is a Proxy contract for Escrows that uses the logic implementation as defined in the EscrowFactory contract.
-    @notice It extends BaseEscrow so the constructor is able to store the Escrow's initial state variables.
+    @notice It is a Proxy contract for Escrows that uses the logic implementation as defined in the global EscrowFactory contract.
+    @notice It extends BaseEscrow to get access to the settings.
 
     @author develop@teller.finance
  */
 contract EscrowProxy is BaseProxy, BaseEscrow {
     /**
-        @notice This Proxy constructor acts as the constructor/initialize function for the Escrow contract.
+        @notice Define the Settings contract for the proxy to get the current implementation logic from the global EscrowFactory.
         @param settingsAddress the Settings contract address.
-        @param loansAddress the Loans contract address.
-        @param aLoanID the loanID associated to this Escrow contract.
      */
-    constructor(address settingsAddress, address loansAddress, uint256 aLoanID)
+    constructor(address settingsAddress)
         public
         payable
     {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
-        require(loansAddress.isContract(), "LOANS_MUST_BE_A_CONTRACT");
 
         settings = SettingsInterface(settingsAddress);
-        loans = LoansInterface(loansAddress);
-        loanID = aLoanID;
     }
 
     /** Internal Functions **/
@@ -37,6 +32,6 @@ contract EscrowProxy is BaseProxy, BaseEscrow {
         @return Address of the current implementation
      */
     function _implementation() internal view returns (address) {
-        return settings.getEscrowFactory().escrowLogic();
+        return settings.escrowFactory().escrowLogic();
     }
 }

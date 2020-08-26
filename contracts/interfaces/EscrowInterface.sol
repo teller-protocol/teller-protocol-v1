@@ -17,4 +17,5 @@ interface EscrowInterface {
      */
     function callDapp(TellerCommon.DappData calldata dappData) external;
 
+    function initialize(address loansAddress, uint256 aLoanID) external;
 }

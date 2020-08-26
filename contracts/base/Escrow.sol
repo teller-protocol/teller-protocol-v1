@@ -2,12 +2,14 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
+import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 
 // Interfaces
 import "../interfaces/EscrowInterface.sol";
 
 // Libraries
 import "./BaseEscrow.sol";
+import "./BaseEscrowDapp.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -27,15 +29,30 @@ import "./BaseEscrow.sol";
 
     @author develop@teller.finance
  */
-contract Escrow is BaseEscrow, EscrowInterface {
+contract Escrow is BaseEscrow, BaseEscrowDapp, EscrowInterface, TInitializable, Ownable {
+    using Address for address;
+
+    /** State Variables **/
+
     /**
-        @notice It checks whether the sender is the borrower or not.
-        @dev It throws a require error if the sender is not the borrower associated to the current loan id.
+        @notice It is the current loans contract instance.
      */
-    modifier onlyBorrower() {
-        require(_isBorrower(), "CALLER_NOT_BORROWER");
+    LoansInterface public loans;
+
+    /**
+        @notice This loan id refers the loan in the loans contract.
+        @notice This loan was taken out by a borrower.
+     */
+    uint256 public loanID;
+
+    /** Modifiers **/
+
+    modifier whenLoanActive() {
+        require(getLoan().status == TellerCommon.LoanStatus.Active, "LOAN_NOT_ACTIVE");
         _;
     }
+
+    /** Public Functions **/
 
     /**
         @notice It calls a given dapp using a delegatecall function by a borrower owned the current loan id associated to this escrow contract.
@@ -43,22 +60,51 @@ contract Escrow is BaseEscrow, EscrowInterface {
      */
     function callDapp(TellerCommon.DappData calldata dappData)
         external
-        onlyBorrower()
+        isInitialized()
+        whenLoanActive()
+        onlyOwner()
     {
-        require(settings.getEscrowFactory().isDapp(dappData.location), "DAPP_NOT_WHITELISTED");
+        require(settings.escrowFactory().isDapp(dappData.location), "DAPP_NOT_WHITELISTED");
 
         (bool success, ) = dappData.location.delegatecall(dappData.data);
 
         require(success, "DAPP_CALL_FAILED");
     }
 
-    /** Internal Functions */
+    /**
+        @notice Gets the borrower for this Escrow's loan.
+        @return address of this Escrow's loans
+     */
+    function getBorrower() public view returns (address) {
+        return loans.loans(loanID).loanTerms.borrower;
+    }
+
+    function getLoan() public view returns (TellerCommon.Loan memory) {
+        return loans.loans(loanID);
+    }
+
+    function purchaseLoanDebt() external whenLoanActive() {
+    }
 
     /**
-        @notice It checks whether the sender is the loans borrower or not.
-        @dev It throws a require error it sender is not the loans borrower.
+        @notice It initializes the instance of the Escrow.
+        @param loansAddress the Loans contract address.
+        @param aLoanID the loanID associated to this Escrow contract.
      */
-    function _isBorrower() internal view returns (bool) {
-        return msg.sender == loans.loans(loanID).loanTerms.borrower;
+    function initialize(address loansAddress, uint256 aLoanID)
+        public
+        isNotInitialized()
+    {
+        require(loansAddress.isContract(), "LOANS_MUST_BE_A_CONTRACT");
+
+        loans = LoansInterface(loansAddress);
+        loanID = aLoanID;
+
+        initialize(getBorrower());
+
+        // Initialize tokens list with the borrowed token.
+        _tokenUpdated(loans.lendingToken());
     }
+
+    /** Internal Functions */
 }
