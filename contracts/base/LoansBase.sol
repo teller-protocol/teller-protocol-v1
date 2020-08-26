@@ -680,7 +680,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
      */
     function _createEscrow(uint256 loanID) internal returns (address) {
         return
-            settings.getEscrowFactory().createEscrow(
+            settings.escrowFactory().createEscrow(
                 loans[loanID].loanTerms.borrower,
                 loanID
             );

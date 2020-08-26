@@ -4,12 +4,12 @@ pragma experimental ABIEncoderV2;
 import "../../base/Escrow.sol";
 
 contract EscrowMock is Escrow {
-    bool private _mockIsBorrower;
-    bool public isBorrower;
+    bool private _mockIsOwner;
+    bool public _isOwner;
 
-    function mockIsBorrower(bool mockIsABorrower, bool isABorrower) external {
-        _mockIsBorrower = mockIsABorrower;
-        isBorrower = isABorrower;
+    function mockIsOwner(bool mockIsAOwner, bool isAOwner) external {
+        _mockIsOwner = mockIsAOwner;
+        _isOwner = isAOwner;
     }
 
     function mockInitialize(
@@ -22,17 +22,17 @@ contract EscrowMock is Escrow {
         loanID = aLoanID;
     }
 
-    function _isBorrower() internal view returns (bool) {
-        if (_mockIsBorrower) {
-            return isBorrower;
+    function isOwner() public view returns (bool) {
+        if (_mockIsOwner) {
+            return _isOwner;
         } else {
-            return super._isBorrower();
+            return super.isOwner();
         }
     }
 
-    function externalIsBorrower() external onlyBorrower() {}
+    function externalIsOwner() external onlyOwner() {}
 
-    function testImplementationFunctionMultiply(uint256 num1, uint256 num2) external returns (uint256) {
+    function testImplementationFunctionMultiply(uint256 num1, uint256 num2) external pure returns (uint256) {
         return num1 * num2;
     }
 }

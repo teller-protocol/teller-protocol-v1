@@ -11,12 +11,12 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 // Interfaces
 import "../interfaces/EscrowFactoryInterface.sol";
 import "../interfaces/LoansInterface.sol";
+import "../interfaces/EscrowInterface.sol";
+import "../interfaces/SettingsInterface.sol";
 
 // Commons
 import "../util/AddressLib.sol";
 import "../util/AddressArrayLib.sol";
-import "../interfaces/EscrowInterface.sol";
-import "../interfaces/SettingsInterface.sol";
 
 import "./TInitializable.sol";
 
@@ -97,12 +97,12 @@ contract EscrowFactory is TInitializable, EscrowFactoryInterface {
         require(loansAddress.isContract(), "CALLER_MUST_BE_CONTRACT");
         borrower.requireNotEmpty("BORROWER_MUSTNT_BE_EMPTY");
 
-        EscrowProxy escrow = new EscrowProxy(
+        escrowAddress = address(new EscrowProxy());
+        EscrowInterface(escrowAddress).initialize(
             address(settings),
             loansAddress,
             loanID
         );
-        escrowAddress = address(escrow);
 
         emit EscrowCreated(borrower, loansAddress, loanID, escrowAddress);
     }

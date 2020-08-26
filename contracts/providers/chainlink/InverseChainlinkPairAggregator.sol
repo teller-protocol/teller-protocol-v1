@@ -9,25 +9,6 @@ import "./ChainlinkPairAggregator.sol";
     @author develop@teller.finance
  */
 contract InverseChainlinkPairAggregator is ChainlinkPairAggregator {
-    /**
-        @notice It creates a new InverseChainlinkPairAggregator instance.
-        @param aggregatorAddress to use in this Chainlink pair aggregator.
-        @param responseDecimalsValue the decimals included in the Chainlink response.
-        @param collateralDecimalsValue the decimals included in the collateral token.
-    */
-    constructor(
-        address aggregatorAddress,
-        uint8 responseDecimalsValue,
-        uint8 collateralDecimalsValue
-    )
-        public
-        ChainlinkPairAggregator(
-            aggregatorAddress,
-            responseDecimalsValue,
-            collateralDecimalsValue
-        )
-    {}
-
     /** External Functions */
 
     /** Internal Functions */

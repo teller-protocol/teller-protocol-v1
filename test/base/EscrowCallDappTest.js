@@ -57,7 +57,7 @@ contract('EscrowCallDappTest', function (accounts) {
       if (enableDapp) {
         await instance.addDapp(dapp.address, { from: owner });
       }
-      await escrow.mockIsBorrower(true, isBorrower);
+      await escrow.mockIsOwner(true, isBorrower);
 
       let dappData = {
         location: dapp.address,

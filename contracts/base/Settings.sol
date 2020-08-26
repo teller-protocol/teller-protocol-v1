@@ -14,6 +14,7 @@ import "../util/AddressArrayLib.sol";
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
 import "../interfaces/EscrowFactoryInterface.sol";
+import "../providers/chainlink/ChainlinkPairAggregatorRegistry.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -90,7 +91,15 @@ contract Settings is Pausable, SettingsInterface {
      */
     mapping(bytes32 => PlatformSettingsLib.PlatformSetting) public platformSettings;
 
+    /**
+        @notice It is the global instance of the EscrowFactory contract.
+     */
     EscrowFactoryInterface public escrowFactory;
+
+    /**
+        @notice It is the global instance of the ChainlinkPairAggregatorRegistry contract.
+     */
+    ChainlinkPairAggregatorRegistry public chainlinkPairAggregatorRegistry;
 
     /** Modifiers */
 
@@ -360,32 +369,35 @@ contract Settings is Pausable, SettingsInterface {
     }
 
     /**
-        @notice Sets a new escrow factory contract.
-        @param newEscrowFactoryAddress contract address of new escrow factory.
+        @notice Sets a new EscrowFactory contract.
+        @param newValue contract address of new EscrowFactory.
      */
-    function setEscrowFactory(address newEscrowFactoryAddress)
+    function setEscrowFactory(address newValue)
         external
         onlyPauser()
         whenNotPaused()
     {
-        require(newEscrowFactoryAddress.isContract(), "NEW_FACTORY_MUST_BE_CONTRACT");
         address oldValue = address(escrowFactory);
-        newEscrowFactoryAddress.requireNotEqualTo(
-            oldValue,
-            "NEW_ESCROW_FACTORY_MUST_BE_NEW"
-        );
+        _beforeUpdateAddress(oldValue, newValue);
+        escrowFactory = EscrowFactoryInterface(newValue);
 
-        escrowFactory = EscrowFactoryInterface(newEscrowFactoryAddress);
-
-        emit EscrowFactoryUpdated(msg.sender, oldValue, newEscrowFactoryAddress);
+        emit EscrowFactoryUpdated(msg.sender, oldValue, newValue);
     }
 
     /**
-        @notice Get the current escrow factory contract.
-        @return the current escrow factory contract.
+        @notice Sets a new ChainlinkPairAggregatorRegistry contract.
+        @param newValue contract address of new ChainlinkPairAggregatorRegistry.
      */
-    function getEscrowFactory() external view returns (EscrowFactoryInterface) {
-        return escrowFactory;
+    function setChainlinkPairAggregatorRegistry(address newValue)
+        external
+        onlyPauser()
+        whenNotPaused()
+    {
+        address oldValue = address(chainlinkPairAggregatorRegistry);
+        _beforeUpdateAddress(oldValue, newValue);
+        chainlinkPairAggregatorRegistry = ChainlinkPairAggregatorRegistry(newValue);
+
+        emit ChainlinkPairAggregatorRegistryUpdated(msg.sender, oldValue, newValue);
     }
 
     /** Internal functions */
@@ -401,6 +413,17 @@ contract Settings is Pausable, SettingsInterface {
         returns (PlatformSettingsLib.PlatformSetting memory)
     {
         return platformSettings[settingName];
+    }
+
+    /**
+        @notice It performs pre-update checks on the old and new contract addresses.
+     */
+    function _beforeUpdateAddress(address oldValue, address newValue)
+        internal
+        view
+    {
+        require(newValue.isContract(), "NEW_ADDRESS_MUST_BE_CONTRACT");
+        newValue.requireNotEqualTo(oldValue, "NEW_ADDRESS_MUST_BE_NEW");
     }
 
     /** Private functions */

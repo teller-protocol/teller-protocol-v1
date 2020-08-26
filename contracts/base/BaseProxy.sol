@@ -13,9 +13,6 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 contract BaseProxy is Proxy {
     using Address for address;
 
-    constructor() public payable {
-    }
-
     /** Internal Functions **/
 
     /**

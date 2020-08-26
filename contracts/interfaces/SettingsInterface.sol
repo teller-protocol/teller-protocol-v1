@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 import "../util/AssetSettingsLib.sol";
 import "../util/PlatformSettingsLib.sol";
 import "./EscrowFactoryInterface.sol";
+import "../providers/chainlink/ChainlinkPairAggregatorRegistry.sol";
 
 /**
     @notice This interface defines all function to manage the platform configuration.
@@ -121,12 +122,24 @@ interface SettingsInterface {
     );
 
     /**
-        @notice This event is emitted when the escrow factory is updated.
+        @notice This event is emitted when the global EscrowFactory address is updated.
         @param sender the transaction sender address.
-        @param oldValue the old value used for the escrow factory address.
-        @param newValue the value updated.
+        @param oldValue the old address.
+        @param newValue the new address.
      */
     event EscrowFactoryUpdated(
+        address indexed sender,
+        address oldValue,
+        address newValue
+    );
+
+    /**
+        @notice This event is emitted when the global ChainlinkPairAggregatorRegistry address is updated.
+        @param sender the transaction sender address.
+        @param oldValue the old address.
+        @param newValue the new address.
+     */
+    event ChainlinkPairAggregatorRegistryUpdated(
         address indexed sender,
         address oldValue,
         address newValue
@@ -283,14 +296,26 @@ interface SettingsInterface {
     function requirePauserRole(address account) external view;
 
     /**
-        @notice Get the current escrow factory contract.
-        @return the current escrow factory contract.
+        @notice Get the current EscrowFactory contract.
+        @return the current EscrowFactory contract.
      */
-    function getEscrowFactory() external view returns (EscrowFactoryInterface);
+    function escrowFactory() external view returns (EscrowFactoryInterface);
+
+    /**
+        @notice Sets a new EscrowFactory contract.
+        @param newValue contract address of new EscrowFactory.
+     */
+    function setEscrowFactory(address newValue) external;
+
+    /**
+        @notice Get the current ChainlinkPairAggregatorRegistry contract.
+        @return the current ChainlinkPairAggregatorRegistry contract.
+     */
+    function chainlinkPairAggregatorRegistry() external view returns (ChainlinkPairAggregatorRegistry);
 
     /**
         @notice Sets a new escrow factory contract.
-        @param newEscrowFactoryAddress contract address of new escrow factory.
+        @param newValue contract address of new ChainlinkPairAggregatorRegistry.
      */
-    function setEscrowFactory(address newEscrowFactoryAddress) external;
+    function setChainlinkPairAggregatorRegistry(address newValue) external;
 }
