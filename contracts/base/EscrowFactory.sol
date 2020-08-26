@@ -97,9 +97,8 @@ contract EscrowFactory is TInitializable, EscrowFactoryInterface {
         require(loansAddress.isContract(), "CALLER_MUST_BE_CONTRACT");
         borrower.requireNotEmpty("BORROWER_MUSTNT_BE_EMPTY");
 
-        escrowAddress = address(new EscrowProxy());
+        escrowAddress = address(new EscrowProxy(address(settings)));
         EscrowInterface(escrowAddress).initialize(
-            address(settings),
             loansAddress,
             loanID
         );

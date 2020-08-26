@@ -39,7 +39,7 @@ contract ChainlinkPairAggregatorRegistry is IChainlinkPairAggregatorRegistry, TI
         onlyPauser()
         returns (PairAggregatorInterface aggregator)
     {
-        ChainlinkPairAggregatorProxy proxy = new ChainlinkPairAggregatorProxy(address(settings));
+        ChainlinkPairAggregatorProxy proxy = new ChainlinkPairAggregatorProxy(address(settings), request.inverse);
         address pairAggregatorAddress = address(proxy);
         aggregator = PairAggregatorInterface(pairAggregatorAddress);
         aggregator.initialize(
