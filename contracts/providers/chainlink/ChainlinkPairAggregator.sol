@@ -1,6 +1,7 @@
 pragma solidity 0.5.17;
 
 // Contracts
+import "../../base/TInitializable.sol";
 import "./BaseChainlinkPairAggregator.sol";
 
 // Interfaces
@@ -8,6 +9,7 @@ import "../../interfaces/PairAggregatorInterface.sol";
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "../openzeppelin/SignedSafeMath.sol";
 
 /**
@@ -18,6 +20,7 @@ import "../openzeppelin/SignedSafeMath.sol";
 contract ChainlinkPairAggregator is BaseChainlinkPairAggregator, PairAggregatorInterface, TInitializable {
     using SafeMath for uint256;
     using SignedSafeMath for int256;
+    using Address for address;
 
     uint256 internal constant TEN = 10;
     uint256 internal constant MAX_POWER_VALUE = 50;
@@ -109,6 +112,7 @@ contract ChainlinkPairAggregator is BaseChainlinkPairAggregator, PairAggregatorI
     */
     function initialize(
         address aggregatorAddress,
+        bool isInverse,
         uint8 responseDecimalsValue,
         uint8 collateralDecimalsValue
     )
@@ -119,6 +123,7 @@ contract ChainlinkPairAggregator is BaseChainlinkPairAggregator, PairAggregatorI
 
         _initialize();
 
+        inverse = isInverse;
         aggregator = AggregatorInterface(aggregatorAddress);
         responseDecimals = responseDecimalsValue;
         collateralDecimals = collateralDecimalsValue;
