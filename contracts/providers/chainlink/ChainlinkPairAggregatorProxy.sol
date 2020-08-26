@@ -13,7 +13,7 @@ contract ChainlinkPairAggregatorProxy is BaseProxy, BaseChainlinkPairAggregator 
     constructor(address settingsAddress, bool isInverse)
         public
     {
-        require(settingsAddress.isContract(), "AGGREGATOR_NOT_CONTRACT");
+        require(settingsAddress.isContract(), "SETTINGS_NOT_CONTRACT");
 
         settings = SettingsInterface(settingsAddress);
         inverse = isInverse;

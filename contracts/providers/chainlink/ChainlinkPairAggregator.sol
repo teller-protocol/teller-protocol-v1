@@ -107,6 +107,7 @@ contract ChainlinkPairAggregator is BaseChainlinkPairAggregator, PairAggregatorI
     /**
         @notice It creates a new ChainlinkPairAggregator instance.
         @param aggregatorAddress to use in this Chainlink pair aggregator.
+        @param isInverse defines whether the aggregator is inverse or not.
         @param responseDecimalsValue the decimals included in the Chainlink response.
         @param collateralDecimalsValue the decimals included in the collateral token.
     */
