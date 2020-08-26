@@ -40,6 +40,10 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   await collateralToken.mint(senderTxConfig.from, initialCollateralAmount, senderTxConfig);
   await collateralToken.mint(senderTxConfig.from, finalCollateralAmount, senderTxConfig)
   const collateralNeeded = '320486794520547945';
+
+  // Minting tokens for the borrower (to repay the loan)
+  console.log(`Minting tokens for the borrower (to repay the loan)`);
+  await token.mint(borrower, maxAmountWei);
   
   const borrowerTxConfig = { from: borrower };
   const borrowerTxConfigWithValue = { ...borrowerTxConfig, value: collateralNeeded };
