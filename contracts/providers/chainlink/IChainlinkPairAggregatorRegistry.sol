@@ -5,9 +5,10 @@ pragma experimental ABIEncoderV2;
 import "./ChainlinkPairAggregator.sol";
 
 interface IChainlinkPairAggregatorRegistry {
+    
     struct PairAggregatorRegisterRequest {
-        string baseSymbol;
-        string quoteSymbol;
+        address baseToken;
+        address quoteToken;
         address chainlinkAggregatorAddress;
         bool inverse;
         uint8 responseDecimals;
@@ -15,24 +16,16 @@ interface IChainlinkPairAggregatorRegistry {
     }
 
     event PairAggregatorRegistered(
-        string indexed baseSymbol,
-        string indexed quoteSymbol,
+        address indexed baseSymbol,
+        address indexed quoteSymbol,
         address pairAggregatorAddress
     );
 
-    event ChainlinkPairAggregatorUpdated(
-        address indexed sender,
-        address oldLogic,
-        address newLogic
-    );
+    function getPairAggregator(address baseToken, address quoteToken) external view returns (PairAggregatorInterface);
 
-    function pairAggregatorLogic() external view returns (address);
+    function hasPairAggregator(address baseToken, address quoteToken) external view returns (bool);
 
-    function inversePairAggregatorLogic() external view returns (address);
+    function registerPairAggregator(PairAggregatorRegisterRequest calldata request) external returns (PairAggregatorInterface aggregator);
 
-    function register(PairAggregatorRegisterRequest calldata request) external returns (PairAggregatorInterface aggregator);
-
-    function updatePairAggregatorLogic(address newLogic) external;
-
-    function initialize(address settingsAddress, address pairAggregatorLogicAddress, address inversePairAggregatorLogicAddress) external;
+    function initialize(address settingsAddress) external;
 }
