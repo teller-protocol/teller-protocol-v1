@@ -8,38 +8,41 @@ import "../../base/TInitializable.sol";
 
 // Contracts
 import "./ChainlinkPairAggregator.sol";
-import "./ChainlinkPairAggregatorProxy.sol";
+import "../../base/DynamicProxy.sol";
 
 // Commons
 import "../../util/AddressLib.sol";
+import "../../util/LogicVersionsConsts.sol";
 
-contract ChainlinkPairAggregatorRegistry is IChainlinkPairAggregatorRegistry, TInitializable {
+contract ChainlinkPairAggregatorRegistry is IChainlinkPairAggregatorRegistry, TInitializable, LogicVersionsConsts {
     using AddressLib for address;
     using Address for address;
 
     SettingsInterface public settings;
 
-    address public pairAggregatorLogic;
-
-    mapping(string => mapping(string => PairAggregatorInterface)) public aggregators;
+    mapping(address => mapping(address => PairAggregatorInterface)) public aggregators;
 
     /** Modifiers **/
 
     modifier onlyPauser() {
-        require(settings.hasPauserRole(msg.sender), "ONLY_PAUSER");
+        settings.requirePauserRole(msg.sender);
         _;
     }
 
     /** Public Functions **/
 
-    function register(PairAggregatorRegisterRequest calldata request)
+    function registerPairAggregator(PairAggregatorRegisterRequest calldata request)
         external
         isInitialized()
         onlyPauser()
         returns (PairAggregatorInterface aggregator)
     {
-        ChainlinkPairAggregatorProxy proxy = new ChainlinkPairAggregatorProxy(address(settings));
-        address pairAggregatorAddress = address(proxy);
+        // TODO Do we need to create an update function?
+        // TODO Do we need to validate the new request is already registered?
+        bytes32 logicName = request.inverse ? INVERSE_PAIR_AGGREGATOR_LOGIC_NAME : PAIR_AGGREGATOR_LOGIC_NAME;
+        DynamicProxy pairAggregatorProxy = new DynamicProxy(address(settings.versionsRegistry()), logicName);
+
+        address pairAggregatorAddress = address(pairAggregatorProxy);
         aggregator = PairAggregatorInterface(pairAggregatorAddress);
         aggregator.initialize(
             request.chainlinkAggregatorAddress,
@@ -47,42 +50,31 @@ contract ChainlinkPairAggregatorRegistry is IChainlinkPairAggregatorRegistry, TI
             request.responseDecimals,
             request.collateralDecimals
         );
-        aggregators[request.baseSymbol][request.quoteSymbol] = aggregator;
+        aggregators[request.baseToken][request.quoteToken] = aggregator;
 
         emit PairAggregatorRegistered(
-            request.baseSymbol,
-            request.quoteSymbol,
+            request.baseToken,
+            request.quoteToken,
             pairAggregatorAddress
         );
     }
 
-    function updatePairAggregatorLogic(address newLogic)
+    function initialize(address settingsAddress)
         external
-        isInitialized()
-        onlyPauser()
-    {
-        require(newLogic.isContract(), "NEW_LOGIC_NOT_CONTRACT");
-        newLogic.requireNotEqualTo(pairAggregatorLogic, "NEW_LOGIC_SAME");
-
-        address oldLogic = pairAggregatorLogic;
-        pairAggregatorLogic = newLogic;
-
-        emit ChainlinkPairAggregatorUpdated(msg.sender, oldLogic, newLogic);
-    }
-
-    function initialize(
-        address settingsAddress,
-        address pairAggregatorLogicAddress
-    )
-        public
         isNotInitialized()
     {
         require(settingsAddress.isContract(), "SETTINGS_NOT_A_CONTRACT");
-        require(pairAggregatorLogicAddress.isContract(), "CHAINLINK_PAIR_AGGREGATOR_LOGIC_NOT_A_CONTRACT");
-
-        settings = SettingsInterface(settingsAddress);
-        pairAggregatorLogic = pairAggregatorLogicAddress;
 
         _initialize();
+        
+        settings = SettingsInterface(settingsAddress);
+    }
+
+    function getPairAggregator(address baseToken, address quoteToken) external view returns (PairAggregatorInterface) {
+        return aggregators[baseToken][quoteToken];
+    }
+
+    function hasPairAggregator(address baseToken, address quoteToken) external view returns (bool) {
+        return address(aggregators[baseToken][quoteToken]) !=  address(0x0);
     }
 }
