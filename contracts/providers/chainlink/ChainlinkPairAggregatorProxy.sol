@@ -10,20 +10,15 @@ contract ChainlinkPairAggregatorProxy is BaseProxy, BaseChainlinkPairAggregator 
         @param settingsAddress the global Settings address.
         @param isInverse determines whether or not this pair aggregator is inverse.
     */
-    constructor(address settingsAddress, bool isInverse)
+    constructor(address settingsAddress)
         public
     {
         require(settingsAddress.isContract(), "SETTINGS_NOT_CONTRACT");
 
         settings = SettingsInterface(settingsAddress);
-        inverse = isInverse;
     }
 
     function _implementation() internal view returns (address) {
-        if (inverse) {
-            return settings.chainlinkPairAggregatorRegistry().inversePairAggregatorLogic();
-        } else  {
-            return settings.chainlinkPairAggregatorRegistry().pairAggregatorLogic();
-        }
+        return settings.chainlinkPairAggregatorRegistry().pairAggregatorLogic();
     }
 }

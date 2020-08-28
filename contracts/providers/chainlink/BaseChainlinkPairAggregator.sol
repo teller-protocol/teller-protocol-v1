@@ -6,5 +6,4 @@ import "../../interfaces/SettingsInterface.sol";
 
 contract BaseChainlinkPairAggregator {
     SettingsInterface public settings;
-    bool public inverse;
 }

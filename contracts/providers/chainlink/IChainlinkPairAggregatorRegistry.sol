@@ -28,11 +28,9 @@ interface IChainlinkPairAggregatorRegistry {
 
     function pairAggregatorLogic() external view returns (address);
 
-    function inversePairAggregatorLogic() external view returns (address);
-
     function register(PairAggregatorRegisterRequest calldata request) external returns (PairAggregatorInterface aggregator);
 
     function updatePairAggregatorLogic(address newLogic) external;
 
-    function initialize(address settingsAddress, address pairAggregatorLogicAddress, address inversePairAggregatorLogicAddress) external;
+    function initialize(address settingsAddress, address pairAggregatorLogicAddress) external;
 }
