@@ -202,9 +202,10 @@ module.exports = {
             const name = 'LoanTakenOut';
             return {
                 name: name,
-                emitted: (loanID, borrower, amountBorrowed) => emitted(tx, name, ev => {
+                emitted: (loanID, borrower, escrow, amountBorrowed) => emitted(tx, name, ev => {
                     assert.equal(ev.loanID.toString(), loanID.toString());
                     assert.equal(ev.borrower, borrower);
+                    assert.equal(ev.escrow, escrow);
                     assert.equal(ev.amountBorrowed.toString(), amountBorrowed.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)

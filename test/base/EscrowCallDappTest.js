@@ -11,7 +11,7 @@ const DappMock = artifacts.require("./mock/DappMock.sol");
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
 const Escrow = artifacts.require("./mock/base/EscrowMock.sol");
-const EscrowFactory = artifacts.require("./mock/base/EscrowFactoryMock.sol");
+const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
 
 contract('EscrowCallDappTest', function (accounts) {
   const owner = accounts[0];

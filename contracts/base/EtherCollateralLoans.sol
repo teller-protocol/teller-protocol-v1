@@ -134,6 +134,7 @@ contract EtherCollateralLoans is LoansBase {
         @notice Pays out collateral for the associated loan
         @param loanID The ID of the loan the collateral is for
         @param amount The amount of collateral to be paid
+        @param recipient address that will receive the given amount.
      */
     function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
         internal

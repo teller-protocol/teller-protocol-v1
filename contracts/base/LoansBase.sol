@@ -242,13 +242,11 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         require(!moreCollateralRequired, "MORE_COLLATERAL_REQUIRED");
 
         loans[loanID].loanStartTime = now;
-
         loans[loanID].status = TellerCommon.LoanStatus.Active;
-
-        address escrow = _createEscrow(loanID);
+        loans[loanID].escrow = _createEscrow(loanID);
 
         // We only send the loan to escrow contract for now.
-        lendingPool.createLoan(amountBorrow, escrow);
+        lendingPool.createLoan(amountBorrow, loans[loanID].escrow);
 
         markets.increaseBorrow(
             lendingPool.lendingToken(),
@@ -256,7 +254,12 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
             amountBorrow
         );
 
-        emit LoanTakenOut(loanID, loans[loanID].loanTerms.borrower, amountBorrow);
+        emit LoanTakenOut(
+            loanID,
+            loans[loanID].loanTerms.borrower,
+            loans[loanID].escrow,
+            amountBorrow
+        );
     }
 
     /**
@@ -633,6 +636,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
                 principalOwed: 0,
                 interestOwed: 0,
                 borrowedAmount: 0,
+                escrow: address(0x0),
                 status: TellerCommon.LoanStatus.TermsSet,
                 liquidated: false
             });
@@ -692,9 +696,12 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         @return the new Escrow contract address.
      */
     function _createEscrow(uint256 loanID) internal returns (address) {
+        address escrowOwner =   loans[loanID].loanTerms.recipient != address(0x0) ?
+                                loans[loanID].loanTerms.recipient :
+                                loans[loanID].loanTerms.borrower;
         return
             settings.getEscrowFactory().createEscrow(
-                loans[loanID].loanTerms.borrower,
+                escrowOwner,
                 loanID
             );
     }

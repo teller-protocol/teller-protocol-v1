@@ -96,6 +96,7 @@ library TellerCommon {
         uint256 principalOwed;
         uint256 interestOwed;
         uint256 borrowedAmount;
+        address escrow;
         LoanStatus status;
         bool liquidated;
     }
