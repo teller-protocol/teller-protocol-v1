@@ -6,7 +6,7 @@ module.exports = {
             symbol: 'ATMTest',
             decimals: 18,
             maxCap: 100000000000,
-            maxVestingsPerWallet: 50,
+            maxVestingPerWallet: 50,
         },
         supplyToDebt: 5000,
         /**

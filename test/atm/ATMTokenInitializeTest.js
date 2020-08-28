@@ -1,4 +1,6 @@
 // JS Libraries
+const IATMSettingsEncoder = require("../utils/encoders/IATMSettingsEncoder");
+const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
 
@@ -7,8 +9,10 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const ATMToken = artifacts.require('./ATMToken.sol');
+const Settings = artifacts.require("./base/Settings.sol");
 
 contract('ATMTokenInitializeTest', function (accounts) {
+    const encoder = new IATMSettingsEncoder(web3)
 
     withData({
         _1_initialize_basic: ['ATMToken', 'ATMT', 18, 10000, 50, undefined, false],
@@ -18,14 +22,21 @@ contract('ATMTokenInitializeTest', function (accounts) {
         symbol,
         decimals,
         cap,
-        maxVestings,
+        maxVesting,
         expectedErrorMessage,
         mustFail
     ) {
         it(t('user', 'initialize', 'Should or should not be able to create a new instance.', mustFail), async function() {
             // Setup
             const instance = await ATMToken.new();
+
+            const settings = await createTestSettingsInstance(Settings);
             const atmSettingsInstance = await Mock.new();
+            await atmSettingsInstance.givenMethodReturnAddress(
+                encoder.encodeSettings(),
+                settings.address
+            );
+
             const atmInstance = await Mock.new()
             try {
                 const result = await instance.initialize(
@@ -33,7 +44,7 @@ contract('ATMTokenInitializeTest', function (accounts) {
                                                 symbol,
                                                 decimals,
                                                 cap,
-                                                maxVestings,
+                                                maxVesting,
                                                 atmSettingsInstance.address,
                                                 atmInstance.address
                                             );

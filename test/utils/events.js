@@ -767,6 +767,30 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        atmTokenLogicUpdated: tx => {
+            const name = "ATMTokenLogicUpdated";
+            return {
+                name: name,
+                emitted: (sender, oldATMTokenLogic, newATMTokenLogic) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.oldATMTokenLogic.toString(), oldATMTokenLogic.toString());
+                    assert.equal(ev.newATMTokenLogic.toString(), newATMTokenLogic.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        atmGovernanceLogicUpdated: tx => {
+            const name = "ATMGovernanceLogicUpdated";
+            return {
+                name: name,
+                emitted: (sender, oldATMGovernanceLogic, newATMGovernanceLogic) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.oldATMGovernanceLogic.toString(), oldATMGovernanceLogic.toString());
+                    assert.equal(ev.newATMGovernanceLogic.toString(), newATMGovernanceLogic.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     },
     escrowFactory: {
         escrowCreated: (tx, Factory) => {

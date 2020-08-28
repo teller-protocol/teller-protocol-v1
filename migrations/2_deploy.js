@@ -66,7 +66,7 @@ module.exports = async function(deployer, network, accounts) {
   await deployerApp.deploy(MarketsState, txConfig);
   const marketsStateInstance = await MarketsState.deployed();
 
-  const settingsInstance = await deployerApp.deployWithUpgradeable('Settings', Settings, txConfig.from, '0x');
+  const settingsInstance = await deployerApp.deployWithUpgradeable('Settings', Settings, txConfig.from, '0x', txConfig)
   await settingsInstance.initialize(txConfig.from);
   await initSettings(
     settingsInstance,
@@ -87,23 +87,21 @@ module.exports = async function(deployer, network, accounts) {
   await deployerApp.deploy(
     ATMSettings,
     settingsInstance.address,
+    atmTokenLogicInstance.address,
+    atmGovernanceLogicInstance.address,
     txConfig
   );
   const atmSettingsInstance = await ATMSettings.deployed();
   console.log(`ATM settings deployed at: ${atmSettingsInstance.address}`);
 
-  const atmFactoryInstance = await deployerApp.deployWithUpgradeable('ATMFactory', ATMFactory, txConfig.from, '0x')
-  await atmFactoryInstance.initialize(
-    settingsInstance.address,
-    atmSettingsInstance.address,
-    txConfig
-  );
+  const atmFactoryInstance = await deployerApp.deployWithUpgradeable('ATMFactory', ATMFactory, txConfig.from, '0x', txConfig)
+  await atmFactoryInstance.initialize(atmSettingsInstance.address, txConfig);
   console.log(`ATM Governance Factory (Proxy) deployed at: ${atmFactoryInstance.address}`);
 
   await initATMs(
     { atmFactory: atmFactoryInstance, atmSettings: atmSettingsInstance },
-    { atms, tokens, txConfig, web3, deployerApp },
-    { ATMGovernance, ATMToken },
+    { atms, tokens, txConfig, web3 },
+    { ATMGovernance },
   );
 
   const aggregators = {};

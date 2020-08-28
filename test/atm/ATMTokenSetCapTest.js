@@ -1,6 +1,7 @@
 // JS Libraries
+const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
-const { t, NULL_ADDRESS  } = require('../utils/consts');
+const { t  } = require('../utils/consts');
 const { atmToken } = require('../utils/events');
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 
@@ -9,6 +10,7 @@ const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 
 // Smart contracts
 const ATMToken = artifacts.require("./ATMToken.sol");
+const Settings = artifacts.require("./base/Settings.sol");
 
 contract('ATMTokenSetCapTest', function (accounts) {
     const atmSettingsEncoder = new IATMSettingsEncoder(web3);
@@ -19,7 +21,12 @@ contract('ATMTokenSetCapTest', function (accounts) {
     const daoMember1 = accounts[2];
 
     beforeEach('Setup for each test', async () => {
+        const settings = await createTestSettingsInstance(Settings);
         atmSettingsInstance = await Mock.new();
+        await atmSettingsInstance.givenMethodReturnAddress(
+            atmSettingsEncoder.encodeSettings(),
+            settings.address
+        );
         atmInstance = await Mock.new();
         instance = await ATMToken.new();
         await instance.initialize(
@@ -34,8 +41,8 @@ contract('ATMTokenSetCapTest', function (accounts) {
     });
 
     withData({
-        _1_set_supply_cap_basic: [70000, daoAgent, undefined, false],
-        _2_set_supply_cap_invalid_sender: [100000, daoMember1, 'CALLER_IS_NOT_OWNER', true]
+        _1_basic: [70000, daoAgent, undefined, false],
+        _2_invalid_sender: [100000, daoMember1, 'ONLY_PAUSER', true]
     },function(
         newCap,
         sender,

@@ -16,7 +16,7 @@ pragma solidity 0.5.17;
 
     @author develop@teller.finance
  */
-interface IATMGovernance {
+interface ATMGovernanceInterface {
     /* Events */
 
     /**

@@ -1,4 +1,6 @@
 // JS Libraries
+const IATMSettingsEncoder = require("../utils/encoders/IATMSettingsEncoder");
+const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
 const {
     t,
@@ -13,14 +15,22 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
+const Settings = artifacts.require("./base/Settings.sol");
 
 contract('ATMGovernanceRemoveAssetMarketSettingTest', function (accounts) {
-    const owner = accounts[0];
+    const encoder = new IATMSettingsEncoder(web3)
     let instance;
 
     beforeEach('Setup for each test', async () => {
+        const settings = await createTestSettingsInstance(Settings)
+        const atmSettings = await Mock.new();
+        await atmSettings.givenMethodReturnAddress(
+            encoder.encodeSettings(),
+            settings.address
+        );
+
         instance = await ATMGovernance.new();
-        await instance.initialize(owner);
+        await instance.initialize(atmSettings.address);
     });
 
     // Testing values
@@ -32,19 +42,16 @@ contract('ATMGovernanceRemoveAssetMarketSettingTest', function (accounts) {
 
     withData({
         _1_basic: [0, SETTING_NAME, undefined, false],
-        _2_notSigner: [2, SETTING_NAME, 'SignerRole: caller does not have the Signer role', true],
+        _2_notSigner: [2, SETTING_NAME, 'ONLY_PAUSER', true],
     }, function (senderIndex, settingName, expectedErrorMessage, mustFail) {
         it(t('user', 'removeAssetMarketSetting#1', 'Should (or not) be able to remove an asset market setting.', mustFail), async function () {
             // Setup
             const sender = accounts[senderIndex];
-            const validSender = accounts[0];
             const assetContract = await Mock.new();
             const assetAddress = assetContract.address;
 
             // Precondition
-            await instance.addAssetMarketSetting(assetAddress, settingName, SETTING_VALUE, {
-                from: validSender
-            });
+            await instance.addAssetMarketSetting(assetAddress, settingName, SETTING_VALUE);
 
             try {
     

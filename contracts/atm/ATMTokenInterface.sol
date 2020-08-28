@@ -122,4 +122,10 @@ interface ATMTokenInterface {
         @param snapshotId The id of the snapshot being queried
      */
     function totalSupplyAt(uint256 snapshotId) external view returns (uint256);
+
+    /**
+        @notice Gets the ATM address associated to this token.
+        @return the ATM address associated to this token.
+     */
+    function atmAddress() external view returns (address);
 }

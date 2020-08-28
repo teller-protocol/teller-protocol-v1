@@ -17,7 +17,7 @@ import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
 import "../settings/IATMSettings.sol";
-import "../atm/IATMGovernance.sol";
+import "../atm/ATMGovernanceInterface.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -680,7 +680,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
             collateralToken
         );
         require(atmAddressForMarket != address(0x0), "ATM_NOT_FOUND_FOR_MARKET");
-        uint256 supplyToDebtMarketLimit = IATMGovernance(atmAddressForMarket)
+        uint256 supplyToDebtMarketLimit = ATMGovernanceInterface(atmAddressForMarket)
             .getGeneralSetting(SUPPLY_TO_DEBT_ATM_SETTING);
         uint256 currentSupplyToDebtMarket = markets.getSupplyToDebtFor(
             lendingPool.lendingToken(),
