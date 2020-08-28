@@ -8,7 +8,7 @@ const ChainlinkAggregatorMock = artifacts.require("./mock/util/Mock.sol");
 // Smart contracts
 const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
 
-contract('ChainlinkPairAggregatorConstructorTest', function (accounts) {
+contract('ChainlinkPairAggregatorInitializeTest', function (accounts) {
     let chainlinkAggregator;
     
     beforeEach('Setup for each test', async () => {
@@ -16,14 +16,15 @@ contract('ChainlinkPairAggregatorConstructorTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [true, 18, 18, undefined, false],
-        _2_emptyChainlink: [false, 0, 18, 'AGGREGATOR_NOT_CONTRACT', true],
-        _3_zeroResponseDecimals: [true, 0, 18, undefined, false],
-        _4_zeroCollateralDecimals: [true, 18, 0, undefined, false],
-        _5_zeroDecimals: [true, 0, 0, undefined, false],
-        _6_big_diff: [true, 5, 56, 'MAX_PENDING_DECIMALS_EXCEEDED', true]
+        _1_basic: [true, false, 18, 18, undefined, false],
+        _2_emptyChainlink: [false, false, 0, 18, undefined, true], // TODO: Change expectedErrorMessage to 'AGGREGATOR_NOT_CONTRACT' from undefined once the deployment todo from the ChainlinkPairAggregator contract has been completed
+        _3_zeroResponseDecimals: [true, false, 0, 18, undefined, false],
+        _4_zeroCollateralDecimals: [true, false, 18, 0, undefined, false],
+        _5_zeroDecimals: [true, false, 0, 0, undefined, false],
+        _6_big_diff: [true, false, 5, 56, 'MAX_PENDING_DECIMALS_EXCEEDED', true]
     }, function(
         createChainlinkInstance,
+        isInverse,
         responseDecimals,
         collateralDecimals,
         expectedErrorMessage,
@@ -35,12 +36,18 @@ contract('ChainlinkPairAggregatorConstructorTest', function (accounts) {
 
             try {
                 // Invocation
-                const result = await ChainlinkPairAggregator.new(chainlinkAddress, responseDecimals, collateralDecimals);
+                const instance = await ChainlinkPairAggregator.new();
+                const result = await instance.initialize(
+                    chainlinkAddress,
+                    isInverse,
+                    responseDecimals,
+                    collateralDecimals
+                    );
                 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
-                assert(result.address);
+                assert(instance.address);
             } catch (error) {
                 // Assertions
                 assert(mustFail);
