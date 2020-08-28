@@ -28,7 +28,6 @@ const ATMToken = artifacts.require("./atm/ATMToken.sol");
 // External providers
 const ChainlinkPairAggregatorRegistry = artifacts.require("./providers/chainlink/ChainlinkPairAggregatorRegistry.sol");
 const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
-const InverseChainlinkPairAggregator = artifacts.require("./providers/chainlink/InverseChainlinkPairAggregator.sol");
 
 const tokensRequired = ['DAI', 'USDC', 'LINK'];
 const chainlinkOraclesRequired = ['DAI_ETH', 'USDC_ETH', 'LINK_USD'];
@@ -110,11 +109,10 @@ module.exports = async function(deployer, network, accounts) {
   const aggregators = {};
 
   await deployerApp.deploy(ChainlinkPairAggregator, txConfig)
-  await deployerApp.deploy(InverseChainlinkPairAggregator, txConfig)
   // cannot get the web3 contract from the truffle contract
   const pairAggregregatorRegistryInitData = new web3.eth.Contract(ChainlinkPairAggregatorRegistry.abi)
       .methods
-      .initialize(settingsInstance.address, ChainlinkPairAggregator.address, InverseChainlinkPairAggregator.address)
+      .initialize(settingsInstance.address, ChainlinkPairAggregator.address)
       .encodeABI()
   const chainlinkPairAggregatorRegistry = await deployerApp.deployWithUpgradeable('ChainlinkPairAggregatorRegistry', ChainlinkPairAggregatorRegistry, txConfig.from, pairAggregregatorRegistryInitData, txConfig)
   await settingsInstance.setChainlinkPairAggregatorRegistry(chainlinkPairAggregatorRegistry.address)
@@ -140,20 +138,6 @@ module.exports = async function(deployer, network, accounts) {
     const aggregatorAddress = await chainlinkPairAggregatorRegistry.register.call(registerRequest, txConfig)
     await chainlinkPairAggregatorRegistry.register(registerRequest, txConfig)
 
-    // const ChainlinkPairAggregatorReference = inversed ? InverseChainlinkPairAggregator : ChainlinkPairAggregator;
-    // let chainlinkPairAggregatorName =  `ChainlinkPairAggregator_${chainlinkOraclePair.toUpperCase()}`;
-    // if(inversed) {
-    //   const pairs = chainlinkOraclePair.split('_');
-    //   chainlinkPairAggregatorName =  `ChainlinkPairAggregator_${pairs[1].toUpperCase()}_${pairs[0]}`;
-    // }
-    // await deployerApp.deployWith(
-    //   chainlinkPairAggregatorName,
-    //   ChainlinkPairAggregatorReference,
-    //   address,
-    //   responseDecimals,
-    //   collateralDecimals,
-    //   txConfig
-    // );
     console.log(`New aggregator (Inversed? ${inversed}) for ${chainlinkOraclePair} (Collateral Decimals: ${collateralDecimals} / Response Decimals: ${responseDecimals}): ${aggregatorAddress} (using Chainlink Oracle address ${address})`);
     aggregators[chainlinkOraclePair] = aggregatorAddress;
   }
