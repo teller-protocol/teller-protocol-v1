@@ -1,6 +1,9 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
+// Contracts
+import "../util/SettingsConsts.sol";
+
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/lifecycle/Pausable.sol";
 
@@ -52,6 +55,8 @@ contract Settings is Pausable, SettingsInterface {
     bytes32 public constant CTOKEN_ADDRESS_ASSET_SETTING = "CTokenAddress";
 
     /* State Variables */
+
+    SettingsConsts public CONSTANTS;
 
     /**
         @notice It represents a mapping to identify the lending pools paused and not paused.
@@ -398,6 +403,12 @@ contract Settings is Pausable, SettingsInterface {
         chainlinkPairAggregatorRegistry = ChainlinkPairAggregatorRegistry(newValue);
 
         emit ChainlinkPairAggregatorRegistryUpdated(msg.sender, oldValue, newValue);
+    }
+
+    function initialize(address pauser) public initializer() {
+        Pausable.initialize(pauser);
+
+        CONSTANTS = new SettingsConsts();
     }
 
     /** Internal functions */

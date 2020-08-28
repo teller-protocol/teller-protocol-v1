@@ -5,6 +5,7 @@ import "../util/AssetSettingsLib.sol";
 import "../util/PlatformSettingsLib.sol";
 import "./EscrowFactoryInterface.sol";
 import "../providers/chainlink/ChainlinkPairAggregatorRegistry.sol";
+import "../util/SettingsConsts.sol";
 
 /**
     @notice This interface defines all function to manage the platform configuration.
@@ -144,6 +145,8 @@ interface SettingsInterface {
         address oldValue,
         address newValue
     );
+
+    function CONSTANTS() external view returns (SettingsConsts);
 
     /**
         @notice It creates a new platform setting given a setting name, value, min and max values.

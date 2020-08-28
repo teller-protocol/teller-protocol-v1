@@ -4,7 +4,6 @@ pragma solidity 0.5.17;
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../util/TellerCommon.sol";
 import "../util/NumbersList.sol";
-import "../util/SettingsConsts.sol";
 
 // Contracts
 import "./OwnerSignersRole.sol";
@@ -28,7 +27,7 @@ import "../base/Base.sol";
 
     @author develop@teller.finance
  */
-contract Consensus is Base, OwnerSignersRole, SettingsConsts {
+contract Consensus is Base, OwnerSignersRole {
     using SafeMath for uint256;
     using NumbersList for NumbersList.Values;
 
@@ -119,7 +118,7 @@ contract Consensus is Base, OwnerSignersRole, SettingsConsts {
     {
         require(
             values.isWithinTolerance(
-                settings.getPlatformSettingValue(MAXIMUM_TOLERANCE_SETTING)
+                settings.getPlatformSettingValue(settings.CONSTANTS().MAXIMUM_TOLERANCE_SETTING())
             ),
             "RESPONSES_TOO_VARIED"
         );
@@ -152,7 +151,7 @@ contract Consensus is Base, OwnerSignersRole, SettingsConsts {
 
         require(
             responseTime >=
-                now.sub(settings.getPlatformSettingValue(RESPONSE_EXPIRY_LENGTH_SETTING)),
+                now.sub(settings.getPlatformSettingValue(settings.CONSTANTS().RESPONSE_EXPIRY_LENGTH_SETTING())),
             "RESPONSE_EXPIRED"
         );
 
