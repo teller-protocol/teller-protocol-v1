@@ -29,6 +29,7 @@ contract ChainlinkPairAggregator is BaseChainlinkPairAggregator, PairAggregatorI
     uint8 public responseDecimals;
     uint8 public collateralDecimals;
     uint8 public pendingDecimals;
+    bool public inverse;
 
     /** External Functions */
 
@@ -97,10 +98,14 @@ contract ChainlinkPairAggregator is BaseChainlinkPairAggregator, PairAggregatorI
         @return a normalized value.
      */
     function _normalizeResponse(int256 value) internal view returns (int256) {
-        if (collateralDecimals >= responseDecimals) {
-            return value.mul(int256(TEN**pendingDecimals));
+        if (inverse) {
+            return (int256(TEN**collateralDecimals) * int256(TEN**responseDecimals)) / value;
         } else {
-            return value.div(int256(TEN**pendingDecimals));
+            if (collateralDecimals >= responseDecimals) {
+                return value.mul(int256(TEN**pendingDecimals));
+            } else {
+                return value.div(int256(TEN**pendingDecimals));
+            }
         }
     }
 

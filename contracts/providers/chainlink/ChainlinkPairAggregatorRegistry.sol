@@ -20,7 +20,6 @@ contract ChainlinkPairAggregatorRegistry is IChainlinkPairAggregatorRegistry, TI
     SettingsInterface public settings;
 
     address public pairAggregatorLogic;
-    address public inversePairAggregatorLogic;
 
     mapping(string => mapping(string => PairAggregatorInterface)) public aggregators;
 
@@ -39,7 +38,7 @@ contract ChainlinkPairAggregatorRegistry is IChainlinkPairAggregatorRegistry, TI
         onlyPauser()
         returns (PairAggregatorInterface aggregator)
     {
-        ChainlinkPairAggregatorProxy proxy = new ChainlinkPairAggregatorProxy(address(settings), request.inverse);
+        ChainlinkPairAggregatorProxy proxy = new ChainlinkPairAggregatorProxy(address(settings));
         address pairAggregatorAddress = address(proxy);
         aggregator = PairAggregatorInterface(pairAggregatorAddress);
         aggregator.initialize(
@@ -71,35 +70,18 @@ contract ChainlinkPairAggregatorRegistry is IChainlinkPairAggregatorRegistry, TI
         emit ChainlinkPairAggregatorUpdated(msg.sender, oldLogic, newLogic);
     }
 
-    function updateInversePairAggregatorLogic(address newLogic)
-        external
-        isInitialized()
-        onlyPauser()
-    {
-        require(newLogic.isContract(), "NEW_LOGIC_NOT_CONTRACT");
-        newLogic.requireNotEqualTo(inversePairAggregatorLogic, "NEW_LOGIC_SAME");
-
-        address oldLogic = inversePairAggregatorLogic;
-        inversePairAggregatorLogic = newLogic;
-
-        emit ChainlinkPairAggregatorUpdated(msg.sender, oldLogic, newLogic);
-    }
-
     function initialize(
         address settingsAddress,
-        address pairAggregatorLogicAddress,
-        address inversePairAggregatorLogicAddress
+        address pairAggregatorLogicAddress
     )
         public
         isNotInitialized()
     {
         require(settingsAddress.isContract(), "SETTINGS_NOT_A_CONTRACT");
         require(pairAggregatorLogicAddress.isContract(), "CHAINLINK_PAIR_AGGREGATOR_LOGIC_NOT_A_CONTRACT");
-        require(inversePairAggregatorLogicAddress.isContract(), "CHAINLINK_INVERSE_PAIR_AGGREGATOR_LOGIC_NOT_A_CONTRACT");
 
         settings = SettingsInterface(settingsAddress);
         pairAggregatorLogic = pairAggregatorLogicAddress;
-        inversePairAggregatorLogic = inversePairAggregatorLogicAddress;
 
         _initialize();
     }
