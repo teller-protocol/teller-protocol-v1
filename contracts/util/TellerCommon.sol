@@ -116,4 +116,18 @@ library TellerCommon {
         address location;
         bytes data;
     }
+
+    /**
+        @notice This struct defines a market in the platform.
+        @dev It is used by the MarketFactory contract.
+     */
+    struct Market {
+        address loans;
+        address lenders;
+        address lendingPool;
+        address loanTermsConsensus;
+        address interestConsensus;
+        address pairAggregator;
+        bool exists;
+    }
 }

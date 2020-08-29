@@ -100,7 +100,8 @@ contract Escrow is BaseEscrow, BaseEscrowDapp, EscrowInterface, TInitializable, 
         loans = LoansInterface(loansAddress);
         loanID = aLoanID;
 
-        initialize(getBorrower());
+        Ownable.initialize(getBorrower());
+        TInitializable._initialize();
 
         // Initialize tokens list with the borrowed token.
         _tokenUpdated(loans.lendingToken());

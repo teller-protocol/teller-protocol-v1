@@ -18,10 +18,10 @@ contract BaseMock is Base {
         whenLendingPoolPaused(lendingPoolAddress)
     {}
 
-    function externalInitialize(address settingsAddress, address marketsAddress)
+    function externalInitialize(address settingsAddress)
         external
     {
-        super._initialize(settingsAddress, marketsAddress);
+        super._initialize(settingsAddress);
     }
 
     function externalWhenAllowed(address anAddress) external whenAllowed(anAddress) {}

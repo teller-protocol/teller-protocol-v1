@@ -72,7 +72,7 @@ contract LoansBaseMock is LoansBase {
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
-        address marketsAddress,
+        address ,
         address atmSettingsAddress
     ) external isNotInitialized() {
         _initialize(
@@ -80,7 +80,6 @@ contract LoansBaseMock is LoansBase {
             lendingPoolAddress,
             loanTermsConsensusAddress,
             settingsAddress,
-            marketsAddress,
             atmSettingsAddress
         );
     }

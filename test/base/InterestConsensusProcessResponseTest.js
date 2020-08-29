@@ -22,7 +22,8 @@ const InterestConsensusMock = artifacts.require("./mock/base/InterestConsensusMo
 
 
 contract('InterestConsensusProcessResponseTest', function (accounts) {
-    let instance
+    const owner = accounts[0];
+    let instance;
     const lendersContract = accounts[1]
     const nodeAddress = accounts[2]
     const submissions = 5
@@ -72,6 +73,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
             // set up contract
             const settings = await createTestSettingsInstance(
                 Settings,
+                { from: owner, Mock },
                 {
                     [settingsNames.RequiredSubmissions]: submissions,
                     [settingsNames.MaximumTolerance]: tolerance,

@@ -3,9 +3,10 @@ pragma experimental ABIEncoderV2;
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/lifecycle/Pausable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Commons
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "./TInitializable.sol";
 import "../util/AddressLib.sol";
 import "../util/AssetSettingsLib.sol";
 import "../util/PlatformSettingsLib.sol";
@@ -14,7 +15,9 @@ import "../util/AddressArrayLib.sol";
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
 import "../interfaces/EscrowFactoryInterface.sol";
-import "../providers/chainlink/ChainlinkPairAggregatorRegistry.sol";
+import "../interfaces/MarketsStateInterface.sol";
+import "../interfaces/InterestValidatorInterface.sol";
+import "../providers/chainlink/IChainlinkPairAggregatorRegistry.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -34,7 +37,7 @@ import "../providers/chainlink/ChainlinkPairAggregatorRegistry.sol";
 
     @author develop@teller.finance
  */
-contract Settings is Pausable, SettingsInterface {
+contract Settings is Pausable, SettingsInterface, TInitializable {
     using AddressLib for address;
     using Address for address;
     using AssetSettingsLib for AssetSettingsLib.AssetSettings;
@@ -97,9 +100,24 @@ contract Settings is Pausable, SettingsInterface {
     EscrowFactoryInterface public escrowFactory;
 
     /**
+        @notice It is the global instance of the logic versions registry contract.
+     */
+    LogicVersionsRegistryInterface public versionsRegistry;
+
+    /**
         @notice It is the global instance of the ChainlinkPairAggregatorRegistry contract.
      */
-    ChainlinkPairAggregatorRegistry public chainlinkPairAggregatorRegistry;
+    IChainlinkPairAggregatorRegistry public pairAggregatorRegistry;
+
+    /**
+        @notice The markets state.
+     */
+    MarketsStateInterface public marketsState;
+    
+    /**
+        @notice The current interest validator.
+     */
+    InterestValidatorInterface public interestValidator;
 
     /** Modifiers */
 
@@ -119,7 +137,7 @@ contract Settings is Pausable, SettingsInterface {
         uint256 value,
         uint256 minValue,
         uint256 maxValue
-    ) external onlyPauser() {
+    ) external onlyPauser() isInitialized() {
         require(settingName != "", "SETTING_NAME_MUST_BE_PROVIDED");
         platformSettings[settingName].initialize(value, minValue, maxValue);
 
@@ -136,6 +154,7 @@ contract Settings is Pausable, SettingsInterface {
     function updatePlatformSetting(bytes32 settingName, uint256 newValue)
         external
         onlyPauser()
+        isInitialized()
     {
         uint256 oldValue = platformSettings[settingName].update(newValue);
 
@@ -146,7 +165,7 @@ contract Settings is Pausable, SettingsInterface {
         @notice Removes a current platform setting given a setting name.
         @param settingName to remove.
      */
-    function removePlatformSetting(bytes32 settingName) external onlyPauser() {
+    function removePlatformSetting(bytes32 settingName) external onlyPauser() isInitialized() {
         uint256 oldValue = platformSettings[settingName].value;
         platformSettings[settingName].remove();
 
@@ -196,6 +215,7 @@ contract Settings is Pausable, SettingsInterface {
         external
         onlyPauser()
         whenNotPaused()
+        isInitialized()
     {
         lendingPoolAddress.requireNotEmpty("LENDING_POOL_IS_REQUIRED");
         require(!lendingPoolPaused[lendingPoolAddress], "LENDING_POOL_ALREADY_PAUSED");
@@ -213,6 +233,7 @@ contract Settings is Pausable, SettingsInterface {
         external
         onlyPauser()
         whenNotPaused()
+        isInitialized()
     {
         lendingPoolAddress.requireNotEmpty("LENDING_POOL_IS_REQUIRED");
         require(lendingPoolPaused[lendingPoolAddress], "LENDING_POOL_IS_NOT_PAUSED");
@@ -240,7 +261,7 @@ contract Settings is Pausable, SettingsInterface {
         address assetAddress,
         address cTokenAddress,
         uint256 maxLoanAmount
-    ) external onlyPauser() whenNotPaused() {
+    ) external onlyPauser() isInitialized() {
         require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
 
         assetSettings[assetAddress].requireNotExists();
@@ -259,7 +280,7 @@ contract Settings is Pausable, SettingsInterface {
     function removeAssetSettings(address assetAddress)
         external
         onlyPauser()
-        whenNotPaused()
+        isInitialized()
     {
         assetAddress.requireNotEmpty("ASSET_ADDRESS_IS_REQUIRED");
         assetSettings[assetAddress].requireExists();
@@ -278,7 +299,7 @@ contract Settings is Pausable, SettingsInterface {
     function updateMaxLoanAmount(address assetAddress, uint256 newMaxLoanAmount)
         external
         onlyPauser()
-        whenNotPaused()
+        isInitialized()
     {
         uint256 oldMaxLoanAmount = assetSettings[assetAddress].maxLoanAmount;
 
@@ -301,7 +322,7 @@ contract Settings is Pausable, SettingsInterface {
     function updateCTokenAddress(address assetAddress, address newCTokenAddress)
         external
         onlyPauser()
-        whenNotPaused()
+        isInitialized()
     {
         address oldCTokenAddress = assetSettings[assetAddress].cTokenAddress;
 
@@ -369,35 +390,40 @@ contract Settings is Pausable, SettingsInterface {
     }
 
     /**
-        @notice Sets a new EscrowFactory contract.
-        @param newValue contract address of new EscrowFactory.
+        @notice It initializes this settings contract instance.
+        @param escrowFactoryAddress the initial escrow factory address.
+        @param versionsRegistryAddress the initial versions registry address.
+        @param pairAggregatorRegistryAddress the initial pair aggregator registry address.
+        @param marketsStateAddress the initial markets state address.
+        @param interestValidatorAddress the initial interest validator address.
      */
-    function setEscrowFactory(address newValue)
+    function initialize(
+        address escrowFactoryAddress,
+        address versionsRegistryAddress,
+        address pairAggregatorRegistryAddress,
+        address marketsStateAddress,
+        address interestValidatorAddress
+    )
         external
-        onlyPauser()
-        whenNotPaused()
+        isNotInitialized()
     {
-        address oldValue = address(escrowFactory);
-        _beforeUpdateAddress(oldValue, newValue);
-        escrowFactory = EscrowFactoryInterface(newValue);
+        require(escrowFactoryAddress.isContract(), "ESCROW_FACTORY_MUST_BE_CONTRACT");
+        require(versionsRegistryAddress.isContract(), "VERS_REGISTRY_MUST_BE_CONTRACT");
+        require(pairAggregatorRegistryAddress.isContract(), "AGGR_REGISTRY_MUST_BE_CONTRACT");
+        require(marketsStateAddress.isContract(), "MARKETS_STATE_MUST_BE_CONTRACT");
+        require(
+            interestValidatorAddress.isEmpty() || interestValidatorAddress.isContract(),
+            "INTEREST_VAL_MUST_BE_CONTRACT"
+        );
 
-        emit EscrowFactoryUpdated(msg.sender, oldValue, newValue);
-    }
+        Pausable.initialize(msg.sender);
+        TInitializable._initialize();
 
-    /**
-        @notice Sets a new ChainlinkPairAggregatorRegistry contract.
-        @param newValue contract address of new ChainlinkPairAggregatorRegistry.
-     */
-    function setChainlinkPairAggregatorRegistry(address newValue)
-        external
-        onlyPauser()
-        whenNotPaused()
-    {
-        address oldValue = address(chainlinkPairAggregatorRegistry);
-        _beforeUpdateAddress(oldValue, newValue);
-        chainlinkPairAggregatorRegistry = ChainlinkPairAggregatorRegistry(newValue);
-
-        emit ChainlinkPairAggregatorRegistryUpdated(msg.sender, oldValue, newValue);
+        escrowFactory = EscrowFactoryInterface(escrowFactoryAddress);
+        versionsRegistry = LogicVersionsRegistryInterface(versionsRegistryAddress);
+        pairAggregatorRegistry = IChainlinkPairAggregatorRegistry(pairAggregatorRegistryAddress);
+        marketsState = MarketsStateInterface(marketsStateAddress);
+        interestValidator = InterestValidatorInterface(interestValidatorAddress);
     }
 
     /** Internal functions */
@@ -413,17 +439,6 @@ contract Settings is Pausable, SettingsInterface {
         returns (PlatformSettingsLib.PlatformSetting memory)
     {
         return platformSettings[settingName];
-    }
-
-    /**
-        @notice It performs pre-update checks on the old and new contract addresses.
-     */
-    function _beforeUpdateAddress(address oldValue, address newValue)
-        internal
-        view
-    {
-        require(newValue.isContract(), "NEW_ADDRESS_MUST_BE_CONTRACT");
-        newValue.requireNotEqualTo(oldValue, "NEW_ADDRESS_MUST_BE_NEW");
     }
 
     /** Private functions */

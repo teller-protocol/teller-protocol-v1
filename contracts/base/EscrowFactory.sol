@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
-import "./EscrowProxy.sol";
+import "./DynamicProxy.sol";
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/lifecycle/Pausable.sol";
@@ -60,11 +60,6 @@ contract EscrowFactory is TInitializable, EscrowFactoryInterface {
      */
     address[] public dappsList;
 
-    /**
-        This defines the current logic that is being used by all Escrow contracts.
-     */
-    address public escrowLogic;
-
     /* Modifiers */
 
     modifier onlyPauser() {
@@ -97,7 +92,9 @@ contract EscrowFactory is TInitializable, EscrowFactoryInterface {
         require(loansAddress.isContract(), "CALLER_MUST_BE_CONTRACT");
         borrower.requireNotEmpty("BORROWER_MUSTNT_BE_EMPTY");
 
-        escrowAddress = address(new EscrowProxy(address(settings)));
+        bytes32 escrowLogicName = settings.versionsRegistry().consts().ESCROW_LOGIC_NAME();
+
+        escrowAddress = address(new DynamicProxy(address(settings), escrowLogicName));
         EscrowInterface(escrowAddress).initialize(
             loansAddress,
             loanID
@@ -154,44 +151,19 @@ contract EscrowFactory is TInitializable, EscrowFactoryInterface {
     /**
         @notice It initializes this escrow contract factory instance.
         @param settingsAddress the settings contract address.
-        @param escrowLogicAddress the escrow contract address.
      */
-    function initialize(address settingsAddress, address escrowLogicAddress)
+    function initialize(address settingsAddress)
         external
         isNotInitialized()
     {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
-        require(escrowLogicAddress.isContract(), "ESCROW_LOGIC_MUST_BE_CONTRACT");
 
         _initialize();
 
         settings = SettingsInterface(settingsAddress);
-        _upgradeEscrowLogic(escrowLogicAddress);
-    }
-
-    /**
-        @notice It upgrades the logic to be used for all Escrow contracts.
-        @param newLogic the new Escrow logic implementation.
-     */
-    function upgradeEscrowLogic(address newLogic) external onlyPauser() isInitialized() {
-        _upgradeEscrowLogic(newLogic);
     }
 
     /** Internal Functions */
-
-    /**
-        @notice It upgrades the logic to be used for all Escrow contracts.
-        @param newLogic the new Escrow logic implementation.
-     */
-    function _upgradeEscrowLogic(address newLogic) internal {
-        require(newLogic.isContract(), "ESCROW_LOGIC_MUST_BE_A_CONTRACT");
-
-        address oldLogic = escrowLogic;
-        require(newLogic != oldLogic, "NEW_ESCROW_LOGIC_SAME");
-
-        escrowLogic = newLogic;
-        emit EscrowLogicUpgraded(msg.sender, oldLogic, newLogic);
-    }
 
     /**
         @notice It tests whether an address is a dapp or not.

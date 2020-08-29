@@ -14,6 +14,7 @@ contract BaseProxy is Proxy {
     using Address for address;
 
     /** Internal Functions **/
+    // TODO Do we need this contract?
 
     /**
         @notice Returns the current implementation.
@@ -32,10 +33,11 @@ contract BaseProxy is Proxy {
         @return encoded bytes returned from the delegatecall
      */
     function _delegateToWith(address _implementation, bytes memory _data) internal returns (bytes memory) {
+        // TODO Error message too long (max 32 chars).
         require(_implementation.isContract(), "PROXY_DELEGATE_TO_IMPLEMENTATION_MUST_BE_A_CONTRACT");
 
         (bool success, bytes memory data) = _implementation.delegatecall(_data);
-        require(success, ':(');
+        require(success, ':(');// TODO Add a valid error message.
         return data;
     }
 }

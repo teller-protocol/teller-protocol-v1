@@ -12,22 +12,21 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 
 // Smart contracts
-const Escrow = artifacts.require("./base/Escrow.sol");
 const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 
 contract('BaseLoansCreateEscrowTest', function (accounts) {
+  const owner = accounts[0];
   let instance;
-  let escrowLibrary;
   let loans;
 
   beforeEach(async () => {
-    const settingsInstance = await createTestSettingsInstance(Settings);
+    const settingsInstance = await createTestSettingsInstance(Settings, { from: owner, Mock });
 
     const oracleInstance = await Mock.new();
     const lendingPoolInstance = await Mock.new();
     const loanTermsConsInstance = await Mock.new();
-    const marketsInstance = await Mock.new();
+    const collateralTokenInstance = await Mock.new();
     const atmSettingsInstance = await Mock.new();
     loans = await Loans.new();
     await loans.initialize(
@@ -35,14 +34,11 @@ contract('BaseLoansCreateEscrowTest', function (accounts) {
       lendingPoolInstance.address,
       loanTermsConsInstance.address,
       settingsInstance.address,
-      marketsInstance.address,
+      collateralTokenInstance.address,
       atmSettingsInstance.address
     );
-    escrowLibrary = await Escrow.new();
     instance = await EscrowFactory.new();
-    await instance.initialize(settingsInstance.address, escrowLibrary.address);
-
-    await settingsInstance.setEscrowFactory(instance.address)
+    await instance.initialize(settingsInstance.address);
   })
 
   withData({
@@ -66,6 +62,7 @@ contract('BaseLoansCreateEscrowTest', function (accounts) {
         if (!mustFail)
           escrowAddress = await loans.externalCreateEscrow.call(loanID);
         const result = await loans.externalCreateEscrow(loanID);
+        // TODO fix unit test.
 
         // Assertions
         assert(!mustFail);
@@ -74,6 +71,7 @@ contract('BaseLoansCreateEscrowTest', function (accounts) {
           .escrowCreated(result, EscrowFactory)
           .emitted(borrower, loans.address, loanID.toString(), escrowAddress);
       } catch (error) {
+        console.log(error);
         assert(mustFail, error);
         assert(error);
         assert.equal(error.reason, expectedErrorMessage);

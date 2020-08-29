@@ -3,6 +3,7 @@ const withData = require('leche').withData;
 const { t, NULL_ADDRESS, ACTIVE, CLOSED } = require('../utils/consts');
 const { createLoanTerms } = require('../utils/structs');
 const BigNumber = require('bignumber.js');
+const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -11,12 +12,13 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 
 contract('EtherCollateralLoansRepayTest', function (accounts) {
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     let instance;
     let oracleInstance;
     let loanTermsConsInstance;
     let lendingPoolInstance;
     let settingsInstance;
-    let marketsInstance;
+    let collateralTokenInstance;
     let atmSettingsInstance;
 
     const mockLoanID = 2831
@@ -29,8 +31,13 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
         lendingTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
+        const marketsInstance = await Mock.new();
         settingsInstance = await Mock.new();
-        marketsInstance = await Mock.new();
+        await settingsInstance.givenMethodReturnAddress(
+            settingsInterfaceEncoder.encodeMarketsState(),
+            marketsInstance.address
+        );
+        collateralTokenInstance = await Mock.new();
         atmSettingsInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(
@@ -38,7 +45,7 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,
-            marketsInstance.address,
+            collateralTokenInstance.address,
             atmSettingsInstance.address,
         )
     });

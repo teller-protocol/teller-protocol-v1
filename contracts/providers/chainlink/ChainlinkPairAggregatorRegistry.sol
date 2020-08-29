@@ -14,6 +14,7 @@ import "../../base/DynamicProxy.sol";
 import "../../util/AddressLib.sol";
 import "../../util/LogicVersionsConsts.sol";
 
+// TODO Add docs.
 contract ChainlinkPairAggregatorRegistry is IChainlinkPairAggregatorRegistry, TInitializable, LogicVersionsConsts {
     using AddressLib for address;
     using Address for address;

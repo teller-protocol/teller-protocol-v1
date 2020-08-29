@@ -4,6 +4,8 @@ const { createTestSettingsInstance } = require("../utils/settings-helper");
 const { t, NULL_ADDRESS, ACTIVE } = require("../utils/consts");
 const withData = require('leche').withData;
 
+const Mock = artifacts.require("./mock/util/Mock.sol");
+
 // Smart contracts
 const Escrow = artifacts.require("./base/Escrow.sol");
 const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
@@ -18,7 +20,7 @@ contract('EscrowFactoryCreateEscrowTest', function (accounts) {
   let escrowLibrary;
 
   beforeEach(async () => {
-    settingsInstance = await createTestSettingsInstance(Settings);
+    settingsInstance = await createTestSettingsInstance(Settings, { from: owner, Mock });
     loans = await Loans.new();
     escrowLibrary = await Escrow.new();
     instance = await EscrowFactory.new();

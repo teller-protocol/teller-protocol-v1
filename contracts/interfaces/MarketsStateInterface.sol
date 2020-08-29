@@ -96,4 +96,12 @@ interface MarketsStateInterface {
         external
         view
         returns (MarketStateLib.MarketState memory);
+
+    function isWhitelisted(address account) external view returns (bool);
+
+    function addWhitelisted(address account) external;
+
+    function removeWhitelisted(address account) external;
+
+    function renounceWhitelisted() external;
 }

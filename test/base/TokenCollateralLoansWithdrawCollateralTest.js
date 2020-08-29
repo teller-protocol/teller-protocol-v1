@@ -26,7 +26,6 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
     let lendingPoolInstance;
     let loanTermsConsInstance;
     let settingsInstance;
-    let marketsInstance;
     let atmSettingsInstance;
 
     beforeEach('Setup for each test', async () => {
@@ -35,7 +34,6 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
         lendingPoolInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
         settingsInstance = await Mock.new()
-        marketsInstance = await Mock.new();
         atmSettingsInstance = await Mock.new();
         instance = await Loans.new();
 
@@ -71,7 +69,6 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
                 loanTermsConsInstance.address,
                 settingsInstance.address,
                 collateralToken.address,
-                marketsInstance.address,
                 atmSettingsInstance.address,
             )
 
@@ -151,7 +148,6 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
                 loanTermsConsInstance.address,
                 settingsInstance.address,
                 collateralToken.address,
-                marketsInstance.address,
                 atmSettingsInstance.address,
             )
 

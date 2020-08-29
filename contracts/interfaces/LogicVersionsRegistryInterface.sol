@@ -3,6 +3,7 @@ pragma experimental ABIEncoderV2;
 
 // Commons
 import "../util/LogicVersionLib.sol";
+import "../util/LogicVersionsConsts.sol";
 
 /**
     @notice It defines all the functions to manage the logic contract versions.
@@ -57,6 +58,8 @@ interface LogicVersionsRegistryInterface {
     );
 
     /** External Functions */
+
+    function consts() external returns (LogicVersionsConsts);
 
     /**
         @notice It creates a new logic version given a logic name and address.
