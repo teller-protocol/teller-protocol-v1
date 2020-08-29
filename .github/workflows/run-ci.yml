@@ -1,12 +1,6 @@
 name: Compile & Run Smart Contract Unit Tests
 
-on:
-  pull_request:
-    branches:
-      - "*"
-  push:
-    branches:
-      - "*"
+on: [push, pull_request]
 
 jobs:
   test:
