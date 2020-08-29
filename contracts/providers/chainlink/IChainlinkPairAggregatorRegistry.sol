@@ -6,7 +6,7 @@ import "./ChainlinkPairAggregator.sol";
 
 // TODO Add Docs
 interface IChainlinkPairAggregatorRegistry {
-    
+    // TODO move to TellerCommon
     struct PairAggregatorRegisterRequest {
         address baseToken;
         address quoteToken;

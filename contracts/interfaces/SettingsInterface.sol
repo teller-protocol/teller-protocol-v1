@@ -8,6 +8,7 @@ import "./InterestValidatorInterface.sol";
 import "./EscrowFactoryInterface.sol";
 import "./LogicVersionsRegistryInterface.sol";
 import "../providers/chainlink/IChainlinkPairAggregatorRegistry.sol";
+import "../settings/IATMSettings.sol";
 
 /**
     @notice This interface defines all function to manage the platform configuration.
@@ -293,6 +294,8 @@ interface SettingsInterface {
      */
     function pairAggregatorRegistry() external view returns (IChainlinkPairAggregatorRegistry);
 
+    function atmSettings() external view returns (IATMSettings);
+
     /**
         @notice It initializes this settings contract instance.
         @param escrowFactoryAddress the initial escrow factory address.
@@ -300,12 +303,14 @@ interface SettingsInterface {
         @param pairAggregatorRegistryAddress the initial pair aggregator registry address.
         @param marketsStateAddress the initial markets state address.
         @param interestValidatorAddress the initial interest validator address.
+        @param atmSettingsAddress the initial ATM settings address.
      */
     function initialize(
         address escrowFactoryAddress,
         address versionsRegistryAddress,
         address pairAggregatorRegistryAddress,
         address marketsStateAddress,
-        address interestValidatorAddress
+        address interestValidatorAddress,
+        address atmSettingsAddress
     ) external;
 }

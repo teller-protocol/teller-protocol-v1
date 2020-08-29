@@ -3,27 +3,32 @@ pragma experimental ABIEncoderV2;
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/access/roles/WhitelistedRole.sol";
 
 // Contracts
 
 // Interfaces
+import "../interfaces/SettingsInterface.sol";
 import "../interfaces/MarketsStateInterface.sol";
 import "../util/MarketStateLib.sol";
-
+import "./TInitializable.sol";
 
 /**
     @notice This contract is used to store market data.
 
     @author develop@teller.finance
  */
-contract MarketsState is MarketsStateInterface, WhitelistedRole {
+contract MarketsState is MarketsStateInterface, WhitelistedRole, TInitializable {
     using SafeMath for uint256;
+    using Address for address;
     using MarketStateLib for MarketStateLib.MarketState;
 
     /** Constants */
 
     /* State Variables */
+
+    SettingsInterface public settings;
 
     /**
         @notice It maps a lent token => collateral token => Market state.
@@ -44,7 +49,7 @@ contract MarketsState is MarketsStateInterface, WhitelistedRole {
         address borrowedAsset,
         address collateralAsset,
         uint256 amount
-    ) external onlyWhitelisted() {
+    ) external onlyWhitelisted() isInitialized() {
         markets[borrowedAsset][collateralAsset].increaseRepayment(amount);
     }
 
@@ -59,7 +64,7 @@ contract MarketsState is MarketsStateInterface, WhitelistedRole {
         address borrowedAsset,
         address collateralAsset,
         uint256 amount
-    ) external onlyWhitelisted() {
+    ) external onlyWhitelisted() isInitialized() {
         markets[borrowedAsset][collateralAsset].increaseSupply(amount);
     }
 
@@ -74,7 +79,7 @@ contract MarketsState is MarketsStateInterface, WhitelistedRole {
         address borrowedAsset,
         address collateralAsset,
         uint256 amount
-    ) external onlyWhitelisted() {
+    ) external onlyWhitelisted() isInitialized()  {
         markets[borrowedAsset][collateralAsset].decreaseSupply(amount);
     }
 
@@ -89,7 +94,7 @@ contract MarketsState is MarketsStateInterface, WhitelistedRole {
         address borrowedAsset,
         address collateralAsset,
         uint256 amount
-    ) external onlyWhitelisted() {
+    ) external onlyWhitelisted() isInitialized() {
         markets[borrowedAsset][collateralAsset].increaseBorrow(amount);
     }
 
@@ -134,6 +139,21 @@ contract MarketsState is MarketsStateInterface, WhitelistedRole {
         returns (MarketStateLib.MarketState memory)
     {
         return _getMarket(borrowedAsset, collateralAsset);
+    }
+
+    /**
+        @notice It initializes this Markets State instance.
+        @param settingsAddress settings address.
+     */
+    function initialize(address settingsAddress)
+        external
+        isNotInitialized()
+    {
+        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
+
+        TInitializable._initialize();
+
+        settings = SettingsInterface(settingsAddress);
     }
 
     /** Internal Functions */

@@ -24,7 +24,7 @@ const InterestConsensusMock = artifacts.require("./mock/base/InterestConsensusMo
 contract('InterestConsensusProcessRequestTest', function (accounts) {
     let instance;
     const owner = accounts[0];
-    const lendersContract = accounts[1]
+    let lenders
     const nodeOne = accounts[2]
     const nodeTwo = accounts[3]
     const nodeThree = accounts[4]
@@ -51,6 +51,7 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
 
         const chainId = chains.mainnet;
         const invalidChainId = chains.ropsten;
+        lenders = await Mock.new();
 
         interestRequest = createInterestRequest(lender, requestNonce, 23456, endTime, 45678, instance.address)
 
@@ -70,7 +71,7 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
         responseExpired.responseTime = currentTime - (31 * ONE_DAY)
         responseInvalidChainId.responseTime = currentTime - (15 * ONE_DAY)
 
-        const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract, chainId))
+        const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lenders.address, chainId))
 
         responseOne = await createInterestResponseSig(web3, nodeOne, responseOne, requestHash, chainId)
         responseTwo = await createInterestResponseSig(web3, nodeTwo, responseTwo, requestHash, chainId)
@@ -132,7 +133,9 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
                 }
             );
 
-            await instance.initialize(lendersContract, settings.address, marketsInstance.address);
+            // The sender validation (equal to the lenders contract) is mocked (InterestConsensusMock _isCaller(...) function) to allow execute the unit test.
+            const sender = accounts[1];
+            await instance.initialize(lenders.address, settings.address);
 
             await instance.addSigner(nodeOne)
             await instance.addSigner(nodeTwo)
@@ -152,7 +155,7 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
                 const result = await instance.processRequest(
                     interestRequest,
                     responses, {
-                       from: lendersContract
+                       from: sender
                     }
                 );
 

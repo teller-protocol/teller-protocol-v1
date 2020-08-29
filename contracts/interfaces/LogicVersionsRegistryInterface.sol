@@ -104,4 +104,10 @@ interface LogicVersionsRegistryInterface {
         @return true if the logic version is already configured. Otherwise it returns false.
      */
     function hasLogicVersion(bytes32 logicName) external view returns (bool);
+
+    /**
+        @notice It initializes this logic versions registry contract instance.
+        @param settingsAddress the settings contract address.
+     */
+    function initialize(address settingsAddress) external;
 }

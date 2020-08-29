@@ -2,8 +2,10 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Libraries
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Commons
+import "../base/TInitializable.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
@@ -15,7 +17,7 @@ import "./IATMSettings.sol";
 
     @author develop@teller.finance
  */
-contract ATMSettings is IATMSettings {
+contract ATMSettings is IATMSettings, TInitializable {
     using Address for address;
     /** Constants */
 
@@ -53,19 +55,13 @@ contract ATMSettings is IATMSettings {
 
     /* Constructor */
 
-    constructor(address settingsAddress) public {
-        require(settingsAddress != address(0x0), "SETTINGS_MUST_BE_PROVIDED");
-
-        settings = SettingsInterface(settingsAddress);
-    }
-
     /** External Functions */
 
     /**
         @notice It pauses a given ATM.
         @param atmAddress ATM address to pause.
      */
-    function pauseATM(address atmAddress) external withPauserRole() {
+    function pauseATM(address atmAddress) external withPauserRole() isInitialized() {
         require(settings.isPaused() == false, "PLATFORM_IS_ALREADY_PAUSED");
         require(atmPaused[atmAddress] == false, "ATM_IS_ALREADY_PAUSED");
 
@@ -78,7 +74,7 @@ contract ATMSettings is IATMSettings {
         @notice It unpauses a given ATM.
         @param atmAddress ATM address to unpause.
      */
-    function unpauseATM(address atmAddress) external withPauserRole() {
+    function unpauseATM(address atmAddress) external withPauserRole() isInitialized() {
         require(settings.isPaused() == false, "PLATFORM_IS_PAUSED");
         require(atmPaused[atmAddress] == true, "ATM_IS_NOT_PAUSED");
 
@@ -106,7 +102,7 @@ contract ATMSettings is IATMSettings {
         address borrowedToken,
         address collateralToken,
         address atmAddress
-    ) external withPauserRole() {
+    ) external withPauserRole() isInitialized() {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
             collateralToken == ETH_ADDRESS || collateralToken.isContract() == true,
@@ -132,7 +128,7 @@ contract ATMSettings is IATMSettings {
         address borrowedToken,
         address collateralToken,
         address newAtmAddress
-    ) external withPauserRole() {
+    ) external withPauserRole() isInitialized() {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
             collateralToken == ETH_ADDRESS || collateralToken.isContract() == true,
@@ -168,6 +164,7 @@ contract ATMSettings is IATMSettings {
     function removeATMToMarket(address borrowedToken, address collateralToken)
         external
         withPauserRole()
+        isInitialized()
     {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
@@ -218,6 +215,21 @@ contract ATMSettings is IATMSettings {
         address atmAddress
     ) external view returns (bool) {
         return marketToAtm[borrowedToken][collateralToken] == atmAddress;
+    }
+
+    /**
+        @notice It initializes this ATM Settings instance.
+        @param settingsAddress settings address.
+     */
+    function initialize(address settingsAddress)
+        external
+        isNotInitialized()
+    {
+        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
+
+        TInitializable._initialize();
+
+        settings = SettingsInterface(settingsAddress);
     }
 
     /** Internal functions */
