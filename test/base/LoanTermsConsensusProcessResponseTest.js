@@ -23,6 +23,7 @@ const LoanTermsConsensusMock = artifacts.require("./mock/base/LoanTermsConsensus
 const Settings = artifacts.require("./base/Settings.sol");
 
 contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
+    const owner = accounts[0];
     let instance
     let settings
     const loansContract = accounts[1]
@@ -90,7 +91,8 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
             // set up contract
             const markets = await Mock.new();
             settings = await createTestSettingsInstance(
-                Settings, 
+                Settings,
+                { from: owner, Mock },
                 {
                     [settingsNames.RequiredSubmissions]: requiredSubs,
                     [settingsNames.MaximumTolerance]: tolerance,

@@ -1,7 +1,7 @@
 pragma solidity 0.5.17;
 
 // Interfaces
-import "../interfaces/LogicVersionsRegistryInterface.sol";
+import "../interfaces/SettingsInterface.sol";
 
 /**
 TODO change it
@@ -15,8 +15,8 @@ contract BaseDynamic {
     /**
         @notice The logic versions registry.
      */
-    LogicVersionsRegistryInterface public versionsRegistry;
+    SettingsInterface public settings;
     // TODO Verify OpenZeppeling impl. It mustn't change over the time.
-    bytes32 public logicName;
+    bytes32 internal logicName;
 }
 

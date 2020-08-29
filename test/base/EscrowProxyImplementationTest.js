@@ -15,6 +15,7 @@ const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 contract("EscrowProxyImplementationTest", function(accounts) {
+    const owner = accounts[0];
     let libraryV1
     let libraryV2
     let factory
@@ -26,7 +27,7 @@ contract("EscrowProxyImplementationTest", function(accounts) {
         libraryV1 = await Mock.new();
         libraryV2 = await EscrowMock.new();
 
-        settings = await createTestSettingsInstance(Settings);
+        settings = await createTestSettingsInstance(Settings, { from: owner, Mock });
         factory = await EscrowFactory.new();
         loans = await Loans.new();
 

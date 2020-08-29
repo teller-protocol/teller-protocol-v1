@@ -31,6 +31,20 @@ interface LendersInterface {
     ) external;
 
     /**
+        @notice It initializes this contract instance.
+        @param tTokenAddress tToken contract address.
+        @param lendingPoolAddress lending pool contract address.
+        @param interestConsensusAddress interest consensus contract address.
+        @param settingAddress settings contract address.
+     */
+    function initialize(
+        address tTokenAddress,
+        address lendingPoolAddress,
+        address interestConsensusAddress,
+        address settingAddress
+    ) external;
+
+    /**
         @notice This event is emitted when an accrued interest is updated.
         @param lender address.
         @param totalNotWithdrawn total amount not withdrawn by the lender.

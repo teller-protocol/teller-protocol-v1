@@ -21,11 +21,11 @@
     "deploy:rinkeby": "truffle compile && truffle deploy --network rinkeby --reset --to 2",
     "deploy:ganache": "truffle compile && truffle deploy --network ganache --reset --to 2",
     "deploy:ganache:mock": "truffle compile && truffle deploy --network ganache --reset -f 3 --to 3",
-    "format:prettier": "prettier --write contracts/**/**/**/**/**.sol",
+    "format:prettier": "prettier --write contracts/**/**/LogicVersion**.sol",
     "format:prettier:print": "prettier contracts/**/**/**/**/**.sol",
-    "verify:ropsten": "truffle run verify ChainlinkPairAggregator InverseChainlinkPairAggregator EtherCollateralLoans InterestConsensus Lenders LendingPool LoanTermsConsensus MarketsState Settings TDAI TokenCollateralLoans TUSDC ATMToken ATMFactory ATMGovernance --network ropsten",
-    "verify:mainnet": "truffle run verify ChainlinkPairAggregator InverseChainlinkPairAggregator EtherCollateralLoans InterestConsensus Lenders LendingPool LoanTermsConsensus MarketsState Settings TDAI TokenCollateralLoans TUSDC ATMToken ATMFactory ATMGovernance --network mainnet",
-    "verify:rinkeby": "truffle run verify ChainlinkPairAggregator InverseChainlinkPairAggregator EtherCollateralLoans InterestConsensus Lenders LendingPool LoanTermsConsensus MarketsState Settings TDAI TokenCollateralLoans TUSDC ATMToken ATMFactory ATMGovernance --network rinkeby"
+    "verify:ropsten": "truffle run verify ChainlinkPairAggregator EtherCollateralLoans InterestConsensus Lenders LendingPool LoanTermsConsensus MarketsState Settings TDAI TokenCollateralLoans TUSDC ATMToken ATMFactory ATMGovernance --network ropsten",
+    "verify:mainnet": "truffle run verify ChainlinkPairAggregator EtherCollateralLoans InterestConsensus Lenders LendingPool LoanTermsConsensus MarketsState Settings TDAI TokenCollateralLoans TUSDC ATMToken ATMFactory ATMGovernance --network mainnet",
+    "verify:rinkeby": "truffle run verify ChainlinkPairAggregator EtherCollateralLoans InterestConsensus Lenders LendingPool LoanTermsConsensus MarketsState Settings TDAI TokenCollateralLoans TUSDC ATMToken ATMFactory ATMGovernance --network rinkeby"
   },
   "devDependencies": {
     "@gnosis.pm/mock-contract": "^3.0.7",
@@ -62,10 +62,5 @@
     "web3": "1.0.0-beta.55",
     "web3-provider-engine": "15.0.0",
     "web3-utils": "1.0.0-beta.55"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "yarn format:prettier"
-    }
   }
 }

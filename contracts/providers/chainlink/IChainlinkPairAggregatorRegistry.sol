@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 // Contracts
 import "./ChainlinkPairAggregator.sol";
 
+// TODO Add Docs
 interface IChainlinkPairAggregatorRegistry {
     
     struct PairAggregatorRegisterRequest {

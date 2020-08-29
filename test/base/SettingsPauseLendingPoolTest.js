@@ -5,15 +5,17 @@ const { settings } = require('../utils/events');
 const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
 
 contract('SettingsPauseLendingPoolTest', function (accounts) {
+    const owner = accounts[0];
     let instance;
     
     beforeEach('Setup for each test', async () => {
-        instance = await createTestSettingsInstance(Settings);
+        instance = await createTestSettingsInstance(Settings, { from: owner, Mock });
     });
 
     withData({

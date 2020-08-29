@@ -70,4 +70,8 @@ contract InterestConsensusMock is InterestConsensus {
     function mockRequestNonce(address lender, uint256 requestNonce, bool taken) external {
         requestNonceTaken[lender][requestNonce] = taken;
     }
+
+    function _isCaller(address) internal view returns (bool) {
+        return true;
+    }
 }

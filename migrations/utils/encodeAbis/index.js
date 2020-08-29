@@ -8,6 +8,11 @@ const encodeData = (web3, functionName, paramTypes, params) => {
     return `${functionSignature}${functionParamsEncoded.toString('hex')}`;
 };
 
+const encodeParamsData = (paramTypes, params) => {
+    const functionParamsEncoded = abijs.rawEncode(paramTypes, params);
+    return `0x${functionParamsEncoded.toString('hex')}`;
+};
+
 const DAPP_MOCK_TEST_FUNCTION_SIGNATURE = 'testFunction(bool)';
 const DAPP_MOCK_TEST_FUNCTION_PARAM_TYPES = ['bool'];
 
@@ -19,6 +24,7 @@ const LENDING_POOL_INITIALIZE_PARAM_TYPES = ['address', 'address', 'address', 'a
 
 module.exports = {
     encodeData,
+    encodeParamsData,
     dappMockABI: {
         encodeTestFunction: (web3, failTransaction) => {
             const params = [failTransaction];

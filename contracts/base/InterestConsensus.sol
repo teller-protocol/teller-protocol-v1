@@ -26,7 +26,7 @@ import "./Consensus.sol";
 
     @author develop@teller.finance
  */
-contract InterestConsensus is Consensus, InterestConsensusInterface {
+contract InterestConsensus is InterestConsensusInterface, Consensus {
     using AddressLib for address;
 
     /* State Variables */
@@ -48,7 +48,7 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
     function processRequest(
         TellerCommon.InterestRequest calldata request,
         TellerCommon.InterestResponse[] calldata responses
-    ) external isInitialized() isCaller() returns (uint256) {
+    ) external isInitialized() isCaller(msg.sender) returns (uint256) {
         require(
             responses.length >=
                 settings.getPlatformSettingValue(REQUIRED_SUBMISSIONS_SETTING),

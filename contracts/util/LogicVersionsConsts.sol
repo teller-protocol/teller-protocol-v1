@@ -25,6 +25,8 @@ contract LogicVersionsConsts {
     bytes32 public constant INTEREST_CONSENSUS_LOGIC_NAME = "InterestConsensus";
 
     bytes32 public constant PAIR_AGGREGATOR_LOGIC_NAME = "PairAggregator";
+
+    bytes32 public constant ESCROW_LOGIC_NAME = "Escrow";
     
     bytes32 public constant INVERSE_PAIR_AGGREGATOR_LOGIC_NAME = "InversePairAggregator";
     
