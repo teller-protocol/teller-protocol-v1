@@ -27,7 +27,6 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
         daiInstance = await Mock.new();
         interestConsensusInstance = await Mock.new();
         cTokenInstance = await Mock.new();
-        const marketsInstance = await Mock.new();
         const settingsInstance = await Mock.new();
         instance = await LendingPool.new();
 
@@ -35,7 +34,6 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
           tTokenInstance.address,
           instance.address,
           interestConsensusInstance.address,
-          marketsInstance.address,
         );
 
         await instance.initialize(
@@ -45,8 +43,6 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
             loansAddress,
             cTokenInstance.address,
             settingsInstance.address,
-            marketsInstance.address,
-            NULL_ADDRESS,
         );
     });
 

@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@gnosis.pm/mock-contract": "^3.0.7",
+    "chai": "^4.2.0",
     "dotenv": "^8.2.0",
     "eslint": "^5.16.0",
     "eth-gas-reporter": "^0.2.15",

@@ -29,7 +29,6 @@ contract('LendersWithdrawInterestTest', function (accounts) {
             lendingPoolInstance.address,
             interestConsensusInstance.address,
             settingsInstance.address,
-            marketsInstance.address,
         );
     });
 
