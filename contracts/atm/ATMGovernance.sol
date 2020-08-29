@@ -12,8 +12,9 @@ import "../base/TInitializable.sol";
 import "./BaseATM.sol";
 
 // Interfaces
-import "./ATMGovernanceInterface.sol";
-import "../settings/IATMSettings.sol";
+import "./IATMGovernance.sol";
+import "../interfaces/SettingsInterface.sol";
+
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -30,7 +31,7 @@ import "../settings/IATMSettings.sol";
 
     @author develop@teller.finance
  */
-contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
+contract ATMGovernance is IATMGovernance, TInitializable, SignerRole {
     using AddressArrayLib for address[];
     using AddressLib for address;
     using Address for address;
@@ -56,6 +57,8 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
     // Unique CRA - Credit Risk Algorithm github hash to use in this ATM
     string public cra;
 
+    SettingsInterface public settings;
+
     /* External Functions */
 
     /**
@@ -65,8 +68,8 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
      */
     function addGeneralSetting(bytes32 settingName, uint256 settingValue)
         external
-        onlyPauser()
-    // TODO Do we need to add isInitialized() (the same for other functions)?
+        onlySigner()
+        isNotInitialized()
     {
         require(settingValue > 0, "GENERAL_SETTING_MUST_BE_POSITIVE");
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
@@ -82,7 +85,8 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
      */
     function updateGeneralSetting(bytes32 settingName, uint256 newValue)
         external
-        onlyPauser()
+        onlySigner()
+        isNotInitialized()
     {
         require(newValue > 0, "GENERAL_SETTING_MUST_BE_POSITIVE");
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
@@ -96,7 +100,7 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
         @notice Removes a General Setting from this ATM.
         @param settingName name of the setting to be removed.
      */
-    function removeGeneralSetting(bytes32 settingName) external onlyPauser() {
+    function removeGeneralSetting(bytes32 settingName) external onlySigner() isNotInitialized() {
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
         require(generalSettings[settingName] > 0, "GENERAL_SETTING_NOT_FOUND");
         uint256 previousValue = generalSettings[settingName];
@@ -114,7 +118,7 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
         address asset,
         bytes32 settingName,
         uint256 settingValue
-    ) external onlyPauser() {
+    ) external onlySigner() isNotInitialized() {
         asset.requireNotEmpty("ASSET_ADDRESS_IS_REQUIRED");
         require(asset.isContract(), "ASSET_MUST_BE_A_CONTRACT");
         require(settingValue > 0, "ASSET_SETTING_MUST_BE_POSITIVE");
@@ -137,7 +141,7 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
         address asset,
         bytes32 settingName,
         uint256 newValue
-    ) external onlyPauser() {
+    ) external onlySigner() isNotInitialized() {
         require(settingName != "", "ASSET_SETTING_MUST_BE_PROVIDED");
         require(assetMarketSettings[asset][settingName] > 0, "ASSET_SETTING_NOT_FOUND");
         require(
@@ -162,7 +166,8 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
      */
     function removeAssetMarketSetting(address asset, bytes32 settingName)
         external
-        onlyPauser()
+        onlySigner()
+        isNotInitialized()
     {
         require(settingName != "", "ASSET_SETTING_MUST_BE_PROVIDED");
         require(assetMarketSettings[asset][settingName] > 0, "ASSET_SETTING_NOT_FOUND");
@@ -179,7 +184,8 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
      */
     function addDataProvider(uint8 dataTypeIndex, address dataProvider)
         external
-        onlyPauser()
+        onlySigner()
+        isNotInitialized()
     {
         require(dataProvider.isContract(), "DATA_PROVIDER_MUST_BE_A_CONTRACT");
         dataProviders[dataTypeIndex].add(dataProvider);
@@ -202,7 +208,7 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
         uint8 dataTypeIndex,
         uint256 providerIndex,
         address newProvider
-    ) external onlyPauser() {
+    ) external onlySigner() isNotInitialized() {
         require(
             dataProviders[dataTypeIndex].length > providerIndex,
             "DATA_PROVIDER_OUT_RANGE"
@@ -227,7 +233,8 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
      */
     function removeDataProvider(uint8 dataTypeIndex, uint256 dataProviderIndex)
         external
-        onlyPauser()
+        onlySigner()
+        isNotInitialized()
     {
         require(
             dataProviders[dataTypeIndex].length > dataProviderIndex,
@@ -248,7 +255,7 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
                 CRA is represented by a Github commit hash of the newly proposed algorithm.
         @param _cra Credit Risk Algorithm github commit hash.
      */
-    function setCRA(string calldata _cra) external onlyPauser() {
+    function setCRA(string calldata _cra) external onlySigner() isNotInitialized() {
         bytes memory tempEmptyStringTest = bytes(_cra);
         require(tempEmptyStringTest.length > 0, "CRA_CANT_BE_EMPTY");
         require(
@@ -261,14 +268,16 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
 
     /**
         @notice It initializes this ATM Governance instance.
-        @param atmSettingsAddress ATM Settings address for proxy to grab current logic implementation.
+        @param settingsAddress the initial settings address.
+        @param ownerAddress the owner address for this ATM Governance.
      */
-    function initialize(address atmSettingsAddress) public isNotInitialized() {
-        require(atmSettingsAddress.isContract(), "ATM_SETTINGS_MUST_BE_A_CONTRACT");
+    function initialize(address settingsAddress, address ownerAddress) external isNotInitialized() {
+        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
 
+        SignerRole.initialize(ownerAddress);
         TInitializable._initialize();
 
-        atmSettings = IATMSettings(atmSettingsAddress);
+        settings = SettingsInterface(settingsAddress);
     }
 
     /* External Constant functions */

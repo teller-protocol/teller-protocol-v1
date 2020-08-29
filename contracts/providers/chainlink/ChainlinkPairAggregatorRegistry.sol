@@ -40,8 +40,9 @@ contract ChainlinkPairAggregatorRegistry is IChainlinkPairAggregatorRegistry, TI
     {
         // TODO Do we need to create an update function?
         // TODO Do we need to validate the new request is already registered?
-        bytes32 logicName = request.inverse ? INVERSE_PAIR_AGGREGATOR_LOGIC_NAME : PAIR_AGGREGATOR_LOGIC_NAME;
-        DynamicProxy pairAggregatorProxy = new DynamicProxy(address(settings.versionsRegistry()), logicName);
+        bytes32 logicName = settings.versionsRegistry().consts().CHAINLINK_PAIR_AGGREGATOR_LOGIC_NAME();
+
+        DynamicProxy pairAggregatorProxy = new DynamicProxy(address(settings), logicName);
 
         address pairAggregatorAddress = address(pairAggregatorProxy);
         aggregator = PairAggregatorInterface(pairAggregatorAddress);

@@ -84,7 +84,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
             );
             const marketsInstance = await Mock.new();
             instance = await InterestConsensusMock.new()
-            await instance.initialize(lendersContract, settings.address, marketsInstance.address);
+            await instance.initialize(lendersContract, settings.address);
 
             const interestRequest = createInterestRequest(lender, requestNonce, 23456, endTime, 45678, instance.address)
             const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract, chainId))

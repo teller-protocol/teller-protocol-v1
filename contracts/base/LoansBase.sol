@@ -10,6 +10,7 @@ import "../util/ERC20Lib.sol";
 // Contracts
 import "./Base.sol";
 import "../providers/openzeppelin/ERC20.sol";
+// TODO Review it. Rename to ERC20Interface.sol to avoid collisions with OpenZeppeling contracts.
 
 // Interfaces
 import "../interfaces/PairAggregatorInterface.sol";

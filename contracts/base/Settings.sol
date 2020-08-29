@@ -18,6 +18,7 @@ import "../interfaces/EscrowFactoryInterface.sol";
 import "../interfaces/MarketsStateInterface.sol";
 import "../interfaces/InterestValidatorInterface.sol";
 import "../providers/chainlink/IChainlinkPairAggregatorRegistry.sol";
+import "../settings/IATMSettings.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -118,6 +119,11 @@ contract Settings is Pausable, SettingsInterface, TInitializable {
         @notice The current interest validator.
      */
     InterestValidatorInterface public interestValidator;
+
+    /**
+        @notice The current ATM settings.
+     */
+    IATMSettings public atmSettings;
 
     /** Modifiers */
 
@@ -396,13 +402,15 @@ contract Settings is Pausable, SettingsInterface, TInitializable {
         @param pairAggregatorRegistryAddress the initial pair aggregator registry address.
         @param marketsStateAddress the initial markets state address.
         @param interestValidatorAddress the initial interest validator address.
+        @param atmSettingsAddress the initial ATM settings address.
      */
     function initialize(
         address escrowFactoryAddress,
         address versionsRegistryAddress,
         address pairAggregatorRegistryAddress,
         address marketsStateAddress,
-        address interestValidatorAddress
+        address interestValidatorAddress,
+        address atmSettingsAddress
     )
         external
         isNotInitialized()
@@ -415,6 +423,7 @@ contract Settings is Pausable, SettingsInterface, TInitializable {
             interestValidatorAddress.isEmpty() || interestValidatorAddress.isContract(),
             "INTEREST_VAL_MUST_BE_CONTRACT"
         );
+        require(atmSettingsAddress.isContract(), "ATM_SETTINGS_MUST_BE_CONTRACT");
 
         Pausable.initialize(msg.sender);
         TInitializable._initialize();
@@ -424,6 +433,7 @@ contract Settings is Pausable, SettingsInterface, TInitializable {
         pairAggregatorRegistry = IChainlinkPairAggregatorRegistry(pairAggregatorRegistryAddress);
         marketsState = MarketsStateInterface(marketsStateAddress);
         interestValidator = InterestValidatorInterface(interestValidatorAddress);
+        atmSettings = IATMSettings(atmSettingsAddress);
     }
 
     /** Internal functions */

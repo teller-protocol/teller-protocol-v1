@@ -205,4 +205,10 @@ interface IATMSettings {
         address collateralToken,
         address atmAddress
     ) external view returns (bool);
+
+    /**
+        @notice It initializes this ATM Settings instance.
+        @param settingsAddress settings address.
+     */
+    function initialize(address settingsAddress) external;
 }
