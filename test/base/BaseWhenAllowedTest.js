@@ -16,10 +16,9 @@ contract('BaseWhenAllowedTest', function (accounts) {
     let instance;
 
     beforeEach('Setup for each test', async () => {
-        settings = await createTestSettingsInstance(Settings);
-        const markets = await Mock.new();
+        settings = await createTestSettingsInstance(Settings, { from: owner, Mock });
         instance = await BaseMock.new();
-        await instance.externalInitialize(settings.address, markets.address);
+        await instance.externalInitialize(settings.address);
     });
 
     withData({

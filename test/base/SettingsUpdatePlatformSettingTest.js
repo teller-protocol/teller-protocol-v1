@@ -9,6 +9,7 @@ const { createTestSettingsInstance } = require("../utils/settings-helper");
 const { settings } = require('../utils/events');
 
 // Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
@@ -18,7 +19,7 @@ contract('SettingsUpdatePlatformSettingTest', function (accounts) {
     let instance;
     
     beforeEach('Setup for each test', async () => {
-        instance = await createTestSettingsInstance(Settings);
+        instance = await createTestSettingsInstance(Settings, { from: owner, Mock });
     });
 
     const newSetting = (value, min = 0, max = value * 2) => ({value, min, max});

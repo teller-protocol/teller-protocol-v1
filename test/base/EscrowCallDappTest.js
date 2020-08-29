@@ -21,7 +21,7 @@ contract('EscrowCallDappTest', function (accounts) {
   let escrow;
 
   beforeEach(async () => {
-    settingsInstance = await createTestSettingsInstance(Settings);
+    settingsInstance = await createTestSettingsInstance(Settings, { from: owner, Mock });
     loans = await Mock.new();
     escrow = await Escrow.new();
     instance = await EscrowFactory.new();

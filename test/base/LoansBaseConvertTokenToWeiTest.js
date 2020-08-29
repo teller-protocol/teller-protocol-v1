@@ -25,7 +25,6 @@ contract('LoansBaseConvertTokenToWeiTest', function () {
     let lendingPoolInstance;
     let lendingTokenInstance;
     let settingsInstance;
-    let marketsInstance;
     let atmSettingsInstance;
     
     beforeEach('Setup for each test', async () => {
@@ -34,15 +33,15 @@ contract('LoansBaseConvertTokenToWeiTest', function () {
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
         settingsInstance = await Mock.new();
-        marketsInstance = await Mock.new();
         atmSettingsInstance = await Mock.new();
+        const collateralTokenInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(
             oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,
-            marketsInstance.address,
+            collateralTokenInstance.address,
             atmSettingsInstance.address,
         )
 

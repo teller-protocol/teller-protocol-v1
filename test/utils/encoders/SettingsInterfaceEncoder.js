@@ -19,4 +19,24 @@ SettingsInterfaceEncoder.prototype.encodeIsPaused = function() {
     return encode(this.web3, 'isPaused()');
 }
 
+SettingsInterfaceEncoder.prototype.encodeMarketsState = function() {
+    return encode(this.web3, 'marketsState()');
+}
+
+SettingsInterfaceEncoder.prototype.encodeMarketsState = function() {
+    return encode(this.web3, 'marketsState()');
+}
+
+SettingsInterfaceEncoder.prototype.encodeVersionsRegistry = function() {
+    return encode(this.web3, 'versionsRegistry()');
+}
+
+SettingsInterfaceEncoder.prototype.encodeInterestValidator = function() {
+    return encode(this.web3, 'interestValidator()');
+}
+
+SettingsInterfaceEncoder.prototype.encodeGetAssetSettings = function() {
+    return encode(this.web3, 'getAssetSettings(address)');
+}
+
 module.exports = SettingsInterfaceEncoder;

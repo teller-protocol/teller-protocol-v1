@@ -1,8 +1,10 @@
 pragma solidity 0.5.17;
 
+// Externals
+import "@chainlink/contracts/src/v0.5/interfaces/AggregatorInterface.sol";
+
 // Contracts
 import "../../base/TInitializable.sol";
-import "./BaseChainlinkPairAggregator.sol";
 
 // Interfaces
 import "../../interfaces/PairAggregatorInterface.sol";
@@ -17,11 +19,12 @@ import "../openzeppelin/SignedSafeMath.sol";
 
     @author develop@teller.finance
  */
-contract ChainlinkPairAggregator is BaseChainlinkPairAggregator, PairAggregatorInterface, TInitializable {
+contract ChainlinkPairAggregator is PairAggregatorInterface, TInitializable {
     using SafeMath for uint256;
     using SignedSafeMath for int256;
     using Address for address;
 
+    // TODO  Can we have constants here?
     uint256 internal constant TEN = 10;
     uint256 internal constant MAX_POWER_VALUE = 50;
 
@@ -79,18 +82,41 @@ contract ChainlinkPairAggregator is BaseChainlinkPairAggregator, PairAggregatorI
         return aggregator.getTimestamp(latest - roundsBack);
     }
 
-    /** Internal Functions */
-
     /**
-        @notice Gets the past round answer from the Chainlink aggregator oracle.
-        @param roundsBack the answer number to retrieve the answer for
-        @return a non-normalized response value.
-     */
-    function _getPreviousAnswer(uint256 roundsBack) internal view returns (int256) {
-        uint256 latest = aggregator.latestRound();
-        require(roundsBack <= latest, "NOT_ENOUGH_HISTORY");
-        return aggregator.getAnswer(latest - roundsBack);
+        @notice It creates a new ChainlinkPairAggregator instance.
+        @param aggregatorAddress to use in this Chainlink pair aggregator.
+        @param isInverse defines whether the aggregator is inverse or not.
+        @param responseDecimalsValue the decimals included in the Chainlink response.
+        @param collateralDecimalsValue the decimals included in the collateral token.
+    */
+    function initialize(
+        address aggregatorAddress,
+        bool isInverse,
+        uint8 responseDecimalsValue,
+        uint8 collateralDecimalsValue
+    )
+        external
+        isNotInitialized()
+    {
+        // TODO: Test contract data is dummy address so this will fail
+        // require(aggregatorAddress.isContract(), "AGGREGATOR_NOT_CONTRACT");
+
+        _initialize();
+
+        inverse = isInverse;
+        aggregator = AggregatorInterface(aggregatorAddress);
+        responseDecimals = responseDecimalsValue;
+        collateralDecimals = collateralDecimalsValue;
+
+        if (collateralDecimals >= responseDecimals) {
+            pendingDecimals = collateralDecimals - responseDecimals;
+        } else {
+            pendingDecimals = responseDecimals - collateralDecimals;
+        }
+        require(pendingDecimals <= MAX_POWER_VALUE, "MAX_PENDING_DECIMALS_EXCEEDED");
     }
+
+    /** Internal Functions */
 
     /**
         @notice It normalizes a value depending on the collateral and response decimals configured in the contract.
@@ -110,36 +136,14 @@ contract ChainlinkPairAggregator is BaseChainlinkPairAggregator, PairAggregatorI
     }
 
     /**
-        @notice It creates a new ChainlinkPairAggregator instance.
-        @param aggregatorAddress to use in this Chainlink pair aggregator.
-        @param isInverse defines whether the aggregator is inverse or not.
-        @param responseDecimalsValue the decimals included in the Chainlink response.
-        @param collateralDecimalsValue the decimals included in the collateral token.
-    */
-    function initialize(
-        address aggregatorAddress,
-        bool isInverse,
-        uint8 responseDecimalsValue,
-        uint8 collateralDecimalsValue
-    )
-        public
-        isNotInitialized()
-    {
-        // TODO: Test contract data is dummy address so this will fail
-    //    require(aggregatorAddress.isContract(), "AGGREGATOR_NOT_CONTRACT");
-
-        _initialize();
-
-        inverse = isInverse;
-        aggregator = AggregatorInterface(aggregatorAddress);
-        responseDecimals = responseDecimalsValue;
-        collateralDecimals = collateralDecimalsValue;
-
-        if (collateralDecimals >= responseDecimals) {
-            pendingDecimals = collateralDecimals - responseDecimals;
-        } else {
-            pendingDecimals = responseDecimals - collateralDecimals;
-        }
-        require(pendingDecimals <= MAX_POWER_VALUE, "MAX_PENDING_DECIMALS_EXCEEDED");
+        @notice Gets the past round answer from the Chainlink aggregator oracle.
+        @param roundsBack the answer number to retrieve the answer for
+        @return a non-normalized response value.
+     */
+    function _getPreviousAnswer(uint256 roundsBack) internal view returns (int256) {
+        uint256 latest = aggregator.latestRound();
+        require(roundsBack <= latest, "NOT_ENOUGH_HISTORY");
+        return aggregator.getAnswer(latest - roundsBack);
     }
+
 }

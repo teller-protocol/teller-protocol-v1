@@ -63,16 +63,22 @@ interface LendingPoolInterface {
     function lendingToken() external view returns (address);
 
     /**
-        @notice Gets the current interest validator. By default it is 0x0.
-        @return the interest validator contract address or empty address (0x0). 
+        @notice It initializes the contract state variables.
+        @param tTokenAddress tToken token address.
+        @param lendingTokenAddress ERC20 token address.
+        @param lendersAddress Lenders contract address.
+        @param loansAddress Loans contract address.
+        @param settingsAddress Settings contract address.
+        @dev It throws a require error if the contract is already initialized.
      */
-    function interestValidator() external view returns (address);
-
-    /**
-        @notice Update the current interest validator address.
-        @param newInterestValidator the new interest validator address.
-     */
-    function setInterestValidator(address newInterestValidator) external;
+    function initialize(
+        address tTokenAddress,
+        address lendingTokenAddress,
+        address lendersAddress,
+        address loansAddress,
+        address cTokenAddress,
+        address settingsAddress
+    ) external;
 
     /**
         @notice This event is emitted when an user deposits tokens into the pool.

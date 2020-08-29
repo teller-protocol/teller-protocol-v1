@@ -19,8 +19,8 @@ contract('LoansBaseSetPriceOracleTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         const lendingPoolInstance = await Mock.new();
         const loanTermsConsInstance = await Mock.new();
-        const marketsInstance = await Mock.new();
         const atmSettingsInstance = await Mock.new();
+        const collateralTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
         settingsInstance = await Mock.new()
         instance = await Loans.new();
@@ -29,7 +29,7 @@ contract('LoansBaseSetPriceOracleTest', function (accounts) {
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,
-            marketsInstance.address,
+            collateralTokenInstance.address,
             atmSettingsInstance.address,
         )
     });

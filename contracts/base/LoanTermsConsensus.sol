@@ -23,7 +23,7 @@ import "../interfaces/LoanTermsConsensusInterface.sol";
 
     @author develop@teller.finance
  */
-contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
+contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
     /* Mappings */
     mapping(address => mapping(uint256 => TellerCommon.AccruedLoanTerms)) public termSubmissions;
 
@@ -50,7 +50,7 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
     )
         external
         isInitialized()
-        isCaller()
+        isCaller(msg.sender)
         returns (uint256 interestRate, uint256 collateralRatio, uint256 maxLoanAmount)
     {
         require(

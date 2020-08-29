@@ -28,8 +28,6 @@ const ATMToken = artifacts.require("./atm/ATMToken.sol");
 // External providers
 const ChainlinkPairAggregatorRegistry = artifacts.require("./providers/chainlink/ChainlinkPairAggregatorRegistry.sol");
 const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
-const InverseChainlinkPairAggregator = artifacts.require("./providers/chainlink/InverseChainlinkPairAggregator.sol");
-
 const tokensRequired = ['DAI', 'USDC', 'LINK'];
 const chainlinkOraclesRequired = ['DAI_ETH', 'USDC_ETH', 'LINK_USD'];
 
@@ -38,7 +36,7 @@ module.exports = async function(deployer, network, accounts) {
   // Getting network configuration.
   const appConfig = require('../config')(network);
   const { networkConfig, env } = appConfig;
-
+  return; // TODO Fix migration. For now we return so unit tests can run.
   // Getting configuration values.
   const deployerAccountIndex = env.getDefaultAddressIndex().getOrDefault();
   const deployerAccount = accounts[deployerAccountIndex];

@@ -11,6 +11,7 @@ import "./TInitializable.sol";
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
 import "../interfaces/MarketsStateInterface.sol";
+import "../interfaces/InterestValidatorInterface.sol";
 
 
 /*****************************************************************************************************/
@@ -38,7 +39,6 @@ contract Base is TInitializable, ReentrancyGuard {
     /* State Variables */
 
     SettingsInterface public settings;
-    MarketsStateInterface public markets;
 
     /** Modifiers */
 
@@ -99,21 +99,17 @@ contract Base is TInitializable, ReentrancyGuard {
     /**
         @notice It initializes the current contract instance setting the required parameters.
         @param settingsAddress settings contract address.
-        @param marketsAddress markets state contract address.
      */
-    function _initialize(address settingsAddress, address marketsAddress)
+    function _initialize(address settingsAddress)
         internal
         isNotInitialized()
     {
         settingsAddress.requireNotEmpty("SETTINGS_MUST_BE_PROVIDED");
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
-        marketsAddress.requireNotEmpty("MARKETS_MUST_BE_PROVIDED");
-        require(marketsAddress.isContract(), "MARKETS_MUST_BE_A_CONTRACT");
 
         _initialize();
 
         settings = SettingsInterface(settingsAddress);
-        markets = MarketsStateInterface(marketsAddress);
     }
 
     /**
@@ -131,6 +127,14 @@ contract Base is TInitializable, ReentrancyGuard {
      */
     function _isPaused() internal view returns (bool) {
         return settings.isPaused();
+    }
+
+    function _markets() internal view returns (MarketsStateInterface) {
+        return settings.marketsState();
+    }
+
+    function _interestValidator() internal view returns (InterestValidatorInterface) {
+        return settings.interestValidator();
     }
 
     /** Private functions */

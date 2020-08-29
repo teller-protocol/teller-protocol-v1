@@ -248,7 +248,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         // We only send the loan to escrow contract for now.
         lendingPool.createLoan(amountBorrow, escrow);
 
-        markets.increaseBorrow(
+        _markets().increaseBorrow(
             lendingPool.lendingToken(),
             this.collateralToken(),
             amountBorrow
@@ -299,7 +299,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         // collect the money from the payer
         lendingPool.repay(toPay, msg.sender);
 
-        markets.increaseRepayment(
+        _markets().increaseRepayment(
             lendingPool.lendingToken(),
             this.collateralToken(),
             toPay
@@ -464,7 +464,6 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         @param lendingPoolAddress Contract address of the lending pool
         @param loanTermsConsensusAddress Contract address for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
-        @param marketsAddress Contract address to store market data.
         @param atmSettingsAddress Contract address to get ATM settings data.
      */
     function _initialize(
@@ -472,7 +471,6 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
-        address marketsAddress,
         address atmSettingsAddress
     ) internal isNotInitialized() {
         priceOracleAddress.requireNotEmpty("PROVIDE_ORACLE_ADDRESS");
@@ -480,7 +478,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         loanTermsConsensusAddress.requireNotEmpty("PROVIDED_LOAN_TERMS_ADDRESS");
         atmSettingsAddress.requireNotEmpty("PROVIDED_ATM_SETTINGS_ADDRESS");
 
-        _initialize(settingsAddress, marketsAddress);
+        _initialize(settingsAddress);
 
         priceOracle = priceOracleAddress;
         lendingPool = LendingPoolInterface(lendingPoolAddress);
@@ -665,7 +663,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         require(atmAddressForMarket != address(0x0), "ATM_NOT_FOUND_FOR_MARKET");
         uint256 supplyToDebtMarketLimit = IATMGovernance(atmAddressForMarket)
             .getGeneralSetting(SUPPLY_TO_DEBT_ATM_SETTING);
-        uint256 currentSupplyToDebtMarket = markets.getSupplyToDebtFor(
+        uint256 currentSupplyToDebtMarket = _markets().getSupplyToDebtFor(
             lendingPool.lendingToken(),
             collateralToken,
             newLoanAmount

@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t } = require('../utils/consts');
+const { t, NULL_ADDRESS } = require('../utils/consts');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -11,23 +11,24 @@ const Consensus = artifacts.require("./base/ConsensusModifiersMock.sol");
 contract('ConsensusModifiersTest', function (accounts) {
 
     withData({
-        _1_not_lenders: [accounts[1], accounts[3], 'SENDER_HASNT_PERMISSIONS', true],
-        _2_lenders: [accounts[1], accounts[1], undefined, false]
+        _1_caller_empty: [-1, 'SENDER_HASNT_PERMISSIONS', true],
+        _2_caller_account: [99, 'SENDER_HASNT_PERMISSIONS', true],
+        _3_valid: [2, undefined, false]
     }, function(
-        callerAddress,
-        msgSender,
+        callerIndex,
         expectedErrorMessage,
         mustFail
     ) {    
         it(t('user', 'isCaller', 'Should (or not) be able to call the function', mustFail), async function() {
+            // Setup
+            const settingsInstance = await Mock.new();
+            const callerInstance = await Mock.new();
+            const instance = await Consensus.new();
+            await instance.initialize(callerInstance.address, settingsInstance.address);
+            const callerAddress = callerIndex === -1 ? NULL_ADDRESS : callerIndex === 99 ? accounts[2] : callerInstance.address;
             try {
-                // Setup
-                const settingsInstance = await Mock.new();
-                const marketsInstance = await Mock.new();
-                const instance = await Consensus.new();
-                await instance.initialize(callerAddress, settingsInstance.address, marketsInstance.address);
-
-                const result = await instance.externalIsCaller({ from:  msgSender })
+                // Invocation
+                const result = await instance.externalIsCaller(callerAddress);
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');

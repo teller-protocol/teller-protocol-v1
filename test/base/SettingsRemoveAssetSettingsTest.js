@@ -65,7 +65,7 @@ contract('SettingsRemoveAssetSettingsTest', function (accounts) {
     ) {
         it(t('user', 'removeAssetSettings', 'Should (or not) be able to remove a asset setting.', mustFail), async function() {
             // Setup
-            const instance = await createTestSettingsInstance(Settings);
+            const instance = await createTestSettingsInstance(Settings, { from: owner, Mock });
             
             const senderAddress = getSenderAddress(senderIndex);
             if(addAsPauserRole) {

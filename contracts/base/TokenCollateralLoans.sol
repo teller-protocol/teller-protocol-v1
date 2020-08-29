@@ -124,7 +124,7 @@ contract TokenCollateralLoans is LoansBase {
         @param lendingPoolAddress Contract address of the lending pool
         @param loanTermsConsensusAddress Contract adddress for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
-        @param marketsAddress Contract address to store market data.
+        @param collateralTokenAddress Contract address for the collateral token.
         @param atmSettingsAddress Contract address to get ATM settings data.
      */
     function initialize(
@@ -133,7 +133,6 @@ contract TokenCollateralLoans is LoansBase {
         address loanTermsConsensusAddress,
         address settingsAddress,
         address collateralTokenAddress,
-        address marketsAddress,
         address atmSettingsAddress
     ) external isNotInitialized() {
         collateralTokenAddress.requireNotEmpty("PROVIDE_COLL_TOKEN_ADDRESS");
@@ -143,7 +142,6 @@ contract TokenCollateralLoans is LoansBase {
             lendingPoolAddress,
             loanTermsConsensusAddress,
             settingsAddress,
-            marketsAddress,
             atmSettingsAddress
         );
 
