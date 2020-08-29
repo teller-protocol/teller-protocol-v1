@@ -42,8 +42,7 @@ contract('LendersSetAccruedInterestTest', function (accounts) {
             tTokenInstance.address,
             lendingPoolInstance.address,
             interestConsensusInstance.address,
-            settingsInstance.address,
-            marketsInstance.address,
+            settingsInstance.address
         );
 
         interestConsensusTemplate = await InterestConsensus.new()
