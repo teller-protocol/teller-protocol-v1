@@ -2,26 +2,23 @@
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
 const { t  } = require('../utils/consts');
-const { atmToken } = require('../utils/events');
-const Timer = require('../../scripts/utils/Timer');
+const { tlrToken } = require('../utils/events');
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 
  // Mock contracts
  const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const ATMToken = artifacts.require("./ATMToken.sol");
+const TLRToken = artifacts.require("./TLRToken.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 
-contract('ATMTokenRevokeVestingTest', function (accounts) {
+contract('ATMTokenSetCapTest', function (accounts) {
     const atmSettingsEncoder = new IATMSettingsEncoder(web3);
     let atmSettingsInstance;
     let atmInstance;
     let instance;
     const daoAgent = accounts[0];
     const daoMember1 = accounts[2];
-    const daoMember2 = accounts[3];
-    const timer = new Timer(web3);
 
     beforeEach('Setup for each test', async () => {
         const settings = await createTestSettingsInstance(Settings);
@@ -31,12 +28,12 @@ contract('ATMTokenRevokeVestingTest', function (accounts) {
             settings.address
         );
         atmInstance = await Mock.new();
-        instance = await ATMToken.new();
+        instance = await TLRToken.new();
         await instance.initialize(
-                            "ATMToken",
-                            "ATMT",
-                            18,
-                            10000,
+                            "Teller Token",
+                            "TLR",
+                            18, 
+                            10000, 
                             50,
                             atmSettingsInstance.address,
                             atmInstance.address
@@ -44,22 +41,15 @@ contract('ATMTokenRevokeVestingTest', function (accounts) {
     });
 
     withData({
-        _1_revoke_vested_basic: [daoAgent, daoMember1, 1000, 3000, 7000, undefined, false],
-        _2_revoke_vested_no_amount: [daoAgent, daoMember2, 1000, 1750, 7000, "ACCOUNT_DOESNT_HAVE_VESTING", true],
-        _3_revoke_vested_invalid_sender: [daoMember1, daoMember2, 1000, 1750, 7000, "ONLY_PAUSER", true],
+        _1_basic: [70000, daoAgent, undefined, false],
+        _2_invalid_sender: [100000, daoMember1, 'ONLY_PAUSER', true]
     },function(
+        newCap,
         sender,
-        receipent,
-        amount,
-        cliff,
-        vestingPeriod,
         expectedErrorMessage,
         mustFail
     ) {
-        it(t('agent', 'revokeVesting', 'Should or be able to revoke correctly', mustFail), async function() {
-            // Setup
-            await instance.mintVesting(daoMember1, amount, cliff, vestingPeriod, { from: daoAgent });
-            const deadline = await timer.getCurrentTimestampInSecondsAndSum(vestingPeriod);
+        it(t('agent', 'setCap', 'Should or should not be able to set cap correctly', mustFail), async function() {
             await atmSettingsInstance.givenMethodReturnBool(
                 atmSettingsEncoder.encodeIsATMPaused(),
                 false
@@ -67,12 +57,19 @@ contract('ATMTokenRevokeVestingTest', function (accounts) {
 
             try {
                 // Invocation
-                const result = await instance.revokeVesting(receipent, 0, { from: sender });
+                const result = await instance.setCap(newCap, { from: sender });
+                const cap = await instance.cap();
                 // Assertions
-                assert(!mustFail, 'It should have failed because the account is not vested');
-                atmToken
-                    .revokeVesting(result)
-                    .emitted(receipent, amount, deadline);
+                assert(!mustFail, 'It should have failed because the sender is invalid');
+                assert.equal(
+                    cap,
+                    newCap,
+                    'New supply cap not set!'
+                );
+                tlrToken
+                    .newCap(result)
+                    .emitted(newCap);
+                assert(result);
             } catch (error) {
                 // Assertions
                 assert(mustFail);

@@ -3,16 +3,16 @@ pragma solidity 0.5.17;
 import "./BaseATMProxy.sol";
 
 /**
- * @notice It is the Proxy contract for ATM Tokens.
+ * @notice It is the Proxy contract for TLR Tokens.
  *
  * @author develop@teller.finance
  */
-contract ATMTokenProxy is BaseATMProxy {
+contract TLRTokenProxy is BaseATMProxy {
     /**
         @notice This constructor forwards the parameters to the implementation logic contract defined in ATMSettings.
-        @param name The name of the ATM token
-        @param symbol The symbol of the ATM token
-        @param decimals The amount of decimals for ATM token
+        @param name The name of the token
+        @param symbol The symbol of the token
+        @param decimals The amount of decimals for token
         @param cap The maximum number of tokens available
         @param maxVestingPerWallet The maximum number of times a wallet can mint their vesting
         @param atmSettingsAddress The ATMSettings address
@@ -44,11 +44,11 @@ contract ATMTokenProxy is BaseATMProxy {
     /** internal functions **/
 
     /**
-        @notice it is the logic of grabbing the current ATMToken logic address from an ATMSettings contract address.
+        @notice it is the logic of grabbing the current TLRToken logic address from an ATMSettings contract address.
         @param atmSettingsAddress address of an ATMSettings contract
-        @return address of ATMToken logic implementation
+        @return address of TLRToken logic implementation
      */
     function _getImplementation(address atmSettingsAddress) internal view returns (address) {
-        return IATMSettings(atmSettingsAddress).atmTokenLogic();
+        return IATMSettings(atmSettingsAddress).tlrTokenLogic();
     }
 }

@@ -74,15 +74,15 @@ interface IATMSettings {
     );
 
     /**
-        @notice This event is emitted when the ATM token template is updated.
+        @notice This event is emitted when the TLR token template is updated.
         @param sender address that sent the transaction.
-        @param oldATMTokenLogic the old ATM token template address.
-        @param newATMTokenLogic the new ATM token template address.
+        @param oldTLRTokenLogic the old TLR token template address.
+        @param newTLRTokenLogic the new TLR token template address.
      */
-    event ATMTokenLogicUpdated(
+    event TLRTokenLogicUpdated(
         address indexed sender,
-        address indexed oldATMTokenLogic,
-        address indexed newATMTokenLogic
+        address indexed oldTLRTokenLogic,
+        address indexed newTLRTokenLogic
     );
 
     /**
@@ -111,9 +111,9 @@ interface IATMSettings {
     function settings() external view returns (SettingsInterface);
 
     /**
-        @notice It fetches the current logic implementation address for ATM Tokens.
+        @notice It fetches the current logic implementation address for TLR Tokens.
      */
-    function atmTokenLogic() external view returns (address);
+    function tlrTokenLogic() external view returns (address);
 
     /**
         @notice It fetches the current logic implementation address for ATM Governance.
@@ -152,10 +152,10 @@ interface IATMSettings {
     ) external;
 
     /**
-        @notice It sets a new ATM token template to be used in the proxy (see createATM function).
-        @param newATMTokenLogicAddress the new ATM token template address.
+        @notice It sets a new TLR token template to be used in the proxy (see createATM function).
+        @param newTLRTokenLogicAddress the new TLR token template address.
      */
-    function setATMTokenLogic(address newATMTokenLogicAddress) external;
+    function setTLRTokenLogic(address newTLRTokenLogicAddress) external;
 
     /**
         @notice It sets a new ATM governance template to be used in the proxy (see createATM function).
