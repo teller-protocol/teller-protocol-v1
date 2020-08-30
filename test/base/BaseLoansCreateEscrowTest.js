@@ -14,14 +14,37 @@ const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 // Smart contracts
 const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
 const Settings = artifacts.require("./base/Settings.sol");
+const Escrow = artifacts.require("./base/Escrow.sol");
 
 contract('BaseLoansCreateEscrowTest', function (accounts) {
   const owner = accounts[0];
-  let instance;
+  let contract;
   let loans;
 
   beforeEach(async () => {
-    const settingsInstance = await createTestSettingsInstance(Settings, { from: owner, Mock });
+    contract = await EscrowFactory.new();
+    const versionsRegistry = await Mock.new();
+    const pairAggregatorRegistry = await Mock.new();
+    const interestValidator = await Mock.new();
+    const marketsInstance = await Mock.new();
+
+    const settingsInstance = await createTestSettingsInstance(
+      Settings,
+      { 
+        from: owner,
+        Mock,
+        onInitialize: async (
+          instance,
+          ) => {
+            await instance.initialize(
+              contract.address,
+              versionsRegistry.address,
+              pairAggregatorRegistry.address,
+              marketsInstance.address,
+              interestValidator.address,
+            );
+          },
+      });
 
     const oracleInstance = await Mock.new();
     const lendingPoolInstance = await Mock.new();
@@ -37,8 +60,8 @@ contract('BaseLoansCreateEscrowTest', function (accounts) {
       collateralTokenInstance.address,
       atmSettingsInstance.address
     );
-    instance = await EscrowFactory.new();
-    await instance.initialize(settingsInstance.address);
+    
+    await contract.initialize(settingsInstance.address);
   })
 
   withData({
@@ -59,11 +82,13 @@ contract('BaseLoansCreateEscrowTest', function (accounts) {
         // Invocation
         let escrowAddress
         // If the test must fail from the resulting transaction, then the call to the function (not a transaction) will also fail but as a different Error object
-        if (!mustFail)
+        if (!mustFail) {
           escrowAddress = await loans.externalCreateEscrow.call(loanID);
+        }
+
         const result = await loans.externalCreateEscrow(loanID);
         // TODO fix unit test.
-
+        console.log("RESULT>>>>", result);
         // Assertions
         assert(!mustFail);
 
@@ -71,7 +96,7 @@ contract('BaseLoansCreateEscrowTest', function (accounts) {
           .escrowCreated(result, EscrowFactory)
           .emitted(borrower, loans.address, loanID.toString(), escrowAddress);
       } catch (error) {
-        console.log(error);
+        console.log("ERROR>>>>", error);
         assert(mustFail, error);
         assert(error);
         assert.equal(error.reason, expectedErrorMessage);

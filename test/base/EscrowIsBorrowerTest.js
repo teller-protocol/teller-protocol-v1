@@ -39,18 +39,17 @@ contract('EscrowIsBorrowerTest', function (accounts) {
     );
     instance = await Escrow.new();
     escrowFactory = await EscrowFactory.new();
-    await escrowFactory.initialize(settingsInstance.address, instance.address);
+    await escrowFactory.initialize(settingsInstance.address);
   })
 
   withData({
-    _1_valid: [1234, 1, 1, false, null],
-    _2_sender_not_borrower: [1234, 2, 1, true, 'CALLER_NOT_BORROWER'],
+    _1_valid: [1234, 1, 1, false],
+    _2_sender_not_borrower: [1234, 2, 1, true],
   }, function(
     loanID,
     borrowerIndex,
     senderIndex,
-    mustFail,
-    expectedErrorMessage
+    mustFail
   ) {
     it(t('loans', 'isBorrower', 'Should be able (or not) to test whether sender is a borrower or not.', mustFail), async function() {
       // Setup
@@ -60,18 +59,20 @@ contract('EscrowIsBorrowerTest', function (accounts) {
       await loans.setLoan(loanID, loanTerms, 0, 0, 123456, 0, 0, 0, loanTerms.maxLoanAmount, ACTIVE, false);
 
       await instance.mockInitialize(settingsInstance.address, loans.address, loanID);
-
       try {
         // Invocation
-        const result = await instance.externalIsBorrower({ from: sender });
-
+        const result = await instance.getBorrower({ from: sender });
         // Assertions
         assert(!mustFail);
         assert(result);
+        assert.equal(
+          result,
+          sender,
+          "Escrow is not borrower"
+        )
       } catch (error) {
         assert(mustFail, error);
         assert(error);
-        assert.equal(error.reason, expectedErrorMessage);
       }
     });
   });
