@@ -82,9 +82,9 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
                     [settingsNames.LiquidateEthPrice]: 9500,
                 }
             );
-            const marketsInstance = await Mock.new();
             instance = await InterestConsensusMock.new()
-            await instance.initialize(lendersContract, settings.address);
+            const lendersCon = await Mock.new()
+            await instance.initialize(owner, lendersCon.address, settings.address);
 
             const interestRequest = createInterestRequest(lender, requestNonce, 23456, endTime, 45678, instance.address)
             const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract, chainId))

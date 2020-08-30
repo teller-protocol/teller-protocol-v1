@@ -21,7 +21,8 @@ contract('InterestConsensusHashesTest', function (accounts) {
         const settings = await Mock.new();
         lenders = await Mock.new();
         instance = await InterestConsensusMock.new()
-        await instance.initialize(lenders.address, settings.address);
+        const owner = accounts[0];
+        await instance.initialize(owner, lenders.address, settings.address);
     })
 
     withData({

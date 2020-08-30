@@ -24,8 +24,10 @@ contract('ConsensusModifiersTest', function (accounts) {
             const settingsInstance = await Mock.new();
             const callerInstance = await Mock.new();
             const instance = await Consensus.new();
-            await instance.initialize(callerInstance.address, settingsInstance.address);
+            
             const callerAddress = callerIndex === -1 ? NULL_ADDRESS : callerIndex === 99 ? accounts[2] : callerInstance.address;
+
+            await instance.initialize(callerAddress, callerInstance.address, settingsInstance.address);
             try {
                 // Invocation
                 const result = await instance.externalIsCaller(callerAddress);
