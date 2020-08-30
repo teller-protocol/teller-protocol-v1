@@ -109,16 +109,12 @@ contract MarketFactory is TInitializable, MarketFactoryInterface {
             LoanTermsConsensusInterface loanTermsConsensusProxy,
             LoansInterface loansProxy
         ) = _createAndInitializeProxies(
+            owner,
             tToken,
             borrowedToken,
             collateralToken,
             pairAggregator
         );
-
-        //TODO IERC20Mintable(tToken).addMinter(address(lendingPoolProxy));
-        
-        //TODO marketsState.addWhitelisted(address(loansProxy));
-        //TODO marketsState.addWhitelisted(address(lendingPoolProxy));
 
         _addMarket(
             borrowedToken,
@@ -225,6 +221,7 @@ contract MarketFactory is TInitializable, MarketFactoryInterface {
     }
 
     function _createAndInitializeProxies(
+        address owner,
         address tToken,
         address borrowedToken,
         address collateralToken,
@@ -247,6 +244,7 @@ contract MarketFactory is TInitializable, MarketFactoryInterface {
 
         // Initializing proxies.
         _initializeProxies(
+            owner,
             tToken,
             borrowedToken,
             collateralToken,
@@ -287,6 +285,7 @@ contract MarketFactory is TInitializable, MarketFactoryInterface {
     }
 
     function _initializeProxies(
+        address owner,
         address tToken,
         address borrowedToken,
         address collateralToken,
@@ -310,6 +309,7 @@ contract MarketFactory is TInitializable, MarketFactoryInterface {
         );
         // Initializing InterestConsensus
         interestConsensusProxy.initialize(
+            owner,
             address(lendersProxy),
             address(settings)
         );
@@ -322,6 +322,7 @@ contract MarketFactory is TInitializable, MarketFactoryInterface {
         );
         // Initializing LoanTermsConsensus
         loanTermsConsensusProxy.initialize(
+            owner,
             address(loansProxy),
             address(settings)
         );

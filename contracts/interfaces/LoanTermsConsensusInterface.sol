@@ -59,10 +59,12 @@ interface LoanTermsConsensusInterface {
     /**
         @notice It initializes this loan terms consensus contract.
         @dev The caller address is the loans address for the loan terms consensus implementation.
+        @param owner the owner address.
         @param aCallerAddress the contract that will call it.
         @param aSettingAddress the settings contract address.
      */
     function initialize(
+        address owner,
         address aCallerAddress,
         address aSettingAddress
     ) external;

@@ -1,19 +1,14 @@
 const assert = require('assert');
-const {
-    toDecimals, toBytes32
-} = require('../../../test/utils/consts');
-const { add } = require('lodash');
 
 module.exports = async function (
-    logicContracts,
     instances,
     params,
 ) {
     console.log('\n');
+    return;//TODO Fix CONTRACT_ALREADY_INITIALIZED
     console.log('Registering pair aggregators in registry.');
     const { pairAggregatorRegistryInstance } = instances;
     const { txConfig, chainlink, tokens } = params;
-    return;//TODO Fix CONTRACT_ALREADY_INITIALIZED 
     const chainlinkEntries =  Object.entries(chainlink);
     console.log(`Registering ${chainlinkEntries.length} pair aggregators.`);
     for (const [key, aggregatorInfo] of chainlinkEntries) {

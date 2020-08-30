@@ -64,10 +64,12 @@ contract Consensus is Base, OwnerSignersRole, SettingsConsts {
     /**
         @notice It initializes this consensus contract.
         @dev The caller address must be the loans contract for LoanTermsConsensus, and the lenders contract for InterestConsensus.
+        @param owner the owner address.
         @param aCallerAddress the contract that will call it.
         @param aSettingAddress the settings contract address.
      */
     function initialize(
+        address owner,
         address aCallerAddress,
         address aSettingAddress
     ) external isNotInitialized() {
@@ -76,7 +78,7 @@ contract Consensus is Base, OwnerSignersRole, SettingsConsts {
             "CALLER_MUST_BE_CONTRACT"
         );
 
-        Ownable.initialize(msg.sender);
+        Ownable.initialize(owner);
         _initialize(aSettingAddress);
 
         callerAddress = aCallerAddress;

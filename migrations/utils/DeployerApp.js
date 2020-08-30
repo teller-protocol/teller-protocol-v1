@@ -1,3 +1,4 @@
+const assert = require('assert');
 const jsonfile = require('jsonfile');
 const MOCK_NETWORKS = ["test", "ganache"];
 
@@ -23,6 +24,28 @@ DeployerApp.prototype.deployWithUpgradeable = async function(contractName, contr
     await this.deployWith(contractName, contract)
     await this.deployWith(`${contractName}_Proxy`, this.UpgradeableProxy, contract.address, admin, initData, ...params)
     return contract.at(this.UpgradeableProxy.address)
+}
+
+DeployerApp.prototype.deployProxyFor = async function(contractName, contract, admin, initParams = undefined, ...params) {
+    console.log(`Deploying CONTRACT for: ${contractName} - admin address: ${admin}.`)
+    await this.deployWith(contractName, contract, ...params);
+    console.log(`Deploying PROXY for: ${contractName} - logic address: ${contract.address} - admin address: ${admin}.`)
+    assert(contract !== undefined && contract.address !== undefined, `Contract or logic address is undefined.`);
+    await this.deployWith(
+        `${contractName}_Proxy`,
+        this.UpgradeableProxy,
+        contract.address,
+        admin,
+        '0x', // Init data.
+        ...params
+    );
+    const proxyContract = await contract.at(this.UpgradeableProxy.address);
+    if (initParams !== undefined) {
+        console.log(`PROXY ${contractName}: Initializing with params ${initParams}.`);
+        await proxyContract.initialize(...initParams);
+    }
+    console.log('\n');
+    return proxyContract;
 }
 
 DeployerApp.prototype.deployWith = async function(contractName, contract, ...params) {

@@ -54,10 +54,12 @@ interface InterestConsensusInterface {
     /**
         @notice It initializes this interest consensus contract.
         @dev The caller address is the lenders address for the interest consensus implementation.
+        @param owner the owner address.
         @param aCallerAddress the contract that will call it.
         @param aSettingAddress the settings contract address.
      */
     function initialize(
+        address owner,
         address aCallerAddress,
         address aSettingAddress
     ) external;
