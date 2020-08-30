@@ -69,7 +69,6 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
                 loanTermsConsInstance.address,
                 settingsInstance.address,
                 collateralToken.address,
-                atmSettingsInstance.address,
             )
 
             const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, 0)
@@ -148,7 +147,6 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
                 loanTermsConsInstance.address,
                 settingsInstance.address,
                 collateralToken.address,
-                atmSettingsInstance.address,
             )
 
             const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, 0)

@@ -73,7 +73,6 @@ contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
                 loanTermsConsInstance.address,
                 settingsInstance.address,
                 collateralToken.address,
-                atmSettingsInstance.address,
             );
 
             const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, 0, 0, 0)
@@ -147,7 +146,6 @@ contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
                 loanTermsConsInstance.address,
                 settingsInstance.address,
                 collateralToken.address,
-                atmSettingsInstance.address,
             );
             const encodeAllowance = erc20InterfaceEncoder.encodeAllowance();
             await collateralToken.givenMethodReturnUint(encodeAllowance, currentAllowance);

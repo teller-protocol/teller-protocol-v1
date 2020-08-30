@@ -78,7 +78,6 @@ contract('LoansBaseGetCollateralInfoTest', function (accounts) {
             loanTermsConsInstance.address,
             settingsInstance.address,
             collateralToken.address,
-            atmSettingsInstance.address,
         );
         return instance
     };
