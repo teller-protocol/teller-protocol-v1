@@ -17,8 +17,7 @@ import "../interfaces/PairAggregatorInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
-import "../settings/IATMSettings.sol";
-import "../atm/ATMGovernanceInterface.sol";
+import "../atm/IATMGovernance.sol";
 import "../util/TellerCommon.sol";
 
 /*****************************************************************************************************/
@@ -66,8 +65,6 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
     LendingPoolInterface public lendingPool;
 
     LoanTermsConsensusInterface public loanTermsConsensus;
-
-    IATMSettings public atmSettings;
 
     mapping(address => uint256[]) public borrowerLoans;
 
@@ -468,26 +465,22 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         @param lendingPoolAddress Contract address of the lending pool
         @param loanTermsConsensusAddress Contract address for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
-        @param atmSettingsAddress Contract address to get ATM settings data.
      */
     function _initialize(
         address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
-        address settingsAddress,
-        address atmSettingsAddress
+        address settingsAddress
     ) internal isNotInitialized() {
         priceOracleAddress.requireNotEmpty("PROVIDE_ORACLE_ADDRESS");
         lendingPoolAddress.requireNotEmpty("PROVIDE_LENDING_POOL_ADDRESS");
         loanTermsConsensusAddress.requireNotEmpty("PROVIDED_LOAN_TERMS_ADDRESS");
-        atmSettingsAddress.requireNotEmpty("PROVIDED_ATM_SETTINGS_ADDRESS");
 
         _initialize(settingsAddress);
 
         priceOracle = priceOracleAddress;
         lendingPool = LendingPoolInterface(lendingPoolAddress);
         loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
-        atmSettings = IATMSettings(atmSettingsAddress);
     }
 
     /**
@@ -661,7 +654,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         view
         returns (bool)
     {
-        address atmAddressForMarket = atmSettings.getATMForMarket(
+        address atmAddressForMarket = settings.atmSettings().getATMForMarket(
             lendingPool.lendingToken(),
             collateralToken
         );

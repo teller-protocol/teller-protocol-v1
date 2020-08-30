@@ -5,7 +5,7 @@ const { t, NULL_ADDRESS, ACTIVE } = require("../utils/consts");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 
 // Smart contracts
-const EscrowProxy = artifacts.require("./base/EscrowProxy.sol");
+//const EscrowProxy = artifacts.require("./base/EscrowProxy.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
 const EscrowMock = artifacts.require("./mock/base/EscrowMock.sol");

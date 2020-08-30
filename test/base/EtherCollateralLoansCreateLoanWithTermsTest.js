@@ -72,6 +72,7 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
                         pairAggregatorRegistry.address,
                         marketsInstance.address,
                         interestValidator.address,
+                        atmSettingsInstance.address
                     );
                 },
             },
@@ -86,7 +87,6 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
             loanTermsConsInstance.address,
             settingsInstance.address,
             collateralTokenInstance.address,
-            atmSettingsInstance.address,
         )
         responseOne = createUnsignedLoanResponse(accounts[3], 0, 1234, 6500, 10000, 3, loanTermsConsInstance.address)
         responseTwo = createUnsignedLoanResponse(accounts[4], 0, 1500, 6000, 10000, 2, loanTermsConsInstance.address)

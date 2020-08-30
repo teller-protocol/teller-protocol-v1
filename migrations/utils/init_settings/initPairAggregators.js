@@ -13,13 +13,10 @@ module.exports = async function (
     console.log('Registering pair aggregators in registry.');
     const { pairAggregatorRegistryInstance } = instances;
     const { txConfig, chainlink, tokens } = params;
-
+    return;//TODO Fix CONTRACT_ALREADY_INITIALIZED 
     const chainlinkEntries =  Object.entries(chainlink);
     console.log(`Registering ${chainlinkEntries.length} pair aggregators.`);
     for (const [key, aggregatorInfo] of chainlinkEntries) {
-        // TODO remove console.
-        console.log(key);
-        console.log(aggregatorInfo);
         const {
             address,
             inversed,

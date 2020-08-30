@@ -72,15 +72,13 @@ contract LoansBaseMock is LoansBase {
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
-        address ,
-        address atmSettingsAddress
+        address 
     ) external isNotInitialized() {
         _initialize(
             priceOracleAddress,
             lendingPoolAddress,
             loanTermsConsensusAddress,
-            settingsAddress,
-            atmSettingsAddress
+            settingsAddress
         );
     }
 
