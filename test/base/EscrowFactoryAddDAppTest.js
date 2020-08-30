@@ -23,7 +23,7 @@ contract('EscrowFactoryAddDAppTest', function (accounts) {
     instance = await EscrowFactory.new();
     const settings = await Settings.new();
     await settings.initialize(owner);
-    await instance.initialize(settings.address, escrow.address, { from: owner });
+    await instance.initialize(settings.address, { from: owner });
 
     mocks = await createMocks(Mock, 10);
   })
