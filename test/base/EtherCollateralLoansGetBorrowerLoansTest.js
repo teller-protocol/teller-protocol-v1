@@ -48,7 +48,27 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
         loanTermsConsInstance = await Mock.new();
         collateralTokenInstance = await Mock.new();
         atmSettingsInstance = await Mock.new();
-        settingsInstance = await createTestSettingsInstance(Settings, { from: owner, Mock }, {});
+        const mock = await Mock.new();
+        
+        settingsInstance = await createTestSettingsInstance(
+            Settings,
+            {
+                from: owner,
+                Mock,
+                onInitialize: async (
+                    instance,
+                ) => {
+                    await instance.initialize(
+                        mock.address,
+                        mock.address,
+                        mock.address,
+                        mock.address,
+                        mock.address,
+                        atmSettingsInstance.address,
+                    );
+                },
+            });
+        
         instance = await Loans.new();
         await instance.initialize(
             oracleInstance.address,
@@ -56,7 +76,6 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
             loanTermsConsInstance.address,
             settingsInstance.address,
             collateralTokenInstance.address,
-            atmSettingsInstance.address,
         )
         responseOne = createUnsignedLoanResponse(accounts[3], 0, 1234, 6500, 10000, 3, loanTermsConsInstance.address)
         responseTwo = createUnsignedLoanResponse(accounts[4], 0, 1500, 6000, 10000, 2, loanTermsConsInstance.address)

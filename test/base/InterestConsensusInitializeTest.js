@@ -29,8 +29,9 @@ contract('InterestConsensusInitializeTest', function (accounts) {
                 const lenders = await Lenders.new();
                 const lendersAddress = lendersIndex === -1 ? NULL_ADDRESS: lendersIndex === 99 ? accounts[2] : lenders.address;
                 const settingsAddress = settingsIndex === -1 ? NULL_ADDRESS: settingsIndex === 99 ? accounts[3] : settings.address;
-
+                const owner = accounts[0];
                 let result = await instance.initialize(
+                    owner,
                     lendersAddress,
                     settingsAddress,
                 )

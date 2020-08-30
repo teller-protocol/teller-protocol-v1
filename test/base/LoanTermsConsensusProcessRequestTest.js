@@ -138,12 +138,13 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
             );
             
             await instance.initialize(loansContract, settings.address, markets.address);
+            const txConfig = { from: loansContract };
 
-            await instance.addSigner(nodeOne)
-            await instance.addSigner(nodeTwo)
-            await instance.addSigner(nodeThree)
-            await instance.addSigner(nodeFour)
-            await instance.addSigner(nodeSix)
+            await instance.addSigner(nodeOne, txConfig);
+            await instance.addSigner(nodeTwo, txConfig);
+            await instance.addSigner(nodeThree, txConfig);
+            await instance.addSigner(nodeFour, txConfig);
+            await instance.addSigner(nodeSix, txConfig);
 
             if(signerNonceTaken !== undefined)  {
                 await instance.mockSignerNonce(
