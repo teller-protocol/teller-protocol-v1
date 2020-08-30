@@ -11,14 +11,12 @@ import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
 import "../interfaces/SettingsInterface.sol";
-import "../interfaces/LogicVersionsRegistryInterface.sol";
 import "../interfaces/MarketFactoryInterface.sol";
-import "../providers/openzeppelin/IERC20Mintable.sol";
+import "../providers/openzeppelin/IERC20Mintable.sol";//TODO Review if we need it here.
 import "../providers/chainlink/IChainlinkPairAggregatorRegistry.sol";
 
 // Commons
 import "./DynamicProxy.sol";
-import "../util/LogicVersionsConsts.sol";
 import "../util/TellerCommon.sol";
 import "./TInitializable.sol";
 
@@ -37,7 +35,7 @@ import "./TInitializable.sol";
 
     @author develop@teller.finance
  */
-contract MarketFactory is TInitializable, LogicVersionsConsts, MarketFactoryInterface {
+contract MarketFactory is TInitializable, MarketFactoryInterface {
     using Address for address;
 
     /** Constants */
@@ -50,11 +48,6 @@ contract MarketFactory is TInitializable, LogicVersionsConsts, MarketFactoryInte
         @notice The platform settings.
      */
     SettingsInterface public settings;
-
-    /**
-        @notice The ATM settings.
-     */
-    address public atmSettings;
 
     mapping(address => mapping(address => TellerCommon.Market)) markets;
 
@@ -105,6 +98,10 @@ contract MarketFactory is TInitializable, LogicVersionsConsts, MarketFactoryInte
         _requireCreateMarket(tToken, borrowedToken, collateralToken);
         address owner = msg.sender;
 
+        IChainlinkPairAggregatorRegistry pairAggregatorRegistry = settings.pairAggregatorRegistry();
+        address pairAggregator = address(pairAggregatorRegistry.getPairAggregator(borrowedToken, collateralToken));
+        // TODO uncomment require(pairAggregator != address(0x0), "ORACLE_NOT_FOUND_FOR_MARKET");
+
         (
             LendingPoolInterface lendingPoolProxy,
             InterestConsensusInterface interestConsensusProxy,
@@ -114,14 +111,14 @@ contract MarketFactory is TInitializable, LogicVersionsConsts, MarketFactoryInte
         ) = _createAndInitializeProxies(
             tToken,
             borrowedToken,
-            collateralToken
+            collateralToken,
+            pairAggregator
         );
 
         //TODO IERC20Mintable(tToken).addMinter(address(lendingPoolProxy));
         
         //TODO marketsState.addWhitelisted(address(loansProxy));
         //TODO marketsState.addWhitelisted(address(lendingPoolProxy));
-        address pairAggregator = loansProxy.priceOracle();
 
         _addMarket(
             borrowedToken,
@@ -174,20 +171,15 @@ contract MarketFactory is TInitializable, LogicVersionsConsts, MarketFactoryInte
         return !_getMarket(borrowedToken, collateralToken).exists;
     }
 
-    function initialize(
-        address settingsAddress,
-        address atmSettingsAddress
-    )
+    function initialize(address settingsAddress)
         external
         isNotInitialized()
     {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
-        require(atmSettingsAddress.isContract(), "ATM_SETTINGS_MUST_BE_CONTRACT");
 
         _initialize();
 
         settings = SettingsInterface(settingsAddress);
-        atmSettings = atmSettingsAddress;
     }
 
     /** Internal Functions */
@@ -214,8 +206,7 @@ contract MarketFactory is TInitializable, LogicVersionsConsts, MarketFactoryInte
     }
 
     function _createDynamicProxy(bytes32 logicName) internal returns (address) {
-        LogicVersionsRegistryInterface versionsRegistry = settings.versionsRegistry();
-        return address(new DynamicProxy(address(versionsRegistry), logicName));
+        return address(new DynamicProxy(address(settings), logicName));
     }
 
     function _getMarket(address borrowedToken, address collateralToken) internal view returns (TellerCommon.Market memory) {
@@ -236,7 +227,8 @@ contract MarketFactory is TInitializable, LogicVersionsConsts, MarketFactoryInte
     function _createAndInitializeProxies(
         address tToken,
         address borrowedToken,
-        address collateralToken
+        address collateralToken,
+        address pairAggregator
     ) internal returns (
         LendingPoolInterface lendingPoolProxy,
         InterestConsensusInterface interestConsensusProxy,
@@ -258,6 +250,7 @@ contract MarketFactory is TInitializable, LogicVersionsConsts, MarketFactoryInte
             tToken,
             borrowedToken,
             collateralToken,
+            pairAggregator,
             lendingPoolProxy,
             interestConsensusProxy,
             lendersProxy,
@@ -281,15 +274,15 @@ contract MarketFactory is TInitializable, LogicVersionsConsts, MarketFactoryInte
         LoanTermsConsensusInterface loanTermsConsensusProxy,
         LoansInterface loansProxy
     ) {
-        lendingPoolProxy = LendingPoolInterface(_createDynamicProxy(LENDING_POOL_LOGIC_NAME));
-        interestConsensusProxy = InterestConsensusInterface(_createDynamicProxy(INTEREST_CONSENSUS_LOGIC_NAME));
-        lendersProxy = LendersInterface(_createDynamicProxy(LENDERS_LOGIC_NAME));
-        loanTermsConsensusProxy = LoanTermsConsensusInterface(_createDynamicProxy(LOAN_TERMS_CONSENSUS_LOGIC_NAME));
+        lendingPoolProxy = LendingPoolInterface(_createDynamicProxy(settings.versionsRegistry().consts().LENDING_POOL_LOGIC_NAME()));
+        interestConsensusProxy = InterestConsensusInterface(_createDynamicProxy(settings.versionsRegistry().consts().INTEREST_CONSENSUS_LOGIC_NAME()));
+        lendersProxy = LendersInterface(_createDynamicProxy(settings.versionsRegistry().consts().LENDERS_LOGIC_NAME()));
+        loanTermsConsensusProxy = LoanTermsConsensusInterface(_createDynamicProxy(settings.versionsRegistry().consts().LOAN_TERMS_CONSENSUS_LOGIC_NAME()));
         if (collateralToken == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
             // TODO Use constant.
-            loansProxy = LoansInterface(_createDynamicProxy(ETHER_COLLATERAL_LOANS_LOGIC_NAME));
+            loansProxy = LoansInterface(_createDynamicProxy(settings.versionsRegistry().consts().ETHER_COLLATERAL_LOANS_LOGIC_NAME()));
         } else {
-            loansProxy = LoansInterface(_createDynamicProxy(TOKEN_COLLATERAL_LOANS_LOGIC_NAME));
+            loansProxy = LoansInterface(_createDynamicProxy(settings.versionsRegistry().consts().TOKEN_COLLATERAL_LOANS_LOGIC_NAME()));
         }
     }
 
@@ -297,6 +290,7 @@ contract MarketFactory is TInitializable, LogicVersionsConsts, MarketFactoryInte
         address tToken,
         address borrowedToken,
         address collateralToken,
+        address pairAggregator,
         LendingPoolInterface lendingPoolProxy,
         InterestConsensusInterface interestConsensusProxy,
         LendersInterface lendersProxy,
@@ -332,16 +326,13 @@ contract MarketFactory is TInitializable, LogicVersionsConsts, MarketFactoryInte
             address(settings)
         );
 
-        IChainlinkPairAggregatorRegistry pairAggregatorRegistry = settings.pairAggregatorRegistry();
-        address pairAggregator = address(pairAggregatorRegistry.getPairAggregator(borrowedToken, collateralToken));        
         // Initializing Loans
         loansProxy.initialize(
             pairAggregator,
             address(lendingPoolProxy),
             address(loanTermsConsensusProxy),
             address(settings),
-            collateralToken,
-            address(atmSettings)
+            collateralToken
         );
     }
 }

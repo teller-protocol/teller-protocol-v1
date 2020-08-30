@@ -6,11 +6,13 @@ const atmGovernanceSettingsNames = require('../../../test/utils/atmGovernanceSet
 
 module.exports = async function(
     { atmFactory, atmSettings, },
-    { atms, tokens, txConfig, web3, deployerApp },
-    { ATMGovernance, ATMToken },
+    { atms, tokens, txConfig, web3 },
+    { ATMGovernance },
 ) {
+    console.log('');
     const atmKeys = Object.keys(atms);
     console.log(`Creating ${atmKeys.length} ATMs.`);
+    return;//TODO Fix CONTRACT_ALREADY_INITIALIZED ATMFactory.createATM >>> atmGovernanceProxy.initialize(address(settings), owner);
     for (const atmKey of atmKeys) {
         const atmInfo = atms[atmKey];
         assert(!_.isUndefined(atmInfo), `ATM info is undefined for key ${atmKey}.`);
@@ -21,20 +23,12 @@ module.exports = async function(
             markets,
         } = atmInfo;
 
-        await deployerApp.deploy(ATMGovernance, txConfig);
-        await deployerApp.deploy(ATMToken, txConfig);
-
-        const atmGovernanceInstance = await ATMGovernance.deployed();
-        const atmTokenInstance = await ATMToken.deployed();
-
         await atmFactory.createATM(
             token.name,
             token.symbol,
             token.decimals,
             token.maxCap,
             token.maxVestingsPerWallet,
-            atmGovernanceInstance.address,
-            atmTokenInstance.address,
             txConfig,
         );
 
@@ -68,4 +62,5 @@ module.exports = async function(
             );
         }
     }
+    console.log('');
 }

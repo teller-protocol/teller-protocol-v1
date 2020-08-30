@@ -20,7 +20,8 @@ contract('ATMSettingsUpdateATMToMarketTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         mocks = await createMocks(Mock, 10);
         settings = await Mock.new();
-        instance = await ATMSettings.new(settings.address);
+        instance = await ATMSettings.new();
+        await instance.initialize(settings.address);
     });
 
     const newAtM = (borrowedTokenIndex, collateralTokenIndex, atmAddressIndex) => ({borrowedTokenIndex, collateralTokenIndex, atmAddressIndex});

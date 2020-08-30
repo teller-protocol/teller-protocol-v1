@@ -106,22 +106,19 @@ contract EtherCollateralLoans is LoansBase {
         @param lendingPoolAddress Contract address of the lending pool
         @param loanTermsConsensusAddress Contract adddress for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
-        @param atmSettingsAddress Contract address to get ATM settings data.
      */
     function initialize(
         address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
-        address ,
-        address atmSettingsAddress
+        address
     ) external isNotInitialized() {
         _initialize(
             priceOracleAddress,
             lendingPoolAddress,
             loanTermsConsensusAddress,
-            settingsAddress,
-            atmSettingsAddress
+            settingsAddress
         );
 
         collateralToken = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;

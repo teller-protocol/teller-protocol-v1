@@ -15,7 +15,6 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
 const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
-const Escrow = artifacts.require("./base/Escrow.sol");
 const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
 
 contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
@@ -61,6 +60,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
                         pairAggregatorRegistry.address,
                         marketsStateInstance.address,
                         interestValidator.address,
+                        atmSettingsInstance.address,
                     );
                 },
             });
@@ -75,8 +75,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,
-            collateralTokenInstance.address,
-            atmSettingsInstance.address,
+            collateralTokenInstance.address
         );
 
         // encode lending token address

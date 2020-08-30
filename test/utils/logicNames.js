@@ -16,4 +16,5 @@ module.exports = {
     ATMSettings: 'ATMSettings',
     ATMGovernance: 'ATMGovernance',
     ATMToken: 'ATMToken',
+    MarketFactory: 'MarketFactory',
 }

@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "../util/TellerCommon.sol";
 
-
 /**
     @notice 
 
@@ -28,10 +27,7 @@ interface MarketFactoryInterface {
 
     function notExistMarket(address borrowedToken, address collateralToken) external view returns (bool);
 
-    function initialize(
-        address settingsAddress,
-        address atmSettingsAddress
-    ) external;
+    function initialize(address settingsAddress) external;
     
     /** Events */
 
