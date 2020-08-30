@@ -18,7 +18,6 @@ contract('LoansBaseLendingTokenTest', function (accounts) {
         const oracleInstance = await Mock.new();
         const loanTermsConsInstance = await Mock.new();
         const settingsInstance = await Mock.new();
-        const atmSettingsInstance = await Mock.new();
         const collateralTokenInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(
@@ -27,7 +26,6 @@ contract('LoansBaseLendingTokenTest', function (accounts) {
             loanTermsConsInstance.address,
             settingsInstance.address,
             collateralTokenInstance.address,
-            atmSettingsInstance.address,
         );
     });
 

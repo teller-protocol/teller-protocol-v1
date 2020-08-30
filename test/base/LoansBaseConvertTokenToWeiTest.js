@@ -25,7 +25,6 @@ contract('LoansBaseConvertTokenToWeiTest', function () {
     let lendingPoolInstance;
     let lendingTokenInstance;
     let settingsInstance;
-    let atmSettingsInstance;
     
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
@@ -33,7 +32,6 @@ contract('LoansBaseConvertTokenToWeiTest', function () {
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
         settingsInstance = await Mock.new();
-        atmSettingsInstance = await Mock.new();
         const collateralTokenInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(
@@ -42,7 +40,6 @@ contract('LoansBaseConvertTokenToWeiTest', function () {
             loanTermsConsInstance.address,
             settingsInstance.address,
             collateralTokenInstance.address,
-            atmSettingsInstance.address,
         )
 
         // encode lending token address

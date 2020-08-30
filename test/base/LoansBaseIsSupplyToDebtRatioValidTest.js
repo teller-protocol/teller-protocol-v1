@@ -40,12 +40,15 @@ contract('LoansBaseIsSupplyToDebtRatioValidTest', function (accounts) {
             loanTermsConsInstance.address,
             settingsInstance.address,
             collateralTokenInstance.address,
-            atmSettingsInstance.address,
         );
 
         await settingsInstance.givenMethodReturnAddress(
             settingsInterfaceEncoder.encodeMarketsState(),
             marketsInstance.address
+        );
+        await settingsInstance.givenMethodReturnAddress(
+            settingsInterfaceEncoder.encodeATMSettings(),
+            atmSettingsInstance.address
         );
     });
 
