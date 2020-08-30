@@ -25,9 +25,9 @@ contract('EscrowCallDappTest', function (accounts) {
     loans = await Mock.new();
     escrow = await Escrow.new();
     instance = await EscrowFactory.new();
-    await instance.initialize(settingsInstance.address, escrow.address);
+    await instance.initialize(settingsInstance.address);
 
-    await settingsInstance.setEscrowFactory(instance.address)
+    // await settingsInstance.setEscrowFactory(instance.address)
   })
 
   withData({
@@ -47,13 +47,15 @@ contract('EscrowCallDappTest', function (accounts) {
     it(t('user', 'callDapp', 'Should be able (or not) to call a function on a whitelisted dapp contract', false), async function() {
       // Setup
       const dapp = await DappMock.new();
+
+      await escrow.mockBorrower(owner);
       if (initialize) {
-        await escrow.mockInitialize(
-          settingsInstance.address,
+        await escrow.initialize(
           loans.address,
           loanID
         );
       }
+
       if (enableDapp) {
         await instance.addDapp(dapp.address, { from: owner });
       }
@@ -66,12 +68,13 @@ contract('EscrowCallDappTest', function (accounts) {
 
       try {
         // Invocation
-        const result = await escrow.callDapp(dappData);
-
+        const result = await escrow.callDapp(dappData, { from: owner });
+        
         // Assertions
         assert(!mustFail);
         assert(result);
       } catch (error) {
+        // console.log("ERROR>>>>", error);
         assert(mustFail)
         assert(error)
         assert.equal(error.reason, expectedErrorMessage)

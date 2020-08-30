@@ -104,7 +104,7 @@ contract Escrow is BaseEscrow, BaseEscrowDapp, EscrowInterface, TInitializable, 
         TInitializable._initialize();
 
         // Initialize tokens list with the borrowed token.
-        _tokenUpdated(loans.lendingToken());
+        // _tokenUpdated(loans.lendingToken()); // TODO Verify the _tokenUpdated function works with the AddressLib
     }
 
     /** Internal Functions */

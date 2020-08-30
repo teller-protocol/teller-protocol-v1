@@ -6,20 +6,29 @@ import "../../base/Escrow.sol";
 contract EscrowMock is Escrow {
     bool private _mockIsOwner;
     bool public _isOwner;
+    address public _borrower;
 
     function mockIsOwner(bool mockIsAOwner, bool isAOwner) external {
         _mockIsOwner = mockIsAOwner;
         _isOwner = isAOwner;
     }
 
-    function mockInitialize(
-        address settingsAddress,
-        address loansAddress,
-        uint256 aLoanID
-    ) external {
-        settings = SettingsInterface(settingsAddress);
-        loans = LoansInterface(loansAddress);
-        loanID = aLoanID;
+    // function mockInitialize(
+    //     address settingsAddress,
+    //     address loansAddress,
+    //     uint256 aLoanID
+    // ) external {
+    //     settings = SettingsInterface(settingsAddress);
+    //     loans = LoansInterface(loansAddress);
+    //     loanID = aLoanID;
+    // }
+
+    function getBorrower() public view returns (address) {
+        return _borrower;
+    }
+
+    function mockBorrower(address borrower) public {
+        _borrower = borrower;
     }
 
     function isOwner() public view returns (bool) {
