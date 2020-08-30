@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/access/roles/WhitelistedRole.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/WhitelistedRole.sol";
 
 // Contracts
 
@@ -19,7 +19,7 @@ import "./TInitializable.sol";
 
     @author develop@teller.finance
  */
-contract MarketsState is MarketsStateInterface, WhitelistedRole, TInitializable {
+contract MarketsState is MarketsStateInterface, TInitializable, WhitelistedRole {
     using SafeMath for uint256;
     using Address for address;
     using MarketStateLib for MarketStateLib.MarketState;
@@ -146,11 +146,13 @@ contract MarketsState is MarketsStateInterface, WhitelistedRole, TInitializable 
         @param settingsAddress settings address.
      */
     function initialize(address settingsAddress)
-        external
+        public
+        initializer()
         isNotInitialized()
     {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
 
+        WhitelistedRole.initialize(msg.sender);
         TInitializable._initialize();
 
         settings = SettingsInterface(settingsAddress);
