@@ -25,7 +25,7 @@ contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
     let lendingPoolInstance;
     let lendingTokenInstance;
     let settingsInstance;
-    let collateralTokenInstance;
+    let atmSettingsInstance;
 
     const mockLoanID = 7
     
@@ -35,14 +35,14 @@ contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
         settingsInstance = await Mock.new();
-        collateralTokenInstance = await Mock.new();
+        atmSettingsInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(
             oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,
-            collateralTokenInstance.address,
+            atmSettingsInstance.address,
         )
 
         // encode lending token address

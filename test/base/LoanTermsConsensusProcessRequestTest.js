@@ -136,7 +136,9 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
                     [settingsNames.LiquidateEthPrice]: 9500,
                 }
             );
-            await instance.initialize(owner, loansInstance.address, settings.address);
+            
+            await instance.initialize(loansContract, settings.address, markets.address);
+            const txConfig = { from: loansContract };
 
             await instance.addSigner(nodeOne, txConfig);
             await instance.addSigner(nodeTwo, txConfig);

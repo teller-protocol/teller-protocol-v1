@@ -50,6 +50,8 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
         loanTermsConsInstance = await Mock.new();
         collateralTokenInstance = await Mock.new();
         atmSettingsInstance = await Mock.new();
+        const mock = await Mock.new();
+        
         settingsInstance = await createTestSettingsInstance(
             Settings,
             {
@@ -57,25 +59,18 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
                 Mock,
                 onInitialize: async (
                     instance,
-                    {
-                        escrowFactory,
-                        versionsRegistry,
-                        pairAggregatorRegistry,
-                        marketsState,
-                        interestValidator,
-                    }) => {
+                ) => {
                     await instance.initialize(
-                        escrowFactory.address,
-                        versionsRegistry.address,
-                        pairAggregatorRegistry.address,
-                        marketsState.address,
-                        interestValidator.address,
+                        mock.address,
+                        mock.address,
+                        mock.address,
+                        mock.address,
+                        mock.address,
                         atmSettingsInstance.address,
                     );
                 },
-            },
-            {}
-        );
+            });
+        
         instance = await Loans.new();
         await instance.initialize(
             oracleInstance.address,

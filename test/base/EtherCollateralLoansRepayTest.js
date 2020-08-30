@@ -18,6 +18,7 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
     let loanTermsConsInstance;
     let lendingPoolInstance;
     let settingsInstance;
+    let atmSettingsInstance;
 
     const mockLoanID = 2831
     const totalCollateral = BigNumber("4500000000000000000") // 4.5 ETH
@@ -42,7 +43,7 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,
-            collateralTokenInstance.address,
+            atmSettingsInstance.address,
         )
     });
 
