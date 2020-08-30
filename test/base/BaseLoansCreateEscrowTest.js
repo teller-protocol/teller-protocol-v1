@@ -88,7 +88,7 @@ contract('BaseLoansCreateEscrowTest', function (accounts) {
 
         const result = await loans.externalCreateEscrow(loanID);
         // TODO fix unit test.
-
+        console.log("RESULT>>>>", result);
         // Assertions
         assert(!mustFail);
 
@@ -96,6 +96,7 @@ contract('BaseLoansCreateEscrowTest', function (accounts) {
           .escrowCreated(result, EscrowFactory)
           .emitted(borrower, loans.address, loanID.toString(), escrowAddress);
       } catch (error) {
+        console.log("ERROR>>>>", error);
         assert(mustFail, error);
         assert(error);
         assert.equal(error.reason, expectedErrorMessage);

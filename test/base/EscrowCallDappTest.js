@@ -26,6 +26,8 @@ contract('EscrowCallDappTest', function (accounts) {
     escrow = await Escrow.new();
     instance = await EscrowFactory.new();
     await instance.initialize(settingsInstance.address);
+
+    // await settingsInstance.setEscrowFactory(instance.address)
   })
 
   withData({
@@ -72,6 +74,7 @@ contract('EscrowCallDappTest', function (accounts) {
         assert(!mustFail);
         assert(result);
       } catch (error) {
+        // console.log("ERROR>>>>", error);
         assert(mustFail)
         assert(error)
         assert.equal(error.reason, expectedErrorMessage)

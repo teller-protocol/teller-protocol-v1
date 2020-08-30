@@ -24,6 +24,7 @@ contract('EscrowFactoryCreateEscrowTest', function (accounts) {
     instance = await EscrowFactory.new();
 
     await instance.initialize(settingsInstance.address);
+    // await settingsInstance.setEscrowFactory(instance.address);
     await loans.externalSetSettings(settingsInstance.address);
   })
 
@@ -56,6 +57,7 @@ contract('EscrowFactoryCreateEscrowTest', function (accounts) {
         // Assertions
         assert(!mustFail);
       } catch (error) {
+        console.log("ERROR>>>>", error);
         assert(mustFail, error);
         assert(error);
         assert.equal(error.reason, expectedErrorMessage);
