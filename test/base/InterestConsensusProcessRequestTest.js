@@ -135,7 +135,7 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
 
             // The sender validation (equal to the lenders contract) is mocked (InterestConsensusMock _isCaller(...) function) to allow execute the unit test.
             const sender = accounts[1];
-            await instance.initialize(lenders.address, settings.address);
+            await instance.initialize(owner,lenders.address, settings.address);
 
             await instance.addSigner(nodeOne)
             await instance.addSigner(nodeTwo)

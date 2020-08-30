@@ -10,9 +10,6 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 // Smart contracts
 const ATMFactory = artifacts.require("./atm/ATMFactory.sol");
 const Settings = artifacts.require("./base/Settings.sol");
-const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
-const ATMToken = artifacts.require("./atm/ATMToken.sol");
-const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 
 contract("ATMFactoryCreateATMTest", function(accounts) {
     let instance;
@@ -25,7 +22,7 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
         const atmSettings = await ATMSettings.new(settings.address, atmTokenLogic.address, atmGovernanceLogic.address);
 
         instance = await ATMFactory.new();
-        await instance.initialize(atmSettings.address);
+        await instance.initialize(settings.address, { from: admin });
     });
 
     withData({
@@ -37,7 +34,6 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
             // Setup
             const sender = accounts[senderIndex];
             try {
-                
                 // Invocation 
                 const result = await instance.createATM(
                     name,
@@ -47,12 +43,13 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
                     maxVesting,
                     {from : sender }
                 );
+                console.log("RESULT>>>", result);
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
 
                 // Validating state changes
-                const atmsList = await instance.getATMs();
+                const atmsList = await instance.atmsList();
                 const newATM = atmsList[atmsList.length - 1];
                 
                 // Validating ATM instance creation

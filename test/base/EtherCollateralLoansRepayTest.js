@@ -18,7 +18,6 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
     let loanTermsConsInstance;
     let lendingPoolInstance;
     let settingsInstance;
-    let collateralTokenInstance;
     let atmSettingsInstance;
 
     const mockLoanID = 2831
@@ -45,7 +44,6 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,
-            collateralTokenInstance.address,
             atmSettingsInstance.address,
         )
     });
