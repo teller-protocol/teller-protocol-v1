@@ -14,6 +14,8 @@ const UpgradeableProxy = artifacts.require("./base/UpgradeableProxy.sol");
 const InitializeableDynamicProxy = artifacts.require("./base/InitializeableDynamicProxy.sol");
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
+const ERC20Mintable = artifacts.require('@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol');
+
 // Official Smart Contracts
 const TDAI = artifacts.require("./base/TDAI.sol");
 const TUSDC = artifacts.require("./base/TUSDC.sol");
@@ -23,7 +25,6 @@ const MarketsState = artifacts.require("./base/MarketsState.sol");
 const EscrowFactory = artifacts.require('./base/EscrowFactory.sol');
 const MarketFactory = artifacts.require('./base/MarketFactory.sol');
 const LogicVersionsRegistry = artifacts.require('./base/LogicVersionsRegistry.sol');
-const IERC20Mintable = artifacts.require('./providers/openzeppelin/IERC20Mintable.sol');
 const Escrow = artifacts.require('./base/Escrow.sol');
 const Lenders = artifacts.require("./base/Lenders.sol");
 const EtherCollateralLoans = artifacts.require("./base/EtherCollateralLoans.sol");
@@ -197,7 +198,7 @@ module.exports = async function(deployer, network, accounts) {
     marketDefinitions,
     { marketFactoryInstance, marketsStateInstance },
     { txConfig, deployerApp, ...networkConfig },
-    { LoanTermsConsensus, InterestConsensus, IERC20Mintable }
+    { LoanTermsConsensus, InterestConsensus, ERC20Mintable }
   );
 
   deployerApp.print();

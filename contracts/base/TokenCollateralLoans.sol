@@ -178,7 +178,7 @@ contract TokenCollateralLoans is LoansBase {
         @param amount The amount of tokens to transfer.
      */
     function _collateralTokenTransfer(address recipient, uint256 amount) internal {
-        ERC20(collateralToken).tokenTransfer(recipient, amount);
+        ERC20Detailed(collateralToken).tokenTransfer(recipient, amount);
     }
 
     /**
@@ -187,6 +187,6 @@ contract TokenCollateralLoans is LoansBase {
         @param amount The amount to be transferred.
      */
     function _collateralTokenTransferFrom(address from, uint256 amount) internal {
-        ERC20(collateralToken).tokenTransferFrom(from, amount);
+        ERC20Detailed(collateralToken).tokenTransferFrom(from, amount);
     }
 }

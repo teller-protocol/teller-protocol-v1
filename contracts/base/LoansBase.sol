@@ -5,12 +5,11 @@ pragma experimental ABIEncoderV2;
 import "../util/TellerCommon.sol";
 import "../util/SettingsConsts.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "../util/ERC20Lib.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
+import "../util/ERC20DetailedLib.sol";
 
 // Contracts
 import "./Base.sol";
-import "../providers/openzeppelin/ERC20.sol";
-// TODO Review it. Rename to ERC20Interface.sol to avoid collisions with OpenZeppeling contracts.
 
 // Interfaces
 import "../interfaces/PairAggregatorInterface.sol";
@@ -39,7 +38,7 @@ import "../util/TellerCommon.sol";
  */
 contract LoansBase is LoansInterface, Base {
     using SafeMath for uint256;
-    using ERC20Lib for ERC20;
+    using ERC20DetailedLib for ERC20Detailed;
 
     /* State Variables */
 
@@ -541,7 +540,7 @@ contract LoansBase is LoansInterface, Base {
      */
     function _convertWeiToToken(uint256 weiAmount) internal view returns (uint256) {
         // wei amount / lending token price in wei * the lending token decimals.
-        uint256 aWholeLendingToken = ERC20(lendingPool.lendingToken()).getAWholeToken();
+        uint256 aWholeLendingToken = ERC20Detailed(lendingPool.lendingToken()).getAWholeToken();
         uint256 oneLendingTokenPriceWei = uint256(
             PairAggregatorInterface(priceOracle).getLatestAnswer()
         );
@@ -559,7 +558,7 @@ contract LoansBase is LoansInterface, Base {
     function _convertTokenToWei(uint256 tokenAmount) internal view returns (uint256) {
         // tokenAmount is in token units, chainlink price is in whole tokens
         // token amount in tokens * lending token price in wei / the lending token decimals.
-        uint256 aWholeLendingToken = ERC20(lendingPool.lendingToken()).getAWholeToken();
+        uint256 aWholeLendingToken = ERC20Detailed(lendingPool.lendingToken()).getAWholeToken();
         uint256 oneLendingTokenPriceWei = uint256(
             PairAggregatorInterface(priceOracle).getLatestAnswer()
         );

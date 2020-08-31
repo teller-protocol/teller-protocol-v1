@@ -12,7 +12,6 @@ import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
 import "../interfaces/SettingsInterface.sol";
 import "../interfaces/MarketFactoryInterface.sol";
-import "../providers/openzeppelin/IERC20Mintable.sol";//TODO Review if we need it here.
 import "../providers/chainlink/IChainlinkPairAggregatorRegistry.sol";
 
 // Commons
