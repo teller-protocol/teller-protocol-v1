@@ -28,7 +28,7 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
 
     withData({
         _1_basic: [ ADMIN_INDEX, "TokenName", "TKN", 18, 1000, 20000, undefined, false ],
-        _2_notAdmin: [ 0, "TokenName", "TKN", 18, 1000, 20000, true, "SENDER_ISNT_ALLOWED" ],
+        _2_notAdmin: [ 0, "TokenName", "TKN", 18, 1000, 20000, true, "NOT_PAUSER" ],
 
     }, function(senderIndex, name, symbol, decimals, cap, maxVesting, mustFail, expectedErrorMessage) {
         it(t("admin", "createATM", "Should be able to create an ATM.", mustFail), async function() {

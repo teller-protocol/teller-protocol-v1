@@ -43,16 +43,6 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
 
     /** Modifiers */
 
-    /**
-        @notice It checks whether sender address has the pauser role or not.
-        @dev It throws a require error if sender hasn't the pauser role.
-     */
-    // TODO: replace with modifier from BaseUpgradeable.onlyPauser
-    modifier withPauserRole() {
-        require(settings().hasPauserRole(msg.sender), "SENDER_HASNT_PAUSER_ROLE");
-        _;
-    }
-
     /* Constructor */
 
     /** External Functions */
@@ -61,7 +51,7 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
         @notice It pauses a given ATM.
         @param atmAddress ATM address to pause.
      */
-    function pauseATM(address atmAddress) external withPauserRole() isInitialized() {
+    function pauseATM(address atmAddress) external onlyPauser() isInitialized() {
         require(settings().isPaused() == false, "PLATFORM_IS_ALREADY_PAUSED");
         require(atmPaused[atmAddress] == false, "ATM_IS_ALREADY_PAUSED");
 
@@ -74,7 +64,7 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
         @notice It unpauses a given ATM.
         @param atmAddress ATM address to unpause.
      */
-    function unpauseATM(address atmAddress) external withPauserRole() isInitialized() {
+    function unpauseATM(address atmAddress) external onlyPauser() isInitialized() {
         require(settings().isPaused() == false, "PLATFORM_IS_PAUSED");
         require(atmPaused[atmAddress] == true, "ATM_IS_NOT_PAUSED");
 
@@ -102,7 +92,7 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
         address borrowedToken,
         address collateralToken,
         address atmAddress
-    ) external withPauserRole() isInitialized() {
+    ) external onlyPauser() isInitialized() {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
             collateralToken == ETH_ADDRESS || collateralToken.isContract() == true,
@@ -128,7 +118,7 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
         address borrowedToken,
         address collateralToken,
         address newAtmAddress
-    ) external withPauserRole() isInitialized() {
+    ) external onlyPauser() isInitialized() {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
             collateralToken == ETH_ADDRESS || collateralToken.isContract() == true,
@@ -163,7 +153,7 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
      */
     function removeATMToMarket(address borrowedToken, address collateralToken)
         external
-        withPauserRole()
+        onlyPauser()
         isInitialized()
     {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");

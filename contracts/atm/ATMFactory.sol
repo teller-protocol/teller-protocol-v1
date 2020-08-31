@@ -49,12 +49,6 @@ contract ATMFactory is IATMFactory, TInitializable, BaseUpgradeable {
     // List of ATM instances
     address[] public atmsList;
 
-    // TODO: replace with modifier from BaseUpgradeable
-    modifier onlyOwner() {
-        require(settings().hasPauserRole(msg.sender) == true, "SENDER_ISNT_ALLOWED");
-        _;
-    }
-
     /**
         @notice It creates a new ATM instance.
         @param name ATM token name.
@@ -70,7 +64,7 @@ contract ATMFactory is IATMFactory, TInitializable, BaseUpgradeable {
         uint8 decimals,
         uint256 cap,
         uint256 maxVestingsPerWallet
-    ) external onlyOwner() isInitialized() returns (address) {
+    ) external onlyPauser() isInitialized() returns (address) {
         address owner = msg.sender;
         
         bytes32 atmTokenLogicName = settings().versionsRegistry().consts().ATM_TOKEN_LOGIC_NAME();

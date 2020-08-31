@@ -391,7 +391,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
     function setPriceOracle(address newPriceOracle)
         external
         isInitialized()
-        whenAllowed(msg.sender)
+        onlyPauser()
     {
         // New address must be a contract and not empty
         require(newPriceOracle.isContract(), "ORACLE_MUST_CONTRACT_NOT_EMPTY");
