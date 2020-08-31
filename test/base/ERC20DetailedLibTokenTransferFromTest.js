@@ -7,14 +7,14 @@ const BigNumber = require('bignumber.js');
 // Smart contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
 const DAI = artifacts.require("./mock/token/DAIMock.sol");
-const ERC20LibMock = artifacts.require("./mock/util/ERC20LibMock.sol");
+const ERC20DetailedLibMock = artifacts.require("./mock/util/ERC20DetailedLibMock.sol");
 
-contract('ERC20LibTokenTransferFromTest', function (accounts) {
+contract('ERC20DetailedLibTokenTransferFromTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     let instance;
     
     beforeEach('Setup for each test', async () => {
-        instance = await ERC20LibMock.new();
+        instance = await ERC20DetailedLibMock.new();
     });
 
     withData({

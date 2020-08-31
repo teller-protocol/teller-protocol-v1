@@ -1,15 +1,14 @@
 pragma solidity 0.5.17;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "../providers/openzeppelin/ERC20.sol";
-
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 
 /**
     @notice This library helps contracts to validate amounts (balances and allowances) when a 'transfer' or 'transferFrom' is executed.
 
     @author develop@teller.finance
  */
-library ERC20Lib {
+library ERC20DetailedLib {
     using SafeMath for uint256;
 
     // Used to calculate one whole token.
@@ -20,7 +19,7 @@ library ERC20Lib {
         @param self the current ERC20 instance.
         @return a whole token value based on the decimals.
      */
-    function getAWholeToken(ERC20 self) internal view returns (uint256) {
+    function getAWholeToken(ERC20Detailed self) internal view returns (uint256) {
         uint8 decimals = self.decimals();
         return TEN**decimals;
     }
@@ -32,7 +31,7 @@ library ERC20Lib {
         @param amount The amount of tokens to transfer.
         @dev It throws a require error if 'transfer' invocation fails.
      */
-    function tokenTransfer(ERC20 self, address recipient, uint256 amount) internal {
+    function tokenTransfer(ERC20Detailed self, address recipient, uint256 amount) internal {
         uint256 initialBalance = self.balanceOf(address(this));
         require(initialBalance >= amount, "NOT_ENOUGH_TOKENS_BALANCE");
 
@@ -52,7 +51,7 @@ library ERC20Lib {
         @dev It throws a require error if the allowance is not enough.
         @dev It throws a require error if 'transferFrom' invocation fails.
      */
-    function tokenTransferFrom(ERC20 self, address from, uint256 amount) internal {
+    function tokenTransferFrom(ERC20Detailed self, address from, uint256 amount) internal {
         uint256 currentAllowance = self.allowance(from, address(this));
         require(currentAllowance >= amount, "NOT_ENOUGH_TOKENS_ALLOWANCE");
 

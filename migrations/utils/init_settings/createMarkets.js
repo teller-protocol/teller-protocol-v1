@@ -1,6 +1,5 @@
 const assert = require('assert');
 const initSignerAddresses = require('./initSignerAddresses');
-const logicNames = require('../../../test/utils/logicNames');
 
 module.exports = async function (
     marketDefinitions,
@@ -12,7 +11,7 @@ module.exports = async function (
     console.log(`Creating ${marketDefinitions.length} markets.`);
     const { marketFactoryInstance, marketsStateInstance } = instances;
     const { tokens, txConfig, signers, deployerApp } = params;
-    const { LoanTermsConsensus, InterestConsensus, IERC20Mintable } = artifacts;
+    const { LoanTermsConsensus, InterestConsensus, ERC20Mintable } = artifacts;
     
     for (const marketDefinition of marketDefinitions) {
       console.log('\n');
@@ -51,7 +50,7 @@ module.exports = async function (
       deployerApp.addContractInfo(`${collateralTokenName}_ChainlinkPairAggregator_t${borrowedTokenName}_Proxy`, marketInfo.pairAggregator);
 
       console.log(`TToken (${tTokenAddress}): Adding as minter ${marketInfo.lendingPool} (LendingPool). Sender: ${txConfig.from}`);
-      const tTokenInstance = await IERC20Mintable.at(tTokenAddress);
+      const tTokenInstance = await ERC20Mintable.at(tTokenAddress);
       await tTokenInstance.addMinter(marketInfo.lendingPool, txConfig);
       
       console.log(`MarketsState (${marketsStateInstance.address}): Adding as whitelisted ${marketInfo.loans} (loans proxy). Sender: ${txConfig.from}`);
