@@ -20,7 +20,6 @@ module.exports = async function (
             quoteTokenName
         } = aggregatorInfo;
 
-        // TODO: tokens on testnet are dummy contract addresses: 0x000000000000000000000000000000001 and will throw error saying NOT_CONTRACT
         const baseTokenAddress = tokens[baseTokenName];
         assert(baseTokenAddress, `Aggregator: base token address is undefined. Base token name: ${baseTokenName}`);
         const quoteTokenAddress = tokens[quoteTokenName];
