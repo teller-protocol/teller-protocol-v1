@@ -1,5 +1,6 @@
 const assert = require('assert');
 const initSignerAddresses = require('./initSignerAddresses');
+const logicNames = require('../../../test/utils/logicNames');
 
 module.exports = async function (
     marketDefinitions,
@@ -10,7 +11,7 @@ module.exports = async function (
     console.log('\n\n');
     console.log(`Creating ${marketDefinitions.length} markets.`);
     const { marketFactoryInstance, marketsStateInstance } = instances;
-    const { tokens, txConfig, signers } = params;
+    const { tokens, txConfig, signers, deployerApp } = params;
     const { LoanTermsConsensus, InterestConsensus, IERC20Mintable } = artifacts;
     
     for (const marketDefinition of marketDefinitions) {
@@ -20,9 +21,9 @@ module.exports = async function (
 
       // TODO: should we create markets in both directions? i.e. borrowed => collateral && collateral => borrowed
       // if the collateral token is LINK, flip the market pair direction so it will be accessed correctly on-chain
-      const borrowedTokenAddress = collateralTokenName === 'LINK' ? tokens[collateralTokenName] : tokens[borrowedTokenName];
+      const borrowedTokenAddress = tokens[borrowedTokenName];
       assert(borrowedTokenAddress, `Borrowed token is undefined. Borrowed token name; ${borrowedTokenName}`);
-      const collateralTokenAddress = collateralTokenName === 'LINK' ? tokens[borrowedTokenName] : tokens[collateralTokenName];
+      const collateralTokenAddress = tokens[collateralTokenName];
       assert(collateralTokenAddress, `Collateral token is undefined. Collateral token name; ${collateralTokenAddress}`);
   
       console.log(`Creating market (Sender: ${txConfig.from}): ${borrowedTokenName} / ${borrowedTokenAddress} - ${collateralTokenName} / ${collateralTokenAddress}.`)
@@ -43,7 +44,14 @@ module.exports = async function (
       console.log(`Market ${borrowedTokenName} / ${collateralTokenName}: Loan term consensus (proxy): ${marketInfo.loanTermsConsensus}`);
       console.log(`Market ${borrowedTokenName} / ${collateralTokenName}: Interest consensus (proxy): ${marketInfo.interestConsensus}`);
       console.log(`Market ${borrowedTokenName} / ${collateralTokenName}: Pair aggregator (proxy): ${marketInfo.pairAggregator}`);
-      // TODO Add proxy addresses to deployer, so it is printed out at the end of the process.
+
+      deployerApp.addContractInfo(`${collateralTokenName}_Loans_t${borrowedTokenName}_Proxy`, marketInfo.loans);
+      deployerApp.addContractInfo(`${collateralTokenName}_Lenders_t${borrowedTokenName}_Proxy`, marketInfo.lenders);
+      deployerApp.addContractInfo(`${collateralTokenName}_LendingPool_t${borrowedTokenName}_Proxy`, marketInfo.lendingPool);
+      deployerApp.addContractInfo(`${collateralTokenName}_LoanTermsConsensus_t${borrowedTokenName}_Proxy`, marketInfo.loanTermsConsensus);
+      deployerApp.addContractInfo(`${collateralTokenName}_InterestConsensus_t${borrowedTokenName}_Proxy`, marketInfo.interestConsensus);
+      deployerApp.addContractInfo(`${collateralTokenName}_ChainlinkPairAggregator_t${borrowedTokenName}_Proxy`, marketInfo.pairAggregator);
+
       console.log(`TToken (${tTokenAddress}): Adding as minter ${marketInfo.lendingPool} (LendingPool). Sender: ${txConfig.from}`);
       const tTokenInstance = await IERC20Mintable.at(tTokenAddress);
       await tTokenInstance.addMinter(marketInfo.lendingPool, txConfig);

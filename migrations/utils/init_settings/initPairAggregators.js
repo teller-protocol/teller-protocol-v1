@@ -33,13 +33,26 @@ module.exports = async function (
             inverse: inversed,
             responseDecimals,
             collateralDecimals,
-          }
-
+        };
         await pairAggregatorRegistryInstance.registerPairAggregator(
             registerRequest,
             txConfig,
         );
-        console.log(`Registered pair aggregator: Inverse: ${inversed} - ${baseTokenName} (${baseTokenAddress}) - ${quoteTokenName} / (${quoteTokenAddress}) - Chainlink Oracle: ${address}.`)
+        console.log(`Registered pair aggregator: Inverse: ${registerRequest.inverse} - ${baseTokenName} (${registerRequest.baseToken}) - ${quoteTokenName} / (${registerRequest.quoteToken}) - Chainlink Oracle: ${registerRequest.chainlinkAggregatorAddress}.`)
+
+        const inverseRegisterRequest = {
+            baseToken: quoteTokenAddress,
+            quoteToken: baseTokenAddress,
+            chainlinkAggregatorAddress: address,
+            inverse: !inversed,
+            responseDecimals,
+            collateralDecimals,
+        };
+        await pairAggregatorRegistryInstance.registerPairAggregator(
+            inverseRegisterRequest,
+            txConfig,
+        );
+        console.log(`Registered pair aggregator: Inverse: ${inverseRegisterRequest.inverse} - ${quoteTokenName} (${inverseRegisterRequest.baseToken}) - ${baseTokenName} / (${inverseRegisterRequest.quoteToken}) - Chainlink Oracle: ${inverseRegisterRequest.chainlinkAggregatorAddress}.`)
     }
     console.log('\n');
 }
