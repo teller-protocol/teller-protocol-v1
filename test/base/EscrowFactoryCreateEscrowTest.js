@@ -17,16 +17,13 @@ contract('EscrowFactoryCreateEscrowTest', function (accounts) {
   let instance;
   let settingsInstance;
   let loans;
-  let escrowLibrary;
 
   beforeEach(async () => {
     settingsInstance = await createTestSettingsInstance(Settings, { from: owner, Mock });
     loans = await Loans.new();
-    escrowLibrary = await Escrow.new();
     instance = await EscrowFactory.new();
 
-    await instance.initialize(settingsInstance.address, escrowLibrary.address);
-    await settingsInstance.setEscrowFactory(instance.address);
+    await instance.initialize(settingsInstance.address);
     await loans.externalSetSettings(settingsInstance.address);
   })
 

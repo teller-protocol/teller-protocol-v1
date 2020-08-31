@@ -18,8 +18,6 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
     let loanTermsConsInstance;
     let lendingPoolInstance;
     let settingsInstance;
-    let collateralTokenInstance;
-    let atmSettingsInstance;
 
     const mockLoanID = 2831
     const totalCollateral = BigNumber("4500000000000000000") // 4.5 ETH
@@ -38,7 +36,6 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
             marketsInstance.address
         );
         collateralTokenInstance = await Mock.new();
-        atmSettingsInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(
             oracleInstance.address,
@@ -46,7 +43,6 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
             loanTermsConsInstance.address,
             settingsInstance.address,
             collateralTokenInstance.address,
-            atmSettingsInstance.address,
         )
     });
 
