@@ -78,8 +78,6 @@ module.exports = async function(deployer, network, accounts) {
     { Contract: ATMGovernance, name: logicNames.ATMGovernance },
     { Contract: ATMToken, name: logicNames.ATMToken },
     // Initializables
-    { Contract: LogicVersionsRegistry, name: logicNames.LogicVersionsRegistry },
-    { Contract: Settings, name: logicNames.Settings },
     { Contract: EscrowFactory, name: logicNames.EscrowFactory },
     { Contract: ChainlinkPairAggregatorRegistry, name: logicNames.ChainlinkPairAggregatorRegistry },
     { Contract: MarketsState, name: logicNames.MarketsState },
@@ -96,15 +94,19 @@ module.exports = async function(deployer, network, accounts) {
     return info.Contract.at(proxy.address)
   }
 
+  console.log(`Deploying Settings logic...`)
+  const settingsLogic = await deployer.deploy(Settings)
   const settingsProxy = await deployer.deploy(UpgradeableProxy, txConfig)
   await settingsProxy.initializeProxy(
     settingsProxy.address,
-    deployedLogicContractsMap.get(logicNames.Settings).address,
+    settingsLogic.address,
     txConfig
   )
   const settingsInstance = await Settings.at(settingsProxy.address)
+  console.log(`Settings logic: ${settingsLogic.address}`)
+  console.log(`Settings_Proxy: ${settingsProxy.address}`)
 
-
+  // TODO: initialize
   const escrowFactoryInstance = await deployInitializableDynamicProxy(logicNames.EscrowFactory)
   const pairAggregatorRegistryInstance = await deployInitializableDynamicProxy(logicNames.ChainlinkPairAggregatorRegistry)
   const marketsStateInstance = await deployInitializableDynamicProxy(logicNames.MarketsState)
@@ -112,14 +114,18 @@ module.exports = async function(deployer, network, accounts) {
   const atmFactoryInstance = await deployInitializableDynamicProxy(logicNames.ATMFactory)
   const marketFactoryInstance = await deployInitializableDynamicProxy(logicNames.MarketFactory)
 
+  console.log(`Deploying LogicVersionsRegistry...`)
+  const logicVersionsRegistryLogic = await deployer.deploy(LogicVersionsRegistry)
   const logicVersionsRegistryProxy = await deployer.deploy(UpgradeableProxy, txConfig)
   await logicVersionsRegistryProxy.initializeProxy(
     settingsInstance.address,
-    deployedLogicContractsMap.get(logicNames.LogicVersionsRegistry).address,
+    logicVersionsRegistryLogic.address,
     txConfig
   )
   const logicVersionsRegistryInstance = await LogicVersionsRegistry.at(logicVersionsRegistryProxy.address)
   await logicVersionsRegistryInstance.initialize(settingsInstance.address)
+  console.log(`LogicVersionsRegistry logic: ${logicVersionsRegistryLogic.address}`)
+  console.log(`LogicVersionsRegistry_Proxy: ${logicVersionsRegistryLogic.address}`)
 
   console.log(`Settings: Initializing...`);
   await settingsInstance.initialize(
@@ -189,67 +195,7 @@ module.exports = async function(deployer, network, accounts) {
     { txConfig, ...networkConfig },
     { LoanTermsConsensus, InterestConsensus, IERC20Mintable }
   );
-/*
 
-  const deployConfig = {
-    tokens,
-    aggregators,
-    signers,
-    cTokens: compound,
-  };
-
-  const artifacts = {
-    Lenders,
-    LendingPool,
-    InterestConsensus,
-    LoanTermsConsensus,
-  };
-  const poolDeployer = new PoolDeployer(deployerApp, deployConfig, artifacts);
-
-  const instances = {
-    marketsStateInstance2,
-    settingsInstance,
-    atmSettingsInstance,
-    interestValidatorInstance: undefined, // The first version will be undefined (or 0x0).
-  };
-  await poolDeployer.deployPool(
-    { tokenName: 'DAI', collateralName: 'ETH' },
-    {
-      Loans: EtherCollateralLoans,
-      TToken: TDAI,
-    },
-    instances,
-    txConfig
-  );
-  await poolDeployer.deployPool(
-    { tokenName: 'USDC', collateralName: 'ETH' },
-    {
-      Loans: EtherCollateralLoans,
-      TToken: TUSDC,
-    },
-    instances,
-    txConfig
-  );
-
-  await poolDeployer.deployPool(
-    { tokenName: 'DAI', collateralName: 'LINK', aggregatorName: 'LINK_USD' },
-    {
-      Loans: TokenCollateralLoans,
-      TToken: TDAI,
-    },
-    instances,
-    txConfig
-  );
-  await poolDeployer.deployPool(
-    { tokenName: 'USDC', collateralName: 'LINK', aggregatorName: 'LINK_USD' },
-    {
-      Loans: TokenCollateralLoans,
-      TToken: TUSDC,
-    },
-    instances,
-    txConfig
-  );
-*/
   deployerApp.print();
   deployerApp.writeJson();
   console.log(`${'='.repeat(25)} Deployment process finished. ${'='.repeat(25)}`);
