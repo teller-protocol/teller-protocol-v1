@@ -45,7 +45,7 @@ const chainlinkOraclesRequired = ['DAI_ETH', 'USDC_ETH', 'LINK_USD'];
 module.exports = async function(deployer, network, accounts) {
   console.log(`Deploying smart contracts to '${network}'.`)
   // Getting network configuration.
-  const appConfig = require('../config')(network);
+  const appConfig = await require('../config')(network);
   const { networkConfig, env } = appConfig;
 
   // Getting configuration values.
