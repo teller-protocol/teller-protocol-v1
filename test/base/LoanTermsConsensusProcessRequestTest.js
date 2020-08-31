@@ -28,7 +28,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
     const owner = accounts[0];
     let instance
     let settings
-    const loansContract = accounts[1]
+    let loansInstance
     const nodeOne = accounts[2]
     const nodeTwo = accounts[3]
     const nodeThree = accounts[4]
@@ -50,6 +50,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
     beforeEach('Setup the response times and signatures', async () => {
         instance = await LoanTermsConsensus.new()
         currentTime = await getLatestTimestamp()
+        loansInstance = await Mock.new();
 
         loanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478, instance.address)
 
@@ -71,7 +72,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
 
         const chainId = chains.mainnet;
         const invalidChainId = chains.ropsten;
-        const requestHash = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, loansContract, chainId))
+        const requestHash = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, loansInstance.address, chainId))
 
         responseOne = await createLoanResponseSig(web3, nodeOne, responseOne, requestHash, chainId)
         responseTwo = await createLoanResponseSig(web3, nodeTwo, responseTwo, requestHash, chainId)
@@ -124,7 +125,6 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
     ) {    
         it(t('user', 'processRequest', 'Should accept/not accept node request/responses', mustFail), async function() {
             // set up contract
-            const markets = await Mock.new();
             settings = await createTestSettingsInstance(
                 Settings,
                 { from: owner, Mock },
@@ -136,8 +136,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
                     [settingsNames.LiquidateEthPrice]: 9500,
                 }
             );
-            
-            await instance.initialize(loansContract, settings.address, markets.address);
+            await instance.initialize(owner, loansInstance.address, settings.address);
 
             await instance.addSigner(nodeOne)
             await instance.addSigner(nodeTwo)
@@ -166,7 +165,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
                 const result = await instance.processRequest(
                     loanRequest,
                     responses, {
-                       from: loansContract
+                       from: owner,
                     }
                 );
 
@@ -214,7 +213,6 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
                     )
               
             } catch (error) {
-                if(!mustFail) console.log(error)
                 assert(mustFail, 'Should not have failed');
                 assert.equal(error.reason, expectedErrorMessage);
             }
