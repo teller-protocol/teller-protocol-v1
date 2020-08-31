@@ -87,7 +87,31 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
         loanTermsConsInstance = await Mock.new();
         const lendingPoolInstance = await Mock.new();
         const oracleInstance = await Mock.new();
-        settingsInstance = await createTestSettingsInstance(Settings, { from: owner, Mock }, { [settingsNames.TermsExpiryTime]: THIRTY_DAYS });
+        settingsInstance = await createTestSettingsInstance(
+            Settings,
+            {
+                from: owner, Mock,
+                onInitialize: async (
+                    instance,
+                    {
+                        escrowFactory,
+                        versionsRegistry,
+                        pairAggregatorRegistry,
+                        marketsState,
+                        interestValidator,
+                    }) => {
+                    await instance.initialize(
+                        escrowFactory.address,
+                        versionsRegistry.address,
+                        pairAggregatorRegistry.address,
+                        marketsState.address,
+                        interestValidator.address,
+                        atmSettingsInstance.address,
+                    );
+                },
+            },
+            { [settingsNames.TermsExpiryTime]: THIRTY_DAYS }
+        );
 
         loanRequest = createLoanRequest(borrowerAddress, NULL_ADDRESS, 3, AMOUNT_LOAN_REQUEST, 4, 19, loanTermsConsInstance.address);
         emptyRequest = createLoanRequest(NULL_ADDRESS, NULL_ADDRESS, 0, 0, 0, 0, loanTermsConsInstance.address);
@@ -102,7 +126,6 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
             loanTermsConsInstance.address,
             settingsInstance.address,
             collateralToken.address,
-            atmSettingsInstance.address,
         );
         const loanTermsConsensus = await LoanTermsConsensus.new();
         loanTermsConsensusEncoder = new LoanTermsConsensusEncoder(web3, loanTermsConsensus);

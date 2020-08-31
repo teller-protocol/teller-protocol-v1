@@ -88,7 +88,7 @@ module.exports = async function(deployer, network, accounts) {
 
   const logicContracts = contracts.filter( contract => contract.isLogic);
   const deployedLogicContractsMap = await deployLogicContracts(logicContracts, { deployerApp, txConfig, web3 });
-
+  // TODO Register the contracts (isLogic=false) in the logicVersionsRegistry.
   const settingsInstance = await deployerApp.deployProxyFor(
     logicNames.Settings,
     Settings,

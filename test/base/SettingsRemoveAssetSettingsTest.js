@@ -48,11 +48,12 @@ contract('SettingsRemoveAssetSettingsTest', function (accounts) {
                 { maxLoanAmount: toDecimals(2000, 18) }
             ], false, false, 0, 1, undefined, false
         ],
-        _5_invalid_platform_paused: [
+        // We should able to remove/create/update an asset settings when platform is paused.
+        _5_platform_paused: [
             [
                 { maxLoanAmount: toDecimals(900, 18) },
                 { maxLoanAmount: toDecimals(1000, 18) }
-            ], true, false, 0, 1, 'Pausable: paused', true
+            ], true, false, 0, 1, undefined, false
         ],
     }, function(
         previousAssetsInfo,
