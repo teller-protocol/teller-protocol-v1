@@ -1,7 +1,5 @@
 pragma solidity 0.5.17;
 
-import "../interfaces/SettingsInterface.sol";
-
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
 /**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
@@ -272,8 +270,6 @@ interface IATMGovernance {
                 CRA is represented by a Github commit hash of the newly proposed algorithm.
      */
     function getCRA() external view returns (string memory);
-
-    function settings() external view returns (SettingsInterface);
 
     /**
         @notice It initializes this ATM Governance instance.

@@ -47,7 +47,7 @@ contract('LoansBaseSetPriceOracleTest', function (accounts) {
 
     withData({
         _1_basic: [1, true, 99, undefined, false],
-        _2_sender_not_allowed: [1, false, 99, 'ADDRESS_ISNT_ALLOWED', true],
+        _2_sender_not_allowed: [1, false, 99, 'NOT_PAUSER', true],
         _3_new_price_oracle_empty: [1, true, -1, 'ORACLE_MUST_CONTRACT_NOT_EMPTY', true],
         _4_new_price_oracle_not_contract: [1, true, 2, 'ORACLE_MUST_CONTRACT_NOT_EMPTY', true],
         _5_must_provide_new_price_oracle: [1, true, 0, 'NEW_ORACLE_MUST_BE_PROVIDED', true],

@@ -3,11 +3,11 @@ pragma solidity 0.5.17;
 // Externals
 import "@chainlink/contracts/src/v0.5/interfaces/AggregatorInterface.sol";
 
-// Contracts
-import "../../base/TInitializable.sol";
-
 // Interfaces
 import "../../interfaces/PairAggregatorInterface.sol";
+
+// Contracts
+import "../../base/TInitializable.sol";
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";

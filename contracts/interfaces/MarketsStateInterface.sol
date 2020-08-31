@@ -2,7 +2,6 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 import "../util/MarketStateLib.sol";
-import "./SettingsInterface.sol";
 
 /**
     @notice This interface defines the function to store and get data from different markets.
@@ -104,8 +103,6 @@ interface MarketsStateInterface {
     function removeWhitelisted(address account) external;
 
     function renounceWhitelisted() external;
-
-    function settings() external view returns (SettingsInterface);
 
     function initialize(address settingsAddress) external;
 }

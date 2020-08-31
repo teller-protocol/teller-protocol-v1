@@ -1,6 +1,6 @@
 const assert = require('assert');
 const DeployerApp = require('./utils/DeployerApp');
-const UpgradeableProxy = artifacts.require("./base/UpgradeableProxy.sol");
+const InitializeableDynamicProxy = artifacts.require("./base/InitializeableDynamicProxy.sol");
 
 // Mock Smart Contracts
 const DAIMock = artifacts.require("./mock/token/DAIMock.sol");
@@ -10,10 +10,11 @@ const CDAIMock = artifacts.require("./mock/providers/compound/CDAIMock.sol");
 const CUSDCMock = artifacts.require("./mock/providers/compound/CUSDCMock.sol");
 const PairAggregatorMock = artifacts.require("./mock/providers/chainlink/PairAggregatorMock.sol");
 
+// TODO: make this the 2nd migration and save mock address in networkConfig if the network === 'test' ??
 module.exports = async function(deployer, network, accounts) {
   console.log(`Deploying smart contracts to '${network}'.`)
   // Getting network configuration.
-  const appConfig = require('../config')(network);
+  const appConfig = await require('../config')(network);
   const { networkConfig, env } = appConfig;
 
   // Getting configuration values.
@@ -26,7 +27,7 @@ module.exports = async function(deployer, network, accounts) {
   const txConfig = { gas: maxGasLimit, from: deployerAccount };
 
   // Creating DeployerApp helper.
-  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, UpgradeableProxy, network);
+  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, InitializeableDynamicProxy, network);
   
   await deployerApp.deployMockIfWith('DAI', DAIMock, txConfig);
   await deployerApp.deployMockIfWith('USDC', USDCMock, txConfig);

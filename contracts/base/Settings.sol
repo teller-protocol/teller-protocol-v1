@@ -2,15 +2,16 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/lifecycle/Pausable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
-
-// Commons
-import "./TInitializable.sol";
 import "../util/AddressLib.sol";
 import "../util/AssetSettingsLib.sol";
 import "../util/PlatformSettingsLib.sol";
 import "../util/AddressArrayLib.sol";
+
+// Contracts
+import "@openzeppelin/contracts-ethereum-package/contracts/lifecycle/Pausable.sol";
+import "./BaseUpgradeable.sol";
+import "./TInitializable.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
@@ -38,7 +39,7 @@ import "../settings/IATMSettings.sol";
 
     @author develop@teller.finance
  */
-contract Settings is Pausable, SettingsInterface, TInitializable {
+contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeable {
     using AddressLib for address;
     using Address for address;
     using AssetSettingsLib for AssetSettingsLib.AssetSettings;

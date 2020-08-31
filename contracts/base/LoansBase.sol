@@ -127,12 +127,12 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
      */
     modifier withValidLoanRequest(TellerCommon.LoanRequest memory loanRequest) {
         require(
-            settings.getPlatformSettingValue(MAXIMUM_LOAN_DURATION_SETTING) >=
+            settings().getPlatformSettingValue(MAXIMUM_LOAN_DURATION_SETTING) >=
                 loanRequest.duration,
             "DURATION_EXCEEDS_MAX_DURATION"
         );
         require(
-            !settings.exceedsMaxLoanAmount(
+            !settings().exceedsMaxLoanAmount(
                 lendingPool.lendingToken(),
                 loanRequest.amount
             ),
@@ -220,7 +220,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
 
         require(
             loans[loanID].lastCollateralIn <=
-                now.sub(settings.getPlatformSettingValue(SAFETY_INTERVAL_SETTING)),
+                now.sub(settings().getPlatformSettingValue(SAFETY_INTERVAL_SETTING)),
             "COLLATERAL_DEPOSITED_RECENTLY"
         );
 
@@ -336,7 +336,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         _payOutCollateral(loanID, collateral, msg.sender);
 
         uint256 tokenPayment = collateralInTokens
-            .mul(settings.getPlatformSettingValue(LIQUIDATE_ETH_PRICE_SETTING))
+            .mul(settings().getPlatformSettingValue(LIQUIDATE_ETH_PRICE_SETTING))
             .div(TEN_THOUSAND);
         // the liquidator pays x% of the collateral price
         lendingPool.liquidationPayment(tokenPayment, msg.sender);
@@ -391,7 +391,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
     function setPriceOracle(address newPriceOracle)
         external
         isInitialized()
-        whenAllowed(msg.sender)
+        onlyPauser()
     {
         // New address must be a contract and not empty
         require(newPriceOracle.isContract(), "ORACLE_MUST_CONTRACT_NOT_EMPTY");
@@ -592,7 +592,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         uint256 maxLoanAmount
     ) internal view returns (TellerCommon.Loan memory) {
         uint256 termsExpiry = now.add(
-            settings.getPlatformSettingValue(TERMS_EXPIRY_TIME_SETTING)
+            settings().getPlatformSettingValue(TERMS_EXPIRY_TIME_SETTING)
         );
         return
             TellerCommon.Loan({
@@ -650,7 +650,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         view
         returns (bool)
     {
-        address atmAddressForMarket = settings.atmSettings().getATMForMarket(
+        address atmAddressForMarket = settings().atmSettings().getATMForMarket(
             lendingPool.lendingToken(),
             collateralToken
         );
@@ -672,7 +672,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
      */
     function _createEscrow(uint256 loanID) internal returns (address) {
         return
-            settings.escrowFactory().createEscrow(
+            settings().escrowFactory().createEscrow(
                 loans[loanID].loanTerms.borrower,
                 loanID
             );

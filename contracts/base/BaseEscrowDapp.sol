@@ -2,10 +2,9 @@ pragma solidity 0.5.17;
 
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
-import "./BaseEscrow.sol";
 
 // TODO: Use AddressLib to handle mapping/array
-contract BaseEscrowDapp is BaseEscrow {
+contract BaseEscrowDapp {
     /**
         @notice It tells us if this escrow has a token balance.
      */

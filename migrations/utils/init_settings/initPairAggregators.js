@@ -5,7 +5,6 @@ module.exports = async function (
     params,
 ) {
     console.log('\n');
-    return;//TODO Fix CONTRACT_ALREADY_INITIALIZED
     console.log('Registering pair aggregators in registry.');
     const { pairAggregatorRegistryInstance } = instances;
     const { txConfig, chainlink, tokens } = params;

@@ -13,6 +13,9 @@ import "../interfaces/SettingsInterface.sol";
 import "../interfaces/MarketsStateInterface.sol";
 import "../interfaces/InterestValidatorInterface.sol";
 
+// Contracts
+import "./BaseUpgradeable.sol";
+
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -32,13 +35,11 @@ import "../interfaces/InterestValidatorInterface.sol";
 
     @author develop@teller.finance.
  */
-contract Base is TInitializable, ReentrancyGuard {
+contract Base is TInitializable, BaseUpgradeable, ReentrancyGuard {
     using AddressLib for address;
     using Address for address;
 
     /* State Variables */
-
-    SettingsInterface public settings;
 
     /** Modifiers */
 
@@ -86,7 +87,7 @@ contract Base is TInitializable, ReentrancyGuard {
         @param anAddress account to test.
      */
     modifier whenAllowed(address anAddress) {
-        require(settings.hasPauserRole(anAddress), "ADDRESS_ISNT_ALLOWED");
+        require(settings().hasPauserRole(anAddress), "ADDRESS_ISNT_ALLOWED");
         _;
     }
 
@@ -108,8 +109,7 @@ contract Base is TInitializable, ReentrancyGuard {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
 
         _initialize();
-
-        settings = SettingsInterface(settingsAddress);
+        _setSettings(settingsAddress);
     }
 
     /**
@@ -118,7 +118,7 @@ contract Base is TInitializable, ReentrancyGuard {
         @return true if the lending pool address is  paused. Otherwise it returns false.
      */
     function _isPoolPaused(address poolAddress) internal view returns (bool) {
-        return settings.lendingPoolPaused(poolAddress);
+        return settings().lendingPoolPaused(poolAddress);
     }
 
     /**
@@ -126,15 +126,15 @@ contract Base is TInitializable, ReentrancyGuard {
         @return true if platform is paused. Otherwise it returns false.
      */
     function _isPaused() internal view returns (bool) {
-        return settings.isPaused();
+        return settings().isPaused();
     }
 
     function _markets() internal view returns (MarketsStateInterface) {
-        return settings.marketsState();
+        return settings().marketsState();
     }
 
     function _interestValidator() internal view returns (InterestValidatorInterface) {
-        return settings.interestValidator();
+        return settings().interestValidator();
     }
 
     /** Private functions */
