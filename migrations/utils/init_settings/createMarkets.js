@@ -8,7 +8,6 @@ module.exports = async function (
     artifacts,
 ) {
     console.log('\n');
-    return;//TODO Fix CONTRACT_ALREADY_INITIALIZED
     console.log(`Creating ${marketDefinitions.length} markets.`);
     const { marketFactoryInstance, marketsStateInstance } = instances;
     const { tokens, txConfig, signers } = params;
@@ -17,9 +16,12 @@ module.exports = async function (
     for (const marketDefinition of marketDefinitions) {
         const { tTokenAddress, borrowedTokenName, collateralTokenName } = marketDefinition;
         assert(tTokenAddress, `TToken address is undefined.`);
-        const borrowedTokenAddress = tokens[borrowedTokenName];
+
+        // TODO: should we create markets in both directions? i.e. borrowed => collateral && collateral => borrowed
+        // if the collateral token is LINK, flip the market pair direction so it will be accessed correctly on-chain
+        const borrowedTokenAddress = collateralTokenName === 'LINK' ? tokens[collateralTokenName] : tokens[borrowedTokenName];
         assert(borrowedTokenAddress, `Borrowed token is undefined. Borrowed token name; ${borrowedTokenName}`);
-        const collateralTokenAddress = tokens[collateralTokenName];
+        const collateralTokenAddress = collateralTokenName === 'LINK' ? tokens[borrowedTokenName] : tokens[collateralTokenName];
         assert(collateralTokenAddress, `Collateral token is undefined. Collateral token name; ${collateralTokenAddress}`);
     
         console.log(`Creating market (Sender: ${txConfig.from}): ${borrowedTokenName} / ${borrowedTokenAddress} - ${collateralTokenName} / ${collateralTokenAddress}.`)
@@ -29,7 +31,7 @@ module.exports = async function (
           collateralTokenAddress,
           txConfig,
         );
-    
+
         const marketInfo = await marketFactoryInstance.getMarket(
           borrowedTokenAddress,
           collateralTokenAddress,
