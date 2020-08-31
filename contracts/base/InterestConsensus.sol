@@ -51,7 +51,7 @@ contract InterestConsensus is InterestConsensusInterface, Consensus {
     ) external isInitialized() isCaller(msg.sender) returns (uint256) {
         require(
             responses.length >=
-                settings().getPlatformSettingValue(REQUIRED_SUBMISSIONS_SETTING),
+                settings().getPlatformSettingValue(consts.REQUIRED_SUBMISSIONS_SETTING()),
             "INTEREST_INSUFFICIENT_RESPONSES"
         );
         require(
