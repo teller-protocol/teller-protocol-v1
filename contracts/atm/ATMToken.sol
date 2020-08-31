@@ -10,7 +10,7 @@ import "./ATMTokenInterface.sol";
 import "../base/TInitializable.sol";
 import "@openzeppelin/contracts/utils/Arrays.sol";
 import "../settings/IATMSettings.sol";
-import "./BaseATM.sol";
+import "../base/BaseUpgradeable.sol";
 
 
 /*****************************************************************************************************/
@@ -35,7 +35,8 @@ contract ATMToken is
     ERC20Detailed,
     ERC20Mintable,
     ERC20Burnable,
-    TInitializable
+    TInitializable,
+    BaseUpgradeable
 {
     /**
      *  @notice ATMToken implements an ERC20 token with a supply cap and a vesting scheduling
@@ -45,6 +46,15 @@ contract ATMToken is
     using Address for address;
 
     /* Modifiers */
+    /**
+        @notice Checks if sender is owner
+        @dev Throws an error if the sender is not the owner
+     */
+    // TODO: should this be only pauser from settings?
+    modifier onlyOwner() {
+        require(msg.sender == _owner, "CALLER_IS_NOT_OWNER");
+        _;
+    }
 
     /**
         @notice Checks if the platform is paused or not

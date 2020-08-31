@@ -2,6 +2,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
+import "./BaseUpgradeable.sol";
 import "./TInitializable.sol";
 
 // Commons
@@ -18,7 +19,7 @@ import "../interfaces/LogicVersionsRegistryInterface.sol";
 
     @author develop@teller.finance
  */
-contract LogicVersionsRegistry is TInitializable, LogicVersionsRegistryInterface {
+contract LogicVersionsRegistry is LogicVersionsRegistryInterface, TInitializable, BaseUpgradeable {
     using LogicVersionLib for LogicVersionLib.LogicVersion;
     using Address for address;
     /** Constants */
@@ -36,21 +37,7 @@ contract LogicVersionsRegistry is TInitializable, LogicVersionsRegistryInterface
      */
     mapping(bytes32 => LogicVersionLib.LogicVersion) public logicVersions;
 
-    /**
-        @notice It represents the current platform settings.
-     */
-    SettingsInterface public settings;
-
     /** Modifiers */
-
-    /**
-        @notice It checks whether the transaction sender has pauser role or not.
-        @dev It throws a require error if the sender has not the pauser role.
-     */
-    modifier onlyPauser() {
-        settings.requirePauserRole(msg.sender);
-        _;
-    }
 
     /* Constructor */
 
@@ -61,7 +48,7 @@ contract LogicVersionsRegistry is TInitializable, LogicVersionsRegistryInterface
         @param logicName logic name to create.
         @param logic the logic address value for the given logic name.
      */
-    function createLogicVersion(bytes32 logicName, address logic) external onlyPauser() isInitialized() {
+    function createLogicVersion(bytes32 logicName, address logic) external /** onlyPauser() **/ isInitialized() {
         require(logicName != "", "LOGIC_NAME_MUST_BE_PROVIDED");
         logicVersions[logicName].initialize(logic);
 
@@ -143,11 +130,9 @@ contract LogicVersionsRegistry is TInitializable, LogicVersionsRegistryInterface
         external
         isNotInitialized()
     {
-        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
-
         _initialize();
 
-        settings = SettingsInterface(settingsAddress);
+        _setSettings(settingsAddress);
         consts = new LogicVersionsConsts();
     }
 

@@ -7,19 +7,20 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/WhitelistedRole.sol";
 
 // Contracts
+import "./BaseUpgradeable.sol";
+import "./TInitializable.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
 import "../interfaces/MarketsStateInterface.sol";
 import "../util/MarketStateLib.sol";
-import "./TInitializable.sol";
 
 /**
     @notice This contract is used to store market data.
 
     @author develop@teller.finance
  */
-contract MarketsState is MarketsStateInterface, TInitializable, WhitelistedRole {
+contract MarketsState is MarketsStateInterface, TInitializable, WhitelistedRole, BaseUpgradeable {
     using SafeMath for uint256;
     using Address for address;
     using MarketStateLib for MarketStateLib.MarketState;
@@ -27,8 +28,6 @@ contract MarketsState is MarketsStateInterface, TInitializable, WhitelistedRole 
     /** Constants */
 
     /* State Variables */
-
-    SettingsInterface public settings;
 
     /**
         @notice It maps a lent token => collateral token => Market state.
@@ -155,7 +154,7 @@ contract MarketsState is MarketsStateInterface, TInitializable, WhitelistedRole 
         WhitelistedRole.initialize(msg.sender);
         TInitializable._initialize();
 
-        settings = SettingsInterface(settingsAddress);
+        _setSettings(settingsAddress);
     }
 
     /** Internal Functions */

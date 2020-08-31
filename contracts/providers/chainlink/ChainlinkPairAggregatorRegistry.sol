@@ -15,20 +15,13 @@ import "../../util/AddressLib.sol";
 import "../../util/LogicVersionsConsts.sol";
 
 // TODO Add docs.
-contract ChainlinkPairAggregatorRegistry is IChainlinkPairAggregatorRegistry, TInitializable, LogicVersionsConsts {
+contract ChainlinkPairAggregatorRegistry is TInitializable, BaseUpgradeable, IChainlinkPairAggregatorRegistry, LogicVersionsConsts {
     using AddressLib for address;
     using Address for address;
-
-    SettingsInterface public settings;
 
     mapping(address => mapping(address => PairAggregatorInterface)) public aggregators;
 
     /** Modifiers **/
-
-    modifier onlyPauser() {
-        settings.requirePauserRole(msg.sender);
-        _;
-    }
 
     /** Public Functions **/
 
@@ -40,9 +33,9 @@ contract ChainlinkPairAggregatorRegistry is IChainlinkPairAggregatorRegistry, TI
     {
         // TODO Do we need to create an update function?
         // TODO Do we need to validate the new request is already registered?
-        bytes32 logicName = settings.versionsRegistry().consts().CHAINLINK_PAIR_AGGREGATOR_LOGIC_NAME();
+        bytes32 logicName = settings().versionsRegistry().consts().CHAINLINK_PAIR_AGGREGATOR_LOGIC_NAME();
 
-        DynamicProxy pairAggregatorProxy = new DynamicProxy(address(settings), logicName);
+        DynamicProxy pairAggregatorProxy = new DynamicProxy(address(settings()), logicName);
 
         address pairAggregatorAddress = address(pairAggregatorProxy);
         aggregator = PairAggregatorInterface(pairAggregatorAddress);
@@ -65,11 +58,9 @@ contract ChainlinkPairAggregatorRegistry is IChainlinkPairAggregatorRegistry, TI
         external
         isNotInitialized()
     {
-        require(settingsAddress.isContract(), "SETTINGS_NOT_A_CONTRACT");
+        _setSettings(settingsAddress);
 
         _initialize();
-        
-        settings = SettingsInterface(settingsAddress);
     }
 
     function getPairAggregator(address baseToken, address quoteToken) external view returns (PairAggregatorInterface) {

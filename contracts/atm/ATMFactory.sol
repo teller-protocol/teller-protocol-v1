@@ -33,7 +33,7 @@ import "../settings/IATMSettings.sol";
     @notice This contract will create upgradeable ATM instances.
     @author develop@teller.finance
  */
-contract ATMFactory is BaseATM, ATMFactoryInterface, TInitializable {
+contract ATMFactory is IATMFactory, TInitializable, BaseUpgradeable {
     using AddressArrayLib for address[];
     using AddressLib for address;
     using Address for address;
@@ -51,10 +51,9 @@ contract ATMFactory is BaseATM, ATMFactoryInterface, TInitializable {
     // List of ATM instances
     address[] public atmsList;
 
-    SettingsInterface public settings;
-
+    // TODO: replace with modifier from BaseUpgradeable
     modifier onlyOwner() {
-        require(settings.hasPauserRole(msg.sender) == true, "SENDER_ISNT_ALLOWED");
+        require(settings().hasPauserRole(msg.sender) == true, "SENDER_ISNT_ALLOWED");
         _;
     }
 
@@ -76,12 +75,12 @@ contract ATMFactory is BaseATM, ATMFactoryInterface, TInitializable {
     ) external onlyOwner() isInitialized() returns (address) {
         address owner = msg.sender;
         
-        bytes32 atmTokenLogicName = settings.versionsRegistry().consts().ATM_TOKEN_LOGIC_NAME();
-        ATMTokenInterface atmTokenProxy = ATMTokenInterface(address(new DynamicProxy(address(settings), atmTokenLogicName)));
+        bytes32 atmTokenLogicName = settings().versionsRegistry().consts().ATM_TOKEN_LOGIC_NAME();
+        ATMTokenInterface atmTokenProxy = ATMTokenInterface(address(new DynamicProxy(address(settings()), atmTokenLogicName)));
 
-        bytes32 atmGovernanceLogicName = settings.versionsRegistry().consts().ATM_GOVERNANCE_LOGIC_NAME();
-        IATMGovernance atmGovernanceProxy = IATMGovernance(address(new DynamicProxy(address(settings), atmGovernanceLogicName)));
-        atmGovernanceProxy.initialize(address(settings), owner);
+        bytes32 atmGovernanceLogicName = settings().versionsRegistry().consts().ATM_GOVERNANCE_LOGIC_NAME();
+        IATMGovernance atmGovernanceProxy = IATMGovernance(address(new DynamicProxy(address(settings()), atmGovernanceLogicName)));
+        atmGovernanceProxy.initialize(address(settings()), owner);
         address atmGovernanceProxyAddress = address(atmGovernanceProxy);
 
         atmTokenProxy.initialize(
@@ -90,7 +89,7 @@ contract ATMFactory is BaseATM, ATMFactoryInterface, TInitializable {
             decimals,
             cap,
             maxVestingsPerWallet,
-            address(settings.atmSettings()),
+            address(settings().atmSettings()),
             atmGovernanceProxyAddress
         );
         address atmTokenProxyAddress = address(atmTokenProxy);
@@ -113,11 +112,9 @@ contract ATMFactory is BaseATM, ATMFactoryInterface, TInitializable {
         external
         isNotInitialized()
     {
-        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
+        _setSettings(settingsAddress);
 
         _initialize();
-
-        settings = SettingsInterface(settingsAddress);
     }
 
     /**

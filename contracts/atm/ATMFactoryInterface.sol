@@ -1,7 +1,5 @@
 pragma solidity 0.5.17;
 
-import "../interfaces/SettingsInterface.sol";
-
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
 /**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
@@ -68,12 +66,6 @@ interface ATMFactoryInterface {
         @return the list of ATMs.
      */
     function getATMs() external view returns (address[] memory);
-
-    /**
-        @notice Returns the address of the Settings contract
-        @return Address of the settings contract
-     */
-    function settings() external view returns (SettingsInterface);
 
     /**
         @notice Returns the atm token address of a given associated atm address.

@@ -3,11 +3,11 @@ const jsonfile = require('jsonfile');
 const MOCK_NETWORKS = ["test", "ganache"];
 
 class DeployerApp {
-    constructor(deployer, web3, account, UpgradeableProxy, network, mockNetworks = MOCK_NETWORKS) {
+    constructor(deployer, web3, account, InitializeableDynamicProxy, network, mockNetworks = MOCK_NETWORKS) {
         this.data = new Map();
         this.web3 = web3;
         this.account = account;
-        this.UpgradeableProxy = UpgradeableProxy
+        this.InitializeableDynamicProxy = InitializeableDynamicProxy
         this.contracts = [];
         this.deployer = deployer;
         this.network = network.toLowerCase();
@@ -17,48 +17,39 @@ class DeployerApp {
 }
 
 /**
-    This function deploys two contract: 1- The original and 2- An UpgradeableProxy (with the reference to the original).
+    This function deploys two contract: 1- The original and 2- An InitializeableDynamicProxy (with the reference to the original).
     After deploying a proxy, we MUST call the initialize function with the parameters it needs.
  */
 DeployerApp.prototype.deployWithUpgradeable = async function(contractName, contract, admin, initData, ...params) {
     await this.deployWith(contractName, contract)
-    await this.deployWith(`${contractName}_Proxy`, this.UpgradeableProxy, contract.address, admin, initData, ...params)
-    return contract.at(this.UpgradeableProxy.address)
+    await this.deployWith(`${contractName}_Proxy`, this.InitializeableDynamicProxy, contract.address, admin, initData, ...params)
+    return contract.at(this.InitializeableDynamicProxy.address)
 }
 
-DeployerApp.prototype.deployProxyFor = async function(contractName, contract, admin, initParams = undefined, ...params) {
-    console.log(`Deploying CONTRACT for: ${contractName} - admin address: ${admin}.`)
-    await this.deployWith(contractName, contract, ...params);
-    console.log(`Deploying PROXY for: ${contractName} - logic address: ${contract.address} - admin address: ${admin}.`)
-    assert(contract !== undefined && contract.address !== undefined, `Contract or logic address is undefined.`);
-    await this.deployWith(
-        `${contractName}_Proxy`,
-        this.UpgradeableProxy,
-        contract.address,
-        admin,
-        '0x', // Init data.
+DeployerApp.prototype.deployInitializeableDynamicProxy = async function ({ name, address }, ...params) {
+    console.log(`Deploying PROXY for: ${name} - logic address: ${address}.`)
+    const proxy = await this.deployWith(
+        `${name}_Proxy`,
+        this.InitializeableDynamicProxy,
+        address,
         ...params
     );
-    const proxyContract = await contract.at(this.UpgradeableProxy.address);
-    if (initParams !== undefined) {
-        console.log(`PROXY ${contractName}: Initializing with params ${initParams}.`);
-        await proxyContract.initialize(...initParams);
-    }
-    console.log('\n');
-    return proxyContract;
+
+    return proxy
 }
 
 DeployerApp.prototype.deployWith = async function(contractName, contract, ...params) {
     console.log(`Contract '${contractName}': deploying.`);
-    await this.deployer.deploy(contract, ...params);
+    const instance = await this.deployer.deploy(contract, ...params);
     this.contracts.push({
         address: contract.address,
         name: contractName,
     });
+    return instance
 }
 
 DeployerApp.prototype.deploy = async function(contract, ...params) {
-    await this.deployWith(contract.contractName, contract, ...params);
+    return await this.deployWith(contract.contractName, contract, ...params);
 }
 
 DeployerApp.prototype.canDeployMock = function() {

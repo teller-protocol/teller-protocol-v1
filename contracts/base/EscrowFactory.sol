@@ -2,6 +2,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
+import "./TInitializable.sol";
 import "./DynamicProxy.sol";
 
 // Libraries
@@ -18,8 +19,6 @@ import "../interfaces/SettingsInterface.sol";
 import "../util/AddressLib.sol";
 import "../util/AddressArrayLib.sol";
 
-import "./TInitializable.sol";
-
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
 /**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
@@ -35,17 +34,12 @@ import "./TInitializable.sol";
 
     @author develop@teller.finance
  */
-contract EscrowFactory is TInitializable, EscrowFactoryInterface {
+contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeable {
     using AddressArrayLib for address[];
     using AddressLib for address;
     using Address for address;
 
     /* State Variables */
-
-    /**
-        @notice The platform settings.
-     */
-    SettingsInterface public settings;
 
     /**
         @notice It defines whether a DApp exists or not.
@@ -62,17 +56,12 @@ contract EscrowFactory is TInitializable, EscrowFactoryInterface {
 
     /* Modifiers */
 
-    modifier onlyPauser() {
-        settings.requirePauserRole(msg.sender);
-        _;
-    }
-
     /**
         @notice It checks whether the platform is paused or not.
         @dev It throws a require error if the platform is used.
      */
     modifier isNotPaused() {
-        require(!settings.isPaused(), "PLATFORM_IS_PAUSED");
+        require(!settings().isPaused(), "PLATFORM_IS_PAUSED");
         _;
     }
 
@@ -92,9 +81,9 @@ contract EscrowFactory is TInitializable, EscrowFactoryInterface {
         require(loansAddress.isContract(), "CALLER_MUST_BE_CONTRACT");
         borrower.requireNotEmpty("BORROWER_MUSTNT_BE_EMPTY");
 
-        bytes32 escrowLogicName = settings.versionsRegistry().consts().ESCROW_LOGIC_NAME();
+        bytes32 escrowLogicName = settings().versionsRegistry().consts().ESCROW_LOGIC_NAME();
 
-        escrowAddress = address(new DynamicProxy(address(settings), escrowLogicName));
+        escrowAddress = address(new DynamicProxy(address(settings()), escrowLogicName));
         EscrowInterface(escrowAddress).initialize(
             loansAddress,
             loanID
@@ -159,8 +148,7 @@ contract EscrowFactory is TInitializable, EscrowFactoryInterface {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
 
         _initialize();
-
-        settings = SettingsInterface(settingsAddress);
+        _setSettings(settingsAddress);
     }
 
     /** Internal Functions */

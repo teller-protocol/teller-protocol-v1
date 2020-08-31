@@ -17,7 +17,7 @@ contract EscrowMock is Escrow {
         address loansAddress,
         uint256 aLoanID
     ) external {
-        settings = SettingsInterface(settingsAddress);
+        _setSettings(settingsAddress);
         loans = LoansInterface(loansAddress);
         loanID = aLoanID;
     }
