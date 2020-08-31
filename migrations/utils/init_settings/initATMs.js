@@ -12,7 +12,6 @@ module.exports = async function(
     console.log('\n');
     const atmKeys = Object.keys(atms);
     console.log(`Creating ${atmKeys.length} ATMs.`);
-    return;//TODO Fix CONTRACT_ALREADY_INITIALIZED ATMFactory.createATM >>> atmGovernanceProxy.initialize(address(settings), owner);
     for (const atmKey of atmKeys) {
         const atmInfo = atms[atmKey];
         assert(!_.isUndefined(atmInfo), `ATM info is undefined for key ${atmKey}.`);

@@ -199,7 +199,7 @@ module.exports = async function(deployer, network, accounts) {
   await createMarkets(
     marketDefinitions,
     { marketFactoryInstance, marketsStateInstance },
-    { txConfig, ...networkConfig },
+    { txConfig, deployerApp, ...networkConfig },
     { LoanTermsConsensus, InterestConsensus, IERC20Mintable }
   );
 

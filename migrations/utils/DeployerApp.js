@@ -68,13 +68,17 @@ DeployerApp.prototype.deployInitializeableDynamicProxy = async function ({ name,
     return proxy
 }
 
+DeployerApp.prototype.addContractInfo = async function(contractName, contractAddress) {
+    this.contracts.push({
+        address: contractAddress,
+        name: contractName,
+    });
+}
+
 DeployerApp.prototype.deployWith = async function(contractName, contract, ...params) {
     console.log(`Contract '${contractName}': deploying.`);
     const instance = await this.deployer.deploy(contract, ...params);
-    this.contracts.push({
-        address: contract.address,
-        name: contractName,
-    });
+    this.addContractInfo(contractName, contract.address);
     return instance
 }
 

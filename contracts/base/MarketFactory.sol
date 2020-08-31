@@ -90,7 +90,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
 
         IChainlinkPairAggregatorRegistry pairAggregatorRegistry = settings().pairAggregatorRegistry();
         address pairAggregator = address(pairAggregatorRegistry.getPairAggregator(borrowedToken, collateralToken));
-        // TODO uncomment require(pairAggregator != address(0x0), "ORACLE_NOT_FOUND_FOR_MARKET");
+        require(pairAggregator != address(0x0), "ORACLE_NOT_FOUND_FOR_MARKET");
 
         (
             LendingPoolInterface lendingPoolProxy,

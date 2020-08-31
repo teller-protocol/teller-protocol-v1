@@ -68,7 +68,7 @@ contract ATMGovernance is IATMGovernance, TInitializable, SignerRole, BaseUpgrad
     function addGeneralSetting(bytes32 settingName, uint256 settingValue)
         external
         onlySigner()
-        isNotInitialized()
+        isInitialized()
     {
         require(settingValue > 0, "GENERAL_SETTING_MUST_BE_POSITIVE");
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
@@ -99,7 +99,7 @@ contract ATMGovernance is IATMGovernance, TInitializable, SignerRole, BaseUpgrad
         @notice Removes a General Setting from this ATM.
         @param settingName name of the setting to be removed.
      */
-    function removeGeneralSetting(bytes32 settingName) external onlySigner() isNotInitialized() {
+    function removeGeneralSetting(bytes32 settingName) external onlySigner() isInitialized() {
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
         require(generalSettings[settingName] > 0, "GENERAL_SETTING_NOT_FOUND");
         uint256 previousValue = generalSettings[settingName];
@@ -117,7 +117,7 @@ contract ATMGovernance is IATMGovernance, TInitializable, SignerRole, BaseUpgrad
         address asset,
         bytes32 settingName,
         uint256 settingValue
-    ) external onlySigner() isNotInitialized() {
+    ) external onlySigner() isInitialized() {
         asset.requireNotEmpty("ASSET_ADDRESS_IS_REQUIRED");
         require(asset.isContract(), "ASSET_MUST_BE_A_CONTRACT");
         require(settingValue > 0, "ASSET_SETTING_MUST_BE_POSITIVE");
@@ -140,7 +140,7 @@ contract ATMGovernance is IATMGovernance, TInitializable, SignerRole, BaseUpgrad
         address asset,
         bytes32 settingName,
         uint256 newValue
-    ) external onlySigner() isNotInitialized() {
+    ) external onlySigner() isInitialized() {
         require(settingName != "", "ASSET_SETTING_MUST_BE_PROVIDED");
         require(assetMarketSettings[asset][settingName] > 0, "ASSET_SETTING_NOT_FOUND");
         require(
@@ -166,7 +166,7 @@ contract ATMGovernance is IATMGovernance, TInitializable, SignerRole, BaseUpgrad
     function removeAssetMarketSetting(address asset, bytes32 settingName)
         external
         onlySigner()
-        isNotInitialized()
+        isInitialized()
     {
         require(settingName != "", "ASSET_SETTING_MUST_BE_PROVIDED");
         require(assetMarketSettings[asset][settingName] > 0, "ASSET_SETTING_NOT_FOUND");
@@ -184,7 +184,7 @@ contract ATMGovernance is IATMGovernance, TInitializable, SignerRole, BaseUpgrad
     function addDataProvider(uint8 dataTypeIndex, address dataProvider)
         external
         onlySigner()
-        isNotInitialized()
+        isInitialized()
     {
         require(dataProvider.isContract(), "DATA_PROVIDER_MUST_BE_A_CONTRACT");
         dataProviders[dataTypeIndex].add(dataProvider);
@@ -207,7 +207,7 @@ contract ATMGovernance is IATMGovernance, TInitializable, SignerRole, BaseUpgrad
         uint8 dataTypeIndex,
         uint256 providerIndex,
         address newProvider
-    ) external onlySigner() isNotInitialized() {
+    ) external onlySigner() isInitialized() {
         require(
             dataProviders[dataTypeIndex].length > providerIndex,
             "DATA_PROVIDER_OUT_RANGE"
@@ -233,7 +233,7 @@ contract ATMGovernance is IATMGovernance, TInitializable, SignerRole, BaseUpgrad
     function removeDataProvider(uint8 dataTypeIndex, uint256 dataProviderIndex)
         external
         onlySigner()
-        isNotInitialized()
+        isInitialized()
     {
         require(
             dataProviders[dataTypeIndex].length > dataProviderIndex,
@@ -254,7 +254,7 @@ contract ATMGovernance is IATMGovernance, TInitializable, SignerRole, BaseUpgrad
                 CRA is represented by a Github commit hash of the newly proposed algorithm.
         @param _cra Credit Risk Algorithm github commit hash.
      */
-    function setCRA(string calldata _cra) external onlySigner() isNotInitialized() {
+    function setCRA(string calldata _cra) external onlySigner() isInitialized() {
         bytes memory tempEmptyStringTest = bytes(_cra);
         require(tempEmptyStringTest.length > 0, "CRA_CANT_BE_EMPTY");
         require(
