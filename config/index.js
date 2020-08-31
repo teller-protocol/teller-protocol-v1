@@ -8,8 +8,8 @@ module.exports = async (network) => {
 		if (_.isNaN(networkConfig) || _.isUndefined(networkConfig) || _.isNull(networkConfig)) {
 			throw new Error(`Config for network ${network} not found.`);
 		}
-
-		if (network === 'test') {
+		// TODO improve it
+		if (network === 'test' || network === 'soliditycoverage') {
 			await deployDummyMocks(networkConfig)
 		}
 
