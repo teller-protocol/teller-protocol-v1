@@ -9,7 +9,7 @@ module.exports = async function(
     { atms, tokens, txConfig, web3 },
     { ATMGovernance },
 ) {
-    console.log('');
+    console.log('\n');
     const atmKeys = Object.keys(atms);
     console.log(`Creating ${atmKeys.length} ATMs.`);
     return;//TODO Fix CONTRACT_ALREADY_INITIALIZED ATMFactory.createATM >>> atmGovernanceProxy.initialize(address(settings), owner);
@@ -22,6 +22,7 @@ module.exports = async function(
             supplyToDebt,
             markets,
         } = atmInfo;
+        console.log(`Creating ATM ${atmKey}: ${token.name}/${token.symbol}/${token.decimals} - Max. Cap.: ${token.maxCap} - Max. Vestings per Wallet: ${token.maxVestingsPerWallet}`);
 
         await atmFactory.createATM(
             token.name,
@@ -62,5 +63,5 @@ module.exports = async function(
             );
         }
     }
-    console.log('');
+    console.log('\n');
 }

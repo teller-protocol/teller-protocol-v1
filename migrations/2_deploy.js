@@ -2,6 +2,7 @@ const assert = require('assert');
 const logicNames = require('../test/utils/logicNames');
 const DeployerApp = require('./utils/DeployerApp');
 const PoolDeployer = require('./utils/PoolDeployer');
+// TODO Remove PoolDeployer
 const initSettings = require('./utils/init_settings');
 const initATMs = require('./utils/init_settings/initATMs');
 const initLogicVersions = require('./utils/init_settings/initLogicVersions');
@@ -14,6 +15,7 @@ const ERC20 = artifacts.require("@openzeppelin/contracts/token/ERC20/ERC20Detail
 // TODO: delete this contract and any references
 const UpgradeableProxy = artifacts.require("./base/UpgradeableProxy.sol");
 const InitializeableDynamicProxy = artifacts.require("./base/InitializeableDynamicProxy.sol");
+const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Official Smart Contracts
 const TDAI = artifacts.require("./base/TDAI.sol");
@@ -62,7 +64,9 @@ module.exports = async function(deployer, network, accounts) {
   const txConfig = { gas: maxGasLimit, from: deployerAccount };
 
   // Creating DeployerApp helper.
-  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, InitializeableDynamicProxy, network);
+  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, { InitializeableDynamicProxy, Mock }, { network, networkConfig });
+  
+  await deployerApp.deployMocksContractsIfNeeded();
   const currentBlockNumber = await web3.eth.getBlockNumber();
 
   const contracts = [
@@ -90,6 +94,7 @@ module.exports = async function(deployer, network, accounts) {
 
   async function deployInitializableDynamicProxy(name) {
     const info = deployedLogicContractsMap.get(name)
+    assert(info, `Deployed logic info is undefined for logic name ${name}.`)
     const proxy = await deployerApp.deployInitializeableDynamicProxy(info, txConfig)
     return info.Contract.at(proxy.address)
   }
@@ -144,7 +149,9 @@ module.exports = async function(deployer, network, accounts) {
   );
 
   async function initializeProxy(name, instance) {
-    const { nameBytes32 } = deployedLogicContractsMap.get(name)
+    const logicContractInfo = deployedLogicContractsMap.get(name)
+    assert(logicContractInfo.nameBytes32, `Name bytes32 is undefined for logic name ${name}.`);
+    const { nameBytes32 } = logicContractInfo;
     const proxy = await InitializeableDynamicProxy.at(instance.address)
     await proxy.initializeProxy(settingsInstance.address, nameBytes32)
     await instance.initialize(settingsInstance.address)

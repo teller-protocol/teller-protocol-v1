@@ -20,6 +20,7 @@ module.exports = async function (
             quoteTokenName
         } = aggregatorInfo;
 
+        console.log(`Registering pair aggregator: Inverse: ${inversed} - Market: ${baseTokenName} / ${quoteTokenName} - Chainlink Oracle: ${address}.`)
         const baseTokenAddress = tokens[baseTokenName];
         assert(baseTokenAddress, `Aggregator: base token address is undefined. Base token name: ${baseTokenName}`);
         const quoteTokenAddress = tokens[quoteTokenName];

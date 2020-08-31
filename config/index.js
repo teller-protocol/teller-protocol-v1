@@ -1,6 +1,5 @@
 const _ = require('lodash');
 const getEnvConfiguration = require('./env');
-const Mock = artifacts.require("./mock/util/Mock.sol");
 
 module.exports = async (network) => {
 	try {
@@ -8,11 +7,6 @@ module.exports = async (network) => {
 		if (_.isNaN(networkConfig) || _.isUndefined(networkConfig) || _.isNull(networkConfig)) {
 			throw new Error(`Config for network ${network} not found.`);
 		}
-		// TODO improve it
-		if (network === 'test' || network === 'soliditycoverage') {
-			await deployDummyMocks(networkConfig)
-		}
-
 		return {
 			networkConfig: networkConfig,
 			env: getEnvConfiguration(),
@@ -22,24 +16,3 @@ module.exports = async (network) => {
         throw error;
 	}
 };
-
-async function deployDummyMocks(networkConfig) {
-	const { tokens, compound, chainlink } = networkConfig
-
-	// tokens
-	for (const symbol in tokens) {
-		if (symbol === 'ETH') continue
-
-		tokens[symbol] = (await Mock.new()).address
-	}
-
-	// compound
-	for (const symbol in compound) {
-		compound[symbol] = (await Mock.new()).address
-	}
-
-	// compound
-	for (const pair in chainlink) {
-		chainlink[pair].address = (await Mock.new()).address
-	}
-}

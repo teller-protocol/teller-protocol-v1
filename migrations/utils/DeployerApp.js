@@ -1,19 +1,49 @@
 const assert = require('assert');
 const jsonfile = require('jsonfile');
-const MOCK_NETWORKS = ["test", "ganache"];
+const MOCK_NETWORKS = ["test", "ganache", "soliditycoverage"];
 
 class DeployerApp {
-    constructor(deployer, web3, account, InitializeableDynamicProxy, network, mockNetworks = MOCK_NETWORKS) {
+    constructor(deployer, web3, account, { InitializeableDynamicProxy, Mock }, { network, networkConfig }, mockNetworks = MOCK_NETWORKS) {
         this.data = new Map();
         this.web3 = web3;
         this.account = account;
-        this.InitializeableDynamicProxy = InitializeableDynamicProxy
+        this.artifacts = { InitializeableDynamicProxy, Mock };
         this.contracts = [];
         this.deployer = deployer;
         this.network = network.toLowerCase();
+        this.networkConfig = networkConfig;
         this.mockNetworks = mockNetworks.map( network => network.toLowerCase());
     }
+}
 
+DeployerApp.prototype.deployMocksContractsIfNeeded = async function() {
+    const deployMocks = this.canDeployMock();
+    if (!deployMocks || this.isNetwork('ganache')) {
+        return;
+    }
+	const { tokens, compound, chainlink } = this.networkConfig;
+    const { Mock } = this.artifacts;
+    if(Mock === undefined) {
+        return;
+    }
+    // Tokens
+    console.log(`Deploying mocks for tokens...`);
+	for (const symbol in tokens) {
+		if (symbol === 'ETH') continue
+		tokens[symbol] = (await Mock.new()).address;
+	}
+
+    // Compound
+    console.log(`Deploying mocks for compound...`);
+	for (const symbol in compound) {
+		compound[symbol] = (await Mock.new()).address;
+	}
+
+    // Chainlink
+    console.log(`Deploying mocks for chainlink...`);
+	for (const pair in chainlink) {
+		chainlink[pair].address = (await Mock.new()).address;
+	}
 }
 
 /**
@@ -22,15 +52,15 @@ class DeployerApp {
  */
 DeployerApp.prototype.deployWithUpgradeable = async function(contractName, contract, admin, initData, ...params) {
     await this.deployWith(contractName, contract)
-    await this.deployWith(`${contractName}_Proxy`, this.InitializeableDynamicProxy, contract.address, admin, initData, ...params)
-    return contract.at(this.InitializeableDynamicProxy.address)
+    await this.deployWith(`${contractName}_Proxy`, this.artifacts.InitializeableDynamicProxy, contract.address, admin, initData, ...params)
+    return contract.at(this.artifacts.InitializeableDynamicProxy.address)
 }
 
 DeployerApp.prototype.deployInitializeableDynamicProxy = async function ({ name, address }, ...params) {
     console.log(`Deploying PROXY for: ${name} - logic address: ${address}.`)
     const proxy = await this.deployWith(
         `${name}_Proxy`,
-        this.InitializeableDynamicProxy,
+        this.artifacts.InitializeableDynamicProxy,
         address,
         ...params
     );
@@ -54,6 +84,10 @@ DeployerApp.prototype.deploy = async function(contract, ...params) {
 
 DeployerApp.prototype.canDeployMock = function() {
     return this.mockNetworks.indexOf(this.network) > -1;
+}
+
+DeployerApp.prototype.isNetwork = function(aNewtork) {
+    return this.network.toLowerCase() === aNewtork.toLowerCase();
 }
 
 DeployerApp.prototype.deployMockIf = async function(contract, ...params) {
