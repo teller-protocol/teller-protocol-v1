@@ -13,16 +13,6 @@ contract EscrowMock is Escrow {
         _isOwner = isAOwner;
     }
 
-    // function mockInitialize(
-    //     address settingsAddress,
-    //     address loansAddress,
-    //     uint256 aLoanID
-    // ) external {
-    //     settings = SettingsInterface(settingsAddress);
-    //     loans = LoansInterface(loansAddress);
-    //     loanID = aLoanID;
-    // }
-
     function getBorrower() public view returns (address) {
         return _borrower;
     }
