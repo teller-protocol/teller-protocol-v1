@@ -55,7 +55,7 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
     {
         require(
             responses.length >=
-                settings().getPlatformSettingValue(REQUIRED_SUBMISSIONS_SETTING),
+                settings().getPlatformSettingValue(consts.REQUIRED_SUBMISSIONS_SETTING()),
             "LOANTERM_INSUFFICIENT_RESPONSES"
         );
         _requireRequestLoanTermsRateLimit(request);
@@ -199,7 +199,7 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
             return;
         }
         uint256 requestLoanTermsRateLimit = settings().getPlatformSettingValue(
-            REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING
+            consts.REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING()
         );
         require(
             borrowerToLastLoanTermRequest[request.borrower].add(

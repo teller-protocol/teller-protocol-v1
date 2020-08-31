@@ -130,4 +130,16 @@ library TellerCommon {
         address pairAggregator;
         bool exists;
     }
+
+    /**
+        @notice This struct is used to register new pair aggregator in the aggregators registry.@
+     */
+    struct PairAggregatorRegisterRequest {
+        address baseToken;
+        address quoteToken;
+        address chainlinkAggregatorAddress;
+        bool inverse;
+        uint8 responseDecimals;
+        uint8 collateralDecimals;
+    }
 }
