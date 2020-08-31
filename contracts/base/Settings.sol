@@ -435,6 +435,8 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         marketsState = MarketsStateInterface(marketsStateAddress);
         interestValidator = InterestValidatorInterface(interestValidatorAddress);
         atmSettings = IATMSettings(atmSettingsAddress);
+
+        _setSettings(address(this));
     }
 
     /** Internal functions */
