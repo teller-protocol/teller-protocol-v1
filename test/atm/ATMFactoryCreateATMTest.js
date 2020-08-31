@@ -43,7 +43,6 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
                     maxVesting,
                     {from : sender }
                 );
-                console.log("RESULT>>>", result);
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
