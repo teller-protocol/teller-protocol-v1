@@ -23,11 +23,11 @@ contract("ATMSettingsSetATMGovernanceLogicTest", function (accounts) {
         admin = accounts[ADMIN_INDEX];
         const settings = await Settings.new();
         await settings.initialize(admin);
-        const atmTokenLogic = await Mock.new();
+        const tlrTokenLogic = await Mock.new();
         oldATMGovernanceLogicAddress = mocks[atmGovernanceLogicIndex];
         instance = await ATMSettings.new(
             settings.address,
-            atmTokenLogic.address,
+            tlrTokenLogic.address,
             oldATMGovernanceLogicAddress,
         );
     });
@@ -37,8 +37,8 @@ contract("ATMSettingsSetATMGovernanceLogicTest", function (accounts) {
     withData({
         _1_basic: [0, atmGovernanceLogicIndex + 1, undefined, false],
         _2_not_contract: [0, 99, "ATM_GOV_MUST_BE_A_CONTRACT", true],
-        _4_same_old: [0, atmGovernanceLogicIndex, "NEW_ATM_GOV_MUST_BE_PROVIDED", true],
-        _5_not_pauser: [ADMIN_INDEX + 1, atmGovernanceLogicIndex + 1, 'ONLY_PAUSER', true],
+        _3_same_old: [0, atmGovernanceLogicIndex, "NEW_ATM_GOV_MUST_BE_PROVIDED", true],
+        _4_not_pauser: [ADMIN_INDEX + 1, atmGovernanceLogicIndex + 1, 'ONLY_PAUSER', true],
     }, function(
         senderIndex,
         newAtmGovernanceLogicIndex,

@@ -27,7 +27,7 @@ contract('ATMSettingsConstructorTest', function (accounts) {
     withData({
         _1_basic: [true, 2, 3, undefined, false],
         _2_empty_settings: [false, 2, 3, 'SETTINGS_MUST_BE_A_CONTRACT', true],
-        _3_no_atmTokenLogic: [true, 99, 3, "ATM_TOKEN_MUST_BE_A_CONTRACT", true],
+        _3_no_atmTokenLogic: [true, 99, 3, "TLR_TOKEN_MUST_BE_A_CONTRACT", true],
         _4_no_atmTokenLogic: [true, 2, 99, "ATM_GOV_MUST_BE_A_CONTRACT", true],
     }, function(
         setSettings,

@@ -24,9 +24,9 @@ contract('ATMSettingsSetATMToMarketTest', function (accounts) {
         await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeHasPauserRole(), true);
         await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), false);
 
-        const atmTokenLogic = await Mock.new();
+        const tlrTokenLogic = await Mock.new();
         const atmGovernanceLogic = await Mock.new();
-        instance = await ATMSettings.new(settings.address, atmTokenLogic.address, atmGovernanceLogic.address);
+        instance = await ATMSettings.new(settings.address, tlrTokenLogic.address, atmGovernanceLogic.address);
     });
 
     const newAtM = (borrowedTokenIndex, collateralTokenIndex, atmAddressIndex) => ({borrowedTokenIndex, collateralTokenIndex, atmAddressIndex});

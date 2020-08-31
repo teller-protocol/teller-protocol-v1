@@ -2,12 +2,12 @@ pragma solidity 0.5.17;
 
 
 /**
-    @notice This interface defines the available functions and events for the ATM Token
+    @notice This interface defines the available functions and events for the TLR Token
 
     @author develop@teller.finance
  */
 
-interface ATMTokenInterface {
+interface TLRTokenInterface {
     /* Events */
 
     /**

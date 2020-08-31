@@ -1,5 +1,5 @@
 // JS Libraries
-const ATMTokenEncoder = require("../utils/encoders/ATMTokenEncoder");
+const TLRTokenEncoder = require("../utils/encoders/TLRTokenEncoder");
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
 
@@ -7,28 +7,28 @@ const { t } = require('../utils/consts');
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const ATMToken = artifacts.require('./base/atm/ATMToken.sol');
-const ATMTokenProxy = artifacts.require('./base/atm/ATMTokenProxy.sol');
+const TLRToken = artifacts.require('./base/atm/TLRToken.sol');
+const TLRTokenProxy = artifacts.require('./base/atm/TLRTokenProxy.sol');
 
-contract('ATMTokenProxyConstructorTest', function (accounts) {
-    const encoder = new ATMTokenEncoder(web3)
-    let atmToken
+contract('TLRTokenProxyConstructorTest', function (accounts) {
+    const encoder = new TLRTokenEncoder(web3)
+    let tlrToken
     let atmGovernance;
     let atmSettings
 
     beforeEach(async () => {
-        atmToken = await ATMToken.new();
+        tlrToken = await TLRToken.new();
         atmGovernance = await Mock.new();
 
         atmSettings = await Mock.new();
         await atmSettings.givenMethodReturnAddress(
-            encoder.encodeAtmTokenLogic(),
-            atmToken.address
+            encoder.encodeTlrTokenLogic(),
+            tlrToken.address
         );
     })
 
     withData({
-        _1_initialize_basic: ['ATMToken', 'ATMT', 18, 10000, 50],
+        _1_initialize_basic: ['Teller Token', 'TLR', 18, 10000, 50],
     }, function (
         name,
         symbol,
@@ -41,14 +41,14 @@ contract('ATMTokenProxyConstructorTest', function (accounts) {
         it(t('user', 'constructor', 'Should be able to create and initialize contract.', mustFail), async function() {
             // Setup
             try {
-                const proxy = await ATMTokenProxy.new(name, symbol, decimals, cap, maxVesting, atmSettings.address, atmGovernance.address)
-                const atmToken = await ATMToken.at(proxy.address)
+                const proxy = await TLRTokenProxy.new(name, symbol, decimals, cap, maxVesting, atmSettings.address, atmGovernance.address)
+                const tlrToken = await TLRToken.at(proxy.address)
 
                 // Assertions
-                const isInitialized = await atmToken.initialized.call()
+                const isInitialized = await tlrToken.initialized.call()
                 assert(isInitialized, 'Contract not initialized.')
 
-                const atmSettingsAddress = await atmToken.atmSettings.call()
+                const atmSettingsAddress = await tlrToken.atmSettings.call()
                 assert.equal(atmSettings.address, atmSettingsAddress, 'ATMSettings address not set.')
             } catch (error) {
                 // Assertions

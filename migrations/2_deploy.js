@@ -22,7 +22,7 @@ const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 // ATM Smart contracts
 const ATMFactory = artifacts.require("./atm/ATMFactory.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
-const ATMToken = artifacts.require("./atm/ATMToken.sol");
+const TLRToken = artifacts.require("./atm/TLRToken.sol");
 // External providers
 const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
 const InverseChainlinkPairAggregator = artifacts.require("./providers/chainlink/InverseChainlinkPairAggregator.sol");
@@ -71,13 +71,13 @@ module.exports = async function(deployer, network, accounts) {
   // As they are used as logic template for their proxies, we don't need to call initialize function here.
   await deployerApp.deploy(ATMGovernance, txConfig);
   const atmGovernanceLogicInstance = await ATMGovernance.deployed();
-  await deployerApp.deploy(ATMToken, txConfig);
-  const atmTokenLogicInstance = await ATMToken.deployed();
+  await deployerApp.deploy(TLRToken, txConfig);
+  const tlrTokenLogicInstance = await TLRToken.deployed();
 
   await deployerApp.deploy(
     ATMSettings,
     settingsInstance.address,
-    atmTokenLogicInstance.address,
+    tlrTokenLogicInstance.address,
     atmGovernanceLogicInstance.address,
     txConfig
   );

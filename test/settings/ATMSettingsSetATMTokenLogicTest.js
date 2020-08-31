@@ -14,8 +14,8 @@ contract("ATMSettingsSetATMTokenLogicTest", function (accounts) {
     const ADMIN_INDEX = 0;
     let admin;
     let instance;
-    let oldATMTokenLogicAddress;
-    let atmTokenLogicIndex = 1;
+    let oldTLRTokenLogicAddress;
+    let tlrTokenLogicIndex = 1;
     let mocks;
 
     beforeEach("Setup for each test", async () => {
@@ -23,11 +23,11 @@ contract("ATMSettingsSetATMTokenLogicTest", function (accounts) {
         admin = accounts[ADMIN_INDEX];
         const settings = await Settings.new();
         await settings.initialize(admin);
-        oldATMTokenLogicAddress = mocks[atmTokenLogicIndex];
+        oldTLRTokenLogicAddress = mocks[tlrTokenLogicIndex];
         const atmGovernanceLogic = await Mock.new();
         instance = await ATMSettings.new(
             settings.address,
-            oldATMTokenLogicAddress,
+            oldTLRTokenLogicAddress,
             atmGovernanceLogic.address,
         );
     });
@@ -35,41 +35,41 @@ contract("ATMSettingsSetATMTokenLogicTest", function (accounts) {
     const getInstance = (refs, index, accountIndex) => index === -1 ? NULL_ADDRESS: index === 99 ? accounts[accountIndex] : refs[index];
 
     withData({
-        _1_basic: [0, atmTokenLogicIndex + 1, undefined, false],
-        _2_not_contract: [0, 99, "ATM_TOKEN_MUST_BE_A_CONTRACT", true],
-        _4_same_old: [0, atmTokenLogicIndex, "NEW_ATM_TOKEN_MUST_BE_PROVIDED", true],
-        _5_not_pauser: [ADMIN_INDEX + 1, atmTokenLogicIndex + 1, 'ONLY_PAUSER', true],
+        _1_basic: [0, tlrTokenLogicIndex + 1, undefined, false],
+        _2_not_contract: [0, 99, "TLR_TOKEN_MUST_BE_A_CONTRACT", true],
+        _3_same_old: [0, tlrTokenLogicIndex, "NEW_ATM_TOKEN_MUST_BE_PROVIDED", true],
+        _4_not_pauser: [ADMIN_INDEX + 1, tlrTokenLogicIndex + 1, 'ONLY_PAUSER', true],
     }, function(
         senderIndex,
-        newAtmTokenLogicIndex,
+        newTlrTokenLogicIndex,
         expectedErrorMessage,
         mustFail
     ) {
         it(t("admin", "setATMTokenLogic", "Should be able (or not) to set atm token logic", mustFail), async function() {
             // Setup
             const sender = accounts[senderIndex];
-            const atmTokenLogicAddress = getInstance(mocks, newAtmTokenLogicIndex, 2);
+            const tlrTokenLogicAddress = await getInstance(mocks, newTlrTokenLogicIndex, 2);
 
             try {
                 // Invocation
-                const result = await instance.setATMTokenLogic(atmTokenLogicAddress, { from: sender });
+                const result = await instance.setTLRTokenLogic(tlrTokenLogicAddress, { from: sender });
 
                 // Assertions
                 assert(!mustFail, "It should have failed because data is invalid.");
                 assert(result);
 
                 // Validating state changes
-                const newATMTokenLogic = await instance.atmTokenLogic();
+                const newTLRTokenLogic = await instance.tlrTokenLogic();
                 assert.equal(
-                    newATMTokenLogic,
-                    atmTokenLogicAddress,
-                    "ATM Token Template was not updated."
+                    newTLRTokenLogic,
+                    tlrTokenLogicAddress,
+                    "TLR Token Template was not updated."
                 );
-
+                
                 // Validating events were emitted
                 atmFactory
-                    .atmTokenLogicUpdated(result)
-                    .emitted(sender, oldATMTokenLogicAddress, newATMTokenLogic);
+                    .tlrTokenLogicUpdated(result)
+                    .emitted(sender, oldTLRTokenLogicAddress, newTLRTokenLogic);
             } catch (error) {
                 assert(mustFail);
                 assert(error);

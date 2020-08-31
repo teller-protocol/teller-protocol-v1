@@ -297,7 +297,7 @@ module.exports = {
             };
         },
     },
-    atmToken: {
+    tlrToken: {
         newCap: tx => {
             const name = 'NewCap';
             return {
@@ -673,7 +673,7 @@ module.exports = {
                 emitted: (sender, atm, token) => emitted(tx, name, ev => {
                     assert.equal(ev.creator, sender);
                     assert.equal(ev.atmGovernanceAddress, atm);
-                    assert.equal(ev.atmTokenAddress, token);
+                    assert.equal(ev.tlrTokenAddress, token);
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -702,14 +702,14 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-        atmTokenLogicUpdated: tx => {
-            const name = "ATMTokenLogicUpdated";
+        tlrTokenLogicUpdated: tx => {
+            const name = "TLRTokenLogicUpdated";
             return {
                 name: name,
-                emitted: (sender, oldATMTokenLogic, newATMTokenLogic) => emitted(tx, name, ev => {
+                emitted: (sender, oldTLRTokenLogic, newTLRTokenLogic) => emitted(tx, name, ev => {
                     assert.equal(ev.sender, sender);
-                    assert.equal(ev.oldATMTokenLogic.toString(), oldATMTokenLogic.toString());
-                    assert.equal(ev.newATMTokenLogic.toString(), newATMTokenLogic.toString());
+                    assert.equal(ev.oldTLRTokenLogic.toString(), oldTLRTokenLogic.toString());
+                    assert.equal(ev.newTLRTokenLogic.toString(), newTLRTokenLogic.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
