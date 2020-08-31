@@ -107,7 +107,7 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
         require(balanceAfterSwap >= (balanceBeforeSwap + minDestination), "UNISWAP_BALANCE_NOT_INCREASED");
         require(amounts.length == path.length , "UNISWAP_ERROR_SWAPPING");
         uint256 amountReceived = amounts[amounts.length - 1];
-
+        // TODO fix _tokenUpdated() in BaseEscrowDapp.sol
         // _tokenUpdated(source);
         // _tokenUpdated(destination);
 
