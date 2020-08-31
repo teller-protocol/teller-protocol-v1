@@ -36,7 +36,7 @@ contract LendingPool is Base, LendingPoolInterface {
     /* State Variables */
 
     IERC20 public lendingToken;
-    // TODO Can we get it from settings.getAssetSetting(address(lendingToken)).cTokenAddress ?
+    // TODO Can we get it from settings().getAssetSetting(address(lendingToken)).cTokenAddress ?
     // So then we can remove cToken from initialize function and here.
     address public cToken;
 

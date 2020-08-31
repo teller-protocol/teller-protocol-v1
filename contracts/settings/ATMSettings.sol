@@ -4,8 +4,9 @@ pragma experimental ABIEncoderV2;
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
-// Commons
+// Contracts
 import "../base/TInitializable.sol";
+import "../base/BaseUpgradeable.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
@@ -17,15 +18,13 @@ import "./IATMSettings.sol";
 
     @author develop@teller.finance
  */
-contract ATMSettings is IATMSettings, TInitializable {
+contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
     using Address for address;
     /** Constants */
 
     address internal constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /* State Variables */
-
-    SettingsInterface public settings;
 
     /**
         @notice It represents a mapping to identify whether a ATM is paused or not.
@@ -48,8 +47,9 @@ contract ATMSettings is IATMSettings, TInitializable {
         @notice It checks whether sender address has the pauser role or not.
         @dev It throws a require error if sender hasn't the pauser role.
      */
+    // TODO: replace with modifier from BaseUpgradeable.onlyPauser
     modifier withPauserRole() {
-        require(settings.hasPauserRole(msg.sender), "SENDER_HASNT_PAUSER_ROLE");
+        require(settings().hasPauserRole(msg.sender), "SENDER_HASNT_PAUSER_ROLE");
         _;
     }
 
@@ -62,7 +62,7 @@ contract ATMSettings is IATMSettings, TInitializable {
         @param atmAddress ATM address to pause.
      */
     function pauseATM(address atmAddress) external withPauserRole() isInitialized() {
-        require(settings.isPaused() == false, "PLATFORM_IS_ALREADY_PAUSED");
+        require(settings().isPaused() == false, "PLATFORM_IS_ALREADY_PAUSED");
         require(atmPaused[atmAddress] == false, "ATM_IS_ALREADY_PAUSED");
 
         atmPaused[atmAddress] = true;
@@ -75,7 +75,7 @@ contract ATMSettings is IATMSettings, TInitializable {
         @param atmAddress ATM address to unpause.
      */
     function unpauseATM(address atmAddress) external withPauserRole() isInitialized() {
-        require(settings.isPaused() == false, "PLATFORM_IS_PAUSED");
+        require(settings().isPaused() == false, "PLATFORM_IS_PAUSED");
         require(atmPaused[atmAddress] == true, "ATM_IS_NOT_PAUSED");
 
         atmPaused[atmAddress] = false;
@@ -89,7 +89,7 @@ contract ATMSettings is IATMSettings, TInitializable {
         @return true if ATM is paused. Otherwise it returns false.
      */
     function isATMPaused(address atmAddress) external view returns (bool) {
-        return settings.isPaused() || atmPaused[atmAddress];
+        return settings().isPaused() || atmPaused[atmAddress];
     }
 
     /**
@@ -225,11 +225,9 @@ contract ATMSettings is IATMSettings, TInitializable {
         external
         isNotInitialized()
     {
-        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
+        _setSettings(settingsAddress);
 
         TInitializable._initialize();
-
-        settings = SettingsInterface(settingsAddress);
     }
 
     /** Internal functions */

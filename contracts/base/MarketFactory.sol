@@ -35,7 +35,7 @@ import "./TInitializable.sol";
 
     @author develop@teller.finance
  */
-contract MarketFactory is TInitializable, MarketFactoryInterface {
+contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterface {
     using Address for address;
 
     /** Constants */
@@ -44,26 +44,16 @@ contract MarketFactory is TInitializable, MarketFactoryInterface {
 
     /* State Variables */
 
-    /**
-        @notice The platform settings.
-     */
-    SettingsInterface public settings;
-
     mapping(address => mapping(address => TellerCommon.Market)) markets;
 
     /* Modifiers */
-
-    modifier onlyPauser() {
-        settings.requirePauserRole(msg.sender);
-        _;
-    }
 
     /**
         @notice It checks whether the platform is paused or not.
         @dev It throws a require error if the platform is used.
      */
     modifier isNotPaused() {
-        require(!settings.isPaused(), "PLATFORM_IS_PAUSED");
+        require(!settings().isPaused(), "PLATFORM_IS_PAUSED");
         _;
     }
 
@@ -98,7 +88,7 @@ contract MarketFactory is TInitializable, MarketFactoryInterface {
         _requireCreateMarket(tToken, borrowedToken, collateralToken);
         address owner = msg.sender;
 
-        IChainlinkPairAggregatorRegistry pairAggregatorRegistry = settings.pairAggregatorRegistry();
+        IChainlinkPairAggregatorRegistry pairAggregatorRegistry = settings().pairAggregatorRegistry();
         address pairAggregator = address(pairAggregatorRegistry.getPairAggregator(borrowedToken, collateralToken));
         // TODO uncomment require(pairAggregator != address(0x0), "ORACLE_NOT_FOUND_FOR_MARKET");
 
@@ -175,7 +165,7 @@ contract MarketFactory is TInitializable, MarketFactoryInterface {
 
         _initialize();
 
-        settings = SettingsInterface(settingsAddress);
+        _setSettings(settingsAddress);
     }
 
     /** Internal Functions */
@@ -202,7 +192,7 @@ contract MarketFactory is TInitializable, MarketFactoryInterface {
     }
 
     function _createDynamicProxy(bytes32 logicName) internal returns (address) {
-        return address(new DynamicProxy(address(settings), logicName));
+        return address(new DynamicProxy(address(settings()), logicName));
     }
 
     function _getMarket(address borrowedToken, address collateralToken) internal view returns (TellerCommon.Market memory) {
@@ -272,15 +262,15 @@ contract MarketFactory is TInitializable, MarketFactoryInterface {
         LoanTermsConsensusInterface loanTermsConsensusProxy,
         LoansInterface loansProxy
     ) {
-        lendingPoolProxy = LendingPoolInterface(_createDynamicProxy(settings.versionsRegistry().consts().LENDING_POOL_LOGIC_NAME()));
-        interestConsensusProxy = InterestConsensusInterface(_createDynamicProxy(settings.versionsRegistry().consts().INTEREST_CONSENSUS_LOGIC_NAME()));
-        lendersProxy = LendersInterface(_createDynamicProxy(settings.versionsRegistry().consts().LENDERS_LOGIC_NAME()));
-        loanTermsConsensusProxy = LoanTermsConsensusInterface(_createDynamicProxy(settings.versionsRegistry().consts().LOAN_TERMS_CONSENSUS_LOGIC_NAME()));
+        lendingPoolProxy = LendingPoolInterface(_createDynamicProxy(settings().versionsRegistry().consts().LENDING_POOL_LOGIC_NAME()));
+        interestConsensusProxy = InterestConsensusInterface(_createDynamicProxy(settings().versionsRegistry().consts().INTEREST_CONSENSUS_LOGIC_NAME()));
+        lendersProxy = LendersInterface(_createDynamicProxy(settings().versionsRegistry().consts().LENDERS_LOGIC_NAME()));
+        loanTermsConsensusProxy = LoanTermsConsensusInterface(_createDynamicProxy(settings().versionsRegistry().consts().LOAN_TERMS_CONSENSUS_LOGIC_NAME()));
         if (collateralToken == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
             // TODO Use constant.
-            loansProxy = LoansInterface(_createDynamicProxy(settings.versionsRegistry().consts().ETHER_COLLATERAL_LOANS_LOGIC_NAME()));
+            loansProxy = LoansInterface(_createDynamicProxy(settings().versionsRegistry().consts().ETHER_COLLATERAL_LOANS_LOGIC_NAME()));
         } else {
-            loansProxy = LoansInterface(_createDynamicProxy(settings.versionsRegistry().consts().TOKEN_COLLATERAL_LOANS_LOGIC_NAME()));
+            loansProxy = LoansInterface(_createDynamicProxy(settings().versionsRegistry().consts().TOKEN_COLLATERAL_LOANS_LOGIC_NAME()));
         }
     }
 
@@ -296,7 +286,7 @@ contract MarketFactory is TInitializable, MarketFactoryInterface {
         LoanTermsConsensusInterface loanTermsConsensusProxy,
         LoansInterface loansProxy
     ) internal {
-        address cTokenAddress = settings.getAssetSettings(borrowedToken).cTokenAddress;
+        address cTokenAddress = settings().getAssetSettings(borrowedToken).cTokenAddress;
 
         // Initializing LendingPool
         lendingPoolProxy.initialize(
@@ -305,26 +295,26 @@ contract MarketFactory is TInitializable, MarketFactoryInterface {
             address(lendersProxy),
             address(loansProxy),
             cTokenAddress,
-            address(settings)
+            address(settings())
         );
         // Initializing InterestConsensus
         interestConsensusProxy.initialize(
             owner,
             address(lendersProxy),
-            address(settings)
+            address(settings())
         );
         // Initializing Lenders
         lendersProxy.initialize(
             tToken,
             address(lendingPoolProxy),
             address(interestConsensusProxy),
-            address(settings)
+            address(settings())
         );
         // Initializing LoanTermsConsensus
         loanTermsConsensusProxy.initialize(
             owner,
             address(loansProxy),
-            address(settings)
+            address(settings())
         );
 
         // Initializing Loans
@@ -332,7 +322,7 @@ contract MarketFactory is TInitializable, MarketFactoryInterface {
             pairAggregator,
             address(lendingPoolProxy),
             address(loanTermsConsensusProxy),
-            address(settings),
+            address(settings()),
             collateralToken
         );
     }

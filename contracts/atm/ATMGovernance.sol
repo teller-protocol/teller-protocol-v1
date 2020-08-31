@@ -10,6 +10,7 @@ import "../base/TInitializable.sol";
 
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/SignerRole.sol";
+import "../base/BaseUpgradeable.sol";
 
 // Interfaces
 import "./IATMGovernance.sol";
@@ -30,7 +31,7 @@ import "../interfaces/SettingsInterface.sol";
     @notice This contract is used to modify Risk Settings, CRA or DataProviders for a specific ATM.
     @author develop@teller.finance
  */
-contract ATMGovernance is IATMGovernance, TInitializable, SignerRole {
+contract ATMGovernance is IATMGovernance, TInitializable, SignerRole, BaseUpgradeable {
     using AddressArrayLib for address[];
     using AddressLib for address;
     using Address for address;
@@ -55,8 +56,6 @@ contract ATMGovernance is IATMGovernance, TInitializable, SignerRole {
 
     // Unique CRA - Credit Risk Algorithm github hash to use in this ATM
     string public cra;
-
-    SettingsInterface public settings;
 
     /* External Functions */
 
@@ -271,12 +270,10 @@ contract ATMGovernance is IATMGovernance, TInitializable, SignerRole {
         @param ownerAddress the owner address for this ATM Governance.
      */
     function initialize(address settingsAddress, address ownerAddress) external isNotInitialized() {
-        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
+        _setSettings(settingsAddress);
 
         SignerRole.initialize(ownerAddress);
         TInitializable._initialize();
-
-        settings = SettingsInterface(settingsAddress);
     }
 
     /* External Constant functions */
