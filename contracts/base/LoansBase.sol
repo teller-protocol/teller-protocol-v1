@@ -37,7 +37,7 @@ import "../util/TellerCommon.sol";
 
     @author develop@teller.finance
  */
-contract LoansBase is LoansInterface, Base, SettingsConsts {
+contract LoansBase is LoansInterface, Base {
     using SafeMath for uint256;
     using ERC20Lib for ERC20;
 
@@ -69,6 +69,8 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
     mapping(address => uint256[]) public borrowerLoans;
 
     mapping(uint256 => TellerCommon.Loan) public loans;
+
+    SettingsConsts public consts;
 
     /* Modifiers */
 
@@ -127,7 +129,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
      */
     modifier withValidLoanRequest(TellerCommon.LoanRequest memory loanRequest) {
         require(
-            settings().getPlatformSettingValue(MAXIMUM_LOAN_DURATION_SETTING) >=
+            settings().getPlatformSettingValue(consts.MAXIMUM_LOAN_DURATION_SETTING()) >=
                 loanRequest.duration,
             "DURATION_EXCEEDS_MAX_DURATION"
         );
@@ -220,7 +222,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
 
         require(
             loans[loanID].lastCollateralIn <=
-                now.sub(settings().getPlatformSettingValue(SAFETY_INTERVAL_SETTING)),
+                now.sub(settings().getPlatformSettingValue(consts.SAFETY_INTERVAL_SETTING())),
             "COLLATERAL_DEPOSITED_RECENTLY"
         );
 
@@ -336,7 +338,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         _payOutCollateral(loanID, collateral, msg.sender);
 
         uint256 tokenPayment = collateralInTokens
-            .mul(settings().getPlatformSettingValue(LIQUIDATE_ETH_PRICE_SETTING))
+            .mul(settings().getPlatformSettingValue(consts.LIQUIDATE_ETH_PRICE_SETTING()))
             .div(TEN_THOUSAND);
         // the liquidator pays x% of the collateral price
         lendingPool.liquidationPayment(tokenPayment, msg.sender);
@@ -478,6 +480,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         priceOracle = priceOracleAddress;
         lendingPool = LendingPoolInterface(lendingPoolAddress);
         loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
+        consts = new SettingsConsts();
     }
 
     /**
@@ -592,7 +595,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         uint256 maxLoanAmount
     ) internal view returns (TellerCommon.Loan memory) {
         uint256 termsExpiry = now.add(
-            settings().getPlatformSettingValue(TERMS_EXPIRY_TIME_SETTING)
+            settings().getPlatformSettingValue(consts.TERMS_EXPIRY_TIME_SETTING())
         );
         return
             TellerCommon.Loan({

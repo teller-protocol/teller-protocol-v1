@@ -19,8 +19,6 @@ module.exports = async function (
       const { tTokenAddress, borrowedTokenName, collateralTokenName } = marketDefinition;
       assert(tTokenAddress, `TToken address is undefined.`);
 
-      // TODO: should we create markets in both directions? i.e. borrowed => collateral && collateral => borrowed
-      // if the collateral token is LINK, flip the market pair direction so it will be accessed correctly on-chain
       const borrowedTokenAddress = tokens[borrowedTokenName];
       assert(borrowedTokenAddress, `Borrowed token is undefined. Borrowed token name; ${borrowedTokenName}`);
       const collateralTokenAddress = tokens[collateralTokenName];

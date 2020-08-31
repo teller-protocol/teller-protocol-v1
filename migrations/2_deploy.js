@@ -1,8 +1,6 @@
 const assert = require('assert');
 const logicNames = require('../test/utils/logicNames');
 const DeployerApp = require('./utils/DeployerApp');
-const PoolDeployer = require('./utils/PoolDeployer');
-// TODO Remove PoolDeployer
 const initSettings = require('./utils/init_settings');
 const initATMs = require('./utils/init_settings/initATMs');
 const initLogicVersions = require('./utils/init_settings/initLogicVersions');
@@ -12,7 +10,6 @@ const initPairAggregators = require('./utils/init_settings/initPairAggregators')
 const createMarkets = require('./utils/init_settings/createMarkets');
 
 const ERC20 = artifacts.require("@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol");
-// TODO: delete this contract and any references
 const UpgradeableProxy = artifacts.require("./base/UpgradeableProxy.sol");
 const InitializeableDynamicProxy = artifacts.require("./base/InitializeableDynamicProxy.sol");
 const Mock = artifacts.require("./mock/util/Mock.sol");
