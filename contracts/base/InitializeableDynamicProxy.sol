@@ -5,10 +5,6 @@ import "@openzeppelin/upgrades/contracts/upgradeability/BaseUpgradeabilityProxy.
 import "./BaseDynamicProxy.sol";
 
 contract InitializeableDynamicProxy is BaseDynamicProxy, BaseUpgradeabilityProxy {
-    constructor(address initialLogic) public {
-        _setImplementation(initialLogic);
-    }
-
     function initializeProxy(address settingsAddress, bytes32 aLogicName) public {
         require(!__isInitialized(), 'DYNAMIC_PROXY_ALREADY_INITIALIZED');
 

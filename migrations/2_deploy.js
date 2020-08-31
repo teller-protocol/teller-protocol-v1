@@ -95,7 +95,7 @@ module.exports = async function(deployer, network, accounts) {
   }
 
   console.log(`Deploying Settings logic...`)
-  const settingsLogic = await deployer.deploy(Settings)
+  const settingsLogic = await deployer.deploy(Settings, txConfig)
   const settingsProxy = await deployer.deploy(UpgradeableProxy, txConfig)
   await settingsProxy.initializeProxy(
     settingsProxy.address,
@@ -106,7 +106,6 @@ module.exports = async function(deployer, network, accounts) {
   console.log(`Settings logic: ${settingsLogic.address}`)
   console.log(`Settings_Proxy: ${settingsProxy.address}`)
 
-  // TODO: initialize
   const escrowFactoryInstance = await deployInitializableDynamicProxy(logicNames.EscrowFactory)
   const pairAggregatorRegistryInstance = await deployInitializableDynamicProxy(logicNames.ChainlinkPairAggregatorRegistry)
   const marketsStateInstance = await deployInitializableDynamicProxy(logicNames.MarketsState)
@@ -115,7 +114,7 @@ module.exports = async function(deployer, network, accounts) {
   const marketFactoryInstance = await deployInitializableDynamicProxy(logicNames.MarketFactory)
 
   console.log(`Deploying LogicVersionsRegistry...`)
-  const logicVersionsRegistryLogic = await deployer.deploy(LogicVersionsRegistry)
+  const logicVersionsRegistryLogic = await deployer.deploy(LogicVersionsRegistry, txConfig)
   const logicVersionsRegistryProxy = await deployer.deploy(UpgradeableProxy, txConfig)
   await logicVersionsRegistryProxy.initializeProxy(
     settingsInstance.address,
@@ -144,18 +143,19 @@ module.exports = async function(deployer, network, accounts) {
     { txConfig },
   );
 
-  async function initializeProxy(name, address) {
+  async function initializeProxy(name, instance) {
     const { nameBytes32 } = deployedLogicContractsMap.get(name)
-    const proxy = await InitializeableDynamicProxy.at(address)
+    const proxy = await InitializeableDynamicProxy.at(instance.address)
     await proxy.initializeProxy(settingsInstance.address, nameBytes32)
+    await instance.initialize(settingsInstance.address)
   }
 
-  await initializeProxy(logicNames.EscrowFactory, escrowFactoryInstance.address)
-  await initializeProxy(logicNames.ChainlinkPairAggregatorRegistry, pairAggregatorRegistryInstance.address)
-  await initializeProxy(logicNames.MarketsState, marketsStateInstance.address)
-  await initializeProxy(logicNames.ATMSettings, atmSettingsInstance.address)
-  await initializeProxy(logicNames.ATMFactory, atmFactoryInstance.address)
-  await initializeProxy(logicNames.MarketFactory, marketFactoryInstance.address)
+  await initializeProxy(logicNames.EscrowFactory, escrowFactoryInstance)
+  await initializeProxy(logicNames.ChainlinkPairAggregatorRegistry, pairAggregatorRegistryInstance)
+  await initializeProxy(logicNames.MarketsState, marketsStateInstance)
+  await initializeProxy(logicNames.ATMSettings, atmSettingsInstance)
+  await initializeProxy(logicNames.ATMFactory, atmFactoryInstance)
+  await initializeProxy(logicNames.MarketFactory, marketFactoryInstance)
 
   await initSettings(
     settingsInstance,
