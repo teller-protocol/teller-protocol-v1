@@ -27,7 +27,7 @@ module.exports = async function(deployer, network, accounts) {
   const txConfig = { gas: maxGasLimit, from: deployerAccount };
 
   // Creating DeployerApp helper.
-  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, InitializeableDynamicProxy, network);
+  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, { InitializeableDynamicProxy }, { network, networkConfig });
   
   await deployerApp.deployMockIfWith('DAI', DAIMock, txConfig);
   await deployerApp.deployMockIfWith('USDC', USDCMock, txConfig);

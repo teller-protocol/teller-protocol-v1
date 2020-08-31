@@ -9,6 +9,7 @@ pragma solidity 0.5.17;
     @notice This contract centralizes all the required constants for the settings.
 
     @author develop@teller.finance
+    // TODO Create instance similar to LogicVersionsConsts.sol
  */
 contract SettingsConsts {
     /** Constants */
