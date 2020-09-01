@@ -114,7 +114,6 @@ contract("UpgradeableProxyUpgradeToTest", function(accounts) {
                 : await v1.sendToken(dai.address, recipient, Number(incrementsToSend))
             
             const bal = await getBalance(v1.address);
-            console.log("BALANCE>>>>", bal);
             await verifyBalance(v1.address, balance - incrementsToSend, 'Did not send amount required from v1.')
 
             await proxy.upgradeTo(v2LibraryInstance.address, { from: admin });
