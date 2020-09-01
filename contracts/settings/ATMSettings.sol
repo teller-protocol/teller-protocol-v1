@@ -22,8 +22,6 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
     using Address for address;
     /** Constants */
 
-    address internal constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
     /* State Variables */
 
     /**
@@ -95,7 +93,7 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
     ) external onlyPauser() isInitialized() {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
-            collateralToken == ETH_ADDRESS || collateralToken.isContract() == true,
+            collateralToken == settings().ETH_ADDRESS() || collateralToken.isContract() == true,
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
         require(
@@ -121,7 +119,7 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
     ) external onlyPauser() isInitialized() {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
-            collateralToken == ETH_ADDRESS || collateralToken.isContract() == true,
+            collateralToken == settings().ETH_ADDRESS() || collateralToken.isContract() == true,
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
         require(
@@ -158,7 +156,7 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
     {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
-            collateralToken == ETH_ADDRESS || collateralToken.isContract() == true,
+            collateralToken == settings().ETH_ADDRESS() || collateralToken.isContract() == true,
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
         require(

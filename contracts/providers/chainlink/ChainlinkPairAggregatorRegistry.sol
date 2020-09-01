@@ -30,7 +30,7 @@ contract ChainlinkPairAggregatorRegistry is TInitializable, BaseUpgradeable, ICh
             address(DAI) => address(LINK) => address(0x2345...789)
             address(USDC) => address(ETH) => address(0x345...7890)
             address(USDC) => address(LINK) => address(0x4567...890)
-        @dev It uses 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE for ETH.
+        @dev It uses 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE for ETH. See Settings.ETH_ADDRESS()
      */
     mapping(address => mapping(address => PairAggregatorInterface)) public aggregators;
 

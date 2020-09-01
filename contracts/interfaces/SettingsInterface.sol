@@ -313,4 +313,10 @@ interface SettingsInterface {
         address interestValidatorAddress,
         address atmSettingsAddress
     ) external;
+
+    /**
+        @notice It gets the ETH address used in the platform.
+        @return the ETH address used in the platform.
+     */
+    function ETH_ADDRESS() external view returns (address);
 }
