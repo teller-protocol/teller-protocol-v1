@@ -43,6 +43,14 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
 
     /* State Variables */
 
+    /**
+        @notice It defines a market for a given borrowed and collateral tokens.
+        @dev It uses the Settings.ETH_ADDRESS constant to represent ETHER.
+        @dev Examples:
+
+        address(DAI) => address(ETH) => Market {...}
+        address(DAI) => address(LINK) => Market {...}
+     */
     mapping(address => mapping(address => TellerCommon.Market)) markets;
 
     /* Modifiers */
@@ -56,24 +64,43 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         _;
     }
 
+    /**
+        @notice It checks whether a market exists or not for a given borrowed/collateral tokens.
+        @param borrowedToken the borrowed token address.
+        @param collateralToken the collateral token address.
+        @dev It throws a require error if the market already exists.
+     */
     modifier marketNotExist(address borrowedToken, address collateralToken) {
         require(
             !_getMarket(borrowedToken, collateralToken).exists,
-            "MARKET_NOT_EXIST"
+            "MARKET_ALREADY_EXIST"
         );
         _;
     }
 
+    /**
+        @notice It checks whether a market exists or not for a given borrowed/collateral tokens.
+        @param borrowedToken the borrowed token address.
+        @param collateralToken the collateral token address.
+        @dev It throws a require error if the market doesn't exist.
+     */
     modifier marketExist(address borrowedToken, address collateralToken) {
         require(
             _getMarket(borrowedToken, collateralToken).exists,
-            "MARKET_ALREADY_EXIST"
+            "MARKET_NOT_EXIST"
         );
         _;
     }
 
     /** External Functions */
 
+    /**
+        @notice It creates a new market for a given TToken and borrowed/collateral tokens.
+        @dev It uses the Settings.ETH_ADDRESS to represent the ETHER.
+        @param tToken the TToken address.
+        @param borrowedToken the borrowed token address.
+        @param collateralToken the collateral token address.
+     */
     function createMarket(
         address tToken,
         address borrowedToken,
@@ -129,6 +156,11 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         );
     }
 
+    /**
+        @notice It removes a current market for a given borrowed/collateral tokens.
+        @param borrowedToken the borrowed token address.
+        @param collateralToken the collateral token address.
+     */
     function removeMarket(address borrowedToken, address collateralToken) external
         onlyPauser()
         isNotPaused()
@@ -144,6 +176,12 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         );
     }
 
+    /**
+        @notice It gets the current addresses for a given borrowed/collateral token.
+        @param borrowedToken the borrowed token address.
+        @param collateralToken the collateral token address.
+        @return a struct with the contract addresses for the given market.
+     */
     function getMarket(address borrowedToken, address collateralToken) external view returns (TellerCommon.Market memory) {
         return _getMarket(borrowedToken, collateralToken);
     }
@@ -190,10 +228,20 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         });
     }
 
+    /**
+        @notice It creates a dynamic proxy instance for a given logic name.
+        @dev It is used to create all the market contracts (Lenders, LendingPool, Loans, and others).
+     */
     function _createDynamicProxy(bytes32 logicName) internal returns (address) {
         return address(new DynamicProxy(address(settings()), logicName));
     }
 
+    /**
+        @notice It gets the current addresses for a given borrowed/collateral token.
+        @param borrowedToken the borrowed token address.
+        @param collateralToken the collateral token address.
+        @return a struct with the contract addresses for the given market.
+     */
     function _getMarket(address borrowedToken, address collateralToken) internal view returns (TellerCommon.Market memory) {
         return markets[borrowedToken][collateralToken];
     }
