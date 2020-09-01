@@ -43,7 +43,7 @@ contract('SettingsRemovePlatformSettingTest', function (accounts) {
                 newSetting('customSettingC', 1000, 0, 9000),
                 newSetting('customSettingD', 2100, 0, 4000)
             ],
-            1, 'customSettingD', 'PauserRole: caller does not have the Pauser role', true
+            1, 'customSettingD', 'NOT_PAUSER', true
         ],
     }, function(previousSettings, senderIndex, platformNameToRemove, expectedErrorMessage, mustFail) {
         it(t('user', `removePlatformSetting`, `Should (or not) be able to remove a platform setting.`, mustFail), async function() {

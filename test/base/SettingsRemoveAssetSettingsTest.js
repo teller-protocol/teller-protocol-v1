@@ -39,7 +39,7 @@ contract('SettingsRemoveAssetSettingsTest', function (accounts) {
             [
                 { maxLoanAmount: toDecimals(900, 18) },
                 { maxLoanAmount: toDecimals(1000, 18) }
-            ], false, false, 1, 1, 'PauserRole: caller does not have the Pauser role', true
+            ], false, false, 1, 1, 'NOT_PAUSER', true
         ],
         _4_valid_with3PreviousAssets_remove: [
             [

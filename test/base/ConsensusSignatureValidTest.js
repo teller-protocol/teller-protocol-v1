@@ -44,6 +44,7 @@ contract('ConsensusSignatureValidTest', function (accounts) {
         const aCaller = await Mock.new();
         const aSetting = await Mock.new();
         await instance.initialize(
+            accounts[0],
             aCaller.address,
             aSetting.address,
         );
