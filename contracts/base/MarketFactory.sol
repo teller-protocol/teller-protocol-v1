@@ -186,14 +186,30 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         return _getMarket(borrowedToken, collateralToken);
     }
 
+    /**
+        @notice It tests whether a market exists or not for a given borrowed/collateral tokens.
+        @param borrowedToken the borrowed token address.
+        @param collateralToken the collateral token address.
+        @return true if the market exists for the given borrowed/collateral tokens. Otherwise it returns false.
+     */
     function existMarket(address borrowedToken, address collateralToken) external view returns (bool) {
         return _getMarket(borrowedToken, collateralToken).exists;
     }
 
+    /**
+        @notice It tests whether a market exists or not for a given borrowed/collateral tokens.
+        @param borrowedToken the borrowed token address.
+        @param collateralToken the collateral token address.
+        @return true if the market doesn't exist for the given borrowed/collateral tokens. Otherwise it returns false.
+     */
     function notExistMarket(address borrowedToken, address collateralToken) external view returns (bool) {
         return !_getMarket(borrowedToken, collateralToken).exists;
     }
 
+    /**
+        @notice It initializes this market factory instance.
+        @param settingsAddress the settings contract address.
+     */
     function initialize(address settingsAddress)
         external
         isNotInitialized()
@@ -207,6 +223,17 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
 
     /** Internal Functions */
 
+    /**
+        @notice It adds a market in the internal mapping.
+        @param borrowedToken the borrowed token address.
+        @param collateralToken the collateral token address.
+        @param loans the new loans contract address.
+        @param lenders the new lenders contracct address.
+        @param lendingPool the new lending pool contract address.
+        @param loanTermsConsensus the new loan terms consensus contract address.
+        @param interestConsensus the new interest consensus contract address.
+        @param pairAggregator the pair aggregator address for the market.
+     */
     function _addMarket(
         address borrowedToken,
         address collateralToken,
@@ -246,6 +273,13 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         return markets[borrowedToken][collateralToken];
     }
 
+    /**
+        @notice It validates the TToken, borrowed and collateral token addresses.
+        @param tToken the TToken contract address.
+        @param borrowedToken the borrowed token address.
+        @param collateralToken the collateral token address.
+        @dev It throws a require error if any param is invalid.
+     */
     function _requireCreateMarket(
         address tToken,
         address borrowedToken,
@@ -256,6 +290,14 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         require(collateralToken == settings().ETH_ADDRESS() || collateralToken.isContract(), "COLL_TOKEN_MUST_BE_CONTRACT");
     }
 
+    /**
+        @notice It creates and initializes the proxies used for the given tToken, and borrowed/collateral tokens.
+        @param owner the owner address (or sender transaction).
+        @param tToken the tToken address.
+        @param borrowedToken the borrowed token address.
+        @param collateralToken the collateral token address.
+        @param pairAggregator the pair aggregator address to used in the new market.
+     */
     function _createAndInitializeProxies(
         address owner,
         address tToken,
@@ -319,6 +361,19 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         }
     }
 
+    /**
+        @notice It initializes all the new proxies.
+        @param owner the owner address (or sender transaction).
+        @param tToken the tToken address.
+        @param borrowedToken the borrowed token address.
+        @param collateralToken the collateral token address.
+        @param pairAggregator the pair aggregator address to used in the new market.
+        @param lendingPoolProxy the new lending pool proxy instance.
+        @param interestConsensusProxy the new interest consensus proxy instance.
+        @param lendersProxy the new lenders proxy instance.
+        @param loanTermsConsensusProxy the new loan terms consensus proxy instance.
+        @param loansProxy the new loans proxy instance.
+     */
     function _initializeProxies(
         address owner,
         address tToken,
