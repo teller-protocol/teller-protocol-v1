@@ -29,7 +29,7 @@ contract('SettingsUpdatePlatformSettingTest', function (accounts) {
         _2_invalid_not_lt_min: [settingsNames.MaximumLoanDuration, 0, newSetting(2000, 1500, 5000), 500, 'NEW_VALUE_MUST_BE_GT_MIN_VALUE', true],
         _3_invalid_not_gt_max: [settingsNames.MaximumLoanDuration, 0, newSetting(1000, 500, 6000), 9000, 'NEW_VALUE_MUST_BE_LT_MAX_VALUE', true],
         _4_invalid_same_value: [settingsNames.MaximumLoanDuration, 0, newSetting(2000, 400, 6000), 2000, 'NEW_VALUE_REQUIRED', true],
-        _5_invalid_not_owner: [settingsNames.MaximumLoanDuration, 1, newSetting(2000, 0, 7000), 5100, 'PauserRole: caller does not have the Pauser role', true],
+        _5_invalid_not_owner: [settingsNames.MaximumLoanDuration, 1, newSetting(2000, 0, 7000), 5100, 'NOT_PAUSER', true],
     }, function(settingKey, senderIndex, currentValue, newValue, expectedErrorMessage, mustFail) {
         it(t('user', `updatePlatformSetting`, `Should (or not) be able to update a platform setting (${settingKey}).`, mustFail), async function() {
             // Setup
