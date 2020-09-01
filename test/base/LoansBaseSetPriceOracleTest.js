@@ -62,11 +62,12 @@ contract('LoansBaseSetPriceOracleTest', function (accounts) {
                 Otherwise accounts[index]
             */
             const newPriceOracle = await getNewPriceOracle(newPriceOracleIndex, Mock);
-
-            await settingsInstance.givenMethodReturnBool(
-                settingsInterfaceEncoder.encodeHasPauserRole(),
-                hasPauserRole
-            );
+            if(!hasPauserRole) {
+                await settingsInstance.givenMethodRevertWithMessage(
+                    settingsInterfaceEncoder.encodeRequirePauserRole(),
+                    "NOT_PAUSER"
+                );
+            }
 
             try {
                 // Invocation

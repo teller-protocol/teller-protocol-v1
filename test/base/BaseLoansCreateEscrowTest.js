@@ -6,6 +6,7 @@ const { ACTIVE } = require("../utils/consts");
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
 const { escrowFactory } = require('../utils/events');
+const LogicVersionsRegistryEncoder = require('../utils/encoders/LogicVersionsRegistryEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -17,16 +18,29 @@ const Settings = artifacts.require("./base/Settings.sol");
 const Escrow = artifacts.require("./base/Escrow.sol");
 
 contract('BaseLoansCreateEscrowTest', function (accounts) {
+  const logicVersionsRegistryEncoder = new LogicVersionsRegistryEncoder(web3);
   const owner = accounts[0];
-  let contract;
+  let escrowFactoryInstance;
   let loans;
 
   beforeEach(async () => {
-    contract = await EscrowFactory.new();
+    escrowFactoryInstance = await EscrowFactory.new();
     const versionsRegistry = await Mock.new();
     const pairAggregatorRegistry = await Mock.new();
     const interestValidator = await Mock.new();
     const marketsInstance = await Mock.new();
+    const atmSettingsInstance = await Mock.new();
+
+    const constsInstance = await Mock.new();
+
+    await versionsRegistry.givenMethodReturnAddress(
+      logicVersionsRegistryEncoder.encodeConsts(),
+      constsInstance.address
+    );
+    await versionsRegistry.givenMethodReturnBool(
+      logicVersionsRegistryEncoder.encodeHasLogicVersion(),
+      true
+    );
 
     const settingsInstance = await createTestSettingsInstance(
       Settings,
@@ -37,11 +51,12 @@ contract('BaseLoansCreateEscrowTest', function (accounts) {
           instance,
           ) => {
             await instance.initialize(
-              contract.address,
+              escrowFactoryInstance.address,
               versionsRegistry.address,
               pairAggregatorRegistry.address,
               marketsInstance.address,
               interestValidator.address,
+              atmSettingsInstance.address,
             );
           },
       });
@@ -50,7 +65,6 @@ contract('BaseLoansCreateEscrowTest', function (accounts) {
     const lendingPoolInstance = await Mock.new();
     const loanTermsConsInstance = await Mock.new();
     const collateralTokenInstance = await Mock.new();
-    const atmSettingsInstance = await Mock.new();
     loans = await Loans.new();
     await loans.initialize(
       oracleInstance.address,
@@ -58,10 +72,9 @@ contract('BaseLoansCreateEscrowTest', function (accounts) {
       loanTermsConsInstance.address,
       settingsInstance.address,
       collateralTokenInstance.address,
-      atmSettingsInstance.address
     );
     
-    await contract.initialize(settingsInstance.address);
+    await escrowFactoryInstance.initialize(settingsInstance.address);
   })
 
   withData({
@@ -87,7 +100,6 @@ contract('BaseLoansCreateEscrowTest', function (accounts) {
         }
 
         const result = await loans.externalCreateEscrow(loanID);
-        // TODO fix unit test.
 
         // Assertions
         assert(!mustFail);

@@ -2,6 +2,7 @@
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
 const { createTestSettingsInstance } = require('../utils/settings-helper');
+const { assert } = require('chai');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -27,16 +28,12 @@ contract('SettingsPauserRoleTest', function (accounts) {
             // Setup
             const address = accounts[addressIndex];
             if (callAddPauser) {
-              try {
-                    await instance.addPauser(address);
-              } catch (err) {
-                  console.error(err)
-              }
+                await instance.addPauser(address);
             }
 
             try {
                 // Invocation
-                const hasPauserRole = await instance.hasPauserRole.call(address);
+                const hasPauserRole = await instance.hasPauserRole(address);
 
                 // Assertions
                 assert.equal(hasPauserRole, expectedResponse, 'Pauser role not correct.')
@@ -63,15 +60,16 @@ contract('SettingsPauserRoleTest', function (accounts) {
 
             try {
                 // Invocation
-                await instance.requirePauserRole.call(address);
+                const result = await instance.requirePauserRole(address);
 
                 // Assertions
                 assert(!mustFail, 'Should have thrown due to not having Pauser role.')
+                assert(result);
             } catch (error) {
                 // Assertions
                 assert(mustFail);
                 assert(error);
-                assert.equal(error.reason, expectedErrorMessage);
+                assert(error.message.includes(expectedErrorMessage));
             }
         });
     });
