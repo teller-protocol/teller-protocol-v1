@@ -42,7 +42,13 @@ contract BaseUpgradeable {
 
     /** Internal Functions **/
 
-    // TODO Verify OpenZeppeling impl. It mustn't change over the time.
+    /**
+        @notice It represent the current logic name (key) for the current implementation.
+        @dev It is used by LogicVersionsRegistry to get the logic address for the given logic name.
+        @dev It must NOT change over the time.
+        @dev The logic is equal to the OpenZeppelin
+        @return the logic name.
+     */
     function logicName() internal view returns (bytes32 name) {
         bytes32 slot = LOGIC_NAME_SLOT;
         assembly {
