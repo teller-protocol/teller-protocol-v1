@@ -129,7 +129,7 @@ interface ATMTokenInterface {
         uint8 decimals,
         uint256 cap,
         uint256 maxVestingsPerWallet,
-        address atmSettingsAddress,
+        address settingsAddress,
         address atm
     ) external;
 }

@@ -81,7 +81,7 @@ contract ATMFactory is IATMFactory, TInitializable, BaseUpgradeable {
             decimals,
             cap,
             maxVestingsPerWallet,
-            address(settings().atmSettings()),
+            address(settings()),
             atmGovernanceProxyAddress
         );
         address atmTokenProxyAddress = address(atmTokenProxy);

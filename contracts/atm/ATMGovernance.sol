@@ -84,7 +84,7 @@ contract ATMGovernance is IATMGovernance, TInitializable, SignerRole, BaseUpgrad
     function updateGeneralSetting(bytes32 settingName, uint256 newValue)
         external
         onlySigner()
-        isNotInitialized()
+        isInitialized()
     {
         require(newValue > 0, "GENERAL_SETTING_MUST_BE_POSITIVE");
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");

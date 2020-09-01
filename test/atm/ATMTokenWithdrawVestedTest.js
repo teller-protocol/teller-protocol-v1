@@ -4,6 +4,7 @@ const { t, NULL_ADDRESS  } = require('../utils/consts');
 const Timer = require('../../scripts/utils/Timer');
 const { atmToken } = require('../utils/events');
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
+const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
  // Mock contracts
  const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -13,6 +14,8 @@ const ATMToken = artifacts.require("./ATMToken.sol");
 
 contract('ATMTokenWithdrawVestedTest', function (accounts) {
     const atmSettingsEncoder = new IATMSettingsEncoder(web3);
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    let settingsInstance;
     let atmSettingsInstance;
     let atmInstance;
     let instance;
@@ -22,6 +25,7 @@ contract('ATMTokenWithdrawVestedTest', function (accounts) {
     const timer = new Timer(web3);
 
     beforeEach('Setup for each test', async () => {
+        settingsInstance = await Mock.new();
         atmSettingsInstance = await Mock.new();
         atmInstance = await Mock.new();
         instance = await ATMToken.new();
@@ -31,9 +35,13 @@ contract('ATMTokenWithdrawVestedTest', function (accounts) {
                             18,
                             10000,
                             50,
-                            atmSettingsInstance.address,
+                            settingsInstance.address,
                             atmInstance.address
                         );
+        await settingsInstance.givenMethodReturnAddress(
+            settingsInterfaceEncoder.encodeATMSettings(),
+            atmSettingsInstance.address
+        );
     });
 
     withData({

@@ -3,6 +3,7 @@ const withData = require('leche').withData;
 const { t, NULL_ADDRESS } = require('../utils/consts');
 const { atmToken } = require('../utils/events');
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
+const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -12,6 +13,7 @@ const ATMToken = artifacts.require('./ATMToken.sol');
 
 contract('ATMTokenSnapshotTest', function (accounts) {
     const atmSettingsEncoder = new IATMSettingsEncoder(web3);
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     let atmSettingsInstance;
     let atmInstance;
     let instance;
@@ -20,6 +22,7 @@ contract('ATMTokenSnapshotTest', function (accounts) {
     const daoMember2 = accounts[2];
 
     beforeEach('Setup for each test', async () => {
+        settingsInstance = await Mock.new();
         atmSettingsInstance = await Mock.new();
         atmInstance = await Mock.new();
         instance = await ATMToken.new();
@@ -29,9 +32,13 @@ contract('ATMTokenSnapshotTest', function (accounts) {
                                 18,
                                 100000,
                                 50,
-                                atmSettingsInstance.address,
+                                settingsInstance.address,
                                 atmInstance.address
                             );
+        await settingsInstance.givenMethodReturnAddress(
+            settingsInterfaceEncoder.encodeATMSettings(),
+            atmSettingsInstance.address
+        );
     });
 
     withData({

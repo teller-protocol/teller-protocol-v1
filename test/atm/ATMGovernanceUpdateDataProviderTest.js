@@ -12,10 +12,12 @@ const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 contract('ATMGovernanceUpdateDataProviderTest', function (accounts) {
     const owner = accounts[0];
     let instance;
+    let settingsInstance;
 
     beforeEach('Setup for each test', async () => {
+        settingsInstance = await Mock.new();
         instance = await ATMGovernance.new();
-        await instance.initialize(owner);
+        await instance.initialize(settingsInstance.address, owner);
     });
 
     // Testing values
