@@ -5,14 +5,19 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
 /**
-    TODO Add comments.
+    @notice This libraries manages the functions for the logic version struct.
 
     @author develop@teller.finance
  */
 library LogicVersionLib {
     using SafeMath for uint256;
     using Address for address;
-    // TODO move  it
+    
+    /**
+        @notice It stores the current version for a given logic address.
+        @param logic the logic address.
+        @param version the current version for the given logic address.
+     */
     struct LogicVersion {
         address logic;
         uint256 version;
@@ -21,6 +26,7 @@ library LogicVersionLib {
 
     /**
         @notice It creates a new logic version.
+        @param self the current logic version instance.
         @param logic initial logic address.
      */
     function initialize(LogicVersion storage self, address logic) internal {
