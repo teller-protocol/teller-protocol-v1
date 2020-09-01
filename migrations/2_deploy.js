@@ -40,7 +40,6 @@ const ATMToken = artifacts.require("./atm/ATMToken.sol");
 const ChainlinkPairAggregatorRegistry = artifacts.require("./providers/chainlink/ChainlinkPairAggregatorRegistry.sol");
 const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
 const tokensRequired = ['DAI', 'USDC', 'LINK'];
-const chainlinkOraclesRequired = ['DAI_ETH', 'USDC_ETH', 'LINK_USD'];
 
 module.exports = async function(deployer, network, accounts) {
   console.log(`Deploying smart contracts to '${network}'.`)
@@ -57,7 +56,6 @@ module.exports = async function(deployer, network, accounts) {
 
   // Validations
   tokensRequired.forEach( tokenName => assert(tokens[tokenName], `${tokenName} token address is not defined.`));
-  // TODO Review chainlinkOraclesRequired.forEach( pairName => assert(chainlink[pairName], `Chainlink: ${pairName} oracle address is undefined.`));
 
   const txConfig = { gas: maxGasLimit, from: deployerAccount };
 
@@ -137,7 +135,6 @@ module.exports = async function(deployer, network, accounts) {
     marketsStateInstance.address,
     NULL_ADDRESS, // Interest Validator is empty (0x0) in the first version.
     atmSettingsInstance.address,
-    // txConfig,
   );
 
   await initLogicVersions(
