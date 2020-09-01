@@ -20,6 +20,7 @@ contract("UniswapSwapTest", function(accounts) {
   let instance;
   let dai;
   let usdc;
+  let weth;
 
   beforeEach(async () => {
     dai = await DAI.new(); // Used as Input as well as ETH
