@@ -17,10 +17,10 @@ contract('ChainlinkPairAggregatorInitializeTest', function (accounts) {
 
     withData({
         _1_basic: [true, false, 18, 18, undefined, false],
-        _2_emptyChainlink: [false, false, 0, 18, undefined, true], // TODO: Change expectedErrorMessage to 'AGGREGATOR_NOT_CONTRACT' from undefined once the deployment todo from the ChainlinkPairAggregator contract has been completed
-        _3_zeroResponseDecimals: [true, false, 0, 18, undefined, false],
-        _4_zeroCollateralDecimals: [true, false, 18, 0, undefined, false],
-        _5_zeroDecimals: [true, false, 0, 0, undefined, false],
+        _2_empty_chainlink: [false, false, 0, 18, 'AGGREGATOR_NOT_CONTRACT', true],
+        _3_zero_response_decimals: [true, false, 0, 18, undefined, false],
+        _4_zero_collateral_decimals: [true, false, 18, 0, undefined, false],
+        _5_zero_decimals: [true, false, 0, 0, undefined, false],
         _6_big_diff: [true, false, 5, 56, 'MAX_PENDING_DECIMALS_EXCEEDED', true]
     }, function(
         createChainlinkInstance,
@@ -33,10 +33,10 @@ contract('ChainlinkPairAggregatorInitializeTest', function (accounts) {
         it(t('user', 'new', 'Should (or not) able to create a new instance.', mustFail), async function() {
             // Setup
             const chainlinkAddress = createChainlinkInstance ? chainlinkAggregator.address : NULL_ADDRESS;
+            const instance = await ChainlinkPairAggregator.new();
 
             try {
                 // Invocation
-                const instance = await ChainlinkPairAggregator.new();
                 const result = await instance.initialize(
                     chainlinkAddress,
                     isInverse,
