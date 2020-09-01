@@ -33,16 +33,19 @@ contract('ATMSettingsPauseATMTest', function (accounts) {
     }, function(previousATMs, atmIndex, senderIndex, encodeIsATM, encodeHasPauserRole, encodeIsPaused, expectedErrorMessage, mustFail) {
         it(t('user', 'pauseATM', 'Should (or not) be able to pause an ATM.', mustFail), async function() {
             // Setup
-            await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeHasPauserRole(), true);
             await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), false);
             for (const previousATMIndex of previousATMs) {
                 await instance.pauseATM(mocks[previousATMIndex], { from: owner });
             }
             const sender = accounts[senderIndex];
             const atmAddress = atmIndex === -1 ? NULL_ADDRESS : mocks[atmIndex];
-            await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeHasPauserRole(), encodeHasPauserRole);
             await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), encodeIsPaused);
-
+            if(!encodeHasPauserRole) {
+                await settings.givenMethodRevertWithMessage(
+                    settingsInterfaceEncoder.encodeRequirePauserRole(),
+                    'NOT_PAUSER'
+                );
+            }
 
             try {
                 // Invocation
