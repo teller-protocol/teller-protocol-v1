@@ -10,7 +10,6 @@ const CDAIMock = artifacts.require("./mock/providers/compound/CDAIMock.sol");
 const CUSDCMock = artifacts.require("./mock/providers/compound/CUSDCMock.sol");
 const PairAggregatorMock = artifacts.require("./mock/providers/chainlink/PairAggregatorMock.sol");
 
-// TODO: make this the 2nd migration and save mock address in networkConfig if the network === 'test' ??
 module.exports = async function(deployer, network, accounts) {
   console.log(`Deploying smart contracts to '${network}'.`)
   // Getting network configuration.

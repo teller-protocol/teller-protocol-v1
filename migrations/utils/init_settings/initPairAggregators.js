@@ -10,7 +10,7 @@ module.exports = async function (
     const { txConfig, chainlink, tokens } = params;
     const chainlinkEntries =  Object.entries(chainlink);
     console.log(`Registering ${chainlinkEntries.length} pair aggregators.`);
-    for (const [key, aggregatorInfo] of chainlinkEntries) {
+    for (const [, aggregatorInfo] of chainlinkEntries) {
         const {
             address,
             inversed,

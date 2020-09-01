@@ -15,6 +15,10 @@ SettingsInterfaceEncoder.prototype.encodeHasPauserRole = function() {
     return encode(this.web3, 'hasPauserRole(address)');
 }
 
+SettingsInterfaceEncoder.prototype.encodeRequirePauserRole = function() {
+    return encode(this.web3, 'requirePauserRole(address)');
+}
+
 SettingsInterfaceEncoder.prototype.encodeIsPaused = function() {
     return encode(this.web3, 'isPaused()');
 }

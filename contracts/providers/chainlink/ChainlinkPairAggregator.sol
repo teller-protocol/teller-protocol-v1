@@ -98,8 +98,7 @@ contract ChainlinkPairAggregator is PairAggregatorInterface, TInitializable {
         external
         isNotInitialized()
     {
-        // TODO: Test contract data is dummy address so this will fail
-        // require(aggregatorAddress.isContract(), "AGGREGATOR_NOT_CONTRACT");
+        require(aggregatorAddress.isContract(), "AGGREGATOR_NOT_CONTRACT");
 
         _initialize();
 

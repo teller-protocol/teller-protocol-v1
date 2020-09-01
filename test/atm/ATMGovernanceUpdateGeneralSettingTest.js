@@ -4,7 +4,8 @@ const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
 const {
     t,
-    toBytes32
+    toBytes32,
+    createMocks
 } = require('../utils/consts');
 const {
     atmGovernance
@@ -20,6 +21,7 @@ const Settings = artifacts.require("./base/Settings.sol");
 contract('ATMGovernanceUpdateGeneralSettingTest', function (accounts) {
     const encoder = new IATMSettingsEncoder(web3)
     let instance;
+    let settingsInstance;
 
     // Testing values
     const SETTING_NAME = toBytes32(web3, 'supplyToDebtRatio');
@@ -28,15 +30,10 @@ contract('ATMGovernanceUpdateGeneralSettingTest', function (accounts) {
     const EMPTY_SETTING_NAME = toBytes32(web3, '');
 
     beforeEach('Setup for each test', async () => {
-        const settings = await createTestSettingsInstance(Settings);
-        const atmSettings = await Mock.new();
-        await atmSettings.givenMethodReturnAddress(
-            encoder.encodeSettings(),
-            settings.address
-        );
-
+        settingsInstance = await Mock.new();
         instance = await ATMGovernance.new();
-        await instance.initialize(atmSettings.address);
+        const validSender = accounts[0];
+        await instance.initialize(settingsInstance.address, validSender);
         // Adding the general setting we will update later
         await instance.addGeneralSetting(SETTING_NAME, SETTING_OLD_VALUE);
     });
@@ -59,7 +56,6 @@ contract('ATMGovernanceUpdateGeneralSettingTest', function (accounts) {
                 const result = await instance.updateGeneralSetting(settingName, settingValue, {
                     from: sender
                 });
-
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');

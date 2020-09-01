@@ -9,7 +9,6 @@ import "./ATMTokenInterface.sol";
 
 import "../base/TInitializable.sol";
 import "@openzeppelin/contracts/utils/Arrays.sol";
-import "../settings/IATMSettings.sol";
 import "../base/BaseUpgradeable.sol";
 
 
@@ -50,9 +49,8 @@ contract ATMToken is
         @notice Checks if sender is owner
         @dev Throws an error if the sender is not the owner
      */
-    // TODO: should this be only pauser from settings?
     modifier onlyOwner() {
-        require(msg.sender == _owner, "CALLER_IS_NOT_OWNER");
+        settings().requirePauserRole(msg.sender);
         _;
     }
 
@@ -61,7 +59,7 @@ contract ATMToken is
         @dev Throws an error is the Teller platform is paused
      */
     modifier whenNotPaused() {
-        require(!atmSettings.isATMPaused(atmAddress), "ATM_IS_PAUSED");
+        require(!settings().atmSettings().isATMPaused(atmAddress), "ATM_IS_PAUSED");
         _;
     }
 
@@ -70,7 +68,6 @@ contract ATMToken is
     uint256 private _maxVestingPerWallet;
     Snapshots private _totalSupplySnapshots;
     uint256 private _currentSnapshotId;
-    IATMSettings public atmSettings;
     address public atmAddress;
 
     /* Structs */
@@ -110,8 +107,8 @@ contract ATMToken is
         string calldata symbol,
         uint8 decimals,
         uint256 cap,
-        uint256 maxVestingPerWallet,
-        address atmSettingsAddress,
+        uint256 maxVestingsPerWallet,
+        address settingsAddress,
         address atm
     ) external initializer() isNotInitialized() {
         require(cap > 0, "CAP_CANNOT_BE_ZERO");
@@ -119,9 +116,8 @@ contract ATMToken is
         TInitializable._initialize();
         _cap = cap;
         _maxVestingsPerWallet = maxVestingsPerWallet;
-        _owner = msg.sender;
-        atmSettings = IATMSettings(atmSettingsAddress);
         atmAddress = atm;
+        _setSettings(settingsAddress);
     }
 
     /**

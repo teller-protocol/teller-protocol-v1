@@ -20,17 +20,12 @@ const Settings = artifacts.require("./base/Settings.sol");
 contract('ATMGovernanceRemoveGeneralSettingTest', function (accounts) {
     const encoder = new IATMSettingsEncoder(web3)
     let instance;
+    let settingsInstance;
 
     beforeEach('Setup for each test', async () => {
-        const settings = await createTestSettingsInstance(Settings);
-        const atmSettings = await Mock.new();
-        await atmSettings.givenMethodReturnAddress(
-            encoder.encodeSettings(),
-            settings.address
-        );
-
+        settingsInstance = await Mock.new();
         instance = await ATMGovernance.new();
-        await instance.initialize(atmSettings.address);
+        await instance.initialize(settingsInstance.address, owner);
     });
 
     // Testing values
