@@ -6,6 +6,7 @@ pragma solidity 0.5.17;
 // Commons
 
 /**
+    @notice It defines the keys (constants) used in the LogicVersionsRegistry contract.
 
     @author develop@teller.finance
  */

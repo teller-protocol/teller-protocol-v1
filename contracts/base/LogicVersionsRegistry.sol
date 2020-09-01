@@ -6,12 +6,10 @@ import "./BaseUpgradeable.sol";
 import "./TInitializable.sol";
 
 // Commons
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "../util/LogicVersionLib.sol";
 import "../util/LogicVersionsConsts.sol";
 
 // Interfaces
-import "../interfaces/SettingsInterface.sol";
 import "../interfaces/LogicVersionsRegistryInterface.sol";
 
 /**
@@ -21,7 +19,7 @@ import "../interfaces/LogicVersionsRegistryInterface.sol";
  */
 contract LogicVersionsRegistry is LogicVersionsRegistryInterface, TInitializable, BaseUpgradeable {
     using LogicVersionLib for LogicVersionLib.LogicVersion;
-    using Address for address;
+
     /** Constants */
 
     /* State Variables */
@@ -48,7 +46,7 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface, TInitializable
         @param logicName logic name to create.
         @param logic the logic address value for the given logic name.
      */
-    function createLogicVersion(bytes32 logicName, address logic) external /** onlyPauser() **/ isInitialized() {
+    function createLogicVersion(bytes32 logicName, address logic) external onlyPauser() isInitialized() {
         require(logicName != "", "LOGIC_NAME_MUST_BE_PROVIDED");
         logicVersions[logicName].initialize(logic);
 

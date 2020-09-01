@@ -28,7 +28,6 @@ contract BaseUpgradeable {
     /**
         @notice The settings contract.
      */
-    // TODO: remove in sub contracts' initializers since it will already be set in the proxy
     function settings() public view returns (SettingsInterface) {
         address settingsAddress;
 

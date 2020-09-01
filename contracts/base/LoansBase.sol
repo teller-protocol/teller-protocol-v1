@@ -17,7 +17,6 @@ import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
 import "../atm/IATMGovernance.sol";
-import "../util/TellerCommon.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/

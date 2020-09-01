@@ -5,9 +5,11 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 import "./BaseUpgradeable.sol";
 import "./BaseEscrowDapp.sol";
+import "./TInitializable.sol";
 
 // Interfaces
 import "../interfaces/EscrowInterface.sol";
+import "../interfaces/LoansInterface.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/

@@ -25,6 +25,14 @@ import "../interfaces/LoanTermsConsensusInterface.sol";
  */
 contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
     /* Mappings */
+    /**
+        @notice It identifies the loan terms submissions for a given borrower address and a request nonce.
+
+        @dev Examples:
+            @address(0x123...567) => 1 => AccruedLoanTerms({...})
+            @address(0x123...567) => 2 => AccruedLoanTerms({...})
+            @address(0x234...678) => 1 => AccruedLoanTerms({...})
+     */
     mapping(address => mapping(uint256 => TellerCommon.AccruedLoanTerms)) public termSubmissions;
 
     /**

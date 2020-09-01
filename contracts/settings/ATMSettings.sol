@@ -9,7 +9,6 @@ import "../base/TInitializable.sol";
 import "../base/BaseUpgradeable.sol";
 
 // Interfaces
-import "../interfaces/SettingsInterface.sol";
 import "./IATMSettings.sol";
 
 
