@@ -47,7 +47,6 @@ contract("UpgradeableProxySettingsCreatePlatformSettingTest", function(accounts)
 
                 // Invocation using proxy 2
                 const settingName = toBytes32(web3, 'MyCustom');
-                console.log("NAME>>>", settingName);
                 const res = await settingsOfProxy2.createPlatformSetting(
                     settingName,
                     100,
@@ -55,7 +54,6 @@ contract("UpgradeableProxySettingsCreatePlatformSettingTest", function(accounts)
                     2000,
                     { from: caller }
                 );
-                console.log("RES>>>", res);
 
                 // Validating state change using proxy 1
                 const platformSetting = await settingsOfProxy1.getPlatformSetting(
