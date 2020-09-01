@@ -27,6 +27,10 @@ SettingsInterfaceEncoder.prototype.encodeMarketsState = function() {
     return encode(this.web3, 'marketsState()');
 }
 
+SettingsInterfaceEncoder.prototype.encodeEscrowFactory = function() {
+    return encode(this.web3, 'escrowFactory()');
+}
+
 SettingsInterfaceEncoder.prototype.encodeATMSettings = function() {
     return encode(this.web3, 'atmSettings()');
 }
