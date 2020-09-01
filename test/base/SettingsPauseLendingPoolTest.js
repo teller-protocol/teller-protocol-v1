@@ -20,7 +20,7 @@ contract('SettingsPauseLendingPoolTest', function (accounts) {
 
     withData({
         _1_basic: [0, 1, undefined, false],
-        _2_notOwner: [2, 3, 'PauserRole: caller does not have the Pauser role', true],
+        _2_notOwner: [2, 3, 'NOT_PAUSER', true],
         _3_emptyLendingPool: [0, -1, 'LENDING_POOL_IS_REQUIRED', true],
     }, function(senderIndex, lendingPoolIndex, expectedErrorMessage, mustFail) {
         it(t('user', 'pauseLendingPool', 'Should (or not) be able to pause a lending pool.', mustFail), async function() {

@@ -128,7 +128,7 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
     }, function(
         tolerance,
         responses,
-    ) {    
+    ) {
         it(t('user', 'new', 'Should accept/not accept a nodes response', false), async function() {
             // Setup
             const expectedMaxGas = expectedGasCost(responses.length);
@@ -146,7 +146,7 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
             // The sender validation (equal to the loans contract) is mocked (LoanTermsConsensusMock _isCaller(...) function) to allow execute the unit test.
             const sender = accounts[1];
             instance = await LoanTermsConsensus.new();
-            await instance.initialize(loans.address, settings.address);
+            await instance.initialize(owner, loans.address, settings.address);
 
             for (const response of responses) {
                 await instance.addSigner(response.signer)
