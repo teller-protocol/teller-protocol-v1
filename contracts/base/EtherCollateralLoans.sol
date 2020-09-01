@@ -121,7 +121,7 @@ contract EtherCollateralLoans is LoansBase {
             settingsAddress
         );
 
-        collateralToken = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+        collateralToken = settings().ETH_ADDRESS();
     }
 
     /** Internal Functions */

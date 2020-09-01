@@ -55,6 +55,10 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @notice The asset setting name for cToken address settings.
      */
     bytes32 public constant CTOKEN_ADDRESS_ASSET_SETTING = "CTokenAddress";
+    /**
+        @notice It defines the constant address to represent ETHER.
+     */
+    address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /* State Variables */
 

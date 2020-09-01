@@ -24,7 +24,6 @@ contract ChainlinkPairAggregator is PairAggregatorInterface, TInitializable {
     using SignedSafeMath for int256;
     using Address for address;
 
-    // TODO  Can we have constants here?
     uint256 internal constant TEN = 10;
     uint256 internal constant MAX_POWER_VALUE = 50;
 

@@ -205,8 +205,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
     ) internal view marketNotExist(borrowedToken, collateralToken) {
         require(tToken.isContract(), "TTOKEN_MUST_BE_CONTRACT");
         require(borrowedToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
-        // TODO Use constant.
-        require(collateralToken == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE || collateralToken.isContract(), "COLL_TOKEN_MUST_BE_CONTRACT");
+        require(collateralToken == settings().ETH_ADDRESS() || collateralToken.isContract(), "COLL_TOKEN_MUST_BE_CONTRACT");
     }
 
     function _createAndInitializeProxies(
@@ -265,8 +264,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         interestConsensusProxy = InterestConsensusInterface(_createDynamicProxy(settings().versionsRegistry().consts().INTEREST_CONSENSUS_LOGIC_NAME()));
         lendersProxy = LendersInterface(_createDynamicProxy(settings().versionsRegistry().consts().LENDERS_LOGIC_NAME()));
         loanTermsConsensusProxy = LoanTermsConsensusInterface(_createDynamicProxy(settings().versionsRegistry().consts().LOAN_TERMS_CONSENSUS_LOGIC_NAME()));
-        if (collateralToken == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
-            // TODO Use constant.
+        if (collateralToken == settings().ETH_ADDRESS()) {
             loansProxy = LoansInterface(_createDynamicProxy(settings().versionsRegistry().consts().ETHER_COLLATERAL_LOANS_LOGIC_NAME()));
         } else {
             loansProxy = LoansInterface(_createDynamicProxy(settings().versionsRegistry().consts().TOKEN_COLLATERAL_LOANS_LOGIC_NAME()));
