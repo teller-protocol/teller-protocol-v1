@@ -26,6 +26,12 @@ contract('MarketFactoryCreateMarketTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         mocks = await createMocks(Mock, 10);
         versionsRegistryInstance = await Mock.new();
+        const constsInstance = await Mock.new();
+        await versionsRegistryInstance.givenMethodReturnAddress(
+            logicVersionsRegistryEncoder.encodeConsts(),
+            constsInstance.address
+        );
+
         pairAggregatorRegistryInstance = await Mock.new();
         settingsInstance = await createTestSettingsInstance(
             Settings,
@@ -36,15 +42,13 @@ contract('MarketFactoryCreateMarketTest', function (accounts) {
                     instance,
                     {
                         escrowFactory,
-                        versionsRegistry,
-                        pairAggregatorRegistry,
                         marketsState,
                         interestValidator,
                         atmSettings,
                     }) => {
                     await instance.initialize(
                         escrowFactory.address,
-                        versionsRegistry.address,
+                        versionsRegistryInstance.address,
                         pairAggregatorRegistryInstance.address,
                         marketsState.address,
                         interestValidator.address,
@@ -67,10 +71,11 @@ contract('MarketFactoryCreateMarketTest', function (accounts) {
         _3_not_pauser_role: [4, false, 2, 3, 4, 5, 6, true, 'NOT_PAUSER'],
         _4_ttoken_not_contract: [0, false, 99, 3, 4, 5, 6, true, 'TTOKEN_MUST_BE_CONTRACT'],
         _5_ttoken_empty: [0, false, -1, 3, 4, 5, 6, true, 'TTOKEN_MUST_BE_CONTRACT'],
-        //FIX  _6_borrowed_token_empty: [0, false, 2, 99, 4, 5, 6, true, 'BORROWED_TOKEN_MUST_BE_CONTRACT'],
-        _7_coll_token_eth: [0, false, 2, 3, 100, 5, 6, false, undefined],
-        _8_coll_token_not_contract: [0, false, 2, 3, 99, 5, 6, true, 'COLL_TOKEN_MUST_BE_CONTRACT'],
-        _9_coll_token_empty: [0, false, 2, 3, -1, 5, 6, true, 'COLL_TOKEN_MUST_BE_CONTRACT'],
+        _6_borrowed_token_not_ccontract: [0, false, 2, 99, 4, 5, 6, true, 'BORROWED_TOKEN_MUST_BE_CONTRACT'],
+        _7_borrowed_token_empty: [0, false, 2, -1, 4, 5, 6, true, 'BORROWED_TOKEN_MUST_BE_CONTRACT'],
+        _8_coll_token_eth: [0, false, 2, 3, 100, 5, 6, false, undefined],
+        _9_coll_token_not_contract: [0, false, 2, 3, 99, 5, 6, true, 'COLL_TOKEN_MUST_BE_CONTRACT'],
+        _10_coll_token_empty: [0, false, 2, 3, -1, 5, 6, true, 'COLL_TOKEN_MUST_BE_CONTRACT'],
     }, function(
         senderIndex,
         pausePlatform,
@@ -98,12 +103,14 @@ contract('MarketFactoryCreateMarketTest', function (accounts) {
                 chainlinkPairAggregatorRegistryEncoder.encodeGetPairAggregator(),
                 encodeGetPairAggregatorResponse
             );
-            await settingsInstance.createAssetSettings(
-                borrowedTokenAddress,
-                cTokenAddressResponse,
-                '10000',
-                { from: owner }
-            );
+            if(borrowedTokenIndex !== 99 && borrowedTokenIndex !== -1) {
+                await settingsInstance.createAssetSettings(
+                    borrowedTokenAddress,
+                    cTokenAddressResponse,
+                    '10000',
+                    { from: owner }
+                );
+            }
             if(pausePlatform) {
                 await settingsInstance.pause({ from: owner });
             }

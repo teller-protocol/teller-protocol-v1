@@ -9,7 +9,7 @@ const { assert } = require("chai");
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
 const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
-const Escrow = artifacts.require("./mock/base/EscrowMock.sol");
+const Escrow = artifacts.require("./base/Escrow.sol");
 
 // Smart contracts
 const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
@@ -22,20 +22,17 @@ contract('EscrowIsBorrowerTest', function (accounts) {
 
   beforeEach(async () => {
     settingsInstance = await Mock.new();
-
     const oracleInstance = await Mock.new();
     const lendingPoolInstance = await Mock.new();
     const loanTermsConsInstance = await Mock.new();
-    const marketsInstance = await Mock.new();
-    const atmSettingsInstance = await Mock.new();
+    const collateralInstance = await Mock.new();
     loans = await Loans.new();
     await loans.initialize(
       oracleInstance.address,
       lendingPoolInstance.address,
       loanTermsConsInstance.address,
       settingsInstance.address,
-      marketsInstance.address,
-      atmSettingsInstance.address
+      collateralInstance.address
     );
     instance = await Escrow.new();
     escrowFactory = await EscrowFactory.new();
@@ -58,17 +55,18 @@ contract('EscrowIsBorrowerTest', function (accounts) {
       const loanTerms = createLoanTerms(borrower, NULL_ADDRESS, 0, 0, 0, 0);
       await loans.setLoan(loanID, loanTerms, 0, 0, 123456, 0, 0, 0, loanTerms.maxLoanAmount, ACTIVE, false);
 
-      await instance.mockInitialize(settingsInstance.address, loans.address, loanID);
+      await instance.initialize(loans.address, loanID);
       try {
         // Invocation
-        const result = await instance.getBorrower({ from: sender });
+        const result = await instance.getBorrower();
+        
         // Assertions
         assert(!mustFail);
         assert(result);
         assert.equal(
           result,
-          sender,
-          "Escrow is not borrower"
+          borrower,
+          "Borrower is not equal to the loan."
         )
       } catch (error) {
         assert(mustFail, error);
