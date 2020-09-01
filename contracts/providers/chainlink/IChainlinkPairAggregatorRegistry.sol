@@ -27,11 +27,36 @@ interface IChainlinkPairAggregatorRegistry {
     );
 
     /**
+        @notice This event is emitted when a current pair aggregator is updated.
+        @param sender the sender address.
+        @param baseToken the base token address.
+        @param quoteToken the quote token address.
+        @param oldPairAggregator the old pair aggregator address.
+        @param newPairAggregator the new pair aggregator address.
+     */
+    event PairAggregatorUpdated(
+        address indexed sender,
+        address indexed baseToken,
+        address indexed quoteToken,
+        address oldPairAggregator,
+        address newPairAggregator
+    );
+
+    /**
         @notice It registers a new pair aggregator for a given market.
         @param request the input data to register the new pair aggregator.
         @return the new pair aggregator created.
      */
     function registerPairAggregator(TellerCommon.PairAggregatorRegisterRequest calldata request)
+        external
+        returns (PairAggregatorInterface aggregator);
+
+    /**
+        @notice It updates a current pair aggregator for a given market.
+        @param request the input data to register the new pair aggregator.
+        @return the new pair aggregator created.
+     */
+    function updatePairAggregator(TellerCommon.PairAggregatorRegisterRequest calldata request)
         external
         returns (PairAggregatorInterface aggregator);
 
