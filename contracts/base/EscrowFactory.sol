@@ -6,14 +6,11 @@ import "./TInitializable.sol";
 import "./DynamicProxy.sol";
 
 // Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/lifecycle/Pausable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Interfaces
 import "../interfaces/EscrowFactoryInterface.sol";
-import "../interfaces/LoansInterface.sol";
 import "../interfaces/EscrowInterface.sol";
-import "../interfaces/SettingsInterface.sol";
 
 // Commons
 import "../util/AddressLib.sol";
@@ -110,7 +107,7 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         require(!_isDapp(dapp), "DAPP_ALREADY_EXIST");
 
         dapps[dapp] = true;
-        dappsList.push(dapp);
+        dappsList.add(dapp);
 
         emit NewDAppAdded(msg.sender, dapp);
     }

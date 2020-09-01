@@ -15,8 +15,6 @@ import "./ATMTokenProxy.sol";
 import "./ATMTokenInterface.sol";
 import "./IATMGovernance.sol";
 import "../atm/IATMFactory.sol";
-import "../interfaces/SettingsInterface.sol";
-import "../settings/IATMSettings.sol";
 
 
 /*****************************************************************************************************/
@@ -35,8 +33,6 @@ import "../settings/IATMSettings.sol";
  */
 contract ATMFactory is IATMFactory, TInitializable, BaseUpgradeable {
     using AddressArrayLib for address[];
-    using AddressLib for address;
-    using Address for address;
 
     /**
         @notice It defines whether an ATM address exists or not.

@@ -2,7 +2,6 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Libraries
-import "../util/AddressLib.sol";
 
 // Interfaces
 import "../interfaces/InterestConsensusInterface.sol";
@@ -27,7 +26,6 @@ import "./Consensus.sol";
     @author develop@teller.finance
  */
 contract InterestConsensus is InterestConsensusInterface, Consensus {
-    using AddressLib for address;
 
     /* State Variables */
 

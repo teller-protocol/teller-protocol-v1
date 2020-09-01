@@ -14,7 +14,6 @@ import "../base/BaseUpgradeable.sol";
 
 // Interfaces
 import "./IATMGovernance.sol";
-import "../interfaces/SettingsInterface.sol";
 
 
 /*****************************************************************************************************/

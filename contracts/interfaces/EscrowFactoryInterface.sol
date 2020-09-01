@@ -1,6 +1,5 @@
 pragma solidity 0.5.17;
 
-import "./LoansInterface.sol";
 
 /**
     @notice This interface defines the functions to manage the Escrow contracts associated to borrowers and loans.

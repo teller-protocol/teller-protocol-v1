@@ -1,9 +1,9 @@
-pragma solidity ^0.5.17;
+pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
-import "./ChainlinkPairAggregator.sol";
 import "../../util/TellerCommon.sol";
+import "../../interfaces/PairAggregatorInterface.sol";
 
 /**
     @notice It defines the functions to manager the pair aggregator address for specific markets (including the inversed markets).

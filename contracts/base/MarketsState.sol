@@ -2,7 +2,6 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/WhitelistedRole.sol";
 
@@ -11,7 +10,6 @@ import "./BaseUpgradeable.sol";
 import "./TInitializable.sol";
 
 // Interfaces
-import "../interfaces/SettingsInterface.sol";
 import "../interfaces/MarketsStateInterface.sol";
 import "../util/MarketStateLib.sol";
 
@@ -21,7 +19,6 @@ import "../util/MarketStateLib.sol";
     @author develop@teller.finance
  */
 contract MarketsState is MarketsStateInterface, TInitializable, WhitelistedRole, BaseUpgradeable {
-    using SafeMath for uint256;
     using Address for address;
     using MarketStateLib for MarketStateLib.MarketState;
 

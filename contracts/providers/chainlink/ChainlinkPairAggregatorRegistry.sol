@@ -2,16 +2,13 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Interfaces
-import "../../interfaces/SettingsInterface.sol";
 import "./IChainlinkPairAggregatorRegistry.sol";
 import "../../base/TInitializable.sol";
 
 // Contracts
-import "./ChainlinkPairAggregator.sol";
 import "../../base/DynamicProxy.sol";
 
 // Commons
-import "../../util/LogicVersionsConsts.sol";
 import "../../util/TellerCommon.sol";
 
 /**
@@ -20,7 +17,7 @@ import "../../util/TellerCommon.sol";
 
     @author developer@teller.finance
  */
-contract ChainlinkPairAggregatorRegistry is TInitializable, BaseUpgradeable, IChainlinkPairAggregatorRegistry, LogicVersionsConsts {
+contract ChainlinkPairAggregatorRegistry is TInitializable, BaseUpgradeable, IChainlinkPairAggregatorRegistry {
     using Address for address;
 
     /**

@@ -3,7 +3,6 @@ pragma solidity 0.5.17;
 // Libraries
 
 // Commons
-import "../util/TellerCommon.sol";
 
 // Interfaces
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -36,8 +35,7 @@ contract LendingPool is Base, LendingPoolInterface {
     /* State Variables */
 
     IERC20 public lendingToken;
-    // TODO Can we get it from settings().getAssetSetting(address(lendingToken)).cTokenAddress ?
-    // So then we can remove cToken from initialize function and here.
+    
     address public cToken;
 
     TTokenInterface public tToken;
