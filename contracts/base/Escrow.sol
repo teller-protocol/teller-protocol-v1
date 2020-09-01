@@ -95,7 +95,7 @@ contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, Ba
     function calculateTotalValue() public view returns (TellerCommon.EscrowValue memory) {
         address[] memory tokens = getTokens();
 
-        uint256 valueInEth = _valueOfIn(loans.lendingToken(), _balanceOf(loans.lendingToken()), address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE));
+        uint256 valueInEth = 0;
 
         for (uint i = 0; i < tokens.length; i++) {
             uint256 tokenEthValue = _valueOfIn(tokens[i], _balanceOf(tokens[i]), address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE));

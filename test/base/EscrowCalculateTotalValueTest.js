@@ -68,14 +68,14 @@ contract("EscrowCalculateTotalValueTest", function(accounts) {
         collateralAddress
       )
 
-
-      let expectedValueInEth = new BN(tokensValueInEth);
+      let expectedValueInEth = new BN(0);
 
       await instance.mockValueOfIn(tokens[loanedTokenIndex].address, ETH_ADDRESS, tokensValueInEth);
 
       for (const index of tokenIndices) {
         const token = tokens[index];
-        await instance.mockInitialToken(token.address);
+        await token.mint(instance.address, 10000)
+        await instance.externalTokenUpdated(token.address);
         await instance.mockValueOfIn(token.address, ETH_ADDRESS, tokensValueInEth);
         expectedValueInEth = expectedValueInEth.plus(tokensValueInEth);
       }
