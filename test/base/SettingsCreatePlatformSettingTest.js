@@ -58,7 +58,7 @@ contract('SettingsCreatePlatformSettingTest', function (accounts) {
                 newSetting('customSetting7', 2000, 2000, 9000),
                 newSetting('customSetting8', 3000, 0, 9000)
             ],
-            1, newSetting('customSetting9', 1000, 0, 9000), 'PauserRole: caller does not have the Pauser role', true
+            1, newSetting('customSetting9', 1000, 0, 9000), 'NOT_PAUSER', true
         ],
         _8_valid_max_value: [
             [],

@@ -19,29 +19,43 @@ contract('MarketFactoryCreateMarketTest', function (accounts) {
     const logicVersionsRegistryEncoder = new LogicVersionsRegistryEncoder(web3);
     let instance;
     let settingsInstance;
-    let marketsInstance;
-    let atmSettingsInstance;
-    let interestValidatorInstance;
     let versionsRegistryInstance;
     let pairAggregatorRegistryInstance;
 
     
     beforeEach('Setup for each test', async () => {
         mocks = await createMocks(Mock, 10);
-        settingsInstance = await createTestSettingsInstance(Settings, { from: owner, Mock });
-        marketsInstance = await Mock.new();
-        atmSettingsInstance = await Mock.new();
-        interestValidatorInstance = await Mock.new();
         versionsRegistryInstance = await Mock.new();
         pairAggregatorRegistryInstance = await Mock.new();
+        settingsInstance = await createTestSettingsInstance(
+            Settings,
+            {
+                from: owner,
+                Mock,
+                onInitialize: async (
+                    instance,
+                    {
+                        escrowFactory,
+                        versionsRegistry,
+                        pairAggregatorRegistry,
+                        marketsState,
+                        interestValidator,
+                        atmSettings,
+                    }) => {
+                    await instance.initialize(
+                        escrowFactory.address,
+                        versionsRegistry.address,
+                        pairAggregatorRegistryInstance.address,
+                        marketsState.address,
+                        interestValidator.address,
+                        atmSettings.address
+                    );
+                },
+            },
+        );
         instance = await MarketFactory.new();
         await instance.initialize(
             settingsInstance.address,
-            atmSettingsInstance.address,
-            marketsInstance.address,
-            interestValidatorInstance.address,
-            versionsRegistryInstance.address,
-            pairAggregatorRegistryInstance.address
         )
     });
 
@@ -102,7 +116,6 @@ contract('MarketFactoryCreateMarketTest', function (accounts) {
                     collateralTokenAddress,
                     { from: sender }
                 );
-
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
