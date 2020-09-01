@@ -40,8 +40,13 @@ contract('ATMSettingsUnpauseATMTest', function (accounts) {
             }
             const sender = accounts[senderIndex];
             const atmAddress = atmIndex === -1 ? NULL_ADDRESS : mocks[atmIndex];
-            await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeHasPauserRole(), encodeHasPauserRole);
             await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), encodeIsPaused);
+            if(!encodeHasPauserRole) {
+                await settings.givenMethodRevertWithMessage(
+                    settingsInterfaceEncoder.encodeRequirePauserRole(),
+                    "NOT_PAUSER"
+                );
+            }
 
             try {
                 // Invocation
