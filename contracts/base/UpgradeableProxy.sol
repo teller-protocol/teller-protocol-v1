@@ -3,8 +3,9 @@ pragma solidity 0.5.17;
 // Contracts
 import "@openzeppelin/upgrades/contracts/upgradeability/BaseUpgradeabilityProxy.sol";
 import "./BaseUpgradeable.sol";
+import "./BaseProxy.sol";
 
-contract UpgradeableProxy is BaseUpgradeabilityProxy, BaseUpgradeable {
+contract UpgradeableProxy is BaseUpgradeabilityProxy, BaseUpgradeable, BaseProxy {
 
     /**
         @notice It initializes this proxy instance.
