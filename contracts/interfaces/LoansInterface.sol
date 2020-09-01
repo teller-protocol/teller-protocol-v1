@@ -215,6 +215,8 @@ interface LoansInterface {
      */
     function canLiquidateLoan(uint256 loanID) external view returns (bool);
 
+    function getTotalOwed(uint256 loanID) external view returns (uint256);
+
     /**
         @notice Get collateral information of a specific loan
         @param loanID ID of the loan to get info for

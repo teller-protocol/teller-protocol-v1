@@ -10,6 +10,13 @@ import "./TInitializable.sol";
 // Interfaces
 import "../interfaces/EscrowInterface.sol";
 import "../interfaces/LoansInterface.sol";
+import "../interfaces/PairAggregatorInterface.sol";
+
+// Libraries
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
+import "../util/SettingsConsts.sol";
+import "../util/TellerCommon.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -29,8 +36,10 @@ import "../interfaces/LoansInterface.sol";
 
     @author develop@teller.finance
  */
-contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, BaseEscrowDapp {
+// TODO: remove SettingsConsts once constants added to settings contract.
+contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, BaseEscrowDapp, SettingsConsts {
     using Address for address;
+    using SafeMath for uint256;
 
     /** State Variables **/
 
@@ -83,7 +92,51 @@ contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, Ba
         return loans.loans(loanID);
     }
 
-    function purchaseLoanDebt() external whenLoanActive() {
+    function calculateTotalValue() public view returns (TellerCommon.EscrowValue memory) {
+        address[] memory tokens = getTokens();
+
+        uint256 valueInEth = _valueOfIn(loans.lendingToken(), _balanceOf(loans.lendingToken()), address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE));
+
+        for (uint i = 0; i < tokens.length; i++) {
+            uint256 tokenEthValue = _valueOfIn(tokens[i], _balanceOf(tokens[i]), address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE));
+            valueInEth = valueInEth.add(tokenEthValue);
+        }
+
+        if (loans.collateralToken() == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
+            valueInEth = valueInEth.add(getLoan().collateral);
+        } else {
+            uint256 collateralEthValue = _valueOfIn(loans.collateralToken(), getLoan().collateral, address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE));
+            valueInEth = valueInEth.add(collateralEthValue);
+        }
+
+        uint256 valueInToken = _valueOfIn(address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE), valueInEth, loans.lendingToken());
+
+        return TellerCommon.EscrowValue({
+            valueInEth: valueInEth,
+            valueInToken: valueInToken
+        });
+    }
+
+    function canPurchase() external returns (bool) {
+        return _canPurchase(calculateTotalValue());
+    }
+
+    // TODO: test
+    function _canPurchase(TellerCommon.EscrowValue memory value) internal whenLoanActive() returns (bool) {
+        require(loans.canLiquidateLoan(loanID), 'LOAN_NOT_LIQUIDATABLE');
+
+        uint256 buffer = settings().getPlatformSettingValue(COLLATERAL_BUFFER_SETTING);
+
+        return value.valueInToken < loans.getTotalOwed(loanID) + buffer;
+    }
+
+    // TODO: what asset can be used to purchase with?
+    // TODO: test
+    function purchaseLoanDebt() external payable whenLoanActive() {
+        TellerCommon.EscrowValue memory value = calculateTotalValue();
+        require(_canPurchase(value), 'ESCROW_INELIGIBLE_TO_PURCHASE');
+
+        _transferOwnership(msg.sender);
     }
 
     /**
@@ -108,4 +161,18 @@ contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, Ba
     }
 
     /** Internal Functions */
+
+    function _valueOfIn(address baseAddress, uint256 baseAmount, address quoteAddress) internal view returns (uint256) {
+        uint8 baseDecimals = baseAddress == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) ? 18 : ERC20Detailed(baseAddress).decimals();
+        PairAggregatorInterface aggregator = _getAggregatorFor(baseAddress, quoteAddress);
+        uint256 oneTokenPrice = uint256(aggregator.getLatestAnswer());
+        // TODO: better way with SafeMath?
+        return baseAmount.mul(oneTokenPrice).div(uint256(10)**baseDecimals);
+    }
+
+    function _getAggregatorFor(address base, address quote) internal view returns (PairAggregatorInterface) {
+        require(settings().pairAggregatorRegistry().hasPairAggregator(base, quote), "CHAINLINK_PAIR_AGGREGATOR_NOT_EXISTS");
+
+        return settings().pairAggregatorRegistry().getPairAggregator(base, quote);
+    }
 }

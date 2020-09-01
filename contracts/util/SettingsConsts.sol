@@ -59,4 +59,9 @@ contract SettingsConsts {
         @notice The request loan terms rate limit setting is defined in seconds.
      */
     bytes32 public constant REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING = "RequestLoanTermsRateLimit";
+
+    /**
+        @notice The setting name for the collateral buffer.
+     */
+    bytes32 public constant COLLATERAL_BUFFER_SETTING = "CollateralBuffer";
 }

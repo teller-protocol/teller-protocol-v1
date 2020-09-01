@@ -1,7 +1,6 @@
 pragma solidity 0.5.17;
 
 // External Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Common
@@ -68,7 +67,7 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
         require(minDestination > 0, "UNISWAP_MIN_DESTINATION_ZERO"); // what if there is no minimum?
 
         uint256[] memory amounts;
-        uint256 balanceBeforeSwap = IERC20(destination).balanceOf(address(this));
+        uint256 balanceBeforeSwap = _balanceOf(destination);
 
         if (source == canonicalWeth) {
             require(address(this).balance >= sourceAmount, "UNISWAP_INSUFFICIENT_ETH");
@@ -80,7 +79,7 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
             ); 
         } else {
             require(
-                IERC20(source).balanceOf(address(this)) >= sourceAmount,
+                _balanceOf(source) >= sourceAmount,
                 "UNISWAP_INSUFFICIENT_TOKENS"
             );
             IERC20(source).approve(routerAddress, sourceAmount);
@@ -103,7 +102,7 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
             }
         }
 
-        uint256 balanceAfterSwap = IERC20(destination).balanceOf(address(this));
+        uint256 balanceAfterSwap = _balanceOf(destination);
         require(balanceAfterSwap >= (balanceBeforeSwap + minDestination), "UNISWAP_BALANCE_NOT_INCREASED");
         require(amounts.length == path.length , "UNISWAP_ERROR_SWAPPING");
         uint256 amountReceived = amounts[amounts.length - 1];

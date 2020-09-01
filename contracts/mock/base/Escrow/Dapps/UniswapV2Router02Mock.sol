@@ -8,7 +8,6 @@ contract UniswapV2Router02Mock is IUniswapV2Router02 {
 
     uint24 public constant DONT_ALTER_BALANCE = 999999;
     uint24 public constant SIMULATE_UNISWAP_RESPONSE_ERROR = 777777;
-    address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
 
     /**

@@ -149,4 +149,9 @@ library TellerCommon {
         uint8 responseDecimals;
         uint8 collateralDecimals;
     }
+
+    struct EscrowValue {
+        uint256 valueInToken;
+        uint256 valueInEth;
+    }
 }

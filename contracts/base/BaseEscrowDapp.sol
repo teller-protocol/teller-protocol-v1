@@ -1,45 +1,43 @@
 pragma solidity 0.5.17;
 
 // Contracts
+
+// Interfaces
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
+
+// Libraries
+import "../util/AddressArrayLib.sol";
 
 // TODO: Use AddressLib to handle mapping/array
 contract BaseEscrowDapp {
-    /**
-        @notice It tells us if this escrow has a token balance.
-     */
-    mapping(address => uint) public tokenIndices;
+    using AddressArrayLib for address[];
 
     /**
         @notice An array of tokens that are owned by this escrow.
      */
-    address[] public tokens;
+    address[] private tokens;
 
-    function balanceOf(address tokenAddress) public view returns (uint256) {
+    function getTokens() public view returns (address[] memory)  {
+        return tokens;
+    }
+
+    function findTokenIndex(address tokenAddress) external view returns (int) {
+        (bool found, uint256 index) = tokens.getIndex(tokenAddress);
+        return found ? int(index) : -1;
+    }
+
+    function _balanceOf(address tokenAddress) internal view returns (uint256) {
         return IERC20(tokenAddress).balanceOf(address(this));
     }
 
-    function calculateTotalValue() public view returns (uint256 value) {
-        value = 0;
-        for (uint i = 0; i < tokens.length; i++) {
-            value += balanceOf(tokens[i]);
-        }
-    }
-
-    function hasToken(address tokenAddress) public view returns (bool) {
-        return tokens[tokenIndices[tokenAddress]] == tokenAddress;
-    }
-
     function _tokenUpdated(address tokenAddress) internal {
-        bool has = hasToken(tokenAddress);
-        if (balanceOf(tokenAddress) > 0) {
-            if (!has)
-                tokenIndices[tokenAddress] = tokens.push(tokenAddress) - 1;
-        } else if (has) {
-            uint indexToDelete = tokenIndices[tokenAddress];
-            address tokenToMove = tokens[tokens.length - 1];
-            tokens[indexToDelete] = tokenToMove;
-            tokens.length--;
+        (bool found, uint256 index) = tokens.getIndex(tokenAddress);
+        if (_balanceOf(tokenAddress) > 0) {
+            if (!found) {
+                tokens.add(tokenAddress);
+            }
+        } else if (found) {
+            tokens.removeAt(index);
         }
     }
 }

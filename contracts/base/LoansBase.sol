@@ -16,7 +16,7 @@ import "../interfaces/PairAggregatorInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
-import "../atm/ATMGovernanceInterface.sol";
+import "../atm/IATMGovernance.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -274,7 +274,7 @@ contract LoansBase is LoansInterface, Base {
         require(amount > 0, "AMOUNT_VALUE_REQUIRED");
         // calculate the actual amount to repay
         uint256 toPay = amount;
-        uint256 totalOwed = _getTotalOwed(loanID);
+        uint256 totalOwed = getTotalOwed(loanID);
         if (totalOwed < toPay) {
             toPay = totalOwed;
         }
@@ -374,6 +374,15 @@ contract LoansBase is LoansInterface, Base {
         uint256 startTime = loans[loanID].loanStartTime;
         uint256 duration = loans[loanID].loanTerms.duration;
         return startTime.add(duration) < now;
+    }
+
+    /**
+        @notice Returns the total owed amount remaining for a specified loan
+        @param loanID The ID of the loan to be queried
+        @return uint256 The total amount owed remaining
+     */
+    function getTotalOwed(uint256 loanID) public view returns (uint256) {
+        return loans[loanID].interestOwed.add(loans[loanID].principalOwed);
     }
 
     /**
@@ -512,15 +521,6 @@ contract LoansBase is LoansInterface, Base {
     }
 
     /**
-        @notice Returns the total owed amount remaining for a specified loan
-        @param loanID The ID of the loan to be queried
-        @return uint256 The total amount owed remaining
-     */
-    function _getTotalOwed(uint256 loanID) internal view returns (uint256) {
-        return loans[loanID].interestOwed.add(loans[loanID].principalOwed);
-    }
-
-    /**
         @notice Returns the value of collateral
         @param loanID The loan ID to get collateral info for
         @return uint256 The amount of collateral needed in lending tokens (not wei)
@@ -530,7 +530,7 @@ contract LoansBase is LoansInterface, Base {
         view
         returns (uint256)
     {
-        uint256 loanAmount = _getTotalOwed(loanID);
+        uint256 loanAmount = getTotalOwed(loanID);
         uint256 collateralRatio = loans[loanID].loanTerms.collateralRatio;
         return loanAmount.mul(collateralRatio).div(TEN_THOUSAND);
     }
