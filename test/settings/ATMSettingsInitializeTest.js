@@ -10,6 +10,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
 
 contract('ATMSettingsInitializeTest', function (accounts) {
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     let mocks;
 
     beforeEach('Setup for each test', async () => {
@@ -19,8 +20,6 @@ contract('ATMSettingsInitializeTest', function (accounts) {
 
         mocks = await createMocks(Mock, 10);
     });
-
-    const getInstance = (refs, index, accountIndex) => index === -1 ? NULL_ADDRESS: index === 99 ? accounts[accountIndex] : refs[index];
 
     withData({
         _1_basic: [4, undefined, false],

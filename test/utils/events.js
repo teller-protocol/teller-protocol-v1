@@ -511,18 +511,6 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-        escrowFactoryUpdated: tx => {
-            const name = 'EscrowFactoryUpdated';
-            return {
-                name: name,
-                emitted: (sender, oldValue, newValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender.toString(), sender.toString());
-                    assert.equal(ev.oldValue.toString(), oldValue.toString());
-                    assert.equal(ev.newValue.toString(), newValue.toString());
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
     },
     atmGovernance: {
         generalSettingAdded: tx => {
@@ -731,54 +719,6 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-        atmSettingsUpdated: tx => {
-            const name = "ATMSettingsUpdated";
-            return {
-                name: name,
-                emitted: (sender, oldATMSettings, newATMSettings) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.oldATMSettings.toString(), oldATMSettings.toString());
-                    assert.equal(ev.newATMSettings.toString(), newATMSettings.toString());
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
-        settingsUpdated: tx => {
-            const name = "SettingsUpdated";
-            return {
-                name: name,
-                emitted: (sender, oldSettings, newSettings) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.oldSettings.toString(), oldSettings.toString());
-                    assert.equal(ev.newSettings.toString(), newSettings.toString());
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
-        atmTokenLogicUpdated: tx => {
-            const name = "ATMTokenLogicUpdated";
-            return {
-                name: name,
-                emitted: (sender, oldATMTokenLogic, newATMTokenLogic) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.oldATMTokenLogic.toString(), oldATMTokenLogic.toString());
-                    assert.equal(ev.newATMTokenLogic.toString(), newATMTokenLogic.toString());
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
-        atmGovernanceLogicUpdated: tx => {
-            const name = "ATMGovernanceLogicUpdated";
-            return {
-                name: name,
-                emitted: (sender, oldATMGovernanceLogic, newATMGovernanceLogic) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.oldATMGovernanceLogic.toString(), oldATMGovernanceLogic.toString());
-                    assert.equal(ev.newATMGovernanceLogic.toString(), newATMGovernanceLogic.toString());
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
     },
     escrowFactory: {
         escrowCreated: (tx, Factory) => {
@@ -814,18 +754,6 @@ module.exports = {
                 emitted: (sender, dapp) => emitted(tx, name, ev => {
                     assert.equal(ev.sender.toString(), sender.toString());
                     assert.equal(ev.dapp.toString(), dapp.toString());
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
-        escrowLogicUpgraded: tx => {
-            const name = 'EscrowLogicUpgraded';
-            return {
-                name: name,
-                emitted: (sender, oldLogic, newLogic) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender.toString(), sender.toString());
-                    assert.equal(ev.oldLogic.toString(), oldLogic.toString());
-                    assert.equal(ev.newLogic.toString(), newLogic.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };

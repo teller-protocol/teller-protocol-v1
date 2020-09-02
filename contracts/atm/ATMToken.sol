@@ -29,7 +29,6 @@ import "../base/BaseUpgradeable.sol";
  */
 
 contract ATMToken is
-    BaseATM,
     ATMTokenInterface,
     ERC20Detailed,
     ERC20Mintable,
@@ -45,14 +44,6 @@ contract ATMToken is
     using Address for address;
 
     /* Modifiers */
-    /**
-        @notice Checks if sender is owner
-        @dev Throws an error if the sender is not the owner
-     */
-    modifier onlyOwner() {
-        settings().requirePauserRole(msg.sender);
-        _;
-    }
 
     /**
         @notice Checks if the platform is paused or not
@@ -93,13 +84,13 @@ contract ATMToken is
     /* Functions */
 
     /**
-        @notice It initializes this token instance. It should only be called from the ATMTokenProxy constructor!
+        @notice It initializes this token instance.
         @param name The name of the ATM token
         @param symbol The symbol of the ATM token
         @param decimals The amount of decimals for ATM token
         @param cap The maximum number of tokens available
         @param maxVestingPerWallet The maximum number of times a wallet can mint their vesting
-        @param atmSettingsAddress The ATMSettings address
+        @param settingsAddress The ATMSettings address
         @param atm The ATMGovernance address for this token
      */
     function initialize(
@@ -107,7 +98,7 @@ contract ATMToken is
         string calldata symbol,
         uint8 decimals,
         uint256 cap,
-        uint256 maxVestingsPerWallet,
+        uint256 maxVestingPerWallet,
         address settingsAddress,
         address atm
     ) external initializer() isNotInitialized() {
@@ -115,7 +106,7 @@ contract ATMToken is
         super.initialize(name, symbol, decimals);
         TInitializable._initialize();
         _cap = cap;
-        _maxVestingsPerWallet = maxVestingsPerWallet;
+        _maxVestingPerWallet = maxVestingPerWallet;
         atmAddress = atm;
         _setSettings(settingsAddress);
     }
@@ -132,7 +123,7 @@ contract ATMToken is
      * @notice Sets a new cap on the token's total supply.
      * @param newCap The new capped amount of tokens
      */
-    function setCap(uint256 newCap) external onlyOwner() whenNotPaused() isInitialized() {
+    function setCap(uint256 newCap) external onlyPauser() whenNotPaused() isInitialized() {
         _cap = newCap;
         emit NewCap(_cap);
     }
@@ -180,7 +171,7 @@ contract ATMToken is
         uint256 amount,
         uint256 cliff,
         uint256 vestingTime
-    ) public onlyOwner() whenNotPaused() isInitialized() {
+    ) public onlyPauser() whenNotPaused() isInitialized() {
         require(account != address(0x0), "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED");
         require(vestingCount[account] < _maxVestingPerWallet, "MAX_VESTINGS_REACHED");
         _beforeTokenTransfer(address(0x0), account, amount);

@@ -27,10 +27,31 @@ contract ChainlinkPairAggregator is PairAggregatorInterface, TInitializable {
     uint256 internal constant TEN = 10;
     uint256 internal constant MAX_POWER_VALUE = 50;
 
+    /**
+        @notice It represents the Chainlink oracle reference used in this pair aggregator instance.
+     */
     AggregatorInterface public aggregator;
+    /**
+        @notice It represents the decimals included in the Chainlink oracle responses.
+     */
     uint8 public responseDecimals;
+    /**
+        @notice It represents the decimals in the collateral token used in this pair aggregator.
+     */
     uint8 public collateralDecimals;
+    /**
+        @notice It represents the difference between reponseDecimals and collateralDecimals.
+        @notice It is used to normalize the amounts.
+     */
     uint8 public pendingDecimals;
+    /**
+        @notice It defines if this pair aggregator is inverse or not.
+        @dev It is used when Chainlink doesn't support a given market, but they support the inverse one.
+        @dev Example:
+            Not supported:  DAI / LINK
+            Supported:      LINK / DAI.
+            In this case, despite Chainlink doesn't support the  DAI / LINK oracle, we use the LINK / DAI one and make the inverse calculation.
+     */
     bool public inverse;
 
     /** External Functions */

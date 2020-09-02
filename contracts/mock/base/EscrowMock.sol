@@ -61,6 +61,7 @@ contract EscrowMock is Escrow {
                 principalOwed: 0,
                 interestOwed: 0,
                 borrowedAmount: 0,
+                escrow: address(0x0),
                 status: _loanStatus,
                 liquidated: false
             });

@@ -17,5 +17,10 @@ interface EscrowInterface {
      */
     function callDapp(TellerCommon.DappData calldata dappData) external;
 
+    /**
+        @notice It initializes this escrow instance for a given loans address and loan id.
+        @param loansAddress loans contract address.
+        @param aLoanID the loan ID associated to this escrow instance.
+     */
     function initialize(address loansAddress, uint256 aLoanID) external;
 }

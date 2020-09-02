@@ -101,6 +101,13 @@ library TellerCommon {
         bool liquidated;
     }
 
+    /**
+        @notice This struct represents the collateral information for a given loan.
+        @param collateral the current collateral amount.
+        @param neededInLendingTokens the collateral needed expressed in lending tokens.
+        @param neededInCollateralTokens the collateral needed expressed in collateral tokens.
+        @param moreCollateralRequired true if the given loan requires more collateral. Otherwise it is false.
+     */
     struct LoanCollateralInfo {
         uint256 collateral;
         uint256 neededInLendingTokens;

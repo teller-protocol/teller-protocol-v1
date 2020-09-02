@@ -21,14 +21,14 @@ module.exports = async function(
             supplyToDebt,
             markets,
         } = atmInfo;
-        console.log(`Creating ATM ${atmKey}: ${token.name}/${token.symbol}/${token.decimals} - Max. Cap.: ${token.maxCap} - Max. Vestings per Wallet: ${token.maxVestingsPerWallet}`);
+        console.log(`Creating ATM ${atmKey}: ${token.name}/${token.symbol}/${token.decimals} - Max. Cap.: ${token.maxCap} - Max. Vestings per Wallet: ${token.maxVestingPerWallet}`);
 
         await atmFactory.createATM(
             token.name,
             token.symbol,
             token.decimals,
             token.maxCap,
-            token.maxVestingsPerWallet,
+            token.maxVestingPerWallet,
             txConfig,
         );
 

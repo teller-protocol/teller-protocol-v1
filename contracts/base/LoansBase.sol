@@ -16,7 +16,7 @@ import "../interfaces/PairAggregatorInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
-import "../atm/IATMGovernance.sol";
+import "../atm/ATMGovernanceInterface.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/

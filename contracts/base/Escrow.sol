@@ -87,9 +87,9 @@ contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, Ba
     }
 
     /**
-        @notice It initializes the instance of the Escrow.
-        @param loansAddress the Loans contract address.
-        @param aLoanID the loanID associated to this Escrow contract.
+        @notice It initializes this escrow instance for a given loans address and loan id.
+        @param loansAddress loans contract address.
+        @param aLoanID the loan ID associated to this escrow instance.
      */
     function initialize(address loansAddress, uint256 aLoanID)
         public

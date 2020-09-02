@@ -1,11 +1,8 @@
 // JS Libraries
-const IATMSettingsEncoder = require("../utils/encoders/IATMSettingsEncoder");
-const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
 const {
     t,
     toBytes32,
-    createMocks
 } = require('../utils/consts');
 const {
     atmGovernance
@@ -16,10 +13,8 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
-const Settings = artifacts.require("./base/Settings.sol");
 
 contract('ATMGovernanceUpdateGeneralSettingTest', function (accounts) {
-    const encoder = new IATMSettingsEncoder(web3)
     let instance;
     let settingsInstance;
 
@@ -41,7 +36,7 @@ contract('ATMGovernanceUpdateGeneralSettingTest', function (accounts) {
 
     withData({
         _1_basic: [0, SETTING_NAME, SETTING_NEW_VALUE, undefined, false],
-        _2_notSigner: [2, SETTING_NAME, SETTING_NEW_VALUE, 'ONLY_PAUSER', true],
+        _2_notSigner: [2, SETTING_NAME, SETTING_NEW_VALUE, 'SignerRole: caller does not have the Signer role', true],
         _3_emptySettingName: [0, EMPTY_SETTING_NAME, SETTING_NEW_VALUE, 'GENERAL_SETTING_MUST_BE_PROVIDED', true],
         _4_sameOldValue: [0, SETTING_NAME, SETTING_OLD_VALUE, 'GENERAL_SETTING_EQUAL_PREVIOUS', true],
         _5_invalidValueZero: [0, SETTING_NAME, 0, 'GENERAL_SETTING_MUST_BE_POSITIVE', true],

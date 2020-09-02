@@ -7,6 +7,7 @@ const { loans } = require('../utils/events');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const PairAggregatorEncoder = require('../utils/encoders/PairAggregatorEncoder');
 const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
+const EscrowFactoryInterfaceEncoder = require('../utils/encoders/EscrowFactoryInterfaceEncoder');
 const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
@@ -21,12 +22,14 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     const pairAggregatorEncoder = new PairAggregatorEncoder(web3);
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
+    const escrowFactoryInterfaceEncoder = new EscrowFactoryInterfaceEncoder(web3);
     const owner = accounts[0];
     let instance;
     let oracleInstance;
     let lendingPoolInstance;
     let loanTermsConsInstance;
     let lendingTokenInstance;
+    let escrowFactory;
 
     const mockLoanID = 0;
 
@@ -38,6 +41,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
         lendingPoolInstance = await Mock.new();
         lendingTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
+        escrowFactory = await Mock.new();
         const collateralTokenInstance = await Mock.new();
         const atmSettingsInstance = await Mock.new();
         const marketsStateInstance = await Mock.new();
@@ -49,7 +53,6 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
                 onInitialize: async (
                     instance,
                     {
-                        escrowFactory,
                         versionsRegistry,
                         pairAggregatorRegistry,
                         interestValidator,
@@ -64,9 +67,12 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
                     );
                 },
             });
-        const escrowFactory = await EscrowFactory.new();
 
-        await escrowFactory.initialize(settingsInstance.address);
+        const newEscrowInstance = await Mock.new();
+        await escrowFactory.givenMethodReturnAddress(
+            escrowFactoryInterfaceEncoder.encodeCreateEscrow(),
+            newEscrowInstance.address
+        );
 
         loanTermsConsInstance = await Mock.new();
         instance = await Loans.new();

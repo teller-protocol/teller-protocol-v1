@@ -11,7 +11,16 @@ import "../base/BaseUpgradeable.sol";
 // Interfaces
 import "./IATMSettings.sol";
 
-
+/*****************************************************************************************************/
+/**                                             WARNING                                             **/
+/**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
+/**  ---------------------------------------------------------------------------------------------  **/
+/**  Do NOT change the order of or PREPEND any storage variables to this or new versions of this    **/
+/**  contract as this will cause the the storage slots to be overwritten on the proxy contract!!    **/
+/**                                                                                                 **/
+/**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
+/**  more information.                                                                              **/
+/*****************************************************************************************************/
 /**
     @notice It manages the settings for the ATMs.
 
@@ -39,43 +48,9 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
      */
     mapping(address => mapping(address => address)) public marketToAtm;
 
-    /**
-        @notice It stores the current logic implementation address for ATM Tokens.
-     */
-    address public atmTokenLogic;
-
-    /**
-        @notice It stores the current logic implementation address for ATM Governance.
-     */
-    address public atmGovernanceLogic;
-
-    /** Modifiers */
-
     /* Constructor */
 
     /** External Functions */
-
-    /**
-        @notice It sets a new ATM token template to be used in the proxy (see createATM function).
-        @param newATMTokenLogicAddress the new ATM token template address.
-     */
-    function setATMTokenLogic(address newATMTokenLogicAddress)
-        external
-        onlyPauser()
-    {
-        _setATMTokenLogic(newATMTokenLogicAddress);
-    }
-
-    /**
-        @notice It sets a new ATM governance template to be used in the proxy (see createATM function).
-        @param newATMGovernanceLogicAddress the new ATM governance template address.
-     */
-    function setATMGovernanceLogic(address newATMGovernanceLogicAddress)
-        external
-        onlyPauser()
-    {
-        _setATMGovernanceLogic(newATMGovernanceLogicAddress);
-    }
 
     /**
         @notice It pauses a given ATM.
@@ -251,53 +226,6 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
     }
 
     /** Internal functions */
-
-    /**
-        @notice It sets a new ATM token template to be used in the proxy (see createATM function).
-        @param newATMTokenLogicAddress the new ATM token template address.
-     */
-    function _setATMTokenLogic(address newATMTokenLogicAddress) internal {
-        require(newATMTokenLogicAddress.isContract(), "ATM_TOKEN_MUST_BE_A_CONTRACT");
-        address oldATMTokenLogic = atmTokenLogic;
-        oldATMTokenLogic.requireNotEqualTo(
-            newATMTokenLogicAddress,
-            "NEW_ATM_TOKEN_MUST_BE_PROVIDED"
-        );
-
-        atmTokenLogic = newATMTokenLogicAddress;
-
-        emit ATMTokenLogicUpdated(
-            msg.sender,
-            oldATMTokenLogic,
-            newATMTokenLogicAddress
-        );
-    }
-
-    /**
-        @notice It sets a new ATM governance template to be used in the proxy (see createATM function).
-        @param newATMGovernanceLogicAddress the new ATM governance template address.
-     */
-    function _setATMGovernanceLogic(address newATMGovernanceLogicAddress)
-        internal
-    {
-        require(
-            newATMGovernanceLogicAddress.isContract(),
-            "ATM_GOV_MUST_BE_A_CONTRACT"
-        );
-        address oldATMGovernanceLogic = atmGovernanceLogic;
-        oldATMGovernanceLogic.requireNotEqualTo(
-            newATMGovernanceLogicAddress,
-            "NEW_ATM_GOV_MUST_BE_PROVIDED"
-        );
-
-        atmGovernanceLogic = newATMGovernanceLogicAddress;
-
-        emit ATMGovernanceLogicUpdated(
-            msg.sender,
-            oldATMGovernanceLogic,
-            newATMGovernanceLogicAddress
-        );
-    }
 
     /** Private functions */
 }

@@ -7,14 +7,11 @@ import "../util/AddressArrayLib.sol";
 import "../base/TInitializable.sol";
 import "../base/DynamicProxy.sol";
 
-// Contracts
-import "./ATMGovernanceProxy.sol";
-import "./ATMTokenProxy.sol";
 
 // Interfaces
 import "./ATMTokenInterface.sol";
-import "./IATMGovernance.sol";
-import "../atm/IATMFactory.sol";
+import "./ATMGovernanceInterface.sol";
+import "../atm/ATMFactoryInterface.sol";
 
 
 /*****************************************************************************************************/
@@ -31,7 +28,7 @@ import "../atm/IATMFactory.sol";
     @notice This contract will create upgradeable ATM instances.
     @author develop@teller.finance
  */
-contract ATMFactory is IATMFactory, TInitializable, BaseUpgradeable {
+contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
     using AddressArrayLib for address[];
 
     /**
@@ -53,7 +50,7 @@ contract ATMFactory is IATMFactory, TInitializable, BaseUpgradeable {
         @param symbol ATM token symbol
         @param decimals ATM token decimals 
         @param cap ATM token max cap.
-        @param maxVestingsPerWallet max vestings per wallet for the ATM token.
+        @param maxVestingPerWallet max vestings per wallet for the ATM token.
         @return the new ATM governance instance address.
      */
     function createATM(
@@ -61,7 +58,7 @@ contract ATMFactory is IATMFactory, TInitializable, BaseUpgradeable {
         string calldata symbol,
         uint8 decimals,
         uint256 cap,
-        uint256 maxVestingsPerWallet
+        uint256 maxVestingPerWallet
     ) external onlyPauser() isInitialized() returns (address) {
         address owner = msg.sender;
         
@@ -69,7 +66,7 @@ contract ATMFactory is IATMFactory, TInitializable, BaseUpgradeable {
         ATMTokenInterface atmTokenProxy = ATMTokenInterface(address(new DynamicProxy(address(settings()), atmTokenLogicName)));
 
         bytes32 atmGovernanceLogicName = settings().versionsRegistry().consts().ATM_GOVERNANCE_LOGIC_NAME();
-        IATMGovernance atmGovernanceProxy = IATMGovernance(address(new DynamicProxy(address(settings()), atmGovernanceLogicName)));
+        ATMGovernanceInterface atmGovernanceProxy = ATMGovernanceInterface(address(new DynamicProxy(address(settings()), atmGovernanceLogicName)));
         atmGovernanceProxy.initialize(address(settings()), owner);
         address atmGovernanceProxyAddress = address(atmGovernanceProxy);
 
@@ -78,7 +75,7 @@ contract ATMFactory is IATMFactory, TInitializable, BaseUpgradeable {
             symbol,
             decimals,
             cap,
-            maxVestingsPerWallet,
+            maxVestingPerWallet,
             address(settings()),
             atmGovernanceProxyAddress
         );

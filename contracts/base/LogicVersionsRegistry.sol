@@ -12,6 +12,16 @@ import "../util/LogicVersionsConsts.sol";
 // Interfaces
 import "../interfaces/LogicVersionsRegistryInterface.sol";
 
+/*****************************************************************************************************/
+/**                                             WARNING                                             **/
+/**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
+/**  ---------------------------------------------------------------------------------------------  **/
+/**  Do NOT change the order of or PREPEND any storage variables to this or new versions of this    **/
+/**  contract as this will cause the the storage slots to be overwritten on the proxy contract!!    **/
+/**                                                                                                 **/
+/**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
+/**  more information.                                                                              **/
+/*****************************************************************************************************/
 /**
     @notice It manages all the logic contract versions, mapping each one to a logic name (or key).
 

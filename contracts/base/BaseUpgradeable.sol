@@ -18,6 +18,10 @@ contract BaseUpgradeable {
 
     /** Modifiers **/
 
+    /**
+        @notice Checks if sender has a pauser role
+        @dev Throws an error if the sender has not a pauser role.
+     */
     modifier onlyPauser() {
         settings().requirePauserRole(msg.sender);
         _;

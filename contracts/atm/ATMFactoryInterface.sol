@@ -43,7 +43,7 @@ interface ATMFactoryInterface {
         @param symbol ATM token symbol
         @param decimals ATM token decimals 
         @param cap ATM token max cap.
-        @param maxVestingsPerWallet max vestings per wallet for the ATM token.
+        @param maxVestingPerWallet max vestings per wallet for the ATM token.
         @return the new ATM governance instance address.
      */
     function createATM(
@@ -51,7 +51,7 @@ interface ATMFactoryInterface {
         string calldata symbol,
         uint8 decimals,
         uint256 cap,
-        uint256 maxVestingsPerWallet
+        uint256 maxVestingPerWallet
     ) external returns (address);
 
     /**

@@ -7,6 +7,7 @@ const { loans } = require('../utils/events');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const PairAggregatorEncoder = require('../utils/encoders/PairAggregatorEncoder');
 const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
+const EscrowFactoryInterfaceEncoder = require('../utils/encoders/EscrowFactoryInterfaceEncoder');
 const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
@@ -22,6 +23,7 @@ contract('TokenCollateralLoansTakeOutLoanTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     const pairAggregatorEncoder = new PairAggregatorEncoder(web3);
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
+    const escrowFactoryInterfaceEncoder = new EscrowFactoryInterfaceEncoder(web3);
     const owner = accounts[0];
     let instance;
     let oracleInstance;
@@ -29,6 +31,7 @@ contract('TokenCollateralLoansTakeOutLoanTest', function (accounts) {
     let loanTermsConsInstance;
     let lendingTokenInstance;
     let collateralTokenInstance;
+    let escrowFactory;
 
     const mockLoanID = 0;
 
@@ -41,6 +44,7 @@ contract('TokenCollateralLoansTakeOutLoanTest', function (accounts) {
         lendingTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
         collateralTokenInstance = await LINKMock.new();
+        escrowFactory = await Mock.new();
         const atmSettingsInstance = await Mock.new();
         const marketsStateInstance = await Mock.new();
         const settingsInstance = await createTestSettingsInstance(
@@ -51,7 +55,6 @@ contract('TokenCollateralLoansTakeOutLoanTest', function (accounts) {
                 onInitialize: async (
                     instance,
                     {
-                        escrowFactory,
                         versionsRegistry,
                         pairAggregatorRegistry,
                         interestValidator,
@@ -66,9 +69,12 @@ contract('TokenCollateralLoansTakeOutLoanTest', function (accounts) {
                     );
                 },
             });
-        const escrowFactory = await EscrowFactory.new();
 
-        await escrowFactory.initialize(settingsInstance.address);
+        const newEscrowInstance = await Mock.new();
+        await escrowFactory.givenMethodReturnAddress(
+            escrowFactoryInterfaceEncoder.encodeCreateEscrow(),
+            newEscrowInstance.address
+        );
 
         loanTermsConsInstance = await Mock.new();
         instance = await Loans.new();
@@ -146,14 +152,15 @@ contract('TokenCollateralLoansTakeOutLoanTest', function (accounts) {
                 const interestOwed = Math.floor(amountToBorrow * 1475 * loanDuration / 10000 / 3650000)
                 const loan = await instance.loans.call(mockLoanID)
 
-                assert.equal(loan['loanStartTime'].toString(), txTime)
-                assert.equal(loan['principalOwed'].toString(), amountToBorrow)
-                assert.equal(loan['interestOwed'].toString(), interestOwed)
-                assert.equal(loan['status'].toString(), ACTIVE)
+                assert.equal(loan.loanStartTime.toString(), txTime)
+                assert.equal(loan.principalOwed.toString(), amountToBorrow)
+                assert.equal(loan.interestOwed.toString(), interestOwed)
+                assert.equal(loan.status.toString(), ACTIVE)
+                assert(loan.escrow.toString() !== NULL_ADDRESS)
 
                 loans
                     .loanTakenOut(tx)
-                    .emitted(mockLoanID, borrower, amountToBorrow)
+                    .emitted(mockLoanID, borrower, loan.escrow, amountToBorrow)
 
             } catch (error) {
                 assert(mustFail);

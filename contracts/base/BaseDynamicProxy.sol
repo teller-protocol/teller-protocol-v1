@@ -8,8 +8,9 @@ contract BaseDynamicProxy is BaseUpgradeable, BaseProxy {
     /** Internal Functions **/
 
     /**
-        @dev Returns the current implementation.
-        @return Address of the current implementation
+        @notice Returns the current implementation.
+        @dev It uses the LogicVersionsRegistry contract to get the logic address for a given logic name.
+        @return address of the current implementation
      */
     function _implementation() internal view returns (address) {
         return settings().versionsRegistry().getLogicVersionAddress(logicName());

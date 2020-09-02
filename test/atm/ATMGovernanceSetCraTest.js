@@ -1,6 +1,4 @@
 // JS Libraries
-const IATMSettingsEncoder = require("../utils/encoders/IATMSettingsEncoder");
-const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
 const { atmGovernance } = require('../utils/events');
@@ -10,10 +8,9 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
-const Settings = artifacts.require("./base/Settings.sol");
 
 contract('ATMGovernanceSetCraTest', function (accounts) {
-    const encoder = new IATMSettingsEncoder(web3)
+    const owner = accounts[0];
     let instance;
     let settingsInstance;
 
@@ -29,7 +26,7 @@ contract('ATMGovernanceSetCraTest', function (accounts) {
 
     withData({
         _1_basic: [0, CRA_INITIAL_VALUE, false, undefined, false],
-        _2_notSigner: [2, CRA_INITIAL_VALUE, false,  'ONLY_PAUSER', true],
+        _2_notSigner: [2, CRA_INITIAL_VALUE, false,  'SignerRole: caller does not have the Signer role', true],
         _3_notEmpty: [0, EMPTY_CRA, false, 'CRA_CANT_BE_EMPTY', true],
         _3_sameAsOld: [0, CRA_INITIAL_VALUE, true, 'CRA_SAME_AS_OLD', true],
     }, function (senderIndex, cra, repeatInsert, expectedErrorMessage, mustFail) {
