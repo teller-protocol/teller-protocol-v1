@@ -26,4 +26,8 @@ LoansBaseInterfaceEncoder.prototype.encodeCanLiquidateLoan = function() {
     return encode(this.web3, 'canLiquidateLoan(uint256)');
 }
 
+LoansBaseInterfaceEncoder.prototype.encodeRepay = function() {
+    return encode(this.web3, 'repay(uint256,uint256)');
+}
+
 module.exports = LoansBaseInterfaceEncoder;

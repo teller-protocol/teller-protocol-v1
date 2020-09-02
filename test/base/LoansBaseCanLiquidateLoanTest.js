@@ -39,8 +39,8 @@ contract("LoansBaseCanLiquidateLoanTest", function(accounts) {
     _4_is_expired: [ false, false, ACTIVE, true, false, false, false, false ],
     _5_has_escrow_not_under_valued: [ false, false, ACTIVE, false, true, false, false, false ],
     _6_has_escrow_is_under_valued: [ false, false, ACTIVE, false, true, true, false, true ],
-    _7_more_collateral_required: [ false, false, ACTIVE, false, false, false, true, false ],
-    _8_success: [ false, false, ACTIVE, false, false, false, false, true ],
+    _7_more_collateral_required: [ false, false, ACTIVE, false, false, false, true, true ],
+    _8_success: [ false, false, ACTIVE, false, false, false, false, false ],
   }, function(
     isPlatformPaused,
     isLendingPoolPaused,

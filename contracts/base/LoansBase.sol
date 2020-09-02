@@ -359,7 +359,6 @@ contract LoansBase is LoansInterface, Base {
         @param loanID The ID of the loan to check
         @return bool weather the loan can be liquidated
      */
-    // TODO: Update test
     function canLiquidateLoan(uint256 loanID) public view returns (bool) {
         if (_isPaused() || _isPoolPaused(address(lendingPool)) || loans[loanID].status != TellerCommon.LoanStatus.Active) {
             return false;

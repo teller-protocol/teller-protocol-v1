@@ -56,11 +56,6 @@ contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, Ba
 
     /** Modifiers **/
 
-    modifier whenLoanActive() {
-        require(isLoanActive(), "LOAN_NOT_ACTIVE");
-        _;
-    }
-
     /** Public Functions **/
 
     function isLoanActive() public view returns (bool) {
@@ -74,7 +69,6 @@ contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, Ba
     function callDapp(TellerCommon.DappData calldata dappData)
         external
         isInitialized()
-        whenLoanActive()
         onlyOwner()
     {
         require(settings().escrowFactory().isDapp(dappData.location), "DAPP_NOT_WHITELISTED");
@@ -136,15 +130,10 @@ contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, Ba
         return calculateTotalValue().valueInToken < loans.getTotalOwed(loanID);
     }
 
-    function purchaseLoanDebt() external payable whenLoanActive() {
+    function purchaseLoanDebt() external payable {
         require(canPurchase(), 'ESCROW_INELIGIBLE_TO_PURCHASE');
 
-        IERC20 lendingToken = IERC20(loans.lendingToken());
-        uint256 lendingTokenAllowance = lendingToken.allowance(msg.sender, address(this));
-        uint256 amountOwed = loans.getTotalOwed(loanID);
-        if (lendingTokenAllowance >= amountOwed) {
-            lendingToken.transferFrom(msg.sender, address(this), amountOwed);
-        }
+        loans.repay(loans.getTotalOwed(loanID), loanID);
 
         _transferOwnership(msg.sender);
     }
