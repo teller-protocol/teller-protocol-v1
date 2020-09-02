@@ -47,7 +47,7 @@ contract("UpgradeableProxySettingsCreatePlatformSettingTest", function(accounts)
 
                 // Invocation using proxy 2
                 const settingName = toBytes32(web3, 'MyCustom');
-                const res = await settingsOfProxy2.createPlatformSetting(
+                await settingsOfProxy2.createPlatformSetting(
                     settingName,
                     100,
                     0,
