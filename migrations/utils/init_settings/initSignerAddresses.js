@@ -5,7 +5,7 @@ const internalAddSigner = async (label, consensusInstance, signerAddress, sender
     console.log(`Adding signer ${signerAddress} to consensus contract ${consensusInstance.address}.`);
     const isAlreadySigner = await consensusInstance.isSigner(signerAddress);
     if (isAlreadySigner === false) {
-        await consensusInstance.addSigner(signerAddress);
+        await consensusInstance.addSigner(signerAddress, senderTxConfig);
         const isSigner = await consensusInstance.isSigner(signerAddress);
         console.log(`${label}: Has ${signerAddress} a signer role? ${isSigner.toString()}`);
     } else {

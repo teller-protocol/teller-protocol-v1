@@ -2,7 +2,6 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Libraries
-import "../util/AddressLib.sol";
 
 // Interfaces
 import "../interfaces/InterestConsensusInterface.sol";
@@ -26,8 +25,7 @@ import "./Consensus.sol";
 
     @author develop@teller.finance
  */
-contract InterestConsensus is Consensus, InterestConsensusInterface {
-    using AddressLib for address;
+contract InterestConsensus is InterestConsensusInterface, Consensus {
 
     /* State Variables */
 
@@ -48,10 +46,10 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
     function processRequest(
         TellerCommon.InterestRequest calldata request,
         TellerCommon.InterestResponse[] calldata responses
-    ) external isInitialized() isCaller() returns (uint256) {
+    ) external isInitialized() isCaller(msg.sender) returns (uint256) {
         require(
             responses.length >=
-                settings.getPlatformSettingValue(REQUIRED_SUBMISSIONS_SETTING),
+                settings().getPlatformSettingValue(consts.REQUIRED_SUBMISSIONS_SETTING()),
             "INTEREST_INSUFFICIENT_RESPONSES"
         );
         require(

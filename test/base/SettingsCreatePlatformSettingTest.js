@@ -9,6 +9,7 @@ const { settings } = require('../utils/events');
 const { MAX_VALUE_STRING, MAX_VALUE } = require('../../config/consts');
 
 // Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
@@ -18,7 +19,7 @@ contract('SettingsCreatePlatformSettingTest', function (accounts) {
     let instance;
     
     beforeEach('Setup for each test', async () => {
-        instance = await createTestSettingsInstance(Settings);
+        instance = await createTestSettingsInstance(Settings, { from: owner, Mock });
     });
 
     const newSetting = (name, value, min = 0, max = value * 2) => ({name, nameBytes32: toBytes32(web3, name), value, min, max});
@@ -57,7 +58,7 @@ contract('SettingsCreatePlatformSettingTest', function (accounts) {
                 newSetting('customSetting7', 2000, 2000, 9000),
                 newSetting('customSetting8', 3000, 0, 9000)
             ],
-            1, newSetting('customSetting9', 1000, 0, 9000), 'PauserRole: caller does not have the Pauser role', true
+            1, newSetting('customSetting9', 1000, 0, 9000), 'NOT_PAUSER', true
         ],
         _8_valid_max_value: [
             [],

@@ -5,10 +5,6 @@ const {
     toBytes32
 } = require('../utils/consts');
 const {
-    DUMMY_ADDRESS,
-    NULL_ADDRESS
-} = require('../utils/consts');
-const {
     atmGovernance
 } = require('../utils/events');
 
@@ -21,10 +17,12 @@ const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 contract('ATMGovernanceUpdateAssetMarketSettingTest', function (accounts) {
     const owner = accounts[0];
     let instance;
+    let settingsInstance;
 
     beforeEach('Setup for each test', async () => {
+        settingsInstance = await Mock.new();
         instance = await ATMGovernance.new();
-        await instance.initialize(owner);
+        await instance.initialize(settingsInstance.address, owner);
     });
 
     // Testing values

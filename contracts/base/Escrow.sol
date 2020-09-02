@@ -3,13 +3,13 @@ pragma experimental ABIEncoderV2;
 
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
+import "./BaseUpgradeable.sol";
+import "./BaseEscrowDapp.sol";
+import "./TInitializable.sol";
 
 // Interfaces
 import "../interfaces/EscrowInterface.sol";
-
-// Libraries
-import "./BaseEscrow.sol";
-import "./BaseEscrowDapp.sol";
+import "../interfaces/LoansInterface.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -29,7 +29,7 @@ import "./BaseEscrowDapp.sol";
 
     @author develop@teller.finance
  */
-contract Escrow is BaseEscrow, BaseEscrowDapp, EscrowInterface, TInitializable, Ownable {
+contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, BaseEscrowDapp {
     using Address for address;
 
     /** State Variables **/
@@ -64,7 +64,7 @@ contract Escrow is BaseEscrow, BaseEscrowDapp, EscrowInterface, TInitializable, 
         whenLoanActive()
         onlyOwner()
     {
-        require(settings.escrowFactory().isDapp(dappData.location), "DAPP_NOT_WHITELISTED");
+        require(settings().escrowFactory().isDapp(dappData.location), "DAPP_NOT_WHITELISTED");
 
         (bool success, ) = dappData.location.delegatecall(dappData.data);
 
@@ -100,10 +100,11 @@ contract Escrow is BaseEscrow, BaseEscrowDapp, EscrowInterface, TInitializable, 
         loans = LoansInterface(loansAddress);
         loanID = aLoanID;
 
-        initialize(getBorrower());
+        Ownable.initialize(getBorrower());
+        TInitializable._initialize();
 
         // Initialize tokens list with the borrowed token.
-        _tokenUpdated(loans.lendingToken());
+        // _tokenUpdated(loans.lendingToken()); // TODO Verify the _tokenUpdated function works with the AddressLib
     }
 
     /** Internal Functions */

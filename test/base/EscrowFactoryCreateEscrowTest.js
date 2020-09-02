@@ -4,27 +4,60 @@ const { createTestSettingsInstance } = require("../utils/settings-helper");
 const { t, NULL_ADDRESS, ACTIVE } = require("../utils/consts");
 const withData = require('leche').withData;
 
+const LogicVersionsRegistryEncoder = require("../utils/encoders/LogicVersionsRegistryEncoder");
+
+const Mock = artifacts.require("./mock/util/Mock.sol");
+
 // Smart contracts
-const Escrow = artifacts.require("./base/Escrow.sol");
 const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 
 contract('EscrowFactoryCreateEscrowTest', function (accounts) {
+  const logicVersionsRegistryEncoder = new LogicVersionsRegistryEncoder(web3);
   const owner = accounts[0];
-  let instance;
+  let escrowFactoryInstance;
   let settingsInstance;
   let loans;
-  let escrowLibrary;
+  let versionsRegistry;
+  let consts;
 
   beforeEach(async () => {
-    settingsInstance = await createTestSettingsInstance(Settings);
     loans = await Loans.new();
-    escrowLibrary = await Escrow.new();
-    instance = await EscrowFactory.new();
+    escrowFactoryInstance = await EscrowFactory.new();
+    versionsRegistry = await Mock.new();
+    consts = await Mock.new();
 
-    await instance.initialize(settingsInstance.address, escrowLibrary.address);
-    await settingsInstance.setEscrowFactory(instance.address);
+    await versionsRegistry.givenMethodReturnBool(
+      logicVersionsRegistryEncoder.encodeConsts(),
+      consts.address
+    );
+
+    settingsInstance = await createTestSettingsInstance(
+      Settings,
+      {
+        from: owner,
+        Mock,
+        onInitialize: async (
+          instance,
+          {
+              marketsState,
+              interestValidator,
+              pairAggregatorRegistry,
+              atmSettings,
+          }) => {
+          await instance.initialize(
+              escrowFactoryInstance.address,
+              versionsRegistry.address,
+              pairAggregatorRegistry.address,
+              marketsState.address,
+              interestValidator.address,
+              atmSettings.address
+          );
+      },
+      }
+    );
+    await escrowFactoryInstance.initialize(settingsInstance.address);
     await loans.externalSetSettings(settingsInstance.address);
   })
 

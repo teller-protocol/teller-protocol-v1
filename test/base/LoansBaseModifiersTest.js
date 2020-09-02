@@ -20,7 +20,6 @@ contract('LoansBaseModifiersTest', function (accounts) {
         const lendingPool = await Mock.new();
         const loanTermsConsensus = await Mock.new();
         const markets = await Mock.new();
-        const atmSettings = await Mock.new();
         settingsInstance = await Mock.new();
         instance = await LoansBaseModifiersMock.new();
         await instance.initialize(
@@ -29,7 +28,6 @@ contract('LoansBaseModifiersTest', function (accounts) {
             loanTermsConsensus.address,
             settingsInstance.address,
             markets.address,
-            atmSettings.address,
         );
     });
 

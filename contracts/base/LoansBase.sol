@@ -5,20 +5,18 @@ pragma experimental ABIEncoderV2;
 import "../util/TellerCommon.sol";
 import "../util/SettingsConsts.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "../util/ERC20Lib.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
+import "../util/ERC20DetailedLib.sol";
 
 // Contracts
 import "./Base.sol";
-import "../providers/openzeppelin/ERC20.sol";
 
 // Interfaces
 import "../interfaces/PairAggregatorInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
-import "../settings/IATMSettings.sol";
 import "../atm/IATMGovernance.sol";
-import "../util/TellerCommon.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -37,9 +35,9 @@ import "../util/TellerCommon.sol";
 
     @author develop@teller.finance
  */
-contract LoansBase is LoansInterface, Base, SettingsConsts {
+contract LoansBase is LoansInterface, Base {
     using SafeMath for uint256;
-    using ERC20Lib for ERC20;
+    using ERC20DetailedLib for ERC20Detailed;
 
     /* State Variables */
 
@@ -66,11 +64,11 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
 
     LoanTermsConsensusInterface public loanTermsConsensus;
 
-    IATMSettings public atmSettings;
-
     mapping(address => uint256[]) public borrowerLoans;
 
     mapping(uint256 => TellerCommon.Loan) public loans;
+
+    SettingsConsts public consts;
 
     /* Modifiers */
 
@@ -129,12 +127,12 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
      */
     modifier withValidLoanRequest(TellerCommon.LoanRequest memory loanRequest) {
         require(
-            settings.getPlatformSettingValue(MAXIMUM_LOAN_DURATION_SETTING) >=
+            settings().getPlatformSettingValue(consts.MAXIMUM_LOAN_DURATION_SETTING()) >=
                 loanRequest.duration,
             "DURATION_EXCEEDS_MAX_DURATION"
         );
         require(
-            !settings.exceedsMaxLoanAmount(
+            !settings().exceedsMaxLoanAmount(
                 lendingPool.lendingToken(),
                 loanRequest.amount
             ),
@@ -222,7 +220,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
 
         require(
             loans[loanID].lastCollateralIn <=
-                now.sub(settings.getPlatformSettingValue(SAFETY_INTERVAL_SETTING)),
+                now.sub(settings().getPlatformSettingValue(consts.SAFETY_INTERVAL_SETTING())),
             "COLLATERAL_DEPOSITED_RECENTLY"
         );
 
@@ -248,7 +246,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         // We only send the loan to escrow contract for now.
         lendingPool.createLoan(amountBorrow, escrow);
 
-        markets.increaseBorrow(
+        _markets().increaseBorrow(
             lendingPool.lendingToken(),
             this.collateralToken(),
             amountBorrow
@@ -299,7 +297,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         // collect the money from the payer
         lendingPool.repay(toPay, msg.sender);
 
-        markets.increaseRepayment(
+        _markets().increaseRepayment(
             lendingPool.lendingToken(),
             this.collateralToken(),
             toPay
@@ -338,7 +336,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         _payOutCollateral(loanID, collateral, msg.sender);
 
         uint256 tokenPayment = collateralInTokens
-            .mul(settings.getPlatformSettingValue(LIQUIDATE_ETH_PRICE_SETTING))
+            .mul(settings().getPlatformSettingValue(consts.LIQUIDATE_ETH_PRICE_SETTING()))
             .div(TEN_THOUSAND);
         // the liquidator pays x% of the collateral price
         lendingPool.liquidationPayment(tokenPayment, msg.sender);
@@ -393,7 +391,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
     function setPriceOracle(address newPriceOracle)
         external
         isInitialized()
-        whenAllowed(msg.sender)
+        onlyPauser()
     {
         // New address must be a contract and not empty
         require(newPriceOracle.isContract(), "ORACLE_MUST_CONTRACT_NOT_EMPTY");
@@ -464,28 +462,23 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         @param lendingPoolAddress Contract address of the lending pool
         @param loanTermsConsensusAddress Contract address for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
-        @param marketsAddress Contract address to store market data.
-        @param atmSettingsAddress Contract address to get ATM settings data.
      */
     function _initialize(
         address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
-        address settingsAddress,
-        address marketsAddress,
-        address atmSettingsAddress
+        address settingsAddress
     ) internal isNotInitialized() {
         priceOracleAddress.requireNotEmpty("PROVIDE_ORACLE_ADDRESS");
         lendingPoolAddress.requireNotEmpty("PROVIDE_LENDING_POOL_ADDRESS");
         loanTermsConsensusAddress.requireNotEmpty("PROVIDED_LOAN_TERMS_ADDRESS");
-        atmSettingsAddress.requireNotEmpty("PROVIDED_ATM_SETTINGS_ADDRESS");
 
-        _initialize(settingsAddress, marketsAddress);
+        _initialize(settingsAddress);
 
         priceOracle = priceOracleAddress;
         lendingPool = LendingPoolInterface(lendingPoolAddress);
         loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
-        atmSettings = IATMSettings(atmSettingsAddress);
+        consts = new SettingsConsts();
     }
 
     /**
@@ -546,7 +539,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
      */
     function _convertWeiToToken(uint256 weiAmount) internal view returns (uint256) {
         // wei amount / lending token price in wei * the lending token decimals.
-        uint256 aWholeLendingToken = ERC20(lendingPool.lendingToken()).getAWholeToken();
+        uint256 aWholeLendingToken = ERC20Detailed(lendingPool.lendingToken()).getAWholeToken();
         uint256 oneLendingTokenPriceWei = uint256(
             PairAggregatorInterface(priceOracle).getLatestAnswer()
         );
@@ -564,7 +557,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
     function _convertTokenToWei(uint256 tokenAmount) internal view returns (uint256) {
         // tokenAmount is in token units, chainlink price is in whole tokens
         // token amount in tokens * lending token price in wei / the lending token decimals.
-        uint256 aWholeLendingToken = ERC20(lendingPool.lendingToken()).getAWholeToken();
+        uint256 aWholeLendingToken = ERC20Detailed(lendingPool.lendingToken()).getAWholeToken();
         uint256 oneLendingTokenPriceWei = uint256(
             PairAggregatorInterface(priceOracle).getLatestAnswer()
         );
@@ -600,7 +593,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         uint256 maxLoanAmount
     ) internal view returns (TellerCommon.Loan memory) {
         uint256 termsExpiry = now.add(
-            settings.getPlatformSettingValue(TERMS_EXPIRY_TIME_SETTING)
+            settings().getPlatformSettingValue(consts.TERMS_EXPIRY_TIME_SETTING())
         );
         return
             TellerCommon.Loan({
@@ -658,14 +651,14 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
         view
         returns (bool)
     {
-        address atmAddressForMarket = atmSettings.getATMForMarket(
+        address atmAddressForMarket = settings().atmSettings().getATMForMarket(
             lendingPool.lendingToken(),
             collateralToken
         );
         require(atmAddressForMarket != address(0x0), "ATM_NOT_FOUND_FOR_MARKET");
         uint256 supplyToDebtMarketLimit = IATMGovernance(atmAddressForMarket)
             .getGeneralSetting(SUPPLY_TO_DEBT_ATM_SETTING);
-        uint256 currentSupplyToDebtMarket = markets.getSupplyToDebtFor(
+        uint256 currentSupplyToDebtMarket = _markets().getSupplyToDebtFor(
             lendingPool.lendingToken(),
             collateralToken,
             newLoanAmount
@@ -680,7 +673,7 @@ contract LoansBase is LoansInterface, Base, SettingsConsts {
      */
     function _createEscrow(uint256 loanID) internal returns (address) {
         return
-            settings.escrowFactory().createEscrow(
+            settings().escrowFactory().createEscrow(
                 loans[loanID].loanTerms.borrower,
                 loanID
             );

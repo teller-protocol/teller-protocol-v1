@@ -6,43 +6,75 @@ const { ACTIVE } = require("../utils/consts");
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
 const { escrowFactory } = require('../utils/events');
+const LogicVersionsRegistryEncoder = require('../utils/encoders/LogicVersionsRegistryEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
 const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 
 // Smart contracts
-const Escrow = artifacts.require("./base/Escrow.sol");
 const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
 const Settings = artifacts.require("./base/Settings.sol");
+const Escrow = artifacts.require("./base/Escrow.sol");
 
 contract('BaseLoansCreateEscrowTest', function (accounts) {
-  let instance;
-  let escrowLibrary;
+  const logicVersionsRegistryEncoder = new LogicVersionsRegistryEncoder(web3);
+  const owner = accounts[0];
+  let escrowFactoryInstance;
   let loans;
 
   beforeEach(async () => {
-    const settingsInstance = await createTestSettingsInstance(Settings);
+    escrowFactoryInstance = await EscrowFactory.new();
+    const versionsRegistry = await Mock.new();
+    const pairAggregatorRegistry = await Mock.new();
+    const interestValidator = await Mock.new();
+    const marketsInstance = await Mock.new();
+    const atmSettingsInstance = await Mock.new();
+
+    const constsInstance = await Mock.new();
+
+    await versionsRegistry.givenMethodReturnAddress(
+      logicVersionsRegistryEncoder.encodeConsts(),
+      constsInstance.address
+    );
+    await versionsRegistry.givenMethodReturnBool(
+      logicVersionsRegistryEncoder.encodeHasLogicVersion(),
+      true
+    );
+
+    const settingsInstance = await createTestSettingsInstance(
+      Settings,
+      { 
+        from: owner,
+        Mock,
+        onInitialize: async (
+          instance,
+          ) => {
+            await instance.initialize(
+              escrowFactoryInstance.address,
+              versionsRegistry.address,
+              pairAggregatorRegistry.address,
+              marketsInstance.address,
+              interestValidator.address,
+              atmSettingsInstance.address,
+            );
+          },
+      });
 
     const oracleInstance = await Mock.new();
     const lendingPoolInstance = await Mock.new();
     const loanTermsConsInstance = await Mock.new();
-    const marketsInstance = await Mock.new();
-    const atmSettingsInstance = await Mock.new();
+    const collateralTokenInstance = await Mock.new();
     loans = await Loans.new();
     await loans.initialize(
       oracleInstance.address,
       lendingPoolInstance.address,
       loanTermsConsInstance.address,
       settingsInstance.address,
-      marketsInstance.address,
-      atmSettingsInstance.address
+      collateralTokenInstance.address,
     );
-    escrowLibrary = await Escrow.new();
-    instance = await EscrowFactory.new();
-    await instance.initialize(settingsInstance.address, escrowLibrary.address);
-
-    await settingsInstance.setEscrowFactory(instance.address)
+    
+    await escrowFactoryInstance.initialize(settingsInstance.address);
   })
 
   withData({
@@ -63,8 +95,10 @@ contract('BaseLoansCreateEscrowTest', function (accounts) {
         // Invocation
         let escrowAddress
         // If the test must fail from the resulting transaction, then the call to the function (not a transaction) will also fail but as a different Error object
-        if (!mustFail)
+        if (!mustFail) {
           escrowAddress = await loans.externalCreateEscrow.call(loanID);
+        }
+
         const result = await loans.externalCreateEscrow(loanID);
 
         // Assertions

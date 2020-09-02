@@ -4,8 +4,6 @@ const {
 } = require('./consts');
 const initPlatformSettings = require('../../migrations/utils/init_settings/initPlatformSettings');
 
-const UpgradeableProxy = artifacts.require("./base/UpgradeableProxy.sol");
-
 const INITIAL_VALUE = 1;
 const TEST_DEFAULT_VALUE = {
     requiredSubmissions: INITIAL_VALUE,
@@ -21,20 +19,56 @@ const TEST_DEFAULT_VALUE = {
 
 const createSettingsInstance = async (
     Settings,
-    params,
+    { txConfig, Mock, onInitialize},
+    platformSettings,
 ) => {
-    const { from } = Settings.class_defaults
-    const settingsInstance = await Settings.new();
-    const proxy = await UpgradeableProxy.new(settingsInstance.address, from, '0x')
-    const instance = await Settings.at(proxy.address)
-    await instance.initialize(from);
+    const instance = await Settings.new();
+    if(onInitialize !== undefined) {
+        if(Mock !== undefined) {
+            const escrowFactory = await Mock.new();
+            const versionsRegistry = await Mock.new();
+            const pairAggregatorRegistry = await Mock.new();
+            const marketsState = await Mock.new();
+            const interestValidator = await Mock.new();
+            const atmSettings = await Mock.new();
+            await onInitialize(
+                instance,
+                {
+                    escrowFactory,
+                    versionsRegistry,
+                    pairAggregatorRegistry,
+                    marketsState,
+                    interestValidator,
+                    atmSettings,
+                }
+            );
+        } else {
+            await onInitialize(instance, {});
+        }
+    } else {
+        if(Mock !== undefined) {
+            const escrowFactory = await Mock.new();
+            const versionsRegistry = await Mock.new();
+            const pairAggregatorRegistry = await Mock.new();
+            const marketsState = await Mock.new();
+            const interestValidator = await Mock.new();
+            const atmSettings = await Mock.new();
+            await instance.initialize(
+                escrowFactory.address,
+                versionsRegistry.address,
+                pairAggregatorRegistry.address,
+                marketsState.address,
+                interestValidator.address,
+                atmSettings.address,
+            );
+        }
+    }
 
-    const txConfig = { from };
-    const shouldInitPlatformSettings = typeof params === 'object'
+    const shouldInitPlatformSettings = typeof platformSettings === 'object'
     if (shouldInitPlatformSettings) {
         await initPlatformSettings(
             instance,
-            { ...params, txConfig, },
+            { ...platformSettings, txConfig, },
             {},
         );
     }
@@ -56,16 +90,16 @@ const overrideDefaultTestValues = (params) => {
 
 module.exports = {
     TEST_DEFAULT_VALUE,
-    // NOTE: Pass an object as `params` to init platform settings
-    createTestSettingsInstance: async (Settings, params) => {
+    // NOTE: Pass an object as `platformSettings` to init platform settings
+    createTestSettingsInstance: async (Settings, { from, Mock, onInitialize}, platformSettings) => {
         // It overrides the TEST default values using a {settingName: newValue} object.
         // See examples using this 'createTestSettingsInstance' function.
-        if (typeof params === 'object') {
-            const values = overrideDefaultTestValues(params);
-            params = { platformSettings: values, currentBlockNumber: 0, web3, verbose: false, }
+        if (typeof platformSettings === 'object') {
+            const values = overrideDefaultTestValues(platformSettings);
+            platformSettings = { platformSettings: values, currentBlockNumber: 0, web3, verbose: false, }
         }
 
-        return await createSettingsInstance(Settings, params);
+        return await createSettingsInstance(Settings, { txConfig: { from }, Mock, onInitialize }, platformSettings);
     },
     printPlatformSetting: ({value, min, max, exists}, { settingName, settingNameBytes32 }) => {
         console.log(`Setting Name / Bytes32:    ${settingName} / ${settingNameBytes32}`);

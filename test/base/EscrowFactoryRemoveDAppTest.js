@@ -9,21 +9,18 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
-const Escrow = artifacts.require("./base/Escrow.sol");
 const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
 
 contract('EscrowFactoryRemoveDAppTest', function (accounts) {
   const owner = accounts[0];
-  let escrow;
   let instance;
   let mocks;
 
   beforeEach(async () => {
-    escrow = await Escrow.new();
     instance = await EscrowFactory.new();
     const settings = await Settings.new();
     await settings.initialize(owner);
-    await instance.initialize(settings.address, escrow.address, { from: owner });
+    await instance.initialize(settings.address, { from: owner });
 
     mocks = await createMocks(Mock, 10);
   })

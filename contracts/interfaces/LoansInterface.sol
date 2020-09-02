@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 import "../util/TellerCommon.sol";
-
+import "./SettingsInterface.sol";
 
 /**
     @notice This interface defines the functions to work with the Teller loans protocol
@@ -225,4 +225,22 @@ interface LoansInterface {
         @param newPriceOracle the new price oracle address.
      */
     function setPriceOracle(address newPriceOracle) external;
+
+    function settings() external view returns (SettingsInterface);
+
+    /**
+        @notice Initializes the current contract instance setting the required parameters, if allowed
+        @param priceOracleAddress Contract address of the price oracle
+        @param lendingPoolAddress Contract address of the lending pool
+        @param loanTermsConsensusAddress Contract adddress for loan term consensus
+        @param settingsAddress Contract address for the configuration of the platform
+        @param collateralTokenAddress Contract address for the collateral token
+     */
+    function initialize(
+        address priceOracleAddress,
+        address lendingPoolAddress,
+        address loanTermsConsensusAddress,
+        address settingsAddress,
+        address collateralTokenAddress
+    ) external;
 }

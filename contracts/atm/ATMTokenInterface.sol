@@ -122,4 +122,14 @@ interface ATMTokenInterface {
         @param snapshotId The id of the snapshot being queried
      */
     function totalSupplyAt(uint256 snapshotId) external view returns (uint256);
+
+    function initialize(
+        string calldata name,
+        string calldata symbol,
+        uint8 decimals,
+        uint256 cap,
+        uint256 maxVestingsPerWallet,
+        address settingsAddress,
+        address atm
+    ) external;
 }

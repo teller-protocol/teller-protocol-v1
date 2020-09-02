@@ -117,4 +117,8 @@ contract LoanTermsConsensusMock is LoanTermsConsensus {
         super._requireRequestLoanTermsRateLimit(request);
         return true;
     }
+
+    function _isCaller(address) internal view returns (bool) {
+        return true;
+    }
 }

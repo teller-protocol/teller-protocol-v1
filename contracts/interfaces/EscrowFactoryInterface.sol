@@ -1,6 +1,5 @@
 pragma solidity 0.5.17;
 
-import "./LoansInterface.sol";
 
 /**
     @notice This interface defines the functions to manage the Escrow contracts associated to borrowers and loans.
@@ -8,10 +7,6 @@ import "./LoansInterface.sol";
     @author develop@teller.finance
  */
 interface EscrowFactoryInterface {
-    /**
-        This grabs the current logic that is being used by all Escrow contracts.
-     */
-    function escrowLogic() external view returns (address);
 
     /**
         @notice It tests whether a dapp address exists in the factory or not.
@@ -49,10 +44,10 @@ interface EscrowFactoryInterface {
     function getDapps() external view returns (address[] memory);
 
     /**
-        @notice It upgrades the logic to be used for all Escrow contracts.
-        @param newLogic the new Escrow logic implementation.
+        @notice It initializes this escrow contract factory instance.
+        @param settingsAddress the settings contract address.
      */
-    function upgradeEscrowLogic(address newLogic) external;
+    function initialize(address settingsAddress) external;
 
     /**
         @notice This event is emitted when a new Escrow contract is created.
@@ -66,18 +61,6 @@ interface EscrowFactoryInterface {
         address indexed loansAddress,
         uint256 indexed loanID,
         address escrowAddress
-    );
-
-    /**
-        @notice This event is emitted when the logic implementation for all Escrow contracts have been upgraded.
-        @param sender address who upgraded the Escrow logic.
-        @param oldLogic the old Escrow logic implementation.
-        @param newLogic the new Escrow logic implementation.
-     */
-    event EscrowLogicUpgraded(
-        address sender,
-        address oldLogic,
-        address newLogic
     );
 
     /**

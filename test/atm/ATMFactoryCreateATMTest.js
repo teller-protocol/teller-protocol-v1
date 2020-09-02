@@ -2,42 +2,61 @@
 const withData = require("leche").withData;
 const { t } = require("../utils/consts");
 const { atmFactory } = require('../utils/events');
+const LogicVersionsRegistryEncoder = require('../utils/encoders/LogicVersionsRegistryEncoder');
+const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const ATMFactory = artifacts.require("./atm/ATMFactory.sol");
-const Settings = artifacts.require("./base/Settings.sol");
-const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 
 contract("ATMFactoryCreateATMTest", function(accounts) {
+    const logicVersionsRegistryEncoder = new LogicVersionsRegistryEncoder(web3);
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     const ADMIN_INDEX = 1; 
 
+    let settingsInstance;
     let instance;
+    let versionsRegistry;
+    let constsInstance;
     let admin;
 
     beforeEach("Setup for each test", async () => {
         admin = accounts[ADMIN_INDEX];
-        const settings = await Settings.new();
-        await settings.initialize(admin);
+        versionsRegistry = await Mock.new();
+        constsInstance = await Mock.new();
+        await versionsRegistry.givenMethodReturnAddress(
+            logicVersionsRegistryEncoder.encodeConsts(),
+            constsInstance.address
+        );
+        await versionsRegistry.givenMethodReturnBool(
+            logicVersionsRegistryEncoder.encodeHasLogicVersion(),
+            true
+        );
+        settingsInstance = await Mock.new();
+        await settingsInstance.givenMethodReturnAddress(
+            settingsInterfaceEncoder.encodeVersionsRegistry(),
+            versionsRegistry.address
+        );
         instance = await ATMFactory.new();
-        const atmSettings = await Mock.new();
-        await instance.initialize(settings.address, atmSettings.address);
+        await instance.initialize(settingsInstance.address, { from: admin });
     });
 
     withData({
-        _1_basic: [ ADMIN_INDEX, "TokenName", "TKN", 18, 1000, 20000, undefined, false ],
-        _2_notAdmin: [ 0, "TokenName", "TKN", 18, 1000, 20000, true, "SENDER_ISNT_ALLOWED" ],
-
-    }, function(senderIndex, name, symbol, decimals, cap, maxVesting, mustFail, expectedErrorMessage) {
+        _1_basic: [ ADMIN_INDEX, true, "TokenName", "TKN", 18, 1000, 20000, undefined, false ],
+        _2_notAdmin: [ 0, false, "TokenName", "TKN", 18, 1000, 20000, true, "NOT_PAUSER" ],
+    }, function(senderIndex, addAsPauserRole, name, symbol, decimals, cap, maxVesting, mustFail, expectedErrorMessage) {
         it(t("admin", "createATM", "Should be able to create an ATM.", mustFail), async function() {
             // Setup
             const sender = accounts[senderIndex];
-            const atmToken = await Mock.new();
-            const atmGovernance = await Mock.new();
+            if(!addAsPauserRole) {
+                await settingsInstance.givenMethodRevertWithMessage(
+                    settingsInterfaceEncoder.encodeRequirePauserRole(),
+                    "NOT_PAUSER"
+                );
+            }
             try {
-                
                 // Invocation 
                 const result = await instance.createATM(
                     name,
@@ -45,8 +64,6 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
                     decimals,
                     cap,
                     maxVesting,
-                    atmGovernance.address,
-                    atmToken.address,
                     {from : sender }
                 );
                 // Assertions

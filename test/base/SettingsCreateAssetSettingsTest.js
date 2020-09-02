@@ -50,7 +50,7 @@ contract('SettingsCreateAssetSettingsTest', function (accounts) {
             const senderAddress = getSenderAddress(senderIndex);
             const assetAddress = getContractAddress(assetAddressIndex, assetInstance);
             const cTokenAddress = getContractAddress(cTokenAddressIndex, cTokenInstance);
-            const instance = await createTestSettingsInstance(Settings);
+            const instance = await createTestSettingsInstance(Settings, { from: owner, Mock });
             if(addPauserRole) {
                 await instance.addPauser(senderAddress, { from: owner });
             }
@@ -93,7 +93,7 @@ contract('SettingsCreateAssetSettingsTest', function (accounts) {
     withData({
         _1_valid_owner: [[], false, 0, {useCurrentSetting: false, index: 99}, 99, 10000, undefined, false],
         _2_valid_new_owner: [[], true, 2, {useCurrentSetting: false, index: 99}, 99, 20000, undefined, false],
-        _3_not_owner: [[], false, 2, {useCurrentSetting: false, index: 99}, 99, 20000, 'PauserRole: caller does not have the Pauser role', true],
+        _3_not_owner: [[], false, 2, {useCurrentSetting: false, index: 99}, 99, 20000, 'NOT_PAUSER', true],
         _4_with1PreviousAssets_createNew: [
             [{ maxLoanAmount: toDecimals(100, 18) }], false, 0, {useCurrentSetting: false, index: 99}, 99, 20000, undefined, false
         ],
@@ -120,7 +120,7 @@ contract('SettingsCreateAssetSettingsTest', function (accounts) {
     ) {
         it(t('user', 'createAssetSettings#2', 'Should (or not) be able to create a new asset instance.', mustFail), async function() {
             // Setup
-            const instance = await createTestSettingsInstance(Settings);
+            const instance = await createTestSettingsInstance(Settings, { from: owner, Mock });
             const senderAddress = getSenderAddress(senderIndex);
             if(addAsPauserRole) {
                 await instance.addPauser(senderAddress, { from: owner });

@@ -23,8 +23,16 @@ import "../interfaces/LoanTermsConsensusInterface.sol";
 
     @author develop@teller.finance
  */
-contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
+contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
     /* Mappings */
+    /**
+        @notice It identifies the loan terms submissions for a given borrower address and a request nonce.
+
+        @dev Examples:
+            @address(0x123...567) => 1 => AccruedLoanTerms({...})
+            @address(0x123...567) => 2 => AccruedLoanTerms({...})
+            @address(0x234...678) => 1 => AccruedLoanTerms({...})
+     */
     mapping(address => mapping(uint256 => TellerCommon.AccruedLoanTerms)) public termSubmissions;
 
     /**
@@ -50,12 +58,12 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
     )
         external
         isInitialized()
-        isCaller()
+        isCaller(msg.sender)
         returns (uint256 interestRate, uint256 collateralRatio, uint256 maxLoanAmount)
     {
         require(
             responses.length >=
-                settings.getPlatformSettingValue(REQUIRED_SUBMISSIONS_SETTING),
+                settings().getPlatformSettingValue(consts.REQUIRED_SUBMISSIONS_SETTING()),
             "LOANTERM_INSUFFICIENT_RESPONSES"
         );
         _requireRequestLoanTermsRateLimit(request);
@@ -198,8 +206,8 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         if (borrowerToLastLoanTermRequest[request.borrower] == 0) {
             return;
         }
-        uint256 requestLoanTermsRateLimit = settings.getPlatformSettingValue(
-            REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING
+        uint256 requestLoanTermsRateLimit = settings().getPlatformSettingValue(
+            consts.REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING()
         );
         require(
             borrowerToLastLoanTermRequest[request.borrower].add(

@@ -19,8 +19,7 @@ contract('LoansBaseSetPriceOracleTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         const lendingPoolInstance = await Mock.new();
         const loanTermsConsInstance = await Mock.new();
-        const marketsInstance = await Mock.new();
-        const atmSettingsInstance = await Mock.new();
+        const collateralTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
         settingsInstance = await Mock.new()
         instance = await Loans.new();
@@ -29,8 +28,7 @@ contract('LoansBaseSetPriceOracleTest', function (accounts) {
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,
-            marketsInstance.address,
-            atmSettingsInstance.address,
+            collateralTokenInstance.address,
         )
     });
 
@@ -49,7 +47,7 @@ contract('LoansBaseSetPriceOracleTest', function (accounts) {
 
     withData({
         _1_basic: [1, true, 99, undefined, false],
-        _2_sender_not_allowed: [1, false, 99, 'ADDRESS_ISNT_ALLOWED', true],
+        _2_sender_not_allowed: [1, false, 99, 'NOT_PAUSER', true],
         _3_new_price_oracle_empty: [1, true, -1, 'ORACLE_MUST_CONTRACT_NOT_EMPTY', true],
         _4_new_price_oracle_not_contract: [1, true, 2, 'ORACLE_MUST_CONTRACT_NOT_EMPTY', true],
         _5_must_provide_new_price_oracle: [1, true, 0, 'NEW_ORACLE_MUST_BE_PROVIDED', true],
@@ -64,11 +62,12 @@ contract('LoansBaseSetPriceOracleTest', function (accounts) {
                 Otherwise accounts[index]
             */
             const newPriceOracle = await getNewPriceOracle(newPriceOracleIndex, Mock);
-
-            await settingsInstance.givenMethodReturnBool(
-                settingsInterfaceEncoder.encodeHasPauserRole(),
-                hasPauserRole
-            );
+            if(!hasPauserRole) {
+                await settingsInstance.givenMethodRevertWithMessage(
+                    settingsInterfaceEncoder.encodeRequirePauserRole(),
+                    "NOT_PAUSER"
+                );
+            }
 
             try {
                 // Invocation

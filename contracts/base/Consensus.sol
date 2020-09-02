@@ -28,7 +28,7 @@ import "../base/Base.sol";
 
     @author develop@teller.finance
  */
-contract Consensus is Base, OwnerSignersRole, SettingsConsts {
+contract Consensus is Base, OwnerSignersRole {
     using SafeMath for uint256;
     using NumbersList for NumbersList.Values;
 
@@ -42,6 +42,8 @@ contract Consensus is Base, OwnerSignersRole, SettingsConsts {
     // the address with permissions to submit a request for processing
     address public callerAddress;
 
+    SettingsConsts public consts;
+
     /**
         @notice It tracks each request nonce value that borrower (in LoanTermsConsensus) or lender (in InterestConsensus) used in the loan terms and interest requests.
 
@@ -54,29 +56,35 @@ contract Consensus is Base, OwnerSignersRole, SettingsConsts {
     /**
         @notice Checks whether sender is equal to the caller address.
         @dev It throws a require error if sender is not equal to caller address.
+        @param sender the sender transaction.
      */
-    modifier isCaller() {
-        require(callerAddress == msg.sender, "SENDER_HASNT_PERMISSIONS");
+    modifier isCaller(address sender) {
+        require(_isCaller(sender), "SENDER_HASNT_PERMISSIONS");
         _;
     }
 
     /**
-        @notice It initializes this contract setting the parameters.
+        @notice It initializes this consensus contract.
+        @dev The caller address must be the loans contract for LoanTermsConsensus, and the lenders contract for InterestConsensus.
+        @param owner the owner address.
         @param aCallerAddress the contract that will call it.
         @param aSettingAddress the settings contract address.
-        @param aMarketsAddress the markets state address.
      */
     function initialize(
-        address aCallerAddress, // loans for LoanTermsConsensus, lenders for InterestConsensus
-        address aSettingAddress,
-        address aMarketsAddress
-    ) public isNotInitialized() {
-        aCallerAddress.requireNotEmpty("MUST_PROVIDE_LENDER_INFO");
+        address owner,
+        address aCallerAddress,
+        address aSettingAddress
+    ) external isNotInitialized() {
+        require(
+            aCallerAddress.isContract(),
+            "CALLER_MUST_BE_CONTRACT"
+        );
 
-        Ownable.initialize(msg.sender);
-        _initialize(aSettingAddress, aMarketsAddress);
+        Ownable.initialize(owner);
+        _initialize(aSettingAddress);
 
         callerAddress = aCallerAddress;
+        consts = new SettingsConsts();
     }
 
     /**
@@ -119,7 +127,7 @@ contract Consensus is Base, OwnerSignersRole, SettingsConsts {
     {
         require(
             values.isWithinTolerance(
-                settings.getPlatformSettingValue(MAXIMUM_TOLERANCE_SETTING)
+                settings().getPlatformSettingValue(consts.MAXIMUM_TOLERANCE_SETTING())
             ),
             "RESPONSES_TOO_VARIED"
         );
@@ -152,7 +160,7 @@ contract Consensus is Base, OwnerSignersRole, SettingsConsts {
 
         require(
             responseTime >=
-                now.sub(settings.getPlatformSettingValue(RESPONSE_EXPIRY_LENGTH_SETTING)),
+                now.sub(settings().getPlatformSettingValue(consts.RESPONSE_EXPIRY_LENGTH_SETTING())),
             "RESPONSE_EXPIRED"
         );
 
@@ -171,5 +179,13 @@ contract Consensus is Base, OwnerSignersRole, SettingsConsts {
             id := chainid()
         }
         return id;
+    }
+
+    /**
+        @notice It tests whether an given address is the initialized caller address.
+        @dev This function is overriden by mock instances.
+     */
+    function _isCaller(address sender) internal view returns (bool) {
+        return callerAddress == sender;
     }
 }

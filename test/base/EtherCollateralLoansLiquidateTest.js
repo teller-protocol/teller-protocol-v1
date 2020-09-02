@@ -52,7 +52,6 @@ contract('EtherCollateralLoansLiquidateTest', function (accounts) {
             loanTermsConsInstance.address,
             settingsInstance.address,
             marketsInstance.address,
-            atmSettingsInstance.address,
         )
 
         // encode lending token address

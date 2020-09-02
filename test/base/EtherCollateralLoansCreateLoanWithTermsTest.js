@@ -25,6 +25,7 @@ const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
     const IAtmSettingsEncoder = new IATMSettingsEncoder(web3);
+    const owner = accounts[0];
     let instance;
     let loanTermsConsInstance;
     let lendingPoolInstance;
@@ -33,9 +34,9 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
     let oracleInstance;
     let settingsInstance;
     let lendingTokenInstance;
+    let collateralTokenInstance;
     let atmSettingsInstance;
 
-    const owner = accounts[0];
     const borrowerAddress = accounts[2];
     const AMOUNT_LOAN_REQUEST = 12000;
 
@@ -48,11 +49,33 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
         lendingTokenInstance = await Mock.new();
         lendingPoolInstance = await Mock.new();
         marketsInstance = await Mock.new();
+        collateralTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
         atmSettingsInstance = await Mock.new();
         settingsInstance = await createTestSettingsInstance(
             Settings,
+            {
+                from: owner,
+                Mock,
+                onInitialize: async (
+                    instance,
+                    {
+                        escrowFactory,
+                        versionsRegistry,
+                        pairAggregatorRegistry,
+                        interestValidator,
+                    }) => {
+                    await instance.initialize(
+                        escrowFactory.address,
+                        versionsRegistry.address,
+                        pairAggregatorRegistry.address,
+                        marketsInstance.address,
+                        interestValidator.address,
+                        atmSettingsInstance.address
+                    );
+                },
+            },
             {
                 [settingsNames.TermsExpiryTime]: THIRTY_DAYS
             }
@@ -63,8 +86,7 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,
-            marketsInstance.address,
-            atmSettingsInstance.address,
+            collateralTokenInstance.address,
         )
         responseOne = createUnsignedLoanResponse(accounts[3], 0, 1234, 6500, 10000, 3, loanTermsConsInstance.address)
         responseTwo = createUnsignedLoanResponse(accounts[4], 0, 1500, 6000, 10000, 2, loanTermsConsInstance.address)

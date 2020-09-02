@@ -51,7 +51,7 @@ contract EtherCollateralLoansMock is EtherCollateralLoans {
     }
 
     function externalSetSettings(address settingsAddress) external {
-        settings = SettingsInterface(settingsAddress);
+        _setSettings(settingsAddress);
     }
 
     function() external payable {}

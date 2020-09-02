@@ -15,14 +15,13 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
 const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
-const Escrow = artifacts.require("./base/Escrow.sol");
 const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
 
 contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     const pairAggregatorEncoder = new PairAggregatorEncoder(web3);
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
-
+    const owner = accounts[0];
     let instance;
     let oracleInstance;
     let lendingPoolInstance;
@@ -39,14 +38,35 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
         lendingPoolInstance = await Mock.new();
         lendingTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
-        const marketsInstance = await Mock.new();
+        const collateralTokenInstance = await Mock.new();
         const atmSettingsInstance = await Mock.new();
-        const settingsInstance = await createTestSettingsInstance(Settings);
-        const escrowLibrary = await Escrow.new();
+        const marketsStateInstance = await Mock.new();
+        const settingsInstance = await createTestSettingsInstance(
+            Settings,
+            {
+                from: owner,
+                Mock,
+                onInitialize: async (
+                    instance,
+                    {
+                        escrowFactory,
+                        versionsRegistry,
+                        pairAggregatorRegistry,
+                        interestValidator,
+                    }) => {
+                    await instance.initialize(
+                        escrowFactory.address,
+                        versionsRegistry.address,
+                        pairAggregatorRegistry.address,
+                        marketsStateInstance.address,
+                        interestValidator.address,
+                        atmSettingsInstance.address,
+                    );
+                },
+            });
         const escrowFactory = await EscrowFactory.new();
 
-        await escrowFactory.initialize(settingsInstance.address, escrowLibrary.address);
-        await settingsInstance.setEscrowFactory(escrowFactory.address)
+        await escrowFactory.initialize(settingsInstance.address);
 
         loanTermsConsInstance = await Mock.new();
         instance = await Loans.new();
@@ -55,8 +75,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,
-            marketsInstance.address,
-            atmSettingsInstance.address,
+            collateralTokenInstance.address
         );
 
         // encode lending token address
