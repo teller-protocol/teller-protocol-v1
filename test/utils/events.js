@@ -269,6 +269,21 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        escrowCreated: (tx, Factory) => {
+            const name = 'EscrowCreated';
+            return {
+                name: name,
+                emitted: async (borrower, loansAddress, loanID, escrowAddress) => {
+                    await expectEvent.inTransaction(tx.tx, Factory, name, {
+                        borrower,
+                        loansAddress,
+                        loanID,
+                        escrowAddress
+                    });
+                },
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     },
     interestConsensus: {
         interestSubmitted: tx => {
@@ -721,17 +736,14 @@ module.exports = {
         },
     },
     escrowFactory: {
-        escrowCreated: (tx, Factory) => {
+        escrowCreated: tx => {
             const name = 'EscrowCreated';
             return {
                 name: name,
-                emitted: async (borrower, loansAddress, loanID, escrowAddress) => {
-                    await expectEvent.inTransaction(tx.tx, Factory, name, {
-                        borrower,
-                        loansAddress,
-                        loanID,
-                        escrowAddress
-                    });
+                emitted: (borrower, loansAddress, loanID) => {
+                    assert.equal(ev.borrower.toString(), borrower.toString());
+                    assert.equal(ev.loanAddress.toString(), loanAddress.toString());
+                    assert.equal(ev.loanID.toString(), loanID.toString());
                 },
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };

@@ -68,12 +68,7 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         @param loanID loan id to associate to the new escrow instance.
         @return the new escrow instance.
      */
-    function createEscrow(address loansAddress, uint256 loanID)
-        external
-        isNotPaused()
-        isInitialized()
-        returns (address escrowAddress)
-    {
+    function createEscrow(address loansAddress, uint256 loanID) external returns (address) {
         // TODO: verify is loans contract
         // TODO: verify loan does not already have an escrow
         require(loansAddress.isContract(), "CALLER_MUST_BE_CONTRACT");
@@ -81,7 +76,12 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         return _createEscrow(loansAddress, loanID);
     }
 
-    function _createEscrow(address loansAddress, uint256 loanID) internal returns (address escrowAddress) {
+    function _createEscrow(address loansAddress, uint256 loanID)
+        internal
+        isNotPaused()
+        isInitialized()
+        returns (address escrowAddress)
+    {
         bytes32 escrowLogicName = settings().versionsRegistry().consts().ESCROW_LOGIC_NAME();
 
         escrowAddress = address(new DynamicProxy(address(settings()), escrowLogicName));
