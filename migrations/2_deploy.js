@@ -96,8 +96,8 @@ module.exports = async function(deployer, network, accounts) {
   }
 
   console.log(`Deploying Settings logic...`)
-  const settingsLogic = await deployer.deploy(Settings, txConfig)
-  const settingsProxy = await deployer.deploy(UpgradeableProxy, txConfig)
+  const settingsLogic = await deployerApp.deployWith('Settings', Settings, txConfig)
+  const settingsProxy = await deployerApp.deployWith('Settings_Proxy', UpgradeableProxy, txConfig)
   await settingsProxy.initializeProxy(
     settingsProxy.address,
     settingsLogic.address,
@@ -115,8 +115,8 @@ module.exports = async function(deployer, network, accounts) {
   const marketFactoryInstance = await deployInitializableDynamicProxy(logicNames.MarketFactory)
 
   console.log(`Deploying LogicVersionsRegistry...`)
-  const logicVersionsRegistryLogic = await deployer.deploy(LogicVersionsRegistry, txConfig)
-  const logicVersionsRegistryProxy = await deployer.deploy(UpgradeableProxy, txConfig)
+  const logicVersionsRegistryLogic = await deployerApp.deployWith('LogicVersionsRegistry', LogicVersionsRegistry, txConfig)
+  const logicVersionsRegistryProxy = await deployerApp.deployWith('LogicVersionsRegistry_Proxy', UpgradeableProxy, txConfig)
   await logicVersionsRegistryProxy.initializeProxy(
     settingsInstance.address,
     logicVersionsRegistryLogic.address,

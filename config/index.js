@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const getEnvConfiguration = require('./env');
 
-module.exports = async (network) => {
+module.exports = (network) => {
 	try {
 		const networkConfig = require(`./networks/${network}`);
 		if (_.isNaN(networkConfig) || _.isUndefined(networkConfig) || _.isNull(networkConfig)) {
