@@ -1,59 +1,51 @@
 // JS Libraries
+const EscrowFactoryEncoder = require("../utils/encoders/EscrowFactoryEncoder");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const { NULL_ADDRESS } = require("../utils/consts");
 const { createLoanTerms } = require("../utils/structs");
 const { ACTIVE } = require("../utils/consts");
 const withData = require("leche").withData;
 const { t } = require("../utils/consts");
-const { loans } = require("../utils/events");
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
 const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 
 // Smart contracts
-const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 
 contract("BaseLoansCreateEscrowTest", function(accounts) {
+  const escrowFactoryEncoder = new EscrowFactoryEncoder(web3)
+
   const owner = accounts[0];
   let escrowFactoryInstance;
-  let loans;
+  let loansInstance;
 
   beforeEach(async () => {
-    escrowFactoryInstance = await EscrowFactory.new();
-    const versionsRegistry = await Mock.new();
-    const pairAggregatorRegistry = await Mock.new();
-    const interestValidator = await Mock.new();
-    const marketsInstance = await Mock.new();
-    const atmSettingsInstance = await Mock.new();
-
-    await createTestSettingsInstance(
-      Settings,
-      {
-        from: owner,
-        Mock,
-        onInitialize: async (
-          instance
-        ) => {
-          await instance.initialize(
-            escrowFactoryInstance.address,
-            versionsRegistry.address,
-            pairAggregatorRegistry.address,
-            marketsInstance.address,
-            interestValidator.address,
-            atmSettingsInstance.address
-          );
-          await escrowFactoryInstance.initialize(instance.address);
+    const settings = await createTestSettingsInstance(
+      Settings, {
+        from: owner, Mock, initialize: true,
+        onInitialize: async (instance, { escrowFactory }) => {
+          escrowFactoryInstance = escrowFactory;
+          await escrowFactoryInstance.givenMethodReturnAddress(
+            escrowFactoryEncoder.encodeCreateEscrow(),
+            NULL_ADDRESS
+          )
         }
       });
 
-    loans = await Loans.new();
+    loansInstance = await Loans.new();
+    await loansInstance.initialize(
+      (await Mock.new()).address,
+      (await Mock.new()).address,
+      (await Mock.new()).address,
+      settings.address,
+      (await Mock.new()).address
+    );
   });
 
   withData({
-    _1_valid: [ 1234, 1, false, null ],
-    _2_empty_borrower: [ 1234, -1, true, "BORROWER_MUSTNT_BE_EMPTY" ]
+    _1_valid: [ 1234, 1, false, null ]
   }, function(
     loanID,
     borrowerIndex,
@@ -64,26 +56,25 @@ contract("BaseLoansCreateEscrowTest", function(accounts) {
       try {
         const borrower = borrowerIndex === -1 ? NULL_ADDRESS : accounts[borrowerIndex];
         const loanTerms = createLoanTerms(borrower, NULL_ADDRESS, 0, 0, 0, 0);
-        await loans.setLoan(loanID, loanTerms, 0, 0, 123456, 0, 0, 0, loanTerms.maxLoanAmount, ACTIVE, false);
+        await loansInstance.setLoan(loanID, loanTerms, 0, 0, 123456, 0, 0, 0, loanTerms.maxLoanAmount, ACTIVE, false);
 
         // Invocation
         let escrowAddress;
         // If the test must fail from the resulting transaction, then the call to the function (not a transaction) will also fail but as a different Error object
         if (!mustFail) {
-          escrowAddress = await loans.externalCreateEscrow.call(loanID);
+          escrowAddress = await loansInstance.externalCreateEscrow.call(loanID);
         }
 
-        const result = await loans.externalCreateEscrow(loanID);
+        await loansInstance.externalCreateEscrow(loanID);
+
+        const callCount = await escrowFactoryInstance.invocationCountForMethod.call(escrowFactoryEncoder.encodeCreateEscrow())
 
         // Assertions
+        assert.equal(callCount.toString(), '1', "Create Escrow was not called!")
         assert(!mustFail);
-
-        await loans
-          .escrowCreated(result, EscrowFactory)
-          .emitted(borrower, loans.address, loanID.toString(), escrowAddress);
       } catch (error) {
         assert.equal(error.reason, expectedErrorMessage);
-        assert(mustFail, error);
+        assert(mustFail, error.message);
         assert(error);
       }
     });

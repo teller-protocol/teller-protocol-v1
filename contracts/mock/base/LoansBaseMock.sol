@@ -113,4 +113,8 @@ contract LoansBaseMock is LoansBase, BaseMock {
         TellerCommon.LoanResponse[] calldata responses,
         uint256 collateralAmount
     ) external payable {}
+
+    function externalCreateEscrow(uint256 loanID) external returns (address) {
+        return super._createEscrow(loanID);
+    }
 }

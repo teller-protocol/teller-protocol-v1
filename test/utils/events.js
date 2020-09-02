@@ -2,7 +2,6 @@
 const BigNumber = require('bignumber.js');
 const truffleAssert = require('truffle-assertions');
 const assert = require('assert');
-const { expectEvent } = require('openzeppelin-test-helpers');
 
 const emitted = (tx, eventName, assertFunction) => {
     truffleAssert.eventEmitted(tx, eventName, event => {
@@ -266,21 +265,6 @@ module.exports = {
                     assert.equal(ev.oldPriceOracle, oldPriceOracle);
                     assert.equal(ev.newPriceOracle, newPriceOracle);
                 }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
-        escrowCreated: (tx, Factory) => {
-            const name = 'EscrowCreated';
-            return {
-                name: name,
-                emitted: async (borrower, loansAddress, loanID, escrowAddress) => {
-                    await expectEvent.inTransaction(tx.tx, Factory, name, {
-                        borrower,
-                        loansAddress,
-                        loanID,
-                        escrowAddress
-                    });
-                },
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
@@ -740,11 +724,11 @@ module.exports = {
             const name = 'EscrowCreated';
             return {
                 name: name,
-                emitted: (borrower, loansAddress, loanID) => {
+                emitted: (borrower, loansAddress, loanID) => emitted(tx, name, ev => {
                     assert.equal(ev.borrower.toString(), borrower.toString());
-                    assert.equal(ev.loanAddress.toString(), loanAddress.toString());
+                    assert.equal(ev.loansAddress.toString(), loansAddress.toString());
                     assert.equal(ev.loanID.toString(), loanID.toString());
-                },
+                }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
