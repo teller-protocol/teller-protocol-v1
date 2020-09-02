@@ -40,4 +40,8 @@ contract BaseEscrowDapp {
             tokens.removeAt(index);
         }
     }
+
+    function _setTokens(address[] memory tokenList) internal {
+        tokens = tokenList;
+    }
 }

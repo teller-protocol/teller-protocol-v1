@@ -18,4 +18,12 @@ LoansBaseInterfaceEncoder.prototype.encodeLoans = function() {
     return encode(this.web3, 'loans(uint256)');
 }
 
+LoansBaseInterfaceEncoder.prototype.encodeGetTotalOwed = function() {
+    return encode(this.web3, 'getTotalOwed(uint256)');
+}
+
+LoansBaseInterfaceEncoder.prototype.encodeCanLiquidateLoan = function() {
+    return encode(this.web3, 'canLiquidateLoan(uint256)');
+}
+
 module.exports = LoansBaseInterfaceEncoder;

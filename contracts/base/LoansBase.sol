@@ -17,6 +17,7 @@ import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
 import "../atm/IATMGovernance.sol";
+import "../interfaces/EscrowInterface.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -358,22 +359,25 @@ contract LoansBase is LoansInterface, Base {
         @param loanID The ID of the loan to check
         @return bool weather the loan can be liquidated
      */
-    function canLiquidateLoan(uint256 loanID)
-        public
-        view
-        loanActive(loanID)
-        whenNotPaused()
-        whenLendingPoolNotPaused(address(lendingPool))
-        returns (bool)
-    {
-        // calculate the amount of collateral the loan needs in tokens
-        TellerCommon.LoanCollateralInfo memory collateralInfo = _getCollateralInfo(loanID);
-        if (collateralInfo.moreCollateralRequired) return true;
+    // TODO: Update test
+    function canLiquidateLoan(uint256 loanID) public view returns (bool) {
+        if (_isPaused() || _isPoolPaused(address(lendingPool)) || loans[loanID].status != TellerCommon.LoanStatus.Active) {
+            return false;
+        }
 
-        // calculate when the loan should end
         uint256 startTime = loans[loanID].loanStartTime;
         uint256 duration = loans[loanID].loanTerms.duration;
-        return startTime.add(duration) < now;
+        bool isExpired = startTime.add(duration) < now;
+        if (isExpired) {
+            return true;
+        }
+
+        address escrowAddress = loans[loanID].escrow;
+        if (escrowAddress != address(0x0)) {
+            return EscrowInterface(escrowAddress).isUnderValued();
+        }
+
+        return _getCollateralInfo(loanID).moreCollateralRequired;
     }
 
     /**

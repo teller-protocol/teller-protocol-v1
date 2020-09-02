@@ -11,10 +11,17 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
     address public _borrower;
     TellerCommon.LoanStatus public _loanStatus;
     address internal mockedAggregator;
+    uint256 internal valueInToken;
+    uint256 internal valueInEth;
+    bool internal mockedCanPurchase;
 
     bool private _mockValueOfIn;
 
     mapping(address => mapping(address => uint256)) public _valueOfInMapMock;
+
+    function externalSetSettings(address settingsAddress) external {
+        _setSettings(settingsAddress);
+    }
 
     function mockIsOwner(bool mockIsAOwner, bool isAOwner) external {
         _mockIsOwner = mockIsAOwner;
@@ -52,20 +59,46 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
         loans = LoansInterface(loansAddress);
     }
 
+    function mockCalculateTotalValue(uint256 tokensValue, uint256 ethValue) external {
+        valueInToken = tokensValue;
+        valueInEth = ethValue;
+    }
+
+    function calculateTotalValue() public view returns (TellerCommon.EscrowValue memory value) {
+        if (valueInToken > 0) {
+            value.valueInToken = valueInToken;
+            value.valueInEth = valueInEth;
+        } else {
+            return super.calculateTotalValue();
+        }
+    }
+
+    function mockCanPurchase() external {
+        mockedCanPurchase = true;
+    }
+
+    function mockInitialize(address loansAddress, uint256 aLoanID) external {
+        loans = LoansInterface(loansAddress);
+        loanID = aLoanID;
+
+        Ownable.initialize(msg.sender);
+        TInitializable._initialize();
+    }
+
     function mockValueOfIn(address base, address quote, uint256 value) external {
         _mockValueOfIn = true;
         _valueOfInMapMock[base][quote] = value;
     }
 
-    function externalValueOfIn(address baseAddress, uint256 baseAmount, address quoteAddress) external returns (uint256) {
-        return super._valueOfIn(baseAddress, baseAmount, quoteAddress);
+    function externalValueOfIn(address baseAddress, address quoteAddress, uint256 baseAmount) external returns (uint256) {
+        return super._valueOfIn(baseAddress, quoteAddress, baseAmount);
     }
 
-    function _valueOfIn(address baseAddress, uint256 baseAmount, address quoteAddress) internal view returns (uint256) {
+    function _valueOfIn(address baseAddress, address quoteAddress, uint256 baseAmount) internal view returns (uint256) {
         if (_mockValueOfIn) {
             return _valueOfInMapMock[baseAddress][quoteAddress];
         } else {
-            return Escrow._valueOfIn(baseAddress, baseAmount, quoteAddress);
+            return Escrow._valueOfIn(baseAddress, quoteAddress, baseAmount);
         }
     }
 
@@ -79,6 +112,10 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
         } else {
             return super._getAggregatorFor(base, quote);
         }
+    }
+
+    function externalGetAggregatorFor(address base, address quote) external returns (PairAggregatorInterface) {
+        return _getAggregatorFor(base, quote);
     }
 
     function getLoan() public view returns (TellerCommon.Loan memory) {

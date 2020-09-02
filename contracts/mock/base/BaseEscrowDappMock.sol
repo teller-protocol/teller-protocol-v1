@@ -11,4 +11,8 @@ contract BaseEscrowDappMock is BaseEscrowDapp {
     function externalTokenUpdated(address tokenAddress) external {
         _tokenUpdated(tokenAddress);
     }
+
+    function externalSetTokens(address[] calldata tokenList) external {
+        _setTokens(tokenList);
+    }
 }

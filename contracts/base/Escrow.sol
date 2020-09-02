@@ -57,11 +57,15 @@ contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, Ba
     /** Modifiers **/
 
     modifier whenLoanActive() {
-        require(getLoan().status == TellerCommon.LoanStatus.Active, "LOAN_NOT_ACTIVE");
+        require(isLoanActive(), "LOAN_NOT_ACTIVE");
         _;
     }
 
     /** Public Functions **/
+
+    function isLoanActive() public view returns (bool) {
+        return getLoan().status == TellerCommon.LoanStatus.Active;
+    }
 
     /**
         @notice It calls a given dapp using a delegatecall function by a borrower owned the current loan id associated to this escrow contract.
@@ -98,18 +102,25 @@ contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, Ba
         uint256 valueInEth = 0;
 
         for (uint i = 0; i < tokens.length; i++) {
-            uint256 tokenEthValue = _valueOfIn(tokens[i], _balanceOf(tokens[i]), address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE));
+            uint256 tokenEthValue = _valueOfIn(tokens[i], 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, _balanceOf(tokens[i]));
             valueInEth = valueInEth.add(tokenEthValue);
         }
 
-        if (loans.collateralToken() == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)) {
-            valueInEth = valueInEth.add(getLoan().collateral);
+        uint256 collateralValue = getLoan().collateral;
+        if (getLoan().loanTerms.collateralRatio > 0) {
+            uint256 bufferPercent = settings().getPlatformSettingValue(COLLATERAL_BUFFER_SETTING);
+            uint256 buffer = collateralValue * bufferPercent / 10000;
+            collateralValue = collateralValue.sub(buffer);
+        }
+
+        if (loans.collateralToken() == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
+            valueInEth = valueInEth.add(collateralValue);
         } else {
-            uint256 collateralEthValue = _valueOfIn(loans.collateralToken(), getLoan().collateral, address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE));
+            uint256 collateralEthValue = _valueOfIn(loans.collateralToken(), 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, collateralValue);
             valueInEth = valueInEth.add(collateralEthValue);
         }
 
-        uint256 valueInToken = _valueOfIn(address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE), valueInEth, loans.lendingToken());
+        uint256 valueInToken = _valueOfIn(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, loans.lendingToken(), valueInEth);
 
         return TellerCommon.EscrowValue({
             valueInEth: valueInEth,
@@ -117,24 +128,23 @@ contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, Ba
         });
     }
 
-    function canPurchase() external returns (bool) {
-        return _canPurchase(calculateTotalValue());
+    function canPurchase() public view returns (bool) {
+        return loans.canLiquidateLoan(loanID);
     }
 
-    // TODO: test
-    function _canPurchase(TellerCommon.EscrowValue memory value) internal whenLoanActive() returns (bool) {
-        require(loans.canLiquidateLoan(loanID), 'LOAN_NOT_LIQUIDATABLE');
-
-        uint256 buffer = settings().getPlatformSettingValue(COLLATERAL_BUFFER_SETTING);
-
-        return value.valueInToken < loans.getTotalOwed(loanID) + buffer;
+    function isUnderValued() external view returns (bool) {
+        return calculateTotalValue().valueInToken < loans.getTotalOwed(loanID);
     }
 
-    // TODO: what asset can be used to purchase with?
-    // TODO: test
     function purchaseLoanDebt() external payable whenLoanActive() {
-        TellerCommon.EscrowValue memory value = calculateTotalValue();
-        require(_canPurchase(value), 'ESCROW_INELIGIBLE_TO_PURCHASE');
+        require(canPurchase(), 'ESCROW_INELIGIBLE_TO_PURCHASE');
+
+        IERC20 lendingToken = IERC20(loans.lendingToken());
+        uint256 lendingTokenAllowance = lendingToken.allowance(msg.sender, address(this));
+        uint256 amountOwed = loans.getTotalOwed(loanID);
+        if (lendingTokenAllowance >= amountOwed) {
+            lendingToken.transferFrom(msg.sender, address(this), amountOwed);
+        }
 
         _transferOwnership(msg.sender);
     }
@@ -157,13 +167,15 @@ contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, Ba
         TInitializable._initialize();
 
         // Initialize tokens list with the borrowed token.
-        // _tokenUpdated(loans.lendingToken()); // TODO Verify the _tokenUpdated function works with the AddressLib
+        // TODO: test balance
+        require(_balanceOf(loans.lendingToken()) > 0, "LENDING_TOKEN_BALANCE_ZERO");
+        _tokenUpdated(loans.lendingToken());
     }
 
     /** Internal Functions */
 
-    function _valueOfIn(address baseAddress, uint256 baseAmount, address quoteAddress) internal view returns (uint256) {
-        uint8 baseDecimals = baseAddress == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) ? 18 : ERC20Detailed(baseAddress).decimals();
+    function _valueOfIn(address baseAddress, address quoteAddress, uint256 baseAmount) internal view returns (uint256) {
+        uint8 baseDecimals = baseAddress == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? 18 : ERC20Detailed(baseAddress).decimals();
         PairAggregatorInterface aggregator = _getAggregatorFor(baseAddress, quoteAddress);
         uint256 oneTokenPrice = uint256(aggregator.getLatestAnswer());
         // TODO: better way with SafeMath?

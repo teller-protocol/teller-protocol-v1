@@ -17,6 +17,12 @@ interface EscrowInterface {
      */
     function callDapp(TellerCommon.DappData calldata dappData) external;
 
+    function calculateTotalValue() external view returns (TellerCommon.EscrowValue memory);
+
+    function canPurchase() external view returns (bool);
+
+    function isUnderValued() external view returns (bool);
+
     /**
         @notice It initializes this escrow instance for a given loans address and loan id.
         @param loansAddress loans contract address.

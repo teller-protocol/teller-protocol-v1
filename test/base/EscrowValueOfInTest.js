@@ -66,7 +66,7 @@ contract("EscrowValueOfInTest", function(accounts) {
       let value
       try {
         // Invocation
-        value = await instance.externalValueOfIn.call(baseAddress, baseAmount, quoteAddress)
+        value = await instance.externalValueOfIn.call(baseAddress, quoteAddress, baseAmount)
       } catch (error) {
         assert.equal(error.message, expectedErrorMessage);
         assert(mustFail);

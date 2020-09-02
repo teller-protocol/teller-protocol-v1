@@ -1,106 +1,91 @@
 // JS Libraries
-const BN = require("bignumber.js");
 const { withData } = require("leche");
 const { t, ETH_ADDRESS } = require("../utils/consts");
 const LoansBaseInterfaceEncoder = require("../utils/encoders/LoansBaseInterfaceEncoder");
+const settingsNames = require("../utils/platformSettingsNames");
+const { createMocks } = require("../utils/consts");
+const { createTestSettingsInstance } = require("../utils/settings-helper");
 const { encodeLoanParameter } = require("../utils/loans");
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
+const Settings = artifacts.require("./base/Settings.sol");
 const Escrow = artifacts.require("./mock/base/EscrowMock.sol");
-const DAI = artifacts.require("./mock/token/DAIMock.sol");
-const USDC = artifacts.require("./mock/token/USDCMock.sol");
-const LINK = artifacts.require("./mock/token/LINKMock.sol");
 
 contract("EscrowCalculateTotalValueTest", function(accounts) {
   const loansEncoder = new LoansBaseInterfaceEncoder(web3)
 
   let instance;
-  const loanedTokenIndex = 0;
-  const tokens = [];
-  const collateralAmount = 4000000;
+  const collateralBuffer = 1500;
 
   beforeEach(async () => {
+    const settings = await createTestSettingsInstance(Settings, { from: accounts[0], Mock }, {
+      [settingsNames.CollateralBuffer]: collateralBuffer
+    });
+
     instance = await Escrow.new();
-    tokens.push(
-      await DAI.new(),
-      await USDC.new()
-    );
+    await instance.externalSetSettings(settings.address);
   });
 
   withData({
-    _1_no_tokens_collateral_eth: [ true, collateralAmount, [], "0", "1234567890", false, null ],
-    _2_with_tokens_dai_usdc_collateral_eth: [ true, collateralAmount, [ 0, 1 ], "10000000", "1234567890", false, null ],
-    _3_with_tokens_dai_collateral_link: [ false, collateralAmount, [ 0 ], "10000000", "1234567890", false, null ]
-  }, function test(
+    _1_1_tokens_with_collateral_ratio_eth: [ [ 1000 ], 100, 20, true, 1085 ],
+    _2_2_tokens_with_collateral_ratio_eth: [ [ 1000, 2000 ], 200, 20, true, 3170 ],
+    _3_3_tokens_with_collateral_ratio_eth: [ [ 1000, 2000, 3000 ], 300, 20, true, 6255 ],
+    _4_1_tokens_with_zero_collateral_eth: [ [ 1000 ], 0, 0, true, 1000 ],
+    _5_2_tokens_with_zero_collateral_eth: [ [ 1000, 2000 ], 0, 0, true, 3000 ],
+    _6_3_tokens_with_zero_collateral_eth: [ [ 1000, 2000, 3000 ], 0, 0, true, 6000 ],
+
+    _7_1_tokens_with_collateral_ratio_token: [ [ 1000 ], 100, 20, false, 1100 ],
+    _8_2_tokens_with_collateral_ratio_token: [ [ 1000, 2000 ], 200, 20, false, 3200 ],
+    _9_3_tokens_with_collateral_ratio_token: [ [ 1000, 2000, 3000 ], 300, 20, false, 6300 ],
+    _10_1_tokens_with_zero_collateral_token: [ [ 1000 ], 0, 0, false, 1000 ],
+    _11_2_tokens_with_zero_collateral_token: [ [ 1000, 2000 ], 0, 0, false, 3000 ],
+    _12_3_tokens_with_zero_collateral_token: [ [ 1000, 2000, 3000 ], 0, 0, false, 6000 ],
+  }, function(
+    tokenAmounts,
+    collateralAmount,
+    collateralRatio,
     collateralIsEth,
-    collateralValueInEth,
-    tokenIndices,
-    tokensValueInEth,
-    expectedValueInTokens,
-    mustFail,
-    expectedErrorMessage
+    expectedValueInEth
   ) {
-    it(t("escrow", "calculateTotalValue", "Should be able to calculate its total value of all assets owned.", mustFail), async function() {
-      // Setup
+    it(t("escrow", "calculateTotalValue", "Should be able to calculate its total value of all assets owned.", false), async function() {
+      const tokensAddresses = await createMocks(Mock, tokenAmounts.length)
+      await instance.externalSetTokens(tokensAddresses)
+
+      const lendingAddress = tokensAddresses[0]
+      const collateralAddress = collateralIsEth ? ETH_ADDRESS : (await Mock.new()).address
+
       const loans = await Mock.new()
       await instance.mockLoans(loans.address)
       await loans.givenMethodReturnAddress(
         loansEncoder.encodeLendingToken(),
-        tokens[loanedTokenIndex].address
+        lendingAddress
       )
-      await loans.givenMethodReturn(
-        loansEncoder.encodeLoans(),
-        encodeLoanParameter(web3, { collateral: collateralAmount })
-      )
-
-      let collateralAddress;
-      if (collateralIsEth) {
-        collateralAddress = ETH_ADDRESS;
-      } else {
-        const collateralToken = await LINK.new();
-        collateralAddress = collateralToken.address;
-      }
       await loans.givenMethodReturnAddress(
         loansEncoder.encodeCollateralToken(),
         collateralAddress
       )
+      await loans.givenMethodReturn(
+        loansEncoder.encodeLoans(),
+        encodeLoanParameter(web3, { collateral: collateralAmount, loanTerms: { collateralRatio } })
+      )
 
-      let expectedValueInEth = new BN(0);
-
-      await instance.mockValueOfIn(tokens[loanedTokenIndex].address, ETH_ADDRESS, tokensValueInEth);
-
-      for (const index of tokenIndices) {
-        const token = tokens[index];
-        await token.mint(instance.address, 10000)
-        await instance.externalTokenUpdated(token.address);
-        await instance.mockValueOfIn(token.address, ETH_ADDRESS, tokensValueInEth);
-        expectedValueInEth = expectedValueInEth.plus(tokensValueInEth);
+      for (let i = 0; i < tokensAddresses.length; i++) {
+        await instance.mockValueOfIn(tokensAddresses[i], ETH_ADDRESS, tokenAmounts[i])
       }
 
-      if (collateralIsEth) {
-        expectedValueInEth = expectedValueInEth.plus(collateralAmount);
-      } else {
-        await instance.mockValueOfIn(collateralAddress, ETH_ADDRESS, collateralValueInEth);
-        expectedValueInEth = expectedValueInEth.plus(collateralValueInEth);
+      if (!collateralIsEth) {
+        await instance.mockValueOfIn(collateralAddress, ETH_ADDRESS, collateralAmount)
       }
 
-      await instance.mockValueOfIn(ETH_ADDRESS, tokens[loanedTokenIndex].address, expectedValueInTokens);
+      const valueInToken = 1234567890
+      await instance.mockValueOfIn(ETH_ADDRESS, lendingAddress, valueInToken)
 
-      let value;
-      try {
-        // Invocation
-        value = await instance.calculateTotalValue.call();
-      } catch (error) {
-        assert.equal(error.reason, expectedErrorMessage);
-        assert(mustFail);
-      }
-
-      // Assertions
-      assert.equal(value.valueInEth.toString(), expectedValueInEth.toString(), "ETH value not calculated correctly.");
-      assert.equal(value.valueInToken.toString(), expectedValueInTokens.toString(), "Token value not calculated correctly.");
-    });
-  });
+      const value = await instance.calculateTotalValue.call()
+      assert.equal(value.valueInEth.toString(), expectedValueInEth.toString())
+      assert.equal(value.valueInToken.toString(), valueInToken.toString())
+    })
+  })
 });

@@ -759,6 +759,19 @@ module.exports = {
             };
         },
     },
+    escrow: {
+        ownershipTransferred: tx => {
+            const name = 'OwnershipTransferred';
+            return {
+                name: name,
+                emitted: (previousOwner, newOwner) => emitted(tx, name, ev => {
+                    assert.equal(ev.previousOwner.toString(), previousOwner.toString());
+                    assert.equal(ev.newOwner.toString(), newOwner.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
     upgradeable: {
         upgraded: tx => {
             const name = "Upgraded";
