@@ -17,6 +17,7 @@ exports.encodeLoanParameter = (web3, {
   principalOwed = 0,
   interestOwed = 0,
   borrowedAmount = 0,
+  escrow = NULL_ADDRESS,
   status = ACTIVE,
   liquidated = false
 }) => {
@@ -38,6 +39,7 @@ exports.encodeLoanParameter = (web3, {
       principalOwed: 'uint256',
       interestOwed: 'uint256',
       borrowedAmount: 'uint256',
+      escrow: 'address',
       status: 'uint256',
       liquidated: 'bool',
     }
@@ -58,6 +60,7 @@ exports.encodeLoanParameter = (web3, {
     principalOwed,
     interestOwed,
     borrowedAmount,
+    escrow,
     status,
     liquidated
   })

@@ -19,7 +19,7 @@ const TEST_DEFAULT_VALUE = {
 
 const createSettingsInstance = async (
     Settings,
-    { txConfig, Mock, onInitialize},
+    { txConfig, Mock, initialize = false, onInitialize},
     platformSettings,
 ) => {
     const instance = await Settings.new();
@@ -31,6 +31,16 @@ const createSettingsInstance = async (
             const marketsState = await Mock.new();
             const interestValidator = await Mock.new();
             const atmSettings = await Mock.new();
+            if (initialize) {
+                await instance.initialize(
+                  escrowFactory.address,
+                  versionsRegistry.address,
+                  pairAggregatorRegistry.address,
+                  marketsState.address,
+                  interestValidator.address,
+                  atmSettings.address,
+                );
+            }
             await onInitialize(
                 instance,
                 {
@@ -91,7 +101,7 @@ const overrideDefaultTestValues = (params) => {
 module.exports = {
     TEST_DEFAULT_VALUE,
     // NOTE: Pass an object as `platformSettings` to init platform settings
-    createTestSettingsInstance: async (Settings, { from, Mock, onInitialize}, platformSettings) => {
+    createTestSettingsInstance: async (Settings, { from, Mock, initialize, onInitialize}, platformSettings) => {
         // It overrides the TEST default values using a {settingName: newValue} object.
         // See examples using this 'createTestSettingsInstance' function.
         if (typeof platformSettings === 'object') {
@@ -99,7 +109,7 @@ module.exports = {
             platformSettings = { platformSettings: values, currentBlockNumber: 0, web3, verbose: false, }
         }
 
-        return await createSettingsInstance(Settings, { txConfig: { from }, Mock, onInitialize }, platformSettings);
+        return await createSettingsInstance(Settings, { txConfig: { from }, Mock, initialize, onInitialize }, platformSettings);
     },
     printPlatformSetting: ({value, min, max, exists}, { settingName, settingNameBytes32 }) => {
         console.log(`Setting Name / Bytes32:    ${settingName} / ${settingNameBytes32}`);

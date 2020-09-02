@@ -17,6 +17,8 @@ interface EscrowInterface {
      */
     function callDapp(TellerCommon.DappData calldata dappData) external;
 
+    function getBorrower() external view returns (address);
+
     function calculateTotalValue() external view returns (TellerCommon.EscrowValue memory);
 
     function canPurchase() external view returns (bool);

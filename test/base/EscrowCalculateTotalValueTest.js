@@ -9,6 +9,7 @@ const { encodeLoanParameter } = require("../utils/loans");
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
+const DAIMock = artifacts.require("./mock/token/DAIMock.sol");
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
@@ -51,7 +52,7 @@ contract("EscrowCalculateTotalValueTest", function(accounts) {
     expectedValueInEth
   ) {
     it(t("escrow", "calculateTotalValue", "Should be able to calculate its total value of all assets owned.", false), async function() {
-      const tokensAddresses = await createMocks(Mock, tokenAmounts.length)
+      const tokensAddresses = await createMocks(DAIMock, tokenAmounts.length)
       await instance.externalSetTokens(tokensAddresses)
 
       const lendingAddress = tokensAddresses[0]

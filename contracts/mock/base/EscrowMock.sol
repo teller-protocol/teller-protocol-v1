@@ -11,8 +11,6 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
     address public _borrower;
     TellerCommon.LoanStatus public _loanStatus;
     address internal mockedAggregator;
-    uint256 internal valueInToken;
-    uint256 internal valueInEth;
     bool internal mockedCanPurchase;
 
     bool private _mockValueOfIn;
@@ -57,20 +55,6 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
 
     function mockLoans(address loansAddress) external {
         loans = LoansInterface(loansAddress);
-    }
-
-    function mockCalculateTotalValue(uint256 tokensValue, uint256 ethValue) external {
-        valueInToken = tokensValue;
-        valueInEth = ethValue;
-    }
-
-    function calculateTotalValue() public view returns (TellerCommon.EscrowValue memory value) {
-        if (valueInToken > 0) {
-            value.valueInToken = valueInToken;
-            value.valueInEth = valueInEth;
-        } else {
-            return super.calculateTotalValue();
-        }
     }
 
     function mockCanPurchase() external {

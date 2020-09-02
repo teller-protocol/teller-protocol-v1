@@ -679,13 +679,6 @@ contract LoansBase is LoansInterface, Base {
         @return the new Escrow contract address.
      */
     function _createEscrow(uint256 loanID) internal returns (address) {
-        address escrowOwner =   loans[loanID].loanTerms.recipient != address(0x0) ?
-                                loans[loanID].loanTerms.recipient :
-                                loans[loanID].loanTerms.borrower;
-        return
-            settings().escrowFactory().createEscrow(
-                escrowOwner,
-                loanID
-            );
+        return settings().escrowFactory().createEscrow(address(this), loanID);
     }
 }

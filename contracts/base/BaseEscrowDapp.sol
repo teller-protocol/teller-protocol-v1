@@ -8,7 +8,6 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.so
 // Libraries
 import "../util/AddressArrayLib.sol";
 
-// TODO: Use AddressLib to handle mapping/array
 contract BaseEscrowDapp {
     using AddressArrayLib for address[];
 

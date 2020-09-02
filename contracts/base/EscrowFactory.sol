@@ -64,29 +64,31 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
 
     /**
         @notice It creates an Escrow contract for a given loan id.
-        @param borrower borrower address associated to the loan.
+        @param loansAddress address of the loans contract that is creating an escrow.
         @param loanID loan id to associate to the new escrow instance.
         @return the new escrow instance.
      */
-    function createEscrow(address borrower, uint256 loanID)
+    function createEscrow(address loansAddress, uint256 loanID)
         external
         isNotPaused()
         isInitialized()
         returns (address escrowAddress)
     {
-        address loansAddress = msg.sender;
+        // TODO: verify is loans contract
+        // TODO: verify loan does not already have an escrow
         require(loansAddress.isContract(), "CALLER_MUST_BE_CONTRACT");
-        borrower.requireNotEmpty("BORROWER_MUSTNT_BE_EMPTY");
 
+        return _createEscrow(loansAddress, loanID);
+    }
+
+    function _createEscrow(address loansAddress, uint256 loanID) internal returns (address escrowAddress) {
         bytes32 escrowLogicName = settings().versionsRegistry().consts().ESCROW_LOGIC_NAME();
 
         escrowAddress = address(new DynamicProxy(address(settings()), escrowLogicName));
-        EscrowInterface(escrowAddress).initialize(
-            loansAddress,
-            loanID
-        );
+        EscrowInterface escrow = EscrowInterface(escrowAddress);
+        escrow.initialize(loansAddress, loanID);
 
-        emit EscrowCreated(borrower, loansAddress, loanID, escrowAddress);
+        emit EscrowCreated(escrow.getBorrower(), loansAddress, loanID, escrowAddress);
     }
 
     /**
