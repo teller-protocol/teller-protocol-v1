@@ -13,7 +13,7 @@ const UpgradeableProxy = artifacts.require("./base/UpgradeableProxy.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 
-contract("UpgradeableProxySettingsUpgradeToTest", function(accounts) {
+contract("UpgradeableProxyUpgradeToTest", function(accounts) {
     let settingsLogic;
     let initLogic;
 
