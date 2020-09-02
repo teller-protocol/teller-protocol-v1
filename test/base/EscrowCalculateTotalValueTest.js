@@ -84,7 +84,10 @@ contract("EscrowCalculateTotalValueTest", function(accounts) {
       const valueInToken = 1234567890
       await instance.mockValueOfIn(ETH_ADDRESS, lendingAddress, valueInToken)
 
+      // Invocation
       const value = await instance.calculateTotalValue.call()
+
+      // Assertions
       assert.equal(value.valueInEth.toString(), expectedValueInEth.toString())
       assert.equal(value.valueInToken.toString(), valueInToken.toString())
     })

@@ -101,29 +101,4 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
     function externalGetAggregatorFor(address base, address quote) external returns (PairAggregatorInterface) {
         return _getAggregatorFor(base, quote);
     }
-
-    function getLoan() public view returns (TellerCommon.Loan memory) {
-        return
-            TellerCommon.Loan({
-                id: 0,
-                loanTerms: TellerCommon.LoanTerms({
-                    borrower: msg.sender,
-                    recipient: address(0x0),
-                    interestRate: 0,
-                    collateralRatio: 0,
-                    maxLoanAmount: 0,
-                    duration: 0
-                }),
-                termsExpiry: 0,
-                loanStartTime: 0,
-                collateral: 0,
-                lastCollateralIn: 0,
-                principalOwed: 0,
-                interestOwed: 0,
-                borrowedAmount: 0,
-                escrow: address(0x0),
-                status: _loanStatus,
-                liquidated: false
-            });
-    }
 }
