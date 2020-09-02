@@ -14,12 +14,12 @@ const Settings = artifacts.require("./base/Settings.sol");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 
 contract("UpgradeableProxyUpgradeToTest", function(accounts) {
-    let settingsLogic;
+    let settings;
     let initLogic;
 
     beforeEach("Setup for each test", async () => {
         const owner = accounts[0];
-        settingsLogic = await createTestSettingsInstance(
+        settings = await createTestSettingsInstance(
             Settings,
             {
                 from: owner,
@@ -45,7 +45,7 @@ contract("UpgradeableProxyUpgradeToTest", function(accounts) {
             try {
                 // Setup
                 const proxy = await UpgradeableProxy.new();
-                await proxy.initializeProxy(settingsLogic.address, initLogic.address, { from: admin });
+                await proxy.initializeProxy(settings.address, initLogic.address, { from: admin });
                 const newLogicInstance = await Mock.new();
 
                 if (isPauser) {
