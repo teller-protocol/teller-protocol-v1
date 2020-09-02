@@ -9,6 +9,7 @@ import "./DynamicProxy.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Interfaces
+import "../interfaces/LoansInterface.sol";
 import "../interfaces/EscrowFactoryInterface.sol";
 import "../interfaces/EscrowInterface.sol";
 
@@ -68,27 +69,23 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         @param loanID loan id to associate to the new escrow instance.
         @return the new escrow instance.
      */
-    function createEscrow(address loansAddress, uint256 loanID) external returns (address) {
-        // TODO: verify is loans contract
-        // TODO: verify loan does not already have an escrow
-        require(loansAddress.isContract(), "CALLER_MUST_BE_CONTRACT");
-
-        return _createEscrow(loansAddress, loanID);
-    }
-
-    function _createEscrow(address loansAddress, uint256 loanID)
-        internal
-        isNotPaused()
+    function createEscrow(address loansAddress, uint256 loanID)
+        external
         isInitialized()
+        isNotPaused()
         returns (address escrowAddress)
     {
+        TellerCommon.Loan memory loan = LoansInterface(loansAddress).loans(loanID);
+        require(loan.escrow == address(0x0), "LOAN_ESCROW_ALREADY_EXISTS");
+
         bytes32 escrowLogicName = settings().versionsRegistry().consts().ESCROW_LOGIC_NAME();
-
         escrowAddress = address(new DynamicProxy(address(settings()), escrowLogicName));
-        EscrowInterface escrow = EscrowInterface(escrowAddress);
-        escrow.initialize(loansAddress, loanID);
-
-        emit EscrowCreated(escrow.getBorrower(), loansAddress, loanID, escrowAddress);
+        emit EscrowCreated(
+            loan.loanTerms.borrower,
+            loansAddress,
+            loanID,
+            escrowAddress
+        );
     }
 
     /**

@@ -13,6 +13,7 @@ const DappMock = artifacts.require("./mock/DappMock.sol");
 
 // Smart contracts
 const Escrow = artifacts.require("./mock/base/EscrowMock.sol");
+const Settings = artifacts.require("./base/Settings.sol");
 
 contract('EscrowCallDappTest', function (accounts) {
   const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
@@ -61,7 +62,7 @@ contract('EscrowCallDappTest', function (accounts) {
       if (initialize) {
         await escrow.mockInitialize(loans.address, loanID, { from: owner });
       }
-      await escrow.mockSettings(settingsInstance.address);
+      await escrow.mockSettings(settings.address);
 
       await factory.givenMethodReturnBool(
         encoder.encodeIsDapp(),

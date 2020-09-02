@@ -10,7 +10,7 @@ const { toBytes32 } = require("../utils/consts");
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const EscrowFactory = artifacts.require("./mock/base/EscrowFactoryMock.sol");
+const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
 const Escrow = artifacts.require("./base/Escrow.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
@@ -55,18 +55,20 @@ contract("EscrowFactoryCreateEscrowTest", function(accounts) {
     await loans.externalSetSettings(settingsInstance.address);
 
     const escrowLogic = await Escrow.new();
-    await versionsRegistry.initialize(settingsInstance.address)
-    await versionsRegistry.createLogicVersion(toBytes32(web3, 'Escrow'), escrowLogic.address)
+    await versionsRegistry.initialize(settingsInstance.address);
+    await versionsRegistry.createLogicVersion(toBytes32(web3, "Escrow"), escrowLogic.address);
   });
 
   withData({
-    _1_not_initialized: [ false, false, 1234, -1, true, "CONTRACT_NOT_INITIALIZED" ],
-    _2_platform_paused: [ true, true, 1234, 2, true, "PLATFORM_IS_PAUSED" ],
-    _3_success: [ false, true, 1234, 2, false, null ],
+    _1_not_initialized: [ false, false, 1234, false, -1, true, "CONTRACT_NOT_INITIALIZED" ],
+    _2_platform_paused: [ true, true, 1234, false, 2, true, "PLATFORM_IS_PAUSED" ],
+    _3_escrow_already_exists: [ false, true, 1234, true, 2, true, "LOAN_ESCROW_ALREADY_EXISTS" ],
+    _4_success: [ false, true, 1234, false, 2, false, null ]
   }, function(
     isPaused,
     initialize,
     loanID,
+    duplicate,
     borrowerIndex,
     mustFail,
     expectedErrorMessage
@@ -85,18 +87,22 @@ contract("EscrowFactoryCreateEscrowTest", function(accounts) {
         await escrowFactoryInstance.initialize(settingsInstance.address);
       }
 
+      if (duplicate) {
+        const dummyEscrow = await Mock.new();
+        await loans.setEscrowForLoan(loanID, dummyEscrow.address);
+      }
+
       try {
         // Invocation
-        const result = await escrowFactoryInstance.externalCreateEscrow(loans.address, loanID);
+        const result = await escrowFactoryInstance.createEscrow(loans.address, loanID);
 
         // Assertions
         escrowFactory
           .escrowCreated(result)
           .emitted(borrower, loans.address, loanID);
 
-        assert(!mustFail, 'It passed but wasnt supposed to...');
+        assert(!mustFail, "It passed but wasnt supposed to...");
       } catch (error) {
-        console.error(error)
         assert.equal(error.reason, expectedErrorMessage);
         assert(mustFail, error.message);
         assert(error);
