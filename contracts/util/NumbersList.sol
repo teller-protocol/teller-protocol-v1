@@ -2,7 +2,6 @@ pragma solidity 0.5.17;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
-
 /**
  * @dev Utility library of inline functions on NumbersList.Values
  *

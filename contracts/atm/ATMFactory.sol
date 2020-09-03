@@ -5,24 +5,29 @@ pragma solidity 0.5.17;
 // Common
 import "../util/AddressArrayLib.sol";
 import "../base/TInitializable.sol";
-import "../base/UpgradeableProxy.sol";
-
-// Contracts
+import "../base/DynamicProxy.sol";
 
 // Interfaces
-import "../atm/IATMFactory.sol";
-import "../interfaces/SettingsInterface.sol";
-import "../settings/IATMSettings.sol";
+import "./TLRTokenInterface.sol";
+import "./ATMGovernanceInterface.sol";
+import "../atm/ATMFactoryInterface.sol";
 
-
+/*****************************************************************************************************/
+/**                                             WARNING                                             **/
+/**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
+/**  ---------------------------------------------------------------------------------------------  **/
+/**  Do NOT change the order of or PREPEND any storage variables to this or new versions of this    **/
+/**  contract as this will cause the the storage slots to be overwritten on the proxy contract!!    **/
+/**                                                                                                 **/
+/**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
+/**  more information.                                                                              **/
+/*****************************************************************************************************/
 /**
     @notice This contract will create upgradeable ATM instances.
     @author develop@teller.finance
  */
-contract ATMFactory is IATMFactory, TInitializable {
+contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
     using AddressArrayLib for address[];
-    using AddressLib for address;
-    using Address for address;
 
     /**
         @notice It defines whether an ATM address exists or not.
@@ -32,29 +37,18 @@ contract ATMFactory is IATMFactory, TInitializable {
      */
     mapping(address => bool) public atms;
 
-    mapping(address => address) public atmTokens;
+    mapping(address => address) public tlrTokens;
 
     // List of ATM instances
     address[] public atmsList;
 
-    SettingsInterface public settings;
-
-    IATMSettings public atmSettings;
-
-    modifier onlyOwner() {
-        require(settings.hasPauserRole(msg.sender) == true, "SENDER_ISNT_ALLOWED");
-        _;
-    }
-
     /**
         @notice It creates a new ATM instance.
-        @param name ATM token name.
-        @param symbol ATM token symbol
-        @param decimals ATM token decimals 
-        @param cap ATM token max cap.
-        @param maxVestingsPerWallet max vestings per wallet for the ATM token.
-        @param atmGovernanceLogic the atm governance instance address.
-        @param atmTokenLogic the atm token instance address.
+        @param name The token name.
+        @param symbol The token symbol
+        @param decimals The token decimals 
+        @param cap Token max cap.
+        @param maxVestingPerWallet max vestings per wallet for the token.
         @return the new ATM governance instance address.
      */
     function createATM(
@@ -62,66 +56,57 @@ contract ATMFactory is IATMFactory, TInitializable {
         string calldata symbol,
         uint8 decimals,
         uint256 cap,
-        uint256 maxVestingsPerWallet,
-        address atmGovernanceLogic,
-        address atmTokenLogic
-    ) external onlyOwner() isInitialized() returns (address) {
+        uint256 maxVestingPerWallet
+    ) external onlyPauser() isInitialized() returns (address) {
         address owner = msg.sender;
 
-        bytes memory atmGovernanceInitData = abi.encodeWithSignature(
-            "initialize(address)",
-            owner
+        bytes32 tlrTokenLogicName = settings()
+            .versionsRegistry()
+            .consts()
+            .TLR_TOKEN_LOGIC_NAME();
+        TLRTokenInterface tlrTokenProxy = TLRTokenInterface(
+            address(new DynamicProxy(address(settings()), tlrTokenLogicName))
         );
-        UpgradeableProxy atmGovernanceProxy = new UpgradeableProxy(
-            atmGovernanceLogic,
-            owner,
-            atmGovernanceInitData
+
+        bytes32 atmGovernanceLogicName = settings()
+            .versionsRegistry()
+            .consts()
+            .ATM_GOVERNANCE_LOGIC_NAME();
+        ATMGovernanceInterface atmGovernanceProxy = ATMGovernanceInterface(
+            address(new DynamicProxy(address(settings()), atmGovernanceLogicName))
         );
+        atmGovernanceProxy.initialize(address(settings()), owner);
         address atmGovernanceProxyAddress = address(atmGovernanceProxy);
 
-        bytes memory atmTokenInitData = abi.encodeWithSignature(
-            "initialize(string,string,uint8,uint256,uint256,address,address)",
+        tlrTokenProxy.initialize(
             name,
             symbol,
             decimals,
             cap,
-            maxVestingsPerWallet,
-            address(atmSettings),
+            maxVestingPerWallet,
+            address(settings()),
             atmGovernanceProxyAddress
         );
-
-        UpgradeableProxy atmTokenProxy = new UpgradeableProxy(
-            atmTokenLogic,
-            owner,
-            atmTokenInitData
-        );
-        address atmTokenProxyAddress = address(atmTokenProxy);
+        address tlrTokenProxyAddress = address(tlrTokenProxy);
 
         atms[atmGovernanceProxyAddress] = true;
-        atmTokens[atmGovernanceProxyAddress] = atmTokenProxyAddress;
+        tlrTokens[atmGovernanceProxyAddress] = tlrTokenProxyAddress;
         atmsList.add(atmGovernanceProxyAddress);
 
         // Emit new ATM created event.
-        emit ATMCreated(msg.sender, atmGovernanceProxyAddress, atmTokenProxyAddress);
+        emit ATMCreated(owner, atmGovernanceProxyAddress, tlrTokenProxyAddress);
+
         return atmGovernanceProxyAddress;
     }
 
     /**
         @notice It initializes this ATM Governance Factory instance.
         @param settingsAddress settings address.
-        @param atmSettingsAddress the ATM settings address.
      */
-    function initialize(address settingsAddress, address atmSettingsAddress)
-        external
-        isNotInitialized()
-    {
-        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
-        require(atmSettingsAddress.isContract(), "ATM_SETTINGS_MUST_BE_A_CONTRACT");
+    function initialize(address settingsAddress) external isNotInitialized() {
+        _setSettings(settingsAddress);
 
         _initialize();
-
-        settings = SettingsInterface(settingsAddress);
-        atmSettings = IATMSettings(atmSettingsAddress);
     }
 
     /**
@@ -133,16 +118,13 @@ contract ATMFactory is IATMFactory, TInitializable {
         return atms[atmAddress];
     }
 
-    function getATMToken(address atmAddress) external view returns (address) {
-        return atmTokens[atmAddress];
-    }
-
-    function getATMSettings() external view returns (address) {
-        return address(atmSettings);
-    }
-
-    function getSettings() external view returns (address) {
-        return address(settings);
+    /**
+        @notice Returns the token address of a given associated atm address.
+        @param atmAddress ATM address to test
+        @return Address of the associated TLR Token
+     */
+    function getTLRToken(address atmAddress) external view returns (address) {
+        return tlrTokens[atmAddress];
     }
 
     /**
@@ -151,35 +133,5 @@ contract ATMFactory is IATMFactory, TInitializable {
      */
     function getATMs() external view returns (address[] memory) {
         return atmsList;
-    }
-
-    /**
-        @notice It updates the current settings.
-        @param newSettingsAddress the new setting address.
-     */
-    function setSettings(address newSettingsAddress) external onlyOwner() {
-        require(newSettingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
-        address oldSettingsAddress = address(settings);
-        oldSettingsAddress.requireNotEqualTo(
-            newSettingsAddress,
-            "NEW_SETTINGS_MUST_BE_PROVIDED"
-        );
-
-        settings = SettingsInterface(newSettingsAddress);
-
-        emit SettingsUpdated(msg.sender, oldSettingsAddress, newSettingsAddress);
-    }
-
-    function setATMSettings(address newATMSettingsAddress) external onlyOwner() {
-        require(newATMSettingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
-        address oldATMSettingsAddress = address(atmSettings);
-        oldATMSettingsAddress.requireNotEqualTo(
-            newATMSettingsAddress,
-            "NEW_ATM_SETTINGS_NOT_PROVIDED"
-        );
-
-        atmSettings = IATMSettings(newATMSettingsAddress);
-
-        emit ATMSettingsUpdated(msg.sender, oldATMSettingsAddress, newATMSettingsAddress);
     }
 }

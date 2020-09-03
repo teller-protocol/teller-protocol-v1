@@ -1,6 +1,5 @@
 pragma solidity 0.5.17;
 
-
 // Libraries
 
 // Commons
@@ -16,7 +15,9 @@ pragma solidity 0.5.17;
 contract TInitializable {
     /* State Variables */
 
-    bool private _isInitialized;
+    bytes32 internal constant IS_INITIALIZED_SLOT = keccak256(
+        "TInitializable.isInitialized"
+    );
 
     /** Modifiers */
 
@@ -25,7 +26,7 @@ contract TInitializable {
         @dev It throws a require error if the contract is initialized.
      */
     modifier isNotInitialized() {
-        require(!_isInitialized, "CONTRACT_ALREADY_INITIALIZED");
+        require(!initialized(), "CONTRACT_ALREADY_INITIALIZED");
         _;
     }
 
@@ -34,20 +35,23 @@ contract TInitializable {
         @dev It throws a require error if the contract is not initialized.
      */
     modifier isInitialized() {
-        require(_isInitialized, "CONTRACT_NOT_INITIALIZED");
+        require(initialized(), "CONTRACT_NOT_INITIALIZED");
         _;
     }
 
     /* Constructor */
 
-    /** External Functions */
+    /** Public Functions */
 
     /**
         @notice Gets if the contract is initialized.
         @return true if contract is initialized. Otherwise it returns false.
      */
-    function initialized() external view returns (bool) {
-        return _isInitialized;
+    function initialized() public view returns (bool value) {
+        bytes32 slot = IS_INITIALIZED_SLOT;
+        assembly {
+            value := sload(slot)
+        }
     }
 
     /** Internal functions */
@@ -56,7 +60,11 @@ contract TInitializable {
         @notice It initializes this contract.
      */
     function _initialize() internal {
-        _isInitialized = true;
+        bytes32 slot = IS_INITIALIZED_SLOT;
+        bool value = true;
+        assembly {
+            sstore(slot, value)
+        }
     }
 
     /** Private functions */

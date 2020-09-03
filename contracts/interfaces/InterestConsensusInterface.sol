@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "../util/TellerCommon.sol";
 
-
 /**
     @notice This interface defines the functions to process node responses and get consensus in the lender interest.
 
@@ -50,4 +49,17 @@ interface InterestConsensusInterface {
         TellerCommon.InterestRequest calldata request,
         TellerCommon.InterestResponse[] calldata responses
     ) external returns (uint256);
+
+    /**
+        @notice It initializes this interest consensus contract.
+        @dev The caller address is the lenders address for the interest consensus implementation.
+        @param owner the owner address.
+        @param aCallerAddress the contract that will call it.
+        @param aSettingAddress the settings contract address.
+     */
+    function initialize(
+        address owner,
+        address aCallerAddress,
+        address aSettingAddress
+    ) external;
 }

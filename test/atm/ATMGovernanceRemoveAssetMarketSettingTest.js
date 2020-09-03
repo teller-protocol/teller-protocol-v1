@@ -17,10 +17,12 @@ const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 contract('ATMGovernanceRemoveAssetMarketSettingTest', function (accounts) {
     const owner = accounts[0];
     let instance;
+    let settingsInstance;
 
     beforeEach('Setup for each test', async () => {
+        settingsInstance = await Mock.new();
         instance = await ATMGovernance.new();
-        await instance.initialize(owner);
+        await instance.initialize(settingsInstance.address, owner);
     });
 
     // Testing values
@@ -37,14 +39,11 @@ contract('ATMGovernanceRemoveAssetMarketSettingTest', function (accounts) {
         it(t('user', 'removeAssetMarketSetting#1', 'Should (or not) be able to remove an asset market setting.', mustFail), async function () {
             // Setup
             const sender = accounts[senderIndex];
-            const validSender = accounts[0];
             const assetContract = await Mock.new();
             const assetAddress = assetContract.address;
 
             // Precondition
-            await instance.addAssetMarketSetting(assetAddress, settingName, SETTING_VALUE, {
-                from: validSender
-            });
+            await instance.addAssetMarketSetting(assetAddress, settingName, SETTING_VALUE);
 
             try {
     

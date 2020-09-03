@@ -7,15 +7,33 @@ import "./Consensus.sol";
 // Interfaces
 import "../interfaces/LoanTermsConsensusInterface.sol";
 
-
+/*****************************************************************************************************/
+/**                                             WARNING                                             **/
+/**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
+/**  ---------------------------------------------------------------------------------------------  **/
+/**  Do NOT change the order of or PREPEND any storage variables to this or new versions of this    **/
+/**  contract as this will cause the the storage slots to be overwritten on the proxy contract!!    **/
+/**                                                                                                 **/
+/**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
+/**  more information.                                                                              **/
+/*****************************************************************************************************/
 /**
     @notice This contract is used to process the loan requests through the Teller protocol
 
     @author develop@teller.finance
  */
-contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
+contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
     /* Mappings */
-    mapping(address => mapping(uint256 => TellerCommon.AccruedLoanTerms)) public termSubmissions;
+    /**
+        @notice It identifies the loan terms submissions for a given borrower address and a request nonce.
+
+        @dev Examples:
+            @address(0x123...567) => 1 => AccruedLoanTerms({...})
+            @address(0x123...567) => 2 => AccruedLoanTerms({...})
+            @address(0x234...678) => 1 => AccruedLoanTerms({...})
+     */
+    mapping(address => mapping(uint256 => TellerCommon.AccruedLoanTerms))
+        public termSubmissions;
 
     /**
         This mapping identify the last request timestamp for a given borrower address.
@@ -40,12 +58,16 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
     )
         external
         isInitialized()
-        isCaller()
-        returns (uint256 interestRate, uint256 collateralRatio, uint256 maxLoanAmount)
+        isCaller(msg.sender)
+        returns (
+            uint256 interestRate,
+            uint256 collateralRatio,
+            uint256 maxLoanAmount
+        )
     {
         require(
             responses.length >=
-                settings.getPlatformSettingValue(REQUIRED_SUBMISSIONS_SETTING),
+                settings().getPlatformSettingValue(consts.REQUIRED_SUBMISSIONS_SETTING()),
             "LOANTERM_INSUFFICIENT_RESPONSES"
         );
         _requireRequestLoanTermsRateLimit(request);
@@ -188,8 +210,8 @@ contract LoanTermsConsensus is Consensus, LoanTermsConsensusInterface {
         if (borrowerToLastLoanTermRequest[request.borrower] == 0) {
             return;
         }
-        uint256 requestLoanTermsRateLimit = settings.getPlatformSettingValue(
-            REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING
+        uint256 requestLoanTermsRateLimit = settings().getPlatformSettingValue(
+            consts.REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING()
         );
         require(
             borrowerToLastLoanTermRequest[request.borrower].add(

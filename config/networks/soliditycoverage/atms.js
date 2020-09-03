@@ -2,11 +2,11 @@ module.exports = {
     teller: {
         name: 'Teller',
         token: {
-            name: 'ATM Token Test',
-            symbol: 'ATMTest',
+            name: 'Teller Token',
+            symbol: 'TLR',
             decimals: 18,
             maxCap: 100000000000,
-            maxVestingsPerWallet: 50,
+            maxVestingPerWallet: 50,
         },
         supplyToDebt: 5000,
         /**

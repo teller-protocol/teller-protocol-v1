@@ -13,15 +13,20 @@ const LoanTermsConsensusMock = artifacts.require("./mock/base/LoanTermsConsensus
 contract('LoanTermsConsensusRequireRequestLoanTermsRateLimitTest', function (accounts) {
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     const timer = new Timer(web3);
-    const loansAddress = accounts[3];
+    const owner = accounts[1];
     let instance
     let settingsInstance;
+    let callerInstance;
 
     beforeEach('Setup for each test', async () => {
         settingsInstance = await Mock.new();
-        const marketsInstance = await Mock.new();
+        callerInstance = await Mock.new();
         instance = await LoanTermsConsensusMock.new();
-        await instance.initialize(loansAddress, settingsInstance.address, marketsInstance.address);
+        await instance.initialize(
+            owner,
+            callerInstance.address,
+            settingsInstance.address
+        );
     })
 
     withData({

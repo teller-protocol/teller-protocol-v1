@@ -2,23 +2,39 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/access/roles/WhitelistedRole.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/WhitelistedRole.sol";
 
 // Contracts
+import "./BaseUpgradeable.sol";
+import "./TInitializable.sol";
 
 // Interfaces
 import "../interfaces/MarketsStateInterface.sol";
 import "../util/MarketStateLib.sol";
 
-
+/*****************************************************************************************************/
+/**                                             WARNING                                             **/
+/**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
+/**  ---------------------------------------------------------------------------------------------  **/
+/**  Do NOT change the order of or PREPEND any storage variables to this or new versions of this    **/
+/**  contract as this will cause the the storage slots to be overwritten on the proxy contract!!    **/
+/**                                                                                                 **/
+/**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
+/**  more information.                                                                              **/
+/*****************************************************************************************************/
 /**
     @notice This contract is used to store market data.
 
     @author develop@teller.finance
  */
-contract MarketsState is MarketsStateInterface, WhitelistedRole {
-    using SafeMath for uint256;
+contract MarketsState is
+    MarketsStateInterface,
+    TInitializable,
+    WhitelistedRole,
+    BaseUpgradeable
+{
+    using Address for address;
     using MarketStateLib for MarketStateLib.MarketState;
 
     /** Constants */
@@ -44,7 +60,7 @@ contract MarketsState is MarketsStateInterface, WhitelistedRole {
         address borrowedAsset,
         address collateralAsset,
         uint256 amount
-    ) external onlyWhitelisted() {
+    ) external onlyWhitelisted() isInitialized() {
         markets[borrowedAsset][collateralAsset].increaseRepayment(amount);
     }
 
@@ -59,7 +75,7 @@ contract MarketsState is MarketsStateInterface, WhitelistedRole {
         address borrowedAsset,
         address collateralAsset,
         uint256 amount
-    ) external onlyWhitelisted() {
+    ) external onlyWhitelisted() isInitialized() {
         markets[borrowedAsset][collateralAsset].increaseSupply(amount);
     }
 
@@ -74,7 +90,7 @@ contract MarketsState is MarketsStateInterface, WhitelistedRole {
         address borrowedAsset,
         address collateralAsset,
         uint256 amount
-    ) external onlyWhitelisted() {
+    ) external onlyWhitelisted() isInitialized() {
         markets[borrowedAsset][collateralAsset].decreaseSupply(amount);
     }
 
@@ -89,7 +105,7 @@ contract MarketsState is MarketsStateInterface, WhitelistedRole {
         address borrowedAsset,
         address collateralAsset,
         uint256 amount
-    ) external onlyWhitelisted() {
+    ) external onlyWhitelisted() isInitialized() {
         markets[borrowedAsset][collateralAsset].increaseBorrow(amount);
     }
 
@@ -134,6 +150,19 @@ contract MarketsState is MarketsStateInterface, WhitelistedRole {
         returns (MarketStateLib.MarketState memory)
     {
         return _getMarket(borrowedAsset, collateralAsset);
+    }
+
+    /**
+        @notice It initializes this Markets State instance.
+        @param settingsAddress settings address.
+     */
+    function initialize(address settingsAddress) public initializer() isNotInitialized() {
+        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
+
+        WhitelistedRole.initialize(msg.sender);
+        TInitializable._initialize();
+
+        _setSettings(settingsAddress);
     }
 
     /** Internal Functions */

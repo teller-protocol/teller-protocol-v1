@@ -1,5 +1,6 @@
 pragma solidity 0.5.17;
 
+import "../interfaces/SettingsInterface.sol";
 
 // Libraries
 
@@ -80,6 +81,11 @@ interface IATMSettings {
     /** External Functions */
 
     /**
+        @notice It represents the protocol Settings contract.
+     */
+    function settings() external view returns (SettingsInterface);
+
+    /**
         @notice It pauses an given ATM.
         @param atmAddress ATM address to pause.
      */
@@ -152,4 +158,10 @@ interface IATMSettings {
         address collateralToken,
         address atmAddress
     ) external view returns (bool);
+
+    /**
+        @notice It initializes this ATM Settings instance.
+        @param settingsAddress settings address.
+     */
+    function initialize(address settingsAddress) external;
 }

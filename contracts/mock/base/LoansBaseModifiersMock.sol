@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/EtherCollateralLoans.sol";
 
-
 /**
     This contract is created ONLY for testing purposes.
  */

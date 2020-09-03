@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/TokenCollateralLoans.sol";
 
-
 contract TokenCollateralLoansMock is TokenCollateralLoans {
     bool public mockTokenFunctions;
 
@@ -48,6 +47,7 @@ contract TokenCollateralLoansMock is TokenCollateralLoans {
             principalOwed: principalOwed,
             interestOwed: interestOwed,
             borrowedAmount: borrowedAmount,
+            escrow: address(0x0),
             status: status,
             liquidated: liquidated
         });

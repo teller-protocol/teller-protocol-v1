@@ -19,29 +19,34 @@ contract('ATMSettingsPauseATMTest', function (accounts) {
     
     beforeEach('Setup for each test', async () => {
         mocks = await createMocks(Mock, 10);
+
         settings = await Mock.new();
-        instance = await ATMSettings.new(settings.address);
+        instance = await ATMSettings.new();
+        await instance.initialize(settings.address);
     });
 
     withData({
         _1_basic: [[], 0, 1, true, true, false, undefined, false],
         _2_basic_previous_atms: [[1, 2, 3], 5, 1, true, true, false, undefined, false],
-        _3_sender_not_pauser_role: [[], 0, 1, true, false, false, 'SENDER_HASNT_PAUSER_ROLE', true],
+        _3_sender_not_pauser_role: [[], 0, 1, true, false, false, 'NOT_PAUSER', true],
         _4_platform_already_paused: [[], 0, 1, true, true, true, 'PLATFORM_IS_ALREADY_PAUSED', true],
         _5_atm_already_paused: [[1, 2], 2, 1, true, true, false, 'ATM_IS_ALREADY_PAUSED', true],
     }, function(previousATMs, atmIndex, senderIndex, encodeIsATM, encodeHasPauserRole, encodeIsPaused, expectedErrorMessage, mustFail) {
         it(t('user', 'pauseATM', 'Should (or not) be able to pause an ATM.', mustFail), async function() {
             // Setup
-            await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeHasPauserRole(), true);
             await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), false);
             for (const previousATMIndex of previousATMs) {
                 await instance.pauseATM(mocks[previousATMIndex], { from: owner });
             }
             const sender = accounts[senderIndex];
             const atmAddress = atmIndex === -1 ? NULL_ADDRESS : mocks[atmIndex];
-            await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeHasPauserRole(), encodeHasPauserRole);
             await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), encodeIsPaused);
-
+            if(!encodeHasPauserRole) {
+                await settings.givenMethodRevertWithMessage(
+                    settingsInterfaceEncoder.encodeRequirePauserRole(),
+                    'NOT_PAUSER'
+                );
+            }
 
             try {
                 // Invocation

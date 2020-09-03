@@ -13,17 +13,18 @@ const LoanTermsConsensusMock = artifacts.require("./mock/base/LoanTermsConsensus
 const { NULL_ADDRESS } = require('../utils/consts');
 const chains = require('../utils/chains');
 
-contract('LoanTermsConsensus hashRequest and hashReponse', function (accounts) {
-    const loansAddress = accounts[3]
+contract('LoanTermsConsensusHashesTest', function (accounts) {
+    let loansInstance
     let instance
     let consensusInstance;
 
     beforeEach('Setup for each test', async () => {
         const settingsInstance = await Mock.new();
-        const marketsInstance = await Mock.new();
         consensusInstance = await Mock.new();
+        loansInstance = await Mock.new();
         instance = await LoanTermsConsensusMock.new();
-        await instance.initialize(loansAddress, settingsInstance.address, marketsInstance.address);
+        const owner = accounts[0];
+        await instance.initialize(owner, loansInstance.address, settingsInstance.address);
     })
 
     withData({
@@ -44,7 +45,7 @@ contract('LoanTermsConsensus hashRequest and hashReponse', function (accounts) {
             let expectedResult = ethUtil.bufferToHex(
                 hashLoanTermsRequest(
                     request,
-                    loansAddress,
+                    loansInstance.address,
                     chainId,
                 )
             )

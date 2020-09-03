@@ -18,6 +18,57 @@ const notEmitted = (tx, eventName, assertFunction) => {
 }
 
 module.exports = {
+    uniswap: {
+        uniswapSwapped: tx => {
+            const name = 'UniswapSwapped';
+            return {
+                name: name,
+                emitted: (from, to, sourceElement, receivedElement, sourceAmount, receivedAmount) => emitted(tx, name, ev => {
+                    assert.equal(ev.from, from);
+                    assert.equal(ev.to, to);
+                    assert.equal(ev.sourceElement, sourceElement);
+                    assert.equal(ev.receivedElement, receivedElement);
+                    assert.equal(ev.sourceAmount, sourceAmount);
+                    assert.equal(ev.receivedAmount, receivedAmount);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
+    compound: {
+        compoundLended: tx => {
+            const name = 'CompoundLended';
+            return {
+                name: name,
+                emitted: (sender, dapp, amount, cToken, cTokenBalance, underlyingToken, underlyingBalance) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.dappAddress, dapp);
+                    assert.equal(ev.amount.toString(), amount.toString());
+                    assert.equal(ev.cToken, cToken); 
+                    assert.equal(ev.cTokenBalance.toString(), cTokenBalance.toString());
+                    assert.equal(ev.underlyingToken, underlyingToken);
+                    assert.equal(ev.underlyingBalance.toString(), underlyingBalance.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        compoundRedeemed: tx => {
+            const name = 'CompoundRedeemed';
+            return {
+                name: name,
+                emitted: (sender, dapp, amount, cToken, cTokenBalance, underlyingToken, underlyingBalance) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.dappAddress, dapp);
+                    assert.equal(ev.amount.toString(), amount.toString());
+                    assert.equal(ev.cToken, cToken);
+                    assert.equal(ev.cTokenBalance.toString(), cTokenBalance.toString());
+                    assert.equal(ev.underlyingToken, underlyingToken);
+                    assert.equal(ev.underlyingBalance.toString(), underlyingBalance.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },        
+    },
     erc20: {
         transfer: tx => {
             const name = 'Transfer';
@@ -115,18 +166,6 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-        interestValidatorUpdated: tx => {
-            const name = 'InterestValidatorUpdated';
-            return {
-                name: name,
-                emitted: (sender, oldInterestValidator, newInterestValidator) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender.toString(), sender.toString());
-                    assert.equal(ev.oldInterestValidator.toString(), oldInterestValidator.toString());
-                    assert.equal(ev.newInterestValidator.toString(), newInterestValidator.toString());
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
     },
     loans: {
         loanTermsSet: tx => {
@@ -150,9 +189,10 @@ module.exports = {
             const name = 'LoanTakenOut';
             return {
                 name: name,
-                emitted: (loanID, borrower, amountBorrowed) => emitted(tx, name, ev => {
+                emitted: (loanID, borrower, escrow, amountBorrowed) => emitted(tx, name, ev => {
                     assert.equal(ev.loanID.toString(), loanID.toString());
                     assert.equal(ev.borrower, borrower);
+                    assert.equal(ev.escrow, escrow);
                     assert.equal(ev.amountBorrowed.toString(), amountBorrowed.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
@@ -297,7 +337,7 @@ module.exports = {
             };
         },
     },
-    atmToken: {
+    tlrToken: {
         newCap: tx => {
             const name = 'NewCap';
             return {
@@ -673,7 +713,114 @@ module.exports = {
                 emitted: (sender, atm, token) => emitted(tx, name, ev => {
                     assert.equal(ev.creator, sender);
                     assert.equal(ev.atmGovernanceAddress, atm);
-                    assert.equal(ev.atmTokenAddress, token);
+                    assert.equal(ev.tlrTokenAddress, token);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
+    escrowFactory: {
+        escrowCreated: tx => {
+            const name = 'EscrowCreated';
+            return {
+                name: name,
+                emitted: (borrower, loansAddress, loanID) => emitted(tx, name, ev => {
+                    assert.equal(ev.borrower.toString(), borrower.toString());
+                    assert.equal(ev.loansAddress.toString(), loansAddress.toString());
+                    assert.equal(ev.loanID.toString(), loanID.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        newDAppAdded: tx => {
+            const name = 'NewDAppAdded';
+            return {
+                name: name,
+                emitted: (sender, dapp) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.dapp.toString(), dapp.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        dappRemoved: tx => {
+            const name = 'DAppRemoved';
+            return {
+                name: name,
+                emitted: (sender, dapp) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.dapp.toString(), dapp.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
+    escrow: {
+        ownershipTransferred: tx => {
+            const name = 'OwnershipTransferred';
+            return {
+                name: name,
+                emitted: (previousOwner, newOwner) => emitted(tx, name, ev => {
+                    assert.equal(ev.previousOwner.toString(), previousOwner.toString());
+                    assert.equal(ev.newOwner.toString(), newOwner.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
+    upgradeable: {
+        upgraded: tx => {
+            const name = "Upgraded";
+            return {
+                name: name,
+                emitted: (implementation) => emitted(tx, name, ev => {
+                    assert.equal(ev.implementation, implementation);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
+    marketFactory: {
+        newMarketCreated: tx => {
+            const name = "NewMarketCreated";
+            return {
+                name: name,
+                emitted: (
+                    sender,
+                    borrowedToken,
+                    collateralToken,
+                    loans,
+                    lenders,
+                    lendingPool,
+                    loanTermsConsensus,
+                    interestConsensus,
+                    pairAggregator
+                ) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.borrowedToken.toString(), borrowedToken.toString());
+                    assert.equal(ev.collateralToken.toString(), collateralToken.toString());
+                    assert.equal(ev.loans.toString(), loans.toString());
+                    assert.equal(ev.lenders.toString(), lenders.toString());
+                    assert.equal(ev.lendingPool.toString(), lendingPool.toString());
+                    assert.equal(ev.loanTermsConsensus.toString(), loanTermsConsensus.toString());
+                    assert.equal(ev.interestConsensus.toString(), interestConsensus.toString());
+                    assert.equal(ev.pairAggregator.toString(), pairAggregator.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        marketRemoved: tx => {
+            const name = "MarketRemoved";
+            return {
+                name: name,
+                emitted: (
+                    sender,
+                    borrowedToken,
+                    collateralToken,
+                ) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.borrowedToken.toString(), borrowedToken.toString());
+                    assert.equal(ev.collateralToken.toString(), collateralToken.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };

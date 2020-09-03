@@ -19,4 +19,8 @@ IATMSettingsEncoder.prototype.encodeGetATMForMarket = function() {
     return encode(this.web3, 'getATMForMarket(address,address)');
 }
 
+IATMSettingsEncoder.prototype.encodeSettings = function() {
+    return encode(this.web3, 'settings()')
+}
+
 module.exports = IATMSettingsEncoder;

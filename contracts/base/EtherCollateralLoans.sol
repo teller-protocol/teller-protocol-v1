@@ -4,7 +4,16 @@ pragma experimental ABIEncoderV2;
 // Contracts
 import "./LoansBase.sol";
 
-
+/*****************************************************************************************************/
+/**                                             WARNING                                             **/
+/**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
+/**  ---------------------------------------------------------------------------------------------  **/
+/**  Do NOT change the order of or PREPEND any storage variables to this or new versions of this    **/
+/**  contract as this will cause the the storage slots to be overwritten on the proxy contract!!    **/
+/**                                                                                                 **/
+/**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
+/**  more information.                                                                              **/
+/*****************************************************************************************************/
 /**
     @notice This contract is used as a basis for the creation of Ether based loans across the platform
     @notice It implements the LoansBase contract from Teller
@@ -17,7 +26,11 @@ contract EtherCollateralLoans is LoansBase {
      * @param borrower The address of the loan borrower.
      * @param loanID The ID of the loan the collateral is for
      */
-    function depositCollateral(address borrower, uint256 loanID, uint256 amount)
+    function depositCollateral(
+        address borrower,
+        uint256 loanID,
+        uint256 amount
+    )
         external
         payable
         loanActiveOrSet(loanID)
@@ -96,27 +109,22 @@ contract EtherCollateralLoans is LoansBase {
         @param lendingPoolAddress Contract address of the lending pool
         @param loanTermsConsensusAddress Contract adddress for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
-        @param marketsAddress Contract address to store the market data.
-        @param atmSettingsAddress Contract address to get ATM settings data.
      */
     function initialize(
         address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
-        address marketsAddress,
-        address atmSettingsAddress
+        address
     ) external isNotInitialized() {
         _initialize(
             priceOracleAddress,
             lendingPoolAddress,
             loanTermsConsensusAddress,
-            settingsAddress,
-            marketsAddress,
-            atmSettingsAddress
+            settingsAddress
         );
 
-        collateralToken = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+        collateralToken = settings().ETH_ADDRESS();
     }
 
     /** Internal Functions */
@@ -124,10 +132,13 @@ contract EtherCollateralLoans is LoansBase {
         @notice Pays out collateral for the associated loan
         @param loanID The ID of the loan the collateral is for
         @param amount The amount of collateral to be paid
+        @param recipient address that will receive the given amount.
      */
-    function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
-        internal
-    {
+    function _payOutCollateral(
+        uint256 loanID,
+        uint256 amount,
+        address payable recipient
+    ) internal {
         totalCollateral = totalCollateral.sub(amount);
         loans[loanID].collateral = loans[loanID].collateral.sub(amount);
         recipient.transfer(amount);

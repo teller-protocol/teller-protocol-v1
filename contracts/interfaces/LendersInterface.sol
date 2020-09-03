@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "../util/TellerCommon.sol";
 
-
 /**
     @notice This interface defines the functions for interactions between lenders and the interests.
 
@@ -28,6 +27,20 @@ interface LendersInterface {
     function setAccruedInterest(
         TellerCommon.InterestRequest calldata request,
         TellerCommon.InterestResponse[] calldata responses
+    ) external;
+
+    /**
+        @notice It initializes this contract instance.
+        @param tTokenAddress tToken contract address.
+        @param lendingPoolAddress lending pool contract address.
+        @param interestConsensusAddress interest consensus contract address.
+        @param settingAddress settings contract address.
+     */
+    function initialize(
+        address tTokenAddress,
+        address lendingPoolAddress,
+        address interestConsensusAddress,
+        address settingAddress
     ) external;
 
     /**

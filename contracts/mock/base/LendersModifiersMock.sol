@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/Lenders.sol";
 
-
 /**
     This contract is created ONLY for testing purposes.
  */

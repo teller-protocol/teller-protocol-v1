@@ -1,39 +1,29 @@
 pragma solidity 0.5.17;
 
-import "@openzeppelin/upgrades/contracts/upgradeability/AdminUpgradeabilityProxy.sol";
+// Contracts
+import "@openzeppelin/upgrades/contracts/upgradeability/BaseUpgradeabilityProxy.sol";
+import "./BaseUpgradeable.sol";
+import "./BaseProxy.sol";
 
-
-contract UpgradeableProxy is AdminUpgradeabilityProxy {
+contract UpgradeableProxy is BaseUpgradeabilityProxy, BaseUpgradeable, BaseProxy {
     /**
-     * @dev Override ifAdmin to require caller to be the admin instead of calling the fallback.
+        @notice It initializes this proxy instance.
+        @param settingsAddress the settings address.
+        @param initialLogic the initial logic address.
      */
-    modifier ifAdmin() {
-        require(msg.sender == _admin(), "UPGRADABLE_CALLER_MUST_BE_ADMIN");
-        _;
-    }
+    function initializeProxy(address settingsAddress, address initialLogic) public {
+        require(settingsAddress.isContract(), "SETTINGS_NOT_A_CONTRACT");
+        require(initialLogic.isContract(), "INITIAL_LOGIC_NOT_A_CONTRACT");
 
-    constructor(address _logic, address _admin, bytes memory _data)
-        public
-        payable
-        AdminUpgradeabilityProxy(_logic, _admin, _data)
-    {}
-
-    /**
-     * @return The address of the proxy admin.
-     */
-    function admin() external returns (address) {
-        return _admin();
+        _setSettings(settingsAddress);
+        _setImplementation(initialLogic);
     }
 
     /**
-     * @return The address of the implementation.
+        @notice It upgrades the current logic to a new logic address.
+        @param newLogic the new logic address.
      */
-    function implementation() external returns (address) {
-        return _implementation();
+    function upgradeTo(address newLogic) public onlyPauser() {
+        BaseUpgradeabilityProxy._upgradeTo(newLogic);
     }
-
-    /**
-     * @dev Anyone can call the function on the derived contracts.
-     */
-    function _willFallback() internal {}
 }

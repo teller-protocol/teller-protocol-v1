@@ -1,6 +1,6 @@
 const assert = require('assert');
 const DeployerApp = require('./utils/DeployerApp');
-const UpgradeableProxy = artifacts.require("./base/UpgradeableProxy.sol");
+const InitializeableDynamicProxy = artifacts.require("./base/InitializeableDynamicProxy.sol");
 
 // Mock Smart Contracts
 const DAIMock = artifacts.require("./mock/token/DAIMock.sol");
@@ -13,7 +13,7 @@ const PairAggregatorMock = artifacts.require("./mock/providers/chainlink/PairAgg
 module.exports = async function(deployer, network, accounts) {
   console.log(`Deploying smart contracts to '${network}'.`)
   // Getting network configuration.
-  const appConfig = require('../config')(network);
+  const appConfig = await require('../config')(network);
   const { networkConfig, env } = appConfig;
 
   // Getting configuration values.
@@ -26,7 +26,7 @@ module.exports = async function(deployer, network, accounts) {
   const txConfig = { gas: maxGasLimit, from: deployerAccount };
 
   // Creating DeployerApp helper.
-  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, UpgradeableProxy, network);
+  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, { InitializeableDynamicProxy }, { network, networkConfig });
   
   await deployerApp.deployMockIfWith('DAI', DAIMock, txConfig);
   await deployerApp.deployMockIfWith('USDC', USDCMock, txConfig);
@@ -37,8 +37,8 @@ module.exports = async function(deployer, network, accounts) {
   const initialUsdcEthPrice = '4789225000000000';
   await deployerApp.deployMockIfWith('USDC_ETH', PairAggregatorMock, initialUsdcEthPrice, txConfig);
   const initialLinkUsdPrice = '241545893719807000';
-  // The Chainlink Oracle for pairs: DAI/LINK and USDC/LINK don't exist yet. So we use LINK/USD (inversed).
-  await deployerApp.deployMockIfWith('LINK_USD', PairAggregatorMock, initialLinkUsdPrice, txConfig);
+  await deployerApp.deployMockIfWith('LINK_DAI', PairAggregatorMock, initialLinkUsdPrice, txConfig);
+  await deployerApp.deployMockIfWith('LINK_USDC', PairAggregatorMock, initialLinkUsdPrice, txConfig);
 
   if(deployerApp.canDeployMock()) {
       const defaultMultiplier = '2';

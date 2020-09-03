@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/LoanTermsConsensus.sol";
 
-
 contract LoanTermsConsensusMock is LoanTermsConsensus {
     uint256 private _mockChainId = 1; // Mainnet
 
@@ -64,7 +63,11 @@ contract LoanTermsConsensusMock is LoanTermsConsensus {
         hasSubmitted[signer][lender][blockNumber] = hasSub;
     }
 
-    function mockSignerNonce(address signer, uint256 signerNonce, bool taken) external {
+    function mockSignerNonce(
+        address signer,
+        uint256 signerNonce,
+        bool taken
+    ) external {
         signerNonceTaken[signer][signerNonce] = taken;
     }
 
@@ -74,9 +77,11 @@ contract LoanTermsConsensusMock is LoanTermsConsensus {
         borrowerToLastLoanTermRequest[borrower] = lastTime;
     }
 
-    function mockRequestNonce(address borrower, uint256 borrowerNonce, bool taken)
-        external
-    {
+    function mockRequestNonce(
+        address borrower,
+        uint256 borrowerNonce,
+        bool taken
+    ) external {
         requestNonceTaken[borrower][borrowerNonce] = taken;
     }
 
@@ -115,6 +120,10 @@ contract LoanTermsConsensusMock is LoanTermsConsensus {
         TellerCommon.LoanRequest calldata request
     ) external view returns (bool) {
         super._requireRequestLoanTermsRateLimit(request);
+        return true;
+    }
+
+    function _isCaller(address) internal view returns (bool) {
         return true;
     }
 }

@@ -5,6 +5,7 @@ const { lendingPool } = require('../utils/events');
 const BurnableInterfaceEncoder = require('../utils/encoders/BurnableInterfaceEncoder');
 const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
 const InterestValidatorInterfaceEncoder = require('../utils/encoders/InterestValidatorInterfaceEncoder');
+const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -17,6 +18,7 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
     const burnableInterfaceEncoder = new BurnableInterfaceEncoder(web3);
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
     const interestValidatorInterfaceEncoder = new InterestValidatorInterfaceEncoder(web3);
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     let instance;
     let tTokenInstance;
     let lendingTokenInstance;
@@ -45,7 +47,6 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
             instance.address,
             consensusInstance.address,
             settingsInstance.address,
-            marketsInstance.address,
         );
     });
 
@@ -79,9 +80,16 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
         it(t('user', 'withdrawInterest', 'Should able (or not) to withdraw the interest.', mustFail), async function() {
             // Setup
             const cTokenAddress = isCTokenSupported ? cTokenInstance.address : NULL_ADDRESS;
-            const interestValidatorAddress = interestValidatorInfo.supported ? interestValidatorInstance.address : NULL_ADDRESS; 
-            const encodeIsInterestValid = interestValidatorInterfaceEncoder.encodeIsInterestValid();
-            await interestValidatorInstance.givenMethodReturnBool(encodeIsInterestValid, interestValidatorInfo.isValid);
+
+            const interestValidatorAddress = interestValidatorInfo.supported ? interestValidatorInstance.address : NULL_ADDRESS;
+            await settingsInstance.givenMethodReturnAddress(
+                settingsInterfaceEncoder.encodeInterestValidator(),
+                interestValidatorAddress
+            );
+            if(interestValidatorInfo.supported) {
+                const encodeIsInterestValid = interestValidatorInterfaceEncoder.encodeIsInterestValid();
+                await interestValidatorInstance.givenMethodReturnBool(encodeIsInterestValid, interestValidatorInfo.isValid);
+            }
             await instance.initialize(
                 tTokenInstance.address,
                 lendingTokenInstance.address,
@@ -89,8 +97,6 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
                 loansInstance.address,
                 cTokenAddress,
                 settingsInstance.address,
-                marketsInstance.address,
-                interestValidatorAddress,
             );
             await lendersInstance.mockLenderInfo(
                 lender,

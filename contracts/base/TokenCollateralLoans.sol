@@ -4,7 +4,16 @@ pragma experimental ABIEncoderV2;
 // Contracts
 import "./LoansBase.sol";
 
-
+/*****************************************************************************************************/
+/**                                             WARNING                                             **/
+/**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
+/**  ---------------------------------------------------------------------------------------------  **/
+/**  Do NOT change the order of or PREPEND any storage variables to this or new versions of this    **/
+/**  contract as this will cause the the storage slots to be overwritten on the proxy contract!!    **/
+/**                                                                                                 **/
+/**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
+/**  more information.                                                                              **/
+/*****************************************************************************************************/
 /**
     @notice This contract is used as a basis for the creation of loans (not wei) across the platform
     @notice It implements the LoansBase contract from Teller
@@ -35,7 +44,11 @@ contract TokenCollateralLoans is LoansBase {
      * @param loanID The ID of the loan the collateral is for
      * @param amount The amount to deposit as collateral.
      */
-    function depositCollateral(address borrower, uint256 loanID, uint256 amount)
+    function depositCollateral(
+        address borrower,
+        uint256 loanID,
+        uint256 amount
+    )
         external
         payable
         noMsgValue()
@@ -114,17 +127,14 @@ contract TokenCollateralLoans is LoansBase {
         @param lendingPoolAddress Contract address of the lending pool
         @param loanTermsConsensusAddress Contract adddress for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
-        @param marketsAddress Contract address to store market data.
-        @param atmSettingsAddress Contract address to get ATM settings data.
+        @param collateralTokenAddress Contract address for the collateral token.
      */
     function initialize(
         address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
-        address collateralTokenAddress,
-        address marketsAddress,
-        address atmSettingsAddress
+        address collateralTokenAddress
     ) external isNotInitialized() {
         collateralTokenAddress.requireNotEmpty("PROVIDE_COLL_TOKEN_ADDRESS");
 
@@ -132,9 +142,7 @@ contract TokenCollateralLoans is LoansBase {
             priceOracleAddress,
             lendingPoolAddress,
             loanTermsConsensusAddress,
-            settingsAddress,
-            marketsAddress,
-            atmSettingsAddress
+            settingsAddress
         );
 
         collateralToken = collateralTokenAddress;
@@ -146,9 +154,11 @@ contract TokenCollateralLoans is LoansBase {
         @param loanID The ID of the loan the collateral is for
         @param amount The amount of collateral to be paid
      */
-    function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
-        internal
-    {
+    function _payOutCollateral(
+        uint256 loanID,
+        uint256 amount,
+        address payable recipient
+    ) internal {
         totalCollateral = totalCollateral.sub(amount);
         loans[loanID].collateral = loans[loanID].collateral.sub(amount);
 
@@ -173,7 +183,7 @@ contract TokenCollateralLoans is LoansBase {
         @param amount The amount of tokens to transfer.
      */
     function _collateralTokenTransfer(address recipient, uint256 amount) internal {
-        ERC20(collateralToken).tokenTransfer(recipient, amount);
+        ERC20Detailed(collateralToken).tokenTransfer(recipient, amount);
     }
 
     /**
@@ -182,6 +192,6 @@ contract TokenCollateralLoans is LoansBase {
         @param amount The amount to be transferred.
      */
     function _collateralTokenTransferFrom(address from, uint256 amount) internal {
-        ERC20(collateralToken).tokenTransferFrom(from, amount);
+        ERC20Detailed(collateralToken).tokenTransferFrom(from, amount);
     }
 }

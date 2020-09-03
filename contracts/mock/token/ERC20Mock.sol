@@ -1,9 +1,8 @@
 pragma solidity 0.5.17;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20Mintable.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
-
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Burnable.sol";
 
 contract ERC20Mock is ERC20Detailed, ERC20Mintable, ERC20Burnable {
     constructor(
@@ -11,7 +10,10 @@ contract ERC20Mock is ERC20Detailed, ERC20Mintable, ERC20Burnable {
         string memory aSymbol,
         uint8 aDecimals,
         uint256 initialMintAmount
-    ) public ERC20Detailed(aName, aSymbol, aDecimals) {
+    ) public {
+        ERC20Detailed.initialize(aName, aSymbol, aDecimals);
+        ERC20Mintable.initialize(msg.sender);
+
         _mint(msg.sender, initialMintAmount * (10**uint256(decimals())));
     }
 

@@ -6,6 +6,7 @@ const { initContracts } = require('../utils/contracts');
 const BurnableInterfaceEncoder = require('../utils/encoders/BurnableInterfaceEncoder');
 const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
+const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -20,6 +21,7 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     const burnableInterfaceEncoder = new BurnableInterfaceEncoder(web3);
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     let instance;
     let loansInstance;
     let consensusInstance;
@@ -34,6 +36,11 @@ contract('LendingPoolWithdrawTest', function (accounts) {
         cTokenInstance = await Mock.new();
         marketsInstance = await Mock.new();
         instance = await LendingPool.new();
+
+        await settingsInstance.givenMethodReturnAddress(
+            settingsInterfaceEncoder.encodeMarketsState(),
+            marketsInstance.address
+        );
     });
 
     withData({
@@ -62,8 +69,6 @@ contract('LendingPoolWithdrawTest', function (accounts) {
                 consensusInstance,
                 lendingTokenInstance,
                 loansInstance,
-                marketsInstance,
-                NULL_ADDRESS,
                 Lenders,
             );
             const encodeTransfer = burnableInterfaceEncoder.encodeTransfer();
@@ -113,8 +118,6 @@ contract('LendingPoolWithdrawTest', function (accounts) {
                 consensusInstance,
                 lendingTokenInstance,
                 loansInstance,
-                marketsInstance,
-                NULL_ADDRESS,
                 Lenders,
             );
             await lendingTokenInstance.approve(instance.address, depositAmount, { from: depositSender });

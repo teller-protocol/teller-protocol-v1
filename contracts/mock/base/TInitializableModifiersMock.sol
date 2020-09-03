@@ -2,7 +2,6 @@ pragma solidity 0.5.17;
 
 import "../../base/TInitializable.sol";
 
-
 /**
     This contract is created ONLY for testing purposes.
  */

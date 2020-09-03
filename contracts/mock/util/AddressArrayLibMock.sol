@@ -2,7 +2,6 @@ pragma solidity 0.5.17;
 
 import "../../util/AddressArrayLib.sol";
 
-
 contract AddressArrayLibMock {
     using AddressArrayLib for address[];
 
@@ -12,7 +11,7 @@ contract AddressArrayLibMock {
         result = initialData;
     }
 
-    function getResult() public view returns (address[] memory) {
+    function getResult() external view returns (address[] memory) {
         return result;
     }
 

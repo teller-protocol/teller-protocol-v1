@@ -10,16 +10,32 @@ import "../base/TInitializable.sol";
 
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/SignerRole.sol";
+import "../base/BaseUpgradeable.sol";
 
 // Interfaces
-import "./IATMGovernance.sol";
+import "./ATMGovernanceInterface.sol";
 
-
+/*****************************************************************************************************/
+/**                                             WARNING                                             **/
+/**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
+/**  ---------------------------------------------------------------------------------------------  **/
+/**  Do NOT change the order of or PREPEND any storage variables to this or new versions of this    **/
+/**  contract as this will cause the the storage slots to be overwritten on the proxy contract!!    **/
+/**                                                                                                 **/
+/**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
+/**  more information.                                                                              **/
+/*****************************************************************************************************/
 /**
     @notice This contract is used to modify Risk Settings, CRA or DataProviders for a specific ATM.
+
     @author develop@teller.finance
  */
-contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
+contract ATMGovernance is
+    ATMGovernanceInterface,
+    TInitializable,
+    SignerRole,
+    BaseUpgradeable
+{
     using AddressArrayLib for address[];
     using AddressLib for address;
     using Address for address;
@@ -55,7 +71,7 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
     function addGeneralSetting(bytes32 settingName, uint256 settingValue)
         external
         onlySigner()
-    // TODO Do we need to add isInitialized() (the same for other functions)?
+        isInitialized()
     {
         require(settingValue > 0, "GENERAL_SETTING_MUST_BE_POSITIVE");
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
@@ -72,6 +88,7 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
     function updateGeneralSetting(bytes32 settingName, uint256 newValue)
         external
         onlySigner()
+        isInitialized()
     {
         require(newValue > 0, "GENERAL_SETTING_MUST_BE_POSITIVE");
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
@@ -85,7 +102,11 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
         @notice Removes a General Setting from this ATM.
         @param settingName name of the setting to be removed.
      */
-    function removeGeneralSetting(bytes32 settingName) external onlySigner() {
+    function removeGeneralSetting(bytes32 settingName)
+        external
+        onlySigner()
+        isInitialized()
+    {
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
         require(generalSettings[settingName] > 0, "GENERAL_SETTING_NOT_FOUND");
         uint256 previousValue = generalSettings[settingName];
@@ -103,7 +124,7 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
         address asset,
         bytes32 settingName,
         uint256 settingValue
-    ) external onlySigner() {
+    ) external onlySigner() isInitialized() {
         asset.requireNotEmpty("ASSET_ADDRESS_IS_REQUIRED");
         require(asset.isContract(), "ASSET_MUST_BE_A_CONTRACT");
         require(settingValue > 0, "ASSET_SETTING_MUST_BE_POSITIVE");
@@ -126,7 +147,7 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
         address asset,
         bytes32 settingName,
         uint256 newValue
-    ) external onlySigner() {
+    ) external onlySigner() isInitialized() {
         require(settingName != "", "ASSET_SETTING_MUST_BE_PROVIDED");
         require(assetMarketSettings[asset][settingName] > 0, "ASSET_SETTING_NOT_FOUND");
         require(
@@ -152,6 +173,7 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
     function removeAssetMarketSetting(address asset, bytes32 settingName)
         external
         onlySigner()
+        isInitialized()
     {
         require(settingName != "", "ASSET_SETTING_MUST_BE_PROVIDED");
         require(assetMarketSettings[asset][settingName] > 0, "ASSET_SETTING_NOT_FOUND");
@@ -169,6 +191,7 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
     function addDataProvider(uint8 dataTypeIndex, address dataProvider)
         external
         onlySigner()
+        isInitialized()
     {
         require(dataProvider.isContract(), "DATA_PROVIDER_MUST_BE_A_CONTRACT");
         dataProviders[dataTypeIndex].add(dataProvider);
@@ -191,7 +214,7 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
         uint8 dataTypeIndex,
         uint256 providerIndex,
         address newProvider
-    ) external onlySigner() {
+    ) external onlySigner() isInitialized() {
         require(
             dataProviders[dataTypeIndex].length > providerIndex,
             "DATA_PROVIDER_OUT_RANGE"
@@ -217,6 +240,7 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
     function removeDataProvider(uint8 dataTypeIndex, uint256 dataProviderIndex)
         external
         onlySigner()
+        isInitialized()
     {
         require(
             dataProviders[dataTypeIndex].length > dataProviderIndex,
@@ -237,7 +261,7 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
                 CRA is represented by a Github commit hash of the newly proposed algorithm.
         @param _cra Credit Risk Algorithm github commit hash.
      */
-    function setCRA(string calldata _cra) external onlySigner() {
+    function setCRA(string calldata _cra) external onlySigner() isInitialized() {
         bytes memory tempEmptyStringTest = bytes(_cra);
         require(tempEmptyStringTest.length > 0, "CRA_CANT_BE_EMPTY");
         require(
@@ -250,9 +274,15 @@ contract ATMGovernance is SignerRole, IATMGovernance, TInitializable {
 
     /**
         @notice It initializes this ATM Governance instance.
+        @param settingsAddress the initial settings address.
         @param ownerAddress the owner address for this ATM Governance.
      */
-    function initialize(address ownerAddress) public isNotInitialized() {
+    function initialize(address settingsAddress, address ownerAddress)
+        external
+        isNotInitialized()
+    {
+        _setSettings(settingsAddress);
+
         SignerRole.initialize(ownerAddress);
         TInitializable._initialize();
     }

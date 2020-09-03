@@ -1,11 +1,20 @@
 const assert = require('assert');
+const logicNames = require('../test/utils/logicNames');
 const DeployerApp = require('./utils/DeployerApp');
-const PoolDeployer = require('./utils/PoolDeployer');
 const initSettings = require('./utils/init_settings');
 const initATMs = require('./utils/init_settings/initATMs');
+const initLogicVersions = require('./utils/init_settings/initLogicVersions');
+const deployLogicContracts = require('./utils/init_settings/deployLogicContracts');
+const { NULL_ADDRESS } = require('../test/utils/consts');
+const initPairAggregators = require('./utils/init_settings/initPairAggregators');
+const createMarkets = require('./utils/init_settings/createMarkets');
 
 const ERC20 = artifacts.require("@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol");
 const UpgradeableProxy = artifacts.require("./base/UpgradeableProxy.sol");
+const InitializeableDynamicProxy = artifacts.require("./base/InitializeableDynamicProxy.sol");
+const Mock = artifacts.require("./mock/util/Mock.sol");
+
+const ERC20Mintable = artifacts.require('@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol');
 
 // Official Smart Contracts
 const TDAI = artifacts.require("./base/TDAI.sol");
@@ -13,6 +22,10 @@ const TUSDC = artifacts.require("./base/TUSDC.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
 const MarketsState = artifacts.require("./base/MarketsState.sol");
+const EscrowFactory = artifacts.require('./base/EscrowFactory.sol');
+const MarketFactory = artifacts.require('./base/MarketFactory.sol');
+const LogicVersionsRegistry = artifacts.require('./base/LogicVersionsRegistry.sol');
+const Escrow = artifacts.require('./base/Escrow.sol');
 const Lenders = artifacts.require("./base/Lenders.sol");
 const EtherCollateralLoans = artifacts.require("./base/EtherCollateralLoans.sol");
 const TokenCollateralLoans = artifacts.require("./base/TokenCollateralLoans.sol");
@@ -22,18 +35,16 @@ const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 // ATM Smart contracts
 const ATMFactory = artifacts.require("./atm/ATMFactory.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
-const ATMToken = artifacts.require("./atm/ATMToken.sol");
+const TLRToken = artifacts.require("./atm/TLRToken.sol");
 // External providers
+const ChainlinkPairAggregatorRegistry = artifacts.require("./providers/chainlink/ChainlinkPairAggregatorRegistry.sol");
 const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
-const InverseChainlinkPairAggregator = artifacts.require("./providers/chainlink/InverseChainlinkPairAggregator.sol");
-
 const tokensRequired = ['DAI', 'USDC', 'LINK'];
-const chainlinkOraclesRequired = ['DAI_ETH', 'USDC_ETH', 'LINK_USD'];
 
 module.exports = async function(deployer, network, accounts) {
   console.log(`Deploying smart contracts to '${network}'.`)
   // Getting network configuration.
-  const appConfig = require('../config')(network);
+  const appConfig = await require('../config')(network);
   const { networkConfig, env } = appConfig;
 
   // Getting configuration values.
@@ -45,137 +56,146 @@ module.exports = async function(deployer, network, accounts) {
 
   // Validations
   tokensRequired.forEach( tokenName => assert(tokens[tokenName], `${tokenName} token address is not defined.`));
-  chainlinkOraclesRequired.forEach( pairName => assert(chainlink[pairName], `Chainlink: ${pairName} oracle address is undefined.`));
 
   const txConfig = { gas: maxGasLimit, from: deployerAccount };
 
   // Creating DeployerApp helper.
-  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, UpgradeableProxy, network);
+  const deployerApp = new DeployerApp(deployer, web3, deployerAccount, { InitializeableDynamicProxy, Mock }, { network, networkConfig });
+  
+  await deployerApp.deployMocksContractsIfNeeded();
   const currentBlockNumber = await web3.eth.getBlockNumber();
 
-  await deployerApp.deploys([TDAI, TUSDC], txConfig);
-  console.log(`Deployed tokens: TDAI [${TDAI.address}] TUSDC [${TUSDC.address}] `);  
+  const contracts = [
+    // Logic
+    { Contract: LendingPool, name: logicNames.LendingPool },
+    { Contract: Lenders, name: logicNames.Lenders },
+    { Contract: TokenCollateralLoans, name: logicNames.TokenCollateralLoans },
+    { Contract: EtherCollateralLoans, name: logicNames.EtherCollateralLoans },
+    { Contract: LoanTermsConsensus, name: logicNames.LoanTermsConsensus },
+    { Contract: InterestConsensus, name: logicNames.InterestConsensus },
+    { Contract: Escrow, name: logicNames.Escrow },
+    { Contract: ChainlinkPairAggregator, name: logicNames.ChainlinkPairAggregator },
+    { Contract: ATMGovernance, name: logicNames.ATMGovernance },
+    { Contract: TLRToken, name: logicNames.TLRToken },
+    // Initializables
+    { Contract: EscrowFactory, name: logicNames.EscrowFactory },
+    { Contract: ChainlinkPairAggregatorRegistry, name: logicNames.ChainlinkPairAggregatorRegistry },
+    { Contract: MarketsState, name: logicNames.MarketsState },
+    { Contract: ATMSettings, name: logicNames.ATMSettings },
+    { Contract: ATMFactory, name: logicNames.ATMFactory },
+    { Contract: MarketFactory, name: logicNames.MarketFactory },
+  ];
 
-  // Settings Deployments
-  await deployerApp.deploy(MarketsState, txConfig);
-  const marketsStateInstance = await MarketsState.deployed();
+  const deployedLogicContractsMap = await deployLogicContracts(contracts, { deployerApp, txConfig, web3 });
 
-  const settingsInstance = await deployerApp.deployWithUpgradeable('Settings', Settings, txConfig.from, '0x')
-  await settingsInstance.initialize(txConfig.from);
+  async function deployInitializableDynamicProxy(name) {
+    const info = deployedLogicContractsMap.get(name)
+    assert(info, `Deployed logic info is undefined for logic name ${name}.`)
+    const proxy = await deployerApp.deployInitializeableDynamicProxy(info, txConfig)
+    return info.Contract.at(proxy.address)
+  }
+
+  console.log(`Deploying Settings logic...`)
+  const settingsLogic = await deployerApp.deployWith('Settings', Settings, txConfig)
+  const settingsProxy = await deployerApp.deployWith('Settings_Proxy', UpgradeableProxy, txConfig)
+  await settingsProxy.initializeProxy(
+    settingsProxy.address,
+    settingsLogic.address,
+    txConfig
+  )
+  const settingsInstance = await Settings.at(settingsProxy.address)
+  console.log(`Settings logic: ${settingsLogic.address}`)
+  console.log(`Settings_Proxy: ${settingsProxy.address}`)
+
+  const escrowFactoryInstance = await deployInitializableDynamicProxy(logicNames.EscrowFactory)
+  const pairAggregatorRegistryInstance = await deployInitializableDynamicProxy(logicNames.ChainlinkPairAggregatorRegistry)
+  const marketsStateInstance = await deployInitializableDynamicProxy(logicNames.MarketsState)
+  const atmSettingsInstance = await deployInitializableDynamicProxy(logicNames.ATMSettings)
+  const atmFactoryInstance = await deployInitializableDynamicProxy(logicNames.ATMFactory)
+  const marketFactoryInstance = await deployInitializableDynamicProxy(logicNames.MarketFactory)
+
+  console.log(`Deploying LogicVersionsRegistry...`)
+  const logicVersionsRegistryLogic = await deployerApp.deployWith('LogicVersionsRegistry', LogicVersionsRegistry, txConfig)
+  const logicVersionsRegistryProxy = await deployerApp.deployWith('LogicVersionsRegistry_Proxy', UpgradeableProxy, txConfig)
+  await logicVersionsRegistryProxy.initializeProxy(
+    settingsInstance.address,
+    logicVersionsRegistryLogic.address,
+    txConfig
+  )
+  const logicVersionsRegistryInstance = await LogicVersionsRegistry.at(logicVersionsRegistryProxy.address)
+  await logicVersionsRegistryInstance.initialize(settingsInstance.address)
+  console.log(`LogicVersionsRegistry logic: ${logicVersionsRegistryLogic.address}`)
+  console.log(`LogicVersionsRegistry_Proxy: ${logicVersionsRegistryLogic.address}`)
+
+  console.log(`Settings: Initializing...`);
+  await settingsInstance.initialize(
+    escrowFactoryInstance.address,
+    logicVersionsRegistryInstance.address,
+    pairAggregatorRegistryInstance.address,
+    marketsStateInstance.address,
+    NULL_ADDRESS, // Interest Validator is empty (0x0) in the first version.
+    atmSettingsInstance.address,
+  );
+
+  await initLogicVersions(
+    deployedLogicContractsMap,
+    { logicVersionsRegistryInstance },
+    { txConfig },
+  );
+
+  async function initializeProxy(name, instance) {
+    const logicContractInfo = deployedLogicContractsMap.get(name)
+    assert(logicContractInfo.nameBytes32, `Name bytes32 is undefined for logic name ${name}.`);
+    const { nameBytes32 } = logicContractInfo;
+    const proxy = await InitializeableDynamicProxy.at(instance.address)
+    await proxy.initializeProxy(settingsInstance.address, nameBytes32)
+    await instance.initialize(settingsInstance.address)
+  }
+
+  await initializeProxy(logicNames.EscrowFactory, escrowFactoryInstance)
+  await initializeProxy(logicNames.ChainlinkPairAggregatorRegistry, pairAggregatorRegistryInstance)
+  await initializeProxy(logicNames.MarketsState, marketsStateInstance)
+  await initializeProxy(logicNames.ATMSettings, atmSettingsInstance)
+  await initializeProxy(logicNames.ATMFactory, atmFactoryInstance)
+  await initializeProxy(logicNames.MarketFactory, marketFactoryInstance)
+
   await initSettings(
     settingsInstance,
-    { ...networkConfig, txConfig, network, currentBlockNumber, web3 },
+    {
+      ...networkConfig,
+      txConfig,
+      network,
+      currentBlockNumber,
+      web3
+    },
     { ERC20 },
   );
 
-  await deployerApp.deploy(
-    ATMSettings,
-    settingsInstance.address,
-    txConfig
-  );
-  const atmSettingsInstance = await ATMSettings.deployed();
-  console.log(`ATM settings deployed at: ${atmSettingsInstance.address}`);
-
-  const atmFactoryInstance = await deployerApp.deployWithUpgradeable('ATMFactory', ATMFactory, txConfig.from, '0x')
-  await atmFactoryInstance.initialize(
-    settingsInstance.address,
-    atmSettingsInstance.address,
-    txConfig
-  );
-  console.log(`ATM Governance Factory (Proxy) deployed at: ${atmFactoryInstance.address}`);
-
   await initATMs(
     { atmFactory: atmFactoryInstance, atmSettings: atmSettingsInstance },
-    { atms, tokens, txConfig, web3, deployerApp },
-    { ATMGovernance, ATMToken },
+    { atms, tokens, txConfig, web3 },
+    { ATMGovernance },
   );
 
-  const aggregators = {};
-  
-  for (const chainlinkOraclePair of chainlinkOraclesRequired) {
-    const chainlinkOracleInfo = chainlink[chainlinkOraclePair];
-    const {
-      address,
-      collateralDecimals,
-      responseDecimals,
-      inversed,
-    } = chainlinkOracleInfo;
-
-    const ChainlinkPairAggregatorReference = inversed ? InverseChainlinkPairAggregator : ChainlinkPairAggregator;
-    let chainlinkPairAggregatorName =  `ChainlinkPairAggregator_${chainlinkOraclePair.toUpperCase()}`;
-    if(inversed) {
-      const pairs = chainlinkOraclePair.split('_');
-      chainlinkPairAggregatorName =  `ChainlinkPairAggregator_${pairs[1].toUpperCase()}_${pairs[0]}`;
-    }
-    await deployerApp.deployWith(
-      chainlinkPairAggregatorName,
-      ChainlinkPairAggregatorReference,
-      address,
-      responseDecimals,
-      collateralDecimals,
-      txConfig
-    );
-    console.log(`New aggregator (Inversed? ${inversed}) for ${chainlinkOraclePair} (Collateral Decimals: ${collateralDecimals} / Response Decimals: ${responseDecimals}): ${ChainlinkPairAggregatorReference.address} (using Chainlink Oracle address ${address})`);
-    aggregators[chainlinkOraclePair] = ChainlinkPairAggregatorReference.address;
-  }
-
-  const deployConfig = {
-    tokens,
-    aggregators,
-    signers,
-    cTokens: compound,
-  };
-
-  const artifacts = {
-    Lenders,
-    LendingPool,
-    InterestConsensus,
-    LoanTermsConsensus,
-  };
-  const poolDeployer = new PoolDeployer(deployerApp, deployConfig, artifacts);
-
-  const instances = {
-    marketsStateInstance,
-    settingsInstance,
-    atmSettingsInstance,
-    interestValidatorInstance: undefined, // The first version will be undefined (or 0x0).
-  };
-  await poolDeployer.deployPool(
-    { tokenName: 'DAI', collateralName: 'ETH' },
-    {
-      Loans: EtherCollateralLoans,
-      TToken: TDAI,
-    },
-    instances,
-    txConfig
-  );
-  await poolDeployer.deployPool(
-    { tokenName: 'USDC', collateralName: 'ETH' },
-    {
-      Loans: EtherCollateralLoans,
-      TToken: TUSDC,
-    },
-    instances,
-    txConfig
+  await initPairAggregators(
+    { pairAggregatorRegistryInstance },
+    { txConfig, ...networkConfig },
   );
 
-  await poolDeployer.deployPool(
-    { tokenName: 'DAI', collateralName: 'LINK', aggregatorName: 'LINK_USD' },
-    {
-      Loans: TokenCollateralLoans,
-      TToken: TDAI,
-    },
-    instances,
-    txConfig
-  );
-  await poolDeployer.deployPool(
-    { tokenName: 'USDC', collateralName: 'LINK', aggregatorName: 'LINK_USD' },
-    {
-      Loans: TokenCollateralLoans,
-      TToken: TUSDC,
-    },
-    instances,
-    txConfig
+  await deployerApp.deploys([TDAI, TUSDC], txConfig);
+  console.log(`Deployed tokens: TDAI [${TDAI.address}] TUSDC [${TUSDC.address}] `);
+  const marketDefinitions = [
+    { tTokenAddress: TDAI.address, borrowedTokenName: 'DAI', collateralTokenName: 'ETH' },
+    { tTokenAddress: TDAI.address, borrowedTokenName: 'DAI', collateralTokenName: 'LINK' },
+    { tTokenAddress: TUSDC.address, borrowedTokenName: 'USDC', collateralTokenName: 'ETH' },
+    { tTokenAddress: TUSDC.address, borrowedTokenName: 'USDC', collateralTokenName: 'LINK' },
+  ];
+
+  await createMarkets(
+    marketDefinitions,
+    { marketFactoryInstance, marketsStateInstance },
+    { txConfig, deployerApp, ...networkConfig },
+    { LoanTermsConsensus, InterestConsensus, ERC20Mintable }
   );
 
   deployerApp.print();

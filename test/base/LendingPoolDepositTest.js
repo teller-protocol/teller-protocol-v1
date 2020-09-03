@@ -9,6 +9,7 @@ const {
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const MintableInterfaceEncoder = require('../utils/encoders/MintableInterfaceEncoder');
 const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
+const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -22,6 +23,7 @@ contract('LendingPoolDepositTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     const mintableInterfaceEncoder = new MintableInterfaceEncoder(web3);
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
 
     let instance;
     let tTokenInstance;
@@ -39,17 +41,19 @@ contract('LendingPoolDepositTest', function (accounts) {
         loansInstance = await Mock.new();
         interestConsensusInstance = await Mock.new();
         instance = await LendingPool.new();
-        settingsInstance = await Mock.new();
-        cTokenInstance = await Mock.new();
         marketsInstance = await Mock.new();
-
+        settingsInstance = await Mock.new();
+        await settingsInstance.givenMethodReturnAddress(
+            settingsInterfaceEncoder.encodeMarketsState(),
+            marketsInstance.address
+        );
+        cTokenInstance = await Mock.new();
         lendersInstance = await Lenders.new();
         await lendersInstance.initialize(
             tTokenInstance.address,
             instance.address,
             interestConsensusInstance.address,
             settingsInstance.address,
-            marketsInstance.address,
         );
 
         await instance.initialize(
@@ -59,8 +63,6 @@ contract('LendingPoolDepositTest', function (accounts) {
             loansInstance.address,
             cTokenInstance.address,
             settingsInstance.address,
-            marketsInstance.address,
-            NULL_ADDRESS,
         );
     });
 
@@ -136,7 +138,6 @@ contract('LendingPoolDepositTest', function (accounts) {
                 instance.address,
                 interestConsensusInstance.address,
                 settingsInstance.address,
-                marketsInstance.address,
             );
             instance = await LendingPool.new();
             await instance.initialize(
@@ -146,8 +147,6 @@ contract('LendingPoolDepositTest', function (accounts) {
                 loansInstance.address,
                 cTokenInstance.address,
                 settingsInstance.address,
-                marketsInstance.address,
-                NULL_ADDRESS,
             );
 
             const encodeTransferFrom = erc20InterfaceEncoder.encodeTransferFrom();

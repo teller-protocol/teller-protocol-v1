@@ -18,12 +18,12 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
-const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
-
+const InterestConsensus = artifacts.require("./mock/base/InterestConsensusMock.sol");
 
 contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
+    const owner = accounts[0];
+    let lenders;
     let instance
-    const lendersContract = accounts[1]
     const nodeOne = accounts[1]
     const nodeTwo = accounts[2]
     const nodeThree = accounts[3]
@@ -39,8 +39,8 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
     let currentTime;
     let interestRequest;
 
-    const baseGasCost = 244000;
-    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 79000);
+    const baseGasCost = 250000;
+    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 80500);
 
     let responseOne = createUnsignedInterestResponse(nodeOne, 0, 34676, 1, NULL_ADDRESS)
     let responseTwo = createUnsignedInterestResponse(nodeTwo, 0, 34642, 1, NULL_ADDRESS)
@@ -57,9 +57,10 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
 
         const consensusAddress = accounts[8];
         const chainId = chains.mainnet;
+        lenders = await Mock.new();
 
         interestRequest = createInterestRequest(lender, 1, 23456, endTime, 45678, consensusAddress)
-        const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract, chainId))
+        const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lenders.address, chainId))
 
         responseOne.responseTime = currentTime - (2 * ONE_DAY)
         responseTwo.responseTime = currentTime - (25 * ONE_DAY)
@@ -129,6 +130,7 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
             const expectedMaxGas = expectedGasCost(responses.length);
             const settings = await createTestSettingsInstance(
                 Settings,
+                { from: owner, Mock },
                 {
                     [settingsNames.RequiredSubmissions]: responses.length,
                     [settingsNames.MaximumTolerance]: tolerance,
@@ -137,9 +139,10 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
                     [settingsNames.LiquidateEthPrice]: 9500,
                 }
             );
-            const marketsInstance = await Mock.new();
+            // The sender validation (equal to the lenders contract) is mocked (InterestConsensusMock _isCaller(...) function) to allow execute the unit test.
+            const sender = accounts[1];
             instance = await InterestConsensus.new();
-            await instance.initialize(lendersContract, settings.address, marketsInstance.address);
+            await instance.initialize(owner, lenders.address, settings.address);
 
             for (const response of responses) {
                 await instance.addSigner(response.signer)
@@ -148,7 +151,7 @@ contract('EstimateGasInterestConsensusProcessRequestTest', function (accounts) {
             const result = await instance.processRequest.estimateGas(
                 interestRequest,
                 responses, {
-                    from: lendersContract
+                    from: sender
                 }
             );
             assert(parseInt(result) <= expectedMaxGas, 'Expected max gas less than result.');

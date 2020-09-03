@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/Consensus.sol";
 
-
 contract ConsensusMock is Consensus {
     function externalSignatureValid(
         TellerCommon.Signature calldata signature,

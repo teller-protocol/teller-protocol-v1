@@ -13,15 +13,16 @@ const InterestConsensusMock = artifacts.require("./mock/base/InterestConsensusMo
 const { NULL_ADDRESS } = require('../utils/consts');
 const chains = require('../utils/chains');
 
-contract('InterestConsensus hashInterestRequest and hashReponse', function (accounts) {
-    const lendersAddress = accounts[3]
+contract('InterestConsensusHashesTest', function (accounts) {
+    let lenders;
     let instance
 
     beforeEach('Setup for each test', async () => {
         const settings = await Mock.new();
-        const marketsInstance = await Mock.new();
+        lenders = await Mock.new();
         instance = await InterestConsensusMock.new()
-        await instance.initialize(lendersAddress, settings.address, marketsInstance.address);
+        const owner = accounts[0];
+        await instance.initialize(owner, lenders.address, settings.address);
     })
 
     withData({
@@ -42,7 +43,7 @@ contract('InterestConsensus hashInterestRequest and hashReponse', function (acco
             let expectedResult = ethUtil.bufferToHex(
                 hashInterestRequest(
                     request,
-                    lendersAddress,
+                    lenders.address,
                     chainId,
                 )
             )

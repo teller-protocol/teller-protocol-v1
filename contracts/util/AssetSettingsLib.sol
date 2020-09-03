@@ -1,9 +1,7 @@
 pragma solidity 0.5.17;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "./AddressLib.sol";
-
 
 /**
     @notice Utility library of inline functions on the AssetSettings struct.
@@ -11,7 +9,6 @@ import "./AddressLib.sol";
     @author develop@teller.finance
  */
 library AssetSettingsLib {
-    using SafeMath for uint256;
     using AddressLib for address;
     using Address for address;
 

@@ -25,7 +25,7 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   const liquidatorTxConfig = await accounts.getTxConfigAt(2);
   const recipient = NULL_ADDRESS;
   const initialOraclePrice = toDecimals('0.005', 18); // 1 token = 0.005 ether = 5000000000000000 wei
-  const finalOraclePrice = toDecimals('0.006', 18); // 1 token = 0.006 ether = 6000000000000000 wei
+  const finalOraclePrice = toDecimals('0.09', 18); // 1 token = 0.006 ether = 6000000000000000 wei
   const decimals = parseInt(await token.decimals());
   const lendingPoolDepositAmountWei = toDecimals(4000, decimals);
   const amountWei = toDecimals(100, decimals);
@@ -109,9 +109,10 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   // Take out a loan.
   console.log(`Taking out loan id ${lastLoanID}...`);
   const takeOutLoanResult = await loansInstance.takeOutLoan(lastLoanID, amountWei, borrowerTxConfig);
+  const { escrow } = await loansInstance.loans(lastLoanID);
   loans
     .loanTakenOut(takeOutLoanResult)
-    .emitted(lastLoanID, borrowerTxConfig.from, amountWei);
+    .emitted(lastLoanID, borrowerTxConfig.from, escrow, amountWei);
 
   // Set a lower price for Token/ETH.
   console.log(`Settings final (lower) oracle price: 1 ${tokenName} = ${finalOraclePrice.toFixed(0)} WEI = ${toUnits(finalOraclePrice, 18)} ETHER`);
@@ -124,10 +125,11 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
 
   const initialTotalCollateral = await loansInstance.totalCollateral();
   const liquidateEthPrice = await settingsInstance.getPlatformSettingValue(toBytes32(web3, platformSettingsNames.LiquidateEthPrice));
+  const getCollateralInfo = await loansInstance.getCollateralInfo(lastLoanID);
   const {
-    collateralNeededLendingTokens,
-  } = await loansInstance.getCollateralInfo(lastLoanID);
-  const transferAmountToLiquidate = BigNumber(collateralNeededLendingTokens.toString()).times(liquidateEthPrice).div(10000);
+    neededInLendingTokens,
+  } = getCollateralInfo;
+  const transferAmountToLiquidate = BigNumber(neededInLendingTokens.toString()).times(liquidateEthPrice).div(10000);
 
   await token.mint(liquidatorTxConfig.from, transferAmountToLiquidate.toFixed(0));
 
