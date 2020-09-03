@@ -23,12 +23,20 @@ SettingsInterfaceEncoder.prototype.encodeIsPaused = function() {
     return encode(this.web3, 'isPaused()');
 }
 
+SettingsInterfaceEncoder.prototype.encodeIsPoolPaused = function() {
+    return encode(this.web3, 'isPoolPaused(address)');
+}
+
 SettingsInterfaceEncoder.prototype.encodeMarketsState = function() {
     return encode(this.web3, 'marketsState()');
 }
 
 SettingsInterfaceEncoder.prototype.encodeEscrowFactory = function() {
     return encode(this.web3, 'escrowFactory()');
+}
+
+SettingsInterfaceEncoder.prototype.encodeETH_ADDRESS = function() {
+    return encode(this.web3, 'ETH_ADDRESS()');
 }
 
 SettingsInterfaceEncoder.prototype.encodeATMSettings = function() {

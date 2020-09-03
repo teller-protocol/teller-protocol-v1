@@ -17,6 +17,7 @@ import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
 import "../atm/ATMGovernanceInterface.sol";
+import "../interfaces/EscrowInterface.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -244,6 +245,8 @@ contract LoansBase is LoansInterface, Base {
         // We only send the loan to escrow contract for now.
         lendingPool.createLoan(amountBorrow, loans[loanID].escrow);
 
+        EscrowInterface(loans[loanID].escrow).initialize(address(this), loanID);
+
         _markets().increaseBorrow(
             lendingPool.lendingToken(),
             this.collateralToken(),
@@ -274,7 +277,7 @@ contract LoansBase is LoansInterface, Base {
         require(amount > 0, "AMOUNT_VALUE_REQUIRED");
         // calculate the actual amount to repay
         uint256 toPay = amount;
-        uint256 totalOwed = _getTotalOwed(loanID);
+        uint256 totalOwed = getTotalOwed(loanID);
         if (totalOwed < toPay) {
             toPay = totalOwed;
         }
@@ -358,22 +361,33 @@ contract LoansBase is LoansInterface, Base {
         @param loanID The ID of the loan to check
         @return bool weather the loan can be liquidated
      */
-    function canLiquidateLoan(uint256 loanID)
-        public
-        view
-        loanActive(loanID)
-        whenNotPaused()
-        whenLendingPoolNotPaused(address(lendingPool))
-        returns (bool)
-    {
-        // calculate the amount of collateral the loan needs in tokens
-        TellerCommon.LoanCollateralInfo memory collateralInfo = _getCollateralInfo(loanID);
-        if (collateralInfo.moreCollateralRequired) return true;
+    function canLiquidateLoan(uint256 loanID) public view returns (bool) {
+        if (_isPaused() || _isPoolPaused(address(lendingPool)) || loans[loanID].status != TellerCommon.LoanStatus.Active) {
+            return false;
+        }
 
-        // calculate when the loan should end
         uint256 startTime = loans[loanID].loanStartTime;
         uint256 duration = loans[loanID].loanTerms.duration;
-        return startTime.add(duration) < now;
+        bool isExpired = startTime.add(duration) < now;
+        if (isExpired) {
+            return true;
+        }
+
+        address escrowAddress = loans[loanID].escrow;
+        if (escrowAddress != address(0x0)) {
+            return EscrowInterface(escrowAddress).isUnderValued();
+        }
+
+        return _getCollateralInfo(loanID).moreCollateralRequired;
+    }
+
+    /**
+        @notice Returns the total owed amount remaining for a specified loan
+        @param loanID The ID of the loan to be queried
+        @return uint256 The total amount owed remaining
+     */
+    function getTotalOwed(uint256 loanID) public view returns (uint256) {
+        return loans[loanID].interestOwed.add(loans[loanID].principalOwed);
     }
 
     /**
@@ -512,15 +526,6 @@ contract LoansBase is LoansInterface, Base {
     }
 
     /**
-        @notice Returns the total owed amount remaining for a specified loan
-        @param loanID The ID of the loan to be queried
-        @return uint256 The total amount owed remaining
-     */
-    function _getTotalOwed(uint256 loanID) internal view returns (uint256) {
-        return loans[loanID].interestOwed.add(loans[loanID].principalOwed);
-    }
-
-    /**
         @notice Returns the value of collateral
         @param loanID The loan ID to get collateral info for
         @return uint256 The amount of collateral needed in lending tokens (not wei)
@@ -530,7 +535,7 @@ contract LoansBase is LoansInterface, Base {
         view
         returns (uint256)
     {
-        uint256 loanAmount = _getTotalOwed(loanID);
+        uint256 loanAmount = getTotalOwed(loanID);
         uint256 collateralRatio = loans[loanID].loanTerms.collateralRatio;
         return loanAmount.mul(collateralRatio).div(TEN_THOUSAND);
     }
@@ -676,13 +681,6 @@ contract LoansBase is LoansInterface, Base {
         @return the new Escrow contract address.
      */
     function _createEscrow(uint256 loanID) internal returns (address) {
-        address escrowOwner =   loans[loanID].loanTerms.recipient != address(0x0) ?
-                                loans[loanID].loanTerms.recipient :
-                                loans[loanID].loanTerms.borrower;
-        return
-            settings().escrowFactory().createEscrow(
-                escrowOwner,
-                loanID
-            );
+        return settings().escrowFactory().createEscrow(address(this), loanID);
     }
 }

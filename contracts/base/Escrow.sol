@@ -10,6 +10,13 @@ import "./TInitializable.sol";
 // Interfaces
 import "../interfaces/EscrowInterface.sol";
 import "../interfaces/LoansInterface.sol";
+import "../interfaces/PairAggregatorInterface.sol";
+
+// Libraries
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
+import "../util/SettingsConsts.sol";
+import "../util/TellerCommon.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -29,8 +36,9 @@ import "../interfaces/LoansInterface.sol";
 
     @author develop@teller.finance
  */
-contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, BaseEscrowDapp {
+contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, BaseEscrowDapp, SettingsConsts {
     using Address for address;
+    using SafeMath for uint256;
 
     /** State Variables **/
 
@@ -47,12 +55,11 @@ contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, Ba
 
     /** Modifiers **/
 
-    modifier whenLoanActive() {
-        require(getLoan().status == TellerCommon.LoanStatus.Active, "LOAN_NOT_ACTIVE");
-        _;
-    }
-
     /** Public Functions **/
+
+    function isLoanActive() public view returns (bool) {
+        return getLoan().status == TellerCommon.LoanStatus.Active;
+    }
 
     /**
         @notice It calls a given dapp using a delegatecall function by a borrower owned the current loan id associated to this escrow contract.
@@ -61,7 +68,6 @@ contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, Ba
     function callDapp(TellerCommon.DappData calldata dappData)
         external
         isInitialized()
-        whenLoanActive()
         onlyOwner()
     {
         require(settings().escrowFactory().isDapp(dappData.location), "DAPP_NOT_WHITELISTED");
@@ -83,7 +89,52 @@ contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, Ba
         return loans.loans(loanID);
     }
 
-    function purchaseLoanDebt() external whenLoanActive() {
+    function calculateTotalValue() public view returns (TellerCommon.EscrowValue memory) {
+        address[] memory tokens = getTokens();
+
+        uint256 valueInEth = 0;
+
+        for (uint i = 0; i < tokens.length; i++) {
+            uint256 tokenEthValue = _valueOfIn(tokens[i], settings().ETH_ADDRESS(), _balanceOf(tokens[i]));
+            valueInEth = valueInEth.add(tokenEthValue);
+        }
+
+        uint256 collateralValue = getLoan().collateral;
+        if (getLoan().loanTerms.collateralRatio > 0) {
+            uint256 bufferPercent = settings().getPlatformSettingValue(COLLATERAL_BUFFER_SETTING);
+            uint256 buffer = collateralValue * bufferPercent / 10000;
+            collateralValue = collateralValue.sub(buffer);
+        }
+
+        if (loans.collateralToken() == settings().ETH_ADDRESS()) {
+            valueInEth = valueInEth.add(collateralValue);
+        } else {
+            uint256 collateralEthValue = _valueOfIn(loans.collateralToken(), settings().ETH_ADDRESS(), collateralValue);
+            valueInEth = valueInEth.add(collateralEthValue);
+        }
+
+        uint256 valueInToken = _valueOfIn(settings().ETH_ADDRESS(), loans.lendingToken(), valueInEth);
+
+        return TellerCommon.EscrowValue({
+            valueInEth: valueInEth,
+            valueInToken: valueInToken
+        });
+    }
+
+    function canPurchase() public view returns (bool) {
+        return loans.canLiquidateLoan(loanID);
+    }
+
+    function isUnderValued() external view returns (bool) {
+        return calculateTotalValue().valueInToken < loans.getTotalOwed(loanID);
+    }
+
+    function purchaseLoanDebt() external payable {
+        require(canPurchase(), 'ESCROW_INELIGIBLE_TO_PURCHASE');
+
+        loans.repay(loans.getTotalOwed(loanID), loanID);
+
+        _transferOwnership(msg.sender);
     }
 
     /**
@@ -104,8 +155,23 @@ contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, Ba
         TInitializable._initialize();
 
         // Initialize tokens list with the borrowed token.
-        // _tokenUpdated(loans.lendingToken()); // TODO Verify the _tokenUpdated function works with the AddressLib
+        require(_balanceOf(loans.lendingToken()) == getLoan().borrowedAmount, "ESCROW_BALANCE_NOT_MATCH_LOAN");
+        _tokenUpdated(loans.lendingToken());
     }
 
     /** Internal Functions */
+
+    function _valueOfIn(address baseAddress, address quoteAddress, uint256 baseAmount) internal view returns (uint256) {
+        uint8 baseDecimals = baseAddress == settings().ETH_ADDRESS() ? 18 : ERC20Detailed(baseAddress).decimals();
+        PairAggregatorInterface aggregator = _getAggregatorFor(baseAddress, quoteAddress);
+        uint256 oneTokenPrice = uint256(aggregator.getLatestAnswer());
+        // TODO: better way with SafeMath?
+        return baseAmount.mul(oneTokenPrice).div(uint256(10)**baseDecimals);
+    }
+
+    function _getAggregatorFor(address base, address quote) internal view returns (PairAggregatorInterface) {
+        require(settings().pairAggregatorRegistry().hasPairAggregator(base, quote), "CHAINLINK_PAIR_AGGREGATOR_NOT_EXISTS");
+
+        return settings().pairAggregatorRegistry().getPairAggregator(base, quote);
+    }
 }

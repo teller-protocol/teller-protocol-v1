@@ -42,7 +42,6 @@
     "leche": "^2.3.0",
     "lodash": "^4.17.19",
     "mocha": "^7.1.0",
-    "openzeppelin-test-helpers": "^0.5.1",
     "prettier": "^2.0.2",
     "prettier-plugin-solidity": "^1.0.0-alpha.46",
     "solhint": "^2.1.0",

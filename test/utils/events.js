@@ -2,7 +2,6 @@
 const BigNumber = require('bignumber.js');
 const truffleAssert = require('truffle-assertions');
 const assert = require('assert');
-const { expectEvent } = require('openzeppelin-test-helpers');
 
 const emitted = (tx, eventName, assertFunction) => {
     truffleAssert.eventEmitted(tx, eventName, event => {
@@ -721,18 +720,15 @@ module.exports = {
         },
     },
     escrowFactory: {
-        escrowCreated: (tx, Factory) => {
+        escrowCreated: tx => {
             const name = 'EscrowCreated';
             return {
                 name: name,
-                emitted: async (borrower, loansAddress, loanID, escrowAddress) => {
-                    await expectEvent.inTransaction(tx.tx, Factory, name, {
-                        borrower,
-                        loansAddress,
-                        loanID,
-                        escrowAddress
-                    });
-                },
+                emitted: (borrower, loansAddress, loanID) => emitted(tx, name, ev => {
+                    assert.equal(ev.borrower.toString(), borrower.toString());
+                    assert.equal(ev.loansAddress.toString(), loansAddress.toString());
+                    assert.equal(ev.loanID.toString(), loanID.toString());
+                }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
@@ -754,6 +750,19 @@ module.exports = {
                 emitted: (sender, dapp) => emitted(tx, name, ev => {
                     assert.equal(ev.sender.toString(), sender.toString());
                     assert.equal(ev.dapp.toString(), dapp.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
+    escrow: {
+        ownershipTransferred: tx => {
+            const name = 'OwnershipTransferred';
+            return {
+                name: name,
+                emitted: (previousOwner, newOwner) => emitted(tx, name, ev => {
+                    assert.equal(ev.previousOwner.toString(), previousOwner.toString());
+                    assert.equal(ev.newOwner.toString(), newOwner.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
