@@ -21,12 +21,12 @@ interface ATMFactoryInterface {
         @notice This event is emitted when a new ATM instance is created.
         @param creator creator address.
         @param atmGovernanceAddress new ATM Governance instance address.
-        @param atmTokenAddress new ATM Token instance address.
+        @param tlrTokenAddress new TLR Token instance address.
      */
     event ATMCreated(
         address indexed creator,
         address indexed atmGovernanceAddress,
-        address indexed atmTokenAddress
+        address indexed tlrTokenAddress
     );
 
     /* State Variables */
@@ -39,11 +39,11 @@ interface ATMFactoryInterface {
 
     /**
         @notice It creates a new ATM instance.
-        @param name ATM token name.
-        @param symbol ATM token symbol
-        @param decimals ATM token decimals 
-        @param cap ATM token max cap.
-        @param maxVestingPerWallet max vestings per wallet for the ATM token.
+        @param name The token name.
+        @param symbol The token symbol
+        @param decimals The token decimals 
+        @param cap Token max cap.
+        @param maxVestingPerWallet max vestings per wallet for the token.
         @return the new ATM governance instance address.
      */
     function createATM(
@@ -68,11 +68,11 @@ interface ATMFactoryInterface {
     function getATMs() external view returns (address[] memory);
 
     /**
-        @notice Returns the atm token address of a given associated atm address.
+        @notice Returns the token address of a given associated atm address.
         @param atmAddress ATM address to test
-        @return Address of the associated ATM Token
+        @return Address of the associated TLR Token
      */
-    function getATMToken(address atmAddress) external view returns (address);
+    function getTLRToken(address atmAddress) external view returns (address);
 
     /**
         @notice It initializes this ATM Governance Factory instance.

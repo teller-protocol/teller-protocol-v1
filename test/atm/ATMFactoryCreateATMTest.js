@@ -80,10 +80,10 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
                 assert(isATM);
 
                 // Validating events were emitted
-                const atmTokenExpected = await instance.getATMToken(newATM);
+                const tlrTokenExpected = await instance.getTLRToken(newATM);
                 atmFactory
                     .atmCreated(result)
-                    .emitted(sender, newATM, atmTokenExpected);
+                    .emitted(sender, newATM, tlrTokenExpected);
                 
             } catch (error) {
                 assert(mustFail);

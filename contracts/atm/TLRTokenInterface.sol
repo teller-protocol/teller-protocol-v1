@@ -12,11 +12,11 @@ pragma solidity 0.5.17;
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
-    @notice This interface defines the available functions and events for the ATM Token
+    @notice This interface defines the available functions and events for the TLR Token
 
     @author develop@teller.finance
  */
-interface ATMTokenInterface {
+interface TLRTokenInterface {
     /* Events */
 
     /**
@@ -125,9 +125,9 @@ interface ATMTokenInterface {
 
     /**
         @notice It initializes this token instance.
-        @param name The name of the ATM token
-        @param symbol The symbol of the ATM token
-        @param decimals The amount of decimals for ATM token
+        @param name The name of the token
+        @param symbol The symbol of the token
+        @param decimals The amount of decimals for token
         @param cap The maximum number of tokens available
         @param maxVestingPerWallet The maximum number of times a wallet can mint their vesting
         @param settingsAddress The ATMSettings address

@@ -1,7 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
-const { atmToken } = require('../utils/events');
+const { tlrToken } = require('../utils/events');
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
@@ -9,9 +9,9 @@ const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEnc
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const ATMToken = artifacts.require('./ATMToken.sol');
+const TLRToken = artifacts.require('./TLRToken.sol');
 
-contract('ATMTokenSnapshotTest', function (accounts) {
+contract('TLRTokenSnapshotTest', function (accounts) {
     const atmSettingsEncoder = new IATMSettingsEncoder(web3);
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     let atmSettingsInstance;
@@ -29,10 +29,10 @@ contract('ATMTokenSnapshotTest', function (accounts) {
             settingsInstance.address
         );
         atmInstance = await Mock.new();
-        instance = await ATMToken.new();
+        instance = await TLRToken.new();
         await instance.initialize(
-                                "ATMToken",
-                                "ATMT",
+                                "Teller Token",
+                                "TLR",
                                 18,
                                 100000,
                                 50,
@@ -82,7 +82,7 @@ contract('ATMTokenSnapshotTest', function (accounts) {
                     2000,
                     'Balance snapshot was not created correctly!'
                 );
-                atmToken
+                tlrToken
                     .snapshot(mintResult)
                     .emitted(snapshotId);
             } catch (error) {

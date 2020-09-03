@@ -28,5 +28,5 @@ contract LogicVersionsConsts {
     bytes32 public constant ATM_FACTORY_LOGIC_NAME = 'ATMFactory';
     bytes32 public constant ATM_SETTINGS_LOGIC_NAME = 'ATMSettings';
     bytes32 public constant ATM_GOVERNANCE_LOGIC_NAME = 'ATMGovernance';
-    bytes32 public constant ATM_TOKEN_LOGIC_NAME = 'ATMToken';
+    bytes32 public constant TLR_TOKEN_LOGIC_NAME = 'TLRToken';
 }

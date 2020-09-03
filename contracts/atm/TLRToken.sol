@@ -6,7 +6,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Deta
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Burnable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Arrays.sol";
-import "./ATMTokenInterface.sol";
+import "./TLRTokenInterface.sol";
 
 import "../base/TInitializable.sol";
 import "../base/BaseUpgradeable.sol";
@@ -23,13 +23,13 @@ import "../base/BaseUpgradeable.sol";
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
- *  @title ATM Token for Teller DAO
+ *  @title TLR Token for the Teller Platform
  *
  *  @author develop@teller.finance
  */
 
-contract ATMToken is
-    ATMTokenInterface,
+contract TLRToken is
+    TLRTokenInterface,
     ERC20Detailed,
     ERC20Mintable,
     ERC20Burnable,
@@ -37,7 +37,7 @@ contract ATMToken is
     BaseUpgradeable
 {
     /**
-     *  @notice ATMToken implements an ERC20 token with a supply cap and a vesting scheduling
+     *  @notice TLRToken implements an ERC20 token with a supply cap and a vesting scheduling
      */
     using SafeMath for uint256;
     using Arrays for uint256[];
@@ -85,9 +85,9 @@ contract ATMToken is
 
     /**
         @notice It initializes this token instance.
-        @param name The name of the ATM token
-        @param symbol The symbol of the ATM token
-        @param decimals The amount of decimals for ATM token
+        @param name The name of the token
+        @param symbol The symbol of the token
+        @param decimals The amount of decimals for token
         @param cap The maximum number of tokens available
         @param maxVestingPerWallet The maximum number of times a wallet can mint their vesting
         @param settingsAddress The ATMSettings address

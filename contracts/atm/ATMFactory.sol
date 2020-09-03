@@ -9,7 +9,7 @@ import "../base/DynamicProxy.sol";
 
 
 // Interfaces
-import "./ATMTokenInterface.sol";
+import "./TLRTokenInterface.sol";
 import "./ATMGovernanceInterface.sol";
 import "../atm/ATMFactoryInterface.sol";
 
@@ -39,18 +39,18 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
      */
     mapping(address => bool) public atms;
 
-    mapping(address => address) public atmTokens;
+    mapping(address => address) public tlrTokens;
 
     // List of ATM instances
     address[] public atmsList;
 
     /**
         @notice It creates a new ATM instance.
-        @param name ATM token name.
-        @param symbol ATM token symbol
-        @param decimals ATM token decimals 
-        @param cap ATM token max cap.
-        @param maxVestingPerWallet max vestings per wallet for the ATM token.
+        @param name The token name.
+        @param symbol The token symbol
+        @param decimals The token decimals 
+        @param cap Token max cap.
+        @param maxVestingPerWallet max vestings per wallet for the token.
         @return the new ATM governance instance address.
      */
     function createATM(
@@ -62,15 +62,15 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
     ) external onlyPauser() isInitialized() returns (address) {
         address owner = msg.sender;
         
-        bytes32 atmTokenLogicName = settings().versionsRegistry().consts().ATM_TOKEN_LOGIC_NAME();
-        ATMTokenInterface atmTokenProxy = ATMTokenInterface(address(new DynamicProxy(address(settings()), atmTokenLogicName)));
+        bytes32 tlrTokenLogicName = settings().versionsRegistry().consts().TLR_TOKEN_LOGIC_NAME();
+        TLRTokenInterface tlrTokenProxy = TLRTokenInterface(address(new DynamicProxy(address(settings()), tlrTokenLogicName)));
 
         bytes32 atmGovernanceLogicName = settings().versionsRegistry().consts().ATM_GOVERNANCE_LOGIC_NAME();
         ATMGovernanceInterface atmGovernanceProxy = ATMGovernanceInterface(address(new DynamicProxy(address(settings()), atmGovernanceLogicName)));
         atmGovernanceProxy.initialize(address(settings()), owner);
         address atmGovernanceProxyAddress = address(atmGovernanceProxy);
 
-        atmTokenProxy.initialize(
+        tlrTokenProxy.initialize(
             name,
             symbol,
             decimals,
@@ -79,14 +79,14 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
             address(settings()),
             atmGovernanceProxyAddress
         );
-        address atmTokenProxyAddress = address(atmTokenProxy);
+        address tlrTokenProxyAddress = address(tlrTokenProxy);
 
         atms[atmGovernanceProxyAddress] = true;
-        atmTokens[atmGovernanceProxyAddress] = atmTokenProxyAddress;
+        tlrTokens[atmGovernanceProxyAddress] = tlrTokenProxyAddress;
         atmsList.add(atmGovernanceProxyAddress);
 
         // Emit new ATM created event.
-        emit ATMCreated(owner, atmGovernanceProxyAddress, atmTokenProxyAddress);
+        emit ATMCreated(owner, atmGovernanceProxyAddress, tlrTokenProxyAddress);
 
         return atmGovernanceProxyAddress;
     }
@@ -114,12 +114,12 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
     }
 
     /**
-        @notice Returns the atm token address of a given associated atm address.
+        @notice Returns the token address of a given associated atm address.
         @param atmAddress ATM address to test
-        @return Address of the associated ATM Token
+        @return Address of the associated TLR Token
      */
-    function getATMToken(address atmAddress) external view returns (address) {
-        return atmTokens[atmAddress];
+    function getTLRToken(address atmAddress) external view returns (address) {
+        return tlrTokens[atmAddress];
     }
 
     /**
