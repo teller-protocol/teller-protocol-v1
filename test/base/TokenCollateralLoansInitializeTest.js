@@ -18,23 +18,18 @@ contract('TokenCollateralLoansInitializeTest', function (accounts) {
     const getInstance = (refs, index, accountIndex) => index === -1 ? NULL_ADDRESS: index === 99 ? accounts[accountIndex] : refs[index];
 
     withData({
-        _1_basic: [2, 3, 4, 5, 6, 7, 8, undefined, false],
-        _2_not_oracle: [-1, 3, 4, 5, 6, 7, 8, 'PROVIDE_ORACLE_ADDRESS', true],
-        _3_not_lendingpool: [2, -1, 4, 5, 6, 7, 8, 'PROVIDE_LENDINGPOOL_ADDRESS', true],
-        _4_not_loanTerms: [2, 3, -1, 5, 6, 7, 8, 'PROVIDED_LOAN_TERMS_ADDRESS', true],
-        _5_not_settings: [2, 3, 4, -1, 6, 7, 8, 'SETTINGS_MUST_BE_PROVIDED', true],
-        _6_not_collateralToken: [2, 3, 4, 5, -1, 7, 8, 'PROVIDE_COLL_TOKEN_ADDRESS', true],
-        _7_not_markets: [2, 3, 4, 5, 6, -1, 8, 'MARKETS_MUST_BE_PROVIDED', true],
-        _8_not_contract_markets: [2, 3, 4, 5, 6, 99, 8, 'MARKETS_MUST_BE_A_CONTRACT', true],
-        _9_not_atm_settings: [2, 3, 4, 5, 6, 99, -1, 'PROVIDED_ATM_SETTINGS_ADDRESS', true],
+        _1_basic: [2, 3, 4, 5, 6, undefined, false],
+        _2_not_oracle: [-1, 3, 4, 5, 6, 'PROVIDE_ORACLE_ADDRESS', true],
+        _3_not_lendingpool: [2, -1, 4, 5, 6, 'PROVIDE_LENDING_POOL_ADDRESS', true],
+        _4_not_loanTerms: [2, 3, -1, 5, 6, 'PROVIDED_LOAN_TERMS_ADDRESS', true],
+        _5_not_settings: [2, 3, 4, -1, 6, 'SETTINGS_MUST_BE_PROVIDED', true],
+        _6_not_collateralToken: [2, 3, 4, 5, -1, 'PROVIDE_COLL_TOKEN_ADDRESS', true],
     }, function(
         priceOracleIndex,
         lendingPoolIndex,
         loanTermsConsensusIndex,
         settingsIndex,
         collateralTokenIndex,
-        marketsIndex,
-        atmSettingsIndex,
         expectedErrorMessage,
         mustFail
     ) {    
@@ -46,8 +41,6 @@ contract('TokenCollateralLoansInitializeTest', function (accounts) {
             const loanTermsConsensusAddress = getInstance(mocks, loanTermsConsensusIndex, 4);
             const settingsAddress = getInstance(mocks, settingsIndex, 5);
             const collateralTokenAddress = getInstance(mocks, collateralTokenIndex, 6);
-            const marketsAddress = getInstance(mocks, marketsIndex, 7);
-            const atmSettingsAddress = getInstance(mocks, atmSettingsIndex, 8);
 
             try {
                 // Invocation
@@ -57,8 +50,6 @@ contract('TokenCollateralLoansInitializeTest', function (accounts) {
                     loanTermsConsensusAddress,
                     settingsAddress,
                     collateralTokenAddress,
-                    marketsAddress,
-                    atmSettingsAddress,
                 );;
                 
                 // Assertions

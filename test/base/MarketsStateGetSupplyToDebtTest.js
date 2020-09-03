@@ -13,10 +13,13 @@ contract('MarketsStateGetSupplyToDebtTest', function (accounts) {
     const owner = accounts[0];
     let mocks;
     let instance;
+    let settings;
     
     beforeEach('Setup for each test', async () => {
+        settings = await Mock.new();
         instance = await MarketsState.new();
-        instance.addWhitelisted(owner, { from: owner});
+        await instance.initialize(settings.address);
+        await instance.addWhitelisted(owner, { from: owner});
         mocks = await createMocks(Mock, 10);
     });
 

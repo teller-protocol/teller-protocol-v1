@@ -2,64 +2,110 @@
 const { createLoanTerms } = require("../utils/structs");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const { t, NULL_ADDRESS, ACTIVE } = require("../utils/consts");
-const withData = require('leche').withData;
+const withData = require("leche").withData;
+
+const { escrowFactory } = require("../utils/events");
+const { toBytes32 } = require("../utils/consts");
+
+const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const Escrow = artifacts.require("./base/Escrow.sol");
 const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
+const Escrow = artifacts.require("./base/Escrow.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
+const VersionsRegistry = artifacts.require("./base/LogicVersionsRegistry.sol");
 
-contract('EscrowFactoryCreateEscrowTest', function (accounts) {
+contract("EscrowFactoryCreateEscrowTest", function(accounts) {
   const owner = accounts[0];
-  let instance;
+  let escrowFactoryInstance;
   let settingsInstance;
   let loans;
-  let escrowLibrary;
+  let versionsRegistry;
 
   beforeEach(async () => {
-    settingsInstance = await createTestSettingsInstance(Settings);
     loans = await Loans.new();
-    escrowLibrary = await Escrow.new();
-    instance = await EscrowFactory.new();
+    escrowFactoryInstance = await EscrowFactory.new();
+    versionsRegistry = await VersionsRegistry.new();
 
-    await instance.initialize(settingsInstance.address, escrowLibrary.address);
-    await settingsInstance.setEscrowFactory(instance.address);
+    settingsInstance = await createTestSettingsInstance(
+      Settings,
+      {
+        from: owner,
+        Mock,
+        onInitialize: async (
+          instance,
+          {
+            marketsState,
+            interestValidator,
+            pairAggregatorRegistry,
+            atmSettings
+          }) => {
+          await instance.initialize(
+            escrowFactoryInstance.address,
+            versionsRegistry.address,
+            pairAggregatorRegistry.address,
+            marketsState.address,
+            interestValidator.address,
+            atmSettings.address
+          );
+        }
+      }
+    );
     await loans.externalSetSettings(settingsInstance.address);
-  })
+
+    const escrowLogic = await Escrow.new();
+    await versionsRegistry.initialize(settingsInstance.address);
+    await versionsRegistry.createLogicVersion(toBytes32(web3, "Escrow"), escrowLogic.address);
+  });
 
   withData({
-    _1_empty_borrower: [false, 1234, -1, true, 'BORROWER_MUSTNT_BE_EMPTY'],
-    _2_platform_paused: [true, 1234, 2, true, 'PLATFORM_IS_PAUSED'],
+    _1_not_initialized: [ false, false, 1234, false, -1, true, "CONTRACT_NOT_INITIALIZED" ],
+    _2_platform_paused: [ true, true, 1234, false, 2, true, "PLATFORM_IS_PAUSED" ],
+    _3_escrow_already_exists: [ false, true, 1234, true, 2, true, "LOAN_ESCROW_ALREADY_EXISTS" ],
+    _4_success: [ false, true, 1234, false, 2, false, null ]
   }, function(
     isPaused,
+    initialize,
     loanID,
+    duplicate,
     borrowerIndex,
     mustFail,
     expectedErrorMessage
   ) {
-    it(t('loans', 'createEscrow', 'Should not be able to create an escrow contract.', mustFail), async function() {
+    it(t("loans", "createEscrow", "Should not be able to create an escrow contract.", mustFail), async function() {
       // Setup
       const borrower = borrowerIndex === -1 ? NULL_ADDRESS : accounts[borrowerIndex];
       const loanTerms = createLoanTerms(borrower, NULL_ADDRESS, 0, 0, 0, 0);
       await loans.setLoan(loanID, loanTerms, 0, 0, 123456, 0, 0, 0, loanTerms.maxLoanAmount, ACTIVE, false);
 
-      if(isPaused) {
-        await settingsInstance.pause({ from: owner});
+      if (isPaused) {
+        await settingsInstance.pause({ from: owner });
       }
+
+      if (initialize) {
+        await escrowFactoryInstance.initialize(settingsInstance.address);
+      }
+
+      if (duplicate) {
+        const dummyEscrow = await Mock.new();
+        await loans.setEscrowForLoan(loanID, dummyEscrow.address);
+      }
+
       try {
         // Invocation
-        await loans.externalCreateEscrow(
-            loanID,
-            { from: owner }
-        );
+        const result = await escrowFactoryInstance.createEscrow(loans.address, loanID);
 
         // Assertions
-        assert(!mustFail);
+        escrowFactory
+          .escrowCreated(result)
+          .emitted(borrower, loans.address, loanID);
+
+        assert(!mustFail, "It passed but wasnt supposed to...");
       } catch (error) {
-        assert(mustFail, error);
-        assert(error);
         assert.equal(error.reason, expectedErrorMessage);
+        assert(mustFail, error.message);
+        assert(error);
       }
     });
   });

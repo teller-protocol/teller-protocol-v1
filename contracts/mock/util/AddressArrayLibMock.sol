@@ -12,7 +12,7 @@ contract AddressArrayLibMock {
         result = initialData;
     }
 
-    function getResult() public view returns (address[] memory) {
+    function getResult() external view returns (address[] memory) {
         return result;
     }
 

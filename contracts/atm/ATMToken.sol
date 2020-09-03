@@ -5,12 +5,11 @@ pragma solidity 0.5.17;
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Burnable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Arrays.sol";
 import "./ATMTokenInterface.sol";
 
 import "../base/TInitializable.sol";
-import "@openzeppelin/contracts/utils/Arrays.sol";
-import "../settings/IATMSettings.sol";
-import "./BaseATM.sol";
+import "../base/BaseUpgradeable.sol";
 
 
 /*****************************************************************************************************/
@@ -30,12 +29,12 @@ import "./BaseATM.sol";
  */
 
 contract ATMToken is
-    BaseATM,
     ATMTokenInterface,
     ERC20Detailed,
     ERC20Mintable,
     ERC20Burnable,
-    TInitializable
+    TInitializable,
+    BaseUpgradeable
 {
     /**
      *  @notice ATMToken implements an ERC20 token with a supply cap and a vesting scheduling
@@ -51,7 +50,7 @@ contract ATMToken is
         @dev Throws an error is the Teller platform is paused
      */
     modifier whenNotPaused() {
-        require(!atmSettings.isATMPaused(atmAddress), "ATM_IS_PAUSED");
+        require(!settings().atmSettings().isATMPaused(atmAddress), "ATM_IS_PAUSED");
         _;
     }
 
@@ -85,34 +84,31 @@ contract ATMToken is
     /* Functions */
 
     /**
-        @notice It initializes this token instance. It should only be called from the ATMTokenProxy constructor!
+        @notice It initializes this token instance.
         @param name The name of the ATM token
         @param symbol The symbol of the ATM token
         @param decimals The amount of decimals for ATM token
         @param cap The maximum number of tokens available
         @param maxVestingPerWallet The maximum number of times a wallet can mint their vesting
-        @param atmSettingsAddress The ATMSettings address
+        @param settingsAddress The ATMSettings address
         @param atm The ATMGovernance address for this token
      */
     function initialize(
-        string memory name,
-        string memory symbol,
+        string calldata name,
+        string calldata symbol,
         uint8 decimals,
         uint256 cap,
         uint256 maxVestingPerWallet,
-        address atmSettingsAddress,
+        address settingsAddress,
         address atm
-    ) public initializer {
-        require(atmSettingsAddress.isContract(), "ATM_SETTINGS_MUST_BE_A_CONTRACT");
+    ) external initializer() isNotInitialized() {
         require(cap > 0, "CAP_CANNOT_BE_ZERO");
-
-        ERC20Detailed.initialize(name, symbol, decimals);
+        super.initialize(name, symbol, decimals);
         TInitializable._initialize();
-
         _cap = cap;
         _maxVestingPerWallet = maxVestingPerWallet;
-        atmSettings = IATMSettings(atmSettingsAddress);
         atmAddress = atm;
+        _setSettings(settingsAddress);
     }
 
     /**
@@ -127,7 +123,7 @@ contract ATMToken is
      * @notice Sets a new cap on the token's total supply.
      * @param newCap The new capped amount of tokens
      */
-    function setCap(uint256 newCap) external onlyPauser() whenNotPaused() {
+    function setCap(uint256 newCap) external onlyPauser() whenNotPaused() isInitialized() {
         _cap = newCap;
         emit NewCap(_cap);
     }
@@ -142,6 +138,7 @@ contract ATMToken is
         public
         onlyPauser()
         whenNotPaused()
+        isInitialized()
         returns (bool)
     {
         require(account != address(0x0), "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED");
@@ -174,7 +171,7 @@ contract ATMToken is
         uint256 amount,
         uint256 cliff,
         uint256 vestingTime
-    ) public onlyPauser() whenNotPaused() {
+    ) public onlyPauser() whenNotPaused() isInitialized() {
         require(account != address(0x0), "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED");
         require(vestingCount[account] < _maxVestingPerWallet, "MAX_VESTINGS_REACHED");
         _beforeTokenTransfer(address(0x0), account, amount);
@@ -206,6 +203,7 @@ contract ATMToken is
         public
         onlyPauser()
         whenNotPaused()
+        isInitialized()
     {
         require(assignedTokens[account] > 0, "ACCOUNT_DOESNT_HAVE_VESTING");
         VestingTokens memory vestingTokens = _vestingBalances[account][vestingId];
@@ -231,7 +229,7 @@ contract ATMToken is
      *  @return true if successful
      *
      */
-    function withdrawVested() public whenNotPaused() {
+    function withdrawVested() public whenNotPaused() isInitialized() {
         require(assignedTokens[msg.sender] > 0, "ACCOUNT_DOESNT_HAVE_VESTING");
 
         uint256 transferableTokens = _transferableTokens(msg.sender, block.timestamp);

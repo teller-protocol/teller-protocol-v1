@@ -40,7 +40,6 @@ contract('LendingPoolRepayTest', function (accounts) {
             instance.address,
             interestConsensusInstance.address,
             settingsInstance.address,
-            marketsInstance.address,
         );
     });
 
@@ -74,8 +73,6 @@ contract('LendingPoolRepayTest', function (accounts) {
                 loansAddress,
                 cTokenAddress,
                 settingsInstance.address,
-                marketsInstance.address,
-                NULL_ADDRESS,
             );
             const encodeTransferFrom = erc20InterfaceEncoder.encodeTransferFrom();
             await daiInstance.givenMethodReturnBool(encodeTransferFrom, transferFrom);

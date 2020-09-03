@@ -33,10 +33,7 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   const collateralNeeded = '320486794520547945';
   const borrowerTxConfig = { from: borrower };
   const borrowerTxConfigWithValue = { ...borrowerTxConfig, value: collateralNeeded };
-
-  // Minting tokens for the borrower (to repay the loan)
-  console.log(`Minting tokens for the borrower (to repay the loan)`);
-  await token.mint(borrower, maxAmountWei);
+  await token.mint(borrowerTxConfig.from, maxAmountWei);
 
   // Sets Initial Oracle Price
   console.log(`Settings initial oracle price: 1 ${tokenName} = ${initialOraclePrice.toFixed(0)} WEI = ${toUnits(initialOraclePrice, 18)} ETHER`);

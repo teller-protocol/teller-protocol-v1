@@ -9,7 +9,7 @@ class PoolDeployer {
         this.artifacts = artifacts;
     }
 }
-
+// TODO Remove it after deploying to ropsten
 PoolDeployer.prototype.deployPool = async function(
     { tokenName, collateralName, aggregatorName = `${tokenName.toUpperCase()}_${collateralName.toUpperCase()}`},
     { Loans, TToken },

@@ -1,24 +1,38 @@
 // See more details here: https://docs.chain.link/docs/reference-contracts
 
 module.exports = {
-    USDC_ETH: {
-        //As Chainlink does NOT support USDC/ETH (as on Ropsten), we use the pair ETH/USD: 0x0bF4e7bf3e1f6D6Dc29AA516A33134985cC3A5aA
-        address: '0x0bF4e7bf3e1f6D6Dc29AA516A33134985cC3A5aA',
+    ETH_USDC: {
+        //As Chainlink does NOT support USDC/ETH on Rinkeby, we use the pair ETH/USD: 0x8A753747A1Fa494EC906cE90E9f37563A8AF630e
+        address: '0x8A753747A1Fa494EC906cE90E9f37563A8AF630e',
         inversed: true,
         collateralDecimals: 18, // ETH
         responseDecimals: 8,
+        baseTokenName: 'ETH',
+        quoteTokenName: 'USDC',
     },
-    DAI_ETH: {
-        //As Chainlink does NOT support DAI/ETH (as on Ropsten), we use the pair ETH/USD: 0x0bF4e7bf3e1f6D6Dc29AA516A33134985cC3A5aA
-        address: '0x0bF4e7bf3e1f6D6Dc29AA516A33134985cC3A5aA',
+    ETH_DAI: {
+        //As Chainlink does NOT support DAI/ETH on Rinkeby, we use the pair ETH/USD: 0x8A753747A1Fa494EC906cE90E9f37563A8AF630e
+        address: '0x8A753747A1Fa494EC906cE90E9f37563A8AF630e',
         inversed: true,
         collateralDecimals: 18, // ETH
         responseDecimals: 8,
+        baseTokenName: 'ETH',
+        quoteTokenName: 'DAI',
     },
-    LINK_USD: {
-        address: '0x0853E36EeAd0eAA08D61E94237168696383869DD',
+    LINK_DAI: {
+        address: '0xd8bD0a1cB028a31AA859A21A3758685a95dE4623', // Chainlink Pair: LINK - USD
         inversed: true,
-        collateralDecimals: 18, // LINK
+        collateralDecimals: 18, // ETH
         responseDecimals: 8,
+        baseTokenName: 'LINK',
+        quoteTokenName: 'DAI',
+    },
+    LINK_USDC: {
+        address: '0xd8bD0a1cB028a31AA859A21A3758685a95dE4623', // Chainlink Pair: LINK - USD
+        inversed: true,
+        collateralDecimals: 18, // ETH
+        responseDecimals: 8,
+        baseTokenName: 'LINK',
+        quoteTokenName: 'USDC',
     },
 };

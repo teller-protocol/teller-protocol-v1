@@ -38,4 +38,18 @@ interface PairAggregatorInterface {
         @return the latest round id.
     */
     function getLatestRound() external view returns (uint256);
+
+    /**
+        @notice It creates a new ChainlinkPairAggregator instance.
+        @param aggregatorAddress to use in this Chainlink pair aggregator.
+        @param isInverse defines whether this pair aggregator is inverse or not.
+        @param responseDecimalsValue the decimals included in the Chainlink response.
+        @param collateralDecimalsValue the decimals included in the collateral token.
+    */
+    function initialize(
+        address aggregatorAddress,
+        bool isInverse,
+        uint8 responseDecimalsValue,
+        uint8 collateralDecimalsValue
+    ) external;
 }

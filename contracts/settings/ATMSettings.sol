@@ -2,33 +2,36 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Libraries
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
-// Commons
+// Contracts
+import "../base/TInitializable.sol";
+import "../base/BaseUpgradeable.sol";
 
 // Interfaces
-import "../interfaces/SettingsInterface.sol";
 import "./IATMSettings.sol";
 
-
+/*****************************************************************************************************/
+/**                                             WARNING                                             **/
+/**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
+/**  ---------------------------------------------------------------------------------------------  **/
+/**  Do NOT change the order of or PREPEND any storage variables to this or new versions of this    **/
+/**  contract as this will cause the the storage slots to be overwritten on the proxy contract!!    **/
+/**                                                                                                 **/
+/**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
+/**  more information.                                                                              **/
+/*****************************************************************************************************/
 /**
     @notice It manages the settings for the ATMs.
 
     @author develop@teller.finance
  */
-contract ATMSettings is IATMSettings {
-    using AddressLib for address;
+contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
     using Address for address;
 
     /** Constants */
 
-    address internal constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
     /* State Variables */
-
-    /**
-        @notice It represents the protocol Settings contract.
-     */
-    SettingsInterface public settings;
 
     /**
         @notice It represents a mapping to identify whether a ATM is paused or not.
@@ -45,71 +48,16 @@ contract ATMSettings is IATMSettings {
      */
     mapping(address => mapping(address => address)) public marketToAtm;
 
-    /**
-        @notice It stores the current logic implementation address for ATM Tokens.
-     */
-    address public atmTokenLogic;
-
-    /**
-        @notice It stores the current logic implementation address for ATM Governance.
-     */
-    address public atmGovernanceLogic;
-
-    /** Modifiers */
-
-    /**
-        @notice It checks whether sender address has the pauser role or not.
-        @dev It throws a require error if sender hasn't the pauser role.
-     */
-    modifier onlyPauser() {
-        require(settings.hasPauserRole(msg.sender), "ONLY_PAUSER");
-        _;
-    }
-
     /* Constructor */
 
-    constructor(
-        address settingsAddress,
-        address atmTokenLogicAddress,
-        address atmGovernanceLogicAddress
-    ) public {
-        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
-
-        settings = SettingsInterface(settingsAddress);
-        _setATMTokenLogic(atmTokenLogicAddress);
-        _setATMGovernanceLogic(atmGovernanceLogicAddress);
-    }
-
     /** External Functions */
-
-    /**
-        @notice It sets a new ATM token template to be used in the proxy (see createATM function).
-        @param newATMTokenLogicAddress the new ATM token template address.
-     */
-    function setATMTokenLogic(address newATMTokenLogicAddress)
-        external
-        onlyPauser()
-    {
-        _setATMTokenLogic(newATMTokenLogicAddress);
-    }
-
-    /**
-        @notice It sets a new ATM governance template to be used in the proxy (see createATM function).
-        @param newATMGovernanceLogicAddress the new ATM governance template address.
-     */
-    function setATMGovernanceLogic(address newATMGovernanceLogicAddress)
-        external
-        onlyPauser()
-    {
-        _setATMGovernanceLogic(newATMGovernanceLogicAddress);
-    }
 
     /**
         @notice It pauses a given ATM.
         @param atmAddress ATM address to pause.
      */
-    function pauseATM(address atmAddress) external onlyPauser() {
-        require(settings.isPaused() == false, "PLATFORM_IS_ALREADY_PAUSED");
+    function pauseATM(address atmAddress) external onlyPauser() isInitialized() {
+        require(settings().isPaused() == false, "PLATFORM_IS_ALREADY_PAUSED");
         require(atmPaused[atmAddress] == false, "ATM_IS_ALREADY_PAUSED");
 
         atmPaused[atmAddress] = true;
@@ -121,8 +69,8 @@ contract ATMSettings is IATMSettings {
         @notice It unpauses a given ATM.
         @param atmAddress ATM address to unpause.
      */
-    function unpauseATM(address atmAddress) external onlyPauser() {
-        require(settings.isPaused() == false, "PLATFORM_IS_PAUSED");
+    function unpauseATM(address atmAddress) external onlyPauser() isInitialized() {
+        require(settings().isPaused() == false, "PLATFORM_IS_PAUSED");
         require(atmPaused[atmAddress] == true, "ATM_IS_NOT_PAUSED");
 
         atmPaused[atmAddress] = false;
@@ -136,7 +84,7 @@ contract ATMSettings is IATMSettings {
         @return true if ATM is paused. Otherwise it returns false.
      */
     function isATMPaused(address atmAddress) external view returns (bool) {
-        return settings.isPaused() || atmPaused[atmAddress];
+        return settings().isPaused() || atmPaused[atmAddress];
     }
 
     /**
@@ -149,10 +97,10 @@ contract ATMSettings is IATMSettings {
         address borrowedToken,
         address collateralToken,
         address atmAddress
-    ) external onlyPauser() {
+    ) external onlyPauser() isInitialized() {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
-            collateralToken == ETH_ADDRESS || collateralToken.isContract() == true,
+            collateralToken == settings().ETH_ADDRESS() || collateralToken.isContract() == true,
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
         require(
@@ -175,10 +123,10 @@ contract ATMSettings is IATMSettings {
         address borrowedToken,
         address collateralToken,
         address newAtmAddress
-    ) external onlyPauser() {
+    ) external onlyPauser() isInitialized() {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
-            collateralToken == ETH_ADDRESS || collateralToken.isContract() == true,
+            collateralToken == settings().ETH_ADDRESS() || collateralToken.isContract() == true,
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
         require(
@@ -211,10 +159,11 @@ contract ATMSettings is IATMSettings {
     function removeATMToMarket(address borrowedToken, address collateralToken)
         external
         onlyPauser()
+        isInitialized()
     {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
-            collateralToken == ETH_ADDRESS || collateralToken.isContract() == true,
+            collateralToken == settings().ETH_ADDRESS() || collateralToken.isContract() == true,
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
         require(
@@ -263,54 +212,20 @@ contract ATMSettings is IATMSettings {
         return marketToAtm[borrowedToken][collateralToken] == atmAddress;
     }
 
-    /** Internal functions */
-
     /**
-        @notice It sets a new ATM token template to be used in the proxy (see createATM function).
-        @param newATMTokenLogicAddress the new ATM token template address.
+        @notice It initializes this ATM Settings instance.
+        @param settingsAddress settings address.
      */
-    function _setATMTokenLogic(address newATMTokenLogicAddress) internal {
-        require(newATMTokenLogicAddress.isContract(), "ATM_TOKEN_MUST_BE_A_CONTRACT");
-        address oldATMTokenLogic = atmTokenLogic;
-        oldATMTokenLogic.requireNotEqualTo(
-            newATMTokenLogicAddress,
-            "NEW_ATM_TOKEN_MUST_BE_PROVIDED"
-        );
-
-        atmTokenLogic = newATMTokenLogicAddress;
-
-        emit ATMTokenLogicUpdated(
-            msg.sender,
-            oldATMTokenLogic,
-            newATMTokenLogicAddress
-        );
-    }
-
-    /**
-        @notice It sets a new ATM governance template to be used in the proxy (see createATM function).
-        @param newATMGovernanceLogicAddress the new ATM governance template address.
-     */
-    function _setATMGovernanceLogic(address newATMGovernanceLogicAddress)
-        internal
+    function initialize(address settingsAddress)
+        external
+        isNotInitialized()
     {
-        require(
-            newATMGovernanceLogicAddress.isContract(),
-            "ATM_GOV_MUST_BE_A_CONTRACT"
-        );
-        address oldATMGovernanceLogic = atmGovernanceLogic;
-        oldATMGovernanceLogic.requireNotEqualTo(
-            newATMGovernanceLogicAddress,
-            "NEW_ATM_GOV_MUST_BE_PROVIDED"
-        );
+        _setSettings(settingsAddress);
 
-        atmGovernanceLogic = newATMGovernanceLogicAddress;
-
-        emit ATMGovernanceLogicUpdated(
-            msg.sender,
-            oldATMGovernanceLogic,
-            newATMGovernanceLogicAddress
-        );
+        TInitializable._initialize();
     }
+
+    /** Internal functions */
 
     /** Private functions */
 }

@@ -1,6 +1,4 @@
 // JS Libraries
-const IATMSettingsEncoder = require("../utils/encoders/IATMSettingsEncoder");
-const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
 const {
     t,
@@ -15,22 +13,16 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
-const Settings = artifacts.require("./base/Settings.sol");
 
 contract('ATMGovernanceRemoveAssetMarketSettingTest', function (accounts) {
-    const encoder = new IATMSettingsEncoder(web3)
+    const owner = accounts[0];
     let instance;
+    let settingsInstance;
 
     beforeEach('Setup for each test', async () => {
-        const settings = await createTestSettingsInstance(Settings)
-        const atmSettings = await Mock.new();
-        await atmSettings.givenMethodReturnAddress(
-            encoder.encodeSettings(),
-            settings.address
-        );
-
+        settingsInstance = await Mock.new();
         instance = await ATMGovernance.new();
-        await instance.initialize(atmSettings.address);
+        await instance.initialize(settingsInstance.address, owner);
     });
 
     // Testing values
@@ -42,7 +34,7 @@ contract('ATMGovernanceRemoveAssetMarketSettingTest', function (accounts) {
 
     withData({
         _1_basic: [0, SETTING_NAME, undefined, false],
-        _2_notSigner: [2, SETTING_NAME, 'ONLY_PAUSER', true],
+        _2_notSigner: [2, SETTING_NAME, 'SignerRole: caller does not have the Signer role', true],
     }, function (senderIndex, settingName, expectedErrorMessage, mustFail) {
         it(t('user', 'removeAssetMarketSetting#1', 'Should (or not) be able to remove an asset market setting.', mustFail), async function () {
             // Setup

@@ -23,6 +23,7 @@ const LoanTermsConsensusMock = artifacts.require("./mock/base/LoanTermsConsensus
 const Settings = artifacts.require("./base/Settings.sol");
 
 contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
+    const owner = accounts[0];
     let instance
     let settings
     const loansContract = accounts[1]
@@ -88,9 +89,9 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
     ) {    
         it(t('user', 'processResponse', 'Should accept/not accept a nodes response', false), async function() {
             // set up contract
-            const markets = await Mock.new();
             settings = await createTestSettingsInstance(
-                Settings, 
+                Settings,
+                { from: owner, Mock },
                 {
                     [settingsNames.RequiredSubmissions]: requiredSubs,
                     [settingsNames.MaximumTolerance]: tolerance,
@@ -99,8 +100,9 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
                     [settingsNames.LiquidateEthPrice]: 9500,
                 }
             );
-            instance = await LoanTermsConsensusMock.new()
-            await instance.initialize(loansContract, settings.address, markets.address);
+            const loansInstance = await Mock.new();
+            instance = await LoanTermsConsensusMock.new();
+            await instance.initialize(owner, loansInstance.address, settings.address);
 
             const loanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478, instance.address)
             const requestHash = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, loansContract, chains.mainnet))

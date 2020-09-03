@@ -8,7 +8,6 @@ module.exports = async function (
         platformSettings,
         tokens,
         compound,
-        escrowFactory,
         txConfig,
         network,
         currentBlockNumber,
@@ -17,7 +16,8 @@ module.exports = async function (
         ERC20
     },
 ) {
-    console.log('Initializing settings.');
+    console.log('\n');
+    console.log('Initializing platform settings.');
 
     await initPlatformSettings(
         settingsInstance,
@@ -47,6 +47,5 @@ module.exports = async function (
             ERC20
         }
     );
-
-    await settingsInstance.setEscrowFactory(escrowFactory.address)
+    console.log('\n');
 }

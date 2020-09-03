@@ -22,7 +22,8 @@ const InterestConsensusMock = artifacts.require("./mock/base/InterestConsensusMo
 
 
 contract('InterestConsensusProcessResponseTest', function (accounts) {
-    let instance
+    const owner = accounts[0];
+    let instance;
     const lendersContract = accounts[1]
     const nodeAddress = accounts[2]
     const submissions = 5
@@ -72,6 +73,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
             // set up contract
             const settings = await createTestSettingsInstance(
                 Settings,
+                { from: owner, Mock },
                 {
                     [settingsNames.RequiredSubmissions]: submissions,
                     [settingsNames.MaximumTolerance]: tolerance,
@@ -80,9 +82,9 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
                     [settingsNames.LiquidateEthPrice]: 9500,
                 }
             );
-            const marketsInstance = await Mock.new();
             instance = await InterestConsensusMock.new()
-            await instance.initialize(lendersContract, settings.address, marketsInstance.address);
+            const lendersCon = await Mock.new()
+            await instance.initialize(owner, lendersCon.address, settings.address);
 
             const interestRequest = createInterestRequest(lender, requestNonce, 23456, endTime, 45678, instance.address)
             const requestHash = ethUtil.bufferToHex(hashInterestRequest(interestRequest, lendersContract, chainId))

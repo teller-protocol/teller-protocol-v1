@@ -7,6 +7,8 @@ const { loans } = require('../utils/events');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const PairAggregatorEncoder = require('../utils/encoders/PairAggregatorEncoder');
 const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
+const EscrowFactoryInterfaceEncoder = require('../utils/encoders/EscrowFactoryInterfaceEncoder');
+const EscrowInterfaceEncoder = require("../utils/encoders/EscrowInterfaceEncoder");
 const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
@@ -15,38 +17,64 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
 const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
-const Escrow = artifacts.require("./base/Escrow.sol");
-const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
 
 contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     const pairAggregatorEncoder = new PairAggregatorEncoder(web3);
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
-
+    const escrowFactoryInterfaceEncoder = new EscrowFactoryInterfaceEncoder(web3);
+    const escrowInterfaceEncoder = new EscrowInterfaceEncoder(web3);
+    const owner = accounts[0];
     let instance;
     let oracleInstance;
     let lendingPoolInstance;
     let loanTermsConsInstance;
     let lendingTokenInstance;
+    let escrowFactory;
+    let createdEscrowMock;
 
     const mockLoanID = 0;
 
     const borrower = accounts[3]
 
     let loanTerms = createLoanTerms(borrower, NULL_ADDRESS, 1475, 3564, 15000000, 0)
-    
+
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
         lendingTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
-        const marketsInstance = await Mock.new();
+        escrowFactory = await Mock.new();
+        const collateralTokenInstance = await Mock.new();
         const atmSettingsInstance = await Mock.new();
-        const settingsInstance = await createTestSettingsInstance(Settings);
-        const escrowLibrary = await Escrow.new();
-        const escrowFactory = await EscrowFactory.new();
+        const marketsStateInstance = await Mock.new();
+        const settingsInstance = await createTestSettingsInstance(
+            Settings,
+            {
+                from: owner,
+                Mock,
+                onInitialize: async (
+                    instance,
+                    {
+                        versionsRegistry,
+                        pairAggregatorRegistry,
+                        interestValidator,
+                    }) => {
+                    await instance.initialize(
+                        escrowFactory.address,
+                        versionsRegistry.address,
+                        pairAggregatorRegistry.address,
+                        marketsStateInstance.address,
+                        interestValidator.address,
+                        atmSettingsInstance.address,
+                    );
+                },
+            });
 
-        await escrowFactory.initialize(settingsInstance.address, escrowLibrary.address);
-        await settingsInstance.setEscrowFactory(escrowFactory.address)
+        createdEscrowMock = await Mock.new();
+        await escrowFactory.givenMethodReturnAddress(
+            escrowFactoryInterfaceEncoder.encodeCreateEscrow(),
+            createdEscrowMock.address
+        );
 
         loanTermsConsInstance = await Mock.new();
         instance = await Loans.new();
@@ -55,8 +83,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,
-            marketsInstance.address,
-            atmSettingsInstance.address,
+            collateralTokenInstance.address
         );
 
         // encode lending token address
@@ -130,13 +157,15 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
                 assert.equal(loan.status.toString(), ACTIVE)
                 assert(loan.escrow.toString() !== NULL_ADDRESS)
 
+                const count = await createdEscrowMock.invocationCountForMethod.call(escrowInterfaceEncoder.encodeInitialize());
+                assert.equal(count.toString(), '1', "Escrow initializer was not called");
+
                 loans
                     .loanTakenOut(tx)
                     .emitted(mockLoanID, borrower, loan.escrow, amountToBorrow)
 
             } catch (error) {
-                assert(mustFail);
-                assert(error);
+                assert(mustFail, error.message);
                 assert.equal(error.reason, expectedErrorMessage);
             }
         });

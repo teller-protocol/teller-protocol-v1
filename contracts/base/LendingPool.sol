@@ -3,15 +3,13 @@ pragma solidity 0.5.17;
 // Libraries
 
 // Commons
-import "../util/TellerCommon.sol";
 
 // Interfaces
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
 import "../interfaces/LoansInterface.sol";
 import "../interfaces/TTokenInterface.sol";
-import "../interfaces/InterestValidatorInterface.sol";
 import "../providers/compound/CErc20Interface.sol";
 
 // Contracts
@@ -37,14 +35,12 @@ contract LendingPool is Base, LendingPoolInterface {
     /* State Variables */
 
     IERC20 public lendingToken;
-
+    
     address public cToken;
 
     TTokenInterface public tToken;
 
     LendersInterface public lenders;
-
-    InterestValidatorInterface public interestValidator;
 
     address public loans;
 
@@ -84,7 +80,7 @@ contract LendingPool is Base, LendingPoolInterface {
         // Mint tToken tokens
         tTokenMint(msg.sender, amount);
 
-        markets.increaseSupply(
+        _markets().increaseSupply(
             address(lendingToken),
             LoansInterface(loans).collateralToken(),
             amount
@@ -115,7 +111,7 @@ contract LendingPool is Base, LendingPoolInterface {
         // Transfers tokens
         tokenTransfer(msg.sender, amount);
 
-        markets.decreaseSupply(
+        _markets().decreaseSupply(
             address(lendingToken),
             LoansInterface(loans).collateralToken(),
             amount
@@ -203,6 +199,7 @@ contract LendingPool is Base, LendingPoolInterface {
         whenLendingPoolNotPaused(address(this))
     {
         address lender = msg.sender;
+        InterestValidatorInterface interestValidator = _interestValidator();
         require(
             address(interestValidator) == address(0x0) ||
                 interestValidator.isInterestValid(
@@ -227,38 +224,12 @@ contract LendingPool is Base, LendingPoolInterface {
     }
 
     /**
-        @notice Update the current interest validator address.
-        @param newInterestValidator the new interest validator address.
-     */
-    function setInterestValidator(address newInterestValidator)
-        external
-        whenAllowed(msg.sender)
-    {
-        require(newInterestValidator.isContract(), "VALIDATOR_MUST_CONTRACT_NT_EMPTY");
-        address oldInterestValidator = address(interestValidator);
-        oldInterestValidator.requireNotEqualTo(
-            newInterestValidator,
-            "NEW_VALIDATOR_MUST_BE_PROVIDED"
-        );
-
-        interestValidator = InterestValidatorInterface(newInterestValidator);
-
-        emit InterestValidatorUpdated(
-            msg.sender,
-            oldInterestValidator,
-            newInterestValidator
-        );
-    }
-
-    /**
         @notice It initializes the contract state variables.
         @param tTokenAddress tToken token address.
         @param lendingTokenAddress ERC20 token address.
         @param lendersAddress Lenders contract address.
         @param loansAddress Loans contract address.
         @param settingsAddress Settings contract address.
-        @param marketsAddress Markets state conntract address.
-        @param interestValidatorAddress Interest validator address. It can be 0x0.
         @dev It throws a require error if the contract is already initialized.
      */
     function initialize(
@@ -267,27 +238,20 @@ contract LendingPool is Base, LendingPoolInterface {
         address lendersAddress,
         address loansAddress,
         address cTokenAddress,
-        address settingsAddress,
-        address marketsAddress,
-        address interestValidatorAddress
+        address settingsAddress
     ) external isNotInitialized() {
         tTokenAddress.requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
         lendingTokenAddress.requireNotEmpty("TOKEN_ADDRESS_IS_REQUIRED");
         lendersAddress.requireNotEmpty("LENDERS_ADDRESS_IS_REQUIRED");
         loansAddress.requireNotEmpty("LOANS_ADDRESS_IS_REQUIRED");
-        require(
-            interestValidatorAddress.isEmpty() || interestValidatorAddress.isContract(),
-            "VAL_MUST_BE_EMPTY_OR_CONTRACT"
-        );
 
-        _initialize(settingsAddress, marketsAddress);
+        _initialize(settingsAddress);
 
         tToken = TTokenInterface(tTokenAddress);
         lendingToken = IERC20(lendingTokenAddress);
         lenders = LendersInterface(lendersAddress);
         loans = loansAddress;
         cToken = cTokenAddress;
-        interestValidator = InterestValidatorInterface(interestValidatorAddress);
     }
 
     /** Internal functions */

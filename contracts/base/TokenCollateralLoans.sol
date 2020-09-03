@@ -124,17 +124,14 @@ contract TokenCollateralLoans is LoansBase {
         @param lendingPoolAddress Contract address of the lending pool
         @param loanTermsConsensusAddress Contract adddress for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
-        @param marketsAddress Contract address to store market data.
-        @param atmSettingsAddress Contract address to get ATM settings data.
+        @param collateralTokenAddress Contract address for the collateral token.
      */
     function initialize(
         address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
-        address collateralTokenAddress,
-        address marketsAddress,
-        address atmSettingsAddress
+        address collateralTokenAddress
     ) external isNotInitialized() {
         collateralTokenAddress.requireNotEmpty("PROVIDE_COLL_TOKEN_ADDRESS");
 
@@ -142,9 +139,7 @@ contract TokenCollateralLoans is LoansBase {
             priceOracleAddress,
             lendingPoolAddress,
             loanTermsConsensusAddress,
-            settingsAddress,
-            marketsAddress,
-            atmSettingsAddress
+            settingsAddress
         );
 
         collateralToken = collateralTokenAddress;
@@ -183,7 +178,7 @@ contract TokenCollateralLoans is LoansBase {
         @param amount The amount of tokens to transfer.
      */
     function _collateralTokenTransfer(address recipient, uint256 amount) internal {
-        ERC20(collateralToken).tokenTransfer(recipient, amount);
+        ERC20Detailed(collateralToken).tokenTransfer(recipient, amount);
     }
 
     /**
@@ -192,6 +187,6 @@ contract TokenCollateralLoans is LoansBase {
         @param amount The amount to be transferred.
      */
     function _collateralTokenTransferFrom(address from, uint256 amount) internal {
-        ERC20(collateralToken).tokenTransferFrom(from, amount);
+        ERC20Detailed(collateralToken).tokenTransferFrom(from, amount);
     }
 }

@@ -3,7 +3,12 @@ pragma experimental ABIEncoderV2;
 
 import "../util/AssetSettingsLib.sol";
 import "../util/PlatformSettingsLib.sol";
+import "./MarketsStateInterface.sol";
+import "./InterestValidatorInterface.sol";
 import "./EscrowFactoryInterface.sol";
+import "./LogicVersionsRegistryInterface.sol";
+import "../providers/chainlink/IChainlinkPairAggregatorRegistry.sol";
+import "../settings/IATMSettings.sol";
 
 /**
     @notice This interface defines all function to manage the platform configuration.
@@ -118,18 +123,6 @@ interface SettingsInterface {
         address indexed assetAddress,
         uint256 oldValue,
         uint256 newValue
-    );
-
-    /**
-        @notice This event is emitted when the escrow factory is updated.
-        @param sender the transaction sender address.
-        @param oldValue the old value used for the escrow factory address.
-        @param newValue the value updated.
-     */
-    event EscrowFactoryUpdated(
-        address indexed sender,
-        address oldValue,
-        address newValue
     );
 
     /**
@@ -283,14 +276,47 @@ interface SettingsInterface {
     function requirePauserRole(address account) external view;
 
     /**
-        @notice Get the current escrow factory contract.
-        @return the current escrow factory contract.
+        @notice Get the current EscrowFactory contract.
+        @return the current EscrowFactory contract.
      */
-    function getEscrowFactory() external view returns (EscrowFactoryInterface);
+    function escrowFactory() external view returns (EscrowFactoryInterface);
+
+
+    function versionsRegistry() external view returns (LogicVersionsRegistryInterface);
+
+    function marketsState() external view returns (MarketsStateInterface);
+
+    function interestValidator() external view returns (InterestValidatorInterface);
 
     /**
-        @notice Sets a new escrow factory contract.
-        @param newEscrowFactoryAddress contract address of new escrow factory.
+        @notice Get the current ChainlinkPairAggregatorRegistry contract.
+        @return the current ChainlinkPairAggregatorRegistry contract.
      */
-    function setEscrowFactory(address newEscrowFactoryAddress) external;
+    function pairAggregatorRegistry() external view returns (IChainlinkPairAggregatorRegistry);
+
+    function atmSettings() external view returns (IATMSettings);
+
+    /**
+        @notice It initializes this settings contract instance.
+        @param escrowFactoryAddress the initial escrow factory address.
+        @param versionsRegistryAddress the initial versions registry address.
+        @param pairAggregatorRegistryAddress the initial pair aggregator registry address.
+        @param marketsStateAddress the initial markets state address.
+        @param interestValidatorAddress the initial interest validator address.
+        @param atmSettingsAddress the initial ATM settings address.
+     */
+    function initialize(
+        address escrowFactoryAddress,
+        address versionsRegistryAddress,
+        address pairAggregatorRegistryAddress,
+        address marketsStateAddress,
+        address interestValidatorAddress,
+        address atmSettingsAddress
+    ) external;
+
+    /**
+        @notice It gets the ETH address used in the platform.
+        @return the ETH address used in the platform.
+     */
+    function ETH_ADDRESS() external view returns (address);
 }

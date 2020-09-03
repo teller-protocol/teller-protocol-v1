@@ -1,7 +1,6 @@
 pragma solidity 0.5.17;
 
 // External Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Common
@@ -12,6 +11,7 @@ import "../../../util/AddressLib.sol";
 // Interfaces
 import "./IUniswap.sol";
 import "../../../providers/uniswap/IUniswapV2Router02.sol";
+import "../../BaseEscrowDapp.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -29,7 +29,7 @@ import "../../../providers/uniswap/IUniswapV2Router02.sol";
         delegatecalls from Escrow contract, so this contract's state is really Escrow.
     @author develop@teller.finance
  */
-contract Uniswap is IUniswap {
+contract Uniswap is IUniswap, BaseEscrowDapp {
     using AddressLib for address;
     using Address for address;
 
@@ -67,9 +67,8 @@ contract Uniswap is IUniswap {
         require(minDestination > 0, "UNISWAP_MIN_DESTINATION_ZERO"); // what if there is no minimum?
 
         uint256[] memory amounts;
-        uint256 balanceBeforeSwap = 0;
-        uint256 balanceAfterSwap = 0;
-        balanceBeforeSwap = IERC20(destination).balanceOf(address(this));
+        uint256 balanceBeforeSwap = _balanceOf(destination);
+
         if (source == canonicalWeth) {
             require(address(this).balance >= sourceAmount, "UNISWAP_INSUFFICIENT_ETH");
             amounts = router.swapExactETHForTokens.value(sourceAmount)(
@@ -80,7 +79,7 @@ contract Uniswap is IUniswap {
             ); 
         } else {
             require(
-                IERC20(source).balanceOf(address(this)) >= sourceAmount,
+                _balanceOf(source) >= sourceAmount,
                 "UNISWAP_INSUFFICIENT_TOKENS"
             );
             IERC20(source).approve(routerAddress, sourceAmount);
@@ -102,10 +101,15 @@ contract Uniswap is IUniswap {
                 );
             }
         }
-        balanceAfterSwap = IERC20(destination).balanceOf(address(this));
+
+        uint256 balanceAfterSwap = _balanceOf(destination);
         require(balanceAfterSwap >= (balanceBeforeSwap + minDestination), "UNISWAP_BALANCE_NOT_INCREASED");
         require(amounts.length == path.length , "UNISWAP_ERROR_SWAPPING");
         uint256 amountReceived = amounts[amounts.length - 1];
+
+         _tokenUpdated(source);
+         _tokenUpdated(destination);
+
         emit UniswapSwapped(
             msg.sender, 
             address(this),

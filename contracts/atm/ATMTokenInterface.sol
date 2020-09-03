@@ -124,8 +124,22 @@ interface ATMTokenInterface {
     function totalSupplyAt(uint256 snapshotId) external view returns (uint256);
 
     /**
-        @notice Gets the ATM address associated to this token.
-        @return the ATM address associated to this token.
+        @notice It initializes this token instance.
+        @param name The name of the ATM token
+        @param symbol The symbol of the ATM token
+        @param decimals The amount of decimals for ATM token
+        @param cap The maximum number of tokens available
+        @param maxVestingPerWallet The maximum number of times a wallet can mint their vesting
+        @param settingsAddress The ATMSettings address
+        @param atm The ATMGovernance address for this token
      */
-    function atmAddress() external view returns (address);
+    function initialize(
+        string calldata name,
+        string calldata symbol,
+        uint8 decimals,
+        uint256 cap,
+        uint256 maxVestingPerWallet,
+        address settingsAddress,
+        address atm
+    ) external;
 }
