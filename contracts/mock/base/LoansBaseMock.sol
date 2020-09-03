@@ -8,6 +8,9 @@ import "../../base/LoansBase.sol";
 contract LoansBaseMock is LoansBase, BaseMock {
     mapping(uint256 => TellerCommon.LoanCollateralInfo) internal mockCollateralInfo;
 
+    function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
+        internal
+    {}
 
     function externalPayLoan(uint256 loanID, uint256 toPay) external {
         _payLoan(loanID, toPay);
@@ -100,6 +103,16 @@ contract LoansBaseMock is LoansBase, BaseMock {
         );
     }
 
+    function depositCollateral(address borrower, uint256 loanID, uint256 amount)
+        external
+        payable
+    {}
+
+    function createLoanWithTerms(
+        TellerCommon.LoanRequest calldata request,
+        TellerCommon.LoanResponse[] calldata responses,
+        uint256 collateralAmount
+    ) external payable {}
 
     function externalCreateEscrow(uint256 loanID) external returns (address) {
         return super._createEscrow(loanID);
