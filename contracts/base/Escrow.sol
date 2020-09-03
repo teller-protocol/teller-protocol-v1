@@ -96,7 +96,7 @@ contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, Ba
         uint256 valueInEth = 0;
 
         for (uint i = 0; i < tokens.length; i++) {
-            uint256 tokenEthValue = _valueOfIn(tokens[i], 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, _balanceOf(tokens[i]));
+            uint256 tokenEthValue = _valueOfIn(tokens[i], settings().ETH_ADDRESS(), _balanceOf(tokens[i]));
             valueInEth = valueInEth.add(tokenEthValue);
         }
 
@@ -107,14 +107,14 @@ contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, Ba
             collateralValue = collateralValue.sub(buffer);
         }
 
-        if (loans.collateralToken() == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
+        if (loans.collateralToken() == settings().ETH_ADDRESS()) {
             valueInEth = valueInEth.add(collateralValue);
         } else {
-            uint256 collateralEthValue = _valueOfIn(loans.collateralToken(), 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, collateralValue);
+            uint256 collateralEthValue = _valueOfIn(loans.collateralToken(), settings().ETH_ADDRESS(), collateralValue);
             valueInEth = valueInEth.add(collateralEthValue);
         }
 
-        uint256 valueInToken = _valueOfIn(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, loans.lendingToken(), valueInEth);
+        uint256 valueInToken = _valueOfIn(settings().ETH_ADDRESS(), loans.lendingToken(), valueInEth);
 
         return TellerCommon.EscrowValue({
             valueInEth: valueInEth,
@@ -164,7 +164,7 @@ contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, Ba
     /** Internal Functions */
 
     function _valueOfIn(address baseAddress, address quoteAddress, uint256 baseAmount) internal view returns (uint256) {
-        uint8 baseDecimals = baseAddress == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? 18 : ERC20Detailed(baseAddress).decimals();
+        uint8 baseDecimals = baseAddress == settings().ETH_ADDRESS() ? 18 : ERC20Detailed(baseAddress).decimals();
         PairAggregatorInterface aggregator = _getAggregatorFor(baseAddress, quoteAddress);
         uint256 oneTokenPrice = uint256(aggregator.getLatestAnswer());
         // TODO: better way with SafeMath?

@@ -45,7 +45,7 @@ contract("BaseLoansCreateEscrowTest", function(accounts) {
   });
 
   withData({
-    _1_valid: [ 1234, 1, false, null ]
+    _1_call_escrow_factory_create_escrow: [ 1234, 1, false, null ]
   }, function(
     loanID,
     borrowerIndex,
