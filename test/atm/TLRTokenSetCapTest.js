@@ -1,8 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t  } = require('../utils/consts');
-const Timer = require('../../scripts/utils/Timer');
-const { atmToken } = require('../utils/events');
+const { tlrToken } = require('../utils/events');
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
@@ -10,19 +9,17 @@ const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEnc
  const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const ATMToken = artifacts.require("./ATMToken.sol");
+const TLRToken = artifacts.require("./TLRToken.sol");
 
-contract('ATMTokenWithdrawVestedTest', function (accounts) {
+contract('TLRTokenSetCapTest', function (accounts) {
     const atmSettingsEncoder = new IATMSettingsEncoder(web3);
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
-    let settingsInstance;
     let atmSettingsInstance;
     let atmInstance;
     let instance;
+    let settingsInstance;
     const daoAgent = accounts[0];
     const daoMember1 = accounts[2];
-    const daoMember2 = accounts[3];
-    const timer = new Timer(web3);
 
     beforeEach('Setup for each test', async () => {
         settingsInstance = await Mock.new();
@@ -32,12 +29,12 @@ contract('ATMTokenWithdrawVestedTest', function (accounts) {
             settingsInstance.address
         );
         atmInstance = await Mock.new();
-        instance = await ATMToken.new();
+        instance = await TLRToken.new();
         await instance.initialize(
-                            "ATMToken",
-                            "ATMT",
-                            18,
-                            10000,
+                            "Teller Token",
+                            "TLR",
+                            18, 
+                            10000, 
                             50,
                             settingsInstance.address,
                             atmInstance.address
@@ -49,38 +46,42 @@ contract('ATMTokenWithdrawVestedTest', function (accounts) {
     });
 
     withData({
-        _1_claim_vested_basic: [daoMember2, 1000, 2500, 7000, 7001, undefined, false],
-        _2_claim_vested_before_deadline_after_cliff: [daoMember2, 1000, 3000, 7000, 5000, undefined, false],
-        _3_claim_vested_no_amount: [daoMember1, 1000, 4000, 7000, 8000, 'ACCOUNT_DOESNT_HAVE_VESTING', true]
+        _1_set_supply_cap_basic: [true, 70000, daoAgent, undefined, false],
+        _2_set_supply_cap_invalid_sender: [false, 100000, daoMember1, 'NOT_PAUSER', true]
     },function(
-        receipent,
-        amount,
-        cliff,
-        vestingPeriod,
-        claimTime,
+        isOwner,
+        newCap,
+        sender,
         expectedErrorMessage,
         mustFail
     ) {
-        it(t('user', 'withdrawVested', 'Should or should not be able to claim correctly', mustFail), async function() {
+        it(t('agent', 'setCap', 'Should or should not be able to set cap correctly', mustFail), async function() {
+            if(!isOwner) {
+                await settingsInstance.givenMethodRevertWithMessage(
+                    settingsInterfaceEncoder.encodeRequirePauserRole(),
+                    'NOT_PAUSER'
+                );
+            }
+            await atmSettingsInstance.givenMethodReturnBool(
+                atmSettingsEncoder.encodeIsATMPaused(),
+                false
+            );
 
-        // Setup 
-        await instance.mintVesting(daoMember2, amount, cliff, vestingPeriod, { from: daoAgent });
-        await atmSettingsInstance.givenMethodReturnBool(
-            atmSettingsEncoder.encodeIsATMPaused(),
-            false
-        );
-            
             try {
                 // Invocation
-                const currentTime = await timer.getCurrentTimestampInSeconds();
-                await timer.advanceBlockAtTime(currentTime + claimTime);
-                const result = await instance.withdrawVested({ from: receipent });
+                const result = await instance.setCap(newCap, { from: sender });
+                const cap = await instance.cap();
                 // Assertions
-                assert(!mustFail, 'It should have failed because the account is not vested');
+                assert(!mustFail, 'It should have failed because the sender is invalid');
+                assert.equal(
+                    cap,
+                    newCap,
+                    'New supply cap not set!'
+                );
+                tlrToken
+                    .newCap(result)
+                    .emitted(newCap);
                 assert(result);
-                atmToken
-                    .vestingClaimed(result)
-                    .emitted(receipent, amount);
             } catch (error) {
                 // Assertions
                 assert(mustFail);

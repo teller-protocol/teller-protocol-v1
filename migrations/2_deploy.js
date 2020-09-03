@@ -35,7 +35,7 @@ const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 // ATM Smart contracts
 const ATMFactory = artifacts.require("./atm/ATMFactory.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
-const ATMToken = artifacts.require("./atm/ATMToken.sol");
+const TLRToken = artifacts.require("./atm/TLRToken.sol");
 // External providers
 const ChainlinkPairAggregatorRegistry = artifacts.require("./providers/chainlink/ChainlinkPairAggregatorRegistry.sol");
 const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
@@ -76,7 +76,7 @@ module.exports = async function(deployer, network, accounts) {
     { Contract: Escrow, name: logicNames.Escrow },
     { Contract: ChainlinkPairAggregator, name: logicNames.ChainlinkPairAggregator },
     { Contract: ATMGovernance, name: logicNames.ATMGovernance },
-    { Contract: ATMToken, name: logicNames.ATMToken },
+    { Contract: TLRToken, name: logicNames.TLRToken },
     // Initializables
     { Contract: EscrowFactory, name: logicNames.EscrowFactory },
     { Contract: ChainlinkPairAggregatorRegistry, name: logicNames.ChainlinkPairAggregatorRegistry },

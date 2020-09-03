@@ -1,8 +1,8 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t  } = require('../utils/consts');
-const { atmToken } = require('../utils/events');
 const Timer = require('../../scripts/utils/Timer');
+const { tlrToken } = require('../utils/events');
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
@@ -10,9 +10,9 @@ const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEnc
  const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const ATMToken = artifacts.require("./ATMToken.sol");
+const TLRToken = artifacts.require("./TLRToken.sol");
 
-contract('ATMTokenRevokeVestingTest', function (accounts) {
+contract('TLRTokenWithdrawVestedTest', function (accounts) {
     const atmSettingsEncoder = new IATMSettingsEncoder(web3);
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     let settingsInstance;
@@ -27,11 +27,15 @@ contract('ATMTokenRevokeVestingTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         settingsInstance = await Mock.new();
         atmSettingsInstance = await Mock.new();
+        await atmSettingsInstance.givenMethodReturnAddress(
+            atmSettingsEncoder.encodeSettings(),
+            settingsInstance.address
+        );
         atmInstance = await Mock.new();
-        instance = await ATMToken.new();
+        instance = await TLRToken.new();
         await instance.initialize(
-                            "ATMToken",
-                            "ATMT",
+                            "Teller Token",
+                            "TLR",
                             18,
                             10000,
                             50,
@@ -45,42 +49,38 @@ contract('ATMTokenRevokeVestingTest', function (accounts) {
     });
 
     withData({
-        _1_revoke_vested_basic: [true, daoAgent, daoMember1, 1000, 3000, 7000, undefined, false],
-        _2_revoke_vested_no_amount: [true, daoAgent, daoMember2, 1000, 1750, 7000, "ACCOUNT_DOESNT_HAVE_VESTING", true],
-        _3_revoke_vested_invalid_sender: [false, daoMember1, daoMember2, 1000, 1750, 7000, "NOT_PAUSER", true],
+        _1_claim_vested_basic: [daoMember2, 1000, 2500, 7000, 7001, undefined, false],
+        _2_claim_vested_before_deadline_after_cliff: [daoMember2, 1000, 3000, 7000, 5000, undefined, false],
+        _3_claim_vested_no_amount: [daoMember1, 1000, 4000, 7000, 8000, 'ACCOUNT_DOESNT_HAVE_VESTING', true]
     },function(
-        senderHasPauserRole,
-        sender,
         receipent,
         amount,
         cliff,
         vestingPeriod,
+        claimTime,
         expectedErrorMessage,
         mustFail
     ) {
-        it(t('agent', 'revokeVesting', 'Should or be able to revoke correctly', mustFail), async function() {
-            // Setup
-            await instance.mintVesting(daoMember1, amount, cliff, vestingPeriod, { from: daoAgent });
-            const deadline = await timer.getCurrentTimestampInSecondsAndSum(vestingPeriod);
-            await atmSettingsInstance.givenMethodReturnBool(
-                atmSettingsEncoder.encodeIsATMPaused(),
-                false
-            );
-            if(!senderHasPauserRole) {
-                await settingsInstance.givenMethodRevertWithMessage(
-                    settingsInterfaceEncoder.encodeRequirePauserRole(),
-                    "NOT_PAUSER"
-                );
-            }
+        it(t('user', 'withdrawVested', 'Should or should not be able to claim correctly', mustFail), async function() {
 
+        // Setup 
+        await instance.mintVesting(daoMember2, amount, cliff, vestingPeriod, { from: daoAgent });
+        await atmSettingsInstance.givenMethodReturnBool(
+            atmSettingsEncoder.encodeIsATMPaused(),
+            false
+        );
+            
             try {
                 // Invocation
-                const result = await instance.revokeVesting(receipent, 0, { from: sender });
+                const currentTime = await timer.getCurrentTimestampInSeconds();
+                await timer.advanceBlockAtTime(currentTime + claimTime);
+                const result = await instance.withdrawVested({ from: receipent });
                 // Assertions
                 assert(!mustFail, 'It should have failed because the account is not vested');
-                atmToken
-                    .revokeVesting(result)
-                    .emitted(receipent, amount, deadline);
+                assert(result);
+                tlrToken
+                    .vestingClaimed(result)
+                    .emitted(receipent, amount);
             } catch (error) {
                 // Assertions
                 assert(mustFail);

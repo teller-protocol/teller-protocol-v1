@@ -15,6 +15,6 @@ module.exports = {
     ATMFactory: 'ATMFactory',
     ATMSettings: 'ATMSettings',
     ATMGovernance: 'ATMGovernance',
-    ATMToken: 'ATMToken',
+    TLRToken: 'TLRToken',
     MarketFactory: 'MarketFactory',
 }

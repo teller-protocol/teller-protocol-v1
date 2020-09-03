@@ -337,7 +337,7 @@ module.exports = {
             };
         },
     },
-    atmToken: {
+    tlrToken: {
         newCap: tx => {
             const name = 'NewCap';
             return {
@@ -713,7 +713,7 @@ module.exports = {
                 emitted: (sender, atm, token) => emitted(tx, name, ev => {
                     assert.equal(ev.creator, sender);
                     assert.equal(ev.atmGovernanceAddress, atm);
-                    assert.equal(ev.atmTokenAddress, token);
+                    assert.equal(ev.tlrTokenAddress, token);
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
