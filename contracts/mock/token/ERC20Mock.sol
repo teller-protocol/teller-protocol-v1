@@ -4,7 +4,6 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Deta
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Burnable.sol";
 
-
 contract ERC20Mock is ERC20Detailed, ERC20Mintable, ERC20Burnable {
     constructor(
         string memory aName,

@@ -11,7 +11,6 @@ import "../../interfaces/PairAggregatorInterface.sol";
     @author develop@teller.finance
  */
 interface IChainlinkPairAggregatorRegistry {
-
     /**
         @notice This event is emitted when a new pair aggregator is registered.
         @param sender the sender address.
@@ -47,34 +46,33 @@ interface IChainlinkPairAggregatorRegistry {
         @param request the input data to register the new pair aggregator.
         @return the new pair aggregator created.
      */
-    function registerPairAggregator(TellerCommon.PairAggregatorRegisterRequest calldata request)
-        external
-        returns (PairAggregatorInterface aggregator);
+    function registerPairAggregator(
+        TellerCommon.PairAggregatorRegisterRequest calldata request
+    ) external returns (PairAggregatorInterface aggregator);
 
     /**
         @notice It registers new pair aggregators for given markets.
         @param requests the input data to register the new pair aggregator.
         @return the new pair aggregator addresses.
      */
-    function registerPairAggregators(TellerCommon.PairAggregatorRegisterRequest[] calldata requests)
-        external
-        returns (PairAggregatorInterface[] memory newAggregators);
+    function registerPairAggregators(
+        TellerCommon.PairAggregatorRegisterRequest[] calldata requests
+    ) external returns (PairAggregatorInterface[] memory newAggregators);
 
     /**
         @notice It updates a current pair aggregator for a given market.
         @param request the input data to register the new pair aggregator.
         @return the new pair aggregator created.
      */
-    function updatePairAggregator(TellerCommon.PairAggregatorRegisterRequest calldata request)
-        external
-        returns (PairAggregatorInterface aggregator);
+    function updatePairAggregator(
+        TellerCommon.PairAggregatorRegisterRequest calldata request
+    ) external returns (PairAggregatorInterface aggregator);
 
     /**
         @notice It initializes this registry contract.
         @param settingsAddress this settings address.
      */
-    function initialize(address settingsAddress)
-        external;
+    function initialize(address settingsAddress) external;
 
     /**
         @notice Gets a pair aggregator for a given base and quote tokens (a market).
@@ -82,7 +80,10 @@ interface IChainlinkPairAggregatorRegistry {
         @notice quoteToken the quote token address.
         @return the pair aggregator address for the given base and quote addresses.
      */
-    function getPairAggregator(address baseToken, address quoteToken) external view returns (PairAggregatorInterface);
+    function getPairAggregator(address baseToken, address quoteToken)
+        external
+        view
+        returns (PairAggregatorInterface);
 
     /**
         @notice Tests whether a pair aggregator exists for a given base and quote tokens (a market) or not.
@@ -90,5 +91,8 @@ interface IChainlinkPairAggregatorRegistry {
         @notice quoteToken the quote token address.
         @return true if the pair aggregator address for the given base and quote tokens is not 0x0. Otherwise it returns false.
      */
-    function hasPairAggregator(address baseToken, address quoteToken) external view returns (bool);
+    function hasPairAggregator(address baseToken, address quoteToken)
+        external
+        view
+        returns (bool);
 }

@@ -15,7 +15,6 @@ import "../base/BaseUpgradeable.sol";
 // Interfaces
 import "./ATMGovernanceInterface.sol";
 
-
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
 /**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
@@ -31,7 +30,12 @@ import "./ATMGovernanceInterface.sol";
 
     @author develop@teller.finance
  */
-contract ATMGovernance is ATMGovernanceInterface, TInitializable, SignerRole, BaseUpgradeable {
+contract ATMGovernance is
+    ATMGovernanceInterface,
+    TInitializable,
+    SignerRole,
+    BaseUpgradeable
+{
     using AddressArrayLib for address[];
     using AddressLib for address;
     using Address for address;
@@ -98,7 +102,11 @@ contract ATMGovernance is ATMGovernanceInterface, TInitializable, SignerRole, Ba
         @notice Removes a General Setting from this ATM.
         @param settingName name of the setting to be removed.
      */
-    function removeGeneralSetting(bytes32 settingName) external onlySigner() isInitialized() {
+    function removeGeneralSetting(bytes32 settingName)
+        external
+        onlySigner()
+        isInitialized()
+    {
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
         require(generalSettings[settingName] > 0, "GENERAL_SETTING_NOT_FOUND");
         uint256 previousValue = generalSettings[settingName];
@@ -269,7 +277,10 @@ contract ATMGovernance is ATMGovernanceInterface, TInitializable, SignerRole, Ba
         @param settingsAddress the initial settings address.
         @param ownerAddress the owner address for this ATM Governance.
      */
-    function initialize(address settingsAddress, address ownerAddress) external isNotInitialized() {
+    function initialize(address settingsAddress, address ownerAddress)
+        external
+        isNotInitialized()
+    {
         _setSettings(settingsAddress);
 
         SignerRole.initialize(ownerAddress);

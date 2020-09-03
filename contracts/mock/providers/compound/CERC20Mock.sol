@@ -55,7 +55,10 @@ contract CERC20Mock is ERC20Mock {
         uint256 tokenAmount = _getTokensAmount(redeemAmount);
         require(super.transfer(msg.sender, tokenAmount), "UNDERLYING_TRANSFER_FAILED");
         super.burn(redeemAmount);
-        require(((ERC20Mock(address(underlying))).mint(msg.sender, redeemAmount)), "UNDERLYING_MINT_FAILED");
+        require(
+            ((ERC20Mock(address(underlying))).mint(msg.sender, redeemAmount)),
+            "UNDERLYING_MINT_FAILED"
+        );
         if (SIMULATE_COMPOUND_REDEEM_UNDERLYING_RETURN_ERROR == redeemAmount) {
             return RETURN_ERROR;
         }

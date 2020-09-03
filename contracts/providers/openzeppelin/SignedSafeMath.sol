@@ -2,7 +2,6 @@
 
 pragma solidity 0.5.17;
 
-
 /**
  * @title SignedSafeMath
  * @dev Signed math operations with safety checks that revert on error.

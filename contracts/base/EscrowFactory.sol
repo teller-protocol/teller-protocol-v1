@@ -78,14 +78,12 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         TellerCommon.Loan memory loan = LoansInterface(loansAddress).loans(loanID);
         require(loan.escrow == address(0x0), "LOAN_ESCROW_ALREADY_EXISTS");
 
-        bytes32 escrowLogicName = settings().versionsRegistry().consts().ESCROW_LOGIC_NAME();
+        bytes32 escrowLogicName = settings()
+            .versionsRegistry()
+            .consts()
+            .ESCROW_LOGIC_NAME();
         escrowAddress = address(new DynamicProxy(address(settings()), escrowLogicName));
-        emit EscrowCreated(
-            loan.loanTerms.borrower,
-            loansAddress,
-            loanID,
-            escrowAddress
-        );
+        emit EscrowCreated(loan.loanTerms.borrower, loansAddress, loanID, escrowAddress);
     }
 
     /**
@@ -137,10 +135,7 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         @notice It initializes this escrow contract factory instance.
         @param settingsAddress the settings contract address.
      */
-    function initialize(address settingsAddress)
-        external
-        isNotInitialized()
-    {
+    function initialize(address settingsAddress) external isNotInitialized() {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
 
         _initialize();

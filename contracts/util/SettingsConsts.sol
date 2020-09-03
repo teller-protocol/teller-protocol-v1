@@ -1,6 +1,5 @@
 pragma solidity 0.5.17;
 
-
 // Libraries
 
 // Commons
@@ -58,7 +57,8 @@ contract SettingsConsts {
         @notice The setting name for the request loan terms rate limit settings.
         @notice The request loan terms rate limit setting is defined in seconds.
      */
-    bytes32 public constant REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING = "RequestLoanTermsRateLimit";
+    bytes32
+        public constant REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING = "RequestLoanTermsRateLimit";
 
     /**
         @notice The setting name for the collateral buffer.

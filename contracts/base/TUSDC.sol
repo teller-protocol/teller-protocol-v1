@@ -2,7 +2,6 @@ pragma solidity 0.5.17;
 
 import "./TToken.sol";
 
-
 /**
  * @notice This contract represents USDC token within the Teller protocol
  *

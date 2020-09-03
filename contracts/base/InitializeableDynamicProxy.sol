@@ -6,7 +6,7 @@ import "./BaseDynamicProxy.sol";
 
 contract InitializeableDynamicProxy is BaseDynamicProxy, BaseUpgradeabilityProxy {
     function initializeProxy(address settingsAddress, bytes32 aLogicName) public {
-        require(!__isInitialized(), 'DYNAMIC_PROXY_ALREADY_INITIALIZED');
+        require(!__isInitialized(), "DYNAMIC_PROXY_ALREADY_INITIALIZED");
 
         _setSettings(settingsAddress);
         _setLogicName(aLogicName);

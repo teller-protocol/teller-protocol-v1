@@ -27,7 +27,11 @@ import "../interfaces/LogicVersionsRegistryInterface.sol";
 
     @author develop@teller.finance
  */
-contract LogicVersionsRegistry is LogicVersionsRegistryInterface, TInitializable, BaseUpgradeable {
+contract LogicVersionsRegistry is
+    LogicVersionsRegistryInterface,
+    TInitializable,
+    BaseUpgradeable
+{
     using LogicVersionLib for LogicVersionLib.LogicVersion;
 
     /** Constants */
@@ -56,7 +60,11 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface, TInitializable
         @param logicName logic name to create.
         @param logic the logic address value for the given logic name.
      */
-    function createLogicVersion(bytes32 logicName, address logic) external onlyPauser() isInitialized() {
+    function createLogicVersion(bytes32 logicName, address logic)
+        external
+        onlyPauser()
+        isInitialized()
+    {
         require(logicName != "", "LOGIC_NAME_MUST_BE_PROVIDED");
         logicVersions[logicName].initialize(logic);
 
@@ -134,10 +142,7 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface, TInitializable
         @notice It initializes this logic versions registry contract instance.
         @param settingsAddress the settings contract address.
      */
-    function initialize(address settingsAddress)
-        external
-        isNotInitialized()
-    {
+    function initialize(address settingsAddress) external isNotInitialized() {
         _initialize();
 
         _setSettings(settingsAddress);

@@ -5,7 +5,6 @@ pragma solidity 0.5.17;
     @author develop@teller.finance
  */
 interface IUniswap {
-
     /**
         @notice Swaps ETH/Tokens for Tokens/ETH using the Uniswap protocol.
         @param canonicalWeth address of the canonical WETH in the current network.
@@ -22,8 +21,8 @@ interface IUniswap {
         address canonicalWeth,
         address routerAddress,
         address[] calldata path,
-        uint sourceAmount,
-        uint minDestination
+        uint256 sourceAmount,
+        uint256 minDestination
     ) external;
 
     /**

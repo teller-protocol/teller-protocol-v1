@@ -1,13 +1,11 @@
 pragma solidity 0.5.17;
 
-
 /**
     @notice This interface defines the functions to manage the Escrow contracts associated to borrowers and loans.
 
     @author develop@teller.finance
  */
 interface EscrowFactoryInterface {
-
     /**
         @notice It tests whether a dapp address exists in the factory or not.
         @param dapp dapp address to test.
@@ -21,9 +19,7 @@ interface EscrowFactoryInterface {
         @param loanID loan id to associate to the new escrow instance.
         @return the new escrow instance.
      */
-    function createEscrow(address borrower, uint256 loanID)
-        external
-        returns (address);
+    function createEscrow(address borrower, uint256 loanID) external returns (address);
 
     /**
         @notice It adds a new dapp to the factory.

@@ -7,7 +7,6 @@ import "./Consensus.sol";
 // Interfaces
 import "../interfaces/LoanTermsConsensusInterface.sol";
 
-
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
 /**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
@@ -33,7 +32,8 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
             @address(0x123...567) => 2 => AccruedLoanTerms({...})
             @address(0x234...678) => 1 => AccruedLoanTerms({...})
      */
-    mapping(address => mapping(uint256 => TellerCommon.AccruedLoanTerms)) public termSubmissions;
+    mapping(address => mapping(uint256 => TellerCommon.AccruedLoanTerms))
+        public termSubmissions;
 
     /**
         This mapping identify the last request timestamp for a given borrower address.
@@ -59,7 +59,11 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
         external
         isInitialized()
         isCaller(msg.sender)
-        returns (uint256 interestRate, uint256 collateralRatio, uint256 maxLoanAmount)
+        returns (
+            uint256 interestRate,
+            uint256 collateralRatio,
+            uint256 maxLoanAmount
+        )
     {
         require(
             responses.length >=

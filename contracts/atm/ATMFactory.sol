@@ -7,12 +7,10 @@ import "../util/AddressArrayLib.sol";
 import "../base/TInitializable.sol";
 import "../base/DynamicProxy.sol";
 
-
 // Interfaces
 import "./TLRTokenInterface.sol";
 import "./ATMGovernanceInterface.sol";
 import "../atm/ATMFactoryInterface.sol";
-
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -61,12 +59,22 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
         uint256 maxVestingPerWallet
     ) external onlyPauser() isInitialized() returns (address) {
         address owner = msg.sender;
-        
-        bytes32 tlrTokenLogicName = settings().versionsRegistry().consts().TLR_TOKEN_LOGIC_NAME();
-        TLRTokenInterface tlrTokenProxy = TLRTokenInterface(address(new DynamicProxy(address(settings()), tlrTokenLogicName)));
 
-        bytes32 atmGovernanceLogicName = settings().versionsRegistry().consts().ATM_GOVERNANCE_LOGIC_NAME();
-        ATMGovernanceInterface atmGovernanceProxy = ATMGovernanceInterface(address(new DynamicProxy(address(settings()), atmGovernanceLogicName)));
+        bytes32 tlrTokenLogicName = settings()
+            .versionsRegistry()
+            .consts()
+            .TLR_TOKEN_LOGIC_NAME();
+        TLRTokenInterface tlrTokenProxy = TLRTokenInterface(
+            address(new DynamicProxy(address(settings()), tlrTokenLogicName))
+        );
+
+        bytes32 atmGovernanceLogicName = settings()
+            .versionsRegistry()
+            .consts()
+            .ATM_GOVERNANCE_LOGIC_NAME();
+        ATMGovernanceInterface atmGovernanceProxy = ATMGovernanceInterface(
+            address(new DynamicProxy(address(settings()), atmGovernanceLogicName))
+        );
         atmGovernanceProxy.initialize(address(settings()), owner);
         address atmGovernanceProxyAddress = address(atmGovernanceProxy);
 
@@ -95,10 +103,7 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
         @notice It initializes this ATM Governance Factory instance.
         @param settingsAddress settings address.
      */
-    function initialize(address settingsAddress)
-        external
-        isNotInitialized()
-    {
+    function initialize(address settingsAddress) external isNotInitialized() {
         _setSettings(settingsAddress);
 
         _initialize();

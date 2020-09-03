@@ -1,6 +1,5 @@
 pragma solidity 0.5.17;
 
-
 /**
     @notice This interface defines the functions to work with Oracle feeds.
 

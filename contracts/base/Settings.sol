@@ -119,7 +119,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @notice The markets state.
      */
     MarketsStateInterface public marketsState;
-    
+
     /**
         @notice The current interest validator.
      */
@@ -176,7 +176,11 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @notice Removes a current platform setting given a setting name.
         @param settingName to remove.
      */
-    function removePlatformSetting(bytes32 settingName) external onlyPauser() isInitialized() {
+    function removePlatformSetting(bytes32 settingName)
+        external
+        onlyPauser()
+        isInitialized()
+    {
         uint256 oldValue = platformSettings[settingName].value;
         platformSettings[settingName].remove();
 
@@ -416,13 +420,13 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         address marketsStateAddress,
         address interestValidatorAddress,
         address atmSettingsAddress
-    )
-        external
-        isNotInitialized()
-    {
+    ) external isNotInitialized() {
         require(escrowFactoryAddress.isContract(), "ESCROW_FACTORY_MUST_BE_CONTRACT");
         require(versionsRegistryAddress.isContract(), "VERS_REGISTRY_MUST_BE_CONTRACT");
-        require(pairAggregatorRegistryAddress.isContract(), "AGGR_REGISTRY_MUST_BE_CONTRACT");
+        require(
+            pairAggregatorRegistryAddress.isContract(),
+            "AGGR_REGISTRY_MUST_BE_CONTRACT"
+        );
         require(marketsStateAddress.isContract(), "MARKETS_STATE_MUST_BE_CONTRACT");
         require(
             interestValidatorAddress.isEmpty() || interestValidatorAddress.isContract(),
@@ -435,7 +439,9 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
 
         escrowFactory = EscrowFactoryInterface(escrowFactoryAddress);
         versionsRegistry = LogicVersionsRegistryInterface(versionsRegistryAddress);
-        pairAggregatorRegistry = IChainlinkPairAggregatorRegistry(pairAggregatorRegistryAddress);
+        pairAggregatorRegistry = IChainlinkPairAggregatorRegistry(
+            pairAggregatorRegistryAddress
+        );
         marketsState = MarketsStateInterface(marketsStateAddress);
         interestValidator = InterestValidatorInterface(interestValidatorAddress);
         atmSettings = IATMSettings(atmSettingsAddress);

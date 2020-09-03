@@ -2,7 +2,6 @@ pragma solidity 0.5.17;
 
 import "../interfaces/SettingsInterface.sol";
 
-
 // Libraries
 
 // Commons

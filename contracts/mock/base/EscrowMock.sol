@@ -34,7 +34,9 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
         _setSettings(settingsAddress);
     }
 
-    function mockBorrowerAndStatus(address borrower, TellerCommon.LoanStatus loanStatus) public {
+    function mockBorrowerAndStatus(address borrower, TellerCommon.LoanStatus loanStatus)
+        public
+    {
         _borrower = borrower;
         _loanStatus = loanStatus;
     }
@@ -49,7 +51,11 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
 
     function externalIsOwner() external onlyOwner() {}
 
-    function testImplementationFunctionMultiply(uint256 num1, uint256 num2) external pure returns (uint256) {
+    function testImplementationFunctionMultiply(uint256 num1, uint256 num2)
+        external
+        pure
+        returns (uint256)
+    {
         return num1 * num2;
     }
 
@@ -69,16 +75,28 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
         TInitializable._initialize();
     }
 
-    function mockValueOfIn(address base, address quote, uint256 value) external {
+    function mockValueOfIn(
+        address base,
+        address quote,
+        uint256 value
+    ) external {
         _mockValueOfIn = true;
         _valueOfInMapMock[base][quote] = value;
     }
 
-    function externalValueOfIn(address baseAddress, address quoteAddress, uint256 baseAmount) external returns (uint256) {
+    function externalValueOfIn(
+        address baseAddress,
+        address quoteAddress,
+        uint256 baseAmount
+    ) external returns (uint256) {
         return super._valueOfIn(baseAddress, quoteAddress, baseAmount);
     }
 
-    function _valueOfIn(address baseAddress, address quoteAddress, uint256 baseAmount) internal view returns (uint256) {
+    function _valueOfIn(
+        address baseAddress,
+        address quoteAddress,
+        uint256 baseAmount
+    ) internal view returns (uint256) {
         if (_mockValueOfIn) {
             return _valueOfInMapMock[baseAddress][quoteAddress];
         } else {
@@ -90,7 +108,11 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
         mockedAggregator = aggregatorAddress;
     }
 
-    function _getAggregatorFor(address base, address quote) internal view returns (PairAggregatorInterface) {
+    function _getAggregatorFor(address base, address quote)
+        internal
+        view
+        returns (PairAggregatorInterface)
+    {
         if (mockedAggregator != address(0x0)) {
             return PairAggregatorInterface(mockedAggregator);
         } else {
@@ -98,7 +120,10 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
         }
     }
 
-    function externalGetAggregatorFor(address base, address quote) external returns (PairAggregatorInterface) {
+    function externalGetAggregatorFor(address base, address quote)
+        external
+        returns (PairAggregatorInterface)
+    {
         return _getAggregatorFor(base, quote);
     }
 }

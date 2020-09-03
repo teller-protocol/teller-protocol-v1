@@ -100,7 +100,8 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
     ) external onlyPauser() isInitialized() {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
-            collateralToken == settings().ETH_ADDRESS() || collateralToken.isContract() == true,
+            collateralToken == settings().ETH_ADDRESS() ||
+                collateralToken.isContract() == true,
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
         require(
@@ -126,7 +127,8 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
     ) external onlyPauser() isInitialized() {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
-            collateralToken == settings().ETH_ADDRESS() || collateralToken.isContract() == true,
+            collateralToken == settings().ETH_ADDRESS() ||
+                collateralToken.isContract() == true,
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
         require(
@@ -163,7 +165,8 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
     {
         require(borrowedToken.isContract() == true, "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
-            collateralToken == settings().ETH_ADDRESS() || collateralToken.isContract() == true,
+            collateralToken == settings().ETH_ADDRESS() ||
+                collateralToken.isContract() == true,
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
         require(
@@ -216,10 +219,7 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
         @notice It initializes this ATM Settings instance.
         @param settingsAddress settings address.
      */
-    function initialize(address settingsAddress)
-        external
-        isNotInitialized()
-    {
+    function initialize(address settingsAddress) external isNotInitialized() {
         _setSettings(settingsAddress);
 
         TInitializable._initialize();

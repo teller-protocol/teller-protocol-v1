@@ -2,7 +2,6 @@ pragma solidity 0.5.17;
 
 import "./NumbersList.sol";
 
-
 /**
  * @dev Library of structs common across the Teller protocol
  *

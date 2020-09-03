@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 // Contracts
 import "./LoansBase.sol";
 
-
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
 /**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
@@ -45,7 +44,11 @@ contract TokenCollateralLoans is LoansBase {
      * @param loanID The ID of the loan the collateral is for
      * @param amount The amount to deposit as collateral.
      */
-    function depositCollateral(address borrower, uint256 loanID, uint256 amount)
+    function depositCollateral(
+        address borrower,
+        uint256 loanID,
+        uint256 amount
+    )
         external
         payable
         noMsgValue()
@@ -151,9 +154,11 @@ contract TokenCollateralLoans is LoansBase {
         @param loanID The ID of the loan the collateral is for
         @param amount The amount of collateral to be paid
      */
-    function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
-        internal
-    {
+    function _payOutCollateral(
+        uint256 loanID,
+        uint256 amount,
+        address payable recipient
+    ) internal {
         totalCollateral = totalCollateral.sub(amount);
         loans[loanID].collateral = loans[loanID].collateral.sub(amount);
 

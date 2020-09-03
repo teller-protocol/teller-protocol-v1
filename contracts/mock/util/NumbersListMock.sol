@@ -3,7 +3,6 @@ pragma solidity 0.5.17;
 // We import the contract so truffle compiles it, and we have the ABI available when working with it.
 import "../../util/NumbersList.sol";
 
-
 contract NumbersListMock {
     using NumbersList for NumbersList.Values;
 

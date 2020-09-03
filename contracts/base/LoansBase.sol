@@ -221,7 +221,9 @@ contract LoansBase is LoansInterface, Base {
 
         require(
             loans[loanID].lastCollateralIn <=
-                now.sub(settings().getPlatformSettingValue(consts.SAFETY_INTERVAL_SETTING())),
+                now.sub(
+                    settings().getPlatformSettingValue(consts.SAFETY_INTERVAL_SETTING())
+                ),
             "COLLATERAL_DEPOSITED_RECENTLY"
         );
 
@@ -234,7 +236,9 @@ contract LoansBase is LoansInterface, Base {
             .div(DAYS_PER_YEAR_4DP);
 
         // check that enough collateral has been provided for this loan
-        TellerCommon.LoanCollateralInfo memory collateralInfo = _getCollateralInfo(loanID);
+        TellerCommon.LoanCollateralInfo memory collateralInfo = _getCollateralInfo(
+            loanID
+        );
 
         require(!collateralInfo.moreCollateralRequired, "MORE_COLLATERAL_REQUIRED");
 
@@ -362,7 +366,11 @@ contract LoansBase is LoansInterface, Base {
         @return bool weather the loan can be liquidated
      */
     function canLiquidateLoan(uint256 loanID) public view returns (bool) {
-        if (_isPaused() || _isPoolPaused(address(lendingPool)) || loans[loanID].status != TellerCommon.LoanStatus.Active) {
+        if (
+            _isPaused() ||
+            _isPoolPaused(address(lendingPool)) ||
+            loans[loanID].status != TellerCommon.LoanStatus.Active
+        ) {
             return false;
         }
 
@@ -395,7 +403,11 @@ contract LoansBase is LoansInterface, Base {
         @param loanID of the loan to get info for
         @return memory TellerCommon.LoanCollateralInfo Collateral information of the loan
      */
-    function getCollateralInfo(uint256 loanID) external view returns (TellerCommon.LoanCollateralInfo memory) {
+    function getCollateralInfo(uint256 loanID)
+        external
+        view
+        returns (TellerCommon.LoanCollateralInfo memory)
+    {
         return _getCollateralInfo(loanID);
     }
 
@@ -444,13 +456,16 @@ contract LoansBase is LoansInterface, Base {
         returns (TellerCommon.LoanCollateralInfo memory)
     {
         uint256 collateral = loans[loanID].collateral;
-        (uint256 neededInLending, uint256 neededInCollateral) = _getCollateralNeededInfo(loanID);
-        return TellerCommon.LoanCollateralInfo({
-            collateral: collateral,
-            neededInLendingTokens: neededInLending,
-            neededInCollateralTokens: neededInCollateral,
-            moreCollateralRequired: neededInCollateral > collateral
-        });
+        (uint256 neededInLending, uint256 neededInCollateral) = _getCollateralNeededInfo(
+            loanID
+        );
+        return
+            TellerCommon.LoanCollateralInfo({
+                collateral: collateral,
+                neededInLendingTokens: neededInLending,
+                neededInCollateralTokens: neededInCollateral,
+                moreCollateralRequired: neededInCollateral > collateral
+            });
     }
 
     /**
@@ -462,10 +477,7 @@ contract LoansBase is LoansInterface, Base {
     function _getCollateralNeededInfo(uint256 loanID)
         internal
         view
-        returns (
-            uint256 neededInLendingTokens,
-            uint256 neededInCollateralTokens
-        )
+        returns (uint256 neededInLendingTokens, uint256 neededInCollateralTokens)
     {
         // Get collateral needed in lending tokens.
         uint256 collateralNeededToken = _getCollateralNeededInTokens(loanID);
@@ -547,7 +559,8 @@ contract LoansBase is LoansInterface, Base {
      */
     function _convertWeiToToken(uint256 weiAmount) internal view returns (uint256) {
         // wei amount / lending token price in wei * the lending token decimals.
-        uint256 aWholeLendingToken = ERC20Detailed(lendingPool.lendingToken()).getAWholeToken();
+        uint256 aWholeLendingToken = ERC20Detailed(lendingPool.lendingToken())
+            .getAWholeToken();
         uint256 oneLendingTokenPriceWei = uint256(
             PairAggregatorInterface(priceOracle).getLatestAnswer()
         );
@@ -565,7 +578,8 @@ contract LoansBase is LoansInterface, Base {
     function _convertTokenToWei(uint256 tokenAmount) internal view returns (uint256) {
         // tokenAmount is in token units, chainlink price is in whole tokens
         // token amount in tokens * lending token price in wei / the lending token decimals.
-        uint256 aWholeLendingToken = ERC20Detailed(lendingPool.lendingToken()).getAWholeToken();
+        uint256 aWholeLendingToken = ERC20Detailed(lendingPool.lendingToken())
+            .getAWholeToken();
         uint256 oneLendingTokenPriceWei = uint256(
             PairAggregatorInterface(priceOracle).getLatestAnswer()
         );

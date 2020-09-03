@@ -1,6 +1,5 @@
 pragma solidity 0.5.17;
 
-
 /**
     @notice Utility library of inline functions on the address arrays.
 

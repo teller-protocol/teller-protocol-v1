@@ -6,7 +6,6 @@ import "./BaseUpgradeable.sol";
 import "./BaseProxy.sol";
 
 contract UpgradeableProxy is BaseUpgradeabilityProxy, BaseUpgradeable, BaseProxy {
-
     /**
         @notice It initializes this proxy instance.
         @param settingsAddress the settings address.

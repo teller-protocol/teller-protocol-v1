@@ -1,6 +1,5 @@
 pragma solidity 0.5.17;
 
-
 /**
     @notice This interface define the functio to validate the interest to withdraw by lenders.
 

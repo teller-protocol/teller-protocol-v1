@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "../../base/TokenCollateralLoans.sol";
 
-
 contract TokenCollateralLoansMock is TokenCollateralLoans {
     bool public mockTokenFunctions;
 

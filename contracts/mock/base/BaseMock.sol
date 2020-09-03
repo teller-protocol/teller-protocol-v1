@@ -2,7 +2,6 @@ pragma solidity 0.5.17;
 
 import "../../base/Base.sol";
 
-
 contract BaseMock is Base {
     function externalWhenNotPaused() external whenNotPaused() {}
 
@@ -18,9 +17,7 @@ contract BaseMock is Base {
         whenLendingPoolPaused(lendingPoolAddress)
     {}
 
-    function externalInitialize(address settingsAddress)
-        external
-    {
+    function externalInitialize(address settingsAddress) external {
         super._initialize(settingsAddress);
     }
 }

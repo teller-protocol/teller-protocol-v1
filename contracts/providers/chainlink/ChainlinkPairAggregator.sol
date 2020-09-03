@@ -114,10 +114,7 @@ contract ChainlinkPairAggregator is PairAggregatorInterface, TInitializable {
         bool isInverse,
         uint8 responseDecimalsValue,
         uint8 collateralDecimalsValue
-    )
-        external
-        isNotInitialized()
-    {
+    ) external isNotInitialized() {
         require(aggregatorAddress.isContract(), "AGGREGATOR_NOT_CONTRACT");
 
         _initialize();
@@ -144,7 +141,8 @@ contract ChainlinkPairAggregator is PairAggregatorInterface, TInitializable {
      */
     function _normalizeResponse(int256 value) internal view returns (int256) {
         if (inverse) {
-            return (int256(TEN**collateralDecimals) * int256(TEN**responseDecimals)) / value;
+            return
+                (int256(TEN**collateralDecimals) * int256(TEN**responseDecimals)) / value;
         } else {
             if (collateralDecimals >= responseDecimals) {
                 return value.mul(int256(TEN**pendingDecimals));
@@ -164,5 +162,4 @@ contract ChainlinkPairAggregator is PairAggregatorInterface, TInitializable {
         require(roundsBack <= latest, "NOT_ENOUGH_HISTORY");
         return aggregator.getAnswer(latest - roundsBack);
     }
-
 }

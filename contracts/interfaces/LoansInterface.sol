@@ -129,9 +129,11 @@ interface LoansInterface {
         @param loanID ID of loan from which collateral was withdrawn
         @param amount Amount to be deposited as collateral
      */
-    function depositCollateral(address borrower, uint256 loanID, uint256 amount)
-        external
-        payable;
+    function depositCollateral(
+        address borrower,
+        uint256 loanID,
+        uint256 amount
+    ) external payable;
 
     /**
         @notice Withdraw collateral from a loan, unless this isn't allowed
@@ -222,7 +224,10 @@ interface LoansInterface {
         @param loanID ID of the loan to get info for
         @return memory TellerCommon.LoanCollateralInfo Collateral information of the loan
      */
-    function getCollateralInfo(uint256 loanID) external view returns (TellerCommon.LoanCollateralInfo memory);
+    function getCollateralInfo(uint256 loanID)
+        external
+        view
+        returns (TellerCommon.LoanCollateralInfo memory);
 
     /**
         @notice Updates the current price oracle instance.

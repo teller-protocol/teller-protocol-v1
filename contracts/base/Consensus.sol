@@ -10,7 +10,6 @@ import "../util/SettingsConsts.sol";
 import "./OwnerSignersRole.sol";
 import "../base/Base.sol";
 
-
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
 /**                              THIS CONTRACT IS AN UPGRADEABLE BASE!                              **/
@@ -75,10 +74,7 @@ contract Consensus is Base, OwnerSignersRole {
         address aCallerAddress,
         address aSettingAddress
     ) external isNotInitialized() {
-        require(
-            aCallerAddress.isContract(),
-            "CALLER_MUST_BE_CONTRACT"
-        );
+        require(aCallerAddress.isContract(), "CALLER_MUST_BE_CONTRACT");
 
         Ownable.initialize(owner);
         _initialize(aSettingAddress);
@@ -160,7 +156,11 @@ contract Consensus is Base, OwnerSignersRole {
 
         require(
             responseTime >=
-                now.sub(settings().getPlatformSettingValue(consts.RESPONSE_EXPIRY_LENGTH_SETTING())),
+                now.sub(
+                    settings().getPlatformSettingValue(
+                        consts.RESPONSE_EXPIRY_LENGTH_SETTING()
+                    )
+                ),
             "RESPONSE_EXPIRED"
         );
 
