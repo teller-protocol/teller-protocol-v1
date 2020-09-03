@@ -39,7 +39,7 @@ contract('EscrowCallDappTest', function (accounts) {
   });
 
   withData({
-    _1_not_borrower: [3, loanStatus.Active, true, true, false, false, false, true, 'Ownable: caller is not the owner'],
+    _1_not_owner: [3, loanStatus.Active, true, true, false, false, false, true, 'Ownable: caller is not the owner'],
     _2_without_dapp_whitelisted: [4, loanStatus.Active, true, false, true, false, false, true, 'DAPP_NOT_WHITELISTED'],
     _3_with_invalid_function_signature: [5, loanStatus.Active, true, true, true, true, true, true, 'DAPP_CALL_FAILED'],
     _4_successful: [6, loanStatus.Active, true, true, true, false, false, false, null],

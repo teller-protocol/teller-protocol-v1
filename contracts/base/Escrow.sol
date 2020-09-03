@@ -36,7 +36,6 @@ import "../util/TellerCommon.sol";
 
     @author develop@teller.finance
  */
-// TODO: remove SettingsConsts once constants added to settings contract.
 contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, BaseEscrowDapp, SettingsConsts {
     using Address for address;
     using SafeMath for uint256;
