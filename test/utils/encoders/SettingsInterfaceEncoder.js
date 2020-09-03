@@ -35,6 +35,10 @@ SettingsInterfaceEncoder.prototype.encodeEscrowFactory = function() {
     return encode(this.web3, 'escrowFactory()');
 }
 
+SettingsInterfaceEncoder.prototype.encodeETH_ADDRESS = function() {
+    return encode(this.web3, 'ETH_ADDRESS()');
+}
+
 SettingsInterfaceEncoder.prototype.encodeATMSettings = function() {
     return encode(this.web3, 'atmSettings()');
 }

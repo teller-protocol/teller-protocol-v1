@@ -3,6 +3,7 @@ const BN = require("bignumber.js");
 const { withData } = require("leche");
 const { t, ETH_ADDRESS,  } = require("../utils/consts");
 const PairAggregatorEncoder = require("../utils/encoders/PairAggregatorEncoder");
+const SettingsInterfaceEncoder = require("../utils/encoders/SettingsInterfaceEncoder");
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -16,12 +17,20 @@ const LINK = artifacts.require("./mock/token/LINKMock.sol");
 
 contract("EscrowValueOfInTest", function(accounts) {
   const encoder = new PairAggregatorEncoder(web3)
+  const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
   let instance;
   let assetsAddresses;
-  let aggregator
+  let aggregator;
+  let settingsInstance;
 
   before(async () => {
+    settingsInstance = await Mock.new();
+    await settingsInstance.givenMethodReturnAddress(
+      settingsInterfaceEncoder.encodeETH_ADDRESS(),
+      ETH_ADDRESS
+    );
     instance = await Escrow.new();
+    await instance.mockSettings(settingsInstance.address);
     aggregator = await Mock.new()
     await instance.mockGetAggregatorFor(aggregator.address)
 
@@ -68,8 +77,8 @@ contract("EscrowValueOfInTest", function(accounts) {
         // Invocation
         value = await instance.externalValueOfIn.call(baseAddress, quoteAddress, baseAmount)
       } catch (error) {
+        assert(mustFail, error.message);
         assert.equal(error.message, expectedErrorMessage);
-        assert(mustFail);
       }
 
       // Assertions

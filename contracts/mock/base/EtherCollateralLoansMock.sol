@@ -17,6 +17,10 @@ contract EtherCollateralLoansMock is EtherCollateralLoans {
         totalCollateral = amount;
     }
 
+    function setEscrowForLoan(uint256 loanID, address escrowAddress) external {
+        loans[loanID].escrow = escrowAddress;
+    }
+
     function setLoan(
         uint256 id,
         TellerCommon.LoanTerms calldata loanTerms,
