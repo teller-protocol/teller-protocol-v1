@@ -52,6 +52,15 @@ interface IChainlinkPairAggregatorRegistry {
         returns (PairAggregatorInterface aggregator);
 
     /**
+        @notice It registers new pair aggregators for given markets.
+        @param requests the input data to register the new pair aggregator.
+        @return the new pair aggregator addresses.
+     */
+    function registerPairAggregators(TellerCommon.PairAggregatorRegisterRequest[] calldata requests)
+        external
+        returns (PairAggregatorInterface[] memory newAggregators);
+
+    /**
         @notice It updates a current pair aggregator for a given market.
         @param request the input data to register the new pair aggregator.
         @return the new pair aggregator created.
