@@ -3,17 +3,17 @@ const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
 const { t  } = require('../utils/consts');
 const Timer = require('../../scripts/utils/Timer');
-const { tlrToken } = require('../utils/events');
+const { atmToken } = require('../utils/events');
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 
  // Mock contracts
  const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const TLRToken = artifacts.require("./TLRToken.sol");
+const ATMToken = artifacts.require("./ATMToken.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 
-contract('TLRTokenWithdrawVestedTest', function (accounts) {
+contract('ATMTokenWithdrawVestedTest', function (accounts) {
     const atmSettingsEncoder = new IATMSettingsEncoder(web3);
     let atmSettingsInstance;
     let atmInstance;
@@ -31,10 +31,10 @@ contract('TLRTokenWithdrawVestedTest', function (accounts) {
             settings.address
         );
         atmInstance = await Mock.new();
-        instance = await TLRToken.new();
+        instance = await ATMToken.new();
         await instance.initialize(
-                            "Teller Token",
-                            "TLR",
+                            "ATMToken",
+                            "ATMT",
                             18,
                             10000,
                             50,
@@ -73,7 +73,7 @@ contract('TLRTokenWithdrawVestedTest', function (accounts) {
                 // Assertions
                 assert(!mustFail, 'It should have failed because the account is not vested');
                 assert(result);
-                tlrToken
+                atmToken
                     .vestingClaimed(result)
                     .emitted(receipent, amount);
             } catch (error) {

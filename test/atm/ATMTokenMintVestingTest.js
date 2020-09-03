@@ -2,17 +2,17 @@
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS  } = require('../utils/consts');
-const { tlrToken } = require('../utils/events');
+const { atmToken } = require('../utils/events');
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const TLRToken = artifacts.require("./TLRToken.sol");
+const ATMToken = artifacts.require("./ATMToken.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 
-contract('TLRTokenMintVestingTest', function (accounts) {
+contract('ATMTokenMintVestingTest', function (accounts) {
     const atmSettingsEncoder = new IATMSettingsEncoder(web3);
     let atmSettingsInstance;
     let atmInstance;
@@ -28,10 +28,10 @@ contract('TLRTokenMintVestingTest', function (accounts) {
             settings.address
         );
         atmInstance = await Mock.new();
-        instance = await TLRToken.new();
+        instance = await ATMToken.new();
         await instance.initialize(
-                                "Teller Token",
-                                "TLR",
+                                "ATMToken",
+                                "ATMT",
                                 18,
                                 10000,
                                 1,
@@ -68,7 +68,7 @@ contract('TLRTokenMintVestingTest', function (accounts) {
                 if (multipleVesting) {
                     result = await instance.mintVesting(receipent, amount, cliff, vestingPeriod, { from: sender });
                 }
-                tlrToken
+                atmToken
                     .newVesting(result)
                     .emitted(receipent, amount, vestingPeriod);
                 // Assertions

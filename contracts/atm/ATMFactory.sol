@@ -8,7 +8,7 @@ import "../base/TInitializable.sol";
 
 // Contracts
 import "./ATMGovernanceProxy.sol";
-import "./TLRTokenProxy.sol";
+import "./ATMTokenProxy.sol";
 
 // Interfaces
 import "../atm/ATMFactoryInterface.sol";
@@ -31,17 +31,17 @@ contract ATMFactory is BaseATM, ATMFactoryInterface, TInitializable {
      */
     mapping(address => bool) public atms;
 
-    mapping(address => address) public tlrTokens;
+    mapping(address => address) public atmTokens;
 
     // List of ATM instances
     address[] public atmsList;
 
     /**
         @notice It creates a new ATM instance.
-        @param name TLR token name.
-        @param symbol TLR token symbol
-        @param decimals TLR token decimals 
-        @param cap TLR token max cap.
+        @param name ATM token name.
+        @param symbol ATM token symbol
+        @param decimals ATM token decimals 
+        @param cap ATM token max cap.
         @param maxVestingPerWallet max vesting per wallet for the ATM token.
         @return the new ATM governance instance address.
      */
@@ -57,7 +57,7 @@ contract ATMFactory is BaseATM, ATMFactoryInterface, TInitializable {
         ATMGovernanceProxy atmGovernanceProxy = new ATMGovernanceProxy(atmSettingsAddress);
         address atmGovernanceProxyAddress = address(atmGovernanceProxy);
 
-        TLRTokenProxy tlrTokenProxy = new TLRTokenProxy(
+        ATMTokenProxy atmTokenProxy = new ATMTokenProxy(
             name,
             symbol,
             decimals,
@@ -66,14 +66,14 @@ contract ATMFactory is BaseATM, ATMFactoryInterface, TInitializable {
             atmSettingsAddress,
             atmGovernanceProxyAddress
         );
-        address tlrTokenProxyAddress = address(tlrTokenProxy);
+        address atmTokenProxyAddress = address(atmTokenProxy);
 
         atms[atmGovernanceProxyAddress] = true;
-        tlrTokens[atmGovernanceProxyAddress] = tlrTokenProxyAddress;
+        atmTokens[atmGovernanceProxyAddress] = atmTokenProxyAddress;
         atmsList.add(atmGovernanceProxyAddress);
 
         // Emit new ATM created event.
-        emit ATMCreated(msg.sender, atmGovernanceProxyAddress, tlrTokenProxyAddress);
+        emit ATMCreated(msg.sender, atmGovernanceProxyAddress, atmTokenProxyAddress);
         return atmGovernanceProxyAddress;
     }
 
@@ -87,12 +87,12 @@ contract ATMFactory is BaseATM, ATMFactoryInterface, TInitializable {
     }
 
     /**
-        @notice Returns the TLR token address of a given associated atm address.
+        @notice Returns the atm token address of a given associated atm address.
         @param atmAddress ATM address to test
-        @return Address of the associated TLR Token
+        @return Address of the associated ATM Token
      */
-    function getTLRToken(address atmAddress) external view returns (address) {
-        return tlrTokens[atmAddress];
+    function getATMToken(address atmAddress) external view returns (address) {
+        return atmTokens[atmAddress];
     }
 
     /**
