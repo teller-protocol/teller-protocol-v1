@@ -46,6 +46,26 @@ contract ChainlinkPairAggregatorRegistry is TInitializable, BaseUpgradeable, ICh
     /** Public Functions **/
 
     /**
+        @notice It registers new pair aggregators for given markets.
+        @param requests the input data to register the new pair aggregator.
+        @return the new pair aggregator addresses.
+     */
+    function registerPairAggregators(TellerCommon.PairAggregatorRegisterRequest[] calldata requests)
+        external
+        isInitialized()
+        onlyPauser()
+        returns (PairAggregatorInterface[] memory newAggregators)
+    {
+        require(requests.length > 0, "REQUEST_LIST_EMPTY");
+        
+        newAggregators = new PairAggregatorInterface[](requests.length);
+        
+        for(uint256 index; index < requests.length; index++) {
+            newAggregators[index] = _registerPairAggregator(requests[index]);
+        }
+    }
+
+    /**
         @notice It registers a new pair aggregator for a given market.
         @param request the input data to register the new pair aggregator.
         @return the new pair aggregator created.
@@ -56,21 +76,7 @@ contract ChainlinkPairAggregatorRegistry is TInitializable, BaseUpgradeable, ICh
         onlyPauser()
         returns (PairAggregatorInterface aggregator)
     {
-        require(settings().ETH_ADDRESS() == request.baseToken || request.baseToken.isContract(), "BASE_TOKEN_MUST_BE_CONTRACT");
-        require(settings().ETH_ADDRESS() == request.quoteToken || request.quoteToken.isContract(), "QUOTE_TOKEN_MUST_BE_CONTRACT");
-        require(request.chainlinkAggregatorAddress.isContract(), "BASE_TOKEN_MUST_BE_CONTRACT");
-        require(!_hasPairAggregator(request.baseToken, request.quoteToken), "PAIR_AGGREGATOR_ALREADY_EXIST");
-
-        aggregator = _createPairAggregatorInstance(request);
-
-        aggregators[request.baseToken][request.quoteToken] = aggregator;
-
-        emit PairAggregatorRegistered(
-            msg.sender,
-            request.baseToken,
-            request.quoteToken,
-            address(aggregator)
-        );
+        aggregator = _registerPairAggregator(request);
     }
 
     /**
@@ -160,6 +166,32 @@ contract ChainlinkPairAggregatorRegistry is TInitializable, BaseUpgradeable, ICh
             request.inverse,
             request.responseDecimals,
             request.collateralDecimals
+        );
+    }
+
+    /**
+        @notice It registers a new pair aggregator for a given market.
+        @param request the input data to register the new pair aggregator.
+        @return the new pair aggregator created.
+     */
+    function _registerPairAggregator(TellerCommon.PairAggregatorRegisterRequest memory request)
+        internal
+        returns (PairAggregatorInterface aggregator)
+    {
+        require(settings().ETH_ADDRESS() == request.baseToken || request.baseToken.isContract(), "BASE_TOKEN_MUST_BE_CONTRACT");
+        require(settings().ETH_ADDRESS() == request.quoteToken || request.quoteToken.isContract(), "QUOTE_TOKEN_MUST_BE_CONTRACT");
+        require(request.chainlinkAggregatorAddress.isContract(), "BASE_TOKEN_MUST_BE_CONTRACT");
+        require(!_hasPairAggregator(request.baseToken, request.quoteToken), "PAIR_AGGREGATOR_ALREADY_EXIST");
+
+        aggregator = _createPairAggregatorInstance(request);
+
+        aggregators[request.baseToken][request.quoteToken] = aggregator;
+
+        emit PairAggregatorRegistered(
+            msg.sender,
+            request.baseToken,
+            request.quoteToken,
+            address(aggregator)
         );
     }
 }

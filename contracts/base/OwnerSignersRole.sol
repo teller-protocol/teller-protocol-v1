@@ -48,6 +48,22 @@ contract OwnerSignersRole is Ownable {
     }
 
     /**
+        @notice It adds a list of account as signers.
+        @param accounts addresses to add.
+        @dev The sender must be the owner.
+        @dev It throws a require error if the sender is not the owner.
+     */
+    function addSigners(address[] memory accounts) public onlyOwner {
+        require(accounts.length > 0, "ACCOUNTS_LIST_EMPTY");
+        for(uint256 index = 0; index < accounts.length; index++) {
+            address account = accounts[index];
+            if(!isSigner(account)) {
+                _addSigner(account);
+            }
+        }
+    }
+
+    /**
         @notice It removes an account as signer.
         @param account address to remove.
         @dev The sender must be the owner.

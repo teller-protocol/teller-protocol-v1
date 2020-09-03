@@ -8,25 +8,23 @@ module.exports = async function (
     console.log('Registering pair aggregators in registry.');
     const { pairAggregatorRegistryInstance } = instances;
     const { txConfig, chainlink, tokens } = params;
-    const chainlinkEntries =  Object.entries(chainlink);
-    console.log(`Registering ${chainlinkEntries.length} pair aggregators.`);
-    for (const [, aggregatorInfo] of chainlinkEntries) {
-        const {
+    const chainlinkValues =  Object.values(chainlink);
+
+    const registerRequests = chainlinkValues.map(
+        ({
             address,
             inversed,
             collateralDecimals,
             responseDecimals,
             baseTokenName,
             quoteTokenName
-        } = aggregatorInfo;
-
-        console.log(`Registering pair aggregator: Inverse: ${inversed} - Market: ${baseTokenName} / ${quoteTokenName} - Chainlink Oracle: ${address}.`)
+        }) => {
         const baseTokenAddress = tokens[baseTokenName];
         assert(baseTokenAddress, `Aggregator: base token address is undefined. Base token name: ${baseTokenName}`);
         const quoteTokenAddress = tokens[quoteTokenName];
         assert(quoteTokenAddress, `Aggregator: quote token address is undefined. Quote token name: ${quoteTokenName}`);
-
-        const registerRequest = {
+        console.log(`Pair aggregator: Inverse: ${inversed} - Market: ${baseTokenAddress} / ${quoteTokenAddress} - Chainlink Oracle: ${address}.`)
+        return {
             baseToken: baseTokenAddress,
             quoteToken: quoteTokenAddress,
             chainlinkAggregatorAddress: address,
@@ -34,25 +32,37 @@ module.exports = async function (
             responseDecimals,
             collateralDecimals,
         };
-        await pairAggregatorRegistryInstance.registerPairAggregator(
-            registerRequest,
-            txConfig,
-        );
-        console.log(`Registered pair aggregator: Inverse: ${registerRequest.inverse} - ${baseTokenName} (${registerRequest.baseToken}) - ${quoteTokenName} / (${registerRequest.quoteToken}) - Chainlink Oracle: ${registerRequest.chainlinkAggregatorAddress}.`)
+    });
+    console.log('');
 
-        const inverseRegisterRequest = {
-            baseToken: quoteTokenAddress,
-            quoteToken: baseTokenAddress,
-            chainlinkAggregatorAddress: address,
-            inverse: !inversed,
+    await pairAggregatorRegistryInstance.registerPairAggregators(
+        registerRequests,
+        txConfig,
+    );
+
+    const inverseRegisterRequests = registerRequests.map( ({
+        baseToken,
+        quoteToken,
+        chainlinkAggregatorAddress,
+        inverse,
+        responseDecimals,
+        collateralDecimals,
+    }) => {
+        const inverseRequest = {
+            baseToken: quoteToken,
+            quoteToken: baseToken,
+            chainlinkAggregatorAddress,
+            inverse: !inverse,
             responseDecimals,
             collateralDecimals,
         };
-        await pairAggregatorRegistryInstance.registerPairAggregator(
-            inverseRegisterRequest,
-            txConfig,
-        );
-        console.log(`Registered pair aggregator: Inverse: ${inverseRegisterRequest.inverse} - ${quoteTokenName} (${inverseRegisterRequest.baseToken}) - ${baseTokenName} / (${inverseRegisterRequest.quoteToken}) - Chainlink Oracle: ${inverseRegisterRequest.chainlinkAggregatorAddress}.`)
-    }
+        console.log(`Pair aggregator: Inverse: ${inverseRequest.inverse} - Market: ${inverseRequest.baseToken} / ${inverseRequest.quoteToken} - Chainlink Oracle: ${inverseRequest.chainlinkAggregatorAddress}.`)
+        return inverseRequest;
+    });
+
+    await pairAggregatorRegistryInstance.registerPairAggregators(
+        inverseRegisterRequests,
+        txConfig,
+    );
     console.log('\n');
 }
