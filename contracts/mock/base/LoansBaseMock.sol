@@ -4,13 +4,14 @@ pragma experimental ABIEncoderV2;
 import "./BaseMock.sol";
 import "../../base/LoansBase.sol";
 
-
 contract LoansBaseMock is LoansBase, BaseMock {
     mapping(uint256 => TellerCommon.LoanCollateralInfo) internal mockCollateralInfo;
 
-    function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
-        internal
-    {}
+    function _payOutCollateral(
+        uint256 loanID,
+        uint256 amount,
+        address payable recipient
+    ) internal {}
 
     function externalPayLoan(uint256 loanID, uint256 toPay) external {
         _payLoan(loanID, toPay);
@@ -74,14 +75,23 @@ contract LoansBaseMock is LoansBase, BaseMock {
         loans[loanID].escrow = escrowAddress;
     }
 
-    function mockGetCollateralInfo(uint256 loanID, uint256 neededInLending, uint256 neededInCollateral) external {
+    function mockGetCollateralInfo(
+        uint256 loanID,
+        uint256 neededInLending,
+        uint256 neededInCollateral
+    ) external {
         mockCollateralInfo[loanID].collateral = loans[loanID].collateral;
         mockCollateralInfo[loanID].neededInLendingTokens = neededInLending;
         mockCollateralInfo[loanID].neededInCollateralTokens = neededInCollateral;
-        mockCollateralInfo[loanID].moreCollateralRequired = neededInCollateral > loans[loanID].collateral;
+        mockCollateralInfo[loanID].moreCollateralRequired =
+            neededInCollateral > loans[loanID].collateral;
     }
 
-    function _getCollateralInfo(uint256 loanID) internal view returns (TellerCommon.LoanCollateralInfo memory info) {
+    function _getCollateralInfo(uint256 loanID)
+        internal
+        view
+        returns (TellerCommon.LoanCollateralInfo memory info)
+    {
         info = mockCollateralInfo[loanID];
         if (info.collateral == 0) {
             info = super._getCollateralInfo(loanID);
@@ -93,7 +103,7 @@ contract LoansBaseMock is LoansBase, BaseMock {
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
-        address 
+        address
     ) external isNotInitialized() {
         _initialize(
             priceOracleAddress,
@@ -103,10 +113,11 @@ contract LoansBaseMock is LoansBase, BaseMock {
         );
     }
 
-    function depositCollateral(address borrower, uint256 loanID, uint256 amount)
-        external
-        payable
-    {}
+    function depositCollateral(
+        address borrower,
+        uint256 loanID,
+        uint256 amount
+    ) external payable {}
 
     function createLoanWithTerms(
         TellerCommon.LoanRequest calldata request,

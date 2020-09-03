@@ -61,9 +61,8 @@ contract BaseUpgradeable {
 
     function _setSettings(address settingsAddress) internal {
         // Prevent resetting the settings logic for standalone test deployments.
-        if (address(settings()) != address(0x0)) return
-
-        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
+        if (address(settings()) != address(0x0))
+            return require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
 
         bytes32 slot = SETTINGS_SLOT;
         assembly {
@@ -72,7 +71,10 @@ contract BaseUpgradeable {
     }
 
     function _setLogicName(bytes32 aLogicName) internal {
-        require(settings().versionsRegistry().hasLogicVersion(aLogicName), "LOGIC_NAME_NOT_EXIST");
+        require(
+            settings().versionsRegistry().hasLogicVersion(aLogicName),
+            "LOGIC_NAME_NOT_EXIST"
+        );
 
         bytes32 slot = LOGIC_NAME_SLOT;
         assembly {
@@ -80,4 +82,3 @@ contract BaseUpgradeable {
         }
     }
 }
-

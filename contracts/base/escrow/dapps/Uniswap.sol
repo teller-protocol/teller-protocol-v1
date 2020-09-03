@@ -35,7 +35,7 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
 
     /* State Variables */
     // State is shared with Escrow contract as it uses delegateCall() to interact with this contract.
-    
+
     /**
         @notice Swaps ETH/Tokens for Tokens/ETH using different Uniswap v2 Router 02 methods.
         @param canonicalWeth address of the canonical WETH in the current network.
@@ -52,8 +52,8 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
         address canonicalWeth,
         address routerAddress,
         address[] memory path,
-        uint sourceAmount,
-        uint minDestination
+        uint256 sourceAmount,
+        uint256 minDestination
     ) public {
         require(canonicalWeth.isContract(), "CANONICAL_WETH_MUST_BE_CONTRACT");
         require(routerAddress.isContract(), "ROUTER_MUST_BE_A_CONTRACT");
@@ -76,12 +76,9 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
                 path,
                 address(this),
                 now
-            ); 
-        } else {
-            require(
-                _balanceOf(source) >= sourceAmount,
-                "UNISWAP_INSUFFICIENT_TOKENS"
             );
+        } else {
+            require(_balanceOf(source) >= sourceAmount, "UNISWAP_INSUFFICIENT_TOKENS");
             IERC20(source).approve(routerAddress, sourceAmount);
             if (destination == canonicalWeth) {
                 amounts = router.swapExactTokensForETH(
@@ -103,22 +100,23 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
         }
 
         uint256 balanceAfterSwap = _balanceOf(destination);
-        require(balanceAfterSwap >= (balanceBeforeSwap + minDestination), "UNISWAP_BALANCE_NOT_INCREASED");
-        require(amounts.length == path.length , "UNISWAP_ERROR_SWAPPING");
+        require(
+            balanceAfterSwap >= (balanceBeforeSwap + minDestination),
+            "UNISWAP_BALANCE_NOT_INCREASED"
+        );
+        require(amounts.length == path.length, "UNISWAP_ERROR_SWAPPING");
         uint256 amountReceived = amounts[amounts.length - 1];
 
-         _tokenUpdated(source);
-         _tokenUpdated(destination);
+        _tokenUpdated(source);
+        _tokenUpdated(destination);
 
         emit UniswapSwapped(
-            msg.sender, 
+            msg.sender,
             address(this),
             source,
             destination,
-            sourceAmount, 
+            sourceAmount,
             amountReceived
         );
     }
-
-   
 }

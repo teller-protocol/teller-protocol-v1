@@ -4,7 +4,6 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Deta
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol";
 import "../interfaces/TTokenInterface.sol";
 
-
 /**
  * @notice This contract represents a wrapped token within the Teller protocol
  *
@@ -17,7 +16,11 @@ contract TToken is TTokenInterface, ERC20Detailed, ERC20Mintable {
      * @param symbol The symbol of the token
      * @param decimals The amount of decimals for the token
      */
-    constructor(string memory name, string memory symbol, uint8 decimals) public {
+    constructor(
+        string memory name,
+        string memory symbol,
+        uint8 decimals
+    ) public {
         ERC20Detailed.initialize(name, symbol, decimals);
         ERC20Mintable.initialize(msg.sender);
     }

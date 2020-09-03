@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "../util/TellerCommon.sol";
 
-
 /**
     @notice This interface defines the functions to process node responses and get consensus in the lender interest.
 

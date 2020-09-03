@@ -1,6 +1,5 @@
 pragma solidity 0.5.17;
 
-
 /**
  * @dev Utility library of inline functions on addresses
  *
@@ -71,10 +70,11 @@ library AddressLib {
      * @param other The address to check against itself
      * @param message Error message if addresses are not the same
      */
-    function requireEqualTo(address self, address other, string memory message)
-        internal
-        pure
-    {
+    function requireEqualTo(
+        address self,
+        address other,
+        string memory message
+    ) internal pure {
         require(isEqualTo(self, other), message);
     }
 
@@ -84,10 +84,11 @@ library AddressLib {
      * @param other The address to check against itself
      * @param message Error message if addresses are the same
      */
-    function requireNotEqualTo(address self, address other, string memory message)
-        internal
-        pure
-    {
+    function requireNotEqualTo(
+        address self,
+        address other,
+        string memory message
+    ) internal pure {
         require(isNotEqualTo(self, other), message);
     }
 }

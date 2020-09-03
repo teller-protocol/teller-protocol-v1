@@ -16,7 +16,6 @@ import "../interfaces/InterestValidatorInterface.sol";
 // Contracts
 import "./BaseUpgradeable.sol";
 
-
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
 /**                              THIS CONTRACT IS AN UPGRADEABLE BASE!                              **/
@@ -101,10 +100,7 @@ contract Base is TInitializable, BaseUpgradeable, ReentrancyGuard {
         @notice It initializes the current contract instance setting the required parameters.
         @param settingsAddress settings contract address.
      */
-    function _initialize(address settingsAddress)
-        internal
-        isNotInitialized()
-    {
+    function _initialize(address settingsAddress) internal isNotInitialized() {
         settingsAddress.requireNotEmpty("SETTINGS_MUST_BE_PROVIDED");
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
 

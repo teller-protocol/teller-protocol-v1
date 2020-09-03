@@ -3,7 +3,6 @@ pragma solidity 0.5.17;
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "./AddressLib.sol";
 
-
 /**
     @notice Utility library of inline functions on the AssetSettings struct.
 

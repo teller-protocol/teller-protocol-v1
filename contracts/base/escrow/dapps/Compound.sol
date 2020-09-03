@@ -6,11 +6,9 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.so
 // Common
 import "../../../util/AddressLib.sol";
 
-
 // Interfaces
 import "./ICompound.sol";
 import "../../../providers/compound/CErc20Interface.sol";
-
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -28,13 +26,12 @@ import "../../../providers/compound/CErc20Interface.sol";
         delegatecalls from Escrow contract, so this contract's state is really Escrow. 
     @author develop@teller.finance
  */
- contract Compound is ICompound {
+contract Compound is ICompound {
     using AddressLib for address;
 
     /* State Variables */
     // State is shared with Escrow contract as it uses delegateCall() to interact with this contract.
-   
-  
+
     /**
         @notice To lend we first have to approve the cToken to access the token balance then mint. 
         @param cTokenAddress address of the token.
@@ -52,9 +49,20 @@ import "../../../providers/compound/CErc20Interface.sol";
         uint256 result = cToken.mint(amount);
         require(result == 0, "COMPOUND_DEPOSIT_ERROR");
         uint256 balanceAfterMint = cToken.balanceOf(address(this));
-        require(balanceAfterMint >= (balanceBeforeMint + amount), "COMPOUND_BALANCE_NOT_INCREASED");
+        require(
+            balanceAfterMint >= (balanceBeforeMint + amount),
+            "COMPOUND_BALANCE_NOT_INCREASED"
+        );
         uint256 underlyingBalance = underlying.balanceOf(address(this));
-        emit CompoundLended(msg.sender, address(this), amount, cTokenAddress, balanceAfterMint, address(underlying), underlyingBalance);
+        emit CompoundLended(
+            msg.sender,
+            address(this),
+            amount,
+            cTokenAddress,
+            balanceAfterMint,
+            address(underlying),
+            underlyingBalance
+        );
     }
 
     /**
@@ -71,8 +79,19 @@ import "../../../providers/compound/CErc20Interface.sol";
         require(result == 0, "COMPOUND_WITHDRAWAL_ERROR");
         uint256 underlyingBalanceAfterRedeem = underlying.balanceOf(address(this));
         uint256 cTokenBalanceAfterRedeem = cToken.balanceOf(address(this));
-        require(underlyingBalanceAfterRedeem >= (balanceBeforeRedeem + amount), "COMPOUND_BALANCE_NOT_INCREASED");
-        emit CompoundRedeemed(msg.sender, address(this), amount, cTokenAddress, cTokenBalanceAfterRedeem, address(underlying), underlyingBalanceAfterRedeem);
+        require(
+            underlyingBalanceAfterRedeem >= (balanceBeforeRedeem + amount),
+            "COMPOUND_BALANCE_NOT_INCREASED"
+        );
+        emit CompoundRedeemed(
+            msg.sender,
+            address(this),
+            amount,
+            cTokenAddress,
+            cTokenBalanceAfterRedeem,
+            address(underlying),
+            underlyingBalanceAfterRedeem
+        );
     }
 
     /**

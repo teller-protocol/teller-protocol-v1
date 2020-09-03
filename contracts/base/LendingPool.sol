@@ -15,7 +15,6 @@ import "../providers/compound/CErc20Interface.sol";
 // Contracts
 import "./Base.sol";
 
-
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
 /**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
@@ -35,7 +34,7 @@ contract LendingPool is Base, LendingPoolInterface {
     /* State Variables */
 
     IERC20 public lendingToken;
-    
+
     address public cToken;
 
     TTokenInterface public tToken;

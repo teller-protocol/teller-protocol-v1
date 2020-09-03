@@ -27,7 +27,11 @@ import "../../util/TellerCommon.sol";
 
     @author developer@teller.finance
  */
-contract ChainlinkPairAggregatorRegistry is TInitializable, BaseUpgradeable, IChainlinkPairAggregatorRegistry {
+contract ChainlinkPairAggregatorRegistry is
+    TInitializable,
+    BaseUpgradeable,
+    IChainlinkPairAggregatorRegistry
+{
     using Address for address;
 
     /**
@@ -50,17 +54,19 @@ contract ChainlinkPairAggregatorRegistry is TInitializable, BaseUpgradeable, ICh
         @param requests the input data to register the new pair aggregator.
         @return the new pair aggregator addresses.
      */
-    function registerPairAggregators(TellerCommon.PairAggregatorRegisterRequest[] calldata requests)
+    function registerPairAggregators(
+        TellerCommon.PairAggregatorRegisterRequest[] calldata requests
+    )
         external
         isInitialized()
         onlyPauser()
         returns (PairAggregatorInterface[] memory newAggregators)
     {
         require(requests.length > 0, "REQUEST_LIST_EMPTY");
-        
+
         newAggregators = new PairAggregatorInterface[](requests.length);
-        
-        for(uint256 index; index < requests.length; index++) {
+
+        for (uint256 index; index < requests.length; index++) {
             newAggregators[index] = _registerPairAggregator(requests[index]);
         }
     }
@@ -70,12 +76,9 @@ contract ChainlinkPairAggregatorRegistry is TInitializable, BaseUpgradeable, ICh
         @param request the input data to register the new pair aggregator.
         @return the new pair aggregator created.
      */
-    function registerPairAggregator(TellerCommon.PairAggregatorRegisterRequest calldata request)
-        external
-        isInitialized()
-        onlyPauser()
-        returns (PairAggregatorInterface aggregator)
-    {
+    function registerPairAggregator(
+        TellerCommon.PairAggregatorRegisterRequest calldata request
+    ) external isInitialized() onlyPauser() returns (PairAggregatorInterface aggregator) {
         aggregator = _registerPairAggregator(request);
     }
 
@@ -84,21 +87,26 @@ contract ChainlinkPairAggregatorRegistry is TInitializable, BaseUpgradeable, ICh
         @param request the input data to register the new pair aggregator.
         @return the new pair aggregator created.
      */
-    function updatePairAggregator(TellerCommon.PairAggregatorRegisterRequest calldata request)
-        external
-        isInitialized()
-        onlyPauser()
-        returns (PairAggregatorInterface aggregator)
-    {
+    function updatePairAggregator(
+        TellerCommon.PairAggregatorRegisterRequest calldata request
+    ) external isInitialized() onlyPauser() returns (PairAggregatorInterface aggregator) {
         require(request.baseToken.isContract(), "BASE_TOKEN_MUST_BE_CONTRACT");
         require(request.quoteToken.isContract(), "QUOTE_TOKEN_MUST_BE_CONTRACT");
-        require(request.chainlinkAggregatorAddress.isContract(), "BASE_TOKEN_MUST_BE_CONTRACT");
-        require(_hasPairAggregator(request.baseToken, request.quoteToken), "PAIR_AGGREGATOR_NOT_EXIST");
+        require(
+            request.chainlinkAggregatorAddress.isContract(),
+            "BASE_TOKEN_MUST_BE_CONTRACT"
+        );
+        require(
+            _hasPairAggregator(request.baseToken, request.quoteToken),
+            "PAIR_AGGREGATOR_NOT_EXIST"
+        );
 
-        address oldPairAggregator = address(aggregators[request.baseToken][request.quoteToken]);
-        
+        address oldPairAggregator = address(
+            aggregators[request.baseToken][request.quoteToken]
+        );
+
         aggregator = _createPairAggregatorInstance(request);
-        
+
         aggregators[request.baseToken][request.quoteToken] = aggregator;
 
         emit PairAggregatorUpdated(
@@ -114,10 +122,7 @@ contract ChainlinkPairAggregatorRegistry is TInitializable, BaseUpgradeable, ICh
         @notice It initializes this registry contract.
         @param settingsAddress this settings address.
      */
-    function initialize(address settingsAddress)
-        external
-        isNotInitialized()
-    {
+    function initialize(address settingsAddress) external isNotInitialized() {
         _setSettings(settingsAddress);
 
         _initialize();
@@ -129,7 +134,11 @@ contract ChainlinkPairAggregatorRegistry is TInitializable, BaseUpgradeable, ICh
         @notice quoteToken the quote token address.
         @return the pair aggregator address for the given base and quote addresses.
      */
-    function getPairAggregator(address baseToken, address quoteToken) external view returns (PairAggregatorInterface) {
+    function getPairAggregator(address baseToken, address quoteToken)
+        external
+        view
+        returns (PairAggregatorInterface)
+    {
         return aggregators[baseToken][quoteToken];
     }
 
@@ -139,7 +148,11 @@ contract ChainlinkPairAggregatorRegistry is TInitializable, BaseUpgradeable, ICh
         @notice quoteToken the quote token address.
         @return true if the pair aggregator address for the given base and quote tokens is not 0x0. Otherwise it returns false.
      */
-    function hasPairAggregator(address baseToken, address quoteToken) external view returns (bool) {
+    function hasPairAggregator(address baseToken, address quoteToken)
+        external
+        view
+        returns (bool)
+    {
         return _hasPairAggregator(baseToken, quoteToken);
     }
 
@@ -151,13 +164,25 @@ contract ChainlinkPairAggregatorRegistry is TInitializable, BaseUpgradeable, ICh
         @notice quoteToken the quote token address.
         @return true if the pair aggregator address for the given base and quote tokens is not 0x0. Otherwise it returns false.
      */
-    function _hasPairAggregator(address baseToken, address quoteToken) internal view returns (bool) {
-        return address(aggregators[baseToken][quoteToken]) !=  address(0x0);
+    function _hasPairAggregator(address baseToken, address quoteToken)
+        internal
+        view
+        returns (bool)
+    {
+        return address(aggregators[baseToken][quoteToken]) != address(0x0);
     }
 
-    function _createPairAggregatorInstance(TellerCommon.PairAggregatorRegisterRequest memory request) internal returns (PairAggregatorInterface aggregator) {
-        bytes32 logicName = settings().versionsRegistry().consts().CHAINLINK_PAIR_AGGREGATOR_LOGIC_NAME();
-        DynamicProxy pairAggregatorProxy = new DynamicProxy(address(settings()), logicName);
+    function _createPairAggregatorInstance(
+        TellerCommon.PairAggregatorRegisterRequest memory request
+    ) internal returns (PairAggregatorInterface aggregator) {
+        bytes32 logicName = settings()
+            .versionsRegistry()
+            .consts()
+            .CHAINLINK_PAIR_AGGREGATOR_LOGIC_NAME();
+        DynamicProxy pairAggregatorProxy = new DynamicProxy(
+            address(settings()),
+            logicName
+        );
 
         address pairAggregatorAddress = address(pairAggregatorProxy);
         aggregator = PairAggregatorInterface(pairAggregatorAddress);
@@ -174,14 +199,27 @@ contract ChainlinkPairAggregatorRegistry is TInitializable, BaseUpgradeable, ICh
         @param request the input data to register the new pair aggregator.
         @return the new pair aggregator created.
      */
-    function _registerPairAggregator(TellerCommon.PairAggregatorRegisterRequest memory request)
-        internal
-        returns (PairAggregatorInterface aggregator)
-    {
-        require(settings().ETH_ADDRESS() == request.baseToken || request.baseToken.isContract(), "BASE_TOKEN_MUST_BE_CONTRACT");
-        require(settings().ETH_ADDRESS() == request.quoteToken || request.quoteToken.isContract(), "QUOTE_TOKEN_MUST_BE_CONTRACT");
-        require(request.chainlinkAggregatorAddress.isContract(), "BASE_TOKEN_MUST_BE_CONTRACT");
-        require(!_hasPairAggregator(request.baseToken, request.quoteToken), "PAIR_AGGREGATOR_ALREADY_EXIST");
+    function _registerPairAggregator(
+        TellerCommon.PairAggregatorRegisterRequest memory request
+    ) internal returns (PairAggregatorInterface aggregator) {
+        require(
+            settings().ETH_ADDRESS() == request.baseToken ||
+                request.baseToken.isContract(),
+            "BASE_TOKEN_MUST_BE_CONTRACT"
+        );
+        require(
+            settings().ETH_ADDRESS() == request.quoteToken ||
+                request.quoteToken.isContract(),
+            "QUOTE_TOKEN_MUST_BE_CONTRACT"
+        );
+        require(
+            request.chainlinkAggregatorAddress.isContract(),
+            "BASE_TOKEN_MUST_BE_CONTRACT"
+        );
+        require(
+            !_hasPairAggregator(request.baseToken, request.quoteToken),
+            "PAIR_AGGREGATOR_ALREADY_EXIST"
+        );
 
         aggregator = _createPairAggregatorInstance(request);
 

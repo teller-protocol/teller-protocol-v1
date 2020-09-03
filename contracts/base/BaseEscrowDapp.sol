@@ -16,13 +16,13 @@ contract BaseEscrowDapp {
      */
     address[] private tokens;
 
-    function getTokens() public view returns (address[] memory)  {
+    function getTokens() public view returns (address[] memory) {
         return tokens;
     }
 
-    function findTokenIndex(address tokenAddress) external view returns (int) {
+    function findTokenIndex(address tokenAddress) external view returns (int256) {
         (bool found, uint256 index) = tokens.getIndex(tokenAddress);
-        return found ? int(index) : -1;
+        return found ? int256(index) : -1;
     }
 
     function _balanceOf(address tokenAddress) internal view returns (uint256) {

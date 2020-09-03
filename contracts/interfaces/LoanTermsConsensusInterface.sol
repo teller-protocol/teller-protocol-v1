@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "../util/TellerCommon.sol";
 
-
 /**
     @notice This interface defines the function to process the loan terms through the Teller protocol
 
@@ -54,7 +53,13 @@ interface LoanTermsConsensusInterface {
     function processRequest(
         TellerCommon.LoanRequest calldata request,
         TellerCommon.LoanResponse[] calldata responses
-    ) external returns (uint256, uint256, uint256);
+    )
+        external
+        returns (
+            uint256,
+            uint256,
+            uint256
+        );
 
     /**
         @notice It initializes this loan terms consensus contract.

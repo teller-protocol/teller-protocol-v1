@@ -3,7 +3,6 @@ pragma solidity 0.5.17;
 import "@openzeppelin/contracts-ethereum-package/contracts/access/Roles.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 
-
 /**
     @notice This contract manages the signer role for the consensus contracts.
     @notice It includes an owner role who has the ability to grant the signer role.
@@ -55,9 +54,9 @@ contract OwnerSignersRole is Ownable {
      */
     function addSigners(address[] memory accounts) public onlyOwner {
         require(accounts.length > 0, "ACCOUNTS_LIST_EMPTY");
-        for(uint256 index = 0; index < accounts.length; index++) {
+        for (uint256 index = 0; index < accounts.length; index++) {
             address account = accounts[index];
-            if(!isSigner(account)) {
+            if (!isSigner(account)) {
                 _addSigner(account);
             }
         }

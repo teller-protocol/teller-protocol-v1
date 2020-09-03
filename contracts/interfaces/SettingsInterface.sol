@@ -281,7 +281,6 @@ interface SettingsInterface {
      */
     function escrowFactory() external view returns (EscrowFactoryInterface);
 
-
     function versionsRegistry() external view returns (LogicVersionsRegistryInterface);
 
     function marketsState() external view returns (MarketsStateInterface);
@@ -292,7 +291,10 @@ interface SettingsInterface {
         @notice Get the current ChainlinkPairAggregatorRegistry contract.
         @return the current ChainlinkPairAggregatorRegistry contract.
      */
-    function pairAggregatorRegistry() external view returns (IChainlinkPairAggregatorRegistry);
+    function pairAggregatorRegistry()
+        external
+        view
+        returns (IChainlinkPairAggregatorRegistry);
 
     function atmSettings() external view returns (IATMSettings);
 

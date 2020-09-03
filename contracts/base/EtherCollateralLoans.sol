@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 // Contracts
 import "./LoansBase.sol";
 
-
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
 /**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
@@ -27,7 +26,11 @@ contract EtherCollateralLoans is LoansBase {
      * @param borrower The address of the loan borrower.
      * @param loanID The ID of the loan the collateral is for
      */
-    function depositCollateral(address borrower, uint256 loanID, uint256 amount)
+    function depositCollateral(
+        address borrower,
+        uint256 loanID,
+        uint256 amount
+    )
         external
         payable
         loanActiveOrSet(loanID)
@@ -131,9 +134,11 @@ contract EtherCollateralLoans is LoansBase {
         @param amount The amount of collateral to be paid
         @param recipient address that will receive the given amount.
      */
-    function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
-        internal
-    {
+    function _payOutCollateral(
+        uint256 loanID,
+        uint256 amount,
+        address payable recipient
+    ) internal {
         totalCollateral = totalCollateral.sub(amount);
         loans[loanID].collateral = loans[loanID].collateral.sub(amount);
         recipient.transfer(amount);

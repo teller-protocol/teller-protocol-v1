@@ -6,7 +6,6 @@ pragma solidity 0.5.17;
     @author develop@teller.finance
  */
 interface ICompound {
-
     /**
         @notice To lend we first have to approve the cToken to access the token balance then mint. 
         @param cTokenAddress address of the token.
@@ -34,7 +33,7 @@ interface ICompound {
      */
     function balance(address cTokenAddress) external view returns (uint256);
 
-     /**
+    /**
         @notice This event is emitted every time Compound lend is invoked successfully.
         @param sender the sender of this transaction.
         @param dappAddress address of the compound app.

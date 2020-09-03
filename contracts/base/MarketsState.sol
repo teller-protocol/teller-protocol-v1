@@ -28,7 +28,12 @@ import "../util/MarketStateLib.sol";
 
     @author develop@teller.finance
  */
-contract MarketsState is MarketsStateInterface, TInitializable, WhitelistedRole, BaseUpgradeable {
+contract MarketsState is
+    MarketsStateInterface,
+    TInitializable,
+    WhitelistedRole,
+    BaseUpgradeable
+{
     using Address for address;
     using MarketStateLib for MarketStateLib.MarketState;
 
@@ -85,7 +90,7 @@ contract MarketsState is MarketsStateInterface, TInitializable, WhitelistedRole,
         address borrowedAsset,
         address collateralAsset,
         uint256 amount
-    ) external onlyWhitelisted() isInitialized()  {
+    ) external onlyWhitelisted() isInitialized() {
         markets[borrowedAsset][collateralAsset].decreaseSupply(amount);
     }
 
@@ -151,11 +156,7 @@ contract MarketsState is MarketsStateInterface, TInitializable, WhitelistedRole,
         @notice It initializes this Markets State instance.
         @param settingsAddress settings address.
      */
-    function initialize(address settingsAddress)
-        public
-        initializer()
-        isNotInitialized()
-    {
+    function initialize(address settingsAddress) public initializer() isNotInitialized() {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
 
         WhitelistedRole.initialize(msg.sender);

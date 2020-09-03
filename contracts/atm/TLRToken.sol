@@ -11,7 +11,6 @@ import "./TLRTokenInterface.sol";
 import "../base/TInitializable.sol";
 import "../base/BaseUpgradeable.sol";
 
-
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
 /**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
@@ -123,7 +122,12 @@ contract TLRToken is
      * @notice Sets a new cap on the token's total supply.
      * @param newCap The new capped amount of tokens
      */
-    function setCap(uint256 newCap) external onlyPauser() whenNotPaused() isInitialized() {
+    function setCap(uint256 newCap)
+        external
+        onlyPauser()
+        whenNotPaused()
+        isInitialized()
+    {
         _cap = newCap;
         emit NewCap(_cap);
     }
@@ -248,7 +252,11 @@ contract TLRToken is
      *
      * - minted tokens must not cause the total supply to go over the cap.
      */
-    function _beforeTokenTransfer(address from, address, uint256 amount) internal view {
+    function _beforeTokenTransfer(
+        address from,
+        address,
+        uint256 amount
+    ) internal view {
         require(
             from == address(0) && totalSupply().add(amount) <= _cap,
             "ERC20_CAP_EXCEEDED"

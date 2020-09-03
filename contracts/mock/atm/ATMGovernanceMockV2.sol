@@ -4,7 +4,6 @@ pragma solidity 0.5.17;
 import "../../atm/ATMGovernance.sol";
 
 contract ATMGovernanceMockV2 is ATMGovernance {
-    
     /* Constants */
 
     /* State Variables */
@@ -16,15 +15,11 @@ contract ATMGovernanceMockV2 is ATMGovernance {
 
     /* External Functions */
 
-    function addNewMapping(address key, uint256 value)
-        external
-    {
+    function addNewMapping(address key, uint256 value) external {
         newMapping[key] = value;
     }
 
-    function setNewValue(string calldata aNewValue)
-        external
-    {
+    function setNewValue(string calldata aNewValue) external {
         newValue = aNewValue;
     }
 

@@ -2,7 +2,6 @@ pragma solidity 0.5.17;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
 
-
 /**
  * @notice This contract represents a wrapped token within the Teller protocol
  * @dev Note: since interfaces cannot be inherited by other interfaces, this TTokenInterface is defined as contract.

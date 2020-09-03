@@ -9,7 +9,6 @@ import "../interfaces/InterestConsensusInterface.sol";
 // Contracts
 import "./Consensus.sol";
 
-
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
 /**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
@@ -26,7 +25,6 @@ import "./Consensus.sol";
     @author develop@teller.finance
  */
 contract InterestConsensus is InterestConsensusInterface, Consensus {
-
     /* State Variables */
 
     // mapping of (lender, endTime) to the aggregated node submissions for their request

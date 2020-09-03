@@ -12,7 +12,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 library LogicVersionLib {
     using SafeMath for uint256;
     using Address for address;
-    
+
     /**
         @notice It stores the current version for a given logic address.
         @param logic the logic address.

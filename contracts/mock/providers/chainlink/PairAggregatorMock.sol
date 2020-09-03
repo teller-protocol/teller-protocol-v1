@@ -2,7 +2,6 @@ pragma solidity 0.5.17;
 
 import "@chainlink/contracts/src/v0.5/interfaces/AggregatorInterface.sol";
 
-
 contract PairAggregatorMock is AggregatorInterface {
     struct PriceRound {
         uint256 timestamp;

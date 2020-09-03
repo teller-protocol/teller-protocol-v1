@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "../util/TellerCommon.sol";
 
-
 /**
     @notice This interface defines the functions for interactions between lenders and the interests.
 

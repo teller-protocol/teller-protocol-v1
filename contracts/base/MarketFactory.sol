@@ -85,10 +85,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         @dev It throws a require error if the market doesn't exist.
      */
     modifier marketExist(address borrowedToken, address collateralToken) {
-        require(
-            _getMarket(borrowedToken, collateralToken).exists,
-            "MARKET_NOT_EXIST"
-        );
+        require(_getMarket(borrowedToken, collateralToken).exists, "MARKET_NOT_EXIST");
         _;
     }
 
@@ -105,17 +102,15 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         address tToken,
         address borrowedToken,
         address collateralToken
-    )
-        external
-        onlyPauser()
-        isNotPaused()
-        isInitialized()
-    {
+    ) external onlyPauser() isNotPaused() isInitialized() {
         _requireCreateMarket(tToken, borrowedToken, collateralToken);
         address owner = msg.sender;
 
-        IChainlinkPairAggregatorRegistry pairAggregatorRegistry = settings().pairAggregatorRegistry();
-        address pairAggregator = address(pairAggregatorRegistry.getPairAggregator(borrowedToken, collateralToken));
+        IChainlinkPairAggregatorRegistry pairAggregatorRegistry = settings()
+            .pairAggregatorRegistry();
+        address pairAggregator = address(
+            pairAggregatorRegistry.getPairAggregator(borrowedToken, collateralToken)
+        );
         require(pairAggregator != address(0x0), "ORACLE_NOT_FOUND_FOR_MARKET");
 
         (
@@ -143,7 +138,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
             pairAggregator
         );
 
-        emit NewMarketCreated (
+        emit NewMarketCreated(
             owner,
             borrowedToken,
             collateralToken,
@@ -161,19 +156,16 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         @param borrowedToken the borrowed token address.
         @param collateralToken the collateral token address.
      */
-    function removeMarket(address borrowedToken, address collateralToken) external
+    function removeMarket(address borrowedToken, address collateralToken)
+        external
         onlyPauser()
         isNotPaused()
         isInitialized()
-        marketExist(borrowedToken, collateralToken) {
-
+        marketExist(borrowedToken, collateralToken)
+    {
         delete markets[borrowedToken][collateralToken];
 
-        emit MarketRemoved (
-            msg.sender,
-            borrowedToken,
-            collateralToken
-        );
+        emit MarketRemoved(msg.sender, borrowedToken, collateralToken);
     }
 
     /**
@@ -182,7 +174,11 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         @param collateralToken the collateral token address.
         @return a struct with the contract addresses for the given market.
      */
-    function getMarket(address borrowedToken, address collateralToken) external view returns (TellerCommon.Market memory) {
+    function getMarket(address borrowedToken, address collateralToken)
+        external
+        view
+        returns (TellerCommon.Market memory)
+    {
         return _getMarket(borrowedToken, collateralToken);
     }
 
@@ -192,7 +188,11 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         @param collateralToken the collateral token address.
         @return true if the market exists for the given borrowed/collateral tokens. Otherwise it returns false.
      */
-    function existMarket(address borrowedToken, address collateralToken) external view returns (bool) {
+    function existMarket(address borrowedToken, address collateralToken)
+        external
+        view
+        returns (bool)
+    {
         return _getMarket(borrowedToken, collateralToken).exists;
     }
 
@@ -202,7 +202,11 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         @param collateralToken the collateral token address.
         @return true if the market doesn't exist for the given borrowed/collateral tokens. Otherwise it returns false.
      */
-    function notExistMarket(address borrowedToken, address collateralToken) external view returns (bool) {
+    function notExistMarket(address borrowedToken, address collateralToken)
+        external
+        view
+        returns (bool)
+    {
         return !_getMarket(borrowedToken, collateralToken).exists;
     }
 
@@ -210,10 +214,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         @notice It initializes this market factory instance.
         @param settingsAddress the settings contract address.
      */
-    function initialize(address settingsAddress)
-        external
-        isNotInitialized()
-    {
+    function initialize(address settingsAddress) external isNotInitialized() {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
 
         _initialize();
@@ -269,7 +270,11 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         @param collateralToken the collateral token address.
         @return a struct with the contract addresses for the given market.
      */
-    function _getMarket(address borrowedToken, address collateralToken) internal view returns (TellerCommon.Market memory) {
+    function _getMarket(address borrowedToken, address collateralToken)
+        internal
+        view
+        returns (TellerCommon.Market memory)
+    {
         return markets[borrowedToken][collateralToken];
     }
 
@@ -287,7 +292,10 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
     ) internal view marketNotExist(borrowedToken, collateralToken) {
         require(tToken.isContract(), "TTOKEN_MUST_BE_CONTRACT");
         require(borrowedToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
-        require(collateralToken == settings().ETH_ADDRESS() || collateralToken.isContract(), "COLL_TOKEN_MUST_BE_CONTRACT");
+        require(
+            collateralToken == settings().ETH_ADDRESS() || collateralToken.isContract(),
+            "COLL_TOKEN_MUST_BE_CONTRACT"
+        );
     }
 
     /**
@@ -304,13 +312,16 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         address borrowedToken,
         address collateralToken,
         address pairAggregator
-    ) internal returns (
-        LendingPoolInterface lendingPoolProxy,
-        InterestConsensusInterface interestConsensusProxy,
-        LendersInterface lendersProxy,
-        LoanTermsConsensusInterface loanTermsConsensusProxy,
-        LoansInterface loansProxy
-    ) {
+    )
+        internal
+        returns (
+            LendingPoolInterface lendingPoolProxy,
+            InterestConsensusInterface interestConsensusProxy,
+            LendersInterface lendersProxy,
+            LoanTermsConsensusInterface loanTermsConsensusProxy,
+            LoansInterface loansProxy
+        )
+    {
         // Creating proxies
         (
             lendingPoolProxy,
@@ -343,21 +354,54 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
             - LoanTermsConsensus
         @return the proxy instances.
      */
-    function _createProxies(address collateralToken) internal returns (
-        LendingPoolInterface lendingPoolProxy,
-        InterestConsensusInterface interestConsensusProxy,
-        LendersInterface lendersProxy,
-        LoanTermsConsensusInterface loanTermsConsensusProxy,
-        LoansInterface loansProxy
-    ) {
-        lendingPoolProxy = LendingPoolInterface(_createDynamicProxy(settings().versionsRegistry().consts().LENDING_POOL_LOGIC_NAME()));
-        interestConsensusProxy = InterestConsensusInterface(_createDynamicProxy(settings().versionsRegistry().consts().INTEREST_CONSENSUS_LOGIC_NAME()));
-        lendersProxy = LendersInterface(_createDynamicProxy(settings().versionsRegistry().consts().LENDERS_LOGIC_NAME()));
-        loanTermsConsensusProxy = LoanTermsConsensusInterface(_createDynamicProxy(settings().versionsRegistry().consts().LOAN_TERMS_CONSENSUS_LOGIC_NAME()));
+    function _createProxies(address collateralToken)
+        internal
+        returns (
+            LendingPoolInterface lendingPoolProxy,
+            InterestConsensusInterface interestConsensusProxy,
+            LendersInterface lendersProxy,
+            LoanTermsConsensusInterface loanTermsConsensusProxy,
+            LoansInterface loansProxy
+        )
+    {
+        lendingPoolProxy = LendingPoolInterface(
+            _createDynamicProxy(
+                settings().versionsRegistry().consts().LENDING_POOL_LOGIC_NAME()
+            )
+        );
+        interestConsensusProxy = InterestConsensusInterface(
+            _createDynamicProxy(
+                settings().versionsRegistry().consts().INTEREST_CONSENSUS_LOGIC_NAME()
+            )
+        );
+        lendersProxy = LendersInterface(
+            _createDynamicProxy(
+                settings().versionsRegistry().consts().LENDERS_LOGIC_NAME()
+            )
+        );
+        loanTermsConsensusProxy = LoanTermsConsensusInterface(
+            _createDynamicProxy(
+                settings().versionsRegistry().consts().LOAN_TERMS_CONSENSUS_LOGIC_NAME()
+            )
+        );
         if (collateralToken == settings().ETH_ADDRESS()) {
-            loansProxy = LoansInterface(_createDynamicProxy(settings().versionsRegistry().consts().ETHER_COLLATERAL_LOANS_LOGIC_NAME()));
+            loansProxy = LoansInterface(
+                _createDynamicProxy(
+                    settings()
+                        .versionsRegistry()
+                        .consts()
+                        .ETHER_COLLATERAL_LOANS_LOGIC_NAME()
+                )
+            );
         } else {
-            loansProxy = LoansInterface(_createDynamicProxy(settings().versionsRegistry().consts().TOKEN_COLLATERAL_LOANS_LOGIC_NAME()));
+            loansProxy = LoansInterface(
+                _createDynamicProxy(
+                    settings()
+                        .versionsRegistry()
+                        .consts()
+                        .TOKEN_COLLATERAL_LOANS_LOGIC_NAME()
+                )
+            );
         }
     }
 
