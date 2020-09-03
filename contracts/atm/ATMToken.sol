@@ -5,7 +5,7 @@ pragma solidity 0.5.17;
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Burnable.sol";
-import "./TLRTokenInterface.sol";
+import "./ATMTokenInterface.sol";
 
 import "../base/TInitializable.sol";
 import "@openzeppelin/contracts/utils/Arrays.sol";
@@ -23,21 +23,21 @@ import "./BaseATM.sol";
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
- *  @title Teller Token for the Teller Platform
+ *  @title ATM Token for Teller DAO
  *
  *  @author develop@teller.finance
  */
 
-contract TLRToken is
+contract ATMToken is
     BaseATM,
-    TLRTokenInterface,
+    ATMTokenInterface,
     ERC20Detailed,
     ERC20Mintable,
     ERC20Burnable,
     TInitializable
 {
     /**
-     *  @notice TLRToken implements an ERC20 token with a supply cap and a vesting scheduling
+     *  @notice ATMToken implements an ERC20 token with a supply cap and a vesting scheduling
      */
     using SafeMath for uint256;
     using Arrays for uint256[];
@@ -84,10 +84,10 @@ contract TLRToken is
     /* Functions */
 
     /**
-        @notice It initializes this token instance. It should only be called from the TLRTokenProxy constructor!
-        @param name The name of the token
-        @param symbol The symbol of the token
-        @param decimals The amount of decimals for token
+        @notice It initializes this token instance. It should only be called from the ATMTokenProxy constructor!
+        @param name The name of the ATM token
+        @param symbol The symbol of the ATM token
+        @param decimals The amount of decimals for ATM token
         @param cap The maximum number of tokens available
         @param maxVestingPerWallet The maximum number of times a wallet can mint their vesting
         @param atmSettingsAddress The ATMSettings address

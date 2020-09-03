@@ -46,9 +46,9 @@ contract ATMSettings is IATMSettings {
     mapping(address => mapping(address => address)) public marketToAtm;
 
     /**
-        @notice It stores the current logic implementation address for TLR Tokens.
+        @notice It stores the current logic implementation address for ATM Tokens.
      */
-    address public tlrTokenLogic;
+    address public atmTokenLogic;
 
     /**
         @notice It stores the current logic implementation address for ATM Governance.
@@ -70,27 +70,27 @@ contract ATMSettings is IATMSettings {
 
     constructor(
         address settingsAddress,
-        address tlrTokenLogicAddress,
+        address atmTokenLogicAddress,
         address atmGovernanceLogicAddress
     ) public {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
 
         settings = SettingsInterface(settingsAddress);
-        _setTLRTokenLogic(tlrTokenLogicAddress);
+        _setATMTokenLogic(atmTokenLogicAddress);
         _setATMGovernanceLogic(atmGovernanceLogicAddress);
     }
 
     /** External Functions */
 
     /**
-        @notice It sets a new TLR token template to be used in the proxy (see createATM function).
-        @param newTLRTokenLogicAddress the new TLR token template address.
+        @notice It sets a new ATM token template to be used in the proxy (see createATM function).
+        @param newATMTokenLogicAddress the new ATM token template address.
      */
-    function setTLRTokenLogic(address newTLRTokenLogicAddress)
+    function setATMTokenLogic(address newATMTokenLogicAddress)
         external
         onlyPauser()
     {
-        _setTLRTokenLogic(newTLRTokenLogicAddress);
+        _setATMTokenLogic(newATMTokenLogicAddress);
     }
 
     /**
@@ -266,23 +266,23 @@ contract ATMSettings is IATMSettings {
     /** Internal functions */
 
     /**
-        @notice It sets a new TLR token template to be used in the proxy (see createATM function).
-        @param newTLRTokenLogicAddress the new TLR token template address.
+        @notice It sets a new ATM token template to be used in the proxy (see createATM function).
+        @param newATMTokenLogicAddress the new ATM token template address.
      */
-    function _setTLRTokenLogic(address newTLRTokenLogicAddress) internal {
-        require(newTLRTokenLogicAddress.isContract(), "TLR_TOKEN_MUST_BE_A_CONTRACT");
-        address oldTLRTokenLogic = tlrTokenLogic;
-        oldTLRTokenLogic.requireNotEqualTo(
-            newTLRTokenLogicAddress,
+    function _setATMTokenLogic(address newATMTokenLogicAddress) internal {
+        require(newATMTokenLogicAddress.isContract(), "ATM_TOKEN_MUST_BE_A_CONTRACT");
+        address oldATMTokenLogic = atmTokenLogic;
+        oldATMTokenLogic.requireNotEqualTo(
+            newATMTokenLogicAddress,
             "NEW_ATM_TOKEN_MUST_BE_PROVIDED"
         );
 
-        tlrTokenLogic = newTLRTokenLogicAddress;
+        atmTokenLogic = newATMTokenLogicAddress;
 
-        emit TLRTokenLogicUpdated(
+        emit ATMTokenLogicUpdated(
             msg.sender,
-            oldTLRTokenLogic,
-            newTLRTokenLogicAddress
+            oldATMTokenLogic,
+            newATMTokenLogicAddress
         );
     }
 
