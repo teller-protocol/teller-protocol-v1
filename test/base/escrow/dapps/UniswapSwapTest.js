@@ -1,5 +1,5 @@
 // JS Libraries
-const withData = require('./node_modules/leche').withData;
+const withData = require('leche').withData;
 const { t, DUMMY_ADDRESS } = require("../../../utils/consts");
 const { uniswap } = require('../../../utils/events');
 const { assert } = require('chai');
@@ -9,8 +9,8 @@ const USDC = artifacts.require("./mock/token/USDCMock.sol");
 const WETH = artifacts.require("./mock/token/WETHMock.sol");
 // Smart contracts
 
-const Uniswap = artifacts.require("../mock/base/escrows/dappss/UniswapMock.sol");
-const UniswapRouter = artifacts.require("./mock/base/escrows/dappss/UniswapV2Router02Mock.sol");
+const Uniswap = artifacts.require("../mock/base/escrow/dapps/UniswapMock.sol");
+const UniswapRouter = artifacts.require("./mock/base/escrow/dapps/UniswapV2Router02Mock.sol");
 
 contract("UniswapSwapTest", function(accounts) {
   const DONT_ALTER_BALANCE = 999999;
