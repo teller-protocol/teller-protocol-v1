@@ -2,7 +2,7 @@ module.exports = {
     teller: {
         name: 'Teller',
         token: {
-            name: 'TLR Token',
+            name: 'Teller Token',
             symbol: 'TLR',
             decimals: 18,
             maxCap: 100000000000,
