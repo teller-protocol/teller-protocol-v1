@@ -25,7 +25,7 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   const liquidatorTxConfig = await accounts.getTxConfigAt(2);
   const recipient = NULL_ADDRESS;
   const initialOraclePrice = toDecimals('0.005', 18); // 1 token = 0.005 ether = 5000000000000000 wei
-  const finalOraclePrice = toDecimals('0.006', 18); // 1 token = 0.006 ether = 6000000000000000 wei
+  const finalOraclePrice = toDecimals('0.09', 18); // 1 token = 0.006 ether = 6000000000000000 wei
   const decimals = parseInt(await token.decimals());
   const lendingPoolDepositAmountWei = toDecimals(4000, decimals);
   const amountWei = toDecimals(100, decimals);
@@ -125,9 +125,10 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
 
   const initialTotalCollateral = await loansInstance.totalCollateral();
   const liquidateEthPrice = await settingsInstance.getPlatformSettingValue(toBytes32(web3, platformSettingsNames.LiquidateEthPrice));
+  const getCollateralInfo = await loansInstance.getCollateralInfo(lastLoanID);
   const {
     neededInLendingTokens,
-  } = await loansInstance.getCollateralInfo(lastLoanID);
+  } = getCollateralInfo;
   const transferAmountToLiquidate = BigNumber(neededInLendingTokens.toString()).times(liquidateEthPrice).div(10000);
 
   await token.mint(liquidatorTxConfig.from, transferAmountToLiquidate.toFixed(0));
