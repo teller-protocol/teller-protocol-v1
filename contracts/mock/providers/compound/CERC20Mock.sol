@@ -2,12 +2,16 @@ pragma solidity 0.5.17;
 
 import "../../token/ERC20Mock.sol";
 
-
 contract CERC20Mock is ERC20Mock {
     uint8 public constant CTOKEN_DECIMALS = 8;
     uint256 public constant NO_ERROR = 0;
+    uint256 public constant RETURN_ERROR = 9999;
+    uint256 public constant SIMULATE_COMPOUND_MINT_RETURN_ERROR = 88888888;
+    uint256 public constant SIMULATE_COMPOUND_MINT_ERROR = 77777777;
+    uint256 public constant SIMULATE_COMPOUND_REDEEM_UNDERLYING_RETURN_ERROR = 66666666;
+    uint256 public constant SIMULATE_COMPOUND_REDEEM_UNDERLYING_ERROR = 55555555;
 
-    ERC20Detailed public underlying;
+    IERC20 public underlying;
     uint256 public multiplier;
 
     constructor(
@@ -19,13 +23,20 @@ contract CERC20Mock is ERC20Mock {
     ) public ERC20Mock(aName, aSymbol, aDecimals, 0) {
         require(underlyingToken != address(0x0), "PROVIDE_UNDERLYIG_TOKEN");
         require(multiplierValue > 0, "PROVIDE_MULTIPLIER");
-        underlying = ERC20Detailed(underlyingToken);
+        underlying = IERC20(underlyingToken);
         multiplier = multiplierValue;
     }
 
     function mint(uint256 mintAmount) external returns (uint256) {
+        if (SIMULATE_COMPOUND_MINT_ERROR == mintAmount) {
+            mintAmount = 1;
+        }
         uint256 cAmount = _getCTokensAmount(mintAmount);
+        underlying.transferFrom(msg.sender, address(this), mintAmount);
         require(super.mint(msg.sender, cAmount), "CTOKEN_MINT_FAILED");
+        if (SIMULATE_COMPOUND_MINT_RETURN_ERROR == mintAmount) {
+            return RETURN_ERROR;
+        }
         return NO_ERROR;
     }
 
@@ -38,8 +49,16 @@ contract CERC20Mock is ERC20Mock {
 
     // https://compound.finance/docs/ctokens#redeem-underlying
     function redeemUnderlying(uint256 redeemAmount) external returns (uint256) {
+        if (SIMULATE_COMPOUND_REDEEM_UNDERLYING_ERROR == redeemAmount) {
+            redeemAmount = 1;
+        }
         uint256 tokenAmount = _getTokensAmount(redeemAmount);
         require(super.transfer(msg.sender, tokenAmount), "UNDERLYING_TRANSFER_FAILED");
+        super.burn(redeemAmount);
+        require(((ERC20Mock(address(underlying))).mint(msg.sender, redeemAmount)), "UNDERLYING_MINT_FAILED");
+        if (SIMULATE_COMPOUND_REDEEM_UNDERLYING_RETURN_ERROR == redeemAmount) {
+            return RETURN_ERROR;
+        }
         return NO_ERROR;
     }
 

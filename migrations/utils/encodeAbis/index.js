@@ -8,16 +8,63 @@ const encodeData = (web3, functionName, paramTypes, params) => {
     return `${functionSignature}${functionParamsEncoded.toString('hex')}`;
 };
 
-const SETTINGS_INITIALIZE_SIGNATURE = 'initialize(address)';
-const SETTINGS_INITIALIZE_PARAM_TYPES = ['address'];
+const encodeParamsData = (paramTypes, params) => {
+    const functionParamsEncoded = abijs.rawEncode(paramTypes, params);
+    return `0x${functionParamsEncoded.toString('hex')}`;
+};
+
+const DAPP_MOCK_TEST_FUNCTION_SIGNATURE = 'testFunction(bool)';
+const DAPP_MOCK_TEST_FUNCTION_PARAM_TYPES = ['bool'];
+const DAPP_MOCK_INVALID_TEST_FUNCTION_SIGNATURE = 'invalidTestFunction(bool)';
+const DAPP_MOCK_INVALID_TEST_FUNCTION_PARAM_TYPES = ['bool'];
+
+const SETTINGS_INITIALIZE_SIGNATURE = 'initialize(address,address,address,address,address,address)';
+const SETTINGS_INITIALIZE_PARAM_TYPES = ['address','address','address','address','address','address'];
 
 const LENDING_POOL_INITIALIZE_SIGNATURE = 'initialize(address,address,address,address,address,address,address,address)';
 const LENDING_POOL_INITIALIZE_PARAM_TYPES = ['address', 'address', 'address', 'address', 'address', 'address', 'address', 'address'];
 
 module.exports = {
+    encodeData,
+    encodeParamsData,
+    dappMockABI: {
+        encodeTestFunction: (web3, failTransaction) => {
+            const params = [failTransaction];
+            return encodeData(
+                web3,
+                DAPP_MOCK_TEST_FUNCTION_SIGNATURE,
+                DAPP_MOCK_TEST_FUNCTION_PARAM_TYPES,
+                params,
+            );
+        },
+        encodeInvalidTestFunction: (web3, failTransaction) => {
+            const params = [failTransaction];
+            return encodeData(
+                web3,
+                DAPP_MOCK_INVALID_TEST_FUNCTION_SIGNATURE,
+                DAPP_MOCK_INVALID_TEST_FUNCTION_PARAM_TYPES,
+                params,
+            );
+        },
+    },
     settingsABI: {
-        encodeInitData: (web3, caller) => {
-            const params = [caller];
+        encodeInitData: (
+            web3,
+            escrowFactoryAddress,
+            versionsRegistryAddress,
+            pairAggregatorRegistryAddress,
+            marketsStateAddress,
+            interestValidatorAddress,
+            atmSettingsAddress,
+            ) => {
+            const params = [
+                escrowFactoryAddress,
+                versionsRegistryAddress,
+                pairAggregatorRegistryAddress,
+                marketsStateAddress,
+                interestValidatorAddress,
+                atmSettingsAddress
+            ];
             return encodeData(
                 web3,
                 SETTINGS_INITIALIZE_SIGNATURE,

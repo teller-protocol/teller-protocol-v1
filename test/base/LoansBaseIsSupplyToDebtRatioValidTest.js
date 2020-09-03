@@ -4,6 +4,7 @@ const { t, NULL_ADDRESS } = require('../utils/consts');
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 const MarketsStateInterfaceEncoder = require('../utils/encoders/MarketsStateInterfaceEncoder');
 const ATMGovernanceInterfaceEncoder = require('../utils/encoders/ATMGovernanceInterfaceEncoder');
+const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -15,6 +16,7 @@ contract('LoansBaseIsSupplyToDebtRatioValidTest', function (accounts) {
     const IAtmSettingsEncoder = new IATMSettingsEncoder(web3);
     const marketsStateInterfaceEncoder = new MarketsStateInterfaceEncoder(web3);
     const atmGovernanceInterfaceEncoder = new ATMGovernanceInterfaceEncoder(web3);
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     let instance;
     let oracleInstance;
     let loanTermsConsInstance;
@@ -30,15 +32,24 @@ contract('LoansBaseIsSupplyToDebtRatioValidTest', function (accounts) {
         settingsInstance = await Mock.new();
         marketsInstance = await Mock.new();
         atmSettingsInstance = await Mock.new();
+        const collateralTokenInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(
             oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,
-            marketsInstance.address,
-            atmSettingsInstance.address,
-        )
+            collateralTokenInstance.address,
+        );
+
+        await settingsInstance.givenMethodReturnAddress(
+            settingsInterfaceEncoder.encodeMarketsState(),
+            marketsInstance.address
+        );
+        await settingsInstance.givenMethodReturnAddress(
+            settingsInterfaceEncoder.encodeATMSettings(),
+            atmSettingsInstance.address
+        );
     });
 
     withData({

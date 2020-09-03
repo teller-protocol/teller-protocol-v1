@@ -96,7 +96,62 @@ library TellerCommon {
         uint256 principalOwed;
         uint256 interestOwed;
         uint256 borrowedAmount;
+        address escrow;
         LoanStatus status;
         bool liquidated;
+    }
+
+    /**
+        @notice This struct represents the collateral information for a given loan.
+        @param collateral the current collateral amount.
+        @param neededInLendingTokens the collateral needed expressed in lending tokens.
+        @param neededInCollateralTokens the collateral needed expressed in collateral tokens.
+        @param moreCollateralRequired true if the given loan requires more collateral. Otherwise it is false.
+     */
+    struct LoanCollateralInfo {
+        uint256 collateral;
+        uint256 neededInLendingTokens;
+        uint256 neededInCollateralTokens;
+        bool moreCollateralRequired;
+    }
+
+    /**
+        @notice This struct defines the dapp address and data to execute in the callDapp function.
+        @dev It is executed using a delegatecall in the Escrow contract.
+     */
+    struct DappData {
+        address location;
+        bytes data;
+    }
+
+    /**
+        @notice This struct defines a market in the platform.
+        @dev It is used by the MarketFactory contract.
+     */
+    struct Market {
+        address loans;
+        address lenders;
+        address lendingPool;
+        address loanTermsConsensus;
+        address interestConsensus;
+        address pairAggregator;
+        bool exists;
+    }
+
+    /**
+        @notice This struct is used to register new pair aggregator in the aggregators registry.@
+     */
+    struct PairAggregatorRegisterRequest {
+        address baseToken;
+        address quoteToken;
+        address chainlinkAggregatorAddress;
+        bool inverse;
+        uint8 responseDecimals;
+        uint8 collateralDecimals;
+    }
+
+    struct EscrowValue {
+        uint256 valueInToken;
+        uint256 valueInEth;
     }
 }

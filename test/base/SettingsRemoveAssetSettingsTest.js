@@ -39,7 +39,7 @@ contract('SettingsRemoveAssetSettingsTest', function (accounts) {
             [
                 { maxLoanAmount: toDecimals(900, 18) },
                 { maxLoanAmount: toDecimals(1000, 18) }
-            ], false, false, 1, 1, 'PauserRole: caller does not have the Pauser role', true
+            ], false, false, 1, 1, 'NOT_PAUSER', true
         ],
         _4_valid_with3PreviousAssets_remove: [
             [
@@ -48,11 +48,12 @@ contract('SettingsRemoveAssetSettingsTest', function (accounts) {
                 { maxLoanAmount: toDecimals(2000, 18) }
             ], false, false, 0, 1, undefined, false
         ],
-        _5_invalid_platform_paused: [
+        // We should able to remove/create/update an asset settings when platform is paused.
+        _5_platform_paused: [
             [
                 { maxLoanAmount: toDecimals(900, 18) },
                 { maxLoanAmount: toDecimals(1000, 18) }
-            ], true, false, 0, 1, 'Pausable: paused', true
+            ], true, false, 0, 1, undefined, false
         ],
     }, function(
         previousAssetsInfo,
@@ -65,7 +66,7 @@ contract('SettingsRemoveAssetSettingsTest', function (accounts) {
     ) {
         it(t('user', 'removeAssetSettings', 'Should (or not) be able to remove a asset setting.', mustFail), async function() {
             // Setup
-            const instance = await createTestSettingsInstance(Settings);
+            const instance = await createTestSettingsInstance(Settings, { from: owner, Mock });
             
             const senderAddress = getSenderAddress(senderIndex);
             if(addAsPauserRole) {

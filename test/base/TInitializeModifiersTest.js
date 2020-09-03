@@ -7,7 +7,7 @@ const { t } = require('../utils/consts');
 // Smart contracts
 const TInitializable = artifacts.require("./mock/base/TInitializableModifiersMock.sol");
 
-contract('InitializeModifiersTest', function (accounts) {
+contract('TInitializeModifiersTest', function (accounts) {
     let instance;
     
     beforeEach('Setup for each test', async () => {

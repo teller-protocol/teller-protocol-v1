@@ -11,23 +11,19 @@ const Base = artifacts.require("./mock/base/BaseMock.sol");
 contract('BaseInitializeTest', function (accounts) {
 
     withData({
-        _1_valid: [99, 99, undefined, false],
-        _2_settings_empty: [-1, 99, 'SETTINGS_MUST_BE_PROVIDED', true],
-        _3_settings_not_contract: [1, 99, 'SETTINGS_MUST_BE_A_CONTRACT', true],
-        _4_markets_empty: [99, -1, 'MARKETS_MUST_BE_PROVIDED', true],
-        _5_markets_not_contract: [99, 2, 'MARKETS_MUST_BE_A_CONTRACT', true],
-    }, function(settingsIndex, marketsIndex, expectedErrorMessage, mustFail) {
+        _1_valid: [99, undefined, false],
+        _2_settings_empty: [-1, 'SETTINGS_MUST_BE_PROVIDED', true],
+        _3_settings_not_contract: [1, 'SETTINGS_MUST_BE_A_CONTRACT', true],
+    }, function(settingsIndex, expectedErrorMessage, mustFail) {
         it(t('user', 'initialize', 'Should (or not) be able to initialize the new instance.', mustFail), async function() {
             // Setup
             const settingsInstance = await Mock.new();
-            const marketsInstance = await Mock.new();
             const settingsAddress = settingsIndex === -1 ? NULL_ADDRESS : (settingsIndex === 99 ? settingsInstance.address: accounts[settingsIndex]);
-            const marketsAddress = marketsIndex === -1 ? NULL_ADDRESS : (marketsIndex === 99 ? marketsInstance.address: accounts[marketsIndex]);
             const instance = await Base.new();
 
             try {
                 // Invocation
-                const result = await instance.externalInitialize(settingsAddress, marketsAddress);
+                const result = await instance.externalInitialize(settingsAddress);
                 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');

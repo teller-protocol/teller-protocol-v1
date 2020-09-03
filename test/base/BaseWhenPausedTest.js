@@ -16,10 +16,9 @@ contract('BaseWhenPausedTest', function (accounts) {
     let instance;
     
     beforeEach('Setup for each test', async () => {
-        const marketsInstance = await Mock.new();
-        settings = await createTestSettingsInstance(Settings);
+        settings = await createTestSettingsInstance(Settings, { from: owner, Mock });
         instance = await BaseMock.new();
-        await instance.externalInitialize(settings.address, marketsInstance.address);
+        await instance.externalInitialize(settings.address);
     });
 
     withData({

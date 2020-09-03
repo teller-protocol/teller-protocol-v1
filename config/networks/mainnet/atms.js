@@ -2,8 +2,8 @@ module.exports = {
     teller: {
         name: 'Teller',
         token: {
-            name: 'ATM Token',
-            symbol: 'ATM',
+            name: 'TLR Token',
+            symbol: 'TLR',
             decimals: 18,
             maxCap: 100000000,
             maxVestingPerWallet: 50,

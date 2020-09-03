@@ -26,9 +26,8 @@ contract('LendersModifiersTest', function (accounts) {
         it(t('user', 'isTToken', 'Should able (or not) to call function with modifier isTToken.', mustFail), async function() {
             // Setup
             const settingsInstance = await Mock.new();
-            const marketsInstance = await Mock.new();
             const instance = await Lenders.new();
-            await instance.initialize(tTokenAddress, lendingPoolAddress, consensusAddress, settingsInstance.address, marketsInstance.address);
+            await instance.initialize(tTokenAddress, lendingPoolAddress, consensusAddress, settingsInstance.address);
 
             try {
                 // Invocation
@@ -62,9 +61,8 @@ contract('LendersModifiersTest', function (accounts) {
         it(t('user', 'isLendingPool', 'Should able (or not) to call function with modifier isLendingPool.', mustFail), async function() {
             // Setup
             const settingsInstance = await Mock.new();
-            const marketsInstance = await Mock.new();
             const instance = await Lenders.new();
-            await instance.initialize(tTokenAddress, lendingPoolAddress, consensusAddress, settingsInstance.address, marketsInstance.address);
+            await instance.initialize(tTokenAddress, lendingPoolAddress, consensusAddress, settingsInstance.address);
 
             try {
                 // Invocation
@@ -96,9 +94,8 @@ contract('LendersModifiersTest', function (accounts) {
         it(t('user', 'isValid', 'Should able (or not) to call function with modifier isValid.', mustFail), async function() {
             // Setup
             const settingsInstance = await Mock.new();
-            const marketsInstance = await Mock.new();
             const instance = await Lenders.new();
-            await instance.initialize(tTokenAddress, lendingPoolAddress, consensusAddress, settingsInstance.address, marketsInstance.address);
+            await instance.initialize(tTokenAddress, lendingPoolAddress, consensusAddress, settingsInstance.address);
 
             try {
                 // Invocation

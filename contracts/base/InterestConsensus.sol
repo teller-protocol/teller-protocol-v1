@@ -2,7 +2,6 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Libraries
-import "../util/AddressLib.sol";
 
 // Interfaces
 import "../interfaces/InterestConsensusInterface.sol";
@@ -11,13 +10,22 @@ import "../interfaces/InterestConsensusInterface.sol";
 import "./Consensus.sol";
 
 
+/*****************************************************************************************************/
+/**                                             WARNING                                             **/
+/**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
+/**  ---------------------------------------------------------------------------------------------  **/
+/**  Do NOT change the order of or PREPEND any storage variables to this or new versions of this    **/
+/**  contract as this will cause the the storage slots to be overwritten on the proxy contract!!    **/
+/**                                                                                                 **/
+/**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
+/**  more information.                                                                              **/
+/*****************************************************************************************************/
 /**
     @notice This contract processes the node responses to get consensus in the lender interest.
 
     @author develop@teller.finance
  */
-contract InterestConsensus is Consensus, InterestConsensusInterface {
-    using AddressLib for address;
+contract InterestConsensus is InterestConsensusInterface, Consensus {
 
     /* State Variables */
 
@@ -38,10 +46,10 @@ contract InterestConsensus is Consensus, InterestConsensusInterface {
     function processRequest(
         TellerCommon.InterestRequest calldata request,
         TellerCommon.InterestResponse[] calldata responses
-    ) external isInitialized() isCaller() returns (uint256) {
+    ) external isInitialized() isCaller(msg.sender) returns (uint256) {
         require(
             responses.length >=
-                settings.getPlatformSettingValue(REQUIRED_SUBMISSIONS_SETTING),
+                settings().getPlatformSettingValue(consts.REQUIRED_SUBMISSIONS_SETTING()),
             "INTEREST_INSUFFICIENT_RESPONSES"
         );
         require(

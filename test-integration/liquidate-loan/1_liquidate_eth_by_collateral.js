@@ -109,9 +109,10 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   // Take out a loan.
   console.log(`Taking out loan id ${lastLoanID}...`);
   const takeOutLoanResult = await loansInstance.takeOutLoan(lastLoanID, amountWei, borrowerTxConfig);
+  const { escrow } = await loansInstance.loans(lastLoanID);
   loans
     .loanTakenOut(takeOutLoanResult)
-    .emitted(lastLoanID, borrowerTxConfig.from, amountWei);
+    .emitted(lastLoanID, borrowerTxConfig.from, escrow, amountWei);
 
   // Set a lower price for Token/ETH.
   console.log(`Settings final (lower) oracle price: 1 ${tokenName} = ${finalOraclePrice.toFixed(0)} WEI = ${toUnits(finalOraclePrice, 18)} ETHER`);
@@ -125,9 +126,9 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   const initialTotalCollateral = await loansInstance.totalCollateral();
   const liquidateEthPrice = await settingsInstance.getPlatformSettingValue(toBytes32(web3, platformSettingsNames.LiquidateEthPrice));
   const {
-    collateralNeededLendingTokens,
+    neededInLendingTokens,
   } = await loansInstance.getCollateralInfo(lastLoanID);
-  const transferAmountToLiquidate = BigNumber(collateralNeededLendingTokens.toString()).times(liquidateEthPrice).div(10000);
+  const transferAmountToLiquidate = BigNumber(neededInLendingTokens.toString()).times(liquidateEthPrice).div(10000);
 
   await token.mint(liquidatorTxConfig.from, transferAmountToLiquidate.toFixed(0));
 

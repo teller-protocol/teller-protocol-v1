@@ -48,6 +48,7 @@ contract TokenCollateralLoansMock is TokenCollateralLoans {
             principalOwed: principalOwed,
             interestOwed: interestOwed,
             borrowedAmount: borrowedAmount,
+            escrow: address(0x0),
             status: status,
             liquidated: liquidated
         });

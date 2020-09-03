@@ -7,8 +7,4 @@ class ATMTokenEncoder {
     }
 }
 
-ATMTokenEncoder.prototype.encodeAtmTokenLogic = function() {
-    return encode(this.web3, 'atmTokenLogic()');
-}
-
 module.exports = ATMTokenEncoder;

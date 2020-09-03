@@ -11,14 +11,13 @@ const platformSettingsNames = require('../../test/utils/platformSettingsNames');
 module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonces, chainId}) => {
   console.log('Repay Loan in 4 Payments');
   const tokenName = processArgs.getValue('testTokenName');
-  const oracleTokenName = 'USD';
   const collateralTokenName = 'LINK';
   const settingsInstance = await getContracts.getDeployed(teller.settings());
   const token = await getContracts.getDeployed(tokens.get(tokenName));
   const collateralToken = await getContracts.getDeployed(tokens.get(collateralTokenName));
   const lendingPoolInstance = await getContracts.getDeployed(teller.link().lendingPool(tokenName));
   const loansInstance = await getContracts.getDeployed(teller.link().loans(tokenName));
-  const chainlinkOracle = await getContracts.getDeployed(chainlink.custom(collateralTokenName, oracleTokenName));
+  const chainlinkOracle = await getContracts.getDeployed(chainlink.custom(collateralTokenName, tokenName));
   const loanTermConsensusInstance = await getContracts.getDeployed(teller.link().loanTermsConsensus(tokenName));
 
   const currentTimestamp = parseInt(await timer.getCurrentTimestamp());
@@ -26,7 +25,8 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
 
   const borrower = await accounts.getAt(1);
   const recipient = NULL_ADDRESS;
-  const initialOraclePrice = toDecimals('0.005', 18); // 1 token = 0.005 ether = 5000000000000000 wei
+  const collateralTokenDecimals = parseInt(await collateralToken.decimals());
+  const initialOraclePrice = toDecimals('0.00000000022', collateralTokenDecimals); // 1 token = inverse(0.005 link)
   const decimals = parseInt(await token.decimals());
   const lendingPoolDepositAmountWei = toDecimals(4000, decimals);
   const amountWei = toDecimals(800, decimals);
@@ -34,15 +34,10 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   const durationInDays = 60;
   const signers = await accounts.getAllAt(12, 13);
   const senderTxConfig = await accounts.getTxConfigAt(1);
-  const collateralTokenDecimals = parseInt(await collateralToken.decimals());
   const initialCollateralAmount = toDecimals(10000, collateralTokenDecimals);
-  const finalCollateralAmount = toDecimals(100, collateralTokenDecimals);
   await collateralToken.mint(senderTxConfig.from, initialCollateralAmount, senderTxConfig);
-  await collateralToken.mint(senderTxConfig.from, finalCollateralAmount, senderTxConfig)
-  const collateralNeeded = '320486794520547945';
-  
   const borrowerTxConfig = { from: borrower };
-  const borrowerTxConfigWithValue = { ...borrowerTxConfig, value: collateralNeeded };
+  await token.mint(borrowerTxConfig.from, maxAmountWei);
 
   // Sets Initial Oracle Price
   console.log(`Settings initial oracle price: 1 ${tokenName} = ${initialOraclePrice.toFixed(0)} = ${toUnits(initialOraclePrice, collateralTokenDecimals)} ${collateralTokenName}`);
@@ -103,7 +98,7 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
     .loanTermsSet(createLoanWithTermsResult)
     .emitted(
       lastLoanID,
-      borrowerTxConfigWithValue.from,
+      borrowerTxConfig.from,
       recipient,
       loanResponseInfoTemplate.interestRate,
       loanResponseInfoTemplate.collateralRatio,
@@ -119,9 +114,10 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   // Take out a loan.
   console.log(`Taking out loan id ${lastLoanID}...`);
   const takeOutLoanResult = await loansInstance.takeOutLoan(lastLoanID, amountWei, borrowerTxConfig);
+  const { escrow } = await loansInstance.loans(lastLoanID);
   loans
     .loanTakenOut(takeOutLoanResult)
-    .emitted(lastLoanID, borrowerTxConfig.from, amountWei.toFixed(0));
+    .emitted(lastLoanID, borrowerTxConfig.from, escrow, amountWei.toFixed(0));
 
   // Calculate payment
   console.log(`Making payment for loan id ${lastLoanID}...`);
@@ -144,7 +140,7 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   // Make 1st payment
   console.log(`Repaying loan id ${lastLoanID}...`);
   console.log('Making 1st payment...');
-  await token.approve(lendingPoolInstance.address, payment, {from:borrower});
+  await token.approve(lendingPoolInstance.address, payment, borrowerTxConfig);
   const repay1_result = await loansInstance.repay(payment, lastLoanID, borrowerTxConfig);
   loans
     .loanRepaid(repay1_result)

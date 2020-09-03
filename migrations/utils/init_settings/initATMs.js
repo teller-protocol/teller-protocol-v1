@@ -9,6 +9,7 @@ module.exports = async function(
     { atms, tokens, txConfig, web3 },
     { ATMGovernance },
 ) {
+    console.log('\n');
     const atmKeys = Object.keys(atms);
     console.log(`Creating ${atmKeys.length} ATMs.`);
     for (const atmKey of atmKeys) {
@@ -20,6 +21,7 @@ module.exports = async function(
             supplyToDebt,
             markets,
         } = atmInfo;
+        console.log(`Creating ATM ${atmKey}: ${token.name}/${token.symbol}/${token.decimals} - Max. Cap.: ${token.maxCap} - Max. Vestings per Wallet: ${token.maxVestingPerWallet}`);
 
         await atmFactory.createATM(
             token.name,
@@ -60,4 +62,5 @@ module.exports = async function(
             );
         }
     }
+    console.log('\n');
 }

@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 import "../../base/EtherCollateralLoans.sol";
-
+import "./LoansBaseMock.sol";
 
 contract EtherCollateralLoansMock is EtherCollateralLoans {
     function setLoanIDCounter(uint256 newLoanIdCounter) external {
@@ -15,6 +15,10 @@ contract EtherCollateralLoansMock is EtherCollateralLoans {
 
     function setTotalCollateral(uint256 amount) external {
         totalCollateral = amount;
+    }
+
+    function setEscrowForLoan(uint256 loanID, address escrowAddress) external {
+        loans[loanID].escrow = escrowAddress;
     }
 
     function setLoan(
@@ -42,9 +46,18 @@ contract EtherCollateralLoansMock is EtherCollateralLoans {
             principalOwed: principalOwed,
             interestOwed: interestOwed,
             borrowedAmount: borrowedAmount,
+            escrow: address(0x0),
             status: status,
             liquidated: liquidated
         });
+    }
+
+    function externalCreateEscrow(uint256 loanID) external returns (address) {
+        return super._createEscrow(loanID);
+    }
+
+    function externalSetSettings(address settingsAddress) external {
+        _setSettings(settingsAddress);
     }
 
     function() external payable {}

@@ -1,6 +1,15 @@
 pragma solidity 0.5.17;
 
-
+/*****************************************************************************************************/
+/**                                             WARNING                                             **/
+/**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
+/**  ---------------------------------------------------------------------------------------------  **/
+/**  Do NOT change the order of or PREPEND any storage variables to this or new versions of this    **/
+/**  contract as this will cause the the storage slots to be overwritten on the proxy contract!!    **/
+/**                                                                                                 **/
+/**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
+/**  more information.                                                                              **/
+/*****************************************************************************************************/
 /**
     @notice This interface defines available functions for an ATMGovernace.
 
@@ -261,4 +270,11 @@ interface ATMGovernanceInterface {
                 CRA is represented by a Github commit hash of the newly proposed algorithm.
      */
     function getCRA() external view returns (string memory);
+
+    /**
+        @notice It initializes this ATM Governance instance.
+        @param settingsAddress the initial settings address.
+        @param ownerAddress the owner address for this ATM Governance.
+     */
+    function initialize(address settingsAddress, address ownerAddress) external;
 }

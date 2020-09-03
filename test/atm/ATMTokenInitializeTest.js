@@ -12,6 +12,7 @@ const ATMToken = artifacts.require('./ATMToken.sol');
 const Settings = artifacts.require("./base/Settings.sol");
 
 contract('ATMTokenInitializeTest', function (accounts) {
+    const owner = accounts[0];
     const encoder = new IATMSettingsEncoder(web3)
 
     withData({
@@ -30,7 +31,7 @@ contract('ATMTokenInitializeTest', function (accounts) {
             // Setup
             const instance = await ATMToken.new();
 
-            const settings = await createTestSettingsInstance(Settings);
+            const settings = await createTestSettingsInstance(Settings, { from: owner, Mock });
             const atmSettingsInstance = await Mock.new();
             await atmSettingsInstance.givenMethodReturnAddress(
                 encoder.encodeSettings(),

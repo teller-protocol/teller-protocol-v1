@@ -1,51 +1,58 @@
 pragma solidity 0.5.17;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "../openzeppelin/SignedSafeMath.sol";
+// Externals
 import "@chainlink/contracts/src/v0.5/interfaces/AggregatorInterface.sol";
+
+// Interfaces
 import "../../interfaces/PairAggregatorInterface.sol";
 
+// Contracts
+import "../../base/TInitializable.sol";
+
+// Libraries
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "../openzeppelin/SignedSafeMath.sol";
 
 /**
     @notice This is a Chainlink Oracle wrapper implementation. It uses the AggregatorInterface from Chainlink to get data.
 
     @author develop@teller.finance
  */
-contract ChainlinkPairAggregator is PairAggregatorInterface {
+contract ChainlinkPairAggregator is PairAggregatorInterface, TInitializable {
     using SafeMath for uint256;
     using SignedSafeMath for int256;
+    using Address for address;
 
     uint256 internal constant TEN = 10;
     uint256 internal constant MAX_POWER_VALUE = 50;
 
-    AggregatorInterface public aggregator;
-    uint8 public responseDecimals;
-    uint8 public collateralDecimals;
-    uint8 public pendingDecimals;
-
     /**
-        @notice It creates a new ChainlinkPairAggregator instance.
-        @param aggregatorAddress to use in this Chainlink pair aggregator.
-        @param responseDecimalsValue the decimals included in the Chainlink response.
-        @param collateralDecimalsValue the decimals included in the collateral token.
-    */
-    constructor(
-        address aggregatorAddress,
-        uint8 responseDecimalsValue,
-        uint8 collateralDecimalsValue
-    ) public {
-        require(aggregatorAddress != address(0x0), "PROVIDE_AGGREGATOR_ADDRESS");
-        aggregator = AggregatorInterface(aggregatorAddress);
-        responseDecimals = responseDecimalsValue;
-        collateralDecimals = collateralDecimalsValue;
-
-        if (collateralDecimals >= responseDecimals) {
-            pendingDecimals = collateralDecimals - responseDecimals;
-        } else {
-            pendingDecimals = responseDecimals - collateralDecimals;
-        }
-        require(pendingDecimals <= MAX_POWER_VALUE, "MAX_PENDING_DECIMALS_EXCEEDED");
-    }
+        @notice It represents the Chainlink oracle reference used in this pair aggregator instance.
+     */
+    AggregatorInterface public aggregator;
+    /**
+        @notice It represents the decimals included in the Chainlink oracle responses.
+     */
+    uint8 public responseDecimals;
+    /**
+        @notice It represents the decimals in the collateral token used in this pair aggregator.
+     */
+    uint8 public collateralDecimals;
+    /**
+        @notice It represents the difference between reponseDecimals and collateralDecimals.
+        @notice It is used to normalize the amounts.
+     */
+    uint8 public pendingDecimals;
+    /**
+        @notice It defines if this pair aggregator is inverse or not.
+        @dev It is used when Chainlink doesn't support a given market, but they support the inverse one.
+        @dev Example:
+            Not supported:  DAI / LINK
+            Supported:      LINK / DAI.
+            In this case, despite Chainlink doesn't support the  DAI / LINK oracle, we use the LINK / DAI one and make the inverse calculation.
+     */
+    bool public inverse;
 
     /** External Functions */
 
@@ -95,7 +102,57 @@ contract ChainlinkPairAggregator is PairAggregatorInterface {
         return aggregator.getTimestamp(latest - roundsBack);
     }
 
+    /**
+        @notice It creates a new ChainlinkPairAggregator instance.
+        @param aggregatorAddress to use in this Chainlink pair aggregator.
+        @param isInverse defines whether the aggregator is inverse or not.
+        @param responseDecimalsValue the decimals included in the Chainlink response.
+        @param collateralDecimalsValue the decimals included in the collateral token.
+    */
+    function initialize(
+        address aggregatorAddress,
+        bool isInverse,
+        uint8 responseDecimalsValue,
+        uint8 collateralDecimalsValue
+    )
+        external
+        isNotInitialized()
+    {
+        require(aggregatorAddress.isContract(), "AGGREGATOR_NOT_CONTRACT");
+
+        _initialize();
+
+        inverse = isInverse;
+        aggregator = AggregatorInterface(aggregatorAddress);
+        responseDecimals = responseDecimalsValue;
+        collateralDecimals = collateralDecimalsValue;
+
+        if (collateralDecimals >= responseDecimals) {
+            pendingDecimals = collateralDecimals - responseDecimals;
+        } else {
+            pendingDecimals = responseDecimals - collateralDecimals;
+        }
+        require(pendingDecimals <= MAX_POWER_VALUE, "MAX_PENDING_DECIMALS_EXCEEDED");
+    }
+
     /** Internal Functions */
+
+    /**
+        @notice It normalizes a value depending on the collateral and response decimals configured in the contract.
+        @param value to normalize.
+        @return a normalized value.
+     */
+    function _normalizeResponse(int256 value) internal view returns (int256) {
+        if (inverse) {
+            return (int256(TEN**collateralDecimals) * int256(TEN**responseDecimals)) / value;
+        } else {
+            if (collateralDecimals >= responseDecimals) {
+                return value.mul(int256(TEN**pendingDecimals));
+            } else {
+                return value.div(int256(TEN**pendingDecimals));
+            }
+        }
+    }
 
     /**
         @notice Gets the past round answer from the Chainlink aggregator oracle.
@@ -108,16 +165,4 @@ contract ChainlinkPairAggregator is PairAggregatorInterface {
         return aggregator.getAnswer(latest - roundsBack);
     }
 
-    /**
-        @notice It normalizes a value depending on the collateral and response decimals configured in the contract.
-        @param value to normalize.
-        @return a normalized value.
-     */
-    function _normalizeResponse(int256 value) internal view returns (int256) {
-        if (collateralDecimals >= responseDecimals) {
-            return value.mul(int256(TEN**pendingDecimals));
-        } else {
-            return value.div(int256(TEN**pendingDecimals));
-        }
-    }
 }

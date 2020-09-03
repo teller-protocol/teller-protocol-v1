@@ -10,14 +10,13 @@ const platformSettingsNames = require('../../test/utils/platformSettingsNames');
 module.exports = async ({accounts, getContracts, processArgs, timer, web3, nonces, chainId}) => {
   console.log('Deposit tokens as collateral.');
   const tokenName = processArgs.getValue('testTokenName');
-  const oracleTokenName = 'USD';
   const collateralTokenName = 'LINK';
   const settingsInstance = await getContracts.getDeployed(teller.settings());
   const token = await getContracts.getDeployed(tokens.get(tokenName));
   const collateralToken = await getContracts.getDeployed(tokens.get(collateralTokenName));
   const lendingPoolInstance = await getContracts.getDeployed(teller.link().lendingPool(tokenName));
   const loansInstance = await getContracts.getDeployed(teller.link().loans(tokenName));
-  const chainlinkOracle = await getContracts.getDeployed(chainlink.custom(collateralTokenName, oracleTokenName));
+  const chainlinkOracle = await getContracts.getDeployed(chainlink.custom(collateralTokenName, tokenName));
   const loanTermConsensusInstance = await getContracts.getDeployed(teller.link().loanTermsConsensus(tokenName));
 
   const currentTimestamp = parseInt(await timer.getCurrentTimestamp());
@@ -33,15 +32,13 @@ module.exports = async ({accounts, getContracts, processArgs, timer, web3, nonce
   const signers = await accounts.getAllAt(12, 13);
 
   const collateralTokenDecimals = parseInt(await collateralToken.decimals());
-  const initialOraclePrice = toDecimals('0.26', collateralTokenDecimals); // 1 DAI = 0.26 LINK
-  const finalOraclePrice = toDecimals('0.30', collateralTokenDecimals); // 1 DAI = 0.30 LINK
-  const initialCollateralAmount = toDecimals(10000, collateralTokenDecimals);
-  const finalCollateralAmount = toDecimals(100, collateralTokenDecimals);
+  const initialOraclePrice = toDecimals('0.00000000026', collateralTokenDecimals); // 1 DAI = inverse(0.26 LINK)
+  const finalOraclePrice = toDecimals('0.00000000030', collateralTokenDecimals); // 1 DAI = inverse(0.30 LINK)
+  const initialCollateralAmount = toDecimals(165, collateralTokenDecimals);
   const borrowerTxConfig = { from: borrower };
 
   const senderTxConfig = await accounts.getTxConfigAt(1);
   await collateralToken.mint(senderTxConfig.from, initialCollateralAmount, senderTxConfig);
-  await collateralToken.mint(senderTxConfig.from, finalCollateralAmount, senderTxConfig);
 
   // Sets Initial Oracle Price
   console.log(`Settings initial oracle price: 1 ${tokenName} = ${initialOraclePrice.toFixed(0)} = ${toUnits(initialOraclePrice, collateralTokenDecimals)} ${collateralTokenName}`);
@@ -122,9 +119,11 @@ module.exports = async ({accounts, getContracts, processArgs, timer, web3, nonce
   // Take out a loan.
   console.log(`Taking out loan id ${lastLoanID}...`);
   const takeOutLoanResult = await loansInstance.takeOutLoan(lastLoanID, amountWei, borrowerTxConfig);
+  // Get liquidation status.
+  const { escrow } = await loansInstance.loans(lastLoanID);
   loans
     .loanTakenOut(takeOutLoanResult)
-    .emitted(lastLoanID, borrowerTxConfig.from, amountWei);
+    .emitted(lastLoanID, borrowerTxConfig.from, escrow, amountWei);
 
   // Set a lower price for Token/ETH.
   console.log(`Settings final (lower) oracle price: 1 ${tokenName} = ${finalOraclePrice.toFixed(0)} WEI = ${toUnits(finalOraclePrice, 18)} ETHER`);

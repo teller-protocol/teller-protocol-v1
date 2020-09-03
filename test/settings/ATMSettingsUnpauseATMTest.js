@@ -21,18 +21,14 @@ contract('ATMSettingsUnpauseATMTest', function (accounts) {
         mocks = await createMocks(Mock, 10);
 
         settings = await Mock.new();
-        await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeHasPauserRole(), true);
-        await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), false);
-
-        const atmTokenLogic = await Mock.new();
-        const atmGovernanceLogic = await Mock.new();
-        instance = await ATMSettings.new(settings.address, atmTokenLogic.address, atmGovernanceLogic.address);
+        instance = await ATMSettings.new();
+        await instance.initialize(settings.address);
     });
 
     withData({
         _1_basic_previous_atm: [[0, 2, 4], 0, 1, true, true, false, undefined, false],
         _2_basic: [[0], 0, 1, true, true, false, undefined, false],
-        _3_sender_not_pauser_role: [[], 0, 1, true, false, true, 'ONLY_PAUSER', true],
+        _3_sender_not_pauser_role: [[], 0, 1, true, false, true, 'NOT_PAUSER', true],
         _4_platform_already_paused: [[1, 2, 3], 0, 1, true, true, true, 'PLATFORM_IS_PAUSED', true],
         _5_atm_not_paused: [[1, 2], 3, 1, true, true, false, 'ATM_IS_NOT_PAUSED', true],
     }, function(previousATMs, atmIndex, senderIndex, encodeIsATM, encodeHasPauserRole, encodeIsPaused, expectedErrorMessage, mustFail) {
@@ -43,8 +39,13 @@ contract('ATMSettingsUnpauseATMTest', function (accounts) {
             }
             const sender = accounts[senderIndex];
             const atmAddress = atmIndex === -1 ? NULL_ADDRESS : mocks[atmIndex];
-            await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeHasPauserRole(), encodeHasPauserRole);
             await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), encodeIsPaused);
+            if(!encodeHasPauserRole) {
+                await settings.givenMethodRevertWithMessage(
+                    settingsInterfaceEncoder.encodeRequirePauserRole(),
+                    "NOT_PAUSER"
+                );
+            }
 
             try {
                 // Invocation

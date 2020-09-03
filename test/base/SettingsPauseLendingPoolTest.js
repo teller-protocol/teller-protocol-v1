@@ -5,20 +5,22 @@ const { settings } = require('../utils/events');
 const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
+const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
 
 contract('SettingsPauseLendingPoolTest', function (accounts) {
+    const owner = accounts[0];
     let instance;
     
     beforeEach('Setup for each test', async () => {
-        instance = await createTestSettingsInstance(Settings);
+        instance = await createTestSettingsInstance(Settings, { from: owner, Mock });
     });
 
     withData({
         _1_basic: [0, 1, undefined, false],
-        _2_notOwner: [2, 3, 'PauserRole: caller does not have the Pauser role', true],
+        _2_notOwner: [2, 3, 'NOT_PAUSER', true],
         _3_emptyLendingPool: [0, -1, 'LENDING_POOL_IS_REQUIRED', true],
     }, function(senderIndex, lendingPoolIndex, expectedErrorMessage, mustFail) {
         it(t('user', 'pauseLendingPool', 'Should (or not) be able to pause a lending pool.', mustFail), async function() {

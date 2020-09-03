@@ -8,6 +8,7 @@ const {
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
 const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
+const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
@@ -21,6 +22,7 @@ const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
     const IAtmSettingsEncoder = new IATMSettingsEncoder(web3);
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     let instance;
     let loanTermsConsInstance;
     let lendingPoolInstance;
@@ -29,7 +31,7 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
     let oracleInstance;
     let settingsInstance;
     let lendingTokenInstance;
-    let marketsInstance;
+    let collateralTokenInstance;
     let atmSettingsInstance;
 
     const owner = accounts[0];
@@ -46,17 +48,41 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
         lendingPoolInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
-        marketsInstance = await Mock.new();
+        collateralTokenInstance = await Mock.new();
         atmSettingsInstance = await Mock.new();
-        settingsInstance = await createTestSettingsInstance(Settings, {});
+        settingsInstance = await createTestSettingsInstance(
+            Settings,
+            {
+                from: owner,
+                Mock,
+                onInitialize: async (
+                    instance,
+                    {
+                        escrowFactory,
+                        versionsRegistry,
+                        pairAggregatorRegistry,
+                        marketsState,
+                        interestValidator,
+                    }) => {
+                    await instance.initialize(
+                        escrowFactory.address,
+                        versionsRegistry.address,
+                        pairAggregatorRegistry.address,
+                        marketsState.address,
+                        interestValidator.address,
+                        atmSettingsInstance.address,
+                    );
+                },
+            },
+            {}
+        );
         instance = await Loans.new();
         await instance.initialize(
             oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,
-            marketsInstance.address,
-            atmSettingsInstance.address,
+            collateralTokenInstance.address,
         )
         responseOne = createUnsignedLoanResponse(accounts[3], 0, 1234, 6500, 10000, 3, loanTermsConsInstance.address)
         responseTwo = createUnsignedLoanResponse(accounts[4], 0, 1500, 6000, 10000, 2, loanTermsConsInstance.address)

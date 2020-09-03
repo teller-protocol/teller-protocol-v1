@@ -1,31 +1,28 @@
 // JS Libraries
-const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS  } = require('../utils/consts');
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
+const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const ATMToken = artifacts.require("./ATMToken.sol");
-const Settings = artifacts.require("./base/Settings.sol");
 
 contract('ATMTokenMintTest', function (accounts) {
     const atmSettingsEncoder = new IATMSettingsEncoder(web3);
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     let atmSettingsInstance;
+    let settingsInstance;
     let atmInstance;
     let instance;
     const daoAgent = accounts[0];
     const daoMember1 = accounts[2];
 
     beforeEach('Setup for each test', async () => {
-        const settings = await createTestSettingsInstance(Settings);
+        settingsInstance = await Mock.new();
         atmSettingsInstance = await Mock.new();
-        await atmSettingsInstance.givenMethodReturnAddress(
-            atmSettingsEncoder.encodeSettings(),
-            settings.address
-        );
         atmInstance = await Mock.new();
         instance = await ATMToken.new();
         await instance.initialize(
@@ -34,17 +31,22 @@ contract('ATMTokenMintTest', function (accounts) {
                             18,
                             10000,
                             50,
-                            atmSettingsInstance.address,
+                            settingsInstance.address,
                             atmInstance.address
                         );
+        await settingsInstance.givenMethodReturnAddress(
+            settingsInterfaceEncoder.encodeATMSettings(),
+            atmSettingsInstance.address
+        );
     });
 
     withData({
-        _1_basic: [daoAgent, daoMember1, 2000, undefined, false],
-        _2_above_cap: [daoAgent, daoMember1, 11000, 'ERC20_CAP_EXCEEDED', true],
-        _3_zero_address: [daoAgent, NULL_ADDRESS, 3000, "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED", true],
-        _4_invalid_sender: [daoMember1, daoMember1, 2000, 'ONLY_PAUSER', true],
+        _1_basic: [true, daoAgent, daoMember1, 2000, undefined, false],
+        _2_above_cap: [true, daoAgent, daoMember1, 11000, 'ERC20_CAP_EXCEEDED', true],
+        _3_zero_address: [true, daoAgent, NULL_ADDRESS, 3000, "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED", true],
+        _4_invalid_sender: [false, daoMember1, daoMember1, 2000, 'NOT_PAUSER', true],
     },function(
+        senderHasPauserRole,
         sender,
         receipent,
         amount,
@@ -56,13 +58,20 @@ contract('ATMTokenMintTest', function (accounts) {
                 atmSettingsEncoder.encodeIsATMPaused(),
                 false
             );
+            if(!senderHasPauserRole) {
+                await settingsInstance.givenMethodRevertWithMessage(
+                    settingsInterfaceEncoder.encodeRequirePauserRole(),
+                    "NOT_PAUSER"
+                );
+            }
 
             try {
                 // Invocation
                 await instance.mint(receipent, amount, { from: sender });
                 const result = await instance.totalSupply();
+
                 // Assertions
-                assert(!mustFail, 'It should have failed because the amount is greater than the cap');
+                assert(!mustFail, 'It should have failed because the data is invalid');
                 assert(result);
                 assert.equal(
                     result.toString(),

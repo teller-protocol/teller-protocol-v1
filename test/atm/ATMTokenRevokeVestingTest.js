@@ -1,20 +1,21 @@
 // JS Libraries
-const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
 const { t  } = require('../utils/consts');
 const { atmToken } = require('../utils/events');
 const Timer = require('../../scripts/utils/Timer');
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
+const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
  // Mock contracts
  const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const ATMToken = artifacts.require("./ATMToken.sol");
-const Settings = artifacts.require("./base/Settings.sol");
 
 contract('ATMTokenRevokeVestingTest', function (accounts) {
     const atmSettingsEncoder = new IATMSettingsEncoder(web3);
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    let settingsInstance;
     let atmSettingsInstance;
     let atmInstance;
     let instance;
@@ -24,12 +25,8 @@ contract('ATMTokenRevokeVestingTest', function (accounts) {
     const timer = new Timer(web3);
 
     beforeEach('Setup for each test', async () => {
-        const settings = await createTestSettingsInstance(Settings);
+        settingsInstance = await Mock.new();
         atmSettingsInstance = await Mock.new();
-        await atmSettingsInstance.givenMethodReturnAddress(
-            atmSettingsEncoder.encodeSettings(),
-            settings.address
-        );
         atmInstance = await Mock.new();
         instance = await ATMToken.new();
         await instance.initialize(
@@ -38,16 +35,21 @@ contract('ATMTokenRevokeVestingTest', function (accounts) {
                             18,
                             10000,
                             50,
-                            atmSettingsInstance.address,
+                            settingsInstance.address,
                             atmInstance.address
                         );
+        await settingsInstance.givenMethodReturnAddress(
+            settingsInterfaceEncoder.encodeATMSettings(),
+            atmSettingsInstance.address
+        );
     });
 
     withData({
-        _1_revoke_vested_basic: [daoAgent, daoMember1, 1000, 3000, 7000, undefined, false],
-        _2_revoke_vested_no_amount: [daoAgent, daoMember2, 1000, 1750, 7000, "ACCOUNT_DOESNT_HAVE_VESTING", true],
-        _3_revoke_vested_invalid_sender: [daoMember1, daoMember2, 1000, 1750, 7000, "ONLY_PAUSER", true],
+        _1_revoke_vested_basic: [true, daoAgent, daoMember1, 1000, 3000, 7000, undefined, false],
+        _2_revoke_vested_no_amount: [true, daoAgent, daoMember2, 1000, 1750, 7000, "ACCOUNT_DOESNT_HAVE_VESTING", true],
+        _3_revoke_vested_invalid_sender: [false, daoMember1, daoMember2, 1000, 1750, 7000, "NOT_PAUSER", true],
     },function(
+        senderHasPauserRole,
         sender,
         receipent,
         amount,
@@ -64,6 +66,12 @@ contract('ATMTokenRevokeVestingTest', function (accounts) {
                 atmSettingsEncoder.encodeIsATMPaused(),
                 false
             );
+            if(!senderHasPauserRole) {
+                await settingsInstance.givenMethodRevertWithMessage(
+                    settingsInterfaceEncoder.encodeRequirePauserRole(),
+                    "NOT_PAUSER"
+                );
+            }
 
             try {
                 // Invocation

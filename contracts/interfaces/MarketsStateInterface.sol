@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "../util/MarketStateLib.sol";
 
-
 /**
     @notice This interface defines the function to store and get data from different markets.
 
@@ -96,4 +95,14 @@ interface MarketsStateInterface {
         external
         view
         returns (MarketStateLib.MarketState memory);
+
+    function isWhitelisted(address account) external view returns (bool);
+
+    function addWhitelisted(address account) external;
+
+    function removeWhitelisted(address account) external;
+
+    function renounceWhitelisted() external;
+
+    function initialize(address settingsAddress) external;
 }

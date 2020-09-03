@@ -1,10 +1,13 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
+import "./BaseMock.sol";
 import "../../base/LoansBase.sol";
 
 
-contract LoansBaseMock is LoansBase {
+contract LoansBaseMock is LoansBase, BaseMock {
+    mapping(uint256 => TellerCommon.LoanCollateralInfo) internal mockCollateralInfo;
+
     function _payOutCollateral(uint256 loanID, uint256 amount, address payable recipient)
         internal
     {}
@@ -61,9 +64,28 @@ contract LoansBaseMock is LoansBase {
             principalOwed: principalOwed,
             interestOwed: interestOwed,
             borrowedAmount: borrowedAmount,
+            escrow: address(0x0),
             status: status,
             liquidated: liquidated
         });
+    }
+
+    function setEscrowForLoan(uint256 loanID, address escrowAddress) external {
+        loans[loanID].escrow = escrowAddress;
+    }
+
+    function mockGetCollateralInfo(uint256 loanID, uint256 neededInLending, uint256 neededInCollateral) external {
+        mockCollateralInfo[loanID].collateral = loans[loanID].collateral;
+        mockCollateralInfo[loanID].neededInLendingTokens = neededInLending;
+        mockCollateralInfo[loanID].neededInCollateralTokens = neededInCollateral;
+        mockCollateralInfo[loanID].moreCollateralRequired = neededInCollateral > loans[loanID].collateral;
+    }
+
+    function _getCollateralInfo(uint256 loanID) internal view returns (TellerCommon.LoanCollateralInfo memory info) {
+        info = mockCollateralInfo[loanID];
+        if (info.collateral == 0) {
+            info = super._getCollateralInfo(loanID);
+        }
     }
 
     function initialize(
@@ -71,16 +93,13 @@ contract LoansBaseMock is LoansBase {
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
-        address marketsAddress,
-        address atmSettingsAddress
+        address 
     ) external isNotInitialized() {
         _initialize(
             priceOracleAddress,
             lendingPoolAddress,
             loanTermsConsensusAddress,
-            settingsAddress,
-            marketsAddress,
-            atmSettingsAddress
+            settingsAddress
         );
     }
 
@@ -94,4 +113,8 @@ contract LoansBaseMock is LoansBase {
         TellerCommon.LoanResponse[] calldata responses,
         uint256 collateralAmount
     ) external payable {}
+
+    function externalCreateEscrow(uint256 loanID) external returns (address) {
+        return super._createEscrow(loanID);
+    }
 }
