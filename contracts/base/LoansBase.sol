@@ -245,6 +245,8 @@ contract LoansBase is LoansInterface, Base {
         // We only send the loan to escrow contract for now.
         lendingPool.createLoan(amountBorrow, loans[loanID].escrow);
 
+        EscrowInterface(loans[loanID].escrow).initialize(address(this), loanID);
+
         _markets().increaseBorrow(
             lendingPool.lendingToken(),
             this.collateralToken(),

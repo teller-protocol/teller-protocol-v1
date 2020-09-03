@@ -156,8 +156,7 @@ contract Escrow is EscrowInterface, TInitializable, Ownable, BaseUpgradeable, Ba
         TInitializable._initialize();
 
         // Initialize tokens list with the borrowed token.
-        // TODO: test balance
-        require(_balanceOf(loans.lendingToken()) > 0, "LENDING_TOKEN_BALANCE_ZERO");
+        require(_balanceOf(loans.lendingToken()) == getLoan().borrowedAmount, "ESCROW_BALANCE_NOT_MATCH_LOAN");
         _tokenUpdated(loans.lendingToken());
     }
 
