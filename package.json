@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@gnosis.pm/mock-contract": "^3.0.7",
+    "bl": "^2.2.1",
     "chai": "^4.2.0",
     "dotenv": "^8.2.0",
     "eslint": "^5.16.0",
@@ -44,6 +45,7 @@
     "mocha": "^7.1.0",
     "prettier": "^2.0.2",
     "prettier-plugin-solidity": "^1.0.0-alpha.46",
+    "serialize-javascript": "^3.1.0",
     "solhint": "^2.1.0",
     "solhint-plugin-prettier": "^0.0.4",
     "solidity-coverage": "^0.7.9",
