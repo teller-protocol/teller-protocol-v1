@@ -1,6 +1,6 @@
 pragma solidity 0.5.17;
 
-import "../../../../base/Escrow/Dapps/Uniswap.sol";
+import "../../../../base/escrow/dapps/Uniswap.sol";
 
 /**
     @notice This mock is used to expose a payable fallback function on tests.f
