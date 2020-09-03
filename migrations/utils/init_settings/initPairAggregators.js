@@ -33,7 +33,7 @@ module.exports = async function (
             collateralDecimals,
         };
     });
-    console.log('\n');
+    console.log('');
 
     await pairAggregatorRegistryInstance.registerPairAggregators(
         registerRequests,

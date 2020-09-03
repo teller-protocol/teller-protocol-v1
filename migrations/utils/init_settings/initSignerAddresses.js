@@ -14,10 +14,10 @@ module.exports = async function(
         console.log('Consensus: not new signers defined.');
         return;
     }
-
-    console.log(`LoanTermsConsensus: adding ${signerAddresses.length} accounts as signers. The addresses are: ${signerAddresses}.`);
+    console.log('');
+    console.log(`New addresses (${signerAddresses.length}) to add as signers: ${signerAddresses}.`);
+    console.log(`LoanTermsConsensus (${loanTermsConsensusInstance.address}): adding ${signerAddresses.length} accounts as signers.`);
     await loanTermsConsensusInstance.addSigners(signerAddresses, txConfig);
-
-    console.log(`InteresstConsensus: adding ${signerAddresses.length} accounts as signers. The addresses are: ${signerAddresses}.`);
+    console.log(`InteresstConsensus (${interestConsensusInstance.address}): adding ${signerAddresses.length} accounts as signers.`);
     await interestConsensusInstance.addSigners(signerAddresses, txConfig);
 }
