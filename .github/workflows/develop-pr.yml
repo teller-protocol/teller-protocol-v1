@@ -1,0 +1,32 @@
+name: Compile & Test Changed or New Files
+
+on:
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  test:
+    name: Build Project
+    runs-on: ubuntu-latest
+    env:
+      INFURA_KEY: my-infura-key-here
+      GAS_PRICE_GWEI_KEY: 20
+      GAS_WEI_KEY: 2500000
+      MNEMONIC_KEY: my-mnemonic-value-here
+      ADDRESS_COUNT_KEY: 5
+      DEFAULT_ADDRESS_INDEX_KEY: 0
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '10.15.x'
+      - name: Install dependencies
+        run: |
+          yarn install
+      - name: Compiling Smart Contracts
+        run: |
+          ./node_modules/.bin/truffle compile
+      - name: Test Changes or New Files
+        run: |
+          yarn test:coverage `git diff --name-only origin/develop | tr '\n' ' '`
