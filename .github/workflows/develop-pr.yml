@@ -27,7 +27,7 @@ jobs:
       - id: files
         name: Get List of Changed Files
         uses: jitterbit/get-changed-files@v1
-      - name: Test Changes or New Files
+      - name: Test Changed Files
         env:
           CHANGED_FILES: "${{ steps.files.outputs.all }}"
         run: |
