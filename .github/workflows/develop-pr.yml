@@ -34,5 +34,5 @@ jobs:
         env:
           CHANGED_FILES: "${{ steps.files.outputs.all }}"
         run: |
-          echo $CHANGED_FILES; echo 'abc'
-          yarn test:coverage `$CHANGED_FILES | grep 'test/' | tr '\n' " "`
+          echo $CHANGED_FILES
+          yarn test:coverage `echo $CHANGED_FILES | tr " " '\n' | grep 'test/' | tr '\n' " "`
