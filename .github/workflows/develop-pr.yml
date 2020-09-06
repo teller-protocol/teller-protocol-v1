@@ -31,6 +31,8 @@ jobs:
         name: Get List of Changed Files
         uses: jitterbit/get-changed-files@v1
       - name: Test Changes or New Files
+        env:
+          CHANGED_FILES: "{{ steps.files.outputs.all }}"
         run: |
-          git remote add base git@github.com:teller-protocol/teller-protocol-v1
-          yarn test:coverage `{{ steps.files.outputs.all }} | grep 'test/' | tr '\n' " "`
+          echo $CHANGED_FILES; echo 'abc'
+          yarn test:coverage `$CHANGED_FILES | grep 'test/' | tr '\n' " "`
