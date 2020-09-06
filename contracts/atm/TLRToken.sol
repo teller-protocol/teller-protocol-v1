@@ -303,13 +303,15 @@ contract TLRToken is
         uint256 nonTransferable = 0;
         for (uint256 i = 0; i < totalVesting; i++) {
             VestingTokens storage vestingTokens = _vestingBalances[_account][i];
-            nonTransferable = nonTransferable.add(_returnUnvestedTokens(
-                vestingTokens.amount,
-                _time,
-                vestingTokens.start,
-                vestingTokens.cliff,
-                vestingTokens.deadline
-            ));
+            nonTransferable = nonTransferable.add(
+                _returnUnvestedTokens(
+                    vestingTokens.amount,
+                    _time,
+                    vestingTokens.start,
+                    vestingTokens.cliff,
+                    vestingTokens.deadline
+                )
+            );
         }
         uint256 transferable = totalAssigned.sub(nonTransferable);
         return transferable;
@@ -337,7 +339,7 @@ contract TLRToken is
             return amount;
         } else {
             uint256 tokens = amount.mul(time.sub(start));
-            uint256 eligibleTokens =  tokens.div(deadline.sub(start));
+            uint256 eligibleTokens = tokens.div(deadline.sub(start));
             return amount.sub(eligibleTokens);
         }
     }
