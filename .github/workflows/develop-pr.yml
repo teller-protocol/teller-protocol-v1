@@ -1,4 +1,4 @@
-name: Compile & Test Changed or New Files
+name: Test Changed or New Files
 
 on:
   pull_request:
