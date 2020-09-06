@@ -24,9 +24,6 @@ jobs:
       - name: Install dependencies
         run: |
           yarn install
-      - name: Compiling Smart Contracts
-        run: |
-          ./node_modules/.bin/truffle compile
       - id: files
         name: Get List of Changed Files
         uses: jitterbit/get-changed-files@v1
