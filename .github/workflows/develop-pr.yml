@@ -29,4 +29,5 @@ jobs:
           ./node_modules/.bin/truffle compile
       - name: Test Changes or New Files
         run: |
-          yarn test:coverage `git diff --name-only git@github.com:teller-protocol/teller-protocol-v1/develop -- test/ | tr '\n' " "`
+          git remote add origin git@github.com:teller-protocol/teller-protocol-v1
+          yarn test:coverage `git diff --name-only origin/develop -- test/ | tr '\n' " "`
