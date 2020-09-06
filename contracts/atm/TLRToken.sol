@@ -102,6 +102,8 @@ contract TLRToken is
         address atm
     ) external initializer() isNotInitialized() {
         require(cap > 0, "CAP_CANNOT_BE_ZERO");
+        require(atm != address(0x0), "ATM_CANNOT_BE_ZERO_ADDRESS");
+        require(settingsAddress.isContract(), "SETTINGS_SHOULD_BE_A_CONTRACT");
         super.initialize(name, symbol, decimals);
         TInitializable._initialize();
         _cap = cap;
@@ -128,6 +130,7 @@ contract TLRToken is
         whenNotPaused()
         isInitialized()
     {
+        require(_cap > 0, "CAP_CANNOT_BE_ZERO");
         _cap = newCap;
         emit NewCap(_cap);
     }
@@ -178,21 +181,22 @@ contract TLRToken is
     ) public onlyPauser() whenNotPaused() isInitialized() {
         require(account != address(0x0), "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED");
         require(vestingCount[account] < _maxVestingPerWallet, "MAX_VESTINGS_REACHED");
+        require(vestingTime != 0, "VESTING_CANNOT_BE_ZERO");
         _beforeTokenTransfer(address(0x0), account, amount);
-        uint256 vestingId = vestingCount[account]++;
-        vestingCount[account] += 1;
+        uint256 vestingId = vestingCount[account].add(1);
+        vestingCount[account] = vestingCount[account].add(1);
         VestingTokens memory vestingTokens = VestingTokens(
             account,
             amount,
             block.timestamp,
-            block.timestamp + cliff,
-            block.timestamp + vestingTime
+            block.timestamp.add(cliff),
+            block.timestamp.add(vestingTime)
         );
         _mint(address(this), amount);
         _snapshot();
         _updateAccountSnapshot(address(this));
         _updateTotalSupplySnapshot();
-        assignedTokens[account] += amount;
+        assignedTokens[account] = assignedTokens[account].add(amount);
         _vestingBalances[account][vestingId] = vestingTokens;
         emit NewVesting(account, amount, vestingTime);
     }
@@ -219,7 +223,7 @@ contract TLRToken is
             vestingTokens.cliff,
             vestingTokens.deadline
         );
-        assignedTokens[account] -= unvestedTokens;
+        assignedTokens[account] = assignedTokens[account].sub(unvestedTokens);
         _burn(address(this), unvestedTokens);
         _snapshot();
         _updateAccountSnapshot(address(this));
@@ -230,24 +234,44 @@ contract TLRToken is
 
     /**
      *  @notice Withdrawl of tokens upon completion of vesting period
-     *  @return true if successful
      *
      */
     function withdrawVested() public whenNotPaused() isInitialized() {
         require(assignedTokens[msg.sender] > 0, "ACCOUNT_DOESNT_HAVE_VESTING");
 
         uint256 transferableTokens = _transferableTokens(msg.sender, block.timestamp);
-        approve(msg.sender, transferableTokens);
+        require(approve(msg.sender, transferableTokens), "APPROVAL_UNSUCCESSFUL");
+        approve(address(this), transferableTokens);
+        _transfer(address(this), msg.sender, transferableTokens);
         _snapshot();
         _updateAccountSnapshot(msg.sender);
         _updateAccountSnapshot(address(this));
-        assignedTokens[msg.sender] -= transferableTokens;
+        assignedTokens[msg.sender] = assignedTokens[msg.sender].sub(transferableTokens);
         emit VestingClaimed(msg.sender, transferableTokens);
     }
 
     /**
-     * @notice See {ERC20-_beforeTokenTransfer}.
+     * @dev See {IERC20-transfer}.
+     * @param recipient The address of the account receiving the tokens
+     * @param amount The amount to send
+     * Requirements:
      *
+     * - `recipient` cannot be the zero address.
+     * - the caller must have a balance of at least `amount`.
+     */
+    function transfer(address recipient, uint256 amount) public returns (bool) {
+        _snapshot();
+        _updateAccountSnapshot(msg.sender);
+        _updateAccountSnapshot(recipient);
+        _transfer(_msgSender(), recipient, amount);
+        return true;
+    }
+
+    /**
+     * @notice See {ERC20-_beforeTokenTransfer}.
+     * @param from The address from which tokens are being transfered/minted
+     * @param , Placeholder for to address
+     * @param amount The amount of tokens being transfered
      * Requirements:
      *
      * - minted tokens must not cause the total supply to go over the cap.
@@ -279,15 +303,15 @@ contract TLRToken is
         uint256 nonTransferable = 0;
         for (uint256 i = 0; i < totalVesting; i++) {
             VestingTokens storage vestingTokens = _vestingBalances[_account][i];
-            nonTransferable = _returnUnvestedTokens(
+            nonTransferable = nonTransferable.add(_returnUnvestedTokens(
                 vestingTokens.amount,
                 _time,
                 vestingTokens.start,
                 vestingTokens.cliff,
                 vestingTokens.deadline
-            );
+            ));
         }
-        uint256 transferable = totalAssigned - nonTransferable;
+        uint256 transferable = totalAssigned.sub(nonTransferable);
         return transferable;
     }
 
@@ -312,7 +336,8 @@ contract TLRToken is
         } else if (time < cliff) {
             return amount;
         } else {
-            uint256 eligibleTokens = amount.mul(time.sub(start) / deadline.sub(start));
+            uint256 tokens = amount.mul(time.sub(start));
+            uint256 eligibleTokens =  tokens.div(deadline.sub(start));
             return amount.sub(eligibleTokens);
         }
     }

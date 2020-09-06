@@ -375,10 +375,10 @@ module.exports = {
             const name = "RevokeVesting";
             return {
                 name: name,
-                emitted: (beneficiary, amount, deadline) => emitted(tx, name, ev => {
-                    assert.equal(ev.beneficiary, beneficiary);
-                    assert.equal(ev.amount, amount);
-                    assert.equal(ev.deadline, deadline);
+                emitted: (account, unvestedTokens, deadline) => emitted(tx, name, ev => {
+                    assert.equal(ev.account.toString(), account.toString());
+                    assert.equal(ev.unvestedTokens.toString(), unvestedTokens.toString());
+                    assert.equal(ev.deadline.toString(), deadline.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction) 
             };
