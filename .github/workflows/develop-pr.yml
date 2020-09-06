@@ -32,7 +32,7 @@ jobs:
         uses: jitterbit/get-changed-files@v1
       - name: Test Changes or New Files
         env:
-          CHANGED_FILES: "{{ steps.files.outputs.all }}"
+          CHANGED_FILES: "${{ steps.files.outputs.all }}"
         run: |
           echo $CHANGED_FILES; echo 'abc'
           yarn test:coverage `$CHANGED_FILES | grep 'test/' | tr '\n' " "`
