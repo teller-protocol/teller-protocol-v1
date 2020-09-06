@@ -32,4 +32,4 @@ jobs:
           CHANGED_FILES: "${{ steps.files.outputs.all }}"
         run: |
           echo $CHANGED_FILES
-          yarn test:coverage `echo $CHANGED_FILES | tr " " '\n' | grep 'test/' | tr '\n' " "`
+          yarn test `echo $CHANGED_FILES | tr " " '\n' | grep 'test/' | tr '\n' " "`
