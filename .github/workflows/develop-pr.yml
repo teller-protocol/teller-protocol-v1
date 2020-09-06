@@ -27,7 +27,10 @@ jobs:
       - name: Compiling Smart Contracts
         run: |
           ./node_modules/.bin/truffle compile
+      - id: files
+        name: Get List of Changed Files
+        uses: jitterbit/get-changed-files@v1
       - name: Test Changes or New Files
         run: |
           git remote add base git@github.com:teller-protocol/teller-protocol-v1
-          yarn test:coverage `git diff --name-only base/develop -- test/ | tr '\n' " "`
+          yarn test:coverage `{{ steps.files.outputs.all }} | grep 'test/' | tr '\n' " "`
