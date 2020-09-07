@@ -163,6 +163,22 @@ contract LoansBase is LoansInterface, Base {
     }
 
     /**
+        @notice Returns the tToken in the lending pool
+        @return Address of the tToken
+     */
+    function tToken() external view returns (address) {
+        return lendingPool.tToken();
+    }
+
+    /**
+        @notice Returns the cToken in the lending pool
+        @return Address of the cToken
+     */
+    function cToken() external view returns (address) {
+        return lendingPool.cToken();
+    }
+
+    /**
      * @notice Withdraw collateral from a loan, unless this isn't allowed
      * @param amount The amount of collateral token or ether the caller is hoping to withdraw.
      * @param loanID The ID of the loan the collateral is for

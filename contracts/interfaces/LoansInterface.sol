@@ -252,4 +252,16 @@ interface LoansInterface {
         address settingsAddress,
         address collateralTokenAddress
     ) external;
+
+    /**
+        @notice Returns the tToken in the lending pool
+        @return Address of the tToken
+     */
+    function tToken() external view returns (address);
+
+    /**
+        @notice Returns the cToken in the lending pool
+        @return Address of the cToken
+     */
+    function cToken() external view returns (address);
 }
