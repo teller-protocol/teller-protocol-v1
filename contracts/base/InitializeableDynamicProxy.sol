@@ -13,7 +13,6 @@ import "./BaseDynamicProxy.sol";
     @author develop@teller.finance
  */
 contract InitializeableDynamicProxy is BaseDynamicProxy, BaseUpgradeabilityProxy {
-
     /**
         @notice It initializes this proxy instance with a settings contract and a logic name.
         @param settingsAddress the settings contract address to use.
