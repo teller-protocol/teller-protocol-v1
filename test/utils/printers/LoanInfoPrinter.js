@@ -2,6 +2,7 @@ const BigNumber = require('bignumber.js');
 BigNumber.config({ ROUNDING_MODE: BigNumber.default.ROUND_FLOOR });
 const assert = require('assert');
 const { toDecimals, toUnits } = require("../consts");
+const loanStatus = require("../loanStatus");
 const Timer = require('../../../scripts/utils/Timer');
 
 const TEN_THOUSAND = 10000;
@@ -18,6 +19,14 @@ class LoanInfoPrinter {
         assert(this.loanInfo, 'Loan info is required.');
         assert(this.token, 'Token is required.');
     }
+}
+
+LoanInfoPrinter.prototype.isActive = function() {
+    return this.loanInfo.status.toString() === loanStatus.Active.toString();
+}
+
+LoanInfoPrinter.prototype.isTermsSet = function() {
+    return this.loanInfo.status.toString() === loanStatus.TermsSet.toString();
 }
 
 LoanInfoPrinter.prototype.getTotalOwed = function() {

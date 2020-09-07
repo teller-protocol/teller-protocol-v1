@@ -65,6 +65,8 @@ module.exports = async function(deployer, network, accounts) {
   await deployerApp.deployMocksContractsIfNeeded();
   const currentBlockNumber = await web3.eth.getBlockNumber();
 
+  console.log(`Deployment starts at block number: ${currentBlockNumber}`);
+
   const contracts = [
     // Logic
     { Contract: LendingPool, name: logicNames.LendingPool },
