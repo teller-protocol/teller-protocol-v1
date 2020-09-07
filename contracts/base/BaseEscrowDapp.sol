@@ -1,6 +1,7 @@
 pragma solidity 0.5.17;
 
 // Contracts
+import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 
 // Interfaces
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
@@ -8,7 +9,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.so
 // Libraries
 import "../util/AddressArrayLib.sol";
 
-contract BaseEscrowDapp {
+contract BaseEscrowDapp is Ownable {
     using AddressArrayLib for address[];
 
     /**
@@ -23,6 +24,15 @@ contract BaseEscrowDapp {
     function findTokenIndex(address tokenAddress) external view returns (int256) {
         (bool found, uint256 index) = tokens.getIndex(tokenAddress);
         return found ? int256(index) : -1;
+    }
+
+    /**
+        @notice Returns this contract's balance for the specified token.
+        @param cTokenAddress token address.
+        @return this contract's balance.
+     */
+    function balanceOf(address cTokenAddress) public view returns (uint256) {
+        return _balanceOf(cTokenAddress);
     }
 
     function _balanceOf(address tokenAddress) internal view returns (uint256) {
