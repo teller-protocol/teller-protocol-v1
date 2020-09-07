@@ -23,7 +23,7 @@ jobs:
           node-version: '10.15.x'
       - name: Install dependencies
         run: |
-          yarn install
+          yarn
       - id: files
         name: Get List of Changed Files
         uses: jitterbit/get-changed-files@v1
@@ -31,5 +31,5 @@ jobs:
         env:
           CHANGED_FILES: "${{ steps.files.outputs.all }}"
         run: |
-          echo $CHANGED_FILES
-          yarn test `echo $CHANGED_FILES | tr " " '\n' | grep 'test/' | tr '\n' " "`
+          CHANGED_TEST_FILES=`echo $CHANGED_FILES | tr " " '\n' | grep 'test/' | tr '\n' " "`
+          if [ $CHANGED_TEST_FILES ]; then yarn test $CHANGED_TEST_FILES; fi
