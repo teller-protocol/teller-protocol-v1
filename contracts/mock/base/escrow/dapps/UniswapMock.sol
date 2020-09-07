@@ -10,4 +10,7 @@ contract UniswapMock is DappMock, Uniswap {
     constructor() public {
         Ownable.initialize(msg.sender);
     }
+
+    function() external payable {
+    }
 }

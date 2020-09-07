@@ -85,7 +85,7 @@ contract('EscrowCallDappTest', function (accounts) {
         assert(!mustFail);
         assert(result);
       } catch (error) {
-        assert(mustFail);
+        assert(mustFail, error.message);
         assert(error);
         assert.equal(error.reason, expectedErrorMessage);
       }
