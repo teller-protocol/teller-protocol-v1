@@ -13,7 +13,13 @@ contract BaseUpgradeable {
 
     /** State Variables **/
 
+    /**
+        @notice It defines the slot where the settings contract address will be stored.
+     */
     bytes32 internal constant SETTINGS_SLOT = keccak256("BaseUpgradeable.settings");
+    /**
+        @notice It defines the slot where the logic name will be stored.
+     */
     bytes32 internal constant LOGIC_NAME_SLOT = keccak256("BaseUpgradeable.logicName");
 
     /** Modifiers **/
@@ -30,7 +36,8 @@ contract BaseUpgradeable {
     /** Public Functions **/
 
     /**
-        @notice The settings contract.
+        @notice The gets the settings contract address from the SETTINGS_SLOT.
+        @dev This address should NOT change over the time. See details in the _setSettings(...) function.
      */
     function settings() public view returns (SettingsInterface) {
         address settingsAddress;
@@ -59,10 +66,17 @@ contract BaseUpgradeable {
         }
     }
 
+    /**
+        @notice It sets the settings contract address for this contract instance.
+        @dev As the settings must NOT change over the time, it verifies if it is already set before updating it.
+        @param settingsAddress the settings address to be used for this upgradeable contract.
+     */
     function _setSettings(address settingsAddress) internal {
         // Prevent resetting the settings logic for standalone test deployments.
-        if (address(settings()) != address(0x0))
-            return require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
+        if (address(settings()) != address(0x0)) {
+            return;
+        }
+        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
 
         bytes32 slot = SETTINGS_SLOT;
         assembly {
@@ -70,7 +84,17 @@ contract BaseUpgradeable {
         }
     }
 
+    /**
+        @notice It sets the logic name for this contract instance.
+        @dev As the logic name must NOT change over the time, it verifies if it is already set before updating it.
+        @dev It verifies if the logic name exists in the LogicVersionsRegistry.
+        @param aLogicName the logic name to be used for this upgradeable contract.
+     */
     function _setLogicName(bytes32 aLogicName) internal {
+        // Prevent resetting the logic name for standalone test deployments.
+        if (logicName() != "") {
+            return;
+        }
         require(
             settings().versionsRegistry().hasLogicVersion(aLogicName),
             "LOGIC_NAME_NOT_EXIST"

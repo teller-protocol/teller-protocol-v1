@@ -4,9 +4,23 @@ pragma solidity 0.5.17;
 import "@openzeppelin/upgrades/contracts/upgradeability/BaseUpgradeabilityProxy.sol";
 import "./BaseDynamicProxy.sol";
 
+/**
+    @notice This is used as a proxy contract in the deployment process, allowing to us to make upgreadable the contracts. 
+    @dev The platform uses two types of proxies:
+    - BaseDynamicProxy
+    - BaseUpgradeabilityProxy (from OpenZeppelin).
+
+    @author develop@teller.finance
+ */
 contract InitializeableDynamicProxy is BaseDynamicProxy, BaseUpgradeabilityProxy {
+
+    /**
+        @notice It initializes this proxy instance with a settings contract and a logic name.
+        @param settingsAddress the settings contract address to use.
+        @param aLogicName the logic name to use.
+     */
     function initializeProxy(address settingsAddress, bytes32 aLogicName) public {
-        require(!__isInitialized(), "DYNAMIC_PROXY_ALREADY_INITIALIZED");
+        require(!__isInitialized(), "DYN_PROXY_ALREADY_INITIALIZED");
 
         _setSettings(settingsAddress);
         _setLogicName(aLogicName);
