@@ -1,7 +1,7 @@
 // Smart contracts
 
 // Util classes
-const {teller, tokens, ctokens} = require("../../scripts/utils/contracts");
+const {teller, tokens, ctokens} = require("../utils/contracts");
 const { toTokenDecimals } = require("../../test/utils/consts");
 const { lendingPool: readParams } = require("../utils/cli-builder");
 const BigNumber = require('bignumber.js');
@@ -9,7 +9,7 @@ const assert = require('assert');
 const ProcessArgs = require('../utils/ProcessArgs');
 const Accounts = require('../utils/Accounts');
 const { COLL_TOKEN_NAME, TOKEN_NAME, SENDER_INDEX, AMOUNT } = require("../utils/cli/names");
-const processArgs = new ProcessArgs(readParams.deposit().argv);
+const processArgs = new ProcessArgs(readParams.withdraw().argv);
 
 module.exports = async (callback) => {
     try {
@@ -27,26 +27,26 @@ module.exports = async (callback) => {
         const lendingPoolInstance = await getContracts.getDeployed(teller.custom(collateralTokenName).lendingPool(tokenName));
         const tokenInstance = await getContracts.getDeployed(tokens.get(tokenName));
         const cTokenInstance = await getContracts.getDeployed(ctokens.fromTokenName(tokenName));
-        const depositAmountWithDecimals = await toTokenDecimals(tokenInstance, depositAmount);
+        const withdrawAmountWithDecimals = await toTokenDecimals(tokenInstance, depositAmount);
 
         const sender = await accounts.getAt(senderIndex);
 
         const initialLendingPoolCTokenBalance = await cTokenInstance.balanceOf(lendingPoolInstance.address);
         const initialLendingPoolTokenBalance = await tokenInstance.balanceOf(lendingPoolInstance.address);
         const senderTokenBalance = await tokenInstance.balanceOf(sender);
-        assert(BigNumber(senderTokenBalance.toString()).gte(depositAmountWithDecimals), `Not enough ${tokenName} balance.`);
+        assert(BigNumber(senderTokenBalance.toString()).gte(withdrawAmountWithDecimals), `Not enough ${tokenName} balance.`);
 
-        await tokenInstance.approve(lendingPoolInstance.address, depositAmountWithDecimals, { from: sender });
+        await tokenInstance.approve(lendingPoolInstance.address, withdrawAmountWithDecimals, { from: sender });
 
-        const result = await lendingPoolInstance.deposit(depositAmountWithDecimals, { from: sender });
+        const result = await lendingPoolInstance.withdraw(withdrawAmountWithDecimals, { from: sender });
         console.log(toTxUrl(result));
 
         const finalLendingPoolTokenBalance = await tokenInstance.balanceOf(lendingPoolInstance.address);
         const finalLendingPoolCTokenBalance = await cTokenInstance.balanceOf(lendingPoolInstance.address);
         console.log('');
-        console.log(`Deposit ${tokenName}`);
+        console.log(`Withdraw ${tokenName}`);
         console.log('-'.repeat(11));
-        console.log(`${tokenName} Amount: ${depositAmount.toString()} = ${depositAmountWithDecimals.toString()}`);
+        console.log(`${tokenName} Amount: ${depositAmount.toString()} = ${withdrawAmountWithDecimals.toString()}`);
         console.log('');
         console.log(`${tokenName} LendingPool`);
         console.log('-'.repeat(30));
