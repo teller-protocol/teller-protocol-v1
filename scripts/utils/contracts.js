@@ -118,10 +118,17 @@ module.exports = {
         },
     },
     ctokens: {
-        get: (tokenName, artifactName = 'CErc20Interface') => {
+        get: (cTokenName, artifactName = 'CErc20Interface') => {
             return {
                 keyName: 'compound',
-                contractName: tokenName.toUpperCase(),
+                contractName: cTokenName.toUpperCase(),
+                artifactName,
+            };
+        },
+        fromTokenName: (tokenName, artifactName = 'CErc20Interface') => {
+            return {
+                keyName: 'compound',
+                contractName: `C${tokenName.toUpperCase()}`,
                 artifactName,
             };
         },
