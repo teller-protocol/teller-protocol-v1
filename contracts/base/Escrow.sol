@@ -44,12 +44,15 @@ contract Escrow is
     BaseEscrowDapp,
     SettingsConsts
 {
-    uint16 public constant ONE_HUNDRED_PERCENT = 10000;
-    uint8 public constant ETH_DECIMALS = 18;
-
     using Address for address;
     using SafeMath for uint256;
 
+    // Numerical representation of 100.00 percent. 
+    uint16 public constant ONE_HUNDRED_PERCENT = 10000;
+    
+    // Ethereum decimal places.
+    uint8 public constant ETH_DECIMALS = 18;
+    
     /** State Variables **/
 
     /**
@@ -67,6 +70,10 @@ contract Escrow is
 
     /** Public Functions **/
 
+    /**
+        @notice Checks if loan is active. 
+        @return true in case loan is active.  
+     */
     function isLoanActive() public view returns (bool) {
         return getLoan().status == TellerCommon.LoanStatus.Active;
     }
@@ -98,10 +105,17 @@ contract Escrow is
         return loans.loans(loanID).loanTerms.borrower;
     }
 
+    /**
+        @notice Returns this Escrow's loan instance. 
+     */
     function getLoan() public view returns (TellerCommon.Loan memory) {
         return loans.loans(loanID);
     }
 
+    /**
+        @notice Calculate this Escrow instance total value. 
+        @return This Escrow instance total value expressed in ETH and Token value. 
+     */
     function calculateTotalValue() public view returns (TellerCommon.EscrowValue memory) {
         address[] memory tokens = getTokens();
 
@@ -149,14 +163,27 @@ contract Escrow is
             });
     }
 
+    /**
+        @notice Checks if current Escrow instance loan can be liquidated.
+        @return true if loan can be liquidated.
+     */
     function canPurchase() public view returns (bool) {
         return loans.canLiquidateLoan(loanID);
     }
 
+    /**
+        @notice Checks if this Escrow loan value is undervalued based its token price.
+        @return true if this escrow loan is undervalued based on its token price.
+     */
     function isUnderValued() external view returns (bool) {
         return calculateTotalValue().valueInToken < loans.getTotalOwed(loanID);
     }
 
+    /**
+        @notice Purchase this Escrow's loan if it is eligible to liquidate and transfers ownership
+            to msg.sender.
+        @dev Events are emitted when repay() and _transferOwnership().
+     */
     function purchaseLoanDebt() external payable {
         require(canPurchase(), "ESCROW_INELIGIBLE_TO_PURCHASE");
 
@@ -189,6 +216,13 @@ contract Escrow is
 
     /** Internal Functions */
 
+    /**
+        @notice Calculate this Escrow instance loan value in ETH or Token price.
+        @return Loan value in ETH or Token price based on baseAddress.
+        @param baseAddress base token or ETH address.
+        @param quoteAddress quote token address.
+        @param baseAmount amount of base token or ETH.
+    */    
     function _valueOfIn(
         address baseAddress,
         address quoteAddress,
@@ -203,6 +237,12 @@ contract Escrow is
         return baseAmount.mul(oneTokenPrice).div(oneUnit);
     }
 
+    /**
+        @notice Returns Chainlink pair aggregator for token or revert if not found.
+        @param base base token address.
+        @param quote quote token address.
+        @return PairAggregator instance found for this tokens pair.
+     */
     function _getAggregatorFor(address base, address quote)
         internal
         view
