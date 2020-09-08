@@ -63,7 +63,9 @@ contract BaseUpgradeable {
 
     function _setSettings(address settingsAddress) internal {
         // Prevent resetting the settings logic for standalone test deployments.
-        address(settings()).requireEmpty("SETTINGS_CANT_BE_OVERWRITTEN");
+        if (address(settings()).isNotEmpty()) {
+            return;
+        }
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
         bytes32 slot = SETTINGS_SLOT;
         assembly {
