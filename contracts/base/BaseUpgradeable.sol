@@ -2,6 +2,7 @@ pragma solidity 0.5.17;
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
+import "../util/AddressLib.sol";
 
 /**
     @notice It is the base contract to hold the settings instance and upgradeable logic name in registry.
@@ -10,6 +11,7 @@ import "../interfaces/SettingsInterface.sol";
  */
 contract BaseUpgradeable {
     using Address for address;
+    using AddressLib for address;
 
     /** State Variables **/
 
@@ -61,9 +63,8 @@ contract BaseUpgradeable {
 
     function _setSettings(address settingsAddress) internal {
         // Prevent resetting the settings logic for standalone test deployments.
-        if (address(settings()) != address(0x0))
-            return require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
-
+        address(settings()).requireEmpty("SETTINGS_CANT_BE_OVERWRITTEN");
+        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
         bytes32 slot = SETTINGS_SLOT;
         assembly {
             sstore(slot, settingsAddress)
