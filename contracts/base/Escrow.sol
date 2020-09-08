@@ -44,6 +44,9 @@ contract Escrow is
     BaseEscrowDapp,
     SettingsConsts
 {
+    uint16 public constant ONE_HUNDRED_PERCENT = 10000;
+    uint8 public constant ETH_DECIMALS = 18;
+
     using Address for address;
     using SafeMath for uint256;
 
@@ -118,7 +121,7 @@ contract Escrow is
             uint256 bufferPercent = settings().getPlatformSettingValue(
                 COLLATERAL_BUFFER_SETTING
             );
-            uint256 buffer = (collateralValue * bufferPercent) / 10000;
+            uint256 buffer = (collateralValue * bufferPercent) / ONE_HUNDRED_PERCENT;
             collateralValue = collateralValue.sub(buffer);
         }
 
@@ -192,12 +195,12 @@ contract Escrow is
         uint256 baseAmount
     ) internal view returns (uint256) {
         uint8 baseDecimals = baseAddress == settings().ETH_ADDRESS()
-            ? 18
+            ? ETH_DECIMALS
             : ERC20Detailed(baseAddress).decimals();
         PairAggregatorInterface aggregator = _getAggregatorFor(baseAddress, quoteAddress);
         uint256 oneTokenPrice = uint256(aggregator.getLatestAnswer());
-        // TODO: better way with SafeMath?
-        return baseAmount.mul(oneTokenPrice).div(uint256(10)**baseDecimals);
+        uint256 oneUnit = uint256(10)**baseDecimals;
+        return baseAmount.mul(oneTokenPrice).div(oneUnit);
     }
 
     function _getAggregatorFor(address base, address quote)
