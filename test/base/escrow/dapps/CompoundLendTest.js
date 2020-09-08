@@ -1,6 +1,6 @@
 // JS Libraries
 const { withData } = require("leche");
-const { t } = require("../../../utils/consts");
+const { t, DUMMY_ADDRESS } = require("../../../utils/consts");
 const { compound } = require('../../../utils/events');
 const { assert } = require("chai");
 
@@ -26,13 +26,15 @@ contract("CompoundLendTest", function(accounts) {
   });
 
   withData({
-    _1_successful_lend: [ 80, 100, false, null ],
-    _2_insufficient_underlying: [ 100, 0, true, "COMPOUND_INSUFFICIENT_UNDERLYING" ],
-    _3_compound_return_error: [ SIMULATE_COMPOUND_MINT_RETURN_ERROR, SIMULATE_COMPOUND_MINT_RETURN_ERROR, true, "COMPOUND_DEPOSIT_ERROR" ],
-    _4_compound_mint_error: [ SIMULATE_COMPOUND_MINT_ERROR, SIMULATE_COMPOUND_MINT_ERROR, true, "COMPOUND_BALANCE_NOT_INCREASED" ],
+    _1_successful_lend: [ 80, 100, false, false, null ],
+    _2_insufficient_underlying: [ 100, 0, false, true, "COMPOUND_INSUFFICIENT_UNDERLYING" ],
+    _3_compound_return_error: [ SIMULATE_COMPOUND_MINT_RETURN_ERROR, SIMULATE_COMPOUND_MINT_RETURN_ERROR, false, true, "COMPOUND_DEPOSIT_ERROR" ],
+    _4_compound_mint_error: [ SIMULATE_COMPOUND_MINT_ERROR, SIMULATE_COMPOUND_MINT_ERROR, false, true, "COMPOUND_BALANCE_NOT_INCREASED" ],
+    _5_compound_ctoken_not_contract: [ 80, 100, true, true, "CTOKEN_ADDRESS_MUST_BE_CONTRACT" ],
   }, function(
     amount,
     balance,
+    cTokenNotContract,
     mustFail,
     expectedErrorMessage
   ) {
@@ -42,7 +44,9 @@ contract("CompoundLendTest", function(accounts) {
       if (balance > 0) {
         await dai.mint(instance.address, balance)
       }
-
+      if (cTokenNotContract) {
+        cDai.address = DUMMY_ADDRESS; 
+      }
       try {
         // Invocation
         const result = await instance.lend(cDai.address, amount, {from: sender});

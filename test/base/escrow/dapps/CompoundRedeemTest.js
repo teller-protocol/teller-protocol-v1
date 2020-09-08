@@ -1,6 +1,6 @@
 // JS Libraries
 const { withData } = require("leche");
-const { t, toBytes32 } = require("../../../utils/consts");
+const { t, DUMMY_ADDRESS } = require("../../../utils/consts");
 const Timer = require("../../../../scripts/utils/Timer");
 const { minutesToSeconds } = require("../../../utils/consts");
 const { compound } = require('../../../utils/events');
@@ -31,15 +31,17 @@ contract("CompoundRedeemTest", function(accounts) {
   });
 
   withData({
-    _1_successful_redeem: [ 80, 100, false, false, null ],
-    _2_successful_redeem_all: [ 80, 100, true, false, null ],
-    _3_insufficient_balance: [ 100, 0, false, true, "COMPOUND_INSUFFICIENT_BALANCE" ],
-    _4_compound_return_error: [ SIMULATE_COMPOUND_REDEEM_UNDERLYING_ERROR, SIMULATE_COMPOUND_REDEEM_UNDERLYING_ERROR, false, true, "COMPOUND_BALANCE_NOT_INCREASED" ],
-    _5_compound_redeem_error: [ SIMULATE_COMPOUND_REDEEM_UNDERLYING_RETURN_ERROR, SIMULATE_COMPOUND_REDEEM_UNDERLYING_RETURN_ERROR, false, true, "COMPOUND_WITHDRAWAL_ERROR" ],
+    _1_successful_redeem: [ 80, 100, false, false, false, null ],
+    _2_successful_redeem_all: [ 80, 100, true, false, false, null ],
+    _3_insufficient_balance: [ 100, 0, false, false, true, "COMPOUND_INSUFFICIENT_BALANCE" ],
+    _4_compound_return_error: [ SIMULATE_COMPOUND_REDEEM_UNDERLYING_ERROR, SIMULATE_COMPOUND_REDEEM_UNDERLYING_ERROR, false, false, true, "COMPOUND_BALANCE_NOT_INCREASED" ],
+    _5_compound_redeem_error: [ SIMULATE_COMPOUND_REDEEM_UNDERLYING_RETURN_ERROR, SIMULATE_COMPOUND_REDEEM_UNDERLYING_RETURN_ERROR, false, false, true, "COMPOUND_WITHDRAWAL_ERROR" ],
+    _6_cToken_not_contract: [ 80, 100, false, true, true, "CTOKEN_ADDRESS_MUST_BE_CONTRACT" ],
    }, function(
     amount,
     underlyingBalance,
     redeemAll,
+    cTokenNotContract,
     mustFail,
     expectedErrorMessage
   ) {
@@ -52,6 +54,9 @@ contract("CompoundRedeemTest", function(accounts) {
 
         const nextTimestamp = await timer.getCurrentTimestampInSecondsAndSum(minutesToSeconds(2));
         await timer.advanceBlockAtTime(nextTimestamp)
+      }
+      if (cTokenNotContract) {
+        cDai.address = DUMMY_ADDRESS; 
       }
       try {
         const cBalanceBeforeRedeem = await cDai.balanceOf(instance.address)
