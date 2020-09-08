@@ -63,7 +63,7 @@ contract BaseUpgradeable {
 
     /**
         @notice Sets Settings contract address.
-        @param settingAddress address of the Settings contract.
+        @param settingsAddress address of the Settings contract.
      */
     function _setSettings(address settingsAddress) internal {
         // Prevent resetting the settings logic for standalone test deployments.
