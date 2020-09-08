@@ -43,8 +43,6 @@ contract BaseUpgradeable {
         return SettingsInterface(settingsAddress);
     }
 
-    /** Internal Functions **/
-
     /**
         @notice It represent the current logic name (key) for the current implementation.
         @dev It is used by LogicVersionsRegistry to get the logic address for the given logic name.
@@ -58,6 +56,8 @@ contract BaseUpgradeable {
             name := sload(slot)
         }
     }
+
+    /** Internal Functions **/
 
     function _setSettings(address settingsAddress) internal {
         // Prevent resetting the settings logic for standalone test deployments.
