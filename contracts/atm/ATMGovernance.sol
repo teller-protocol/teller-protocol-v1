@@ -1,4 +1,6 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
+ 
 
 // External Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
@@ -14,6 +16,9 @@ import "./BaseATM.sol";
 // Interfaces
 import "./ATMGovernanceInterface.sol";
 import "../settings/IATMSettings.sol";
+
+// Libraries
+import "./ATMLibrary.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -56,7 +61,17 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
     // Unique CRA - Credit Risk Algorithm github hash to use in this ATM
     string public cra;
 
+    ATMLibrary.Reward[] public rewards;
+
+
     /* External Functions */
+
+   /* function setBlockReward(uint256 _blockReward) 
+        external
+        onlyPauser()
+    {
+        blockReward = _blockReward;
+    }*/
 
     /**
         @notice Adds a new General Setting to this ATM.
@@ -317,4 +332,10 @@ contract ATMGovernance is BaseATM, ATMGovernanceInterface, TInitializable {
     function getCRA() external view returns (string memory) {
         return cra;
     }
+
+    function getLatestReward() external view returns (ATMLibrary.Reward memory) {
+        return rewards[rewards.length - 1];
+    }
+
+    
 }

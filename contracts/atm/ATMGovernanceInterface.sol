@@ -1,5 +1,7 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
+import "./ATMLibrary.sol";
 
 /**
     @notice This interface defines available functions for an ATMGovernace.
@@ -7,6 +9,7 @@ pragma solidity 0.5.17;
     @author develop@teller.finance
  */
 interface ATMGovernanceInterface {
+
     /* Events */
 
     /**
@@ -261,4 +264,10 @@ interface ATMGovernanceInterface {
                 CRA is represented by a Github commit hash of the newly proposed algorithm.
      */
     function getCRA() external view returns (string memory);
+
+    function getLatestReward() external view returns (ATMLibrary.Reward memory);
+
+    function getMinimumRedeem() external view returns (uint256);
+
+    function rewards() external view returns (ATMLibrary.Reward[] memory);
 }

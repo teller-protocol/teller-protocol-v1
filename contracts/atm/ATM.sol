@@ -35,8 +35,9 @@ contract ATM is ATMInterface, BaseATM {
     TTokenInterface public tToken;
 
 
-    mapping( address => ATMLibrary.StakeMovement[] ) public stakeMovements;
     mapping( address => ATMLibrary.UserStakeInfo ) public userStakesInfo;
+
+    mapping ( address => bool ) public forbiddenAddresses; // Apply to all 
 
     constructor(
         address atmGovernanceProxy, 
@@ -60,28 +61,22 @@ contract ATM is ATMInterface, BaseATM {
         external 
     {
         // Checking tToken balance
-        require(tToken.balanceOf(msg.sender) >= amount, "INSUFFICIENT_BALANCE_TO_STAKE");
+        require(tToken.balanceOf(msg.sender) >= amount, "INSUFFICIENT_TTOKENS_TO_STAKE");
         tToken.transfer(address(this), amount); // TODO: Change for safe
-        // Calculate previously earned TLR tokens since last stake movement.
+        // Calculate previously earned TLR tokens since last stake/unstake movement.
         uint256 currentBlock = block.number;
-        // uint256 previoustTokenBalance = _getPrevioustTokenBalance();
-        // uint256 previousTLRBalance = _getPreviousTLRBalance();
-        uint256 previoustTokenBalance = _getPrevioustTokenBalance();
-        uint256 previousTLRBalance = _getPreviousTLRBalance();
+        uint256 tTokenStakedBalance = userStakesInfo[msg.sender].tTokenStakedBalance;
+        uint256 tlrBalance = userStakesInfo[msg.sender].tlrBalance;
         uint256 accruedTLR = _calculateAccruedTLR(currentBlock);
-
-        ATMLibrary.StakeMovement memory currentDeposit = ATMLibrary.StakeMovement ({
-                blockNumber: currentBlock,
-                amount: amount,
-                positiveAmount: STAKE,
-                accruedTLRSinceLastMovement: accruedTLR, // Earned from last movement
-                tTokenBalance: previoustTokenBalance.add(amount), // Staking
-                tlrBalance: previousTLRBalance.add(accruedTLR)
+        
+        ATMLibrary.UserStakeInfo memory userInfo = ATMLibrary.UserStakeInfo ( {
+                lastRewardedBlock: currentBlock,
+                tTokenStakedBalance: tTokenStakedBalance.add(amount), // Staking
+                tlrBalance: tlrBalance.add(accruedTLR)
             });
+        userStakesInfo[msg.sender] = userInfo;
 
-        stakeMovements[msg.sender].push(currentDeposit);
-
-        // TODO: emit staking event
+        // TODO: emit stake event
     }
 
     /**
@@ -90,35 +85,23 @@ contract ATM is ATMInterface, BaseATM {
     function unStake(uint256 amount)
         external
     {
-        //ATMLibrary.StakeMovement[] memory stakes = stakeMovements[msg.sender];
-        //uint256 tTokenBalance = stakes[stakes.length - 1].tTokenBalance;
-        uint256 tTokenBalance = userStakesInfo[msg.sender].tTokenBalance;
-        require(tTokenBalance >= amount, "NOT_ENOUGH_AMOUNT_OF_TTOKENS");
+        uint256 tTokenStakedBalance = userStakesInfo[msg.sender].tTokenStakedBalance;
+        require(tTokenStakedBalance >= amount, "NOT_ENOUGH_STAKED_TTOKENS");
 
-        // Calculate previously earned TLR tokens since last stake movement.
+        // Calculate previously earned TLR tokens since last stake/unstake movement.
         uint256 currentBlock = block.number;
-        //uint256 previoustTokenBalance = _getPrevioustTokenBalance();
-        //uint256 currentTLRBalance = _getPreviousTLRBalance();
         uint256 tlrBalance = userStakesInfo[msg.sender].tlrBalance;
         uint256 accruedTLR = _calculateAccruedTLR(currentBlock);
         
-        /*ATMLibrary.StakeMovement memory currentDeposit = ATMLibrary.StakeMovement ({
-                blockNumber: currentBlock,
-                amount: amount,
-                positiveAmount: UNSTAKE,
-                tTokenBalance: previoustTokenBalance.sub(amount), // Staking
-                tlrBalance: currentTLRBalance.add(accruedTLR),
-                accruedTLRSinceLastMovement: accruedTLR // Earned from last movement
-            });*/
         ATMLibrary.UserStakeInfo memory userInfo = ATMLibrary.UserStakeInfo ( {
                 lastRewardedBlock: currentBlock,
-                tTokenBalance: tTokenBalance.sub(amount), // Staking
-                tlrBalance: tlrBalance.add(accruedTLR)
+                tTokenStakedBalance: tTokenStakedBalance.sub(amount), // UnStaking
+                tlrBalance: tlrBalance.add(accruedTLR) // Accrued TLR are added
             });
-        //stakeMovements[msg.sender].push(currentDeposit);    
         userStakesInfo[msg.sender] = userInfo;
         tToken.transfer(msg.sender, amount);
 
+        // TODO: emit unstake event
     }
 
     function withdrawTLR(uint256 amount)
@@ -147,51 +130,35 @@ contract ATM is ATMInterface, BaseATM {
         view
         returns (uint256 earned)
     {
-        ATMLibrary.StakeMovement[] memory stakes = stakeMovements[msg.sender];
-        if (stakes.length > 0) {
-            // Getting latest stake movement info
-            ATMLibrary.StakeMovement memory lastMovement = stakes[stakes.length - 1];
-            uint256 tTokenBalance = lastMovement.tTokenBalance;  
-            uint256 latestRewardBlock = lastMovement.blockNumber;  
-            
-            ATMLibrary.Reward[] memory rewards = governance.rewards();
-            
-            uint256 latestBlock = blockNumber;
-            for (uint256 i = 1; 
-                latestRewardBlock <= rewards[rewards.length - i].startBlockNumber; 
-                i++)
-            {
-                ATMLibrary.Reward memory reward = rewards[rewards.length - i];
-                uint256 accruedTLR = reward.tlrPerBlockPertToken
-                    .mul(latestBlock.sub(reward.startBlockNumber))
-                    .mul(tTokenBalance);
-                earned.add(accruedTLR);
-                latestBlock = reward.startBlockNumber;
+        // Getting latest stake movement info
+        ATMLibrary.UserStakeInfo memory userStakeInfo = userStakesInfo[msg.sender];
+        uint256 tTokenStakedBalance = userStakeInfo.tTokenStakedBalance;  
+        uint256 latestRewardBlock = userStakeInfo.lastRewardedBlock;  
+        
+        ATMLibrary.Reward[] memory rewards = governance.rewards();
+        
+        uint256 newestRewardBlock = blockNumber;
+        uint256 interval = 0;
+        
+        for (uint256 i = 1; 
+            latestRewardBlock <= newestRewardBlock; 
+            i++)
+        {
+            ATMLibrary.Reward memory reward = rewards[rewards.length - i];
+            if (reward.startBlockNumber < latestRewardBlock ) {
+                interval = newestRewardBlock.sub(latestRewardBlock);
+            } else {
+                interval = newestRewardBlock.sub(reward.startBlockNumber);
             }
+            uint256 accruedTLR = reward.tlrPerBlockPertToken
+                .mul(interval)
+                .mul(tTokenStakedBalance);
+            earned.add(accruedTLR);
+            newestRewardBlock = reward.startBlockNumber;
+
         }
         return earned;
     }
 
-    function _getPreviousTLRBalance()
-        internal
-        view
-        returns (uint256 tlrBalance)
-    {
-        ATMLibrary.StakeMovement[] memory stakes = stakeMovements[msg.sender];
-        if (stakes.length > 0 ) {
-            tlrBalance = stakes[stakes.length - 1].tlrBalance;
-        }
-        return tlrBalance;
-    }
-    function _getPrevioustTokenBalance()
-        internal
-        view
-        returns (uint256 tTokenBalance)
-    {
-        ATMLibrary.StakeMovement[] memory stakes = stakeMovements[msg.sender];
-        if (stakes.length > 0 ) {
-            tTokenBalance = stakes[stakes.length - 1].tTokenBalance;
-        }
-        return tTokenBalance;
-    }
+   
 }

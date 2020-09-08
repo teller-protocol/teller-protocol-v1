@@ -9,6 +9,7 @@ import "../base/TInitializable.sol";
 // Contracts
 import "./ATMGovernanceProxy.sol";
 import "./ATMTokenProxy.sol";
+import "./ATMToken.sol";
 
 // Interfaces
 import "../atm/ATMFactoryInterface.sol";
@@ -68,6 +69,12 @@ contract ATMFactory is BaseATM, ATMFactoryInterface, TInitializable {
         );
         address atmTokenProxyAddress = address(atmTokenProxy);
 
+        /*ATMLiquidityMining liquidityMining = new ATMLiquidityMining(
+            atmGovernanceProxy,
+            atmTokenProxy
+        );
+        ATMToken atmToken = ATMToken(atmTokenProxyAddress);
+        atmToken.addMinter(liquidityMining);*/
         atms[atmGovernanceProxyAddress] = true;
         atmTokens[atmGovernanceProxyAddress] = atmTokenProxyAddress;
         atmsList.add(atmGovernanceProxyAddress);
