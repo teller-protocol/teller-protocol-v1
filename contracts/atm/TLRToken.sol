@@ -179,8 +179,8 @@ contract TLRToken is
         require(account != address(0x0), "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED");
         require(vestingCount[account] < _maxVestingPerWallet, "MAX_VESTINGS_REACHED");
         _beforeTokenTransfer(address(0x0), account, amount);
-        uint256 vestingId = vestingCount[account]++;
         vestingCount[account] += 1;
+        uint256 vestingId = vestingCount[account];
         VestingTokens memory vestingTokens = VestingTokens(
             account,
             amount,
@@ -194,7 +194,7 @@ contract TLRToken is
         _updateTotalSupplySnapshot();
         assignedTokens[account] += amount;
         _vestingBalances[account][vestingId] = vestingTokens;
-        emit NewVesting(account, amount, vestingTime);
+        emit NewVesting(account, amount, vestingTime, vestingId);
     }
 
     /**

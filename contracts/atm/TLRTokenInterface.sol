@@ -29,8 +29,9 @@ interface TLRTokenInterface {
         @param beneficiary The account address being granted the tokens
         @param amount The amount of tokens being granted
         @param deadline The length of time before when the tokens can be claimed
+        @param vestingId Current vesting index
      */
-    event NewVesting(address beneficiary, uint256 amount, uint256 deadline);
+    event NewVesting(address beneficiary, uint256 amount, uint256 deadline, uint256 vestingId);
 
     /**
         @notice Emitted when a vested amount has been claimed
