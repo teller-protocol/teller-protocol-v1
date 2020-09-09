@@ -36,7 +36,7 @@ module.exports = async function(deployer, network, accounts) {
   await deployerApp.deployMockIfWith('DAI_ETH', PairAggregatorMock, initialDaiEthPrice, txConfig);
   const initialUsdcEthPrice = '4789225000000000';
   await deployerApp.deployMockIfWith('USDC_ETH', PairAggregatorMock, initialUsdcEthPrice, txConfig);
-  const initialLinkUsdPrice = '241545893719807000';
+  const initialLinkUsdPrice = '2415458937198';
   await deployerApp.deployMockIfWith('LINK_DAI', PairAggregatorMock, initialLinkUsdPrice, txConfig);
   await deployerApp.deployMockIfWith('LINK_USDC', PairAggregatorMock, initialLinkUsdPrice, txConfig);
 

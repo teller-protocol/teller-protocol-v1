@@ -37,7 +37,7 @@ module.exports = async (callback) => {
         const sender = await accounts.getAt(senderIndex);
         const borrowerLoanIDs = await loansInstance.getBorrowerLoans(borrower);
         if(borrowerLoanIDs.length === 0) {
-            callback(`Borrower ${borrower} has not borrowed loans.`);
+            throw new Error(`Borrower ${borrower} has not borrowed loans.`);
         }
         const loanId = borrowerLoanIDs[borrowerLoanIDs.length - 1];
 
