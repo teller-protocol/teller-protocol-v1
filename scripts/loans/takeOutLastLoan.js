@@ -44,11 +44,12 @@ module.exports = async (callback) => {
             loanInfo, 
             { tokenName, decimals: lendingTokenDecimals },
         );
+        
         if(! loanInfoPrinter.isTermsSet()) {
-            callback(`Loan ID ${lastLoanID} for borrower ${senderTxConfig.from} is not TermsSet. Status: ${loanInfoPrinter.loanInfo.status}`);
+            throw new Error(`Loan ID ${lastLoanID} for borrower ${senderTxConfig.from} is not TermsSet. Status: ${loanInfoPrinter.loanInfo.status}`);
         }
 
-
+        const maxLoanAmount = loanInfo.loanTerms.maxLoanAmount;
         const amountToBorrow = loanAmountWithDecimals === '0' ? maxLoanAmount : loanAmountWithDecimals;
 
         const result = await loansInstance.takeOutLoan(

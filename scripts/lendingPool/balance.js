@@ -5,14 +5,15 @@ const { teller, tokens } = require("../utils/contracts");
 const { lendingPool: readParams } = require("../utils/cli-builder");
 const { toUnits } = require("../../test/utils/consts");
 const ProcessArgs = require('../utils/ProcessArgs');
-const { TOKEN_NAME } = require("../utils/cli/names");
+const { TOKEN_NAME, COLL_TOKEN_NAME } = require("../utils/cli/names");
 const processArgs = new ProcessArgs(readParams.balance().argv);
 
 module.exports = async (callback) => {
     try {
         const tokenName = processArgs.getValue(TOKEN_NAME.name);
+        const collTokenName = processArgs.getValue(COLL_TOKEN_NAME.name);
         const getContracts = processArgs.createGetContracts(artifacts);
-        const lendingPoolInstance = await getContracts.getDeployed(teller.lendingPool(tokenName));
+        const lendingPoolInstance = await getContracts.getDeployed(teller.custom(collTokenName).lendingPool(tokenName));
         const tokenInstance = await getContracts.getDeployed(tokens.get(tokenName));
 
         const lendingPoolDaiBalance = await tokenInstance.balanceOf(lendingPoolInstance.address);
