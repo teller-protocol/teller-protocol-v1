@@ -33,7 +33,7 @@ module.exports = async (callback) => {
         const borrowerLoanIDs = await loansInstance.getBorrowerLoans(senderTxConfig.from);
 
         if(borrowerLoanIDs.length === 0) {
-            callback(`Borrower ${senderTxConfig.from} has not borrowed loans.`);
+            throw new Error(`Borrower ${senderTxConfig.from} has not borrowed loans.`);
         }
 
         const lastLoanID = borrowerLoanIDs[borrowerLoanIDs.length - 1];

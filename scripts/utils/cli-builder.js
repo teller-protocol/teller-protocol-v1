@@ -32,6 +32,7 @@ const {
     addMinValue,
     addMaxValue,
     addBackRounds,
+    addMinAmount,
 } = require("./cli/params");
 
 const addBase = (yargs) => {
@@ -96,6 +97,12 @@ module.exports = {
         balanceOf: () => {
             addTokenName(yargs);
             addAccountIndex(yargs);
+            return yargs;
+        },
+        requireBalanceOf: () => {
+            addTokenName(yargs);
+            addAccountIndex(yargs);
+            addMinAmount(yargs);
             return yargs;
         },
     },

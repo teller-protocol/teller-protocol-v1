@@ -186,4 +186,9 @@ module.exports = {
         alias: 'BR',
         default: 1,
     },
+    MIN_AMOUNT: {
+        name: 'minAmount',
+        alias: 'MA',
+        default: undefined,
+    },
 };
