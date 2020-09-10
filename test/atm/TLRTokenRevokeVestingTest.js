@@ -51,7 +51,7 @@ contract('TLRTokenRevokeVestingTest', function (accounts) {
     },function(
         senderHasPauserRole,
         sender,
-        receipent,
+        recipient,
         amount,
         cliff,
         vestingPeriod,
@@ -80,7 +80,7 @@ contract('TLRTokenRevokeVestingTest', function (accounts) {
                 assert(!mustFail, 'It should have failed because the account is not vested');
                 tlrToken
                     .revokeVesting(result)
-                    .emitted(receipent, amount, deadline);
+                    .emitted(recipient, amount, deadline);
             } catch (error) {
                 // Assertions
                 assert(mustFail);
