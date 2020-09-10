@@ -9,7 +9,7 @@ const SettingsInterfaceEncoder = require("../utils/encoders/SettingsInterfaceEnc
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
-const DappMock = artifacts.require("./mock/DappMock.sol");
+const DappMock = artifacts.require("./mock/base/escrow/dapps/DappMock.sol");
 
 // Smart contracts
 const Escrow = artifacts.require("./mock/base/EscrowMock.sol");
@@ -85,7 +85,7 @@ contract('EscrowCallDappTest', function (accounts) {
         assert(!mustFail);
         assert(result);
       } catch (error) {
-        assert(mustFail);
+        assert(mustFail, error.message);
         assert(error);
         assert.equal(error.reason, expectedErrorMessage);
       }
