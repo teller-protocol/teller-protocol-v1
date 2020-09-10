@@ -31,7 +31,7 @@ contract('BaseUpgradeableSetLogicNameTest', function (accounts) {
 
     withData({
         _1_valid: [undefined, "LogicName1", true, undefined, false],
-        _2_previous: ['MyPrevious', "LogicName2", true, undefined, false],
+        _2_previous: ['MyPrevious', "LogicName2", true, 'LOGIC_NAME_ALREADY_SET', true],
         _3_logic_name_not_present: [undefined, "LogicName3", false,  'LOGIC_NAME_NOT_EXIST', true],
     }, function(previousLogicName, logicName, hasLogicVersion, expectedErrorMessage, mustFail) {
         it(t('user', 'setLogicName', 'Should (or not) be able to set the logic name.', mustFail), async function() {
@@ -59,12 +59,7 @@ contract('BaseUpgradeableSetLogicNameTest', function (accounts) {
                 assert(result);
 
                 const newLogicName = await instance.externalLogicName();
-                if(previousLogicName !== undefined){
-                    const previousLogicNameBytes32 = toBytes32(web3, previousLogicName);
-                    assert.equal(newLogicName, previousLogicNameBytes32);
-                } else {
-                    assert.equal(newLogicName, logicNameBytes32);
-                }
+                assert.equal(newLogicName, logicNameBytes32);
             } catch (error) {
                 // Assertions
                 assert(mustFail);

@@ -71,13 +71,8 @@ contract('InitializeableDynamicProxyInitializeProxyTest', function (accounts) {
                 const settingsResult = await instance.settings();
                 const logicNameResult = await instance.externalLogicName();
 
-                if(previousLogicName !== undefined) {
-                    assert.equal(settingsResult, previousSettings.address);
-                    assert.equal(logicNameResult, previousLogicNameBytes32);
-                } else {
-                    assert.equal(settingsResult, settings.address);
-                    assert.equal(logicNameResult, logicNameBytes32);
-                }
+                assert.equal(settingsResult, settings.address);
+                assert.equal(logicNameResult, logicNameBytes32);
             } catch (error) {
                 // Assertions
                 assert(mustFail);

@@ -57,7 +57,7 @@ contract('InitializeableDynamicProxyImplementationTest', function (accounts) {
 
             try {
                 // Invocation
-                const result = await instance.externalImplementation();
+                const result = await instance.implementation();
                 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
