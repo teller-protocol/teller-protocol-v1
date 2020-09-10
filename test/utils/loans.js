@@ -23,25 +23,25 @@ exports.encodeLoanParameter = (web3, {
 }) => {
   return web3.eth.abi.encodeParameter({
     Loan: {
-      id: 'uint256',
+      id: "uint256",
       loanTerms: {
-        borrower: 'address',
-        recipient: 'address',
-        interestRate: 'uint256',
-        collateralRatio: 'uint256',
-        maxLoanAmount: 'uint256',
-        duration: 'uint256'
+        borrower: "address",
+        recipient: "address",
+        interestRate: "uint256",
+        collateralRatio: "uint256",
+        maxLoanAmount: "uint256",
+        duration: "uint256"
       },
-      termsExpiry: 'uint256',
-      loanStartTime: 'uint256',
-      collateral: 'uint256',
-      lastCollateralIn: 'uint256',
-      principalOwed: 'uint256',
-      interestOwed: 'uint256',
-      borrowedAmount: 'uint256',
-      escrow: 'address',
-      status: 'uint256',
-      liquidated: 'bool',
+      termsExpiry: "uint256",
+      loanStartTime: "uint256",
+      collateral: "uint256",
+      lastCollateralIn: "uint256",
+      principalOwed: "uint256",
+      interestOwed: "uint256",
+      borrowedAmount: "uint256",
+      escrow: "address",
+      status: "uint256",
+      liquidated: "bool"
     }
   }, {
     id,
@@ -63,5 +63,5 @@ exports.encodeLoanParameter = (web3, {
     escrow,
     status,
     liquidated
-  })
-}
+  });
+};

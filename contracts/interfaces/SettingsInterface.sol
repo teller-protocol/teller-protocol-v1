@@ -9,6 +9,7 @@ import "./EscrowFactoryInterface.sol";
 import "./LogicVersionsRegistryInterface.sol";
 import "../providers/chainlink/IChainlinkPairAggregatorRegistry.sol";
 import "../settings/IATMSettings.sol";
+import "../util/SettingsConsts.sol";
 
 /**
     @notice This interface defines all function to manage the platform configuration.
@@ -138,6 +139,8 @@ interface SettingsInterface {
         uint256 minValue,
         uint256 maxValue
     ) external;
+
+    function consts() external view returns (SettingsConsts);
 
     /**
         @notice It updates an existent platform setting given a setting name.

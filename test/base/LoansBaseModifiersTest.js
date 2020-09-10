@@ -6,6 +6,7 @@ const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEnc
 
 // Mock constracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
+const SettingsMock = artifacts.require("./mock/base/SettingsMock.sol");
 
 // Smart contracts
 const LoansBaseModifiersMock = artifacts.require("./mock/base/LoansBaseModifiersMock.sol");
@@ -20,7 +21,7 @@ contract('LoansBaseModifiersTest', function (accounts) {
         const lendingPool = await Mock.new();
         const loanTermsConsensus = await Mock.new();
         const markets = await Mock.new();
-        settingsInstance = await Mock.new();
+        settingsInstance = await SettingsMock.new();
         instance = await LoansBaseModifiersMock.new();
         await instance.initialize(
             priceOracle.address,

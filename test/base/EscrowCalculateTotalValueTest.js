@@ -4,7 +4,6 @@ const { withData } = require("leche");
 const { t, ETH_ADDRESS } = require("../utils/consts");
 const LoansBaseInterfaceEncoder = require("../utils/encoders/LoansBaseInterfaceEncoder");
 const settingsNames = require("../utils/platformSettingsNames");
-const { toBytes32 } = require("../utils/consts");
 const { createMocks } = require("../utils/consts");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const { encodeLoanParameter } = require("../utils/loans");
@@ -16,6 +15,7 @@ const DAIMock = artifacts.require("./mock/token/DAIMock.sol");
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
 const Escrow = artifacts.require("./mock/base/EscrowMock.sol");
+const LoansBase = artifacts.require('./base/LoansBase.sol')
 
 contract("EscrowCalculateTotalValueTest", function(accounts) {
   const loansEncoder = new LoansBaseInterfaceEncoder(web3);
@@ -55,13 +55,11 @@ contract("EscrowCalculateTotalValueTest", function(accounts) {
   ) {
     it(t("escrow", "calculateTotalValue", "Should be able to calculate its total value of all assets owned.", false), async function() {
       const tokensAddresses = await createMocks(DAIMock, tokenAmounts.length);
-      await instance.externalSetTokens(tokensAddresses);
 
       const lendingAddress = tokensAddresses[0];
       const collateralAddress = collateralIsEth ? ETH_ADDRESS : (await Mock.new()).address;
 
       const loans = await Mock.new();
-      await instance.mockLoans(loans.address);
       await loans.givenMethodReturnAddress(
         loansEncoder.encodeLendingToken(),
         lendingAddress
@@ -74,6 +72,9 @@ contract("EscrowCalculateTotalValueTest", function(accounts) {
         loansEncoder.encodeLoans(),
         encodeLoanParameter(web3, { collateral: collateralAmount, loanTerms: { collateralRatio } })
       );
+
+      await instance.externalSetTokens(tokensAddresses);
+      await instance.mockLoans(loans.address);
 
       for (let i = 0; i < tokensAddresses.length; i++) {
         await instance.mockValueOfIn(tokensAddresses[i], ETH_ADDRESS, tokenAmounts[i]);

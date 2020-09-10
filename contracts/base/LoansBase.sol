@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 // Libraries and common
 import "../util/TellerCommon.sol";
-import "../util/SettingsConsts.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 import "../util/ERC20DetailedLib.sol";
@@ -69,8 +68,6 @@ contract LoansBase is LoansInterface, Base {
 
     mapping(uint256 => TellerCommon.Loan) public loans;
 
-    SettingsConsts public consts;
-
     /* Modifiers */
 
     /**
@@ -128,7 +125,7 @@ contract LoansBase is LoansInterface, Base {
      */
     modifier withValidLoanRequest(TellerCommon.LoanRequest memory loanRequest) {
         require(
-            settings().getPlatformSettingValue(consts.MAXIMUM_LOAN_DURATION_SETTING()) >=
+            settings().getPlatformSettingValue(settings().consts().MAXIMUM_LOAN_DURATION_SETTING()) >=
                 loanRequest.duration,
             "DURATION_EXCEEDS_MAX_DURATION"
         );
@@ -221,9 +218,7 @@ contract LoansBase is LoansInterface, Base {
 
         require(
             loans[loanID].lastCollateralIn <=
-                now.sub(
-                    settings().getPlatformSettingValue(consts.SAFETY_INTERVAL_SETTING())
-                ),
+                now.sub(settings().getPlatformSettingValue(settings().consts().SAFETY_INTERVAL_SETTING())),
             "COLLATERAL_DEPOSITED_RECENTLY"
         );
 
@@ -346,7 +341,7 @@ contract LoansBase is LoansInterface, Base {
         _payOutCollateral(loanID, collateral, msg.sender);
 
         uint256 tokenPayment = collateralInTokens
-            .mul(settings().getPlatformSettingValue(consts.LIQUIDATE_ETH_PRICE_SETTING()))
+            .mul(settings().getPlatformSettingValue(settings().consts().LIQUIDATE_ETH_PRICE_SETTING()))
             .div(TEN_THOUSAND);
         // the liquidator pays x% of the collateral price
         lendingPool.liquidationPayment(tokenPayment, msg.sender);
@@ -507,7 +502,6 @@ contract LoansBase is LoansInterface, Base {
         priceOracle = priceOracleAddress;
         lendingPool = LendingPoolInterface(lendingPoolAddress);
         loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
-        consts = new SettingsConsts();
     }
 
     /**
@@ -615,7 +609,7 @@ contract LoansBase is LoansInterface, Base {
         uint256 maxLoanAmount
     ) internal view returns (TellerCommon.Loan memory) {
         uint256 termsExpiry = now.add(
-            settings().getPlatformSettingValue(consts.TERMS_EXPIRY_TIME_SETTING())
+            settings().getPlatformSettingValue(settings().consts().TERMS_EXPIRY_TIME_SETTING())
         );
         return
             TellerCommon.Loan({

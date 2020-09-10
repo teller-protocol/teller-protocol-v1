@@ -40,8 +40,7 @@ contract Escrow is
     EscrowInterface,
     TInitializable,
     BaseUpgradeable,
-    BaseEscrowDapp,
-    SettingsConsts
+    BaseEscrowDapp
 {
     using Address for address;
     using SafeMath for uint256;
@@ -132,9 +131,7 @@ contract Escrow is
 
         uint256 collateralValue = getLoan().collateral;
         if (getLoan().loanTerms.collateralRatio > 0) {
-            uint256 bufferPercent = settings().getPlatformSettingValue(
-                COLLATERAL_BUFFER_SETTING
-            );
+            uint256 bufferPercent = settings().getPlatformSettingValue(settings().consts().COLLATERAL_BUFFER_SETTING());
             uint256 buffer = collateralValue.mul(bufferPercent).div(ONE_HUNDRED_PERCENT);
             collateralValue = collateralValue.sub(buffer);
         }
