@@ -240,8 +240,6 @@ contract TLRToken is
         require(assignedTokens[msg.sender] > 0, "ACCOUNT_DOESNT_HAVE_VESTING");
 
         uint256 transferableTokens = _transferableTokens(msg.sender, block.timestamp);
-        require(approve(msg.sender, transferableTokens), "APPROVAL_UNSUCCESSFUL");
-        approve(address(this), transferableTokens);
         _transfer(address(this), msg.sender, transferableTokens);
         _snapshot();
         _updateAccountSnapshot(msg.sender);
