@@ -1,7 +1,7 @@
 // JS Libraries
 const { withData } = require("leche");
 const { t } = require("../../../utils/consts");
-const { compound } = require('../../../utils/events');
+const { compound } = require("../../../utils/events");
 const { assert } = require("chai");
 
 // Mock contracts
@@ -9,9 +9,11 @@ const CDAI = artifacts.require("./mock/providers/compound/CDAIMock.sol");
 const DAI = artifacts.require("./mock/token/DAIMock.sol");
 
 // Smart contracts
-const Compound = artifacts.require("../base/escrow/dapps/Compound.sol");
+const Compound = artifacts.require("./mock/base/escrow/dapps/CompoundMock.sol");
 
 contract("CompoundLendTest", function(accounts) {
+  const owner = accounts[0];
+
   const SIMULATE_COMPOUND_MINT_RETURN_ERROR = 88888888;
   const SIMULATE_COMPOUND_MINT_ERROR = 77777777;
 
@@ -20,17 +22,18 @@ contract("CompoundLendTest", function(accounts) {
   let dai;
 
   beforeEach(async () => {
-    instance = await Compound.new();  
+    instance = await Compound.new({ from: owner });
     dai = await DAI.new();
     cDai = await CDAI.new(dai.address, 2);
   });
 
   withData({
-    _1_successful_lend: [ 80, 100, false, null ],
-    _2_insufficient_underlying: [ 100, 0, true, "COMPOUND_INSUFFICIENT_UNDERLYING" ],
-    _3_compound_return_error: [ SIMULATE_COMPOUND_MINT_RETURN_ERROR, SIMULATE_COMPOUND_MINT_RETURN_ERROR, true, "COMPOUND_DEPOSIT_ERROR" ],
-    _4_compound_mint_error: [ SIMULATE_COMPOUND_MINT_ERROR, SIMULATE_COMPOUND_MINT_ERROR, true, "COMPOUND_BALANCE_NOT_INCREASED" ],
+    _1_successful_lend: [ owner, 80, 100, false, null ],
+    _2_insufficient_underlying: [ owner, 100, 0, true, "COMPOUND_INSUFFICIENT_UNDERLYING" ],
+    _3_compound_return_error: [ owner, SIMULATE_COMPOUND_MINT_RETURN_ERROR, SIMULATE_COMPOUND_MINT_RETURN_ERROR, true, "COMPOUND_DEPOSIT_ERROR" ],
+    _4_compound_mint_error: [ owner, SIMULATE_COMPOUND_MINT_ERROR, SIMULATE_COMPOUND_MINT_ERROR, true, "COMPOUND_BALANCE_NOT_INCREASED" ]
   }, function(
+    sender,
     amount,
     balance,
     mustFail,
@@ -38,24 +41,23 @@ contract("CompoundLendTest", function(accounts) {
   ) {
     it(t("compound", "lend", "Should be able (or not) to lend tokens on Compound", mustFail), async function() {
       // Setup
-      const sender = accounts[0];
       if (balance > 0) {
-        await dai.mint(instance.address, balance)
+        await dai.mint(instance.address, balance);
       }
 
       try {
         // Invocation
-        const result = await instance.lend(cDai.address, amount, {from: sender});
-        assert(!mustFail, 'It should have failed because data is invalid.');
+        const result = await instance.lend(cDai.address, amount, { from: sender });
+        assert(!mustFail, "It should have failed because data is invalid.");
 
         // Validating state changes
         const cTokenBalance = await cDai.balanceOf(instance.address)
         assert(cTokenBalance > 0, 'Unable to lend token')
-        const cTokenContractBalance = await instance.balance(cDai.address)
+        const cTokenContractBalance = await instance.balanceOf(cDai.address)
         assert.equal(cTokenBalance.toString(), cTokenContractBalance.toString(), "Contract balance error");
-        const tokenBalance = await dai.balanceOf(instance.address)
-        const expectedBalance = balance - amount
-        assert.equal(tokenBalance.toString(), expectedBalance.toString(), 'Token balance invalid after lend')
+        const tokenBalance = await dai.balanceOf(instance.address);
+        const expectedBalance = balance - amount;
+        assert.equal(tokenBalance.toString(), expectedBalance.toString(), "Token balance invalid after lend");
 
         // Validating events emmited correctly
         compound
@@ -69,7 +71,6 @@ contract("CompoundLendTest", function(accounts) {
             dai.address,
             tokenBalance
           );
-
       } catch (error) {
         assert(mustFail, error.message);
         assert(error);

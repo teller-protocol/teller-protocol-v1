@@ -2,7 +2,6 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
-import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 import "./BaseUpgradeable.sol";
 import "./BaseEscrowDapp.sol";
 import "./TInitializable.sol";
@@ -39,7 +38,6 @@ import "../util/TellerCommon.sol";
 contract Escrow is
     EscrowInterface,
     TInitializable,
-    Ownable,
     BaseUpgradeable,
     BaseEscrowDapp,
     SettingsConsts

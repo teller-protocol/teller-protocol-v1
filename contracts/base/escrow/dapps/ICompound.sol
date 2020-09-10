@@ -27,13 +27,6 @@ interface ICompound {
     function redeemAll(address cTokenAddress) external;
 
     /**
-        @notice Returns this contract's balance for the specified token.
-        @param cTokenAddress token address.
-        @return this contract's balance.
-     */
-    function balance(address cTokenAddress) external view returns (uint256);
-
-    /**
         @notice This event is emitted every time Compound lend is invoked successfully.
         @param sender the sender of this transaction.
         @param dappAddress address of the compound app.
