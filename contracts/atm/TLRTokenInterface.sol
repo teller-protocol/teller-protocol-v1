@@ -41,11 +41,11 @@ interface TLRTokenInterface {
 
     /**
         @notice Emitted when an account has had its vesting revoked
-        @param beneficiary The account which had its vesting revoked
-        @param amount The amount being revoked
+        @param account The account which had its vesting revoked
+        @param unvestedTokens The amount of tokens being revoked
         @param deadline The previously set vesting deadline 
      */
-    event RevokeVesting(address beneficiary, uint256 amount, uint256 deadline);
+    event RevokeVesting(address account, uint256 unvestedTokens, uint256 deadline);
 
     /**
     @notice Emitted when a snapshot is created
