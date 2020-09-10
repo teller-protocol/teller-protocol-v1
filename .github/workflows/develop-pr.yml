@@ -1,4 +1,4 @@
-name: Test Changed or New Files
+name: Test Changed or New Files under test/
 
 on:
   pull_request:
@@ -9,6 +9,7 @@ jobs:
   test:
     name: Build Project
     runs-on: ubuntu-latest
+    continue-on-error: true
     env:
       INFURA_KEY: my-infura-key-here
       GAS_PRICE_GWEI_KEY: 20
@@ -21,15 +22,12 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: '10.15.x'
-      - name: Install dependencies
-        run: |
-          yarn
       - id: files
         name: Get List of Changed Files
         uses: jitterbit/get-changed-files@v1
-      - name: Test Changed Files
+      - name: Main
         env:
-          CHANGED_FILES: "${{ steps.files.outputs.all }}"
+          CHANGED_FILES: "${{ steps.files.outputs.added_modified  }}"
         run: |
-          CHANGED_TEST_FILES=`echo $CHANGED_FILES | tr " " '\n' | grep 'test/' | tr '\n' " "`
-          if [ $CHANGED_TEST_FILES ]; then yarn test $CHANGED_TEST_FILES; fi
+          CHANGED_TEST_FILES=`echo "$CHANGED_FILES" | tr " " '\n' | grep 'test/' | tr '\n' " "`
+          if [ "$CHANGED_TEST_FILES" ]; then yarn && yarn test $CHANGED_TEST_FILES; fi
