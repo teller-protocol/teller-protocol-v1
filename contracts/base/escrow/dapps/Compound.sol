@@ -62,7 +62,7 @@ contract Compound is ICompound, BaseEscrowDapp {
         _tokenUpdated(cTokenAddress);
         _tokenUpdated(address(underlying));
 
-    uint256 underlyingBalance = underlying.balanceOf(address(this));
+        uint256 underlyingBalance = underlying.balanceOf(address(this));
         emit CompoundLended(
             msg.sender,
             address(this),
