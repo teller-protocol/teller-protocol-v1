@@ -80,16 +80,6 @@ contract Base is TInitializable, BaseUpgradeable, ReentrancyGuard {
         _;
     }
 
-    /**
-        @notice Checks whether a given address is allowed (see Settings#hasPauserRole function) or not.
-        @dev It throws a require error if address is not allowed.
-        @param anAddress account to test.
-     */
-    modifier whenAllowed(address anAddress) {
-        require(settings().hasPauserRole(anAddress), "ADDRESS_ISNT_ALLOWED");
-        _;
-    }
-
     /* Constructor */
 
     /** External Functions */
