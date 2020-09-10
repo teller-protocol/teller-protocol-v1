@@ -1,5 +1,8 @@
 pragma solidity 0.5.17;
 
+// Libraries
+import "../util/AddressLib.sol";
+
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
 
@@ -10,6 +13,7 @@ import "../interfaces/SettingsInterface.sol";
  */
 contract BaseUpgradeable {
     using Address for address;
+    using AddressLib for address;
 
     /** State Variables **/
 
@@ -73,7 +77,7 @@ contract BaseUpgradeable {
      */
     function _setSettings(address settingsAddress) internal {
         // Prevent resetting the settings logic for standalone test deployments.
-        if (address(settings()) != address(0x0)) {
+        if (address(settings()).isNotEmpty()) {
             return;
         }
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
@@ -92,9 +96,7 @@ contract BaseUpgradeable {
      */
     function _setLogicName(bytes32 aLogicName) internal {
         // Prevent resetting the logic name for standalone test deployments.
-        if (logicName() != "") {
-            return;
-        }
+        require(logicName() == "", "LOGIC_NAME_ALREADY_SET");
         require(
             settings().versionsRegistry().hasLogicVersion(aLogicName),
             "LOGIC_NAME_NOT_EXIST"
