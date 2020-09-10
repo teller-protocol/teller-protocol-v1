@@ -84,7 +84,7 @@ contract Compound is ICompound, BaseEscrowDapp {
     */
     function redeem(address cTokenAddress, uint256 amount) public onlyOwner() {
         require(cTokenAddress.isContract(), "CTOKEN_ADDRESS_MUST_BE_CONTRACT");
-        require(_balance(cTokenAddress) >= amount, "COMPOUND_INSUFFICIENT_BALANCE");
+        require(_balanceOf(cTokenAddress) >= amount, "COMPOUND_INSUFFICIENT_BALANCE");
         CErc20Interface cToken = CErc20Interface(cTokenAddress);
         IERC20 underlying = IERC20(cToken.underlying());
         uint256 balanceBeforeRedeem = underlying.balanceOf(address(this));
