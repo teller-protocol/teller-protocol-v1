@@ -2,9 +2,13 @@ pragma solidity 0.5.17;
 
 // External Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Common
 import "../../../util/AddressLib.sol";
+
+//Contracts
+import "../../BaseEscrowDapp.sol";
 
 // Interfaces
 import "./ICompound.sol";
@@ -26,8 +30,9 @@ import "../../../providers/compound/CErc20Interface.sol";
         delegatecalls from Escrow contract, so this contract's state is really Escrow. 
     @author develop@teller.finance
  */
-contract Compound is ICompound {
+contract Compound is ICompound, BaseEscrowDapp {
     using AddressLib for address;
+    using Address for address;
 
     /* State Variables */
     // State is shared with Escrow contract as it uses delegateCall() to interact with this contract.
@@ -37,7 +42,8 @@ contract Compound is ICompound {
         @param cTokenAddress address of the token.
         @param amount amount of tokens to mint. 
     */
-    function lend(address cTokenAddress, uint256 amount) public {
+    function lend(address cTokenAddress, uint256 amount) public onlyOwner() {
+        require(cTokenAddress.isContract(), "CTOKEN_ADDRESS_MUST_BE_CONTRACT");
         CErc20Interface cToken = CErc20Interface(cTokenAddress);
         uint256 balanceBeforeMint = cToken.balanceOf(address(this));
         IERC20 underlying = IERC20(cToken.underlying());
@@ -45,14 +51,20 @@ contract Compound is ICompound {
             underlying.balanceOf(address(this)) >= amount,
             "COMPOUND_INSUFFICIENT_UNDERLYING"
         );
+
         underlying.approve(cTokenAddress, amount);
         uint256 result = cToken.mint(amount);
         require(result == 0, "COMPOUND_DEPOSIT_ERROR");
+
         uint256 balanceAfterMint = cToken.balanceOf(address(this));
         require(
             balanceAfterMint >= (balanceBeforeMint + amount),
             "COMPOUND_BALANCE_NOT_INCREASED"
         );
+
+        _tokenUpdated(cTokenAddress);
+        _tokenUpdated(address(underlying));
+
         uint256 underlyingBalance = underlying.balanceOf(address(this));
         emit CompoundLended(
             msg.sender,
@@ -70,19 +82,26 @@ contract Compound is ICompound {
         @param cTokenAddress address of the token.
         @param amount amount of underlying tokens to redeem.
     */
-    function redeem(address cTokenAddress, uint256 amount) public {
-        require(_balance(cTokenAddress) >= amount, "COMPOUND_INSUFFICIENT_BALANCE");
+    function redeem(address cTokenAddress, uint256 amount) public onlyOwner() {
+        require(cTokenAddress.isContract(), "CTOKEN_ADDRESS_MUST_BE_CONTRACT");
+        require(_balanceOf(cTokenAddress) >= amount, "COMPOUND_INSUFFICIENT_BALANCE");
         CErc20Interface cToken = CErc20Interface(cTokenAddress);
         IERC20 underlying = IERC20(cToken.underlying());
         uint256 balanceBeforeRedeem = underlying.balanceOf(address(this));
+
         uint256 result = cToken.redeemUnderlying(amount);
         require(result == 0, "COMPOUND_WITHDRAWAL_ERROR");
+
         uint256 underlyingBalanceAfterRedeem = underlying.balanceOf(address(this));
-        uint256 cTokenBalanceAfterRedeem = cToken.balanceOf(address(this));
         require(
             underlyingBalanceAfterRedeem >= (balanceBeforeRedeem + amount),
             "COMPOUND_BALANCE_NOT_INCREASED"
         );
+
+        _tokenUpdated(cTokenAddress);
+        _tokenUpdated(address(underlying));
+
+        uint256 cTokenBalanceAfterRedeem = cToken.balanceOf(address(this));
         emit CompoundRedeemed(
             msg.sender,
             address(this),
@@ -98,26 +117,8 @@ contract Compound is ICompound {
         @notice This function redeems complete token balance.
         @param cTokenAddress address of the token.
     */
-    function redeemAll(address cTokenAddress) public {
-        uint256 amount = _balance(cTokenAddress);
+    function redeemAll(address cTokenAddress) public onlyOwner() {
+        uint256 amount = _balanceOf(cTokenAddress);
         redeem(cTokenAddress, amount);
-    }
-
-    /**
-        @notice Returns this contract's balance for the specified token.
-        @param cTokenAddress token address.
-        @return this contract's balance.
-     */
-    function balance(address cTokenAddress) public view returns (uint256) {
-        return _balance(cTokenAddress);
-    }
-
-    /**
-        @notice Helper function to return this contract's balance for the specified token.
-        @param cToken token address.
-        @return this contract's balance.
-     */
-    function _balance(address cToken) internal view returns (uint256) {
-        return CErc20Interface(cToken).balanceOf(address(this));
     }
 }

@@ -54,6 +54,10 @@ contract("UpgradeableProxyUpgradeToTest", function(accounts) {
                     await settingsAtProxy.addPauser(caller, { from: admin })
                 }
 
+                // Pre Assertions
+                const initImplementation = await proxy.implementation.call()
+                assert.equal(initImplementation, initLogic.address, 'Initial logic implementation incorrect.')
+
                 // Invocation
                 let result;
                 if (newLogic) {
@@ -65,6 +69,9 @@ contract("UpgradeableProxyUpgradeToTest", function(accounts) {
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
+
+                const upgradedImplementation = await proxy.implementation.call()
+                assert.equal(upgradedImplementation, newLogicInstance.address, 'Upgraded logic implementation incorrect.')
 
                 // Validating events were emitted
                 upgradeable
