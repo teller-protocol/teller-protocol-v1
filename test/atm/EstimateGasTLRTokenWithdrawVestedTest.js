@@ -24,8 +24,8 @@ contract('EstimateGasTLRTokenWithdrawVestedTest', function (accounts) {
     const daoMember = accounts[2];
     const timer = new Timer(web3);
     const MAX_VESTINGS_PER_WALLET_TELLER_CONFIG = 50; // refers to: config/network/mainnet/atms.js [maxVestingPerWallet]
-    const MAX_VESTINGS_PER_WALLET_SUPPORTED = 1000; // MAX amount of vestings in one transaction based on gas limit. We are using
-                                                    // only 1000 due to test timeout.   
+    const MAX_VESTINGS_PER_WALLET_SUPPORTED = 500; // MAX amount of vestings in one transaction based on gas limit. We are using
+                                                    // only 500 due to test timeout.   
     
     const baseGasCost = 414000; // Gas cost with 1 vesting in wallet. If this value is changed then the following spreadsheet and corresponding analysis needs to be updated: https://docs.google.com/spreadsheets/d/13TM8960zryfnSfmdVV9nZ3smA_k-ygoewGkZacLrpBU/edit#gid=942101614, then
     const expectedGasCost = (vestings) => baseGasCost + ((vestings -  1) * 3700); // Gas cost > 1 vesting in wallet
