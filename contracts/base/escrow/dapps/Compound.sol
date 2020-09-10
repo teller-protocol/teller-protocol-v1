@@ -2,6 +2,7 @@ pragma solidity 0.5.17;
 
 // External Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Common
 import "../../../util/AddressLib.sol";
@@ -31,6 +32,7 @@ import "../../../providers/compound/CErc20Interface.sol";
  */
 contract Compound is ICompound, BaseEscrowDapp {
     using AddressLib for address;
+    using Address for address;
 
     /* State Variables */
     // State is shared with Escrow contract as it uses delegateCall() to interact with this contract.
@@ -41,6 +43,7 @@ contract Compound is ICompound, BaseEscrowDapp {
         @param amount amount of tokens to mint. 
     */
     function lend(address cTokenAddress, uint256 amount) public onlyOwner() {
+        require(cTokenAddress.isContract(), "CTOKEN_ADDRESS_MUST_BE_CONTRACT");
         CErc20Interface cToken = CErc20Interface(cTokenAddress);
         uint256 balanceBeforeMint = cToken.balanceOf(address(this));
         IERC20 underlying = IERC20(cToken.underlying());
@@ -80,6 +83,7 @@ contract Compound is ICompound, BaseEscrowDapp {
         @param amount amount of underlying tokens to redeem.
     */
     function redeem(address cTokenAddress, uint256 amount) public onlyOwner() {
+        require(cTokenAddress.isContract(), "CTOKEN_ADDRESS_MUST_BE_CONTRACT");
         require(_balanceOf(cTokenAddress) >= amount, "COMPOUND_INSUFFICIENT_BALANCE");
         CErc20Interface cToken = CErc20Interface(cTokenAddress);
         IERC20 underlying = IERC20(cToken.underlying());
