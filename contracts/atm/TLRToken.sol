@@ -194,7 +194,7 @@ contract TLRToken is
         _updateTotalSupplySnapshot();
         assignedTokens[account] += amount;
         _vestingBalances[account][vestingId] = vestingTokens;
-        emit NewVesting(account, amount, vestingTime, vestingId);
+        emit NewVesting(account, amount, vestingTime);
     }
 
     /**
