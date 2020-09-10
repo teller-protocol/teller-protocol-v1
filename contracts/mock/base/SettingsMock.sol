@@ -9,7 +9,7 @@ contract SettingsMock is Mock {
     SettingsConsts public consts;
     IChainlinkPairAggregatorRegistry public pairAggregatorRegistry;
 
-    constructor() Mock() public {
+    constructor() public Mock() {
         consts = new SettingsConsts();
     }
 
