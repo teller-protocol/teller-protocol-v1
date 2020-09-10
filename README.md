@@ -95,6 +95,7 @@ As result, you should see:
 
 - To execute integration tests follow [this guide](./docs/integration-tests.md).
 - To execute scripts on Ethereum networks follow [this guide](./docs/truffle-scripts.md).
+- To learn more about Teller Protocol check our documentation [here](https://teller.gitbook.io/teller-1/).
 
 ---
 © Copyright 2020, Fabrx Labs
