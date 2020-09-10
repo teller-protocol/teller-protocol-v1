@@ -102,7 +102,7 @@ contract TLRToken is
         address atm
     ) external initializer() isNotInitialized() {
         require(cap > 0, "CAP_CANNOT_BE_ZERO");
-        require(atm != address(0x0), "ATM_CANNOT_BE_ZERO_ADDRESS");
+        require(atm.isContract(), "ATM_CANNOT_BE_ZERO_ADDRESS");
         require(settingsAddress.isContract(), "SETTINGS_SHOULD_BE_A_CONTRACT");
         super.initialize(name, symbol, decimals);
         TInitializable._initialize();
@@ -183,8 +183,8 @@ contract TLRToken is
         require(vestingCount[account] < _maxVestingPerWallet, "MAX_VESTINGS_REACHED");
         require(vestingTime != 0, "VESTING_CANNOT_BE_ZERO");
         _beforeTokenTransfer(address(0x0), account, amount);
-        uint256 vestingId = vestingCount[account].add(1);
         vestingCount[account] = vestingCount[account].add(1);
+        uint256 vestingId = vestingCount[account];
         VestingTokens memory vestingTokens = VestingTokens(
             account,
             amount,
@@ -233,7 +233,7 @@ contract TLRToken is
     }
 
     /**
-     *  @notice Withdrawl of tokens upon completion of vesting period
+     *  @notice Withdrawal of tokens upon completion of vesting period
      *
      */
     function withdrawVested() public whenNotPaused() isInitialized() {

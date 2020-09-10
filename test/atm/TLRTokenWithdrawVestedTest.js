@@ -63,7 +63,7 @@ contract('TLRTokenWithdrawVestedTest', function (accounts) {
         mustFail
     ) {
         it(t('user', 'withdrawVested', 'Should or should not be able to claim correctly', mustFail), async function() {
-        console.log(receipent, daoMember2);
+
         // Setup 
         await instance.mintVesting(daoMember2, amount, cliff, vestingPeriod, { from: daoAgent });
         await atmSettingsInstance.givenMethodReturnBool(
