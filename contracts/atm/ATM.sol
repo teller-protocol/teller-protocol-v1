@@ -109,21 +109,19 @@ contract ATM is ATMInterface, BaseATM {
     {
         uint256 accruedTLRBalance = userStakesInfo[msg.sender].accruedTLRBalance;
         require(accruedTLRBalance >= governance.getMinimumRedeem(), "NOT_ENOUGH_TLR_TOKENS_TO_REDEEM");
-        
-        ATMLibrary.StakeMovement memory currentDeposit = ATMLibrary.StakeMovement ({
-                blockNumber: block.number,
-                amount: amount,
-                positiveAmount: UNSTAKE,
-                tTokenBalance: previoustTokenBalance.sub(amount), // Staking
-                tlrBalance: currentTLRBalance.add(accruedTLR),
-                accruedTLRSinceLastMovement: accruedTLR // Earned from last movement
-            });
-        
-        // mint/assign TLR to user
-        tlrToken.mint(msg.sender, amount); // TODO: ATM contract must be minter
+        // Minted tokens are reduced from accrued balance
         userStakesInfo[msg.sender].accruedTLRBalance.sub(amount);
+        // mint/assign TLR to user
+        // TODO: validate we don't overflow TLR max cap
+        tlrToken.mint(msg.sender, amount); // TODO: ATM contract must be minter
+
+        // TODO: emit TLR withdraw event
     }
 
+    /**
+        @notice Returns sender's accrued TLR token amount since last stake operation (stake or unstake)
+            until param blockNumber. 
+    */
     function _calculateAccruedTLR(uint256 blockNumber)
         internal
         view
@@ -132,20 +130,20 @@ contract ATM is ATMInterface, BaseATM {
         // Getting latest stake movement info
         ATMLibrary.UserStakeInfo memory userStakeInfo = userStakesInfo[msg.sender];
         uint256 tTokenStakedBalance = userStakeInfo.tTokenStakedBalance;  
-        uint256 latestRewardBlock = userStakeInfo.lastRewardedBlock;  
-        
+        uint256 latestRewardedBlock = userStakeInfo.lastRewardedBlock;  
+        require(latestRewardedBlock < blockNumber, "BLOCK_TOO_OLD");
         ATMLibrary.Reward[] memory rewards = governance.rewards();
         
         uint256 newestRewardBlock = blockNumber;
         uint256 interval = 0;
         
         for (uint256 i = 1; 
-            latestRewardBlock <= newestRewardBlock; 
+            latestRewardedBlock <= newestRewardBlock; 
             i++)
         {
             ATMLibrary.Reward memory reward = rewards[rewards.length - i];
-            if (reward.startBlockNumber < latestRewardBlock ) {
-                interval = newestRewardBlock.sub(latestRewardBlock);
+            if (reward.startBlockNumber < latestRewardedBlock ) {
+                interval = newestRewardBlock.sub(latestRewardedBlock);
             } else {
                 interval = newestRewardBlock.sub(reward.startBlockNumber);
             }
