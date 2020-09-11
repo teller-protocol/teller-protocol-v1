@@ -88,10 +88,7 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
         address baseAddress,
         address quoteAddress,
         uint256 baseAmount
-    ) 
-        external 
-        view
-        returns (uint256) {
+    ) external view returns (uint256) {
         return super._valueOfIn(baseAddress, quoteAddress, baseAmount);
     }
 

@@ -11,6 +11,7 @@ const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterf
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
+const SettingsMock = artifacts.require("./mock/base/SettingsMock.sol");
 
 // Smart contracts
 const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
@@ -27,6 +28,7 @@ contract('EtherCollateralLoansLiquidateTest', function (accounts) {
     let oracleInstance;
     let loanTermsConsInstance;
     let lendingPoolInstance;
+    let lendingTokenInstance;
     let settingsInstance;
     let marketsInstance;
     let atmSettingsInstance;
@@ -42,7 +44,7 @@ contract('EtherCollateralLoansLiquidateTest', function (accounts) {
         lendingTokenInstance = await Mock.new();
         oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
-        settingsInstance = await Mock.new();
+        settingsInstance = await SettingsMock.new();
         marketsInstance = await Mock.new();
         atmSettingsInstance = await Mock.new();
         instance = await Loans.new();

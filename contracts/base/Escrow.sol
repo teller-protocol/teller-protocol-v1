@@ -36,23 +36,17 @@ import "../providers/openzeppelin/SignedSafeMath.sol";
 
     @author develop@teller.finance
  */
-contract Escrow is
-    EscrowInterface,
-    TInitializable,
-    BaseUpgradeable,
-    BaseEscrowDapp,
-    SettingsConsts
-{
+contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowDapp {
     using Address for address;
     using SafeMath for uint256;
     using SignedSafeMath for uint256;
 
-    // Numerical representation of 100.00 percent. 
+    // Numerical representation of 100.00 percent.
     uint16 public constant ONE_HUNDRED_PERCENT = 10000;
-    
+
     // Ethereum decimal places.
     uint8 public constant ETH_DECIMALS = 18;
-    
+
     /** State Variables **/
 
     /**
@@ -133,7 +127,7 @@ contract Escrow is
         uint256 collateralValue = getLoan().collateral;
         if (getLoan().loanTerms.collateralRatio > 0) {
             uint256 bufferPercent = settings().getPlatformSettingValue(
-                COLLATERAL_BUFFER_SETTING
+                settings().consts().COLLATERAL_BUFFER_SETTING()
             );
             uint256 buffer = collateralValue.mul(bufferPercent).div(ONE_HUNDRED_PERCENT);
             collateralValue = collateralValue.sub(buffer);
@@ -222,7 +216,7 @@ contract Escrow is
         @param baseAddress base token or ETH address.
         @param quoteAddress quote token address.
         @param baseAmount amount of base token or ETH.
-    */    
+    */
     function _valueOfIn(
         address baseAddress,
         address quoteAddress,

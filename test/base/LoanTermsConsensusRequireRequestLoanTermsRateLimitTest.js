@@ -8,6 +8,7 @@ const Timer = require('../../scripts/utils/Timer');
 
 // Smart contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
+const SettingsMock = artifacts.require("./mock/base/SettingsMock.sol");
 const LoanTermsConsensusMock = artifacts.require("./mock/base/LoanTermsConsensusMock.sol");
 
 contract('LoanTermsConsensusRequireRequestLoanTermsRateLimitTest', function (accounts) {
@@ -19,7 +20,7 @@ contract('LoanTermsConsensusRequireRequestLoanTermsRateLimitTest', function (acc
     let callerInstance;
 
     beforeEach('Setup for each test', async () => {
-        settingsInstance = await Mock.new();
+        settingsInstance = await SettingsMock.new();
         callerInstance = await Mock.new();
         instance = await LoanTermsConsensusMock.new();
         await instance.initialize(

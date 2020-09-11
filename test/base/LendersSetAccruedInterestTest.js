@@ -6,6 +6,7 @@ const { createInterestRequest, createUnsignedInterestResponse } = require('../ut
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
+const SettingsMock = artifacts.require("./mock/base/SettingsMock.sol");
 
 // Smart contracts
 const Lenders = artifacts.require("./mock/base/LendersMock.sol");
@@ -17,6 +18,7 @@ contract('LendersSetAccruedInterestTest', function (accounts) {
     let lendingPoolInstance;
     let marketsInstance;
     let interestConsensusInstance;
+    let settingsInstance;
     let interestConsensusTemplate;
     let processRequestEncoding;
 
@@ -30,7 +32,7 @@ contract('LendersSetAccruedInterestTest', function (accounts) {
         tTokenInstance = await Mock.new();
         lendingPoolInstance = await Mock.new();
         interestConsensusInstance = await Mock.new();
-        settingsInstance = await Mock.new();
+        settingsInstance = await SettingsMock.new();
         marketsInstance = await Mock.new();
         instance = await Lenders.new();
 
