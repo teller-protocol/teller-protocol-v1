@@ -27,8 +27,8 @@ contract('EstimateGasTLRTokenWithdrawVestedTest', function (accounts) {
     const MAX_VESTINGS_PER_WALLET_SUPPORTED = 1000; // MAX amount of vestings in one transaction based on gas limit. We are using
                                                     // only 1000 due to test timeout.   
     
-    const baseGasCost = 407000; // Gas cost with 1 vesting in wallet
-    const expectedGasCost = (vestings) => baseGasCost + ((vestings -  1) * 3550); // Gas cost > 1 vesting in wallet
+    const baseGasCost = 414000; // Gas cost with 1 vesting in wallet. If this value is changed then the following spreadsheet and corresponding analysis needs to be updated: https://docs.google.com/spreadsheets/d/13TM8960zryfnSfmdVV9nZ3smA_k-ygoewGkZacLrpBU/edit#gid=942101614, then
+    const expectedGasCost = (vestings) => baseGasCost + ((vestings -  1) * 3700); // Gas cost > 1 vesting in wallet
 
     beforeEach('Setup for each test', async () => {
         settingsInstance = await Mock.new();
@@ -94,7 +94,7 @@ contract('EstimateGasTLRTokenWithdrawVestedTest', function (accounts) {
             await timer.advanceBlockAtTime(currentTime + claimTime);
             const result = await instance.withdrawVested.estimateGas({ from: recipient });
             // Assertions
-            assert(parseInt(result) <= expectedMaxGas, 'Expected max gas less than result.');
+            assert(parseInt(result) <= expectedMaxGas, 'Gas usage exceeded network gas limit.');
         });
     });
 
