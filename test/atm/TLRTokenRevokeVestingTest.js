@@ -75,7 +75,7 @@ contract('TLRTokenRevokeVestingTest', function (accounts) {
 
             try {
                 // Invocation
-                const result = await instance.revokeVesting(recipient, 1, { from: sender });
+                const result = await instance.revokeVesting(receipent, 1, { from: sender });
                 // Assertions
                 assert(!mustFail, 'It should have failed because the account is not vested');
                 tlrToken

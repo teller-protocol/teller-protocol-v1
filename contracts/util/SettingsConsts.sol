@@ -62,6 +62,8 @@ contract SettingsConsts {
 
     /**
         @notice The setting name for the collateral buffer.
+        @notice It represents the percentage value (with 2 decimal places) of a collateral buffer. 
+            e.g.: collateral buffer at 100% is stored as 10000.
      */
     bytes32 public constant COLLATERAL_BUFFER_SETTING = "CollateralBuffer";
 }
