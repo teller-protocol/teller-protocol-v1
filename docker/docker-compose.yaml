@@ -7,8 +7,9 @@ services:
       - DATA_FOLDER=${DATA_FOLDER}
       - PORT=${PORT}
       - ADDRESS_COUNT=${ADDRESS_COUNT}
+      - MNEMONIC=${MNEMONIC}
     ports:
       - "${PORT}:${PORT}"
     volumes:
       - ${DATA_FOLDER}:/ganache_data
-    command: "ganache-cli --deterministic --db=/ganache_data --mnemonic ${MNEMONIC} --networkId ${NETWORK_ID} --hostname 0.0.0.0 --port ${PORT} -a ${ADDRESS_COUNT}"
+    command: "ganache-cli --deterministic --db=/ganache_data --mnemonic '${MNEMONIC}' --networkId ${NETWORK_ID} --hostname 0.0.0.0 --port ${PORT} -a ${ADDRESS_COUNT}"

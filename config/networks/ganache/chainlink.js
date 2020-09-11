@@ -1,7 +1,7 @@
 
 module.exports = {
     USDC_ETH: {
-        address: '0x0482f8aF9A1Bd3078896A3BF970C17A9392c3641',
+        address: '0x79e38bBeF8eFcee7Ab3D34768ae5f7913715eb61',
         inversed: false,
         collateralDecimals: 18, // ETH
         responseDecimals: 18,
@@ -9,7 +9,7 @@ module.exports = {
         quoteTokenName: 'ETH',
     },
     DAI_ETH: {
-        address: '0x1c52F8372fcf99a0e282A71E4B7d2e1443A8b1f5',
+        address: '0x253b19ee3f3B96Ee80936290E7C2CD8fd0fBFF22',
         inversed: false,
         collateralDecimals: 18, // ETH
         responseDecimals: 18,
@@ -17,7 +17,7 @@ module.exports = {
         quoteTokenName: 'ETH',
     },
     LINK_DAI: {
-        address: '0xE1a250d24cDBA038B7F03197741cc2A9b5F052bD', // Chainlink Pair: LINK - USD
+        address: '0xEB946a92aa082a98D1E64AC318869c217901c238', // Chainlink Pair: LINK - USD
         inversed: true,
         collateralDecimals: 18, // LINK
         responseDecimals: 8,
@@ -25,7 +25,7 @@ module.exports = {
         quoteTokenName: 'DAI',
     },
     LINK_USDC: {
-        address: '0x7D6036e123cDC64A33D5e8a43b4440B67124d53c',  // Chainlink Pair: LINK - USD
+        address: '0xB813c002bF28ed3ed9184bcc095fC3aa0216b5c9',  // Chainlink Pair: LINK - USD
         inversed: true,
         collateralDecimals: 18, // LINK
         responseDecimals: 8,
