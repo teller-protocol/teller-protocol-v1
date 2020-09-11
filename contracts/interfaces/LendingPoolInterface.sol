@@ -80,6 +80,30 @@ interface LendingPoolInterface {
     ) external;
 
     /**
+        @notice It gets the cToken address.
+        @return the cToken address.
+    */
+    function cToken() external view returns (address);
+
+    /**
+        @notice It gets the tToken address.
+        @return the tToken address.
+    */
+    function tToken() external view returns (address);
+
+    /**
+        @notice It gets the Lenders contract address.
+        @return the Lenders contract address.
+    */
+    function lenders() external view returns (address);
+
+    /**
+        @notice It gets the Loans contract address.
+        @return the Loans contract address.
+    */
+    function loans() external view returns (address);
+
+    /**
         @notice This event is emitted when an user deposits tokens into the pool.
         @param sender address.
         @param amount of tokens.

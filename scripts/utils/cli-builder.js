@@ -32,6 +32,7 @@ const {
     addMinValue,
     addMaxValue,
     addBackRounds,
+    addMinAmount,
 } = require("./cli/params");
 
 const addBase = (yargs) => {
@@ -79,6 +80,12 @@ module.exports = {
             addAmount(yargs);
             return yargs;
         },
+        withdraw: () => {
+            addLendingPoolBase(yargs);
+            addSenderIndex(yargs);
+            addAmount(yargs);
+            return yargs;
+        },
     },
     tokens: {
         mint: () => {
@@ -90,6 +97,12 @@ module.exports = {
         balanceOf: () => {
             addTokenName(yargs);
             addAccountIndex(yargs);
+            return yargs;
+        },
+        requireBalanceOf: () => {
+            addTokenName(yargs);
+            addAccountIndex(yargs);
+            addMinAmount(yargs);
             return yargs;
         },
     },
@@ -146,10 +159,22 @@ module.exports = {
             addAmount(yargs);
             return yargs;
         },
+        takeOutLast: () => {
+            addLoansBase(yargs);
+            addSenderIndex(yargs);
+            addAmount(yargs);
+            return yargs;
+        },
         repay: () => {
             addLoansBase(yargs);
             addSenderIndex(yargs);
             addLoanId(yargs);
+            addAmount(yargs);
+            return yargs;
+        },
+        repayLast: () => {
+            addLoansBase(yargs);
+            addSenderIndex(yargs);
             addAmount(yargs);
             return yargs;
         },
@@ -158,6 +183,13 @@ module.exports = {
             addBorrowerIndex(yargs);
             addSenderIndex(yargs);
             addLoanId(yargs);
+            addAmount(yargs);
+            return yargs;
+        },
+        depositCollateralLast: () => {
+            addLoansBase(yargs);
+            addBorrowerIndex(yargs);
+            addSenderIndex(yargs);
             addAmount(yargs);
             return yargs;
         },

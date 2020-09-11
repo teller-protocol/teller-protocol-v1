@@ -33,6 +33,7 @@ const {
   MIN_VALUE,
   MAX_VALUE,
   BACK_ROUNDS,
+  MIN_AMOUNT,
 } = require("./names");
 
 const newOption = (argv, name, alias, type, description, defaultValue) => {
@@ -481,6 +482,20 @@ module.exports.addTestTokenName = (
     TEST_TOKEN_NAME.alias,
     "string",
     `This represents the token to be used in the integration tests. By default ${defaultParam}`,
+    defaultParam
+  );
+};
+
+module.exports.addMinAmount = (
+  yargs,
+  defaultParam = MIN_AMOUNT.default
+) => {
+  newOption(
+    yargs,
+    MIN_AMOUNT.name,
+    MIN_AMOUNT.alias,
+    "number",
+    `This represents the minimum amount of tokens that an address should have. It is used in the integration tests and validation scripts. By default ${defaultParam}`,
     defaultParam
   );
 };
