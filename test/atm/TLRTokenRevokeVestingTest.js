@@ -82,7 +82,6 @@ contract('TLRTokenRevokeVestingTest', function (accounts) {
                     .revokeVesting(result)
                     .emitted(recipient, amount, deadline);
             } catch (error) {
-                console.log(error);
                 // Assertions
                 assert(mustFail);
                 assert(error);
