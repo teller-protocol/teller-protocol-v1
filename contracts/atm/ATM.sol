@@ -24,9 +24,6 @@ import "./ATMLibrary.sol";
 contract ATM is ATMInterface, BaseATM {
     using SafeMath for uint256;
 
-    bool constant public STAKE = true;
-    bool constant public UNSTAKE = false;
-    
     /* State Variables */
 
     ATMGovernanceInterface private governance;
@@ -55,7 +52,7 @@ contract ATM is ATMInterface, BaseATM {
 
     
     /**
-        @notice End users will stake their own tTokens on this ATM to earn TLR.
+        @notice End users stake their own tTokens on this ATM to earn TLR.
      */
     function stake(uint256 amount) 
         external 
@@ -80,7 +77,7 @@ contract ATM is ATMInterface, BaseATM {
     }
 
     /**
-        @notice Unstake tTokens.
+        @notice Unstake tTokens from this ATM, no more TLR tokens will be accrued from those tTokens.
     */
     function unStake(uint256 amount)
         external
@@ -104,6 +101,9 @@ contract ATM is ATMInterface, BaseATM {
         // TODO: emit unstake event
     }
 
+    /**
+        @notice Users can withdraw their accrued TLR tokens to their own accounts.
+     */
     function withdrawTLR(uint256 amount)
         external
     {
