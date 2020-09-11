@@ -6,19 +6,10 @@ library ATMLibrary {
         uint256 tlrPerBlockPertToken;
     }
 
-    struct StakeMovement {
-        uint256 blockNumber;
-        uint256 amount;
-        bool positiveAmount;
-        uint256 accruedTLRSinceLastMovement;
-        uint256 tTokenBalance;
-        uint256 tlrBalance;
-    }
-
     struct UserStakeInfo {
         uint256 lastRewardedBlock;
         uint256 tTokenStakedBalance;
-        uint256 tlrBalance;
+        uint256 accruedTLRBalance; // Accumulated tlrTokens not assigned to user yet.
     }
 
 }

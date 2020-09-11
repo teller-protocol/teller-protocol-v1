@@ -66,13 +66,13 @@ contract ATM is ATMInterface, BaseATM {
         // Calculate previously earned TLR tokens since last stake/unstake movement.
         uint256 currentBlock = block.number;
         uint256 tTokenStakedBalance = userStakesInfo[msg.sender].tTokenStakedBalance;
-        uint256 tlrBalance = userStakesInfo[msg.sender].tlrBalance;
+        uint256 accruedTLRBalance = userStakesInfo[msg.sender].accruedTLRBalance;
         uint256 accruedTLR = _calculateAccruedTLR(currentBlock);
         
         ATMLibrary.UserStakeInfo memory userInfo = ATMLibrary.UserStakeInfo ( {
                 lastRewardedBlock: currentBlock,
                 tTokenStakedBalance: tTokenStakedBalance.add(amount), // Staking
-                tlrBalance: tlrBalance.add(accruedTLR)
+                accruedTLRBalance: accruedTLRBalance.add(accruedTLR)
             });
         userStakesInfo[msg.sender] = userInfo;
 
@@ -90,13 +90,13 @@ contract ATM is ATMInterface, BaseATM {
 
         // Calculate previously earned TLR tokens since last stake/unstake movement.
         uint256 currentBlock = block.number;
-        uint256 tlrBalance = userStakesInfo[msg.sender].tlrBalance;
+        uint256 accruedTLRBalance = userStakesInfo[msg.sender].accruedTLRBalance;
         uint256 accruedTLR = _calculateAccruedTLR(currentBlock);
         
         ATMLibrary.UserStakeInfo memory userInfo = ATMLibrary.UserStakeInfo ( {
                 lastRewardedBlock: currentBlock,
                 tTokenStakedBalance: tTokenStakedBalance.sub(amount), // UnStaking
-                tlrBalance: tlrBalance.add(accruedTLR) // Accrued TLR are added
+                accruedTLRBalance: accruedTLRBalance.add(accruedTLR) // Accrued TLR are added
             });
         userStakesInfo[msg.sender] = userInfo;
         tToken.transfer(msg.sender, amount);
@@ -107,8 +107,8 @@ contract ATM is ATMInterface, BaseATM {
     function withdrawTLR(uint256 amount)
         external
     {
-        uint256 tlrBalance = stakeMovements[msg.sender][stakeMovements[msg.sender].length - 1].tlrBalance;
-        require(tlrBalance >= governance.getMinimumRedeem(), "NOT_ENOUGH_TLR_TOKENS_TO_REDEEM");
+        uint256 accruedTLRBalance = userStakesInfo[msg.sender].accruedTLRBalance;
+        require(accruedTLRBalance >= governance.getMinimumRedeem(), "NOT_ENOUGH_TLR_TOKENS_TO_REDEEM");
         
         ATMLibrary.StakeMovement memory currentDeposit = ATMLibrary.StakeMovement ({
                 blockNumber: block.number,
@@ -118,11 +118,10 @@ contract ATM is ATMInterface, BaseATM {
                 tlrBalance: currentTLRBalance.add(accruedTLR),
                 accruedTLRSinceLastMovement: accruedTLR // Earned from last movement
             });
-        stakeMovements[msg.sender].push(currentDeposit);    
         
         // mint/assign TLR to user
         tlrToken.mint(msg.sender, amount); // TODO: ATM contract must be minter
-
+        userStakesInfo[msg.sender].accruedTLRBalance.sub(amount);
     }
 
     function _calculateAccruedTLR(uint256 blockNumber)
