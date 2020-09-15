@@ -18,7 +18,7 @@ module.exports = {
     },
     LINK_DAI: {
         address: '0xEB946a92aa082a98D1E64AC318869c217901c238', // Chainlink Pair: LINK - USD
-        inversed: true,
+        inversed: false,
         collateralDecimals: 18, // LINK
         responseDecimals: 8,
         baseTokenName: 'LINK',
@@ -26,7 +26,7 @@ module.exports = {
     },
     LINK_USDC: {
         address: '0xB813c002bF28ed3ed9184bcc095fC3aa0216b5c9',  // Chainlink Pair: LINK - USD
-        inversed: true,
+        inversed: false,
         collateralDecimals: 18, // LINK
         responseDecimals: 8,
         baseTokenName: 'LINK',

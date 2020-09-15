@@ -8,6 +8,7 @@ import "./TInitializable.sol";
 // Commons
 import "../util/LogicVersionLib.sol";
 import "../util/LogicVersionsConsts.sol";
+import "../util/TellerCommon.sol";
 
 // Interfaces
 import "../interfaces/LogicVersionsRegistryInterface.sol";
@@ -65,10 +66,24 @@ contract LogicVersionsRegistry is
         onlyPauser()
         isInitialized()
     {
-        require(logicName != "", "LOGIC_NAME_MUST_BE_PROVIDED");
-        logicVersions[logicName].initialize(logic);
+        _createLogicVersion(logicName, logic);
+    }
 
-        emit LogicVersionCreated(logicName, msg.sender, logic, 0);
+    /**
+        @notice It creates multiple logic versions.
+        @param newLogicVersions lists of the new logic versions to create.
+     */
+    function createLogicVersions(TellerCommon.LogicVersionRequest[] calldata newLogicVersions)
+        external
+        onlyPauser()
+        isInitialized()
+    {
+        
+        require(newLogicVersions.length > 0, "REQUEST_LIST_EMPTY");
+
+        for (uint256 index; index < newLogicVersions.length; index++) {
+            _createLogicVersion(newLogicVersions[index].logicName, newLogicVersions[index].logic);
+        }
     }
 
     /**
@@ -162,6 +177,20 @@ contract LogicVersionsRegistry is
         returns (LogicVersionLib.LogicVersion memory)
     {
         return logicVersions[logicName];
+    }
+
+    /**
+        @notice It creates a new logic version given a logic name and address.
+        @param logicName logic name to create.
+        @param logic the logic address value for the given logic name.
+     */
+    function _createLogicVersion(bytes32 logicName, address logic)
+        internal
+    {
+        require(logicName != "", "LOGIC_NAME_MUST_BE_PROVIDED");
+        logicVersions[logicName].initialize(logic);
+
+        emit LogicVersionCreated(logicName, msg.sender, logic, 0);
     }
 
     /** Private functions */

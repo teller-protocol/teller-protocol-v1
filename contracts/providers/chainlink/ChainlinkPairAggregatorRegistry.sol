@@ -229,7 +229,10 @@ contract ChainlinkPairAggregatorRegistry is
             msg.sender,
             request.baseToken,
             request.quoteToken,
-            address(aggregator)
+            address(aggregator),
+            request.responseDecimals,
+            request.collateralDecimals,
+            request.inverse
         );
     }
 }

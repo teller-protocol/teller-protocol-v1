@@ -4,8 +4,11 @@
 const { loans: readParams } = require("../utils/cli-builder");
 const { teller, tokens } = require("../utils/contracts");
 const { printFullLoan, printOraclePrice } = require("../../test/utils/printer");
-const { getOracleAggregatorInfo, getDecimals } = require("../../test/utils/collateral-helper");
+const { getDecimals } = require("../../test/utils/collateral-helper");
 const ProcessArgs = require('../utils/ProcessArgs');
+
+const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
+
 const { COLL_TOKEN_NAME, TOKEN_NAME, LOAN_ID } = require("../utils/cli/names");
 const processArgs = new ProcessArgs(readParams.getLoan().argv);
 
@@ -16,10 +19,11 @@ module.exports = async (callback) => {
         const loanId = processArgs.getValue(LOAN_ID.name);
         const getContracts = processArgs.createGetContracts(artifacts);
         const collateralTokenDecimals = await getDecimals(getContracts, collateralTokenName);
-        const oracleInstance = await getContracts.getDeployed(getOracleAggregatorInfo(tokenName, collateralTokenName));
 
         const loansInstance = await getContracts.getDeployed(teller.custom(collateralTokenName).loans(tokenName));
         const tokenInstance = await getContracts.getDeployed(tokens.get(tokenName));
+        const pairAggregatorAddress = await loansInstance.priceOracle();
+        const oracleInstance = await ChainlinkPairAggregator.at(pairAggregatorAddress);
 
         const loanIDCounter = await loansInstance.loanIDCounter();
         const loanCounter = parseInt(loanIDCounter.toString());

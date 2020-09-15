@@ -10,11 +10,12 @@ const TEN_HUNDRED = 100;
 const ETH_DECIMALS = 18;
 
 class LoanInfoPrinter {
-    constructor(web3, loanInfo, { tokenName, decimals }) {
+    constructor(web3, loanInfo, token, collateralToken) {
         this.web3 = web3;
         this.loanInfo = loanInfo;
-        this.token = { tokenName, decimals };
+        this.token = { tokenName: token.tokenName, decimals: token.decimals };
         this.timer = new Timer(web3);
+        this.collateralToken = { tokenName: collateralToken.tokenName, decimals: collateralToken.decimals };
         assert(this.web3, 'Web3 instance is required.');
         assert(this.loanInfo, 'Loan info is required.');
         assert(this.token, 'Token is required.');
@@ -27,6 +28,33 @@ LoanInfoPrinter.prototype.isActive = function() {
 
 LoanInfoPrinter.prototype.isTermsSet = function() {
     return this.loanInfo.status.toString() === loanStatus.TermsSet.toString();
+}
+
+LoanInfoPrinter.prototype.getTotalOwedForMaxLoanAmount = function() {
+    const maxLoanAmount = BigNumber(this.loanInfo.loanTerms.maxLoanAmount);
+    const interestAmount = maxLoanAmount.times(this.loanInfo.loanTerms.interestRate).div(TEN_THOUSAND);
+    const totalAmount = maxLoanAmount.plus(interestAmount);
+    return totalAmount;
+}
+
+LoanInfoPrinter.prototype.getTotalOwedForMaxLoanAmountUnits = function() {
+    const totalOwed = this.getTotalOwedForMaxLoanAmount();
+    return toUnits(totalOwed, this.token.decimals);
+}
+
+LoanInfoPrinter.prototype.getCollateralNeededForMaxLoanAmountInWeis = function(price) {
+    return this.getCollateralNeededForMaxLoanAmountInTokens().times(price).div(this.getAWholeToken());
+}
+
+LoanInfoPrinter.prototype.getCollateralNeededForMaxLoanAmountInWeisUnit = function(price) {
+    const amountWithDecimals = this.getCollateralNeededForMaxLoanAmountInWeis(price);
+    return toUnits(amountWithDecimals, this.collateralToken.decimals);
+}
+
+LoanInfoPrinter.prototype.getCollateralNeededForMaxLoanAmountInTokens = function() {
+    const collateralRatio = this.getCollateralRatio();
+    const totalOwedForMaxLoanAmount = this.getTotalOwedForMaxLoanAmount();
+    return totalOwedForMaxLoanAmount.times(collateralRatio).div(TEN_THOUSAND);
 }
 
 LoanInfoPrinter.prototype.getTotalOwed = function() {
@@ -147,7 +175,7 @@ LoanInfoPrinter.prototype.getNowDate = async function() {
 }
 
 LoanInfoPrinter.prototype.isLiquidable = async function(price) {
-    return this.isCollateralNeededGtCollateral(price) || (await this.isEndTimeLtNow());
+    return this.isActive() && (this.isCollateralNeededGtCollateral(price) || (await this.isEndTimeLtNow()));
 }
 
 module.exports = LoanInfoPrinter;

@@ -153,4 +153,12 @@ library TellerCommon {
         uint256 valueInToken;
         uint256 valueInEth;
     }
+
+    /**
+        @notice This struct is used to register multiple logic versions in LogicVersionsRegistry contract.
+     */
+    struct LogicVersionRequest {
+        address logic;
+        bytes32 logicName;
+    }
 }

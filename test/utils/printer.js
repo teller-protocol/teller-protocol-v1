@@ -60,7 +60,12 @@ const printCollateral = async (
     latestAnswer,
     loanInfo
 ) => {
-    const printer = new LoanInfoPrinter(web3, loanInfo, { tokenName, decimals: tokenDecimals});
+    const printer = new LoanInfoPrinter(
+        web3,
+        loanInfo,
+        { tokenName, decimals: tokenDecimals},
+        { tokenName: collateralTokenName, decimals: collateralTokenDecimals },
+    );
     console.group('Collateral / Liquidation Info:');
     console.log(`Total Principal:      ${printer.getOwedValues().principalOwed} = ${printer.getOwedValuesUnit().principalOwedUnit} ${tokenName}`);
     console.log(`Total Interest:       ${printer.getOwedValues().interestOwed} = ${printer.getOwedValuesUnit().interestOwedUnit} ${tokenName}`);
@@ -93,6 +98,9 @@ const printCollateral = async (
     console.log(`Now:                           ${nowTime} / ${nowDate}`);
     console.log(`EndTime > Now?:                ${(await printer.isEndTimeLtNow())}`);
     console.log(`Liquidable?:                   ${(await printer.isLiquidable(latestAnswer))}`);
+
+    console.log(`Total Owed (for MaxLoanAmount):    ${printer.getTotalOwedForMaxLoanAmount()} = ${printer.getTotalOwedForMaxLoanAmountUnits()} ${tokenName}`);
+    console.log(`Coll. Needed (for MaxLoanAmount):    ${printer.getCollateralNeededForMaxLoanAmountInWeis(latestAnswer).toFixed(0)} = ${printer.getCollateralNeededForMaxLoanAmountInWeisUnit(latestAnswer).toFixed(4)} ${collateralTokenName}`);
     console.groupEnd();
 }
 

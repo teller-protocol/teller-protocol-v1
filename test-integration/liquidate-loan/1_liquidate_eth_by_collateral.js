@@ -10,6 +10,8 @@ const platformSettingsNames = require('../../test/utils/platformSettingsNames');
 
 module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonces, chainId}) => {
   console.log('Liquidate Loan by Collateral');
+  const collTokenName = 'ETH';
+  const collTokenDecimals = 18;
   const tokenName = processArgs.getValue('testTokenName');
   const settingsInstance = await getContracts.getDeployed(teller.settings());
   const token = await getContracts.getDeployed(tokens.get(tokenName));
@@ -138,7 +140,15 @@ module.exports = async ({processArgs, accounts, getContracts, timer, web3, nonce
   await token.approve(lendingPoolInstance.address, transferAmountToLiquidate.toFixed(0), liquidatorTxConfig);
   const liquidateLoanResult = await loansInstance.liquidateLoan(lastLoanID, liquidatorTxConfig);
 
-  const loanPrinter = new LoanInfoPrinter(web3, loanInfo, { tokenName, decimals });
+  const loanPrinter = new LoanInfoPrinter(
+    web3,
+    loanInfo,
+    { tokenName, decimals },
+    {
+      tokenName: collTokenName,
+      decimals: collTokenDecimals
+    }
+  );
   const tokensPaymentIn = loanPrinter.getTotalTokensPaymentInLiquidation(finalOraclePrice, liquidateEthPrice);
   loans
     .loanLiquidated(liquidateLoanResult)

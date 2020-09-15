@@ -108,6 +108,7 @@ module.exports = async (callback) => {
 
         const loanIDs = await loansInstance.getBorrowerLoans(borrower);
         const lastLoanID = loanIDs[loanIDs.length - 1];
+        console.log(`Total Loans: ${loanIDs.length}`);
         console.log();
         console.log(`Loan ID created: ${lastLoanID}`);
         console.log();
@@ -115,6 +116,10 @@ module.exports = async (callback) => {
         const truffleCommand = 'truffle exec ./scripts/loans/takeOutLoan.js';
         console.log(`${truffleCommand} --network ${processArgs.network()} --loanId ${lastLoanID} --tokenName ${tokenName} --collTokenName ${collateralTokenName} --senderIndex ${borrowerIndex} --amount ${amount}`);
 
+        console.log();
+        console.log('To view loan info, execute: ');
+        console.log(`truffle exec ./scripts/loans/getLoan.js --network ${processArgs.network()} --loanId ${lastLoanID} --tokenName ${tokenName} --collTokenName ${collateralTokenName}`);
+        
         console.log(toTxUrl(result));
 
         console.log('>>>> The script finished successfully. <<<<');

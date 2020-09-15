@@ -92,6 +92,13 @@ module.exports = {
         eth: () => customCollateralToken(ETH),
         link: () => customCollateralToken(LINK),
         custom: (collateralToken) => customCollateralToken(collateralToken),
+        pairAggregatorRegistry: (artifactName = 'IChainlinkPairAggregatorRegistry') => {
+            return {
+                keyName: TELLER_KEY,
+                contractName: `ChainlinkPairAggregatorRegistry_Proxy`,
+                artifactName,
+            };
+        },
         oracles: () => ({
             usdc_eth: (artifactName = 'ChainlinkPairAggregator') => internalOracle('USDC', 'ETH', artifactName),
             dai_eth: (artifactName = 'ChainlinkPairAggregator') => internalOracle('DAI', 'ETH', artifactName),

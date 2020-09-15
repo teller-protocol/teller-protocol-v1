@@ -19,7 +19,7 @@ module.exports = {
     },
     LINK_DAI: {
         address: DUMMY_ADDRESS,
-        inversed: true,
+        inversed: false,
         collateralDecimals: 18, // LINK
         responseDecimals: 8,
         baseTokenName: 'LINK',
@@ -27,7 +27,7 @@ module.exports = {
     },
     LINK_USDC: {
         address: DUMMY_ADDRESS,
-        inversed: true,
+        inversed: false,
         collateralDecimals: 18, // LINK
         responseDecimals: 8,
         baseTokenName: 'LINK',
