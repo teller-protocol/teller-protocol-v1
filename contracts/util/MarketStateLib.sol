@@ -68,7 +68,7 @@ library MarketStateLib {
         @return the supply-to-debt ratio value.
      */
     function getSupplyToDebt(MarketState storage self) internal view returns (uint256) {
-        if (self.totalSupplied == 0) {
+        if (self.totalSupplied == 0 || self.totalBorrowed <= self.totalRepaid) {
             return 0;
         }
         return
@@ -92,14 +92,14 @@ library MarketStateLib {
         view
         returns (uint256)
     {
-        if (self.totalSupplied == 0) {
+        if (self.totalSupplied == 0 || self.totalBorrowed.add(loanAmount) <= self.totalRepaid) {
             return 0;
         }
         return
             self
                 .totalBorrowed
-                .sub(self.totalRepaid)
                 .add(loanAmount)
+                .sub(self.totalRepaid)
                 .mul(TO_PERCENTAGE)
                 .div(self.totalSupplied);
     }

@@ -608,7 +608,7 @@ contract LoansBase is LoansInterface, Base {
      */
     function getAndIncrementLoanID() internal returns (uint256 newLoanID) {
         newLoanID = loanIDCounter;
-        loanIDCounter += 1;
+        loanIDCounter = loanIDCounter.add(1);
     }
 
     /**
