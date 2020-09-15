@@ -51,7 +51,7 @@ contract('TLRTokenRevokeVestingTest', function (accounts) {
     },function(
         senderHasPauserRole,
         sender,
-        receipent,
+        recipient,
         amount,
         cliff,
         vestingPeriod,
@@ -75,12 +75,12 @@ contract('TLRTokenRevokeVestingTest', function (accounts) {
 
             try {
                 // Invocation
-                const result = await instance.revokeVesting(receipent, 1, { from: sender });
+                const result = await instance.revokeVesting(recipient, 1, { from: sender });
                 // Assertions
                 assert(!mustFail, 'It should have failed because the account is not vested');
                 tlrToken
                     .revokeVesting(result)
-                    .emitted(receipent, amount, deadline);
+                    .emitted(recipient, amount, deadline);
             } catch (error) {
                 // Assertions
                 assert(mustFail);
