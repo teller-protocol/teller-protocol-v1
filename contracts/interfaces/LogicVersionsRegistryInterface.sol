@@ -73,7 +73,9 @@ interface LogicVersionsRegistryInterface {
         @notice It creates multiple logic versions.
         @param newLogicVersions lists of the new logic versions to create.
      */
-    function createLogicVersions(TellerCommon.LogicVersionRequest[] calldata newLogicVersions) external;
+    function createLogicVersions(
+        TellerCommon.LogicVersionRequest[] calldata newLogicVersions
+    ) external;
 
     /**
         @notice It update a current logic address given a logic name.

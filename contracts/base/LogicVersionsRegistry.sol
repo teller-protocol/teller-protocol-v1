@@ -73,16 +73,16 @@ contract LogicVersionsRegistry is
         @notice It creates multiple logic versions.
         @param newLogicVersions lists of the new logic versions to create.
      */
-    function createLogicVersions(TellerCommon.LogicVersionRequest[] calldata newLogicVersions)
-        external
-        onlyPauser()
-        isInitialized()
-    {
-        
+    function createLogicVersions(
+        TellerCommon.LogicVersionRequest[] calldata newLogicVersions
+    ) external onlyPauser() isInitialized() {
         require(newLogicVersions.length > 0, "REQUEST_LIST_EMPTY");
 
         for (uint256 index; index < newLogicVersions.length; index++) {
-            _createLogicVersion(newLogicVersions[index].logicName, newLogicVersions[index].logic);
+            _createLogicVersion(
+                newLogicVersions[index].logicName,
+                newLogicVersions[index].logic
+            );
         }
     }
 
@@ -184,9 +184,7 @@ contract LogicVersionsRegistry is
         @param logicName logic name to create.
         @param logic the logic address value for the given logic name.
      */
-    function _createLogicVersion(bytes32 logicName, address logic)
-        internal
-    {
+    function _createLogicVersion(bytes32 logicName, address logic) internal {
         require(logicName != "", "LOGIC_NAME_MUST_BE_PROVIDED");
         logicVersions[logicName].initialize(logic);
 
