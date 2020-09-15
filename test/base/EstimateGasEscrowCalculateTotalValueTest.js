@@ -20,8 +20,8 @@ const Escrow = artifacts.require("./mock/base/EscrowMock.sol");
 contract("EscrowCalculateTotalValueTest", function(accounts) {
   const loansEncoder = new LoansBaseInterfaceEncoder(web3);
   
-  const baseGasCost = 629500; // Gas cost with 1 vesting in wallet
-  const expectedGasCost = (vestings) => new BN(baseGasCost + ((vestings -  1) * 9500)); // Gas cost > 1 vesting in wallet
+  const baseGasCost = 700000; // Gas cost with 1 vesting in wallet
+  const expectedGasCost = (vestings) => baseGasCost + ((vestings -  1) * 10000); // Gas cost > 1 vesting in wallet
 
   let instance;
   const collateralBuffer = 1500;
@@ -99,10 +99,9 @@ contract("EscrowCalculateTotalValueTest", function(accounts) {
       await instance.mockValueOfIn(ETH_ADDRESS, lendingAddress, valueInToken);
 
       // Invocation
-      const result = new BN(await instance.calculateTotalValue.estimateGas());
-      console.log("RESULT: " + result + " <= MAX EXPECTED:" + expectedMaxGas);
+      const result = await instance.calculateTotalValue.estimateGas();
       // Assertions
-      assert(result.isLessThanOrEqualTo(expectedMaxGas), 'Gas usage exceeded network gas limit.');
+      assert(parseInt(result) <= expectedMaxGas, 'Gas usage exceeded network gas limit.');
     });
   });
 });
