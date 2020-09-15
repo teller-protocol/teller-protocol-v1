@@ -92,7 +92,10 @@ library MarketStateLib {
         view
         returns (uint256)
     {
-        if (self.totalSupplied == 0 || self.totalBorrowed.add(loanAmount) <= self.totalRepaid) {
+        if (
+            self.totalSupplied == 0 ||
+            self.totalBorrowed.add(loanAmount) <= self.totalRepaid
+        ) {
             return 0;
         }
         return
