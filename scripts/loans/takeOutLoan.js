@@ -38,7 +38,7 @@ module.exports = async (callback) => {
 
         console.log('To repay the loan, execute: ');
         const truffleCommand = 'truffle exec ./scripts/loans/repay.js';
-        console.log(`${truffleCommand} --network ${processArgs.network()} --loanId ${loanID} --tokenName ${tokenName} --collTokenName ${collateralTokenName} --senderIndex ${senderIndex} --amount ${loanAmount}`);
+        console.log(`${truffleCommand} --network ${processArgs.network()} --loanID ${loanID} --tokenName ${tokenName} --collTokenName ${collateralTokenName} --senderIndex ${senderIndex} --amount ${loanAmount}`);
 
         console.log(toTxUrl(result));
 

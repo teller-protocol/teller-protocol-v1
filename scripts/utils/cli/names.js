@@ -52,7 +52,7 @@ module.exports = {
         default: undefined,
     },
     LOAN_ID: {
-        name: 'loanId',
+        name: 'loanID',
         alias: 'LI',
         default: undefined,
     },
