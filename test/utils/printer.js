@@ -98,9 +98,12 @@ const printCollateral = async (
     console.log(`Now:                           ${nowTime} / ${nowDate}`);
     console.log(`EndTime > Now?:                ${(await printer.isEndTimeLtNow())}`);
     console.log(`Liquidable?:                   ${(await printer.isLiquidable(latestAnswer))}`);
-
-    console.log(`Total Owed (for MaxLoanAmount):    ${printer.getTotalOwedForMaxLoanAmount()} = ${printer.getTotalOwedForMaxLoanAmountUnits()} ${tokenName}`);
-    console.log(`Coll. Needed (for MaxLoanAmount):    ${printer.getCollateralNeededForMaxLoanAmountInWeis(latestAnswer).toFixed(0)} = ${printer.getCollateralNeededForMaxLoanAmountInWeisUnit(latestAnswer).toFixed(4)} ${collateralTokenName}`);
+    console.groupEnd();
+    const loanTerms = printer.getLoanTerms();
+    console.group(`Collateral Info for Max Loan Amount (${loanTerms.maxLoanAmountValue} ${tokenName}):`);
+    console.log(`Total Owed (MaxLoanAmount + Interest -${loanTerms.interestRateValue}%-):    ${printer.getTotalOwedForMaxLoanAmount()} = ${printer.getTotalOwedForMaxLoanAmountUnits()} ${tokenName}`);
+    const message = `(${loanTerms.collateralRatioValue}% of ${loanTerms.maxLoanAmountValue} ${tokenName}) * ${latestAnswerEther.toString()}`;
+    console.log(`Coll. Needed (Coll. Ratio: ${loanTerms.collateralRatioValue}%):    ${printer.getCollateralNeededForMaxLoanAmountInWeis(latestAnswer).toFixed(0)} = ${printer.getCollateralNeededForMaxLoanAmountInWeisUnit(latestAnswer).toFixed(4)} ${collateralTokenName} => ${message}`);
     console.groupEnd();
 }
 

@@ -22,6 +22,23 @@ class LoanInfoPrinter {
     }
 }
 
+LoanInfoPrinter.prototype.getLoanTerms = function() {
+    const { loanTerms } = this.loanInfo;
+    const {
+        interestRate,
+        collateralRatio,
+        maxLoanAmount,
+    } =  loanTerms;
+    return {
+        interestRate: interestRate,
+        interestRateValue: interestRate / 100,
+        collateralRatio: collateralRatio,
+        collateralRatioValue: collateralRatio / 100,
+        maxLoanAmount: maxLoanAmount,
+        maxLoanAmountValue: toUnits(maxLoanAmount, this.token.decimals),
+    };
+}
+
 LoanInfoPrinter.prototype.isActive = function() {
     return this.loanInfo.status.toString() === loanStatus.Active.toString();
 }
@@ -53,8 +70,8 @@ LoanInfoPrinter.prototype.getCollateralNeededForMaxLoanAmountInWeisUnit = functi
 
 LoanInfoPrinter.prototype.getCollateralNeededForMaxLoanAmountInTokens = function() {
     const collateralRatio = this.getCollateralRatio();
-    const totalOwedForMaxLoanAmount = this.getTotalOwedForMaxLoanAmount();
-    return totalOwedForMaxLoanAmount.times(collateralRatio).div(TEN_THOUSAND);
+    const maxLoanAmount = BigNumber(this.loanInfo.loanTerms.maxLoanAmount);
+    return maxLoanAmount.times(collateralRatio).div(TEN_THOUSAND);
 }
 
 LoanInfoPrinter.prototype.getTotalOwed = function() {
