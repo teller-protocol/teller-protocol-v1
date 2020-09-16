@@ -75,6 +75,9 @@ module.exports = {
     minutesToSeconds: (minutes) => {
         return parseInt(minutes.toString()) * 60;
     },
+    daysToSeconds: (days) => {
+        return parseInt(days.toString()) * 24 * 60 * 60;
+    },
     getLatestTimestamp: async () => {
       return (await web3.eth.getBlock('latest')).timestamp
     },

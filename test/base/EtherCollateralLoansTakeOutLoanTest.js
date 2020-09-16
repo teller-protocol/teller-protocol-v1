@@ -148,7 +148,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
                 assert(tx);
 
                 const txTime = (await web3.eth.getBlock(tx.receipt.blockNumber)).timestamp
-                const interestOwed = Math.floor(amountToBorrow * 1475 * loanDuration / 10000 / 3650000)
+                const interestOwed = Math.floor(amountToBorrow * 1475 * loanDuration / 10000 / 31536000)
                 const loan = await instance.loans(mockLoanID)
 
                 assert.equal(loan.loanStartTime.toString(), txTime)

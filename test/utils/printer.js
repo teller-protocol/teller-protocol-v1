@@ -3,20 +3,51 @@ const loanStatus = require("./loanStatus");
 const LoanInfoPrinter = require('./printers/LoanInfoPrinter');
 const { secondsToDays, toUnits } = require("./consts");
 
+const YEAR = 365;
+
+const printInterestRate = ({ tokenName, tokenDecimals }, loanTerms, amountWithUnits) => {
+    console.group(`Interest Rate:`);
+    const durationInDays = secondsToDays(loanTerms.duration);
+
+    console.log(`Amount:                ${amountWithUnits.toFixed(4)} ${tokenName}`);
+    console.log(`Duration:              ${durationInDays} days = ${loanTerms.duration} secs`);
+    
+    console.log(`APR:                   ${loanTerms.interestRate} == ${BigNumber(loanTerms.interestRate).div(100)} % = ${BigNumber(loanTerms.interestRate).div(10000)}`);
+    const interestRatePerYear = BigNumber(loanTerms.interestRate).div(10000);
+    const interestPerYear = amountWithUnits.times(interestRatePerYear);
+    console.log(`Yearly (% / ${tokenName}):     ${interestRatePerYear.times(100).toFixed(8)} % / ${interestPerYear.toFixed(8)} ${tokenName}`);
+
+    const interestRatePerMonth = interestRatePerYear.div(12);
+    const interestPerMonth = interestPerYear.div(12);
+    console.log(`Monthly (% / ${tokenName}):    ${interestRatePerMonth.times(100).toFixed(8)} % / ${interestPerMonth.toFixed(8)} ${tokenName}`);
+
+    const interestRatePerDay = interestRatePerYear.div(YEAR);
+    const interestPerDay = interestPerYear.div(YEAR);
+    console.log(`Daily (% / ${tokenName}):      ${interestRatePerDay.toFixed(8)} % / ${interestPerDay.toFixed(8)} ${tokenName}`);
+
+    const interestPerDuration = interestPerYear.times(durationInDays).div(YEAR);
+    const interestRatePerDuration  = interestRatePerDay.times(durationInDays);
+    console.log(`Duration (% / ${tokenName}):   ${interestRatePerDuration.toFixed(8)} % / ${interestPerDuration.toFixed(8)} ${tokenName}`);
+    console.groupEnd();
+}
+
 const printLoanTerms = ({ tokenName, tokenDecimals }, loanTerms) => {
     console.group('Loan Terms:')
     console.log(`Borrower:          ${loanTerms.borrower}`);
     console.log(`Recipient:         ${loanTerms.recipient}`);
-    console.log(`Interest Rate:     ${loanTerms.interestRate} == ${BigNumber(loanTerms.interestRate).div(100)} % = ${BigNumber(loanTerms.interestRate).div(10000)}`);
+    const durationInDays = secondsToDays(loanTerms.duration);
+    console.log(`Duration:          ${loanTerms.duration} sec = ${durationInDays} days`);
     console.log(`Collateral Ratio:  ${loanTerms.collateralRatio} == ${BigNumber(loanTerms.collateralRatio).div(100)} % = ${BigNumber(loanTerms.collateralRatio).div(10000)}`);
-    console.log(`Max. Loan Amount:  ${loanTerms.maxLoanAmount} = ${toUnits(loanTerms.maxLoanAmount, tokenDecimals)} ${tokenName}`);
-    console.log(`Duration:          ${loanTerms.duration} sec = ${secondsToDays(loanTerms.duration)} days`);
+    
+    const maxLoanAmountUnits = toUnits(loanTerms.maxLoanAmount, tokenDecimals);
+    console.log(`Max. Loan Amount:  ${loanTerms.maxLoanAmount} = ${maxLoanAmountUnits} ${tokenName}`);
     console.groupEnd();
 }
 
 const printLoan = (loanInfo, { tokenName, tokenDecimals, collateralTokenName, collateralTokenDecimals }) => {
     console.group(`Loan:`);
     console.log(`ID:                    ${loanInfo.id.toString()}`);
+    console.log(`Escrow Address:        ${loanInfo.escrow}`);
     console.log(`Borrowed Amount:       ${loanInfo.borrowedAmount} = ${toUnits(loanInfo.borrowedAmount, tokenDecimals)} ${tokenName}`);
     console.log(`Terms Expiry:          ${loanInfo.termsExpiry} secs = ${secondsToDays(loanInfo.termsExpiry).toFixed(2)} days`);
     if(loanInfo.status === loanStatus.TermsSet) {
@@ -67,9 +98,9 @@ const printCollateral = async (
         { tokenName: collateralTokenName, decimals: collateralTokenDecimals },
     );
     console.group('Collateral / Liquidation Info:');
-    console.log(`Total Principal:      ${printer.getOwedValues().principalOwed} = ${printer.getOwedValuesUnit().principalOwedUnit} ${tokenName}`);
-    console.log(`Total Interest:       ${printer.getOwedValues().interestOwed} = ${printer.getOwedValuesUnit().interestOwedUnit} ${tokenName}`);
-    console.log(`Total Owed:           ${printer.getTotalOwed()} = ${printer.getTotalOwedUnits()} ${tokenName} (principal + interest)`);
+    console.log(`Total Principal:       ${printer.getOwedValues().principalOwed} = ${printer.getOwedValuesUnit().principalOwedUnit} ${tokenName}`);
+    console.log(`Total Interest:        ${printer.getOwedValues().interestOwed} = ${printer.getOwedValuesUnit().interestOwedUnit} ${tokenName}`);
+    console.log(`Total Owed:            ${printer.getTotalOwed()} = ${printer.getTotalOwedUnits()} ${tokenName} (principal + interest)`);
     const {
         collateralRatio,
         collateralRatioDecimals,
@@ -99,12 +130,6 @@ const printCollateral = async (
     console.log(`EndTime > Now?:                ${(await printer.isEndTimeLtNow())}`);
     console.log(`Liquidable?:                   ${(await printer.isLiquidable(latestAnswer))}`);
     console.groupEnd();
-    const loanTerms = printer.getLoanTerms();
-    console.group(`Collateral Info for Max Loan Amount (${loanTerms.maxLoanAmountValue} ${tokenName}):`);
-    console.log(`Total Owed (MaxLoanAmount + Interest -${loanTerms.interestRateValue}%-):    ${printer.getTotalOwedForMaxLoanAmount()} = ${printer.getTotalOwedForMaxLoanAmountUnits()} ${tokenName}`);
-    const message = `(${loanTerms.collateralRatioValue}% of ${loanTerms.maxLoanAmountValue} ${tokenName}) * ${latestAnswerEther.toString()}`;
-    console.log(`Coll. Needed (Coll. Ratio: ${loanTerms.collateralRatioValue}%):    ${printer.getCollateralNeededForMaxLoanAmountInWeis(latestAnswer).toFixed(0)} = ${printer.getCollateralNeededForMaxLoanAmountInWeisUnit(latestAnswer).toFixed(4)} ${collateralTokenName} => ${message}`);
-    console.groupEnd();
 }
 
 module.exports = {
@@ -125,8 +150,18 @@ module.exports = {
             loanInfo,
             { tokenName, tokenDecimals, collateralTokenName, collateralTokenDecimals },
         );
+        const loanTerms = loanInfo.loanTerms;
         console.log('-'.repeat(times));
-        printLoanTerms({ tokenName, tokenDecimals }, loanInfo.loanTerms);
+        printLoanTerms({ tokenName, tokenDecimals }, loanTerms);
+        console.log('-'.repeat(times));
+        
+        if(loanInfo.borrowedAmount !== 0) {
+            const borrowedAmountUnits = toUnits(loanInfo.borrowedAmount, tokenDecimals);
+            printInterestRate({ tokenName, tokenDecimals }, loanTerms, borrowedAmountUnits);
+        } else {
+            const maxLoanAmountUnits = toUnits(loanTerms.maxLoanAmount, tokenDecimals);
+            printInterestRate({ tokenName, tokenDecimals }, loanTerms, maxLoanAmountUnits);
+        }
         console.log('-'.repeat(times));
         await printCollateral(
             web3,

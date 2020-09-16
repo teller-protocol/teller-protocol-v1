@@ -92,6 +92,13 @@ module.exports = {
         eth: () => customCollateralToken(ETH),
         link: () => customCollateralToken(LINK),
         custom: (collateralToken) => customCollateralToken(collateralToken),
+        logicVersionsRegistry: (artifactName = 'LogicVersionsRegistryInterface') => {
+            return {
+                keyName: TELLER_KEY,
+                contractName: `LogicVersionsRegistry_Proxy`,
+                artifactName,
+            };
+        },
         pairAggregatorRegistry: (artifactName = 'IChainlinkPairAggregatorRegistry') => {
             return {
                 keyName: TELLER_KEY,

@@ -47,33 +47,6 @@ LoanInfoPrinter.prototype.isTermsSet = function() {
     return this.loanInfo.status.toString() === loanStatus.TermsSet.toString();
 }
 
-LoanInfoPrinter.prototype.getTotalOwedForMaxLoanAmount = function() {
-    const maxLoanAmount = BigNumber(this.loanInfo.loanTerms.maxLoanAmount);
-    const interestAmount = maxLoanAmount.times(this.loanInfo.loanTerms.interestRate).div(TEN_THOUSAND);
-    const totalAmount = maxLoanAmount.plus(interestAmount);
-    return totalAmount;
-}
-
-LoanInfoPrinter.prototype.getTotalOwedForMaxLoanAmountUnits = function() {
-    const totalOwed = this.getTotalOwedForMaxLoanAmount();
-    return toUnits(totalOwed, this.token.decimals);
-}
-
-LoanInfoPrinter.prototype.getCollateralNeededForMaxLoanAmountInWeis = function(price) {
-    return this.getCollateralNeededForMaxLoanAmountInTokens().times(price).div(this.getAWholeToken());
-}
-
-LoanInfoPrinter.prototype.getCollateralNeededForMaxLoanAmountInWeisUnit = function(price) {
-    const amountWithDecimals = this.getCollateralNeededForMaxLoanAmountInWeis(price);
-    return toUnits(amountWithDecimals, this.collateralToken.decimals);
-}
-
-LoanInfoPrinter.prototype.getCollateralNeededForMaxLoanAmountInTokens = function() {
-    const collateralRatio = this.getCollateralRatio();
-    const maxLoanAmount = BigNumber(this.loanInfo.loanTerms.maxLoanAmount);
-    return maxLoanAmount.times(collateralRatio).div(TEN_THOUSAND);
-}
-
 LoanInfoPrinter.prototype.getTotalOwed = function() {
     return BigNumber(this.loanInfo.principalOwed).plus(BigNumber(this.loanInfo.interestOwed));
 }

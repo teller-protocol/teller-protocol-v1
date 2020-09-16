@@ -191,4 +191,9 @@ module.exports = {
         alias: 'MA',
         default: undefined,
     },
+    LOGIC_NAME: {
+        name: 'logicName',
+        alias: 'LN',
+        default: undefined,
+    },
 };

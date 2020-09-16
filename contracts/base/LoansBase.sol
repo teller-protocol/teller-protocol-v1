@@ -41,9 +41,9 @@ contract LoansBase is LoansInterface, Base {
 
     /* State Variables */
 
-    // Loan length will be inputted in days, with 4 decimal places. i.e. 30 days will be inputted as
-    // 300000. Therefore in interest calculations we must divide by 365000
-    uint256 internal constant DAYS_PER_YEAR_4DP = 3650000;
+    // Loan length will be inputted in seconds, with 4 decimal places. i.e. 30 days will be inputted as
+    // 31536. Therefore in interest calculations we must divide by 31536000
+    uint256 internal constant SECONDS_PER_YEAR_4DP = 31536000;
 
     // For interestRate, collateral, and liquidation price, 7% is represented as 700. To find the value
     // of something we must divide 700 by 100 to remove decimal places, and another 100 for percentage.
@@ -243,11 +243,11 @@ contract LoansBase is LoansInterface, Base {
 
         loans[loanID].borrowedAmount = amountBorrow;
         loans[loanID].principalOwed = amountBorrow;
-        loans[loanID].interestOwed = amountBorrow
-            .mul(loans[loanID].loanTerms.interestRate)
-            .mul(loans[loanID].loanTerms.duration)
-            .div(TEN_THOUSAND)
-            .div(DAYS_PER_YEAR_4DP);
+            loans[loanID].interestOwed = amountBorrow
+                .mul(loans[loanID].loanTerms.interestRate)
+                .mul(loans[loanID].loanTerms.duration)
+                .div(TEN_THOUSAND)
+                .div(SECONDS_PER_YEAR_4DP);
 
         // check that enough collateral has been provided for this loan
         TellerCommon.LoanCollateralInfo memory collateralInfo = _getCollateralInfo(
