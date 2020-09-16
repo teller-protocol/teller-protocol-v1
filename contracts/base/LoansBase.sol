@@ -243,11 +243,11 @@ contract LoansBase is LoansInterface, Base {
 
         loans[loanID].borrowedAmount = amountBorrow;
         loans[loanID].principalOwed = amountBorrow;
-            loans[loanID].interestOwed = amountBorrow
-                .mul(loans[loanID].loanTerms.interestRate)
-                .mul(loans[loanID].loanTerms.duration)
-                .div(TEN_THOUSAND)
-                .div(SECONDS_PER_YEAR_4DP);
+        loans[loanID].interestOwed = amountBorrow
+            .mul(loans[loanID].loanTerms.interestRate)
+            .mul(loans[loanID].loanTerms.duration)
+            .div(TEN_THOUSAND)
+            .div(SECONDS_PER_YEAR_4DP);
 
         // check that enough collateral has been provided for this loan
         TellerCommon.LoanCollateralInfo memory collateralInfo = _getCollateralInfo(
