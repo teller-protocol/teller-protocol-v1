@@ -732,19 +732,32 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-        newDAppAdded: tx => {
-            const name = 'NewDAppAdded';
+        newDappAdded: tx => {
+            const name = 'NewDappAdded';
             return {
                 name: name,
-                emitted: (sender, dapp) => emitted(tx, name, ev => {
+                emitted: (sender, dapp, unsecured) => emitted(tx, name, ev => {
                     assert.equal(ev.sender.toString(), sender.toString());
                     assert.equal(ev.dapp.toString(), dapp.toString());
+                    assert.equal(ev.unsecured, unsecured);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        dappUpdated: tx => {
+            const name = 'DappUpdated';
+            return {
+                name: name,
+                emitted: (sender, dapp, unsecured) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.dapp.toString(), dapp.toString());
+                    assert.equal(ev.unsecured, unsecured);
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
         dappRemoved: tx => {
-            const name = 'DAppRemoved';
+            const name = 'DappRemoved';
             return {
                 name: name,
                 emitted: (sender, dapp) => emitted(tx, name, ev => {

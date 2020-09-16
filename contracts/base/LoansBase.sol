@@ -174,6 +174,10 @@ contract LoansBase is LoansInterface, Base {
         return lendingPool.cToken();
     }
 
+    function isLoanSecured(uint256 loanID) external view returns (bool) {
+        return loans[loanID].loanTerms.collateralRatio >= settings().getPlatformSettingValue(settings().consts().COLLATERAL_BUFFER_SETTING());
+    }
+
     /**
      * @notice Withdraw collateral from a loan, unless this isn't allowed
      * @param amount The amount of collateral token or ether the caller is hoping to withdraw.

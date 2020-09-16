@@ -34,11 +34,8 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
         _setSettings(settingsAddress);
     }
 
-    function mockBorrowerAndStatus(address borrower, TellerCommon.LoanStatus loanStatus)
-        public
-    {
+    function mockBorrower(address borrower) public {
         _borrower = borrower;
-        _loanStatus = loanStatus;
     }
 
     function isOwner() public view returns (bool) {

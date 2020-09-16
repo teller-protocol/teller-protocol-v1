@@ -1,4 +1,7 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
+
+import "../util/TellerCommon.sol";
 
 /**
     @notice This interface defines the functions to manage the Escrow contracts associated to borrowers and loans.
@@ -7,11 +10,11 @@ pragma solidity 0.5.17;
  */
 interface EscrowFactoryInterface {
     /**
-        @notice It tests whether a dapp address exists in the factory or not.
-        @param dapp dapp address to test.
-        @return true if the dapp address already exists. Otherwise it returns false.
+        @notice It gets a dapp configuration based its contract address.
+        @param dapp dapp address.
+        @return TellerCommon.Dapp dapp configuration.
      */
-    function isDapp(address dapp) external view returns (bool);
+    function dapps(address dapp) external view returns (TellerCommon.Dapp memory);
 
     /**
         @notice It creates an Escrow contract for a given loan id.
@@ -24,8 +27,16 @@ interface EscrowFactoryInterface {
     /**
         @notice It adds a new dapp to the factory.
         @param dapp address to add in this factory.
+        @param unsecured boolean to describe in the dapp is allowed to be used with unsecured loans.
      */
-    function addDapp(address dapp) external;
+    function addDapp(address dapp, bool unsecured) external;
+
+    /**
+        @notice It updates a dapp configuration.
+        @param dapp address to add in this factory.
+        @param unsecured boolean that describes if the dapp can be used by with an unsecured loan.
+     */
+    function updateDapp(address dapp, bool unsecured) external;
 
     /**
         @notice It removes a current dapp from the factory.
@@ -62,14 +73,23 @@ interface EscrowFactoryInterface {
     /**
         @notice This event is emitted when a new dapp is added to the factory.
         @param sender address.
-        @param dapp address addded to the factory.
+        @param dapp address added to the factory.
+        @param unsecured boolean that describes if the dapp can be used by with an unsecured loan.
      */
-    event NewDAppAdded(address indexed sender, address indexed dapp);
+    event NewDappAdded(address indexed sender, address indexed dapp, bool unsecured);
+
+    /**
+        @notice This event is emitted when a dapp is updated.
+        @param sender address.
+        @param dapp address of dapp contract.
+        @param unsecured boolean that describes if the dapp can be used by with an unsecured loan.
+     */
+    event DappUpdated(address indexed sender, address indexed dapp, bool unsecured);
 
     /**
         @notice This event is emitted when a current dapp is removed from the factory.
         @param sender address.
         @param dapp address removed from the factory.
      */
-    event DAppRemoved(address indexed sender, address indexed dapp);
+    event DappRemoved(address indexed sender, address indexed dapp);
 }
