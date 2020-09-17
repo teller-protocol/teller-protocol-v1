@@ -174,6 +174,10 @@ contract LoansBase is LoansInterface, Base {
         return lendingPool.cToken();
     }
 
+    /**
+        @notice Checks wheather the loan's collateral ratio is considered to be secured based on the settings collateral buffer value.
+        @return bool value of it being secured or not.
+    */
     function isLoanSecured(uint256 loanID) external view returns (bool) {
         return loans[loanID].loanTerms.collateralRatio >= settings().getPlatformSettingValue(settings().consts().COLLATERAL_BUFFER_SETTING());
     }
