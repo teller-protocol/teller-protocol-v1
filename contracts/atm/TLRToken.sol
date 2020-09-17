@@ -257,7 +257,12 @@ contract TLRToken is
      * - `recipient` cannot be the zero address.
      * - the caller must have a balance of at least `amount`.
      */
-    function transfer(address recipient, uint256 amount) public returns (bool) {
+    function transfer(address recipient, uint256 amount)
+        public
+        whenNotPaused()
+        isInitialized()
+        returns (bool)
+    {
         _snapshot();
         _updateAccountSnapshot(msg.sender);
         _updateAccountSnapshot(recipient);
