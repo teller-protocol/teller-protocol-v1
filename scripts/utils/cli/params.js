@@ -34,7 +34,8 @@ const {
   MAX_VALUE,
   BACK_ROUNDS,
   MIN_AMOUNT,
-  LOGIC_NAME
+  LOGIC_NAME,
+  CONTRACT_NAME,
 } = require("./names");
 
 const newOption = (argv, name, alias, type, description, defaultValue) => {
@@ -508,6 +509,17 @@ module.exports.addLogicName = (yargs, defaultParam = LOGIC_NAME.default) => {
     LOGIC_NAME.alias,
     "string",
     `The current logic name. By default ${defaultParam}`,
+    defaultParam
+  );
+};
+
+module.exports.addContractName = (yargs, defaultParam = CONTRACT_NAME.default) => {
+  newOption(
+    yargs,
+    CONTRACT_NAME.name,
+    CONTRACT_NAME.alias,
+    "string",
+    `The contract name to update. It should be equal to the contract name (including cases). By default ${defaultParam}`,
     defaultParam
   );
 };

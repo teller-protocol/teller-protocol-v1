@@ -196,4 +196,9 @@ module.exports = {
         alias: 'LN',
         default: undefined,
     },
+    CONTRACT_NAME: {
+        name: 'contractName',
+        alias: 'CN',
+        default: undefined,
+    },
 };

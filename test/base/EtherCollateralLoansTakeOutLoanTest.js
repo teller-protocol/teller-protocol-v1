@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, getLatestTimestamp, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE } = require('../utils/consts');
+const { t, getLatestTimestamp, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE, TEN_THOUSAND, SECONDS_PER_YEAR_4DP } = require('../utils/consts');
 const { createLoanTerms } = require('../utils/structs');
 const { loans } = require('../utils/events');
 
@@ -148,7 +148,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
                 assert(tx);
 
                 const txTime = (await web3.eth.getBlock(tx.receipt.blockNumber)).timestamp
-                const interestOwed = Math.floor(amountToBorrow * 1475 * loanDuration / 10000 / 31536000)
+                const interestOwed = Math.floor(amountToBorrow * 1475 * loanDuration / TEN_THOUSAND / SECONDS_PER_YEAR_4DP)
                 const loan = await instance.loans(mockLoanID)
 
                 assert.equal(loan.loanStartTime.toString(), txTime)

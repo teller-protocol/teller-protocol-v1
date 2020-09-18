@@ -5,12 +5,8 @@ const { teller } = require("../utils/contracts");
 const Accounts = require('../utils/Accounts');
 const ProcessArgs = require('../utils/ProcessArgs');
 
-const MarketsState = artifacts.require("./base/MarketsState.sol");
-const TokenCollateralLoans = artifacts.require("./base/TokenCollateralLoans.sol");
-const EtherCollateralLoans = artifacts.require("./base/EtherCollateralLoans.sol");
-
 const { logicVersion: readParams } = require("../utils/cli-builder");
-const { SENDER_INDEX, LOGIC_NAME } = require('../utils/cli/names');
+const { SENDER_INDEX, LOGIC_NAME, CONTRACT_NAME } = require('../utils/cli/names');
 const { toBytes32 } = require('../../test/utils/consts');
 const { assert } = require("chai");
 const processArgs = new ProcessArgs(readParams.updateLogicVersion().argv);
@@ -23,11 +19,15 @@ module.exports = async (callback) => {
 
         const logicName = processArgs.getValue(LOGIC_NAME.name);
         const senderIndex = processArgs.getValue(SENDER_INDEX.name);
+        const contractName = processArgs.getValue(CONTRACT_NAME.name);
         const sender = await accounts.getAt(senderIndex);
         const senderTxConfig = {
             from: sender,
             gas: maxGasLimit,
         };
+
+        const ContractReference = artifacts.require(contractName);
+        console.log(`Using contract artifcact: '${ContractReference.contract_name}'`);
 
         const getContracts = processArgs.createGetContracts(artifacts);
         const logicVersionsRegistry = await getContracts.getDeployed(teller.logicVersionsRegistry());
@@ -40,12 +40,6 @@ module.exports = async (callback) => {
     
         const getLogicVersionResult = await logicVersionsRegistry.getLogicVersion(logicNameBytes32, senderTxConfig);
         console.log(`Current logic version info: ${JSON.stringify(getLogicVersionResult)}`);
-
-        /**
-         * Set the ContractReference variable with the contract you want to update.
-         * Verify it has a default constructor (without parameters).
-         */
-        const ContractReference = EtherCollateralLoans;
 
         const instance = await ContractReference.new(senderTxConfig);
 

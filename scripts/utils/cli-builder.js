@@ -34,6 +34,7 @@ const {
     addBackRounds,
     addMinAmount,
     addLogicName,
+    addContractName,
 } = require("./cli/params");
 
 const addBase = (yargs) => {
@@ -224,6 +225,7 @@ module.exports = {
         updateLogicVersion: () => {
             addBase(yargs);
             addLogicName(yargs);
+            addContractName(yargs);
             return yargs;
         },
     },

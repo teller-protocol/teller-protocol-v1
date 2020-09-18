@@ -50,6 +50,12 @@ module.exports = {
     SAFETY_INTERVAL,
     TERMS_EXPIRY_TIME,
     LIQUIDATE_ETH_PRICE,
+    // Loan length will be inputted in seconds, with 4 decimal places. i.e. 30 days will be inputted as
+    // 31536. Therefore in interest calculations we must divide by 31536000
+    SECONDS_PER_YEAR_4DP: 31536000,
+    // For interestRate, collateral, and liquidation price, 7% is represented as 700. To find the value
+    // of something we must divide 700 by 100 to remove decimal places, and another 100 for percentage.
+    TEN_THOUSAND: 10000,
     t: function (who, func, desc, fail) {
         const failText = fail ? '\x1b[31mMustFail\x1b[0m .' : '\x1b[0m';
         return '\x1b[32m.' + func + ' => \x1b[36m' + who + '\x1b[0m\033[01;34m : ' + desc + ' '+ failText;
