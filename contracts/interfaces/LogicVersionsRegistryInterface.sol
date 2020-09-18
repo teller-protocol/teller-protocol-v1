@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 // Commons
 import "../util/LogicVersionLib.sol";
 import "../util/LogicVersionsConsts.sol";
+import "../util/TellerCommon.sol";
 
 /**
     @notice It defines all the functions to manage the logic contract versions.
@@ -67,6 +68,14 @@ interface LogicVersionsRegistryInterface {
         @param logic the logic address value for the given logic name.
      */
     function createLogicVersion(bytes32 logicName, address logic) external;
+
+    /**
+        @notice It creates multiple logic versions.
+        @param newLogicVersions lists of the new logic versions to create.
+     */
+    function createLogicVersions(
+        TellerCommon.LogicVersionRequest[] calldata newLogicVersions
+    ) external;
 
     /**
         @notice It update a current logic address given a logic name.
