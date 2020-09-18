@@ -259,7 +259,6 @@ contract TLRToken is
      */
     function transfer(address recipient, uint256 amount)
         public
-        whenNotPaused()
         isInitialized()
         returns (bool)
     {
