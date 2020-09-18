@@ -2,7 +2,6 @@
 const { withData } = require('leche')
 const { t } = require('../utils/consts');
 const { dappMockABI } = require('../../migrations/utils/encodeAbis');
-const loanStatus = require("../utils/loanStatus");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const EscrowFactoryEncoder = require("../utils/encoders/EscrowFactoryEncoder");
 const SettingsInterfaceEncoder = require("../utils/encoders/SettingsInterfaceEncoder");
@@ -39,16 +38,15 @@ contract('EscrowCallDappTest', function (accounts) {
   });
 
   withData({
-    _1_not_owner: [3, loanStatus.Active, true, true, false, false, false, true, 'Ownable: caller is not the owner'],
-    _2_without_dapp_whitelisted: [4, loanStatus.Active, true, false, true, false, false, true, 'DAPP_NOT_WHITELISTED'],
-    _3_with_invalid_function_signature: [5, loanStatus.Active, true, true, true, true, true, true, 'DAPP_CALL_FAILED'],
-    _4_successful: [6, loanStatus.Active, true, true, true, false, false, false, null],
+    _1_not_owner: [3, true, true, false, false, false, true, 'Ownable: caller is not the owner'],
+    _2_without_dapp_whitelisted: [4, true, false, true, false, false, true, 'DAPP_NOT_WHITELISTED'],
+    _3_with_invalid_function_signature: [5, true, true, true, true, true, true, 'DAPP_CALL_FAILED'],
+    _4_successful: [6, true, true, true, false, false, false, null],
   }, function(
     loanID,
-    loanStatus,
     initialize,
     enableDapp,
-    isBorrower,
+    isOwner,
     failDapp,
     useInvalidSignature,
     mustFail,
@@ -58,7 +56,6 @@ contract('EscrowCallDappTest', function (accounts) {
       // Setup
       const dapp = await DappMock.new();
 
-      await escrow.mockBorrowerAndStatus(owner, loanStatus);
       if (initialize) {
         await escrow.mockInitialize(loans.address, loanID, { from: owner });
       }
@@ -68,7 +65,7 @@ contract('EscrowCallDappTest', function (accounts) {
         encoder.encodeIsDapp(),
         enableDapp
       )
-      await escrow.mockIsOwner(true, isBorrower);
+      await escrow.mockIsOwner(true, isOwner);
 
       let dappData = {
         location: dapp.address,

@@ -4,6 +4,7 @@ const { t, NULL_ADDRESS, ACTIVE, CLOSED } = require('../utils/consts');
 const { createLoanTerms } = require('../utils/structs');
 const BigNumber = require('bignumber.js');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const EscrowInterfaceEncoder = require("../utils/encoders/EscrowInterfaceEncoder");
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -13,6 +14,8 @@ const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 
 contract('EtherCollateralLoansRepayTest', function (accounts) {
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const escrowInterfaceEncoder = new EscrowInterfaceEncoder(web3)
+
     let instance;
     let oracleInstance;
     let loanTermsConsInstance;
@@ -23,7 +26,7 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
     const totalCollateral = BigNumber("4500000000000000000") // 4.5 ETH
     const loanBorrower = accounts[3]
     const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, 0, 0, 0)
-    
+
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
         lendingTokenInstance = await Mock.new();
@@ -47,22 +50,24 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
     });
 
     withData({
-        _1_to_pay_more_than_owed: [12345678, 40291, 13000000, BigNumber("3000000000000000000"), undefined, false],
-        _2_to_pay_zero: [12345678, 40291, 0, BigNumber("3000000000000000000"), 'AMOUNT_VALUE_REQUIRED', true],
-        _3_to_less_than_owed: [12345678, 40291, 12345677, BigNumber("3276312217812723563"), undefined, false],
-        _4_to_pay_exact_owed: [12345678, 40291, 12385969, BigNumber("3276312217812723563"), undefined, false],
+        _1_to_pay_more_than_owed: [12345678, 40291, 13000000, BigNumber("3000000000000000000"), false, undefined, false],
+        _2_to_pay_zero: [12345678, 40291, 0, BigNumber("3000000000000000000"), false, 'AMOUNT_VALUE_REQUIRED', true],
+        _3_to_less_than_owed: [12345678, 40291, 12345677, BigNumber("3276312217812723563"), false, undefined, false],
+        _4_to_pay_exact_owed: [12345678, 40291, 12385969, BigNumber("3276312217812723563"), false, undefined, false],
+        _5_with_escrow: [12345678, 40291, 12385969, BigNumber("3276312217812723563"), true, undefined, false],
     }, function(
         loanPrincipalOwed,
         loanInterestOwed,
         amountToPay,
         loanCollateral,
+        hasEscrow,
         expectedErrorMessage,
         mustFail
     ) {
         it(t('user', 'repay', 'Should able to repay your loan.', false), async function() {
             // Setup
-            await instance.setLoan(mockLoanID, loanTerms, 0, 0, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, loanTerms.maxLoanAmount, ACTIVE, false) 
-              
+            await instance.setLoan(mockLoanID, loanTerms, 0, 0, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, loanTerms.maxLoanAmount, ACTIVE, false)
+
             await instance.setTotalCollateral(totalCollateral)
 
             // give the contract collateral (mock has a fallback)
@@ -71,15 +76,25 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
             const contractBalBefore = await web3.eth.getBalance(instance.address)
             const borrowerBalBefore = await web3.eth.getBalance(loanBorrower)
 
+            let escrow
+            if (hasEscrow) {
+                escrow = await Mock.new();
+                await escrow.givenMethodReturn(
+                  escrowInterfaceEncoder.encodeClaimTokens(),
+                  '0x'
+                )
+                await instance.setEscrowForLoan(mockLoanID, escrow.address)
+            }
+
             try {
                 await instance.repay(amountToPay, mockLoanID, { from: accounts[0] })
-                
+
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 const totalAfter = await instance.totalCollateral.call()
                 const contractBalAfter = await web3.eth.getBalance(instance.address)
                 const borrowerBalAfter = await web3.eth.getBalance(loanBorrower)
-    
+
                 let newPrincipalOwed = 0
                 let newInterestOwed = 0
                 if (amountToPay > (loanPrincipalOwed + loanInterestOwed)) {
@@ -92,12 +107,12 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
                     newPrincipalOwed = 0
                     newInterestOwed = loanInterestOwed - (amountToPay - loanPrincipalOwed)
                 }
-    
+
                 let loan = await instance.loans.call(mockLoanID)
-    
+
                 assert.equal(loan['principalOwed'].toString(), newPrincipalOwed)
                 assert.equal(loan['interestOwed'].toString(), newInterestOwed)
-    
+
                 if (newPrincipalOwed + newInterestOwed == 0) {
                     assert.equal(parseInt(loan['collateral']), 0)
                     assert.equal(totalCollateral.minus(loanCollateral).toFixed(), totalAfter.toString())
@@ -105,9 +120,15 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
                     assert.equal(BigNumber(borrowerBalBefore).plus(loanCollateral), borrowerBalAfter.toString())
                     assert.equal(parseInt(loan['status']), CLOSED)
                 }
+
+                if (hasEscrow) {
+                    const claimTokensCallCount = await escrow.invocationCountForMethod.call(escrowInterfaceEncoder.encodeClaimTokens());
+
+                    assert.equal(claimTokensCallCount.toString(), "1", "Escrow.claimTokens was not called.");
+                }
             } catch (error) {
                 // Assertions
-                assert(mustFail);
+                assert(mustFail, error.message);
                 assert.equal(error.reason, expectedErrorMessage);
             }
         });
