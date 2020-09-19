@@ -175,6 +175,14 @@ contract LoansBase is LoansInterface, Base {
     }
 
     /**
+        @notice Checks wheather the loan's collateral ratio is considered to be secured based on the settings collateral buffer value.
+        @return bool value of it being secured or not.
+    */
+    function isLoanSecured(uint256 loanID) external view returns (bool) {
+        return loans[loanID].loanTerms.collateralRatio >= settings().getPlatformSettingValue(settings().consts().COLLATERAL_BUFFER_SETTING());
+    }
+
+    /**
      * @notice Withdraw collateral from a loan, unless this isn't allowed
      * @param amount The amount of collateral token or ether the caller is hoping to withdraw.
      * @param loanID The ID of the loan the collateral is for

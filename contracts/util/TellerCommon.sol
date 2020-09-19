@@ -118,6 +118,15 @@ library TellerCommon {
         @notice This struct defines the dapp address and data to execute in the callDapp function.
         @dev It is executed using a delegatecall in the Escrow contract.
      */
+    struct Dapp {
+        bool exists;
+        bool unsecured;
+    }
+
+    /**
+        @notice This struct defines the dapp address and data to execute in the callDapp function.
+        @dev It is executed using a delegatecall in the Escrow contract.
+     */
     struct DappData {
         address location;
         bytes data;
