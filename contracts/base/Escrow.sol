@@ -149,14 +149,6 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
     }
 
     /**
-        @notice Checks if current Escrow instance loan can be liquidated.
-        @return true if loan can be liquidated.
-     */
-    function canPurchase() public view returns (bool) {
-        return loans.canLiquidateLoan(loanID);
-    }
-
-    /**
         @notice Checks if this Escrow loan value is undervalued based its token price.
         @return true if this escrow loan is undervalued based on its token price.
      */
@@ -165,16 +157,37 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
     }
 
     /**
-        @notice Purchase this Escrow's loan if it is eligible to liquidate and transfers ownership
-            to msg.sender.
-        @dev Events are emitted when repay() and _transferOwnership().
+        @notice Repay this Escrow's loan.
+        @dev If the Escrow's balance of the borrowed token is less than the amount to repay, transfer tokens from the sender's wallet.
+        @dev Only the owner of the Escrow can call this. If someone else wants to make a payment, they should call the loans contract directly.
      */
-    function purchaseLoanDebt() external payable {
-        require(canPurchase(), "ESCROW_INELIGIBLE_TO_PURCHASE");
+    function repay(uint256 amount) external onlyOwner {
+        IERC20 token = IERC20(loans.lendingToken());
+        uint256 balance = _balanceOf(loans.lendingToken());
+        if (amount > balance) {
+            token.transferFrom(msg.sender, address(this), amount.sub(balance));
+        }
+        token.approve(address(loans), amount);
 
-        loans.repay(loans.getTotalOwed(loanID), loanID);
+        loans.repay(amount, loanID);
+    }
 
-        _transferOwnership(msg.sender);
+    /**
+        @notice Sends the tokens owned by this escrow to the recipient.
+        @dev The loan must not be active.
+        @dev The recipient must either be the loan borrower OR the loan must be already liquidated.
+        @param recipient address to send the tokens to.
+    */
+    function claimTokens(address recipient) external {
+        require(getLoan().status != TellerCommon.LoanStatus.Active, "LOAN_ACTIVE");
+        require(recipient == getBorrower() || getLoan().liquidated, "LOAN_NOT_LIQUIDATED");
+
+        address[] memory tokens = getTokens();
+        for (uint256 i = 0; i < tokens.length; i++) {
+            IERC20(tokens[i]).transfer(recipient, _balanceOf(tokens[i]));
+        }
+
+        emit TokensClaimed(recipient);
     }
 
     /**

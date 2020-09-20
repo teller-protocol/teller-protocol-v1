@@ -769,13 +769,12 @@ module.exports = {
         },
     },
     escrow: {
-        ownershipTransferred: tx => {
-            const name = 'OwnershipTransferred';
+        tokensClaimed: tx => {
+            const name = 'TokensClaimed';
             return {
                 name: name,
-                emitted: (previousOwner, newOwner) => emitted(tx, name, ev => {
-                    assert.equal(ev.previousOwner.toString(), previousOwner.toString());
-                    assert.equal(ev.newOwner.toString(), newOwner.toString());
+                emitted: (recipient) => emitted(tx, name, ev => {
+                    assert.equal(ev.recipient.toString(), recipient.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };

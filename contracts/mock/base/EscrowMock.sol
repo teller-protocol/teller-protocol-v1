@@ -27,7 +27,7 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
     }
 
     function getBorrower() public view returns (address) {
-        return _borrower;
+        return address(_borrower) == address(0x0) ? super.getBorrower() : _borrower;
     }
 
     function mockSettings(address settingsAddress) public {

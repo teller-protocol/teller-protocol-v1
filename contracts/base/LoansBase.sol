@@ -317,7 +317,7 @@ contract LoansBase is LoansInterface, Base {
             loans[loanID].status = TellerCommon.LoanStatus.Closed;
 
             uint256 collateralAmount = loans[loanID].collateral;
-            _payOutCollateral(loanID, collateralAmount, loans[loanID].loanTerms.borrower);
+            _payOutLoan(loanID, collateralAmount, loans[loanID].loanTerms.borrower);
 
             emit CollateralWithdrawn(
                 loanID,
@@ -365,7 +365,7 @@ contract LoansBase is LoansInterface, Base {
         uint256 collateralInTokens = _convertWeiToToken(collateral);
 
         // the caller gets the collateral from the loan
-        _payOutCollateral(loanID, collateral, msg.sender);
+        _payOutLoan(loanID, collateral, msg.sender);
 
         uint256 liquidateEthPrice = settings().getPlatformSettingValue(
             settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
@@ -458,6 +458,19 @@ contract LoansBase is LoansInterface, Base {
     }
 
     /** Internal Functions */
+
+    /**
+        @notice Checks if the loan has an Escrow and claims any tokens then pays out the loan collateral.
+        @dev See Escrow.claimTokens for more info.
+    */
+    function _payOutLoan(uint256 loanID, uint256 amount, address payable recipient) internal {
+        if (loans[loanID].escrow != address(0x0)) {
+            EscrowInterface(loans[loanID].escrow).claimTokens(msg.sender);
+        }
+
+        _payOutCollateral(loanID, amount, recipient);
+    }
+
     /**
         @notice Pays out the collateral for a loan
         @param loanID ID of loan from which collateral is to be paid out
