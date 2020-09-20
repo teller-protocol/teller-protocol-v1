@@ -179,7 +179,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
         @param recipient address to send the tokens to.
     */
     function claimTokens(address recipient) external {
-        require(!isLoanActive(), "LOAN_ACTIVE");
+        require(getLoan().status != TellerCommon.LoanStatus.Active, "LOAN_ACTIVE");
         require(recipient == getBorrower() || getLoan().liquidated, "LOAN_NOT_LIQUIDATED");
 
         address[] memory tokens = getTokens();
