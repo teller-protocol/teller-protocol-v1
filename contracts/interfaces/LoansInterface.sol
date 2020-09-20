@@ -264,4 +264,10 @@ interface LoansInterface {
         @return Address of the cToken
      */
     function cToken() external view returns (address);
+
+    /**
+        @notice Returns whether or not the loan is considered secured.
+        @return bool Whether or not the loan is considered secured.
+     */
+    function isLoanSecured(uint256 loanID) external view returns (bool);
 }

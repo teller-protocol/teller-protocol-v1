@@ -17,12 +17,18 @@ interface IChainlinkPairAggregatorRegistry {
         @param baseToken the base token address.
         @param quoteToken the quote token address.
         @param pairAggregator the pair aggregator address.
+        @param responseDecimals the response decimals.
+        @param collateralDecimals the collateral decimals.
+        @param inverse true if the pair aggregator is inverse.
      */
     event PairAggregatorRegistered(
         address indexed sender,
         address indexed baseToken,
         address indexed quoteToken,
-        address pairAggregator
+        address pairAggregator,
+        uint8 responseDecimals,
+        uint8 collateralDecimals,
+        bool inverse
     );
 
     /**
@@ -32,13 +38,19 @@ interface IChainlinkPairAggregatorRegistry {
         @param quoteToken the quote token address.
         @param oldPairAggregator the old pair aggregator address.
         @param newPairAggregator the new pair aggregator address.
+        @param newResponseDecimals the response decimals.
+        @param newCollateralDecimals the collateral decimals.
+        @param newInverse true if the pair aggregator is inverse.
      */
     event PairAggregatorUpdated(
         address indexed sender,
         address indexed baseToken,
         address indexed quoteToken,
         address oldPairAggregator,
-        address newPairAggregator
+        address newPairAggregator,
+        uint8 newResponseDecimals,
+        uint8 newCollateralDecimals,
+        bool newInverse
     );
 
     /**

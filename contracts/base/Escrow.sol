@@ -29,10 +29,10 @@ import "../providers/openzeppelin/SignedSafeMath.sol";
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
-    @notice This contract is used by borrowers to call DApp functions (using delegate calls).
+    @notice This contract is used by borrowers to call Dapp functions (using delegate calls).
     @notice This contract should only be constructed using it's upgradeable Proxy contract.
-    @notice In order to call a DApp function, the DApp must be added in the EscrowFactory instance.
-    @dev The current DApp implementations are: Uniswap and Compound.
+    @notice In order to call a Dapp function, the Dapp must be added in the EscrowFactory instance.
+    @dev The current Dapp implementations are: Uniswap and Compound.
 
     @author develop@teller.finance
  */
@@ -65,14 +65,6 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
     /** Public Functions **/
 
     /**
-        @notice Checks if loan is active. 
-        @return true in case loan is active.  
-     */
-    function isLoanActive() public view returns (bool) {
-        return getLoan().status == TellerCommon.LoanStatus.Active;
-    }
-
-    /**
         @notice It calls a given dapp using a delegatecall function by a borrower owned the current loan id associated to this escrow contract.
         @param dappData the current dapp data to be executed.
      */
@@ -81,10 +73,9 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
         isInitialized()
         onlyOwner()
     {
-        require(
-            settings().escrowFactory().isDapp(dappData.location),
-            "DAPP_NOT_WHITELISTED"
-        );
+        TellerCommon.Dapp memory dapp = settings().escrowFactory().dapps(dappData.location);
+        require(dapp.exists, "DAPP_NOT_WHITELISTED");
+        require(dapp.unsecured || loans.isLoanSecured(loanID), "DAPP_UNSECURED_NOT_ALLOWED");
 
         (bool success, ) = dappData.location.delegatecall(dappData.data);
 

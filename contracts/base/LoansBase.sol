@@ -41,9 +41,9 @@ contract LoansBase is LoansInterface, Base {
 
     /* State Variables */
 
-    // Loan length will be inputted in days, with 4 decimal places. i.e. 30 days will be inputted as
-    // 300000. Therefore in interest calculations we must divide by 365000
-    uint256 internal constant DAYS_PER_YEAR_4DP = 3650000;
+    // Loan length will be inputted in seconds, with 4 decimal places. i.e. 30 days will be inputted as
+    // 31536. Therefore in interest calculations we must divide by 31536000
+    uint256 internal constant SECONDS_PER_YEAR_4DP = 31536000;
 
     // For interestRate, collateral, and liquidation price, 7% is represented as 700. To find the value
     // of something we must divide 700 by 100 to remove decimal places, and another 100 for percentage.
@@ -175,6 +175,14 @@ contract LoansBase is LoansInterface, Base {
     }
 
     /**
+        @notice Checks wheather the loan's collateral ratio is considered to be secured based on the settings collateral buffer value.
+        @return bool value of it being secured or not.
+    */
+    function isLoanSecured(uint256 loanID) external view returns (bool) {
+        return loans[loanID].loanTerms.collateralRatio >= settings().getPlatformSettingValue(settings().consts().COLLATERAL_BUFFER_SETTING());
+    }
+
+    /**
      * @notice Withdraw collateral from a loan, unless this isn't allowed
      * @param amount The amount of collateral token or ether the caller is hoping to withdraw.
      * @param loanID The ID of the loan the collateral is for
@@ -247,7 +255,7 @@ contract LoansBase is LoansInterface, Base {
             .mul(loans[loanID].loanTerms.interestRate)
             .mul(loans[loanID].loanTerms.duration)
             .div(TEN_THOUSAND)
-            .div(DAYS_PER_YEAR_4DP);
+            .div(SECONDS_PER_YEAR_4DP);
 
         // check that enough collateral has been provided for this loan
         TellerCommon.LoanCollateralInfo memory collateralInfo = _getCollateralInfo(
@@ -621,7 +629,7 @@ contract LoansBase is LoansInterface, Base {
      */
     function getAndIncrementLoanID() internal returns (uint256 newLoanID) {
         newLoanID = loanIDCounter;
-        loanIDCounter += 1;
+        loanIDCounter = loanIDCounter.add(1);
     }
 
     /**

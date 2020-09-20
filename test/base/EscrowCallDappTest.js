@@ -5,6 +5,8 @@ const { dappMockABI } = require('../../migrations/utils/encodeAbis');
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const EscrowFactoryEncoder = require("../utils/encoders/EscrowFactoryEncoder");
 const SettingsInterfaceEncoder = require("../utils/encoders/SettingsInterfaceEncoder");
+const LoansBaseInterfaceEncoder = require("../utils/encoders/LoansBaseInterfaceEncoder");
+const { encodeDappConfigParameter } = require("../utils/escrow");
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -15,8 +17,8 @@ const Escrow = artifacts.require("./mock/base/EscrowMock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 
 contract('EscrowCallDappTest', function (accounts) {
-  const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
-  const encoder = new EscrowFactoryEncoder(web3)
+  const loansEncoder = new LoansBaseInterfaceEncoder(web3);
+  const escrowFactoryEncoder = new EscrowFactoryEncoder(web3)
 
   const owner = accounts[0];
   let factory;
@@ -26,7 +28,7 @@ contract('EscrowCallDappTest', function (accounts) {
 
   beforeEach(async () => {
     await createTestSettingsInstance(Settings, {
-      from: owner, Mock, initialize: true, onInitialize: (instance, { escrowFactory, }) => {
+      from: owner, Mock, initialize: true, onInitialize: (instance, { escrowFactory }) => {
         settings = instance
         factory = escrowFactory
       }
@@ -35,17 +37,22 @@ contract('EscrowCallDappTest', function (accounts) {
     loans = await Mock.new();
     escrow = await Escrow.new();
     await escrow.externalSetSettings(settings.address)
+    await escrow.mockBorrower(owner);
   });
 
   withData({
-    _1_not_owner: [3, true, true, false, false, false, true, 'Ownable: caller is not the owner'],
-    _2_without_dapp_whitelisted: [4, true, false, true, false, false, true, 'DAPP_NOT_WHITELISTED'],
-    _3_with_invalid_function_signature: [5, true, true, true, true, true, true, 'DAPP_CALL_FAILED'],
-    _4_successful: [6, true, true, true, false, false, false, null],
+    _1_not_initialized: [3, true, false, true, true, false, false, false, true, 'CONTRACT_NOT_INITIALIZED'],
+    _2_not_owner: [3, true, true, true, true, false, false, false, true, 'Ownable: caller is not the owner'],
+    _3_without_dapp_whitelisted: [4, true, true, false, true, true, false, false, true, 'DAPP_NOT_WHITELISTED'],
+    _4_with_invalid_function_signature: [5, true, true, true, true, true, true, true, true, 'DAPP_CALL_FAILED'],
+    _5_loan_unsecured: [6, false, true, true, true, true, false, false, true, 'DAPP_UNSECURED_NOT_ALLOWED'],
+    _5_successful: [6, true, true, true, true, true, false, false, false, null],
   }, function(
     loanID,
+    loanSecured,
     initialize,
     enableDapp,
+    unsecuredDapp,
     isOwner,
     failDapp,
     useInvalidSignature,
@@ -56,16 +63,24 @@ contract('EscrowCallDappTest', function (accounts) {
       // Setup
       const dapp = await DappMock.new();
 
+      await escrow.mockIsOwner(true, isOwner);
       if (initialize) {
         await escrow.mockInitialize(loans.address, loanID, { from: owner });
       }
-      await escrow.mockSettings(settings.address);
+
+      await loans.givenMethodReturnBool(
+        loansEncoder.encodeIsLoanSecured(),
+        loanSecured
+      )
 
       await factory.givenMethodReturnBool(
-        encoder.encodeIsDapp(),
+        escrowFactoryEncoder.encodeIsDapp(),
         enableDapp
       )
-      await escrow.mockIsOwner(true, isOwner);
+      await factory.givenMethodReturn(
+        escrowFactoryEncoder.encodeDapps(),
+        encodeDappConfigParameter(web3, { exists: enableDapp, unsecured: unsecuredDapp })
+      )
 
       let dappData = {
         location: dapp.address,

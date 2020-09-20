@@ -30,4 +30,8 @@ LoansBaseInterfaceEncoder.prototype.encodeRepay = function() {
     return encode(this.web3, 'repay(uint256,uint256)');
 }
 
+LoansBaseInterfaceEncoder.prototype.encodeIsLoanSecured = function() {
+    return encode(this.web3, 'isLoanSecured(uint256)');
+}
+
 module.exports = LoansBaseInterfaceEncoder;

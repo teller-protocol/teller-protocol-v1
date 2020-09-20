@@ -33,6 +33,8 @@ const {
     addMaxValue,
     addBackRounds,
     addMinAmount,
+    addLogicName,
+    addContractName,
 } = require("./cli/params");
 
 const addBase = (yargs) => {
@@ -218,6 +220,14 @@ module.exports = {
     cTokens: () => {
             addCTokenName(yargs);
             return yargs;
+    },
+    logicVersion: {
+        updateLogicVersion: () => {
+            addBase(yargs);
+            addLogicName(yargs);
+            addContractName(yargs);
+            return yargs;
+        },
     },
     settings: {
         view: () => {

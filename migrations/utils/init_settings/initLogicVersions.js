@@ -1,32 +1,28 @@
-const assert = require('assert');
-const {
-    toDecimals, toBytes32
-} = require('../../../test/utils/consts');
+const assert = require("assert");
+const {toDecimals, toBytes32} = require("../../../test/utils/consts");
 
-/**
- * We set all assets settings.
- * 
- * @param settingsInstance a Settings contract instance.
- * @param param1 contains the settings we need for the asset.
- * @param param2 contains an ERC20Detailed instance. 
- */
-module.exports = async function (
-    logicContracts,
-    instances,
-    params,
-) {
-    console.log('\n');
-    console.log('Initializing logic versions.');
-    const { logicVersionsRegistryInstance } = instances;
-    const { txConfig } = params;
-    for (const [, value] of logicContracts.entries()) {
-        const { name, nameBytes32, address } = value;
-        console.log(`Registering logic: Name / Key: ${name} / ${nameBytes32} - Address: ${address} - Version: 1.`);
-        await logicVersionsRegistryInstance.createLogicVersion(
-            nameBytes32,
-            address,
-            txConfig,
+module.exports = async function (logicContracts, instances, params) {
+    console.log("\n");
+    const {logicVersionsRegistryInstance} = instances;
+    const {txConfig} = params;
+    const logicContractsKeys = Array.from(logicContracts.keys());
+
+    console.log(`Initializing ${logicContractsKeys.length} logic versions...`)
+    const logicVersionRequests = logicContractsKeys.map(
+    (logicContractKey, index) => {
+
+        const {name, nameBytes32, address} = logicContracts.get(logicContractKey);
+        console.log(
+            `${index+1}# Logic Name / Key: ${name} / ${nameBytes32} - Address: ${address} - Version: 1.`
         );
-    }
-    console.log('\n');
-}
+        return {
+            logic: address,
+            logicName: nameBytes32,
+        };
+    });
+    await logicVersionsRegistryInstance.createLogicVersions(
+        logicVersionRequests,
+        txConfig
+    );
+    console.log("\n");
+};

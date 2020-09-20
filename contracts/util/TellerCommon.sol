@@ -118,6 +118,15 @@ library TellerCommon {
         @notice This struct defines the dapp address and data to execute in the callDapp function.
         @dev It is executed using a delegatecall in the Escrow contract.
      */
+    struct Dapp {
+        bool exists;
+        bool unsecured;
+    }
+
+    /**
+        @notice This struct defines the dapp address and data to execute in the callDapp function.
+        @dev It is executed using a delegatecall in the Escrow contract.
+     */
     struct DappData {
         address location;
         bytes data;
@@ -152,5 +161,13 @@ library TellerCommon {
     struct EscrowValue {
         uint256 valueInToken;
         uint256 valueInEth;
+    }
+
+    /**
+        @notice This struct is used to register multiple logic versions in LogicVersionsRegistry contract.
+     */
+    struct LogicVersionRequest {
+        address logic;
+        bytes32 logicName;
     }
 }

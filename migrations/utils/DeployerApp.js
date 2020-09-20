@@ -1,4 +1,3 @@
-const assert = require('assert');
 const jsonfile = require('jsonfile');
 const MOCK_NETWORKS = ["test", "ganache", "soliditycoverage"];
 

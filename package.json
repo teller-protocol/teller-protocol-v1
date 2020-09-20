@@ -23,9 +23,9 @@
     "deploy:ganache:mock": "truffle compile && truffle deploy --network ganache --reset -f 3 --to 3",
     "format:prettier": "prettier --write contracts/**/**/**/**/**/**.sol",
     "format:prettier:print": "prettier contracts/**/**/**/**/**/**.sol",
-    "verify:ropsten": "truffle run verify TDAI TUSDC Settings ATMSettings MarketsState EscrowFactory MarketFactory LogicVersionsRegistry Escrow Lenders EtherCollateralLoans TokenCollateralLoans LendingPool InterestConsensus LoanTermsConsensus ATMFactory ATMGovernance ATMToken ChainlinkPairAggregatorRegistry ChainlinkPairAggregator --network ropsten",
-    "verify:mainnet": "truffle run verify TDAI TUSDC Settings ATMSettings MarketsState EscrowFactory MarketFactory LogicVersionsRegistry Escrow Lenders EtherCollateralLoans TokenCollateralLoans LendingPool InterestConsensus LoanTermsConsensus ATMFactory ATMGovernance ATMToken ChainlinkPairAggregatorRegistry ChainlinkPairAggregator --network mainnet",
-    "verify:rinkeby": "truffle run verify TDAI TUSDC Settings ATMSettings MarketsState EscrowFactory MarketFactory LogicVersionsRegistry Escrow Lenders EtherCollateralLoans TokenCollateralLoans LendingPool InterestConsensus LoanTermsConsensus ATMFactory ATMGovernance ATMToken ChainlinkPairAggregatorRegistry ChainlinkPairAggregator --network rinkeby"
+    "verify:ropsten": "truffle run verify TDAI TUSDC Settings ATMSettings MarketsState EscrowFactory MarketFactory LogicVersionsRegistry Escrow Lenders EtherCollateralLoans TokenCollateralLoans LendingPool InterestConsensus LoanTermsConsensus ATMFactory ATMGovernance TLRToken ChainlinkPairAggregatorRegistry ChainlinkPairAggregator --network ropsten",
+    "verify:mainnet": "truffle run verify TDAI TUSDC Settings ATMSettings MarketsState EscrowFactory MarketFactory LogicVersionsRegistry Escrow Lenders EtherCollateralLoans TokenCollateralLoans LendingPool InterestConsensus LoanTermsConsensus ATMFactory ATMGovernance TLRToken ChainlinkPairAggregatorRegistry ChainlinkPairAggregator --network mainnet",
+    "verify:rinkeby": "truffle run verify TDAI TUSDC Settings ATMSettings MarketsState EscrowFactory MarketFactory LogicVersionsRegistry Escrow Lenders EtherCollateralLoans TokenCollateralLoans LendingPool InterestConsensus LoanTermsConsensus ATMFactory ATMGovernance TLRToken ChainlinkPairAggregatorRegistry ChainlinkPairAggregator --network rinkeby"
   },
   "devDependencies": {
     "@gnosis.pm/mock-contract": "^3.0.7",
