@@ -1,18 +1,15 @@
 // JS Libraries
 const { withData } = require('leche')
 const { t } = require('../utils/consts')
-const { createTestSettingsInstance } = require('../utils/settings-helper')
 const LoansBaseInterfaceEncoder = require('../utils/encoders/LoansBaseInterfaceEncoder')
 const { encodeLoanParameter } = require('../utils/loans')
 
 // Mock contracts
 const Mock = artifacts.require('./mock/util/Mock.sol')
-const DappMock = artifacts.require('./mock/base/escrow/dapps/DappMock.sol')
 const DAI = artifacts.require('./mock/tokens/DAIMock.sol')
 
 // Smart contracts
-const Escrow = artifacts.require('./mock/base/EscrowMock.sol')
-const Settings = artifacts.require('./base/Settings.sol')
+const Escrow = artifacts.require('./base/Escrow.sol')
 
 contract('EscrowInitializeTest', function (accounts) {
   const loansEncoder = new LoansBaseInterfaceEncoder(web3)
@@ -21,11 +18,7 @@ contract('EscrowInitializeTest', function (accounts) {
   let dai
 
   beforeEach(async () => {
-    const settings = await createTestSettingsInstance(Settings, { Mock })
-
     escrow = await Escrow.new()
-    await escrow.externalSetSettings(settings.address)
-
     dai = await DAI.new()
   })
 
@@ -64,7 +57,7 @@ contract('EscrowInitializeTest', function (accounts) {
       }
 
       if (alreadyInitialized) {
-        await escrow.mockInitialize(loansAddress, 12345)
+        await escrow.initialize(loansAddress, 12345)
       }
 
       try {
