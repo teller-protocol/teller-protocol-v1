@@ -57,8 +57,6 @@ contract("CompoundLendTest", function(accounts) {
         // Validating state changes
         const cTokenBalance = await cDai.balanceOf(instance.address)
         assert(cTokenBalance > 0, 'Unable to lend token')
-        const cTokenContractBalance = await instance.balanceOf(cDai.address)
-        assert.equal(cTokenBalance.toString(), cTokenContractBalance.toString(), "Contract balance error");
         const tokenBalance = await dai.balanceOf(instance.address);
         const expectedBalance = balance - amount;
         assert.equal(tokenBalance.toString(), expectedBalance.toString(), "Token balance invalid after lend");
@@ -71,7 +69,7 @@ contract("CompoundLendTest", function(accounts) {
             instance.address,
             amount,
             cDai.address,
-            cTokenContractBalance,
+            cTokenBalance,
             dai.address,
             tokenBalance
           );

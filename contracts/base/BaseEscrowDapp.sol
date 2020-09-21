@@ -28,13 +28,9 @@ contract BaseEscrowDapp is Ownable {
 
     /**
         @notice Returns this contract's balance for the specified token.
-        @param cTokenAddress token address.
+        @param tokenAddress token address.
         @return this contract's balance.
      */
-    function balanceOf(address cTokenAddress) public view returns (uint256) {
-        return _balanceOf(cTokenAddress);
-    }
-
     function _balanceOf(address tokenAddress) internal view returns (uint256) {
         return IERC20(tokenAddress).balanceOf(address(this));
     }
