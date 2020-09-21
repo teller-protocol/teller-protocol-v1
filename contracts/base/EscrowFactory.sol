@@ -92,7 +92,7 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         require(dapp.isContract(), "DAPP_ISNT_A_CONTRACT");
         require(!_isDapp(dapp), "DAPP_ALREADY_EXIST");
 
-        dapps[dapp] = TellerCommon.Dapp({ exists: true, unsecured: unsecured });
+        dapps[dapp] = TellerCommon.Dapp({exists: true, unsecured: unsecured});
         dappsList.add(dapp);
 
         emit NewDappAdded(msg.sender, dapp, unsecured);
@@ -103,7 +103,11 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         @param dapp address to add in this factory.
         @param unsecured boolean that describes if the dapp can be used by with an unsecured loan.
      */
-    function updateDapp(address dapp, bool unsecured) external onlyPauser() isInitialized() {
+    function updateDapp(address dapp, bool unsecured)
+        external
+        onlyPauser()
+        isInitialized()
+    {
         require(_isDapp(dapp), "DAPP_NOT_EXIST");
 
         dapps[dapp].unsecured = unsecured;

@@ -28,7 +28,11 @@ contract ERC20Mock is ERC20Detailed, ERC20Mintable, ERC20Burnable {
         mockedTransferFrom = true;
     }
 
-    function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) public returns (bool) {
         if (mockedTransferFrom) {
             return false;
         } else {
