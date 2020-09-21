@@ -17,8 +17,8 @@ const Escrow = artifacts.require("./mock/base/EscrowMock.sol");
 contract("EscrowCalculateTotalValueTest", function(accounts) {
   const loansEncoder = new LoansBaseInterfaceEncoder(web3);
   
-  const baseGasCost = 322000; // Gas cost with 1 vesting in wallet
-  const expectedGasCost = (tokens) => baseGasCost + ((tokens -  1) * 36500); // Gas cost > 1 vesting in wallet
+  const baseGasCost = 322000; // Gas cost with 1 token in wallet
+  const expectedGasCost = (tokens) => baseGasCost + ((tokens -  1) * 36500); // Gas cost > 1 token in wallet
 
   let instance;
   let loans;
