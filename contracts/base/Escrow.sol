@@ -184,7 +184,10 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
 
         address[] memory tokens = getTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
-            IERC20(tokens[i]).transfer(recipient, _balanceOf(tokens[i]));
+            uint256 balance = _balanceOf(tokens[i]);
+            if (balance > 0) {
+                IERC20(tokens[i]).transfer(recipient, balance);
+            }
         }
 
         emit TokensClaimed(recipient);
