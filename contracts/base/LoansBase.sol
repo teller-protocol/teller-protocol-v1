@@ -179,7 +179,11 @@ contract LoansBase is LoansInterface, Base {
         @return bool value of it being secured or not.
     */
     function isLoanSecured(uint256 loanID) external view returns (bool) {
-        return loans[loanID].loanTerms.collateralRatio >= settings().getPlatformSettingValue(settings().consts().COLLATERAL_BUFFER_SETTING());
+        return
+            loans[loanID].loanTerms.collateralRatio >=
+            settings().getPlatformSettingValue(
+                settings().consts().COLLATERAL_BUFFER_SETTING()
+            );
     }
 
     /**
@@ -463,7 +467,11 @@ contract LoansBase is LoansInterface, Base {
         @notice Checks if the loan has an Escrow and claims any tokens then pays out the loan collateral.
         @dev See Escrow.claimTokens for more info.
     */
-    function _payOutLoan(uint256 loanID, uint256 amount, address payable recipient) internal {
+    function _payOutLoan(
+        uint256 loanID,
+        uint256 amount,
+        address payable recipient
+    ) internal {
         if (loans[loanID].escrow != address(0x0)) {
             EscrowInterface(loans[loanID].escrow).claimTokens(msg.sender);
         }

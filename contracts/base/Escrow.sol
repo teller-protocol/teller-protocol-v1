@@ -73,9 +73,14 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
         isInitialized()
         onlyOwner()
     {
-        TellerCommon.Dapp memory dapp = settings().escrowFactory().dapps(dappData.location);
+        TellerCommon.Dapp memory dapp = settings().escrowFactory().dapps(
+            dappData.location
+        );
         require(dapp.exists, "DAPP_NOT_WHITELISTED");
-        require(dapp.unsecured || loans.isLoanSecured(loanID), "DAPP_UNSECURED_NOT_ALLOWED");
+        require(
+            dapp.unsecured || loans.isLoanSecured(loanID),
+            "DAPP_UNSECURED_NOT_ALLOWED"
+        );
 
         (bool success, ) = dappData.location.delegatecall(dappData.data);
 
@@ -183,7 +188,10 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
     */
     function claimTokens(address recipient) external {
         require(getLoan().status != TellerCommon.LoanStatus.Active, "LOAN_ACTIVE");
-        require(recipient == getBorrower() || getLoan().liquidated, "LOAN_NOT_LIQUIDATED");
+        require(
+            recipient == getBorrower() || getLoan().liquidated,
+            "LOAN_NOT_LIQUIDATED"
+        );
 
         address[] memory tokens = getTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
