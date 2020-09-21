@@ -43,6 +43,7 @@
     "leche": "^2.3.0",
     "lodash": "^4.17.19",
     "mocha": "^7.1.0",
+    "node-fetch": "^2.6.1",
     "prettier": "^2.0.2",
     "prettier-plugin-solidity": "^1.0.0-alpha.46",
     "serialize-javascript": "^3.1.0",
