@@ -14,6 +14,8 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
     bool internal mockedCanPurchase;
 
     bool private _mockValueOfIn;
+    bool private mockedCalculateTotalValue;
+    TellerCommon.EscrowValue public totalValue;
 
     mapping(address => mapping(address => uint256)) public _valueOfInMapMock;
 
@@ -58,6 +60,19 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
 
     function mockLoans(address loansAddress) external {
         loans = LoansInterface(loansAddress);
+    }
+
+    function mockCalculateTotalValue(TellerCommon.EscrowValue memory aTotalValue) public {
+        mockedCalculateTotalValue = true;
+        totalValue = aTotalValue;
+    }
+
+    function calculateTotalValue() public view returns (TellerCommon.EscrowValue memory) {
+        if (mockedCalculateTotalValue) {
+            return totalValue;
+        } else {
+            return super.calculateTotalValue();
+        }
     }
 
     function mockCanPurchase() external {

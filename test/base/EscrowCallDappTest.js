@@ -59,7 +59,7 @@ contract('EscrowCallDappTest', function (accounts) {
     mustFail,
     expectedErrorMessage
   ) {
-    it(t("user", "callDapp", "Should be able (or not) to call a function on a whitelisted dapp contract", false), async function() {
+    it(t("user", "callDapp", "Should be able (or not) to call a function on a whitelisted dapp contract", mustFail), async function() {
       // Setup
       const dapp = await DappMock.new();
 
