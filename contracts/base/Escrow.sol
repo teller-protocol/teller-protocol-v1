@@ -165,7 +165,10 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
         IERC20 token = IERC20(loans.lendingToken());
         uint256 balance = _balanceOf(loans.lendingToken());
         if (amount > balance) {
-            token.transferFrom(msg.sender, address(this), amount.sub(balance));
+            require(
+                token.transferFrom(msg.sender, address(this), amount.sub(balance)),
+                "ESCROW_TRANSFER_FROM_FAILED"
+            );
         }
         token.approve(address(loans), amount);
 
