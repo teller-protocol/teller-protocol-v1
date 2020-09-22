@@ -183,7 +183,12 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
     */
     function claimTokens(address recipient) external {
         require(getLoan().status != TellerCommon.LoanStatus.Active, "LOAN_ACTIVE");
-        require(recipient == getBorrower() || getLoan().liquidated, "LOAN_NOT_LIQUIDATED");
+        if (getLoan().liquidated) {
+            require(recipient != getBorrower(), "LOAN_LIQUIDATED: recipient must not be the borrower");
+            require(msg.sender == address(loans), "LOAN_LIQUIDATED: caller must be the loans contract");
+        } else {
+            require(recipient == getBorrower(), "LOAN_NOT_LIQUIDATED: recipient must be the borrower");
+        }
 
         address[] memory tokens = getTokens();
         for (uint256 i = 0; i < tokens.length; i++) {

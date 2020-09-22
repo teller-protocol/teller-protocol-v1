@@ -1,17 +1,18 @@
 // JS Libraries
 const LoansBaseInterfaceEncoder = require("../utils/encoders/LoansBaseInterfaceEncoder");
 const loanStatus = require("../utils/loanStatus");
+const { createLoan } = require('../utils/loans')
 const { encodeLoanParameter } = require("../utils/loans");
 const { escrow } = require("../utils/events");
 const { withData } = require("leche");
 const { t } = require("../utils/consts");
 
 // Mock contracts
-const Mock = artifacts.require("./mock/util/Mock.sol");
 const DAI = artifacts.require("./mock/token/DAIMock.sol");
 
 // Smart contracts
 const Escrow = artifacts.require("./mock/base/EscrowMock.sol");
+const LoansBase = artifacts.require("./mock/base/LoansBaseMock.sol");
 
 contract("EscrowClaimTokensTest", function(accounts) {
   const loansEncoder = new LoansBaseInterfaceEncoder(web3);
@@ -20,21 +21,22 @@ contract("EscrowClaimTokensTest", function(accounts) {
   let instance;
 
   beforeEach(async () => {
-    loans = await Mock.new();
-
+    loans = await LoansBase.new();
     instance = await Escrow.new();
-    await instance.mockLoans(loans.address);
   });
 
   withData({
-    _1_loan_active: [ loanStatus.Active, accounts[1], accounts[1], false, 0, 0, true, "LOAN_ACTIVE" ],
-    _2_loan_not_liquidated_recipient_not_borrower: [ loanStatus.Closed, accounts[1], accounts[2], false, 0, 0, true, "LOAN_NOT_LIQUIDATED" ],
-    _3_loan_not_liquidated_recipient_is_borrower: [ loanStatus.Closed, accounts[1], accounts[1], false, 2, 1000, false, null ],
-    _4_loan_liquidated_recipient_not_borrower: [ loanStatus.Closed, accounts[1], accounts[2], true, 2, 1000, false, null ],
+    _1_loan_active: [ loanStatus.Active, accounts[1], accounts[1], false, false, 0, 0, true, "LOAN_ACTIVE" ],
+    _2_loan_not_liquidated_recipient_not_borrower: [ loanStatus.Closed, accounts[1], accounts[2], false, false, 0, 0, true, "LOAN_NOT_LIQUIDATED: recipient must be the borrower" ],
+    _3_loan_not_liquidated_recipient_is_borrower: [ loanStatus.Closed, accounts[1], accounts[1], false, false, 2, 1000, false, null ],
+    _4_loan_liquidated_recipient_not_borrower_caller_loans: [ loanStatus.Closed, accounts[1], accounts[2], true, true, 2, 1000, false, null ],
+    _5_loan_liquidated_recipient_is_borrower_caller_loans: [ loanStatus.Closed, accounts[1], accounts[1], true, true, 2, 1000, true, "LOAN_LIQUIDATED: recipient must not be the borrower" ],
+    _6_loan_liquidated_recipient_not_borrower_caller_not_loans: [ loanStatus.Closed, accounts[1], accounts[2], false, true, 2, 1000, true, "LOAN_LIQUIDATED: caller must be the loans contract" ],
   }, function(
     status,
     recipient,
     borrower,
+    callerIsLoans,
     liquidated,
     tokensCount,
     tokenBalance,
@@ -43,10 +45,9 @@ contract("EscrowClaimTokensTest", function(accounts) {
   ) {
     it(t("user", "claimTokens", "Should be able to claim tokens after the loan is closed.", mustFail), async function() {
       // Setup
-      await loans.givenMethodReturn(
-        loansEncoder.encodeLoans(),
-        encodeLoanParameter(web3, { status, liquidated, loanTerms: { borrower } })
-      );
+      const loan = createLoan({ status, liquidated, escrow: instance.address, loanTerms: { borrower } });
+      await loans.setLoan(loan);
+      await instance.mockInitialize(loans.address, loan.id);
 
       const tokens = [];
       for (let i = 0; i < tokensCount; i++) {
@@ -58,7 +59,12 @@ contract("EscrowClaimTokensTest", function(accounts) {
 
       try {
         // Invocation
-        const result = await instance.claimTokens(recipient);
+        let result
+        if (callerIsLoans) {
+          result = await loans.externalEscrowClaimTokens(loan.id, recipient)
+        } else {
+          result = await instance.claimTokens(recipient);
+        }
 
         // Assertions
         for (let i = 0; i < tokensCount; i++) {
@@ -70,9 +76,11 @@ contract("EscrowClaimTokensTest", function(accounts) {
           assert.equal(recipientBalance.toString(), tokenBalance.toString(), 'Recipient did not receive tokens')
         }
 
-        escrow
-          .tokensClaimed(result)
-          .emitted(recipient);
+        if (!callerIsLoans) {
+          escrow
+            .tokensClaimed(result)
+            .emitted(recipient);
+        }
       } catch (error) {
         assert(mustFail, error.message);
         assert.equal(error.reason, expectedErrorMessage);
