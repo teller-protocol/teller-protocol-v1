@@ -27,7 +27,7 @@ contract('InitializeableDynamicProxyImplementationTest', function (accounts) {
 
     withData({
         _1_initialize_proxy: [true, 'NewLogicName1', undefined, false],
-        _2_not_initialize_proxy: [true, 'NewLogicName2', undefined, false],
+        _2_not_initialize_proxy: [false, 'NewLogicName2', undefined, false],
     }, function(initializeProxy, logicName, expectedErrorMessage, mustFail) {
         it(t('user', 'implementation', 'Should (or not) be able to get the implementation.', mustFail), async function() {
             // Setup
@@ -53,16 +53,19 @@ contract('InitializeableDynamicProxyImplementationTest', function (accounts) {
             } else {
                 initializeProxyImpl = await UpgradableV1.new();
                 await initializeProxyImpl.initialize('2');
+                await instance.externalSetImplementation(initializeProxyImpl.address);
             }
 
             try {
                 // Invocation
                 const result = await instance.implementation();
-                
+
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
                 assert.equal(result, initializeProxyImpl.address);
+                const __isInitialized = await instance.__isInitialized();
+                assert.equal(initializeProxy, __isInitialized);
             } catch (error) {
                 // Assertions
                 assert(mustFail);

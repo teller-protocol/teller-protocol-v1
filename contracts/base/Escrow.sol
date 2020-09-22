@@ -73,9 +73,14 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
         isInitialized()
         onlyOwner()
     {
-        TellerCommon.Dapp memory dapp = settings().escrowFactory().dapps(dappData.location);
+        TellerCommon.Dapp memory dapp = settings().escrowFactory().dapps(
+            dappData.location
+        );
         require(dapp.exists, "DAPP_NOT_WHITELISTED");
-        require(dapp.unsecured || loans.isLoanSecured(loanID), "DAPP_UNSECURED_NOT_ALLOWED");
+        require(
+            dapp.unsecured || loans.isLoanSecured(loanID),
+            "DAPP_UNSECURED_NOT_ALLOWED"
+        );
 
         (bool success, ) = dappData.location.delegatecall(dappData.data);
 
