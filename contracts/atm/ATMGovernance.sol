@@ -364,8 +364,7 @@ contract ATMGovernance is
         return cra;
     } 
 
-    function getTLRRewards() external view returns (ATMLibrary.TLRReward[] memory) {
-        return tlrRewards;
+    function getRewardsTLR() external view returns (ATMLibrary.TLRReward[] memory) {
+        return rewardsTLR;
     }
-
 }

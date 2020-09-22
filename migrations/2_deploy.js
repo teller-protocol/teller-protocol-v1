@@ -67,6 +67,7 @@ module.exports = async function(deployer, network, accounts) {
   // Creating DeployerApp helper.
   const deployerApp = new DeployerApp(deployer, web3, deployerAccount, { InitializeableDynamicProxy, Mock }, { network, networkConfig });
   try {
+<<<<<<< HEAD
   await deployerApp.deployMocksContractsIfNeeded();
   const currentBlockNumber = await web3.eth.getBlockNumber();
 
@@ -138,6 +139,74 @@ module.exports = async function(deployer, network, accounts) {
   const logicVersionsRegistryInstance = await LogicVersionsRegistry.at(logicVersionsRegistryProxy.address)
   await logicVersionsRegistryInstance.initialize(settingsInstance.address)
   console.log(`LogicVersionsRegistry logic: ${logicVersionsRegistryLogic.address}`)
+=======
+    await deployerApp.deployMocksContractsIfNeeded();
+    const currentBlockNumber = await web3.eth.getBlockNumber();
+  
+    console.log(`Deployment starts at block number: ${currentBlockNumber}`);
+  
+    const contracts = [
+      // Logic
+      { Contract: LendingPool, name: logicNames.LendingPool },
+      { Contract: Lenders, name: logicNames.Lenders },
+      { Contract: TokenCollateralLoans, name: logicNames.TokenCollateralLoans },
+      { Contract: EtherCollateralLoans, name: logicNames.EtherCollateralLoans },
+      { Contract: LoanTermsConsensus, name: logicNames.LoanTermsConsensus },
+      { Contract: InterestConsensus, name: logicNames.InterestConsensus },
+      { Contract: Escrow, name: logicNames.Escrow },
+      { Contract: ChainlinkPairAggregator, name: logicNames.ChainlinkPairAggregator },
+      { Contract: ATMGovernance, name: logicNames.ATMGovernance },
+      { Contract: ATMLiquidityMining, name: logicNames.ATMLiquidityMining },
+      { Contract: TLRToken, name: logicNames.TLRToken },
+      // Initializables
+      { Contract: EscrowFactory, name: logicNames.EscrowFactory },
+      { Contract: ChainlinkPairAggregatorRegistry, name: logicNames.ChainlinkPairAggregatorRegistry },
+      { Contract: MarketsState, name: logicNames.MarketsState },
+      { Contract: ATMSettings, name: logicNames.ATMSettings },
+      { Contract: ATMFactory, name: logicNames.ATMFactory },
+      { Contract: MarketFactory, name: logicNames.MarketFactory },
+    ];
+  
+    const deployedLogicContractsMap = await deployLogicContracts(contracts, { deployerApp, txConfig, web3 });
+  
+    async function deployInitializableDynamicProxy(name) {
+      const info = deployedLogicContractsMap.get(name)
+      assert(info, `Deployed logic info is undefined for logic name ${name}.`)
+      const proxy = await deployerApp.deployInitializeableDynamicProxy(info, txConfig)
+      return info.Contract.at(proxy.address)
+    }
+  
+    console.log(`Deploying Settings logic...`)
+    const settingsLogic = await deployerApp.deployWith('Settings', Settings, txConfig)
+    const settingsProxy = await deployerApp.deployWith('Settings_Proxy', UpgradeableProxy, txConfig)
+    await settingsProxy.initializeProxy(
+      settingsProxy.address,
+      settingsLogic.address,
+      txConfig
+    )
+    const settingsInstance = await Settings.at(settingsProxy.address)
+    console.log(`Settings logic: ${settingsLogic.address}`)
+    console.log(`Settings_Proxy: ${settingsProxy.address}`)
+  
+    const escrowFactoryInstance = await deployInitializableDynamicProxy(logicNames.EscrowFactory)
+    const pairAggregatorRegistryInstance = await deployInitializableDynamicProxy(logicNames.ChainlinkPairAggregatorRegistry)
+    const marketsStateInstance = await deployInitializableDynamicProxy(logicNames.MarketsState)
+    const atmSettingsInstance = await deployInitializableDynamicProxy(logicNames.ATMSettings)
+    const atmFactoryInstance = await deployInitializableDynamicProxy(logicNames.ATMFactory)
+    const marketFactoryInstance = await deployInitializableDynamicProxy(logicNames.MarketFactory)
+  
+    console.log(`Deploying LogicVersionsRegistry...`)
+    const logicVersionsRegistryLogic = await deployerApp.deployWith('LogicVersionsRegistry', LogicVersionsRegistry, txConfig)
+    const logicVersionsRegistryProxy = await deployerApp.deployWith('LogicVersionsRegistry_Proxy', UpgradeableProxy, txConfig)
+    await logicVersionsRegistryProxy.initializeProxy(
+      settingsInstance.address,
+      logicVersionsRegistryLogic.address,
+      txConfig
+    )
+    const logicVersionsRegistryInstance = await LogicVersionsRegistry.at(logicVersionsRegistryProxy.address)
+    await logicVersionsRegistryInstance.initialize(settingsInstance.address)
+    console.log(`LogicVersionsRegistry logic: ${logicVersionsRegistryLogic.address}`)
+>>>>>>> 18cbff3... Liquidity mining initial version [PROTOCOL-184]
     console.log(`LogicVersionsRegistry_Proxy: ${logicVersionsRegistryProxy.address}`)
 
   console.log(`Settings: Initializing...`);
