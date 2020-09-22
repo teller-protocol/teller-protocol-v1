@@ -1,4 +1,6 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
+
 
 // External Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
@@ -7,6 +9,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "../util/AddressArrayLib.sol";
 import "../util/AddressLib.sol";
 import "../base/TInitializable.sol";
+import "./ATMLibrary.sol";
 
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/SignerRole.sol";
@@ -58,6 +61,9 @@ contract ATMGovernance is
     // List of ATM Data providers per data type
     mapping(uint8 => address[]) public dataProviders;
 
+    // List of TLR rewards
+    ATMLibrary.TLRReward[] public rewardsTLR;
+ 
     // Unique CRA - Credit Risk Algorithm github hash to use in this ATM
     string public cra;
 
@@ -277,7 +283,7 @@ contract ATMGovernance is
         @param settingsAddress the initial settings address.
         @param ownerAddress the owner address for this ATM Governance.
      */
-    function initialize(address settingsAddress, address ownerAddress)
+    function initialize(address settingsAddress, address ownerAddress, uint256 tlrInitialReward)
         external
         isNotInitialized()
     {
@@ -285,6 +291,11 @@ contract ATMGovernance is
 
         SignerRole.initialize(ownerAddress);
         TInitializable._initialize();
+        ATMLibrary.TLRReward memory setupReward = ATMLibrary.TLRReward({
+            startBlockNumber:  block.number,
+            tlrPerBlockPertToken: tlrInitialReward
+        });
+        rewardsTLR.push(setupReward);
     }
 
     /* External Constant functions */
@@ -332,5 +343,9 @@ contract ATMGovernance is
      */
     function getCRA() external view returns (string memory) {
         return cra;
+    } 
+
+    function getRewardsTLR() external view returns (ATMLibrary.TLRReward[] memory) {
+        return rewardsTLR;
     }
 }

@@ -16,5 +16,6 @@ module.exports = {
     ATMSettings: 'ATMSettings',
     ATMGovernance: 'ATMGovernance',
     TLRToken: 'TLRToken',
+    ATMLiquidityMining: 'ATMLiquidityMining',
     MarketFactory: 'MarketFactory',
 }

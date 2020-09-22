@@ -1,4 +1,8 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
+
+
+import "./ATMLibrary.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -270,11 +274,14 @@ interface ATMGovernanceInterface {
                 CRA is represented by a Github commit hash of the newly proposed algorithm.
      */
     function getCRA() external view returns (string memory);
+    
+    function getRewardsTLR() external view returns (ATMLibrary.TLRReward[] memory);
 
     /**
         @notice It initializes this ATM Governance instance.
         @param settingsAddress the initial settings address.
         @param ownerAddress the owner address for this ATM Governance.
+        @param tlrInitialReward ATM Liquidity Mining TLR reward.
      */
-    function initialize(address settingsAddress, address ownerAddress) external;
+    function initialize(address settingsAddress, address ownerAddress, uint256 tlrInitialReward) external;
 }
