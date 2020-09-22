@@ -4,7 +4,6 @@ const { t, NULL_ADDRESS, ACTIVE, CLOSED } = require('../utils/consts');
 const { createLoanTerms } = require('../utils/structs');
 const BigNumber = require('bignumber.js');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
-const EscrowInterfaceEncoder = require("../utils/encoders/EscrowInterfaceEncoder");
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -14,7 +13,6 @@ const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 
 contract('EtherCollateralLoansRepayTest', function (accounts) {
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
-    const escrowInterfaceEncoder = new EscrowInterfaceEncoder(web3)
 
     let instance;
     let oracleInstance;
@@ -50,17 +48,16 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
     });
 
     withData({
-        _1_to_pay_more_than_owed: [12345678, 40291, 13000000, BigNumber("3000000000000000000"), false, undefined, false],
-        _2_to_pay_zero: [12345678, 40291, 0, BigNumber("3000000000000000000"), false, 'AMOUNT_VALUE_REQUIRED', true],
-        _3_to_less_than_owed: [12345678, 40291, 12345677, BigNumber("3276312217812723563"), false, undefined, false],
-        _4_to_pay_exact_owed: [12345678, 40291, 12385969, BigNumber("3276312217812723563"), false, undefined, false],
-        _5_with_escrow: [12345678, 40291, 12385969, BigNumber("3276312217812723563"), true, undefined, false],
+        _1_to_pay_more_than_owed: [12345678, 40291, 13000000, BigNumber("3000000000000000000"), undefined, false],
+        _2_to_pay_zero: [12345678, 40291, 0, BigNumber("3000000000000000000"), 'AMOUNT_VALUE_REQUIRED', true],
+        _3_to_less_than_owed: [12345678, 40291, 12345677, BigNumber("3276312217812723563"), undefined, false],
+        _4_to_pay_exact_owed: [12345678, 40291, 12385969, BigNumber("3276312217812723563"), undefined, false],
+        _5_with_escrow: [12345678, 40291, 12385969, BigNumber("3276312217812723563"), undefined, false],
     }, function(
         loanPrincipalOwed,
         loanInterestOwed,
         amountToPay,
         loanCollateral,
-        hasEscrow,
         expectedErrorMessage,
         mustFail
     ) {
@@ -75,16 +72,6 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
 
             const contractBalBefore = await web3.eth.getBalance(instance.address)
             const borrowerBalBefore = await web3.eth.getBalance(loanBorrower)
-
-            let escrow
-            if (hasEscrow) {
-                escrow = await Mock.new();
-                await escrow.givenMethodReturn(
-                  escrowInterfaceEncoder.encodeClaimTokens(),
-                  '0x'
-                )
-                await instance.setEscrowForLoan(mockLoanID, escrow.address)
-            }
 
             try {
                 await instance.repay(amountToPay, mockLoanID, { from: accounts[0] })
@@ -119,12 +106,6 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
                     assert.equal(BigNumber(contractBalBefore).minus(loanCollateral), contractBalAfter.toString())
                     assert.equal(BigNumber(borrowerBalBefore).plus(loanCollateral), borrowerBalAfter.toString())
                     assert.equal(parseInt(loan['status']), CLOSED)
-                }
-
-                if (hasEscrow) {
-                    const claimTokensCallCount = await escrow.invocationCountForMethod.call(escrowInterfaceEncoder.encodeClaimTokens());
-
-                    assert.equal(claimTokensCallCount.toString(), "1", "Escrow.claimTokens was not called.");
                 }
             } catch (error) {
                 // Assertions

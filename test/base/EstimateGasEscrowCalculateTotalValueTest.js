@@ -17,7 +17,7 @@ const DAIMock = artifacts.require("./mock/token/DAIMock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const Escrow = artifacts.require("./mock/base/EscrowMock.sol");
 
-contract("EscrowCalculateTotalValueTest", function(accounts) {
+contract("EstimateGasEscrowCalculateTotalValueTest", function(accounts) {
   const loansEncoder = new LoansBaseInterfaceEncoder(web3);
   
   const baseGasCost = 700000; // Gas cost with 1 token in wallet

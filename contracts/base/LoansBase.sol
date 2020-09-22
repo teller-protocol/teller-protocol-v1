@@ -321,7 +321,7 @@ contract LoansBase is LoansInterface, Base {
             loans[loanID].status = TellerCommon.LoanStatus.Closed;
 
             uint256 collateralAmount = loans[loanID].collateral;
-            _payOutLoan(loanID, collateralAmount, loans[loanID].loanTerms.borrower);
+            _payOutCollateral(loanID, collateralAmount, loans[loanID].loanTerms.borrower);
 
             emit CollateralWithdrawn(
                 loanID,
@@ -473,7 +473,7 @@ contract LoansBase is LoansInterface, Base {
         address payable recipient
     ) internal {
         if (loans[loanID].escrow != address(0x0)) {
-            EscrowInterface(loans[loanID].escrow).claimTokens(msg.sender);
+            EscrowInterface(loans[loanID].escrow).claimTokens(recipient);
         }
 
         _payOutCollateral(loanID, amount, recipient);
