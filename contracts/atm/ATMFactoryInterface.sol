@@ -1,4 +1,5 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -44,6 +45,7 @@ interface ATMFactoryInterface {
         @param decimals The token decimals 
         @param cap Token max cap.
         @param maxVestingPerWallet max vestings per wallet for the token.
+        @param tlrInitialReward ATM Liquidity Mining initial reward.
         @return the new ATM governance instance address.
      */
     function createATM(
@@ -51,7 +53,8 @@ interface ATMFactoryInterface {
         string calldata symbol,
         uint8 decimals,
         uint256 cap,
-        uint256 maxVestingPerWallet
+        uint256 maxVestingPerWallet,
+        uint256 tlrInitialReward
     ) external returns (address);
 
     /**

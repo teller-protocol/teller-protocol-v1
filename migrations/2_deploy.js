@@ -38,6 +38,7 @@ const Compound = artifacts.require("./base/escrow/dapps/Compound.sol");
 // ATM Smart contracts
 const ATMFactory = artifacts.require("./atm/ATMFactory.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
+const ATMLiquidityMining = artifacts.require("./atm/ATMLiquidityMining.sol");
 const TLRToken = artifacts.require("./atm/TLRToken.sol");
 // External providers
 const ChainlinkPairAggregatorRegistry = artifacts.require("./providers/chainlink/ChainlinkPairAggregatorRegistry.sol");
@@ -81,6 +82,7 @@ module.exports = async function(deployer, network, accounts) {
       { Contract: Escrow, name: logicNames.Escrow },
       { Contract: ChainlinkPairAggregator, name: logicNames.ChainlinkPairAggregator },
       { Contract: ATMGovernance, name: logicNames.ATMGovernance },
+      { Contract: ATMLiquidityMining, name: logicNames.ATMLiquidityMining },
       { Contract: TLRToken, name: logicNames.TLRToken },
       // Dapps
       { Contract: Uniswap, name: logicNames.Uniswap },
