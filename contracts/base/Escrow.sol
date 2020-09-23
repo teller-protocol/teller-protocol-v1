@@ -75,9 +75,8 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
         isInitialized()
         onlyOwner()
     {
-        TellerCommon.Dapp memory dapp = EscrowFactoryInterface(settings().escrowFactory()).dapps(
-            dappData.location
-        );
+        TellerCommon.Dapp memory dapp = EscrowFactoryInterface(settings().escrowFactory())
+            .dapps(dappData.location);
         require(dapp.exists, "DAPP_NOT_WHITELISTED");
         require(
             dapp.unsecured || loans.isLoanSecured(loanID),
@@ -262,7 +261,9 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
         view
         returns (PairAggregatorInterface)
     {
-        IChainlinkPairAggregatorRegistry registry = IChainlinkPairAggregatorRegistry(settings().pairAggregatorRegistry());
+        IChainlinkPairAggregatorRegistry registry = IChainlinkPairAggregatorRegistry(
+            settings().pairAggregatorRegistry()
+        );
         require(
             registry.hasPairAggregator(base, quote),
             "CHAINLINK_PAIR_AGGREGATOR_NOT_EXISTS"

@@ -100,7 +100,9 @@ contract BaseUpgradeable {
         // Prevent resetting the logic name for standalone test deployments.
         require(logicName() == "", "LOGIC_NAME_ALREADY_SET");
         require(
-            LogicVersionsRegistryInterface(settings().versionsRegistry()).hasLogicVersion(aLogicName),
+            LogicVersionsRegistryInterface(settings().versionsRegistry()).hasLogicVersion(
+                aLogicName
+            ),
             "LOGIC_NAME_NOT_EXIST"
         );
 

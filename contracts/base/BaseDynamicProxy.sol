@@ -15,6 +15,8 @@ contract BaseDynamicProxy is BaseUpgradeable, BaseProxy {
         @return address of the current implementation
      */
     function _implementation() internal view returns (address) {
-        return LogicVersionsRegistryInterface(settings().versionsRegistry()).getLogicVersionAddress(logicName());
+        return
+            LogicVersionsRegistryInterface(settings().versionsRegistry())
+                .getLogicVersionAddress(logicName());
     }
 }

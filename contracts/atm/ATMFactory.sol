@@ -62,16 +62,18 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
     ) external onlyPauser() isInitialized() returns (address) {
         address owner = msg.sender;
 
-        bytes32 tlrTokenLogicName = LogicVersionsRegistryInterface(settings()
-            .versionsRegistry())
+        bytes32 tlrTokenLogicName = LogicVersionsRegistryInterface(
+            settings().versionsRegistry()
+        )
             .consts()
             .TLR_TOKEN_LOGIC_NAME();
         TLRTokenInterface tlrTokenProxy = TLRTokenInterface(
             address(new DynamicProxy(address(settings()), tlrTokenLogicName))
         );
 
-        bytes32 atmGovernanceLogicName = LogicVersionsRegistryInterface(settings()
-            .versionsRegistry())
+        bytes32 atmGovernanceLogicName = LogicVersionsRegistryInterface(
+            settings().versionsRegistry()
+        )
             .consts()
             .ATM_GOVERNANCE_LOGIC_NAME();
         ATMGovernanceInterface atmGovernanceProxy = ATMGovernanceInterface(

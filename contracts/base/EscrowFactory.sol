@@ -75,8 +75,9 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         TellerCommon.Loan memory loan = LoansInterface(loansAddress).loans(loanID);
         require(loan.escrow == address(0x0), "LOAN_ESCROW_ALREADY_EXISTS");
 
-        bytes32 escrowLogicName = LogicVersionsRegistryInterface(settings()
-            .versionsRegistry())
+        bytes32 escrowLogicName = LogicVersionsRegistryInterface(
+            settings().versionsRegistry()
+        )
             .consts()
             .ESCROW_LOGIC_NAME();
         escrowAddress = address(new DynamicProxy(address(settings()), escrowLogicName));

@@ -719,10 +719,8 @@ contract LoansBase is LoansInterface, Base {
         view
         returns (bool)
     {
-        address atmAddressForMarket = IATMSettings(settings().atmSettings()).getATMForMarket(
-            lendingPool.lendingToken(),
-            collateralToken
-        );
+        address atmAddressForMarket = IATMSettings(settings().atmSettings())
+            .getATMForMarket(lendingPool.lendingToken(), collateralToken);
         require(atmAddressForMarket != address(0x0), "ATM_NOT_FOUND_FOR_MARKET");
         uint256 supplyToDebtMarketLimit = ATMGovernanceInterface(atmAddressForMarket)
             .getGeneralSetting(SUPPLY_TO_DEBT_ATM_SETTING);
@@ -740,6 +738,10 @@ contract LoansBase is LoansInterface, Base {
         @return the new Escrow contract address.
      */
     function _createEscrow(uint256 loanID) internal returns (address) {
-        return EscrowFactoryInterface(settings().escrowFactory()).createEscrow(address(this), loanID);
+        return
+            EscrowFactoryInterface(settings().escrowFactory()).createEscrow(
+                address(this),
+                loanID
+            );
     }
 }

@@ -106,8 +106,9 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         _requireCreateMarket(tToken, borrowedToken, collateralToken);
         address owner = msg.sender;
 
-        IChainlinkPairAggregatorRegistry pairAggregatorRegistry = IChainlinkPairAggregatorRegistry(settings()
-            .pairAggregatorRegistry());
+
+            IChainlinkPairAggregatorRegistry pairAggregatorRegistry
+         = IChainlinkPairAggregatorRegistry(settings().pairAggregatorRegistry());
         address pairAggregator = address(
             pairAggregatorRegistry.getPairAggregator(borrowedToken, collateralToken)
         );
@@ -364,21 +365,17 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
             LoansInterface loansProxy
         )
     {
-        LogicVersionsRegistryInterface versinosRegistry = LogicVersionsRegistryInterface(settings().versionsRegistry());
+        LogicVersionsRegistryInterface versinosRegistry = LogicVersionsRegistryInterface(
+            settings().versionsRegistry()
+        );
         lendingPoolProxy = LendingPoolInterface(
-            _createDynamicProxy(
-                versinosRegistry.consts().LENDING_POOL_LOGIC_NAME()
-            )
+            _createDynamicProxy(versinosRegistry.consts().LENDING_POOL_LOGIC_NAME())
         );
         interestConsensusProxy = InterestConsensusInterface(
-            _createDynamicProxy(
-                versinosRegistry.consts().INTEREST_CONSENSUS_LOGIC_NAME()
-            )
+            _createDynamicProxy(versinosRegistry.consts().INTEREST_CONSENSUS_LOGIC_NAME())
         );
         lendersProxy = LendersInterface(
-            _createDynamicProxy(
-                versinosRegistry.consts().LENDERS_LOGIC_NAME()
-            )
+            _createDynamicProxy(versinosRegistry.consts().LENDERS_LOGIC_NAME())
         );
         loanTermsConsensusProxy = LoanTermsConsensusInterface(
             _createDynamicProxy(
@@ -388,17 +385,13 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         if (collateralToken == settings().ETH_ADDRESS()) {
             loansProxy = LoansInterface(
                 _createDynamicProxy(
-                    versinosRegistry
-                        .consts()
-                        .ETHER_COLLATERAL_LOANS_LOGIC_NAME()
+                    versinosRegistry.consts().ETHER_COLLATERAL_LOANS_LOGIC_NAME()
                 )
             );
         } else {
             loansProxy = LoansInterface(
                 _createDynamicProxy(
-                    versinosRegistry
-                        .consts()
-                        .TOKEN_COLLATERAL_LOANS_LOGIC_NAME()
+                    versinosRegistry.consts().TOKEN_COLLATERAL_LOANS_LOGIC_NAME()
                 )
             );
         }

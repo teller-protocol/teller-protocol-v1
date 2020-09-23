@@ -179,8 +179,7 @@ contract ChainlinkPairAggregatorRegistry is
     function _createPairAggregatorInstance(
         TellerCommon.PairAggregatorRegisterRequest memory request
     ) internal returns (PairAggregatorInterface aggregator) {
-        bytes32 logicName = LogicVersionsRegistryInterface(settings()
-            .versionsRegistry())
+        bytes32 logicName = LogicVersionsRegistryInterface(settings().versionsRegistry())
             .consts()
             .CHAINLINK_PAIR_AGGREGATOR_LOGIC_NAME();
         DynamicProxy pairAggregatorProxy = new DynamicProxy(

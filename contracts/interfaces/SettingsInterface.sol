@@ -288,10 +288,7 @@ interface SettingsInterface {
         @notice Get the current ChainlinkPairAggregatorRegistry contract.
         @return the current ChainlinkPairAggregatorRegistry contract.
      */
-    function pairAggregatorRegistry()
-        external
-        view
-        returns (address);
+    function pairAggregatorRegistry() external view returns (address);
 
     function atmSettings() external view returns (address);
 
