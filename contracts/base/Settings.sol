@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
+pragma solidity 0.5.17;
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
@@ -16,11 +16,6 @@ import "./TInitializable.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
-import "../interfaces/EscrowFactoryInterface.sol";
-import "../interfaces/MarketsStateInterface.sol";
-import "../interfaces/InterestValidatorInterface.sol";
-import "../providers/chainlink/IChainlinkPairAggregatorRegistry.sol";
-import "../settings/IATMSettings.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -106,32 +101,32 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     /**
         @notice It is the global instance of the EscrowFactory contract.
      */
-    EscrowFactoryInterface public escrowFactory;
+    address public escrowFactory;
 
     /**
         @notice It is the global instance of the logic versions registry contract.
      */
-    LogicVersionsRegistryInterface public versionsRegistry;
+    address public versionsRegistry;
 
     /**
         @notice It is the global instance of the ChainlinkPairAggregatorRegistry contract.
      */
-    IChainlinkPairAggregatorRegistry public pairAggregatorRegistry;
+    address public pairAggregatorRegistry;
 
     /**
         @notice The markets state.
      */
-    MarketsStateInterface public marketsState;
+    address public marketsState;
 
     /**
         @notice The current interest validator.
      */
-    InterestValidatorInterface public interestValidator;
+    address public interestValidator;
 
     /**
         @notice The current ATM settings.
      */
-    IATMSettings public atmSettings;
+    address public atmSettings;
 
     /** Modifiers */
 
@@ -440,14 +435,12 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         Pausable.initialize(msg.sender);
         TInitializable._initialize();
 
-        escrowFactory = EscrowFactoryInterface(escrowFactoryAddress);
-        versionsRegistry = LogicVersionsRegistryInterface(versionsRegistryAddress);
-        pairAggregatorRegistry = IChainlinkPairAggregatorRegistry(
-            pairAggregatorRegistryAddress
-        );
-        marketsState = MarketsStateInterface(marketsStateAddress);
-        interestValidator = InterestValidatorInterface(interestValidatorAddress);
-        atmSettings = IATMSettings(atmSettingsAddress);
+        escrowFactory = escrowFactoryAddress;
+        versionsRegistry = versionsRegistryAddress;
+        pairAggregatorRegistry = pairAggregatorRegistryAddress;
+        marketsState = marketsStateAddress;
+        interestValidator = interestValidatorAddress;
+        atmSettings = atmSettingsAddress;
 
         consts = new SettingsConsts();
 

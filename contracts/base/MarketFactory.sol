@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
+pragma solidity 0.5.17;
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
@@ -106,8 +106,8 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         _requireCreateMarket(tToken, borrowedToken, collateralToken);
         address owner = msg.sender;
 
-        IChainlinkPairAggregatorRegistry pairAggregatorRegistry = settings()
-            .pairAggregatorRegistry();
+        IChainlinkPairAggregatorRegistry pairAggregatorRegistry = IChainlinkPairAggregatorRegistry(settings()
+            .pairAggregatorRegistry());
         address pairAggregator = address(
             pairAggregatorRegistry.getPairAggregator(borrowedToken, collateralToken)
         );
@@ -364,31 +364,31 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
             LoansInterface loansProxy
         )
     {
+        LogicVersionsRegistryInterface versinosRegistry = LogicVersionsRegistryInterface(settings().versionsRegistry());
         lendingPoolProxy = LendingPoolInterface(
             _createDynamicProxy(
-                settings().versionsRegistry().consts().LENDING_POOL_LOGIC_NAME()
+                versinosRegistry.consts().LENDING_POOL_LOGIC_NAME()
             )
         );
         interestConsensusProxy = InterestConsensusInterface(
             _createDynamicProxy(
-                settings().versionsRegistry().consts().INTEREST_CONSENSUS_LOGIC_NAME()
+                versinosRegistry.consts().INTEREST_CONSENSUS_LOGIC_NAME()
             )
         );
         lendersProxy = LendersInterface(
             _createDynamicProxy(
-                settings().versionsRegistry().consts().LENDERS_LOGIC_NAME()
+                versinosRegistry.consts().LENDERS_LOGIC_NAME()
             )
         );
         loanTermsConsensusProxy = LoanTermsConsensusInterface(
             _createDynamicProxy(
-                settings().versionsRegistry().consts().LOAN_TERMS_CONSENSUS_LOGIC_NAME()
+                versinosRegistry.consts().LOAN_TERMS_CONSENSUS_LOGIC_NAME()
             )
         );
         if (collateralToken == settings().ETH_ADDRESS()) {
             loansProxy = LoansInterface(
                 _createDynamicProxy(
-                    settings()
-                        .versionsRegistry()
+                    versinosRegistry
                         .consts()
                         .ETHER_COLLATERAL_LOANS_LOGIC_NAME()
                 )
@@ -396,8 +396,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         } else {
             loansProxy = LoansInterface(
                 _createDynamicProxy(
-                    settings()
-                        .versionsRegistry()
+                    versinosRegistry
                         .consts()
                         .TOKEN_COLLATERAL_LOANS_LOGIC_NAME()
                 )

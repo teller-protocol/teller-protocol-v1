@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
+pragma solidity 0.5.17;
 
 // Contracts
 import "./BaseUpgradeable.sol";
@@ -8,8 +8,10 @@ import "./TInitializable.sol";
 
 // Interfaces
 import "../interfaces/EscrowInterface.sol";
+import "../interfaces/EscrowFactoryInterface.sol";
 import "../interfaces/LoansInterface.sol";
 import "../interfaces/PairAggregatorInterface.sol";
+import "../providers/chainlink/IChainlinkPairAggregatorRegistry.sol";
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
@@ -73,7 +75,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
         isInitialized()
         onlyOwner()
     {
-        TellerCommon.Dapp memory dapp = settings().escrowFactory().dapps(
+        TellerCommon.Dapp memory dapp = EscrowFactoryInterface(settings().escrowFactory()).dapps(
             dappData.location
         );
         require(dapp.exists, "DAPP_NOT_WHITELISTED");
@@ -260,11 +262,12 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
         view
         returns (PairAggregatorInterface)
     {
+        IChainlinkPairAggregatorRegistry registry = IChainlinkPairAggregatorRegistry(settings().pairAggregatorRegistry());
         require(
-            settings().pairAggregatorRegistry().hasPairAggregator(base, quote),
+            registry.hasPairAggregator(base, quote),
             "CHAINLINK_PAIR_AGGREGATOR_NOT_EXISTS"
         );
 
-        return settings().pairAggregatorRegistry().getPairAggregator(base, quote);
+        return registry.getPairAggregator(base, quote);
     }
 }

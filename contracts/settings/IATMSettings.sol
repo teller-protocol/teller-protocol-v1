@@ -1,7 +1,5 @@
 pragma solidity 0.5.17;
 
-import "../interfaces/SettingsInterface.sol";
-
 // Libraries
 
 // Commons
@@ -79,11 +77,6 @@ interface IATMSettings {
     /* Constructor */
 
     /** External Functions */
-
-    /**
-        @notice It represents the protocol Settings contract.
-     */
-    function settings() external view returns (SettingsInterface);
 
     /**
         @notice It pauses an given ATM.

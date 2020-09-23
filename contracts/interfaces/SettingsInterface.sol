@@ -1,14 +1,8 @@
-pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
+pragma solidity 0.5.17;
 
 import "../util/AssetSettingsLib.sol";
 import "../util/PlatformSettingsLib.sol";
-import "./MarketsStateInterface.sol";
-import "./InterestValidatorInterface.sol";
-import "./EscrowFactoryInterface.sol";
-import "./LogicVersionsRegistryInterface.sol";
-import "../providers/chainlink/IChainlinkPairAggregatorRegistry.sol";
-import "../settings/IATMSettings.sol";
 import "../util/SettingsConsts.sol";
 
 /**
@@ -282,13 +276,13 @@ interface SettingsInterface {
         @notice Get the current EscrowFactory contract.
         @return the current EscrowFactory contract.
      */
-    function escrowFactory() external view returns (EscrowFactoryInterface);
+    function escrowFactory() external view returns (address);
 
-    function versionsRegistry() external view returns (LogicVersionsRegistryInterface);
+    function versionsRegistry() external view returns (address);
 
-    function marketsState() external view returns (MarketsStateInterface);
+    function marketsState() external view returns (address);
 
-    function interestValidator() external view returns (InterestValidatorInterface);
+    function interestValidator() external view returns (address);
 
     /**
         @notice Get the current ChainlinkPairAggregatorRegistry contract.
@@ -297,9 +291,9 @@ interface SettingsInterface {
     function pairAggregatorRegistry()
         external
         view
-        returns (IChainlinkPairAggregatorRegistry);
+        returns (address);
 
-    function atmSettings() external view returns (IATMSettings);
+    function atmSettings() external view returns (address);
 
     /**
         @notice It initializes this settings contract instance.

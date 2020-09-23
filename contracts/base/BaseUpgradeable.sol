@@ -2,9 +2,11 @@ pragma solidity 0.5.17;
 
 // Libraries
 import "../util/AddressLib.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
+import "../interfaces/LogicVersionsRegistryInterface.sol";
 
 /**
     @notice It is the base contract to hold the settings instance and upgradeable logic name in registry.
@@ -98,7 +100,7 @@ contract BaseUpgradeable {
         // Prevent resetting the logic name for standalone test deployments.
         require(logicName() == "", "LOGIC_NAME_ALREADY_SET");
         require(
-            settings().versionsRegistry().hasLogicVersion(aLogicName),
+            LogicVersionsRegistryInterface(settings().versionsRegistry()).hasLogicVersion(aLogicName),
             "LOGIC_NAME_NOT_EXIST"
         );
 

@@ -1,9 +1,10 @@
-pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
+pragma solidity 0.5.17;
 
 // Contracts
 import "./TInitializable.sol";
 import "./DynamicProxy.sol";
+import "./BaseUpgradeable.sol";
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
@@ -11,7 +12,6 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 // Interfaces
 import "../interfaces/LoansInterface.sol";
 import "../interfaces/EscrowFactoryInterface.sol";
-import "../interfaces/EscrowInterface.sol";
 
 // Commons
 import "../util/AddressLib.sol";
@@ -75,8 +75,8 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         TellerCommon.Loan memory loan = LoansInterface(loansAddress).loans(loanID);
         require(loan.escrow == address(0x0), "LOAN_ESCROW_ALREADY_EXISTS");
 
-        bytes32 escrowLogicName = settings()
-            .versionsRegistry()
+        bytes32 escrowLogicName = LogicVersionsRegistryInterface(settings()
+            .versionsRegistry())
             .consts()
             .ESCROW_LOGIC_NAME();
         escrowAddress = address(new DynamicProxy(address(settings()), escrowLogicName));

@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
+pragma solidity 0.5.17;
 
 // Contracts
 import "./BaseUpgradeable.sol";

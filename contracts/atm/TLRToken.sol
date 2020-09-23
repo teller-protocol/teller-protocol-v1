@@ -6,7 +6,9 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Deta
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Burnable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Arrays.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "./TLRTokenInterface.sol";
+import "../settings/IATMSettings.sol";
 
 import "../base/TInitializable.sol";
 import "../base/BaseUpgradeable.sol";
@@ -49,7 +51,7 @@ contract TLRToken is
         @dev Throws an error is the Teller platform is paused
      */
     modifier whenNotPaused() {
-        require(!settings().atmSettings().isATMPaused(atmAddress), "ATM_IS_PAUSED");
+        require(!IATMSettings(settings().atmSettings()).isATMPaused(atmAddress), "ATM_IS_PAUSED");
         _;
     }
 
@@ -84,18 +86,18 @@ contract TLRToken is
 
     /**
         @notice It initializes this token instance.
-        @param name The name of the token
-        @param symbol The symbol of the token
-        @param decimals The amount of decimals for token
+        @param aName The name of the token
+        @param aSymbol The symbol of the token
+        @param tlrDecimals The amount of decimals for token
         @param cap The maximum number of tokens available
         @param maxVestingPerWallet The maximum number of times a wallet can mint their vesting
         @param settingsAddress The ATMSettings address
         @param atm The ATMGovernance address for this token
      */
     function initialize(
-        string calldata name,
-        string calldata symbol,
-        uint8 decimals,
+        string calldata aName,
+        string calldata aSymbol,
+        uint8 tlrDecimals,
         uint256 cap,
         uint256 maxVestingPerWallet,
         address settingsAddress,
@@ -104,7 +106,7 @@ contract TLRToken is
         require(cap > 0, "CAP_CANNOT_BE_ZERO");
         require(atm.isContract(), "ATM_CANNOT_BE_ZERO_ADDRESS");
         require(settingsAddress.isContract(), "SETTINGS_SHOULD_BE_A_CONTRACT");
-        super.initialize(name, symbol, decimals);
+        super.initialize(aName, aSymbol, tlrDecimals);
         TInitializable._initialize();
         _cap = cap;
         _maxVestingPerWallet = maxVestingPerWallet;

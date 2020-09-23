@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
+pragma solidity 0.5.17;
 
 // Libraries and common
 import "../util/TellerCommon.sol";
@@ -16,7 +16,9 @@ import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
 import "../atm/ATMGovernanceInterface.sol";
+import "../settings/IATMSettings.sol";
 import "../interfaces/EscrowInterface.sol";
+import "../interfaces/EscrowFactoryInterface.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -717,7 +719,7 @@ contract LoansBase is LoansInterface, Base {
         view
         returns (bool)
     {
-        address atmAddressForMarket = settings().atmSettings().getATMForMarket(
+        address atmAddressForMarket = IATMSettings(settings().atmSettings()).getATMForMarket(
             lendingPool.lendingToken(),
             collateralToken
         );
@@ -738,6 +740,6 @@ contract LoansBase is LoansInterface, Base {
         @return the new Escrow contract address.
      */
     function _createEscrow(uint256 loanID) internal returns (address) {
-        return settings().escrowFactory().createEscrow(address(this), loanID);
+        return EscrowFactoryInterface(settings().escrowFactory()).createEscrow(address(this), loanID);
     }
 }

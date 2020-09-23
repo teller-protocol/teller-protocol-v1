@@ -18,6 +18,7 @@
     "start:ganache:docker:empty": "yarn remove:ganache:data && cd docker && docker-compose up",
     "deploy:mainnet": "truffle compile && truffle deploy --network mainnet --reset --to 2",
     "deploy:ropsten": "truffle compile && truffle deploy --network ropsten --reset --to 2",
+    "deploy:ropsten:custom": "truffle compile && truffle deploy --network ropsten --reset -f 4 --to 4",
     "deploy:rinkeby": "truffle compile && truffle deploy --network rinkeby --reset --to 2",
     "deploy:ganache": "truffle compile && truffle deploy --network ganache --reset --to 2",
     "deploy:ganache:mock": "truffle compile && truffle deploy --network ganache --reset -f 3 --to 3",
@@ -52,7 +53,7 @@
     "solidity-coverage": "^0.7.9",
     "truffle": "^5.1.16",
     "truffle-assertions": "^0.9.2",
-    "truffle-plugin-verify": "^0.3.10",
+    "truffle-plugin-verify": "^0.4.0",
     "yargs": "^15.3.1"
   },
   "dependencies": {

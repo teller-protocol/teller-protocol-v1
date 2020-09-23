@@ -4,6 +4,8 @@ pragma solidity 0.5.17;
 import "./BaseProxy.sol";
 import "./BaseUpgradeable.sol";
 
+import "../interfaces/LogicVersionsRegistryInterface.sol";
+
 contract BaseDynamicProxy is BaseUpgradeable, BaseProxy {
     /** Internal Functions **/
 
@@ -13,6 +15,6 @@ contract BaseDynamicProxy is BaseUpgradeable, BaseProxy {
         @return address of the current implementation
      */
     function _implementation() internal view returns (address) {
-        return settings().versionsRegistry().getLogicVersionAddress(logicName());
+        return LogicVersionsRegistryInterface(settings().versionsRegistry()).getLogicVersionAddress(logicName());
     }
 }

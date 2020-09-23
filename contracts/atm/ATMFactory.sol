@@ -6,10 +6,12 @@ pragma solidity 0.5.17;
 import "../util/AddressArrayLib.sol";
 import "../base/TInitializable.sol";
 import "../base/DynamicProxy.sol";
+import "../base/BaseUpgradeable.sol";
 
 // Interfaces
 import "./TLRTokenInterface.sol";
 import "./ATMGovernanceInterface.sol";
+import "../interfaces/LogicVersionsRegistryInterface.sol";
 import "../atm/ATMFactoryInterface.sol";
 
 /*****************************************************************************************************/
@@ -60,16 +62,16 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
     ) external onlyPauser() isInitialized() returns (address) {
         address owner = msg.sender;
 
-        bytes32 tlrTokenLogicName = settings()
-            .versionsRegistry()
+        bytes32 tlrTokenLogicName = LogicVersionsRegistryInterface(settings()
+            .versionsRegistry())
             .consts()
             .TLR_TOKEN_LOGIC_NAME();
         TLRTokenInterface tlrTokenProxy = TLRTokenInterface(
             address(new DynamicProxy(address(settings()), tlrTokenLogicName))
         );
 
-        bytes32 atmGovernanceLogicName = settings()
-            .versionsRegistry()
+        bytes32 atmGovernanceLogicName = LogicVersionsRegistryInterface(settings()
+            .versionsRegistry())
             .consts()
             .ATM_GOVERNANCE_LOGIC_NAME();
         ATMGovernanceInterface atmGovernanceProxy = ATMGovernanceInterface(
