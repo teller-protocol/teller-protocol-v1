@@ -26,7 +26,7 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
     let governance;
     let tToken;
     let atmSettingsInstance;
-
+    
     beforeEach("Setup for each test", async () => {
         const settingsInstance = await Mock.new();
         governance = await ATMGovernance.new();

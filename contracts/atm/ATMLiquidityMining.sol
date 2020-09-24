@@ -219,7 +219,7 @@ contract ATMLiquidityMining is
         userStakeInfo[msg.sender].lastRewardedBlock = block.number;
         // TODO: validate we don't overflow TLR max cap
         require(tlrToken.mint(msg.sender, amount), "WITHDRAW_FAILED_MINTING_TLR"); 
-        
+
         emit TLRWithdrawn(
             msg.sender,
             amount,
@@ -316,7 +316,7 @@ contract ATMLiquidityMining is
         }
         return earned;
     }
-
+   
     /**
         @notice Internal helper to return TLR total balance ( assigned + floating ) until current block.
      */

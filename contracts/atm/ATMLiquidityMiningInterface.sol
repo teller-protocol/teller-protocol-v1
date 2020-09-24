@@ -112,5 +112,5 @@ interface ATMLiquidityMiningInterface {
     function getTLRTotalBalance() external 
         view 
         returns (uint256);
-    
+
 }
