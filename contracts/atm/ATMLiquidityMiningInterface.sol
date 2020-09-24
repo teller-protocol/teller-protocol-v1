@@ -3,6 +3,15 @@ pragma experimental ABIEncoderV2;
 
 interface ATMLiquidityMiningInterface {
 
-    function initialize(address atmGovernanceProxy, address atmTLRTokenProxy) external;
+    event Stake(
+        address indexed sender,
+        address indexed tToken,
+        uint256 amount,
+        uint256 lastRewardedBlock,
+        uint256 tTokenStakedBalance,
+        uint256 accruedTLRBalance
+    );
+
+    function initialize(address settingsAddress, address atmGovernanceProxy, address atmTLRTokenProxy) external;
 
 }

@@ -780,6 +780,24 @@ module.exports = {
             };
         },
     },
+    liquidityMining: {
+        stake: tx => {
+            const name = 'Stake';
+            return {
+                name: name,
+                emitted: (sender, tToken, amount, beforeLastRewardedBlock, afterLastRewardedBlock, tTokenStakedBalance, accruedTLRBalance) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.tToken.toString(), tToken.toString());
+                    assert.equal(ev.amount.toString(), amount.toString());
+                    assert(parseInt(ev.lastRewardedBlock) >= parseInt(beforeLastRewardedBlock));
+                    assert(parseInt(ev.lastRewardedBlock) <= parseInt(afterLastRewardedBlock));
+                    assert.equal(ev.tTokenStakedBalance.toString(), tTokenStakedBalance.toString());
+                    assert.equal(ev.accruedTLRBalance.toString(), accruedTLRBalance.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
     upgradeable: {
         upgraded: tx => {
             const name = "Upgraded";
