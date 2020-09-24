@@ -79,7 +79,7 @@ module.exports = async (testContext) => {
   // Deposit tokens on lending pool.
   await loansActions.depositFunds(
     {token, lendingPool: lendingPoolInstance},
-    {txConfig: lenderTxConfig},
+    {txConfig: lenderTxConfig, testContext},
     {amount: depositFundsAmount}
   );
 
@@ -99,7 +99,7 @@ module.exports = async (testContext) => {
   const loanInfoRequestLoanTerms = await loansActions.requestLoanTerms(
     {
       loans: loansInstance,
-      loanTermConsensus: loanTermConsensusInstance,
+      loanTermsConsensus: loanTermConsensusInstance,
       settings: settingsInstance,
     },
     {txConfig: borrowerTxConfigWithValue, testContext},
