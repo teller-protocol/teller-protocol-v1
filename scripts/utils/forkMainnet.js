@@ -33,7 +33,7 @@ async function main() {
     debug: true,
     mnemonic,
     total_accounts: addressCountValue,
-    default_balance_ether: 1000,
+    default_balance_ether: 100000,
     gasLimit: ethers.utils.hexlify(maxGasLimit),
     gasPrice: ethers.utils.hexlify(parseInt(gasPriceKeyValue))
   });
