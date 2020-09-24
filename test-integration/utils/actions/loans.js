@@ -110,6 +110,7 @@ const requestLoanTerms = async (
       loanTermsRequestInfo.duration,
       expiryTermsExpected
     );
+  console.log(`Loan id requested: ${lastLoanID}`);
   const loansInfo = await loans.loans(lastLoanID);
   return loansInfo;
 };
@@ -119,10 +120,11 @@ const requestLoanTerms = async (
  * If the token parameter is not defined, use ETH as collateral.
  */
 const depositCollateral = async (
-  {loanID, token, loans},
+  {token, loans},
   {txConfig, testContext},
-  {amount}
+  {loanId, amount}
 ) => {
+  console.log(`Depositing collateral ${amount} in loan id: ${loanId}.`);
   if (token) {
     await token.approve(loans.address, amount, txConfig);
   } else {
@@ -132,13 +134,13 @@ const depositCollateral = async (
   }
   const depositResult = await loans.depositCollateral(
     txConfig.from,
-    loanID,
+    loanId,
     amount,
     txConfig
   );
   loansEvents
     .collateralDeposited(depositResult)
-    .emitted(loanID, txConfig.from, amount);
+    .emitted(loanId, txConfig.from, amount);
   return depositResult;
 };
 
@@ -146,18 +148,18 @@ const depositCollateral = async (
  * Withdraws collateral from the loans contract for a specific loan.
  */
 const withdrawCollateral = async (
-  {loanID, loans},
+  {loans},
   {txConfig, testContext},
-  {amount}
+  {loanId, amount}
 ) => {
   const depositResult = await loans.withdrawCollateral(
-    loanID,
     amount,
+    loanId,
     txConfig
   );
   loansEvents
     .collateralWithdrawn(depositResult)
-    .emitted(loanID, txConfig.from, amount);
+    .emitted(loanId, txConfig.from, amount);
   return depositResult;
 };
 
@@ -179,13 +181,19 @@ const takeOutLoan = async (
 /**
  * Repays an amount of the borrowed token for a loan.
  */
-const repay = async ({loans}, {txConfig}, {loanId, amount}) => {
-  const loan = await loans.loans(loanId).call();
-  const totalOwed = await loans.getTotalOwed(loanId).call();
+const repay = async ({loans, lendingPool, token}, {txConfig}, {loanId, amount}) => {
+  console.log(`Repaying ${amount} for loan id ${loanId}`);
+  const loan = await loans.loans(loanId);
+  const totalOwed = await loans.getTotalOwed(loanId);
+  const totalOwedBigNumber = BigNumber(totalOwed.toString());
+  
+  await token.approve(lendingPool.address, amount, txConfig);
   const repayResult = await loans.repay(amount, loanId, txConfig);
+
+  const totalOwedAfterRepayment = totalOwedBigNumber.minus(amount);
   loansEvents
     .loanRepaid(repayResult)
-    .emitted(loanId, loan.loanTerms.borrower, amount, txConfig.from, totalOwed);
+    .emitted(loanId, loan.loanTerms.borrower, amount, txConfig.from, totalOwedAfterRepayment);
   return repayResult;
 };
 
