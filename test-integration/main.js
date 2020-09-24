@@ -1,6 +1,6 @@
 // Util classes
 const { ganacheTest: readParams } = require('../scripts/utils/cli-builder');
-const index = require('./index');
+const scenarios = require('./scenarios');
 const Timer = require('../scripts/utils/Timer');
 const ProcessArgs = require('../scripts/utils/ProcessArgs');
 const Accounts = require('../scripts/utils/Accounts');
@@ -10,7 +10,7 @@ const executeInitializers = require('./initializers');
 const chains = require('../test/utils/chains');
 
 const processArgs = new ProcessArgs(readParams().argv);
-const tests = Object.keys(index).map( key => index[key]);
+const tests = Object.keys(scenarios).map( key => scenarios[key]);
 
 const executeTestFunction = async (testFunctionObject, testContext) => {
     console.time(testFunctionObject.key);
