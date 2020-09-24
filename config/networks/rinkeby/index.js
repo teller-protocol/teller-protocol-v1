@@ -3,7 +3,7 @@ module.exports = {
     chainlink: require('./chainlink'),
     compound: require('./compound'),
     tokens: require('./tokens'),
-    teller: require('./teller'),
+    teller: require('./teller.json'),
     assetSettings: require('./assetSettings'),
     platformSettings: require('./platformSettings'),
     signers: require('./signers'),
