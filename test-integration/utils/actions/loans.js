@@ -31,7 +31,7 @@ const depositFunds = async (
 };
 
 const requestLoanTerms = async (
-  {loans, loanTermConsensus, settings},
+  {loans, loanTermsConsensus, settings},
   {txConfig, testContext},
   {loanTermsRequestTemplate, loanResponseTemplate}
 ) => {
@@ -60,7 +60,7 @@ const requestLoanTerms = async (
     duration: durationInDays * ONE_DAY,
     requestTime: currentTimestamp,
     caller: loans.address,
-    consensusAddress: loanTermConsensus.address,
+    consensusAddress: loanTermsConsensus.address,
   };
   const loanResponseInfoTemplate = {
     //        responseTime: currentTimestamp - 10,
@@ -68,7 +68,7 @@ const requestLoanTerms = async (
     interestRate,
     collateralRatio,
     maxLoanAmount: maxLoanAmount.toFixed(0),
-    consensusAddress: loanTermConsensus.address,
+    consensusAddress: loanTermsConsensus.address,
   };
   const loanTermsRequest = createLoanTermsRequest(
     loanTermsRequestInfo,
