@@ -1,3 +1,4 @@
+const fs = require('fs');
 const jsonfile = require('jsonfile');
 const MOCK_NETWORKS = ["test", "ganache", "soliditycoverage"];
 
@@ -134,11 +135,15 @@ DeployerApp.prototype.writeJson = function(outputJson = `./build/${this.network}
     if(this.canDeployMock()) {
         return;
     }
+
+    const tellerContracts = {}
     const jsonData = {
         contracts: []
     };
 
     for (const contractInfo of this.contracts) {
+        tellerContracts[contractInfo.name] = contractInfo.address
+
         jsonData.contracts.push({
             order: this.contracts.indexOf(contractInfo) + 1,
             address: contractInfo.address,
@@ -146,11 +151,13 @@ DeployerApp.prototype.writeJson = function(outputJson = `./build/${this.network}
         });
     }
 
+    fs.writeFileSync(`./config/networks/${this.network}/teller.json`, JSON.stringify(tellerContracts, null, 2))
+
     jsonfile.writeFile(outputJson, jsonData, {spaces: 4, EOL: '\r\n'}, function (err) {
-      console.log(`JSON file created at '${outputJson}'.`);
-      if(err) {
-        console.error("Errors: " + err);
-      }
+        console.log(`JSON file created at '${outputJson}'.`);
+        if(err) {
+            console.error("Errors: " + err);
+        }
     });
 }
 
