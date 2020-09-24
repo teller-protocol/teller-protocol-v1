@@ -6,6 +6,7 @@ const {printFullLoan, printOraclePrice} = require("../../test/utils/printer");
 const {
   loans: loansActions,
   oracles: oraclesActions,
+  blockchain: blockchainActions,
 } = require("../utils/actions/");
 const {
   toDecimals,
@@ -32,11 +33,13 @@ module.exports = async (testContext) => {
     web3,
     nonces,
     chainId,
+    artifacts,
   } = testContext;
   console.log("Liquidate Loan by Collateral");
   const collTokenName = "ETH";
   const collTokenDecimals = 18;
   const tokenName = processArgs.getValue("testTokenName");
+  const verbose = processArgs.getValue("verbose");
   const settingsInstance = await getContracts.getDeployed(teller.settings());
   const token = await getContracts.getDeployed(tokens.get(tokenName));
   const lendingPoolInstance = await getContracts.getDeployed(
@@ -48,6 +51,9 @@ module.exports = async (testContext) => {
   const chainlinkOracle = await getContracts.getDeployed(
     teller.eth().chainlink.custom(tokenName)
   );
+  const pairAggregator = await getContracts.getDeployed(
+    teller.oracles().dai_eth()
+  );
   const loanTermConsensusInstance = await getContracts.getDeployed(
     teller.eth().loanTermsConsensus(tokenName)
   );
@@ -58,8 +64,8 @@ module.exports = async (testContext) => {
   const borrower = await accounts.getAt(1);
   const liquidatorTxConfig = await accounts.getTxConfigAt(2);
   const recipient = NULL_ADDRESS;
-  const initialOraclePrice = toDecimals("0.005", 18); // 1 token = 0.005 ether = 5000000000000000 wei
-  const finalOraclePrice = toDecimals("0.09", 18); // 1 token = 0.006 ether = 6000000000000000 wei
+  const initialOraclePrice = toDecimals("0.00295835", 18); // 1 token = 0.00295835 ether = 5000000000000000 wei
+  const finalOraclePrice = toDecimals("0.00605835", 18); // 1 token = 0.006 ether = 6000000000000000 wei
   const decimals = parseInt(await token.decimals());
   const lendingPoolDepositAmountWei = toDecimals(4000, decimals);
   const amountWei = toDecimals(100, decimals);
@@ -79,8 +85,11 @@ module.exports = async (testContext) => {
   //await chainlinkOracle.setLatestAnswer(initialOraclePrice);
   const lenderTxConfig = await accounts.getTxConfigAt(0);
 
-  console.log(await loansInstance.priceOracle());
-  console.log(chainlinkOracle.address);
+  const loansOraclePrice = await loansInstance.priceOracle();
+  console.log(`loansOraclePrice ${loansOraclePrice}`);
+  console.log(`chainlinkOracle ${chainlinkOracle.address}`);
+  console.log(`pairAggregator ${pairAggregator.address}`);
+
   await oraclesActions.setPrice(
     {oracle: chainlinkOracle, token},
     {txConfig: lenderTxConfig, testContext},
@@ -116,67 +125,8 @@ module.exports = async (testContext) => {
     {txConfig: borrowerTxConfigWithValue, testContext},
     {loanTermsRequestTemplate, loanResponseTemplate}
   );
-  /*
-  console.log('Setting loan terms...');
-  const loanTermsRequestInfo = {
-    borrower,
-    recipient,
-    requestNonce: nonces.newNonce(borrower),
-    amount: amountWei.toFixed(0),
-    duration: durationInDays * ONE_DAY,
-    requestTime: currentTimestamp,
-    caller: loansInstance.address,
-    consensusAddress: loanTermConsensusInstance.address,
-  };
-  const loanResponseInfoTemplate = {
-    responseTime: currentTimestamp - 10,
-    interestRate: 4000,
-    collateralRatio: 6000,
-    maxLoanAmount: maxAmountWei.toFixed(0),
-    consensusAddress: loanTermConsensusInstance.address,
-  };
-  const loanTermsRequest = createLoanTermsRequest(loanTermsRequestInfo, chainId);
-  const signedResponses = await createMultipleSignedLoanTermsResponses(
-    web3,
-    loanTermsRequest,
-    signers,
-    loanResponseInfoTemplate,
-    nonces,
-    chainId,
-  );
 
-  const createLoanWithTermsResult = await loansInstance.createLoanWithTerms(
-    loanTermsRequest.loanTermsRequest,
-    signedResponses,
-    borrowerTxConfigWithValue.value,
-    borrowerTxConfigWithValue
-  );
-
-  const termsExpiryTime = await settingsInstance.getPlatformSettingValue(toBytes32(web3, platformSettingsNames.TermsExpiryTime));
-  const expiryTermsExpected = await timer.getCurrentTimestampInSecondsAndSum(termsExpiryTime);
-  const loanIDs = await loansInstance.getBorrowerLoans(borrower);
-  const lastLoanID = loanIDs[loanIDs.length - 1];
-  loans
-    .loanTermsSet(createLoanWithTermsResult)
-    .emitted(
-      lastLoanID,
-      borrowerTxConfigWithValue.from,
-      recipient,
-      loanResponseInfoTemplate.interestRate,
-      loanResponseInfoTemplate.collateralRatio,
-      loanResponseInfoTemplate.maxLoanAmount,
-      loanTermsRequestInfo.duration,
-      expiryTermsExpected,
-    );
-    */
-
-  console.log(
-    `Advancing time to take out loan (current: ${await timer.getCurrentDate()})...`
-  );
-  const nextTimestamp = await timer.getCurrentTimestampInSecondsAndSum(
-    minutesToSeconds(2)
-  );
-  await timer.advanceBlockAtTime(nextTimestamp);
+  await blockchainActions.advanceMinutes({timer}, {testContext}, {minutes: 2});
 
   // Take out a loan.
   await loansActions.takeOutLoan(
@@ -184,35 +134,30 @@ module.exports = async (testContext) => {
     {txConfig: borrowerTxConfig, testContext},
     {loanId: loanInfoRequestLoanTerms.id, amount: amountWei}
   );
-  /*
-  console.log(`Taking out loan id ${lastLoanID}...`);
-  const takeOutLoanResult = await loansInstance.takeOutLoan(lastLoanID, amountWei, borrowerTxConfig);
-  const { escrow } = await loansInstance.loans(lastLoanID);
-  loans
-    .loanTakenOut(takeOutLoanResult)
-    .emitted(lastLoanID, borrowerTxConfig.from, escrow, amountWei);
-  */
 
   // Set a lower price for Token/ETH.
-  console.log(
-    `Settings final (lower) oracle price: 1 ${tokenName} = ${finalOraclePrice.toFixed(
-      0
-    )} WEI = ${toUnits(finalOraclePrice, 18)} ETHER`
+  await oraclesActions.setPrice(
+    {oracle: chainlinkOracle, token},
+    {txConfig: lenderTxConfig, testContext},
+    {price: finalOraclePrice}
   );
-  await chainlinkOracle.setLatestAnswer(finalOraclePrice);
 
-  const loanInfo2 = await loansInstance.loans(loanInfoRequestLoanTerms.id);
-  await printFullLoan(
-    web3,
-    { tokenName, tokenDecimals: 18, collateralTokenDecimals: 18, collateralTokenName: 'ETH' },
-    { latestAnswer: finalOraclePrice, oracleAddress: chainlinkOracle.address },
-    loanInfo2
-);
+  await loansActions.printLoanInfo(
+    { loans: loansInstance, settings: settingsInstance },
+    { testContext },
+    {
+      loanId: loanInfoRequestLoanTerms.id,
+      verbose,
+      // TODO Change it
+      collateralTokenInfo: { decimals: 18, name: 'ETH'},
+      tokenInfo: { decimals: 18, name: tokenName},
+      latestAnswer: finalOraclePrice,
+      oracleAddress: loansOraclePrice,
+    }
+  );
 
-  // Get liquidation status.
-  //const loanInfo = await loansInstance.loans(lastLoanID);
-
-  await loansActions.liquidtateLoan(
+  // Liquidate loan
+  await loansActions.liquidateLoan(
     {
       token,
       loans: loansInstance,
