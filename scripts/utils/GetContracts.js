@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const { NULL_ADDRESS } = require('../../test/utils/consts');
+const { NULL_ADDRESS, ETH_ADDRESS } = require('../../test/utils/consts');
 
 class GetContracts {
     constructor(artifacts, networkConf) {
@@ -39,6 +39,36 @@ GetContracts.prototype.getDeployed = async function({ keyName, contractName, add
     const artifact = this.artifacts.require(artifactName || name);
     const instance = await artifact.at(address);
     return instance;
+}
+
+GetContracts.prototype.getAllDeployed = async function({ teller, tokens }, tokenName, collTokenName) {
+    let collateralToken;
+    if(collTokenName.toLowerCase() === 'eth') {
+        collateralToken = {
+            decimals: async () => Promise.resolve(18),
+            address: async () => Promise.resolve(ETH_ADDRESS),
+        };
+    } else {
+        collateralToken = await this.getDeployed(tokens.get(collTokenName));
+    }
+    const settings = await this.getDeployed(teller.settings());
+    const token = await this.getDeployed(tokens.get(tokenName));
+    const lendingPool = await this.getDeployed(teller.custom(collTokenName).lendingPool(tokenName));
+    const loans = await this.getDeployed(teller.custom(collTokenName).loans(tokenName));
+    const chainlinkOracle = await this.getDeployed(teller.custom(collTokenName).chainlink.custom(tokenName));
+    const pairAggregator = await this.getDeployed(teller.oracles().custom(tokenName, collTokenName));
+    const loanTermsConsensus = await this.getDeployed(teller.custom(collTokenName).loanTermsConsensus(tokenName));
+
+    return {
+        settings,
+        token,
+        collateralToken,
+        lendingPool,
+        loans,
+        chainlinkOracle,
+        pairAggregator,
+        loanTermsConsensus,
+    };
 }
 
 module.exports = GetContracts;
