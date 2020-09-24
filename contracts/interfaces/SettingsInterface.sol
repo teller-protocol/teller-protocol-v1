@@ -195,6 +195,12 @@ interface SettingsInterface {
     function lendingPoolPaused(address lendingPoolAddress) external view returns (bool);
 
     /**
+        @notice Returns true if tToken is part of the Teller platform.
+        @param tToken address of the tToken to validate.
+     */
+    function isTTokenWhitelisted(address tToken) external view returns (bool);
+
+    /**
         @notice It pauses a specific lending pool.
         @param lendingPoolAddress lending pool address to pause.
      */
