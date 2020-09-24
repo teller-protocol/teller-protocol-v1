@@ -22,6 +22,7 @@ const executeTestFunction = async (testFunctionObject, testContext) => {
 };
 
 module.exports = async (callback) => {
+    const network = processArgs.getValue('network');
     const revertBlockchain = processArgs.getValue('revert', false);
     const initialNonceValue = processArgs.getValue('initialNonce', 0);
     const testResults = new Map();
@@ -34,6 +35,8 @@ module.exports = async (callback) => {
         
         snapshotId = await timer.takeSnapshot();
         const testContext = {
+            artifacts,
+            network,
             processArgs,
             getContracts,
             timer,
