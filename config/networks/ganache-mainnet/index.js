@@ -1,5 +1,5 @@
 module.exports = {
-    network: 'ganache',
+    network: 'ganache-mainnet',
     chainlink: require('./chainlink.json'),
     compound: require('./compound.json'),
     tokens: require('./tokens.json'),
@@ -8,8 +8,8 @@ module.exports = {
     platformSettings: require('./platformSettings.json'),
     signers: require('./signers.json'),
     atms: require('./atms.json'),
-    maxGasLimit: 6721975,
+    maxGasLimit: 6000000,
     toTxUrl: ({ tx }) => {
-        return `not-supported-url`;
+        return `https://www.etherscan.io/tx/${tx}`;
     },
 };

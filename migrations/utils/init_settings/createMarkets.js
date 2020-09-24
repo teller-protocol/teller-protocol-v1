@@ -42,12 +42,30 @@ module.exports = async function (
       console.log(`Market ${borrowedTokenName} / ${collateralTokenName}: Interest consensus (proxy): ${marketInfo.interestConsensus}`);
       console.log(`Market ${borrowedTokenName} / ${collateralTokenName}: Pair aggregator (proxy): ${marketInfo.pairAggregator}`);
 
-      deployerApp.addContractInfo(`${collateralTokenName}_Loans_t${borrowedTokenName}_Proxy`, marketInfo.loans);
-      deployerApp.addContractInfo(`${collateralTokenName}_Lenders_t${borrowedTokenName}_Proxy`, marketInfo.lenders);
-      deployerApp.addContractInfo(`${collateralTokenName}_LendingPool_t${borrowedTokenName}_Proxy`, marketInfo.lendingPool);
-      deployerApp.addContractInfo(`${collateralTokenName}_LoanTermsConsensus_t${borrowedTokenName}_Proxy`, marketInfo.loanTermsConsensus);
-      deployerApp.addContractInfo(`${collateralTokenName}_InterestConsensus_t${borrowedTokenName}_Proxy`, marketInfo.interestConsensus);
-      deployerApp.addContractInfo(`${collateralTokenName}_ChainlinkPairAggregator_t${borrowedTokenName}_Proxy`, marketInfo.pairAggregator);
+      deployerApp.addContractInfo({
+        name: `${collateralTokenName}_Loans_t${borrowedTokenName}_Proxy`,
+        address: marketInfo.loans
+      });
+      deployerApp.addContractInfo({
+        name: `${collateralTokenName}_Lenders_t${borrowedTokenName}_Proxy`,
+        address: marketInfo.lenders
+      });
+      deployerApp.addContractInfo({
+        name: `${collateralTokenName}_LendingPool_t${borrowedTokenName}_Proxy`,
+        address: marketInfo.lendingPool
+      });
+      deployerApp.addContractInfo({
+        name: `${collateralTokenName}_LoanTermsConsensus_t${borrowedTokenName}_Proxy`,
+        address: marketInfo.loanTermsConsensus
+      });
+      deployerApp.addContractInfo({
+        name: `${collateralTokenName}_InterestConsensus_t${borrowedTokenName}_Proxy`,
+        address: marketInfo.interestConsensus
+      });
+      deployerApp.addContractInfo({
+        name: `${collateralTokenName}_ChainlinkPairAggregator_t${borrowedTokenName}_Proxy`,
+        address: marketInfo.pairAggregator
+      });
 
       console.log(`TToken (${tTokenAddress}): Adding as minter ${marketInfo.lendingPool} (LendingPool). Sender: ${txConfig.from}`);
       const tTokenInstance = await ERC20Mintable.at(tTokenAddress);

@@ -1,0 +1,10 @@
+{
+  "DAI": {
+    "cToken": "CDAI",
+    "maxLoanAmount": 1000
+  },
+  "USDC": {
+    "cToken": "CUSDC",
+    "maxLoanAmount": 1000
+  }
+}
