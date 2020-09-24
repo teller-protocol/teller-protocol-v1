@@ -8,6 +8,7 @@ module.exports = {
             maxCap: 100000000000,
             maxVestingPerWallet: 50,
         },
+        tlrInitialReward: 3,
         supplyToDebt: 5000,
         /**
             It represents the ATM that will be used by each market. So, a market has only one ATM.

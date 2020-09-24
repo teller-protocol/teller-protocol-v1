@@ -171,7 +171,7 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
         ATMLiquidityMiningInterface liquidityMining = ATMLiquidityMiningInterface(
             address(new DynamicProxy(address(settings()), liquidityMiningLogicName))
         );
-        liquidityMining.initialize(governance, tlr);
+        liquidityMining.initialize(address(settings()), governance, tlr);
         return address (liquidityMining);
     }
 }

@@ -238,8 +238,15 @@ interface ATMGovernanceInterface {
     /**
         @notice Sets the CRA - Credit Risk Algorithm to be used on this specific ATM.
                 CRA is represented by a Github commit hash of the newly proposed algorithm.
+        @param cra Github CRA commit hash.
      */
     function setCRA(string calldata cra) external;
+
+    /**
+        @notice Adds a new TLR reward on this ATM starting from current block.
+        @param rewardAmount New TLR reward amount.
+     */
+    function addTLRReward(uint256 rewardAmount) external;
 
     /* External Constant functions */
 
@@ -275,7 +282,7 @@ interface ATMGovernanceInterface {
      */
     function getCRA() external view returns (string memory);
     
-    function getRewardsTLR() external view returns (ATMLibrary.TLRReward[] memory);
+    function getTLRRewards() external view returns (ATMLibrary.TLRReward[] memory);
 
     /**
         @notice It initializes this ATM Governance instance.
