@@ -86,7 +86,6 @@ contract("UniswapSwapTest", function(accounts) {
             path[0],
             path[path.length - 1],
             sourceAmount,
-            minDestination
           );
       } catch (error) {
         assert(mustFail);
@@ -139,7 +138,6 @@ contract("UniswapSwapTest", function(accounts) {
             path[0],
             path[path.length - 1],
             sourceAmount,
-            minDestination
           );
       } catch (error) {
         assert(mustFail);
@@ -186,7 +184,6 @@ contract("UniswapSwapTest", function(accounts) {
             path[0],
             path[path.length - 1],
             sourceAmount,
-            minDestination
           );
       } catch (error) {
         assert(mustFail);
