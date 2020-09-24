@@ -49,11 +49,16 @@ module.exports = async (testContext) => {
   const currentOraclePrice = toDecimals("0.00295835", 18); // 1 token = 0.00295835 ether = 5000000000000000 wei
   const tokenDecimals = parseInt(await token.decimals());
   const collateralTokenDecimals = parseInt(await collateralToken.decimals());
+  const collateralTokenInfo = { decimals: collateralTokenDecimals, name: collTokenName};
+  const tokenInfo = { decimals: tokenDecimals, name: tokenName};
   
   const depositFundsAmount = toDecimals(200, tokenDecimals);
   const maxAmountRequestLoanTerms = toDecimals(80, tokenDecimals);
   const amountTakeOut = toDecimals(50, tokenDecimals);
+  const amountRepay_1 = toDecimals(25, tokenDecimals);
+  const amountRepay_2 = toDecimals(55, tokenDecimals);
   const collateralAmountDepositCollateral = toDecimals(0.3, collateralTokenDecimals);
+  const collateralAmountWithdrawCollateral = toDecimals(0.1, collateralTokenDecimals);
   
   const durationInDays = 5;
   const signers = await accounts.getAllAt(12, 13);
@@ -117,18 +122,40 @@ module.exports = async (testContext) => {
     {loanId: loanInfoRequestLoanTerms.id, amount: amountTakeOut}
   );
 
+  await blockchainActions.advanceMinutes({timer}, {testContext}, {minutes: 5});
+
+  // TODO Review it
+  await token.mint(borrowerTxConfig.from, amountRepay_1);
+  await loansActions.repay(
+    {loans: loansInstance, lendingPool: lendingPoolInstance, token},
+    {txConfig: borrowerTxConfig, testContext},
+    {loanId: loanInfoRequestLoanTerms.id, amount: amountRepay_1}
+  );
+
   await loansActions.printLoanInfo(
     { loans: loansInstance, settings: settingsInstance },
     { testContext },
     {
       loanId: loanInfoRequestLoanTerms.id,
       verbose,
-      // TODO Change it
-      collateralTokenInfo: { decimals: 18, name: 'ETH'},
-      tokenInfo: { decimals: 18, name: tokenName},
+      collateralTokenInfo,
+      tokenInfo,
       latestAnswer: currentOraclePrice,
       oracleAddress: chainlinkOracle.address,
     }
+  );
+
+  await loansActions.withdrawCollateral(
+    {loans: loansInstance},
+    {txConfig: borrowerTxConfig, testContext},
+    {loanId: loanInfoRequestLoanTerms.id, amount: collateralAmountWithdrawCollateral}
+  );
+
+  await token.mint(borrowerTxConfig.from, amountRepay_2);
+  await loansActions.repay(
+    {loans: loansInstance, lendingPool: lendingPoolInstance, token},
+    {txConfig: borrowerTxConfig, testContext},
+    {loanId: loanInfoRequestLoanTerms.id, amount: amountRepay_2}
   );
 
   /*
