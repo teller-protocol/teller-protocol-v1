@@ -106,8 +106,8 @@ module.exports = async function(deployer, network, accounts) {
     }
 
     console.log(`Deploying Settings logic...`)
-    const settingsLogic = await deployerApp.deployWith('Settings', Settings, txConfig)
-    const settingsProxy = await deployerApp.deployWith('Settings_Proxy', UpgradeableProxy, txConfig)
+    const settingsLogic = await deployerApp.deployWith('Settings', Settings, 'teller', txConfig)
+    const settingsProxy = await deployerApp.deployWith('Settings_Proxy', UpgradeableProxy, 'teller', txConfig)
     await settingsProxy.initializeProxy(
       settingsProxy.address,
       settingsLogic.address,
@@ -126,8 +126,8 @@ module.exports = async function(deployer, network, accounts) {
     const tTokenRegistryInstance = await deployInitializableDynamicProxy(logicNames.TTokenRegistry)
 
     console.log(`Deploying LogicVersionsRegistry...`)
-    const logicVersionsRegistryLogic = await deployerApp.deployWith('LogicVersionsRegistry', LogicVersionsRegistry, txConfig)
-    const logicVersionsRegistryProxy = await deployerApp.deployWith('LogicVersionsRegistry_Proxy', UpgradeableProxy, txConfig)
+    const logicVersionsRegistryLogic = await deployerApp.deployWith('LogicVersionsRegistry', LogicVersionsRegistry, 'teller', txConfig)
+    const logicVersionsRegistryProxy = await deployerApp.deployWith('LogicVersionsRegistry_Proxy', UpgradeableProxy, 'teller', txConfig)
     await logicVersionsRegistryProxy.initializeProxy(
       settingsInstance.address,
       logicVersionsRegistryLogic.address,
