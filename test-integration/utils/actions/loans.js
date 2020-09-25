@@ -259,6 +259,9 @@ const printLoanInfo = async (
     {latestAnswer, oracleAddress},
     loanInfo
   );
+  if(loanInfo.escrow === NULL_ADDRESS) {
+    return;
+  }
   const escrowInstance = await getEscrow({loans}, {testContext}, {loanId});
   const {
     valueInToken,

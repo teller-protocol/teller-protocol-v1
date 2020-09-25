@@ -1,5 +1,6 @@
 const assert = require('assert');
 const BigNumber = require("bignumber.js");
+const loanStatus = require("../../../test/utils/loanStatus");
 const { loans: loansActions } = require('../actions');
 const {
   NULL_ADDRESS,
@@ -13,11 +14,13 @@ const assertClosedLoan = async (
   {testContext},
   {
     id,
-    status,
+    status = loanStatus.Closed,
     collateral = BigNumber('0'),
     principalOwed = BigNumber('0'),
     interestOwed = BigNumber('0'),
     liquidated = false,
+    escrowTotalValueEth = BigNumber('0'),
+    escrowTotalValueToken = BigNumber('0'),
   }
 ) => {
   const loanInfo = await loans.loans(id);
@@ -29,7 +32,12 @@ const assertClosedLoan = async (
   assert.equal(loanInfo.liquidated, liquidated);
 
   const escrow = await loansActions.getEscrow({loans}, {testContext}, {loanId: id});
-  console.log(escrow);
+  const {
+    valueInToken,
+    valueInEth,
+  } = await escrow.calculateTotalValue();
+  assert.equal(valueInToken.toString(), escrowTotalValueToken.toString());
+  assert.equal(valueInEth.toString(), escrowTotalValueEth.toString());
 };
 
 module.exports = {
