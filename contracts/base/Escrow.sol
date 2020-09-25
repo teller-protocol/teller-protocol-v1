@@ -169,8 +169,8 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
     function repay(uint256 amount) external onlyOwner {
         IERC20 token = IERC20(loans.lendingToken());
         uint256 balance = _balanceOf(loans.lendingToken());
-        if (amount > balance) {
-            uint256 totalOwed = loans.getTotalOwed(loanID);
+        uint256 totalOwed = loans.getTotalOwed(loanID);
+        if (balance < totalOwed && amount > balance) {
             uint256 amountNeeded = amount > totalOwed
                 ? totalOwed.sub(balance)
                 : amount.sub(balance);

@@ -43,6 +43,7 @@ contract("EscrowRepayTest", function(accounts) {
     _4_with_partial_escrow_balance: [ true, 1000, 1000, 800, 200, true, false, null ],
     _5_with_partial_escrow_balance_user_no_funds: [ true, 1000, 1000, 800, 0, true, true, "ERC20: transfer amount exceeds balance" ],
     _6_transfer_from_false: [ true, 1000, 1000, 800, 0, false, true, "ESCROW_TRANSFER_FROM_FAILED" ],
+    _7_balance_gt_amount_owed: [ true, 30, 60, 40, 0, true, false, null ],
   }, function(
     isOwner,
     totalOwed,
