@@ -37,14 +37,15 @@ contract("EscrowRepayTest", function(accounts) {
   });
 
   withData({
-    _1_only_owner: [ false, 0, 0, 0, true, true, "Ownable: caller is not the owner" ],
-    _2_with_escrow_balance: [ true, 1000, 1000, 0, true, false, null ],
-    _3_with_user_balance: [ true, 1000, 0, 1000, true, false, null ],
-    _4_with_partial_escrow_balance: [ true, 1000, 800, 200, true, false, null ],
-    _5_with_partial_escrow_balance_user_no_funds: [ true, 1000, 800, 0, true, true, "ERC20: transfer amount exceeds balance" ],
-    _6_transfer_from_false: [ true, 1000, 800, 0, false, true, "ESCROW_TRANSFER_FROM_FAILED" ],
+    _1_only_owner: [ false, 1000, 0, 0, 0, true, true, "Ownable: caller is not the owner" ],
+    _2_with_escrow_balance: [ true, 1000, 1000, 1000, 0, true, false, null ],
+    _3_with_user_balance: [ true, 1000, 1000, 0, 1000, true, false, null ],
+    _4_with_partial_escrow_balance: [ true, 1000, 1000, 800, 200, true, false, null ],
+    _5_with_partial_escrow_balance_user_no_funds: [ true, 1000, 1000, 800, 0, true, true, "ERC20: transfer amount exceeds balance" ],
+    _6_transfer_from_false: [ true, 1000, 1000, 800, 0, false, true, "ESCROW_TRANSFER_FROM_FAILED" ],
   }, function(
     isOwner,
+    totalOwed,
     amount,
     escrowBalance,
     userBalance,
@@ -58,6 +59,7 @@ contract("EscrowRepayTest", function(accounts) {
       await instance.mockIsOwner(true, isOwner);
 
       await loans.givenMethodReturn(loansEncoder.encodeRepay(), "0x");
+      await loans.givenMethodReturnUint(loansEncoder.encodeGetTotalOwed(), totalOwed)
 
       await dai.mint(instance.address, escrowBalance);
       await dai.mint(caller, userBalance);
