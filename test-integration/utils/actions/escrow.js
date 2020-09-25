@@ -6,6 +6,9 @@ const {
   uniswap: uniswapEvents,
   compound: compoundEvents
 } = require("../../../test/utils/events");
+const {
+  loans: loansActions
+} = require('./loans')
 const { teller, tokens } = require("../../../scripts/utils/contracts");
 const logicNames = require("../../../test/utils/logicNames");
 
