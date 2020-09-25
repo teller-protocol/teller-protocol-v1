@@ -1,5 +1,4 @@
 pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
 
 // Contracts
 import "./BaseUpgradeable.sol";
@@ -71,6 +70,6 @@ contract TTokenRegistry is TTokenRegistryInterface, TInitializable, BaseUpgradea
         require(tToken.isContract(), "ADDRESS_MUST_BE_CONTRACT");
         tokenRegistry[tToken] = true;
 
-        emit TTokenRegistered(tToken);
+        emit TTokenRegistered(tToken, msg.sender);
     }
 }

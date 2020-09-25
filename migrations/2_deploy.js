@@ -87,6 +87,7 @@ module.exports = async function(deployer, network, accounts) {
       { Contract: ATMSettings, name: logicNames.ATMSettings },
       { Contract: ATMFactory, name: logicNames.ATMFactory },
       { Contract: MarketFactory, name: logicNames.MarketFactory },
+      { Contract: TTokenRegistry, name : logicNames.TTokenRegistry },
     ];
   
     const deployedLogicContractsMap = await deployLogicContracts(contracts, { deployerApp, txConfig, web3 });
@@ -116,6 +117,7 @@ module.exports = async function(deployer, network, accounts) {
     const atmSettingsInstance = await deployInitializableDynamicProxy(logicNames.ATMSettings)
     const atmFactoryInstance = await deployInitializableDynamicProxy(logicNames.ATMFactory)
     const marketFactoryInstance = await deployInitializableDynamicProxy(logicNames.MarketFactory)
+    const tTokenRegistryInstance = await deployInitializableDynamicProxy(logicNames.TTokenRegistry)
   
     console.log(`Deploying LogicVersionsRegistry...`)
     const logicVersionsRegistryLogic = await deployerApp.deployWith('LogicVersionsRegistry', LogicVersionsRegistry, txConfig)
@@ -129,19 +131,6 @@ module.exports = async function(deployer, network, accounts) {
     await logicVersionsRegistryInstance.initialize(settingsInstance.address)
     console.log(`LogicVersionsRegistry logic: ${logicVersionsRegistryLogic.address}`)
     console.log(`LogicVersionsRegistry_Proxy: ${logicVersionsRegistryProxy.address}`)
-
-    console.log(`Deploying TTokenRegistry...`);
-    const tTokenRegistryLogic = await deployerApp.deployWith('TTokenRegistry', TTokenRegistry, txConfig);
-    const tTokenRegistryProxy = await deployerApp.deployWith('TTokenRegistry_Proxy', UpgradeableProxy, txConfig);
-    await tTokenRegistryProxy.initializeProxy(
-      settingsInstance.address,
-      tTokenRegistryLogic.address,
-      txConfig
-    );
-    const tTokenRegistryInstance = await TTokenRegistry.at(tTokenRegistryProxy.address);
-    await tTokenRegistryInstance.initialize(settingsInstance.address);
-    console.log(`TTokenRegistry logic: ${tTokenRegistryLogic.address}`);
-    console.log(`TTokenRegistry_Proxy: ${tTokenRegistryProxy.address}`);
 
     console.log(`Settings: Initializing...`);
     await settingsInstance.initialize(

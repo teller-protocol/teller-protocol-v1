@@ -1,5 +1,4 @@
 pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
 
 /**
     @notice It defines all the functions for the TToken registry
@@ -12,7 +11,7 @@ interface TTokenRegistryInterface {
         @notice This event is emitted when a new TToken contract address has been registered
         @param tToken The contract address registered
      */
-    event TTokenRegistered(address tToken);
+    event TTokenRegistered(address tToken, address sender);
 
     /** External Functions */
 
