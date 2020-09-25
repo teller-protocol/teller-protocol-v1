@@ -57,7 +57,7 @@ contract TTokenRegistry is TTokenRegistryInterface, TInitializable, BaseUpgradea
         @param settingsAddress The settings contract address
      */
     function initialize(address settingsAddress) external isNotInitialized() {
-        require(settingsAddress.isContract(), 'SETTINGS_NOT_A_CONTRACT');
+        require(settingsAddress.isContract(), "SETTINGS_NOT_A_CONTRACT");
         _initialize();
         _setSettings(settingsAddress);
     }
