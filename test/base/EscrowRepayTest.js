@@ -21,11 +21,16 @@ contract("EscrowRepayTest", function(accounts) {
   beforeEach(async () => {
     dai = await DAI.new();
 
+    const lendingPool = await Mock.new();
     loans = await Mock.new();
     await loans.givenMethodReturnAddress(
       loansEncoder.encodeLendingToken(),
       dai.address
     );
+    await loans.givenMethodReturnAddress(
+      loansEncoder.encodeLendingPool(),
+      lendingPool.address
+    )
 
     instance = await Escrow.new();
     await instance.mockLoans(loans.address);

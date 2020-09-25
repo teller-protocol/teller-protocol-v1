@@ -10,6 +10,10 @@ LoansBaseInterfaceEncoder.prototype.encodeCollateralToken = function() {
     return encode(this.web3, 'collateralToken()');
 }
 
+LoansBaseInterfaceEncoder.prototype.encodeLendingPool = function() {
+    return encode(this.web3, 'lendingPool()');
+}
+
 LoansBaseInterfaceEncoder.prototype.encodeLendingToken = function() {
     return encode(this.web3, 'lendingToken()');
 }

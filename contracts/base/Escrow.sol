@@ -175,7 +175,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
                 "ESCROW_TRANSFER_FROM_FAILED"
             );
         }
-        token.approve(address(loans), amount);
+        token.approve(loans.lendingPool(), amount);
 
         loans.repay(amount, loanID);
     }
