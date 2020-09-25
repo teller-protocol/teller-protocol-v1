@@ -40,7 +40,7 @@ exports.takeOutNewLoan = async function takeOutNewLoan(
   // Deposit tokens on lending pool.
   await loanActions.depositFunds(
     { token, lendingPool },
-    { txConfig: lenderTxConfig },
+    { txConfig: lenderTxConfig, testContext },
     { amount: lendingPoolDepositAmountWei }
   );
 
