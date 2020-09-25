@@ -23,12 +23,7 @@ import "../interfaces/TTokenRegistryInterface.sol";
 
     @author develop@teller.finance
  */
-contract TTokenRegistry is
-    TTokenRegistryInterface,
-    TInitializable,
-    BaseUpgradeable
-{
-
+contract TTokenRegistry is TTokenRegistryInterface, TInitializable, BaseUpgradeable {
     /* State Variables */
 
     /**
@@ -38,17 +33,13 @@ contract TTokenRegistry is
             address("0x479...584") => { True }.
             address("0x132...741") => { False }.
      */
-     mapping(address => bool) public tokenRegistry;
+    mapping(address => bool) public tokenRegistry;
 
     /**
         @notice It registers a new TToken contract address
         @param tToken Contract address of the TToken
      */
-    function registerTToken(address tToken)
-        external
-        onlyPauser()
-        isInitialized()
-    {
+    function registerTToken(address tToken) external onlyPauser() isInitialized() {
         _registerTTokenAddress(tToken);
     }
 
@@ -57,24 +48,16 @@ contract TTokenRegistry is
         @param tokenAddress The token contract address to check
         @return bool representing if the address is a registered TToken contract
      */
-     function isTToken(address tokenAddress)
-        external
-        view
-        isInitialized()
-        returns (bool)
-    {
+    function isTToken(address tokenAddress) external view isInitialized() returns (bool) {
         require(tokenAddress.isContract(), "INVALID_ADDRESS");
-        return(tokenRegistry[tokenAddress]);
+        return (tokenRegistry[tokenAddress]);
     }
 
     /**
         @notice It initializes this ttoken registry contract instance
         @param settingsAddress The settings contract address
      */
-     function initialize(address settingsAddress)
-        external
-        isNotInitialized() 
-    {
+    function initialize(address settingsAddress) external isNotInitialized() {
         _setSettings(settingsAddress);
     }
 
@@ -84,11 +67,10 @@ contract TTokenRegistry is
         @notice It registers a new given TToken contract address
         @param tToken Contract address of the TToken
      */
-     function _registerTTokenAddress(address tToken) internal {
-         require(tToken.isContract(), "ADDRESS_MUST_BE_CONTRACT");
-         tokenRegistry[tToken] = true;
+    function _registerTTokenAddress(address tToken) internal {
+        require(tToken.isContract(), "ADDRESS_MUST_BE_CONTRACT");
+        tokenRegistry[tToken] = true;
 
-         emit TTokenRegistered(tToken);
-     }
-
+        emit TTokenRegistered(tToken);
+    }
 }
