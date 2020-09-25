@@ -19,6 +19,7 @@ const ERC20Mintable = artifacts.require('@openzeppelin/contracts-ethereum-packag
 // Official Smart Contracts
 const TDAI = artifacts.require("./base/TDAI.sol");
 const TUSDC = artifacts.require("./base/TUSDC.sol");
+const TTokenRegistry = artifacts.require("./base/TTokenRegistry.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
 const MarketsState = artifacts.require("./base/MarketsState.sol");
@@ -128,7 +129,20 @@ module.exports = async function(deployer, network, accounts) {
     await logicVersionsRegistryInstance.initialize(settingsInstance.address)
     console.log(`LogicVersionsRegistry logic: ${logicVersionsRegistryLogic.address}`)
     console.log(`LogicVersionsRegistry_Proxy: ${logicVersionsRegistryProxy.address}`)
-  
+
+    console.log(`Deploying TTokenRegistry...`);
+    const tTokenRegistryLogic = await deployerApp.deployWith('TTokenRegistry', TTokenRegistry, txConfig);
+    const tTokenRegistryProxy = await deployerApp.deployWith('TTokenRegistry_Proxy', UpgradeableProxy, txConfig);
+    await tTokenRegistryProxy.initializeProxy(
+      settingsInstance.address,
+      tTokenRegistryLogic.address,
+      txConfig
+    );
+    const tTokenRegistryInstance = await TTokenRegistry.at(tTokenRegistryProxy.address);
+    await tTokenRegistryInstance.initialize(settingsInstance.address);
+    console.log(`TTokenRegistry logic: ${tTokenRegistryLogic.address}`);
+    console.log(`TTokenRegistry_Proxy: ${tTokenRegistryProxy.address}`);
+
     console.log(`Settings: Initializing...`);
     await settingsInstance.initialize(
       escrowFactoryInstance.address,
@@ -186,6 +200,11 @@ module.exports = async function(deployer, network, accounts) {
   
     await deployerApp.deploys([TDAI, TUSDC], txConfig);
     console.log(`Deployed tokens: TDAI [${TDAI.address}] TUSDC [${TUSDC.address}] `);
+    console.log(`Registering TDAI and TUSDC in TTokenRegistry`);
+    await tTokenRegistryInstance.registerTToken(TDAI.address);
+    await tTokenRegistryInstance.registerTToken(TUSDC.address);
+    console.log(`TDAI [${TDAI.address}] and TUSDC [${TUSDC.address}] added to TTokenRegistry`);
+    console.log(`Creating Markets...`);
     const marketDefinitions = [
       { tTokenAddress: TDAI.address, borrowedTokenName: 'DAI', collateralTokenName: 'ETH' },
       { tTokenAddress: TDAI.address, borrowedTokenName: 'DAI', collateralTokenName: 'LINK' },
