@@ -1,14 +1,12 @@
 const BigNumber = require("bignumber.js");
 const {
-  NULL_ADDRESS,
-  ONE_DAY,
-  toBytes32
-} = require("../../../test/utils/consts");
-const {
   escrow: escrowEvents,
   uniswap: uniswapEvents,
   compound: compoundEvents
 } = require("../../../test/utils/events");
+const {
+  loans: loansActions
+} = require('./loans')
 const { teller, tokens } = require("../../../scripts/utils/contracts");
 const logicNames = require("../../../test/utils/logicNames");
 
