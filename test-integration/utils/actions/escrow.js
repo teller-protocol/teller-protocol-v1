@@ -1,9 +1,6 @@
-const BigNumber = require("bignumber.js");
 const {
-  NULL_ADDRESS,
-  ONE_DAY,
-  toBytes32
-} = require("../../../test/utils/consts");
+  getEscrow,
+} = require("./loans");
 const {
   escrow: escrowEvents,
   uniswap: uniswapEvents,
@@ -24,6 +21,23 @@ const repay = async (
   await token.approve(escrow.address, amount, txConfig);
   const escrowResult = await escrow.repay(amount, txConfig);
   return escrowResult;
+};
+
+/**
+ * Claims the tokens in the escrow using the loan id.
+ */
+const claimTokensByLoanId = async (
+  { loans },
+  { txConfig, testContext },
+  { loanId, recipient }
+) => {
+  const escrowInstance = await getEscrow({loans}, {testContext}, {loanId});
+  const claimTokensResult = await escrowInstance.claimTokens(recipient, txConfig);
+  escrowEvents
+    .tokensClaimed(claimTokensResult)
+    .emitted(recipient);
+  // TODO Assert balances.
+  return claimTokensResult;
 };
 
 /**
@@ -140,6 +154,7 @@ const compoundRedeemAll = async (
 module.exports = {
   repay,
   claimTokens,
+  claimTokensByLoanId,
   dapp: {
     uniswap: {
       swap: uniswapSwap

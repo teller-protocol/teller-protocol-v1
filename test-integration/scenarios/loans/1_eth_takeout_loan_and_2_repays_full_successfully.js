@@ -4,6 +4,7 @@ const {
   loans: loansActions,
   oracles: oraclesActions,
   blockchain: blockchainActions,
+  escrow: escrowActions,
 } = require("../../utils/actions");
 const {
   loans: loansAssertions,
@@ -11,7 +12,6 @@ const {
 const {
   toDecimals,
 } = require("../../../test/utils/consts");
-const loanStatus = require("../../../test/utils/loanStatus");
 
 module.exports = async (testContext) => {
   const {
@@ -20,7 +20,7 @@ module.exports = async (testContext) => {
     getContracts,
     timer,
   } = testContext;
-  console.log("Scenario: Take out a loan and repay twice in full successfully.");
+  console.log("Scenario: Loans#1 - ETH - Take out a loan and repay twice in full successfully.");
   const collTokenName = "ETH";
   const tokenName = processArgs.getValue("testTokenName");
   const verbose = processArgs.getValue("verbose");
@@ -30,7 +30,6 @@ module.exports = async (testContext) => {
     token,
     collateralToken,
     oracle,
-    loans:loansInstance,
   } = allContracts;
 
   const borrower = await accounts.getAt(1);
@@ -48,7 +47,7 @@ module.exports = async (testContext) => {
   const amountTakeOut = toDecimals(50, tokenDecimals);
   const amountRepay_1 = toDecimals(25, tokenDecimals);
   const amountRepay_2 = toDecimals(30, tokenDecimals);
-  const collateralAmountDepositCollateral = toDecimals(0.3, collateralTokenDecimals);
+  const collateralAmountDepositCollateral = toDecimals(0.2, collateralTokenDecimals);
   const collateralAmountWithdrawCollateral = toDecimals(0.1, collateralTokenDecimals);
   
   const durationInDays = 5;
@@ -126,6 +125,12 @@ module.exports = async (testContext) => {
     {loanId: loanInfoRequestLoanTerms.id, amount: amountRepay_2}
   );
 
+  await escrowActions.claimTokensByLoanId(
+    allContracts,
+    {txConfig: borrowerTxConfig, testContext},
+    {loanId: loanInfoRequestLoanTerms.id, recipient: borrowerTxConfig.from}
+  );
+
   await loansActions.printLoanInfo(
     allContracts,
     { testContext },
@@ -144,63 +149,6 @@ module.exports = async (testContext) => {
     { testContext },
     {
       id: loanInfoRequestLoanTerms.id,
-      status: loanStatus.Closed,
     }
   );
-/*
-  const loanInfo = await loansInstance.loans(loanInfoRequestLoanTerms.id);
-  console.log(loanInfo);
-  assert.equal(loanInfo.id.toString(), loanInfoRequestLoanTerms.id.toString());
-  assert.equal(loanInfo.status.toString(), loanStatus.Closed.toString());
-  assert.equal(loanInfo.collateral.toString(), '0');
-  assert.equal(loanInfo.principalOwed.toString(), '0');
-  assert.equal(loanInfo.interestOwed.toString(), '0');
-  assert.equal(loanInfo.liquidated, false);
-  */
-  /*
-  console.log(`Liquidating loan id ${lastLoanID}...`);
-
-  const initialTotalCollateral = await loansInstance.totalCollateral();
-  const liquidateEthPrice = await settingsInstance.getPlatformSettingValue(toBytes32(web3, platformSettingsNames.LiquidateEthPrice));
-  const getCollateralInfo = await loansInstance.getCollateralInfo(lastLoanID);
-  const {
-    neededInLendingTokens,
-  } = getCollateralInfo;
-  const transferAmountToLiquidate = BigNumber(neededInLendingTokens.toString()).times(liquidateEthPrice).div(10000);
-
-  await token.mint(liquidatorTxConfig.from, transferAmountToLiquidate.toFixed(0));
-
-  const initialLiquidatorTokenBalance = await token.balanceOf(liquidatorTxConfig.from);
-
-  await token.approve(lendingPoolInstance.address, transferAmountToLiquidate.toFixed(0), liquidatorTxConfig);
-  const liquidateLoanResult = await loansInstance.liquidateLoan(lastLoanID, liquidatorTxConfig);
-
-  const loanPrinter = new LoanInfoPrinter(
-    web3,
-    loanInfo,
-    { tokenName, decimals },
-    {
-      tokenName: collTokenName,
-      decimals: collTokenDecimals
-    }
-  );
-  const tokensPaymentIn = loanPrinter.getTotalTokensPaymentInLiquidation(finalOraclePrice, liquidateEthPrice);
-  loans
-    .loanLiquidated(liquidateLoanResult)
-    .emitted(lastLoanID, borrower, liquidatorTxConfig.from, loanInfo.collateral, tokensPaymentIn);
-
-  const finalTotalCollateral = await loansInstance.totalCollateral();
-  assert.equal(
-    loanInfo.collateral.toString(),
-    BigNumber(initialTotalCollateral.toString()).minus(finalTotalCollateral.toString()).toFixed(0),
-    'Invalid final total collateral balance (Loans).'
-  );
-
-  const finalLiquidatorTokenBalance = await token.balanceOf(liquidatorTxConfig.from);
-  assert.equal(
-    tokensPaymentIn.toFixed(0),
-    BigNumber(initialLiquidatorTokenBalance.toString()).minus(finalLiquidatorTokenBalance.toString()).toFixed(0),
-    'Invalid final liquidator lending tokens balance.'
-  );
-  */
 };

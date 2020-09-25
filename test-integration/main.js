@@ -24,6 +24,7 @@ const executeTestFunction = async (testFunctionObject, testContext) => {
 module.exports = async (callback) => {
     const network = processArgs.getValue('network');
     const revertBlockchain = processArgs.getValue('revert', false);
+    const revertTestBlockchain = processArgs.getValue('revertTest', true);
     const initialNonceValue = processArgs.getValue('initialNonce', 0);
     const testResults = new Map();
     const timer = new Timer(web3);
@@ -59,7 +60,14 @@ module.exports = async (callback) => {
                 for (const testObject of testObjects) {
                     try {
                         printSeparatorLine();
+                        let testSnapshotId;
+                        if(revertTestBlockchain) {
+                            testSnapshotId = await timer.takeSnapshot();
+                        }
                         await executeTestFunction(testObject, testContext);
+                        if(revertTestBlockchain) {
+                            await timer.revertToSnapshot(testSnapshotId.result);
+                        }
                         printSeparatorLine();
                     } catch (error) {
                         console.log(error);
