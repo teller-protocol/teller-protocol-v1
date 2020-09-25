@@ -31,7 +31,7 @@ const depositFunds = async (
 };
 
 const requestLoanTerms = async (
-  {loans, loanTermConsensus, settings},
+  {loans, loanTermsConsensus, settings},
   {txConfig, testContext},
   {loanTermsRequestTemplate, loanResponseTemplate}
 ) => {
@@ -60,7 +60,7 @@ const requestLoanTerms = async (
     duration: durationInDays * ONE_DAY,
     requestTime: currentTimestamp,
     caller: loans.address,
-    consensusAddress: loanTermConsensus.address,
+    consensusAddress: loanTermsConsensus.address,
   };
   const loanResponseInfoTemplate = {
     //        responseTime: currentTimestamp - 10,
@@ -68,7 +68,7 @@ const requestLoanTerms = async (
     interestRate,
     collateralRatio,
     maxLoanAmount: maxLoanAmount.toFixed(0),
-    consensusAddress: loanTermConsensus.address,
+    consensusAddress: loanTermsConsensus.address,
   };
   const loanTermsRequest = createLoanTermsRequest(
     loanTermsRequestInfo,
@@ -124,7 +124,7 @@ const depositCollateral = async (
   {txConfig, testContext},
   {loanId, amount}
 ) => {
-  console.log(`Depositing collateral ${amount} in loan id: ${loanId}.`);
+  console.log(`Depositing collateral ${amount} in loan id ${loanId}.`);
   if (token) {
     await token.approve(loans.address, amount, txConfig);
   } else {
@@ -152,6 +152,7 @@ const withdrawCollateral = async (
   {txConfig, testContext},
   {loanId, amount}
 ) => {
+  console.log(`Withdrawing collateral ${amount} in loan id ${loanId}.`);
   const depositResult = await loans.withdrawCollateral(
     amount,
     loanId,
@@ -190,10 +191,11 @@ const repay = async ({loans, lendingPool, token}, {txConfig}, {loanId, amount}) 
   await token.approve(lendingPool.address, amount, txConfig);
   const repayResult = await loans.repay(amount, loanId, txConfig);
 
-  const totalOwedAfterRepayment = totalOwedBigNumber.minus(amount);
+  const totalPaid = totalOwedBigNumber.gt(amount) ? amount : totalOwedBigNumber;
+  const totalOwedAfterRepayment = totalOwedBigNumber.gt(amount) ? totalOwedBigNumber.minus(amount) : '0';
   loansEvents
     .loanRepaid(repayResult)
-    .emitted(loanId, loan.loanTerms.borrower, amount, txConfig.from, totalOwedAfterRepayment);
+    .emitted(loanId, loan.loanTerms.borrower, totalPaid, txConfig.from, totalOwedAfterRepayment);
   return repayResult;
 };
 
