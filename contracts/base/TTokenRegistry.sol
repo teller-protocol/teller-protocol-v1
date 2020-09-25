@@ -48,7 +48,6 @@ contract TTokenRegistry is TTokenRegistryInterface, TInitializable, BaseUpgradea
         @return bool representing if the address is a registered TToken contract
      */
     function isTToken(address tokenAddress) external view isInitialized() returns (bool) {
-        require(tokenAddress.isContract(), "INVALID_ADDRESS");
         return (tokenRegistry[tokenAddress]);
     }
 

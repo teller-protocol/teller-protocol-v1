@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, createMocks } = require('../utils/consts');
+const { t, createMocks, NULL_ADDRESS } = require('../utils/consts');
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const LogicVersionsRegistryEncoder = require('../utils/encoders/LogicVersionsRegistryEncoder');
 
@@ -11,9 +11,10 @@ const Mock = artifacts.require('./mock/util/Mock.sol');
 const TTokenRegistry = artifacts.require('./base/TTokenRegistry.sol');
 const Settings = artifacts.require("./base/Settings.sol");
 
-contract('TTokenRegistryIsTTokenTest', function (accounts) {
-    let instance;
+contract('TTokenRegistryInitializeTest', function (accounts) {
     const logicVersionsRegistryEncoder = new LogicVersionsRegistryEncoder(web3);
+    let instance;
+    let settingsInstance;
 
     beforeEach('Setup for each test', async () => {
         const pauser = accounts[0];
@@ -27,7 +28,7 @@ contract('TTokenRegistryIsTTokenTest', function (accounts) {
         );
 
         const pairAggregatorRegistryInstance = await Mock.new();
-        const settingsInstance = await createTestSettingsInstance(
+        settingsInstance = await createTestSettingsInstance(
             Settings,
             {
                 from: pauser,
@@ -51,38 +52,32 @@ contract('TTokenRegistryIsTTokenTest', function (accounts) {
                 },
             },
         );
+        
         instance = await TTokenRegistry.new();
-        await instance.initialize(settingsInstance.address);
+        
     });
 
     withData({
-        _1_registered_check: [0, true, undefined, false],
-        _2_unregistered_check: [1, false, undefined, false],
+        _1_valid_settings_initialize: [0, undefined, false],
+        _2_invalid_settings_initialize: [1, "SETTINGS_NOT_A_CONTRACT", true],
     }, function(
         contractAddress,
-        expectedReturn,
         expectedErrorMessage,
         mustFail
     ) {
-        it(t('user', 'isTToken', 'Should be able to check if a given TToken contract has been registered.', mustFail), async function() {
+        it(t('user', 'initialize', 'Should (or should not) be able to initialize the TTokenRegistry contract.', mustFail), async function() {
             // Setup
-            const tokenContract = await Mock.new();
-            await instance.registerTToken(tokenContract.address, { from: accounts[0] });
+            
 
-            const newTokenContract = await Mock.new();
-
-            const tokenAdd = contractAddress === 0 ? tokenContract.address : newTokenContract.address;
+            const settingsAdd = contractAddress === 0 ? settingsInstance.address : NULL_ADDRESS;
 
             try {
                 // Invocation
-                const result = await instance.isTToken(tokenAdd);
+                const result = await await instance.initialize(settingsAdd);;
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid');
-                assert.equal(
-                    result,
-                    expectedReturn
-                );
+                assert(result)
             } catch (error) {
                 assert(mustFail);
                 assert(error);
