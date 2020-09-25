@@ -1,4 +1,5 @@
 const assert = require('assert');
+const BigNumber = require('bignumber.js');
 
 class Accounts {
     constructor(web3) {
@@ -35,9 +36,9 @@ Accounts.prototype.getAt = async function(indexAccount) {
     return account;
 }
 
-Accounts.prototype.getTxConfigAt = async function(indexAccount) {
+Accounts.prototype.getTxConfigAt = async function(indexAccount, value = BigNumber('0')) {
     const account = await this.getAt(indexAccount);
-    return { from: account };
+    return { from: account, value };
 }
 
 Accounts.prototype.getAtOrDefault = async function(indexAccount, defaultValue) {

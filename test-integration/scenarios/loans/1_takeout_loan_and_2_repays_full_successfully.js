@@ -4,12 +4,14 @@ const {
   loans: loansActions,
   oracles: oraclesActions,
   blockchain: blockchainActions,
-} = require("../../utils/actions/");
+} = require("../../utils/actions");
+const {
+  loans: loansAssertions,
+} = require("../../utils/assertions");
 const {
   toDecimals,
-  NULL_ADDRESS,
 } = require("../../../test/utils/consts");
-const LoanInfoPrinter = require("../../../test/utils/printers/LoanInfoPrinter");
+const loanStatus = require("../../../test/utils/loanStatus");
 
 module.exports = async (testContext) => {
   const {
@@ -17,34 +19,23 @@ module.exports = async (testContext) => {
     accounts,
     getContracts,
     timer,
-    web3,
-    nonces,
-    chainId,
-    artifacts,
   } = testContext;
-  console.log("Liquidate Loan by Collateral");
+  console.log("Scenario: Take out a loan and repay twice in full successfully.");
   const collTokenName = "ETH";
   const tokenName = processArgs.getValue("testTokenName");
   const verbose = processArgs.getValue("verbose");
 
+  const allContracts = await getContracts.getAllDeployed({ teller, tokens }, tokenName, collTokenName);
   const {
-    settings: settingsInstance,
     token,
     collateralToken,
-    loans: loansInstance,
-    chainlinkOracle,
-    pairAggregator,
-    lendingPool: lendingPoolInstance,
-    loanTermsConsensus: loanTermConsensusInstance,
-  } = await getContracts.getAllDeployed({ teller, tokens }, tokenName, collTokenName);
-
-  const currentTimestamp = await timer.getCurrentTimestamp();
-  console.log(`Current timestamp: ${currentTimestamp} segs`);
+    oracle,
+    loans:loansInstance,
+  } = allContracts;
 
   const borrower = await accounts.getAt(1);
   const lenderTxConfig = await accounts.getTxConfigAt(0);
   const borrowerTxConfig = await accounts.getTxConfigAt(1);
-  const liquidatorTxConfig = await accounts.getTxConfigAt(2);
 
   const currentOraclePrice = toDecimals("0.00295835", 18); // 1 token = 0.00295835 ether = 5000000000000000 wei
   const tokenDecimals = parseInt(await token.decimals());
@@ -56,29 +47,23 @@ module.exports = async (testContext) => {
   const maxAmountRequestLoanTerms = toDecimals(80, tokenDecimals);
   const amountTakeOut = toDecimals(50, tokenDecimals);
   const amountRepay_1 = toDecimals(25, tokenDecimals);
-  const amountRepay_2 = toDecimals(55, tokenDecimals);
+  const amountRepay_2 = toDecimals(30, tokenDecimals);
   const collateralAmountDepositCollateral = toDecimals(0.3, collateralTokenDecimals);
   const collateralAmountWithdrawCollateral = toDecimals(0.1, collateralTokenDecimals);
   
   const durationInDays = 5;
   const signers = await accounts.getAllAt(12, 13);
-  const collateralNeeded = "320486794520547945";
-  
-  const borrowerTxConfigWithValue = {
-    ...borrowerTxConfig,
-    value: collateralNeeded,
-  };
 
   // Sets Initial Oracle Price
   await oraclesActions.setPrice(
-    {oracle: chainlinkOracle, token},
+    allContracts,
     {txConfig: lenderTxConfig, testContext},
     {price: currentOraclePrice}
   );
 
   // Deposit tokens on lending pool.
   await loansActions.depositFunds(
-    {token, lendingPool: lendingPoolInstance},
+    allContracts,
     {txConfig: lenderTxConfig, testContext},
     {amount: depositFundsAmount}
   );
@@ -97,18 +82,14 @@ module.exports = async (testContext) => {
     responseTime: 50,
   };
   const loanInfoRequestLoanTerms = await loansActions.requestLoanTerms(
-    {
-      loans: loansInstance,
-      loanTermsConsensus: loanTermConsensusInstance,
-      settings: settingsInstance,
-    },
-    {txConfig: borrowerTxConfigWithValue, testContext},
+    allContracts,
+    {txConfig: borrowerTxConfig, testContext},
     {loanTermsRequestTemplate, loanResponseTemplate}
   );
 
   // Depositing collateral.
   await loansActions.depositCollateral(
-    {loans: loansInstance},
+    {...allContracts, token: undefined},
     {txConfig: borrowerTxConfig, testContext},
     {loanId: loanInfoRequestLoanTerms.id, amount: collateralAmountDepositCollateral}
   );
@@ -117,7 +98,7 @@ module.exports = async (testContext) => {
 
   // Take out a loan.
   await loansActions.takeOutLoan(
-    {loans: loansInstance},
+    allContracts,
     {txConfig: borrowerTxConfig, testContext},
     {loanId: loanInfoRequestLoanTerms.id, amount: amountTakeOut}
   );
@@ -127,13 +108,26 @@ module.exports = async (testContext) => {
   // TODO Review it
   await token.mint(borrowerTxConfig.from, amountRepay_1);
   await loansActions.repay(
-    {loans: loansInstance, lendingPool: lendingPoolInstance, token},
+    allContracts,
     {txConfig: borrowerTxConfig, testContext},
     {loanId: loanInfoRequestLoanTerms.id, amount: amountRepay_1}
   );
 
+  await loansActions.withdrawCollateral(
+    allContracts,
+    {txConfig: borrowerTxConfig, testContext},
+    {loanId: loanInfoRequestLoanTerms.id, amount: collateralAmountWithdrawCollateral}
+  );
+
+  await token.mint(borrowerTxConfig.from, amountRepay_2);
+  await loansActions.repay(
+    allContracts,
+    {txConfig: borrowerTxConfig, testContext},
+    {loanId: loanInfoRequestLoanTerms.id, amount: amountRepay_2}
+  );
+
   await loansActions.printLoanInfo(
-    { loans: loansInstance, settings: settingsInstance },
+    allContracts,
     { testContext },
     {
       loanId: loanInfoRequestLoanTerms.id,
@@ -141,23 +135,28 @@ module.exports = async (testContext) => {
       collateralTokenInfo,
       tokenInfo,
       latestAnswer: currentOraclePrice,
-      oracleAddress: chainlinkOracle.address,
+      oracleAddress: oracle.address,
     }
   );
 
-  await loansActions.withdrawCollateral(
-    {loans: loansInstance},
-    {txConfig: borrowerTxConfig, testContext},
-    {loanId: loanInfoRequestLoanTerms.id, amount: collateralAmountWithdrawCollateral}
+  await loansAssertions.assertClosedLoan(
+    allContracts,
+    { testContext },
+    {
+      id: loanInfoRequestLoanTerms.id,
+      status: loanStatus.Closed,
+    }
   );
-
-  await token.mint(borrowerTxConfig.from, amountRepay_2);
-  await loansActions.repay(
-    {loans: loansInstance, lendingPool: lendingPoolInstance, token},
-    {txConfig: borrowerTxConfig, testContext},
-    {loanId: loanInfoRequestLoanTerms.id, amount: amountRepay_2}
-  );
-
+/*
+  const loanInfo = await loansInstance.loans(loanInfoRequestLoanTerms.id);
+  console.log(loanInfo);
+  assert.equal(loanInfo.id.toString(), loanInfoRequestLoanTerms.id.toString());
+  assert.equal(loanInfo.status.toString(), loanStatus.Closed.toString());
+  assert.equal(loanInfo.collateral.toString(), '0');
+  assert.equal(loanInfo.principalOwed.toString(), '0');
+  assert.equal(loanInfo.interestOwed.toString(), '0');
+  assert.equal(loanInfo.liquidated, false);
+  */
   /*
   console.log(`Liquidating loan id ${lastLoanID}...`);
 

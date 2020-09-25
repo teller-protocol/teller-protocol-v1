@@ -55,7 +55,7 @@ GetContracts.prototype.getAllDeployed = async function({ teller, tokens }, token
     const token = await this.getDeployed(tokens.get(tokenName));
     const lendingPool = await this.getDeployed(teller.custom(collTokenName).lendingPool(tokenName));
     const loans = await this.getDeployed(teller.custom(collTokenName).loans(tokenName));
-    const chainlinkOracle = await this.getDeployed(teller.custom(collTokenName).chainlink.custom(tokenName));
+    const oracle = await this.getDeployed(teller.custom(collTokenName).chainlink.custom(tokenName));
     const pairAggregator = await this.getDeployed(teller.oracles().custom(tokenName, collTokenName));
     const loanTermsConsensus = await this.getDeployed(teller.custom(collTokenName).loanTermsConsensus(tokenName));
 
@@ -65,7 +65,7 @@ GetContracts.prototype.getAllDeployed = async function({ teller, tokens }, token
         collateralToken,
         lendingPool,
         loans,
-        chainlinkOracle,
+        oracle,
         pairAggregator,
         loanTermsConsensus,
     };
