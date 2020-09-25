@@ -838,4 +838,20 @@ module.exports = {
             };
         },
     },
+    tTokenRegistry: {
+        tTokenRegistered: tx => {
+            const name = 'TTokenRegistered';
+            return {
+                name: name,
+                emitted: (
+                    tToken,
+                    sender
+                ) => emitted(tx, name, ev => {
+                    assert.equal(ev.tToken.toString(), tToken.toString());
+                    assert.equal(ev.sender.toString(), sender.toString());
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+    },
 };
