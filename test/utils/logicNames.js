@@ -18,4 +18,6 @@ module.exports = {
     ATMGovernance: 'ATMGovernance',
     TLRToken: 'TLRToken',
     MarketFactory: 'MarketFactory',
+    Uniswap: 'Uniswap',
+    Compound: 'Compound'
 }

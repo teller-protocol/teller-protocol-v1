@@ -5,13 +5,14 @@ const initSettings = require('./utils/init_settings');
 const initATMs = require('./utils/init_settings/initATMs');
 const initLogicVersions = require('./utils/init_settings/initLogicVersions');
 const deployLogicContracts = require('./utils/init_settings/deployLogicContracts');
-const { NULL_ADDRESS } = require('../test/utils/consts');
+const { NULL_ADDRESS, toBytes32 } = require('../test/utils/consts');
 const initPairAggregators = require('./utils/init_settings/initPairAggregators');
 const createMarkets = require('./utils/init_settings/createMarkets');
 
 const ERC20 = artifacts.require("@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol");
 const UpgradeableProxy = artifacts.require("./base/UpgradeableProxy.sol");
 const InitializeableDynamicProxy = artifacts.require("./base/InitializeableDynamicProxy.sol");
+const DynamicProxy = artifacts.require("./base/DynamicProxy.sol");
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 const ERC20Mintable = artifacts.require('@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol');
@@ -33,6 +34,8 @@ const TokenCollateralLoans = artifacts.require("./base/TokenCollateralLoans.sol"
 const LendingPool = artifacts.require("./base/LendingPool.sol");
 const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
+const Uniswap = artifacts.require("./base/escrow/dapps/Uniswap.sol");
+const Compound = artifacts.require("./base/escrow/dapps/Compound.sol");
 // ATM Smart contracts
 const ATMFactory = artifacts.require("./atm/ATMFactory.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
@@ -80,6 +83,9 @@ module.exports = async function(deployer, network, accounts) {
       { Contract: ChainlinkPairAggregator, name: logicNames.ChainlinkPairAggregator },
       { Contract: ATMGovernance, name: logicNames.ATMGovernance },
       { Contract: TLRToken, name: logicNames.TLRToken },
+      // Dapps
+      { Contract: Uniswap, name: logicNames.Uniswap },
+      { Contract: Compound, name: logicNames.Compound },
       // Initializables
       { Contract: EscrowFactory, name: logicNames.EscrowFactory },
       { Contract: ChainlinkPairAggregatorRegistry, name: logicNames.ChainlinkPairAggregatorRegistry },
@@ -89,16 +95,16 @@ module.exports = async function(deployer, network, accounts) {
       { Contract: MarketFactory, name: logicNames.MarketFactory },
       { Contract: TTokenRegistry, name : logicNames.TTokenRegistry },
     ];
-  
+
     const deployedLogicContractsMap = await deployLogicContracts(contracts, { deployerApp, txConfig, web3 });
-  
+
     async function deployInitializableDynamicProxy(name) {
       const info = deployedLogicContractsMap.get(name)
       assert(info, `Deployed logic info is undefined for logic name ${name}.`)
       const proxy = await deployerApp.deployInitializeableDynamicProxy(info, txConfig)
       return info.Contract.at(proxy.address)
     }
-  
+
     console.log(`Deploying Settings logic...`)
     const settingsLogic = await deployerApp.deployWith('Settings', Settings, txConfig)
     const settingsProxy = await deployerApp.deployWith('Settings_Proxy', UpgradeableProxy, txConfig)
@@ -110,7 +116,7 @@ module.exports = async function(deployer, network, accounts) {
     const settingsInstance = await Settings.at(settingsProxy.address)
     console.log(`Settings logic: ${settingsLogic.address}`)
     console.log(`Settings_Proxy: ${settingsProxy.address}`)
-  
+
     const escrowFactoryInstance = await deployInitializableDynamicProxy(logicNames.EscrowFactory)
     const pairAggregatorRegistryInstance = await deployInitializableDynamicProxy(logicNames.ChainlinkPairAggregatorRegistry)
     const marketsStateInstance = await deployInitializableDynamicProxy(logicNames.MarketsState)
@@ -118,7 +124,7 @@ module.exports = async function(deployer, network, accounts) {
     const atmFactoryInstance = await deployInitializableDynamicProxy(logicNames.ATMFactory)
     const marketFactoryInstance = await deployInitializableDynamicProxy(logicNames.MarketFactory)
     const tTokenRegistryInstance = await deployInitializableDynamicProxy(logicNames.TTokenRegistry)
-  
+
     console.log(`Deploying LogicVersionsRegistry...`)
     const logicVersionsRegistryLogic = await deployerApp.deployWith('LogicVersionsRegistry', LogicVersionsRegistry, txConfig)
     const logicVersionsRegistryProxy = await deployerApp.deployWith('LogicVersionsRegistry_Proxy', UpgradeableProxy, txConfig)
@@ -147,7 +153,30 @@ module.exports = async function(deployer, network, accounts) {
       { logicVersionsRegistryInstance },
       { txConfig },
     );
-  
+
+    await initSettings(
+      settingsInstance,
+      {
+        ...networkConfig,
+        txConfig,
+        network,
+        currentBlockNumber,
+        web3
+      },
+      { ERC20 },
+    );
+
+    async function deployDynamicProxy(name) {
+      const info = deployedLogicContractsMap.get(name)
+      assert(info, `Deployed logic info is undefined for logic name ${name}.`)
+      const proxy = await deployerApp.deployWith(`${info.name}_Proxy`, DynamicProxy, settingsInstance.address, toBytes32(web3, name), txConfig)
+      const logicImplementation = await proxy.implementation.call()
+      return info.Contract.at(proxy.address)
+    }
+
+    await deployDynamicProxy(logicNames.Uniswap)
+    await deployDynamicProxy(logicNames.Compound)
+
     async function initializeProxy(name, instance) {
       const logicContractInfo = deployedLogicContractsMap.get(name)
       assert(logicContractInfo.nameBytes32, `Name bytes32 is undefined for logic name ${name}.`);
@@ -163,19 +192,7 @@ module.exports = async function(deployer, network, accounts) {
     await initializeProxy(logicNames.ATMSettings, atmSettingsInstance)
     await initializeProxy(logicNames.ATMFactory, atmFactoryInstance)
     await initializeProxy(logicNames.MarketFactory, marketFactoryInstance)
-  
-    await initSettings(
-      settingsInstance,
-      {
-        ...networkConfig,
-        txConfig,
-        network,
-        currentBlockNumber,
-        web3
-      },
-      { ERC20 },
-    );
-  
+
     await initATMs(
       { atmFactory: atmFactoryInstance, atmSettings: atmSettingsInstance },
       { atms, tokens, txConfig, web3 },
