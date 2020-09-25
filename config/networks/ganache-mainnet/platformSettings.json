@@ -1,7 +1,7 @@
 {
   "RequiredSubmissions": {
     "processOnDeployment": true,
-    "value": 1,
+    "value": 2,
     "min": 0,
     "max": "115792089237316195423570985008687907853269984665640564039457584007913129639935"
   },
@@ -13,13 +13,13 @@
   },
   "ResponseExpiryLength": {
     "processOnDeployment": true,
-    "value": 900,
+    "value": 300,
     "min": 0,
     "max": "115792089237316195423570985008687907853269984665640564039457584007913129639935"
   },
   "SafetyInterval": {
     "processOnDeployment": true,
-    "value": 300,
+    "value": 60,
     "min": 0,
     "max": "115792089237316195423570985008687907853269984665640564039457584007913129639935"
   },
@@ -60,7 +60,7 @@
   },
   "RequestLoanTermsRateLimit": {
     "processOnDeployment": true,
-    "value": 86400,
+    "value": 30,
     "min": 0,
     "max": "115792089237316195423570985008687907853269984665640564039457584007913129639935"
   }
