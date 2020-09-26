@@ -9,7 +9,6 @@ const Swapper = require('./utils/Uniswap')
 const { printSeparatorLine } = require('../test/utils/consts');
 const executeInitializers = require('./initializers');
 const chains = require('../test/utils/chains');
-const { tokens } = require("../scripts/utils/contracts");
 
 const UniswapSwapper = artifacts.require('./mock/providers/uniswap/Swapper.sol')
 
@@ -37,10 +36,9 @@ module.exports = async (callback) => {
     try {
         const getContracts = processArgs.createGetContracts(artifacts);
 
-        const { address: wethAddress } = getContracts.getInfo(tokens.get('WETH'))
         const uniswapArtifact = await UniswapSwapper.new()
         const funderTxConfig = await accounts.getTxConfigAt(6);
-        const swapper = await Swapper.init(web3, uniswapArtifact, wethAddress, '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D', funderTxConfig)
+        const swapper = await Swapper.init(web3, uniswapArtifact, funderTxConfig)
         
         snapshotId = await timer.takeSnapshot();
         const testContext = {
