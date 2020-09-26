@@ -4,7 +4,7 @@ const {
 
 const advanceMinutes = async ({timer}, {testContext}, {minutes}) => {
   const {network} = testContext;
-  if(network.toLowerCase() !== 'ganache') {
+  if(!['ganache', 'ganache-mainnet'].includes(network.toLowerCase())) {
     return;
   }
   console.log(`Blockchain: Advancing time (current: ${await timer.getCurrentDate()})...`);

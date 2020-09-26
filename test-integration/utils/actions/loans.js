@@ -15,6 +15,18 @@ const {
   lendingPool: lendingPoolEvents,
   loans: loansEvents,
 } = require("../../../test/utils/events");
+const { tokens } = require("../../../scripts/utils/contracts");
+
+const getFunds = async (
+  {token},
+  {testContext},
+  {amount, to}
+) => {
+  if (testContext.network === 'ganache-mainnet') {
+    const { swapper } = testContext
+    await swapper.swapForExact(to, token.address, amount)
+  }
+}
 
 const depositFunds = async (
   {token, lendingPool},
@@ -22,6 +34,7 @@ const depositFunds = async (
   {amount}
 ) => {
   console.log("Depositing funds on pool...");
+  await getFunds({ token }, { testContext }, { amount, to: txConfig.from })
   await token.approve(lendingPool.address, amount, txConfig);
   const depositResult = await lendingPool.deposit(amount, txConfig);
   lendingPoolEvents
@@ -126,6 +139,7 @@ const depositCollateral = async (
 ) => {
   console.log(`Depositing collateral ${amount} in loan id ${loanId}.`);
   if (token) {
+    await getFunds({ token }, { txConfig, testContext }, { amount })
     await token.approve(loans.address, amount, txConfig);
   } else {
     // Don't overwrite the config object
@@ -296,6 +310,7 @@ const getEscrow = async (
   };
 
 module.exports = {
+  getFunds,
   depositFunds,
   requestLoanTerms,
   depositCollateral,

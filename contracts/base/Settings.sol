@@ -60,6 +60,10 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @notice It defines the constant address to represent ETHER.
      */
     address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    /**
+        @notice It defines the constant address to represent WETH.
+     */
+    address public constant WETH_ADDRESS = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
     /* State Variables */
 

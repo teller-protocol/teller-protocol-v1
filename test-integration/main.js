@@ -5,9 +5,12 @@ const Timer = require('../scripts/utils/Timer');
 const ProcessArgs = require('../scripts/utils/ProcessArgs');
 const Accounts = require('../scripts/utils/Accounts');
 const Nonces = require('../scripts/utils/Nonces');
+const Swapper = require('./utils/Swapper')
 const { printSeparatorLine } = require('../test/utils/consts');
 const executeInitializers = require('./initializers');
 const chains = require('../test/utils/chains');
+
+const UniswapSwapper = artifacts.require('./mock/providers/uniswap/Swapper.sol')
 
 const processArgs = new ProcessArgs(readParams().argv);
 const tests = Object.keys(scenarios).map( key => scenarios[key]);
@@ -33,6 +36,10 @@ module.exports = async (callback) => {
     let snapshotId;
     try {
         const getContracts = processArgs.createGetContracts(artifacts);
+
+        const uniswapArtifact = await UniswapSwapper.new()
+        const funderTxConfig = await accounts.getTxConfigAt(6);
+        const swapper = await Swapper.init(web3, uniswapArtifact, funderTxConfig)
         
         snapshotId = await timer.takeSnapshot();
         const testContext = {
@@ -45,6 +52,7 @@ module.exports = async (callback) => {
             web3,
             nonces,
             chainId: chains.localGanache,
+            swapper
         };
 
         await executeInitializers(

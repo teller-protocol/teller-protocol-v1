@@ -59,7 +59,7 @@ const addLoansBase = (yargs) => {
 
 module.exports = {
     ganacheTest: () => {
-        yargs.scriptName("yarn test:ganache");
+        yargs.scriptName("yarn test:ganache*");
         addNetwork(yargs);
         addRevert(yargs);
         addInitialNonce(yargs);
@@ -68,6 +68,7 @@ module.exports = {
         addTokenNames(yargs);
         addRequiredSubmissions(yargs);
         addSafetyInterval(yargs);
+        addTokenName(yargs);
         addTestTokenName(yargs);
         return yargs;
     },

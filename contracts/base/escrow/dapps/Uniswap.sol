@@ -33,71 +33,58 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
     using AddressLib for address;
     using Address for address;
 
-    /* State Variables */
+    /* Constants */
+
+    IUniswapV2Router02 public constant router = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
+
     // State is shared with Escrow contract as it uses delegateCall() to interact with this contract.
 
     /**
         @notice Swaps ETH/Tokens for Tokens/ETH using different Uniswap v2 Router 02 methods.
-        @param canonicalWeth address of the canonical WETH in the current network.
-        @param routerAddress address of the Uniswap Router v02.
         @param path An array of token addresses. path.length must be >= 2. Pools for each consecutive pair of addresses must exist and have liquidity.
-        @param sourceAmount amount of source element (ETH or Tokens) to swap.
+        @param sourceAmount amount of source token to swap.
         @param minDestination The minimum amount of output tokens that must be received for the transaction not to revert.
-        @dev This function mainly invokes 3 Uniswap external functions:
-            https://uniswap.org/docs/v2/smart-contracts/router02/#swapexactethfortokens
-            https://uniswap.org/docs/v2/smart-contracts/router02/#swapexacttokensforeth
-            https://uniswap.org/docs/v2/smart-contracts/router02/#swapexacttokensfortokens
      */
     function swap(
-        address canonicalWeth,
-        address routerAddress,
         address[] memory path,
         uint256 sourceAmount,
         uint256 minDestination
     ) public onlyOwner() {
-        require(canonicalWeth.isContract(), "CANONICAL_WETH_MUST_BE_CONTRACT");
-        require(routerAddress.isContract(), "ROUTER_MUST_BE_A_CONTRACT");
-        IUniswapV2Router02 router = IUniswapV2Router02(routerAddress);
+        _swap(router, path, sourceAmount, minDestination);
+    }
 
+    /* Internal Functions */
+
+    /**
+        @notice Swaps ETH/Tokens for Tokens/ETH using different Uniswap v2 Router 02 methods.
+        @param theRouter The UniswapV2Router instance.
+        @param path An array of token addresses. path.length must be >= 2. Pools for each consecutive pair of addresses must exist and have liquidity.
+        @param sourceAmount amount of source token to swap.
+        @param minDestination The minimum amount of output tokens that must be received for the transaction not to revert.
+     */
+    function _swap(
+        IUniswapV2Router02 theRouter,
+        address[] memory path,
+        uint256 sourceAmount,
+        uint256 minDestination
+    ) internal {
         require(path.length >= 2, "UNISWAP_PATH_TOO_SHORT");
         address source = path[0];
         address destination = path[path.length - 1];
-
+        require(_balanceOf(source) >= sourceAmount, "UNISWAP_INSUFFICIENT_SOURCE");
         source.requireNotEqualTo(destination, "UNISWAP_SOURCE_AND_DESTINATION_SAME");
         require(minDestination > 0, "UNISWAP_MIN_DESTINATION_ZERO"); // what if there is no minimum?
 
-        uint256[] memory amounts;
         uint256 balanceBeforeSwap = _balanceOf(destination);
 
-        if (source == canonicalWeth) {
-            require(address(this).balance >= sourceAmount, "UNISWAP_INSUFFICIENT_ETH");
-            amounts = router.swapExactETHForTokens.value(sourceAmount)(
-                minDestination,
-                path,
-                address(this),
-                now
-            );
-        } else {
-            require(_balanceOf(source) >= sourceAmount, "UNISWAP_INSUFFICIENT_TOKENS");
-            IERC20(source).approve(routerAddress, sourceAmount);
-            if (destination == canonicalWeth) {
-                amounts = router.swapExactTokensForETH(
-                    sourceAmount,
-                    minDestination,
-                    path,
-                    address(this),
-                    now
-                );
-            } else {
-                amounts = router.swapExactTokensForTokens(
-                    sourceAmount,
-                    minDestination,
-                    path,
-                    address(this),
-                    now
-                );
-            }
-        }
+        IERC20(source).approve(address(theRouter), sourceAmount);
+        uint256[] memory amounts = theRouter.swapExactTokensForTokens(
+            sourceAmount,
+            minDestination,
+            path,
+            address(this),
+            now
+        );
 
         uint256 balanceAfterSwap = _balanceOf(destination);
         require(
@@ -105,18 +92,16 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
             "UNISWAP_BALANCE_NOT_INCREASED"
         );
         require(amounts.length == path.length, "UNISWAP_ERROR_SWAPPING");
-        uint256 amountReceived = amounts[amounts.length - 1];
+        uint256 destinationAmount = amounts[amounts.length - 1];
 
         _tokenUpdated(source);
         _tokenUpdated(destination);
 
         emit UniswapSwapped(
-            msg.sender,
-            address(this),
             source,
             destination,
             sourceAmount,
-            amountReceived
+            destinationAmount
         );
     }
 }
