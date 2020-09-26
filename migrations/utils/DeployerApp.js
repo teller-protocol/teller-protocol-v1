@@ -181,6 +181,10 @@ DeployerApp.prototype.writeChainlink = function() {
             json[pair] = info
         }
         fs.writeFileSync(`./config/networks/${this.network}/chainlink.json`, JSON.stringify(json, null, 2))
+        // delete the require cache for config data for deploy scripts
+        delete require.cache[require.resolve(`../../config`)]
+        delete require.cache[require.resolve(`../../config/networks/${this.network}`)]
+        delete require.cache[require.resolve(`../../config/networks/${this.network}/chainlink.json`)]
     }
 }
 
