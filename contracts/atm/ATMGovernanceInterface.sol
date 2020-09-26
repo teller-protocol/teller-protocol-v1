@@ -155,6 +155,20 @@ interface ATMGovernanceInterface {
      */
     event CRASet(address indexed sender, string craCommitHash);
 
+    /**
+        @notice Emitted when a new TLR Reward was added.
+        @param sender msg.sender address.
+        @param rewardIndex reward index in rewards array.
+        @param startBlockNumber block number where this reward takes place.
+        @param tlrPerBlockPertToken amount of TLR tokens to accrue per block per tToken staked. 
+     */
+    event TLRRewardAdded(
+        address indexed sender,
+        uint256 rewardIndex, 
+        uint256 startBlockNumber,
+        uint256 tlrPerBlockPertToken
+    );
+
     /* External Functions */
 
     /**

@@ -128,7 +128,14 @@ contract ATMLiquidityMining is
         // Send tTokens back to user
         IERC20(tToken).transfer(msg.sender, amount);
 
-        // TODO: emit unstake event
+        emit UnStake(
+            msg.sender,
+            tToken,
+            amount,
+            userInfo.lastRewardedBlock,
+            userInfo.tTokenStakedBalance,
+            userInfo.accruedTLRBalance
+        );
     }
 
     /**
@@ -182,10 +189,12 @@ contract ATMLiquidityMining is
             ATMLibrary.TLRReward memory reward = rewards[rewards.length - i];
             if (reward.startBlockNumber < latestRewardedBlock ) {
                 interval = newestRewardBlock.sub(latestRewardedBlock);
+                emit PrintUint("interval < ", interval);            
             } else {
                 interval = newestRewardBlock.sub(reward.startBlockNumber);
+                emit PrintUint("interval >= ", interval);            
             }
-            emit PrintUint("interval", interval);
+            //emit PrintUint("interval", interval);
             emit PrintUint("reward.tlrPerBlockPertToken", reward.tlrPerBlockPertToken);
             emit PrintUint("tTokenStakedBalance", tTokenStakedBalance);
 
