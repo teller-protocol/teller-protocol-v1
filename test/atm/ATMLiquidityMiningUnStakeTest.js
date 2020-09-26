@@ -14,7 +14,7 @@ const TLRToken = artifacts.require("./atm/TLRToken.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 const ATMLiquidityMiningMock = artifacts.require("./atm/ATMLiquidityMiningMock.sol");
 
-contract("ATMLiquidityMiningStakeTest", function(accounts) {
+contract("ATMLiquidityMiningUnStakeTest", function(accounts) {
     const owner = accounts[0]; 
     const user = accounts[2];
     const INITIAL_REWARD = 1;
@@ -32,33 +32,34 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
         instance = await ATMLiquidityMiningMock.new();
         await instance.initialize(settingsInstance.address, governance.address, tlr.address, { from: owner });
     });
-
+/*
     withData({
         _1_basic: [ 10, 0, false, undefined ],
-        _2_not_enough_tTokens: [ 10, 1, true, "INSUFFICIENT_TTOKENS_TO_STAKE" ],
+        _2_not_enough_tTokens: [ 10, 1, true, "NOT_ENOUGH_STAKED_TTOKENS" ],
     }, function(amount, offset, mustFail, expectedErrorMessage) {
-        it(t("user", "stake#1-one-reward-one-stake", "Should be able or not to stake tTokens.", mustFail), async function() {
+        it(t("user", "unStake#1", "Should be able or not to unStake tTokens.", mustFail), async function() {
             // Setup
             await tToken.mint(user, amount, { from: owner });
+            await tToken.approve(instance.address, amount, { from: user });
+            await instance.stake(tToken.address, amount , { from: user });                
             const userBalanceBefore = await tToken.balanceOf(user);
             const liquidityBalanceBefore = await tToken.balanceOf(instance.address);
-            await tToken.approve(instance.address, amount, { from: user });
-
+            await helper.advanceBlocks(100);
             try {
                 // Invocation 
-                const result = await instance.stake(tToken.address, amount + offset , { from: user });
+                const result = await instance.unStake(tToken.address, amount + offset , { from: user });
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 // Validating result
                 const userBalanceAfter = await tToken.balanceOf(user);
-                assert(parseInt(userBalanceAfter) < parseInt(userBalanceBefore), 'user tTokens not sent on stake.');
+                assert(parseInt(userBalanceAfter) > parseInt(userBalanceBefore), 'user tTokens not received on unStake.');
                 const liquidityBalanceAfter = await tToken.balanceOf(instance.address);
-                assert(parseInt(liquidityBalanceAfter) > parseInt(liquidityBalanceBefore), 'tTokens not received on stake.');
-                assert(parseInt(liquidityBalanceAfter) == parseInt(userBalanceBefore), 'tTokens received are less than sent amount.');
+                assert(parseInt(liquidityBalanceAfter) < parseInt(liquidityBalanceBefore), 'liquidity tTokens not sent on unStake.');
+                assert(parseInt(liquidityBalanceAfter) == parseInt(userBalanceBefore), 'tTokens sent are different than expected.');
                 // Validating events were emitted
                 liquidityMining
-                    .stake(result)
-                    .emitted(user, tToken.address, amount, result.receipt.blockNumber, amount, 0);
+                    .unstake(result)
+                    .emitted(user, tToken.address, amount, result.receipt.blockNumber, 0);
             } catch (error) {
                 assert(mustFail);
                 assert(error);
@@ -66,32 +67,83 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
             }
         });
     });
+   */ 
+ /*
     withData({
-        _1_one_reward_multi_stake: [ [10, 20, 30, 5, 3], false, undefined ],
+        _1_one_reward_multi_unstake: [ [10, 20, 30, 5, 3], false, undefined ],
     }, function(amounts, mustFail, expectedErrorMessage) {
-        it(t("user", "stake#2-one-reward-multiple-stakes", "Should be able or not to stake tTokens.", mustFail), async function() {
+        it(t("user", "unStake#2-one-reward-multiple-unStakes", "Should be able or not to unStake tTokens.", mustFail), async function() {
+            // Setup
+            let totalAmount = 0;
+            for (let a = 0; a < amounts.length; a++) {
+                await helper.advanceBlocks(10);
+                totalAmount += parseInt(amounts[a]);
+                await tToken.mint(user, amounts[a], { from: owner });
+                await tToken.approve(instance.address, totalAmount, { from: user });
+                await instance.stake(tToken.address, amounts[a] , { from: user });                    
+            }
+            let liquidityBalanceBefore = parseInt(await tToken.balanceOf(instance.address)) ;
+
             try {
                 // Setup
-                let totalAmount = 0;
-                let userBalanceBefore = 0;
-                let liquidityBalanceAfter = 0;
+                totalAmount = 0;
                 for (let i = 0; i < amounts.length; i++) {
                     totalAmount += parseInt(amounts[i]);
-                    await tToken.mint(user, amounts[i], { from: owner });
-                    await tToken.approve(instance.address, totalAmount, { from: user });
-                    userBalanceBefore += parseInt(await tToken.balanceOf(user));
+                    await helper.advanceBlocks(10);
                     // Invocation 
-                    const result = await instance.stake(tToken.address, amounts[i] , { from: user });
+                    const result = await instance.unStake(tToken.address, amounts[i] , { from: user });
                     // Assertions
                     assert(!mustFail, 'It should have failed because data is invalid.');
                     // Validating result
-                    liquidityBalanceAfter = parseInt(await tToken.balanceOf(instance.address)) ;
+                    const userBalanceAfter = parseInt(await tToken.balanceOf(user)) ;
+                    assert.equal(userBalanceAfter, totalAmount, "user didn't receive corresponding tTokens");
+                    const liquidityBalanceAfter = parseInt(await tToken.balanceOf(instance.address)) ;
+                    assert.equal(liquidityBalanceBefore, liquidityBalanceAfter + userBalanceAfter, "tTokens not sent from liquidity to user")
                     // Validating events were emitted
                     liquidityMining
-                        .stake(result)
-                        .emitted(user, tToken.address, amounts[i], result.receipt.blockNumber, totalAmount); // accruedTLR validated on calculateAccruedTLR test.
-                }
+                        .unstake(result)
+                        .emitted(user, tToken.address, amounts[i], result.receipt.blockNumber, liquidityBalanceBefore - totalAmount); // accruedTLR validated on calculateAccruedTLR test.
+                    }
             } catch (error) {
+                assert(mustFail);
+                assert(error);
+                assert.equal(error.reason, expectedErrorMessage);
+            }
+        });
+    });
+*/    
+    withData({
+        _1_multi_reward_multi_stake: [ [10, 100], [20, 200, 2000], false, undefined ],
+    }, function(amounts, rewards, mustFail, expectedErrorMessage) {
+        it(t("user", "unStake#3-multiple-rewards-multiple-unStakes", "Should be able or not to stake tTokens.", mustFail), async function() {
+            // Setup
+            const totalAmount = amounts[0] + amounts[1];        
+            await tToken.mint(user, totalAmount, { from: owner });
+            await tToken.approve(instance.address, totalAmount, { from: user });
+            await instance.stake(tToken.address, totalAmount , { from: user });
+            await helper.advanceBlocks(100);
+            // First unStake call
+            await instance.unStake(tToken.address, amounts[0] , { from: user });
+            for (let r = 0; r < rewards.length; r++){
+                await helper.advanceBlocks(rewards[r]);
+                await governance.addTLRReward(rewards[r], { from: owner});
+            }
+            try {
+                // Invocation second unStake call
+                const result = await instance.unStake(tToken.address, amounts[1] , { from: user });
+                // Assertions
+                assert(!mustFail, 'It should have failed because data is invalid.');
+                // Validating result
+                liquidityBalanceAfter = parseInt(await tToken.balanceOf(instance.address)) ;
+                assert( liquidityBalanceAfter == 0, "liquidity tToken balance not correct");
+                const userBalanceAfter = parseInt(await tToken.balanceOf(user)) ;
+                assert( userBalanceAfter == totalAmount, "user tToken balance not correct");
+                // Validating events were emitted
+                liquidityMining
+                    .unstake(result)
+                    .emitted(user, tToken.address, amounts[1], result.receipt.blockNumber, 0); // accruedTLR validated on calculateAccruedTLR test.
+            } catch (error) {
+                console.log(error);
                 assert(mustFail);
                 assert(error);
                 assert.equal(error.reason, expectedErrorMessage);
@@ -99,39 +151,4 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
         });
     });
     
-    withData({
-        _1_multi_reward_multi_stake: [ [10, 100], [20, 200, 2000], false, undefined ],
-    }, function(amounts, rewards, mustFail, expectedErrorMessage) {
-        it(t("user", "stake#3-multiple-rewards-multiple-stakes", "Should be able or not to stake tTokens.", mustFail), async function() {
-            // Setup
-            await tToken.mint(user, amounts[0], { from: owner });
-            await tToken.approve(instance.address, amounts[0], { from: user });
-            await instance.stake(tToken.address, amounts[0] , { from: user });
-            const totalAmount = amounts[0] + amounts[1];        
-            for (let r = 0; r < rewards.length; r++){
-                await helper.advanceBlocks(rewards[r]);
-                await governance.addTLRReward(rewards[r], { from: owner});
-            }
-            await tToken.mint(user, amounts[1], { from: owner });
-            await tToken.approve(instance.address, totalAmount, { from: user });
-            
-            try {
-                // Invocation 
-                const result = await instance.stake(tToken.address, amounts[1] , { from: user });
-                // Assertions
-                assert(!mustFail, 'It should have failed because data is invalid.');
-                // Validating result
-                liquidityBalanceAfter = parseInt(await tToken.balanceOf(instance.address)) ;
-                assert( liquidityBalanceAfter == totalAmount);
-                // Validating events were emitted
-                liquidityMining
-                    .stake(result)
-                    .emitted(user, tToken.address, amounts[1], result.receipt.blockNumber, totalAmount); // accruedTLR validated on calculateAccruedTLR test.
-            } catch (error) {
-                assert(mustFail);
-                assert(error);
-                assert.equal(error.reason, expectedErrorMessage);
-            }
-        });
-    });
 });

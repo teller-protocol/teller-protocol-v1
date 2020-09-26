@@ -61,7 +61,7 @@ contract ATMGovernance is
     // List of ATM Data providers per data type
     mapping(uint8 => address[]) public dataProviders;
 
-    // List of TLR rewards
+    // List of TLR rewards initialized with at least 1 value during ATMGovernance creation.
     ATMLibrary.TLRReward[] public tlrRewards;
  
     // Unique CRA - Credit Risk Algorithm github hash to use in this ATM
@@ -280,18 +280,22 @@ contract ATMGovernance is
 
     /**
         @notice Add new TLR Reward value starting from current block.
+        @dev 
      */
     function addTLRReward(uint256 rewardAmount) 
         external 
         onlySigner()
         isInitialized()
     {
-        require(tlrRewards[ tlrRewards.length - 1 ].startBlockNumber < block.number, "TLR_REWARD_ALREADY_SET_FOR_BLOCK");
+        ATMLibrary.TLRReward memory latestReward = tlrRewards[ tlrRewards.length - 1 ];
+        require(latestReward.tlrPerBlockPertToken != rewardAmount, "PREVIOUS_AND_NEW_VALUE_ARE_EQUAL");
+        require(latestReward.startBlockNumber < block.number, "TLR_REWARD_ALREADY_SET_FOR_BLOCK");
         ATMLibrary.TLRReward memory setupReward = ATMLibrary.TLRReward({
             startBlockNumber:  block.number,
             tlrPerBlockPertToken: rewardAmount
         });
         tlrRewards.push(setupReward);
+        emit TLRRewardAdded(msg.sender, tlrRewards.length, setupReward.startBlockNumber, setupReward.tlrPerBlockPertToken);
     }
     /**
         @notice It initializes this ATM Governance instance.
