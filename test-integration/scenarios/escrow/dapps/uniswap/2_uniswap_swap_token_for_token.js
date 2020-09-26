@@ -1,11 +1,11 @@
 const BigNumber = require("bignumber.js");
-const { teller, tokens } = require("../../../scripts/utils/contracts");
+const { teller, tokens } = require("../../../../../scripts/utils/contracts");
 const {
   loans: loansActions,
   escrow: escrowActions
-} = require("../../utils/actions");
-const { takeOutNewLoan } = require("../../utils/takeOutNewLoan");
-const { toDecimals } = require("../../../test/utils/consts");
+} = require("../../../../utils/actions");
+const { takeOutNewLoan } = require("../../../../utils/takeOutNewLoan");
+const { toDecimals } = require("../../../../../test/utils/consts");
 
 module.exports = async (testContext) => {
   const { processArgs, getContracts, accounts } = testContext
