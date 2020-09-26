@@ -7,8 +7,6 @@ pragma solidity 0.5.17;
 interface IUniswap {
     /**
         @notice Swaps ETH/Tokens for Tokens/ETH using the Uniswap protocol.
-        @param canonicalWeth address of the canonical WETH in the current network.
-        @param routerAddress address of the Uniswap Router.
         @param path An array of token addresses. path.length must be >= 2. Pools for each consecutive pair of addresses must exist and have liquidity.
         @param sourceAmount amount of source element (ETH or Tokens) to swap.
         @param minDestination The minimum amount of output tokens that must be received for the transaction not to revert.
@@ -18,8 +16,6 @@ interface IUniswap {
             https://uniswap.org/docs/v2/smart-contracts/router02/#swapexacttokensfortokens
      */
     function swap(
-        address canonicalWeth,
-        address routerAddress,
         address[] calldata path,
         uint256 sourceAmount,
         uint256 minDestination

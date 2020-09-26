@@ -64,26 +64,23 @@ const claimTokens = async (
 const uniswapSwap = async (
   { escrow },
   { txConfig, testContext },
-  { routerAddress, path, sourceAmount, minDestination }
+  { path, sourceAmount, minDestination }
 ) => {
-  const { getContracts } = testContext;
-  const uniswapDapp = await getContracts.getDeployed(
+  const { processArgs, getContracts } = testContext;
+  const { address: uniswapDappAddress, contract: uniswapDapp  } = await getContracts.getDeployed(
     teller.escrowDapp(logicNames.Uniswap)
   );
-  const weth = await getContracts.getDeployed(
-    tokens.get("WETH", "ERC20")
-  );
   const dappData = {
-    location: uniswapDapp.address,
-    data: uniswapDapp.swap(weth.address, routerAddress, path, sourceAmount, minDestination).encodeABI()
+    location: uniswapDappAddress,
+    data: uniswapDapp.methods.swap(path, sourceAmount, minDestination).encodeABI()
   };
   const swapResult = await escrow.callDapp(dappData, txConfig);
 
-  const sourceTokenAddress = path[0];
-  const destinationTokenAddress = path[path.length - 1];
-  uniswapEvents
-    .uniswapSwapped(swapResult)
-    .emitted(txConfig.from, escrow.address, sourceTokenAddress, destinationTokenAddress, sourceAmount);
+  // const sourceTokenAddress = path[0];
+  // const destinationTokenAddress = path[path.length - 1];
+  // uniswapEvents
+  //   .uniswapSwapped(swapResult)
+  //   .emitted(txConfig.from, escrow.address, sourceTokenAddress, destinationTokenAddress, sourceAmount);
 
   return swapResult;
 };

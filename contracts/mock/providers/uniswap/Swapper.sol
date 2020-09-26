@@ -7,13 +7,9 @@ import "../../../base/escrow/dapps/Uniswap.sol";
  */
 contract Swapper is Uniswap {
     function swapForExact(
-        address canonicalWeth,
-        address routerAddress,
         address[] memory path,
         uint256 destinationAmount
     ) public {
-        IUniswapV2Router02 router = IUniswapV2Router02(routerAddress);
-
         require(path.length >= 2, "UNISWAP_PATH_TOO_SHORT");
         address source = path[0];
         address destination = path[path.length - 1];
@@ -22,7 +18,7 @@ contract Swapper is Uniswap {
 
         uint256[] memory amounts;
 
-        if (source == canonicalWeth) {
+        if (source == router.WETH()) {
             amounts = router.swapETHForExactTokens.value(address(this).balance)(
                 destinationAmount,
                 path,
@@ -30,9 +26,8 @@ contract Swapper is Uniswap {
                 now
             );
         } else {
-            uint approveAmount = 0;
-            IERC20(source).approve(routerAddress, approveAmount - 1);
-            if (destination == canonicalWeth) {
+            IERC20(source).approve(address(router), MAX_INT);
+            if (destination == router.WETH()) {
                 amounts = router.swapTokensForExactETH(
                     destinationAmount,
                     100000000000000000000000000000,
