@@ -61,9 +61,6 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
         uint256 maxVestingPerWallet,
         uint256 tlrInitialReward
     ) external onlyPauser() isInitialized() returns (address) {
-        address owner = msg.sender;
-
-        
         address atmGovernanceProxyAddress = _createGovernance(tlrInitialReward);
         address tlrTokenProxyAddress = _createTLRToken( 
             name,
@@ -83,7 +80,7 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
         atmsList.add(atmGovernanceProxyAddress);
 
         // Emit new ATM created event.
-        emit ATMCreated(owner, atmGovernanceProxyAddress, tlrTokenProxyAddress);
+        emit ATMCreated(msg.sender, atmGovernanceProxyAddress, tlrTokenProxyAddress, liquidityMiningAddress);
 
         return atmGovernanceProxyAddress;
     }

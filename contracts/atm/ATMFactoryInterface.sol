@@ -23,11 +23,13 @@ interface ATMFactoryInterface {
         @param creator creator address.
         @param atmGovernanceAddress new ATM Governance instance address.
         @param tlrTokenAddress new TLR Token instance address.
+        @param liquidityMiningAddress new ATM Liquidity Mining instance address.
      */
     event ATMCreated(
         address indexed creator,
         address indexed atmGovernanceAddress,
-        address indexed tlrTokenAddress
+        address indexed tlrTokenAddress,
+        address liquidityMiningAddress
     );
 
     /* State Variables */
