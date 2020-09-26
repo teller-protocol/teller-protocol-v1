@@ -66,7 +66,7 @@ const uniswapSwap = async (
   { txConfig, testContext },
   { path, sourceAmount, minDestination }
 ) => {
-  const { processArgs, getContracts } = testContext;
+  const { getContracts } = testContext;
   const { address: uniswapDappAddress, contract: uniswapDapp  } = await getContracts.getDeployed(
     teller.escrowDapp(logicNames.Uniswap)
   );

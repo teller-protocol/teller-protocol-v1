@@ -11,7 +11,7 @@ module.exports = async (testContext) => {
   const { processArgs, getContracts, accounts } = testContext
 
   const collTokenName = "ETH";
-  const tokenName = processArgs.getValue("testTokenName");
+  const tokenName = "DAI";
   const verbose = processArgs.getValue("verbose");
 
   const contracts = await getContracts.getAllDeployed({ teller, tokens }, tokenName, collTokenName);
@@ -57,7 +57,7 @@ module.exports = async (testContext) => {
   const principal = loan.principalOwed.toString()
   const interest = loan.interestOwed.toString()
   const totalOwed = new BigNumber(principal).plus(interest).toString()
-  await loansActions.getFunds({ token: contracts.token }, { txConfig: borrowerTxConfig, testContext }, { amount: interest })
+  await loansActions.getFunds({ token: contracts.token }, { testContext }, { amount: interest, to: borrower })
   await escrowActions.repay(contracts, context,
     { amount: totalOwed }
   )

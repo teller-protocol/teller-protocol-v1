@@ -15,8 +15,12 @@ contract UniswapMock is DappMock, Uniswap {
         router = new UniswapV2Router02Mock(wethAddress);
     }
 
-    function getRouter() internal pure returns (IUniswapV2Router02) {
-        return router;
+    function swap(
+        address[] memory path,
+        uint256 sourceAmount,
+        uint256 minDestination
+    ) public onlyOwner() {
+        _swap(router, path, sourceAmount, minDestination);
     }
 
     function() external payable {}

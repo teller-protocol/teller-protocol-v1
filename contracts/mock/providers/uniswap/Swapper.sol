@@ -7,44 +7,19 @@ import "../../../base/escrow/dapps/Uniswap.sol";
  */
 contract Swapper is Uniswap {
     function swapForExact(
-        address[] memory path,
+        address to,
+        address tokenAddress,
         uint256 destinationAmount
     ) public {
-        require(path.length >= 2, "UNISWAP_PATH_TOO_SHORT");
-        address source = path[0];
-        address destination = path[path.length - 1];
-
-        source.requireNotEqualTo(destination, "UNISWAP_SOURCE_AND_DESTINATION_SAME");
-
-        uint256[] memory amounts;
-
-        if (source == router.WETH()) {
-            amounts = router.swapETHForExactTokens.value(address(this).balance)(
-                destinationAmount,
-                path,
-                msg.sender,
-                now
-            );
-        } else {
-            IERC20(source).approve(address(router), MAX_INT);
-            if (destination == router.WETH()) {
-                amounts = router.swapTokensForExactETH(
-                    destinationAmount,
-                    100000000000000000000000000000,
-                    path,
-                    msg.sender,
-                    now
-                );
-            } else {
-                amounts = router.swapTokensForExactTokens(
-                    destinationAmount,
-                    100000000000000000000000000000,
-                    path,
-                    msg.sender,
-                    now
-                );
-            }
-        }
+        address[] memory path = new address[](2);
+        path[0] = router.WETH();
+        path[1] = tokenAddress;
+        router.swapETHForExactTokens.value(address(this).balance)(
+            destinationAmount,
+            path,
+            to,
+            now
+        );
     }
 
     function() external payable {}
