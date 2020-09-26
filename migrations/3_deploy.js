@@ -163,17 +163,6 @@ module.exports = async function(deployer, network, accounts) {
       { ERC20 },
     );
 
-    async function deployDynamicProxy(name) {
-      const info = deployedLogicContractsMap.get(name)
-      assert(info, `Deployed logic info is undefined for logic name ${name}.`)
-      const proxy = await deployerApp.deployWith(`${info.name}_Proxy`, DynamicProxy, settingsInstance.address, toBytes32(web3, name), txConfig)
-      const logicImplementation = await proxy.implementation.call()
-      return info.Contract.at(proxy.address)
-    }
-
-    await deployDynamicProxy(logicNames.Uniswap)
-    await deployDynamicProxy(logicNames.Compound)
-
     async function initializeProxy(name, instance) {
       const logicContractInfo = deployedLogicContractsMap.get(name)
       assert(logicContractInfo.nameBytes32, `Name bytes32 is undefined for logic name ${name}.`);
@@ -189,6 +178,20 @@ module.exports = async function(deployer, network, accounts) {
     await initializeProxy(logicNames.ATMSettings, atmSettingsInstance)
     await initializeProxy(logicNames.ATMFactory, atmFactoryInstance)
     await initializeProxy(logicNames.MarketFactory, marketFactoryInstance)
+
+    async function deployDapp(name, secured) {
+      const info = deployedLogicContractsMap.get(name)
+      assert(info, `Deployed logic info is undefined for logic name ${name}.`)
+      const proxy = await deployerApp.deployWith(`${info.name}_Proxy`, DynamicProxy, 'teller', settingsInstance.address, toBytes32(web3, name), txConfig)
+
+      // Register dapp
+      await escrowFactoryInstance.addDapp(proxy.address, secured)
+
+      return info.Contract.at(proxy.address)
+    }
+
+    await deployDapp(logicNames.Uniswap, true)
+    await deployDapp(logicNames.Compound, false)
 
     await initATMs(
       { atmFactory: atmFactoryInstance, atmSettings: atmSettingsInstance },
