@@ -17,9 +17,7 @@ module.exports = async (testContext) => {
   const contracts = await getContracts.getAllDeployed({ teller, tokens }, tokenName, collTokenName);
 
   const borrower = await accounts.getAt(1);
-  const liquidatorTxConfig = await accounts.getTxConfigAt(2);
   const initialOraclePrice = toDecimals("0.00295835", 18); // 1 token = 0.00295835 ether = 5000000000000000 wei
-  const finalOraclePrice = toDecimals("0.00605835", 18); // 1 token = 0.006 ether = 6000000000000000 wei
   const decimals = parseInt(await contracts.token.decimals());
   const lendingPoolDepositAmountWei = toDecimals(4000, decimals);
   const amountWei = toDecimals(100, decimals);
@@ -47,18 +45,18 @@ module.exports = async (testContext) => {
     signers
   });
 
-  const escrow = await loansActions.getEscrow(
-    { loans: contracts.loans },
-    { testContext },
+  const context = {
+    txConfig: borrowerTxConfig,
+    testContext
+  }
+
+  contracts.escrow = await loansActions.getEscrow(contracts, context,
     { loanId: loan.id }
   )
 
-  const extraAmount = new BigNumber(10000000000000000000)
-  const amountToRepay = amountWei.plus(extraAmount)
-  await loansActions.getFunds({ token: contracts.token }, { txConfig: borrowerTxConfig, testContext }, { amount: extraAmount })
-  await escrowActions.repay(
-    { escrow, token: contracts.token },
-    { txConfig: borrowerTxConfig, testContext },
-    { amount: amountToRepay }
+  const { address: wethAddress } = getContracts.getInfo(tokens.get('WETH'))
+  const path = [ contracts.token.address, wethAddress ]
+  await escrowActions.dapp.uniswap.swap(contracts, context,
+    { path, sourceAmount: loan.borrowedAmount.toString(), minDestination: '1000000000000000' }
   )
 };
