@@ -104,8 +104,7 @@ module.exports = async (testContext) => {
 
   await blockchainActions.advanceMinutes({timer}, {testContext}, {minutes: 5});
 
-  // TODO Review it
-  await token.mint(borrowerTxConfig.from, amountRepay_1);
+  await loansActions.getFunds({ token }, { testContext }, { amount: amountRepay_1, to: borrower })
   await loansActions.repay(
     allContracts,
     {txConfig: borrowerTxConfig, testContext},
@@ -118,7 +117,7 @@ module.exports = async (testContext) => {
     {loanId: loanInfoRequestLoanTerms.id, amount: collateralAmountWithdrawCollateral}
   );
 
-  await token.mint(borrowerTxConfig.from, amountRepay_2);
+  await loansActions.getFunds({ token }, { testContext }, { amount: amountRepay_2, to: borrower })
   await loansActions.repay(
     allContracts,
     {txConfig: borrowerTxConfig, testContext},

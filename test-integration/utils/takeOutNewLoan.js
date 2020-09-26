@@ -11,7 +11,7 @@ exports.takeOutNewLoan = async function takeOutNewLoan(
     settings,
     lendingPool,
     loans,
-    chainlinkOracle,
+    oracle,
     pairAggregator,
     loanTermsConsensus
   },
@@ -32,7 +32,7 @@ exports.takeOutNewLoan = async function takeOutNewLoan(
   const { timer } = testContext;
 
   await oracleActions.setPrice(
-    { oracle: chainlinkOracle, token },
+    { oracle, token },
     { txConfig: lenderTxConfig, testContext },
     { price: initialOraclePrice }
   );

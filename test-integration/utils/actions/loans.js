@@ -17,14 +17,22 @@ const {
 } = require("../../../test/utils/events");
 const { tokens } = require("../../../scripts/utils/contracts");
 
+/**
+ * Gets an amount of tokens requested based on the current network.
+ */
 const getFunds = async (
   {token},
   {testContext},
   {amount, to}
 ) => {
-  if (testContext.network === 'ganache-mainnet') {
-    const { swapper } = testContext
-    await swapper.swapForExact(to, token.address, amount)
+  switch (testContext.network) {
+    case 'ganache':
+      await token.mint(to, amount);
+      break
+    case 'ganache-mainnet':
+      const { swapper } = testContext
+      await swapper.swapForExact(to, token.address, amount)
+      break
   }
 }
 
