@@ -46,14 +46,14 @@ module.exports = async function(deployer, network, accounts) {
     quoteTokenName: "ETH"
   }, initialDaiEthPrice, txConfig);
   await deployerApp.deployChainlink(PairAggregatorMock, {
-    inversed: true,
+    inversed: false,
     collateralDecimals: 18,
     responseDecimals: 8,
     baseTokenName: "LINK",
     quoteTokenName: "DAI"
   }, initialLinkUsdPrice, txConfig);
   await deployerApp.deployChainlink(PairAggregatorMock, {
-    inversed: true,
+    inversed: false,
     collateralDecimals: 18,
     responseDecimals: 8,
     baseTokenName: "LINK",

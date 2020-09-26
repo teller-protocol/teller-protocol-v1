@@ -73,8 +73,6 @@ contract("UniswapSwapTest", function(accounts) {
         uniswap
           .uniswapSwapped(result)
           .emitted(
-            sender,
-            instance.address,
             path[0],
             path[path.length - 1],
             sourceAmount,

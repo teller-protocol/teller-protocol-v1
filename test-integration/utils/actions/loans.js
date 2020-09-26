@@ -19,16 +19,12 @@ const { tokens } = require("../../../scripts/utils/contracts");
 
 const getFunds = async (
   {token},
-  {txConfig, testContext},
-  {amount}
+  {testContext},
+  {amount, to}
 ) => {
   if (testContext.network === 'ganache-mainnet') {
-    const balance = new BigNumber(await token.balanceOf.call(txConfig.from))
-    if (balance.lt(amount)) {
-      const { swapper, getContracts } = testContext
-      const { address: wethAddress } = getContracts.getInfo(tokens.get('WETH'))
-      await swapper.swapForExact([wethAddress, token.address], amount, txConfig)
-    }
+    const { swapper } = testContext
+    await swapper.swapForExact(to, token.address, amount)
   }
 }
 
@@ -38,7 +34,7 @@ const depositFunds = async (
   {amount}
 ) => {
   console.log("Depositing funds on pool...");
-  await getFunds({ token }, { txConfig, testContext }, { amount })
+  await getFunds({ token }, { testContext }, { amount, to: txConfig.from })
   await token.approve(lendingPool.address, amount, txConfig);
   const depositResult = await lendingPool.deposit(amount, txConfig);
   lendingPoolEvents
