@@ -143,7 +143,6 @@ contract("ATMLiquidityMiningUnStakeTest", function(accounts) {
                     .unstake(result)
                     .emitted(user, tToken.address, amounts[1], result.receipt.blockNumber, 0); // accruedTLR validated on calculateAccruedTLR test.
             } catch (error) {
-                console.log(error);
                 assert(mustFail);
                 assert(error);
                 assert.equal(error.reason, expectedErrorMessage);

@@ -145,17 +145,28 @@ contract ATMLiquidityMining is
         external
         isInitialized() 
     {
-        uint256 accruedTLRBalance = userStakeInfo[msg.sender].accruedTLRBalance;
+        uint256 accruedTLRBalance = _calculateAccruedTLR(block.number);
+            emit PrintUint("withdrawTLR - accruedTLRBalance", accruedTLRBalance);            
+
         uint256 minimumTLRToRedeem = governance.getGeneralSetting("MIN_TLR_TO_REDEEM");
         require(accruedTLRBalance >= minimumTLRToRedeem, "NOT_ENOUGH_TLR_TOKENS_TO_REDEEM");
+        require(accruedTLRBalance >= amount, "UNSUFFICIENT_TLR_TO_WITHDRAW");
         // Minted tokens are reduced from accrued balance
-        userStakeInfo[msg.sender].accruedTLRBalance.sub(amount);
+        userStakeInfo[msg.sender].accruedTLRBalance = accruedTLRBalance.sub(amount);
+        userStakeInfo[msg.sender].lastRewardedBlock = block.number;
         // mint/assign TLR to user
         // TODO: validate we don't overflow TLR max cap
-        tlrToken.mint(msg.sender, amount); // TODO: ATM contract must be minter
-
-        // TODO: emit TLR withdraw event
+        tlrToken.mint(msg.sender, amount); // TODO: Liq Min contract must be minter
+        
+        emit TLRWithdrawn(
+            msg.sender,
+            amount,
+            userStakeInfo[msg.sender].lastRewardedBlock,
+            userStakeInfo[msg.sender].tTokenStakedBalance,
+            userStakeInfo[msg.sender].accruedTLRBalance
+        );
     }
+    
     function gettTokenTotalBalance(address tToken) external view returns (uint256) {
         return IERC20(tToken).balanceOf(address(this));
     }
@@ -166,7 +177,7 @@ contract ATMLiquidityMining is
     */
     function _calculateAccruedTLR(uint256 blockNumber)
         internal
-        //view
+        //view uncomment after PrintUint
         isInitialized() 
         returns (uint256 earned)
     {
@@ -205,6 +216,14 @@ contract ATMLiquidityMining is
             newestRewardBlock = reward.startBlockNumber;
         }
         return earned;
+    }
+
+    function getTLRBalance() 
+        external 
+        //view unComment after PrintUint
+        returns (uint256)
+    {
+        return _calculateAccruedTLR(block.number);
     }
    
 }
