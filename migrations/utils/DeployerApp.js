@@ -149,7 +149,7 @@ DeployerApp.prototype.writeJson = function(outputJson = `./build/${this.network}
     jsonfile.writeFile(outputJson, jsonData, {spaces: 4, EOL: '\r\n'}, function (err) {
       console.log(`JSON file created at '${outputJson}'.`);
       if(err) {
-        console.error("Errors: " + err);
+        console.error('\x1b[33m\x1b[41m\x1b[5m%s\x1b[0m', "Errors: " + err);
       }
     });
 }

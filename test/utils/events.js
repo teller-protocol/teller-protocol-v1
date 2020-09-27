@@ -810,6 +810,20 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        withdrawTLR: tx => {
+            const name = 'TLRWithdrawn';
+            return {
+                name: name,
+                emitted: (sender, amount, lastRewardedBlock, tTokenStakedBalance) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.amount.toString(), amount.toString());
+                    assert.equal(ev.lastRewardedBlock.toString(), lastRewardedBlock.toString());
+                    assert.equal(ev.tTokenStakedBalance.toString(), tTokenStakedBalance.toString());
+                    assert(parseInt(ev.accruedTLRBalance) > 0);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
     },
     upgradeable: {
         upgraded: tx => {
