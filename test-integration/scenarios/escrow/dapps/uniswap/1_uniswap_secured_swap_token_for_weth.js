@@ -1,11 +1,11 @@
 const BigNumber = require("bignumber.js");
-const { teller, tokens } = require("../../../scripts/utils/contracts");
+const { teller, tokens } = require("../../../../../scripts/utils/contracts");
 const {
   loans: loansActions,
   escrow: escrowActions
-} = require("../../utils/actions");
-const { takeOutNewLoan } = require("../../utils/takeOutNewLoan");
-const { toDecimals } = require("../../../test/utils/consts");
+} = require("../../../../utils/actions");
+const { takeOutNewLoan } = require("../../../../utils/takeOutNewLoan");
+const { toDecimals } = require("../../../../../test/utils/consts");
 
 module.exports = async (testContext) => {
   const { processArgs, getContracts, accounts } = testContext
@@ -54,11 +54,9 @@ module.exports = async (testContext) => {
     { loanId: loan.id }
   )
 
-  const principal = loan.principalOwed.toString()
-  const interest = loan.interestOwed.toString()
-  const totalOwed = new BigNumber(principal).plus(interest).toString()
-  await loansActions.getFunds(contracts, { testContext }, { amount: interest, to: borrower })
-  await escrowActions.repay(contracts, context,
-    { amount: totalOwed }
+  const weth = await getContracts.getDeployed(tokens.get('WETH'))
+  const tokensPath = [ contracts.token, weth ]
+  await escrowActions.dapp.uniswap.swap(contracts, context,
+    { tokensPath, sourceAmount: loan.borrowedAmount.toString(), minDestination: '1000000000000000' }
   )
 };

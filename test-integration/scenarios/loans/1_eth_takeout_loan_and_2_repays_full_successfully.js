@@ -143,7 +143,7 @@ module.exports = async (testContext) => {
     }
   );
 
-  await loansAssertions.assertClosedLoan(
+  await loansAssertions.assertLoanValues(
     allContracts,
     { testContext },
     {

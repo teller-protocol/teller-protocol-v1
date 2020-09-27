@@ -11,10 +11,13 @@ module.exports = async (testContext) => {
   const { processArgs, getContracts, accounts } = testContext
 
   const collTokenName = "ETH";
-  const tokenName = "DAI";
+  const sourceTokenName = "DAI"
+  const destinationTokenName = "USDC";
+  console.assert(sourceTokenName !== destinationTokenName, 'Tokens must not be the same');
+
   const verbose = processArgs.getValue("verbose");
 
-  const contracts = await getContracts.getAllDeployed({ teller, tokens }, tokenName, collTokenName);
+  const contracts = await getContracts.getAllDeployed({ teller, tokens }, sourceTokenName, collTokenName);
 
   const borrower = await accounts.getAt(1);
   const initialOraclePrice = toDecimals("0.00295835", 18); // 1 token = 0.00295835 ether = 5000000000000000 wei
@@ -54,9 +57,9 @@ module.exports = async (testContext) => {
     { loanId: loan.id }
   )
 
-  const { address: wethAddress } = getContracts.getInfo(tokens.get('WETH'))
-  const path = [ contracts.token.address, wethAddress ]
+  const destinationToken = await getContracts.getDeployed(tokens.get(destinationTokenName))
+  const tokensPath = [ contracts.token, destinationToken ]
   await escrowActions.dapp.uniswap.swap(contracts, context,
-    { path, sourceAmount: loan.borrowedAmount.toString(), minDestination: '1000000000000000' }
+    { tokensPath, sourceAmount: loan.borrowedAmount.toString(), minDestination: '100' }
   )
 };

@@ -12,8 +12,6 @@ module.exports = async (testContext) => {
 
   const collTokenName = "ETH";
   const sourceTokenName = "DAI"
-  const destinationTokenName = "USDC";
-  console.assert(sourceTokenName !== destinationTokenName, 'Tokens must not be the same');
 
   const verbose = processArgs.getValue("verbose");
 
@@ -57,9 +55,12 @@ module.exports = async (testContext) => {
     { loanId: loan.id }
   )
 
-  const { address: destinationAddress } = getContracts.getInfo(tokens.get(destinationTokenName))
-  const path = [ contracts.token.address, destinationAddress ]
+  const destinationToken = await getContracts.getDeployed(tokens.get('USDC'))
+
+  const tokensPath = [ contracts.token, destinationToken ]
+  const sourceAmount = new BigNumber(loan.borrowedAmount.toString()).plus(1).toString()
+  const minDestinationBalance = '100000000000000000'
   await escrowActions.dapp.uniswap.swap(contracts, context,
-    { path, sourceAmount: loan.borrowedAmount.toString(), minDestination: '100' }
+    { tokensPath, sourceAmount, minDestination: minDestinationBalance, shouldFail: true, expectedRevertReason: 'UNISWAP_INSUFFICIENT_SOURCE' }
   )
 };

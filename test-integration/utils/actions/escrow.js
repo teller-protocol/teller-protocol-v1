@@ -1,14 +1,14 @@
+const assert = require('assert')
+
+const loansActions = require("./loans");
 const {
-  getEscrow,
-} = require("./loans");
+  tokens: tokensAssertions
+} = require('../assertions')
 const {
   escrow: escrowEvents,
   uniswap: uniswapEvents,
   compound: compoundEvents
 } = require("../../../test/utils/events");
-const {
-  loans: loansActions
-} = require('./loans')
 const { teller, tokens } = require("../../../scripts/utils/contracts");
 const logicNames = require("../../../test/utils/logicNames");
 
@@ -34,7 +34,7 @@ const claimTokensByLoanId = async (
   { txConfig, testContext },
   { loanId, recipient }
 ) => {
-  const escrowInstance = await getEscrow({loans}, {testContext}, {loanId});
+  const escrowInstance = await loansActions.getEscrow({loans}, {testContext}, {loanId});
   const claimTokensResult = await escrowInstance.claimTokens(recipient, txConfig);
   escrowEvents
     .tokensClaimed(claimTokensResult)
@@ -60,29 +60,47 @@ const claimTokens = async (
 
 /**
  * Use the Uniswap Dapp to swap a token using the funds in an Escrow.
+ * @returns number - Balance of the destination token if swap was successful
  */
 const uniswapSwap = async (
   { escrow },
   { txConfig, testContext },
-  { path, sourceAmount, minDestination }
+  { tokensPath, sourceAmount, minDestination, shouldFail = false, expectedRevertReason }
 ) => {
   const { getContracts } = testContext;
   const { address: uniswapDappAddress, contract: uniswapDapp  } = await getContracts.getDeployed(
     teller.escrowDapp(logicNames.Uniswap)
   );
+  const path = tokensPath.map(({ address }) => address)
   const dappData = {
     location: uniswapDappAddress,
     data: uniswapDapp.methods.swap(path, sourceAmount, minDestination).encodeABI()
   };
-  const swapResult = await escrow.callDapp(dappData, txConfig);
+  const fn = escrow.callDapp(dappData, txConfig);
 
-  // const sourceTokenAddress = path[0];
-  // const destinationTokenAddress = path[path.length - 1];
-  // uniswapEvents
-  //   .uniswapSwapped(swapResult)
-  //   .emitted(txConfig.from, escrow.address, sourceTokenAddress, destinationTokenAddress, sourceAmount);
+  if (shouldFail) {
+    try {
+      await assert.rejects(fn, 'Expected swap to fail')
+    } catch (error) {
+      assert.strictEqual(error.reason, expectedRevertReason);
+    }
+  } else {
+    await assert.doesNotReject(fn, 'Expected swap to be successful')
 
-  return swapResult;
+    const balance = await tokensAssertions.balanceGt(
+      { token: tokensPath[tokensPath.length - 1] },
+      { testContext },
+      { address: escrow.address, minBalance: minDestination }
+    )
+
+    // const sourceTokenAddress = path[0];
+    // const destinationTokenAddress = path[path.length - 1];
+    // uniswapEvents
+    //   .uniswapSwapped(swapResult)
+    //   .emitted(txConfig.from, escrow.address, sourceTokenAddress, destinationTokenAddress, sourceAmount);
+
+    return balance;
+  }
 };
 
 /**

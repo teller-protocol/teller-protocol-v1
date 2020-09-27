@@ -1,7 +1,6 @@
 const assert = require('assert');
 const BigNumber = require("bignumber.js");
 const loanStatus = require("../../../test/utils/loanStatus");
-const { loans: loansActions } = require('../actions');
 const {
   NULL_ADDRESS,
   ONE_DAY,
@@ -9,7 +8,7 @@ const {
   toUnits,
 } = require("../../../test/utils/consts");
 
-const assertClosedLoan = async (
+const assertLoanValues = async (
   {loans},
   {testContext},
   {
@@ -23,23 +22,22 @@ const assertClosedLoan = async (
     escrowTotalValueToken = BigNumber('0'),
   }
 ) => {
-  const loanInfo = await loans.loans(id);
-  assert.equal(loanInfo.id.toString(), id.toString());
-  assert.equal(loanInfo.status.toString(), status.toString());
-  assert.equal(loanInfo.collateral.toString(), collateral.toString());
-  assert.equal(loanInfo.principalOwed.toString(), principalOwed.toString());
-  assert.equal(loanInfo.interestOwed.toString(), interestOwed.toString());
-  assert.equal(loanInfo.liquidated, liquidated);
+  const { artifacts } = testContext
 
-  const escrow = await loansActions.getEscrow({loans}, {testContext}, {loanId: id});
-  const {
-    valueInToken,
-    valueInEth,
-  } = await escrow.calculateTotalValue();
-  assert.equal(valueInToken.toString(), escrowTotalValueToken.toString());
-  assert.equal(valueInEth.toString(), escrowTotalValueEth.toString());
+  const loanInfo = await loans.loans(id);
+  assert.strictEqual(loanInfo.id.toString(), id.toString());
+  assert.strictEqual(loanInfo.status.toString(), status.toString());
+  assert.strictEqual(loanInfo.collateral.toString(), collateral.toString());
+  assert.strictEqual(loanInfo.principalOwed.toString(), principalOwed.toString());
+  assert.strictEqual(loanInfo.interestOwed.toString(), interestOwed.toString());
+  assert.strictEqual(loanInfo.liquidated, liquidated);
+
+  const escrow = await artifacts.require('Escrow').at(loanInfo.escrow)
+  const { valueInToken, valueInEth } = await escrow.calculateTotalValue();
+  assert.strictEqual(valueInToken.toString(), escrowTotalValueToken.toString());
+  assert.strictEqual(valueInEth.toString(), escrowTotalValueEth.toString());
 };
 
 module.exports = {
-  assertClosedLoan,
+  assertLoanValues,
 };

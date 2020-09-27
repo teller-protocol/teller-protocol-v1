@@ -26,7 +26,8 @@ exports.takeOutNewLoan = async function takeOutNewLoan(
     amountWei,
     maxAmountWei,
     durationInDays,
-    signers
+    signers,
+    secured = true
   }
 ) {
   const { timer } = testContext;
@@ -45,6 +46,7 @@ exports.takeOutNewLoan = async function takeOutNewLoan(
   );
 
   // Requesting the loan terms.
+  const collateralRatio = secured ? 6000 : 0
   const loanTermsRequestTemplate = {
     amount: amountWei,
     durationInDays,
@@ -52,7 +54,7 @@ exports.takeOutNewLoan = async function takeOutNewLoan(
   };
   const loanResponseTemplate = {
     interestRate: 4000,
-    collateralRatio: 6000,
+    collateralRatio,
     maxLoanAmount: maxAmountWei,
     signers,
     responseTime: 50
