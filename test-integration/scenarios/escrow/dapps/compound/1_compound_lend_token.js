@@ -1,6 +1,6 @@
 const BigNumber = require("bignumber.js");
 
-const { teller, tokens } = require("../../../../../scripts/utils/contracts");
+const { teller, tokens, ctokens } = require("../../../../../scripts/utils/contracts");
 const {
   loans: loansActions,
   escrow: escrowActions
@@ -28,7 +28,7 @@ module.exports = async (testContext) => {
   const durationInDays = 5;
   const signers = await accounts.getAllAt(12, 13);
   const collateralNeeded = "320486794520547945";
-  const secured = false
+  const secured = true
   const borrowerTxConfig = { from: borrower };
   const borrowerTxConfigWithValue = {
     ...borrowerTxConfig,
@@ -59,12 +59,10 @@ module.exports = async (testContext) => {
     { loanId: loan.id }
   )
 
-  const destinationToken = await getContracts.getDeployed(tokens.get('USDC'))
+  contracts.cToken = await getContracts.getDeployed(ctokens.fromTokenName(sourceTokenName))
 
-  const tokensPath = [ token, destinationToken ]
-  const sourceAmount = loan.borrowedAmount.toString()
-  const minDestinationBalance = '100000000000000000'
-  await escrowActions.dapp.uniswap.swap(contracts, context,
-    { tokensPath, sourceAmount, minDestination: minDestinationBalance, shouldFail: true, expectedRevertReason: 'DAPP_UNSECURED_NOT_ALLOWED' }
+  const amount = loan.borrowedAmount.toString()
+  await escrowActions.dapp.compound.lend(contracts, context,
+    { amount }
   )
 };

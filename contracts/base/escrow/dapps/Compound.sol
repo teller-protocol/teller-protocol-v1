@@ -58,7 +58,7 @@ contract Compound is ICompound, BaseEscrowDapp {
 
         uint256 balanceAfterMint = cToken.balanceOf(address(this));
         require(
-            balanceAfterMint >= (balanceBeforeMint + amount),
+            balanceAfterMint >= balanceBeforeMint,
             "COMPOUND_BALANCE_NOT_INCREASED"
         );
 

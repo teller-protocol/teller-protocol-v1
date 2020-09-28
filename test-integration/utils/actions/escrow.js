@@ -58,6 +58,22 @@ const claimTokens = async (
   return claimTokensResult;
 };
 
+const callDapp = async (
+  { escrow },
+  { txConfig, testContext },
+  { dappName, fnName, args }
+) => {
+  const { getContracts } = testContext;
+  const { address: location, contract: dappContract } = await getContracts.getDeployed(
+    teller.escrowDapp(dappName)
+  );
+  const dappData = {
+    location,
+    data: dappContract.methods[fnName](...args).encodeABI()
+  };
+  return escrow.callDapp(dappData, txConfig);
+}
+
 /**
  * Use the Uniswap Dapp to swap a token using the funds in an Escrow.
  * @returns number - Balance of the destination token if swap was successful
@@ -67,16 +83,13 @@ const uniswapSwap = async (
   { txConfig, testContext },
   { tokensPath, sourceAmount, minDestination, shouldFail = false, expectedRevertReason }
 ) => {
-  const { getContracts } = testContext;
-  const { address: uniswapDappAddress, contract: uniswapDapp  } = await getContracts.getDeployed(
-    teller.escrowDapp(logicNames.Uniswap)
-  );
   const path = tokensPath.map(({ address }) => address)
-  const dappData = {
-    location: uniswapDappAddress,
-    data: uniswapDapp.methods.swap(path, sourceAmount, minDestination).encodeABI()
-  };
-  const fn = escrow.callDapp(dappData, txConfig);
+  const args = [ path, sourceAmount, minDestination ]
+  const fn = callDapp(
+    { escrow },
+    { txConfig, testContext },
+    { dappName: logicNames.Uniswap, fnName: 'swap', args }
+  )
 
   if (shouldFail) {
     try {
@@ -107,15 +120,22 @@ const uniswapSwap = async (
  * Use the Compound Dapp to lend a token using the funds in an Escrow.
  */
 const compoundLend = async (
-  { escrow },
+  { escrow, cToken },
   { txConfig, testContext },
-  { cTokenAddress, amount }
+  { amount }
 ) => {
-  const { getContracts } = testContext;
-  const compoundDapp = await getContracts.getDeployed(
-    teller.escrowDapp(logicNames.Compound)
-  );
-  const lendResult = await compoundDapp.lend(cTokenAddress, amount, txConfig);
+  const args = [ cToken.address, amount ]
+  const lendResult = await callDapp(
+    { escrow },
+    { txConfig, testContext },
+    { dappName: logicNames.Compound, fnName: 'lend', args }
+  )
+
+  await tokensAssertions.balanceGt(
+    { token: cToken },
+    { testContext },
+    { address: escrow.address, minBalance: '0' }
+  )
 
   // TODO: get token instances to fetch balances
   // compoundEvents
