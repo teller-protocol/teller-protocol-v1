@@ -104,7 +104,8 @@ contract TLRToken is
         require(cap > 0, "CAP_CANNOT_BE_ZERO");
         require(atm.isContract(), "ATM_CANNOT_BE_ZERO_ADDRESS");
         require(settingsAddress.isContract(), "SETTINGS_SHOULD_BE_A_CONTRACT");
-        super.initialize(name, symbol, decimals);
+        ERC20Detailed.initialize(name, symbol, decimals);
+        ERC20Mintable.initialize(msg.sender);
         TInitializable._initialize();
         _cap = cap;
         _maxVestingPerWallet = maxVestingPerWallet;
@@ -143,7 +144,7 @@ contract TLRToken is
      */
     function mint(address account, uint256 amount)
         public
-        onlyPauser()
+        onlyMinter()
         whenNotPaused()
         isInitialized()
         returns (bool)
