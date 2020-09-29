@@ -77,6 +77,7 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
         );
         TLRToken(tlrTokenProxyAddress).addMinter(liquidityMiningAddress);
 
+        // TODO: add liq mining as TLR minter
         atms[atmGovernanceProxyAddress] = true;
         tlrTokens[atmGovernanceProxyAddress] = tlrTokenProxyAddress;
         atmsList.add(atmGovernanceProxyAddress);
