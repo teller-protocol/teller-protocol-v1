@@ -145,7 +145,7 @@ contract ATMLiquidityMining is
         external
         isInitialized() 
     {
-        uint256 accruedTLRBalance = _calculateAccruedTLR(block.number);
+        uint256 accruedTLRBalance = userStakeInfo[msg.sender].accruedTLRBalance.add(_calculateAccruedTLR(block.number));
             emit PrintUint("withdrawTLR - accruedTLRBalance", accruedTLRBalance);            
 
         uint256 minimumTLRToRedeem = governance.getGeneralSetting("MIN_TLR_TO_REDEEM");
@@ -154,9 +154,8 @@ contract ATMLiquidityMining is
         // Minted tokens are reduced from accrued balance
         userStakeInfo[msg.sender].accruedTLRBalance = accruedTLRBalance.sub(amount);
         userStakeInfo[msg.sender].lastRewardedBlock = block.number;
-        // mint/assign TLR to user
         // TODO: validate we don't overflow TLR max cap
-        tlrToken.mint(msg.sender, amount); // TODO: Liq Min contract must be minter
+        tlrToken.mint(msg.sender, amount); 
         
         emit TLRWithdrawn(
             msg.sender,
@@ -218,12 +217,20 @@ contract ATMLiquidityMining is
         return earned;
     }
 
-    function getTLRBalance() 
+    function getAccruedTLRBalance() 
         external 
         //view unComment after PrintUint
         returns (uint256)
     {
         return _calculateAccruedTLR(block.number);
+    }
+    
+    function getTLRBalance() 
+        external 
+        //view unComment after PrintUint
+        returns (uint256)
+    {
+        return userStakeInfo[msg.sender].accruedTLRBalance.add(_calculateAccruedTLR(block.number));
     }
    
 }
