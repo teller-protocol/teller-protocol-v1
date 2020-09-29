@@ -10,6 +10,7 @@ import "../base/DynamicProxy.sol";
 
 // Interfaces
 import "./TLRTokenInterface.sol";
+import "./TLRToken.sol";
 import "./ATMGovernanceInterface.sol";
 import "./ATMFactoryInterface.sol";
 import "./ATMLiquidityMiningInterface.sol";
@@ -74,7 +75,9 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
             atmGovernanceProxyAddress,
             tlrTokenProxyAddress
         );
+        TLRToken(tlrTokenProxyAddress).addMinter(liquidityMiningAddress);
 
+        // TODO: add liq mining as TLR minter
         atms[atmGovernanceProxyAddress] = true;
         tlrTokens[atmGovernanceProxyAddress] = tlrTokenProxyAddress;
         atmsList.add(atmGovernanceProxyAddress);
