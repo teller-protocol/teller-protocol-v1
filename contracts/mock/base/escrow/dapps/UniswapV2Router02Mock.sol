@@ -56,33 +56,27 @@ contract UniswapV2Router02Mock is IUniswapV2Router02 {
     }
 
     function swapTokensForExactTokens(
-        uint amountOut,
-        uint amountInMax,
+        uint256 amountOut,
+        uint256 amountInMax,
         address[] calldata path,
         address to,
-        uint deadline
-    ) external returns (uint[] memory amounts) {
-
-    }
+        uint256 deadline
+    ) external returns (uint256[] memory amounts) {}
 
     function swapTokensForExactETH(
-        uint amountOut,
-        uint amountInMax,
+        uint256 amountOut,
+        uint256 amountInMax,
         address[] calldata path,
         address to,
-        uint deadline
-    ) external returns (uint[] memory amounts) {
-
-    }
+        uint256 deadline
+    ) external returns (uint256[] memory amounts) {}
 
     function swapETHForExactTokens(
-        uint amountOut,
+        uint256 amountOut,
         address[] calldata path,
         address to,
-        uint deadline
-    ) external payable returns (uint[] memory amounts) {
-
-    }
+        uint256 deadline
+    ) external payable returns (uint256[] memory amounts) {}
 
     function _swap(
         uint256 amountOutMin,

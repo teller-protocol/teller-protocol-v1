@@ -46,6 +46,8 @@ GetContracts.prototype.getAllDeployed = async function({ teller, tokens }, token
     if(collTokenName.toLowerCase() === 'eth') {
         collateralToken = {
             decimals: async () => Promise.resolve(18),
+            name: async () => Promise.resolve('ETH'),
+            symbol: async () => Promise.resolve('ETH'),
             address: async () => Promise.resolve(ETH_ADDRESS),
         };
     } else {
@@ -55,10 +57,14 @@ GetContracts.prototype.getAllDeployed = async function({ teller, tokens }, token
     const token = await this.getDeployed(tokens.get(tokenName));
     const lendingPool = await this.getDeployed(teller.custom(collTokenName).lendingPool(tokenName));
     const loans = await this.getDeployed(teller.custom(collTokenName).loans(tokenName));
-    const oracle = await this.getDeployed(teller.custom(collTokenName).chainlink.custom(tokenName));
-    const pairAggregator = await this.getDeployed(teller.oracles().custom(tokenName, collTokenName));
     const loanTermsConsensus = await this.getDeployed(teller.custom(collTokenName).loanTermsConsensus(tokenName));
 
+    const oraclePrice = await loans.priceOracle();
+    const PairAggregatorInterface = this.artifacts.require('PairAggregatorInterface');
+    const pairAggregator = await PairAggregatorInterface.at(oraclePrice);
+    const chainlinkAggregator = await pairAggregator.aggregator();
+    const PairAggregatorMock = this.artifacts.require('PairAggregatorMock');
+    const oracle = await PairAggregatorMock.at(chainlinkAggregator);
     return {
         settings,
         token,

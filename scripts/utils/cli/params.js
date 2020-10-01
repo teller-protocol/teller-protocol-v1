@@ -36,6 +36,9 @@ const {
   MIN_AMOUNT,
   LOGIC_NAME,
   CONTRACT_NAME,
+  REVERT_TEST,
+  COLL_TOKEN_NAMES,
+  VERBOSE,
 } = require("./names");
 
 const newOption = (argv, name, alias, type, description, defaultValue) => {
@@ -396,6 +399,28 @@ module.exports.addRevert = (yargs, defaultParam = REVERT.default) => {
   );
 };
 
+module.exports.addRevertTest = (yargs, defaultParam = REVERT_TEST.default) => {
+  newOption(
+    yargs,
+    REVERT_TEST.name,
+    REVERT_TEST.alias,
+    "boolean",
+    `Sets whether the process reverts the changes after running each integration test. By default ${defaultParam}`,
+    defaultParam
+  );
+};
+
+module.exports.addCollTokenNames = (yargs, defaultParam = COLL_TOKEN_NAMES.default) => {
+  newOption(
+    yargs,
+    COLL_TOKEN_NAMES.name,
+    COLL_TOKEN_NAMES.alias,
+    "array",
+    `The collateral token names used in the integration tests. By default ${defaultParam}`,
+    defaultParam
+  );
+};
+
 module.exports.addInitialNonce = (
   yargs,
   defaultParam = INITIAL_NONCE.default
@@ -441,7 +466,7 @@ module.exports.addTokenNames = (yargs, defaultParam = TOKEN_NAMES.default) => {
     TOKEN_NAMES.name,
     TOKEN_NAMES.alias,
     "array",
-    `Used to add signers in the LoanTermsConsensus contracts used for each token (or lending token). By default ${defaultParam}`,
+    `Used to execute the integration tests. By default ${defaultParam}`,
     defaultParam
   );
 };
@@ -470,20 +495,6 @@ module.exports.addSafetyInterval = (
     SAFETY_INTERVAL.alias,
     "number",
     "Used to set as min time window (in seconds) between last time borrower deposited collateral and when the borrower takes out the loan.",
-    defaultParam
-  );
-};
-
-module.exports.addTestTokenName = (
-  yargs,
-  defaultParam = TEST_TOKEN_NAME.default
-) => {
-  newOption(
-    yargs,
-    TEST_TOKEN_NAME.name,
-    TEST_TOKEN_NAME.alias,
-    "string",
-    `This represents the token to be used in the integration tests. By default ${defaultParam}`,
     defaultParam
   );
 };
@@ -520,6 +531,17 @@ module.exports.addContractName = (yargs, defaultParam = CONTRACT_NAME.default) =
     CONTRACT_NAME.alias,
     "string",
     `The contract name to update. It should be equal to the contract name (including cases). By default ${defaultParam}`,
+    defaultParam
+  );
+};
+
+module.exports.addVerbose = (yargs, defaultParam = VERBOSE.default) => {
+  newOption(
+    yargs,
+    VERBOSE.name,
+    VERBOSE.alias,
+    "boolean",
+    `Used in integration tests to print info out. By default ${defaultParam}`,
     defaultParam
   );
 };

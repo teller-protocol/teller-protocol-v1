@@ -6,6 +6,7 @@ const InitializeableDynamicProxy = artifacts.require("./base/InitializeableDynam
 const PairAggregatorMock = artifacts.require("./mock/providers/chainlink/PairAggregatorMock.sol");
 
 module.exports = async function(deployer, network, accounts) {
+  // We only deploy the Chainlink mocks on the ganache-mainnet netwotk.
   if (network !== 'ganache-mainnet') return
 
   console.log(`Deploying smart contracts to '${network}'.`);
@@ -28,9 +29,10 @@ module.exports = async function(deployer, network, accounts) {
     networkConfig
   });
 
-  const initialUsdcEthPrice = '4789225000000000';
-  const initialDaiEthPrice = '4806625000000000';
-  const initialLinkUsdPrice = '2415458937198';
+  const initialUsdcEthPrice = '2797359000000000';
+  const initialDaiEthPrice = '2827359000000000';
+  const initialLinkUsdPrice = '993000000'; // 1 LINK = 9.93 USD or 1 USD = 0.1007049
+  const initialLinkEthPrice = '27750000000000000'; // 1 LINK = 0.02775 ETH or 1 ETH = 36.035827 LINK
   await deployerApp.deployChainlink(PairAggregatorMock, {
     inversed: false,
     collateralDecimals: 18,
@@ -46,19 +48,26 @@ module.exports = async function(deployer, network, accounts) {
     quoteTokenName: "ETH"
   }, initialDaiEthPrice, txConfig);
   await deployerApp.deployChainlink(PairAggregatorMock, {
-    inversed: false,
+    inversed: true,
     collateralDecimals: 18,
     responseDecimals: 8,
     baseTokenName: "LINK",
     quoteTokenName: "DAI"
   }, initialLinkUsdPrice, txConfig);
   await deployerApp.deployChainlink(PairAggregatorMock, {
-    inversed: false,
+    inversed: true,
     collateralDecimals: 18,
     responseDecimals: 8,
     baseTokenName: "LINK",
     quoteTokenName: "USDC"
   }, initialLinkUsdPrice, txConfig);
+  await deployerApp.deployChainlink(PairAggregatorMock, {
+    inversed: true,
+    collateralDecimals: 18,
+    responseDecimals: 18,
+    baseTokenName: "LINK",
+    quoteTokenName: "ETH"
+  }, initialLinkEthPrice, txConfig);
 
   deployerApp.writeChainlink();
   console.log(`${"=".repeat(25)} Deployment process finished. ${"=".repeat(25)}`);

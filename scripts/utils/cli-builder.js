@@ -28,13 +28,15 @@ const {
     addTokenNames,
     addRequiredSubmissions,
     addSafetyInterval,
-    addTestTokenName,
     addMinValue,
     addMaxValue,
     addBackRounds,
     addMinAmount,
     addLogicName,
     addContractName,
+    addRevertTest,
+    addCollTokenNames,
+    addVerbose,
 } = require("./cli/params");
 
 const addBase = (yargs) => {
@@ -62,14 +64,15 @@ module.exports = {
         yargs.scriptName("yarn test:ganache*");
         addNetwork(yargs);
         addRevert(yargs);
+        addRevertTest(yargs);
         addInitialNonce(yargs);
         addSignerAddress(yargs);
         addSignerUrl(yargs);
         addTokenNames(yargs);
+        addCollTokenNames(yargs);
         addRequiredSubmissions(yargs);
         addSafetyInterval(yargs);
-        addTokenName(yargs);
-        addTestTokenName(yargs);
+        addVerbose(yargs);
         return yargs;
     },
     lendingPool: {

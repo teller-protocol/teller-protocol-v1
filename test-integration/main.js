@@ -9,6 +9,7 @@ const Swapper = require('./utils/Swapper')
 const { printSeparatorLine } = require('../test/utils/consts');
 const executeInitializers = require('./initializers');
 const chains = require('../test/utils/chains');
+const { REVERT, NETWORK, REVERT_TEST, INITIAL_NONCE, TOKEN_NAMES, COLL_TOKEN_NAMES, VERBOSE } = require('../scripts/utils/cli/names');
 
 const UniswapSwapper = artifacts.require('./mock/providers/uniswap/Swapper.sol')
 
@@ -25,10 +26,15 @@ const executeTestFunction = async (testFunctionObject, testContext) => {
 };
 
 module.exports = async (callback) => {
-    const network = processArgs.getValue('network');
-    const revertBlockchain = processArgs.getValue('revert', false);
-    // const revertTestBlockchain = processArgs.getValue('revertTest', true);
-    const initialNonceValue = processArgs.getValue('initialNonce', 0);
+    const network = processArgs.getValue(NETWORK.name);
+    const revertBlockchain = processArgs.getValue(REVERT.name, false);
+    const revertTestBlockchain = processArgs.getValue(REVERT_TEST.name, false);
+    const initialNonceValue = processArgs.getValue(INITIAL_NONCE.name, 0);
+    const verbose = processArgs.getValue(VERBOSE.name, false);
+
+    const tokenNames = processArgs.getValue(TOKEN_NAMES.name, 0);
+    const collTokenNames = processArgs.getValue(COLL_TOKEN_NAMES.name, 0);
+
     const testResults = new Map();
     const timer = new Timer(web3);
     const accounts = new Accounts(web3);
@@ -36,12 +42,13 @@ module.exports = async (callback) => {
     let snapshotId;
     try {
         const getContracts = processArgs.createGetContracts(artifacts);
-
-        const uniswapArtifact = await UniswapSwapper.new()
-        const funderTxConfig = await accounts.getTxConfigAt(6);
-        const swapper = await Swapper.init(web3, uniswapArtifact, funderTxConfig)
         
         snapshotId = await timer.takeSnapshot();
+
+        const uniswapArtifact = await UniswapSwapper.new();
+        const funderTxConfig = await accounts.getTxConfigAt(6);
+        const swapper = await Swapper.init(web3, uniswapArtifact, funderTxConfig);
+
         const testContext = {
             artifacts,
             network,
@@ -52,7 +59,8 @@ module.exports = async (callback) => {
             web3,
             nonces,
             chainId: chains.localGanache,
-            swapper
+            swapper,
+            verbose,
         };
 
         await executeInitializers(
@@ -68,14 +76,22 @@ module.exports = async (callback) => {
                 for (const testObject of testObjects) {
                     try {
                         printSeparatorLine();
-                        // let testSnapshotId;
-                        // if(revertTestBlockchain) {
-                        //     testSnapshotId = await timer.takeSnapshot();
-                        // }
-                        await executeTestFunction(testObject, testContext);
-                        // if(revertTestBlockchain) {
-                        //     await timer.revertToSnapshot(testSnapshotId.result);
-                        // }
+                        let testSnapshotId;
+                        if(revertTestBlockchain) {
+                            testSnapshotId = await timer.takeSnapshot();
+                        }
+                        for (const tokenName of tokenNames) {
+                            for (const collTokenName of collTokenNames) {
+                                console.log(`\n\nExecuting integration tests for market: ${tokenName} / ${collTokenName}.\n\n`)
+                                await executeTestFunction(
+                                    testObject,
+                                    {...testContext, tokenName, collTokenName},
+                                );
+                            }
+                        }
+                        if(revertTestBlockchain) {
+                            await timer.revertToSnapshot(testSnapshotId.result);
+                        }
                         printSeparatorLine();
                     } catch (error) {
                         console.log(error);
