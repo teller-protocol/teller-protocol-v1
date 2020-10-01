@@ -4,18 +4,17 @@ const {
   NULL_ADDRESS,
   ONE_DAY,
   toBytes32,
-  toUnits,
 } = require("../../../test/utils/consts");
 const {
   createMultipleSignedLoanTermsResponses,
   createLoanTermsRequest,
 } = require("../../../test/utils/loan-terms-helper");
-const {printFullLoan} = require("../../../test/utils/printer");
+const { printLoanDetails, printPairAggregator } = require("../../../test/utils/printer");
 const {
   lendingPool: lendingPoolEvents,
   loans: loansEvents,
 } = require("../../../test/utils/events");
-const { tokens } = require("../../../scripts/utils/contracts");
+const errorActions = require("./errors");
 
 /**
  * Gets an amount of tokens requested based on the current network.
@@ -30,7 +29,7 @@ const getFunds = async (
       await token.mint(to, amount);
       break
     case 'ganache-mainnet':
-      const { swapper } = testContext
+      const { swapper } = testContext;
       await swapper.swapForExact(to, token.address, amount)
       break
   }
@@ -141,14 +140,15 @@ const requestLoanTerms = async (
  * If the token parameter is not defined, use ETH as collateral.
  */
 const depositCollateral = async (
-  {token, loans},
+  {collateralToken, loans},
   {txConfig, testContext},
   {loanId, amount}
 ) => {
-  console.log(`Depositing collateral ${amount} in loan id ${loanId}.`);
-  if (token) {
-    await getFunds({ token }, { txConfig, testContext }, { amount })
-    await token.approve(loans.address, amount, txConfig);
+  const collateralTokenSymbol = await collateralToken.symbol();
+  console.log(`Depositing collateral ${amount} ${collateralTokenSymbol} in loan id ${loanId}.`);
+  if (collateralTokenSymbol.toUpperCase() !== 'ETH') {
+    await getFunds({ token: collateralToken }, { txConfig, testContext }, { amount, to: txConfig.from })
+    await collateralToken.approve(loans.address, amount, txConfig);
   } else {
     // Don't overwrite the config object
     txConfig = Object.assign({}, txConfig);
@@ -184,21 +184,35 @@ const withdrawCollateral = async (
     .collateralWithdrawn(depositResult)
     .emitted(loanId, txConfig.from, amount);
   return depositResult;
-};
+}
 
 const takeOutLoan = async (
   {loans},
   {txConfig, testContext},
-  {loanId, amount}
+  {loanId, amount, expectedErrorMessage = undefined}
 ) => {
   console.log(`Taking out loan id ${loanId}...`);
-  const takeOutLoanResult = await loans.takeOutLoan(loanId, amount, txConfig);
-  const loanInfo = await loans.loans(loanId);
-  const {escrow} = loanInfo;
-  loansEvents
-    .loanTakenOut(takeOutLoanResult)
-    .emitted(loanId, txConfig.from, escrow, amount);
-  return loanInfo;
+  const takeOutLoanResultPromise = async () => await loans.takeOutLoan(loanId, amount, txConfig);
+
+  const {
+    failed,
+    tx: takeOutLoanResult,
+  } = await errorActions.handleContractError(
+    'TakeOutLoan',
+    { testContext },
+    {
+      fnPromise: takeOutLoanResultPromise,
+      expectedErrorMessage,
+    }
+  );
+  if(!failed) {
+    const loanInfo = await loans.loans(loanId);
+    const { escrow } = loanInfo;
+    loansEvents
+      .loanTakenOut(takeOutLoanResult)
+      .emitted(loanId, txConfig.from, escrow, amount);
+    return loanInfo;
+  }
 };
 
 /**
@@ -254,53 +268,35 @@ const liquidateLoan = async (
 };
 
 const printLoanInfo = async (
-  {loans, settings},
+  allContracts,
   {testContext},
   {
     tokenInfo,
     collateralTokenInfo,
     loanId,
-    verbose = false,
-    latestAnswer,
-    oracleAddress,
   }
 ) => {
-  if (verbose === "false") {
+  const { verbose } = testContext;
+  if (!verbose) {
     return;
   }
-  const {web3} = testContext;
-  const loanInfo = await loans.loans(loanId);
-  await printFullLoan(
-    web3,
-    {
-      tokenName: tokenInfo.name,
-      tokenDecimals: tokenInfo.decimals,
-      collateralTokenDecimals: collateralTokenInfo.decimals,
-      collateralTokenName: collateralTokenInfo.name,
-    },
-    {latestAnswer, oracleAddress},
-    loanInfo
-  );
-  if(loanInfo.escrow === NULL_ADDRESS) {
+  const escrow = await getEscrow(allContracts, { testContext }, {loanId});
+  await printLoanDetails(allContracts, {testContext}, {tokenInfo, collateralTokenInfo, loanId, escrow});
+};
+
+const printPairAggregatorInfo = async (
+  allContracts,
+  { testContext },
+  {
+    tokenInfo,
+    collateralTokenInfo,
+  }
+) => {
+  const { verbose } = testContext;
+  if (!verbose) {
     return;
   }
-  const escrowInstance = await getEscrow({loans}, {testContext}, {loanId});
-  const {
-    valueInToken,
-    valueInEth,
-  } = await escrowInstance.calculateTotalValue();
-  const collateralBufferBytes32 = toBytes32(web3, platformSettingsNames.CollateralBuffer);
-  const collateralBufferSetting = await settings.getPlatformSetting(collateralBufferBytes32);
-  const collateralBuffer = parseInt(collateralBufferSetting.value);
-//Liquidable?:                   true call loans.canBeLiquidate();
-  console.log('-'.repeat(120));
-  console.group(`Escrow Info:`);
-  console.log(`Collateral Buffer (%):           ${collateralBuffer} = ${collateralBuffer / 100} %`);
-  console.log(`Escrow Address:                  ${escrowInstance.address}`);
-  console.log(`Total Value (borrowed token):    ${valueInToken} = ${toUnits(valueInToken, tokenInfo.decimals).toFixed(6)} ${tokenInfo.name}`);
-  console.log(`Total Value (collateral token):  ${valueInEth} = ${toUnits(valueInEth, collateralTokenInfo.decimals).toFixed(6)} ${collateralTokenInfo.name}`);
-  console.groupEnd();
-  console.log('-'.repeat(120));
+  await printPairAggregator(allContracts, {tokenInfo, collateralTokenInfo});
 };
 
 const getEscrow = async (
@@ -313,6 +309,9 @@ const getEscrow = async (
     const { artifacts } = testContext;
     const Escrow = artifacts.require("./base/Escrow.sol");
     const loanInfo = await loans.loans(loanId);
+    if(loanInfo.escrow ===  NULL_ADDRESS) {
+      return undefined;
+    }
     const escrow = await Escrow.at(loanInfo.escrow);
     return escrow;
   };
@@ -327,5 +326,6 @@ module.exports = {
   repay,
   liquidateLoan,
   printLoanInfo,
+  printPairAggregatorInfo,
   getEscrow,
 };

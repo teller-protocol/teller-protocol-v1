@@ -34,8 +34,10 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
     using Address for address;
 
     /* Constants */
-
-    IUniswapV2Router02 public constant router = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
+    // TODO Add comment why we are using the same address for all the networks.
+    IUniswapV2Router02 public constant router = IUniswapV2Router02(
+        0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D
+    );
 
     // State is shared with Escrow contract as it uses delegateCall() to interact with this contract.
 
@@ -97,11 +99,6 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
         _tokenUpdated(source);
         _tokenUpdated(destination);
 
-        emit UniswapSwapped(
-            source,
-            destination,
-            sourceAmount,
-            destinationAmount
-        );
+        emit UniswapSwapped(source, destination, sourceAmount, destinationAmount);
     }
 }

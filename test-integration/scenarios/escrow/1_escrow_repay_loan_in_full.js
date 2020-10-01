@@ -12,7 +12,7 @@ module.exports = async (testContext) => {
 
   const collTokenName = "ETH";
   const tokenName = "DAI";
-  const verbose = processArgs.getValue("verbose");
+  // TODO use parameters for the coll/token name.
 
   const contracts = await getContracts.getAllDeployed({ teller, tokens }, tokenName, collTokenName);
 

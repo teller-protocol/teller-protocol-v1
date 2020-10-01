@@ -5,6 +5,7 @@ const _2_add_signers = require('./2_add_signers');
 const initializersObject = {
     'init-1-set-settings': _1_set_settings,
     // 'init-2-add-signers': _2_add_signers,
+    // TODO Remove the 2_add_signers file.
 };
 
 module.exports = async (initConfig, initContext) => {
