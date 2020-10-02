@@ -16,6 +16,9 @@ const {
   loans: loansEvents,
 } = require("../../../test/utils/events");
 const { tokens } = require("../../../scripts/utils/contracts");
+const {
+  tokens: tokensAssertions
+} = require('../assertions')
 
 /**
  * Gets an amount of tokens requested based on the current network.
@@ -25,6 +28,8 @@ const getFunds = async (
   {testContext},
   {amount, to}
 ) => {
+  const balanceBefore = (await token.balanceOf.call(to)).toString()
+
   switch (testContext.network) {
     case 'ganache':
       await token.mint(to, amount);
@@ -34,6 +39,12 @@ const getFunds = async (
       await swapper.swapForExact(to, token.address, amount)
       break
   }
+
+  await tokensAssertions.balanceGt(
+    { token },
+    { testContext },
+    { address: to, minBalance: balanceBefore }
+  )
 }
 
 const depositFunds = async (

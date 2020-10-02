@@ -5,13 +5,14 @@ import "../util/AddressLib.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
+import "../interfaces/IBaseUpgradeable.sol";
 
 /**
     @notice It is the base contract to hold the settings instance and upgradeable logic name in registry.
 
     @author develop@teller.finance
  */
-contract BaseUpgradeable {
+contract BaseUpgradeable is IBaseUpgradeable {
     using Address for address;
     using AddressLib for address;
 

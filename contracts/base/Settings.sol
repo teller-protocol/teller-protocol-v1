@@ -284,7 +284,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         address cTokenAddress,
         uint256 maxLoanAmount
     ) external onlyPauser() isInitialized() {
-        require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
+        require(assetAddress.isContract() || assetAddress == ETH_ADDRESS, "ASSET_ADDRESS_MUST_BE_CONTRACT");
 
         assetSettings[assetAddress].requireNotExists();
 
@@ -392,6 +392,10 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         returns (AssetSettingsLib.AssetSettings memory)
     {
         return assetSettings[assetAddress];
+    }
+
+    function getCTokenAddress(address assetAddress) external view returns (address) {
+        return assetSettings[assetAddress].cTokenAddress;
     }
 
     /**

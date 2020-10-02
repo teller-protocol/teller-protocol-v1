@@ -254,6 +254,11 @@ interface SettingsInterface {
         view
         returns (AssetSettingsLib.AssetSettings memory);
 
+    function getCTokenAddress(address assetAddress)
+        external
+        view
+        returns (address);
+
     /**
         @notice Tests whether amount exceeds the current maximum loan amount for a specific asset settings.
         @param assetAddress asset address to test the setting.

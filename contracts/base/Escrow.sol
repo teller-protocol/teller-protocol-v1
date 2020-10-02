@@ -37,7 +37,7 @@ import "../providers/openzeppelin/SignedSafeMath.sol";
 
     @author develop@teller.finance
  */
-contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowDapp {
+contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
     using Address for address;
     using SafeMath for uint256;
     using SignedSafeMath for uint256;

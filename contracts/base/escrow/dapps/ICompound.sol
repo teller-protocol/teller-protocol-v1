@@ -8,23 +8,23 @@ pragma solidity 0.5.17;
 interface ICompound {
     /**
         @notice To lend we first have to approve the cToken to access the token balance then mint. 
-        @param cTokenAddress address of the token.
+        @param tokenAddress address of the token.
         @param amount amount of tokens to mint. 
     */
-    function lend(address cTokenAddress, uint256 amount) external;
+    function lend(address tokenAddress, uint256 amount) external;
 
     /**
         @notice This function calls Compound redeemUnderlying().
-        @param cTokenAddress address of the token.
+        @param tokenAddress address of the token.
         @param amount amount of underlying tokens to redeem.
     */
-    function redeem(address cTokenAddress, uint256 amount) external;
+    function redeem(address tokenAddress, uint256 amount) external;
 
     /**
         @notice This function redeems complete token balance.
-        @param cTokenAddress address of the token.
+        @param tokenAddress address of the token.
     */
-    function redeemAll(address cTokenAddress) external;
+    function redeemAll(address tokenAddress) external;
 
     /**
         @notice This event is emitted every time Compound lend is invoked successfully.

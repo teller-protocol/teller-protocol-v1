@@ -1,4 +1,5 @@
 const assert = require('assert')
+const BigNumber = require('bignumber.js')
 
 const loansActions = require("./loans");
 const {
@@ -83,6 +84,11 @@ const uniswapSwap = async (
   { txConfig, testContext },
   { tokensPath, sourceAmount, minDestination, shouldFail = false, expectedRevertReason }
 ) => {
+  const tokenA = tokensPath[0]
+  const tokenB = tokensPath[tokensPath.length - 1]
+  const tokenABalanceBefore = (await tokenA.balanceOf(address)).toString()
+  const tokenBBalanceBefore = (await tokenB.balanceOf(address)).toString()
+
   const path = tokensPath.map(({ address }) => address)
   const args = [ path, sourceAmount, minDestination ]
   const fn = callDapp(
@@ -100,10 +106,16 @@ const uniswapSwap = async (
   } else {
     await assert.doesNotReject(fn, 'Expected swap to be successful')
 
-    const balance = await tokensAssertions.balanceGt(
-      { token: tokensPath[tokensPath.length - 1] },
+    await tokensAssertions.balanceLt(
+      { token: tokenA },
       { testContext },
-      { address: escrow.address, minBalance: minDestination }
+      { address: escrow.address, maxBalance: tokenABalanceBefore }
+    )
+    const minDestinationBalance = new BigNumber(tokenBBalanceBefore).plus(minDestination)
+    await tokensAssertions.balanceGt(
+      { token: tokenB },
+      { testContext },
+      { address: escrow.address, minBalance: minDestinationBalance.toString() }
     )
 
     // const sourceTokenAddress = path[0];
@@ -111,8 +123,6 @@ const uniswapSwap = async (
     // uniswapEvents
     //   .uniswapSwapped(swapResult)
     //   .emitted(txConfig.from, escrow.address, sourceTokenAddress, destinationTokenAddress, sourceAmount);
-
-    return balance;
   }
 };
 
@@ -120,21 +130,29 @@ const uniswapSwap = async (
  * Use the Compound Dapp to lend a token using the funds in an Escrow.
  */
 const compoundLend = async (
-  { escrow, cToken },
+  { escrow, token, cToken },
   { txConfig, testContext },
   { amount }
 ) => {
-  const args = [ cToken.address, amount ]
+  const tokenBalanceBefore = (await token.balanceOf(escrow.address)).toString()
+  const cTokenBalanceBefore = (await cToken.balanceOf(escrow.address)).toString()
+
+  const args = [ token.address, amount ]
   const lendResult = await callDapp(
     { escrow },
     { txConfig, testContext },
     { dappName: logicNames.Compound, fnName: 'lend', args }
   )
 
+  await tokensAssertions.balanceLt(
+    { token },
+    { testContext },
+    { address: escrow.address, maxBalance: tokenBalanceBefore }
+  )
   await tokensAssertions.balanceGt(
     { token: cToken },
     { testContext },
-    { address: escrow.address, minBalance: '0' }
+    { address: escrow.address, minBalance: cTokenBalanceBefore }
   )
 
   // TODO: get token instances to fetch balances
@@ -149,15 +167,30 @@ const compoundLend = async (
  * Use the Compound Dapp to redeem a token being lent using the funds in an Escrow.
  */
 const compoundRedeem = async (
-  { escrow },
+  { escrow, token, cToken },
   { txConfig, testContext },
-  { cTokenAddress, amount }
+  { amount }
 ) => {
-  const { getContracts } = testContext;
-  const compoundDapp = await getContracts.getDeployed(
-    teller.escrowDapp(logicNames.Compound)
-  );
-  const redeemResult = await compoundDapp.redeem(cTokenAddress, amount, txConfig);
+  const tokenBalanceBefore = (await token.balanceOf(escrow.address)).toString()
+  const cTokenBalanceBefore = (await cToken.balanceOf(escrow.address)).toString()
+
+  const args = [ token.address, amount ]
+  const redeemResult = await callDapp(
+    { escrow },
+    { txConfig, testContext },
+    { dappName: logicNames.Compound, fnName: 'redeem', args }
+  )
+
+  await tokensAssertions.balanceLt(
+    { token: cToken },
+    { testContext },
+    { address: escrow.address, maxBalance: cTokenBalanceBefore }
+  )
+  await tokensAssertions.balanceGt(
+    { token },
+    { testContext },
+    { address: escrow.address, minBalance: tokenBalanceBefore }
+  )
 
   // TODO: get token instances to fetch balances
   // compoundEvents
@@ -171,15 +204,28 @@ const compoundRedeem = async (
  * Use the Compound Dapp to redeem the full balance of a token being lent using the funds in an Escrow.
  */
 const compoundRedeemAll = async (
-  { escrow },
-  { txConfig, testContext },
-  { cTokenAddress }
+  { escrow, token, cToken },
+  { txConfig, testContext }
 ) => {
-  const { getContracts } = testContext;
-  const compoundDapp = await getContracts.getDeployed(
-    teller.escrowDapp(logicNames.Compound)
-  );
-  const redeemResult = await compoundDapp.redeemAll(cTokenAddress, txConfig);
+  const tokenBalanceBefore = (await token.balanceOf(escrow.address)).toString()
+
+  const args = [ token.address ]
+  const redeemResult = await callDapp(
+    { escrow },
+    { txConfig, testContext },
+    { dappName: logicNames.Compound, fnName: 'redeemAll', args }
+  )
+
+  await tokensAssertions.balanceIs(
+    { token: cToken },
+    { testContext },
+    { address: escrow.address, expectedBalance: '0' }
+  )
+  await tokensAssertions.balanceGt(
+    { token },
+    { testContext },
+    { address: escrow.address, minBalance: tokenBalanceBefore }
+  )
 
   // TODO: get token instances to fetch balances
   // compoundEvents

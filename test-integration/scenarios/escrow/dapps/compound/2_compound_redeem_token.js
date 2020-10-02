@@ -1,14 +1,12 @@
 const BigNumber = require("bignumber.js");
-const { teller, tokens } = require("../../../../../scripts/utils/contracts");
+
+const { teller, tokens, ctokens } = require("../../../../../scripts/utils/contracts");
 const {
   loans: loansActions,
   escrow: escrowActions
 } = require("../../../../utils/actions");
 const { takeOutNewLoan } = require("../../../../utils/takeOutNewLoan");
 const { toDecimals } = require("../../../../../test/utils/consts");
-const {
-  tokens: tokensAssertions
-} = require('../../../../utils/assertions')
 
 module.exports = async (testContext) => {
   const { processArgs, getContracts, accounts } = testContext
@@ -19,16 +17,18 @@ module.exports = async (testContext) => {
   const verbose = processArgs.getValue("verbose");
 
   const contracts = await getContracts.getAllDeployed({ teller, tokens }, sourceTokenName, collTokenName);
+  const { token } = contracts
 
   const borrower = await accounts.getAt(1);
   const initialOraclePrice = toDecimals("0.00295835", 18); // 1 token = 0.00295835 ether = 5000000000000000 wei
-  const decimals = parseInt(await contracts.token.decimals());
+  const decimals = parseInt(await token.decimals());
   const lendingPoolDepositAmountWei = toDecimals(4000, decimals);
   const amountWei = toDecimals(100, decimals);
   const maxAmountWei = toDecimals(200, decimals);
   const durationInDays = 5;
   const signers = await accounts.getAllAt(12, 13);
   const collateralNeeded = "320486794520547945";
+  const secured = true
   const borrowerTxConfig = { from: borrower };
   const borrowerTxConfigWithValue = {
     ...borrowerTxConfig,
@@ -45,6 +45,7 @@ module.exports = async (testContext) => {
     lendingPoolDepositAmountWei,
     amountWei,
     maxAmountWei,
+    secured,
     durationInDays,
     signers
   });
@@ -58,17 +59,16 @@ module.exports = async (testContext) => {
     { loanId: loan.id }
   )
 
-  const weth = await getContracts.getDeployed(tokens.get('WETH'))
+  contracts.cToken = await getContracts.getDeployed(ctokens.fromTokenName(sourceTokenName))
 
-  const amount = '100000000000000000'
-  await loansActions.getFunds(
-    { token: weth },
-    { testContext },
-    { amount, to: contracts.escrow }
+  const borrowedAmount = loan.borrowedAmount.toString()
+  await escrowActions.dapp.compound.lend(contracts, context,
+    { amount: borrowedAmount }
   )
 
-  const tokensPath = [ weth, contracts.token ]
-  await escrowActions.dapp.uniswap.swap(contracts, context,
-    { tokensPath, sourceAmount: amount, minDestination: '1' }
+  const cTokenDecimals = await contracts.cToken.decimals.call()
+  const cTokenAmount = new BigNumber(1).times(new BigNumber(10).pow(cTokenDecimals.toString()))
+  await escrowActions.dapp.compound.redeem(contracts, context,
+    { amount: cTokenAmount.toString() }
   )
 };

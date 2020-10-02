@@ -1,6 +1,8 @@
 const _1_escrow_repay_loan_in_full = require('./1_escrow_repay_loan_in_full');
 
 const _1_compound_lend_token = require('./dapps/compound/1_compound_lend_token')
+const _2_compound_redeem_token = require('./dapps/compound/2_compound_redeem_token')
+const _3_compound_redeem_all_token = require('./dapps/compound/3_compound_redeem_all_token')
 
 const _1_uniswap_secured_swap_token_for_weth = require('./dapps/uniswap/1_uniswap_secured_swap_token_for_weth')
 const _2_uniswap_secured_swap_token_for_token = require('./dapps/uniswap/2_uniswap_secured_swap_token_for_token')
@@ -14,6 +16,8 @@ const escrow = {
 
 const compound = {
   _1_compound_lend_token,
+  _2_compound_redeem_token,
+  _3_compound_redeem_all_token,
 }
 
 const uniswap = {
