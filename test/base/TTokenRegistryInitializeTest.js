@@ -18,8 +18,6 @@ contract('TTokenRegistryInitializeTest', function (accounts) {
 
     beforeEach('Setup for each test', async () => {
         const pauser = accounts[0];
-        
-        mocks = await createMocks(Mock, 10);
         const versionsRegistryInstance = await Mock.new();
         const constsInstance = await Mock.new();
         await versionsRegistryInstance.givenMethodReturnAddress(
@@ -73,11 +71,14 @@ contract('TTokenRegistryInitializeTest', function (accounts) {
 
             try {
                 // Invocation
-                const result = await await instance.initialize(settingsAdd);;
+                const result = await instance.initialize(settingsAdd);
+
+                const isInitialized = await instance.initialized();
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid');
-                assert(result)
+                assert(result);
+                assert(isInitialized);
             } catch (error) {
                 assert(mustFail);
                 assert(error);
