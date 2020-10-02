@@ -593,11 +593,11 @@ contract LoansBase is LoansInterface, Base {
         returns (uint256)
     {
         TellerCommon.LoanStatus currentStatus = loans[loanID].status;
-        if(currentStatus == TellerCommon.LoanStatus.Closed) {
+        if (currentStatus == TellerCommon.LoanStatus.Closed) {
             return 0;
         }
         uint256 loanAmount = loans[loanID].loanTerms.maxLoanAmount;
-        if(currentStatus == TellerCommon.LoanStatus.Active) {
+        if (currentStatus == TellerCommon.LoanStatus.Active) {
             loanAmount = getTotalOwed(loanID);
         }
         uint256 collateralRatio = loans[loanID].loanTerms.collateralRatio;
