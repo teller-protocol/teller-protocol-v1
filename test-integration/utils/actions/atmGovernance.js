@@ -178,3 +178,16 @@ const setCRA = async (
     .CRASet(result)
     .emitted(txConfig.from, _cra);
 }
+
+module.export = {
+  addGeneralSetting,
+  updateGeneralSetting,
+  removeGeneralSetting,
+  addAssetMarketSetting,
+  updateAssetMarketSetting,
+  removeAssetMarketSetting,
+  addDataProvider,
+  updateDataProvider,
+  removeDataProvider,
+  setCRA
+}
