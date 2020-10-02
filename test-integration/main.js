@@ -22,7 +22,8 @@ const executeTestFunction = async (testFunctionObject, testContext) => {
     await testFunctionObject.test(testContext);
     console.timeEnd(testFunctionObject.key);
     console.timeLog(testFunctionObject.key)
-    console.groupEnd(`>>>>> Test: ${testFunctionObject.key} ends <<<<<`);
+    console.groupEnd();
+    console.log(`>>>>> Test: ${testFunctionObject.key} ends <<<<<`);
 };
 
 module.exports = async (callback) => {
@@ -34,7 +35,7 @@ module.exports = async (callback) => {
 
     const tokenNames = processArgs.getValue(TOKEN_NAMES.name, 0);
     const collTokenNames = processArgs.getValue(COLL_TOKEN_NAMES.name, 0);
-
+    let totalTests = 0;
     const testResults = new Map();
     const timer = new Timer(web3);
     const accounts = new Accounts(web3);
@@ -73,6 +74,7 @@ module.exports = async (callback) => {
             const testType = typeof test;
             if(testType === 'object') {
                 const testObjects = Object.keys(test).map( key => ({test: test[key], key }));
+                totalTests += testObjects.length;
                 for (const testObject of testObjects) {
                     try {
                         printSeparatorLine();
@@ -82,7 +84,7 @@ module.exports = async (callback) => {
                         }
                         for (const tokenName of tokenNames) {
                             for (const collTokenName of collTokenNames) {
-                                console.log(`\n\nExecuting integration tests for market: ${tokenName} / ${collTokenName}.\n\n`)
+                                console.log(`\n\nExecuting integration test for market: ${tokenName} / ${collTokenName}.\n\n`)
                                 await executeTestFunction(
                                     testObject,
                                     {...testContext, tokenName, collTokenName},
@@ -111,7 +113,13 @@ module.exports = async (callback) => {
     }
     console.log();
     if(testResults.size === 0) {
+        const totalMarkets = tokenNames.length * collTokenNames.length;
+        const totalCategories = tests.length;
         console.log('Test Results: >>>> The integration tests finished successfully. <<<<');
+        console.log(`Markets: ${totalMarkets}`);
+        console.log(`Categories: ${totalCategories}`);
+        console.log(`Integration Tests: ${totalTests}`);
+        console.log(`Executions: ${totalTests * totalMarkets}`);
         callback();
     } else {
         console.group('Test Results: >>>> Some integration tests failed. <<<<');

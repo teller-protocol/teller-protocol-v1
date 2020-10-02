@@ -100,7 +100,7 @@ module.exports = async (testContext) => {
 
   // Depositing collateral.
   await loansActions.depositCollateral(
-    {...allContracts, token: undefined},
+    allContracts,
     {txConfig: borrowerTxConfig, testContext},
     {loanId: loanInfoRequestLoanTerms.id, amount: collateralAmountDepositCollateral}
   );
