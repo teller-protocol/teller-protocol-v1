@@ -3,13 +3,8 @@ const {
 } = require("./loans");
 const {
   escrow: escrowEvents,
-  uniswap: uniswapEvents,
-  compound: compoundEvents
 } = require("../../../test/utils/events");
-const {
-  loans: loansActions
-} = require('./loans')
-const { teller, tokens } = require("../../../scripts/utils/contracts");
+const { teller } = require("../../../scripts/utils/contracts");
 const logicNames = require("../../../test/utils/logicNames");
 
 /**
@@ -21,8 +16,10 @@ const repay = async (
   { txConfig, testContext },
   { amount }
 ) => {
+  console.log(`Repaying ${amount} in escrow ${escrow.address}...`);
   await token.approve(escrow.address, amount, txConfig);
   const escrowResult = await escrow.repay(amount, txConfig);
+  //TODO Add assertions (events, amount).
   return escrowResult;
 };
 
@@ -76,6 +73,7 @@ const uniswapSwap = async (
   };
   const swapResult = await escrow.callDapp(dappData, txConfig);
 
+  // TODO Add assertions
   // const sourceTokenAddress = path[0];
   // const destinationTokenAddress = path[path.length - 1];
   // uniswapEvents
@@ -99,6 +97,7 @@ const compoundLend = async (
   );
   const lendResult = await compoundDapp.lend(cTokenAddress, amount, txConfig);
 
+  // TODO Add assertions
   // TODO: get token instances to fetch balances
   // compoundEvents
   //   .compoundLended(lendResult)

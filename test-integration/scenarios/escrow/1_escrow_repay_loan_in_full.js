@@ -1,64 +1,103 @@
-const BigNumber = require("bignumber.js");
-const { teller, tokens } = require("../../../scripts/utils/contracts");
+const {teller, tokens} = require("../../../scripts/utils/contracts");
 const {
   loans: loansActions,
-  escrow: escrowActions
+  escrow: escrowActions,
+  tokens: tokensActions,
 } = require("../../utils/actions");
-const { takeOutNewLoan } = require("../../utils/takeOutNewLoan");
-const { toDecimals } = require("../../../test/utils/consts");
+const helperActions = require("../../utils/actions/helper");
+const {toDecimals} = require("../../../test/utils/consts");
 
 module.exports = async (testContext) => {
-  const { processArgs, getContracts, accounts } = testContext
+  const {
+    getContracts,
+    accounts,
+    collTokenName,
+    tokenName,
+  } = testContext;
+  // TODO Add scenario title (from spreadsheet).
+  console.log("Scenario: Escrow#1 - .");
 
-  const collTokenName = "ETH";
-  const tokenName = "DAI";
-  // TODO use parameters for the coll/token name.
-
-  const contracts = await getContracts.getAllDeployed({ teller, tokens }, tokenName, collTokenName);
-
-  const borrower = await accounts.getAt(1);
-  const initialOraclePrice = toDecimals("0.00295835", 18); // 1 token = 0.00295835 ether = 5000000000000000 wei
-  const decimals = parseInt(await contracts.token.decimals());
-  const lendingPoolDepositAmountWei = toDecimals(4000, decimals);
-  const amountWei = toDecimals(100, decimals);
-  const maxAmountWei = toDecimals(200, decimals);
-  const durationInDays = 5;
-  const signers = await accounts.getAllAt(12, 13);
-  const collateralNeeded = "320486794520547945";
-  const borrowerTxConfig = { from: borrower };
-  const borrowerTxConfigWithValue = {
-    ...borrowerTxConfig,
-    value: collateralNeeded
-  };
-  const lenderTxConfig = await accounts.getTxConfigAt(0);
-
-  const loan = await takeOutNewLoan(contracts, { testContext }, {
-    borrower,
-    borrowerTxConfig,
-    borrowerTxConfigWithValue,
-    initialOraclePrice,
-    lenderTxConfig,
-    lendingPoolDepositAmountWei,
-    amountWei,
-    maxAmountWei,
-    durationInDays,
-    signers
+  const allContracts = await getContracts.getAllDeployed(
+    {teller, tokens},
+    tokenName,
+    collTokenName
+  );
+  const {token, collateralToken, loans} = allContracts;
+  const tokenInfo = await tokensActions.getInfo({token});
+  const collateralTokenInfo = await tokensActions.getInfo({
+    token: collateralToken,
   });
 
-  const context = {
-    txConfig: borrowerTxConfig,
-    testContext
+  const depositFundsAmount = toDecimals(300, tokenInfo.decimals);
+  const maxAmountRequestLoanTerms = toDecimals(100, tokenInfo.decimals);
+  const amountTakeOut = toDecimals(50, tokenInfo.decimals);
+  let initialOraclePrice;
+  let collateralAmountDepositCollateral;
+  let collateralAmountWithdrawCollateral;
+  if (collTokenName.toLowerCase() === "eth") {
+    initialOraclePrice = toDecimals("0.00295835", 18);
+    collateralAmountDepositCollateral = toDecimals(0.2, collateralTokenInfo.decimals);
+    collateralAmountWithdrawCollateral = toDecimals(0.1,collateralTokenInfo.decimals);
   }
+  if (collTokenName.toLowerCase() === "link") {
+    initialOraclePrice = toDecimals("0.100704", 8);
+    collateralAmountDepositCollateral = toDecimals(6.1, collateralTokenInfo.decimals);
+    collateralAmountWithdrawCollateral = toDecimals(1, collateralTokenInfo.decimals);
+  }
+  const durationInDays = 5;
+  const signers = await accounts.getAllAt(12, 13);
+  const borrowerTxConfig = await accounts.getTxConfigAt(1);
+  const lenderTxConfig = await accounts.getTxConfigAt(0);
 
-  contracts.escrow = await loansActions.getEscrow(contracts, context,
-    { loanId: loan.id }
-  )
+  const loan = await helperActions.takeOutNewLoan(
+    allContracts,
+    {testContext},
+    {
+      borrowerTxConfig,
+      oraclePrice: initialOraclePrice,
+      lenderTxConfig,
+      depositFundsAmount,
+      maxAmountRequestLoanTerms,
+      amountTakeOut,
+      collateralAmountDepositCollateral,
+      durationInDays,
+      signers,
+      tokenInfo,
+      collateralTokenInfo,
+    }
+  );
 
-  const principal = loan.principalOwed.toString()
-  const interest = loan.interestOwed.toString()
-  const totalOwed = new BigNumber(principal).plus(interest).toString()
-  await loansActions.getFunds({ token: contracts.token }, { testContext }, { amount: interest, to: borrower })
-  await escrowActions.repay(contracts, context,
-    { amount: totalOwed }
-  )
+  allContracts.escrow = await loansActions.getEscrow(
+    allContracts,
+    {testContext},
+    {
+      loanId: loan.id,
+    }
+  );
+
+  const totalOwed = await loans.getTotalOwed(loan.id);
+
+  await loansActions.getFunds(
+    {token: allContracts.token},
+    {testContext},
+    {amount: loan.interestOwed, to: borrowerTxConfig.from}
+  );
+  await escrowActions.repay(
+    allContracts,
+    {
+      txConfig: borrowerTxConfig,
+      testContext,
+    },
+    {amount: totalOwed}
+  );
+
+  await loansActions.printLoanInfo(
+    allContracts,
+    { testContext },
+    {
+      loanId: loan.id,
+      collateralTokenInfo,
+      tokenInfo,
+    }
+  );
 };

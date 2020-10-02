@@ -1,4 +1,5 @@
 const assert = require('assert');
+const _ = require('lodash');
 
 module.exports = async function (
     instances,
@@ -64,5 +65,14 @@ module.exports = async function (
         inverseRegisterRequests,
         txConfig,
     );
+    console.log('\n');
+    const allRequests = registerRequests.concat(inverseRegisterRequests);
+    for (const {baseToken, quoteToken, inverse} of allRequests) {
+        const pairAggregatorAddress =await pairAggregatorRegistryInstance.getPairAggregator(
+            baseToken,
+            quoteToken,
+        );
+        console.log(`Pair aggregator (inverse? ${inverse}) for market ${baseToken} / ${quoteToken}: ${pairAggregatorAddress}`);
+    }
     console.log('\n');
 }

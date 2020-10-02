@@ -3,5 +3,5 @@ const escrow = require("./escrow");
 
 module.exports = {
   loans,
-  //escrow,
+  escrow,
 };
