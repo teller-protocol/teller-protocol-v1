@@ -4,6 +4,7 @@ const escrow = require('./escrow');
 const blockchain = require('./blockchain');
 const tokens = require('./tokens');
 const errors = require('./errors');
+const settings = require('./settings');
 
 module.exports = {
     loans,
@@ -12,4 +13,5 @@ module.exports = {
     blockchain,
     tokens,
     errors,
+    settings,
 };

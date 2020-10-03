@@ -133,6 +133,16 @@ module.exports = async (testContext) => {
     {loanId: loanInfoRequestLoanTerms.id, amount: amountRepay_1}
   );
 
+  await loansActions.printLoanInfo(
+    allContracts,
+    { testContext },
+    {
+      loanId: loanInfoRequestLoanTerms.id,
+      collateralTokenInfo,
+      tokenInfo,
+    }
+  );
+
   await loansActions.withdrawCollateral(
     allContracts,
     {txConfig: borrowerTxConfig, testContext},
