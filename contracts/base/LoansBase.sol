@@ -208,11 +208,10 @@ contract LoansBase is LoansInterface, Base {
         );
 
         // Withdrawal amount holds the amount of excess collateral in the loan
-        uint256 withdrawalAmount = collateralInfo.collateral.sub(collateralInfo.neededInCollateralTokens);
-        require(
-            withdrawalAmount >= amount,
-            "COLLATERAL_AMOUNT_TOO_HIGH"
+        uint256 withdrawalAmount = collateralInfo.collateral.sub(
+            collateralInfo.neededInCollateralTokens
         );
+        require(withdrawalAmount >= amount, "COLLATERAL_AMOUNT_TOO_HIGH");
 
         // Update the contract total and the loan collateral total
         _payOutCollateral(loanID, amount, msg.sender);
