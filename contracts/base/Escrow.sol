@@ -2,7 +2,6 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
-import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 import "./BaseUpgradeable.sol";
 import "./BaseEscrowDapp.sol";
 import "./TInitializable.sol";
@@ -17,6 +16,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 import "../util/SettingsConsts.sol";
 import "../util/TellerCommon.sol";
+import "../providers/openzeppelin/SignedSafeMath.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -29,23 +29,23 @@ import "../util/TellerCommon.sol";
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
-    @notice This contract is used by borrowers to call DApp functions (using delegate calls).
+    @notice This contract is used by borrowers to call Dapp functions (using delegate calls).
     @notice This contract should only be constructed using it's upgradeable Proxy contract.
-    @notice In order to call a DApp function, the DApp must be added in the EscrowFactory instance.
-    @dev The current DApp implementations are: Uniswap and Compound.
+    @notice In order to call a Dapp function, the Dapp must be added in the EscrowFactory instance.
+    @dev The current Dapp implementations are: Uniswap and Compound.
 
     @author develop@teller.finance
  */
-contract Escrow is
-    EscrowInterface,
-    TInitializable,
-    Ownable,
-    BaseUpgradeable,
-    BaseEscrowDapp,
-    SettingsConsts
-{
+contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowDapp {
     using Address for address;
     using SafeMath for uint256;
+    using SignedSafeMath for uint256;
+
+    // Numerical representation of 100.00 percent.
+    uint16 public constant ONE_HUNDRED_PERCENT = 10000;
+
+    // Ethereum decimal places.
+    uint8 public constant ETH_DECIMALS = 18;
 
     /** State Variables **/
 
@@ -64,10 +64,6 @@ contract Escrow is
 
     /** Public Functions **/
 
-    function isLoanActive() public view returns (bool) {
-        return getLoan().status == TellerCommon.LoanStatus.Active;
-    }
-
     /**
         @notice It calls a given dapp using a delegatecall function by a borrower owned the current loan id associated to this escrow contract.
         @param dappData the current dapp data to be executed.
@@ -77,9 +73,13 @@ contract Escrow is
         isInitialized()
         onlyOwner()
     {
+        TellerCommon.Dapp memory dapp = settings().escrowFactory().dapps(
+            dappData.location
+        );
+        require(dapp.exists, "DAPP_NOT_WHITELISTED");
         require(
-            settings().escrowFactory().isDapp(dappData.location),
-            "DAPP_NOT_WHITELISTED"
+            dapp.unsecured || loans.isLoanSecured(loanID),
+            "DAPP_UNSECURED_NOT_ALLOWED"
         );
 
         (bool success, ) = dappData.location.delegatecall(dappData.data);
@@ -95,10 +95,17 @@ contract Escrow is
         return loans.loans(loanID).loanTerms.borrower;
     }
 
+    /**
+        @notice Returns this Escrow's loan instance. 
+     */
     function getLoan() public view returns (TellerCommon.Loan memory) {
         return loans.loans(loanID);
     }
 
+    /**
+        @notice Calculate this Escrow instance total value. 
+        @return This Escrow instance total value expressed in ETH and Token value. 
+     */
     function calculateTotalValue() public view returns (TellerCommon.EscrowValue memory) {
         address[] memory tokens = getTokens();
 
@@ -116,9 +123,9 @@ contract Escrow is
         uint256 collateralValue = getLoan().collateral;
         if (getLoan().loanTerms.collateralRatio > 0) {
             uint256 bufferPercent = settings().getPlatformSettingValue(
-                COLLATERAL_BUFFER_SETTING
+                settings().consts().COLLATERAL_BUFFER_SETTING()
             );
-            uint256 buffer = (collateralValue * bufferPercent) / 10000;
+            uint256 buffer = collateralValue.mul(bufferPercent).div(ONE_HUNDRED_PERCENT);
             collateralValue = collateralValue.sub(buffer);
         }
 
@@ -146,20 +153,62 @@ contract Escrow is
             });
     }
 
-    function canPurchase() public view returns (bool) {
-        return loans.canLiquidateLoan(loanID);
-    }
-
+    /**
+        @notice Checks if this Escrow loan value is undervalued based its token price.
+        @return true if this escrow loan is undervalued based on its token price.
+     */
     function isUnderValued() external view returns (bool) {
         return calculateTotalValue().valueInToken < loans.getTotalOwed(loanID);
     }
 
-    function purchaseLoanDebt() external payable {
-        require(canPurchase(), "ESCROW_INELIGIBLE_TO_PURCHASE");
+    /**
+        @notice Repay this Escrow's loan.
+        @dev If the Escrow's balance of the borrowed token is less than the amount to repay, transfer tokens from the sender's wallet.
+        @dev Only the owner of the Escrow can call this. If someone else wants to make a payment, they should call the loans contract directly.
+     */
+    function repay(uint256 amount) external onlyOwner {
+        IERC20 token = IERC20(loans.lendingToken());
+        uint256 balance = _balanceOf(loans.lendingToken());
+        uint256 totalOwed = loans.getTotalOwed(loanID);
+        if (balance < totalOwed && amount > balance) {
+            uint256 amountNeeded = amount > totalOwed
+                ? totalOwed.sub(balance)
+                : amount.sub(balance);
 
-        loans.repay(loans.getTotalOwed(loanID), loanID);
+            require(
+                token.transferFrom(msg.sender, address(this), amountNeeded),
+                "ESCROW_TRANSFER_FROM_FAILED"
+            );
+        }
+        token.approve(loans.lendingPool(), amount);
 
-        _transferOwnership(msg.sender);
+        loans.repay(amount, loanID);
+    }
+
+    /**
+        @notice Sends the tokens owned by this escrow to the recipient.
+        @dev The loan must not be active.
+        @dev The recipient must either be the loan borrower OR the loan must be already liquidated.
+        @param recipient address to send the tokens to.
+    */
+    function claimTokens(address recipient) external {
+        require(getLoan().status != TellerCommon.LoanStatus.Active, "LOAN_ACTIVE");
+        if (getLoan().liquidated) {
+            require(recipient != getBorrower(), "RECIPIENT_CANNOT_BE_BORROWER");
+            require(msg.sender == address(loans), "CALLER_MUST_BE_LOANS");
+        } else {
+            require(recipient == getBorrower(), "RECIPIENT_MUST_BE_BORROWER");
+        }
+
+        address[] memory tokens = getTokens();
+        for (uint256 i = 0; i < tokens.length; i++) {
+            uint256 balance = _balanceOf(tokens[i]);
+            if (balance > 0) {
+                IERC20(tokens[i]).transfer(recipient, balance);
+            }
+        }
+
+        emit TokensClaimed(recipient);
     }
 
     /**
@@ -186,20 +235,33 @@ contract Escrow is
 
     /** Internal Functions */
 
+    /**
+        @notice Calculate this Escrow instance loan value in ETH or Token price.
+        @return Loan value in ETH or Token price based on baseAddress.
+        @param baseAddress base token or ETH address.
+        @param quoteAddress quote token address.
+        @param baseAmount amount of base token or ETH.
+    */
     function _valueOfIn(
         address baseAddress,
         address quoteAddress,
         uint256 baseAmount
     ) internal view returns (uint256) {
         uint8 baseDecimals = baseAddress == settings().ETH_ADDRESS()
-            ? 18
+            ? ETH_DECIMALS
             : ERC20Detailed(baseAddress).decimals();
         PairAggregatorInterface aggregator = _getAggregatorFor(baseAddress, quoteAddress);
         uint256 oneTokenPrice = uint256(aggregator.getLatestAnswer());
-        // TODO: better way with SafeMath?
-        return baseAmount.mul(oneTokenPrice).div(uint256(10)**baseDecimals);
+        uint256 oneUnit = uint256(10)**baseDecimals;
+        return baseAmount.mul(oneTokenPrice).div(oneUnit);
     }
 
+    /**
+        @notice Returns Chainlink pair aggregator for token or revert if not found.
+        @param base base token address.
+        @param quote quote token address.
+        @return PairAggregator instance found for this tokens pair.
+     */
     function _getAggregatorFor(address base, address quote)
         internal
         view

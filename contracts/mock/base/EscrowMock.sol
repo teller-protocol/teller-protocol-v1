@@ -14,6 +14,8 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
     bool internal mockedCanPurchase;
 
     bool private _mockValueOfIn;
+    bool private mockedCalculateTotalValue;
+    TellerCommon.EscrowValue public totalValue;
 
     mapping(address => mapping(address => uint256)) public _valueOfInMapMock;
 
@@ -27,18 +29,15 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
     }
 
     function getBorrower() public view returns (address) {
-        return _borrower;
+        return address(_borrower) == address(0x0) ? super.getBorrower() : _borrower;
     }
 
     function mockSettings(address settingsAddress) public {
         _setSettings(settingsAddress);
     }
 
-    function mockBorrowerAndStatus(address borrower, TellerCommon.LoanStatus loanStatus)
-        public
-    {
+    function mockBorrower(address borrower) public {
         _borrower = borrower;
-        _loanStatus = loanStatus;
     }
 
     function isOwner() public view returns (bool) {
@@ -61,6 +60,19 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
 
     function mockLoans(address loansAddress) external {
         loans = LoansInterface(loansAddress);
+    }
+
+    function mockCalculateTotalValue(TellerCommon.EscrowValue memory aTotalValue) public {
+        mockedCalculateTotalValue = true;
+        totalValue = aTotalValue;
+    }
+
+    function calculateTotalValue() public view returns (TellerCommon.EscrowValue memory) {
+        if (mockedCalculateTotalValue) {
+            return totalValue;
+        } else {
+            return super.calculateTotalValue();
+        }
     }
 
     function mockCanPurchase() external {
@@ -88,7 +100,7 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
         address baseAddress,
         address quoteAddress,
         uint256 baseAmount
-    ) external returns (uint256) {
+    ) external view returns (uint256) {
         return super._valueOfIn(baseAddress, quoteAddress, baseAmount);
     }
 
@@ -122,6 +134,7 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
 
     function externalGetAggregatorFor(address base, address quote)
         external
+        view
         returns (PairAggregatorInterface)
     {
         return _getAggregatorFor(base, quote);

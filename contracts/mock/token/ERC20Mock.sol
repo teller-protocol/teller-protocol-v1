@@ -5,6 +5,8 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mint
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Burnable.sol";
 
 contract ERC20Mock is ERC20Detailed, ERC20Mintable, ERC20Burnable {
+    bool mockedTransferFrom;
+
     constructor(
         string memory aName,
         string memory aSymbol,
@@ -20,5 +22,21 @@ contract ERC20Mock is ERC20Detailed, ERC20Mintable, ERC20Burnable {
     function mint(address account, uint256 amount) public returns (bool) {
         _mint(account, amount);
         return true;
+    }
+
+    function mockTransferFromReturnFalse() external {
+        mockedTransferFrom = true;
+    }
+
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) public returns (bool) {
+        if (mockedTransferFrom) {
+            return false;
+        } else {
+            return super.transferFrom(sender, recipient, amount);
+        }
     }
 }

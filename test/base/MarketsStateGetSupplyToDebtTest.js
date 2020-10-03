@@ -86,6 +86,17 @@ contract('MarketsStateGetSupplyToDebtTest', function (accounts) {
                 newAmount(1000, actions.Dec_Supply, 1, 3),
             ], 1, 3, 1 * 10000
         ],
+        // (2000 borrow - 2040 repay + 0 newLoanAmount) / 2500 Supply = 0
+        _6_scenario: [
+            [
+                newAmount(1000, actions.Inc_Supply, 0, 1),
+                newAmount(500, actions.Borrow, 0, 1),
+                newAmount(1500, actions.Inc_Supply, 0, 1),
+                newAmount(520, actions.Repay, 0, 1),
+                newAmount(1500, actions.Borrow, 0, 1),
+                newAmount(1520, actions.Repay, 0, 1),
+            ], 0, 1, 0
+        ],
     }, function(previousAmounts, borrowedIndexToTest, collateralIndexToTest, expectedResult) {
         it(t('user', 'getSupplyToDebt', 'Should be able to get the supply to debt value.', false), async function() {
             // Setup

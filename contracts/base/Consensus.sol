@@ -4,7 +4,6 @@ pragma solidity 0.5.17;
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../util/TellerCommon.sol";
 import "../util/NumbersList.sol";
-import "../util/SettingsConsts.sol";
 
 // Contracts
 import "./OwnerSignersRole.sol";
@@ -40,8 +39,6 @@ contract Consensus is Base, OwnerSignersRole {
 
     // the address with permissions to submit a request for processing
     address public callerAddress;
-
-    SettingsConsts public consts;
 
     /**
         @notice It tracks each request nonce value that borrower (in LoanTermsConsensus) or lender (in InterestConsensus) used in the loan terms and interest requests.
@@ -80,7 +77,6 @@ contract Consensus is Base, OwnerSignersRole {
         _initialize(aSettingAddress);
 
         callerAddress = aCallerAddress;
-        consts = new SettingsConsts();
     }
 
     /**
@@ -123,7 +119,9 @@ contract Consensus is Base, OwnerSignersRole {
     {
         require(
             values.isWithinTolerance(
-                settings().getPlatformSettingValue(consts.MAXIMUM_TOLERANCE_SETTING())
+                settings().getPlatformSettingValue(
+                    settings().consts().MAXIMUM_TOLERANCE_SETTING()
+                )
             ),
             "RESPONSES_TOO_VARIED"
         );
@@ -158,7 +156,7 @@ contract Consensus is Base, OwnerSignersRole {
             responseTime >=
                 now.sub(
                     settings().getPlatformSettingValue(
-                        consts.RESPONSE_EXPIRY_LENGTH_SETTING()
+                        settings().consts().RESPONSE_EXPIRY_LENGTH_SETTING()
                     )
                 ),
             "RESPONSE_EXPIRED"

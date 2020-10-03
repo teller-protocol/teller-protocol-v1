@@ -1,4 +1,3 @@
-const assert = require('assert');
 const jsonfile = require('jsonfile');
 const MOCK_NETWORKS = ["test", "ganache", "soliditycoverage"];
 
@@ -44,16 +43,6 @@ DeployerApp.prototype.deployMocksContractsIfNeeded = async function() {
 	for (const pair in chainlink) {
 		chainlink[pair].address = (await Mock.new()).address;
 	}
-}
-
-/**
-    This function deploys two contract: 1- The original and 2- An InitializeableDynamicProxy (with the reference to the original).
-    After deploying a proxy, we MUST call the initialize function with the parameters it needs.
- */
-DeployerApp.prototype.deployWithUpgradeable = async function(contractName, contract, admin, initData, ...params) {
-    await this.deployWith(contractName, contract)
-    await this.deployWith(`${contractName}_Proxy`, this.artifacts.InitializeableDynamicProxy, contract.address, admin, initData, ...params)
-    return contract.at(this.artifacts.InitializeableDynamicProxy.address)
 }
 
 DeployerApp.prototype.deployInitializeableDynamicProxy = async function ({ name, address }, ...params) {

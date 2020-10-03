@@ -186,4 +186,19 @@ module.exports = {
         alias: 'BR',
         default: 1,
     },
+    MIN_AMOUNT: {
+        name: 'minAmount',
+        alias: 'MA',
+        default: undefined,
+    },
+    LOGIC_NAME: {
+        name: 'logicName',
+        alias: 'LN',
+        default: undefined,
+    },
+    CONTRACT_NAME: {
+        name: 'contractName',
+        alias: 'CN',
+        default: undefined,
+    },
 };

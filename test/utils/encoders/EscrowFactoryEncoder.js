@@ -11,6 +11,10 @@ EscrowFactoryEncoder.prototype.encodeIsDapp = function() {
     return encode(this.web3, 'isDapp(address)');
 }
 
+EscrowFactoryEncoder.prototype.encodeDapps = function() {
+    return encode(this.web3, 'dapps(address)');
+}
+
 EscrowFactoryEncoder.prototype.encodeCreateEscrow = function() {
     return encode(this.web3, 'createEscrow(address,uint256)');
 }

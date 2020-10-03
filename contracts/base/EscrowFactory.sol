@@ -40,12 +40,9 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
     /* State Variables */
 
     /**
-        @notice It defines whether a DApp exists or not.
-        Example:
-            address(0x123...456) => true
-            address(0x456...789) => false
+        @notice It holds the Dapp's configuration.
      */
-    mapping(address => bool) public dapps;
+    mapping(address => TellerCommon.Dapp) public dapps;
 
     /**
         @notice It contains all the dapps added in this factory.
@@ -87,26 +84,35 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
     }
 
     /**
-        @notice It tests whether an address is a dapp or not.
-        @param dapp address to test.
-        @return true if the address is a dapp. Otherwise it returns false.
-     */
-    function isDapp(address dapp) external view returns (bool) {
-        return _isDapp(dapp);
-    }
-
-    /**
         @notice It adds a new dapp to the factory.
         @param dapp address to add in this factory.
+        @param unsecured boolean to describe in the dapp is allowed to be used with unsecured loans.
      */
-    function addDapp(address dapp) external onlyPauser() isInitialized() {
+    function addDapp(address dapp, bool unsecured) external onlyPauser() isInitialized() {
         require(dapp.isContract(), "DAPP_ISNT_A_CONTRACT");
         require(!_isDapp(dapp), "DAPP_ALREADY_EXIST");
 
-        dapps[dapp] = true;
+        dapps[dapp] = TellerCommon.Dapp({exists: true, unsecured: unsecured});
         dappsList.add(dapp);
 
-        emit NewDAppAdded(msg.sender, dapp);
+        emit NewDappAdded(msg.sender, dapp, unsecured);
+    }
+
+    /**
+        @notice It updates a dapp configuration.
+        @param dapp address to add in this factory.
+        @param unsecured boolean that describes if the dapp can be used by with an unsecured loan.
+     */
+    function updateDapp(address dapp, bool unsecured)
+        external
+        onlyPauser()
+        isInitialized()
+    {
+        require(_isDapp(dapp), "DAPP_NOT_EXIST");
+
+        dapps[dapp].unsecured = unsecured;
+
+        emit DappUpdated(msg.sender, dapp, unsecured);
     }
 
     /**
@@ -117,10 +123,10 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         require(dapp.isContract(), "DAPP_ISNT_A_CONTRACT");
         require(_isDapp(dapp), "DAPP_NOT_EXIST");
 
-        dapps[dapp] = false;
+        dapps[dapp].exists = false;
         dappsList.remove(dapp);
 
-        emit DAppRemoved(msg.sender, dapp);
+        emit DappRemoved(msg.sender, dapp);
     }
 
     /**
@@ -150,6 +156,6 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         @return true if the address is a dapp. Otherwise it returns false.
      */
     function _isDapp(address dapp) internal view returns (bool) {
-        return dapps[dapp];
+        return dapps[dapp].exists;
     }
 }

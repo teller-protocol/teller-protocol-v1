@@ -71,8 +71,16 @@ contract LoansBaseMock is LoansBase, BaseMock {
         });
     }
 
+    function setLoan(TellerCommon.Loan memory loan) public {
+        loans[loan.id] = loan;
+    }
+
     function setEscrowForLoan(uint256 loanID, address escrowAddress) external {
         loans[loanID].escrow = escrowAddress;
+    }
+
+    function externalEscrowClaimTokens(uint256 loanID, address recipient) external {
+        EscrowInterface(loans[loanID].escrow).claimTokens(recipient);
     }
 
     function mockGetCollateralInfo(

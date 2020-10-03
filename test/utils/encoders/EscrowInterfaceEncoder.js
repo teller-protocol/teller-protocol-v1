@@ -14,4 +14,8 @@ EscrowInterfaceEncoder.prototype.encodeInitialize = function() {
     return encode(this.web3, 'initialize(address,uint256)');
 }
 
+EscrowInterfaceEncoder.prototype.encodeClaimTokens = function() {
+    return encode(this.web3, 'claimTokens(address)');
+}
+
 module.exports = EscrowInterfaceEncoder;

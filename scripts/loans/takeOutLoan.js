@@ -7,7 +7,7 @@ const { teller, tokens } = require("../../scripts/utils/contracts");
 const ProcessArgs = require('../utils/ProcessArgs');
 const Accounts = require('../utils/Accounts');
 const { COLL_TOKEN_NAME, TOKEN_NAME, SENDER_INDEX, LOAN_ID, AMOUNT } = require('../utils/cli/names');
-const processArgs = new ProcessArgs(readParams.setLoanTerms().argv);
+const processArgs = new ProcessArgs(readParams.takeOut().argv);
 
 module.exports = async (callback) => {
     try {
@@ -38,7 +38,7 @@ module.exports = async (callback) => {
 
         console.log('To repay the loan, execute: ');
         const truffleCommand = 'truffle exec ./scripts/loans/repay.js';
-        console.log(`${truffleCommand} --network ${processArgs.network()} --loanID ${loanID} --tokenName ${tokenName} --collTokenName ${collateralTokenName} --senderIndex ${senderIndex} --amount ${loanAmount}`);
+        console.log(`${truffleCommand} --network ${processArgs.network()} --loanId ${loanID} --tokenName ${tokenName} --collTokenName ${collateralTokenName} --senderIndex ${senderIndex} --amount ${loanAmount}`);
 
         console.log(toTxUrl(result));
 

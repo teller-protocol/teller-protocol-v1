@@ -33,6 +33,9 @@ const {
   MIN_VALUE,
   MAX_VALUE,
   BACK_ROUNDS,
+  MIN_AMOUNT,
+  LOGIC_NAME,
+  CONTRACT_NAME,
 } = require("./names");
 
 const newOption = (argv, name, alias, type, description, defaultValue) => {
@@ -481,6 +484,42 @@ module.exports.addTestTokenName = (
     TEST_TOKEN_NAME.alias,
     "string",
     `This represents the token to be used in the integration tests. By default ${defaultParam}`,
+    defaultParam
+  );
+};
+
+module.exports.addMinAmount = (
+  yargs,
+  defaultParam = MIN_AMOUNT.default
+) => {
+  newOption(
+    yargs,
+    MIN_AMOUNT.name,
+    MIN_AMOUNT.alias,
+    "number",
+    `This represents the minimum amount of tokens that an address should have. It is used in the integration tests and validation scripts. By default ${defaultParam}`,
+    defaultParam
+  );
+};
+
+module.exports.addLogicName = (yargs, defaultParam = LOGIC_NAME.default) => {
+  newOption(
+    yargs,
+    LOGIC_NAME.name,
+    LOGIC_NAME.alias,
+    "string",
+    `The current logic name. By default ${defaultParam}`,
+    defaultParam
+  );
+};
+
+module.exports.addContractName = (yargs, defaultParam = CONTRACT_NAME.default) => {
+  newOption(
+    yargs,
+    CONTRACT_NAME.name,
+    CONTRACT_NAME.alias,
+    "string",
+    `The contract name to update. It should be equal to the contract name (including cases). By default ${defaultParam}`,
     defaultParam
   );
 };

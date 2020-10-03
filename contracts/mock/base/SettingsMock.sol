@@ -1,9 +1,18 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../../base/Settings.sol";
+import "../util/Mock.sol";
+import "../../util/SettingsConsts.sol";
+import "../../providers/chainlink/IChainlinkPairAggregatorRegistry.sol";
 
-contract SettingsMock is Settings {
+contract SettingsMock is Mock {
+    SettingsConsts public consts;
+    IChainlinkPairAggregatorRegistry public pairAggregatorRegistry;
+
+    constructor() public Mock() {
+        consts = new SettingsConsts();
+    }
+
     function externalSetPairAggregatorRegistry(address registryAddress) external {
         pairAggregatorRegistry = IChainlinkPairAggregatorRegistry(registryAddress);
     }

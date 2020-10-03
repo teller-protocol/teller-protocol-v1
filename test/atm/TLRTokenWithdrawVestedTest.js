@@ -5,6 +5,7 @@ const Timer = require('../../scripts/utils/Timer');
 const { tlrToken } = require('../utils/events');
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const BN = require("bignumber.js");
 
  // Mock contracts
  const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -49,7 +50,7 @@ contract('TLRTokenWithdrawVestedTest', function (accounts) {
     });
 
     withData({
-        _1_claim_vested_basic: [daoMember2, 1000, 2500, 7000, 7001, undefined, false],
+        _1_claim_vested_basic: [daoMember2, 1000, 2500, 7000, 8000, undefined, false],
         _2_claim_vested_before_deadline_after_cliff: [daoMember2, 1000, 3000, 7000, 5000, undefined, false],
         _3_claim_vested_no_amount: [daoMember1, 1000, 4000, 7000, 8000, 'ACCOUNT_DOESNT_HAVE_VESTING', true]
     },function(

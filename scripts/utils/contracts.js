@@ -92,6 +92,20 @@ module.exports = {
         eth: () => customCollateralToken(ETH),
         link: () => customCollateralToken(LINK),
         custom: (collateralToken) => customCollateralToken(collateralToken),
+        logicVersionsRegistry: (artifactName = 'LogicVersionsRegistryInterface') => {
+            return {
+                keyName: TELLER_KEY,
+                contractName: `LogicVersionsRegistry_Proxy`,
+                artifactName,
+            };
+        },
+        pairAggregatorRegistry: (artifactName = 'IChainlinkPairAggregatorRegistry') => {
+            return {
+                keyName: TELLER_KEY,
+                contractName: `ChainlinkPairAggregatorRegistry_Proxy`,
+                artifactName,
+            };
+        },
         oracles: () => ({
             usdc_eth: (artifactName = 'ChainlinkPairAggregator') => internalOracle('USDC', 'ETH', artifactName),
             dai_eth: (artifactName = 'ChainlinkPairAggregator') => internalOracle('DAI', 'ETH', artifactName),
@@ -118,10 +132,17 @@ module.exports = {
         },
     },
     ctokens: {
-        get: (tokenName, artifactName = 'CErc20Interface') => {
+        get: (cTokenName, artifactName = 'CErc20Interface') => {
             return {
                 keyName: 'compound',
-                contractName: tokenName.toUpperCase(),
+                contractName: cTokenName.toUpperCase(),
+                artifactName,
+            };
+        },
+        fromTokenName: (tokenName, artifactName = 'CErc20Interface') => {
+            return {
+                keyName: 'compound',
+                contractName: `C${tokenName.toUpperCase()}`,
                 artifactName,
             };
         },

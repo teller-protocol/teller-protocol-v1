@@ -2,6 +2,7 @@ const BigNumber = require('bignumber.js');
 BigNumber.config({ ROUNDING_MODE: BigNumber.default.ROUND_FLOOR });
 const assert = require('assert');
 const { toDecimals, toUnits } = require("../consts");
+const loanStatus = require("../loanStatus");
 const Timer = require('../../../scripts/utils/Timer');
 
 const TEN_THOUSAND = 10000;
@@ -9,15 +10,41 @@ const TEN_HUNDRED = 100;
 const ETH_DECIMALS = 18;
 
 class LoanInfoPrinter {
-    constructor(web3, loanInfo, { tokenName, decimals }) {
+    constructor(web3, loanInfo, token, collateralToken) {
         this.web3 = web3;
         this.loanInfo = loanInfo;
-        this.token = { tokenName, decimals };
+        this.token = { tokenName: token.tokenName, decimals: token.decimals };
         this.timer = new Timer(web3);
+        this.collateralToken = { tokenName: collateralToken.tokenName, decimals: collateralToken.decimals };
         assert(this.web3, 'Web3 instance is required.');
         assert(this.loanInfo, 'Loan info is required.');
         assert(this.token, 'Token is required.');
     }
+}
+
+LoanInfoPrinter.prototype.getLoanTerms = function() {
+    const { loanTerms } = this.loanInfo;
+    const {
+        interestRate,
+        collateralRatio,
+        maxLoanAmount,
+    } =  loanTerms;
+    return {
+        interestRate: interestRate,
+        interestRateValue: interestRate / 100,
+        collateralRatio: collateralRatio,
+        collateralRatioValue: collateralRatio / 100,
+        maxLoanAmount: maxLoanAmount,
+        maxLoanAmountValue: toUnits(maxLoanAmount, this.token.decimals),
+    };
+}
+
+LoanInfoPrinter.prototype.isActive = function() {
+    return this.loanInfo.status.toString() === loanStatus.Active.toString();
+}
+
+LoanInfoPrinter.prototype.isTermsSet = function() {
+    return this.loanInfo.status.toString() === loanStatus.TermsSet.toString();
 }
 
 LoanInfoPrinter.prototype.getTotalOwed = function() {
@@ -138,7 +165,7 @@ LoanInfoPrinter.prototype.getNowDate = async function() {
 }
 
 LoanInfoPrinter.prototype.isLiquidable = async function(price) {
-    return this.isCollateralNeededGtCollateral(price) || (await this.isEndTimeLtNow());
+    return this.isActive() && (this.isCollateralNeededGtCollateral(price) || (await this.isEndTimeLtNow()));
 }
 
 module.exports = LoanInfoPrinter;

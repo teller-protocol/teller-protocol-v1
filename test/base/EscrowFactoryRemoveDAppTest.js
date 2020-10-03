@@ -11,7 +11,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
 
-contract('EscrowFactoryRemoveDAppTest', function (accounts) {
+contract('EscrowFactoryRemoveDappTest', function (accounts) {
   const owner = accounts[0];
   let instance;
   let mocks;
@@ -65,11 +65,10 @@ contract('EscrowFactoryRemoveDAppTest', function (accounts) {
         const dappAddressFound = finalDapps.find(aDappAddress => aDappAddress === dappAddress);
         assert(dappAddressFound === undefined);
 
-        const isDapp = await instance.isDapp(dappAddress);
-        assert(!isDapp);
+        const dapp = await instance.dapps.call(dappAddress);
+        assert(!dapp.exists);
       } catch (error) {
-        assert(mustFail);
-        assert(error);
+        assert(mustFail, error.message);
         assert.equal(error.reason, expectedErrorMessage);
       }
     });

@@ -375,10 +375,10 @@ module.exports = {
             const name = "RevokeVesting";
             return {
                 name: name,
-                emitted: (beneficiary, amount, deadline) => emitted(tx, name, ev => {
-                    assert.equal(ev.beneficiary, beneficiary);
-                    assert.equal(ev.amount, amount);
-                    assert.equal(ev.deadline, deadline);
+                emitted: (account, unvestedTokens, deadline) => emitted(tx, name, ev => {
+                    assert.equal(ev.account.toString(), account.toString());
+                    assert.equal(ev.unvestedTokens.toString(), unvestedTokens.toString());
+                    assert.equal(ev.deadline.toString(), deadline.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction) 
             };
@@ -732,19 +732,32 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
-        newDAppAdded: tx => {
-            const name = 'NewDAppAdded';
+        newDappAdded: tx => {
+            const name = 'NewDappAdded';
             return {
                 name: name,
-                emitted: (sender, dapp) => emitted(tx, name, ev => {
+                emitted: (sender, dapp, unsecured) => emitted(tx, name, ev => {
                     assert.equal(ev.sender.toString(), sender.toString());
                     assert.equal(ev.dapp.toString(), dapp.toString());
+                    assert.equal(ev.unsecured, unsecured);
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        dappUpdated: tx => {
+            const name = 'DappUpdated';
+            return {
+                name: name,
+                emitted: (sender, dapp, unsecured) => emitted(tx, name, ev => {
+                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.dapp.toString(), dapp.toString());
+                    assert.equal(ev.unsecured, unsecured);
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
         dappRemoved: tx => {
-            const name = 'DAppRemoved';
+            const name = 'DappRemoved';
             return {
                 name: name,
                 emitted: (sender, dapp) => emitted(tx, name, ev => {
@@ -756,13 +769,12 @@ module.exports = {
         },
     },
     escrow: {
-        ownershipTransferred: tx => {
-            const name = 'OwnershipTransferred';
+        tokensClaimed: tx => {
+            const name = 'TokensClaimed';
             return {
                 name: name,
-                emitted: (previousOwner, newOwner) => emitted(tx, name, ev => {
-                    assert.equal(ev.previousOwner.toString(), previousOwner.toString());
-                    assert.equal(ev.newOwner.toString(), newOwner.toString());
+                emitted: (recipient) => emitted(tx, name, ev => {
+                    assert.equal(ev.recipient.toString(), recipient.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };

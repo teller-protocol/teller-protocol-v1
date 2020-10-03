@@ -7,7 +7,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const Escrow = artifacts.require("./mock/base/EscrowMock.sol");
-const Settings = artifacts.require("./mock/base/SettingsMock.sol");
+const SettingsMock = artifacts.require("./mock/base/SettingsMock.sol");
 const PairAggregatorRegistry = artifacts.require("./mock/providers/chainlink/PairAggregatorRegistryMock.sol");
 
 contract("EscrowGetAggregatorForTest", function(accounts) {
@@ -18,13 +18,14 @@ contract("EscrowGetAggregatorForTest", function(accounts) {
   let quote
 
   beforeEach(async () => {
-    const settings = await Settings.new()
+    const settings = await SettingsMock.new()
     registry = await PairAggregatorRegistry.new()
     aggregator = await Mock.new()
     base = await Mock.new()
     quote = await Mock.new()
 
     await settings.externalSetPairAggregatorRegistry(registry.address)
+    await settings.givenMethodReturnAddress
 
     instance = await Escrow.new()
     await instance.externalSetSettings(settings.address)

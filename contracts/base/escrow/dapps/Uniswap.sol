@@ -7,11 +7,11 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "../../../util/AddressLib.sol";
 
 // Contracts
+import "../../BaseEscrowDapp.sol";
 
 // Interfaces
 import "./IUniswap.sol";
 import "../../../providers/uniswap/IUniswapV2Router02.sol";
-import "../../BaseEscrowDapp.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -54,7 +54,7 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
         address[] memory path,
         uint256 sourceAmount,
         uint256 minDestination
-    ) public {
+    ) public onlyOwner() {
         require(canonicalWeth.isContract(), "CANONICAL_WETH_MUST_BE_CONTRACT");
         require(routerAddress.isContract(), "ROUTER_MUST_BE_A_CONTRACT");
         IUniswapV2Router02 router = IUniswapV2Router02(routerAddress);

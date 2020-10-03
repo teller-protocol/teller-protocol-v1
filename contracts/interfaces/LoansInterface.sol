@@ -252,4 +252,22 @@ interface LoansInterface {
         address settingsAddress,
         address collateralTokenAddress
     ) external;
+
+    /**
+        @notice Returns the tToken in the lending pool
+        @return Address of the tToken
+     */
+    function tToken() external view returns (address);
+
+    /**
+        @notice Returns the cToken in the lending pool
+        @return Address of the cToken
+     */
+    function cToken() external view returns (address);
+
+    /**
+        @notice Returns whether or not the loan is considered secured.
+        @return bool Whether or not the loan is considered secured.
+     */
+    function isLoanSecured(uint256 loanID) external view returns (bool);
 }

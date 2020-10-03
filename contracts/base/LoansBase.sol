@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 // Libraries and common
 import "../util/TellerCommon.sol";
-import "../util/SettingsConsts.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 import "../util/ERC20DetailedLib.sol";
@@ -42,9 +41,9 @@ contract LoansBase is LoansInterface, Base {
 
     /* State Variables */
 
-    // Loan length will be inputted in days, with 4 decimal places. i.e. 30 days will be inputted as
-    // 300000. Therefore in interest calculations we must divide by 365000
-    uint256 internal constant DAYS_PER_YEAR_4DP = 3650000;
+    // Loan length will be inputted in seconds, with 4 decimal places. i.e. 30 days will be inputted as
+    // 31536. Therefore in interest calculations we must divide by 31536000
+    uint256 internal constant SECONDS_PER_YEAR_4DP = 31536000;
 
     // For interestRate, collateral, and liquidation price, 7% is represented as 700. To find the value
     // of something we must divide 700 by 100 to remove decimal places, and another 100 for percentage.
@@ -68,8 +67,6 @@ contract LoansBase is LoansInterface, Base {
     mapping(address => uint256[]) public borrowerLoans;
 
     mapping(uint256 => TellerCommon.Loan) public loans;
-
-    SettingsConsts public consts;
 
     /* Modifiers */
 
@@ -127,18 +124,17 @@ contract LoansBase is LoansInterface, Base {
         @param loanRequest to validate.
      */
     modifier withValidLoanRequest(TellerCommon.LoanRequest memory loanRequest) {
-        require(
-            settings().getPlatformSettingValue(consts.MAXIMUM_LOAN_DURATION_SETTING()) >=
-                loanRequest.duration,
-            "DURATION_EXCEEDS_MAX_DURATION"
+        uint256 maxLoanDuration = settings().getPlatformSettingValue(
+            settings().consts().MAXIMUM_LOAN_DURATION_SETTING()
         );
-        require(
-            !settings().exceedsMaxLoanAmount(
-                lendingPool.lendingToken(),
-                loanRequest.amount
-            ),
-            "AMOUNT_EXCEEDS_MAX_AMOUNT"
+        require(maxLoanDuration >= loanRequest.duration, "DURATION_EXCEEDS_MAX_DURATION");
+
+        bool exceedsMaxLoanAmount = settings().exceedsMaxLoanAmount(
+            lendingPool.lendingToken(),
+            loanRequest.amount
         );
+        require(!exceedsMaxLoanAmount, "AMOUNT_EXCEEDS_MAX_AMOUNT");
+
         require(
             _isSupplyToDebtRatioValid(loanRequest.amount),
             "SUPPLY_TO_DEBT_EXCEEDS_MAX"
@@ -160,6 +156,34 @@ contract LoansBase is LoansInterface, Base {
      */
     function lendingToken() external view returns (address) {
         return lendingPool.lendingToken();
+    }
+
+    /**
+        @notice Returns the tToken in the lending pool
+        @return Address of the tToken
+     */
+    function tToken() external view returns (address) {
+        return lendingPool.tToken();
+    }
+
+    /**
+        @notice Returns the cToken in the lending pool
+        @return Address of the cToken
+     */
+    function cToken() external view returns (address) {
+        return lendingPool.cToken();
+    }
+
+    /**
+        @notice Checks wheather the loan's collateral ratio is considered to be secured based on the settings collateral buffer value.
+        @return bool value of it being secured or not.
+    */
+    function isLoanSecured(uint256 loanID) external view returns (bool) {
+        return
+            loans[loanID].loanTerms.collateralRatio >=
+            settings().getPlatformSettingValue(
+                settings().consts().COLLATERAL_BUFFER_SETTING()
+            );
     }
 
     /**
@@ -222,7 +246,9 @@ contract LoansBase is LoansInterface, Base {
         require(
             loans[loanID].lastCollateralIn <=
                 now.sub(
-                    settings().getPlatformSettingValue(consts.SAFETY_INTERVAL_SETTING())
+                    settings().getPlatformSettingValue(
+                        settings().consts().SAFETY_INTERVAL_SETTING()
+                    )
                 ),
             "COLLATERAL_DEPOSITED_RECENTLY"
         );
@@ -233,7 +259,7 @@ contract LoansBase is LoansInterface, Base {
             .mul(loans[loanID].loanTerms.interestRate)
             .mul(loans[loanID].loanTerms.duration)
             .div(TEN_THOUSAND)
-            .div(DAYS_PER_YEAR_4DP);
+            .div(SECONDS_PER_YEAR_4DP);
 
         // check that enough collateral has been provided for this loan
         TellerCommon.LoanCollateralInfo memory collateralInfo = _getCollateralInfo(
@@ -343,11 +369,14 @@ contract LoansBase is LoansInterface, Base {
         uint256 collateralInTokens = _convertWeiToToken(collateral);
 
         // the caller gets the collateral from the loan
-        _payOutCollateral(loanID, collateral, msg.sender);
+        _payOutLoan(loanID, collateral, msg.sender);
 
-        uint256 tokenPayment = collateralInTokens
-            .mul(settings().getPlatformSettingValue(consts.LIQUIDATE_ETH_PRICE_SETTING()))
-            .div(TEN_THOUSAND);
+        uint256 liquidateEthPrice = settings().getPlatformSettingValue(
+            settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
+        );
+        uint256 tokenPayment = collateralInTokens.mul(liquidateEthPrice).div(
+            TEN_THOUSAND
+        );
         // the liquidator pays x% of the collateral price
         lendingPool.liquidationPayment(tokenPayment, msg.sender);
 
@@ -433,6 +462,23 @@ contract LoansBase is LoansInterface, Base {
     }
 
     /** Internal Functions */
+
+    /**
+        @notice Checks if the loan has an Escrow and claims any tokens then pays out the loan collateral.
+        @dev See Escrow.claimTokens for more info.
+    */
+    function _payOutLoan(
+        uint256 loanID,
+        uint256 amount,
+        address payable recipient
+    ) internal {
+        if (loans[loanID].escrow != address(0x0)) {
+            EscrowInterface(loans[loanID].escrow).claimTokens(recipient);
+        }
+
+        _payOutCollateral(loanID, amount, recipient);
+    }
+
     /**
         @notice Pays out the collateral for a loan
         @param loanID ID of loan from which collateral is to be paid out
@@ -507,7 +553,6 @@ contract LoansBase is LoansInterface, Base {
         priceOracle = priceOracleAddress;
         lendingPool = LendingPoolInterface(lendingPoolAddress);
         loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
-        consts = new SettingsConsts();
     }
 
     /**
@@ -564,10 +609,7 @@ contract LoansBase is LoansInterface, Base {
         uint256 oneLendingTokenPriceWei = uint256(
             PairAggregatorInterface(priceOracle).getLatestAnswer()
         );
-        uint256 tokenValue = weiAmount.mul(aWholeLendingToken).div(
-            oneLendingTokenPriceWei
-        );
-        return tokenValue;
+        return weiAmount.mul(aWholeLendingToken).div(oneLendingTokenPriceWei);
     }
 
     /**
@@ -595,7 +637,7 @@ contract LoansBase is LoansInterface, Base {
      */
     function getAndIncrementLoanID() internal returns (uint256 newLoanID) {
         newLoanID = loanIDCounter;
-        loanIDCounter += 1;
+        loanIDCounter = loanIDCounter.add(1);
     }
 
     /**
@@ -614,9 +656,10 @@ contract LoansBase is LoansInterface, Base {
         uint256 collateralRatio,
         uint256 maxLoanAmount
     ) internal view returns (TellerCommon.Loan memory) {
-        uint256 termsExpiry = now.add(
-            settings().getPlatformSettingValue(consts.TERMS_EXPIRY_TIME_SETTING())
+        uint256 termsExpiryTime = settings().getPlatformSettingValue(
+            settings().consts().TERMS_EXPIRY_TIME_SETTING()
         );
+        uint256 termsExpiry = now.add(termsExpiryTime);
         return
             TellerCommon.Loan({
                 id: loanID,

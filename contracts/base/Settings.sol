@@ -10,6 +10,7 @@ import "../util/AddressArrayLib.sol";
 
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/lifecycle/Pausable.sol";
+import "../util/SettingsConsts.sol";
 import "./BaseUpgradeable.sol";
 import "./TInitializable.sol";
 
@@ -61,6 +62,8 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /* State Variables */
+
+    SettingsConsts public consts;
 
     /**
         @notice It represents a mapping to identify the lending pools paused and not paused.
@@ -445,6 +448,8 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         marketsState = MarketsStateInterface(marketsStateAddress);
         interestValidator = InterestValidatorInterface(interestValidatorAddress);
         atmSettings = IATMSettings(atmSettingsAddress);
+
+        consts = new SettingsConsts();
 
         _setSettings(address(this));
     }
