@@ -202,22 +202,21 @@ contract LoansBase is LoansInterface, Base {
         require(msg.sender == loans[loanID].loanTerms.borrower, "CALLER_DOESNT_OWN_LOAN");
         require(amount > 0, "CANNOT_WITHDRAW_ZERO");
 
-        // Find the minimum collateral amount this loan is allowed in tokens or ether.
-        uint256 collateralNeededToken = _getCollateralNeededInTokens(loanID);
-        uint256 collateralNeededWei = _convertTokenToWei(collateralNeededToken);
+        // Get the current collateral info.
+        TellerCommon.LoanCollateralInfo memory collateralInfo = _getCollateralInfo(
+            loanID
+        );
 
         // Withdrawal amount holds the amount of excess collateral in the loan
-        uint256 withdrawalAmount = loans[loanID].collateral.sub(collateralNeededWei);
-        if (withdrawalAmount > amount) {
-            withdrawalAmount = amount;
-        }
+        uint256 withdrawalAmount = collateralInfo.collateral.sub(
+            collateralInfo.neededInCollateralTokens
+        );
+        require(withdrawalAmount >= amount, "COLLATERAL_AMOUNT_TOO_HIGH");
 
-        if (withdrawalAmount > 0) {
-            // Update the contract total and the loan collateral total
-            _payOutCollateral(loanID, withdrawalAmount, msg.sender);
-        }
+        // Update the contract total and the loan collateral total
+        _payOutCollateral(loanID, amount, msg.sender);
 
-        emit CollateralWithdrawn(loanID, msg.sender, withdrawalAmount);
+        emit CollateralWithdrawn(loanID, msg.sender, amount);
     }
 
     /**
@@ -592,7 +591,15 @@ contract LoansBase is LoansInterface, Base {
         view
         returns (uint256)
     {
-        uint256 loanAmount = getTotalOwed(loanID);
+        TellerCommon.LoanStatus currentStatus = loans[loanID].status;
+        uint256 loanAmount;
+        if (currentStatus == TellerCommon.LoanStatus.TermsSet) {
+            loanAmount = loans[loanID].loanTerms.maxLoanAmount;
+        } else if (currentStatus == TellerCommon.LoanStatus.Active) {
+            loanAmount = getTotalOwed(loanID);
+        } else {
+            return 0;
+        }
         uint256 collateralRatio = loans[loanID].loanTerms.collateralRatio;
         return loanAmount.mul(collateralRatio).div(TEN_THOUSAND);
     }

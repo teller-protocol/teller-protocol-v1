@@ -1,10 +1,8 @@
 const { printSeparatorLine } = require('../../test/utils/consts');
 const _1_set_settings = require('./1_set_settings');
-const _2_add_signers = require('./2_add_signers');
 
 const initializersObject = {
     'init-1-set-settings': _1_set_settings,
-    // 'init-2-add-signers': _2_add_signers,
 };
 
 module.exports = async (initConfig, initContext) => {

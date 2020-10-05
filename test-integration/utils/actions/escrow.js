@@ -7,10 +7,8 @@ const {
 } = require('../assertions')
 const {
   escrow: escrowEvents,
-  uniswap: uniswapEvents,
-  compound: compoundEvents
 } = require("../../../test/utils/events");
-const { teller, tokens } = require("../../../scripts/utils/contracts");
+const { teller } = require("../../../scripts/utils/contracts");
 const logicNames = require("../../../test/utils/logicNames");
 
 /**
@@ -22,8 +20,10 @@ const repay = async (
   { txConfig, testContext },
   { amount }
 ) => {
+  console.log(`Repaying ${amount} in escrow ${escrow.address}...`);
   await token.approve(escrow.address, amount, txConfig);
   const escrowResult = await escrow.repay(amount, txConfig);
+  //TODO Add assertions (events, amount).
   return escrowResult;
 };
 
@@ -86,8 +86,8 @@ const uniswapSwap = async (
 ) => {
   const tokenA = tokensPath[0]
   const tokenB = tokensPath[tokensPath.length - 1]
-  const tokenABalanceBefore = (await tokenA.balanceOf(address)).toString()
-  const tokenBBalanceBefore = (await tokenB.balanceOf(address)).toString()
+  const tokenABalanceBefore = (await tokenA.balanceOf(escrow.address)).toString()
+  const tokenBBalanceBefore = (await tokenB.balanceOf(escrow.address)).toString()
 
   const path = tokensPath.map(({ address }) => address)
   const args = [ path, sourceAmount, minDestination ]
@@ -101,7 +101,7 @@ const uniswapSwap = async (
     try {
       await assert.rejects(fn, 'Expected swap to fail')
     } catch (error) {
-      assert.strictEqual(error.reason, expectedRevertReason);
+      assert.strictEqual(error.reason, expectedRevertReason, error.message);
     }
   } else {
     await assert.doesNotReject(fn, 'Expected swap to be successful')

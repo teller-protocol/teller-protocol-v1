@@ -53,9 +53,9 @@ contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
     withData({
         _1_non_borrower: [accounts[1], 0, 0, 0, 0, 0, 0, 0, accounts[2], 0, true, 'CALLER_DOESNT_OWN_LOAN'],
         _2_withdraw_zero: [accounts[1], 0, 0, 0, 0, 0, 0, 0, accounts[1], 0, true, 'CANNOT_WITHDRAW_ZERO'],
-        _3_more_than_allowed: [accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 10000, false, undefined],
+        _3_more_than_allowed: [accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 10000, true, 'COLLATERAL_AMOUNT_TOO_HIGH'],
         _4_less_than_allowed: [accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 1000, false, undefined],
-        _5_none_allowed: [accounts[1], 10000000, 2564000, 5410, 35082, 18, 65432, 5161305000000000, accounts[1], 1000, false, undefined],
+        _5_none_allowed: [accounts[1], 10000000, 2564000, 5410, 35082, 18, 65432, 5161305000000000, accounts[1], 1000, true, 'COLLATERAL_AMOUNT_TOO_HIGH'],
     }, function(
         loanBorrower,
         loanPrincipalOwed,
@@ -107,7 +107,7 @@ contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
                     .collateralWithdrawn(tx)
                     .emitted(mockLoanID, loanBorrower, paidOut)
 
-                assert.equal(parseInt(loan['collateral']), (loanCollateral - paidOut))
+                assert.equal(parseInt(loan.collateral), (loanCollateral - paidOut))
                 assert.equal(totalCollateral - paidOut, parseInt(totalAfter))
                 assert.equal(parseInt(contractBalBefore) - paidOut, parseInt(contractBalAfter))
             } catch (error) {

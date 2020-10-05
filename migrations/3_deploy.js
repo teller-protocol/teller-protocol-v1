@@ -179,19 +179,19 @@ module.exports = async function(deployer, network, accounts) {
     await initializeProxy(logicNames.ATMFactory, atmFactoryInstance)
     await initializeProxy(logicNames.MarketFactory, marketFactoryInstance)
 
-    async function deployDapp(name, secured) {
+    async function deployDapp(name, unsecured) {
       const info = deployedLogicContractsMap.get(name)
       assert(info, `Deployed logic info is undefined for logic name ${name}.`)
       const proxy = await deployerApp.deployWith(`${info.name}_Proxy`, DynamicProxy, 'teller', settingsInstance.address, toBytes32(web3, name), txConfig)
 
       // Register dapp
-      await escrowFactoryInstance.addDapp(proxy.address, secured)
+      await escrowFactoryInstance.addDapp(proxy.address, unsecured)
 
       return info.Contract.at(proxy.address)
     }
 
-    await deployDapp(logicNames.Uniswap, true)
-    await deployDapp(logicNames.Compound, false)
+    await deployDapp(logicNames.Uniswap, false)
+    await deployDapp(logicNames.Compound, true)
 
     await initATMs(
       { atmFactory: atmFactoryInstance, atmSettings: atmSettingsInstance },

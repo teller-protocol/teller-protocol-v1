@@ -5,6 +5,7 @@ const {
   oracles: oraclesActions,
   blockchain: blockchainActions,
   escrow: escrowActions,
+  tokens: tokensActions,
 } = require("../../utils/actions");
 const {
   loans: loansAssertions,
@@ -15,39 +16,45 @@ const {
 
 module.exports = async (testContext) => {
   const {
-    processArgs,
     accounts,
     getContracts,
     timer,
+    collTokenName,
+    tokenName,
   } = testContext;
-  console.log("Scenario: Loans#2 - ETH - Take out a loan and repay all at once in full successfully.");
-  const collTokenName = "ETH";
-  const tokenName = processArgs.getValue("testTokenName");
-  const verbose = processArgs.getValue("verbose");
+  console.log("Scenario: Loans#2 - Take out a loan and repay all at once in full successfully.");
 
   const allContracts = await getContracts.getAllDeployed({ teller, tokens }, tokenName, collTokenName);
   const {
     token,
     collateralToken,
-    oracle,
   } = allContracts;
 
   const borrower = await accounts.getAt(1);
   const lenderTxConfig = await accounts.getTxConfigAt(0);
   const borrowerTxConfig = await accounts.getTxConfigAt(1);
 
-  const currentOraclePrice = toDecimals("0.00295835", 18);
-  const tokenDecimals = parseInt(await token.decimals());
-  const collateralTokenDecimals = parseInt(await collateralToken.decimals());
-  const collateralTokenInfo = { decimals: collateralTokenDecimals, name: collTokenName};
-  const tokenInfo = { decimals: tokenDecimals, name: tokenName};
-  
-  const depositFundsAmount = toDecimals(300, tokenDecimals);
-  const maxAmountRequestLoanTerms = toDecimals(100, tokenDecimals);
-  const amountTakeOut = toDecimals(50, tokenDecimals);
-  const amountRepay_1 = toDecimals(55, tokenDecimals);
-  const collateralAmountDepositCollateral = toDecimals(0.3, collateralTokenDecimals);
-  const collateralAmountWithdrawCollateral = toDecimals(0.2, collateralTokenDecimals);
+  const tokenInfo = await tokensActions.getInfo({token});
+  const collateralTokenInfo = await tokensActions.getInfo({
+    token: collateralToken,
+  });
+  let currentOraclePrice;
+  let collateralAmountDepositCollateral;
+  let collateralAmountWithdrawCollateral;
+  if (collTokenName.toLowerCase() === "eth") {
+    currentOraclePrice = toDecimals("0.00295835", 18);
+    collateralAmountDepositCollateral = toDecimals(0.3, collateralTokenInfo.decimals);
+    collateralAmountWithdrawCollateral = toDecimals(0.2, collateralTokenInfo.decimals);
+  }
+  if (collTokenName.toLowerCase() === "link") {
+    currentOraclePrice = toDecimals("0.100704", 8);
+    collateralAmountDepositCollateral = toDecimals(6.1, collateralTokenInfo.decimals);
+    collateralAmountWithdrawCollateral = toDecimals(1, collateralTokenInfo.decimals);
+  }
+  const depositFundsAmount = toDecimals(300, tokenInfo.decimals);
+  const maxAmountRequestLoanTerms = toDecimals(100, tokenInfo.decimals);
+  const amountTakeOut = toDecimals(50, tokenInfo.decimals);
+  const amountRepay_1 = toDecimals(55, tokenInfo.decimals);
   
   const durationInDays = 10;
   const signers = await accounts.getAllAt(12, 13);
@@ -55,8 +62,13 @@ module.exports = async (testContext) => {
   // Sets Initial Oracle Price
   await oraclesActions.setPrice(
     allContracts,
-    {txConfig: lenderTxConfig, testContext},
-    {price: currentOraclePrice}
+    { testContext },
+    { price: currentOraclePrice }
+  );
+  await loansActions.printPairAggregatorInfo(
+    allContracts,
+    { testContext },
+    { tokenInfo, collateralTokenInfo }
   );
 
   // Deposit tokens on lending pool.
@@ -87,12 +99,22 @@ module.exports = async (testContext) => {
 
   // Depositing collateral.
   await loansActions.depositCollateral(
-    {...allContracts, token: undefined},
+    allContracts,
     {txConfig: borrowerTxConfig, testContext},
     {loanId: loanInfoRequestLoanTerms.id, amount: collateralAmountDepositCollateral}
   );
 
   await blockchainActions.advanceMinutes({timer}, {testContext}, {minutes: 2});
+
+  await loansActions.printLoanInfo(
+    allContracts,
+    { testContext },
+    {
+      loanId: loanInfoRequestLoanTerms.id,
+      collateralTokenInfo,
+      tokenInfo,
+    }
+  );
 
   // Take out a loan.
   await loansActions.takeOutLoan(
@@ -121,11 +143,8 @@ module.exports = async (testContext) => {
     { testContext },
     {
       loanId: loanInfoRequestLoanTerms.id,
-      verbose,
       collateralTokenInfo,
       tokenInfo,
-      latestAnswer: currentOraclePrice,
-      oracleAddress: oracle.address,
     }
   );
 
@@ -140,11 +159,8 @@ module.exports = async (testContext) => {
     { testContext },
     {
       loanId: loanInfoRequestLoanTerms.id,
-      verbose,
       collateralTokenInfo,
       tokenInfo,
-      latestAnswer: currentOraclePrice,
-      oracleAddress: oracle.address,
     }
   );
 

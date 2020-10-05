@@ -1,49 +1,48 @@
-const BigNumber = require("bignumber.js");
-
-const { teller, tokens, ctokens } = require("../../../../../scripts/utils/contracts");
+// Util classes
+const {teller, tokens} = require("../../../scripts/utils/contracts");
 const {
   loans: loansActions,
-  escrow: escrowActions,
   tokens: tokensActions,
-} = require("../../../../utils/actions");
-const { toDecimals } = require("../../../../../test/utils/consts");
-const helperActions = require("../../../../utils/actions/helper");
+} = require("../../utils/actions");
+const helperActions = require("../../utils/actions/helper");
+const {toDecimals} = require("../../../test/utils/consts");
 
 module.exports = async (testContext) => {
   const {
-    getContracts,
     accounts,
+    getContracts,
     collTokenName,
     tokenName,
   } = testContext;
-  // TODO Add scenario title (from spreadsheet).
-  console.log("Scenario: Dapp#1 - .");
+  console.log(
+    "Scenario: Loans#4 - Error taking out loan and take out too much collateral."
+  );
   const allContracts = await getContracts.getAllDeployed(
     {teller, tokens},
     tokenName,
     collTokenName
   );
-  const {token, collateralToken} = allContracts;
+  const {token, collateralToken, loans} = allContracts;
   const tokenInfo = await tokensActions.getInfo({token});
   const collateralTokenInfo = await tokensActions.getInfo({
     token: collateralToken,
   });
 
-  const depositFundsAmount = toDecimals(300, tokenInfo.decimals);
+  const depositFundsAmount = toDecimals(500, tokenInfo.decimals);
   const maxAmountRequestLoanTerms = toDecimals(100, tokenInfo.decimals);
-  const amountTakeOut = toDecimals(50, tokenInfo.decimals);
+  const amountTakeOut = toDecimals(100, tokenInfo.decimals);
   let initialOraclePrice;
   let collateralAmountDepositCollateral;
   let collateralAmountWithdrawCollateral;
   if (collTokenName.toLowerCase() === "eth") {
     initialOraclePrice = toDecimals("0.00295835", 18);
-    collateralAmountDepositCollateral = toDecimals(0.2, collateralTokenInfo.decimals);
+    collateralAmountDepositCollateral = toDecimals(0.25, collateralTokenInfo.decimals);
     collateralAmountWithdrawCollateral = toDecimals(0.1,collateralTokenInfo.decimals);
   }
   if (collTokenName.toLowerCase() === "link") {
     initialOraclePrice = toDecimals("0.100704", 8);
     collateralAmountDepositCollateral = toDecimals(6.1, collateralTokenInfo.decimals);
-    collateralAmountWithdrawCollateral = toDecimals(1, collateralTokenInfo.decimals);
+    collateralAmountWithdrawCollateral = toDecimals(0.2, collateralTokenInfo.decimals);
   }
   const durationInDays = 5;
   const signers = await accounts.getAllAt(12, 13);
@@ -68,26 +67,26 @@ module.exports = async (testContext) => {
     }
   );
 
-  allContracts.escrow = await loansActions.getEscrow(
+  await loansActions.printLoanInfo(
     allContracts,
     {testContext},
     {
       loanId: loan.id,
+      collateralTokenInfo,
+      tokenInfo,
     }
   );
 
-  const context = { testContext, txConfig: borrowerTxConfig };
-
-  allContracts.cToken = await getContracts.getDeployed(ctokens.fromTokenName(tokenName))
-
-  const borrowedAmount = loan.borrowedAmount.toString()
-  await escrowActions.dapp.compound.lend(allContracts, context,
-    { amount: borrowedAmount }
-  )
-
-  const cTokenDecimals = await allContracts.cToken.decimals.call()
-  const cTokenAmount = new BigNumber(1).times(new BigNumber(10).pow(cTokenDecimals.toString()))
-  await escrowActions.dapp.compound.redeem(allContracts, context,
-    { amount: cTokenAmount.toString() }
-  )
+  await loansActions.withdrawCollateral(
+    allContracts,
+    {
+      testContext,
+      txConfig: borrowerTxConfig,
+    },
+    {
+      loanId: loan.id,
+      amount: collateralAmountWithdrawCollateral,
+      expectedErrorMessage: 'COLLATERAL_AMOUNT_TOO_HIGH'
+    }
+  );
 };

@@ -1,6 +1,4 @@
-const BigNumber = require("bignumber.js");
-
-const { teller, tokens, ctokens } = require("../../../../../scripts/utils/contracts");
+const { teller, tokens } = require("../../../../../scripts/utils/contracts");
 const {
   loans: loansActions,
   escrow: escrowActions,
@@ -61,6 +59,7 @@ module.exports = async (testContext) => {
       maxAmountRequestLoanTerms,
       amountTakeOut,
       collateralAmountDepositCollateral,
+      secured: false,
       durationInDays,
       signers,
       tokenInfo,
@@ -78,16 +77,12 @@ module.exports = async (testContext) => {
 
   const context = { testContext, txConfig: borrowerTxConfig };
 
-  allContracts.cToken = await getContracts.getDeployed(ctokens.fromTokenName(tokenName))
-
-  const borrowedAmount = loan.borrowedAmount.toString()
-  await escrowActions.dapp.compound.lend(allContracts, context,
-    { amount: borrowedAmount }
-  )
-
-  const cTokenDecimals = await allContracts.cToken.decimals.call()
-  const cTokenAmount = new BigNumber(1).times(new BigNumber(10).pow(cTokenDecimals.toString()))
-  await escrowActions.dapp.compound.redeem(allContracts, context,
-    { amount: cTokenAmount.toString() }
+  const destinationTokenName = collateralTokenInfo.symbol === 'ETH' ? 'WETH' : collateralTokenInfo.symbol;
+  const destinationToken = await getContracts.getDeployed(tokens.get(destinationTokenName));
+  const tokensPath = [ token, destinationToken ]
+  const sourceAmount = loan.borrowedAmount.toString()
+  const minDestination = '100000000000000000'
+  await escrowActions.dapp.uniswap.swap(allContracts, context,
+    { tokensPath, sourceAmount, minDestination, shouldFail: true, expectedRevertReason: 'DAPP_UNSECURED_NOT_ALLOWED' }
   )
 };

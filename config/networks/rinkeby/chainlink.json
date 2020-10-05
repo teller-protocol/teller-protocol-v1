@@ -17,7 +17,7 @@
   },
   "LINK_DAI": {
     "address": "0xd8bD0a1cB028a31AA859A21A3758685a95dE4623",
-    "inversed": false,
+    "inversed": true,
     "collateralDecimals": 18,
     "responseDecimals": 8,
     "baseTokenName": "LINK",
@@ -25,7 +25,7 @@
   },
   "LINK_USDC": {
     "address": "0xd8bD0a1cB028a31AA859A21A3758685a95dE4623",
-    "inversed": false,
+    "inversed": true,
     "collateralDecimals": 18,
     "responseDecimals": 8,
     "baseTokenName": "LINK",

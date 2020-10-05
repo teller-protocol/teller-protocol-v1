@@ -42,7 +42,7 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
     });
 
     withData({
-        _1_more_than_allowed: [1, accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 10000, false, undefined],
+        _1_less_than_allowed: [1, accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 100, false, undefined],
         _2_non_borrower: [2, accounts[1], 0, 0, 0, 0, 0, 0, 0, accounts[2], 0, true, 'CALLER_DOESNT_OWN_LOAN'],
         _3_withdraw_zero: [3, accounts[1], 0, 0, 0, 0, 0, 0, 0, accounts[1], 0, true, 'CANNOT_WITHDRAW_ZERO'],
     }, function(
@@ -120,7 +120,8 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
 
     withData({
         _1_not_enough_balance: [true, 4917, 1, accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 4918, true, 'NOT_ENOUGH_TOKENS_BALANCE'],
-        _2_transfer_fail: [false, 4918, 1, accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 10000, true, 'TOKENS_TRANSFER_FAILED'],
+        _2_transfer_fail: [false, 4918, 1, accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 100, true, 'TOKENS_TRANSFER_FAILED'],
+        _3_too_much_collateral: [true, 4918, 1, accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 100000, true, 'COLLATERAL_AMOUNT_TOO_HIGH'],
     }, function(
         transferResult,
         currentBalance,
