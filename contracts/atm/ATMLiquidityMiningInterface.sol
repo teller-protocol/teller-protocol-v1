@@ -31,7 +31,11 @@ interface ATMLiquidityMiningInterface {
 
     function initialize(address settingsAddress, address atmGovernanceProxy, address atmTLRTokenProxy) external;
 
-    function getTLRBalance() external 
+    function getTLRFloatingBalance() external 
+        //view 
+        returns (uint256);
+    
+    function getTLRTotalBalance() external 
         //view 
         returns (uint256);
     

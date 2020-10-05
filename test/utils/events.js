@@ -785,12 +785,13 @@ module.exports = {
             const name = 'Stake';
             return {
                 name: name,
-                emitted: (sender, tToken, amount, lastRewardedBlock, tTokenStakedBalance) => emitted(tx, name, ev => {
+                emitted: (sender, tToken, amount, lastRewardedBlock, tTokenStakedBalance, accruedTLRBalance) => emitted(tx, name, ev => {
                     assert.equal(ev.sender.toString(), sender.toString());
                     assert.equal(ev.tToken.toString(), tToken.toString());
                     assert.equal(ev.amount.toString(), amount.toString());
                     assert.equal(ev.lastRewardedBlock.toString(), lastRewardedBlock.toString());
                     assert.equal(ev.tTokenStakedBalance.toString(), tTokenStakedBalance.toString());
+                    assert.equal(ev.accruedTLRBalance.toString(), accruedTLRBalance.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -799,13 +800,13 @@ module.exports = {
             const name = 'UnStake';
             return {
                 name: name,
-                emitted: (sender, tToken, amount, lastRewardedBlock, tTokenStakedBalance) => emitted(tx, name, ev => {
+                emitted: (sender, tToken, amount, lastRewardedBlock, tTokenStakedBalance, accruedTLRBalance) => emitted(tx, name, ev => {
                     assert.equal(ev.sender.toString(), sender.toString());
                     assert.equal(ev.tToken.toString(), tToken.toString());
                     assert.equal(ev.amount.toString(), amount.toString());
                     assert.equal(ev.lastRewardedBlock.toString(), lastRewardedBlock.toString());
                     assert.equal(ev.tTokenStakedBalance.toString(), tTokenStakedBalance.toString());
-                    assert(parseInt(ev.accruedTLRBalance) > 0);
+                    assert.equal(ev.accruedTLRBalance.toString(), accruedTLRBalance.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -814,12 +815,12 @@ module.exports = {
             const name = 'TLRWithdrawn';
             return {
                 name: name,
-                emitted: (sender, amount, lastRewardedBlock, tTokenStakedBalance) => emitted(tx, name, ev => {
+                emitted: (sender, amount, lastRewardedBlock, tTokenStakedBalance, accruedTLRBalance) => emitted(tx, name, ev => {
                     assert.equal(ev.sender.toString(), sender.toString());
                     assert.equal(ev.amount.toString(), amount.toString());
                     assert.equal(ev.lastRewardedBlock.toString(), lastRewardedBlock.toString());
                     assert.equal(ev.tTokenStakedBalance.toString(), tTokenStakedBalance.toString());
-                    assert(parseInt(ev.accruedTLRBalance) > 0);
+                    assert.equal(ev.accruedTLRBalance.toString(), accruedTLRBalance.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
