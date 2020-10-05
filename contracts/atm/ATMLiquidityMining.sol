@@ -76,7 +76,7 @@ contract ATMLiquidityMining is
         // Checking tToken balance
         require(TToken(tToken).balanceOf(msg.sender) >= amount, "INSUFFICIENT_TTOKENS_TO_STAKE");
         // Transferring tTokens for staking
-        TToken(tToken).transferFrom(msg.sender, address(this), amount); // TODO: Change for safe
+        require(TToken(tToken).transferFrom(msg.sender, address(this), amount), "STAKE_TTOKEN_TRANSFER_FAILED"); // TODO: Change for safe
         // Calculate previously earned TLR tokens since last stake/unstake movement.
         uint256 currentBlock = block.number;
         uint256 tTokenStakedBalance = userStakeInfo[msg.sender].tTokenStakedBalance;
@@ -126,7 +126,7 @@ contract ATMLiquidityMining is
             });
         userStakeInfo[msg.sender] = userInfo;
         // Send tTokens back to user
-        IERC20(tToken).transfer(msg.sender, amount);
+        require(IERC20(tToken).transfer(msg.sender, amount), "UNSTAKE_TTOKEN_TRANSFER_FAILED");
 
         emit UnStake(
             msg.sender,
@@ -145,9 +145,7 @@ contract ATMLiquidityMining is
         external
         isInitialized() 
     {
-        uint256 accruedTLRBalance = userStakeInfo[msg.sender].accruedTLRBalance.add(_calculateAccruedTLR(block.number));
-            emit PrintUint("withdrawTLR - accruedTLRBalance", accruedTLRBalance);            
-
+        uint256 accruedTLRBalance = _getTLRTotalBalance();
         uint256 minimumTLRToRedeem = governance.getGeneralSetting("MIN_TLR_TO_REDEEM");
         require(accruedTLRBalance >= minimumTLRToRedeem, "NOT_ENOUGH_TLR_TOKENS_TO_REDEEM");
         require(accruedTLRBalance >= amount, "UNSUFFICIENT_TLR_TO_WITHDRAW");
@@ -155,7 +153,7 @@ contract ATMLiquidityMining is
         userStakeInfo[msg.sender].accruedTLRBalance = accruedTLRBalance.sub(amount);
         userStakeInfo[msg.sender].lastRewardedBlock = block.number;
         // TODO: validate we don't overflow TLR max cap
-        tlrToken.mint(msg.sender, amount); 
+        require(tlrToken.mint(msg.sender, amount), "WITHDRAW_FAILED_MINTING_TLR"); 
         
         emit TLRWithdrawn(
             msg.sender,
@@ -187,7 +185,9 @@ contract ATMLiquidityMining is
             return NO_TLR_ACCRUED;
         }  
         uint256 latestRewardedBlock = userStakeInfo[msg.sender].lastRewardedBlock;  
-        require(latestRewardedBlock < blockNumber, "BLOCK_TOO_OLD");
+        if (latestRewardedBlock >= blockNumber) {
+            return NO_TLR_ACCRUED;
+        }
         ATMLibrary.TLRReward[] memory rewards = governance.getTLRRewards();
         uint256 newestRewardBlock = blockNumber;
         uint256 interval = 0;
@@ -204,7 +204,6 @@ contract ATMLiquidityMining is
                 interval = newestRewardBlock.sub(reward.startBlockNumber);
                 emit PrintUint("interval >= ", interval);            
             }
-            //emit PrintUint("interval", interval);
             emit PrintUint("reward.tlrPerBlockPertToken", reward.tlrPerBlockPertToken);
             emit PrintUint("tTokenStakedBalance", tTokenStakedBalance);
 
@@ -217,7 +216,11 @@ contract ATMLiquidityMining is
         return earned;
     }
 
-    function getAccruedTLRBalance() 
+    /**
+        @notice Returns TLR floating accrued balance since last Stake(), UnStake(), Withdraw() operation
+            until current block.
+     */
+    function getTLRFloatingBalance() // getAccruedTLRBalance
         external 
         //view unComment after PrintUint
         returns (uint256)
@@ -225,12 +228,22 @@ contract ATMLiquidityMining is
         return _calculateAccruedTLR(block.number);
     }
     
-    function getTLRBalance() 
+    /**
+        @notice Returns TLR total balance ( accrued + floating ) until current block.
+     */
+    function getTLRTotalBalance() 
         external 
         //view unComment after PrintUint
         returns (uint256)
     {
+        return _getTLRTotalBalance();
+    }
+
+    function _getTLRTotalBalance()
+        internal
+        //view unComment afgter printuint
+        returns (uint256)
+    {
         return userStakeInfo[msg.sender].accruedTLRBalance.add(_calculateAccruedTLR(block.number));
     }
-   
 }

@@ -12,7 +12,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const TDAI = artifacts.require("./base/TDAI.sol");
 const TLRToken = artifacts.require("./atm/TLRToken.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
-const ATMLiquidityMiningMock = artifacts.require("./atm/ATMLiquidityMiningMock.sol");
+const ATMLiquidityMining = artifacts.require("./atm/ATMLiquidityMining.sol");
 
 contract("ATMLiquidityMiningStakeTest", function(accounts) {
     const owner = accounts[0]; 
@@ -20,33 +20,32 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
     const INITIAL_REWARD = 1;
     let instance;
     let governance;
-    let tlr;
-
+    let tToken;
     
     beforeEach("Setup for each test", async () => {
         const settingsInstance = await Mock.new();
         governance = await ATMGovernance.new();
         await governance.initialize(settingsInstance.address, owner, INITIAL_REWARD);
-        tlr = await TLRToken.new();
+        const tlr = await TLRToken.new();
         tToken = await TDAI.new();
-        instance = await ATMLiquidityMiningMock.new();
+        instance = await ATMLiquidityMining.new();
         await instance.initialize(settingsInstance.address, governance.address, tlr.address, { from: owner });
     });
 
     withData({
         _1_basic: [ 10, 0, false, undefined ],
         _2_not_enough_tTokens: [ 10, 1, true, "INSUFFICIENT_TTOKENS_TO_STAKE" ],
-    }, function(amount, offset, mustFail, expectedErrorMessage) {
+    }, function(stakeAmount, offset, mustFail, expectedErrorMessage) {
         it(t("user", "stake#1-one-reward-one-stake", "Should be able or not to stake tTokens.", mustFail), async function() {
             // Setup
-            await tToken.mint(user, amount, { from: owner });
+            await tToken.mint(user, stakeAmount, { from: owner });
             const userBalanceBefore = await tToken.balanceOf(user);
             const liquidityBalanceBefore = await tToken.balanceOf(instance.address);
-            await tToken.approve(instance.address, amount, { from: user });
+            await tToken.approve(instance.address, stakeAmount, { from: user });
 
             try {
                 // Invocation 
-                const result = await instance.stake(tToken.address, amount + offset , { from: user });
+                const result = await instance.stake(tToken.address, stakeAmount + offset , { from: user });
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 // Validating result
@@ -58,7 +57,7 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
                 // Validating events were emitted
                 liquidityMining
                     .stake(result)
-                    .emitted(user, tToken.address, amount, result.receipt.blockNumber, amount, 0);
+                    .emitted(user, tToken.address, stakeAmount, result.receipt.blockNumber, stakeAmount, 0);
             } catch (error) {
                 assert(mustFail);
                 assert(error);
@@ -66,6 +65,7 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
             }
         });
     });
+   
     withData({
         _1_one_reward_multi_stake: [ [10, 20, 30, 5, 3], false, undefined ],
     }, function(amounts, mustFail, expectedErrorMessage) {
@@ -73,23 +73,19 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
             try {
                 // Setup
                 let totalAmount = 0;
-                let userBalanceBefore = 0;
-                let liquidityBalanceAfter = 0;
                 for (let i = 0; i < amounts.length; i++) {
                     totalAmount += parseInt(amounts[i]);
                     await tToken.mint(user, amounts[i], { from: owner });
                     await tToken.approve(instance.address, totalAmount, { from: user });
-                    userBalanceBefore += parseInt(await tToken.balanceOf(user));
                     // Invocation 
                     const result = await instance.stake(tToken.address, amounts[i] , { from: user });
                     // Assertions
                     assert(!mustFail, 'It should have failed because data is invalid.');
-                    // Validating result
-                    liquidityBalanceAfter = parseInt(await tToken.balanceOf(instance.address)) ;
                     // Validating events were emitted
+                    const accruedTLRBalance = parseInt(await instance.getTLRTotalBalance.call({from: user}));
                     liquidityMining
                         .stake(result)
-                        .emitted(user, tToken.address, amounts[i], result.receipt.blockNumber, totalAmount); // accruedTLR validated on calculateAccruedTLR test.
+                        .emitted(user, tToken.address, amounts[i], result.receipt.blockNumber, totalAmount, accruedTLRBalance); 
                 }
             } catch (error) {
                 assert(mustFail);
@@ -98,22 +94,24 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
             }
         });
     });
-    
+ 
     withData({
         _1_multi_reward_multi_stake: [ [10, 100], [20, 200, 2000], false, undefined ],
     }, function(amounts, rewards, mustFail, expectedErrorMessage) {
         it(t("user", "stake#3-multiple-rewards-multiple-stakes", "Should be able or not to stake tTokens.", mustFail), async function() {
-            // Setup
+            // Setup 
+            // Initial stake
             await tToken.mint(user, amounts[0], { from: owner });
             await tToken.approve(instance.address, amounts[0], { from: user });
             await instance.stake(tToken.address, amounts[0] , { from: user });
-            const totalAmount = amounts[0] + amounts[1];        
+            const totalAmounts = amounts.reduce((a, b) => a + b, 0);        
+            // Adding new rewards
             for (let r = 0; r < rewards.length; r++){
                 await helper.advanceBlocks(rewards[r]);
                 await governance.addTLRReward(rewards[r], { from: owner});
             }
             await tToken.mint(user, amounts[1], { from: owner });
-            await tToken.approve(instance.address, totalAmount, { from: user });
+            await tToken.approve(instance.address, totalAmounts, { from: user });
             
             try {
                 // Invocation 
@@ -121,12 +119,13 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 // Validating result
-                liquidityBalanceAfter = parseInt(await tToken.balanceOf(instance.address)) ;
-                assert( liquidityBalanceAfter == totalAmount);
+                const liquidityBalanceAfter = parseInt(await tToken.balanceOf(instance.address)) ;
+                assert.equal(liquidityBalanceAfter, totalAmounts, "Liquidity contract tToken balance error");
+                const accruedTLRBalance = parseInt(await instance.getTLRTotalBalance.call({from: user}));
                 // Validating events were emitted
                 liquidityMining
                     .stake(result)
-                    .emitted(user, tToken.address, amounts[1], result.receipt.blockNumber, totalAmount); // accruedTLR validated on calculateAccruedTLR test.
+                    .emitted(user, tToken.address, amounts[1], result.receipt.blockNumber, totalAmounts, accruedTLRBalance);
             } catch (error) {
                 assert(mustFail);
                 assert(error);
@@ -134,4 +133,6 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
             }
         });
     });
+    
+
 });
