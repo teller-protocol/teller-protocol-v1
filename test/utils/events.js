@@ -834,7 +834,7 @@ module.exports = {
                     assert.equal(ev.amount.toString(), amount.toString());
                     assert.equal(ev.lastRewardedBlock.toString(), lastRewardedBlock.toString());
                     assert.equal(ev.tTokenStakedBalance.toString(), tTokenStakedBalance.toString());
-                    assert(parseInt(ev.accruedTLRBalance) > 0);
+                    assert.equal(ev.accruedTLRBalance.toString(), accruedTLRBalance.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };

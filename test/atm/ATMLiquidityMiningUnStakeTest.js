@@ -55,12 +55,12 @@ contract("ATMLiquidityMiningUnStakeTest", function(accounts) {
         it(t("user", "unStake#1", "Should be able or not to unStake tTokens.", mustFail), async function() {
             // Setup
             if (amount > 0 ) {
-                await tToken.mint(user, amount, { from: owner });
-                await tToken.approve(instance.address, amount, { from: user });
-                await instance.stake(tToken.address, amount , { from: user });                
+            await tToken.mint(user, amount, { from: owner });
+            await tToken.approve(instance.address, amount, { from: user });
+            await instance.stake(tToken.address, amount , { from: user });                
                 userBalanceBefore = await tToken.balanceOf(user);
                 liquidityBalanceBefore = await tToken.balanceOf(instance.address);
-                await helper.advanceBlocks(100);
+            await helper.advanceBlocks(100);
             }
             if (isPaused) {
                 await atmSettingsInstance.givenMethodReturnBool(
