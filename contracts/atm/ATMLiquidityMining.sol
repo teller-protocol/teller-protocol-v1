@@ -30,11 +30,6 @@ contract ATMLiquidityMining is
 {
     using SafeMath for uint256;
 
-
-    event PrintUint(
-        string variableName,
-        uint256 variableValue
-    );
     /* Constants */
     uint8 public constant NO_TTOKENS_STAKED = 0;
     uint8 public constant NO_TLR_ACCRUED = 0;
@@ -47,7 +42,21 @@ contract ATMLiquidityMining is
 
     mapping( address => ATMLibrary.UserStakeInfo ) public userStakeInfo;
 
-    mapping ( address => bool ) public forbiddenAddresses; // Apply to all 
+    mapping ( address => bool ) public notAllowedAddresses;
+
+
+    modifier onlyAllowed() {
+        require(!notAllowedAddresses[msg.sender], "SENDER_NOT_ALLOWED");
+        _;
+    }
+    /**
+        @notice Checks if the platform is paused or not
+        @dev Throws an error is the Teller platform is paused
+     */
+    modifier whenNotPaused() {
+        require(!settings().atmSettings().isATMPaused(address(governance)), "ATM_IS_PAUSED");
+        _;
+    }
 
     function initialize(
         address settingsAddress,
@@ -63,20 +72,39 @@ contract ATMLiquidityMining is
         TInitializable._initialize();
     }
 
+    function addNotAllowedAddress(address notAllowed)
+        external
+        onlyPauser()
+        isInitialized()
+    {
+        notAllowedAddresses[notAllowed] = true;
+        // TODO: Emit event
+    }
+   
+    function removeNotAllowedAddress(address notAllowed)
+        external
+        onlyPauser()
+        isInitialized()
+    {
+        notAllowedAddresses[notAllowed] = false;
+        // TODO: Emit event
+    }
     
     /**
         @notice End users stake their own tTokens on this ATM to earn TLR.
      */
     function stake(address tToken, uint256 amount) 
         external 
+        onlyAllowed()
         isInitialized() 
+        whenNotPaused()
     {
         // TODO: Check tToken is a Teller whitelisted token on settings().
         //require(settings().tTokensRegistry().istTokenValid(tToken), "TTOKEN_IS_NOT_REGISTERED");
         // Checking tToken balance
         require(TToken(tToken).balanceOf(msg.sender) >= amount, "INSUFFICIENT_TTOKENS_TO_STAKE");
         // Transferring tTokens for staking
-        require(TToken(tToken).transferFrom(msg.sender, address(this), amount), "STAKE_TTOKEN_TRANSFER_FAILED"); // TODO: Change for safe
+        require(TToken(tToken).transferFrom(msg.sender, address(this), amount), "STAKE_TTOKEN_TRANSFER_FAILED");
         // Calculate previously earned TLR tokens since last stake/unstake movement.
         uint256 currentBlock = block.number;
         uint256 tTokenStakedBalance = userStakeInfo[msg.sender].tTokenStakedBalance;
@@ -107,6 +135,7 @@ contract ATMLiquidityMining is
     function unStake(address tToken, uint256 amount)
         external
         isInitialized() 
+        whenNotPaused()
     {
         // TODO: Check tToken is a Teller whitelisted token on settings().
         //require(settings().tTokensRegistry().istTokenValid(tToken), "TTOKEN_IS_NOT_REGISTERED");
@@ -144,6 +173,7 @@ contract ATMLiquidityMining is
     function withdrawTLR(uint256 amount)
         external
         isInitialized() 
+        whenNotPaused()
     {
         uint256 accruedTLRBalance = _getTLRTotalBalance();
         uint256 minimumTLRToRedeem = governance.getGeneralSetting("MIN_TLR_TO_REDEEM");
@@ -169,12 +199,35 @@ contract ATMLiquidityMining is
     }
 
     /**
+        @notice Returns TLR floating accrued balance since last Stake(), UnStake(), Withdraw() operation
+            until current block.
+     */
+    function getTLRFloatingBalance() 
+        external 
+        view 
+        returns (uint256)
+    {
+        return _calculateAccruedTLR(block.number);
+    }
+    
+    /**
+        @notice Returns TLR total balance ( accrued + floating ) until current block.
+     */
+    function getTLRTotalBalance() 
+        external 
+        view
+        returns (uint256)
+    {
+        return _getTLRTotalBalance();
+    }
+
+    /**
         @notice Returns sender's accrued TLR token amount since last stake operation (stake or unstake)
             until param blockNumber. 
     */
     function _calculateAccruedTLR(uint256 blockNumber)
         internal
-        //view uncomment after PrintUint
+        view
         isInitialized() 
         returns (uint256 earned)
     {
@@ -199,14 +252,9 @@ contract ATMLiquidityMining is
             ATMLibrary.TLRReward memory reward = rewards[rewards.length - i];
             if (reward.startBlockNumber < latestRewardedBlock ) {
                 interval = newestRewardBlock.sub(latestRewardedBlock);
-                emit PrintUint("interval < ", interval);            
             } else {
                 interval = newestRewardBlock.sub(reward.startBlockNumber);
-                emit PrintUint("interval >= ", interval);            
             }
-            emit PrintUint("reward.tlrPerBlockPertToken", reward.tlrPerBlockPertToken);
-            emit PrintUint("tTokenStakedBalance", tTokenStakedBalance);
-
             uint256 accruedTLR = reward.tlrPerBlockPertToken
                 .mul(interval)
                 .mul(tTokenStakedBalance);
@@ -216,32 +264,9 @@ contract ATMLiquidityMining is
         return earned;
     }
 
-    /**
-        @notice Returns TLR floating accrued balance since last Stake(), UnStake(), Withdraw() operation
-            until current block.
-     */
-    function getTLRFloatingBalance() // getAccruedTLRBalance
-        external 
-        //view unComment after PrintUint
-        returns (uint256)
-    {
-        return _calculateAccruedTLR(block.number);
-    }
-    
-    /**
-        @notice Returns TLR total balance ( accrued + floating ) until current block.
-     */
-    function getTLRTotalBalance() 
-        external 
-        //view unComment after PrintUint
-        returns (uint256)
-    {
-        return _getTLRTotalBalance();
-    }
-
     function _getTLRTotalBalance()
         internal
-        //view unComment afgter printuint
+        view
         returns (uint256)
     {
         return userStakeInfo[msg.sender].accruedTLRBalance.add(_calculateAccruedTLR(block.number));
