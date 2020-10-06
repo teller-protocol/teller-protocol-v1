@@ -13,21 +13,36 @@ const TDAI = artifacts.require("./base/TDAI.sol");
 const TLRToken = artifacts.require("./atm/TLRToken.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 const ATMLiquidityMining = artifacts.require("./atm/ATMLiquidityMining.sol");
+const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
+const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 contract("ATMLiquidityMiningStakeTest", function(accounts) {
+    const atmSettingsEncoder = new IATMSettingsEncoder(web3);
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     const owner = accounts[0]; 
     const user = accounts[2];
     const INITIAL_REWARD = 1;
     let instance;
     let governance;
     let tToken;
-    
+    let atmSettingsInstance;
+
     beforeEach("Setup for each test", async () => {
         const settingsInstance = await Mock.new();
         governance = await ATMGovernance.new();
+        atmSettingsInstance = await Mock.new();
+        await atmSettingsInstance.givenMethodReturnBool(
+            atmSettingsEncoder.encodeIsATMPaused(),
+            false
+        );
+        await settingsInstance.givenMethodReturnAddress(
+            settingsInterfaceEncoder.encodeATMSettings(),
+            atmSettingsInstance.address
+        );
         await governance.initialize(settingsInstance.address, owner, INITIAL_REWARD);
         const tlr = await TLRToken.new();
         tToken = await TDAI.new();
+
         instance = await ATMLiquidityMining.new();
         await instance.initialize(settingsInstance.address, governance.address, tlr.address, { from: owner });
     });
@@ -59,6 +74,7 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
                     .stake(result)
                     .emitted(user, tToken.address, stakeAmount, result.receipt.blockNumber, stakeAmount, 0);
             } catch (error) {
+    console.log(error);
                 assert(mustFail);
                 assert(error);
                 assert.equal(error.reason, expectedErrorMessage);

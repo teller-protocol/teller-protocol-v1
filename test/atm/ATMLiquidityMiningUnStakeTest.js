@@ -13,8 +13,12 @@ const TDAI = artifacts.require("./base/TDAI.sol");
 const TLRToken = artifacts.require("./atm/TLRToken.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 const ATMLiquidityMining = artifacts.require("./atm/ATMLiquidityMining.sol");
+const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
+const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 contract("ATMLiquidityMiningUnStakeTest", function(accounts) {
+    const atmSettingsEncoder = new IATMSettingsEncoder(web3);
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     const owner = accounts[0]; 
     const user = accounts[2];
     const INITIAL_REWARD = 1;
@@ -25,6 +29,15 @@ contract("ATMLiquidityMiningUnStakeTest", function(accounts) {
     
     beforeEach("Setup for each test", async () => {
         const settingsInstance = await Mock.new();
+        const atmSettingsInstance = await Mock.new();
+        await atmSettingsInstance.givenMethodReturnBool(
+            atmSettingsEncoder.encodeIsATMPaused(),
+            false
+        );
+        await settingsInstance.givenMethodReturnAddress(
+            settingsInterfaceEncoder.encodeATMSettings(),
+            atmSettingsInstance.address
+        );
         governance = await ATMGovernance.new();
         await governance.initialize(settingsInstance.address, owner, INITIAL_REWARD);
         tlr = await TLRToken.new();
