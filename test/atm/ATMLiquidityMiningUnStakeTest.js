@@ -92,7 +92,7 @@ contract("ATMLiquidityMiningUnStakeTest", function(accounts) {
         });
     });
    
-
+ 
  
     withData({
         _1_one_reward_multi_unstake: [ [10, 20, 30, 5, 3], false, undefined ],
