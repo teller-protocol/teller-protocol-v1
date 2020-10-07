@@ -25,11 +25,11 @@ contract("ATMLiquidityMiningUnStakeTest", function(accounts) {
     let instance;
     let governance;
     let tlr;
-
+    let atmSettingsInstance;
     
     beforeEach("Setup for each test", async () => {
         const settingsInstance = await Mock.new();
-        const atmSettingsInstance = await Mock.new();
+        atmSettingsInstance = await Mock.new();
         await atmSettingsInstance.givenMethodReturnBool(
             atmSettingsEncoder.encodeIsATMPaused(),
             false
@@ -47,17 +47,27 @@ contract("ATMLiquidityMiningUnStakeTest", function(accounts) {
     });
 
     withData({
-        _1_basic: [ 10, 0, false, undefined ],
-        _2_not_enough_tTokens: [ 10, 1, true, "NOT_ENOUGH_STAKED_TTOKENS" ],
-    }, function(amount, offset, mustFail, expectedErrorMessage) {
+        _1_basic: [ 10, 0, false, false, undefined ],
+        _2_atm_paused: [ 10, 0, true, true, "ATM_IS_PAUSED" ],
+        _3_unstake_zero: [ 0, 0, false, true, "UNSTAKING_ZERO_NOT_ALLOWED" ],        
+        _4_not_enough_tTokens: [ 10, 1, false, true, "NOT_ENOUGH_STAKED_TTOKENS" ],
+    }, function(amount, offset, isPaused, mustFail, expectedErrorMessage) {
         it(t("user", "unStake#1", "Should be able or not to unStake tTokens.", mustFail), async function() {
             // Setup
-            await tToken.mint(user, amount, { from: owner });
-            await tToken.approve(instance.address, amount, { from: user });
-            await instance.stake(tToken.address, amount , { from: user });                
-            const userBalanceBefore = await tToken.balanceOf(user);
-            const liquidityBalanceBefore = await tToken.balanceOf(instance.address);
-            await helper.advanceBlocks(100);
+            if (amount > 0 ) {
+                await tToken.mint(user, amount, { from: owner });
+                await tToken.approve(instance.address, amount, { from: user });
+                await instance.stake(tToken.address, amount , { from: user });                
+                userBalanceBefore = await tToken.balanceOf(user);
+                liquidityBalanceBefore = await tToken.balanceOf(instance.address);
+                await helper.advanceBlocks(100);
+            }
+            if (isPaused) {
+                await atmSettingsInstance.givenMethodReturnBool(
+                    atmSettingsEncoder.encodeIsATMPaused(),
+                    true
+                );
+            }   
             try {
                 // Invocation 
                 const result = await instance.unStake(tToken.address, amount + offset , { from: user });
@@ -82,6 +92,7 @@ contract("ATMLiquidityMiningUnStakeTest", function(accounts) {
         });
     });
    
+
  
     withData({
         _1_one_reward_multi_unstake: [ [10, 20, 30, 5, 3], false, undefined ],
