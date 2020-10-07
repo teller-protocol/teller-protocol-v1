@@ -48,16 +48,29 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
     });
 
     withData({
-        _1_basic: [ 10, 0, false, undefined ],
-        _2_not_enough_tTokens: [ 10, 1, true, "INSUFFICIENT_TTOKENS_TO_STAKE" ],
-    }, function(stakeAmount, offset, mustFail, expectedErrorMessage) {
+        _1_basic: [ 10, 0, false, false, false, undefined ],
+        _2_atm_paused: [ 10, 0, true, false, true, "ATM_IS_PAUSED" ],
+        _3_stake_zero: [ 0, 0, false, false, true, "STAKING_ZERO_NOT_ALLOWED" ],
+        _4_blacklisted: [ 10, 0, false, true, true, "SENDER_NOT_ALLOWED" ],
+        _5_not_enough_tTokens: [ 10, 1, false, false, true, "INSUFFICIENT_TTOKENS_TO_STAKE" ],
+    }, function(stakeAmount, offset, isPaused, blacklisted, mustFail, expectedErrorMessage) {
         it(t("user", "stake#1-one-reward-one-stake", "Should be able or not to stake tTokens.", mustFail), async function() {
             // Setup
-            await tToken.mint(user, stakeAmount, { from: owner });
-            const userBalanceBefore = await tToken.balanceOf(user);
-            const liquidityBalanceBefore = await tToken.balanceOf(instance.address);
-            await tToken.approve(instance.address, stakeAmount, { from: user });
-
+            if (isPaused) {
+                await atmSettingsInstance.givenMethodReturnBool(
+                    atmSettingsEncoder.encodeIsATMPaused(),
+                    true
+                );
+            }
+            if (blacklisted) {
+                instance.addNotAllowedAddress(user, { from: owner });
+            }
+            if (stakeAmount > 0) { 
+                await tToken.mint(user, stakeAmount, { from: owner });
+                userBalanceBefore = await tToken.balanceOf(user);
+                liquidityBalanceBefore = await tToken.balanceOf(instance.address);
+                await tToken.approve(instance.address, stakeAmount, { from: user });
+            }
             try {
                 // Invocation 
                 const result = await instance.stake(tToken.address, stakeAmount + offset , { from: user });
@@ -74,14 +87,13 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
                     .stake(result)
                     .emitted(user, tToken.address, stakeAmount, result.receipt.blockNumber, stakeAmount, 0);
             } catch (error) {
-    console.log(error);
                 assert(mustFail);
                 assert(error);
                 assert.equal(error.reason, expectedErrorMessage);
             }
         });
     });
-   
+  
     withData({
         _1_one_reward_multi_stake: [ [10, 20, 30, 5, 3], false, undefined ],
     }, function(amounts, mustFail, expectedErrorMessage) {
