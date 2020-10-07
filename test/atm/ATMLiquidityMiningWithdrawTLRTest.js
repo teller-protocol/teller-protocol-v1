@@ -15,22 +15,36 @@ const Settings = artifacts.require("./base/Settings.sol");
 const TLRToken = artifacts.require("./atm/TLRToken.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 const ATMLiquidityMining = artifacts.require("./atm/ATMLiquidityMining.sol");
+const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
+const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 contract("ATMLiquidityMiningWithdrawTLRTest", function(accounts) {
+    const atmSettingsEncoder = new IATMSettingsEncoder(web3);
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     const owner = accounts[0]; 
     const user = accounts[2];
     const INITIAL_REWARD = 1;
     let instance;
     let governance;
     let tlr;
+    let atmSettingsInstance;
 
     const SETTING_NAME = toBytes32(web3, 'MIN_TLR_TO_REDEEM');
     const SETTING_VALUE = 3000;
     
     
     beforeEach("Setup for each test", async () => {
-        const settingsInstance = await createTestSettingsInstance(Settings, { from: owner, Mock });
+        const settingsInstance = await Mock.new();
         governance = await ATMGovernance.new();
+        atmSettingsInstance = await Mock.new();
+        await atmSettingsInstance.givenMethodReturnBool(
+            atmSettingsEncoder.encodeIsATMPaused(),
+            false
+        );
+        await settingsInstance.givenMethodReturnAddress(
+            settingsInterfaceEncoder.encodeATMSettings(),
+            atmSettingsInstance.address
+        );
         await governance.initialize(settingsInstance.address, owner, INITIAL_REWARD);
         await governance.addGeneralSetting(SETTING_NAME, SETTING_VALUE, { from: owner });
         tlr = await TLRToken.new();
@@ -42,17 +56,24 @@ contract("ATMLiquidityMiningWithdrawTLRTest", function(accounts) {
     });
 
     withData({
-        _1_basic: [ false, 10, SETTING_VALUE + 2, 1000, false, undefined ],
-        _2_not_enough_to_redeem: [ false, 10, 1, 1, true, "NOT_ENOUGH_TLR_TOKENS_TO_REDEEM" ],
-        _3_not_enough_amount: [ false, 10, 500000000, 1000, true, "UNSUFFICIENT_TLR_TO_WITHDRAW" ],
-        _4_not_user: [ true, 10, 500000000, 1000, true, "NOT_ENOUGH_TLR_TOKENS_TO_REDEEM" ],
-    }, function(useDifferentUser, stakeAmount, withdrawAmount, newBlocks, mustFail, expectedErrorMessage) {
+        _1_basic: [ false, false, 10, SETTING_VALUE + 2, 1000, false, undefined ],
+        _2_atm_paused: [ true, false, 10, SETTING_VALUE + 2, 1000, true, "ATM_IS_PAUSED" ],
+        _3_not_enough_to_redeem: [ false, false, 10, 1, 1, true, "NOT_ENOUGH_TLR_TOKENS_TO_REDEEM" ],
+        _4_not_enough_amount: [ false, false, 10, 500000000, 1000, true, "UNSUFFICIENT_TLR_TO_WITHDRAW" ],
+        _5_not_user: [ false, true, 10, 500000000, 1000, true, "NOT_ENOUGH_TLR_TOKENS_TO_REDEEM" ],
+    }, function(isPaused, useDifferentUser, stakeAmount, withdrawAmount, newBlocks, mustFail, expectedErrorMessage) {
         it(t("user", "withdrawTLR", "Should be able or not to withdraw TLR tokens.", mustFail), async function() {
             // Setup
             await tToken.mint(user, stakeAmount, { from: owner });
             await tToken.approve(instance.address, stakeAmount, { from: user });
             await instance.stake(tToken.address, stakeAmount , { from: user });
             await helper.advanceBlocks(newBlocks);
+            if (isPaused) {
+                await atmSettingsInstance.givenMethodReturnBool(
+                    atmSettingsEncoder.encodeIsATMPaused(),
+                    true
+                );
+            }
             try {
                 // Invocation 
                 const userTLRBalanceBefore = await tlr.balanceOf(user);
