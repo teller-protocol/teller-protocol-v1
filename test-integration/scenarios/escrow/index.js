@@ -1,4 +1,8 @@
 const _1_escrow_repay_loan_in_full = require('./1_escrow_repay_loan_in_full');
+const _2_escrow_error_repaying_loan_as_not_borrower = require('./2_escrow_error_repaying_loan_as_not_borrower')
+const _3_escrow_claim_tokens_after_loan_closed = require('./3_escrow_claim_tokens_after_loan_closed')
+const _4_escrow_error_claim_tokens_before_loan_closed = require('./4_escrow_error_claim_tokens_before_loan_closed')
+const _5_escrow_error_claim_tokens_as_not_borrower_loan_not_liquidated = require('./5_escrow_error_claim_tokens_as_not_borrower_loan_not_liquidated')
 
 const _1_compound_lend_token = require('./dapps/compound/1_compound_lend_token')
 const _2_compound_redeem_token = require('./dapps/compound/2_compound_redeem_token')
@@ -10,6 +14,10 @@ const _3_uniswap_unsecured_swap = require('./dapps/uniswap/3_uniswap_unsecured_s
 
 const escrow = {
   _1_escrow_repay_loan_in_full,
+  _2_escrow_error_repaying_loan_as_not_borrower,
+  _3_escrow_claim_tokens_after_loan_closed,
+  _4_escrow_error_claim_tokens_before_loan_closed,
+  _5_escrow_error_claim_tokens_as_not_borrower_loan_not_liquidated,
 }
 
 const compound = {

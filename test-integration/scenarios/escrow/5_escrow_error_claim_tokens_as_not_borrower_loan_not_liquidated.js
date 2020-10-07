@@ -4,6 +4,9 @@ const {
   escrow: escrowActions,
   tokens: tokensActions
 } = require("../../utils/actions");
+const {
+  loans: loansAssertions
+} = require("../../utils/assertions");
 const helperActions = require("../../utils/actions/helper");
 const { toDecimals } = require("../../../test/utils/consts");
 
@@ -75,9 +78,15 @@ module.exports = async (testContext) => {
     }
   );
 
-  await escrowActions.repayInFull(allContracts,
+  await escrowActions.repayInFull(allContracts, {
+    txConfig: borrowerTxConfig,
+    testContext
+  });
+
+  await escrowActions.claimTokens(
+    { escrow: allContracts.escrow },
     { txConfig: lenderTxConfig, testContext },
-    { shouldFail: true, expectedRevertReason: 'Ownable: caller is not the owner' }
+    { recipient: lenderTxConfig.from, shouldFail: true, expectedRevertReason: "RECIPIENT_MUST_BE_BORROWER" }
   );
 
   await loansActions.printLoanInfo(

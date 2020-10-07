@@ -276,7 +276,7 @@ const repay = async ({loans, lendingPool, token}, {txConfig}, {loanId, amount}) 
   console.log(`Repaying ${amount} for loan id ${loanId}`);
   const loan = await loans.loans(loanId);
   const totalOwed = await loans.getTotalOwed(loanId);
-  const totalOwedBigNumber = BigNumber(totalOwed.toString());
+  const totalOwedBigNumber = new BigNumber(totalOwed.toString());
   
   await token.approve(lendingPool.address, amount, txConfig);
   const repayResult = await loans.repay(amount, loanId, txConfig);

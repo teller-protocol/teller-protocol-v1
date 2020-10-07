@@ -2,6 +2,7 @@ const BigNumber = require('bignumber.js')
 const truffleAssert = require('truffle-assertions')
 
 const {
+  escrow: escrowEvents,
   loans: loansEvents,
 } = require("../../../test/utils/events");
 
@@ -23,6 +24,21 @@ async function loanRepaid(
   }
 }
 
+async function tokensClaimed(
+  { txPromise, recipient, shouldFail, expectedRevertReason }
+) {
+  if (shouldFail) {
+    await truffleAssert.fails(txPromise, expectedRevertReason)
+  } else {
+    await truffleAssert.passes(txPromise)
+    const txResult = await txPromise
+    escrowEvents
+      .tokensClaimed(txResult)
+      .emitted(recipient);
+  }
+}
+
 module.exports = {
-  loanRepaid
+  loanRepaid,
+  tokensClaimed,
 }
