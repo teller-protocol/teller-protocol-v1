@@ -200,7 +200,7 @@ module.exports = {
         const collateralInfo = await loans.getCollateralInfo(loanId);
         
         console.log(SEPARATOR);
-        printTokensInfo({ tokenInfo, collateralTokenInfo });
+        await printTokensInfo({ tokenInfo, collateralTokenInfo });
 
         printLoan({ loanInfo, totalOwed }, { tokenInfo, collateralTokenInfo });
 
