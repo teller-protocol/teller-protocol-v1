@@ -262,6 +262,13 @@ contract ATMLiquidityMining is
         return _getTLRTotalBalance();
     }
 
+    function _incrementTTokenBalance(uint256 amount)
+        internal
+        view
+        returns (uint256)
+    {
+        return userStakeInfo[msg.sender].tTokenStakedBalance.add(amount);
+    }
     /**
         @notice Returns tToken sender balance plus the amount specified. 
         @param amount amount of tTokens to add to current tToken balance. 

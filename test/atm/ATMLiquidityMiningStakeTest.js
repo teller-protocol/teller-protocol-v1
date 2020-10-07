@@ -66,10 +66,10 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
                 instance.addNotAllowedAddress(user, { from: owner });
             }
             if (stakeAmount > 0) { 
-            await tToken.mint(user, stakeAmount, { from: owner });
+                await tToken.mint(user, stakeAmount, { from: owner });
                 userBalanceBefore = await tToken.balanceOf(user);
                 liquidityBalanceBefore = await tToken.balanceOf(instance.address);
-            await tToken.approve(instance.address, stakeAmount, { from: user });
+                await tToken.approve(instance.address, stakeAmount, { from: user });
             }
             try {
                 // Invocation 
@@ -93,7 +93,7 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
             }
         });
     });
-   
+  
     withData({
         _1_one_reward_multi_stake: [ [10, 20, 30, 5, 3], false, undefined ],
     }, function(amounts, mustFail, expectedErrorMessage) {
