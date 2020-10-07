@@ -27,6 +27,8 @@ const executeTestFunction = async (testFunctionObject, testContext) => {
 };
 
 module.exports = async (callback) => {
+    global.web3 = web3
+
     const network = processArgs.getValue(NETWORK.name);
     const revertBlockchain = processArgs.getValue(REVERT.name, false);
     const revertTestBlockchain = processArgs.getValue(REVERT_TEST.name, false);

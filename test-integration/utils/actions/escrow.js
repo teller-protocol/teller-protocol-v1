@@ -3,7 +3,8 @@ const BigNumber = require('bignumber.js')
 
 const loansActions = require("./loans");
 const {
-  tokens: tokensAssertions
+  tokens: tokensAssertions,
+  escrow: escrowAssertions,
 } = require('../assertions')
 const {
   escrow: escrowEvents,
@@ -16,15 +17,19 @@ const logicNames = require("../../../test/utils/logicNames");
  * Requires the borrowed token instance to set an approval.
  */
 const repay = async (
-  { escrow, token },
+  { escrow, token, loans },
   { txConfig, testContext },
-  { amount }
+  { amount, shouldFail = false, expectedRevertReason }
 ) => {
   console.log(`Repaying ${amount} in escrow ${escrow.address}...`);
+
   await token.approve(escrow.address, amount, txConfig);
-  const escrowResult = await escrow.repay(amount, txConfig);
-  //TODO Add assertions (events, amount).
-  return escrowResult;
+  const txPromise = escrow.repay(amount, txConfig);
+  await escrowAssertions.loanRepaid(
+    { escrow, loans },
+    { txConfig, testContext },
+    { txPromise, amount, shouldFail, expectedRevertReason }
+  )
 };
 
 /**
