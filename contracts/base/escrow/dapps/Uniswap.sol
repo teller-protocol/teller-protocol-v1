@@ -34,7 +34,9 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
     using Address for address;
 
     /* Constants */
-    // TODO Add comment why we are using the same address for all the networks.
+    /**
+        @notice Based on the docs https://uniswap.org/docs/v2/smart-contracts/router02/ the Router V2 instance is deployed on the same address in the testnets and mainnet. So, we can hardcode the address here.
+     */
     IUniswapV2Router02 public constant router = IUniswapV2Router02(
         0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D
     );
