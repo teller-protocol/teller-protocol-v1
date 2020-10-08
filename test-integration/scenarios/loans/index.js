@@ -7,6 +7,8 @@ const _6_takeout_loan_invalid_too_short_time_request_loan_terms = require('./6_t
 const _7_takeout_loan_invalid_exceeds_max_loan_amount = require('./7_takeout_loan_invalid_exceeds_max_loan_amount');
 const _8_takeout_loan_invalid_borrower_address = require('./8_takeout_loan_invalid_borrower_address');
 const _9_takeout_loan_invalid_exceeds_max_loan_duration = require('./9_takeout_loan_invalid_exceeds_max_loan_duration');
+const _10_liquidate_loan_due_to_under_collateralized = require('./10_liquidate_loan_due_to_under_collateralized');
+const _11_liquidate_loan_due_to_end_date = require('./11_liquidate_loan_due_to_end_date');
 module.exports = {
     _1_takeout_loan_and_2_repays_full_successfully,
     _2_takeout_loan_and_1_repay_full_successfully,
@@ -17,4 +19,6 @@ module.exports = {
     _7_takeout_loan_invalid_exceeds_max_loan_amount,
     _8_takeout_loan_invalid_borrower_address,
     _9_takeout_loan_invalid_exceeds_max_loan_duration,
+    // TODO Fix after the changes in the PairAggregatorRegistry _10_liquidate_loan_due_to_under_collateralized,
+    _11_liquidate_loan_due_to_end_date,
 };

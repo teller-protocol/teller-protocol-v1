@@ -25,13 +25,17 @@ const getFunds = async (
   {testContext},
   {amount, to}
 ) => {
+  const symbol = await token.symbol();
+  console.log(`Getting funds ${amount} ${symbol} for account ${to}`);
   switch (testContext.network) {
     case 'ganache':
       await token.mint(to, amount);
       break
     case 'ganache-mainnet':
       const { swapper } = testContext;
-      await swapper.swapForExact(to, token.address, amount)
+      assert(amount, 'Amount is undefined.');
+      assert(amount.toString() !== '0', 'Amount must not be zero.');
+      await swapper.swapForExact(to, token.address, amount);
       break
   }
 }
@@ -278,35 +282,70 @@ const repay = async ({loans, lendingPool, token}, {txConfig}, {loanId, amount}) 
 };
 
 const liquidateLoan = async (
-  {token, loans, settings, lendingPool},
+  allContracts,
   {txConfig, testContext},
-  {loanId, amount}
+  {loanId}
 ) => {
   console.log(`Liquidating loan id ${loanId}...`);
-  const {web3} = testContext;
+  const {token, loans, lendingPool} = allContracts;
+  const initialTotalCollateral = BigNumber((await loans.totalCollateral()).toString());
+  const initialLiquidatorTokenBalance = BigNumber((await token.balanceOf(txConfig.from)));
 
-  const initialTotalCollateral = await loans.totalCollateral();
-  const liquidateEthPrice = await settings.getPlatformSettingValue(
-    toBytes32(web3, platformSettingsNames.LiquidateEthPrice)
+  const {
+    liquidable,
+    amountToLiquidate,
+    collateral,
+    collateralInTokens,
+  } = await loans.getLiquidationInfo(loanId);
+
+  const loansInfo = await loans.loans(loanId);
+  await getFunds(
+    allContracts,
+    { testContext },
+    {
+      amount: amountToLiquidate.toString(),
+      to: txConfig.from
+    }
   );
-  const getCollateralInfo = await loans.getCollateralInfo(loanId);
-  const {neededInLendingTokens} = getCollateralInfo;
-  const transferAmountToLiquidate = BigNumber(neededInLendingTokens.toString())
-    .times(liquidateEthPrice)
-    .div(10000);
-
-  // TODO Review it.
-  await token.mint(txConfig.from, transferAmountToLiquidate.toFixed(0));
-
-  const initialLiquidatorTokenBalance = await token.balanceOf(txConfig.from);
-
   await token.approve(
     lendingPool.address,
-    transferAmountToLiquidate.toFixed(0),
+    amountToLiquidate.toString(),
     txConfig
   );
-  // TODO Add validations
+
   const liquidateLoanResult = await loans.liquidateLoan(loanId, txConfig);
+
+  loansEvents
+    .loanLiquidated(liquidateLoanResult)
+    .emitted(
+      loanId,
+      loansInfo.loanTerms.borrower,
+      txConfig.from,
+      collateral,
+      amountToLiquidate
+    );
+  const finalTotalCollateral = BigNumber((await loans.totalCollateral()).toString());
+  assert.equal(
+    initialTotalCollateral.minus(finalTotalCollateral).toString(),
+    collateral.toString()
+  );
+
+  // Asserting the escrow total values.
+  const escrow = await getEscrow(allContracts, { testContext }, { loanId });
+  const {
+    valueInToken,
+    valueInEth,
+  } = await escrow.calculateTotalValue();
+  
+  assert.equal(valueInToken.toString(), '0');
+  assert.equal(valueInEth.toString(), '0');
+  
+  // Asserting liquidator final lending token balance.
+  const finalLiquidatorTokenBalance = BigNumber((await token.balanceOf(txConfig.from)));
+  assert.equal(
+    finalLiquidatorTokenBalance.minus(initialLiquidatorTokenBalance).toString(),
+    loansInfo.borrowedAmount.toString(),
+  );
 };
 
 const printLoanInfo = async (
