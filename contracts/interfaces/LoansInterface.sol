@@ -276,7 +276,8 @@ interface LoansInterface {
         @param loanID loan id to get the info.
         @return liquidationInfo get current liquidation info for the given loan id.
      */
-    function getLiquidationInfo(uint256 loanID) external view returns (
-        TellerCommon.LoanLiquidationInfo memory liquidationInfo
-    );
+    function getLiquidationInfo(uint256 loanID)
+        external
+        view
+        returns (TellerCommon.LoanLiquidationInfo memory liquidationInfo);
 }
