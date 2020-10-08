@@ -359,7 +359,9 @@ contract LoansBase is LoansInterface, Base {
         whenLendingPoolNotPaused(address(lendingPool))
         nonReentrant()
     {
-        TellerCommon.LoanLiquidationInfo memory liquidationInfo = _getLiquidationInfo(loanID);
+        TellerCommon.LoanLiquidationInfo memory liquidationInfo = _getLiquidationInfo(
+            loanID
+        );
         require(liquidationInfo.liquidable, "DOESNT_NEED_LIQUIDATION");
 
         loans[loanID].status = TellerCommon.LoanStatus.Closed;
@@ -385,9 +387,11 @@ contract LoansBase is LoansInterface, Base {
         @param loanID loan id to get the info.
         @return liquidationInfo get current liquidation info for the given loan id.
      */
-    function getLiquidationInfo(uint256 loanID) external view returns (
-        TellerCommon.LoanLiquidationInfo memory liquidationInfo
-    ) {
+    function getLiquidationInfo(uint256 loanID)
+        external
+        view
+        returns (TellerCommon.LoanLiquidationInfo memory liquidationInfo)
+    {
         return _getLiquidationInfo(loanID);
     }
 
@@ -646,9 +650,11 @@ contract LoansBase is LoansInterface, Base {
         @param loanID loan id to get the info.
         @return liquidationInfo get current liquidation info for the given loan id.
      */
-    function _getLiquidationInfo(uint256 loanID) internal view returns (
-        TellerCommon.LoanLiquidationInfo memory liquidationInfo
-    ) {
+    function _getLiquidationInfo(uint256 loanID)
+        internal
+        view
+        returns (TellerCommon.LoanLiquidationInfo memory liquidationInfo)
+    {
         uint256 collateral = loans[loanID].collateral;
         uint256 liquidateEthPrice = settings().getPlatformSettingValue(
             settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
