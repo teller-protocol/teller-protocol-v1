@@ -44,7 +44,7 @@ contract('TLRTokenMintTest', function (accounts) {
         _1_basic: [true, daoAgent, daoMember1, 2000, undefined, false],
         _2_above_cap: [true, daoAgent, daoMember1, 11000, 'ERC20_CAP_EXCEEDED', true],
         _3_zero_address: [true, daoAgent, NULL_ADDRESS, 3000, "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED", true],
-        _4_invalid_sender: [false, daoMember1, daoMember1, 2000, 'NOT_PAUSER', true],
+        _4_invalid_sender: [false, daoMember1, daoMember1, 2000, 'MinterRole: caller does not have the Minter role', true],
     },function(
         senderHasPauserRole,
         sender,
