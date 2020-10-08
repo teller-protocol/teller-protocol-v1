@@ -23,6 +23,21 @@ import "../interfaces/TTokenInterface.sol";
 // Libraries
 import "./ATMLibrary.sol";
 
+/*****************************************************************************************************/
+/**                                             WARNING                                             **/
+/**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
+/**  ---------------------------------------------------------------------------------------------  **/
+/**  Do NOT change the order of or PREPEND any storage variables to this or new versions of this    **/
+/**  contract as this will cause the the storage slots to be overwritten on the proxy contract!!    **/
+/**                                                                                                 **/
+/**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
+/**  more information.                                                                              **/
+/*****************************************************************************************************/
+/**
+    @notice This contract implements all the functions needed on Liquidity Mining program.
+    @dev It uses specific configuration from ATM Governance instance. 
+    @author develop@teller.finance
+ */
 contract ATMLiquidityMining is 
     ATMLiquidityMiningInterface,
     TInitializable,
@@ -40,11 +55,15 @@ contract ATMLiquidityMining is
 
     TLRTokenInterface private tlrToken;
 
+    // List of staking information for every user
     mapping( address => ATMLibrary.UserStakeInfo ) public userStakeInfo;
 
+    // List of addresses not allowed to stake on this ATM Liquidity Mining program.
     mapping ( address => bool ) public notAllowedAddresses;
 
 
+    // All users except those contained in notAllowedAddresses will be able to use
+    // Liquidity Mining program.
     modifier onlyAllowed() {
         require(!notAllowedAddresses[msg.sender], "SENDER_NOT_ALLOWED");
         _;
@@ -58,6 +77,12 @@ contract ATMLiquidityMining is
         _;
     }
 
+    /**
+        @notice Initializes this ATM Liquidity Mining instance using configuration params from other contracts. 
+        @param settingsAddress Settings contract address.
+        @param atmGovernanceProxy ATM Governance proxy instance associated with this Liquidity Mining instance.
+        @param tlrTokenProxy TLR Token instance associated with this ATM Liquidity Mining program.
+     */
     function initialize(
         address settingsAddress,
         address atmGovernanceProxy, 
@@ -72,26 +97,39 @@ contract ATMLiquidityMining is
         TInitializable._initialize();
     }
 
+    /**
+        @notice Adds a new address to the blacklisted list. This address will no longer be able to 
+        stake on this ATM Liquidity Mining program intance. 
+        @param notAllowed address we will blacklist.
+     */
     function addNotAllowedAddress(address notAllowed)
         external
         onlyPauser()
         isInitialized()
     {
         notAllowedAddresses[notAllowed] = true;
-        // TODO: Emit event
+        emit NotAllowedAddressAdded(msg.sender, notAllowed);
     }
    
+    /**
+        @notice Removes an address from the blacklisted list. This address will now start
+        being able to stake on this ATM Liquidity Mining program intance. 
+        @param notAllowed address we will blacklist.
+     */
     function removeNotAllowedAddress(address notAllowed)
         external
         onlyPauser()
         isInitialized()
     {
         notAllowedAddresses[notAllowed] = false;
-        // TODO: Emit event
+        emit NotAllowedAddressRemoved(msg.sender, notAllowed);
     }
     
     /**
-        @notice End users stake their own tTokens on this ATM to earn TLR.
+        @notice End users stake their own tTokens on this ATM Liquidity Mining program to 
+            earn TLR. This operation updates the user stake info for the sender (userStakeInfo[msg.sender]).
+        @param tToken address of the tToken they will stake.
+        @param amount amount of tToken to stake.
      */
     function stake(address tToken, uint256 amount) 
         external 
@@ -126,7 +164,10 @@ contract ATMLiquidityMining is
     }
 
     /**
-        @notice Unstake tTokens from this ATM, no more TLR tokens will be accrued from those tTokens.
+        @notice Unstake tTokens from this ATM, no more TLR tokens will be accrued from those 
+            tTokens anymore. This operation updates the user stake info for the sender (userStakeInfo[msg.sender]).
+        @param tToken address of the tToken they will unstake.
+        @param amount amount of tToken to unstake.
     */
     function unStake(address tToken, uint256 amount)
         external
@@ -160,7 +201,9 @@ contract ATMLiquidityMining is
     }
 
     /**
-        @notice Users can withdraw their accrued TLR tokens to their own accounts.
+        @notice Withdraws accrued TLR tokens by sending them to msg.sender owned account. This operation updates
+         the user stake info for the sender (userStakeInfo[msg.sender]).
+        @param amount amount of accrued TLR Tokens to withdraw.
      */
     function withdrawTLR(uint256 amount)
         external
@@ -186,13 +229,19 @@ contract ATMLiquidityMining is
         );
     }
     
+    /**
+        @notice Helper function to obtain the total balance of a tToken available on this Liquidity Mining instance.
+        @param tToken tToken address we want to obtain the balance.
+     */
     function gettTokenTotalBalance(address tToken) external view returns (uint256) {
         return IERC20(tToken).balanceOf(address(this));
     }
 
     /**
         @notice Returns TLR floating accrued balance since last Stake(), UnStake(), Withdraw() operation
-            until current block.
+            until current block. Floating indicates this balance is part of users TLR balance but is not yet 
+            assigned on userStakeInfo[msg.sender].accruedTLRBalance until any of the following operations
+            takes place (Stake(), UnStake(), Withdraw()). 
      */
     function getTLRFloatingBalance() 
         external 
@@ -203,7 +252,7 @@ contract ATMLiquidityMining is
     }
     
     /**
-        @notice Returns TLR total balance ( accrued + floating ) until current block.
+        @notice Returns TLR total balance ( assigned + floating ) until current block.
      */
     function getTLRTotalBalance() 
         external 
@@ -213,6 +262,10 @@ contract ATMLiquidityMining is
         return _getTLRTotalBalance();
     }
 
+    /**
+        @notice Returns tToken sender balance plus the amount specified. 
+        @param amount amount of tTokens to add to current tToken balance. 
+     */
     function _incrementTTokenBalance(uint256 amount)
         internal
         view
@@ -221,8 +274,9 @@ contract ATMLiquidityMining is
         return userStakeInfo[msg.sender].tTokenStakedBalance.add(amount);
     }
     /**
-        @notice Returns sender's accrued TLR token amount since last stake operation (stake or unstake)
+        @notice Returns sender's accrued TLR token amount since last operation (Stake(), UnStake(), Withdraw())
             until param blockNumber. 
+        @param blockNumber most recent block number to be consider in this calculation.
     */
     function _calculateAccruedTLR(uint256 blockNumber)
         internal
@@ -263,6 +317,9 @@ contract ATMLiquidityMining is
         return earned;
     }
 
+    /**
+        @notice Internal helper to return TLR total balance ( assigned + floating ) until current block.
+     */
     function _getTLRTotalBalance()
         internal
         view
