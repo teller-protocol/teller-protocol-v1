@@ -78,7 +78,7 @@ contract("ATMLiquidityMiningWithdrawTLRTest", function(accounts) {
                 // Invocation 
                 const userTLRBalanceBefore = await tlr.balanceOf(user);
                 const aUser = useDifferentUser ? accounts[5] : user;
-                const result = await instance.withdrawTLR(withdrawAmount, { from: aUser });
+                const result = await instance.withdrawTLR(tToken.address, withdrawAmount, { from: aUser });
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 // Validating result
@@ -86,7 +86,7 @@ contract("ATMLiquidityMiningWithdrawTLRTest", function(accounts) {
                 assert(parseInt(userTLRBalanceAfter) > parseInt(userTLRBalanceBefore), 'user TLR not minted.');
                 assert.equal(userTLRBalanceAfter, withdrawAmount, 'TLR balance is not correct.');
                 // Validating events were emitted
-                const remainingAccruedTLR = parseInt(await instance.getTLRTotalBalance.call({from: user}));
+                const remainingAccruedTLR = parseInt(await instance.getTLRTotalBalance.call(tToken.address, {from: user}));
                 liquidityMining
                     .withdrawTLR(result)
                     .emitted(user, withdrawAmount, result.receipt.blockNumber, stakeAmount, remainingAccruedTLR);
