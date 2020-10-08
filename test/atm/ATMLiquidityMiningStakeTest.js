@@ -53,7 +53,7 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
         _3_stake_zero: [ 0, 0, false, false, true, "STAKING_ZERO_NOT_ALLOWED" ],
         _4_blacklisted: [ 10, 0, false, true, true, "SENDER_NOT_ALLOWED" ],
         _5_not_enough_tTokens: [ 10, 1, false, false, true, "INSUFFICIENT_TTOKENS_TO_STAKE" ],
-    }, function(stakeAmount, offset, isPaused, blacklisted, mustFail, expectedErrorMessage) {
+     }, function(stakeAmount, offset, isPaused, blacklisted, mustFail, expectedErrorMessage) {
         it(t("user", "stake#1-one-reward-one-stake", "Should be able or not to stake tTokens.", mustFail), async function() {
             // Setup
             if (isPaused) {
@@ -110,7 +110,7 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
                     // Assertions
                     assert(!mustFail, 'It should have failed because data is invalid.');
                     // Validating events were emitted
-                    const accruedTLRBalance = parseInt(await instance.getTLRTotalBalance.call({from: user}));
+                    const accruedTLRBalance = parseInt(await instance.getTLRTotalBalance.call(tToken.address, {from: user}));
                     liquidityMining
                         .stake(result)
                         .emitted(user, tToken.address, amounts[i], result.receipt.blockNumber, totalAmount, accruedTLRBalance); 
@@ -122,7 +122,6 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
             }
         });
     });
- 
     withData({
         _1_multi_reward_multi_stake: [ [10, 100], [20, 200, 2000], false, undefined ],
     }, function(amounts, rewards, mustFail, expectedErrorMessage) {
@@ -149,7 +148,7 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
                 // Validating result
                 const liquidityBalanceAfter = parseInt(await tToken.balanceOf(instance.address)) ;
                 assert.equal(liquidityBalanceAfter, totalAmounts, "Liquidity contract tToken balance error");
-                const accruedTLRBalance = parseInt(await instance.getTLRTotalBalance.call({from: user}));
+                const accruedTLRBalance = parseInt(await instance.getTLRTotalBalance.call(tToken.address, {from: user}));
                 // Validating events were emitted
                 liquidityMining
                     .stake(result)
@@ -162,5 +161,4 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
         });
     });
     
-
 });

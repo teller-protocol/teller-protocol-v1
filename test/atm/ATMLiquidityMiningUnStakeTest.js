@@ -79,7 +79,7 @@ contract("ATMLiquidityMiningUnStakeTest", function(accounts) {
                 const liquidityBalanceAfter = await tToken.balanceOf(instance.address);
                 assert(parseInt(liquidityBalanceAfter) < parseInt(liquidityBalanceBefore), 'liquidity tTokens not sent on unStake.');
                 assert(parseInt(liquidityBalanceAfter) == parseInt(userBalanceBefore), 'tTokens sent amount is incorrect.');
-                const accruedTLRBalance = parseInt(await instance.getTLRTotalBalance.call({from: user}));
+                const accruedTLRBalance = parseInt(await instance.getTLRTotalBalance.call(tToken.address, {from: user}));
                 // Validating events were emitted
                 liquidityMining
                     .unstake(result)
@@ -126,7 +126,7 @@ contract("ATMLiquidityMiningUnStakeTest", function(accounts) {
                     const liquidityBalanceAfter = parseInt(await tToken.balanceOf(instance.address)) ;
                     assert.equal(liquidityBalanceBefore, liquidityBalanceAfter + userBalanceAfter, "tTokens not sent from liquidity to user")
                     // Validating events were emitted
-                    const accruedTLRBalance = parseInt(await instance.getTLRTotalBalance.call({from: user}));
+                    const accruedTLRBalance = parseInt(await instance.getTLRTotalBalance.call(tToken.address, {from: user}));
                     liquidityMining
                         .unstake(result)
                         .emitted(user, tToken.address, amounts[i], result.receipt.blockNumber, liquidityBalanceBefore - totalAmount, accruedTLRBalance);
@@ -169,7 +169,7 @@ contract("ATMLiquidityMiningUnStakeTest", function(accounts) {
                 const userBalanceAfter = parseInt(await tToken.balanceOf(user)) ;
                 assert.equal(userBalanceAfter, totalAmounts, "user tToken balance not correct");
                 // Validating events were emitted
-                const accruedTLRBalance = parseInt(await instance.getTLRTotalBalance.call({from: user}));
+                const accruedTLRBalance = parseInt(await instance.getTLRTotalBalance.call(tToken.address, {from: user}));
                 liquidityMining
                     .unstake(result)
                     .emitted(user, tToken.address, amounts[1], result.receipt.blockNumber, 0, accruedTLRBalance); 

@@ -61,7 +61,7 @@ contract("ATMLiquidityMiningCalculateAccruedTLRTest", function(accounts) {
             }
             try {
                 // Invocation 
-                const result = parseInt(await instance.getTLRFloatingBalance.call({ from: user}));
+                const result = parseInt(await instance.getTLRFloatingBalance.call(tToken.address, { from: user}));
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 // Validating result
@@ -87,7 +87,7 @@ contract("ATMLiquidityMiningCalculateAccruedTLRTest", function(accounts) {
                     await tToken.approve(instance.address, amounts[i], { from: user });
                     const tx = await instance.stake(tToken.address, amounts[i] , { from: user });
                     // Invocation 
-                    const result = parseInt(await instance.getTLRTotalBalance.call({from: user}));
+                    const result = parseInt(await instance.getTLRTotalBalance.call(tToken.address, {from: user}));
                     // Assertions
                     assert(!mustFail, 'It should have failed because data is invalid.');
                     // Validating results
@@ -121,8 +121,8 @@ contract("ATMLiquidityMiningCalculateAccruedTLRTest", function(accounts) {
                 for (let r = 0; r < rewards.length; r++){
                     await helper.advanceBlocks(rewards[r] - 1 );
                     await governance.addTLRReward(rewards[r], { from: owner});
-                    const accrued = parseInt(await instance.getTLRTotalBalance.call({from: user}));
-                    const floating = parseInt(await instance.getTLRFloatingBalance.call({from: user}));
+                    const accrued = parseInt(await instance.getTLRTotalBalance.call(tToken.address, {from: user}));
+                    const floating = parseInt(await instance.getTLRFloatingBalance.call(tToken.address, {from: user}));
                     // Validating both accrued and floating balances are equal
                     assert.equal(accrued, floating, "Both TLR accrued balances should be equal as no other STAKE(), UNSTAKE(), WITHDRAW() operation has been called.");
                     assert.equal(floating, expectedResults[r], "Incorrect floating TLR calculation.")
@@ -132,9 +132,9 @@ contract("ATMLiquidityMiningCalculateAccruedTLRTest", function(accounts) {
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 // Validating result
-                const floating = parseInt(await instance.getTLRFloatingBalance.call({from: user}));
+                const floating = parseInt(await instance.getTLRFloatingBalance.call(tToken.address, {from: user}));
                 assert.equal(floating, FLOATING_SHOULD_RESET_AFTER_STAKE_OPERATION, "Floating should be zero after stake().");
-                const accruedTLRBalance = parseInt(await instance.getTLRTotalBalance.call({from: user}));
+                const accruedTLRBalance = parseInt(await instance.getTLRTotalBalance.call(tToken.address, {from: user}));
                 assert.equal(accruedTLRBalance, expectedResults[expectedResults.length - 1], "Incorrect accrued TLR calculation.")
             } catch (error) {
                 assert(mustFail);

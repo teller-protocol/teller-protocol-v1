@@ -94,7 +94,7 @@ interface ATMLiquidityMiningInterface {
          the user stake info for the sender (userStakeInfo[msg.sender]).
         @param amount amount of accrued TLR Tokens to withdraw.
      */
-    function withdrawTLR(uint256 amount) external;
+    function withdrawTLR(address tToken, uint256 amount) external;
 
     /**
         @notice Returns TLR floating accrued balance since last Stake(), UnStake(), Withdraw() operation
@@ -102,14 +102,14 @@ interface ATMLiquidityMiningInterface {
             assigned on userStakeInfo[msg.sender].accruedTLRBalance until any of the following operations
             takes place (Stake(), UnStake(), Withdraw()). 
      */
-    function getTLRFloatingBalance() external 
+    function getTLRFloatingBalance(address tToken) external 
         view 
         returns (uint256);
     
     /**
         @notice Returns TLR total balance ( assigned + floating ) until current block.
      */
-    function getTLRTotalBalance() external 
+    function getTLRTotalBalance(address tToken) external 
         view 
         returns (uint256);
     

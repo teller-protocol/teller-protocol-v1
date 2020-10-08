@@ -55,8 +55,8 @@ contract ATMLiquidityMining is
 
     TLRTokenInterface private tlrToken;
 
-    // List of staking information for every user
-    mapping( address => ATMLibrary.UserStakeInfo ) public userStakeInfo;
+    // List of staking information for every user divided by tToken.
+    mapping( address => mapping ( address => ATMLibrary.UserStakeInfo )) public userStakeInfo;
 
     // List of addresses not allowed to stake on this ATM Liquidity Mining program.
     mapping ( address => bool ) public notAllowedAddresses;
@@ -148,10 +148,10 @@ contract ATMLiquidityMining is
         // Update use stake info
         ATMLibrary.UserStakeInfo memory userInfo = ATMLibrary.UserStakeInfo ( {
                 lastRewardedBlock: block.number,
-                tTokenStakedBalance: _incrementTTokenBalance(amount), // Staking
-                accruedTLRBalance: _getTLRTotalBalance()
+                tTokenStakedBalance: _incrementTTokenBalance(tToken, amount), // Staking
+                accruedTLRBalance: _getTLRTotalBalance(tToken)
             });
-        userStakeInfo[msg.sender] = userInfo;
+        userStakeInfo[msg.sender][tToken] = userInfo;
 
         emit Stake(
             msg.sender,
@@ -177,16 +177,16 @@ contract ATMLiquidityMining is
         // TODO: Check tToken is a Teller whitelisted token on settings().
         //require(settings().tTokensRegistry().istTokenValid(tToken), "TTOKEN_IS_NOT_REGISTERED");
         require(amount > 0, "UNSTAKING_ZERO_NOT_ALLOWED");
-        uint256 tTokenStakedBalance = userStakeInfo[msg.sender].tTokenStakedBalance;
+        uint256 tTokenStakedBalance = userStakeInfo[msg.sender][tToken].tTokenStakedBalance;
         require(tTokenStakedBalance >= amount, "NOT_ENOUGH_STAKED_TTOKENS");
 
         // Update user stake info
         ATMLibrary.UserStakeInfo memory userInfo = ATMLibrary.UserStakeInfo ( {
                 lastRewardedBlock: block.number,
                 tTokenStakedBalance: tTokenStakedBalance.sub(amount), // UnStaking
-                accruedTLRBalance: _getTLRTotalBalance() // Accrued TLR are added
+                accruedTLRBalance: _getTLRTotalBalance(tToken) // Accrued TLR are added
             });
-        userStakeInfo[msg.sender] = userInfo;
+        userStakeInfo[msg.sender][tToken] = userInfo;
         // Send tTokens back to user
         require(IERC20(tToken).transfer(msg.sender, amount), "UNSTAKE_TTOKEN_TRANSFER_FAILED");
 
@@ -205,27 +205,27 @@ contract ATMLiquidityMining is
          the user stake info for the sender (userStakeInfo[msg.sender]).
         @param amount amount of accrued TLR Tokens to withdraw.
      */
-    function withdrawTLR(uint256 amount)
+    function withdrawTLR(address tToken, uint256 amount)
         external
         isInitialized() 
         whenNotPaused()
     {
-        uint256 accruedTLRBalance = _getTLRTotalBalance();
+        uint256 accruedTLRBalance = _getTLRTotalBalance(tToken);
         uint256 minimumTLRToRedeem = governance.getGeneralSetting("MIN_TLR_TO_REDEEM");
         require(accruedTLRBalance >= minimumTLRToRedeem, "NOT_ENOUGH_TLR_TOKENS_TO_REDEEM");
         require(accruedTLRBalance >= amount, "UNSUFFICIENT_TLR_TO_WITHDRAW");
         // Minted tokens are reduced from accrued balance
-        userStakeInfo[msg.sender].accruedTLRBalance = accruedTLRBalance.sub(amount);
-        userStakeInfo[msg.sender].lastRewardedBlock = block.number;
+        userStakeInfo[msg.sender][tToken].accruedTLRBalance = accruedTLRBalance.sub(amount);
+        userStakeInfo[msg.sender][tToken].lastRewardedBlock = block.number;
         // TODO: validate we don't overflow TLR max cap
         require(tlrToken.mint(msg.sender, amount), "WITHDRAW_FAILED_MINTING_TLR"); 
         
         emit TLRWithdrawn(
             msg.sender,
             amount,
-            userStakeInfo[msg.sender].lastRewardedBlock,
-            userStakeInfo[msg.sender].tTokenStakedBalance,
-            userStakeInfo[msg.sender].accruedTLRBalance
+            userStakeInfo[msg.sender][tToken].lastRewardedBlock,
+            userStakeInfo[msg.sender][tToken].tTokenStakedBalance,
+            userStakeInfo[msg.sender][tToken].accruedTLRBalance
         );
     }
     
@@ -243,35 +243,35 @@ contract ATMLiquidityMining is
             assigned on userStakeInfo[msg.sender].accruedTLRBalance until any of the following operations
             takes place (Stake(), UnStake(), Withdraw()). 
      */
-    function getTLRFloatingBalance() 
+    function getTLRFloatingBalance(address tToken) 
         external 
         view 
         returns (uint256)
     {
-        return _calculateAccruedTLR(block.number);
+        return _calculateAccruedTLR(tToken, block.number);
     }
     
     /**
         @notice Returns TLR total balance ( assigned + floating ) until current block.
      */
-    function getTLRTotalBalance() 
+    function getTLRTotalBalance(address tToken) 
         external 
         view
         returns (uint256)
     {
-        return _getTLRTotalBalance();
+        return _getTLRTotalBalance(tToken);
     }
 
     /**
         @notice Returns tToken sender balance plus the amount specified. 
         @param amount amount of tTokens to add to current tToken balance. 
      */
-    function _incrementTTokenBalance(uint256 amount)
+    function _incrementTTokenBalance(address tToken, uint256 amount)
         internal
         view
         returns (uint256)
     {
-        return userStakeInfo[msg.sender].tTokenStakedBalance.add(amount);
+        return userStakeInfo[msg.sender][tToken].tTokenStakedBalance.add(amount);
     }
     /**
         @notice Returns tToken sender balance plus the amount specified. 
@@ -289,19 +289,19 @@ contract ATMLiquidityMining is
             until param blockNumber. 
         @param blockNumber most recent block number to be consider in this calculation.
     */
-    function _calculateAccruedTLR(uint256 blockNumber)
+    function _calculateAccruedTLR(address tToken, uint256 blockNumber)
         internal
         view
         isInitialized() 
         returns (uint256 earned)
     {
         // Getting latest stake movement info
-        uint256 tTokenStakedBalance = userStakeInfo[msg.sender].tTokenStakedBalance;
+        uint256 tTokenStakedBalance = userStakeInfo[msg.sender][tToken].tTokenStakedBalance;
         // If nothing was staked return zero
         if (NO_TTOKENS_STAKED == tTokenStakedBalance ) {
             return NO_TLR_ACCRUED;
         }  
-        uint256 latestRewardedBlock = userStakeInfo[msg.sender].lastRewardedBlock;  
+        uint256 latestRewardedBlock = userStakeInfo[msg.sender][tToken].lastRewardedBlock;  
         if (latestRewardedBlock >= blockNumber) {
             return NO_TLR_ACCRUED;
         }
@@ -331,11 +331,11 @@ contract ATMLiquidityMining is
     /**
         @notice Internal helper to return TLR total balance ( assigned + floating ) until current block.
      */
-    function _getTLRTotalBalance()
+    function _getTLRTotalBalance(address tToken)
         internal
         view
         returns (uint256)
     {
-        return userStakeInfo[msg.sender].accruedTLRBalance.add(_calculateAccruedTLR(block.number));
+        return userStakeInfo[msg.sender][tToken].accruedTLRBalance.add(_calculateAccruedTLR(tToken, block.number));
     }
 }
