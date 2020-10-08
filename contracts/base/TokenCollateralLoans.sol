@@ -88,7 +88,7 @@ contract TokenCollateralLoans is LoansBase {
         isBorrower(request.borrower)
         withValidLoanRequest(request)
     {
-        uint256 loanID = getAndIncrementLoanID();
+        uint256 loanID = _getAndIncrementLoanID();
 
         (
             uint256 interestRate,

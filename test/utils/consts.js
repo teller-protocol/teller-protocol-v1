@@ -72,6 +72,9 @@ module.exports = {
     daysToSeconds: (days) => {
         return parseInt(days.toString()) * 24 * 60 * 60;
     },
+    daysToMinutes: (days) => {
+        return parseInt(days.toString()) * 24 * 60;
+    },
     secondsToDays: (seconds) => {
         return parseInt(seconds.toString()) / (24 * 60 * 60);
     },
