@@ -23,12 +23,13 @@ contract('ATMGovernanceUpdateGeneralSettingTest', function (accounts) {
     const SETTING_OLD_VALUE = 4400;
     const SETTING_NEW_VALUE = 5044;
     const EMPTY_SETTING_NAME = toBytes32(web3, '');
+    const ANY_VALUE = 1;
 
     beforeEach('Setup for each test', async () => {
         settingsInstance = await Mock.new();
         instance = await ATMGovernance.new();
         const validSender = accounts[0];
-        await instance.initialize(settingsInstance.address, validSender);
+        await instance.initialize(settingsInstance.address, validSender, ANY_VALUE);
         // Adding the general setting we will update later
         await instance.addGeneralSetting(SETTING_NAME, SETTING_OLD_VALUE);
     });

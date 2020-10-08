@@ -67,7 +67,6 @@ module.exports = async function(deployer, network, accounts) {
   // Creating DeployerApp helper.
   const deployerApp = new DeployerApp(deployer, web3, deployerAccount, { InitializeableDynamicProxy, Mock }, { network, networkConfig });
   try {
-<<<<<<< HEAD
   await deployerApp.deployMocksContractsIfNeeded();
   const currentBlockNumber = await web3.eth.getBlockNumber();
 
@@ -140,6 +139,7 @@ module.exports = async function(deployer, network, accounts) {
   const logicVersionsRegistryInstance = await LogicVersionsRegistry.at(logicVersionsRegistryProxy.address)
   await logicVersionsRegistryInstance.initialize(settingsInstance.address)
   console.log(`LogicVersionsRegistry logic: ${logicVersionsRegistryLogic.address}`)
+<<<<<<< HEAD
 =======
     await deployerApp.deployMocksContractsIfNeeded();
     const currentBlockNumber = await web3.eth.getBlockNumber();
@@ -208,6 +208,8 @@ module.exports = async function(deployer, network, accounts) {
     await logicVersionsRegistryInstance.initialize(settingsInstance.address)
     console.log(`LogicVersionsRegistry logic: ${logicVersionsRegistryLogic.address}`)
 >>>>>>> 18cbff3... Liquidity mining initial version [PROTOCOL-184]
+=======
+>>>>>>> 0005a4d... Merge branch 'feature/add-liquidity-min' of https://github.com/teller-protocol/teller-protocol-v1 into feature/add-liquidity-min
     console.log(`LogicVersionsRegistry_Proxy: ${logicVersionsRegistryProxy.address}`)
 
   console.log(`Settings: Initializing...`);
