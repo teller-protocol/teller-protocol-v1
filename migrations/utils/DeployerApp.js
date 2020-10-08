@@ -1,3 +1,4 @@
+const fs = require('fs');
 const jsonfile = require('jsonfile');
 const MOCK_NETWORKS = ["test", "ganache", "soliditycoverage"];
 
@@ -7,7 +8,10 @@ class DeployerApp {
         this.web3 = web3;
         this.account = account;
         this.artifacts = { InitializeableDynamicProxy, Mock };
-        this.contracts = [];
+        this.contracts = {
+            teller: [],
+            chainlink: [],
+        };
         this.deployer = deployer;
         this.network = network.toLowerCase();
         this.networkConfig = networkConfig;
@@ -50,6 +54,7 @@ DeployerApp.prototype.deployInitializeableDynamicProxy = async function ({ name,
     const proxy = await this.deployWith(
         `${name}_Proxy`,
         this.artifacts.InitializeableDynamicProxy,
+        'teller',
         address,
         ...params
     );
@@ -57,22 +62,30 @@ DeployerApp.prototype.deployInitializeableDynamicProxy = async function ({ name,
     return proxy
 }
 
-DeployerApp.prototype.addContractInfo = async function(contractName, contractAddress) {
-    this.contracts.push({
-        address: contractAddress,
-        name: contractName,
-    });
+DeployerApp.prototype.addContractInfo = function(data, file = 'teller') {
+    this.contracts[file].push(data);
 }
 
-DeployerApp.prototype.deployWith = async function(contractName, contract, ...params) {
+DeployerApp.prototype.deployWith = async function(contractName, contract, file, ...params) {
     console.log(`Contract '${contractName}': deploying.`);
     const instance = await this.deployer.deploy(contract, ...params);
-    this.addContractInfo(contractName, contract.address);
+    this.addContractInfo({ name: contractName, address: contract.address }, file);
     return instance
 }
 
 DeployerApp.prototype.deploy = async function(contract, ...params) {
-    return await this.deployWith(contract.contractName, contract, ...params);
+    return await this.deployWith(contract.contractName, contract, 'teller', ...params);
+}
+
+DeployerApp.prototype.deployChainlink = async function(contract, data, ...params) {
+    const pair = `${data.baseTokenName}_${data.quoteTokenName}`
+    console.log(`Contract Chainlink aggregator for '${pair}': deploying.`);
+    const instance = await this.deployer.deploy(contract, ...params);
+    this.addContractInfo({
+        ...data,
+        address: instance.address
+    }, 'chainlink');
+    return instance
 }
 
 DeployerApp.prototype.canDeployMock = function() {
@@ -91,7 +104,7 @@ DeployerApp.prototype.deployMockIf = async function(contract, ...params) {
 
 DeployerApp.prototype.deployMockIfWith = async function(contractName, contract, ...params) {
     if(this.canDeployMock()) {
-        await this.deployWith(contractName, contract, ...params);
+        await this.deployWith(contractName, contract, 'teller', ...params);
     }
 }
 
@@ -126,7 +139,7 @@ DeployerApp.prototype.links = async function(contract, libraries) {
 
 DeployerApp.prototype.print = function() {
     console.log(`\n${'-'.repeat(25)} Starts contracts info ${'-'.repeat(25)}`);
-    this.contracts.forEach(item => console.log(`${item.name}: ${item.address}`));
+    this.contracts.teller.forEach(item => console.log(`${item.name}: ${item.address}`));
     console.log(`${'-'.repeat(25)} Ends contracts info ${'-'.repeat(25)}\n`);
 }
 
@@ -134,24 +147,45 @@ DeployerApp.prototype.writeJson = function(outputJson = `./build/${this.network}
     if(this.canDeployMock()) {
         return;
     }
+
+    const tellerContracts = {}
     const jsonData = {
         contracts: []
     };
 
-    for (const contractInfo of this.contracts) {
+    for (const contractInfo of this.contracts.teller) {
+        tellerContracts[contractInfo.name] = contractInfo.address
+
         jsonData.contracts.push({
-            order: this.contracts.indexOf(contractInfo) + 1,
+            order: this.contracts.teller.indexOf(contractInfo) + 1,
             address: contractInfo.address,
             name: contractInfo.name,
         });
     }
 
+    fs.writeFileSync(`./config/networks/${this.network}/teller.json`, JSON.stringify(tellerContracts, null, 2))
+
     jsonfile.writeFile(outputJson, jsonData, {spaces: 4, EOL: '\r\n'}, function (err) {
-      console.log(`JSON file created at '${outputJson}'.`);
-      if(err) {
-        console.error("Errors: " + err);
-      }
+        console.log(`JSON file created at '${outputJson}'.`);
+        if(err) {
+            console.error("Errors: " + err);
+        }
     });
+}
+
+DeployerApp.prototype.writeChainlink = function() {
+    if (this.contracts.chainlink.length > 0) {
+        const json = {}
+        for (const info of this.contracts.chainlink) {
+            const pair = `${info.baseTokenName}_${info.quoteTokenName}`
+            json[pair] = info
+        }
+        fs.writeFileSync(`./config/networks/${this.network}/chainlink.json`, JSON.stringify(json, null, 2))
+        // delete the require cache for config data for deploy scripts
+        delete require.cache[require.resolve(`../../config`)]
+        delete require.cache[require.resolve(`../../config/networks/${this.network}`)]
+        delete require.cache[require.resolve(`../../config/networks/${this.network}/chainlink.json`)]
+    }
 }
 
 module.exports = DeployerApp;

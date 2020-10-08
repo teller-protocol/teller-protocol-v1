@@ -592,7 +592,15 @@ contract LoansBase is LoansInterface, Base {
         view
         returns (uint256)
     {
-        uint256 loanAmount = getTotalOwed(loanID);
+        TellerCommon.LoanStatus currentStatus = loans[loanID].status;
+        uint256 loanAmount;
+        if (currentStatus == TellerCommon.LoanStatus.TermsSet) {
+            loanAmount = loans[loanID].loanTerms.maxLoanAmount;
+        } else if (currentStatus == TellerCommon.LoanStatus.Active) {
+            loanAmount = getTotalOwed(loanID);
+        } else {
+            return 0;
+        }
         uint256 collateralRatio = loans[loanID].loanTerms.collateralRatio;
         return loanAmount.mul(collateralRatio).div(TEN_THOUSAND);
     }

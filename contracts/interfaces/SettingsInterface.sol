@@ -324,4 +324,10 @@ interface SettingsInterface {
         @return the ETH address used in the platform.
      */
     function ETH_ADDRESS() external view returns (address);
+
+    /**
+        @notice It gets the canonical WETH address used in the platform.
+        @return the canonical WETH address used in the platform.
+     */
+    function WETH_ADDRESS() external view returns (address);
 }

@@ -1,4 +1,5 @@
 const envConfig = require('./config/env')();
+const { tokens } = require("./config/networks/ganache-mainnet");
 
 // Environment Configuration
 const addressCountValue = envConfig.getAddressCount().getOrDefault();
@@ -125,5 +126,13 @@ module.exports = {
 			network_id: '1',
 			skipDryRun: false,
 		},
+		['ganache-mainnet']: {
+			host: '127.0.0.1',
+      port: 4545,
+			gas: gasKeyValue,
+			gasPrice: web3.utils.toWei(gasPriceKeyValue, 'gwei'),
+			network_id: '*',
+			skipDryRun: true,
+		}
 	}
 }

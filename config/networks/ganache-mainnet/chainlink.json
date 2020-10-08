@@ -1,0 +1,42 @@
+{
+  "USDC_ETH": {
+    "inversed": false,
+    "collateralDecimals": 18,
+    "responseDecimals": 18,
+    "baseTokenName": "USDC",
+    "quoteTokenName": "ETH",
+    "address": "0x0FC415baDA5c13852b08B5e50B8FD16950E10D38"
+  },
+  "DAI_ETH": {
+    "inversed": false,
+    "collateralDecimals": 18,
+    "responseDecimals": 18,
+    "baseTokenName": "DAI",
+    "quoteTokenName": "ETH",
+    "address": "0x3914be728db48558153e530699E59328FD1E44B2"
+  },
+  "LINK_DAI": {
+    "inversed": true,
+    "collateralDecimals": 18,
+    "responseDecimals": 8,
+    "baseTokenName": "LINK",
+    "quoteTokenName": "DAI",
+    "address": "0x5e4Dc6470C94aDb2E0932de8b4505F4395c9c52E"
+  },
+  "LINK_USDC": {
+    "inversed": true,
+    "collateralDecimals": 18,
+    "responseDecimals": 8,
+    "baseTokenName": "LINK",
+    "quoteTokenName": "USDC",
+    "address": "0x28eB5F050864EC2b57eaB8FE440059e6489aEb73"
+  },
+  "LINK_ETH": {
+    "inversed": true,
+    "collateralDecimals": 18,
+    "responseDecimals": 18,
+    "baseTokenName": "LINK",
+    "quoteTokenName": "ETH",
+    "address": "0xA0E1AC16E27D4933961d0f522Ca8f0728fA13e6d"
+  }
+}

@@ -39,6 +39,12 @@ interface PairAggregatorInterface {
     function getLatestRound() external view returns (uint256);
 
     /**
+        @notice Gets the current Chainlink oracle aggregator used for this pair aggregator instance.
+        @return the Chainlink oracle aggregator address.
+     */
+    function aggregator() external view returns (address);
+
+    /**
         @notice It creates a new ChainlinkPairAggregator instance.
         @param aggregatorAddress to use in this Chainlink pair aggregator.
         @param isInverse defines whether this pair aggregator is inverse or not.
@@ -51,4 +57,21 @@ interface PairAggregatorInterface {
         uint8 responseDecimalsValue,
         uint8 collateralDecimalsValue
     ) external;
+
+    /**
+        @notice It gets the aggregator info associated to this pair aggregator instance.
+        @return response decimals.
+        @return collateral decimals.
+        @return pending decimals (difference between response and collateral).
+        @return isInverse true if it is an inverse pair aggregator. Otherwise it returns false.
+     */
+    function getInfo()
+        external
+        view
+        returns (
+            uint8 response,
+            uint8 collateral,
+            uint8 pending,
+            bool isInverse
+        );
 }

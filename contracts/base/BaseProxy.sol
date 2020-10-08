@@ -1,5 +1,8 @@
 pragma solidity 0.5.17;
 
+// Interfaces
+import "../interfaces/IBaseProxy.sol";
+
 // Contracts
 import "@openzeppelin/upgrades/contracts/upgradeability/Proxy.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
@@ -10,7 +13,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
     @author develop@teller.finance
  */
-contract BaseProxy is Proxy {
+contract BaseProxy is IBaseProxy, Proxy {
     using Address for address;
 
     /**
