@@ -15,6 +15,7 @@ const {
   loans: loansEvents,
 } = require("../../../test/utils/events");
 const errorActions = require("./errors");
+const { assert } = require("chai");
 
 /**
  * Gets an amount of tokens requested based on the current network.
@@ -35,6 +36,19 @@ const getFunds = async (
   }
 }
 
+const withdrawFunds = async (
+  {lendingPool},
+  {txConfig, testContext},
+  {amount}
+) => {
+  console.log("Withdrawing funds from pool...");
+  const withdrawResult = await lendingPool.withdraw(amount, txConfig);
+  lendingPoolEvents
+    .tokenWithdrawn(withdrawResult)
+    .emitted(txConfig.from, amount);
+  return withdrawResult;
+};
+
 const depositFunds = async (
   {token, lendingPool},
   {txConfig, testContext},
@@ -53,7 +67,7 @@ const depositFunds = async (
 const requestLoanTerms = async (
   {loans, loanTermsConsensus, settings},
   {txConfig, testContext},
-  {loanTermsRequestTemplate, loanResponseTemplate}
+  {loanTermsRequestTemplate, loanResponseTemplate, expectedErrorMessage = undefined}
 ) => {
   console.log("Requesting loan terms...");
   const {web3, timer, nonces, chainId} = testContext;
@@ -103,36 +117,49 @@ const requestLoanTerms = async (
     chainId
   );
 
-  const createLoanWithTermsResult = await loans.createLoanWithTerms(
+  const createLoanWithTermsPromise = async () => await loans.createLoanWithTerms(
     loanTermsRequest.loanTermsRequest,
     signedResponses,
     txConfig.value,
     txConfig
   );
 
-  const termsExpiryTime = await settings.getPlatformSettingValue(
-    toBytes32(web3, platformSettingsNames.TermsExpiryTime)
+  const {
+    failed,
+    tx: createLoanWithTermsResult,
+  } = await errorActions.handleContractError(
+    'CreateLoanWithTerms',
+    { testContext },
+    {
+      fnPromise: createLoanWithTermsPromise,
+      expectedErrorMessage,
+    }
   );
-  const expiryTermsExpected = await timer.getCurrentTimestampInSecondsAndSum(
-    termsExpiryTime
-  );
-  const loanIDs = await loans.getBorrowerLoans(borrower);
-  const lastLoanID = loanIDs[loanIDs.length - 1];
-  loansEvents
-    .loanTermsSet(createLoanWithTermsResult)
-    .emitted(
-      lastLoanID,
-      txConfig.from,
-      recipient,
-      loanResponseInfoTemplate.interestRate,
-      loanResponseInfoTemplate.collateralRatio,
-      loanResponseInfoTemplate.maxLoanAmount,
-      loanTermsRequestInfo.duration,
-      expiryTermsExpected
+  if(!failed) {
+    const termsExpiryTime = await settings.getPlatformSettingValue(
+      toBytes32(web3, platformSettingsNames.TermsExpiryTime)
     );
-  console.log(`Loan id requested: ${lastLoanID}`);
-  const loansInfo = await loans.loans(lastLoanID);
-  return loansInfo;
+    const expiryTermsExpected = await timer.getCurrentTimestampInSecondsAndSum(
+      termsExpiryTime
+    );
+    const loanIDs = await loans.getBorrowerLoans(borrower);
+    const lastLoanID = loanIDs[loanIDs.length - 1];
+    loansEvents
+      .loanTermsSet(createLoanWithTermsResult)
+      .emitted(
+        lastLoanID,
+        txConfig.from,
+        recipient,
+        loanResponseInfoTemplate.interestRate,
+        loanResponseInfoTemplate.collateralRatio,
+        loanResponseInfoTemplate.maxLoanAmount,
+        loanTermsRequestInfo.duration,
+        expiryTermsExpected
+      );
+    console.log(`Loan id requested: ${lastLoanID}`);
+    const loansInfo = await loans.loans(lastLoanID);
+    return loansInfo;
+  }
 };
 
 /**
@@ -172,18 +199,33 @@ const depositCollateral = async (
 const withdrawCollateral = async (
   {loans},
   {txConfig, testContext},
-  {loanId, amount}
+  {loanId, amount, expectedErrorMessage = undefined}
 ) => {
   console.log(`Withdrawing collateral ${amount} in loan id ${loanId}.`);
-  const depositResult = await loans.withdrawCollateral(
-    amount,
-    loanId,
-    txConfig
+  const withdrawCollateralPromise = async () => await loans.withdrawCollateral(amount, loanId, txConfig);
+  const initialTotalCollateral = await loans.totalCollateral();
+  const {
+    failed,
+    tx: withdrawCollateralResult,
+  } = await errorActions.handleContractError(
+    'WithdrawCollateral',
+    { testContext },
+    {
+      fnPromise: withdrawCollateralPromise,
+      expectedErrorMessage,
+    }
   );
-  loansEvents
-    .collateralWithdrawn(depositResult)
-    .emitted(loanId, txConfig.from, amount);
-  return depositResult;
+  if(!failed) {
+    const finalTotalCollateral = await loans.totalCollateral();
+    assert.equal(
+      BigNumber(initialTotalCollateral).minus(BigNumber(finalTotalCollateral)).toFixed(0),
+      amount.toString(),
+    );
+    loansEvents
+      .collateralWithdrawn(withdrawCollateralResult)
+      .emitted(loanId, txConfig.from, amount);
+    return withdrawCollateralResult;
+  }
 }
 
 const takeOutLoan = async (
@@ -328,4 +370,5 @@ module.exports = {
   printLoanInfo,
   printPairAggregatorInfo,
   getEscrow,
+  withdrawFunds,
 };
