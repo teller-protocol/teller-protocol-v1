@@ -270,4 +270,14 @@ interface LoansInterface {
         @return bool Whether or not the loan is considered secured.
      */
     function isLoanSecured(uint256 loanID) external view returns (bool);
+
+    /**
+        @notice It getss the current liquidation info for a given loan id.
+        @param loanID loan id to get the info.
+        @return liquidationInfo get current liquidation info for the given loan id.
+     */
+    function getLiquidationInfo(uint256 loanID)
+        external
+        view
+        returns (TellerCommon.LoanLiquidationInfo memory liquidationInfo);
 }

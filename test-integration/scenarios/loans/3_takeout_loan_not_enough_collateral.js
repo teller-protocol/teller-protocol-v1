@@ -26,30 +26,34 @@ module.exports = async (testContext) => {
     collTokenName
   );
   const {token, collateralToken} = allContracts;
-
-  const borrower = await accounts.getAt(1);
-  const lenderTxConfig = await accounts.getTxConfigAt(0);
-  const borrowerTxConfig = await accounts.getTxConfigAt(1);
-  let currentOraclePrice;
-  if (collTokenName.toLowerCase() === "eth") {
-    currentOraclePrice = toDecimals("0.002797359", 18);
-  }
-  if (collTokenName.toLowerCase() === "link") {
-    currentOraclePrice = toDecimals("0.100704", 8);
-  }
-
   const tokenInfo = await tokensActions.getInfo({token});
   const collateralTokenInfo = await tokensActions.getInfo({
     token: collateralToken,
   });
 
+  const borrower = await accounts.getAt(1);
+  const lenderTxConfig = await accounts.getTxConfigAt(0);
+  const borrowerTxConfig = await accounts.getTxConfigAt(1);
+  let currentOraclePrice;
+  let collateralAmountDepositCollateral;
+  if (collTokenName.toLowerCase() === "eth") {
+    currentOraclePrice = toDecimals("0.002797359", 18);
+    collateralAmountDepositCollateral = toDecimals(
+      0.17,
+      collateralTokenInfo.decimals
+    );
+  }
+  if (collTokenName.toLowerCase() === "link") {
+    currentOraclePrice = toDecimals("0.100704", 8);
+    collateralAmountDepositCollateral = toDecimals(
+      3.1,
+      collateralTokenInfo.decimals
+    );
+  }
+
   const depositFundsAmount = toDecimals(500, tokenInfo.decimals);
   const maxAmountRequestLoanTerms = toDecimals(150, tokenInfo.decimals);
-  const amountTakeOut = toDecimals(100, tokenInfo.decimals);
-  const collateralAmountDepositCollateral = toDecimals(
-    0.17,
-    collateralTokenInfo.decimals
-  );
+  const amountTakeOut = toDecimals(150, tokenInfo.decimals);
 
   const durationInDays = 10;
   const signers = await accounts.getAllAt(12, 13);
@@ -103,6 +107,16 @@ module.exports = async (testContext) => {
   );
 
   await blockchainActions.advanceMinutes({timer}, {testContext}, {minutes: 2});
+
+  await loansActions.printLoanInfo(
+    allContracts,
+    {testContext},
+    {
+      loanId: loanInfoRequestLoanTerms.id,
+      collateralTokenInfo,
+      tokenInfo,
+    }
+  );
 
   // Take out a loan.
   await loansActions.takeOutLoan(
