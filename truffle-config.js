@@ -1,5 +1,4 @@
 const envConfig = require('./config/env')();
-const { tokens } = require("./config/networks/ganache-mainnet");
 
 // Environment Configuration
 const addressCountValue = envConfig.getAddressCount().getOrDefault();
