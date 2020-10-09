@@ -367,4 +367,5 @@ contract ATMGovernance is
     function getTLRRewards() external view returns (ATMLibrary.TLRReward[] memory) {
         return tlrRewards;
     }
+
 }

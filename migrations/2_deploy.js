@@ -67,80 +67,6 @@ module.exports = async function(deployer, network, accounts) {
   // Creating DeployerApp helper.
   const deployerApp = new DeployerApp(deployer, web3, deployerAccount, { InitializeableDynamicProxy, Mock }, { network, networkConfig });
   try {
-  await deployerApp.deployMocksContractsIfNeeded();
-  const currentBlockNumber = await web3.eth.getBlockNumber();
-
-  console.log(`Deployment starts at block number: ${currentBlockNumber}`);
-
-  const contracts = [
-    // Logic
-    { Contract: LendingPool, name: logicNames.LendingPool },
-    { Contract: Lenders, name: logicNames.Lenders },
-    { Contract: TokenCollateralLoans, name: logicNames.TokenCollateralLoans },
-    { Contract: EtherCollateralLoans, name: logicNames.EtherCollateralLoans },
-    { Contract: LoanTermsConsensus, name: logicNames.LoanTermsConsensus },
-    { Contract: InterestConsensus, name: logicNames.InterestConsensus },
-    { Contract: Escrow, name: logicNames.Escrow },
-    { Contract: ChainlinkPairAggregator, name: logicNames.ChainlinkPairAggregator },
-    { Contract: ATMGovernance, name: logicNames.ATMGovernance },
-      { Contract: ATMLiquidityMining, name: logicNames.ATMLiquidityMining },
-    { Contract: TLRToken, name: logicNames.TLRToken },
-      // Dapps
-      { Contract: Uniswap, name: logicNames.Uniswap },
-      { Contract: Compound, name: logicNames.Compound },
-    // Initializables
-    { Contract: EscrowFactory, name: logicNames.EscrowFactory },
-    { Contract: ChainlinkPairAggregatorRegistry, name: logicNames.ChainlinkPairAggregatorRegistry },
-    { Contract: MarketsState, name: logicNames.MarketsState },
-    { Contract: ATMSettings, name: logicNames.ATMSettings },
-    { Contract: ATMFactory, name: logicNames.ATMFactory },
-    { Contract: ATMLiquidityMining, name: logicNames.ATMLiquidityMining },
-    { Contract: MarketFactory, name: logicNames.MarketFactory },
-      { Contract: TTokenRegistry, name : logicNames.TTokenRegistry },
-  ];
-
-  const deployedLogicContractsMap = await deployLogicContracts(contracts, { deployerApp, txConfig, web3 });
-
-  async function deployInitializableDynamicProxy(name) {
-    const info = deployedLogicContractsMap.get(name)
-    assert(info, `Deployed logic info is undefined for logic name ${name}.`)
-    const proxy = await deployerApp.deployInitializeableDynamicProxy(info, txConfig)
-    return info.Contract.at(proxy.address)
-  }
-
-  console.log(`Deploying Settings logic...`)
-  const settingsLogic = await deployerApp.deployWith('Settings', Settings, txConfig)
-  const settingsProxy = await deployerApp.deployWith('Settings_Proxy', UpgradeableProxy, txConfig)
-  await settingsProxy.initializeProxy(
-    settingsProxy.address,
-    settingsLogic.address,
-    txConfig
-  )
-  const settingsInstance = await Settings.at(settingsProxy.address)
-  console.log(`Settings logic: ${settingsLogic.address}`)
-  console.log(`Settings_Proxy: ${settingsProxy.address}`)
-
-  const escrowFactoryInstance = await deployInitializableDynamicProxy(logicNames.EscrowFactory)
-  const pairAggregatorRegistryInstance = await deployInitializableDynamicProxy(logicNames.ChainlinkPairAggregatorRegistry)
-  const marketsStateInstance = await deployInitializableDynamicProxy(logicNames.MarketsState)
-  const atmSettingsInstance = await deployInitializableDynamicProxy(logicNames.ATMSettings)
-  const atmFactoryInstance = await deployInitializableDynamicProxy(logicNames.ATMFactory)
-  const marketFactoryInstance = await deployInitializableDynamicProxy(logicNames.MarketFactory)
-    const tTokenRegistryInstance = await deployInitializableDynamicProxy(logicNames.TTokenRegistry)
-
-  console.log(`Deploying LogicVersionsRegistry...`)
-  const logicVersionsRegistryLogic = await deployerApp.deployWith('LogicVersionsRegistry', LogicVersionsRegistry, txConfig)
-  const logicVersionsRegistryProxy = await deployerApp.deployWith('LogicVersionsRegistry_Proxy', UpgradeableProxy, txConfig)
-  await logicVersionsRegistryProxy.initializeProxy(
-    settingsInstance.address,
-    logicVersionsRegistryLogic.address,
-    txConfig
-  )
-  const logicVersionsRegistryInstance = await LogicVersionsRegistry.at(logicVersionsRegistryProxy.address)
-  await logicVersionsRegistryInstance.initialize(settingsInstance.address)
-  console.log(`LogicVersionsRegistry logic: ${logicVersionsRegistryLogic.address}`)
-<<<<<<< HEAD
-=======
     await deployerApp.deployMocksContractsIfNeeded();
     const currentBlockNumber = await web3.eth.getBlockNumber();
   
@@ -159,24 +85,29 @@ module.exports = async function(deployer, network, accounts) {
       { Contract: ATMGovernance, name: logicNames.ATMGovernance },
       { Contract: ATMLiquidityMining, name: logicNames.ATMLiquidityMining },
       { Contract: TLRToken, name: logicNames.TLRToken },
+      // Dapps
+      { Contract: Uniswap, name: logicNames.Uniswap },
+      { Contract: Compound, name: logicNames.Compound },
       // Initializables
       { Contract: EscrowFactory, name: logicNames.EscrowFactory },
       { Contract: ChainlinkPairAggregatorRegistry, name: logicNames.ChainlinkPairAggregatorRegistry },
       { Contract: MarketsState, name: logicNames.MarketsState },
       { Contract: ATMSettings, name: logicNames.ATMSettings },
       { Contract: ATMFactory, name: logicNames.ATMFactory },
+    { Contract: ATMLiquidityMining, name: logicNames.ATMLiquidityMining },
       { Contract: MarketFactory, name: logicNames.MarketFactory },
+      { Contract: TTokenRegistry, name : logicNames.TTokenRegistry },
     ];
-  
+
     const deployedLogicContractsMap = await deployLogicContracts(contracts, { deployerApp, txConfig, web3 });
-  
+
     async function deployInitializableDynamicProxy(name) {
       const info = deployedLogicContractsMap.get(name)
       assert(info, `Deployed logic info is undefined for logic name ${name}.`)
       const proxy = await deployerApp.deployInitializeableDynamicProxy(info, txConfig)
       return info.Contract.at(proxy.address)
     }
-  
+
     console.log(`Deploying Settings logic...`)
     const settingsLogic = await deployerApp.deployWith('Settings', Settings, txConfig)
     const settingsProxy = await deployerApp.deployWith('Settings_Proxy', UpgradeableProxy, txConfig)
@@ -188,14 +119,15 @@ module.exports = async function(deployer, network, accounts) {
     const settingsInstance = await Settings.at(settingsProxy.address)
     console.log(`Settings logic: ${settingsLogic.address}`)
     console.log(`Settings_Proxy: ${settingsProxy.address}`)
-  
+
     const escrowFactoryInstance = await deployInitializableDynamicProxy(logicNames.EscrowFactory)
     const pairAggregatorRegistryInstance = await deployInitializableDynamicProxy(logicNames.ChainlinkPairAggregatorRegistry)
     const marketsStateInstance = await deployInitializableDynamicProxy(logicNames.MarketsState)
     const atmSettingsInstance = await deployInitializableDynamicProxy(logicNames.ATMSettings)
     const atmFactoryInstance = await deployInitializableDynamicProxy(logicNames.ATMFactory)
     const marketFactoryInstance = await deployInitializableDynamicProxy(logicNames.MarketFactory)
-  
+    const tTokenRegistryInstance = await deployInitializableDynamicProxy(logicNames.TTokenRegistry)
+
     console.log(`Deploying LogicVersionsRegistry...`)
     const logicVersionsRegistryLogic = await deployerApp.deployWith('LogicVersionsRegistry', LogicVersionsRegistry, txConfig)
     const logicVersionsRegistryProxy = await deployerApp.deployWith('LogicVersionsRegistry_Proxy', UpgradeableProxy, txConfig)
@@ -207,26 +139,23 @@ module.exports = async function(deployer, network, accounts) {
     const logicVersionsRegistryInstance = await LogicVersionsRegistry.at(logicVersionsRegistryProxy.address)
     await logicVersionsRegistryInstance.initialize(settingsInstance.address)
     console.log(`LogicVersionsRegistry logic: ${logicVersionsRegistryLogic.address}`)
->>>>>>> 18cbff3... Liquidity mining initial version [PROTOCOL-184]
-=======
->>>>>>> 0005a4d... Merge branch 'feature/add-liquidity-min' of https://github.com/teller-protocol/teller-protocol-v1 into feature/add-liquidity-min
     console.log(`LogicVersionsRegistry_Proxy: ${logicVersionsRegistryProxy.address}`)
 
-  console.log(`Settings: Initializing...`);
-  await settingsInstance.initialize(
-    escrowFactoryInstance.address,
-    logicVersionsRegistryInstance.address,
-    pairAggregatorRegistryInstance.address,
-    marketsStateInstance.address,
-    NULL_ADDRESS, // Interest Validator is empty (0x0) in the first version.
-    atmSettingsInstance.address,
-  );
-
-  await initLogicVersions(
-    deployedLogicContractsMap,
-    { logicVersionsRegistryInstance },
-    { txConfig },
-  );
+    console.log(`Settings: Initializing...`);
+    await settingsInstance.initialize(
+      escrowFactoryInstance.address,
+      logicVersionsRegistryInstance.address,
+      pairAggregatorRegistryInstance.address,
+      marketsStateInstance.address,
+      NULL_ADDRESS, // Interest Validator is empty (0x0) in the first version.
+      atmSettingsInstance.address,
+    );
+  
+    await initLogicVersions(
+      deployedLogicContractsMap,
+      { logicVersionsRegistryInstance },
+      { txConfig },
+    );
 
     await initSettings(
       settingsInstance,
@@ -251,60 +180,60 @@ module.exports = async function(deployer, network, accounts) {
     await deployDynamicProxy(logicNames.Uniswap)
     await deployDynamicProxy(logicNames.Compound)
 
-  async function initializeProxy(name, instance) {
-    const logicContractInfo = deployedLogicContractsMap.get(name)
-    assert(logicContractInfo.nameBytes32, `Name bytes32 is undefined for logic name ${name}.`);
-    const { nameBytes32 } = logicContractInfo;
-    const proxy = await InitializeableDynamicProxy.at(instance.address)
-    await proxy.initializeProxy(settingsInstance.address, nameBytes32)
-    await instance.initialize(settingsInstance.address)
-  }
+    async function initializeProxy(name, instance) {
+      const logicContractInfo = deployedLogicContractsMap.get(name)
+      assert(logicContractInfo.nameBytes32, `Name bytes32 is undefined for logic name ${name}.`);
+      const { nameBytes32 } = logicContractInfo;
+      const proxy = await InitializeableDynamicProxy.at(instance.address)
+      await proxy.initializeProxy(settingsInstance.address, nameBytes32)
+      await instance.initialize(settingsInstance.address)
+    }
+  
+    await initializeProxy(logicNames.EscrowFactory, escrowFactoryInstance)
+    await initializeProxy(logicNames.ChainlinkPairAggregatorRegistry, pairAggregatorRegistryInstance)
+    await initializeProxy(logicNames.MarketsState, marketsStateInstance)
+    await initializeProxy(logicNames.ATMSettings, atmSettingsInstance)
+    await initializeProxy(logicNames.ATMFactory, atmFactoryInstance)
+    await initializeProxy(logicNames.MarketFactory, marketFactoryInstance)
 
-  await initializeProxy(logicNames.EscrowFactory, escrowFactoryInstance)
-  await initializeProxy(logicNames.ChainlinkPairAggregatorRegistry, pairAggregatorRegistryInstance)
-  await initializeProxy(logicNames.MarketsState, marketsStateInstance)
-  await initializeProxy(logicNames.ATMSettings, atmSettingsInstance)
-  await initializeProxy(logicNames.ATMFactory, atmFactoryInstance)
-  await initializeProxy(logicNames.MarketFactory, marketFactoryInstance)
-
-  await initATMs(
-    { atmFactory: atmFactoryInstance, atmSettings: atmSettingsInstance },
-    { atms, tokens, txConfig, web3 },
-    { ATMGovernance },
-  );
-
-  await initPairAggregators(
-    { pairAggregatorRegistryInstance },
-    { txConfig, ...networkConfig },
-  );
-
-  await deployerApp.deploys([TDAI, TUSDC], txConfig);
-  console.log(`Deployed tokens: TDAI [${TDAI.address}] TUSDC [${TUSDC.address}] `);
+    await initATMs(
+      { atmFactory: atmFactoryInstance, atmSettings: atmSettingsInstance },
+      { atms, tokens, txConfig, web3 },
+      { ATMGovernance },
+    );
+  
+    await initPairAggregators(
+      { pairAggregatorRegistryInstance },
+      { txConfig, ...networkConfig },
+    );
+  
+    await deployerApp.deploys([TDAI, TUSDC], txConfig);
+    console.log(`Deployed tokens: TDAI [${TDAI.address}] TUSDC [${TUSDC.address}] `);
     console.log(`Registering TDAI and TUSDC in TTokenRegistry`);
     await tTokenRegistryInstance.registerTToken(TDAI.address);
     await tTokenRegistryInstance.registerTToken(TUSDC.address);
     console.log(`TDAI [${TDAI.address}] and TUSDC [${TUSDC.address}] added to TTokenRegistry`);
     console.log(`Creating Markets...`);
-  const marketDefinitions = [
-    { tTokenAddress: TDAI.address, borrowedTokenName: 'DAI', collateralTokenName: 'ETH' },
-    { tTokenAddress: TDAI.address, borrowedTokenName: 'DAI', collateralTokenName: 'LINK' },
-    { tTokenAddress: TUSDC.address, borrowedTokenName: 'USDC', collateralTokenName: 'ETH' },
-    { tTokenAddress: TUSDC.address, borrowedTokenName: 'USDC', collateralTokenName: 'LINK' },
-  ];
-
-  await createMarkets(
-    marketDefinitions,
-    { marketFactoryInstance, marketsStateInstance },
-    { txConfig, deployerApp, ...networkConfig },
-    { LoanTermsConsensus, InterestConsensus, ERC20Mintable }
-  );
-
-  deployerApp.print();
-  deployerApp.writeJson();
-  console.log(`${'='.repeat(25)} Deployment process finished. ${'='.repeat(25)}`);
+    const marketDefinitions = [
+      { tTokenAddress: TDAI.address, borrowedTokenName: 'DAI', collateralTokenName: 'ETH' },
+      { tTokenAddress: TDAI.address, borrowedTokenName: 'DAI', collateralTokenName: 'LINK' },
+      { tTokenAddress: TUSDC.address, borrowedTokenName: 'USDC', collateralTokenName: 'ETH' },
+      { tTokenAddress: TUSDC.address, borrowedTokenName: 'USDC', collateralTokenName: 'LINK' },
+    ];
+  
+    await createMarkets(
+      marketDefinitions,
+      { marketFactoryInstance, marketsStateInstance },
+      { txConfig, deployerApp, ...networkConfig },
+      { LoanTermsConsensus, InterestConsensus, ERC20Mintable }
+    );
+  
+    deployerApp.print();
+    deployerApp.writeJson();
+    console.log(`${'='.repeat(25)} Deployment process finished. ${'='.repeat(25)}`);
   } catch (error) {
     console.log('\x1b[33m\x1b[41m\x1b[5m', `Error deploying contract`, '\x1b[0m');
-    console.log(error);    
+    console.log(error);
     deployerApp.print();
     deployerApp.writeJson();
     console.log('\x1b[33m\x1b[41m\x1b[5m%s\x1b[0m', `${'='.repeat(25)} Deployment process FAILED. ${'='.repeat(25)}`);
