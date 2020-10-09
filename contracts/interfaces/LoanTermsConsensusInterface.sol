@@ -22,6 +22,7 @@ interface LoanTermsConsensusInterface {
         address indexed signer,
         address indexed borrower,
         uint256 indexed requestNonce,
+        uint256 signerNonce,
         uint256 interestRate,
         uint256 collateralRatio,
         uint256 maxLoanAmount

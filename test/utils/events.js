@@ -304,11 +304,12 @@ module.exports = {
             const name = 'TermsSubmitted';
             return {
                 name: name,
-                emitted: (signer, borrower, requestNonce, interestRate, collateralRatio, maxLoanAmount) => truffleAssert.eventEmitted(tx, name, ev => {
+                emitted: (signer, borrower, requestNonce, signerNonce, interestRate, collateralRatio, maxLoanAmount) => truffleAssert.eventEmitted(tx, name, ev => {
                     return (
                         ev.signer === signer && 
                         ev.borrower === borrower &&
                         ev.requestNonce.toString() === requestNonce.toString() &&
+                        ev.signerNonce.toString() === signerNonce.toString() &&
                         ev.interestRate.toString() === interestRate.toString() &&
                         ev.collateralRatio.toString() === collateralRatio.toString() &&
                         ev.maxLoanAmount.toString() === maxLoanAmount.toString()
