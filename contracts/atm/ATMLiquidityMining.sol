@@ -273,17 +273,7 @@ contract ATMLiquidityMining is
     {
         return userStakeInfo[msg.sender][tToken].tTokenStakedBalance.add(amount);
     }
-    /**
-        @notice Returns tToken sender balance plus the amount specified. 
-        @param amount amount of tTokens to add to current tToken balance. 
-     */
-    function _incrementTTokenBalance(uint256 amount)
-        internal
-        view
-        returns (uint256)
-    {
-        return userStakeInfo[msg.sender].tTokenStakedBalance.add(amount);
-    }
+    
     /**
         @notice Returns sender's accrued TLR token amount since last operation (Stake(), UnStake(), Withdraw())
             until param blockNumber. 
