@@ -28,7 +28,7 @@ Timer.prototype.getCurrentTimestampInSeconds = async function () {
 
 Timer.prototype.getCurrentTimestamp = async function () {
   const { timestamp } = await this.getLatestBlock();
-  return parseInt(timestamp.toString()) * 1000;
+  return parseInt(timestamp.toString());
 }
 
 Timer.prototype.getCurrentDate = async function () {
