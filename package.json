@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "@gnosis.pm/mock-contract": "^3.0.7",
+    "axios": "^0.20.0",
     "bl": "^2.2.1",
     "chai": "^4.2.0",
     "dotenv": "^8.2.0",
