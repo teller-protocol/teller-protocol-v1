@@ -73,6 +73,7 @@ GetContracts.prototype.getAllDeployed = async function({ teller, tokens }, token
     const loans = await this.getDeployed(teller.custom(collTokenName).loans(tokenName));
     const loanTermsConsensus = await this.getDeployed(teller.custom(collTokenName).loanTermsConsensus(tokenName));
     const chainlinkAggregator = await this.getDeployed(teller.chainlinkAggregator());
+    //const atmGovernance = await this.getDeployed(teller.atmGovernance());
 
     return {
         settings,
@@ -82,6 +83,7 @@ GetContracts.prototype.getAllDeployed = async function({ teller, tokens }, token
         loans,
         chainlinkAggregator,
         loanTermsConsensus,
+        //atmGovernance
     };
 }
 
