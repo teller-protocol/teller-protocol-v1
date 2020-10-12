@@ -41,8 +41,7 @@ const ATMFactory = artifacts.require("./atm/ATMFactory.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 const TLRToken = artifacts.require("./atm/TLRToken.sol");
 // External providers
-const ChainlinkPairAggregatorRegistry = artifacts.require("./providers/chainlink/ChainlinkPairAggregatorRegistry.sol");
-const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
+const ChainlinkAggregator = artifacts.require("./providers/chainlink/ChainlinkAggregator.sol");
 const tokensRequired = ['DAI', 'USDC', 'LINK'];
 
 module.exports = async function(deployer, network, accounts) {
@@ -80,7 +79,7 @@ module.exports = async function(deployer, network, accounts) {
       { Contract: LoanTermsConsensus, name: logicNames.LoanTermsConsensus },
       { Contract: InterestConsensus, name: logicNames.InterestConsensus },
       { Contract: Escrow, name: logicNames.Escrow },
-      { Contract: ChainlinkPairAggregator, name: logicNames.ChainlinkPairAggregator },
+      { Contract: ChainlinkAggregator, name: logicNames.ChainlinkAggregator },
       { Contract: ATMGovernance, name: logicNames.ATMGovernance },
       { Contract: TLRToken, name: logicNames.TLRToken },
       // Dapps
@@ -88,7 +87,6 @@ module.exports = async function(deployer, network, accounts) {
       { Contract: Compound, name: logicNames.Compound },
       // Initializables
       { Contract: EscrowFactory, name: logicNames.EscrowFactory },
-      { Contract: ChainlinkPairAggregatorRegistry, name: logicNames.ChainlinkPairAggregatorRegistry },
       { Contract: MarketsState, name: logicNames.MarketsState },
       { Contract: ATMSettings, name: logicNames.ATMSettings },
       { Contract: ATMFactory, name: logicNames.ATMFactory },
@@ -118,7 +116,7 @@ module.exports = async function(deployer, network, accounts) {
     console.log(`Settings_Proxy: ${settingsProxy.address}`)
 
     const escrowFactoryInstance = await deployInitializableDynamicProxy(logicNames.EscrowFactory)
-    const pairAggregatorRegistryInstance = await deployInitializableDynamicProxy(logicNames.ChainlinkPairAggregatorRegistry)
+    const chainlinkAggregatorInstance = await deployInitializableDynamicProxy(logicNames.ChainlinkAggregator)
     const marketsStateInstance = await deployInitializableDynamicProxy(logicNames.MarketsState)
     const atmSettingsInstance = await deployInitializableDynamicProxy(logicNames.ATMSettings)
     const atmFactoryInstance = await deployInitializableDynamicProxy(logicNames.ATMFactory)
@@ -142,7 +140,7 @@ module.exports = async function(deployer, network, accounts) {
     await settingsInstance.initialize(
       escrowFactoryInstance.address,
       logicVersionsRegistryInstance.address,
-      pairAggregatorRegistryInstance.address,
+      chainlinkAggregatorInstance.address,
       marketsStateInstance.address,
       NULL_ADDRESS, // Interest Validator is empty (0x0) in the first version.
       atmSettingsInstance.address,
@@ -176,7 +174,7 @@ module.exports = async function(deployer, network, accounts) {
     }
   
     await initializeProxy(logicNames.EscrowFactory, escrowFactoryInstance)
-    await initializeProxy(logicNames.ChainlinkPairAggregatorRegistry, pairAggregatorRegistryInstance)
+    await initializeProxy(logicNames.ChainlinkAggregator, chainlinkAggregatorInstance)
     await initializeProxy(logicNames.MarketsState, marketsStateInstance)
     await initializeProxy(logicNames.ATMSettings, atmSettingsInstance)
     await initializeProxy(logicNames.ATMFactory, atmFactoryInstance)
@@ -203,7 +201,7 @@ module.exports = async function(deployer, network, accounts) {
     );
   
     await initPairAggregators(
-      { pairAggregatorRegistryInstance },
+      { chainlinkAggregatorInstance },
       { txConfig, ...networkConfig },
     );
   

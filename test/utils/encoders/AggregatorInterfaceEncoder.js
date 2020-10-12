@@ -7,8 +7,8 @@ class AggregatorInterfaceEncoder {
     }
 }
 
-AggregatorInterfaceEncoder.prototype.encodeLatestAnswer = function() {
-    return encode(this.web3, 'latestAnswer()');
+AggregatorInterfaceEncoder.prototype.encodeLatestAnswerFor = function() {
+    return encode(this.web3, 'latestAnswerFor(address,address)');
 }
 
 AggregatorInterfaceEncoder.prototype.encodeLatestTimestamp = function() {

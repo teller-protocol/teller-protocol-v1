@@ -8,7 +8,7 @@ module.exports = {
     EscrowFactory: 'EscrowFactory',
     Escrow: 'Escrow',
     ChainlinkPairAggregator: 'ChainlinkPairAggregator',
-    ChainlinkPairAggregatorRegistry: 'ChainlinkPairAggregatorRegistry',
+    ChainlinkAggregator: 'ChainlinkAggregator',
     Settings: 'Settings',
     LogicVersionsRegistry: 'LogicVersionsRegistry',
     TTokenRegistry: 'TTokenRegistry',

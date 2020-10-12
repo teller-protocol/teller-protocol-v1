@@ -195,7 +195,7 @@ module.exports = {
     BACK_ROUNDS: {
         name: 'backRounds',
         alias: 'BR',
-        default: 1,
+        default: 0,
     },
     MIN_AMOUNT: {
         name: 'minAmount',

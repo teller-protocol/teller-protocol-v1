@@ -9,7 +9,6 @@ import "./TInitializable.sol";
 // Interfaces
 import "../interfaces/EscrowInterface.sol";
 import "../interfaces/LoansInterface.sol";
-import "../interfaces/PairAggregatorInterface.sol";
 import "../interfaces/IBaseProxy.sol";
 
 // Libraries
@@ -260,31 +259,6 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
         address quoteAddress,
         uint256 baseAmount
     ) internal view returns (uint256) {
-        uint8 baseDecimals = baseAddress == settings().ETH_ADDRESS()
-            ? ETH_DECIMALS
-            : ERC20Detailed(baseAddress).decimals();
-        PairAggregatorInterface aggregator = _getAggregatorFor(baseAddress, quoteAddress);
-        uint256 oneTokenPrice = uint256(aggregator.getLatestAnswer());
-        uint256 oneUnit = uint256(10)**baseDecimals;
-        return baseAmount.mul(oneTokenPrice).div(oneUnit);
-    }
-
-    /**
-        @notice Returns Chainlink pair aggregator for token or revert if not found.
-        @param base base token address.
-        @param quote quote token address.
-        @return PairAggregator instance found for this tokens pair.
-     */
-    function _getAggregatorFor(address base, address quote)
-        internal
-        view
-        returns (PairAggregatorInterface)
-    {
-        require(
-            settings().pairAggregatorRegistry().hasPairAggregator(base, quote),
-            "CHAINLINK_PAIR_AGGREGATOR_NOT_EXISTS"
-        );
-
-        return settings().pairAggregatorRegistry().getPairAggregator(base, quote);
+        return settings().chainlinkAggregator().valueFor(baseAddress, quoteAddress, baseAmount);
     }
 }

@@ -19,10 +19,7 @@ contract LogicVersionsConsts {
     bytes32 public constant INTEREST_CONSENSUS_LOGIC_NAME = "InterestConsensus";
     bytes32 public constant ESCROW_FACTORY_LOGIC_NAME = "EscrowFactory";
     bytes32 public constant ESCROW_LOGIC_NAME = "Escrow";
-    bytes32
-        public constant CHAINLINK_PAIR_AGGREGATOR_LOGIC_NAME = "ChainlinkPairAggregator";
-    bytes32
-        public constant CHAINLINK_PAIR_AGGREGATOR_REGISTRY_LOGIC_NAME = "ChainlinkPairAggregatorRegistry";
+    bytes32 public constant CHAINLINK_AGGREGATOR_LOGIC_NAME = "ChainlinkAggregator";
     bytes32 public constant SETTINGS_LOGIC_NAME = "Settings";
     bytes32 public constant LOGIC_VERSIONS_REGISTRY_LOGIC_NAME = "LogicVersionsRegistry";
     bytes32 public constant MARKETS_STATE_LOGIC_NAME = "MarketsState";

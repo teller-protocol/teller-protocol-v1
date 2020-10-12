@@ -29,10 +29,10 @@ module.exports = async (testContext) => {
   const amountTakeOut = toDecimals(100, tokenInfo.decimals);
   let initialOraclePrice;
   if (collTokenName.toLowerCase() === "eth") {
-    initialOraclePrice = toDecimals("0.00295835", 18);
+    initialOraclePrice = "0.00295835";
   }
   if (collTokenName.toLowerCase() === "link") {
-    initialOraclePrice = toDecimals("0.100704", 8);
+    initialOraclePrice = "0.100704";
   }
   const durationInDays = 61;
   const signers = await accounts.getAllAt(12, 13);

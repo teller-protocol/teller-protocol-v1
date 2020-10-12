@@ -11,7 +11,6 @@ import "../util/ERC20DetailedLib.sol";
 import "./Base.sol";
 
 // Interfaces
-import "../interfaces/PairAggregatorInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
@@ -57,8 +56,6 @@ contract LoansBase is LoansInterface, Base {
 
     // At any time, this variable stores the next available loan ID
     uint256 public loanIDCounter;
-
-    address public priceOracle;
 
     LendingPoolInterface public lendingPool;
 
@@ -446,27 +443,6 @@ contract LoansBase is LoansInterface, Base {
         return _getCollateralInfo(loanID);
     }
 
-    /**
-        @notice Updates the current price oracle instance.
-        @dev It throws a require error if sender is not allowed.
-        @dev It throws a require error if new address is empty (0x0) or not a contract.
-        @param newPriceOracle the new price oracle address.
-     */
-    function setPriceOracle(address newPriceOracle)
-        external
-        isInitialized()
-        onlyPauser()
-    {
-        // New address must be a contract and not empty
-        require(newPriceOracle.isContract(), "ORACLE_MUST_CONTRACT_NOT_EMPTY");
-        address oldPriceOracle = address(priceOracle);
-        oldPriceOracle.requireNotEqualTo(newPriceOracle, "NEW_ORACLE_MUST_BE_PROVIDED");
-
-        priceOracle = newPriceOracle;
-
-        emit PriceOracleUpdated(msg.sender, oldPriceOracle, newPriceOracle);
-    }
-
     /** Internal Functions */
 
     /**
@@ -532,31 +508,26 @@ contract LoansBase is LoansInterface, Base {
         returns (uint256 neededInLendingTokens, uint256 neededInCollateralTokens)
     {
         // Get collateral needed in lending tokens.
-        uint256 collateralNeededToken = _getCollateralNeededInTokens(loanID);
-        // Convert collateral (in lending tokens) into collateral tokens.
-        return (collateralNeededToken, _convertTokenToWei(collateralNeededToken));
+        neededInLendingTokens = _getCollateralNeededInTokens(loanID);
+        neededInCollateralTokens = settings().chainlinkAggregator().valueFor(lendingPool.lendingToken(), collateralToken, neededInLendingTokens);
     }
 
     /**
         @notice Initializes the current contract instance setting the required parameters.
-        @param priceOracleAddress Contract address of the price oracle
         @param lendingPoolAddress Contract address of the lending pool
         @param loanTermsConsensusAddress Contract address for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
      */
     function _initialize(
-        address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress
     ) internal isNotInitialized() {
-        priceOracleAddress.requireNotEmpty("PROVIDE_ORACLE_ADDRESS");
         lendingPoolAddress.requireNotEmpty("PROVIDE_LENDING_POOL_ADDRESS");
         loanTermsConsensusAddress.requireNotEmpty("PROVIDED_LOAN_TERMS_ADDRESS");
 
         _initialize(settingsAddress);
 
-        priceOracle = priceOracleAddress;
         lendingPool = LendingPoolInterface(lendingPoolAddress);
         loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
     }
@@ -612,41 +583,7 @@ contract LoansBase is LoansInterface, Base {
     }
 
     /**
-        @notice Converts the collateral tokens to lending tokens
-        @param weiAmount The amount of wei to be converted
-        @return uint256 The value the collateral tokens (wei) in lending tokens (not wei)
-     */
-    function _convertWeiToToken(uint256 weiAmount) internal view returns (uint256) {
-        // wei amount / lending token price in wei * the lending token decimals.
-        uint256 aWholeLendingToken = ERC20Detailed(lendingPool.lendingToken())
-            .getAWholeToken();
-        uint256 oneLendingTokenPriceWei = uint256(
-            PairAggregatorInterface(priceOracle).getLatestAnswer()
-        );
-        return weiAmount.mul(aWholeLendingToken).div(oneLendingTokenPriceWei);
-    }
-
-    /**
-        @notice Converts the lending token to collateral tokens
-        @param tokenAmount The amount in lending tokens (not wei) to be converted
-        @return uint256 The value of lending tokens (not wei) in collateral tokens (wei)
-     */
-    function _convertTokenToWei(uint256 tokenAmount) internal view returns (uint256) {
-        // tokenAmount is in token units, chainlink price is in whole tokens
-        // token amount in tokens * lending token price in wei / the lending token decimals.
-        uint256 aWholeLendingToken = ERC20Detailed(lendingPool.lendingToken())
-            .getAWholeToken();
-        uint256 oneLendingTokenPriceWei = uint256(
-            PairAggregatorInterface(priceOracle).getLatestAnswer()
-        );
-        uint256 weiValue = tokenAmount.mul(oneLendingTokenPriceWei).div(
-            aWholeLendingToken
-        );
-        return weiValue;
-    }
-
-    /**
-        @notice It getss the current liquidation info for a given loan id.
+        @notice It gets the current liquidation info for a given loan id.
         @param loanID loan id to get the info.
         @return liquidationInfo get current liquidation info for the given loan id.
      */
@@ -659,7 +596,7 @@ contract LoansBase is LoansInterface, Base {
         uint256 liquidateEthPrice = settings().getPlatformSettingValue(
             settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
         );
-        uint256 collateralInTokens = _convertWeiToToken(collateral);
+        uint256 collateralInTokens = settings().chainlinkAggregator().valueFor(collateralToken, lendingPool.lendingToken(), collateral);
         liquidationInfo = TellerCommon.LoanLiquidationInfo({
             liquidable: canLiquidateLoan(loanID),
             collateral: collateral,

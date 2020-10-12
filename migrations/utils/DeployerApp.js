@@ -77,12 +77,12 @@ DeployerApp.prototype.deploy = async function(contract, ...params) {
     return await this.deployWith(contract.contractName, contract, 'teller', ...params);
 }
 
-DeployerApp.prototype.deployChainlink = async function(contract, data, ...params) {
-    const pair = `${data.baseTokenName}_${data.quoteTokenName}`
-    console.log(`Contract Chainlink aggregator for '${pair}': deploying.`);
+DeployerApp.prototype.deployChainlinkAggregator = async function(contract, baseTokenName, quoteTokenName, ...params) {
+    console.log(`Contract Chainlink aggregator for ${baseTokenName}/${quoteTokenName}: deploying...`);
     const instance = await this.deployer.deploy(contract, ...params);
     this.addContractInfo({
-        ...data,
+        baseTokenName,
+        quoteTokenName,
         address: instance.address
     }, 'chainlink');
     return instance

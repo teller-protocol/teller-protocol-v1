@@ -59,7 +59,7 @@
     "yargs": "^15.3.1"
   },
   "dependencies": {
-    "@chainlink/contracts": "^0.0.5",
+    "@chainlink/contracts": "^0.0.10",
     "@openzeppelin/contracts": "2.5.1",
     "@openzeppelin/contracts-ethereum-package": "2.5.0",
     "@openzeppelin/upgrades": "^2.8.0",
