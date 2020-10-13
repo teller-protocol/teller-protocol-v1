@@ -132,6 +132,26 @@ contract ChainlinkPairAggregator is PairAggregatorInterface, TInitializable {
         require(pendingDecimals <= MAX_POWER_VALUE, "MAX_PENDING_DECIMALS_EXCEEDED");
     }
 
+    /**
+        @notice It gets the aggregator info associated to this pair aggregator instance.
+        @return response decimals.
+        @return collateral decimals.
+        @return pending decimals (difference between response and collateral).
+        @return isInverse true if it is an inverse pair aggregator. Otherwise it returns false.
+     */
+    function getInfo()
+        external
+        view
+        returns (
+            uint8 response,
+            uint8 collateral,
+            uint8 pending,
+            bool isInverse
+        )
+    {
+        return (responseDecimals, collateralDecimals, pendingDecimals, inverse);
+    }
+
     /** Internal Functions */
 
     /**

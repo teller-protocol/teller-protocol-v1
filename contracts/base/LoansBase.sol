@@ -202,22 +202,21 @@ contract LoansBase is LoansInterface, Base {
         require(msg.sender == loans[loanID].loanTerms.borrower, "CALLER_DOESNT_OWN_LOAN");
         require(amount > 0, "CANNOT_WITHDRAW_ZERO");
 
-        // Find the minimum collateral amount this loan is allowed in tokens or ether.
-        uint256 collateralNeededToken = _getCollateralNeededInTokens(loanID);
-        uint256 collateralNeededWei = _convertTokenToWei(collateralNeededToken);
+        // Get the current collateral info.
+        TellerCommon.LoanCollateralInfo memory collateralInfo = _getCollateralInfo(
+            loanID
+        );
 
         // Withdrawal amount holds the amount of excess collateral in the loan
-        uint256 withdrawalAmount = loans[loanID].collateral.sub(collateralNeededWei);
-        if (withdrawalAmount > amount) {
-            withdrawalAmount = amount;
-        }
+        uint256 withdrawalAmount = collateralInfo.collateral.sub(
+            collateralInfo.neededInCollateralTokens
+        );
+        require(withdrawalAmount >= amount, "COLLATERAL_AMOUNT_TOO_HIGH");
 
-        if (withdrawalAmount > 0) {
-            // Update the contract total and the loan collateral total
-            _payOutCollateral(loanID, withdrawalAmount, msg.sender);
-        }
+        // Update the contract total and the loan collateral total
+        _payOutCollateral(loanID, amount, msg.sender);
 
-        emit CollateralWithdrawn(loanID, msg.sender, withdrawalAmount);
+        emit CollateralWithdrawn(loanID, msg.sender, amount);
     }
 
     /**
@@ -260,6 +259,7 @@ contract LoansBase is LoansInterface, Base {
             .mul(loans[loanID].loanTerms.duration)
             .div(TEN_THOUSAND)
             .div(SECONDS_PER_YEAR_4DP);
+        loans[loanID].status = TellerCommon.LoanStatus.Active;
 
         // check that enough collateral has been provided for this loan
         TellerCommon.LoanCollateralInfo memory collateralInfo = _getCollateralInfo(
@@ -269,7 +269,6 @@ contract LoansBase is LoansInterface, Base {
         require(!collateralInfo.moreCollateralRequired, "MORE_COLLATERAL_REQUIRED");
 
         loans[loanID].loanStartTime = now;
-        loans[loanID].status = TellerCommon.LoanStatus.Active;
         loans[loanID].escrow = _createEscrow(loanID);
 
         // We only send the loan to escrow contract for now.
@@ -360,33 +359,40 @@ contract LoansBase is LoansInterface, Base {
         whenLendingPoolNotPaused(address(lendingPool))
         nonReentrant()
     {
-        require(canLiquidateLoan(loanID), "DOESNT_NEED_LIQUIDATION");
+        TellerCommon.LoanLiquidationInfo memory liquidationInfo = _getLiquidationInfo(
+            loanID
+        );
+        require(liquidationInfo.liquidable, "DOESNT_NEED_LIQUIDATION");
 
         loans[loanID].status = TellerCommon.LoanStatus.Closed;
         loans[loanID].liquidated = true;
 
-        uint256 collateral = loans[loanID].collateral;
-        uint256 collateralInTokens = _convertWeiToToken(collateral);
-
         // the caller gets the collateral from the loan
-        _payOutLoan(loanID, collateral, msg.sender);
+        _payOutLoan(loanID, liquidationInfo.collateral, msg.sender);
 
-        uint256 liquidateEthPrice = settings().getPlatformSettingValue(
-            settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
-        );
-        uint256 tokenPayment = collateralInTokens.mul(liquidateEthPrice).div(
-            TEN_THOUSAND
-        );
         // the liquidator pays x% of the collateral price
-        lendingPool.liquidationPayment(tokenPayment, msg.sender);
+        lendingPool.liquidationPayment(liquidationInfo.amountToLiquidate, msg.sender);
 
         emit LoanLiquidated(
             loanID,
             loans[loanID].loanTerms.borrower,
             msg.sender,
-            collateral,
-            tokenPayment
+            liquidationInfo.collateral,
+            liquidationInfo.amountToLiquidate
         );
+    }
+
+    /**
+        @notice It getss the current liquidation info for a given loan id.
+        @param loanID loan id to get the info.
+        @return liquidationInfo get current liquidation info for the given loan id.
+     */
+    function getLiquidationInfo(uint256 loanID)
+        external
+        view
+        returns (TellerCommon.LoanLiquidationInfo memory liquidationInfo)
+    {
+        return _getLiquidationInfo(loanID);
     }
 
     /**
@@ -592,7 +598,15 @@ contract LoansBase is LoansInterface, Base {
         view
         returns (uint256)
     {
-        uint256 loanAmount = getTotalOwed(loanID);
+        TellerCommon.LoanStatus currentStatus = loans[loanID].status;
+        uint256 loanAmount;
+        if (currentStatus == TellerCommon.LoanStatus.TermsSet) {
+            loanAmount = loans[loanID].loanTerms.maxLoanAmount;
+        } else if (currentStatus == TellerCommon.LoanStatus.Active) {
+            loanAmount = getTotalOwed(loanID);
+        } else {
+            return 0;
+        }
         uint256 collateralRatio = loans[loanID].loanTerms.collateralRatio;
         return loanAmount.mul(collateralRatio).div(TEN_THOUSAND);
     }
@@ -632,10 +646,33 @@ contract LoansBase is LoansInterface, Base {
     }
 
     /**
+        @notice It getss the current liquidation info for a given loan id.
+        @param loanID loan id to get the info.
+        @return liquidationInfo get current liquidation info for the given loan id.
+     */
+    function _getLiquidationInfo(uint256 loanID)
+        internal
+        view
+        returns (TellerCommon.LoanLiquidationInfo memory liquidationInfo)
+    {
+        uint256 collateral = loans[loanID].collateral;
+        uint256 liquidateEthPrice = settings().getPlatformSettingValue(
+            settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
+        );
+        uint256 collateralInTokens = _convertWeiToToken(collateral);
+        liquidationInfo = TellerCommon.LoanLiquidationInfo({
+            liquidable: canLiquidateLoan(loanID),
+            collateral: collateral,
+            collateralInTokens: collateralInTokens,
+            amountToLiquidate: collateralInTokens.mul(liquidateEthPrice).div(TEN_THOUSAND)
+        });
+    }
+
+    /**
         @notice Returns the current loan ID and increments it by 1
         @return uint256 The current loan ID before incrementing
      */
-    function getAndIncrementLoanID() internal returns (uint256 newLoanID) {
+    function _getAndIncrementLoanID() internal returns (uint256 newLoanID) {
         newLoanID = loanIDCounter;
         loanIDCounter = loanIDCounter.add(1);
     }

@@ -23,13 +23,10 @@ module.exports = {
             const name = 'UniswapSwapped';
             return {
                 name: name,
-                emitted: (from, to, sourceElement, receivedElement, sourceAmount, receivedAmount) => emitted(tx, name, ev => {
-                    assert.equal(ev.from, from);
-                    assert.equal(ev.to, to);
-                    assert.equal(ev.sourceElement, sourceElement);
-                    assert.equal(ev.receivedElement, receivedElement);
+                emitted: (sourceToken, destinationToken, sourceAmount) => emitted(tx, name, ev => {
+                    assert.equal(ev.sourceToken, sourceToken);
+                    assert.equal(ev.destinationToken, destinationToken);
                     assert.equal(ev.sourceAmount, sourceAmount);
-                    assert.equal(ev.receivedAmount, receivedAmount);
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };

@@ -94,7 +94,7 @@ contract ChainlinkPairAggregatorRegistry is
         require(request.quoteToken.isContract(), "QUOTE_TOKEN_MUST_BE_CONTRACT");
         require(
             request.chainlinkAggregatorAddress.isContract(),
-            "BASE_TOKEN_MUST_BE_CONTRACT"
+            "CHAINLINK_AGG_MUST_BE_CONTRACT"
         );
         require(
             _hasPairAggregator(request.baseToken, request.quoteToken),
@@ -217,7 +217,7 @@ contract ChainlinkPairAggregatorRegistry is
         );
         require(
             request.chainlinkAggregatorAddress.isContract(),
-            "BASE_TOKEN_MUST_BE_CONTRACT"
+            "CHAINLINK_AGG_MUST_BE_CONTRACT"
         );
         require(
             !_hasPairAggregator(request.baseToken, request.quoteToken),

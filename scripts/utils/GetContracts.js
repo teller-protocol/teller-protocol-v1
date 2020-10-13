@@ -1,5 +1,6 @@
 const _ = require('lodash');
-const { NULL_ADDRESS } = require('../../test/utils/consts');
+const assert = require('assert');
+const { NULL_ADDRESS, ETH_ADDRESS } = require('../../test/utils/consts');
 
 class GetContracts {
     constructor(artifacts, networkConf) {
@@ -39,6 +40,80 @@ GetContracts.prototype.getDeployed = async function({ keyName, contractName, add
     const artifact = this.artifacts.require(artifactName || name);
     const instance = await artifact.at(address);
     return instance;
+}
+
+GetContracts.prototype.getTokenDeployed = async function({ tokens }, tokenName) {
+    if(tokenName.toLowerCase() === 'eth') {
+        return {
+            decimals: async () => Promise.resolve(18),
+            name: async () => Promise.resolve('ETH'),
+            symbol: async () => Promise.resolve('ETH'),
+            address: async () => Promise.resolve(ETH_ADDRESS),
+            address: ETH_ADDRESS,
+        };
+    }
+    const token = await this.getDeployed(tokens.get(tokenName));
+    return token;
+}
+
+GetContracts.prototype.getPairAggregatorDeployed = async function({ teller, tokens }, tokenName, collTokenName) {
+    const pairAggregatorRegistry = await this.getDeployed(teller.pairAggregatorRegistry());
+    const token = await this.getTokenDeployed({tokens}, tokenName);
+    const collToken = await this.getTokenDeployed({tokens}, collTokenName);
+
+    const pairAggregatorAddress = await pairAggregatorRegistry.getPairAggregator(token.address, collToken.address);
+    assert(pairAggregatorAddress, 'Pair aggregator address is undefined.');
+
+    const PairAggregatorInterface = this.artifacts.require('PairAggregatorInterface');
+    const pairAggregator = await PairAggregatorInterface.at(pairAggregatorAddress);
+    const chainlinkAggregator = await pairAggregator.aggregator();
+    const PairAggregatorMock = this.artifacts.require('PairAggregatorMock');
+    const oracle = await PairAggregatorMock.at(chainlinkAggregator);
+
+    return {
+        pairAggregator,
+        oracle,
+        token,
+        collateralToken: collToken,
+    };
+}
+
+GetContracts.prototype.getAllDeployed = async function({ teller, tokens }, tokenName, collTokenName) {
+    let collateralToken;
+    if(collTokenName.toLowerCase() === 'eth') {
+        collateralToken = {
+            decimals: async () => Promise.resolve(18),
+            name: async () => Promise.resolve('ETH'),
+            symbol: async () => Promise.resolve('ETH'),
+            address: async () => Promise.resolve(ETH_ADDRESS),
+        };
+    } else {
+        collateralToken = await this.getDeployed(tokens.get(collTokenName));
+    }
+    const settings = await this.getDeployed(teller.settings());
+    const token = await this.getDeployed(tokens.get(tokenName));
+    const lendingPool = await this.getDeployed(teller.custom(collTokenName).lendingPool(tokenName));
+    const loans = await this.getDeployed(teller.custom(collTokenName).loans(tokenName));
+    const loanTermsConsensus = await this.getDeployed(teller.custom(collTokenName).loanTermsConsensus(tokenName));
+    const atmGovernance = await this.getDeployed(teller.atmGovernance());
+
+    const oraclePrice = await loans.priceOracle();
+    const PairAggregatorInterface = this.artifacts.require('PairAggregatorInterface');
+    const pairAggregator = await PairAggregatorInterface.at(oraclePrice);
+    const chainlinkAggregator = await pairAggregator.aggregator();
+    const PairAggregatorMock = this.artifacts.require('PairAggregatorMock');
+    const oracle = await PairAggregatorMock.at(chainlinkAggregator);
+    return {
+        settings,
+        token,
+        collateralToken,
+        lendingPool,
+        loans,
+        oracle,
+        pairAggregator,
+        loanTermsConsensus,
+        atmGovernance
+    };
 }
 
 module.exports = GetContracts;

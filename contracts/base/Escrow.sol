@@ -10,6 +10,7 @@ import "./TInitializable.sol";
 import "../interfaces/EscrowInterface.sol";
 import "../interfaces/LoansInterface.sol";
 import "../interfaces/PairAggregatorInterface.sol";
+import "../interfaces/IBaseProxy.sol";
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
@@ -82,9 +83,17 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
             "DAPP_UNSECURED_NOT_ALLOWED"
         );
 
-        (bool success, ) = dappData.location.delegatecall(dappData.data);
+        address _impl = IBaseProxy(dappData.location).implementation();
+        (bool success, ) = _impl.delegatecall(dappData.data);
 
-        require(success, "DAPP_CALL_FAILED");
+        if (success == false) {
+            assembly {
+                let ptr := mload(0x40)
+                let size := returndatasize
+                returndatacopy(ptr, 0, size)
+                revert(ptr, size)
+            }
+        }
     }
 
     /**
@@ -112,12 +121,16 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
         uint256 valueInEth = 0;
 
         for (uint256 i = 0; i < tokens.length; i++) {
-            uint256 tokenEthValue = _valueOfIn(
-                tokens[i],
-                settings().ETH_ADDRESS(),
-                _balanceOf(tokens[i])
-            );
-            valueInEth = valueInEth.add(tokenEthValue);
+            if (tokens[i] == settings().WETH_ADDRESS()) {
+                valueInEth = valueInEth.add(_balanceOf(tokens[i]));
+            } else {
+                uint256 tokenEthValue = _valueOfIn(
+                    tokens[i],
+                    settings().ETH_ADDRESS(),
+                    _balanceOf(tokens[i])
+                );
+                valueInEth = valueInEth.add(tokenEthValue);
+            }
         }
 
         uint256 collateralValue = getLoan().collateral;

@@ -44,7 +44,7 @@ contract('EscrowCallDappTest', function (accounts) {
     _1_not_initialized: [3, true, false, true, true, false, false, false, true, 'CONTRACT_NOT_INITIALIZED'],
     _2_not_owner: [3, true, true, true, true, false, false, false, true, 'Ownable: caller is not the owner'],
     _3_without_dapp_whitelisted: [4, true, true, false, true, true, false, false, true, 'DAPP_NOT_WHITELISTED'],
-    _4_with_invalid_function_signature: [5, true, true, true, true, true, true, true, true, 'DAPP_CALL_FAILED'],
+    _4_with_invalid_function_signature: [5, true, true, true, true, true, true, true, true, null],
     _5_loan_unsecured: [6, false, true, true, true, true, false, false, true, 'DAPP_UNSECURED_NOT_ALLOWED'],
     _5_successful: [6, true, true, true, true, true, false, false, false, null],
   }, function(
@@ -98,7 +98,6 @@ contract('EscrowCallDappTest', function (accounts) {
         assert(result);
       } catch (error) {
         assert(mustFail, error.message);
-        assert(error);
         assert.equal(error.reason, expectedErrorMessage);
       }
     });

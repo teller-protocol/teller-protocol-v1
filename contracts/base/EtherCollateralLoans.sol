@@ -71,7 +71,7 @@ contract EtherCollateralLoans is LoansBase {
     {
         require(msg.value == collateralAmount, "INCORRECT_ETH_AMOUNT");
 
-        uint256 loanID = getAndIncrementLoanID();
+        uint256 loanID = _getAndIncrementLoanID();
         (
             uint256 interestRate,
             uint256 collateralRatio,

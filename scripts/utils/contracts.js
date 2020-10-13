@@ -12,7 +12,7 @@ const internalLoans = (collateralToken, tokenName, artifactName = 'Loans') => {
 const internalOracle = (sourceToken, targetToken, artifactName = 'ChainlinkPairAggregator') => {
     return {
         keyName: TELLER_KEY,
-        contractName: `ChainlinkPairAggregator_${sourceToken.toUpperCase()}_${targetToken.toUpperCase()}`,
+        contractName: `${targetToken.toUpperCase()}_ChainlinkPairAggregator_t${sourceToken.toUpperCase()}_Proxy`,
         artifactName,
     };
 };
@@ -120,6 +120,13 @@ module.exports = {
                 contractName: 'Settings_Proxy',
                 artifactName: 'Settings',
             };
+        },
+        escrowDapp: (dappLogicName) => {
+            return {
+                keyName: TELLER_KEY,
+                contractName: `${dappLogicName}_Proxy`,
+                artifactName: `${dappLogicName}`
+            }
         }
     },
     tokens: {
