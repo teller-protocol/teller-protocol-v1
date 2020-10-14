@@ -20,6 +20,7 @@ import "../interfaces/EscrowFactoryInterface.sol";
 import "../interfaces/MarketsStateInterface.sol";
 import "../interfaces/InterestValidatorInterface.sol";
 import "../providers/chainlink/IChainlinkPairAggregatorRegistry.sol";
+import "../providers/compound/CErc20Interface.sol";
 import "../settings/IATMSettings.sol";
 
 /*****************************************************************************************************/
@@ -284,7 +285,11 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         address cTokenAddress,
         uint256 maxLoanAmount
     ) external onlyPauser() isInitialized() {
-        require(assetAddress.isContract() || assetAddress == ETH_ADDRESS, "ASSET_ADDRESS_MUST_BE_CONTRACT");
+        require(cTokenAddress.isContract(), "CTOKEN_MUST_BE_CONTRACT");
+        if (assetAddress != ETH_ADDRESS) {
+            require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
+            require(CErc20Interface(cTokenAddress).underlying() == assetAddress, "UNDERLYING_ADDRESS_NOT_MATCH");
+        }
 
         assetSettings[assetAddress].requireNotExists();
 

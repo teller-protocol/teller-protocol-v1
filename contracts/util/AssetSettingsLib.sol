@@ -35,10 +35,6 @@ library AssetSettingsLib {
         uint256 maxLoanAmount
     ) internal {
         require(maxLoanAmount > 0, "INIT_MAX_AMOUNT_REQUIRED");
-        require(
-            cTokenAddress.isEmpty() || cTokenAddress.isContract(),
-            "CTOKEN_MUST_BE_CONTRACT_OR_EMPTY"
-        );
         self.cTokenAddress = cTokenAddress;
         self.maxLoanAmount = maxLoanAmount;
     }

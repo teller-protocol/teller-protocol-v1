@@ -28,41 +28,33 @@ interface ICompound {
 
     /**
         @notice This event is emitted every time Compound lend is invoked successfully.
-        @param sender the sender of this transaction.
-        @param dappAddress address of the compound app.
+        @param tokenAddress address of the underlying token.
+        @param cTokenAddress compound token address.
         @param amount amount of cTokens to Lend.
-        @param cToken compound token address.
+        @param tokenBalance underlying token balance after Lend.
         @param cTokenBalance cTokens balance after Lend.
-        @param underlyingToken address of the underlying token.
-        @param underlyingBalance underlying token balance after Lend. 
      */
     event CompoundLended(
-        address indexed sender,
-        address indexed dappAddress,
+        address indexed tokenAddress,
+        address indexed cTokenAddress,
         uint256 amount,
-        address indexed cToken,
-        uint256 cTokenBalance,
-        address underlyingToken,
-        uint256 underlyingBalance
+        uint256 tokenBalance,
+        uint256 cTokenBalance
     );
 
     /**
         @notice This event is emitted every time Compound redeem is invoked successfully.
-        @param sender the sender of this transaction.
-        @param dappAddress address of the compound app.
+        @param tokenAddress address of the underlying token.
+        @param cTokenAddress compound token address.
         @param amount amount of cTokens to Redeem.
-        @param cToken compound token address.
+        @param tokenBalance underlying token balance after Redeem.
         @param cTokenBalance cTokens balance after Redeem.
-        @param underlyingToken address of the underlying token.
-        @param underlyingBalance underlying token balance after Redeem. 
      */
     event CompoundRedeemed(
-        address indexed sender,
-        address indexed dappAddress,
+        address indexed tokenAddress,
+        address indexed cTokenAddress,
         uint256 amount,
-        address indexed cToken,
-        uint256 cTokenBalance,
-        address underlyingToken,
-        uint256 underlyingBalance
+        uint256 tokenBalance,
+        uint256 cTokenBalance
     );
 }

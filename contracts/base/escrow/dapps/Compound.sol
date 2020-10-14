@@ -54,7 +54,7 @@ contract Compound is ICompound, BaseEscrowDapp {
 
         uint256 balanceAfterMint = cToken.balanceOf(address(this));
         require(
-            balanceAfterMint >= balanceBeforeMint,
+            balanceAfterMint > balanceBeforeMint,
             "COMPOUND_BALANCE_NOT_INCREASED"
         );
 
@@ -63,13 +63,11 @@ contract Compound is ICompound, BaseEscrowDapp {
 
         uint256 underlyingBalance = _balanceOf(tokenAddress);
         emit CompoundLended(
-            msg.sender,
-            address(this),
-            amount,
-            address(cToken),
-            balanceAfterMint,
             tokenAddress,
-            underlyingBalance
+            address(cToken),
+            amount,
+            underlyingBalance,
+            balanceAfterMint
         );
     }
 
@@ -95,13 +93,11 @@ contract Compound is ICompound, BaseEscrowDapp {
 
         uint256 cTokenBalanceAfterRedeem = cToken.balanceOf(address(this));
         emit CompoundRedeemed(
-            msg.sender,
-            address(this),
-            amount,
-            address(cToken),
-            cTokenBalanceAfterRedeem,
             tokenAddress,
-            balanceAfterRedeem
+            address(cToken),
+            amount,
+            balanceAfterRedeem,
+            cTokenBalanceAfterRedeem
         );
     }
 
@@ -122,11 +118,7 @@ contract Compound is ICompound, BaseEscrowDapp {
         @param tokenAddress The token address to get the cToken for.
         @return cToken instance
      */
-    function _getCToken(address tokenAddress) internal view returns (CErc20Interface cToken) {
-        address cTokenAddress = settings().getCTokenAddress(tokenAddress);
-        require(cTokenAddress.isContract(), "CTOKEN_ADDRESS_MUST_BE_CONTRACT");
-
-        cToken = CErc20Interface(cTokenAddress);
-        require(cToken.underlying() == tokenAddress, "UNDERLYING_ADDRESS_NOT_MATCH");
+    function _getCToken(address tokenAddress) internal view returns (CErc20Interface) {
+        return CErc20Interface(settings().getCTokenAddress(tokenAddress));
     }
 }

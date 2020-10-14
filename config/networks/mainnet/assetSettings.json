@@ -9,6 +9,6 @@
   },
   "ETH": {
     "cToken": "CETH",
-    "maxLoanAmount": 0
+    "maxLoanAmount": 0.000000000000000001
   }
 }
