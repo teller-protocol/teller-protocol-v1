@@ -11,6 +11,7 @@ module.exports = {
     ChainlinkPairAggregatorRegistry: 'ChainlinkPairAggregatorRegistry',
     Settings: 'Settings',
     LogicVersionsRegistry: 'LogicVersionsRegistry',
+    TTokenRegistry: 'TTokenRegistry',
     MarketsState: 'MarketsState',
     ATMFactory: 'ATMFactory',
     ATMSettings: 'ATMSettings',

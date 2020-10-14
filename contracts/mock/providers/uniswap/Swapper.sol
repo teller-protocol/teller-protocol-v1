@@ -6,7 +6,7 @@ import "../../../providers/weth/IWETH.sol";
 import "../../../base/escrow/dapps/Uniswap.sol";
 
 /**
-    @notice This mock is used to expose a payable fallback function on tests.f
+    @notice This mock is used to expose a payable fallback function on tests.
  */
 contract Swapper is Uniswap {
     function swapForExact(

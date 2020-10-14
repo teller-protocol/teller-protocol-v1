@@ -15,8 +15,9 @@ module.exports = async (testContext) => {
     tokenName,
   } = testContext;
   console.log(
-    "Scenario: Loans#4 - Error taking out loan and take out too much collateral."
+    "Scenario: Loans#12 - Liquidate loan error. Loan doesn't require liquidation."
   );
+  
   const allContracts = await getContracts.getAllDeployed(
     {teller, tokens},
     tokenName,
@@ -29,25 +30,24 @@ module.exports = async (testContext) => {
   });
 
   const depositFundsAmount = toDecimals(500, tokenInfo.decimals);
-  const maxAmountRequestLoanTerms = toDecimals(100, tokenInfo.decimals);
+  const maxAmountRequestLoanTerms = toDecimals(200, tokenInfo.decimals);
   const amountTakeOut = toDecimals(100, tokenInfo.decimals);
+  const amountLiquidateLoan = toDecimals(100, tokenInfo.decimals);
   let initialOraclePrice;
   let collateralAmountDepositCollateral;
-  let collateralAmountWithdrawCollateral;
   if (collTokenName.toLowerCase() === "eth") {
     initialOraclePrice = toDecimals("0.00295835", 18);
-    collateralAmountDepositCollateral = toDecimals(0.25, collateralTokenInfo.decimals);
-    collateralAmountWithdrawCollateral = toDecimals(0.1,collateralTokenInfo.decimals);
+    collateralAmountDepositCollateral = toDecimals(0.18, collateralTokenInfo.decimals);
   }
   if (collTokenName.toLowerCase() === "link") {
     initialOraclePrice = toDecimals("0.100704", 8);
     collateralAmountDepositCollateral = toDecimals(6.1, collateralTokenInfo.decimals);
-    collateralAmountWithdrawCollateral = toDecimals(0.2, collateralTokenInfo.decimals);
   }
   const durationInDays = 5;
   const signers = await accounts.getAllAt(12, 13);
   const borrowerTxConfig = await accounts.getTxConfigAt(1);
   const lenderTxConfig = await accounts.getTxConfigAt(0);
+  const liquidatorTxConfig = await accounts.getTxConfigAt(2);
 
   const loan = await helperActions.takeOutNewLoan(
     allContracts,
@@ -77,16 +77,13 @@ module.exports = async (testContext) => {
     }
   );
 
-  await loansActions.withdrawCollateral(
+  await loansActions.liquidateLoan(
     allContracts,
-    {
-      testContext,
-      txConfig: borrowerTxConfig,
-    },
+    {testContext, txConfig: liquidatorTxConfig},
     {
       loanId: loan.id,
-      amount: collateralAmountWithdrawCollateral,
-      expectedErrorMessage: 'COLLATERAL_AMOUNT_TOO_HIGH'
+      amount: amountLiquidateLoan,
+      expectedErrorMessage: 'DOESNT_NEED_LIQUIDATION'
     }
   );
 };

@@ -20,6 +20,7 @@ const ERC20Mintable = artifacts.require('@openzeppelin/contracts-ethereum-packag
 // Official Smart Contracts
 const TDAI = artifacts.require("./base/TDAI.sol");
 const TUSDC = artifacts.require("./base/TUSDC.sol");
+const TTokenRegistry = artifacts.require("./base/TTokenRegistry.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
 const MarketsState = artifacts.require("./base/MarketsState.sol");
@@ -92,6 +93,7 @@ module.exports = async function(deployer, network, accounts) {
       { Contract: ATMSettings, name: logicNames.ATMSettings },
       { Contract: ATMFactory, name: logicNames.ATMFactory },
       { Contract: MarketFactory, name: logicNames.MarketFactory },
+      { Contract: TTokenRegistry, name : logicNames.TTokenRegistry },
     ];
 
     const deployedLogicContractsMap = await deployLogicContracts(contracts, { deployerApp, txConfig, web3 });
@@ -121,6 +123,7 @@ module.exports = async function(deployer, network, accounts) {
     const atmSettingsInstance = await deployInitializableDynamicProxy(logicNames.ATMSettings)
     const atmFactoryInstance = await deployInitializableDynamicProxy(logicNames.ATMFactory)
     const marketFactoryInstance = await deployInitializableDynamicProxy(logicNames.MarketFactory)
+    const tTokenRegistryInstance = await deployInitializableDynamicProxy(logicNames.TTokenRegistry)
 
     console.log(`Deploying LogicVersionsRegistry...`)
     const logicVersionsRegistryLogic = await deployerApp.deployWith('LogicVersionsRegistry', LogicVersionsRegistry, 'teller', txConfig)
@@ -134,7 +137,7 @@ module.exports = async function(deployer, network, accounts) {
     await logicVersionsRegistryInstance.initialize(settingsInstance.address)
     console.log(`LogicVersionsRegistry logic: ${logicVersionsRegistryLogic.address}`)
     console.log(`LogicVersionsRegistry_Proxy: ${logicVersionsRegistryProxy.address}`)
-  
+
     console.log(`Settings: Initializing...`);
     await settingsInstance.initialize(
       escrowFactoryInstance.address,
@@ -206,6 +209,11 @@ module.exports = async function(deployer, network, accounts) {
   
     await deployerApp.deploys([TDAI, TUSDC], txConfig);
     console.log(`Deployed tokens: TDAI [${TDAI.address}] TUSDC [${TUSDC.address}] `);
+    console.log(`Registering TDAI and TUSDC in TTokenRegistry`);
+    await tTokenRegistryInstance.registerTToken(TDAI.address);
+    await tTokenRegistryInstance.registerTToken(TUSDC.address);
+    console.log(`TDAI [${TDAI.address}] and TUSDC [${TUSDC.address}] added to TTokenRegistry`);
+    console.log(`Creating Markets...`);
     const marketDefinitions = [
       { tTokenAddress: TDAI.address, borrowedTokenName: 'DAI', collateralTokenName: 'ETH' },
       { tTokenAddress: TDAI.address, borrowedTokenName: 'DAI', collateralTokenName: 'LINK' },

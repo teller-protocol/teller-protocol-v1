@@ -5,7 +5,7 @@
     "responseDecimals": 18,
     "baseTokenName": "USDC",
     "quoteTokenName": "ETH",
-    "address": "0xcf8af775ee9300a9fD2e3f19330f592642655dC7"
+    "address": "0x27df411d32D20D1aaA49A854EF0eE44928Bb4546"
   },
   "DAI_ETH": {
     "inversed": false,
@@ -13,7 +13,7 @@
     "responseDecimals": 18,
     "baseTokenName": "DAI",
     "quoteTokenName": "ETH",
-    "address": "0x156C73fec8f95ba01b8110F25D37d86f32Eb823b"
+    "address": "0x656b4b93e445f03C29bb6BefE1148f94e43Fd4ef"
   },
   "LINK_DAI": {
     "inversed": true,
@@ -21,7 +21,7 @@
     "responseDecimals": 8,
     "baseTokenName": "LINK",
     "quoteTokenName": "DAI",
-    "address": "0x9Dd9de8F4993f022F10BEab3466Ea913F46D17aA"
+    "address": "0x63B46fDdD6Ddf0d785ECa5Bad5D53ec8210D9Bf3"
   },
   "LINK_USDC": {
     "inversed": true,
@@ -29,7 +29,7 @@
     "responseDecimals": 8,
     "baseTokenName": "LINK",
     "quoteTokenName": "USDC",
-    "address": "0x8cf81F00a4249563111d615cb59C935f8e1C6Cce"
+    "address": "0xB04059bF64F18099d2A34390Ad068BceD157C642"
   },
   "LINK_ETH": {
     "inversed": true,
@@ -37,6 +37,6 @@
     "responseDecimals": 18,
     "baseTokenName": "LINK",
     "quoteTokenName": "ETH",
-    "address": "0x6c3FCC05b84A8e9E12Da2bC66f4cf218A9CE3486"
+    "address": "0xce75397470d4f243C73F25E4F51e7f073FCF4e6b"
   }
 }
