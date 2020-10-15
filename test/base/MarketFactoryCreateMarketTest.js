@@ -5,6 +5,7 @@ const { createTestSettingsInstance } = require("../utils/settings-helper");
 const { marketFactory } = require('../utils/events');
 const ChainlinkPairAggregatorRegistryEncoder = require('../utils/encoders/ChainlinkPairAggregatorRegistryEncoder');
 const LogicVersionsRegistryEncoder = require('../utils/encoders/LogicVersionsRegistryEncoder');
+const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -17,10 +18,13 @@ contract('MarketFactoryCreateMarketTest', function (accounts) {
     const owner = accounts[0];
     const chainlinkPairAggregatorRegistryEncoder = new ChainlinkPairAggregatorRegistryEncoder(web3);
     const logicVersionsRegistryEncoder = new LogicVersionsRegistryEncoder(web3);
+    const cTokenEncoder = new CTokenInterfaceEncoder(web3)
+
     let instance;
     let settingsInstance;
     let versionsRegistryInstance;
     let pairAggregatorRegistryInstance;
+    let mocks;
 
     
     beforeEach('Setup for each test', async () => {
@@ -95,6 +99,13 @@ contract('MarketFactoryCreateMarketTest', function (accounts) {
             const collateralTokenAddress = collateralTokenIndex === 100 ? ETH_ADDRESS : getInstance(mocks, collateralTokenIndex, 4);
             const encodeGetPairAggregatorResponse = getInstance(mocks, getPairAggregatorResponseIndex, 5);
             const cTokenAddressResponse = getInstance(mocks, cTokenAddressResponseIndex, 5);
+
+            const cTokenInstance = await Mock.at(cTokenAddressResponse)
+            await cTokenInstance.givenMethodReturnAddress(
+              cTokenEncoder.encodeUnderlying(),
+              borrowedTokenAddress
+            )
+
             await versionsRegistryInstance.givenMethodReturnBool(
                 logicVersionsRegistryEncoder.encodeHasLogicVersion(),
                 true
