@@ -1,9 +1,16 @@
+const { encode } = require('../utils/consts');
 
 const createAssetSettings = async (MockReference, instance, sender, previousAssetsInfo) => {
     const assetsInfo = [];
     for (const previousAssetInfo of previousAssetsInfo) {
         const previousAsset = await MockReference.new();
         const previousCToken = await MockReference.new();
+
+        await previousCToken.givenMethodReturnAddress(
+            encode(web3, 'underlying()'),
+            previousAsset.address
+        )
+
         await instance.createAssetSettings(
             previousAsset.address,
             previousCToken.address,

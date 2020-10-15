@@ -165,8 +165,7 @@ contract('SettingsCreateAssetSettingsTest', function (accounts) {
                 assert.equal(afterAssets[afterAssets.length - 1], assetAddress);
             } catch (error) {
                 // Assertions
-                assert(mustFail);
-                assert(error);
+                assert(mustFail, error.message);
                 assert.equal(error.reason, expectedErrorMessage);
             }
         });
