@@ -399,6 +399,11 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         return assetSettings[assetAddress];
     }
 
+    /**
+        @notice Get the cTokenAddress defined in the asset settings for a given asset address.
+        @param assetAddress asset address used to get the current settings.
+        @return the cTokenAddress.
+     */
     function getCTokenAddress(address assetAddress) external view returns (address) {
         return assetSettings[assetAddress].cTokenAddress;
     }

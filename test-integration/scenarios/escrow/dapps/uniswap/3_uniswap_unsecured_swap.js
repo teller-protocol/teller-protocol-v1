@@ -14,8 +14,7 @@ module.exports = async (testContext) => {
     collTokenName,
     tokenName,
   } = testContext;
-  // TODO Add scenario title (from spreadsheet).
-  console.log("Scenario: Dapp#1 - .");
+  console.log("Scenario: Uniswap#3 - (Unsecured) Error swap");
   const allContracts = await getContracts.getAllDeployed(
     {teller, tokens},
     tokenName,

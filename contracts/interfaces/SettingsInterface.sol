@@ -254,6 +254,11 @@ interface SettingsInterface {
         view
         returns (AssetSettingsLib.AssetSettings memory);
 
+    /**
+        @notice Get the cTokenAddress defined in the asset settings for a given asset address.
+        @param assetAddress asset address used to get the current settings.
+        @return the cTokenAddress.
+     */
     function getCTokenAddress(address assetAddress)
         external
         view

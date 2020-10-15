@@ -16,8 +16,7 @@ module.exports = async (testContext) => {
     collTokenName,
     tokenName,
   } = testContext;
-  // TODO Add scenario title (from spreadsheet).
-  console.log("Scenario: Dapp#1 - .");
+  console.log("Scenario: Compound#2 - Redeem tokens");
   const allContracts = await getContracts.getAllDeployed(
     {teller, tokens},
     tokenName,

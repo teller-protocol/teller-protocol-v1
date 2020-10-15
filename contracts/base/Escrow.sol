@@ -2,7 +2,6 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
-import "./BaseUpgradeable.sol";
 import "./BaseEscrowDapp.sol";
 import "./TInitializable.sol";
 

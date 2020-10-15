@@ -14,8 +14,7 @@ module.exports = async (testContext) => {
     collTokenName,
     tokenName
   } = testContext;
-  // TODO Add scenario title (from spreadsheet).
-  console.log("Scenario: Escrow#1 - .");
+  console.log("Scenario: Escrow#2 - Error repaying loan as not borrower");
 
   const allContracts = await getContracts.getAllDeployed(
     { teller, tokens },
