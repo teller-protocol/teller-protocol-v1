@@ -30,7 +30,7 @@ interface ICompound {
         @notice This event is emitted every time Compound lend is invoked successfully.
         @param tokenAddress address of the underlying token.
         @param cTokenAddress compound token address.
-        @param amount amount of cTokens to Lend.
+        @param amount amount of tokens to Lend.
         @param tokenBalance underlying token balance after Lend.
         @param cTokenBalance cTokens balance after Lend.
      */
@@ -46,7 +46,7 @@ interface ICompound {
         @notice This event is emitted every time Compound redeem is invoked successfully.
         @param tokenAddress address of the underlying token.
         @param cTokenAddress compound token address.
-        @param amount amount of cTokens to Redeem.
+        @param amount amount of tokens to Redeem.
         @param tokenBalance underlying token balance after Redeem.
         @param cTokenBalance cTokens balance after Redeem.
      */

@@ -85,8 +85,8 @@ module.exports = async (testContext) => {
     { amount: borrowedAmount }
   )
 
-  const tokenAmount = new BigNumber(borrowedAmount).dividedBy(2)
+  const tokenAmount = new BigNumber(borrowedAmount).multipliedBy(2)
   await escrowActions.dapp.compound.redeem(allContracts, context,
-    { amount: tokenAmount.toString() }
+    { amount: tokenAmount.toString(), shouldFail: true, expectedRevertReason: "COMPOUND_INSUFFICIENT_BALANCE" }
   )
 };

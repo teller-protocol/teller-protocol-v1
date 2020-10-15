@@ -40,18 +40,37 @@ contract CERC20Mock is ERC20Mock {
         return NO_ERROR;
     }
 
-    function redeem(uint256 redeemTokens) external returns (uint256) {
-        underlying;
-        redeemTokens;
-        _mockChange();
+    function redeem(uint256 redeemAmount) external returns (uint256) {
+        if (SIMULATE_COMPOUND_REDEEM_UNDERLYING_ERROR == redeemAmount) {
+            return NO_ERROR;
+        }
+        if (balanceOf(msg.sender) < redeemAmount) {
+            return 13;
+        }
+
+        uint256 tokenAmount = _getTokensAmount(redeemAmount);
+        require(super.transfer(msg.sender, tokenAmount), "UNDERLYING_TRANSFER_FAILED");
+        super.burn(redeemAmount);
+        require(
+            ((ERC20Mock(address(underlying))).mint(msg.sender, redeemAmount)),
+            "UNDERLYING_MINT_FAILED"
+        );
+        if (SIMULATE_COMPOUND_REDEEM_UNDERLYING_RETURN_ERROR == redeemAmount) {
+            return RETURN_ERROR;
+        }
         return NO_ERROR;
     }
 
     // https://compound.finance/docs/ctokens#redeem-underlying
+    // TODO: this logic needs to taken the amount passed in and transfer that amount of the underlying asset, then convert it to a ctoken amount to burn.
     function redeemUnderlying(uint256 redeemAmount) external returns (uint256) {
         if (SIMULATE_COMPOUND_REDEEM_UNDERLYING_ERROR == redeemAmount) {
-            redeemAmount = 1;
+            return NO_ERROR;
         }
+        if (balanceOfUnderlying(msg.sender) < redeemAmount) {
+            return 13;
+        }
+
         uint256 tokenAmount = _getTokensAmount(redeemAmount);
         require(super.transfer(msg.sender, tokenAmount), "UNDERLYING_TRANSFER_FAILED");
         super.burn(redeemAmount);
@@ -131,7 +150,7 @@ contract CERC20Mock is ERC20Mock {
         return block.number == 0 ? 0 : block.number / multiplier;
     }
 
-    function balanceOfUnderlying(address account) external view returns (uint256) {
+    function balanceOfUnderlying(address account) public view returns (uint256) {
         return balanceOf(account);
     }
 }

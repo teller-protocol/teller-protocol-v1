@@ -1,9 +1,9 @@
 // JS Libraries
 const { withData } = require("leche");
-const { t, DUMMY_ADDRESS } = require("../../../utils/consts");
-const { compound } = require('../../../utils/events');
 const { assert } = require("chai");
 
+const { t } = require("../../../utils/consts");
+const { compound } = require('../../../utils/events');
 const { createTestSettingsInstance } = require('../../../utils/settings-helper');
 
 // Mock contracts
@@ -53,10 +53,18 @@ contract("CompoundLendTest", function(accounts) {
         // Invocation
         const result = await instance.lend(dai.address, amount);
 
+        // Validations
+        const tokens = await instance.getTokens();
+        assert(tokens.includes(cDai.address), "Compound token not added to the tokens list")
+        if (amount === balance) {
+          assert(!tokens.includes(dai.address), "Token still in the tokens list")
+        } else {
+          assert(tokens.includes(dai.address), "Token not added to the tokens list")
+        }
+
         const cTokenBalance = await cDai.balanceOf(instance.address)
         const tokenBalance = await dai.balanceOf(instance.address);
 
-        // Validating events emmited correctly
         assert(!mustFail, "It should have failed because data is invalid.");
         compound
           .compoundLended(result)

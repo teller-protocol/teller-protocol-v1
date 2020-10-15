@@ -193,35 +193,43 @@ const compoundLend = async (
 const compoundRedeem = async (
   { escrow, token, cToken },
   { txConfig, testContext },
-  { amount }
+  { amount, shouldFail = false, expectedRevertReason }
 ) => {
   const tokenBalanceBefore = (await token.balanceOf(escrow.address)).toString();
   const cTokenBalanceBefore = (await cToken.balanceOf(escrow.address)).toString();
 
   const args = [ token.address, amount ];
-  const redeemResult = await callDapp(
+  const fn = callDapp(
     { escrow },
     { txConfig, testContext },
     { dappName: logicNames.Compound, fnName: "redeem", args }
   );
 
-  await tokensAssertions.balanceLt(
-    { token: cToken },
-    { testContext },
-    { address: escrow.address, maxBalance: cTokenBalanceBefore }
-  );
-  await tokensAssertions.balanceGt(
-    { token },
-    { testContext },
-    { address: escrow.address, minBalance: tokenBalanceBefore }
-  );
+  if (shouldFail) {
+    try {
+      await assert.rejects(fn, "Expected redeem to fail");
+    } catch (error) {
+      assert.strictEqual(error.reason, expectedRevertReason, error.message);
+    }
+  } else {
+    await assert.doesNotReject(fn, "Expected redeem to be successful");
 
-  // TODO: get token instances to fetch balances
-  // compoundEvents
-  //   .compoundRedeemed(redeemResult)
-  //   .emitted(txConfig.from, escrow.address, amount, cTokenAddress, cTokenBalance, underlyingTokenAddress, underlyingTokenBalance);
+    await tokensAssertions.balanceLt(
+      { token: cToken },
+      { testContext },
+      { address: escrow.address, maxBalance: cTokenBalanceBefore }
+    );
+    await tokensAssertions.balanceIs(
+      { token },
+      { testContext },
+      { address: escrow.address, expectedBalance: new BigNumber(tokenBalanceBefore).plus(amount).toString() }
+    );
 
-  return redeemResult;
+    // TODO: get token instances to fetch balances
+    // compoundEvents
+    //   .compoundRedeemed(redeemResult)
+    //   .emitted(txConfig.from, escrow.address, amount, cTokenAddress, cTokenBalance, underlyingTokenAddress, underlyingTokenBalance);
+  }
 };
 
 /**

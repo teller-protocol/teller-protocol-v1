@@ -3,6 +3,7 @@ pragma experimental ABIEncoderV2;
 
 // External Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Common
@@ -47,27 +48,27 @@ contract Compound is ICompound, BaseEscrowDapp {
         require(_balanceOf(tokenAddress) >= amount, "COMPOUND_INSUFFICIENT_UNDERLYING");
 
         CErc20Interface cToken = _getCToken(tokenAddress);
-        uint256 balanceBeforeMint = cToken.balanceOf(address(this));
+        uint256 cTokenBalanceBeforeLend = cToken.balanceOf(address(this));
         IERC20(tokenAddress).approve(address(cToken), amount);
         uint256 result = cToken.mint(amount);
         require(result == 0, "COMPOUND_DEPOSIT_ERROR");
 
-        uint256 balanceAfterMint = cToken.balanceOf(address(this));
+        uint256 cTokenBalanceAfterLend = cToken.balanceOf(address(this));
         require(
-            balanceAfterMint > balanceBeforeMint,
+            cTokenBalanceAfterLend > cTokenBalanceBeforeLend,
             "COMPOUND_BALANCE_NOT_INCREASED"
         );
 
         _tokenUpdated(address(cToken));
         _tokenUpdated(tokenAddress);
 
-        uint256 underlyingBalance = _balanceOf(tokenAddress);
+        uint256 tokenBalanceAfterLend = _balanceOf(tokenAddress);
         emit CompoundLended(
             tokenAddress,
             address(cToken),
             amount,
-            underlyingBalance,
-            balanceAfterMint
+            tokenBalanceAfterLend,
+            cTokenBalanceAfterLend
         );
     }
 
@@ -78,15 +79,33 @@ contract Compound is ICompound, BaseEscrowDapp {
     */
     function redeem(address tokenAddress, uint256 amount) public onlyOwner() {
         CErc20Interface cToken = _getCToken(tokenAddress);
-        uint256 balanceBeforeRedeem = _balanceOf(tokenAddress);
-        uint256 result = cToken.redeem(amount);
+//        amount = amount * (10**18) / cToken.exchangeRateCurrent();
+        _redeem(cToken, amount, true);
+    }
+
+    /**
+        @notice This function redeems complete token balance.
+        @param tokenAddress address of the token.
+    */
+    function redeemAll(address tokenAddress) public onlyOwner() {
+        CErc20Interface cToken = _getCToken(tokenAddress);
+        _redeem(cToken, cToken.balanceOf(address(this)), false);
+    }
+
+    /* Internal Functions */
+
+    function _redeem(CErc20Interface cToken, uint256 amount, bool isUnderlying) internal {
+        address tokenAddress = cToken.underlying();
+        uint256 tokenBalanceBeforeRedeem = _balanceOf(tokenAddress);
+        uint256 result = isUnderlying ? cToken.redeemUnderlying(amount) : cToken.redeem(amount);
+        require(result != 13, "COMPOUND_INSUFFICIENT_BALANCE");
         require(result == 0, "COMPOUND_WITHDRAWAL_ERROR");
 
-        uint256 balanceAfterRedeem = _balanceOf(tokenAddress);
-        require(
-            balanceAfterRedeem >= balanceBeforeRedeem,
-            "COMPOUND_BALANCE_NOT_INCREASED"
-        );
+        uint256 tokenBalanceAfterRedeem = _balanceOf(tokenAddress);
+        bool afterRedeemBalanceCheck = isUnderlying
+            ? tokenBalanceAfterRedeem == tokenBalanceBeforeRedeem + amount
+            : tokenBalanceAfterRedeem > tokenBalanceBeforeRedeem;
+        require(afterRedeemBalanceCheck, "COMPOUND_BALANCE_NOT_INCREASED");
 
         _tokenUpdated(address(cToken));
         _tokenUpdated(tokenAddress);
@@ -96,21 +115,10 @@ contract Compound is ICompound, BaseEscrowDapp {
             tokenAddress,
             address(cToken),
             amount,
-            balanceAfterRedeem,
+            tokenBalanceAfterRedeem,
             cTokenBalanceAfterRedeem
         );
     }
-
-    /**
-        @notice This function redeems complete token balance.
-        @param tokenAddress address of the token.
-    */
-    function redeemAll(address tokenAddress) public onlyOwner() {
-        uint256 amount = _balanceOf(settings().getCTokenAddress(tokenAddress));
-        redeem(tokenAddress, amount);
-    }
-
-    /* Internal Functions */
 
     /**
         @notice Grabs the cToken address for an token from the asset settings.

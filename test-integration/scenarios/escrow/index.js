@@ -7,6 +7,7 @@ const _5_escrow_error_claim_tokens_as_not_borrower_loan_not_liquidated = require
 const _1_compound_lend_token = require('./dapps/compound/1_compound_lend_token')
 const _2_compound_redeem_token = require('./dapps/compound/2_compound_redeem_token')
 const _3_compound_redeem_all_token = require('./dapps/compound/3_compound_redeem_all_token')
+const _4_compound_redeem_token_insufficient_balance = require('./dapps/compound/4_compound_redeem_token_insufficient_balance')
 
 const _1_uniswap_secured_swap_token_for_token = require('./dapps/uniswap/1_uniswap_secured_swap_token_for_token')
 const _2_uniswap_secured_swap_token_for_token_gt_balance = require('./dapps/uniswap/2_uniswap_secured_swap_token_for_token_gt_balance')
@@ -24,6 +25,7 @@ const compound = {
   _1_compound_lend_token,
   _2_compound_redeem_token,
   _3_compound_redeem_all_token,
+  _4_compound_redeem_token_insufficient_balance,
 }
 
 const uniswap = {
