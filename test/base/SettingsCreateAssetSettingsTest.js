@@ -1,9 +1,10 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, NULL_ADDRESS, toDecimals } = require('../utils/consts');
+const { t, NULL_ADDRESS, toDecimals, encode } = require('../utils/consts');
 const { settings } = require('../utils/events');
 const { createAssetSettings } = require('../utils/asset-settings-helper');
 const { createTestSettingsInstance } = require('../utils/settings-helper');
+const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -12,6 +13,8 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 
 contract('SettingsCreateAssetSettingsTest', function (accounts) {
+    const cTokenEncoder = new CTokenInterfaceEncoder(web3)
+
     let owner = accounts[0];
     let assetInstance;
     let cTokenInstance;
@@ -19,6 +22,10 @@ contract('SettingsCreateAssetSettingsTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         assetInstance = await Mock.new();
         cTokenInstance = await Mock.new();
+        await cTokenInstance.givenMethodReturnAddress(
+          cTokenEncoder.encodeUnderlying(),
+          assetInstance.address
+        )
     });
 
     const getContractAddress = (addressIndex, defaultInstance) => {

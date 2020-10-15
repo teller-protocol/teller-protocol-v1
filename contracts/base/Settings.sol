@@ -285,6 +285,8 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         address cTokenAddress,
         uint256 maxLoanAmount
     ) external onlyPauser() isInitialized() {
+        assetSettings[assetAddress].requireNotExists();
+
         if (assetAddress != ETH_ADDRESS) {
             require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
         }
@@ -292,8 +294,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
             require(cTokenAddress.isContract(), "CTOKEN_MUST_BE_CONTRACT_OR_EMPTY");
             require(CErc20Interface(cTokenAddress).underlying() == assetAddress, "UNDERLYING_ADDRESS_NOT_MATCH");
         }
-
-        assetSettings[assetAddress].requireNotExists();
 
         assetSettings[assetAddress].initialize(cTokenAddress, maxLoanAmount);
 

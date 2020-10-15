@@ -1,13 +1,15 @@
-const { encode } = require('../utils/consts');
+const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
 
 const createAssetSettings = async (MockReference, instance, sender, previousAssetsInfo) => {
+    const cTokenEncoder = new CTokenInterfaceEncoder(web3)
+
     const assetsInfo = [];
     for (const previousAssetInfo of previousAssetsInfo) {
         const previousAsset = await MockReference.new();
         const previousCToken = await MockReference.new();
 
         await previousCToken.givenMethodReturnAddress(
-            encode(web3, 'underlying()'),
+            cTokenEncoder.encodeUnderlying(),
             previousAsset.address
         )
 

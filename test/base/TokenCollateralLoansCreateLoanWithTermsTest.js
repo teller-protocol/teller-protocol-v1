@@ -18,6 +18,7 @@ const Timer = require('../../scripts/utils/Timer');
 const LoanTermsConsensusEncoder = require('../utils/encoders/LoanTermsConsensusEncoder');
 const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
+const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -59,6 +60,8 @@ const createTermsSetExpectedLoan = (
 contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
     const IATmSettingsEncoder = new IATMSettingsEncoder(web3);
+    const cTokenEncoder = new CTokenInterfaceEncoder(web3)
+
     let loanTermsConsensusEncoder;
     let collateralToken;
     let lendingTokenInstance;
@@ -154,6 +157,10 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
             const maxLoanAmount = getAverage(responseOne.maxLoanAmount, responseTwo.maxLoanAmount);
 
             const cTokenInstance = await Mock.new();
+            await cTokenInstance.givenMethodReturnAddress(
+              cTokenEncoder.encodeUnderlying(),
+              lendingTokenInstance.address
+            )
             await settingsInstance.createAssetSettings(
                 lendingTokenInstance.address,
                 cTokenInstance.address,

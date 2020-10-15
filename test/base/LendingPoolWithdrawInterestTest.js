@@ -6,6 +6,7 @@ const BurnableInterfaceEncoder = require('../utils/encoders/BurnableInterfaceEnc
 const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
 const InterestValidatorInterfaceEncoder = require('../utils/encoders/InterestValidatorInterfaceEncoder');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -19,6 +20,8 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
     const interestValidatorInterfaceEncoder = new InterestValidatorInterfaceEncoder(web3);
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const cTokenEncoder = new CTokenInterfaceEncoder(web3)
+
     let instance;
     let tTokenInstance;
     let lendingTokenInstance;
@@ -40,7 +43,12 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
         lendersInstance = await Lenders.new();
         marketsInstance = await Mock.new();
         interestValidatorInstance = await Mock.new();
-        
+
+        await cTokenInstance.givenMethodReturnAddress(
+          cTokenEncoder.encodeUnderlying(),
+          lendingTokenInstance.address
+        )
+
         instance = await LendingPool.new();
         await lendersInstance.initialize(
             tTokenInstance.address,
