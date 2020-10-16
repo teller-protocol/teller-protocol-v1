@@ -7,8 +7,6 @@ pragma experimental ABIEncoderV2;
     @author develop@teller.finance
  */
 interface ATMLiquidityMiningInterface {
-
-
     /**
         @notice Event emitted every time a user stakes tTokens on this ATM Liquidity Mining program.
         @param sender sender of this transaction.
@@ -44,7 +42,7 @@ interface ATMLiquidityMiningInterface {
         uint256 tTokenStakedBalance,
         uint256 accruedTLRBalance
     );
-    
+
     /**
         @notice Event emitted every time a user withdraws TLR Tokens on this ATM Liquidity Mining program.
         @param sender sender of this transaction.
@@ -66,17 +64,14 @@ interface ATMLiquidityMiningInterface {
         @param sender address of the transaction sender.
         @param addressAdded address newly added to the blacklist.
      */
-    event NotAllowedAddressAdded (
-        address indexed sender,
-        address indexed addressAdded
-    );
-    
-     /**
+    event NotAllowedAddressAdded(address indexed sender, address indexed addressAdded);
+
+    /**
         @notice Event emitted when an address was removed from the blacklist.
         @param sender address of the transaction sender.
         @param addressRemoved address removed from the blacklist.
      */
-    event NotAllowedAddressRemoved (
+    event NotAllowedAddressRemoved(
         address indexed sender,
         address indexed addressRemoved
     );
@@ -84,10 +79,14 @@ interface ATMLiquidityMiningInterface {
     /**
         @notice Initializes this ATM Liquidity Mining instance using configuration params from other contracts. 
         @param settingsAddress Settings contract address.
-        @param atmGovernanceProxy ATM Governance proxy instance associated with this Liquidity Mining instance.
-        @param tlrTokenProxy TLR Token instance associated with this ATM Liquidity Mining program.
+        @param atmGovernanceAddress ATM Governance proxy instance associated with this Liquidity Mining instance.
+        @param tlrTokenAddress TLR Token instance associated with this ATM Liquidity Mining program.
      */
-    function initialize(address settingsAddress, address atmGovernanceProxy, address tlrTokenProxy) external;
+    function initialize(
+        address settingsAddress,
+        address atmGovernanceAddress,
+        address tlrTokenAddress
+    ) external;
 
     /**
         @notice Withdraws accrued TLR tokens by sending them to msg.sender owned account. This operation updates
@@ -109,22 +108,17 @@ interface ATMLiquidityMiningInterface {
         @param notAllowed address we will blacklist.
     */
     function removeNotAllowedAddress(address notAllowed) external;
-    
+
     /**
         @notice Returns TLR floating accrued balance since last Stake(), UnStake(), Withdraw() operation
             until current block. Floating indicates this balance is part of users TLR balance but is not yet 
             assigned on userStakeInfo[msg.sender].accruedTLRBalance until any of the following operations
             takes place (Stake(), UnStake(), Withdraw()). 
      */
-    function getTLRFloatingBalance(address tToken) external 
-        view 
-        returns (uint256);
-    
+    function getTLRFloatingBalance(address tToken) external view returns (uint256);
+
     /**
         @notice Returns TLR total balance ( assigned + floating ) until current block.
      */
-    function getTLRTotalBalance(address tToken) external 
-        view 
-        returns (uint256);
-    
+    function getTLRTotalBalance(address tToken) external view returns (uint256);
 }

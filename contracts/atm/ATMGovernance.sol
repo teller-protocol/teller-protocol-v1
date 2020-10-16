@@ -1,7 +1,6 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-
 // External Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
@@ -9,7 +8,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "../util/AddressArrayLib.sol";
 import "../util/AddressLib.sol";
 import "../base/TInitializable.sol";
-import "./ATMLibrary.sol";
+import "./ATMCommon.sol";
 
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/SignerRole.sol";
@@ -62,8 +61,8 @@ contract ATMGovernance is
     mapping(uint8 => address[]) public dataProviders;
 
     // List of TLR rewards initialized with at least 1 value during ATMGovernance creation.
-    ATMLibrary.TLRReward[] public tlrRewards;
- 
+    ATMCommon.TLRReward[] public tlrRewards;
+
     // Unique CRA - Credit Risk Algorithm github hash to use in this ATM
     string public cra;
 
@@ -281,36 +280,42 @@ contract ATMGovernance is
     /**
         @notice Adds a new TLR Reward value effective immediately since current block.
      */
-    function addTLRReward(uint256 rewardAmount) 
-        external 
-        onlySigner()
-        isInitialized()
-    {
-        ATMLibrary.TLRReward memory latestReward = tlrRewards[ tlrRewards.length - 1 ];
-        require(latestReward.tlrPerBlockPertToken != rewardAmount, "PREVIOUS_AND_NEW_VALUE_ARE_EQUAL");
-        require(latestReward.startBlockNumber < block.number, "TLR_REWARD_ALREADY_SET_FOR_BLOCK");
-        ATMLibrary.TLRReward memory setupReward = ATMLibrary.TLRReward({
-            startBlockNumber:  block.number,
-            tlrPerBlockPertToken: rewardAmount
-        });
-        tlrRewards.push(setupReward);
-        emit TLRRewardAdded(msg.sender, tlrRewards.length, setupReward.startBlockNumber, setupReward.tlrPerBlockPertToken);
+    function addTLRReward(uint256 rewardAmount) external onlySigner() isInitialized() {
+        ATMCommon.TLRReward memory latestReward = tlrRewards[tlrRewards.length - 1];
+        require(
+            latestReward.tlrPerBlockPertToken != rewardAmount,
+            "PREVIOUS_AND_NEW_VALUE_ARE_EQUAL"
+        );
+        require(
+            latestReward.startBlockNumber < block.number,
+            "TLR_REWARD_ALREADY_SET_FOR_BLOCK"
+        );
+        tlrRewards.push(
+            ATMCommon.TLRReward({
+                startBlockNumber: block.number,
+                tlrPerBlockPertToken: rewardAmount
+            })
+        );
+        emit TLRRewardAdded(msg.sender, tlrRewards.length, block.number, rewardAmount);
     }
+
     /**
         @notice It initializes this ATM Governance instance.
         @param settingsAddress the initial settings address.
         @param ownerAddress the owner address for this ATM Governance.
+        @param tlrInitialReward TLR initial reward set on Liquidity mining program associated with this ATM.
      */
-    function initialize(address settingsAddress, address ownerAddress, uint256 tlrInitialReward)
-        external
-        isNotInitialized()
-    {
+    function initialize(
+        address settingsAddress,
+        address ownerAddress,
+        uint256 tlrInitialReward
+    ) external isNotInitialized() {
         _setSettings(settingsAddress);
 
         SignerRole.initialize(ownerAddress);
         TInitializable._initialize();
-        ATMLibrary.TLRReward memory setupReward = ATMLibrary.TLRReward({
-            startBlockNumber:  block.number,
+        ATMCommon.TLRReward memory setupReward = ATMCommon.TLRReward({
+            startBlockNumber: block.number,
             tlrPerBlockPertToken: tlrInitialReward
         });
         tlrRewards.push(setupReward);
@@ -361,10 +366,12 @@ contract ATMGovernance is
      */
     function getCRA() external view returns (string memory) {
         return cra;
-    } 
-
-    function getTLRRewards() external view returns (ATMLibrary.TLRReward[] memory) {
-        return tlrRewards;
     }
 
+    /**
+        @notice Returns the complete list of rewards used on this ATM instance.
+     */
+    function getTLRRewards() external view returns (ATMCommon.TLRReward[] memory) {
+        return tlrRewards;
+    }
 }

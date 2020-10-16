@@ -63,7 +63,7 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
         uint256 tlrInitialReward
     ) external onlyPauser() isInitialized() returns (address) {
         address atmGovernanceProxyAddress = _createGovernance(tlrInitialReward);
-        address tlrTokenProxyAddress = _createTLRToken( 
+        address tlrTokenProxyAddress = _createTLRToken(
             name,
             symbol,
             decimals,
@@ -82,7 +82,12 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
         atmsList.add(atmGovernanceProxyAddress);
 
         // Emit new ATM created event.
-        emit ATMCreated(msg.sender, atmGovernanceProxyAddress, tlrTokenProxyAddress, liquidityMiningAddress);
+        emit ATMCreated(
+            msg.sender,
+            atmGovernanceProxyAddress,
+            tlrTokenProxyAddress,
+            liquidityMiningAddress
+        );
 
         return atmGovernanceProxyAddress;
     }
@@ -122,7 +127,11 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
     function getATMs() external view returns (address[] memory) {
         return atmsList;
     }
-    
+
+    /**
+        @notice Helper function to create a new ATMGovernance instance.
+        @param tlrInitialReward TLR initial reward set on Liquidity mining program associated with this ATM.
+     */
     function _createGovernance(uint256 tlrInitialReward) internal returns (address) {
         bytes32 atmGovernanceLogicName = settings()
             .versionsRegistry()
@@ -135,6 +144,15 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
         return address(atmGovernanceProxy);
     }
 
+    /**
+        @notice Helper function to create a new TLR token instance associated with new ATM.
+        @param name TLR token name.
+        @param symbol TLR token symbol.
+        @param decimals  TLR token decimals.
+        @param cap  TLR token max cap.
+        @param maxVestingPerWallet  TLR token max amount of vestings per address.
+        @param atmGovernanceProxyAddress ATMGovernance instance associated with this new TLR instance. 
+     */
     function _createTLRToken(
         string memory name,
         string memory symbol,
@@ -143,7 +161,7 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
         uint256 maxVestingPerWallet,
         address atmGovernanceProxyAddress
     ) internal returns (address) {
-           bytes32 tlrTokenLogicName = settings()
+        bytes32 tlrTokenLogicName = settings()
             .versionsRegistry()
             .consts()
             .TLR_TOKEN_LOGIC_NAME();
@@ -167,7 +185,10 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
         @param governance ATMGovernance instance address associated to this new Liquidity Mining.
         @param tlr TLRToken instance address associated to this new Liquidity Mining.
      */
-    function _createLiquidityMining( address governance, address tlr) internal returns (address) {
+    function _createLiquidityMining(address governance, address tlr)
+        internal
+        returns (address)
+    {
         bytes32 liquidityMiningLogicName = settings()
             .versionsRegistry()
             .consts()
@@ -176,6 +197,6 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
             address(new DynamicProxy(address(settings()), liquidityMiningLogicName))
         );
         liquidityMining.initialize(address(settings()), governance, tlr);
-        return address (liquidityMining);
+        return address(liquidityMining);
     }
 }
