@@ -279,8 +279,7 @@ contract ATMGovernance is
     }
 
     /**
-        @notice Add new TLR Reward value starting from current block.
-        @dev 
+        @notice Adds a new TLR Reward value effective immediately since current block.
      */
     function addTLRReward(uint256 rewardAmount) 
         external 

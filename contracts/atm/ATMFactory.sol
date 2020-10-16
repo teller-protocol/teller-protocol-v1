@@ -77,7 +77,6 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
         );
         TLRToken(tlrTokenProxyAddress).addMinter(liquidityMiningAddress);
 
-        // TODO: add liq mining as TLR minter
         atms[atmGovernanceProxyAddress] = true;
         tlrTokens[atmGovernanceProxyAddress] = tlrTokenProxyAddress;
         atmsList.add(atmGovernanceProxyAddress);
@@ -163,6 +162,11 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
         return address(tlrTokenProxy);
     }
 
+    /**
+        @notice Helper function to create a new Liquidity Mining program instance.
+        @param governance ATMGovernance instance address associated to this new Liquidity Mining.
+        @param tlr TLRToken instance address associated to this new Liquidity Mining.
+     */
     function _createLiquidityMining( address governance, address tlr) internal returns (address) {
         bytes32 liquidityMiningLogicName = settings()
             .versionsRegistry()

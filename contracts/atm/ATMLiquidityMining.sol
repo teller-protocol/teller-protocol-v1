@@ -46,6 +46,8 @@ contract ATMLiquidityMining is
     using SafeMath for uint256;
 
     /* Constants */
+    // Minimum amout of accrued TLR tokens required to be able to withdraw.
+    bytes32 public constant MIN_TLR_TO_REDEEM = "MIN_TLR_TO_REDEEM";
     uint8 public constant NO_TTOKENS_STAKED = 0;
     uint8 public constant NO_TLR_ACCRUED = 0;
 
@@ -188,7 +190,7 @@ contract ATMLiquidityMining is
             });
         userStakeInfo[msg.sender][tToken] = userInfo;
         // Send tTokens back to user
-        require(IERC20(tToken).transfer(msg.sender, amount), "UNSTAKE_TTOKEN_TRANSFER_FAILED");
+        require(TTokenInterface(tToken).transfer(msg.sender, amount), "UNSTAKE_TTOKEN_TRANSFER_FAILED");
 
         emit UnStake(
             msg.sender,
@@ -211,13 +213,12 @@ contract ATMLiquidityMining is
         whenNotPaused()
     {
         uint256 accruedTLRBalance = _getTLRTotalBalance(tToken);
-        uint256 minimumTLRToRedeem = governance.getGeneralSetting("MIN_TLR_TO_REDEEM");
+        uint256 minimumTLRToRedeem = governance.getGeneralSetting(MIN_TLR_TO_REDEEM);
         require(accruedTLRBalance >= minimumTLRToRedeem, "NOT_ENOUGH_TLR_TOKENS_TO_REDEEM");
         require(accruedTLRBalance >= amount, "UNSUFFICIENT_TLR_TO_WITHDRAW");
         // Minted tokens are reduced from accrued balance
         userStakeInfo[msg.sender][tToken].accruedTLRBalance = accruedTLRBalance.sub(amount);
         userStakeInfo[msg.sender][tToken].lastRewardedBlock = block.number;
-        // TODO: validate we don't overflow TLR max cap
         require(tlrToken.mint(msg.sender, amount), "WITHDRAW_FAILED_MINTING_TLR"); 
         
         emit TLRWithdrawn(
@@ -234,7 +235,7 @@ contract ATMLiquidityMining is
         @param tToken tToken address we want to obtain the balance.
      */
     function gettTokenTotalBalance(address tToken) external view returns (uint256) {
-        return IERC20(tToken).balanceOf(address(this));
+        return TTokenInterface(tToken).balanceOf(address(this));
     }
 
     /**

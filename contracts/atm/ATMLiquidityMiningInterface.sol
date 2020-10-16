@@ -97,6 +97,20 @@ interface ATMLiquidityMiningInterface {
     function withdrawTLR(address tToken, uint256 amount) external;
 
     /**
+        @notice Adds a new address to the blacklisted list. This address will no longer be able to 
+        stake on this ATM Liquidity Mining program intance. 
+        @param notAllowed address we will blacklist.
+    */
+    function addNotAllowedAddress(address notAllowed) external;
+
+    /**
+        @notice Removes an address from the blacklisted list. This address will now start
+        being able to stake on this ATM Liquidity Mining program intance. 
+        @param notAllowed address we will blacklist.
+    */
+    function removeNotAllowedAddress(address notAllowed) external;
+    
+    /**
         @notice Returns TLR floating accrued balance since last Stake(), UnStake(), Withdraw() operation
             until current block. Floating indicates this balance is part of users TLR balance but is not yet 
             assigned on userStakeInfo[msg.sender].accruedTLRBalance until any of the following operations
