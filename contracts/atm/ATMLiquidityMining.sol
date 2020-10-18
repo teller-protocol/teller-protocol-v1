@@ -67,12 +67,12 @@ contract ATMLiquidityMining is
         _;
     }
     /**
-        @notice Checks if the platform is paused or not
-        @dev Throws an error is the Teller platform is paused
+        @notice Checks if the platform or ATM either is paused or not
+        @dev Throws an error if the Teller platform is paused
      */
     modifier whenNotPaused() {
         require(
-            !settings().atmSettings().isATMPaused(address(governance)),
+            !settings().isPaused() && !settings().atmSettings().isATMPaused(address(governance)),
             "ATM_IS_PAUSED"
         );
         _;
