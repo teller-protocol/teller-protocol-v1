@@ -47,6 +47,7 @@ interface ICompound {
         @param tokenAddress address of the underlying token.
         @param cTokenAddress compound token address.
         @param amount amount of tokens to Redeem.
+        @param isUnderlyingAmount boolean indicating if the amount was in the underlying token.
         @param tokenBalance underlying token balance after Redeem.
         @param cTokenBalance cTokens balance after Redeem.
      */
@@ -54,6 +55,7 @@ interface ICompound {
         address indexed tokenAddress,
         address indexed cTokenAddress,
         uint256 amount,
+        bool isUnderlyingAmount,
         uint256 tokenBalance,
         uint256 cTokenBalance
     );

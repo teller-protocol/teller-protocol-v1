@@ -51,10 +51,11 @@ module.exports = {
             const name = 'CompoundRedeemed';
             return {
                 name: name,
-                emitted: (tokenAddress, cTokenAddress, amount, tokenBalance, cTokenBalance) => emitted(tx, name, ev => {
+                emitted: (tokenAddress, cTokenAddress, amount, isUnderlyingAmount, tokenBalance, cTokenBalance) => emitted(tx, name, ev => {
                     assert.equal(ev.tokenAddress, tokenAddress);
                     assert.equal(ev.cTokenAddress, cTokenAddress);
                     assert.equal(ev.amount.toString(), amount.toString());
+                    assert.equal(ev.isUnderlyingAmount, isUnderlyingAmount);
                     assert.equal(ev.tokenBalance.toString(), tokenBalance.toString());
                     assert.equal(ev.cTokenBalance.toString(), cTokenBalance.toString());
                 }),

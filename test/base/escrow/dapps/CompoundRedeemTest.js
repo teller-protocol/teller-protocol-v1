@@ -82,6 +82,7 @@ contract("CompoundRedeemTest", function(accounts) {
             dai.address,
             cDai.address,
             amount,
+            !redeemAll,
             tokenBalance,
             cTokenBalance
           );

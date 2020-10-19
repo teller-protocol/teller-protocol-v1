@@ -86,7 +86,7 @@ const printEscrow = async ({ settings }, {testContext}, {tokenInfo, collateralTo
     console.log(SIMPLE_SEPARATOR);
 }
 
-const printTokensInfo = async ({ tokenInfo, collateralTokenInfo }) => {
+const printTokensInfo = ({ tokenInfo, collateralTokenInfo }) => {
     console.log(SIMPLE_SEPARATOR);
     console.group(`Market Info:`);
     console.group(`Token Info:`);
@@ -200,7 +200,7 @@ module.exports = {
         const collateralInfo = await loans.getCollateralInfo(loanId);
         
         console.log(SEPARATOR);
-        await printTokensInfo({ tokenInfo, collateralTokenInfo });
+        printTokensInfo({ tokenInfo, collateralTokenInfo });
 
         printLoan({ loanInfo, totalOwed }, { tokenInfo, collateralTokenInfo });
 

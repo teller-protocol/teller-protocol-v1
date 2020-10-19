@@ -5,6 +5,7 @@ import "../../token/ERC20Mock.sol";
 contract CERC20Mock is ERC20Mock {
     uint8 public constant CTOKEN_DECIMALS = 8;
     uint256 public constant NO_ERROR = 0;
+    uint256 public constant TOKEN_INSUFFICIENT_BALANCE = 13;
     uint256 public constant RETURN_ERROR = 9999;
     uint256 public constant SIMULATE_COMPOUND_MINT_RETURN_ERROR = 88888888;
     uint256 public constant SIMULATE_COMPOUND_MINT_ERROR = 77777777;
@@ -45,7 +46,7 @@ contract CERC20Mock is ERC20Mock {
             return NO_ERROR;
         }
         if (balanceOf(msg.sender) < redeemAmount) {
-            return 13;
+            return TOKEN_INSUFFICIENT_BALANCE;
         }
 
         uint256 tokenAmount = _getTokensAmount(redeemAmount);
@@ -68,7 +69,7 @@ contract CERC20Mock is ERC20Mock {
             return NO_ERROR;
         }
         if (balanceOfUnderlying(msg.sender) < redeemAmount) {
-            return 13;
+            return TOKEN_INSUFFICIENT_BALANCE;
         }
 
         uint256 tokenAmount = _getTokensAmount(redeemAmount);

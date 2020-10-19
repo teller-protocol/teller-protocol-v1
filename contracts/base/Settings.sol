@@ -286,16 +286,11 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         uint256 maxLoanAmount
     ) external onlyPauser() isInitialized() {
         assetSettings[assetAddress].requireNotExists();
+        assetSettings[assetAddress].initialize(maxLoanAmount);
 
-        if (assetAddress != ETH_ADDRESS) {
-            require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
-        }
         if (cTokenAddress.isNotEmpty()) {
-            require(cTokenAddress.isContract(), "CTOKEN_MUST_BE_CONTRACT_OR_EMPTY");
-            require(CErc20Interface(cTokenAddress).underlying() == assetAddress, "UNDERLYING_ADDRESS_NOT_MATCH");
+            _setCTokenAddress(assetAddress, cTokenAddress);
         }
-
-        assetSettings[assetAddress].initialize(cTokenAddress, maxLoanAmount);
 
         assets.add(assetAddress);
 
@@ -355,7 +350,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     {
         address oldCTokenAddress = assetSettings[assetAddress].cTokenAddress;
 
-        assetSettings[assetAddress].updateCTokenAddress(newCTokenAddress);
+        _setCTokenAddress(assetAddress, newCTokenAddress);
 
         emit AssetSettingsAddressUpdated(
             CTOKEN_ADDRESS_ASSET_SETTING,
@@ -364,6 +359,25 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
             oldCTokenAddress,
             newCTokenAddress
         );
+    }
+
+    /**
+        @notice It sets the cToken address for a specific asset address.
+        @param assetAddress asset address to configure.
+        @param cTokenAddress the new cToken address to configure.
+     */
+    function _setCTokenAddress(address assetAddress, address cTokenAddress) internal {
+        if (assetAddress == ETH_ADDRESS) {
+            cTokenAddress.requireEqualTo(0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5, "CETH_ADDRESS_NOT_MATCH");
+        } else {
+            require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
+            if (cTokenAddress.isNotEmpty()) {
+                require(cTokenAddress.isContract(), "CTOKEN_MUST_BE_CONTRACT_OR_EMPTY");
+                require(CErc20Interface(cTokenAddress).underlying() == assetAddress, "UNDERLYING_ADDRESS_NOT_MATCH");
+            }
+        }
+
+        assetSettings[assetAddress].updateCTokenAddress(cTokenAddress);
     }
 
     /**

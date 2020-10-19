@@ -37,6 +37,14 @@ contract Compound is ICompound, BaseEscrowDapp {
     using Address for address;
 
     /* State Variables */
+
+    /* Error Codes */
+
+    uint256 public constant NO_ERROR = 0;
+
+    // @notice Caller does not have sufficient balance in the ERC-20 contract to complete the desired action.
+    uint256 public constant TOKEN_INSUFFICIENT_BALANCE = 13;
+
     // State is shared with Escrow contract as it uses delegateCall() to interact with this contract.
 
     /**
@@ -51,7 +59,7 @@ contract Compound is ICompound, BaseEscrowDapp {
         uint256 cTokenBalanceBeforeLend = cToken.balanceOf(address(this));
         IERC20(tokenAddress).approve(address(cToken), amount);
         uint256 result = cToken.mint(amount);
-        require(result == 0, "COMPOUND_DEPOSIT_ERROR");
+        require(result == NO_ERROR, "COMPOUND_DEPOSIT_ERROR");
 
         uint256 cTokenBalanceAfterLend = cToken.balanceOf(address(this));
         require(
@@ -73,18 +81,17 @@ contract Compound is ICompound, BaseEscrowDapp {
     }
 
     /**
-        @notice This function calls Compound redeemUnderlying().
+        @notice This function redeems the user's cTokens for a specific amount of the underlying token.
         @param tokenAddress address of the token.
         @param amount amount of underlying tokens to redeem.
     */
     function redeem(address tokenAddress, uint256 amount) public onlyOwner() {
         CErc20Interface cToken = _getCToken(tokenAddress);
-//        amount = amount * (10**18) / cToken.exchangeRateCurrent();
         _redeem(cToken, amount, true);
     }
 
     /**
-        @notice This function redeems complete token balance.
+        @notice This function redeems the complete cToken balance.
         @param tokenAddress address of the token.
     */
     function redeemAll(address tokenAddress) public onlyOwner() {
@@ -94,12 +101,18 @@ contract Compound is ICompound, BaseEscrowDapp {
 
     /* Internal Functions */
 
+    /**
+        @notice This function calls on Compound cToken to redeem an amount of the underlying token.
+        @param cToken the instance of the cToken.
+        @param amount amount of cToken or underlying token to redeem.
+        @param isUnderlying boolean indicating if the amount to redeem is in the underlying token amount.
+    */
     function _redeem(CErc20Interface cToken, uint256 amount, bool isUnderlying) internal {
         address tokenAddress = cToken.underlying();
         uint256 tokenBalanceBeforeRedeem = _balanceOf(tokenAddress);
         uint256 result = isUnderlying ? cToken.redeemUnderlying(amount) : cToken.redeem(amount);
-        require(result != 13, "COMPOUND_INSUFFICIENT_BALANCE");
-        require(result == 0, "COMPOUND_WITHDRAWAL_ERROR");
+        require(result != TOKEN_INSUFFICIENT_BALANCE, "COMPOUND_INSUFFICIENT_BALANCE");
+        require(result == NO_ERROR, "COMPOUND_WITHDRAWAL_ERROR");
 
         uint256 tokenBalanceAfterRedeem = _balanceOf(tokenAddress);
         bool afterRedeemBalanceCheck = isUnderlying
@@ -115,6 +128,7 @@ contract Compound is ICompound, BaseEscrowDapp {
             tokenAddress,
             address(cToken),
             amount,
+            isUnderlying,
             tokenBalanceAfterRedeem,
             cTokenBalanceAfterRedeem
         );
