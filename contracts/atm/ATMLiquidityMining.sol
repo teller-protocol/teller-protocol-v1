@@ -146,18 +146,17 @@ contract ATMLiquidityMining is
             TTokenInterface(tToken).balanceOf(msg.sender) >= amount,
             "INSUFFICIENT_TTOKENS_TO_STAKE"
         );
-        // Transferring tTokens for staking
-        require(
-            TTokenInterface(tToken).transferFrom(msg.sender, address(this), amount),
-            "STAKE_TTOKEN_TRANSFER_FAILED"
-        );
-
         // Update use stake info
         ATMCommon.UserStakeInfo memory userInfo = ATMCommon.UserStakeInfo({
             lastRewardedBlock: block.number,
             tTokenStakedBalance: _incrementTTokenBalance(tToken, amount), // Staking
             accruedTLRBalance: _getTLRTotalBalance(tToken)
         });
+        // Transferring tTokens for staking
+        require(
+            TTokenInterface(tToken).transferFrom(msg.sender, address(this), amount),
+            "STAKE_TTOKEN_TRANSFER_FAILED"
+        );
         userStakeInfo[msg.sender][tToken] = userInfo;
 
         emit Stake(
