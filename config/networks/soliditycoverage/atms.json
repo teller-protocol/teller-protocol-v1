@@ -8,6 +8,7 @@
       "maxCap": 100000000000,
       "maxVestingPerWallet": 50
     },
+    "tlrInitialReward": 0,
     "supplyToDebt": 5000,
     "markets": []
   }

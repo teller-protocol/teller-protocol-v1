@@ -39,6 +39,7 @@ const Compound = artifacts.require("./base/escrow/dapps/Compound.sol");
 // ATM Smart contracts
 const ATMFactory = artifacts.require("./atm/ATMFactory.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
+const ATMLiquidityMining = artifacts.require("./atm/ATMLiquidityMining.sol");
 const TLRToken = artifacts.require("./atm/TLRToken.sol");
 // External providers
 const ChainlinkPairAggregatorRegistry = artifacts.require("./providers/chainlink/ChainlinkPairAggregatorRegistry.sol");
@@ -82,6 +83,7 @@ module.exports = async function(deployer, network, accounts) {
       { Contract: Escrow, name: logicNames.Escrow },
       { Contract: ChainlinkPairAggregator, name: logicNames.ChainlinkPairAggregator },
       { Contract: ATMGovernance, name: logicNames.ATMGovernance },
+      { Contract: ATMLiquidityMining, name: logicNames.ATMLiquidityMining },
       { Contract: TLRToken, name: logicNames.TLRToken },
       // Dapps
       { Contract: Uniswap, name: logicNames.Uniswap },
@@ -92,6 +94,7 @@ module.exports = async function(deployer, network, accounts) {
       { Contract: MarketsState, name: logicNames.MarketsState },
       { Contract: ATMSettings, name: logicNames.ATMSettings },
       { Contract: ATMFactory, name: logicNames.ATMFactory },
+    { Contract: ATMLiquidityMining, name: logicNames.ATMLiquidityMining },
       { Contract: MarketFactory, name: logicNames.MarketFactory },
       { Contract: TTokenRegistry, name : logicNames.TTokenRegistry },
     ];
@@ -232,9 +235,10 @@ module.exports = async function(deployer, network, accounts) {
     deployerApp.writeJson();
     console.log(`${'='.repeat(25)} Deployment process finished. ${'='.repeat(25)}`);
   } catch (error) {
+    console.log('\x1b[33m\x1b[41m\x1b[5m', `Error deploying contract`, '\x1b[0m');
     console.log(error);
     deployerApp.print();
     deployerApp.writeJson();
-    console.log(`${'='.repeat(25)} Deployment process FAILED. ${'='.repeat(25)}`);
+    console.log('\x1b[33m\x1b[41m\x1b[5m%s\x1b[0m', `${'='.repeat(25)} Deployment process FAILED. ${'='.repeat(25)}`);
   }
 };
