@@ -20,10 +20,86 @@ const { default: BigNumber } = require("bignumber.js");
 const { COLL_TOKEN_NAME, TOKEN_NAME, BORROWER_INDEX, DURATION_DAYS, AMOUNT, NONCE, COLL_AMOUNT } = require('../utils/cli/names');
 const processArgs = new ProcessArgs(readParams.setLoanTerms().argv);
 
-const nodeUrls = [
-    'https://node-saxle.layr1.com',
-    //'https://node-tpscrpt.layr1.com',
-];
+const createArrowheadCRARequest = (url, params) => {
+    return {
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        method: 'post',
+        url: url,
+        data: {
+            jsonrpc: '2.0',
+            method: 'arrowheadCRA',
+            id: 1,
+            params: params
+        },
+    };
+};
+
+const callAllNodeArrowheadCRAEndpoints = async (urls, arrowheadCRARequest) => {
+    const responses = [];
+    for (const nodeUrl of urls) {
+        console.log(`Calling node ${nodeUrl}`);
+        const result = await axios(createArrowheadCRARequest(nodeUrl, arrowheadCRARequest));
+        responses.push(result.data.result);
+    }
+    return responses;
+}
+
+const fromArrowheadCRAToLoanRequest = (arrowheadCRARequest, consensusAddress, requestNonce) => ({
+    borrower: arrowheadCRARequest.ethereumWallet,
+    recipient: NULL_ADDRESS,
+    consensusAddress: consensusAddress,
+    requestNonce: requestNonce,
+    amount: arrowheadCRARequest.requestedLoanSize,
+    duration: arrowheadCRARequest.loanTermLength,
+    requestTime: arrowheadCRARequest.requestTime,
+});
+
+const validateNodeResponses = async (responses, { allContracts, chainId }) => {
+    const consensusAddress = await allContracts.loans.loanTermsConsensus();
+    for (const response of responses) {
+        console.log(`Validating chain id...`);
+        assert(response.chainId.toString() === chainId.toString(), `Response chain id ${response.chainId} (from node) does not match to ${chainId}.`);
+        console.log(`Validating consensus address...`);
+        assert(response.consensusAddress === consensusAddress, `Consensus address ${response.consensusAddress} (from node) does not match to ${consensusAddress}.`);
+        const isSigner = await allContracts.loanTermsConsensus.isSigner(response.signer)
+        console.log(`Validating signer address...`);
+        assert(isSigner.toString() === 'true', `Signer address ${response.signer} has not the signer role.`);
+        const { v, r, s } = ethUtil.fromRpcSig(response.signature);
+        response.rsvSignature = {
+            v: v,
+            r: ethUtil.bufferToHex(r),
+            s: ethUtil.bufferToHex(s),
+        };
+    }
+    return responses;
+};
+
+const mapNodeResponseToLoanResponse = (responses) => {
+    return responses.map(response => ({
+        ...response,
+        signer: response.signer,
+        consensusAddress: response.consensusAddress,
+        responseTime: response.responseTime,
+        interestRate: response.interestRate,
+        collateralRatio: response.collateralRatio,
+        maxLoanAmount: response.maxLoanAmount,
+        signature: {
+            signerNonce: response.signerNonce,
+            v: response.rsvSignature.v,
+            r: response.rsvSignature.r,
+            s: response.rsvSignature.s,
+        }
+    }));
+};
+
+const getNodeUrls = nodes => Object.entries(nodes).map((entry, index) => {
+    const [key, value] = entry;
+    console.log(`Getting URL for node ${key}: ${value}`);
+    return value;
+});
 
 module.exports = async (callback) => {
     try {
@@ -31,15 +107,16 @@ module.exports = async (callback) => {
         const accounts = new Accounts(web3);
         const appConf = processArgs.getCurrentConfig();
         const chainId = processArgs.getChainId().toString();
-        const { toTxUrl } = appConf.networkConfig;
+        const { toTxUrl, nodes, signatureValidatorAddress, network } = appConf.networkConfig;
+
+        assert(signatureValidatorAddress, `Signature validator address is undefined for the network ${network}.`);
+        assert(nodes, `Nodes configuration is undefined for the network ${network}.`);
         const currentTimestamp = await timer.getCurrentTimestamp();
         console.log(`Current timestamp (blockchain):    ${currentTimestamp}`);
-        console.log(`Current timestamp :                ${Math.floor(Date.now() / 1000)}`);
 
         const collateralTokenName = processArgs.getValue(COLL_TOKEN_NAME.name);
         const tokenName = processArgs.getValue(TOKEN_NAME.name);
         const borrowerIndex = processArgs.getValue(BORROWER_INDEX.name);
-        //const recipientIndex = processArgs.getValue(RECIPIENT_INDEX.name);
         const durationInDays = processArgs.getValue(DURATION_DAYS.name);
         const amount = processArgs.getValue(AMOUNT.name);
         const collateralAmount = processArgs.getValue(COLL_AMOUNT.name);
@@ -53,28 +130,20 @@ module.exports = async (callback) => {
 
         const consensusAddress = await allContracts.loans.loanTermsConsensus();
 
-        const signatureValidator = await SignatureValidator.at('0xdAdE05d1A7CA9c610a41E7C3E916Ed8edECF6Fcf');
+        const signatureValidator = await SignatureValidator.at(signatureValidatorAddress);
 
         const getChainIdResult = await signatureValidator.getChainId();
-        console.log(`getChainIdResult: ${getChainIdResult}`);
-        /*
-        let collateralTokenAddress = ETH_ADDRESS;
-        let collateralTokenDecimals = 18;
-        if (collateralTokenName !== 'ETH') {
-            const collateralTokenInstance = await getContracts.getDeployed(tokens.get(collateralTokenName));
-            collateralTokenDecimals = await collateralTokenInstance.decimals();
-            collateralTokenAddress = collateralTokenInstance.address;
-        }
-        */
-        console.log(`Caller (or loans address): ${allContracts.loans.address}`);
+
         const networkId = await web3.eth.net.getId();
-        console.log(`Network ID:  ${networkId}`);
+        assert(networkId.toString() === chainId.toString(), `Current chain id ${networkId} (web3) does not match param network id ${chainId} (param)`);
+        assert(networkId.toString() === getChainIdResult.toString(), `Current chain id ${networkId} (web3) does not match param network id ${chainId} (signature validaor)`);
+        
         const amountWithDecimals = toDecimals(amount, tokenInfo.decimals);
         const collateralAmountWithDecimals = toDecimals(collateralAmount, collateralTokenInfo.decimals);
 
         const borrower = await accounts.getAt(borrowerIndex);
 
-        const lendingApplication = {
+        const arrowheadCRARequest = {
             assetReportSignature: null,
             assetReportStringified: null,
             borrowedAsset: tokenName,
@@ -83,56 +152,21 @@ module.exports = async (callback) => {
             ethereumWallet: borrower,
             loanTermLength: (parseInt(durationInDays) * 24 * 60 * 60),
             loanUse: "SECURED",
+            // TODO Use web3 timestamp after fixing node validation.
             requestTime: 1602516970, //requestTime: currentTimestamp.toString(),
             requestedLoanSize: amountWithDecimals.toString(),
         };
-        //console.log(lendingApplication);
-        const loanRequest = {
-            borrower: lendingApplication.ethereumWallet,
-            recipient: NULL_ADDRESS,
-            consensusAddress: consensusAddress,
-            requestNonce: requestNonce,
-            amount: lendingApplication.requestedLoanSize,
-            duration: lendingApplication.loanTermLength,
-            requestTime: lendingApplication.requestTime,
-        };
-        const responses = [];
-        for (const nodeUrl of nodeUrls) {
-            const response = await axios({
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Accept': 'application/json'
-                },
-                method: 'post',
-                url: nodeUrl,
-                data: {
-                  jsonrpc: '2.0',
-                  method: 'arrowheadCRA',
-                  id: 1,
-                  params: lendingApplication
-                }
-              });
-            responses.push(response.data.result);
-        }
+        const loanRequest = fromArrowheadCRAToLoanRequest(arrowheadCRARequest, consensusAddress, requestNonce);
+        
+        const responses = await callAllNodeArrowheadCRAEndpoints(
+            getNodeUrls(nodes),
+            arrowheadCRARequest
+        );
 
-        for (const response of responses) {
-            assert(response.consensusAddress === consensusAddress, `Consensus address ${response.consensusAddress} (response) does not match to ${consensusAddress}`);
-            const isSigner = await allContracts.loanTermsConsensus.isSigner(response.signer);
-            //console.log(`${response.signer} has signer role? ${isSigner}`);
-            assert(isSigner.toString() === 'true', `Signer address ${response.signer} has not the signer role.`);
-            const { v, r, s } = ethUtil.fromRpcSig(response.signature);
-            const sign = {
-                v: v,
-                r: ethUtil.bufferToHex(r),
-                s: ethUtil.bufferToHex(s),
-            };
-            response.rsvSignature = sign;
-        }
-        console.log(responses);
+        const validatedResponses = await validateNodeResponses(responses, { allContracts, chainId });
         
         if(collateralTokenName !== 'ETH') {
             console.log(`Approving tokens...`);
-            //const collateralTokenInstance = await getContracts.getDeployed(tokens.get(collateralTokenName));
             const currentSenderTokenBalance = await collateralToken.balanceOf(borrower);
             assert(
                 BigNumber(currentSenderTokenBalance.toString()).gte(BigNumber(collateralAmountWithDecimals.toString())),
@@ -140,21 +174,7 @@ module.exports = async (callback) => {
             );
             await collateralTokenInstance.approve(allContracts.loans.address, collateralAmountWithDecimals, { from: borrower });
         }
-        const signedResponses = responses.map(response => ({
-            ...response,
-            signer: response.signer,
-            consensusAddress: response.consensusAddress,
-            responseTime: response.responseTime,
-            interestRate: response.interestRate,
-            collateralRatio: response.collateralRatio,
-            maxLoanAmount: response.maxLoanAmount,
-            signature: {
-                signerNonce: response.signerNonce,
-                v: response.rsvSignature.v,
-                r: response.rsvSignature.r,
-                s: response.rsvSignature.s,
-            }
-        }));
+        const signedResponses = mapNodeResponseToLoanResponse(validatedResponses);
 
         for (const signedResponse of signedResponses) {
             const validatorResponse = await signatureValidator.createLoanWithTerms(
@@ -162,20 +182,12 @@ module.exports = async (callback) => {
                 loanRequest,
                 signedResponse
             );
-            const { validResponse, signer, requestHash, responseHash } = validatorResponse;
-            console.log(`Validator hash request:    ${requestHash}`);
-            console.log(`Response hash request:     ${signedResponse.requestHash}`);
-
-            const internalHashRequest = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, allContracts.loans.address, chainId))
-            const internalHashRequest2 = hashLoanTermsRequest(loanRequest, allContracts.loans.address, chainId).toString('hex');
-            console.log(`internal hash request: ${internalHashRequest}`)
-            console.log(`internal hash request2:${internalHashRequest2}`)
-            
-            //console.log(`Validator hash response:    ${responseHash}`);
-            //console.log(`Response hash response:     ${signedResponse.responseHash}`);
-            console.log(validatorResponse);
-        }
-        /*
+            const { requestHash } = validatorResponse;
+            assert.strictEqual(requestHash, signedResponse.requestHash, 'Request hash from Validator (contract) and node response are different.');
+            const internalHashRequest = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, allContracts.loans.address, chainId));
+            assert.strictEqual(internalHashRequest, signedResponse.requestHash, 'Internal hash (JS) and node response are different.');
+        };
+        
         const result = await allContracts.loans.createLoanWithTerms(
             loanRequest,
             signedResponses,
@@ -194,18 +206,13 @@ module.exports = async (callback) => {
         console.log(`Loan ID created: ${lastLoanID}`);
         console.log();
         console.log('To take out the loan, execute: ');
-*/
 
-        /*
         const truffleCommand = 'truffle exec ./scripts/loans/takeOutLoan.js';
         console.log(`${truffleCommand} --network ${processArgs.network()} --loanId ${lastLoanID} --tokenName ${tokenName} --collTokenName ${collateralTokenName} --senderIndex ${borrowerIndex} --amount ${amount}`);
 
         console.log();
         console.log('To view loan info, execute: ');
         console.log(`truffle exec ./scripts/loans/getLoan.js --network ${processArgs.network()} --loanId ${lastLoanID} --tokenName ${tokenName} --collTokenName ${collateralTokenName}`);
-        
-        
-        */
 
         console.log('>>>> The script finished successfully. <<<<');
         callback();

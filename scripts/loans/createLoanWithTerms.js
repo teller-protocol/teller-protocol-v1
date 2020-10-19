@@ -21,6 +21,7 @@ module.exports = async (callback) => {
         const chainId = processArgs.getChainId().toString();
         const { toTxUrl } = appConf.networkConfig;
         const currentTimestamp = await timer.getCurrentTimestamp();
+        console.log(`Current timestamp: ${currentTimestamp}`);
 
         const collateralTokenName = processArgs.getValue(COLL_TOKEN_NAME.name);
         const tokenName = processArgs.getValue(TOKEN_NAME.name);
@@ -57,7 +58,7 @@ module.exports = async (callback) => {
             requestNonce: nonce,
             amount: amountWithDecimals,
             duration: durationInDays * ONE_DAY,
-            requestTime: Math.round(currentTimestamp / 1000),
+            requestTime: currentTimestamp,
             caller: loansInstance.address,
             consensusAddress,
         };
@@ -66,7 +67,7 @@ module.exports = async (callback) => {
         const maxLoanAmountResponse = toDecimals(amount, tokenDecimals.toString()).toFixed(0);
         const loanResponseInfo1 = {
             signer: signer1,
-            responseTime: Math.round(currentTimestamp / 1000) + 30,
+            responseTime: currentTimestamp + 30,
             interestRate: 4000,
             collateralRatio: 6000,
             maxLoanAmount: maxLoanAmountResponse,
@@ -77,7 +78,7 @@ module.exports = async (callback) => {
         
         const loanResponseInfo2 = {
             signer: signer2,
-            responseTime: Math.round(currentTimestamp / 1000) + 65,
+            responseTime: currentTimestamp + 65,
             interestRate: 4000,
             collateralRatio: 6000,
             maxLoanAmount: maxLoanAmountResponse,
