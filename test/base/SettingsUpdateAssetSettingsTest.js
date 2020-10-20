@@ -5,6 +5,7 @@ const { createAssetSettings } = require('../utils/asset-settings-helper');
 const { settings } = require('../utils/events');
 const getAssetSettingsMap = require('../utils/asset-settings-map');
 const { createTestSettingsInstance } = require('../utils/settings-helper');
+const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -13,6 +14,8 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 
 contract('SettingsUpdateAssetSettingsTest', function (accounts) {
+    const cTokenEncoder = new CTokenInterfaceEncoder(web3)
+
     let owner = accounts[0];
     let assetSettingsMap;
 
@@ -136,10 +139,12 @@ contract('SettingsUpdateAssetSettingsTest', function (accounts) {
             const instance = await createTestSettingsInstance(Settings, { from: owner, Mock });
 
             const currentAssetsInfo = await createAssetSettings(Mock, instance, owner, previousAssetsInfo);
-            const assetAddressToUpdate = assetToUpdateIndex === -1 ? (await Mock.new()) : currentAssetsInfo[assetToUpdateIndex].assetAddress;
+            const assetAddressToUpdate = assetToUpdateIndex === -1 ? (await Mock.new()).address : currentAssetsInfo[assetToUpdateIndex].assetAddress;
             const beforeAssets = await instance.getAssets();
             // If newValueIndex is -1, we use the same current asset address as new value (it should fail).
-            const newValue = newValueIndex === -1 ? currentAssetsInfo[assetToUpdateIndex].cTokenAddress : getContractAddress(newValueIndex, (await Mock.new()));
+            const defaultNewValue = await Mock.new()
+            await defaultNewValue.givenMethodReturnAddress(cTokenEncoder.encodeUnderlying(), assetAddressToUpdate)
+            const newValue = newValueIndex === -1 ? currentAssetsInfo[assetToUpdateIndex].cTokenAddress : getContractAddress(newValueIndex, defaultNewValue);
             try {
                 // Invocation
                 const result = await setAssetSettingValue(
@@ -170,8 +175,7 @@ contract('SettingsUpdateAssetSettingsTest', function (accounts) {
                 assert.equal(afterAssets.length, beforeAssets.length);
             } catch (error) {
                 // Assertions
-                assert(mustFail);
-                assert(error);
+                assert(mustFail, error.message);
                 assert.equal(error.reason, expectedErrorMessage);
             }
         });
