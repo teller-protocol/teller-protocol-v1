@@ -192,6 +192,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
                             response.signer,
                             borrower,
                             requestNonce,
+                            response.signature.signerNonce,
                             response.interestRate,
                             response.collateralRatio,
                             response.maxLoanAmount
