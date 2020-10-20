@@ -18,6 +18,7 @@ module.exports = async function(
         const {
             name,
             token,
+            tlrInitialReward,
             supplyToDebt,
             markets,
         } = atmInfo;
@@ -29,6 +30,7 @@ module.exports = async function(
             token.decimals,
             token.maxCap,
             token.maxVestingPerWallet,
+            tlrInitialReward,
             txConfig,
         );
 

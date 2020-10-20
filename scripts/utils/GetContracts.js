@@ -95,7 +95,6 @@ GetContracts.prototype.getAllDeployed = async function({ teller, tokens }, token
     const lendingPool = await this.getDeployed(teller.custom(collTokenName).lendingPool(tokenName));
     const loans = await this.getDeployed(teller.custom(collTokenName).loans(tokenName));
     const loanTermsConsensus = await this.getDeployed(teller.custom(collTokenName).loanTermsConsensus(tokenName));
-    // const atmGovernance = await this.getDeployed(teller.atmGovernance());
 
     const oraclePrice = await loans.priceOracle();
     const PairAggregatorInterface = this.artifacts.require('PairAggregatorInterface');
@@ -112,7 +111,6 @@ GetContracts.prototype.getAllDeployed = async function({ teller, tokens }, token
         oracle,
         pairAggregator,
         loanTermsConsensus,
-        // atmGovernance
     };
 }
 

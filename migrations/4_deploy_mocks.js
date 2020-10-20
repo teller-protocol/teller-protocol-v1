@@ -27,26 +27,33 @@ module.exports = async function(deployer, network, accounts) {
 
   // Creating DeployerApp helper.
   const deployerApp = new DeployerApp(deployer, web3, deployerAccount, { InitializeableDynamicProxy }, { network, networkConfig });
-  
-  await deployerApp.deployMockIfWith('DAI', DAIMock, txConfig);
-  await deployerApp.deployMockIfWith('USDC', USDCMock, txConfig);
-  await deployerApp.deployMockIfWith('LINK', LINKMock, txConfig);
+  try {
+    await deployerApp.deployMockIfWith('DAI', DAIMock, txConfig);
+    await deployerApp.deployMockIfWith('USDC', USDCMock, txConfig);
+    await deployerApp.deployMockIfWith('LINK', LINKMock, txConfig);
 
-  const initialDaiEthPrice = '4806625000000000';
-  await deployerApp.deployMockIfWith('DAI_ETH', PairAggregatorMock, initialDaiEthPrice, txConfig);
-  const initialUsdcEthPrice = '4789225000000000';
-  await deployerApp.deployMockIfWith('USDC_ETH', PairAggregatorMock, initialUsdcEthPrice, txConfig);
-  const initialLinkUsdPrice = '2415458937198';
-  await deployerApp.deployMockIfWith('LINK_DAI', PairAggregatorMock, initialLinkUsdPrice, txConfig);
-  await deployerApp.deployMockIfWith('LINK_USDC', PairAggregatorMock, initialLinkUsdPrice, txConfig);
+    const initialDaiEthPrice = '4806625000000000';
+    await deployerApp.deployMockIfWith('DAI_ETH', PairAggregatorMock, initialDaiEthPrice, txConfig);
+    const initialUsdcEthPrice = '4789225000000000';
+    await deployerApp.deployMockIfWith('USDC_ETH', PairAggregatorMock, initialUsdcEthPrice, txConfig);
+    const initialLinkUsdPrice = '2415458937198';
+    await deployerApp.deployMockIfWith('LINK_DAI', PairAggregatorMock, initialLinkUsdPrice, txConfig);
+    await deployerApp.deployMockIfWith('LINK_USDC', PairAggregatorMock, initialLinkUsdPrice, txConfig);
 
-  if(deployerApp.canDeployMock()) {
-      const defaultMultiplier = '2';
-      await deployerApp.deployMockIfWith('CDAI', CDAIMock, DAIMock.address, defaultMultiplier, txConfig);
-      await deployerApp.deployMockIfWith('CUSDC', CUSDCMock, USDCMock.address, defaultMultiplier, txConfig);
+    if(deployerApp.canDeployMock()) {
+        const defaultMultiplier = '2';
+        await deployerApp.deployMockIfWith('CDAI', CDAIMock, DAIMock.address, defaultMultiplier, txConfig);
+        await deployerApp.deployMockIfWith('CUSDC', CUSDCMock, USDCMock.address, defaultMultiplier, txConfig);
+    }
+
+    deployerApp.print();
+    deployerApp.writeJson();
+    console.log(`${'='.repeat(25)} Deployment process finished. ${'='.repeat(25)}`);
+  } catch (error) {
+    console.log('\x1b[33m\x1b[41m\x1b[5m', `Error deploying contract`, '\x1b[0m');
+    console.log(error);    
+    deployerApp.print();
+    deployerApp.writeJson();
+    console.log('\x1b[33m\x1b[41m\x1b[5m%s\x1b[0m', `${'='.repeat(25)} Deployment process FAILED. ${'='.repeat(25)}`);
   }
-
-  deployerApp.print();
-  deployerApp.writeJson();
-  console.log(`${'='.repeat(25)} Deployment process finished. ${'='.repeat(25)}`);
 };
