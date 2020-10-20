@@ -10,6 +10,7 @@ interface TTokenRegistryInterface {
     /**
         @notice This event is emitted when a new TToken contract address has been registered
         @param tToken The contract address registered
+        @param sender The transaction sender.
      */
     event TTokenRegistered(address indexed tToken, address indexed sender);
 

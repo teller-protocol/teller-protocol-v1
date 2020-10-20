@@ -185,6 +185,7 @@ const depositCollateral = async (
     txConfig = Object.assign({}, txConfig);
     txConfig.value = amount;
   }
+  const initialTotalCollateral = BigNumber(await loans.totalCollateral());
   const depositResult = await loans.depositCollateral(
     txConfig.from,
     loanId,
@@ -194,6 +195,12 @@ const depositCollateral = async (
   loansEvents
     .collateralDeposited(depositResult)
     .emitted(loanId, txConfig.from, amount);
+  
+  const finalTotalCollateral = BigNumber(await loans.totalCollateral());
+  assert.equal(
+    BigNumber(finalTotalCollateral).minus(BigNumber(initialTotalCollateral)).toFixed(0),
+    amount.toString(),
+  );
   return depositResult;
 };
 
