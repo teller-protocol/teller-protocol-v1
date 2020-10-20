@@ -166,10 +166,10 @@ DeployerApp.prototype.writeJson = function(outputJson = `./build/${this.network}
     fs.writeFileSync(`./config/networks/${this.network}/teller.json`, JSON.stringify(tellerContracts, null, 2))
 
     jsonfile.writeFile(outputJson, jsonData, {spaces: 4, EOL: '\r\n'}, function (err) {
-        console.log(`JSON file created at '${outputJson}'.`);
-        if(err) {
-            console.error("Errors: " + err);
-        }
+      console.log(`JSON file created at '${outputJson}'.`);
+      if(err) {
+        console.error('\x1b[33m\x1b[41m\x1b[5m%s\x1b[0m', "Errors: " + err);
+      }
     });
 }
 
