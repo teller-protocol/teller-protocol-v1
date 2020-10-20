@@ -76,7 +76,7 @@ module.exports = async function (
       console.log(`MarketsState (${marketsStateInstance.address}): Adding as whitelisted ${marketInfo.lendingPool} (lending pool proxy). Sender: ${txConfig.from}`);
       await marketsStateInstance.addWhitelisted(marketInfo.lendingPool, txConfig);
       const loanTermsConsensusInstance = await LoanTermsConsensus.at(marketInfo.loanTermsConsensus);
-      const interestConsensusInstance = await InterestConsensus.at(marketInfo.loanTermsConsensus);
+      const interestConsensusInstance = await InterestConsensus.at(marketInfo.interestConsensus);
 
       await initSignerAddresses(
         { loanTermsConsensusInstance, interestConsensusInstance },
