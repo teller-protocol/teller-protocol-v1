@@ -2,12 +2,10 @@ const assert = require("assert");
 const truffleAssert = require('truffle-assertions')
 const BigNumber = require("bignumber.js");
 
-const loanStatus = require("../../../test/utils/loanStatus");
 const loansActions = require("./loans");
 const {
   tokens: tokensAssertions,
   escrow: escrowAssertions,
-  loans: loansAssertions
 } = require("../assertions");
 const {
   escrow: escrowEvents,
@@ -53,14 +51,6 @@ async function repayInFull(
     { escrow, token, loans },
     { txConfig, testContext },
     { amount: totalOwed, shouldFail, expectedRevertReason }
-  );
-
-  let status
-  if (shouldFail) status = loanStatus.Active
-  await loansAssertions.assertLoanValues(
-    { loans },
-    { testContext },
-    { id: loan.id, status }
   );
 }
 
