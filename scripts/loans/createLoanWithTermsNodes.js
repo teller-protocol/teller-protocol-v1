@@ -60,7 +60,6 @@ const fromArrowheadCRAToLoanRequest = (arrowheadCRARequest, consensusAddress, re
 const validateNodeResponses = async (responses, { allContracts, chainId }) => {
     const consensusAddress = await allContracts.loans.loanTermsConsensus();
     for (const response of responses) {
-        console.log(response);
         console.log(`Validating chain id...`);
         assert(response.chainId.toString() === chainId.toString(), `Response chain id ${response.chainId} (from node) does not match to ${chainId}.`);
         console.log(`Validating consensus address...`);
