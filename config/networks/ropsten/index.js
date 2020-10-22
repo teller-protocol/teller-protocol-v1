@@ -9,7 +9,7 @@ module.exports = {
     signers: require('./signers.json'),
     atms: require('./atms.json'),
     nodes: require('./nodes.json'),
-    signatureValidatorAddress: '0xdAdE05d1A7CA9c610a41E7C3E916Ed8edECF6Fcf',
+    loanTermsSignatureValidatorAddress: '0x7301776E7ab81d83187C7dF2972CA8d2C76c7e7c',
     maxGasLimit: 6000000,
     toTxUrl: ({ tx }) => {
         return `https://ropsten.etherscan.io/tx/${tx}`;

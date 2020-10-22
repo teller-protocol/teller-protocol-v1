@@ -1,5 +1,5 @@
 // Smart contracts
-const SignatureValidator = artifacts.require("./mock/util/SignatureValidator.sol");
+const LoanTermsSignatureValidator = artifacts.require("./mock/util/LoanTermsSignatureValidator.sol");
 
 // Util classes
 const ethUtil = require('ethereumjs-util')
@@ -60,6 +60,7 @@ const fromArrowheadCRAToLoanRequest = (arrowheadCRARequest, consensusAddress, re
 const validateNodeResponses = async (responses, { allContracts, chainId }) => {
     const consensusAddress = await allContracts.loans.loanTermsConsensus();
     for (const response of responses) {
+        console.log(response);
         console.log(`Validating chain id...`);
         assert(response.chainId.toString() === chainId.toString(), `Response chain id ${response.chainId} (from node) does not match to ${chainId}.`);
         console.log(`Validating consensus address...`);
@@ -107,9 +108,9 @@ module.exports = async (callback) => {
         const accounts = new Accounts(web3);
         const appConf = processArgs.getCurrentConfig();
         const chainId = processArgs.getChainId().toString();
-        const { toTxUrl, nodes, signatureValidatorAddress, network } = appConf.networkConfig;
+        const { toTxUrl, nodes, loanTermsSignatureValidatorAddress, network } = appConf.networkConfig;
 
-        assert(signatureValidatorAddress, `Signature validator address is undefined for the network ${network}.`);
+        assert(loanTermsSignatureValidatorAddress, `Signature validator address is undefined for the network ${network}.`);
         assert(nodes, `Nodes configuration is undefined for the network ${network}.`);
         const currentTimestamp = await timer.getCurrentTimestamp();
         console.log(`Current timestamp (blockchain):    ${currentTimestamp}`);
@@ -130,9 +131,10 @@ module.exports = async (callback) => {
 
         const consensusAddress = await allContracts.loans.loanTermsConsensus();
 
-        const signatureValidator = await SignatureValidator.at(signatureValidatorAddress);
+        const loanTermsSignatureValidator = await LoanTermsSignatureValidator.at(loanTermsSignatureValidatorAddress);
 
-        const getChainIdResult = await signatureValidator.getChainId();
+        await loanTermsSignatureValidator.mockCallerAddress(allContracts.loans.address);
+        const getChainIdResult = await loanTermsSignatureValidator.getChainId();
 
         const networkId = await web3.eth.net.getId();
         assert(networkId.toString() === chainId.toString(), `Current chain id ${networkId} (web3) does not match param network id ${chainId} (param)`);
@@ -176,9 +178,11 @@ module.exports = async (callback) => {
         }
         const signedResponses = mapNodeResponseToLoanResponse(validatedResponses);
 
+        const callerAddress = await loanTermsSignatureValidator.callerAddress();
+        assert.strictEqual(callerAddress, allContracts.loans.address, 'Caller address must be the loans address.');
+
         for (const signedResponse of signedResponses) {
-            const validatorResponse = await signatureValidator.createLoanWithTerms(
-                allContracts.loans.address,
+            const validatorResponse = await loanTermsSignatureValidator.validateSignatureAndHashes(
                 loanRequest,
                 signedResponse
             );
