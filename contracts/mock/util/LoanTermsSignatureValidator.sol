@@ -6,7 +6,6 @@ import "../../base/LoanTermsConsensus.sol";
 import "../../util/TellerCommon.sol";
 
 contract LoanTermsSignatureValidator is LoanTermsConsensus {
-
     function getChainId() public view returns (uint256) {
         return _getChainId();
     }
@@ -57,7 +56,6 @@ contract LoanTermsSignatureValidator is LoanTermsConsensus {
     {
         return _hashResponse(response, requestHash);
     }
-
 
     function validateResponse(
         address expectedSigner,
