@@ -5,7 +5,7 @@ const {
   oracles: oraclesActions,
   blockchain: blockchainActions,
   tokens: tokensActions,
-} = require("../../utils/actions");
+} = require("../../../scripts/utils/actions");
 const {toDecimals} = require("../../../test/utils/consts");
 
 module.exports = async (testContext) => {

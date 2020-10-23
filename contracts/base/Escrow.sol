@@ -248,11 +248,11 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
     /** Internal Functions */
 
     /**
-        @notice Calculate this Escrow instance loan value in ETH or Token price.
-        @return Loan value in ETH or Token price based on baseAddress.
-        @param baseAddress base token or ETH address.
+        @notice Calculate a value of a token amount.
+        @param baseAddress base token address.
         @param quoteAddress quote token address.
-        @param baseAmount amount of base token or ETH.
+        @param baseAmount amount of base token.
+        @return Value of baseAmount in quote token.
     */
     function _valueOfIn(
         address baseAddress,

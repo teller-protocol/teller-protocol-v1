@@ -7,7 +7,6 @@ module.exports = {
     InterestConsensus: 'InterestConsensus',
     EscrowFactory: 'EscrowFactory',
     Escrow: 'Escrow',
-    ChainlinkPairAggregator: 'ChainlinkPairAggregator',
     ChainlinkAggregator: 'ChainlinkAggregator',
     Settings: 'Settings',
     LogicVersionsRegistry: 'LogicVersionsRegistry',

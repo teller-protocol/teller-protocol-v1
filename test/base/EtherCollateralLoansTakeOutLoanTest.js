@@ -5,7 +5,7 @@ const { createLoanTerms } = require('../utils/structs');
 const { loans } = require('../utils/events');
 
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
-const PairAggregatorEncoder = require('../utils/encoders/PairAggregatorEncoder');
+const ChainlinkAggregatorEncoder = require('../utils/encoders/ChainlinkAggregatorEncoder');
 const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
 const EscrowFactoryInterfaceEncoder = require('../utils/encoders/EscrowFactoryInterfaceEncoder');
 const EscrowInterfaceEncoder = require("../utils/encoders/EscrowInterfaceEncoder");
@@ -20,17 +20,16 @@ const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 
 contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
-    const pairAggregatorEncoder = new PairAggregatorEncoder(web3);
+    const chainlinkAggregatorEncoder = new ChainlinkAggregatorEncoder(web3);
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
     const escrowFactoryInterfaceEncoder = new EscrowFactoryInterfaceEncoder(web3);
     const escrowInterfaceEncoder = new EscrowInterfaceEncoder(web3);
     const owner = accounts[0];
     let instance;
-    let oracleInstance;
+    let chainlinkAggregatorInstance;
     let lendingPoolInstance;
     let loanTermsConsInstance;
     let lendingTokenInstance;
-    let escrowFactory;
     let createdEscrowMock;
 
     const mockLoanID = 0;
@@ -42,44 +41,26 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
         lendingTokenInstance = await Mock.new();
-        oracleInstance = await Mock.new();
-        escrowFactory = await Mock.new();
+        createdEscrowMock = await Mock.new();
         const collateralTokenInstance = await Mock.new();
-        const atmSettingsInstance = await Mock.new();
-        const marketsStateInstance = await Mock.new();
         const settingsInstance = await createTestSettingsInstance(
             Settings,
             {
                 from: owner,
                 Mock,
-                onInitialize: async (
-                    instance,
-                    {
-                        versionsRegistry,
-                        pairAggregatorRegistry,
-                        interestValidator,
-                    }) => {
-                    await instance.initialize(
-                        escrowFactory.address,
-                        versionsRegistry.address,
-                        pairAggregatorRegistry.address,
-                        marketsStateInstance.address,
-                        interestValidator.address,
-                        atmSettingsInstance.address,
+                initialize: true,
+                onInitialize: async (instance, { escrowFactory, chainlinkAggregator }) => {
+                    await escrowFactory.givenMethodReturnAddress(
+                        escrowFactoryInterfaceEncoder.encodeCreateEscrow(),
+                        createdEscrowMock.address
                     );
+                    chainlinkAggregatorInstance = chainlinkAggregator
                 },
             });
-
-        createdEscrowMock = await Mock.new();
-        await escrowFactory.givenMethodReturnAddress(
-            escrowFactoryInterfaceEncoder.encodeCreateEscrow(),
-            createdEscrowMock.address
-        );
 
         loanTermsConsInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(
-            oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,
@@ -116,8 +97,10 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
             const timeNow = await getLatestTimestamp()
 
             // encode current token price
-            const encodeGetLatestAnswer = pairAggregatorEncoder.encodeGetLatestAnswer();
-            await oracleInstance.givenMethodReturnUint(encodeGetLatestAnswer, oraclePrice.toString());
+            await chainlinkAggregatorInstance.givenMethodReturnUint(
+              chainlinkAggregatorEncoder.encodeValueFor(),
+              oraclePrice.toString()
+            );
 
             // encode token decimals
             const encodeDecimals = erc20InterfaceEncoder.encodeDecimals();

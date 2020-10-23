@@ -1,9 +1,9 @@
 const {
   loans: loansActions,
   blockchain: blockchainActions,
-} = require("./");
+} = require("./index");
 
-const oracleActions = require("./oracles");
+const chainlinkActions = require("./chainlink");
 
 const takeOutNewLoan = async function (
   allContracts,
@@ -26,7 +26,7 @@ const takeOutNewLoan = async function (
 ) {
   const { timer } = testContext;
 
-  await oracleActions.setPrice(
+  await chainlinkActions.setPrice(
     allContracts,
     { txConfig: lenderTxConfig, testContext },
     { price: oraclePrice }

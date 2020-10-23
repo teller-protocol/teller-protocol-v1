@@ -20,7 +20,7 @@ module.exports = {
     _7_takeout_loan_invalid_exceeds_max_loan_amount,
     _8_takeout_loan_invalid_borrower_address,
     _9_takeout_loan_invalid_exceeds_max_loan_duration,
-    // TODO Fix after the changes in the PairAggregatorRegistry _10_liquidate_loan_due_to_under_collateralized,
+    // TODO Fix after the changes in the chainlinkAggregator _10_liquidate_loan_due_to_under_collateralized,
     _11_liquidate_loan_due_to_end_date,
     _12_liquidate_loan_invalid_liquidation_not_needed,
 };

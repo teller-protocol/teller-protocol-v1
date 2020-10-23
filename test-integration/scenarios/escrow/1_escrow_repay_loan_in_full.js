@@ -3,8 +3,8 @@ const {
   loans: loansActions,
   escrow: escrowActions,
   tokens: tokensActions,
-} = require("../../utils/actions");
-const helperActions = require("../../utils/actions/helper");
+} = require("../../../scripts/utils/actions");
+const helperActions = require("../../../scripts/utils/actions/helper");
 const {toDecimals} = require("../../../test/utils/consts");
 
 module.exports = async (testContext) => {

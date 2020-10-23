@@ -1,11 +1,12 @@
 // JS Libraries
 const withData = require('leche').withData;
+
 const { t, NULL_ADDRESS, ACTIVE } = require('../utils/consts');
 const { createLoanTerms } = require('../utils/structs');
+const { loans } = require('../utils/events');
+
 const Timer = require('../../scripts/utils/Timer');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
-
-const { loans } = require('../utils/events');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -20,14 +21,12 @@ contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
     const collateralTokenOwner = accounts[9];
     let instance;
     let lendingPoolInstance;
-    let oracleInstance;
     let loanTermsConsInstance;
     let settingsInstance;
     let atmSettingsInstance;
     
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
-        oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
         settingsInstance = await Mock.new();
         atmSettingsInstance = await Mock.new();
@@ -68,7 +67,6 @@ contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
             // Setup
             const collateralToken = await LINKMock.new({ from: collateralTokenOwner });
             await instance.initialize(
-                oracleInstance.address,
                 lendingPoolInstance.address,
                 loanTermsConsInstance.address,
                 settingsInstance.address,
@@ -141,7 +139,6 @@ contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
             // Setup
             const collateralToken = await Mock.new();
             await instance.initialize(
-                oracleInstance.address,
                 lendingPoolInstance.address,
                 loanTermsConsInstance.address,
                 settingsInstance.address,

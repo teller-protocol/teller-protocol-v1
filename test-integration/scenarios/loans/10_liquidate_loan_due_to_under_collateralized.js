@@ -4,8 +4,8 @@ const {
   loans: loansActions,
   tokens: tokensActions,
   oracles: oraclesActions,
-} = require("../../utils/actions");
-const helperActions = require("../../utils/actions/helper");
+} = require("../../../scripts/utils/actions");
+const helperActions = require("../../../scripts/utils/actions/helper");
 const {toDecimals} = require("../../../test/utils/consts");
 
 module.exports = async (testContext) => {
@@ -19,15 +19,6 @@ module.exports = async (testContext) => {
     "Scenario: Loans#10 - Liquidate loan due to under collateralized."
   );
 
-  /*
-  const tokenLinkPairAggregator = await getContracts.getPairAggregatorDeployed(
-    {teller, tokens},
-    tokenName,
-    'LINK'
-  );
-  */
-
-  
   const allContracts = await getContracts.getAllDeployed(
     {teller, tokens},
     tokenName,
@@ -52,27 +43,6 @@ module.exports = async (testContext) => {
     collateralAmountDepositCollateral = toDecimals(0.18, collateralTokenInfo.decimals);
   }
   if (collTokenName.toLowerCase() === "link") {
-    // Settings the DAI/ETH price when LINK is used.
-    const tokenEthPairAggregatorContracts = await getContracts.getPairAggregatorDeployed(
-      {teller, tokens},
-      'ETH',
-      collTokenName,
-    );
-    await oraclesActions.setPrice(
-      { oracle: tokenEthPairAggregatorContracts.oracle },
-      { },
-      { price: toDecimals("15.93655835", 18) }
-    );
-    await loansActions.printPairAggregatorInfo(
-      {...tokenEthPairAggregatorContracts},
-      { testContext },
-      {
-        tokenInfo: (await tokensActions.getInfo({token})),
-        collateralTokenInfo: (await tokensActions.getInfo({token: tokenEthPairAggregatorContracts.collateralToken})),
-      }
-    );
-
-
     initialOraclePrice = "0.100704";
     finalOraclePrice = toDecimals("10000.001704", 8);
     collateralAmountDepositCollateral = toDecimals(6.1, collateralTokenInfo.decimals);

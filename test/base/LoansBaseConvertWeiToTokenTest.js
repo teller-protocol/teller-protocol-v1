@@ -1,41 +1,50 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t } = require('../utils/consts');
 const BigNumber = require('bignumber.js');
+
+const { t } = require('../utils/consts');
+const { createTestSettingsInstance } = require('../utils/settings-helper');
+
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
-const PairAggregatorEncoder = require('../utils/encoders/PairAggregatorEncoder');
+const ChainlinkAggregatorEncoder = require('../utils/encoders/ChainlinkAggregatorEncoder');
 const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
+const Settings = artifacts.require("./base/Settings.sol");
 const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 
 contract('LoansBaseConvertWeiToTokenTest', function () {
     BigNumber.set({ DECIMAL_PLACES: 0, ROUNDING_MODE: 3 })
 
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
-    const pairAggregatorEncoder = new PairAggregatorEncoder(web3);
+    const chainlinkAggregatorEncoder = new ChainlinkAggregatorEncoder(web3);
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
 
     let instance;
-    let oracleInstance;
-    let loanTermsConsInstance;
-    let lendingPoolInstance;
+    let chainlinkAggregatorInstance;
     let lendingTokenInstance;
-    let settingsInstance;
 
     beforeEach('Setup for each test', async () => {
-        lendingPoolInstance = await Mock.new();
+        const lendingPoolInstance = await Mock.new();
+        const loanTermsConsInstance = await Mock.new();
         lendingTokenInstance = await Mock.new();
-        oracleInstance = await Mock.new();
-        loanTermsConsInstance = await Mock.new();
-        settingsInstance = await Mock.new();
+
+        const settingsInstance = await createTestSettingsInstance(
+          Settings,
+          {
+              Mock,
+              initialize: true,
+              onInitialize: async (instance, { chainlinkAggregator }) => {
+                  chainlinkAggregatorInstance = chainlinkAggregator
+              },
+          });
+
         const collateralTokenInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(
-            oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,
@@ -59,8 +68,10 @@ contract('LoansBaseConvertWeiToTokenTest', function () {
     ) {
         it(t('user', 'convertWeiToToken', 'Should able to convert wei to token.', false), async function() {
             // encode current token price
-            const encodeGetLatestAnswer = pairAggregatorEncoder.encodeGetLatestAnswer();
-            await oracleInstance.givenMethodReturnUint(encodeGetLatestAnswer, oraclePrice.toString());
+            await chainlinkAggregatorInstance.givenMethodReturnUint(
+              chainlinkAggregatorEncoder.encodeValueFor(),
+              oraclePrice.toString()
+            );
 
             // encode token decimals
             const encodeDecimals = erc20InterfaceEncoder.encodeDecimals();

@@ -68,9 +68,9 @@ module.exports = async function(deployer, network, accounts) {
   try {
     await deployerApp.deployMocksContractsIfNeeded();
     const currentBlockNumber = await web3.eth.getBlockNumber();
-  
+
     console.log(`Deployment starts at block number: ${currentBlockNumber}`);
-  
+
     const contracts = [
       // Logic
       { Contract: LendingPool, name: logicNames.LendingPool },
@@ -92,7 +92,7 @@ module.exports = async function(deployer, network, accounts) {
       { Contract: MarketsState, name: logicNames.MarketsState },
       { Contract: ATMSettings, name: logicNames.ATMSettings },
       { Contract: ATMFactory, name: logicNames.ATMFactory },
-    { Contract: ATMLiquidityMining, name: logicNames.ATMLiquidityMining },
+      { Contract: ATMLiquidityMining, name: logicNames.ATMLiquidityMining },
       { Contract: MarketFactory, name: logicNames.MarketFactory },
       { Contract: TTokenRegistry, name : logicNames.TTokenRegistry },
     ];
@@ -148,7 +148,7 @@ module.exports = async function(deployer, network, accounts) {
       NULL_ADDRESS, // Interest Validator is empty (0x0) in the first version.
       atmSettingsInstance.address,
     );
-  
+
     await initLogicVersions(
       deployedLogicContractsMap,
       { logicVersionsRegistryInstance },
@@ -175,7 +175,7 @@ module.exports = async function(deployer, network, accounts) {
       await proxy.initializeProxy(settingsInstance.address, nameBytes32)
       await instance.initialize(settingsInstance.address)
     }
-  
+
     await initializeProxy(logicNames.EscrowFactory, escrowFactoryInstance)
     await initializeProxy(logicNames.ChainlinkAggregator, chainlinkAggregatorInstance)
     await initializeProxy(logicNames.MarketsState, marketsStateInstance)
@@ -202,12 +202,12 @@ module.exports = async function(deployer, network, accounts) {
       { atms, tokens, txConfig, web3 },
       { ATMGovernance },
     );
-  
+
     await initPairAggregators(
       { chainlinkAggregatorInstance },
       { txConfig, ...networkConfig },
     );
-  
+
     await deployerApp.deploys([TDAI, TUSDC], txConfig);
     console.log(`Deployed tokens: TDAI [${TDAI.address}] TUSDC [${TUSDC.address}] `);
     console.log(`Registering TDAI and TUSDC in TTokenRegistry`);
@@ -221,14 +221,14 @@ module.exports = async function(deployer, network, accounts) {
       { tTokenAddress: TUSDC.address, borrowedTokenName: 'USDC', collateralTokenName: 'ETH' },
       { tTokenAddress: TUSDC.address, borrowedTokenName: 'USDC', collateralTokenName: 'LINK' },
     ];
-  
+
     await createMarkets(
       marketDefinitions,
       { marketFactoryInstance, marketsStateInstance },
       { txConfig, deployerApp, ...networkConfig },
       { LoanTermsConsensus, InterestConsensus, ERC20Mintable }
     );
-  
+
     deployerApp.print();
     deployerApp.writeJson();
     console.log(`${'='.repeat(25)} Deployment process finished. ${'='.repeat(25)}`);

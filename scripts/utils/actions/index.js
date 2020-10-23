@@ -1,5 +1,5 @@
 const loans = require('./loans');
-const oracles = require('./oracles');
+const chainlink = require('./chainlink');
 const escrow = require('./escrow');
 const blockchain = require('./blockchain');
 const tokens = require('./tokens');
@@ -8,7 +8,8 @@ const settings = require('./settings');
 
 module.exports = {
     loans,
-    oracles,
+    oracles: chainlink,
+    chainlink,
     escrow,
     blockchain,
     tokens,

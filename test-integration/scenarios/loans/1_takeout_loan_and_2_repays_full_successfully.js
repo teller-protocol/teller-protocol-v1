@@ -6,7 +6,7 @@ const {
   blockchain: blockchainActions,
   escrow: escrowActions,
   tokens: tokensActions,
-} = require("../../utils/actions");
+} = require("../../../scripts/utils/actions");
 const {
   loans: loansAssertions,
 } = require("../../utils/assertions");

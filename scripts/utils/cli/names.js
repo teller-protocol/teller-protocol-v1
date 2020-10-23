@@ -37,6 +37,16 @@ module.exports = {
         alias: 'CTNS',
         default: DEFAULT_COLL_TOKEN_NAMES,
     },
+    BASE_TOKEN_NAME: {
+        name: 'baseTokenName',
+        alias: 'BTN',
+        default: undefined
+    },
+    QUOTE_TOKEN_NAME: {
+        name: 'quoteTokenName',
+        alias: 'QTN',
+        default: undefined
+    },
     SENDER_INDEX: {
         name: 'senderIndex',
         alias: 'SI',

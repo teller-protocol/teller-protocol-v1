@@ -5,7 +5,7 @@ const {
   oracles: oraclesActions,
   tokens: tokensActions,
   settings: settingsActions,
-} = require("../../utils/actions");
+} = require("../../../scripts/utils/actions");
 const {toDecimals} = require("../../../test/utils/consts");
 const platformSettingsNames = require("../../../test/utils/platformSettingsNames");
 

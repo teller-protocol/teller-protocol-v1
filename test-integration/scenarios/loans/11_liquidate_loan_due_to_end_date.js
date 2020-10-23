@@ -5,8 +5,8 @@ const {
   tokens: tokensActions,
   oracles: oraclesActions,
   blockchain: blockchainActions,
-} = require("../../utils/actions");
-const helperActions = require("../../utils/actions/helper");
+} = require("../../../scripts/utils/actions");
+const helperActions = require("../../../scripts/utils/actions/helper");
 const {toDecimals, daysToMinutes } = require("../../../test/utils/consts");
 
 module.exports = async (testContext) => {

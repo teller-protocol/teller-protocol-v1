@@ -4,7 +4,6 @@ const { t } = require('../utils/consts');
 const { dappMockABI } = require('../../migrations/utils/encodeAbis');
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const EscrowFactoryEncoder = require("../utils/encoders/EscrowFactoryEncoder");
-const SettingsInterfaceEncoder = require("../utils/encoders/SettingsInterfaceEncoder");
 const LoansBaseInterfaceEncoder = require("../utils/encoders/LoansBaseInterfaceEncoder");
 const { encodeDappConfigParameter } = require("../utils/escrow");
 

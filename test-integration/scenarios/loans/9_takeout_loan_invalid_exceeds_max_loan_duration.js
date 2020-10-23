@@ -5,7 +5,7 @@ const {
   oracles: oraclesActions,
   tokens: tokensActions,
   blockchain: blockchainActions,
-} = require("../../utils/actions");
+} = require("../../../scripts/utils/actions");
 const { toDecimals } = require("../../../test/utils/consts");
 const { MAX_VALUE } = require("../../../config/consts");
 
