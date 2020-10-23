@@ -5,8 +5,8 @@ const {
   tokens: tokensActions,
   oracles: oraclesActions,
   blockchain: blockchainActions,
-} = require("../../utils/actions");
-const helperActions = require("../../utils/actions/helper");
+} = require("../../../scripts/utils/actions");
+const helperActions = require("../../../scripts/utils/actions/helper");
 const {toDecimals, daysToMinutes } = require("../../../test/utils/consts");
 
 module.exports = async (testContext) => {
@@ -38,11 +38,11 @@ module.exports = async (testContext) => {
   let initialOraclePrice;
   let collateralAmountDepositCollateral;
   if (collTokenName.toLowerCase() === "eth") {
-    initialOraclePrice = toDecimals("0.00295835", 18);
+    initialOraclePrice = "0.00295835";
     collateralAmountDepositCollateral = toDecimals(0.18, collateralTokenInfo.decimals);
   }
   if (collTokenName.toLowerCase() === "link") {
-    initialOraclePrice = toDecimals("0.100704", 8);
+    initialOraclePrice = "0.100704";
     collateralAmountDepositCollateral = toDecimals(6.1, collateralTokenInfo.decimals);
   }
   const durationInDays = 5;

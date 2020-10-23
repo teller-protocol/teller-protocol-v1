@@ -4,9 +4,8 @@
 const { oracle: readParams } = require("../utils/cli-builder");
 const { tokens, teller } = require("../../scripts/utils/contracts");
 const ProcessArgs = require('../utils/ProcessArgs');
-const { toUnits, ETH_ADDRESS } = require("../../test/utils/consts");
-const { TOKEN_NAME, COLL_TOKEN_NAME, BACK_ROUNDS } = require("../utils/cli/names");
-const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
+const { toDecimals, toUnits, ETH_ADDRESS } = require("../../test/utils/consts");
+const { TOKEN_NAME, COLL_TOKEN_NAME, AMOUNT, BACK_ROUNDS } = require("../utils/cli/names");
 const processArgs = new ProcessArgs(readParams.getPrices().argv);
 
 module.exports = async (callback) => {
@@ -14,35 +13,27 @@ module.exports = async (callback) => {
 
         const collTokenName = processArgs.getValue(COLL_TOKEN_NAME.name);
         const tokenName = processArgs.getValue(TOKEN_NAME.name);
-        const roundsBack = processArgs.getValue(BACK_ROUNDS.name);
+        const amount = processArgs.getValue(AMOUNT.name);
 
         const getContracts = processArgs.createGetContracts(artifacts);        
-        const chainlinkAggregatorAggregatorRegistry = await getContracts.getDeployed(teller.pairAggregatorRegistry());
+        const chainlinkAggregator = await getContracts.getDeployed(teller.chainlinkAggregator());
         const sourceToken = tokenName.toUpperCase() === 'ETH' ?  {address: ETH_ADDRESS, decimals: async () => Promise.resolve(18) }: await getContracts.getDeployed(tokens.get(tokenName));
         const targetToken = collTokenName.toUpperCase() === 'ETH' ?  {address: ETH_ADDRESS, decimals: async () => Promise.resolve(18) }: await getContracts.getDeployed(tokens.get(collTokenName));
 
-        const pairAggregatorAddress = await chainlinkAggregatorAggregatorRegistry.getPairAggregator(
-            sourceToken.address,
-            targetToken.address,
-        );
+        const decimals = await sourceToken.decimals()
+        const amountWithDecimals = toDecimals(amount, decimals.toString()).toFixed(0);
 
-        const chainlinkAggregatorAggregator = await ChainlinkPairAggregator.at(pairAggregatorAddress);
         const targetTokenDecimals = await targetToken.decimals();
         
         console.log(`Chainlink Aggregator => ${tokenName} / ${collTokenName}: `);
         console.log(`${'-'.repeat(60)}`);
 
-        const getLatestAnswerResult = await chainlinkAggregatorAggregator.getLatestAnswer();
+        const getLatestAnswerResult = await chainlinkAggregator.latestAnswerFor(sourceToken.address, targetToken.address);
         console.log(`Lastest Answer:        1 ${tokenName} = ${getLatestAnswerResult.toString()} = ${toUnits(getLatestAnswerResult.toString(), targetTokenDecimals)} ${collTokenName}`);
 
-        const getLatestTimestampResult = parseInt(await chainlinkAggregatorAggregator.getLatestTimestamp()) * 1000;
-        console.log(`Latest Timestamp:      ${getLatestTimestampResult} ms = ${new Date(getLatestTimestampResult).toISOString()}`);
+        const latestValueResult = await chainlinkAggregator.valueFor(sourceToken.address, targetToken.address, amountWithDecimals);
+        console.log(`Lastest Value:         ${amount} ${tokenName} = ${latestValueResult.toString()} = ${toUnits(latestValueResult.toString(), targetTokenDecimals)} ${collTokenName}`);
 
-        const getPreviousAnswerResult = await chainlinkAggregatorAggregator.getPreviousAnswer(roundsBack);
-        console.log(`Previous Answer:       1 ${tokenName} = ${getPreviousAnswerResult.toString()} = ${toUnits(getPreviousAnswerResult.toString(), targetTokenDecimals)} ${collTokenName}`);
-
-        const getPreviousTimestampResult = parseInt(await chainlinkAggregatorAggregator.getPreviousTimestamp(roundsBack)) * 1000;
-        console.log(`Previous Timestamp:    ${getPreviousTimestampResult.toString()} ms = ${new Date(getPreviousTimestampResult).toISOString()}`);
         console.log(`${'-'.repeat(60)}`);
         console.log('>>>> The script finished successfully. <<<<');
         callback();

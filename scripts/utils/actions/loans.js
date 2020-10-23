@@ -394,8 +394,7 @@ const printLoanInfo = async (
   if (!verbose) {
     return;
   }
-  const escrow = await getEscrow(allContracts, { testContext }, {loanId});
-  await printLoanDetails(allContracts, {testContext}, {tokenInfo, collateralTokenInfo, loanId, escrow});
+  await printLoanDetails(allContracts, {testContext}, {tokenInfo, collateralTokenInfo, loanId});
 };
 
 const printPairAggregatorInfo = async (

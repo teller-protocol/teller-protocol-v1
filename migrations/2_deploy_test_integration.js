@@ -1,5 +1,7 @@
 const assert = require("assert");
+
 const DeployerApp = require("./utils/DeployerApp");
+
 const InitializeableDynamicProxy = artifacts.require("./base/InitializeableDynamicProxy.sol");
 
 // Mock Smart Contracts
@@ -7,7 +9,7 @@ const PairAggregatorMock = artifacts.require("./mock/providers/chainlink/PairAgg
 
 module.exports = async function(deployer, network, accounts) {
   // We only deploy the Chainlink mocks on the ganache-mainnet netwotk.
-  if (network !== 'ganache-mainnet') return
+  if (![ "ganache-mainnet", "ropsten" ].includes(network)) return;
 
   console.log(`Deploying smart contracts to '${network}'.`);
   // Getting network configuration.
@@ -29,45 +31,17 @@ module.exports = async function(deployer, network, accounts) {
     networkConfig
   });
 
-  const initialUsdcEthPrice = '2797359000000000';
-  const initialDaiEthPrice = '2827359000000000';
-  const initialLinkUsdPrice = '993000000'; // 1 LINK = 9.93 USD or 1 USD = 0.1007049
-  const initialLinkEthPrice = '27750000000000000'; // 1 LINK = 0.02775 ETH or 1 ETH = 36.035827 LINK
-  await deployerApp.deployChainlink(PairAggregatorMock, {
-    inversed: false,
-    collateralDecimals: 18,
-    responseDecimals: 18,
-    baseTokenName: "USDC",
-    quoteTokenName: "ETH"
-  }, initialUsdcEthPrice, txConfig);
-  await deployerApp.deployChainlink(PairAggregatorMock, {
-    inversed: false,
-    collateralDecimals: 18,
-    responseDecimals: 18,
-    baseTokenName: "DAI",
-    quoteTokenName: "ETH"
-  }, initialDaiEthPrice, txConfig);
-  await deployerApp.deployChainlink(PairAggregatorMock, {
-    inversed: true,
-    collateralDecimals: 18,
-    responseDecimals: 8,
-    baseTokenName: "LINK",
-    quoteTokenName: "DAI"
-  }, initialLinkUsdPrice, txConfig);
-  await deployerApp.deployChainlink(PairAggregatorMock, {
-    inversed: true,
-    collateralDecimals: 18,
-    responseDecimals: 8,
-    baseTokenName: "LINK",
-    quoteTokenName: "USDC"
-  }, initialLinkUsdPrice, txConfig);
-  await deployerApp.deployChainlink(PairAggregatorMock, {
-    inversed: true,
-    collateralDecimals: 18,
-    responseDecimals: 18,
-    baseTokenName: "LINK",
-    quoteTokenName: "ETH"
-  }, initialLinkEthPrice, txConfig);
+  const initialUsdcEthPrice = "2797359000000000";
+  const initialDaiEthPrice = "2827359000000000";
+  const initialLinkEthPrice = "29282830000000000";
+
+  const initialUsdLinkPrice = "100704900000000000"; // 1 LINK = 9.93 USD or 1 USD = 0.1007049
+
+  await deployerApp.deployChainlinkAggregator(PairAggregatorMock, "USDC", "ETH", initialUsdcEthPrice, 18, txConfig);
+  await deployerApp.deployChainlinkAggregator(PairAggregatorMock, "DAI", "ETH", initialDaiEthPrice, 18, txConfig);
+  await deployerApp.deployChainlinkAggregator(PairAggregatorMock, "LINK", "ETH", initialLinkEthPrice, 18, txConfig);
+  await deployerApp.deployChainlinkAggregator(PairAggregatorMock, "USDC", "LINK", initialUsdLinkPrice, 18, txConfig);
+  await deployerApp.deployChainlinkAggregator(PairAggregatorMock, "DAI", "LINK", initialUsdLinkPrice, 18, txConfig);
 
   deployerApp.writeChainlink();
   console.log(`${"=".repeat(25)} Deployment process finished. ${"=".repeat(25)}`);

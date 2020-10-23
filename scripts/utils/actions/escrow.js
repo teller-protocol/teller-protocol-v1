@@ -12,7 +12,7 @@ const {
   uniswap: uniswapEvents,
   compound: compoundEvents
 } = require("../../../test/utils/events");
-const { teller } = require("../../../scripts/utils/contracts");
+const { teller } = require("../contracts");
 const logicNames = require("../../../test/utils/logicNames");
 
 /**

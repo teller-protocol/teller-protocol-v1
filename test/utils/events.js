@@ -846,8 +846,7 @@ module.exports = {
                     lenders,
                     lendingPool,
                     loanTermsConsensus,
-                    interestConsensus,
-                    pairAggregator
+                    interestConsensus
                 ) => emitted(tx, name, ev => {
                     assert.equal(ev.sender.toString(), sender.toString());
                     assert.equal(ev.borrowedToken.toString(), borrowedToken.toString());
@@ -857,7 +856,6 @@ module.exports = {
                     assert.equal(ev.lendingPool.toString(), lendingPool.toString());
                     assert.equal(ev.loanTermsConsensus.toString(), loanTermsConsensus.toString());
                     assert.equal(ev.interestConsensus.toString(), interestConsensus.toString());
-                    assert.equal(ev.pairAggregator.toString(), pairAggregator.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };

@@ -7,9 +7,9 @@ import "./MarketsStateInterface.sol";
 import "./InterestValidatorInterface.sol";
 import "./EscrowFactoryInterface.sol";
 import "./LogicVersionsRegistryInterface.sol";
-import "../providers/chainlink/IChainlinkPairAggregatorRegistry.sol";
 import "../settings/IATMSettings.sol";
 import "../util/SettingsConsts.sol";
+import "../providers/chainlink/IChainlinkAggregator.sol";
 
 /**
     @notice This interface defines all function to manage the platform configuration.
@@ -301,13 +301,9 @@ interface SettingsInterface {
     function interestValidator() external view returns (InterestValidatorInterface);
 
     /**
-        @notice Get the current ChainlinkPairAggregatorRegistry contract.
-        @return the current ChainlinkPairAggregatorRegistry contract.
+        @notice It is the global instance of the ChainlinkAggregator contract.
      */
-    function pairAggregatorRegistry()
-        external
-        view
-        returns (IChainlinkPairAggregatorRegistry);
+    function chainlinkAggregator() external view returns (IChainlinkAggregator);
 
     function atmSettings() external view returns (IATMSettings);
 
@@ -315,7 +311,7 @@ interface SettingsInterface {
         @notice It initializes this settings contract instance.
         @param escrowFactoryAddress the initial escrow factory address.
         @param versionsRegistryAddress the initial versions registry address.
-        @param pairAggregatorRegistryAddress the initial pair aggregator registry address.
+        @param chainlinkAggregatorAddress the initial pair aggregator registry address.
         @param marketsStateAddress the initial markets state address.
         @param interestValidatorAddress the initial interest validator address.
         @param atmSettingsAddress the initial ATM settings address.
@@ -323,7 +319,7 @@ interface SettingsInterface {
     function initialize(
         address escrowFactoryAddress,
         address versionsRegistryAddress,
-        address pairAggregatorRegistryAddress,
+        address chainlinkAggregatorAddress,
         address marketsStateAddress,
         address interestValidatorAddress,
         address atmSettingsAddress

@@ -4,7 +4,6 @@ const { t } = require('../utils/consts');
 const { dappMockABI } = require('../../migrations/utils/encodeAbis');
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const EscrowFactoryEncoder = require("../utils/encoders/EscrowFactoryEncoder");
-const SettingsInterfaceEncoder = require("../utils/encoders/SettingsInterfaceEncoder");
 const LoansBaseInterfaceEncoder = require("../utils/encoders/LoansBaseInterfaceEncoder");
 const { encodeDappConfigParameter } = require("../utils/escrow");
 
@@ -45,8 +44,8 @@ contract('EscrowCallDappTest', function (accounts) {
     _2_not_owner: [3, true, true, true, true, false, false, false, true, 'Ownable: caller is not the owner'],
     _3_without_dapp_whitelisted: [4, true, true, false, true, true, false, false, true, 'DAPP_NOT_WHITELISTED'],
     _4_with_invalid_function_signature: [5, true, true, true, true, true, true, true, true, null],
-    _5_loan_unsecured: [6, false, true, true, true, true, false, false, true, 'DAPP_UNSECURED_NOT_ALLOWED'],
-    _5_successful: [6, true, true, true, true, true, false, false, false, null],
+    _5_loan_unsecured: [6, false, true, true, false, true, false, false, true, 'DAPP_UNSECURED_NOT_ALLOWED'],
+    _6_successful: [6, true, true, true, true, true, false, false, false, null],
   }, function(
     loanID,
     loanSecured,

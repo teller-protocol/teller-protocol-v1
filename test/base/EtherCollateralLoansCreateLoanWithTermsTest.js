@@ -34,7 +34,6 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
     let lendingPoolInstance;
     let loanTermsConsTemplate;
     let processRequestEncoding;
-    let oracleInstance;
     let settingsInstance;
     let lendingTokenInstance;
     let collateralTokenInstance;
@@ -51,33 +50,17 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         lendingTokenInstance = await Mock.new();
         lendingPoolInstance = await Mock.new();
-        marketsInstance = await Mock.new();
         collateralTokenInstance = await Mock.new();
-        oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
-        atmSettingsInstance = await Mock.new();
         settingsInstance = await createTestSettingsInstance(
             Settings,
             {
                 from: owner,
                 Mock,
-                onInitialize: async (
-                    instance,
-                    {
-                        escrowFactory,
-                        versionsRegistry,
-                        pairAggregatorRegistry,
-                        interestValidator,
-                    }) => {
-                    await instance.initialize(
-                        escrowFactory.address,
-                        versionsRegistry.address,
-                        pairAggregatorRegistry.address,
-                        marketsInstance.address,
-                        interestValidator.address,
-                        atmSettingsInstance.address
-                    );
-                },
+                initialize: true,
+                onInitialize: async (instance, { atmSettings }) => {
+                    atmSettingsInstance = atmSettings
+                }
             },
             {
                 [settingsNames.TermsExpiryTime]: THIRTY_DAYS
@@ -85,7 +68,6 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
         );
         instance = await Loans.new();
         await instance.initialize(
-            oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,
