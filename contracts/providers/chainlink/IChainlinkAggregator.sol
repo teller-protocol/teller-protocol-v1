@@ -24,8 +24,8 @@ interface IChainlinkAggregator {
         @notice It grabs the Chainlink Aggregator contract address for the token pair if it is supported.
         @param src Source token address.
         @param dst Destination token address.
-        @returns AggregatorV2V3Interface The Chainlink Aggregator address.
-        @returns bool whether or not the values from the Aggregator should be considered inverted.
+        @return AggregatorV2V3Interface The Chainlink Aggregator address.
+        @return bool whether or not the values from the Aggregator should be considered inverted.
      */
     function aggregatorFor(address src, address dst) external view returns (AggregatorV2V3Interface, bool);
 
@@ -34,7 +34,7 @@ interface IChainlinkAggregator {
         @param src Source token address.
         @param dst Destination token address.
         @param srcAmount Amount of the source token to convert into the destination token.
-        @returns uint256 Value of the source token amount in destination tokens.
+        @return uint256 Value of the source token amount in destination tokens.
      */
     function valueFor(address src, address dst, uint256 srcAmount) external view returns (uint256);
 
@@ -43,7 +43,7 @@ interface IChainlinkAggregator {
         @dev It tries to use ETH as a pass through asset if the direct pair is not supported.
         @param src Source token address.
         @param dst Destination token address.
-        @returns uint256 The latest answer as given from Chainlink.
+        @return uint256 The latest answer as given from Chainlink.
      */
     function latestAnswerFor(address src, address dst) external view returns (int256);
 
