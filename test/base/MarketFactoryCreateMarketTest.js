@@ -3,7 +3,9 @@ const withData = require("leche").withData;
 const { t, NULL_ADDRESS, createMocks, ETH_ADDRESS } = require("../utils/consts");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const { marketFactory } = require("../utils/events");
+
 const LogicVersionsRegistryEncoder = require("../utils/encoders/LogicVersionsRegistryEncoder");
+const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -14,6 +16,7 @@ const Settings = artifacts.require("./base/Settings.sol");
 
 contract("MarketFactoryCreateMarketTest", function(accounts) {
   const logicVersionsRegistryEncoder = new LogicVersionsRegistryEncoder(web3);
+  const cTokenEncoder = new CTokenInterfaceEncoder(web3)
 
   const owner = accounts[0];
   let instance;
@@ -78,7 +81,16 @@ contract("MarketFactoryCreateMarketTest", function(accounts) {
       const tTokenAddress = getInstance(mocks, tTokenIndex, 2);
       const borrowedTokenAddress = getInstance(mocks, borrowedTokenIndex, 3);
       const collateralTokenAddress = collateralTokenIndex === 100 ? ETH_ADDRESS : getInstance(mocks, collateralTokenIndex, 4);
-      const cTokenAddressResponse = getInstance(mocks, cTokenAddressResponseIndex, 5);
+
+      let cTokenAddressResponse = getInstance(mocks, cTokenAddressResponseIndex, 5);
+      if (cTokenAddressResponse !== NULL_ADDRESS) {
+        const cTokenInstance = await Mock.at(cTokenAddressResponse)
+        await cTokenInstance.givenMethodReturnAddress(
+          cTokenEncoder.encodeUnderlying(),
+          borrowedTokenAddress
+        )
+      }
+
       await versionsRegistryInstance.givenMethodReturnBool(
         logicVersionsRegistryEncoder.encodeHasLogicVersion(),
         true

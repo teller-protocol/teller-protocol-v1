@@ -255,6 +255,16 @@ interface SettingsInterface {
         returns (AssetSettingsLib.AssetSettings memory);
 
     /**
+        @notice Get the cTokenAddress defined in the asset settings for a given asset address.
+        @param assetAddress asset address used to get the current settings.
+        @return the cTokenAddress.
+     */
+    function getCTokenAddress(address assetAddress)
+        external
+        view
+        returns (address);
+
+    /**
         @notice Tests whether amount exceeds the current maximum loan amount for a specific asset settings.
         @param assetAddress asset address to test the setting.
         @param amount amount to test.

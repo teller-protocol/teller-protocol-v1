@@ -93,11 +93,12 @@ module.exports = {
                 artifactName: 'Settings',
             };
         },
-        escrowDapp: (dappLogicName) => {
+        proxy: (contractLogicName, atAddress) => {
             return {
                 keyName: TELLER_KEY,
-                contractName: `${dappLogicName}_Proxy`,
-                artifactName: `${dappLogicName}`
+                contractName: `${contractLogicName}_Proxy`,
+                atAddress,
+                artifactName: `${contractLogicName}`
             }
         }
     },

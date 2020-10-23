@@ -17,6 +17,7 @@ const takeOutNewLoan = async function (
     maxAmountRequestLoanTerms,
     amountTakeOut,
     collateralAmountDepositCollateral,
+    secured = true,
 
     durationInDays,
     signers,
@@ -45,6 +46,7 @@ const takeOutNewLoan = async function (
   );
 
   // Requesting the loan terms.
+  const collateralRatio = secured ? 6000 : 0
   const loanTermsRequestTemplate = {
     amount: amountTakeOut,
     durationInDays,
@@ -52,7 +54,7 @@ const takeOutNewLoan = async function (
   };
   const loanResponseTemplate = {
     interestRate: 4000,
-    collateralRatio: 6000,
+    collateralRatio,
     maxLoanAmount: maxAmountRequestLoanTerms,
     signers,
     responseTime: 50

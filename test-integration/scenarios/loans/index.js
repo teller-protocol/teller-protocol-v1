@@ -10,6 +10,7 @@ const _9_takeout_loan_invalid_exceeds_max_loan_duration = require('./9_takeout_l
 const _10_liquidate_loan_due_to_under_collateralized = require('./10_liquidate_loan_due_to_under_collateralized');
 const _11_liquidate_loan_due_to_end_date = require('./11_liquidate_loan_due_to_end_date');
 const _12_liquidate_loan_invalid_liquidation_not_needed = require('./12_liquidate_loan_invalid_liquidation_not_needed');
+
 module.exports = {
     _1_takeout_loan_and_2_repays_full_successfully,
     _2_takeout_loan_and_1_repay_full_successfully,

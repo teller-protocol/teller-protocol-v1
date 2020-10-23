@@ -20,6 +20,7 @@ import "../interfaces/EscrowFactoryInterface.sol";
 import "../interfaces/MarketsStateInterface.sol";
 import "../interfaces/InterestValidatorInterface.sol";
 import "../providers/chainlink/IChainlinkAggregator.sol";
+import "../providers/compound/CErc20Interface.sol";
 import "../settings/IATMSettings.sol";
 
 /*****************************************************************************************************/
@@ -56,6 +57,10 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @notice The asset setting name for cToken address settings.
      */
     bytes32 public constant CTOKEN_ADDRESS_ASSET_SETTING = "CTokenAddress";
+    /**
+        @notice It defines the constant address that is the mainnet Compound Ether token.
+     */
+    address public constant CETH_ADDRESS = 0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5;
     /**
         @notice It defines the constant address to represent ETHER.
      */
@@ -285,11 +290,12 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         address cTokenAddress,
         uint256 maxLoanAmount
     ) external onlyPauser() isInitialized() {
-        require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
-
         assetSettings[assetAddress].requireNotExists();
+        assetSettings[assetAddress].initialize(maxLoanAmount);
 
-        assetSettings[assetAddress].initialize(cTokenAddress, maxLoanAmount);
+        if (cTokenAddress.isNotEmpty()) {
+            _setCTokenAddress(assetAddress, cTokenAddress);
+        }
 
         assets.add(assetAddress);
 
@@ -349,7 +355,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     {
         address oldCTokenAddress = assetSettings[assetAddress].cTokenAddress;
 
-        assetSettings[assetAddress].updateCTokenAddress(newCTokenAddress);
+        _setCTokenAddress(assetAddress, newCTokenAddress);
 
         emit AssetSettingsAddressUpdated(
             CTOKEN_ADDRESS_ASSET_SETTING,
@@ -358,6 +364,27 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
             oldCTokenAddress,
             newCTokenAddress
         );
+    }
+
+    /**
+        @notice It sets the cToken address for a specific asset address.
+        @param assetAddress asset address to configure.
+        @param cTokenAddress the new cToken address to configure.
+     */
+    function _setCTokenAddress(address assetAddress, address cTokenAddress) internal {
+        if (assetAddress == ETH_ADDRESS) {
+            // NOTE: This is the address for the cETH contract. It is hardcoded because the contract does not have a
+            //       underlying() function on it to check that this is the correct contract.
+            cTokenAddress.requireEqualTo(CETH_ADDRESS, "CETH_ADDRESS_NOT_MATCH");
+        } else {
+            require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
+            if (cTokenAddress.isNotEmpty()) {
+                require(cTokenAddress.isContract(), "CTOKEN_MUST_BE_CONTRACT_OR_EMPTY");
+                require(CErc20Interface(cTokenAddress).underlying() == assetAddress, "UNDERLYING_ADDRESS_NOT_MATCH");
+            }
+        }
+
+        assetSettings[assetAddress].updateCTokenAddress(cTokenAddress);
     }
 
     /**
@@ -393,6 +420,15 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         returns (AssetSettingsLib.AssetSettings memory)
     {
         return assetSettings[assetAddress];
+    }
+
+    /**
+        @notice Get the cTokenAddress defined in the asset settings for a given asset address.
+        @param assetAddress asset address used to get the current settings.
+        @return the cTokenAddress.
+     */
+    function getCTokenAddress(address assetAddress) external view returns (address) {
+        return assetSettings[assetAddress].cTokenAddress;
     }
 
     /**

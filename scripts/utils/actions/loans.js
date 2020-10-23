@@ -14,6 +14,9 @@ const {
   lendingPool: lendingPoolEvents,
   loans: loansEvents,
 } = require("../../../test/utils/events");
+const {
+  tokens: tokensAssertions
+} = require('../assertions')
 const errorActions = require("./errors");
 const { assert } = require("chai");
 
@@ -25,8 +28,10 @@ const getFunds = async (
   {testContext},
   {amount, to}
 ) => {
+  const balanceBefore = (await token.balanceOf.call(to)).toString()
   const symbol = await token.symbol();
   console.log(`Getting funds ${amount} ${symbol} for account ${to}`);
+  
   switch (testContext.network) {
     case 'ganache':
       await token.mint(to, amount);
@@ -38,6 +43,12 @@ const getFunds = async (
       await swapper.swapForExact(to, token.address, amount);
       break
   }
+
+  await tokensAssertions.balanceGt(
+    { token },
+    { testContext },
+    { address: to, minBalance: balanceBefore }
+  )
 }
 
 const withdrawFunds = async (
@@ -275,7 +286,7 @@ const repay = async ({loans, lendingPool, token}, {txConfig}, {loanId, amount}) 
   console.log(`Repaying ${amount} for loan id ${loanId}`);
   const loan = await loans.loans(loanId);
   const totalOwed = await loans.getTotalOwed(loanId);
-  const totalOwedBigNumber = BigNumber(totalOwed.toString());
+  const totalOwedBigNumber = new BigNumber(totalOwed.toString());
   
   await token.approve(lendingPool.address, amount, txConfig);
   const repayResult = await loans.repay(amount, loanId, txConfig);

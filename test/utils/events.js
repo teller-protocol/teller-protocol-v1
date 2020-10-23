@@ -37,14 +37,12 @@ module.exports = {
             const name = 'CompoundLended';
             return {
                 name: name,
-                emitted: (sender, dapp, amount, cToken, cTokenBalance, underlyingToken, underlyingBalance) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.dappAddress, dapp);
+                emitted: (tokenAddress, cTokenAddress, amount, tokenBalance, cTokenBalance) => emitted(tx, name, ev => {
+                    assert.equal(ev.tokenAddress, tokenAddress);
+                    assert.equal(ev.cTokenAddress, cTokenAddress);
                     assert.equal(ev.amount.toString(), amount.toString());
-                    assert.equal(ev.cToken, cToken); 
+                    assert.equal(ev.tokenBalance.toString(), tokenBalance.toString());
                     assert.equal(ev.cTokenBalance.toString(), cTokenBalance.toString());
-                    assert.equal(ev.underlyingToken, underlyingToken);
-                    assert.equal(ev.underlyingBalance.toString(), underlyingBalance.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -53,14 +51,13 @@ module.exports = {
             const name = 'CompoundRedeemed';
             return {
                 name: name,
-                emitted: (sender, dapp, amount, cToken, cTokenBalance, underlyingToken, underlyingBalance) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.dappAddress, dapp);
+                emitted: (tokenAddress, cTokenAddress, amount, isUnderlyingAmount, tokenBalance, cTokenBalance) => emitted(tx, name, ev => {
+                    assert.equal(ev.tokenAddress, tokenAddress);
+                    assert.equal(ev.cTokenAddress, cTokenAddress);
                     assert.equal(ev.amount.toString(), amount.toString());
-                    assert.equal(ev.cToken, cToken);
+                    assert.equal(ev.isUnderlyingAmount, isUnderlyingAmount);
+                    assert.equal(ev.tokenBalance.toString(), tokenBalance.toString());
                     assert.equal(ev.cTokenBalance.toString(), cTokenBalance.toString());
-                    assert.equal(ev.underlyingToken, underlyingToken);
-                    assert.equal(ev.underlyingBalance.toString(), underlyingBalance.toString());
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };

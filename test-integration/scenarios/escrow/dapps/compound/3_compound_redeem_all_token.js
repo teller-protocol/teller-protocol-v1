@@ -1,11 +1,11 @@
-const { teller, tokens } = require("../../../../../scripts/utils/contracts");
+const { teller, tokens, ctokens } = require("../../../../../scripts/utils/contracts");
 const {
   loans: loansActions,
   escrow: escrowActions,
   tokens: tokensActions,
 } = require("../../../../../scripts/utils/actions");
-const helperActions = require("../../../../../scripts/utils/actions/helper");
 const { toDecimals } = require("../../../../../test/utils/consts");
+const helperActions = require("../../../../../scripts/utils/actions/helper");
 
 module.exports = async (testContext) => {
   const {
@@ -14,9 +14,7 @@ module.exports = async (testContext) => {
     collTokenName,
     tokenName,
   } = testContext;
-  // TODO Add scenario title (from spreadsheet).
-  console.log("Scenario: Dapp#1 - .");
-
+  console.log("Scenario: Compound#1 - Redeem all tokens");
   const allContracts = await getContracts.getAllDeployed(
     {teller, tokens},
     tokenName,
@@ -35,12 +33,12 @@ module.exports = async (testContext) => {
   let collateralAmountDepositCollateral;
   let collateralAmountWithdrawCollateral;
   if (collTokenName.toLowerCase() === "eth") {
-    initialOraclePrice = "0.00295835";
+    initialOraclePrice = "0.00295835"
     collateralAmountDepositCollateral = toDecimals(0.2, collateralTokenInfo.decimals);
     collateralAmountWithdrawCollateral = toDecimals(0.1,collateralTokenInfo.decimals);
   }
   if (collTokenName.toLowerCase() === "link") {
-    initialOraclePrice = "0.100704";
+    initialOraclePrice = "0.100704"
     collateralAmountDepositCollateral = toDecimals(6.1, collateralTokenInfo.decimals);
     collateralAmountWithdrawCollateral = toDecimals(1, collateralTokenInfo.decimals);
   }
@@ -76,11 +74,13 @@ module.exports = async (testContext) => {
   );
 
   const context = { testContext, txConfig: borrowerTxConfig };
-  
-  const destinationTokenName = tokenInfo.symbol === 'ETH' ? 'USDC' : 'WETH';
-  const { address: wethAddress } = getContracts.getInfo(tokens.get(destinationTokenName))
-  const path = [ allContracts.token.address, wethAddress ]
-  await escrowActions.dapp.uniswap.swap(allContracts, context,
-    { path, sourceAmount: loan.borrowedAmount.toString(), minDestination: '1000000000000000' }
+
+  allContracts.cToken = await getContracts.getDeployed(ctokens.fromTokenName(tokenName))
+
+  const borrowedAmount = loan.borrowedAmount.toString()
+  await escrowActions.dapp.compound.lend(allContracts, context,
+    { amount: borrowedAmount }
   )
+
+  await escrowActions.dapp.compound.redeemAll(allContracts, context)
 };

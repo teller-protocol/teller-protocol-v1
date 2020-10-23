@@ -1,7 +1,9 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 // External Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Common
@@ -26,8 +28,8 @@ import "../../../providers/compound/CErc20Interface.sol";
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
-    @notice This contract is used to define Compound dApp actions available. All dapp actions are invoked via 
-        delegatecalls from Escrow contract, so this contract's state is really Escrow. 
+    @notice This contract is used to define Compound dApp actions available. All dapp actions are invoked via
+        delegatecalls from Escrow contract, so this contract's state is really Escrow.
     @author develop@teller.finance
  */
 contract Compound is ICompound, BaseEscrowDapp {
@@ -35,90 +37,110 @@ contract Compound is ICompound, BaseEscrowDapp {
     using Address for address;
 
     /* State Variables */
+
+    /* Error Codes */
+
+    uint256 public constant NO_ERROR = 0;
+
+    // @notice Caller does not have sufficient balance in the ERC-20 contract to complete the desired action.
+    uint256 public constant TOKEN_INSUFFICIENT_BALANCE = 13;
+
     // State is shared with Escrow contract as it uses delegateCall() to interact with this contract.
 
     /**
-        @notice To lend we first have to approve the cToken to access the token balance then mint. 
-        @param cTokenAddress address of the token.
-        @param amount amount of tokens to mint. 
+        @notice To lend we first have to approve the cToken to access the token balance then mint.
+        @param tokenAddress address of the token.
+        @param amount amount of tokens to mint.
     */
-    function lend(address cTokenAddress, uint256 amount) public onlyOwner() {
-        require(cTokenAddress.isContract(), "CTOKEN_ADDRESS_MUST_BE_CONTRACT");
-        CErc20Interface cToken = CErc20Interface(cTokenAddress);
-        uint256 balanceBeforeMint = cToken.balanceOf(address(this));
-        IERC20 underlying = IERC20(cToken.underlying());
-        require(
-            underlying.balanceOf(address(this)) >= amount,
-            "COMPOUND_INSUFFICIENT_UNDERLYING"
-        );
+    function lend(address tokenAddress, uint256 amount) public onlyOwner() {
+        require(_balanceOf(tokenAddress) >= amount, "COMPOUND_INSUFFICIENT_UNDERLYING");
 
-        underlying.approve(cTokenAddress, amount);
+        CErc20Interface cToken = _getCToken(tokenAddress);
+        uint256 cTokenBalanceBeforeLend = cToken.balanceOf(address(this));
+        IERC20(tokenAddress).approve(address(cToken), amount);
         uint256 result = cToken.mint(amount);
-        require(result == 0, "COMPOUND_DEPOSIT_ERROR");
+        require(result == NO_ERROR, "COMPOUND_DEPOSIT_ERROR");
 
-        uint256 balanceAfterMint = cToken.balanceOf(address(this));
+        uint256 cTokenBalanceAfterLend = cToken.balanceOf(address(this));
         require(
-            balanceAfterMint >= (balanceBeforeMint + amount),
+            cTokenBalanceAfterLend > cTokenBalanceBeforeLend,
             "COMPOUND_BALANCE_NOT_INCREASED"
         );
 
-        _tokenUpdated(cTokenAddress);
-        _tokenUpdated(address(underlying));
+        _tokenUpdated(address(cToken));
+        _tokenUpdated(tokenAddress);
 
-        uint256 underlyingBalance = underlying.balanceOf(address(this));
+        uint256 tokenBalanceAfterLend = _balanceOf(tokenAddress);
         emit CompoundLended(
-            msg.sender,
-            address(this),
+            tokenAddress,
+            address(cToken),
             amount,
-            cTokenAddress,
-            balanceAfterMint,
-            address(underlying),
-            underlyingBalance
+            tokenBalanceAfterLend,
+            cTokenBalanceAfterLend
         );
     }
 
     /**
-        @notice This function calls Compound redeemUnderlying().
-        @param cTokenAddress address of the token.
+        @notice This function redeems the user's cTokens for a specific amount of the underlying token.
+        @param tokenAddress address of the token.
         @param amount amount of underlying tokens to redeem.
     */
-    function redeem(address cTokenAddress, uint256 amount) public onlyOwner() {
-        require(cTokenAddress.isContract(), "CTOKEN_ADDRESS_MUST_BE_CONTRACT");
-        require(_balanceOf(cTokenAddress) >= amount, "COMPOUND_INSUFFICIENT_BALANCE");
-        CErc20Interface cToken = CErc20Interface(cTokenAddress);
-        IERC20 underlying = IERC20(cToken.underlying());
-        uint256 balanceBeforeRedeem = underlying.balanceOf(address(this));
+    function redeem(address tokenAddress, uint256 amount) public onlyOwner() {
+        CErc20Interface cToken = _getCToken(tokenAddress);
+        _redeem(cToken, amount, true);
+    }
 
-        uint256 result = cToken.redeemUnderlying(amount);
-        require(result == 0, "COMPOUND_WITHDRAWAL_ERROR");
+    /**
+        @notice This function redeems the complete cToken balance.
+        @param tokenAddress address of the token.
+    */
+    function redeemAll(address tokenAddress) public onlyOwner() {
+        CErc20Interface cToken = _getCToken(tokenAddress);
+        _redeem(cToken, cToken.balanceOf(address(this)), false);
+    }
 
-        uint256 underlyingBalanceAfterRedeem = underlying.balanceOf(address(this));
-        require(
-            underlyingBalanceAfterRedeem >= (balanceBeforeRedeem + amount),
-            "COMPOUND_BALANCE_NOT_INCREASED"
-        );
+    /* Internal Functions */
 
-        _tokenUpdated(cTokenAddress);
-        _tokenUpdated(address(underlying));
+    /**
+        @notice This function calls on Compound cToken to redeem an amount of the underlying token.
+        @param cToken the instance of the cToken.
+        @param amount amount of cToken or underlying token to redeem.
+        @param isUnderlying boolean indicating if the amount to redeem is in the underlying token amount.
+    */
+    function _redeem(CErc20Interface cToken, uint256 amount, bool isUnderlying) internal {
+        address tokenAddress = cToken.underlying();
+        uint256 tokenBalanceBeforeRedeem = _balanceOf(tokenAddress);
+        uint256 result = isUnderlying ? cToken.redeemUnderlying(amount) : cToken.redeem(amount);
+        require(result != TOKEN_INSUFFICIENT_BALANCE, "COMPOUND_INSUFFICIENT_BALANCE");
+        require(result == NO_ERROR, "COMPOUND_WITHDRAWAL_ERROR");
+
+        uint256 tokenBalanceAfterRedeem = _balanceOf(tokenAddress);
+        bool afterRedeemBalanceCheck = isUnderlying
+            ? tokenBalanceAfterRedeem == tokenBalanceBeforeRedeem + amount
+            : tokenBalanceAfterRedeem > tokenBalanceBeforeRedeem;
+        require(afterRedeemBalanceCheck, "COMPOUND_BALANCE_NOT_INCREASED");
+
+        _tokenUpdated(address(cToken));
+        _tokenUpdated(tokenAddress);
 
         uint256 cTokenBalanceAfterRedeem = cToken.balanceOf(address(this));
         emit CompoundRedeemed(
-            msg.sender,
-            address(this),
+            tokenAddress,
+            address(cToken),
             amount,
-            cTokenAddress,
-            cTokenBalanceAfterRedeem,
-            address(underlying),
-            underlyingBalanceAfterRedeem
+            isUnderlying,
+            tokenBalanceAfterRedeem,
+            cTokenBalanceAfterRedeem
         );
     }
 
     /**
-        @notice This function redeems complete token balance.
-        @param cTokenAddress address of the token.
-    */
-    function redeemAll(address cTokenAddress) public onlyOwner() {
-        uint256 amount = _balanceOf(cTokenAddress);
-        redeem(cTokenAddress, amount);
+        @notice Grabs the cToken address for an token from the asset settings.
+        @notice The cToken underlying address must match the supplied token address.
+        @param tokenAddress The token address to get the cToken for.
+        @return cToken instance
+     */
+    function _getCToken(address tokenAddress) internal view returns (CErc20Interface) {
+        return CErc20Interface(settings().getCTokenAddress(tokenAddress));
     }
 }

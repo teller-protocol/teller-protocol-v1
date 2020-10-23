@@ -238,6 +238,11 @@ module.exports = {
             addBase(yargs);
             return yargs;
         },
+        viewAsset: () => {
+            addBase(yargs);
+            addTokenName(yargs);
+            return yargs;
+        },
         updatePlatformSetting: () => {
             addBase(yargs);
             addNewValue(yargs);

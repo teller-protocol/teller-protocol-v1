@@ -9,6 +9,7 @@ const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/stru
 const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
 const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
@@ -23,6 +24,8 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
     const IAtmSettingsEncoder = new IATMSettingsEncoder(web3);
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const cTokenEncoder = new CTokenInterfaceEncoder(web3)
+
     let instance;
     let loanTermsConsInstance;
     let lendingPoolInstance;
@@ -108,6 +111,10 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
                 )
             )
             const cTokenInstance = await Mock.new();
+            await cTokenInstance.givenMethodReturnAddress(
+              cTokenEncoder.encodeUnderlying(),
+              lendingTokenInstance.address
+            )
             await settingsInstance.createAssetSettings(
                 lendingTokenInstance.address,
                 cTokenInstance.address,

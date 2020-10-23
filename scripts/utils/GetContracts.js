@@ -9,11 +9,11 @@ class GetContracts {
     }
 }
 
-GetContracts.prototype.getInfo = function({contractName, keyName, addressOnProperty = 'address'}) {
+GetContracts.prototype.getInfo = function({contractName, keyName, atAddress, addressOnProperty = 'address'}) {
     for (const key of Object.keys(this.networkConf[keyName])) {
         const has = key.toLowerCase() === contractName.toLowerCase();
         if(has) {
-            let addressValue = this.networkConf[keyName][key];
+            let addressValue = atAddress || this.networkConf[keyName][key];
             if(typeof addressValue ===  "object") {
                 addressValue = _.get(this.networkConf[keyName][key], addressOnProperty);
             }
@@ -35,8 +35,8 @@ GetContracts.prototype.getAddressOrEmpty = function({contractName, keyName, addr
     }
 }
 
-GetContracts.prototype.getDeployed = async function({ keyName, contractName, addressOnProperty = 'address', artifactName = undefined}) {
-    const { address, name } = this.getInfo({keyName, contractName, addressOnProperty});
+GetContracts.prototype.getDeployed = async function({ keyName, contractName, atAddress, addressOnProperty = 'address', artifactName = undefined}) {
+    const { address, name } = this.getInfo({keyName, contractName, atAddress, addressOnProperty});
     const artifact = this.artifacts.require(artifactName || name);
     const instance = await artifact.at(address);
     return instance;

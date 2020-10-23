@@ -5,7 +5,7 @@ const maxValueString = MAX_VALUE.toFixed(0);
 
 module.exports = {
     /**
-        As default this address is used to represent ETH (for example in Uniswap).
+        As default this address is used to represent ETH.
      */
     ETH_ADDRESS: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     /*

@@ -14,8 +14,7 @@ module.exports = async (testContext) => {
     collTokenName,
     tokenName,
   } = testContext;
-  // TODO Add scenario title (from spreadsheet).
-  console.log("Scenario: Escrow#1 - .");
+  console.log("Scenario: Escrow#1 - Repay loan as borrower in full");
 
   const allContracts = await getContracts.getAllDeployed(
     {teller, tokens},
@@ -75,21 +74,7 @@ module.exports = async (testContext) => {
     }
   );
 
-  const totalOwed = await loans.getTotalOwed(loan.id);
-
-  await loansActions.getFunds(
-    {token: allContracts.token},
-    {testContext},
-    {amount: loan.interestOwed, to: borrowerTxConfig.from}
-  );
-  await escrowActions.repay(
-    allContracts,
-    {
-      txConfig: borrowerTxConfig,
-      testContext,
-    },
-    {amount: totalOwed}
-  );
+  await escrowActions.repayInFull(allContracts, { txConfig: borrowerTxConfig, testContext })
 
   await loansActions.printLoanInfo(
     allContracts,
