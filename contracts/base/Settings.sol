@@ -369,6 +369,8 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
      */
     function _setCTokenAddress(address assetAddress, address cTokenAddress) internal {
         if (assetAddress == ETH_ADDRESS) {
+            // NOTE: This is the address for the cETH contrect. It is hardcoded because the contract does not have a
+            //       underlying() function on it to check that this is the correct contract.
             cTokenAddress.requireEqualTo(0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5, "CETH_ADDRESS_NOT_MATCH");
         } else {
             require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
