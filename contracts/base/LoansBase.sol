@@ -276,12 +276,6 @@ contract LoansBase is LoansInterface, Base {
 
         EscrowInterface(loans[loanID].escrow).initialize(address(this), loanID);
 
-        _markets().increaseBorrow(
-            lendingPool.lendingToken(),
-            this.collateralToken(),
-            amountBorrow
-        );
-
         emit LoanTakenOut(
             loanID,
             loans[loanID].loanTerms.borrower,
@@ -331,12 +325,6 @@ contract LoansBase is LoansInterface, Base {
 
         // collect the money from the payer
         lendingPool.repay(toPay, msg.sender);
-
-        _markets().increaseRepayment(
-            lendingPool.lendingToken(),
-            this.collateralToken(),
-            toPay
-        );
 
         emit LoanRepaid(
             loanID,

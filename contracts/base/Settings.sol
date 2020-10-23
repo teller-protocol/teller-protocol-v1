@@ -360,6 +360,15 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     }
 
     /**
+        @notice Gets the cToken address for a given asset address.
+        @param assetAddress token address.
+        @return the cToken address for a given asset address.
+     */
+    function getCTokenAddress(address assetAddress) external view returns (address) {
+        return assetSettings[assetAddress].cTokenAddress;
+    }
+
+    /**
         @notice Tests whether amount exceeds the current maximum loan amount for a specific asset settings.
         @param assetAddress asset address to test the setting.
         @param amount amount to test.

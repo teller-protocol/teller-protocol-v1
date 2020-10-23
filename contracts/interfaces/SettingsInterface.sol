@@ -299,7 +299,18 @@ interface SettingsInterface {
         view
         returns (IChainlinkPairAggregatorRegistry);
 
+    /**
+        @notice Get the current ATMSetting contract.
+        @return the current AtmSetting contract.
+     */
     function atmSettings() external view returns (IATMSettings);
+
+    /**
+        @notice Gets the cToken address for a given asset address.
+        @param assetAddress token address.
+        @return the cToken address for a given asset address.
+     */
+    function getCTokenAddress(address assetAddress) external view returns (address);
 
     /**
         @notice It initializes this settings contract instance.
