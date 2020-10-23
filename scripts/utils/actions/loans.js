@@ -14,7 +14,6 @@ const {
   lendingPool: lendingPoolEvents,
   loans: loansEvents,
 } = require("../../../test/utils/events");
-const { tokens } = require("../../../scripts/utils/contracts");
 const {
   tokens: tokensAssertions
 } = require('../assertions')

@@ -9,7 +9,7 @@ const {
 } = require("../../../scripts/utils/actions");
 const {
   loans: loansAssertions,
-} = require("../../utils/assertions");
+} = require("../../../scripts/utils/assertions");
 const {
   toDecimals,
 } = require("../../../test/utils/consts");
