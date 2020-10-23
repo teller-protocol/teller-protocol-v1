@@ -39,6 +39,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
 
     uint256 internal constant TEN = 10;
 
+    // It is a mapping for Chainlink Aggregator contracts by baseTokenAddress => quoteTokenAddress => chainlinkAggregatorAddress
     mapping(address => mapping(address => address)) internal aggregators;
 
     /* External Functions */
