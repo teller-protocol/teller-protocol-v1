@@ -81,7 +81,16 @@ contract("MarketFactoryCreateMarketTest", function(accounts) {
       const tTokenAddress = getInstance(mocks, tTokenIndex, 2);
       const borrowedTokenAddress = getInstance(mocks, borrowedTokenIndex, 3);
       const collateralTokenAddress = collateralTokenIndex === 100 ? ETH_ADDRESS : getInstance(mocks, collateralTokenIndex, 4);
-      const cTokenAddressResponse = getInstance(mocks, cTokenAddressResponseIndex, 5);
+
+      let cTokenAddressResponse = getInstance(mocks, cTokenAddressResponseIndex, 5);
+      if (cTokenAddressResponse !== NULL_ADDRESS) {
+        const cTokenInstance = await Mock.at(cTokenAddressResponse)
+        await cTokenInstance.givenMethodReturnAddress(
+          cTokenEncoder.encodeUnderlying(),
+          borrowedTokenAddress
+        )
+      }
+
       await versionsRegistryInstance.givenMethodReturnBool(
         logicVersionsRegistryEncoder.encodeHasLogicVersion(),
         true

@@ -58,6 +58,10 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
      */
     bytes32 public constant CTOKEN_ADDRESS_ASSET_SETTING = "CTokenAddress";
     /**
+        @notice It defines the constant address that is the mainnet Compound Ether token.
+     */
+    address public constant CETH_ADDRESS = 0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5;
+    /**
         @notice It defines the constant address to represent ETHER.
      */
     address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -369,9 +373,9 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
      */
     function _setCTokenAddress(address assetAddress, address cTokenAddress) internal {
         if (assetAddress == ETH_ADDRESS) {
-            // NOTE: This is the address for the cETH contrect. It is hardcoded because the contract does not have a
+            // NOTE: This is the address for the cETH contract. It is hardcoded because the contract does not have a
             //       underlying() function on it to check that this is the correct contract.
-            cTokenAddress.requireEqualTo(0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5, "CETH_ADDRESS_NOT_MATCH");
+            cTokenAddress.requireEqualTo(CETH_ADDRESS, "CETH_ADDRESS_NOT_MATCH");
         } else {
             require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
             if (cTokenAddress.isNotEmpty()) {
