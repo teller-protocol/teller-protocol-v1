@@ -5,7 +5,7 @@ const {
   oracles: oraclesActions,
   blockchain: blockchainActions,
   tokens: tokensActions,
-} = require("../../utils/actions");
+} = require("../../../scripts/utils/actions");
 const {toDecimals} = require("../../../test/utils/consts");
 
 module.exports = async (testContext) => {
@@ -37,14 +37,14 @@ module.exports = async (testContext) => {
   let currentOraclePrice;
   let collateralAmountDepositCollateral;
   if (collTokenName.toLowerCase() === "eth") {
-    currentOraclePrice = toDecimals("0.002797359", 18);
+    currentOraclePrice = "0.002797359";
     collateralAmountDepositCollateral = toDecimals(
       0.17,
       collateralTokenInfo.decimals
     );
   }
   if (collTokenName.toLowerCase() === "link") {
-    currentOraclePrice = toDecimals("0.100704", 8);
+    currentOraclePrice = "0.100704";
     collateralAmountDepositCollateral = toDecimals(
       3.1,
       collateralTokenInfo.decimals

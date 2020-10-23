@@ -59,17 +59,21 @@ const printLoanTerms = ({loanTerms}, { tokenInfo}) => {
     console.log(SIMPLE_SEPARATOR);
 }
 
-const printEscrow = async ({ settings }, {testContext}, {tokenInfo, collateralTokenInfo, escrow}) => {
-    const { web3 } = testContext;
+const printEscrow = async ({ settings, loans }, { testContext }, { loanId, tokenInfo }) => {
+    const { artifacts, web3 } = testContext;
     console.log(SIMPLE_SEPARATOR);
     console.group('Escrow Info:')
-    if(escrow === undefined) {
+
+    const loanInfo = await loans.loans(loanId);
+    if (loanInfo.escrow ===  NULL_ADDRESS) {
         console.log('Escrow not defined.');
         console.groupEnd();
         console.log(SIMPLE_SEPARATOR);
         return;
     }
 
+    const Escrow = artifacts.require("./base/Escrow.sol");
+    const escrow = await Escrow.at(loanInfo.escrow);
     const {
         valueInToken,
         valueInEth,
@@ -86,7 +90,7 @@ const printEscrow = async ({ settings }, {testContext}, {tokenInfo, collateralTo
     console.log(SIMPLE_SEPARATOR);
 }
 
-const printTokensInfo = async ({ tokenInfo, collateralTokenInfo }) => {
+const printTokensInfo = ({ tokenInfo, collateralTokenInfo }) => {
     console.log(SIMPLE_SEPARATOR);
     console.group(`Market Info:`);
     console.group(`Token Info:`);
@@ -103,25 +107,15 @@ const printTokensInfo = async ({ tokenInfo, collateralTokenInfo }) => {
     console.log(SIMPLE_SEPARATOR);
 }
 
-const printPairAggregator = async ({ pairAggregator }, { tokenInfo, collateralTokenInfo }) => {
-    const {
-        response, collateral, pending, isInverse,
-    } = await pairAggregator.getInfo()
-
+const printPairAggregator = async ({ chainlinkAggregator }, { tokenInfo, collateralTokenInfo }) => {
     console.log(SIMPLE_SEPARATOR);
-    console.group(`Pair Aggregator Info:`);
-    console.log(`Address:       ${pairAggregator.address}`);
-    console.log(`Inverse?:      ${isInverse}`);
-    console.group(`Decimals Info:`);
-    console.log(`Chainlink Response:    ${response.toString()}`);
-    console.log(`Collateral Token:      ${collateral.toString()}`);
-    console.log(`Diff. Decimals:        ${pending.toString()}`);
-    console.groupEnd();
+    console.group(`Chainlink Aggregator Info:`);
+    console.log(`Address:       ${chainlinkAggregator.address}`);
 
-    const latestAnswer = await pairAggregator.getLatestAnswer();
-    let lastestAnswerUnits = toUnits(latestAnswer, collateralTokenInfo.decimals);
+    const latestAnswer = await chainlinkAggregator.latestAnswerFor(tokenInfo.address, collateralTokenInfo.address)
+    let lastestAnswerUnits = toUnits(latestAnswer.toString(), collateralTokenInfo.decimals);
 
-    const inversePrice = BigNumber('1').div(lastestAnswerUnits);
+    const inversePrice = new BigNumber('1').div(lastestAnswerUnits);
     console.log(`Market:        ${tokenInfo.symbol} / ${collateralTokenInfo.symbol}`);
     console.log(`Response (from Wrapper):      ${latestAnswer}`);
     console.log(`Price:             1 ${tokenInfo.symbol} = ${lastestAnswerUnits.toFixed(INFO_DECIMALS)}  ${collateralTokenInfo.symbol}`);
@@ -191,9 +185,9 @@ const printLoan = ({ loanInfo, totalOwed }, { tokenInfo, collateralTokenInfo }) 
 module.exports = {
     printPairAggregator,
     printLoanDetails: async (
-        { loans, pairAggregator, settings }, // Contract instances,
+        { loans, chainlinkAggregator, settings }, // Contract instances,
         { testContext }, // Execution context params,
-        { loanId, tokenInfo, collateralTokenInfo, escrow }, // Custom params
+        { loanId, tokenInfo, collateralTokenInfo }, // Custom params
     ) => {
         const loanInfo = await loans.loans(loanId);
         const totalOwed = await loans.getTotalOwed(loanId);
@@ -210,9 +204,9 @@ module.exports = {
 
         printCollateralInfo({loanInfo, collateralInfo}, {tokenInfo, collateralTokenInfo});
 
-        await printPairAggregator({ pairAggregator }, { tokenInfo, collateralTokenInfo });
+        await printPairAggregator({ chainlinkAggregator }, { tokenInfo, collateralTokenInfo });
 
-        await printEscrow({ settings }, { testContext }, { tokenInfo, collateralTokenInfo, escrow });
+        await printEscrow({ settings, loans }, { testContext }, { loanId, tokenInfo, collateralTokenInfo });
 
         console.log(SEPARATOR);
     },

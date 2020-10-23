@@ -13,7 +13,6 @@ const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 
 contract('EtherCollateralLoansDepositCollateralTest', function (accounts) {
     let instance;
-    let oracleInstance;
     let loanTermsConsInstance;
     let lendingPoolInstance;
     let settingsInstance;
@@ -23,13 +22,11 @@ contract('EtherCollateralLoansDepositCollateralTest', function (accounts) {
     
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
-        oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
         settingsInstance = await Mock.new();
         atmSettingsInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(
-            oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,

@@ -101,17 +101,6 @@ interface LoansInterface {
     );
 
     /**
-        @notice This event is emitted when a the price oracle instance is updated.
-        @param oldPriceOracle the previous price oracle address.
-        @param newPriceOracle the new price oracle address.
-     */
-    event PriceOracleUpdated(
-        address indexed sender,
-        address indexed oldPriceOracle,
-        address indexed newPriceOracle
-    );
-
-    /**
         @notice Returns a list of all loans for a borrower
         @param borrower Account address of the borrower
      */
@@ -175,12 +164,6 @@ interface LoansInterface {
     function liquidateLoan(uint256 loanID) external;
 
     /**
-        @notice Get the current price oracle
-        @return address Contract address of the price oracle
-     */
-    function priceOracle() external view returns (address);
-
-    /**
         @notice Returns the lending token in the lending pool
         @return address Contract address of the lending pool
      */
@@ -229,24 +212,16 @@ interface LoansInterface {
         view
         returns (TellerCommon.LoanCollateralInfo memory);
 
-    /**
-        @notice Updates the current price oracle instance.
-        @param newPriceOracle the new price oracle address.
-     */
-    function setPriceOracle(address newPriceOracle) external;
-
     function settings() external view returns (SettingsInterface);
 
     /**
         @notice Initializes the current contract instance setting the required parameters, if allowed
-        @param priceOracleAddress Contract address of the price oracle
         @param lendingPoolAddress Contract address of the lending pool
-        @param loanTermsConsensusAddress Contract adddress for loan term consensus
+        @param loanTermsConsensusAddress Contract address for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
         @param collateralTokenAddress Contract address for the collateral token
      */
     function initialize(
-        address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
@@ -272,7 +247,7 @@ interface LoansInterface {
     function isLoanSecured(uint256 loanID) external view returns (bool);
 
     /**
-        @notice It getss the current liquidation info for a given loan id.
+        @notice It gets the current liquidation info for a given loan id.
         @param loanID loan id to get the info.
         @return liquidationInfo get current liquidation info for the given loan id.
      */

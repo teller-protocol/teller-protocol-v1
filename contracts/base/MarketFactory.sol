@@ -12,7 +12,6 @@ import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
 import "../interfaces/SettingsInterface.sol";
 import "../interfaces/MarketFactoryInterface.sol";
-import "../providers/chainlink/IChainlinkPairAggregatorRegistry.sol";
 
 // Commons
 import "./DynamicProxy.sol";
@@ -106,13 +105,6 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         _requireCreateMarket(tToken, borrowedToken, collateralToken);
         address owner = msg.sender;
 
-        IChainlinkPairAggregatorRegistry pairAggregatorRegistry = settings()
-            .pairAggregatorRegistry();
-        address pairAggregator = address(
-            pairAggregatorRegistry.getPairAggregator(borrowedToken, collateralToken)
-        );
-        require(pairAggregator != address(0x0), "ORACLE_NOT_FOUND_FOR_MARKET");
-
         (
             LendingPoolInterface lendingPoolProxy,
             InterestConsensusInterface interestConsensusProxy,
@@ -123,8 +115,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
             owner,
             tToken,
             borrowedToken,
-            collateralToken,
-            pairAggregator
+            collateralToken
         );
 
         _addMarket(
@@ -134,8 +125,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
             address(lendersProxy),
             address(lendingPoolProxy),
             address(loanTermsConsensusProxy),
-            address(interestConsensusProxy),
-            pairAggregator
+            address(interestConsensusProxy)
         );
 
         emit NewMarketCreated(
@@ -146,8 +136,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
             address(lendersProxy),
             address(lendingPoolProxy),
             address(loanTermsConsensusProxy),
-            address(interestConsensusProxy),
-            address(pairAggregator)
+            address(interestConsensusProxy)
         );
     }
 
@@ -233,7 +222,6 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         @param lendingPool the new lending pool contract address.
         @param loanTermsConsensus the new loan terms consensus contract address.
         @param interestConsensus the new interest consensus contract address.
-        @param pairAggregator the pair aggregator address for the market.
      */
     function _addMarket(
         address borrowedToken,
@@ -242,8 +230,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         address lenders,
         address lendingPool,
         address loanTermsConsensus,
-        address interestConsensus,
-        address pairAggregator
+        address interestConsensus
     ) internal {
         markets[borrowedToken][collateralToken] = TellerCommon.Market({
             loans: loans,
@@ -251,7 +238,6 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
             lendingPool: lendingPool,
             loanTermsConsensus: loanTermsConsensus,
             interestConsensus: interestConsensus,
-            pairAggregator: pairAggregator,
             exists: true
         });
     }
@@ -304,14 +290,12 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         @param tToken the tToken address.
         @param borrowedToken the borrowed token address.
         @param collateralToken the collateral token address.
-        @param pairAggregator the pair aggregator address to used in the new market.
      */
     function _createAndInitializeProxies(
         address owner,
         address tToken,
         address borrowedToken,
-        address collateralToken,
-        address pairAggregator
+        address collateralToken
     )
         internal
         returns (
@@ -337,7 +321,6 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
             tToken,
             borrowedToken,
             collateralToken,
-            pairAggregator,
             lendingPoolProxy,
             interestConsensusProxy,
             lendersProxy,
@@ -411,7 +394,6 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         @param tToken the tToken address.
         @param borrowedToken the borrowed token address.
         @param collateralToken the collateral token address.
-        @param pairAggregator the pair aggregator address to used in the new market.
         @param lendingPoolProxy the new lending pool proxy instance.
         @param interestConsensusProxy the new interest consensus proxy instance.
         @param lendersProxy the new lenders proxy instance.
@@ -423,7 +405,6 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         address tToken,
         address borrowedToken,
         address collateralToken,
-        address pairAggregator,
         LendingPoolInterface lendingPoolProxy,
         InterestConsensusInterface interestConsensusProxy,
         LendersInterface lendersProxy,
@@ -463,7 +444,6 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
 
         // Initializing Loans
         loansProxy.initialize(
-            pairAggregator,
             address(lendingPoolProxy),
             address(loanTermsConsensusProxy),
             address(settings()),

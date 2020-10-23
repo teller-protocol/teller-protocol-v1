@@ -28,7 +28,6 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
     let lendingPoolInstance;
     let loanTermsConsTemplate;
     let processRequestEncoding;
-    let oracleInstance;
     let settingsInstance;
     let lendingTokenInstance;
     let collateralTokenInstance;
@@ -46,39 +45,22 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         lendingTokenInstance = await Mock.new();
         lendingPoolInstance = await Mock.new();
-        oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
         collateralTokenInstance = await Mock.new();
-        atmSettingsInstance = await Mock.new();
         settingsInstance = await createTestSettingsInstance(
             Settings,
             {
                 from: owner,
                 Mock,
-                onInitialize: async (
-                    instance,
-                    {
-                        escrowFactory,
-                        versionsRegistry,
-                        pairAggregatorRegistry,
-                        marketsState,
-                        interestValidator,
-                    }) => {
-                    await instance.initialize(
-                        escrowFactory.address,
-                        versionsRegistry.address,
-                        pairAggregatorRegistry.address,
-                        marketsState.address,
-                        interestValidator.address,
-                        atmSettingsInstance.address,
-                    );
+                initialize: true,
+                onInitialize: async (instance, { atmSettings }) => {
+                    atmSettingsInstance = atmSettings
                 },
             },
             {}
         );
         instance = await Loans.new();
         await instance.initialize(
-            oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,

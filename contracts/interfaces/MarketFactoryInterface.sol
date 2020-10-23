@@ -47,8 +47,7 @@ interface MarketFactoryInterface {
         address lenders,
         address lendingPool,
         address loanTermsConsensus,
-        address interestConsensus,
-        address pairAggregator
+        address interestConsensus
     );
 
     event MarketRemoved(

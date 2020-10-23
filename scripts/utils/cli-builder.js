@@ -312,6 +312,7 @@ module.exports = {
             addTokenName(yargs);
             addCollTokenName(yargs);
             addBackRounds(yargs);
+            addAmount(yargs)
             return yargs;
         },
     },

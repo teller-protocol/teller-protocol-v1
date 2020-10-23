@@ -1,29 +1,32 @@
 const { ETH_ADDRESS } = require('../../../test/utils/consts');
 
 const getInfo = async ({token}) => {
+  const name = await token.name();
+  if (name.toLowerCase() === 'eth') {
+    return getETH()
+  }
+
   const decimalsPromise = token.decimals();
-  const namePromise = token.name();
   const symbolPromise = token.symbol();
 
-  const [decimals, name, symbol] = await Promise.all([
+  const [decimals, symbol] = await Promise.all([
     decimalsPromise,
-    namePromise,
     symbolPromise,
   ]);
   return {
-    decimals,
+    decimals: decimals.toString(),
     name,
     symbol,
     address: token.address,
   };
 };
 
-const getETH = async () => {
+const getETH = () => {
   return {
-    decimals: async () => Promise.resolve(18),
-    name: async () => Promise.resolve("ETH"),
-    symbol: async () => Promise.resolve("ETH"),
-    address: async () => Promise.resolve(ETH_ADDRESS),
+    decimals: "18",
+    name: "ETH",
+    symbol: "ETH",
+    address: ETH_ADDRESS,
   };
 };
 

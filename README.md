@@ -40,14 +40,6 @@ You only need to set/modify the following ones if you want to use a testnet or m
 - *INFURA_KEY*: This is used to deploy smart contracts on a testnet or mainnet.
 - *MNEMONIC_KEY*: This is used to deploy smart contracts on a network or interact with a network. **The default value is used to interact with Ganache locally.**
 
-### Docker: Create a ```.ENV``` file
-
-You already have a `docker/.env.template` file. Just copy/paste the `docker/.env.template` file, and create the `docker/.env`.
-
-All the environment variables already have a default value in the template file. So, you **don't need** to modify any value.
-
-The **MNEMONIC_KEY** value is already set because it was used to deploy the smart contract in the Ganache snapshot. So, please **don't use it** in a production environment.
-
 ### Verifying Versions
 
 ```sh

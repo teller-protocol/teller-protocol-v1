@@ -17,22 +17,6 @@ contract LoansBaseMock is LoansBase, BaseMock {
         _payLoan(loanID, toPay);
     }
 
-    function externalConvertWeiToToken(uint256 weiAmount)
-        external
-        view
-        returns (uint256)
-    {
-        return _convertWeiToToken(weiAmount);
-    }
-
-    function externalConvertTokenToWei(uint256 tokenAmount)
-        external
-        view
-        returns (uint256)
-    {
-        return _convertTokenToWei(tokenAmount);
-    }
-
     function externalIsSupplyToDebtRatioValid(uint256 newLoanAmount)
         external
         view
@@ -107,14 +91,12 @@ contract LoansBaseMock is LoansBase, BaseMock {
     }
 
     function initialize(
-        address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
         address
     ) external isNotInitialized() {
         _initialize(
-            priceOracleAddress,
             lendingPoolAddress,
             loanTermsConsensusAddress,
             settingsAddress

@@ -19,7 +19,7 @@ import "../interfaces/SettingsInterface.sol";
 import "../interfaces/EscrowFactoryInterface.sol";
 import "../interfaces/MarketsStateInterface.sol";
 import "../interfaces/InterestValidatorInterface.sol";
-import "../providers/chainlink/IChainlinkPairAggregatorRegistry.sol";
+import "../providers/chainlink/IChainlinkAggregator.sol";
 import "../settings/IATMSettings.sol";
 
 /*****************************************************************************************************/
@@ -117,10 +117,11 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
      */
     LogicVersionsRegistryInterface public versionsRegistry;
 
+
     /**
-        @notice It is the global instance of the ChainlinkPairAggregatorRegistry contract.
+        @notice It is the global instance of the ChainlinkAggregator contract.
      */
-    IChainlinkPairAggregatorRegistry public pairAggregatorRegistry;
+    IChainlinkAggregator public chainlinkAggregator;
 
     /**
         @notice The markets state.
@@ -415,7 +416,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @notice It initializes this settings contract instance.
         @param escrowFactoryAddress the initial escrow factory address.
         @param versionsRegistryAddress the initial versions registry address.
-        @param pairAggregatorRegistryAddress the initial pair aggregator registry address.
+        @param chainlinkAggregatorAddress the initial pair aggregator registry address.
         @param marketsStateAddress the initial markets state address.
         @param interestValidatorAddress the initial interest validator address.
         @param atmSettingsAddress the initial ATM settings address.
@@ -423,7 +424,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     function initialize(
         address escrowFactoryAddress,
         address versionsRegistryAddress,
-        address pairAggregatorRegistryAddress,
+        address chainlinkAggregatorAddress,
         address marketsStateAddress,
         address interestValidatorAddress,
         address atmSettingsAddress
@@ -431,8 +432,8 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         require(escrowFactoryAddress.isContract(), "ESCROW_FACTORY_MUST_BE_CONTRACT");
         require(versionsRegistryAddress.isContract(), "VERS_REGISTRY_MUST_BE_CONTRACT");
         require(
-            pairAggregatorRegistryAddress.isContract(),
-            "AGGR_REGISTRY_MUST_BE_CONTRACT"
+            chainlinkAggregatorAddress.isContract(),
+            "AGGREGATOR_MUST_BE_CONTRACT"
         );
         require(marketsStateAddress.isContract(), "MARKETS_STATE_MUST_BE_CONTRACT");
         require(
@@ -446,8 +447,8 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
 
         escrowFactory = EscrowFactoryInterface(escrowFactoryAddress);
         versionsRegistry = LogicVersionsRegistryInterface(versionsRegistryAddress);
-        pairAggregatorRegistry = IChainlinkPairAggregatorRegistry(
-            pairAggregatorRegistryAddress
+        chainlinkAggregator = IChainlinkAggregator(
+            chainlinkAggregatorAddress
         );
         marketsState = MarketsStateInterface(marketsStateAddress);
         interestValidator = InterestValidatorInterface(interestValidatorAddress);

@@ -15,7 +15,6 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
 
     let instance;
-    let oracleInstance;
     let loanTermsConsInstance;
     let lendingPoolInstance;
     let settingsInstance;
@@ -27,8 +26,6 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
 
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
-        lendingTokenInstance = await Mock.new();
-        oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
         const marketsInstance = await Mock.new();
         settingsInstance = await Mock.new();
@@ -36,10 +33,9 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
             settingsInterfaceEncoder.encodeMarketsState(),
             marketsInstance.address
         );
-        collateralTokenInstance = await Mock.new();
+        const collateralTokenInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(
-            oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,

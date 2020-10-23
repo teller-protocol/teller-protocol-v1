@@ -1,7 +1,7 @@
 const assert = require('assert');
 const BigNumber = require("bignumber.js");
 const loanStatus = require("../../../test/utils/loanStatus");
-const { loans: loansActions } = require('../actions');
+const { loans: loansActions } = require('../../../scripts/utils/actions');
 const {
   NULL_ADDRESS,
   ONE_DAY,

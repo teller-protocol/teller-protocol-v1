@@ -37,6 +37,16 @@ module.exports = {
         alias: 'CTNS',
         default: DEFAULT_COLL_TOKEN_NAMES,
     },
+    BASE_TOKEN_NAME: {
+        name: 'baseTokenName',
+        alias: 'BTN',
+        default: undefined
+    },
+    QUOTE_TOKEN_NAME: {
+        name: 'quoteTokenName',
+        alias: 'QTN',
+        default: undefined
+    },
     SENDER_INDEX: {
         name: 'senderIndex',
         alias: 'SI',
@@ -195,7 +205,7 @@ module.exports = {
     BACK_ROUNDS: {
         name: 'backRounds',
         alias: 'BR',
-        default: 1,
+        default: 0,
     },
     MIN_AMOUNT: {
         name: 'minAmount',

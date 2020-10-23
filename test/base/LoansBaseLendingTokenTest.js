@@ -15,13 +15,11 @@ contract('LoansBaseLendingTokenTest', function (accounts) {
     let lendingPoolInstance;
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
-        const oracleInstance = await Mock.new();
         const loanTermsConsInstance = await Mock.new();
         const settingsInstance = await Mock.new();
         const collateralTokenInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(
-            oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,
