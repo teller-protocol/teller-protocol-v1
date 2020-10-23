@@ -38,7 +38,6 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
         settingsInstance = await createTestSettingsInstance(
           Settings,
           {
-              from: owner,
               Mock,
               initialize: true,
               onInitialize: async (instance, { chainlinkAggregator }) => {
@@ -53,9 +52,9 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
     });
 
     withData({
-        _1_less_than_allowed: [1, accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 100, false, undefined],
+        _1_less_than_allowed: [1, accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 30000, accounts[1], 100, false, undefined],
         _2_non_borrower: [2, accounts[1], 0, 0, 0, 0, 0, 0, 0, accounts[2], 0, true, 'CALLER_DOESNT_OWN_LOAN'],
-        _3_withdraw_zero: [3, accounts[1], 0, 0, 0, 0, 0, 0, 0, accounts[1], 0, true, 'CANNOT_WITHDRAW_ZERO'],
+        _3_withdraw_zero: [3, accounts[1], 0, 0, 1000, 30000, 0, 30000, 30000, accounts[1], 0, true, 'CANNOT_WITHDRAW_ZERO'],
     }, function(
         loanID,
         loanBorrower,
@@ -65,7 +64,7 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
         loanCollateral,
         tokenDecimals,
         currentTotalCollateral,
-        oraclePrice,
+        oracleValue,
         borrowerAddress,
         withdrawalAmount,
         mustFail,
@@ -90,7 +89,7 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
             // encode current token price
             await chainlinkAggregatorInstance.givenMethodReturnUint(
               chainlinkAggregatorEncoder.encodeValueFor(),
-              oraclePrice.toString()
+              oracleValue.toString()
             );
 
             // encode token decimals
@@ -109,8 +108,7 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
                 const finalTotalCollateral = await instance.totalCollateral();
                 const finalContractCollateralTokenBalance = await collateralToken.balanceOf(instance.address)
 
-                const loanTotalOwed = loanPrincipalOwed + loanInterestOwed
-                const withdrawalAllowed = loanCollateral - Math.floor((Math.floor((loanTotalOwed * loanCollateralRatio) / 10000) * oraclePrice) / (10 ** tokenDecimals))
+                const withdrawalAllowed = loanCollateral - oracleValue
                 const paidOut = Math.min(withdrawalAllowed, withdrawalAmount)
 
                 const loanInfo = await instance.loans(loanID);
@@ -131,9 +129,9 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
     });
 
     withData({
-        _1_not_enough_balance: [true, 4917, 1, accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 4918, true, 'NOT_ENOUGH_TOKENS_BALANCE'],
-        _2_transfer_fail: [false, 4918, 1, accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 100, true, 'TOKENS_TRANSFER_FAILED'],
-        _3_too_much_collateral: [true, 4918, 1, accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 100000, true, 'COLLATERAL_AMOUNT_TOO_HIGH'],
+        _1_not_enough_balance: [true, 4917, 1, accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 30000, accounts[1], 4918, true, 'NOT_ENOUGH_TOKENS_BALANCE'],
+        _2_transfer_fail: [false, 4918, 1, accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 30000, accounts[1], 100, true, 'TOKENS_TRANSFER_FAILED'],
+        _3_too_much_collateral: [true, 4918, 1, accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 30000, accounts[1], 100000, true, 'COLLATERAL_AMOUNT_TOO_HIGH'],
     }, function(
         transferResult,
         currentBalance,
@@ -145,7 +143,7 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
         loanCollateral,
         tokenDecimals,
         currentTotalCollateral,
-        oraclePrice,
+        oracleValue,
         borrowerAddress,
         withdrawalAmount,
         mustFail,
@@ -174,7 +172,7 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
             // encode current token price
             await chainlinkAggregatorInstance.givenMethodReturnUint(
               chainlinkAggregatorEncoder.encodeValueFor(),
-              oraclePrice.toString()
+              oracleValue.toString()
             );
             // encode token decimals
             const encodeDecimals = erc20InterfaceEncoder.encodeDecimals();
@@ -187,8 +185,7 @@ contract('TokenCollateralLoansWithdrawCollateralTest', function (accounts) {
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
 
-                const loanTotalOwed = loanPrincipalOwed + loanInterestOwed
-                const withdrawalAllowed = loanCollateral - Math.floor((Math.floor((loanTotalOwed * loanCollateralRatio) / 10000) * oraclePrice) / (10 ** tokenDecimals))
+                const withdrawalAllowed = loanCollateral - oracleValue
                 const paidOut = Math.min(withdrawalAllowed, withdrawalAmount)
                 loans
                     .collateralWithdrawn(result)

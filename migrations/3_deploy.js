@@ -46,6 +46,7 @@ const ChainlinkAggregator = artifacts.require("./providers/chainlink/ChainlinkAg
 const tokensRequired = ['DAI', 'USDC', 'LINK'];
 
 module.exports = async function(deployer, network, accounts) {
+  return;
   console.log(`Deploying smart contracts to '${network}'.`)
   // Getting network configuration.
   const appConfig = await require('../config')(network);

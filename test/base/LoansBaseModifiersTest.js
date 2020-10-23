@@ -17,14 +17,12 @@ contract('LoansBaseModifiersTest', function (accounts) {
     let settingsInstance;
     
     beforeEach('Setup for each test', async () => {
-        const priceOracle = await Mock.new();
         const lendingPool = await Mock.new();
         const loanTermsConsensus = await Mock.new();
         const markets = await Mock.new();
         settingsInstance = await SettingsMock.new();
         instance = await LoansBaseModifiersMock.new();
         await instance.initialize(
-            priceOracle.address,
             lendingPool.address,
             loanTermsConsensus.address,
             settingsInstance.address,

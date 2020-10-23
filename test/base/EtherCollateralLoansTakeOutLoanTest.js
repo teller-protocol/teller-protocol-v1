@@ -76,18 +76,16 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
         _1_max_loan_exceeded: [15000001, false, false, 300000, NULL_ADDRESS, 0, 0, true, 'MAX_LOAN_EXCEEDED'],
         _2_loan_terms_expired: [15000000, true, false, 300000, NULL_ADDRESS, 0, 0, true, 'LOAN_TERMS_EXPIRED'],
         _3_collateral_deposited_recently: [15000000, false, true, 300000, NULL_ADDRESS, 0, 0, true, 'COLLATERAL_DEPOSITED_RECENTLY'],
-        // colateralNeeded = ((15181849*0.3564)*8346020000000000/10**18 which is 45158. The loan has 40000
-        _4_more_collateral_needed: [15000000, false, false, 300000, NULL_ADDRESS, 8346020000000000, 18, true, 'MORE_COLLATERAL_REQUIRED'],
-        // colateralNeeded = ((15181849*0.3564)*7392727000000000/10**18 which is 40000 exactly - the loan has 40000
-        _5_successful_loan: [15000000, false, false, 300000, NULL_ADDRESS, 7392727000000000, 18, false, undefined],
-        _6_with_recipient: [15000000, false, false, 300000, accounts[4], 7392727000000000, 18, false, undefined],
+        _4_more_collateral_needed: [15000000, false, false, 300000, NULL_ADDRESS, 45158, 18, true, 'MORE_COLLATERAL_REQUIRED'],
+        _5_successful_loan: [15000000, false, false, 300000, NULL_ADDRESS, 40000, 18, false, undefined],
+        _6_with_recipient: [15000000, false, false, 300000, accounts[4], 40000, 18, false, undefined],
     }, function(
         amountToBorrow,
         termsExpired,
         collateralTooRecent,
         loanDuration,
         recipient,
-        oraclePrice,
+        oracleValue,
         tokenDecimals,
         mustFail,
         expectedErrorMessage
@@ -99,7 +97,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
             // encode current token price
             await chainlinkAggregatorInstance.givenMethodReturnUint(
               chainlinkAggregatorEncoder.encodeValueFor(),
-              oraclePrice.toString()
+              oracleValue.toString()
             );
 
             // encode token decimals
@@ -121,6 +119,8 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
             loanTerms.duration = loanDuration
             loanTerms.recipient = recipient
             await instance.setLoan(mockLoanID, loanTerms, termsExpiry, 0, 40000, lastCollateralIn, 0, 0, loanTerms.maxLoanAmount, TERMS_SET, false)
+            const before = await instance.getCollateralInfo.call(mockLoanID)
+            console.log(before)
 
             try {
                 // Invocation

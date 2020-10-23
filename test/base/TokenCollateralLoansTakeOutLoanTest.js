@@ -49,12 +49,14 @@ contract("TokenCollateralLoansTakeOutLoanTest", function(accounts) {
         from: owner,
         Mock,
         initialize: true,
-        onInitialize: async (instance, { escrowFactory }) => {
+        onInitialize: async (instance, { escrowFactory, chainlinkAggregator }) => {
           const newEscrowInstance = await Mock.new();
           await escrowFactory.givenMethodReturnAddress(
             escrowFactoryInterfaceEncoder.encodeCreateEscrow(),
             newEscrowInstance.address
           );
+
+          chainlinkAggregatorInstance = chainlinkAggregator
         }
       });
 
@@ -76,11 +78,9 @@ contract("TokenCollateralLoansTakeOutLoanTest", function(accounts) {
     _1_max_loan_exceeded: [ 15000001, false, false, 300000, NULL_ADDRESS, 0, 0, true, "MAX_LOAN_EXCEEDED" ],
     _2_loan_terms_expired: [ 15000000, true, false, 300000, NULL_ADDRESS, 0, 0, true, "LOAN_TERMS_EXPIRED" ],
     _3_collateral_deposited_recently: [ 15000000, false, true, 300000, NULL_ADDRESS, 0, 0, true, "COLLATERAL_DEPOSITED_RECENTLY" ],
-    // colateralNeeded = ((15181849*0.3564)*8346020000000000/10**18 which is 45158. The loan has 40000
-    _4_more_collateral_needed: [ 15000000, false, false, 300000, NULL_ADDRESS, 8346020000000000, 18, true, "MORE_COLLATERAL_REQUIRED" ],
-    // colateralNeeded = ((15181849*0.3564)*7392727000000000/10**18 which is 40000 exactly - the loan has 40000
-    _5_successful_loan: [ 15000000, false, false, 300000, NULL_ADDRESS, 7392727000000000, 18, false, undefined ],
-    _6_with_recipient: [ 15000000, false, false, 300000, accounts[4], 7392727000000000, 18, false, undefined ]
+    _4_more_collateral_needed: [ 15000000, false, false, 300000, NULL_ADDRESS, 45158, 18, true, "MORE_COLLATERAL_REQUIRED" ],
+    _5_successful_loan: [ 15000000, false, false, 300000, NULL_ADDRESS, 40000, 18, false, undefined ],
+    _6_with_recipient: [ 15000000, false, false, 300000, accounts[4], 40000, 18, false, undefined ]
   }, function(
     amountToBorrow,
     termsExpired,

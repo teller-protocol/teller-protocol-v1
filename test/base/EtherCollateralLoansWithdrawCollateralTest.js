@@ -64,9 +64,9 @@ contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
     withData({
         _1_non_borrower: [accounts[1], 0, 0, 0, 0, 0, 0, 0, accounts[2], 0, true, 'CALLER_DOESNT_OWN_LOAN'],
         _2_withdraw_zero: [accounts[1], 0, 0, 0, 0, 0, 0, 0, accounts[1], 0, true, 'CANNOT_WITHDRAW_ZERO'],
-        _3_more_than_allowed: [accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 10000, true, 'COLLATERAL_AMOUNT_TOO_HIGH'],
-        _4_less_than_allowed: [accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 5161305000000000, accounts[1], 1000, false, undefined],
-        _5_none_allowed: [accounts[1], 10000000, 2564000, 5410, 35082, 18, 65432, 5161305000000000, accounts[1], 1000, true, 'COLLATERAL_AMOUNT_TOO_HIGH'],
+        _3_more_than_allowed: [accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 35000, accounts[1], 10000, true, 'COLLATERAL_AMOUNT_TOO_HIGH'],
+        _4_less_than_allowed: [accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 20000, accounts[1], 1000, false, undefined],
+        _5_none_allowed: [accounts[1], 10000000, 2564000, 5410, 40000, 18, 65432, 40000, accounts[1], 1000, true, 'COLLATERAL_AMOUNT_TOO_HIGH'],
     }, function(
         loanBorrower,
         loanPrincipalOwed,
@@ -75,7 +75,7 @@ contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
         loanCollateral,
         tokenDecimals,
         totalCollateral,
-        oraclePrice,
+        oracleValue,
         msgSender,
         withdrawalAmount,
         mustFail,
@@ -93,7 +93,7 @@ contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
             // encode current token price
             await chainlinkAggregatorInstance.givenMethodReturnUint(
               chainlinkAggregatorEncoder.encodeValueFor(),
-              oraclePrice.toString()
+              oracleValue.toString()
             );
 
             // encode token decimals
@@ -110,8 +110,7 @@ contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
                 const totalAfter = await instance.totalCollateral.call()
                 const contractBalAfter = await web3.eth.getBalance(instance.address)
 
-                const loanTotalOwed = loanPrincipalOwed + loanInterestOwed
-                const withdrawalAllowed = loanCollateral - Math.floor((Math.floor((loanTotalOwed * loanCollateralRatio) / 10000) * oraclePrice) / (10 ** tokenDecimals))
+                const withdrawalAllowed = loanCollateral - oracleValue
                 const paidOut = Math.min(withdrawalAllowed, withdrawalAmount)
 
                 let loan = await instance.loans.call(mockLoanID)
@@ -124,8 +123,7 @@ contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
                 assert.equal(totalCollateral - paidOut, parseInt(totalAfter))
                 assert.equal(parseInt(contractBalBefore) - paidOut, parseInt(contractBalAfter))
             } catch (error) {
-                assert(mustFail);
-                assert(error);
+                assert(mustFail, error.message);
                 assert.equal(error.reason, expectedErrorMessage);
             }
         });

@@ -67,10 +67,10 @@ contract("EtherCollateralLoansLiquidateTest", function(accounts) {
   });
 
   withData({
-    _1_loan_expired: [ 1900000000, 32725581, BigNumber("6000000000000000000"), 6512, true, 300000, BigNumber("4721489128502654"), 6, -400000, false, undefined ],
-    _2_under_collateralised: [ 1900000000, 32725581, BigNumber("5942423100000000000"), 6512, false, 300000, BigNumber("4721489128502654"), 6, -400000, false, undefined ],
-    _3_collateralised_and_loan_duration_expired: [ 1900000000, 32725581, BigNumber("6000000000000000000"), 6512, false, 300000, BigNumber("4721489128502654"), 6, -400000, false, undefined ],
-    _4_doesnt_need_liquidating: [ 1900000000, 32725581, BigNumber("6000000000000000000"), 6512, false, 300000, BigNumber("1000000"), 6, 100, true, "DOESNT_NEED_LIQUIDATION" ]
+    _1_loan_expired: [ 1900000000, 32725581, BigNumber("6000000000000000000"), 6512, true, 300000, BigNumber("6000000000000000000"), 6, -400000, false, undefined ],
+    _2_under_collateralized: [ 1900000000, 32725581, BigNumber("5942423100000000000"), 6512, false, 300000, BigNumber("6000000000000000000"), 6, -400000, false, undefined ],
+    _3_collateralized_and_loan_duration_expired: [ 1900000000, 32725581, BigNumber("6000000000000000000"), 6512, false, 300000, BigNumber("6000000000000000000"), 6, -400000, false, undefined ],
+    _4_doesnt_need_liquidating: [ 1900000000, 32725581, BigNumber("6000000000000000000"), 6512, false, 300000, BigNumber("6000000000000000000"), 6, 100, true, "DOESNT_NEED_LIQUIDATION" ]
   }, function(
     loanPrincipalOwed,
     loanInterestOwed,
@@ -78,7 +78,7 @@ contract("EtherCollateralLoansLiquidateTest", function(accounts) {
     loanCollateralRatio,
     loanExpired,
     loanDuration,
-    oraclePrice,
+    oracleValue,
     tokenDecimals,
     loanStartedSecondsBack,
     mustFail,
@@ -88,7 +88,7 @@ contract("EtherCollateralLoansLiquidateTest", function(accounts) {
       // encode current token price
       await chainlinkAggregatorInstance.givenMethodReturnUint(
         chainlinkAggregatorEncoder.encodeValueFor(),
-        oraclePrice.toString()
+        oracleValue.toString()
       );
 
       // encode token decimals

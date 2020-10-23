@@ -217,7 +217,7 @@ interface LoansInterface {
     /**
         @notice Initializes the current contract instance setting the required parameters, if allowed
         @param lendingPoolAddress Contract address of the lending pool
-        @param loanTermsConsensusAddress Contract adddress for loan term consensus
+        @param loanTermsConsensusAddress Contract address for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
         @param collateralTokenAddress Contract address for the collateral token
      */
@@ -247,7 +247,7 @@ interface LoansInterface {
     function isLoanSecured(uint256 loanID) external view returns (bool);
 
     /**
-        @notice It getss the current liquidation info for a given loan id.
+        @notice It gets the current liquidation info for a given loan id.
         @param loanID loan id to get the info.
         @return liquidationInfo get current liquidation info for the given loan id.
      */

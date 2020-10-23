@@ -18,14 +18,12 @@ contract('TokenCollateralLoansInitializeTest', function (accounts) {
     const getInstance = (refs, index, accountIndex) => index === -1 ? NULL_ADDRESS: index === 99 ? accounts[accountIndex] : refs[index];
 
     withData({
-        _1_basic: [2, 3, 4, 5, 6, undefined, false],
-        _2_not_oracle: [-1, 3, 4, 5, 6, 'PROVIDE_ORACLE_ADDRESS', true],
-        _3_not_lendingpool: [2, -1, 4, 5, 6, 'PROVIDE_LENDING_POOL_ADDRESS', true],
-        _4_not_loanTerms: [2, 3, -1, 5, 6, 'PROVIDED_LOAN_TERMS_ADDRESS', true],
-        _5_not_settings: [2, 3, 4, -1, 6, 'SETTINGS_MUST_BE_PROVIDED', true],
-        _6_not_collateralToken: [2, 3, 4, 5, -1, 'PROVIDE_COLL_TOKEN_ADDRESS', true],
+        _1_basic: [3, 4, 5, 6, undefined, false],
+        _2_not_lendingpool: [-1, 4, 5, 6, 'PROVIDE_LENDING_POOL_ADDRESS', true],
+        _3_not_loanTerms: [3, -1, 5, 6, 'PROVIDED_LOAN_TERMS_ADDRESS', true],
+        _4_not_settings: [3, 4, -1, 6, 'SETTINGS_MUST_BE_PROVIDED', true],
+        _5_not_collateralToken: [3, 4, 5, -1, 'PROVIDE_COLL_TOKEN_ADDRESS', true],
     }, function(
-        priceOracleIndex,
         lendingPoolIndex,
         loanTermsConsensusIndex,
         settingsIndex,
@@ -36,7 +34,6 @@ contract('TokenCollateralLoansInitializeTest', function (accounts) {
         it(t('user', 'initialize', 'Should (or not) be able to create a new instance.', mustFail), async function() {
             // Setup
             const loansInstance = await Loans.new();
-            const priceOracleAddress = getInstance(mocks, priceOracleIndex, 2);
             const lendingPoolAddress = getInstance(mocks, lendingPoolIndex, 3);
             const loanTermsConsensusAddress = getInstance(mocks, loanTermsConsensusIndex, 4);
             const settingsAddress = getInstance(mocks, settingsIndex, 5);
@@ -45,7 +42,6 @@ contract('TokenCollateralLoansInitializeTest', function (accounts) {
             try {
                 // Invocation
                 const result = await loansInstance.initialize(
-                    priceOracleAddress,
                     lendingPoolAddress,
                     loanTermsConsensusAddress,
                     settingsAddress,
@@ -57,8 +53,7 @@ contract('TokenCollateralLoansInitializeTest', function (accounts) {
                 assert(result);
             } catch (error) {
                 // Assertions
-                assert(mustFail);
-                assert(error);
+                assert(mustFail, error.message);
                 assert.equal(error.reason, expectedErrorMessage);
             }
         });

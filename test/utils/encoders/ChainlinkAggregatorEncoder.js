@@ -11,4 +11,8 @@ ChainlinkAggregatorEncoder.prototype.encodeValueFor = function () {
     return encode(this.web3, 'valueFor(address,address,uint256)')
 }
 
+ChainlinkAggregatorEncoder.prototype.encodeLatestAnswerFor = function () {
+    return encode(this.web3, 'latestAnswerFor(address,address)')
+}
+
 module.exports = ChainlinkAggregatorEncoder;
