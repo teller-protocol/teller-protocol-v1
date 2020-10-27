@@ -334,7 +334,7 @@ contract LendingPool is Base, LendingPoolInterface {
         @notice It validates whether transaction sender is the loans contract address.@
         @dev This function is overriden in some mock contracts for testing purposes.
      */
-    function _requireIsLoan() internal {
+    function _requireIsLoan() internal view {
         loans.requireEqualTo(msg.sender, "ADDRESS_ISNT_LOANS_CONTRACT");
     }
 

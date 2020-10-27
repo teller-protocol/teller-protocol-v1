@@ -11,7 +11,7 @@ contract LendingPoolMock is LendingPool {
         _mockRequireIsLoan = mock;
     }
 
-    function _requireIsLoan() internal {
+    function _requireIsLoan() internal view {
         if (!_mockRequireIsLoan) {
             super._requireIsLoan();
         }
