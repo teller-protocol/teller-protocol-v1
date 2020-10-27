@@ -497,7 +497,11 @@ contract LoansBase is LoansInterface, Base {
     {
         // Get collateral needed in lending tokens.
         neededInLendingTokens = _getCollateralNeededInTokens(loanID);
-        neededInCollateralTokens = settings().chainlinkAggregator().valueFor(lendingPool.lendingToken(), collateralToken, neededInLendingTokens);
+        neededInCollateralTokens = settings().chainlinkAggregator().valueFor(
+            lendingPool.lendingToken(),
+            collateralToken,
+            neededInLendingTokens
+        );
     }
 
     /**
@@ -584,7 +588,11 @@ contract LoansBase is LoansInterface, Base {
         uint256 liquidateEthPrice = settings().getPlatformSettingValue(
             settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
         );
-        uint256 collateralInTokens = settings().chainlinkAggregator().valueFor(collateralToken, lendingPool.lendingToken(), collateral);
+        uint256 collateralInTokens = settings().chainlinkAggregator().valueFor(
+            collateralToken,
+            lendingPool.lendingToken(),
+            collateral
+        );
         liquidationInfo = TellerCommon.LoanLiquidationInfo({
             liquidable: canLiquidateLoan(loanID),
             collateral: collateral,

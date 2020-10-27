@@ -111,12 +111,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
             LendersInterface lendersProxy,
             LoanTermsConsensusInterface loanTermsConsensusProxy,
             LoansInterface loansProxy
-        ) = _createAndInitializeProxies(
-            owner,
-            tToken,
-            borrowedToken,
-            collateralToken
-        );
+        ) = _createAndInitializeProxies(owner, tToken, borrowedToken, collateralToken);
 
         _addMarket(
             borrowedToken,

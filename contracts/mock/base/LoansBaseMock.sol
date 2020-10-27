@@ -96,11 +96,7 @@ contract LoansBaseMock is LoansBase, BaseMock {
         address settingsAddress,
         address
     ) external isNotInitialized() {
-        _initialize(
-            lendingPoolAddress,
-            loanTermsConsensusAddress,
-            settingsAddress
-        );
+        _initialize(lendingPoolAddress, loanTermsConsensusAddress, settingsAddress);
     }
 
     function depositCollateral(

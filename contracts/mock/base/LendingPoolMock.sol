@@ -5,7 +5,6 @@ pragma solidity 0.5.17;
 import "../../base/LendingPool.sol";
 
 contract LendingPoolMock is LendingPool {
-
     bool public _mockRequireIsLoan;
 
     function mockRequireIsLoan(bool mock) external {
@@ -13,7 +12,7 @@ contract LendingPoolMock is LendingPool {
     }
 
     function _requireIsLoan() internal {
-        if(!_mockRequireIsLoan) {
+        if (!_mockRequireIsLoan) {
             super._requireIsLoan();
         }
     }

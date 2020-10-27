@@ -30,10 +30,7 @@ library AssetSettingsLib {
         @notice It initializes the struct instance with the given parameters.
         @param maxLoanAmount the initial max loan amount.
      */
-    function initialize(
-        AssetSettings storage self,
-        uint256 maxLoanAmount
-    ) internal {
+    function initialize(AssetSettings storage self, uint256 maxLoanAmount) internal {
         requireNotExists(self);
         require(maxLoanAmount > 0, "INIT_MAX_AMOUNT_REQUIRED");
         self.maxLoanAmount = maxLoanAmount;

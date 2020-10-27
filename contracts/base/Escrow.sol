@@ -258,6 +258,11 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         address quoteAddress,
         uint256 baseAmount
     ) internal view returns (uint256) {
-        return settings().chainlinkAggregator().valueFor(baseAddress, quoteAddress, baseAmount);
+        return
+            settings().chainlinkAggregator().valueFor(
+                baseAddress,
+                quoteAddress,
+                baseAmount
+            );
     }
 }

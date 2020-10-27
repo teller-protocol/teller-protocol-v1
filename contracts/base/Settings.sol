@@ -122,7 +122,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
      */
     LogicVersionsRegistryInterface public versionsRegistry;
 
-
     /**
         @notice It is the global instance of the ChainlinkAggregator contract.
      */
@@ -446,10 +445,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     ) external isNotInitialized() {
         require(escrowFactoryAddress.isContract(), "ESCROW_FACTORY_MUST_BE_CONTRACT");
         require(versionsRegistryAddress.isContract(), "VERS_REGISTRY_MUST_BE_CONTRACT");
-        require(
-            chainlinkAggregatorAddress.isContract(),
-            "AGGREGATOR_MUST_BE_CONTRACT"
-        );
+        require(chainlinkAggregatorAddress.isContract(), "AGGREGATOR_MUST_BE_CONTRACT");
         require(marketsStateAddress.isContract(), "MARKETS_STATE_MUST_BE_CONTRACT");
         require(
             interestValidatorAddress.isEmpty() || interestValidatorAddress.isContract(),
@@ -462,9 +458,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
 
         escrowFactory = EscrowFactoryInterface(escrowFactoryAddress);
         versionsRegistry = LogicVersionsRegistryInterface(versionsRegistryAddress);
-        chainlinkAggregator = IChainlinkAggregator(
-            chainlinkAggregatorAddress
-        );
+        chainlinkAggregator = IChainlinkAggregator(chainlinkAggregatorAddress);
         marketsState = MarketsStateInterface(marketsStateAddress);
         interestValidator = InterestValidatorInterface(interestValidatorAddress);
         atmSettings = IATMSettings(atmSettingsAddress);
@@ -503,7 +497,10 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
             require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
             if (cTokenAddress.isNotEmpty()) {
                 require(cTokenAddress.isContract(), "CTOKEN_MUST_BE_CONTRACT_OR_EMPTY");
-                require(CErc20Interface(cTokenAddress).underlying() == assetAddress, "UNDERLYING_ADDRESS_NOT_MATCH");
+                require(
+                    CErc20Interface(cTokenAddress).underlying() == assetAddress,
+                    "UNDERLYING_ADDRESS_NOT_MATCH"
+                );
             }
         }
 
