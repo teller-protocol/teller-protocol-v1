@@ -190,7 +190,12 @@ contract MarketsState is
         view
         returns (MarketStateLib.MarketState memory)
     {
-        return _getMarket(borrowedAsset, collateralAsset);
+        address cTokenAddress = _getCTokenAddress(borrowedAsset);
+        if (cTokenAddress.isEmpty()) {
+            return _getMarket(borrowedAsset, collateralAsset);
+        } else {
+            return _getMarket(cTokenAddress, collateralAsset);
+        }
     }
 
     /**

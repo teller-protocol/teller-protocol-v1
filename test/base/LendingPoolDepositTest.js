@@ -69,7 +69,6 @@ contract('LendingPoolDepositTest', function (accounts) {
             daiInstance.address,
             lendersInstance.address,
             loansInstance.address,
-            cTokenInstance.address,
             settingsInstance.address,
         );
     });
@@ -92,6 +91,10 @@ contract('LendingPoolDepositTest', function (accounts) {
     ) {
         it(t('user', 'deposit', 'Should able (or not) to deposit DAIs.', mustFail), async function () {
             // Setup
+            await settingsInstance.givenMethodReturnAddress(
+                settingsInterfaceEncoder.encodeGetCTokenAddress(),
+                cTokenInstance.address
+            );
             const encodeTransferFrom = erc20InterfaceEncoder.encodeTransferFrom();
             await daiInstance.givenMethodReturnBool(encodeTransferFrom, transferFrom);
             const encodeMint = mintableInterfaceEncoder.encodeMint();
@@ -153,7 +156,6 @@ contract('LendingPoolDepositTest', function (accounts) {
                 daiInstance.address,
                 lendersInstance.address,
                 loansInstance.address,
-                cTokenInstance.address,
                 settingsInstance.address,
             );
 

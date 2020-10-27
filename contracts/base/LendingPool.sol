@@ -51,7 +51,7 @@ contract LendingPool is Base, LendingPoolInterface {
         @dev It throws a require error if parameter is not equal to loans contract address.
      */
     modifier isLoan() {
-        loans.requireEqualTo(msg.sender, "ADDRESS_ISNT_LOANS_CONTRACT");
+        _requireIsLoan();
         _;
     }
 
@@ -228,6 +228,7 @@ contract LendingPool is Base, LendingPoolInterface {
 
         // Withdraw the tokens from compound
         _withdrawFromCompoundIfSupported(amountToWithdraw);
+        // TODO Do we need to decrease any amount?
 
         // Transfer tokens to the lender.
         tokenTransfer(lender, amountToWithdraw);
@@ -314,7 +315,7 @@ contract LendingPool is Base, LendingPoolInterface {
         // this function withdraws 'amount' lending tokens from compound
         // another function exists to withdraw 'amount' cTokens of lending tokens
         uint256 redeemResult = CErc20Interface(cTokenAddress).redeemUnderlying(amount);
-        require(redeemResult == 0, "COMPOUND_WITHDRAWAL_ERROR");
+        require(redeemResult == 0, "COMPOUND_REDEEM_UNDERLYING_ERROR");
 
         uint256 finalBalance = CErc20Interface(cTokenAddress).balanceOf(address(this));
 
@@ -327,6 +328,14 @@ contract LendingPool is Base, LendingPoolInterface {
      */
     function _isCTokenNotSupported() internal view returns (bool) {
         return cToken() == address(0x0);
+    }
+
+    /**
+        @notice It validates whether transaction sender is the loans contract address.@
+        @dev This function is overriden in some mock contracts for testing purposes.
+     */
+    function _requireIsLoan() internal {
+        loans.requireEqualTo(msg.sender, "ADDRESS_ISNT_LOANS_CONTRACT");
     }
 
     /** Private functions */

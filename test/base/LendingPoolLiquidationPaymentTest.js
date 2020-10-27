@@ -5,6 +5,7 @@ const { lendingPool } = require('../utils/events');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
 const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
+const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -17,7 +18,7 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
     const cTokenEncoder = new CTokenInterfaceEncoder(web3)
-
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     let instance;
     let tTokenInstance;
     let daiInstance;
@@ -70,13 +71,17 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
     ) {
         it(t('user', 'liquidationPayment', 'Should able (or not) to liquidate payment.', mustFail), async function() {
             // Setup
-            const cTokenAddress = isCTokenSupported ? cTokenInstance.address : NULL_ADDRESS;
+            if(isCTokenSupported) {
+                await settingsInstance.givenMethodReturnAddress(
+                    settingsInterfaceEncoder.encodeGetCTokenAddress(),
+                    cTokenInstance.address
+                );
+            }
             await instance.initialize(
                 tTokenInstance.address,
                 daiInstance.address,
                 lendersInstance.address,
                 loansInstance,
-                cTokenAddress,
                 settingsInstance.address,
             );
             const encodeTransferFrom = erc20InterfaceEncoder.encodeTransferFrom();
