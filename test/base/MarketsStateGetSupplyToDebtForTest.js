@@ -2,7 +2,6 @@
 const withData = require('leche').withData;
 const { t, createMocks, } = require('../utils/consts');
 const actions = require('../utils/marketStateActions.js');
-const { encodeAssetSettings } = require('../utils/assetSettings');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 // Mock contracts
@@ -85,9 +84,9 @@ contract('MarketsStateGetSupplyToDebtForTest', function (accounts) {
     }, function(previousAmounts, borrowedIndexToTest, collateralIndexToTest, newLoanAmount, expectedResult) {
         it(t('user', 'getSupplyToDebtFor', 'Should be able to get the supply to debt value.', false), async function() {
             // Setup
-            await settings.givenMethodReturn(
-                settingsInterfaceEncoder.encodeGetAssetSettings(),
-                encodeAssetSettings(web3, { cTokenAddress: cTokenInstance.address })
+            await settings.givenMethodReturnAddress(
+                settingsInterfaceEncoder.encodeGetCTokenAddress(),
+                cTokenInstance.address
             );
             for (const { amount, type, borrowedIndex, collateralIndex } of previousAmounts) {
                 const borrowedAssset = mocks[borrowedIndex];

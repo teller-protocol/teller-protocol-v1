@@ -2,7 +2,6 @@
 const withData = require('leche').withData;
 const { t, createMocks } = require('../utils/consts');
 const actions = require('../utils/marketStateActions.js');
-const { encodeAssetSettings } = require('../utils/assetSettings');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 // Mock contracts
@@ -41,9 +40,9 @@ contract('MarketsStateIncreaseDecreaseTest', function (accounts) {
     }, function(owners, senderIndex, {type, borrowedIndex, collateralIndex, amount}, expectedErrorMessage, mustFail) {
         it(t('user', 'increase/decrease', 'Should be able to increase or decrease value.', mustFail), async function() {
             // Setup
-            await settings.givenMethodReturn(
-                settingsInterfaceEncoder.encodeGetAssetSettings(),
-                encodeAssetSettings(web3, { cTokenAddress: cTokenInstance.address })
+            await settings.givenMethodReturnAddress(
+                settingsInterfaceEncoder.encodeGetCTokenAddress(),
+                cTokenInstance.address
             );
             for (const newOwnerIndex of owners) {
                 instance.addWhitelisted(accounts[newOwnerIndex], { from: owner});

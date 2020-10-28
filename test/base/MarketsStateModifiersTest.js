@@ -1,7 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t, createMocks } = require('../utils/consts');
-const { encodeAssetSettings } = require('../utils/assetSettings');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 // Mock contracts
@@ -36,9 +35,9 @@ contract('MarketsStateModifiersTest', function (accounts) {
     }, function(adminIndexes, senderIndex, action, expectedErrorMessage, mustFail) {
         it(t('user', 'onlyWhitelisted', 'Should be able (or not) to call the increase function.', mustFail), async function() {
             // Setup
-            await settings.givenMethodReturn(
-                settingsInterfaceEncoder.encodeGetAssetSettings(),
-                encodeAssetSettings(web3, { cTokenAddress: cTokenInstance.address })
+            await settings.givenMethodReturnAddress(
+                settingsInterfaceEncoder.encodeGetCTokenAddress(),
+                cTokenInstance.address
             );
             for (const adminIndex of adminIndexes) {
                 const admin = accounts[adminIndex];
