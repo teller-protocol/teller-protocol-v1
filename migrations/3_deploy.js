@@ -84,7 +84,6 @@ module.exports = async function(deployer, network, accounts) {
       { Contract: Escrow, name: logicNames.Escrow },
       { Contract: ChainlinkAggregator, name: logicNames.ChainlinkAggregator },
       { Contract: ATMGovernance, name: logicNames.ATMGovernance },
-      { Contract: ATMLiquidityMining, name: logicNames.ATMLiquidityMining },
       { Contract: TLRToken, name: logicNames.TLRToken },
       // Dapps
       { Contract: Uniswap, name: logicNames.Uniswap },
