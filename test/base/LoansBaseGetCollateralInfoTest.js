@@ -76,11 +76,11 @@ contract("LoansBaseGetCollateralInfoTest", function(accounts) {
       );
 
       const loanID = 1
+      const loanTerms = createLoanTerms(accounts[2], NULL_ADDRESS, 0, collateralRatio, loanAmount, 0);
       const loan = createLoan({
         id: loanID,
         loanTerms,
         collateral: collateralAmount,
-        collateralRatio,
         principalOwed: loanAmount,
         interestOwed,
         status,
