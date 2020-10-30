@@ -56,6 +56,7 @@ contract LoansBaseMock is LoansBase, BaseMock {
     }
 
     function setLoan(TellerCommon.Loan memory loan) public {
+        require(loan.loanTerms.maxLoanAmount >= loan.borrowedAmount, "BORROWED_AMOUNT_EXCEEDS_MAX");
         loans[loan.id] = loan;
     }
 

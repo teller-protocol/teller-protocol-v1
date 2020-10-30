@@ -24,9 +24,9 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sourceToken, destinationToken, sourceAmount) => emitted(tx, name, ev => {
-                    assert.equal(ev.sourceToken, sourceToken);
-                    assert.equal(ev.destinationToken, destinationToken);
-                    assert.equal(ev.sourceAmount, sourceAmount);
+                    assert.equal(ev.sourceToken, sourceToken, 'sourceToken does not match', 'sourceToken does not match');
+                    assert.equal(ev.destinationToken, destinationToken, 'destinationToken does not match', 'destinationToken does not match');
+                    assert.equal(ev.sourceAmount, sourceAmount, 'sourceAmount does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -38,11 +38,11 @@ module.exports = {
             return {
                 name: name,
                 emitted: (tokenAddress, cTokenAddress, amount, tokenBalance, cTokenBalance) => emitted(tx, name, ev => {
-                    assert.equal(ev.tokenAddress, tokenAddress);
-                    assert.equal(ev.cTokenAddress, cTokenAddress);
-                    assert.equal(ev.amount.toString(), amount.toString());
-                    assert.equal(ev.tokenBalance.toString(), tokenBalance.toString());
-                    assert.equal(ev.cTokenBalance.toString(), cTokenBalance.toString());
+                    assert.equal(ev.tokenAddress, tokenAddress, 'tokenAddress does not match');
+                    assert.equal(ev.cTokenAddress, cTokenAddress, 'cTokenAddress does not match');
+                    assert.equal(ev.amount.toString(), amount.toString(), 'amount does not match');
+                    assert.equal(ev.tokenBalance.toString(), tokenBalance.toString(), 'tokenBalance does not match');
+                    assert.equal(ev.cTokenBalance.toString(), cTokenBalance.toString(), 'cTokenBalance does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -52,12 +52,12 @@ module.exports = {
             return {
                 name: name,
                 emitted: (tokenAddress, cTokenAddress, amount, isUnderlyingAmount, tokenBalance, cTokenBalance) => emitted(tx, name, ev => {
-                    assert.equal(ev.tokenAddress, tokenAddress);
-                    assert.equal(ev.cTokenAddress, cTokenAddress);
-                    assert.equal(ev.amount.toString(), amount.toString());
-                    assert.equal(ev.isUnderlyingAmount, isUnderlyingAmount);
-                    assert.equal(ev.tokenBalance.toString(), tokenBalance.toString());
-                    assert.equal(ev.cTokenBalance.toString(), cTokenBalance.toString());
+                    assert.equal(ev.tokenAddress, tokenAddress, 'tokenAddress does not match');
+                    assert.equal(ev.cTokenAddress, cTokenAddress, 'cTokenAddress does not match');
+                    assert.equal(ev.amount.toString(), amount.toString(), 'amount does not match');
+                    assert.equal(ev.isUnderlyingAmount, isUnderlyingAmount, 'isUnderlyingAmount does not match');
+                    assert.equal(ev.tokenBalance.toString(), tokenBalance.toString(), 'tokenBalance does not match');
+                    assert.equal(ev.cTokenBalance.toString(), cTokenBalance.toString(), 'cTokenBalance does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -69,9 +69,9 @@ module.exports = {
             return {
                 name: name,
                 emitted: (from, to, value) => emitted(tx, name, ev => {
-                    assert.equal(ev.from, from);
-                    assert.equal(ev.to, to);
-                    assert.equal(ev.value.toString(), value.toString());
+                    assert.equal(ev.from, from, 'from does not match');
+                    assert.equal(ev.to, to, 'to does not match');
+                    assert.equal(ev.value.toString(), value.toString(), 'value does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -83,9 +83,9 @@ module.exports = {
             return {
                 name: name,
                 emitted: (lender, totalNotWithdrawn, totalAccruedInterest) => emitted(tx, name, ev => {
-                    assert.equal(ev.lender, lender);
-                    assert.equal(ev.totalNotWithdrawn.toString(), totalNotWithdrawn.toString());
-                    assert.equal(ev.totalAccruedInterest.toString(), totalAccruedInterest.toString());
+                    assert.equal(ev.lender, lender, 'lender does not match');
+                    assert.equal(ev.totalNotWithdrawn.toString(), totalNotWithdrawn.toString(), 'totalNotWithdrawn does not match');
+                    assert.equal(ev.totalAccruedInterest.toString(), totalAccruedInterest.toString(), 'totalAccruedInterest does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -95,8 +95,8 @@ module.exports = {
             return {
                 name: name,
                 emitted: (recipient, amount) => emitted(tx, name, ev => {
-                    assert.equal(ev.recipient, recipient);
-                    assert.equal(ev.amount.toString(), amount.toString());
+                    assert.equal(ev.recipient, recipient, 'recipient does not match');
+                    assert.equal(ev.amount.toString(), amount.toString(), 'amount does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -108,7 +108,7 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, amount) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
+                    assert.equal(ev.sender, sender, 'sender does not match');
                     assert.equal(
                         BigNumber(ev.amount.toString()).toFixed(),
                         BigNumber(amount.toString()).toFixed());
@@ -121,8 +121,8 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, amount) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.amount.toString(), amount.toString());
+                    assert.equal(ev.sender, sender, 'sender does not match');
+                    assert.equal(ev.amount.toString(), amount.toString(), 'amount does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -132,8 +132,8 @@ module.exports = {
             return {
                 name: name,
                 emitted: (liquidator, amount) => emitted(tx, name, ev => {
-                    assert.equal(ev.liquidator, liquidator);
-                    assert.equal(ev.amount.toString(), amount.toString());
+                    assert.equal(ev.liquidator, liquidator, 'liquidator does not match');
+                    assert.equal(ev.amount.toString(), amount.toString(), 'amount does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -143,8 +143,8 @@ module.exports = {
             return {
                 name: name,
                 emitted: (borrower, amount) => emitted(tx, name, ev => {
-                    assert.equal(ev.borrower, borrower);
-                    assert.equal(ev.amount.toString(), amount.toString());
+                    assert.equal(ev.borrower, borrower, 'borrower does not match');
+                    assert.equal(ev.amount.toString(), amount.toString(), 'amount does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -154,8 +154,8 @@ module.exports = {
             return {
                 name: name,
                 emitted: (lender, amount) => emitted(tx, name, ev => {
-                    assert.equal(ev.lender, lender);
-                    assert.equal(ev.amount.toString(), amount.toString());
+                    assert.equal(ev.lender, lender, 'lender does not match');
+                    assert.equal(ev.amount.toString(), amount.toString(), 'amount does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -167,14 +167,14 @@ module.exports = {
             return {
                 name: name,
                 emitted: (loanID, borrower, recipient, interestRate, collateralRatio, maxLoanAmount, duration, expiry) => emitted(tx, name, ev => {
-                    assert.equal(ev.loanID.toString(), loanID.toString());
-                    assert.equal(ev.borrower, borrower);
-                    assert.equal(ev.recipient, recipient);
-                    assert.equal(ev.interestRate.toString(), interestRate.toString());
-                    assert.equal(ev.collateralRatio.toString(), collateralRatio.toString());
-                    assert.equal(ev.maxLoanAmount.toString(), maxLoanAmount.toString());
-                    assert.equal(ev.duration.toString(), duration.toString());
-                    assert.equal(ev.termsExpiry.toString(), expiry.toString());
+                    assert.equal(ev.loanID.toString(), loanID.toString(), 'loanID does not match');
+                    assert.equal(ev.borrower, borrower, 'borrower does not match');
+                    assert.equal(ev.recipient, recipient, 'recipient does not match');
+                    assert.equal(ev.interestRate.toString(), interestRate.toString(), 'interestRate does not match');
+                    assert.equal(ev.collateralRatio.toString(), collateralRatio.toString(), 'collateralRatio does not match');
+                    assert.equal(ev.maxLoanAmount.toString(), maxLoanAmount.toString(), 'maxLoanAmount does not match');
+                    assert.equal(ev.duration.toString(), duration.toString(), 'duration does not match');
+                    assert.equal(ev.termsExpiry.toString(), expiry.toString(), 'termsExpiry does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -184,10 +184,10 @@ module.exports = {
             return {
                 name: name,
                 emitted: (loanID, borrower, escrow, amountBorrowed) => emitted(tx, name, ev => {
-                    assert.equal(ev.loanID.toString(), loanID.toString());
-                    assert.equal(ev.borrower, borrower);
-                    assert.equal(ev.escrow, escrow);
-                    assert.equal(ev.amountBorrowed.toString(), amountBorrowed.toString());
+                    assert.equal(ev.loanID.toString(), loanID.toString(), 'loanID does not match');
+                    assert.equal(ev.borrower, borrower, 'borrower does not match');
+                    assert.equal(ev.escrow, escrow, 'escrow does not match');
+                    assert.equal(ev.amountBorrowed.toString(), amountBorrowed.toString(), 'amountBorrowed does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -197,9 +197,9 @@ module.exports = {
             return {
                 name: name,
                 emitted: (loanID, borrower, depositAmount) => emitted(tx, name, ev => {
-                    assert.equal(ev.loanID.toString(), loanID.toString());
-                    assert.equal(ev.borrower, borrower);
-                    assert.equal(ev.depositAmount.toString(), depositAmount.toString());
+                    assert.equal(ev.loanID.toString(), loanID.toString(), 'loanID does not match');
+                    assert.equal(ev.borrower, borrower, 'borrower does not match');
+                    assert.equal(ev.depositAmount.toString(), depositAmount.toString(), 'depositAmount does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -209,9 +209,9 @@ module.exports = {
             return {
                 name: name,
                 emitted: (loanID, borrower, withdrawalAmount) => emitted(tx, name, ev => {
-                    assert.equal(ev.loanID.toString(), loanID.toString());
-                    assert.equal(ev.borrower, borrower);
-                    assert.equal(ev.withdrawalAmount.toString(), withdrawalAmount.toString());
+                    assert.equal(ev.loanID.toString(), loanID.toString(), 'loanID does not match');
+                    assert.equal(ev.borrower, borrower, 'borrower does not match');
+                    assert.equal(ev.withdrawalAmount.toString(), withdrawalAmount.toString(), 'withdrawalAmount does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -221,11 +221,11 @@ module.exports = {
             return {
                 name: name,
                 emitted: (loanID, borrower, amountPaid, payer, totalOwed) => emitted (tx, name, ev => {
-                    assert.equal(ev.loanID.toString(), loanID.toString());
-                    assert.equal(ev.borrower, borrower);
-                    assert.equal(ev.amountPaid.toString(), BigNumber(amountPaid.toString()).toFixed(0));
-                    assert.equal(ev.payer, payer);
-                    assert.equal(ev.totalOwed.toString(), BigNumber(totalOwed.toString()).toFixed(0));
+                    assert.equal(ev.loanID.toString(), loanID.toString(), 'loanID does not match');
+                    assert.equal(ev.borrower, borrower, 'borrower does not match');
+                    assert.equal(ev.amountPaid.toString(), BigNumber(amountPaid.toString()).toFixed(0), 'amountPaid does not match');
+                    assert.equal(ev.payer, payer, 'payer does not match');
+                    assert.equal(ev.totalOwed.toString(), BigNumber(totalOwed.toString()).toFixed(0), 'totalOwed does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -235,9 +235,9 @@ module.exports = {
             return {
                 name: name,
                 emitted: (loanID, borrower, liquidator, collateralOut, tokensIn) => emitted(tx, name, ev => {
-                    assert.equal(ev.loanID.toString(), loanID.toString());
-                    assert.equal(ev.borrower, borrower);
-                    assert.equal(ev.liquidator, liquidator);
+                    assert.equal(ev.loanID.toString(), loanID.toString(), 'loanID does not match');
+                    assert.equal(ev.borrower, borrower, 'borrower does not match');
+                    assert.equal(ev.liquidator, liquidator, 'liquidator does not match');
                     assert.equal(
                         ev.collateralOut.toString(),
                         BigNumber(collateralOut.toString()).toFixed(0)
@@ -255,9 +255,9 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, oldPriceOracle, newPriceOracle) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender.toString(), sender.toString());
-                    assert.equal(ev.oldPriceOracle, oldPriceOracle);
-                    assert.equal(ev.newPriceOracle, newPriceOracle);
+                    assert.equal(ev.sender.toString(), sender.toString(), 'sender does not match');
+                    assert.equal(ev.oldPriceOracle, oldPriceOracle, 'oldPriceOracle does not match');
+                    assert.equal(ev.newPriceOracle, newPriceOracle, 'newPriceOracle does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -338,7 +338,7 @@ module.exports = {
             return {
                 name: name,
                 emitted: (newCap) => emitted(tx, name, ev => {
-                    assert.equal(ev.newCap, newCap);
+                    assert.equal(ev.newCap, newCap, 'newCap does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -348,9 +348,9 @@ module.exports = {
             return {
                 name: name,
                 emitted: (beneficiary, amount, deadline) => emitted(tx, name, ev => {
-                    assert.equal(ev.beneficiary, beneficiary);
-                    assert.equal(ev.amount, amount);
-                    assert.equal(ev.deadline, deadline);
+                    assert.equal(ev.beneficiary, beneficiary, 'beneficiary does not match');
+                    assert.equal(ev.amount, amount, 'amount does not match');
+                    assert.equal(ev.deadline, deadline, 'deadline does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -360,8 +360,8 @@ module.exports = {
             return {
                 name: name,
                 emitted: (beneficiary, amount) => emitted(tx, name, ev => {
-                    assert.equal(ev.beneficiary, beneficiary);
-                    assert.equal(ev.amount, amount);
+                    assert.equal(ev.beneficiary, beneficiary, 'beneficiary does not match');
+                    assert.equal(ev.amount, amount, 'amount does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -371,9 +371,9 @@ module.exports = {
             return {
                 name: name,
                 emitted: (account, unvestedTokens, deadline) => emitted(tx, name, ev => {
-                    assert.equal(ev.account.toString(), account.toString());
-                    assert.equal(ev.unvestedTokens.toString(), unvestedTokens.toString());
-                    assert.equal(ev.deadline.toString(), deadline.toString());
+                    assert.equal(ev.account.toString(), account.toString(), 'account does not match');
+                    assert.equal(ev.unvestedTokens.toString(), unvestedTokens.toString(), 'unvestedTokens does not match');
+                    assert.equal(ev.deadline.toString(), deadline.toString(), 'deadline does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction) 
             };
@@ -383,7 +383,7 @@ module.exports = {
             return {
                 name: name,
                 emitted: (id) => emitted(tx, name, ev => {
-                    assert.equal(ev.id, id);
+                    assert.equal(ev.id, id, 'id does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -395,8 +395,8 @@ module.exports = {
             return {
                 name: name,
                 emitted: (account, lendingPoolAddress) => emitted(tx, name, ev => {
-                    assert.equal(ev.account, account);
-                    assert.equal(ev.lendingPoolAddress, lendingPoolAddress);
+                    assert.equal(ev.account, account, 'account does not match');
+                    assert.equal(ev.lendingPoolAddress, lendingPoolAddress, 'lendingPoolAddress does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -406,8 +406,8 @@ module.exports = {
             return {
                 name: name,
                 emitted: (account, lendingPoolAddress) => emitted(tx, name, ev => {
-                    assert.equal(ev.account, account);
-                    assert.equal(ev.lendingPoolAddress, lendingPoolAddress);
+                    assert.equal(ev.account, account, 'account does not match');
+                    assert.equal(ev.lendingPoolAddress, lendingPoolAddress, 'lendingPoolAddress does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -417,10 +417,10 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, assetAddress, cTokenAddress, maxLoanAmount) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.assetAddress.toString(), assetAddress.toString());
-                    assert.equal(ev.cTokenAddress.toString(), cTokenAddress.toString());
-                    assert.equal(ev.maxLoanAmount.toString(), maxLoanAmount.toString());
+                    assert.equal(ev.sender, sender, 'sender does not match');
+                    assert.equal(ev.assetAddress.toString(), assetAddress.toString(), 'assetAddress does not match');
+                    assert.equal(ev.cTokenAddress.toString(), cTokenAddress.toString(), 'cTokenAddress does not match');
+                    assert.equal(ev.maxLoanAmount.toString(), maxLoanAmount.toString(), 'maxLoanAmount does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -430,11 +430,11 @@ module.exports = {
             return {
                 name: name,
                 emitted: (assetSettingName, sender, assetAddress, oldValue, newValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.assetSettingName.toString(), assetSettingName.toString());
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.assetAddress.toString(), assetAddress.toString());
-                    assert.equal(ev.oldValue.toString(), oldValue.toString());
-                    assert.equal(ev.newValue.toString(), newValue.toString());
+                    assert.equal(ev.assetSettingName.toString(), assetSettingName.toString(), 'assetSettingName does not match');
+                    assert.equal(ev.sender, sender, 'sender does not match');
+                    assert.equal(ev.assetAddress.toString(), assetAddress.toString(), 'assetAddress does not match');
+                    assert.equal(ev.oldValue.toString(), oldValue.toString(), 'oldValue does not match');
+                    assert.equal(ev.newValue.toString(), newValue.toString(), 'newValue does not match', 'newValue does not match');
 
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
@@ -445,11 +445,11 @@ module.exports = {
             return {
                 name: name,
                 emitted: (assetSettingName, sender, assetAddress, oldValue, newValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.assetSettingName.toString(), assetSettingName.toString());
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.assetAddress.toString(), assetAddress.toString());
-                    assert.equal(ev.oldValue.toString(), oldValue.toString());
-                    assert.equal(ev.newValue.toString(), newValue.toString());
+                    assert.equal(ev.assetSettingName.toString(), assetSettingName.toString(), 'assetSettingName does not match');
+                    assert.equal(ev.sender, sender, 'sender does not match');
+                    assert.equal(ev.assetAddress.toString(), assetAddress.toString(), 'assetAddress does not match');
+                    assert.equal(ev.oldValue.toString(), oldValue.toString(), 'oldValue does not match');
+                    assert.equal(ev.newValue.toString(), newValue.toString(), 'newValue does not match');
 
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
@@ -460,8 +460,8 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, assetAddress) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.assetAddress.toString(), assetAddress.toString());
+                    assert.equal(ev.sender, sender, 'sender does not match');
+                    assert.equal(ev.assetAddress.toString(), assetAddress.toString(), 'assetAddress does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -471,11 +471,11 @@ module.exports = {
             return {
                 name: name,
                 emitted: (settingName, sender, value, minValue, maxValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.settingName.toString(), settingName.toString());
-                    assert.equal(ev.sender.toString(), sender.toString());
-                    assert.equal(ev.value.toString(), value.toString());
-                    assert.equal(ev.minValue.toString(), minValue.toString());
-                    assert.equal(ev.maxValue.toString(), maxValue.toString());
+                    assert.equal(ev.settingName.toString(), settingName.toString(), 'settingName does not match');
+                    assert.equal(ev.sender.toString(), sender.toString(), 'sender does not match');
+                    assert.equal(ev.value.toString(), value.toString(), 'value does not match');
+                    assert.equal(ev.minValue.toString(), minValue.toString(), 'minValue does not match');
+                    assert.equal(ev.maxValue.toString(), maxValue.toString(), 'maxValue does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -485,10 +485,10 @@ module.exports = {
             return {
                 name: name,
                 emitted: (settingName, sender, oldValue, newValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.settingName.toString(), settingName.toString());
-                    assert.equal(ev.sender.toString(), sender.toString());
-                    assert.equal(ev.oldValue.toString(), oldValue.toString());
-                    assert.equal(ev.newValue.toString(), newValue.toString());
+                    assert.equal(ev.settingName.toString(), settingName.toString(), 'settingName does not match');
+                    assert.equal(ev.sender.toString(), sender.toString(), 'sender does not match');
+                    assert.equal(ev.oldValue.toString(), oldValue.toString(), 'oldValue does not match');
+                    assert.equal(ev.newValue.toString(), newValue.toString(), 'newValue does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -498,9 +498,9 @@ module.exports = {
             return {
                 name: name,
                 emitted: (settingName, sender, lastValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.settingName.toString(), settingName.toString());
-                    assert.equal(ev.lastValue.toString(), lastValue.toString());
-                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.settingName.toString(), settingName.toString(), 'settingName does not match');
+                    assert.equal(ev.lastValue.toString(), lastValue.toString(), 'lastValue does not match');
+                    assert.equal(ev.sender.toString(), sender.toString(), 'sender does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -512,9 +512,9 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, settingName, settingValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.settingName, settingName);
-                    assert.equal(ev.settingValue, settingValue);
+                    assert.equal(ev.sender, sender, 'sender does not match');
+                    assert.equal(ev.settingName, settingName, 'settingName does not match');
+                    assert.equal(ev.settingValue, settingValue, 'settingValue does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -524,10 +524,10 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, settingName, oldValue, newValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.settingName, settingName);
-                    assert.equal(ev.oldValue, oldValue);
-                    assert.equal(ev.newValue, newValue);
+                    assert.equal(ev.sender, sender, 'sender does not match');
+                    assert.equal(ev.settingName, settingName, 'settingName does not match');
+                    assert.equal(ev.oldValue, oldValue, 'oldValue does not match');
+                    assert.equal(ev.newValue, newValue, 'newValue does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -537,9 +537,9 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, settingName, settingValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.settingName, settingName);
-                    assert.equal(ev.settingValue, settingValue);
+                    assert.equal(ev.sender, sender, 'sender does not match');
+                    assert.equal(ev.settingName, settingName, 'settingName does not match');
+                    assert.equal(ev.settingValue, settingValue, 'settingValue does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -549,10 +549,10 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, asset, settingName, settingValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.asset, asset);
-                    assert.equal(ev.settingName, settingName);
-                    assert.equal(ev.settingValue, settingValue);
+                    assert.equal(ev.sender, sender, 'sender does not match');
+                    assert.equal(ev.asset, asset, 'asset does not match');
+                    assert.equal(ev.settingName, settingName, 'settingName does not match');
+                    assert.equal(ev.settingValue, settingValue, 'settingValue does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -562,10 +562,10 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, asset, settingName, settingValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.asset, asset);
-                    assert.equal(ev.settingName, settingName);
-                    assert.equal(ev.oldValue, settingValue);
+                    assert.equal(ev.sender, sender, 'sender does not match');
+                    assert.equal(ev.asset, asset, 'asset does not match');
+                    assert.equal(ev.settingName, settingName, 'settingName does not match');
+                    assert.equal(ev.oldValue, settingValue, 'oldValue does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -575,11 +575,11 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, asset, settingName, oldValue, newValue) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.asset, asset);
-                    assert.equal(ev.settingName, settingName);
-                    assert.equal(ev.oldValue, oldValue);
-                    assert.equal(ev.newValue, newValue);
+                    assert.equal(ev.sender, sender, 'sender does not match');
+                    assert.equal(ev.asset, asset, 'asset does not match');
+                    assert.equal(ev.settingName, settingName, 'settingName does not match');
+                    assert.equal(ev.oldValue, oldValue, 'oldValue does not match');
+                    assert.equal(ev.newValue, newValue, 'newValue does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -589,10 +589,10 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, index, amountDataProviders, dataProvider) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.dataTypeIndex, index);
-                    assert.equal(ev.amountDataProviders, amountDataProviders);
-                    assert.equal(ev.dataProvider, dataProvider);
+                    assert.equal(ev.sender, sender, 'sender does not match');
+                    assert.equal(ev.dataTypeIndex, index, 'dataTypeIndex does not match');
+                    assert.equal(ev.amountDataProviders, amountDataProviders, 'amountDataProviders does not match');
+                    assert.equal(ev.dataProvider, dataProvider, 'dataProvider does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -602,11 +602,11 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, dataTypeIndex, providerIndex, oldDataProvider, newDataProvider) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.dataTypeIndex, dataTypeIndex);
-                    assert.equal(ev.dataProviderIndex, providerIndex);
-                    assert.equal(ev.oldDataProvider, oldDataProvider);
-                    assert.equal(ev.newDataProvider, newDataProvider);
+                    assert.equal(ev.sender, sender, 'sender does not match');
+                    assert.equal(ev.dataTypeIndex, dataTypeIndex, 'dataTypeIndex does not match');
+                    assert.equal(ev.dataProviderIndex, providerIndex, 'dataProviderIndex does not match');
+                    assert.equal(ev.oldDataProvider, oldDataProvider, 'oldDataProvider does not match');
+                    assert.equal(ev.newDataProvider, newDataProvider, 'newDataProvider does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -616,10 +616,10 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, dataTypeIndex, dataProviderIndex, dataProvider) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.dataTypeIndex, dataTypeIndex);
-                    assert.equal(ev.dataProviderIndex, dataProviderIndex);
-                    assert.equal(ev.dataProvider, dataProvider);
+                    assert.equal(ev.sender, sender, 'sender does not match');
+                    assert.equal(ev.dataTypeIndex, dataTypeIndex, 'dataTypeIndex does not match');
+                    assert.equal(ev.dataProviderIndex, dataProviderIndex, 'dataProviderIndex does not match');
+                    assert.equal(ev.dataProvider, dataProvider, 'dataProvider does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -629,8 +629,8 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, cra) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender, sender);
-                    assert.equal(ev.craCommitHash.toString(), cra.toString());
+                    assert.equal(ev.sender, sender, 'sender does not match');
+                    assert.equal(ev.craCommitHash.toString(), cra.toString(), 'craCommitHash does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -642,8 +642,8 @@ module.exports = {
             return {
                 name: name,
                 emitted: (atm, account) => emitted(tx, name, ev => {
-                    assert.equal(ev.atm.toString(), atm.toString());
-                    assert.equal(ev.account.toString(), account.toString());
+                    assert.equal(ev.atm.toString(), atm.toString(), 'atm does not match');
+                    assert.equal(ev.account.toString(), account.toString(), 'account does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -653,8 +653,8 @@ module.exports = {
             return {
                 name: name,
                 emitted: (atm, account) => emitted(tx, name, ev => {
-                    assert.equal(ev.atm.toString(), atm.toString());
-                    assert.equal(ev.account.toString(), account.toString());
+                    assert.equal(ev.atm.toString(), atm.toString(), 'atm does not match');
+                    assert.equal(ev.account.toString(), account.toString(), 'account does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -664,11 +664,11 @@ module.exports = {
             return {
                 name: name,
                 emitted: (borrowedToken, collateralToken, oldAtm, newAtm, account) => emitted(tx, name, ev => {
-                    assert.equal(ev.borrowedToken.toString(), borrowedToken.toString());
-                    assert.equal(ev.collateralToken.toString(), collateralToken.toString());
-                    assert.equal(ev.oldAtm.toString(), oldAtm.toString());
-                    assert.equal(ev.newAtm.toString(), newAtm.toString());
-                    assert.equal(ev.account.toString(), account.toString());
+                    assert.equal(ev.borrowedToken.toString(), borrowedToken.toString(), 'borrowedToken does not match');
+                    assert.equal(ev.collateralToken.toString(), collateralToken.toString(), 'collateralToken does not match');
+                    assert.equal(ev.oldAtm.toString(), oldAtm.toString(), 'oldAtm does not match');
+                    assert.equal(ev.newAtm.toString(), newAtm.toString(), 'newAtm does not match');
+                    assert.equal(ev.account.toString(), account.toString(), 'account does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -678,10 +678,10 @@ module.exports = {
             return {
                 name: name,
                 emitted: (borrowedToken, collateralToken, atm, account) => emitted(tx, name, ev => {
-                    assert.equal(ev.borrowedToken.toString(), borrowedToken.toString());
-                    assert.equal(ev.collateralToken.toString(), collateralToken.toString());
-                    assert.equal(ev.atm.toString(), atm.toString());
-                    assert.equal(ev.account.toString(), account.toString());
+                    assert.equal(ev.borrowedToken.toString(), borrowedToken.toString(), 'borrowedToken does not match');
+                    assert.equal(ev.collateralToken.toString(), collateralToken.toString(), 'collateralToken does not match');
+                    assert.equal(ev.atm.toString(), atm.toString(), 'atm does not match');
+                    assert.equal(ev.account.toString(), account.toString(), 'account does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -691,10 +691,10 @@ module.exports = {
             return {
                 name: name,
                 emitted: (borrowedToken, collateralToken, oldAtm, account) => emitted(tx, name, ev => {
-                    assert.equal(ev.borrowedToken.toString(), borrowedToken.toString());
-                    assert.equal(ev.collateralToken.toString(), collateralToken.toString());
-                    assert.equal(ev.oldAtm.toString(), oldAtm.toString());
-                    assert.equal(ev.account.toString(), account.toString());
+                    assert.equal(ev.borrowedToken.toString(), borrowedToken.toString(), 'borrowedToken does not match');
+                    assert.equal(ev.collateralToken.toString(), collateralToken.toString(), 'collateralToken does not match');
+                    assert.equal(ev.oldAtm.toString(), oldAtm.toString(), 'oldAtm does not match');
+                    assert.equal(ev.account.toString(), account.toString(), 'account does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -706,9 +706,9 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, atm, token) => emitted(tx, name, ev => {
-                    assert.equal(ev.creator, sender);
-                    assert.equal(ev.atmGovernanceAddress, atm);
-                    assert.equal(ev.tlrTokenAddress, token);
+                    assert.equal(ev.creator, sender, 'creator does not match');
+                    assert.equal(ev.atmGovernanceAddress, atm, 'atmGovernanceAddress does not match');
+                    assert.equal(ev.tlrTokenAddress, token, 'tlrTokenAddress does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -720,9 +720,9 @@ module.exports = {
             return {
                 name: name,
                 emitted: (borrower, loansAddress, loanID) => emitted(tx, name, ev => {
-                    assert.equal(ev.borrower.toString(), borrower.toString());
-                    assert.equal(ev.loansAddress.toString(), loansAddress.toString());
-                    assert.equal(ev.loanID.toString(), loanID.toString());
+                    assert.equal(ev.borrower.toString(), borrower.toString(), 'borrower does not match');
+                    assert.equal(ev.loansAddress.toString(), loansAddress.toString(), 'loansAddress does not match');
+                    assert.equal(ev.loanID.toString(), loanID.toString(), 'loanID does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -732,9 +732,9 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, dapp, unsecured) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender.toString(), sender.toString());
-                    assert.equal(ev.dapp.toString(), dapp.toString());
-                    assert.equal(ev.unsecured, unsecured);
+                    assert.equal(ev.sender.toString(), sender.toString(), 'sender does not match');
+                    assert.equal(ev.dapp.toString(), dapp.toString(), 'dapp does not match');
+                    assert.equal(ev.unsecured, unsecured, 'unsecured does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -744,9 +744,9 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, dapp, unsecured) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender.toString(), sender.toString());
-                    assert.equal(ev.dapp.toString(), dapp.toString());
-                    assert.equal(ev.unsecured, unsecured);
+                    assert.equal(ev.sender.toString(), sender.toString(), 'sender does not match');
+                    assert.equal(ev.dapp.toString(), dapp.toString(), 'dapp does not match');
+                    assert.equal(ev.unsecured, unsecured, 'unsecured does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -756,8 +756,8 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, dapp) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender.toString(), sender.toString());
-                    assert.equal(ev.dapp.toString(), dapp.toString());
+                    assert.equal(ev.sender.toString(), sender.toString(), 'sender does not match');
+                    assert.equal(ev.dapp.toString(), dapp.toString(), 'dapp does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -769,7 +769,7 @@ module.exports = {
             return {
                 name: name,
                 emitted: (recipient) => emitted(tx, name, ev => {
-                    assert.equal(ev.recipient.toString(), recipient.toString());
+                    assert.equal(ev.recipient.toString(), recipient.toString(), 'recipient does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -781,12 +781,12 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, tToken, amount, lastRewardedBlock, tTokenStakedBalance, accruedTLRBalance) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender.toString(), sender.toString());
-                    assert.equal(ev.tToken.toString(), tToken.toString());
-                    assert.equal(ev.amount.toString(), amount.toString());
-                    assert.equal(ev.lastRewardedBlock.toString(), lastRewardedBlock.toString());
-                    assert.equal(ev.tTokenStakedBalance.toString(), tTokenStakedBalance.toString());
-                    assert.equal(ev.accruedTLRBalance.toString(), accruedTLRBalance.toString());
+                    assert.equal(ev.sender.toString(), sender.toString(), 'sender does not match');
+                    assert.equal(ev.tToken.toString(), tToken.toString(), 'tToken does not match');
+                    assert.equal(ev.amount.toString(), amount.toString(), 'amount does not match');
+                    assert.equal(ev.lastRewardedBlock.toString(), lastRewardedBlock.toString(), 'lastRewardedBlock does not match');
+                    assert.equal(ev.tTokenStakedBalance.toString(), tTokenStakedBalance.toString(), 'tTokenStakedBalance does not match');
+                    assert.equal(ev.accruedTLRBalance.toString(), accruedTLRBalance.toString(), 'accruedTLRBalance does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -796,12 +796,12 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, tToken, amount, lastRewardedBlock, tTokenStakedBalance, accruedTLRBalance) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender.toString(), sender.toString());
-                    assert.equal(ev.tToken.toString(), tToken.toString());
-                    assert.equal(ev.amount.toString(), amount.toString());
-                    assert.equal(ev.lastRewardedBlock.toString(), lastRewardedBlock.toString());
-                    assert.equal(ev.tTokenStakedBalance.toString(), tTokenStakedBalance.toString());
-                    assert.equal(ev.accruedTLRBalance.toString(), accruedTLRBalance.toString());
+                    assert.equal(ev.sender.toString(), sender.toString(), 'sender does not match');
+                    assert.equal(ev.tToken.toString(), tToken.toString(), 'tToken does not match');
+                    assert.equal(ev.amount.toString(), amount.toString(), 'amount does not match');
+                    assert.equal(ev.lastRewardedBlock.toString(), lastRewardedBlock.toString(), 'lastRewardedBlock does not match');
+                    assert.equal(ev.tTokenStakedBalance.toString(), tTokenStakedBalance.toString(), 'tTokenStakedBalance does not match');
+                    assert.equal(ev.accruedTLRBalance.toString(), accruedTLRBalance.toString(), 'accruedTLRBalance does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -811,11 +811,11 @@ module.exports = {
             return {
                 name: name,
                 emitted: (sender, amount, lastRewardedBlock, tTokenStakedBalance, accruedTLRBalance) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender.toString(), sender.toString());
-                    assert.equal(ev.amount.toString(), amount.toString());
-                    assert.equal(ev.lastRewardedBlock.toString(), lastRewardedBlock.toString());
-                    assert.equal(ev.tTokenStakedBalance.toString(), tTokenStakedBalance.toString());
-                    assert.equal(ev.accruedTLRBalance.toString(), accruedTLRBalance.toString());
+                    assert.equal(ev.sender.toString(), sender.toString(), 'sender does not match');
+                    assert.equal(ev.amount.toString(), amount.toString(), 'amount does not match');
+                    assert.equal(ev.lastRewardedBlock.toString(), lastRewardedBlock.toString(), 'lastRewardedBlock does not match');
+                    assert.equal(ev.tTokenStakedBalance.toString(), tTokenStakedBalance.toString(), 'tTokenStakedBalance does not match');
+                    assert.equal(ev.accruedTLRBalance.toString(), accruedTLRBalance.toString(), 'accruedTLRBalance does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -827,7 +827,7 @@ module.exports = {
             return {
                 name: name,
                 emitted: (implementation) => emitted(tx, name, ev => {
-                    assert.equal(ev.implementation, implementation);
+                    assert.equal(ev.implementation, implementation, 'implementation does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -848,14 +848,14 @@ module.exports = {
                     loanTermsConsensus,
                     interestConsensus
                 ) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender.toString(), sender.toString());
-                    assert.equal(ev.borrowedToken.toString(), borrowedToken.toString());
-                    assert.equal(ev.collateralToken.toString(), collateralToken.toString());
-                    assert.equal(ev.loans.toString(), loans.toString());
-                    assert.equal(ev.lenders.toString(), lenders.toString());
-                    assert.equal(ev.lendingPool.toString(), lendingPool.toString());
-                    assert.equal(ev.loanTermsConsensus.toString(), loanTermsConsensus.toString());
-                    assert.equal(ev.interestConsensus.toString(), interestConsensus.toString());
+                    assert.equal(ev.sender.toString(), sender.toString(), 'sender does not match');
+                    assert.equal(ev.borrowedToken.toString(), borrowedToken.toString(), 'borrowedToken does not match');
+                    assert.equal(ev.collateralToken.toString(), collateralToken.toString(), 'collateralToken does not match');
+                    assert.equal(ev.loans.toString(), loans.toString(), 'loans does not match');
+                    assert.equal(ev.lenders.toString(), lenders.toString(), 'lenders does not match');
+                    assert.equal(ev.lendingPool.toString(), lendingPool.toString(), 'lendingPool does not match');
+                    assert.equal(ev.loanTermsConsensus.toString(), loanTermsConsensus.toString(), 'loanTermsConsensus does not match');
+                    assert.equal(ev.interestConsensus.toString(), interestConsensus.toString(), 'interestConsensus does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -869,9 +869,9 @@ module.exports = {
                     borrowedToken,
                     collateralToken,
                 ) => emitted(tx, name, ev => {
-                    assert.equal(ev.sender.toString(), sender.toString());
-                    assert.equal(ev.borrowedToken.toString(), borrowedToken.toString());
-                    assert.equal(ev.collateralToken.toString(), collateralToken.toString());
+                    assert.equal(ev.sender.toString(), sender.toString(), 'sender does not match');
+                    assert.equal(ev.borrowedToken.toString(), borrowedToken.toString(), 'borrowedToken does not match');
+                    assert.equal(ev.collateralToken.toString(), collateralToken.toString(), 'collateralToken does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -886,8 +886,8 @@ module.exports = {
                     tToken,
                     sender
                 ) => emitted(tx, name, ev => {
-                    assert.equal(ev.tToken.toString(), tToken.toString());
-                    assert.equal(ev.sender.toString(), sender.toString());
+                    assert.equal(ev.tToken.toString(), tToken.toString(), 'tToken does not match');
+                    assert.equal(ev.sender.toString(), sender.toString(), 'sender does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
