@@ -10,6 +10,7 @@ const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder')
 const MintableInterfaceEncoder = require('../utils/encoders/MintableInterfaceEncoder');
 const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -24,6 +25,7 @@ contract('LendingPoolDepositTest', function (accounts) {
     const mintableInterfaceEncoder = new MintableInterfaceEncoder(web3);
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const cTokenEncoder = new CTokenInterfaceEncoder(web3)
 
     let instance;
     let tTokenInstance;
@@ -47,7 +49,13 @@ contract('LendingPoolDepositTest', function (accounts) {
             settingsInterfaceEncoder.encodeMarketsState(),
             marketsInstance.address
         );
+
         cTokenInstance = await Mock.new();
+        await cTokenInstance.givenMethodReturnAddress(
+          cTokenEncoder.encodeUnderlying(),
+          daiInstance.address
+        )
+
         lendersInstance = await Lenders.new();
         await lendersInstance.initialize(
             tTokenInstance.address,

@@ -2,14 +2,12 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
-import "./BaseUpgradeable.sol";
 import "./BaseEscrowDapp.sol";
 import "./TInitializable.sol";
 
 // Interfaces
 import "../interfaces/EscrowInterface.sol";
 import "../interfaces/LoansInterface.sol";
-import "../interfaces/PairAggregatorInterface.sol";
 import "../interfaces/IBaseProxy.sol";
 
 // Libraries
@@ -37,7 +35,7 @@ import "../providers/openzeppelin/SignedSafeMath.sol";
 
     @author develop@teller.finance
  */
-contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowDapp {
+contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
     using Address for address;
     using SafeMath for uint256;
     using SignedSafeMath for uint256;
@@ -249,42 +247,17 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
     /** Internal Functions */
 
     /**
-        @notice Calculate this Escrow instance loan value in ETH or Token price.
-        @return Loan value in ETH or Token price based on baseAddress.
-        @param baseAddress base token or ETH address.
+        @notice Calculate a value of a token amount.
+        @param baseAddress base token address.
         @param quoteAddress quote token address.
-        @param baseAmount amount of base token or ETH.
+        @param baseAmount amount of base token.
+        @return Value of baseAmount in quote token.
     */
     function _valueOfIn(
         address baseAddress,
         address quoteAddress,
         uint256 baseAmount
     ) internal view returns (uint256) {
-        uint8 baseDecimals = baseAddress == settings().ETH_ADDRESS()
-            ? ETH_DECIMALS
-            : ERC20Detailed(baseAddress).decimals();
-        PairAggregatorInterface aggregator = _getAggregatorFor(baseAddress, quoteAddress);
-        uint256 oneTokenPrice = uint256(aggregator.getLatestAnswer());
-        uint256 oneUnit = uint256(10)**baseDecimals;
-        return baseAmount.mul(oneTokenPrice).div(oneUnit);
-    }
-
-    /**
-        @notice Returns Chainlink pair aggregator for token or revert if not found.
-        @param base base token address.
-        @param quote quote token address.
-        @return PairAggregator instance found for this tokens pair.
-     */
-    function _getAggregatorFor(address base, address quote)
-        internal
-        view
-        returns (PairAggregatorInterface)
-    {
-        require(
-            settings().pairAggregatorRegistry().hasPairAggregator(base, quote),
-            "CHAINLINK_PAIR_AGGREGATOR_NOT_EXISTS"
-        );
-
-        return settings().pairAggregatorRegistry().getPairAggregator(base, quote);
+        return settings().chainlinkAggregator().valueFor(baseAddress, quoteAddress, baseAmount);
     }
 }

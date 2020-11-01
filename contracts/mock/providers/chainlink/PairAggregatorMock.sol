@@ -13,14 +13,18 @@ contract PairAggregatorMock is AggregatorInterface {
     // round => price mapping
     mapping(uint256 => PriceRound) private prices;
 
-    constructor(int256 initialPrice) public {
+    uint8 public decimals;
+
+    constructor(int256 initialPrice, uint8 responseDecimals) public {
         latestRound = 1;
         prices[latestRound].timestamp = now;
         prices[latestRound].price = initialPrice;
         prices[latestRound].round = latestRound;
+
+        decimals = responseDecimals;
     }
 
-    function setLatestAnswer(int256 newPrice) external returns (uint256) {
+    function setLatestAnswer(int256 newPrice) external {
         latestRound += 1;
         prices[latestRound].timestamp = now;
         prices[latestRound].price = newPrice;

@@ -88,7 +88,7 @@ contract TokenCollateralLoans is LoansBase {
         isBorrower(request.borrower)
         withValidLoanRequest(request)
     {
-        uint256 loanID = getAndIncrementLoanID();
+        uint256 loanID = _getAndIncrementLoanID();
 
         (
             uint256 interestRate,
@@ -123,14 +123,12 @@ contract TokenCollateralLoans is LoansBase {
 
     /**
         @notice Initializes the current contract instance setting the required parameters, if allowed
-        @param priceOracleAddress Contract address of the price oracle
         @param lendingPoolAddress Contract address of the lending pool
         @param loanTermsConsensusAddress Contract adddress for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
         @param collateralTokenAddress Contract address for the collateral token.
      */
     function initialize(
-        address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
@@ -139,7 +137,6 @@ contract TokenCollateralLoans is LoansBase {
         collateralTokenAddress.requireNotEmpty("PROVIDE_COLL_TOKEN_ADDRESS");
 
         _initialize(
-            priceOracleAddress,
             lendingPoolAddress,
             loanTermsConsensusAddress,
             settingsAddress

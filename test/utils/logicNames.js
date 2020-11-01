@@ -7,8 +7,7 @@ module.exports = {
     InterestConsensus: 'InterestConsensus',
     EscrowFactory: 'EscrowFactory',
     Escrow: 'Escrow',
-    ChainlinkPairAggregator: 'ChainlinkPairAggregator',
-    ChainlinkPairAggregatorRegistry: 'ChainlinkPairAggregatorRegistry',
+    ChainlinkAggregator: 'ChainlinkAggregator',
     Settings: 'Settings',
     LogicVersionsRegistry: 'LogicVersionsRegistry',
     TTokenRegistry: 'TTokenRegistry',
@@ -17,6 +16,7 @@ module.exports = {
     ATMSettings: 'ATMSettings',
     ATMGovernance: 'ATMGovernance',
     TLRToken: 'TLRToken',
+    ATMLiquidityMining: 'ATMLiquidityMining',
     MarketFactory: 'MarketFactory',
     Uniswap: 'Uniswap',
     Compound: 'Compound'

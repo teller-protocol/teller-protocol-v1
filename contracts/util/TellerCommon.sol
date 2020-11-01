@@ -115,6 +115,20 @@ library TellerCommon {
     }
 
     /**
+        @notice This struct is used to get the current liquidation info for a given loan id.
+        @param collateral the current collateral for the given loan.
+        @param collateralInTokens the current collateral in lending tokenss.
+        @param amountToLiquidate the needed amount to liquidate the loan (if the liquidable parameter is true).
+        @param liquidable true if the loan is liquidable. Otherwise it is false.
+     */
+    struct LoanLiquidationInfo {
+        uint256 collateral;
+        uint256 collateralInTokens;
+        uint256 amountToLiquidate;
+        bool liquidable;
+    }
+
+    /**
         @notice This struct defines the dapp address and data to execute in the callDapp function.
         @dev It is executed using a delegatecall in the Escrow contract.
      */
@@ -142,20 +156,7 @@ library TellerCommon {
         address lendingPool;
         address loanTermsConsensus;
         address interestConsensus;
-        address pairAggregator;
         bool exists;
-    }
-
-    /**
-        @notice This struct is used to register new pair aggregator in the aggregators registry.@
-     */
-    struct PairAggregatorRegisterRequest {
-        address baseToken;
-        address quoteToken;
-        address chainlinkAggregatorAddress;
-        bool inverse;
-        uint8 responseDecimals;
-        uint8 collateralDecimals;
     }
 
     struct EscrowValue {

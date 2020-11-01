@@ -5,7 +5,7 @@ const { createLoanTerms } = require('../utils/structs');
 const { loans } = require('../utils/events');
 
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
-const PairAggregatorEncoder = require('../utils/encoders/PairAggregatorEncoder');
+const ChainlinkAggregatorEncoder = require('../utils/encoders/ChainlinkAggregatorEncoder');
 const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
 const EscrowFactoryInterfaceEncoder = require('../utils/encoders/EscrowFactoryInterfaceEncoder');
 const EscrowInterfaceEncoder = require("../utils/encoders/EscrowInterfaceEncoder");
@@ -20,17 +20,16 @@ const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 
 contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
-    const pairAggregatorEncoder = new PairAggregatorEncoder(web3);
+    const chainlinkAggregatorEncoder = new ChainlinkAggregatorEncoder(web3);
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
     const escrowFactoryInterfaceEncoder = new EscrowFactoryInterfaceEncoder(web3);
     const escrowInterfaceEncoder = new EscrowInterfaceEncoder(web3);
     const owner = accounts[0];
     let instance;
-    let oracleInstance;
+    let chainlinkAggregatorInstance;
     let lendingPoolInstance;
     let loanTermsConsInstance;
     let lendingTokenInstance;
-    let escrowFactory;
     let createdEscrowMock;
 
     const mockLoanID = 0;
@@ -42,44 +41,26 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
         lendingTokenInstance = await Mock.new();
-        oracleInstance = await Mock.new();
-        escrowFactory = await Mock.new();
+        createdEscrowMock = await Mock.new();
         const collateralTokenInstance = await Mock.new();
-        const atmSettingsInstance = await Mock.new();
-        const marketsStateInstance = await Mock.new();
         const settingsInstance = await createTestSettingsInstance(
             Settings,
             {
                 from: owner,
                 Mock,
-                onInitialize: async (
-                    instance,
-                    {
-                        versionsRegistry,
-                        pairAggregatorRegistry,
-                        interestValidator,
-                    }) => {
-                    await instance.initialize(
-                        escrowFactory.address,
-                        versionsRegistry.address,
-                        pairAggregatorRegistry.address,
-                        marketsStateInstance.address,
-                        interestValidator.address,
-                        atmSettingsInstance.address,
+                initialize: true,
+                onInitialize: async (instance, { escrowFactory, chainlinkAggregator }) => {
+                    await escrowFactory.givenMethodReturnAddress(
+                        escrowFactoryInterfaceEncoder.encodeCreateEscrow(),
+                        createdEscrowMock.address
                     );
+                    chainlinkAggregatorInstance = chainlinkAggregator
                 },
             });
-
-        createdEscrowMock = await Mock.new();
-        await escrowFactory.givenMethodReturnAddress(
-            escrowFactoryInterfaceEncoder.encodeCreateEscrow(),
-            createdEscrowMock.address
-        );
 
         loanTermsConsInstance = await Mock.new();
         instance = await Loans.new();
         await instance.initialize(
-            oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,
@@ -95,18 +76,16 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
         _1_max_loan_exceeded: [15000001, false, false, 300000, NULL_ADDRESS, 0, 0, true, 'MAX_LOAN_EXCEEDED'],
         _2_loan_terms_expired: [15000000, true, false, 300000, NULL_ADDRESS, 0, 0, true, 'LOAN_TERMS_EXPIRED'],
         _3_collateral_deposited_recently: [15000000, false, true, 300000, NULL_ADDRESS, 0, 0, true, 'COLLATERAL_DEPOSITED_RECENTLY'],
-        // colateralNeeded = ((15181849*0.3564)*8346020000000000/10**18 which is 45158. The loan has 40000
-        _4_more_collateral_needed: [15000000, false, false, 300000, NULL_ADDRESS, 8346020000000000, 18, true, 'MORE_COLLATERAL_REQUIRED'],
-        // colateralNeeded = ((15181849*0.3564)*7392727000000000/10**18 which is 40000 exactly - the loan has 40000
-        _5_successful_loan: [15000000, false, false, 300000, NULL_ADDRESS, 7392727000000000, 18, false, undefined],
-        _6_with_recipient: [15000000, false, false, 300000, accounts[4], 7392727000000000, 18, false, undefined],
+        _4_more_collateral_needed: [15000000, false, false, 300000, NULL_ADDRESS, 45158, 18, true, 'MORE_COLLATERAL_REQUIRED'],
+        _5_successful_loan: [15000000, false, false, 300000, NULL_ADDRESS, 40000, 18, false, undefined],
+        _6_with_recipient: [15000000, false, false, 300000, accounts[4], 40000, 18, false, undefined],
     }, function(
         amountToBorrow,
         termsExpired,
         collateralTooRecent,
         loanDuration,
         recipient,
-        oraclePrice,
+        oracleValue,
         tokenDecimals,
         mustFail,
         expectedErrorMessage
@@ -116,8 +95,10 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
             const timeNow = await getLatestTimestamp()
 
             // encode current token price
-            const encodeGetLatestAnswer = pairAggregatorEncoder.encodeGetLatestAnswer();
-            await oracleInstance.givenMethodReturnUint(encodeGetLatestAnswer, oraclePrice.toString());
+            await chainlinkAggregatorInstance.givenMethodReturnUint(
+              chainlinkAggregatorEncoder.encodeValueFor(),
+              oracleValue.toString()
+            );
 
             // encode token decimals
             const encodeDecimals = erc20InterfaceEncoder.encodeDecimals();
@@ -138,6 +119,8 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
             loanTerms.duration = loanDuration
             loanTerms.recipient = recipient
             await instance.setLoan(mockLoanID, loanTerms, termsExpiry, 0, 40000, lastCollateralIn, 0, 0, loanTerms.maxLoanAmount, TERMS_SET, false)
+            const before = await instance.getCollateralInfo.call(mockLoanID)
+            console.log(before)
 
             try {
                 // Invocation

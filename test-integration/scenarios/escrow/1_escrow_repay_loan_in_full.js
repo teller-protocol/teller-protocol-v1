@@ -3,8 +3,8 @@ const {
   loans: loansActions,
   escrow: escrowActions,
   tokens: tokensActions,
-} = require("../../utils/actions");
-const helperActions = require("../../utils/actions/helper");
+} = require("../../../scripts/utils/actions");
+const helperActions = require("../../../scripts/utils/actions/helper");
 const {toDecimals} = require("../../../test/utils/consts");
 
 module.exports = async (testContext) => {
@@ -14,8 +14,7 @@ module.exports = async (testContext) => {
     collTokenName,
     tokenName,
   } = testContext;
-  // TODO Add scenario title (from spreadsheet).
-  console.log("Scenario: Escrow#1 - .");
+  console.log("Scenario: Escrow#1 - Repay loan as borrower in full");
 
   const allContracts = await getContracts.getAllDeployed(
     {teller, tokens},
@@ -35,12 +34,12 @@ module.exports = async (testContext) => {
   let collateralAmountDepositCollateral;
   let collateralAmountWithdrawCollateral;
   if (collTokenName.toLowerCase() === "eth") {
-    initialOraclePrice = toDecimals("0.00295835", 18);
+    initialOraclePrice = "0.00295835";
     collateralAmountDepositCollateral = toDecimals(0.2, collateralTokenInfo.decimals);
     collateralAmountWithdrawCollateral = toDecimals(0.1,collateralTokenInfo.decimals);
   }
   if (collTokenName.toLowerCase() === "link") {
-    initialOraclePrice = toDecimals("0.100704", 8);
+    initialOraclePrice = "0.100704";
     collateralAmountDepositCollateral = toDecimals(6.1, collateralTokenInfo.decimals);
     collateralAmountWithdrawCollateral = toDecimals(1, collateralTokenInfo.decimals);
   }
@@ -75,21 +74,7 @@ module.exports = async (testContext) => {
     }
   );
 
-  const totalOwed = await loans.getTotalOwed(loan.id);
-
-  await loansActions.getFunds(
-    {token: allContracts.token},
-    {testContext},
-    {amount: loan.interestOwed, to: borrowerTxConfig.from}
-  );
-  await escrowActions.repay(
-    allContracts,
-    {
-      txConfig: borrowerTxConfig,
-      testContext,
-    },
-    {amount: totalOwed}
-  );
+  await escrowActions.repayInFull(allContracts, { txConfig: borrowerTxConfig, testContext })
 
   await loansActions.printLoanInfo(
     allContracts,

@@ -22,11 +22,13 @@ interface ATMFactoryInterface {
         @param creator creator address.
         @param atmGovernanceAddress new ATM Governance instance address.
         @param tlrTokenAddress new TLR Token instance address.
+        @param liquidityMiningAddress new ATM Liquidity Mining instance address.
      */
     event ATMCreated(
         address indexed creator,
         address indexed atmGovernanceAddress,
-        address indexed tlrTokenAddress
+        address indexed tlrTokenAddress,
+        address liquidityMiningAddress
     );
 
     /* State Variables */
@@ -44,6 +46,7 @@ interface ATMFactoryInterface {
         @param decimals The token decimals 
         @param cap Token max cap.
         @param maxVestingPerWallet max vestings per wallet for the token.
+        @param tlrInitialReward ATM Liquidity Mining initial reward.
         @return the new ATM governance instance address.
      */
     function createATM(
@@ -51,7 +54,8 @@ interface ATMFactoryInterface {
         string calldata symbol,
         uint8 decimals,
         uint256 cap,
-        uint256 maxVestingPerWallet
+        uint256 maxVestingPerWallet,
+        uint256 tlrInitialReward
     ) external returns (address);
 
     /**

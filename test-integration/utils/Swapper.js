@@ -12,8 +12,7 @@ class Swapper {
 
     return uniswap
   }
-
-  async swapForExact(to, tokenAddress, destinationAmount) {
+  swapForExact(to, tokenAddress, destinationAmount) {
     return this.artifact.swapForExact(to, tokenAddress, destinationAmount)
   }
 }

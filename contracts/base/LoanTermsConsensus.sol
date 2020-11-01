@@ -141,6 +141,7 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
             response.signer,
             request.borrower,
             request.requestNonce,
+            response.signature.signerNonce,
             response.interestRate,
             response.collateralRatio,
             response.maxLoanAmount

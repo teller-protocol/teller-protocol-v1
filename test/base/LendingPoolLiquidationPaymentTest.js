@@ -4,6 +4,7 @@ const { t, NULL_ADDRESS } = require('../utils/consts');
 const { lendingPool } = require('../utils/events');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
+const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -15,6 +16,8 @@ const LendingPool = artifacts.require("./base/LendingPool.sol");
 contract('LendingPoolLiquidationPaymentTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
+    const cTokenEncoder = new CTokenInterfaceEncoder(web3)
+
     let instance;
     let tTokenInstance;
     let daiInstance;
@@ -32,6 +35,11 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
         cTokenInstance = await Mock.new()
         settingsInstance = await Mock.new();
         lendersInstance = await Lenders.new();
+
+        await cTokenInstance.givenMethodReturnAddress(
+          cTokenEncoder.encodeUnderlying(),
+          daiInstance.address
+        )
 
         await lendersInstance.initialize(
           tTokenInstance.address,

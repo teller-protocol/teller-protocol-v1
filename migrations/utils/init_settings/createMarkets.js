@@ -40,7 +40,6 @@ module.exports = async function (
       console.log(`Market ${borrowedTokenName} / ${collateralTokenName}: Lending pool (proxy): ${marketInfo.lendingPool}`);
       console.log(`Market ${borrowedTokenName} / ${collateralTokenName}: Loan term consensus (proxy): ${marketInfo.loanTermsConsensus}`);
       console.log(`Market ${borrowedTokenName} / ${collateralTokenName}: Interest consensus (proxy): ${marketInfo.interestConsensus}`);
-      console.log(`Market ${borrowedTokenName} / ${collateralTokenName}: Pair aggregator (proxy): ${marketInfo.pairAggregator}`);
 
       deployerApp.addContractInfo({
         name: `${collateralTokenName}_Loans_t${borrowedTokenName}_Proxy`,
@@ -62,10 +61,6 @@ module.exports = async function (
         name: `${collateralTokenName}_InterestConsensus_t${borrowedTokenName}_Proxy`,
         address: marketInfo.interestConsensus
       });
-      deployerApp.addContractInfo({
-        name: `${collateralTokenName}_ChainlinkPairAggregator_t${borrowedTokenName}_Proxy`,
-        address: marketInfo.pairAggregator
-      });
 
       console.log(`TToken (${tTokenAddress}): Adding as minter ${marketInfo.lendingPool} (LendingPool). Sender: ${txConfig.from}`);
       const tTokenInstance = await ERC20Mintable.at(tTokenAddress);
@@ -76,7 +71,7 @@ module.exports = async function (
       console.log(`MarketsState (${marketsStateInstance.address}): Adding as whitelisted ${marketInfo.lendingPool} (lending pool proxy). Sender: ${txConfig.from}`);
       await marketsStateInstance.addWhitelisted(marketInfo.lendingPool, txConfig);
       const loanTermsConsensusInstance = await LoanTermsConsensus.at(marketInfo.loanTermsConsensus);
-      const interestConsensusInstance = await InterestConsensus.at(marketInfo.loanTermsConsensus);
+      const interestConsensusInstance = await InterestConsensus.at(marketInfo.interestConsensus);
 
       await initSignerAddresses(
         { loanTermsConsensusInstance, interestConsensusInstance },

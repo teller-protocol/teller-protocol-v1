@@ -11,7 +11,6 @@ import "../util/ERC20DetailedLib.sol";
 import "./Base.sol";
 
 // Interfaces
-import "../interfaces/PairAggregatorInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
@@ -57,8 +56,6 @@ contract LoansBase is LoansInterface, Base {
 
     // At any time, this variable stores the next available loan ID
     uint256 public loanIDCounter;
-
-    address public priceOracle;
 
     LendingPoolInterface public lendingPool;
 
@@ -175,7 +172,7 @@ contract LoansBase is LoansInterface, Base {
     }
 
     /**
-        @notice Checks wheather the loan's collateral ratio is considered to be secured based on the settings collateral buffer value.
+        @notice Checks whether the loan's collateral ratio is considered to be secured based on the settings collateral buffer value.
         @return bool value of it being secured or not.
     */
     function isLoanSecured(uint256 loanID) external view returns (bool) {
@@ -259,6 +256,7 @@ contract LoansBase is LoansInterface, Base {
             .mul(loans[loanID].loanTerms.duration)
             .div(TEN_THOUSAND)
             .div(SECONDS_PER_YEAR_4DP);
+        loans[loanID].status = TellerCommon.LoanStatus.Active;
 
         // check that enough collateral has been provided for this loan
         TellerCommon.LoanCollateralInfo memory collateralInfo = _getCollateralInfo(
@@ -268,7 +266,6 @@ contract LoansBase is LoansInterface, Base {
         require(!collateralInfo.moreCollateralRequired, "MORE_COLLATERAL_REQUIRED");
 
         loans[loanID].loanStartTime = now;
-        loans[loanID].status = TellerCommon.LoanStatus.Active;
         loans[loanID].escrow = _createEscrow(loanID);
 
         // We only send the loan to escrow contract for now.
@@ -359,33 +356,40 @@ contract LoansBase is LoansInterface, Base {
         whenLendingPoolNotPaused(address(lendingPool))
         nonReentrant()
     {
-        require(canLiquidateLoan(loanID), "DOESNT_NEED_LIQUIDATION");
+        TellerCommon.LoanLiquidationInfo memory liquidationInfo = _getLiquidationInfo(
+            loanID
+        );
+        require(liquidationInfo.liquidable, "DOESNT_NEED_LIQUIDATION");
 
         loans[loanID].status = TellerCommon.LoanStatus.Closed;
         loans[loanID].liquidated = true;
 
-        uint256 collateral = loans[loanID].collateral;
-        uint256 collateralInTokens = _convertWeiToToken(collateral);
-
         // the caller gets the collateral from the loan
-        _payOutLoan(loanID, collateral, msg.sender);
+        _payOutLoan(loanID, liquidationInfo.collateral, msg.sender);
 
-        uint256 liquidateEthPrice = settings().getPlatformSettingValue(
-            settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
-        );
-        uint256 tokenPayment = collateralInTokens.mul(liquidateEthPrice).div(
-            TEN_THOUSAND
-        );
         // the liquidator pays x% of the collateral price
-        lendingPool.liquidationPayment(tokenPayment, msg.sender);
+        lendingPool.liquidationPayment(liquidationInfo.amountToLiquidate, msg.sender);
 
         emit LoanLiquidated(
             loanID,
             loans[loanID].loanTerms.borrower,
             msg.sender,
-            collateral,
-            tokenPayment
+            liquidationInfo.collateral,
+            liquidationInfo.amountToLiquidate
         );
+    }
+
+    /**
+        @notice It getss the current liquidation info for a given loan id.
+        @param loanID loan id to get the info.
+        @return liquidationInfo get current liquidation info for the given loan id.
+     */
+    function getLiquidationInfo(uint256 loanID)
+        external
+        view
+        returns (TellerCommon.LoanLiquidationInfo memory liquidationInfo)
+    {
+        return _getLiquidationInfo(loanID);
     }
 
     /**
@@ -437,27 +441,6 @@ contract LoansBase is LoansInterface, Base {
         returns (TellerCommon.LoanCollateralInfo memory)
     {
         return _getCollateralInfo(loanID);
-    }
-
-    /**
-        @notice Updates the current price oracle instance.
-        @dev It throws a require error if sender is not allowed.
-        @dev It throws a require error if new address is empty (0x0) or not a contract.
-        @param newPriceOracle the new price oracle address.
-     */
-    function setPriceOracle(address newPriceOracle)
-        external
-        isInitialized()
-        onlyPauser()
-    {
-        // New address must be a contract and not empty
-        require(newPriceOracle.isContract(), "ORACLE_MUST_CONTRACT_NOT_EMPTY");
-        address oldPriceOracle = address(priceOracle);
-        oldPriceOracle.requireNotEqualTo(newPriceOracle, "NEW_ORACLE_MUST_BE_PROVIDED");
-
-        priceOracle = newPriceOracle;
-
-        emit PriceOracleUpdated(msg.sender, oldPriceOracle, newPriceOracle);
     }
 
     /** Internal Functions */
@@ -525,31 +508,26 @@ contract LoansBase is LoansInterface, Base {
         returns (uint256 neededInLendingTokens, uint256 neededInCollateralTokens)
     {
         // Get collateral needed in lending tokens.
-        uint256 collateralNeededToken = _getCollateralNeededInTokens(loanID);
-        // Convert collateral (in lending tokens) into collateral tokens.
-        return (collateralNeededToken, _convertTokenToWei(collateralNeededToken));
+        neededInLendingTokens = _getCollateralNeededInTokens(loanID);
+        neededInCollateralTokens = settings().chainlinkAggregator().valueFor(lendingPool.lendingToken(), collateralToken, neededInLendingTokens);
     }
 
     /**
         @notice Initializes the current contract instance setting the required parameters.
-        @param priceOracleAddress Contract address of the price oracle
         @param lendingPoolAddress Contract address of the lending pool
         @param loanTermsConsensusAddress Contract address for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
      */
     function _initialize(
-        address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress
     ) internal isNotInitialized() {
-        priceOracleAddress.requireNotEmpty("PROVIDE_ORACLE_ADDRESS");
         lendingPoolAddress.requireNotEmpty("PROVIDE_LENDING_POOL_ADDRESS");
         loanTermsConsensusAddress.requireNotEmpty("PROVIDED_LOAN_TERMS_ADDRESS");
 
         _initialize(settingsAddress);
 
-        priceOracle = priceOracleAddress;
         lendingPool = LendingPoolInterface(lendingPoolAddress);
         loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
     }
@@ -605,44 +583,33 @@ contract LoansBase is LoansInterface, Base {
     }
 
     /**
-        @notice Converts the collateral tokens to lending tokens
-        @param weiAmount The amount of wei to be converted
-        @return uint256 The value the collateral tokens (wei) in lending tokens (not wei)
+        @notice It gets the current liquidation info for a given loan id.
+        @param loanID loan id to get the info.
+        @return liquidationInfo get current liquidation info for the given loan id.
      */
-    function _convertWeiToToken(uint256 weiAmount) internal view returns (uint256) {
-        // wei amount / lending token price in wei * the lending token decimals.
-        uint256 aWholeLendingToken = ERC20Detailed(lendingPool.lendingToken())
-            .getAWholeToken();
-        uint256 oneLendingTokenPriceWei = uint256(
-            PairAggregatorInterface(priceOracle).getLatestAnswer()
+    function _getLiquidationInfo(uint256 loanID)
+        internal
+        view
+        returns (TellerCommon.LoanLiquidationInfo memory liquidationInfo)
+    {
+        uint256 collateral = loans[loanID].collateral;
+        uint256 liquidateEthPrice = settings().getPlatformSettingValue(
+            settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
         );
-        return weiAmount.mul(aWholeLendingToken).div(oneLendingTokenPriceWei);
-    }
-
-    /**
-        @notice Converts the lending token to collateral tokens
-        @param tokenAmount The amount in lending tokens (not wei) to be converted
-        @return uint256 The value of lending tokens (not wei) in collateral tokens (wei)
-     */
-    function _convertTokenToWei(uint256 tokenAmount) internal view returns (uint256) {
-        // tokenAmount is in token units, chainlink price is in whole tokens
-        // token amount in tokens * lending token price in wei / the lending token decimals.
-        uint256 aWholeLendingToken = ERC20Detailed(lendingPool.lendingToken())
-            .getAWholeToken();
-        uint256 oneLendingTokenPriceWei = uint256(
-            PairAggregatorInterface(priceOracle).getLatestAnswer()
-        );
-        uint256 weiValue = tokenAmount.mul(oneLendingTokenPriceWei).div(
-            aWholeLendingToken
-        );
-        return weiValue;
+        uint256 collateralInTokens = settings().chainlinkAggregator().valueFor(collateralToken, lendingPool.lendingToken(), collateral);
+        liquidationInfo = TellerCommon.LoanLiquidationInfo({
+            liquidable: canLiquidateLoan(loanID),
+            collateral: collateral,
+            collateralInTokens: collateralInTokens,
+            amountToLiquidate: collateralInTokens.mul(liquidateEthPrice).div(TEN_THOUSAND)
+        });
     }
 
     /**
         @notice Returns the current loan ID and increments it by 1
         @return uint256 The current loan ID before incrementing
      */
-    function getAndIncrementLoanID() internal returns (uint256 newLoanID) {
+    function _getAndIncrementLoanID() internal returns (uint256 newLoanID) {
         newLoanID = loanIDCounter;
         loanIDCounter = loanIDCounter.add(1);
     }

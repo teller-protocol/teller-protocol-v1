@@ -71,7 +71,7 @@ contract EtherCollateralLoans is LoansBase {
     {
         require(msg.value == collateralAmount, "INCORRECT_ETH_AMOUNT");
 
-        uint256 loanID = getAndIncrementLoanID();
+        uint256 loanID = _getAndIncrementLoanID();
         (
             uint256 interestRate,
             uint256 collateralRatio,
@@ -105,20 +105,17 @@ contract EtherCollateralLoans is LoansBase {
 
     /**
         @notice Initializes the current contract instance setting the required parameters
-        @param priceOracleAddress Contract address of the price oracle
         @param lendingPoolAddress Contract address of the lending pool
         @param loanTermsConsensusAddress Contract adddress for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
      */
     function initialize(
-        address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
         address
     ) external isNotInitialized() {
         _initialize(
-            priceOracleAddress,
             lendingPoolAddress,
             loanTermsConsensusAddress,
             settingsAddress

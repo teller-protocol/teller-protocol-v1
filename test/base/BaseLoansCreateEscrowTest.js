@@ -38,7 +38,6 @@ contract("BaseLoansCreateEscrowTest", function(accounts) {
     await loansInstance.initialize(
       (await Mock.new()).address,
       (await Mock.new()).address,
-      (await Mock.new()).address,
       settings.address,
       (await Mock.new()).address
     );

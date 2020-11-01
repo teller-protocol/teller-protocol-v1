@@ -2,12 +2,9 @@
 
 // Util classes
 const { teller, tokens } = require("../utils/contracts");
-const { printFullLoan, printOraclePrice } = require("../../test/utils/printer");
+const { printPairAggregator, printLoanDetails } = require('../../test/utils/printer')
 const { loans: readParams } = require("../utils/cli-builder");
-const { getDecimals } = require("../../test/utils/collateral-helper");
-
-const ChainlinkPairAggregator = artifacts.require("./providers/chainlink/ChainlinkPairAggregator.sol");
-
+const tokenActions = require('../utils/actions/tokens')
 const ProcessArgs = require('../utils/ProcessArgs');
 const { COLL_TOKEN_NAME, TOKEN_NAME, INITIAL_LOAN_ID, FINAL_LOAN_ID } = require("../utils/cli/names");
 const processArgs = new ProcessArgs(readParams.listLoans().argv);
@@ -21,39 +18,31 @@ module.exports = async (callback) => {
         const startLoanId = processArgs.getValue(INITIAL_LOAN_ID.name);
         const endLoanId = processArgs.getValue(FINAL_LOAN_ID.name);
 
-        const loansInstance = await getContracts.getDeployed(teller.custom(collateralTokenName).loans(tokenName));
+        const allContracts = await getContracts.getAllDeployed({ teller, tokens }, tokenName, collateralTokenName)
+        const { token, collateralToken } = allContracts
+        const tokenInfo = await tokenActions.getInfo({ token });
+        const collateralTokenInfo = await tokenActions.getInfo({ token: collateralToken });
 
-        const tokenInstance = await getContracts.getDeployed(tokens.get(tokenName));
-        const tokenDecimals = parseInt(await tokenInstance.decimals());
-        const collateralTokenDecimals = await getDecimals(getContracts, collateralTokenName);
-        const pairAggregatorAddress = await loansInstance.priceOracle();
-        const oracleInstance = await ChainlinkPairAggregator.at(pairAggregatorAddress);
-
-        const loanIDCounter = await loansInstance.loanIDCounter();
+        const loanIDCounter = await allContracts.loans.loanIDCounter();
         const loanCounter = parseInt(loanIDCounter.toString());
 
         console.log(`Total # Loans (${tokenName}): ${loanCounter}`);
         console.log('-'.repeat(70));
 
-        const latestAnswer  = await oracleInstance.getLatestAnswer();
-        const latestTimestamp = await oracleInstance.getLatestTimestamp();
-        printOraclePrice(
-            web3,
-            { tokenName, tokenDecimals, collateralTokenName, collateralTokenDecimals },
-            { latestAnswer, oracleAddress: oracleInstance.address },
-            latestTimestamp
-        );
+        await printPairAggregator(
+          { chainlinkAggregator: allContracts.chainlinkAggregator },
+          { tokenInfo, collateralTokenInfo }
+        )
+
         console.log('-'.repeat(70));
 
         let currentLoanId = startLoanId;
         while ( currentLoanId < endLoanId && currentLoanId < loanCounter) {
-            const loanInfo = await loansInstance.loans(currentLoanId);
-            await printFullLoan(
-                web3,
-                { tokenName, tokenDecimals, collateralTokenName, collateralTokenDecimals },
-                { latestAnswer, oracleAddress: oracleInstance.address },
-                loanInfo
-            );
+            await printLoanDetails(
+              allContracts,
+              { testContext: { artifacts, web3 } },
+              { loanId: currentLoanId, tokenInfo, collateralTokenInfo }
+            )
             currentLoanId++;
         }
 

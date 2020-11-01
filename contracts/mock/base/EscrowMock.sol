@@ -115,28 +115,4 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
             return Escrow._valueOfIn(baseAddress, quoteAddress, baseAmount);
         }
     }
-
-    function mockGetAggregatorFor(address aggregatorAddress) external {
-        mockedAggregator = aggregatorAddress;
-    }
-
-    function _getAggregatorFor(address base, address quote)
-        internal
-        view
-        returns (PairAggregatorInterface)
-    {
-        if (mockedAggregator != address(0x0)) {
-            return PairAggregatorInterface(mockedAggregator);
-        } else {
-            return super._getAggregatorFor(base, quote);
-        }
-    }
-
-    function externalGetAggregatorFor(address base, address quote)
-        external
-        view
-        returns (PairAggregatorInterface)
-    {
-        return _getAggregatorFor(base, quote);
-    }
 }

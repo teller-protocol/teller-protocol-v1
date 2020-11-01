@@ -4,6 +4,8 @@ const {
 } = require('./consts');
 const initPlatformSettings = require('../../migrations/utils/init_settings/initPlatformSettings');
 
+const ChainlinkAggregator = artifacts.require('./base/providers/ChainlinkAggregator.sol')
+
 const INITIAL_VALUE = 1;
 const TEST_DEFAULT_VALUE = {
     requiredSubmissions: INITIAL_VALUE,
@@ -27,7 +29,7 @@ const createSettingsInstance = async (
         if(Mock !== undefined) {
             const escrowFactory = await Mock.new();
             const versionsRegistry = await Mock.new();
-            const pairAggregatorRegistry = await Mock.new();
+            const chainlinkAggregator = await Mock.new();
             const marketsState = await Mock.new();
             const interestValidator = await Mock.new();
             const atmSettings = await Mock.new();
@@ -35,7 +37,7 @@ const createSettingsInstance = async (
                 await instance.initialize(
                   escrowFactory.address,
                   versionsRegistry.address,
-                  pairAggregatorRegistry.address,
+                  chainlinkAggregator.address,
                   marketsState.address,
                   interestValidator.address,
                   atmSettings.address,
@@ -46,7 +48,7 @@ const createSettingsInstance = async (
                 {
                     escrowFactory,
                     versionsRegistry,
-                    pairAggregatorRegistry,
+                    chainlinkAggregator,
                     marketsState,
                     interestValidator,
                     atmSettings,
@@ -59,14 +61,14 @@ const createSettingsInstance = async (
         if(Mock !== undefined) {
             const escrowFactory = await Mock.new();
             const versionsRegistry = await Mock.new();
-            const pairAggregatorRegistry = await Mock.new();
+            const chainlinkAggregator = await Mock.new();
             const marketsState = await Mock.new();
             const interestValidator = await Mock.new();
             const atmSettings = await Mock.new();
             await instance.initialize(
                 escrowFactory.address,
                 versionsRegistry.address,
-                pairAggregatorRegistry.address,
+                chainlinkAggregator.address,
                 marketsState.address,
                 interestValidator.address,
                 atmSettings.address,

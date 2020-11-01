@@ -5,6 +5,7 @@ import "../../token/ERC20Mock.sol";
 contract CERC20Mock is ERC20Mock {
     uint8 public constant CTOKEN_DECIMALS = 8;
     uint256 public constant NO_ERROR = 0;
+    uint256 public constant TOKEN_INSUFFICIENT_BALANCE = 13;
     uint256 public constant RETURN_ERROR = 9999;
     uint256 public constant SIMULATE_COMPOUND_MINT_RETURN_ERROR = 88888888;
     uint256 public constant SIMULATE_COMPOUND_MINT_ERROR = 77777777;
@@ -29,7 +30,7 @@ contract CERC20Mock is ERC20Mock {
 
     function mint(uint256 mintAmount) external returns (uint256) {
         if (SIMULATE_COMPOUND_MINT_ERROR == mintAmount) {
-            mintAmount = 1;
+            return NO_ERROR;
         }
         uint256 cAmount = _getCTokensAmount(mintAmount);
         underlying.transferFrom(msg.sender, address(this), mintAmount);
@@ -40,18 +41,37 @@ contract CERC20Mock is ERC20Mock {
         return NO_ERROR;
     }
 
-    function redeem(uint256 redeemTokens) external returns (uint256) {
-        underlying;
-        redeemTokens;
-        _mockChange();
+    function redeem(uint256 redeemAmount) external returns (uint256) {
+        if (SIMULATE_COMPOUND_REDEEM_UNDERLYING_ERROR == redeemAmount) {
+            return NO_ERROR;
+        }
+        if (balanceOf(msg.sender) < redeemAmount) {
+            return TOKEN_INSUFFICIENT_BALANCE;
+        }
+
+        uint256 tokenAmount = _getTokensAmount(redeemAmount);
+        require(super.transfer(msg.sender, tokenAmount), "UNDERLYING_TRANSFER_FAILED");
+        super.burn(redeemAmount);
+        require(
+            ((ERC20Mock(address(underlying))).mint(msg.sender, redeemAmount)),
+            "UNDERLYING_MINT_FAILED"
+        );
+        if (SIMULATE_COMPOUND_REDEEM_UNDERLYING_RETURN_ERROR == redeemAmount) {
+            return RETURN_ERROR;
+        }
         return NO_ERROR;
     }
 
     // https://compound.finance/docs/ctokens#redeem-underlying
+    // TODO: this logic needs to taken the amount passed in and transfer that amount of the underlying asset, then convert it to a ctoken amount to burn.
     function redeemUnderlying(uint256 redeemAmount) external returns (uint256) {
         if (SIMULATE_COMPOUND_REDEEM_UNDERLYING_ERROR == redeemAmount) {
-            redeemAmount = 1;
+            return NO_ERROR;
         }
+        if (balanceOfUnderlying(msg.sender) < redeemAmount) {
+            return TOKEN_INSUFFICIENT_BALANCE;
+        }
+
         uint256 tokenAmount = _getTokensAmount(redeemAmount);
         require(super.transfer(msg.sender, tokenAmount), "UNDERLYING_TRANSFER_FAILED");
         super.burn(redeemAmount);
@@ -131,7 +151,7 @@ contract CERC20Mock is ERC20Mock {
         return block.number == 0 ? 0 : block.number / multiplier;
     }
 
-    function balanceOfUnderlying(address account) external view returns (uint256) {
+    function balanceOfUnderlying(address account) public view returns (uint256) {
         return balanceOf(account);
     }
 }

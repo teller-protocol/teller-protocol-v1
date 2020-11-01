@@ -38,13 +38,13 @@ contract("EscrowFactoryCreateEscrowTest", function(accounts) {
           {
             marketsState,
             interestValidator,
-            pairAggregatorRegistry,
+            chainlinkAggregator,
             atmSettings
           }) => {
           await instance.initialize(
             escrowFactoryInstance.address,
             versionsRegistry.address,
-            pairAggregatorRegistry.address,
+            chainlinkAggregator.address,
             marketsState.address,
             interestValidator.address,
             atmSettings.address

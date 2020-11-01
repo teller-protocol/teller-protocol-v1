@@ -5,7 +5,7 @@ const {
   oracles: oraclesActions,
   tokens: tokensActions,
   settings: settingsActions,
-} = require("../../utils/actions");
+} = require("../../../scripts/utils/actions");
 const {toDecimals} = require("../../../test/utils/consts");
 const platformSettingsNames = require("../../../test/utils/platformSettingsNames");
 
@@ -31,12 +31,12 @@ module.exports = async (testContext) => {
   let initialOraclePrice;
   let collateralAmountDepositCollateral;
   if (collTokenName.toLowerCase() === "eth") {
-    initialOraclePrice = toDecimals("0.00295835", 18);
+    initialOraclePrice = "0.00295835";
     collateralAmountDepositCollateral = toDecimals(0.2, collateralTokenInfo.decimals
     );
   }
   if (collTokenName.toLowerCase() === "link") {
-    initialOraclePrice = toDecimals("0.100704", 8);
+    initialOraclePrice = "0.100704";
     collateralAmountDepositCollateral = toDecimals(6.1, collateralTokenInfo.decimals);
   }
   const durationInDays = 10;
