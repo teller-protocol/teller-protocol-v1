@@ -4,8 +4,6 @@ const {
 } = require('./consts');
 const initPlatformSettings = require('../../migrations/utils/init_settings/initPlatformSettings');
 
-const ChainlinkAggregator = artifacts.require('./base/providers/ChainlinkAggregator.sol')
-
 const INITIAL_VALUE = 1;
 const TEST_DEFAULT_VALUE = {
     requiredSubmissions: INITIAL_VALUE,
