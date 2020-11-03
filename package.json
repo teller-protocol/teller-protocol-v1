@@ -44,7 +44,7 @@
     "solhint": "^2.1.0",
     "solhint-plugin-prettier": "^0.0.4",
     "solidity-coverage": "^0.7.9",
-    "truffle": "^5.1.16",
+    "truffle": "5.1.41",
     "truffle-assertions": "^0.9.2",
     "truffle-plugin-verify": "^0.3.10",
     "yargs": "^15.3.1"
