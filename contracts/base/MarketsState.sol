@@ -70,12 +70,7 @@ contract MarketsState is
         address collateralAsset,
         uint256 amount
     ) external onlyWhitelisted() isInitialized() {
-        address cTokenAddress = _getCTokenAddress(borrowedAsset);
-        if (cTokenAddress.isEmpty()) {
-            markets[borrowedAsset][collateralAsset].increaseRepayment(amount);
-        } else {
-            markets[cTokenAddress][collateralAsset].increaseRepayment(amount);
-        }
+        _getMarket(borrowedAsset, collateralAsset).increaseRepayment(amount);
     }
 
     /**
@@ -90,12 +85,7 @@ contract MarketsState is
         address collateralAsset,
         uint256 amount
     ) external onlyWhitelisted() isInitialized() {
-        address cTokenAddress = _getCTokenAddress(borrowedAsset);
-        if (cTokenAddress.isEmpty()) {
-            markets[borrowedAsset][collateralAsset].increaseSupply(amount);
-        } else {
-            markets[cTokenAddress][collateralAsset].increaseSupply(amount);
-        }
+        _getMarket(borrowedAsset, collateralAsset).increaseSupply(amount);
     }
 
     /**
@@ -110,12 +100,7 @@ contract MarketsState is
         address collateralAsset,
         uint256 amount
     ) external onlyWhitelisted() isInitialized() {
-        address cTokenAddress = _getCTokenAddress(borrowedAsset);
-        if (cTokenAddress.isEmpty()) {
-            markets[borrowedAsset][collateralAsset].decreaseSupply(amount);
-        } else {
-            markets[cTokenAddress][collateralAsset].decreaseSupply(amount);
-        }
+        _getMarket(borrowedAsset, collateralAsset).decreaseSupply(amount);
     }
 
     /**
@@ -130,12 +115,7 @@ contract MarketsState is
         address collateralAsset,
         uint256 amount
     ) external onlyWhitelisted() isInitialized() {
-        address cTokenAddress = _getCTokenAddress(borrowedAsset);
-        if (cTokenAddress.isEmpty()) {
-            markets[borrowedAsset][collateralAsset].increaseBorrow(amount);
-        } else {
-            markets[cTokenAddress][collateralAsset].increaseBorrow(amount);
-        }
+        _getMarket(borrowedAsset, collateralAsset).increaseBorrow(amount);
     }
 
     /**
@@ -149,12 +129,7 @@ contract MarketsState is
         view
         returns (uint256)
     {
-        address cTokenAddress = _getCTokenAddress(borrowedAsset);
-        if (cTokenAddress.isEmpty()) {
-            return _getMarket(borrowedAsset, collateralAsset).getSupplyToDebt();
-        } else {
-            return _getMarket(cTokenAddress, collateralAsset).getSupplyToDebt();
-        }
+        return _getMarket(borrowedAsset, collateralAsset).getSupplyToDebt();
     }
 
     /**
@@ -169,14 +144,7 @@ contract MarketsState is
         address collateralAsset,
         uint256 loanAmount
     ) external view returns (uint256) {
-        address cTokenAddress = _getCTokenAddress(borrowedAsset);
-        if (cTokenAddress.isEmpty()) {
-            return
-                _getMarket(borrowedAsset, collateralAsset).getSupplyToDebtFor(loanAmount);
-        } else {
-            return
-                _getMarket(cTokenAddress, collateralAsset).getSupplyToDebtFor(loanAmount);
-        }
+        return _getMarket(borrowedAsset, collateralAsset).getSupplyToDebtFor(loanAmount);
     }
 
     /**
@@ -190,12 +158,7 @@ contract MarketsState is
         view
         returns (MarketStateLib.MarketState memory)
     {
-        address cTokenAddress = _getCTokenAddress(borrowedAsset);
-        if (cTokenAddress.isEmpty()) {
-            return _getMarket(borrowedAsset, collateralAsset);
-        } else {
-            return _getMarket(cTokenAddress, collateralAsset);
-        }
+        return _getMarket(borrowedAsset, collateralAsset);
     }
 
     /**
@@ -224,7 +187,12 @@ contract MarketsState is
         view
         returns (MarketStateLib.MarketState storage)
     {
-        return markets[borrowedAsset][collateralAsset];
+        address cTokenAddress = _getCTokenAddress(borrowedAsset);
+        if (cTokenAddress.isEmpty()) {
+            return markets[borrowedAsset][collateralAsset];
+        } else {
+            return markets[cTokenAddress][collateralAsset];
+        }
     }
 
     /**
