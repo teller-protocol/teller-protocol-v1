@@ -13,7 +13,7 @@ contract SettingsConsts {
     /** Constants */
 
     // It represents 100% with 2 decimal places.
-    uint256 public constant TEN_THOUSAND = 10000;
+    uint256 public constant ONE_HUNDRED_PERCENT = 10000;
 
     /**
         @notice The setting name for the required subsmission settings.

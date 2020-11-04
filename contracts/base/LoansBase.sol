@@ -493,7 +493,7 @@ contract LoansBase is LoansInterface, Base {
         uint256 collateralBuffer = settings().getPlatformSettingValue(
             settings().consts().COLLATERAL_BUFFER_SETTING()
         );
-        uint256 liquidationReward = settings().consts().TEN_THOUSAND().sub(
+        uint256 liquidationReward = settings().consts().ONE_HUNDRED_PERCENT().sub(
             settings().getPlatformSettingValue(
                 settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
             )
