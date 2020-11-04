@@ -251,11 +251,7 @@ contract LoansBase is LoansInterface, Base {
 
         loans[loanID].borrowedAmount = amountBorrow;
         loans[loanID].principalOwed = amountBorrow;
-        loans[loanID].interestOwed = amountBorrow
-            .mul(loans[loanID].loanTerms.interestRate)
-            .mul(loans[loanID].loanTerms.duration)
-            .div(TEN_THOUSAND)
-            .div(SECONDS_PER_YEAR_4DP);
+        loans[loanID].interestOwed = _getInterestOwed(loanID, amountBorrow);
         loans[loanID].status = TellerCommon.LoanStatus.Active;
 
         // check that enough collateral has been provided for this loan
@@ -586,13 +582,32 @@ contract LoansBase is LoansInterface, Base {
         TellerCommon.LoanStatus currentStatus = loans[loanID].status;
         uint256 loanAmount;
         if (currentStatus == TellerCommon.LoanStatus.TermsSet) {
-            loanAmount = loans[loanID].loanTerms.maxLoanAmount.add(loans[loanID].interestOwed);
+            uint256 interestOwed = _getInterestOwed(loanID, loans[loanID].loanTerms.maxLoanAmount);
+            loanAmount = loans[loanID].loanTerms.maxLoanAmount.add(interestOwed);
         } else if (currentStatus == TellerCommon.LoanStatus.Active) {
             loanAmount = loans[loanID].interestOwed.add(loans[loanID].principalOwed);
         } else {
             loanAmount = 0;
         }
         return loanAmount;
+    }
+
+    /**
+        @notice Returns the amount of interest owed for a given loan and loan amount
+        @param loanID The id of the loan to get the owed interest
+        @param amountBorrow The principal of the loan to take out
+     */
+     function _getInterestOwed(uint256 loanID, uint256 amountBorrow)
+        internal
+        view
+        returns (uint256)
+    {
+        uint256 interestOwed = amountBorrow
+            .mul(loans[loanID].loanTerms.interestRate)
+            .mul(loans[loanID].loanTerms.duration)
+            .div(TEN_THOUSAND)
+            .div(SECONDS_PER_YEAR_4DP);
+        return interestOwed;
     }
 
     /**
