@@ -5,7 +5,7 @@ const {
   oracles: oraclesActions,
   blockchain: blockchainActions,
   escrow: escrowActions,
-} = require("../../utils/actions");
+} = require("../../../scripts/utils/actions");
 const {
   loans: loansAssertions,
 } = require("../../../scripts/utils/assertions");

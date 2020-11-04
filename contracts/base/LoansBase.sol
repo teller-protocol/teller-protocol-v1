@@ -554,7 +554,7 @@ contract LoansBase is LoansInterface, Base {
                 collateral: collateral,
                 neededInLendingTokens: neededInLending,
                 neededInCollateralTokens: neededInCollateral,
-                moreCollateralRequired: neededInCollateral > collateral
+                moreCollateralRequired: neededInCollateral >= collateral
             });
     }
 

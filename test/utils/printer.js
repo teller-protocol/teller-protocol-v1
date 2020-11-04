@@ -24,7 +24,7 @@ const printInterestRate = ({ loanInfo }, { tokenInfo }) => {
     console.log(`Amount:                ${amountWithUnits.toFixed(4)} ${tokenName}`);
     console.log(`Duration:              ${durationInDays} days = ${loanTerms.duration} secs`);
     
-    console.log(`APR:                   ${loanTerms.interestRate} == ${BigNumber(loanTerms.interestRate).div(100)} % = ${BigNumber(loanTerms.interestRate).div(10000)}`);
+    console.log(`APR:                   ${loanTerms.interestRate} == ${BigNumber(loanTerms.interestRate).div(100)}%`);
     const interestRatePerYear = BigNumber(loanTerms.interestRate).div(10000);
     const interestPerYear = amountWithUnits.times(interestRatePerYear);
     console.log(`Yearly (% / ${tokenName}):     ${interestRatePerYear.times(100).toFixed(8)} % / ${interestPerYear.toFixed(8)} ${tokenName}`);
@@ -51,7 +51,7 @@ const printLoanTerms = ({loanTerms}, { tokenInfo}) => {
     console.log(`Recipient:         ${loanTerms.recipient}`);
     const durationInDays = secondsToDays(loanTerms.duration);
     console.log(`Duration:          ${loanTerms.duration} sec = ${durationInDays} days`);
-    console.log(`Collateral Ratio:  ${loanTerms.collateralRatio} == ${BigNumber(loanTerms.collateralRatio).div(100)} % = ${BigNumber(loanTerms.collateralRatio).div(10000)}`);
+    console.log(`Collateral Ratio:  ${loanTerms.collateralRatio} == ${BigNumber(loanTerms.collateralRatio).div(100)}%`);
     
     const maxLoanAmountUnits = toUnits(loanTerms.maxLoanAmount, tokenInfo.decimals);
     console.log(`Max. Loan Amount:  ${loanTerms.maxLoanAmount} = ${maxLoanAmountUnits} ${tokenInfo.symbol}`);
