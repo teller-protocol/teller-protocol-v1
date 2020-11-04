@@ -228,7 +228,6 @@ contract LendingPool is Base, LendingPoolInterface {
 
         // Withdraw the tokens from compound
         _withdrawFromCompoundIfSupported(amountToWithdraw);
-        // TODO Do we need to decrease any amount?
 
         // Transfer tokens to the lender.
         tokenTransfer(lender, amountToWithdraw);
