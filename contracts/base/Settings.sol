@@ -122,7 +122,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
      */
     LogicVersionsRegistryInterface public versionsRegistry;
 
-
     /**
         @notice It is the global instance of the ChainlinkAggregator contract.
      */
@@ -367,27 +366,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     }
 
     /**
-        @notice It sets the cToken address for a specific asset address.
-        @param assetAddress asset address to configure.
-        @param cTokenAddress the new cToken address to configure.
-     */
-    function _setCTokenAddress(address assetAddress, address cTokenAddress) internal {
-        if (assetAddress == ETH_ADDRESS) {
-            // NOTE: This is the address for the cETH contract. It is hardcoded because the contract does not have a
-            //       underlying() function on it to check that this is the correct contract.
-            cTokenAddress.requireEqualTo(CETH_ADDRESS, "CETH_ADDRESS_NOT_MATCH");
-        } else {
-            require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
-            if (cTokenAddress.isNotEmpty()) {
-                require(cTokenAddress.isContract(), "CTOKEN_MUST_BE_CONTRACT_OR_EMPTY");
-                require(CErc20Interface(cTokenAddress).underlying() == assetAddress, "UNDERLYING_ADDRESS_NOT_MATCH");
-            }
-        }
-
-        assetSettings[assetAddress].updateCTokenAddress(cTokenAddress);
-    }
-
-    /**
         @notice Tests whether amount exceeds the current maximum loan amount for a specific asset settings.
         @param assetAddress asset address to test the setting.
         @param amount amount to test.
@@ -423,9 +401,9 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     }
 
     /**
-        @notice Get the cTokenAddress defined in the asset settings for a given asset address.
-        @param assetAddress asset address used to get the current settings.
-        @return the cTokenAddress.
+        @notice Gets the cToken address for a given asset address.
+        @param assetAddress token address.
+        @return the cToken address for a given asset address.
      */
     function getCTokenAddress(address assetAddress) external view returns (address) {
         return assetSettings[assetAddress].cTokenAddress;
@@ -467,10 +445,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     ) external isNotInitialized() {
         require(escrowFactoryAddress.isContract(), "ESCROW_FACTORY_MUST_BE_CONTRACT");
         require(versionsRegistryAddress.isContract(), "VERS_REGISTRY_MUST_BE_CONTRACT");
-        require(
-            chainlinkAggregatorAddress.isContract(),
-            "AGGREGATOR_MUST_BE_CONTRACT"
-        );
+        require(chainlinkAggregatorAddress.isContract(), "AGGREGATOR_MUST_BE_CONTRACT");
         require(marketsStateAddress.isContract(), "MARKETS_STATE_MUST_BE_CONTRACT");
         require(
             interestValidatorAddress.isEmpty() || interestValidatorAddress.isContract(),
@@ -483,9 +458,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
 
         escrowFactory = EscrowFactoryInterface(escrowFactoryAddress);
         versionsRegistry = LogicVersionsRegistryInterface(versionsRegistryAddress);
-        chainlinkAggregator = IChainlinkAggregator(
-            chainlinkAggregatorAddress
-        );
+        chainlinkAggregator = IChainlinkAggregator(chainlinkAggregatorAddress);
         marketsState = MarketsStateInterface(marketsStateAddress);
         interestValidator = InterestValidatorInterface(interestValidatorAddress);
         atmSettings = IATMSettings(atmSettingsAddress);
@@ -508,6 +481,30 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         returns (PlatformSettingsLib.PlatformSetting memory)
     {
         return platformSettings[settingName];
+    }
+
+    /**
+        @notice It sets the cToken address for a specific asset address.
+        @param assetAddress asset address to configure.
+        @param cTokenAddress the new cToken address to configure.
+     */
+    function _setCTokenAddress(address assetAddress, address cTokenAddress) internal {
+        if (assetAddress == ETH_ADDRESS) {
+            // NOTE: This is the address for the cETH contract. It is hardcoded because the contract does not have a
+            //       underlying() function on it to check that this is the correct contract.
+            cTokenAddress.requireEqualTo(CETH_ADDRESS, "CETH_ADDRESS_NOT_MATCH");
+        } else {
+            require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
+            if (cTokenAddress.isNotEmpty()) {
+                require(cTokenAddress.isContract(), "CTOKEN_MUST_BE_CONTRACT_OR_EMPTY");
+                require(
+                    CErc20Interface(cTokenAddress).underlying() == assetAddress,
+                    "UNDERLYING_ADDRESS_NOT_MATCH"
+                );
+            }
+        }
+
+        assetSettings[assetAddress].updateCTokenAddress(cTokenAddress);
     }
 
     /** Private functions */

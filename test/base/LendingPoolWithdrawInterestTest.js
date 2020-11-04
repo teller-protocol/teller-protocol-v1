@@ -63,7 +63,7 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
         _2_cTokenSupported_basic: [true, accounts[0], true, true, 40, 30, 25, false, { supported: false, isValid: true }, 'AMOUNT_EXCEEDS_AVAILABLE_AMOUNT', true],
         _3_cTokenSupported_basic: [true, accounts[0], true, true, 40, 25, 30, false, { supported: false, isValid: true }, undefined, false],
         _4_cTokenSupported_transferFail: [true, accounts[1], true, false, 50, 50, 50, false, { supported: false, isValid: true }, 'LENDING_TRANSFER_FAILED', true],
-        _5_cTokenSupported_notEnoughBalance: [true, accounts[1], true, true, 49, 50, 50, true, { supported: false, isValid: true }, 'COMPOUND_WITHDRAWAL_ERROR', true],
+        _5_cTokenSupported_notEnoughBalance: [true, accounts[1], true, true, 49, 50, 50, true, { supported: false, isValid: true }, 'LENDING_TOKEN_NOT_ENOUGH_BALANCE', true],
         _6_cTokenSupported_notEqualAddresses: [false, accounts[1], true, true, 49, 50, 50, true, { supported: false, isValid: true }, 'SENDER_ISNT_LENDING_POOL', true],
         _7_cTokenNotSupported_basic: [true, accounts[0], false, true, 10, 10, 10, false, { supported: false, isValid: true }, undefined, false],
         _8_cTokenNotSupported_basic: [true, accounts[0], false, true, 40, 30, 25, false, { supported: false, isValid: true }, 'AMOUNT_EXCEEDS_AVAILABLE_AMOUNT', true],
@@ -103,7 +103,6 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
                 lendingTokenInstance.address,
                 lendersInstance.address,
                 loansInstance.address,
-                cTokenAddress,
                 settingsInstance.address,
             );
             await lendersInstance.mockLenderInfo(

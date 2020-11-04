@@ -27,7 +27,10 @@ interface IChainlinkAggregator {
         @return AggregatorV2V3Interface The Chainlink Aggregator address.
         @return bool whether or not the values from the Aggregator should be considered inverted.
      */
-    function aggregatorFor(address src, address dst) external view returns (AggregatorV2V3Interface, bool);
+    function aggregatorFor(address src, address dst)
+        external
+        view
+        returns (AggregatorV2V3Interface, bool);
 
     /**
         @notice It calculates the value of a token amount into another.
@@ -36,7 +39,11 @@ interface IChainlinkAggregator {
         @param srcAmount Amount of the source token to convert into the destination token.
         @return uint256 Value of the source token amount in destination tokens.
      */
-    function valueFor(address src, address dst, uint256 srcAmount) external view returns (uint256);
+    function valueFor(
+        address src,
+        address dst,
+        uint256 srcAmount
+    ) external view returns (uint256);
 
     /**
         @notice It returns the price of the token pair as given from the Chainlink Aggregator.
@@ -52,5 +59,9 @@ interface IChainlinkAggregator {
         @param src Source token address.
         @param dst Destination token address.
      */
-    function add(address src, address dst, address aggregator) external;
+    function add(
+        address src,
+        address dst,
+        address aggregator
+    ) external;
 }

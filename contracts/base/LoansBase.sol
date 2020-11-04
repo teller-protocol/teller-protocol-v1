@@ -273,12 +273,6 @@ contract LoansBase is LoansInterface, Base {
 
         EscrowInterface(loans[loanID].escrow).initialize(address(this), loanID);
 
-        _markets().increaseBorrow(
-            lendingPool.lendingToken(),
-            this.collateralToken(),
-            amountBorrow
-        );
-
         emit LoanTakenOut(
             loanID,
             loans[loanID].loanTerms.borrower,
@@ -328,12 +322,6 @@ contract LoansBase is LoansInterface, Base {
 
         // collect the money from the payer
         lendingPool.repay(toPay, msg.sender);
-
-        _markets().increaseRepayment(
-            lendingPool.lendingToken(),
-            this.collateralToken(),
-            toPay
-        );
 
         emit LoanRepaid(
             loanID,
@@ -509,7 +497,11 @@ contract LoansBase is LoansInterface, Base {
     {
         // Get collateral needed in lending tokens.
         neededInLendingTokens = _getCollateralNeededInTokens(loanID);
-        neededInCollateralTokens = settings().chainlinkAggregator().valueFor(lendingPool.lendingToken(), collateralToken, neededInLendingTokens);
+        neededInCollateralTokens = settings().chainlinkAggregator().valueFor(
+            lendingPool.lendingToken(),
+            collateralToken,
+            neededInLendingTokens
+        );
     }
 
     /**
@@ -596,7 +588,11 @@ contract LoansBase is LoansInterface, Base {
         uint256 liquidateEthPrice = settings().getPlatformSettingValue(
             settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
         );
-        uint256 collateralInTokens = settings().chainlinkAggregator().valueFor(collateralToken, lendingPool.lendingToken(), collateral);
+        uint256 collateralInTokens = settings().chainlinkAggregator().valueFor(
+            collateralToken,
+            lendingPool.lendingToken(),
+            collateral
+        );
         liquidationInfo = TellerCommon.LoanLiquidationInfo({
             liquidable: canLiquidateLoan(loanID),
             collateral: collateral,

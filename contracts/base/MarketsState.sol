@@ -12,6 +12,7 @@ import "./TInitializable.sol";
 // Interfaces
 import "../interfaces/MarketsStateInterface.sol";
 import "../util/MarketStateLib.sol";
+import "../util/AddressLib.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -34,6 +35,7 @@ contract MarketsState is
     WhitelistedRole,
     BaseUpgradeable
 {
+    using AddressLib for address;
     using Address for address;
     using MarketStateLib for MarketStateLib.MarketState;
 
@@ -42,10 +44,17 @@ contract MarketsState is
     /* State Variables */
 
     /**
-        @notice It maps a lent token => collateral token => Market state.
-        Example:
-            address(DAI) => address(LINK) => MarketState
-            address(DAI) => address(ETH) => MarketState
+        @notice It maps:
+        - The cToken address related with a given lent token => collateral token => Market state.
+        - If the lent token is not supported by Compound, this function uses the lent token address as key.
+        
+        Examples (supported by Compound):
+            address(cDAI) => address(LINK) => MarketState
+            address(cUSDC) => address(LINK) => MarketState
+        
+        Examples (not supported by Compound):
+            address(TokenA) => address(LINK) => MarketState
+            address(TokenB) => address(ETH) => MarketState
      */
     mapping(address => mapping(address => MarketStateLib.MarketState)) public markets;
 
@@ -61,7 +70,7 @@ contract MarketsState is
         address collateralAsset,
         uint256 amount
     ) external onlyWhitelisted() isInitialized() {
-        markets[borrowedAsset][collateralAsset].increaseRepayment(amount);
+        _getMarket(borrowedAsset, collateralAsset).increaseRepayment(amount);
     }
 
     /**
@@ -76,7 +85,7 @@ contract MarketsState is
         address collateralAsset,
         uint256 amount
     ) external onlyWhitelisted() isInitialized() {
-        markets[borrowedAsset][collateralAsset].increaseSupply(amount);
+        _getMarket(borrowedAsset, collateralAsset).increaseSupply(amount);
     }
 
     /**
@@ -91,7 +100,7 @@ contract MarketsState is
         address collateralAsset,
         uint256 amount
     ) external onlyWhitelisted() isInitialized() {
-        markets[borrowedAsset][collateralAsset].decreaseSupply(amount);
+        _getMarket(borrowedAsset, collateralAsset).decreaseSupply(amount);
     }
 
     /**
@@ -106,7 +115,7 @@ contract MarketsState is
         address collateralAsset,
         uint256 amount
     ) external onlyWhitelisted() isInitialized() {
-        markets[borrowedAsset][collateralAsset].increaseBorrow(amount);
+        _getMarket(borrowedAsset, collateralAsset).increaseBorrow(amount);
     }
 
     /**
@@ -178,6 +187,20 @@ contract MarketsState is
         view
         returns (MarketStateLib.MarketState storage)
     {
-        return markets[borrowedAsset][collateralAsset];
+        address cTokenAddress = _getCTokenAddress(borrowedAsset);
+        if (cTokenAddress.isEmpty()) {
+            return markets[borrowedAsset][collateralAsset];
+        } else {
+            return markets[cTokenAddress][collateralAsset];
+        }
+    }
+
+    /**
+        @notice Gets the cToken address associated to a borrowed asset.
+        @param borrowedAsset borrowed address.
+        @return the cToken address (if Compound supported the asset). Otherwise it returns an empty address.
+     */
+    function _getCTokenAddress(address borrowedAsset) internal view returns (address) {
+        return settings().getCTokenAddress(borrowedAsset);
     }
 }

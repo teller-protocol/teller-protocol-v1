@@ -107,10 +107,16 @@ contract Compound is ICompound, BaseEscrowDapp {
         @param amount amount of cToken or underlying token to redeem.
         @param isUnderlying boolean indicating if the amount to redeem is in the underlying token amount.
     */
-    function _redeem(CErc20Interface cToken, uint256 amount, bool isUnderlying) internal {
+    function _redeem(
+        CErc20Interface cToken,
+        uint256 amount,
+        bool isUnderlying
+    ) internal {
         address tokenAddress = cToken.underlying();
         uint256 tokenBalanceBeforeRedeem = _balanceOf(tokenAddress);
-        uint256 result = isUnderlying ? cToken.redeemUnderlying(amount) : cToken.redeem(amount);
+        uint256 result = isUnderlying
+            ? cToken.redeemUnderlying(amount)
+            : cToken.redeem(amount);
         require(result != TOKEN_INSUFFICIENT_BALANCE, "COMPOUND_INSUFFICIENT_BALANCE");
         require(result == NO_ERROR, "COMPOUND_WITHDRAWAL_ERROR");
 

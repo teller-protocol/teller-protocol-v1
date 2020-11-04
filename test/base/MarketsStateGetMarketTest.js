@@ -2,6 +2,7 @@
 const withData = require('leche').withData;
 const { t, createMocks } = require('../utils/consts');
 const actions = require('../utils/marketStateActions.js');
+const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -10,12 +11,15 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const MarketsState = artifacts.require("./base/MarketsState.sol");
 
 contract('MarketsStateGetMarketTest', function (accounts) {
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     const owner = accounts[0];
     let mocks;
     let instance;
     let settings;
+    let cTokenInstance;
     
     beforeEach('Setup for each test', async () => {
+        cTokenInstance = await Mock.new();
         settings = await Mock.new();
         instance = await MarketsState.new();
         await instance.initialize(settings.address);
@@ -97,6 +101,10 @@ contract('MarketsStateGetMarketTest', function (accounts) {
     }, function(previousAmounts, borrowedIndexToTest, collateralIndexToTest, expectedResult) {
         it(t('user', 'getMarket', 'Should be able to get the market info.', false), async function() {
             // Setup
+            await settings.givenMethodReturnAddress(
+                settingsInterfaceEncoder.encodeGetCTokenAddress(),
+                cTokenInstance.address
+            );
             for (const { amount, type, borrowedIndex, collateralIndex } of previousAmounts) {
                 const borrowedAssset = mocks[borrowedIndex];
                 const collateralAssset = mocks[collateralIndex];

@@ -72,7 +72,8 @@ contract ATMLiquidityMining is
      */
     modifier whenNotPaused() {
         require(
-            !settings().isPaused() && !settings().atmSettings().isATMPaused(address(governance)),
+            !settings().isPaused() &&
+                !settings().atmSettings().isATMPaused(address(governance)),
             "ATM_IS_PAUSED"
         );
         _;

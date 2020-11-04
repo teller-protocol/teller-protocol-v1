@@ -2,22 +2,18 @@
 // is completed. At that point we can use that as the template
 pragma solidity 0.5.17;
 
-import "../../interfaces/LendingPoolInterface.sol";
+import "../../base/LendingPool.sol";
 
-contract LendingPoolMock is LendingPoolInterface {
-    function deposit(uint256) external {}
+contract LendingPoolMock is LendingPool {
+    bool public _mockRequireIsLoan;
 
-    function withdraw(uint256 amount) external {}
+    function mockRequireIsLoan(bool mock) external {
+        _mockRequireIsLoan = mock;
+    }
 
-    function repay(uint256, address) external {}
-
-    function liquidationPayment(uint256, address) external {}
-
-    function createLoan(uint256, address) external {}
-
-    function withdrawInterest(uint256 amount) external {}
-
-    function lendingToken() external view returns (address) {
-        return address(0x0);
+    function _requireIsLoan() internal view {
+        if (!_mockRequireIsLoan) {
+            super._requireIsLoan();
+        }
     }
 }

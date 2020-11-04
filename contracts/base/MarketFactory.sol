@@ -111,12 +111,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
             LendersInterface lendersProxy,
             LoanTermsConsensusInterface loanTermsConsensusProxy,
             LoansInterface loansProxy
-        ) = _createAndInitializeProxies(
-            owner,
-            tToken,
-            borrowedToken,
-            collateralToken
-        );
+        ) = _createAndInitializeProxies(owner, tToken, borrowedToken, collateralToken);
 
         _addMarket(
             borrowedToken,
@@ -411,15 +406,12 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         LoanTermsConsensusInterface loanTermsConsensusProxy,
         LoansInterface loansProxy
     ) internal {
-        address cTokenAddress = settings().getAssetSettings(borrowedToken).cTokenAddress;
-
         // Initializing LendingPool
         lendingPoolProxy.initialize(
             tToken,
             borrowedToken,
             address(lendersProxy),
             address(loansProxy),
-            cTokenAddress,
             address(settings())
         );
         // Initializing InterestConsensus
