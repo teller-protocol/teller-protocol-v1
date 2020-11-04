@@ -427,7 +427,7 @@ contract LoansBase is LoansInterface, Base {
         @return uint256 The total amount owed remaining
      */
     function getTotalOwed(uint256 loanID) public view returns (uint256) {
-        return loans[loanID].interestOwed.add(loans[loanID].principalOwed);
+        return _getTotalOwed(loanID);
     }
 
     /**
@@ -569,17 +569,30 @@ contract LoansBase is LoansInterface, Base {
         view
         returns (uint256)
     {
+        uint256 loanAmount = _getTotalOwed(loanID);
+        uint256 collateralRatio = loans[loanID].loanTerms.collateralRatio;
+        return loanAmount.mul(collateralRatio).div(TEN_THOUSAND);
+    }
+
+    /**
+        @notice Returns the total amount owed for a specified loan
+        @param loanID The id of the loan to get the total amount owed
+     */
+     function _getTotalOwed(uint256 loanID)
+        internal
+        view
+        returns (uint256)
+    {
         TellerCommon.LoanStatus currentStatus = loans[loanID].status;
         uint256 loanAmount;
         if (currentStatus == TellerCommon.LoanStatus.TermsSet) {
-            loanAmount = loans[loanID].loanTerms.maxLoanAmount;
+            loanAmount = loans[loanID].loanTerms.maxLoanAmount.add(loans[loanID].interestOwed);
         } else if (currentStatus == TellerCommon.LoanStatus.Active) {
-            loanAmount = getTotalOwed(loanID);
+            loanAmount = loans[loanID].interestOwed.add(loans[loanID].principalOwed);
         } else {
-            return 0;
+            loanAmount = 0;
         }
-        uint256 collateralRatio = loans[loanID].loanTerms.collateralRatio;
-        return loanAmount.mul(collateralRatio).div(TEN_THOUSAND);
+        return loanAmount;
     }
 
     /**
