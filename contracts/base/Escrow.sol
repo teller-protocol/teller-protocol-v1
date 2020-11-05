@@ -15,7 +15,6 @@ import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 import "../util/SettingsConsts.sol";
 import "../util/TellerCommon.sol";
-import "../providers/openzeppelin/SignedSafeMath.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -38,7 +37,6 @@ import "../providers/openzeppelin/SignedSafeMath.sol";
 contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
     using Address for address;
     using SafeMath for uint256;
-    using SignedSafeMath for uint256;
 
     // Numerical representation of 100.00 percent.
     uint16 public constant ONE_HUNDRED_PERCENT = 10000;
