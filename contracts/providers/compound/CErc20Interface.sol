@@ -72,6 +72,8 @@ interface CErc20Interface {
      */
     function exchangeRateCurrent() external view returns (uint256);
 
+    function exchangeRateStored() external view returns (uint256);
+
     function decimals() external view returns (uint8);
 
     function balanceOf(address account) external view returns (uint256);

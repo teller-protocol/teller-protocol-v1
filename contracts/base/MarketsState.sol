@@ -2,8 +2,10 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Libraries
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/WhitelistedRole.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 
 // Contracts
 import "./BaseUpgradeable.sol";
@@ -13,6 +15,7 @@ import "./TInitializable.sol";
 import "../interfaces/MarketsStateInterface.sol";
 import "../util/MarketStateLib.sol";
 import "../util/AddressLib.sol";
+import "../providers/compound/CErc20Interface.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -38,8 +41,11 @@ contract MarketsState is
     using AddressLib for address;
     using Address for address;
     using MarketStateLib for MarketStateLib.MarketState;
+    using SafeMath for uint256;
 
     /** Constants */
+
+    uint8 internal constant EXCHANGE_RATE_DECIMALS = 18;
 
     /* State Variables */
 
@@ -144,7 +150,16 @@ contract MarketsState is
         address collateralAsset,
         uint256 loanAmount
     ) external view returns (uint256) {
-        return _getMarket(borrowedAsset, collateralAsset).getSupplyToDebtFor(loanAmount);
+        address cTokenAddress = _getCTokenAddress(borrowedAsset);
+        if (cTokenAddress.isEmpty()) {
+            return markets[borrowedAsset][collateralAsset].getSupplyToDebtFor(loanAmount);
+        } else {
+            uint8 cTokenDecimals = CErc20Interface(cTokenAddress).decimals();
+            uint256 exchangeRate = CErc20Interface(cTokenAddress).exchangeRateStored();
+            uint256 diffDecimals = uint256(EXCHANGE_RATE_DECIMALS).sub(uint256(cTokenDecimals));
+            uint256 cLoanAmount = loanAmount.mul(10 ** diffDecimals).div(exchangeRate);
+            return markets[cTokenAddress][collateralAsset].getSupplyToDebtFor(cLoanAmount);
+        }
     }
 
     /**
