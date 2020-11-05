@@ -580,16 +580,14 @@ contract LoansBase is LoansInterface, Base {
         returns (uint256)
     {
         TellerCommon.LoanStatus currentStatus = loans[loanID].status;
-        uint256 loanAmount;
         if (currentStatus == TellerCommon.LoanStatus.TermsSet) {
             uint256 interestOwed = _getInterestOwed(loanID, loans[loanID].loanTerms.maxLoanAmount);
-            loanAmount = loans[loanID].loanTerms.maxLoanAmount.add(interestOwed);
+            return loans[loanID].loanTerms.maxLoanAmount.add(interestOwed);
         } else if (currentStatus == TellerCommon.LoanStatus.Active) {
-            loanAmount = loans[loanID].interestOwed.add(loans[loanID].principalOwed);
+            return loans[loanID].principalOwed.add(loans[loanID].interestOwed);
         } else {
-            loanAmount = 0;
+            return 0;
         }
-        return loanAmount;
     }
 
     /**
@@ -602,12 +600,11 @@ contract LoansBase is LoansInterface, Base {
         view
         returns (uint256)
     {
-        uint256 interestOwed = amountBorrow
+        return amountBorrow
             .mul(loans[loanID].loanTerms.interestRate)
             .mul(loans[loanID].loanTerms.duration)
             .div(TEN_THOUSAND)
             .div(SECONDS_PER_YEAR_4DP);
-        return interestOwed;
     }
 
     /**
