@@ -258,11 +258,26 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         address quoteAddress,
         uint256 baseAmount
     ) internal view returns (uint256) {
-        return
+
+        // call function to base address for function signature of underlying
+        (bool success, bytes memory returnData) = baseAddress.staticcall(abi.encodeWithSignature("exchangeRateCurrent()"));
+        // if successful, use base address to call exchange rate function, convert base amount 
+        if (success) {
+            uint256 exchangeRate = abi.decode(returnData, (uint256));
+            return exchangeRate.mul(baseAmount);
+        // else check if base address is cETH and use that address for the exchange rate
+        } else if (baseAddress == settings().CETH_ADDRESS()) {
+            (bool success, bytes memory returnData) = settings().CETH_ADDRESS().staticcall(abi.encodeWithSignature("exchangeRateStored()"));
+            uint256 exchangeRate = abi.decode(returnData, (uint256));
+            return exchangeRate.mul(baseAmount);
+        // if false, use the base address
+        } else {
+            return
             settings().chainlinkAggregator().valueFor(
                 baseAddress,
                 quoteAddress,
                 baseAmount
             );
+        }
     }
 }
