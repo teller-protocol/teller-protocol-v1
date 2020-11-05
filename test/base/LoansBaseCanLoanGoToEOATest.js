@@ -31,22 +31,22 @@ contract("LoansBaseCanLoanGoToEOATest", function(accounts) {
   });
 
   withData({
-    _1_collateral_ratio_50_interest_rate_687: [ '5000', '687', false ],
-    _2_collateral_ratio_90_interest_rate_687: [ '9000', '687', false ],
-    _3_collateral_ratio_110_interest_rate_687: [ '11000', '687', false ],
-    _4_collateral_ratio_130_interest_rate_687: [ '13000', '687', false ],
-    _4_collateral_ratio_136_interest_rate_587: [ '13600', '587', true ],
-    _5_collateral_ratio_140_interest_rate_487: [ '14000', '487', true ],
-    _6_collateral_ratio_150_interest_rate_487: [ '15000', '487', true ],
-    _7_collateral_ratio_160_interest_rate_487: [ '16000', '487', true ],
+    _1_collateral_ratio_50: [ '5000', false ],
+    _2_collateral_ratio_90: [ '9000', false ],
+    _3_collateral_ratio_110: [ '11000', false ],
+    _4_collateral_ratio_130: [ '13000', true ],
+    _5_collateral_ratio_130_01: [ '13001', true ],
+    _6_collateral_ratio_136: [ '13600', true ],
+    _7_collateral_ratio_140: [ '14000', true ],
+    _8_collateral_ratio_150: [ '15000', true ],
+    _9_collateral_ratio_160: [ '16000', true ],
   }, function(
     collateralRatio,
-    interestRate,
     expectedResult
   ) {
     it(t("user", "isLoanOverCollateralized", "Should able to test whether a loan is considered to be secured.", false), async function() {
       // Setup
-      const loanTerms = createLoanTerms(NULL_ADDRESS, NULL_ADDRESS, interestRate, collateralRatio, 0, 0);
+      const loanTerms = createLoanTerms(NULL_ADDRESS, NULL_ADDRESS, 0, collateralRatio, 0, 0);
       const loanID = 1234;
       await instance.setLoan(loanID, loanTerms, 0, 0, 0, 0, 0, 0, 0, 1, false);
 

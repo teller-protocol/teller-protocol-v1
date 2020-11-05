@@ -14,7 +14,7 @@
     "deploy:rinkeby": "truffle compile && truffle deploy --network rinkeby --reset --to 3",
     "deploy:ganache:mainnet": "truffle compile && truffle deploy --network ganache-mainnet --reset --to 3",
     "test:coverage": "node --max-old-space-size=8192 ./node_modules/.bin/truffle run coverage",
-    "test:ganache:mainnet": "yarn compile && truffle exec ./test-integration/main.js --network ganache-mainnet",
+    "test:ganache:mainnet": "truffle exec ./test-integration/main.js --network ganache-mainnet",
     "format:prettier": "prettier --write contracts/**/**/**/**/**/**.sol",
     "format:prettier:print": "prettier contracts/**/**/**/**/**/**.sol",
     "verify:ropsten": "truffle run verify TDAI TUSDC Settings ATMSettings MarketsState EscrowFactory MarketFactory LogicVersionsRegistry Escrow Lenders EtherCollateralLoans TokenCollateralLoans LendingPool InterestConsensus LoanTermsConsensus ATMFactory ATMGovernance TLRToken ChainlinkAggregator --network ropsten",

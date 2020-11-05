@@ -14,7 +14,7 @@ const printInterestRate = ({ loanInfo }, { tokenInfo }) => {
     const tokenName = tokenInfo.symbol;
     const tokenDecimals = tokenInfo.decimals;
 
-    const amount = loanInfo.status === loanStatus.Active ? loanInfo.borrowedAmount : loanTerms.maxLoanAmount;
+    const amount = loanInfo.status.toString() === loanStatus.Active.toString() ? loanInfo.borrowedAmount : loanTerms.maxLoanAmount;
     const amountWithUnits = toUnits(amount, tokenDecimals);
 
     console.log(SIMPLE_SEPARATOR);

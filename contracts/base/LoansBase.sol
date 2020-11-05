@@ -499,9 +499,8 @@ contract LoansBase is LoansInterface, Base {
             collateralRatio >=
             overCollateralizedBuffer
                 .add(collateralBuffer)
-                .add(liquidationReward)
-                .add(interestRate);
-    }
+                .add(liquidationReward);
+   }
 
     /**
         @notice Checks if the loan has an Escrow and claims any tokens then pays out the loan collateral.
@@ -550,7 +549,7 @@ contract LoansBase is LoansInterface, Base {
                 collateral: collateral,
                 neededInLendingTokens: neededInLending,
                 neededInCollateralTokens: neededInCollateral,
-                moreCollateralRequired: neededInCollateral >= collateral
+                moreCollateralRequired: neededInCollateral > collateral
             });
     }
 

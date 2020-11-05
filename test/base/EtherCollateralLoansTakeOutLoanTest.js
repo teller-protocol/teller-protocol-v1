@@ -172,65 +172,15 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
   })
 
   withData({
-    // with no interest this loan will have the exact minimum collateral ratio required for EOA loan
-    _1_base_collateral_needed_no_interest: [ 15000000, baseNeededCollateral, 0, true ],
-    // with interest this loan will have more than minimum collateral ratio required for EOA loan
-    _2_base_collateral_needed_with_interest: [ 15000000, baseNeededCollateral, 1, false ],
-    _3_low_collateral_no_interest: [ 15000000, baseNeededCollateral / 2, 0, true ],
-    // with interest this loan will have less than minimum collateral ratio required for EOA loan
-    _4_less_than_base_collateral: [ 15000000, baseNeededCollateral - 1, 0, true ],
-    // with interest this loan will have less than minimum collateral ratio with the same amount of interest resulting in minimum required for EOA loan
-    _5_less_than_base_collateral_with_interest: [ 15000000, baseNeededCollateral - 2, 2, true ],
-    _6_less_than_base_collateral_with_interest: [ 15000000, baseNeededCollateral - 2, 5, true ],
+    _1_less_than_base_collateral: [ 15000000, baseNeededCollateral - 1 ],
+    _2_low_collateral: [ 15000000, baseNeededCollateral / 2 ],
   }, function (
     amountToBorrow,
     collateralRatio,
-    interestRate,
-    shouldFail
   ) {
-    it(t('user', 'takeOutLoan#2', 'Should able to take out an under collateralized loan with an Escrow contract.', shouldFail), async function () {
+    it(t('user', 'takeOutLoan#2', 'Should able to take out an under collateralized loan with an Escrow contract.', false), async function () {
       // Setup
       const afterAssertFn = await setupLoan({
-        maxLoanAmount: amountToBorrow,
-        collateralRatio,
-        interestRate
-      })
-
-      // Invocation
-      try {
-        const tx = await instance.takeOutLoan(mockLoanID, amountToBorrow, { from: borrower })
-
-        // Assertions
-        const loan = await afterAssertFn(tx)
-
-        assert.notEqual(loan.escrow.toString(), NULL_ADDRESS, "Escrow contract was not created")
-        const count = await createdEscrowMock.invocationCountForMethod.call(escrowInterfaceEncoder.encodeInitialize())
-        assert.equal(count.toString(), '1', 'Escrow initializer was not called')
-
-        const pool = await LendingPool.at(lendingPoolInstance.address)
-        const createLoanCallData = pool.contract.methods.createLoan(amountToBorrow.toString(), loan.escrow.toString()).encodeABI()
-        const createLoanCallCount = await lendingPoolInstance.invocationCountForCalldata.call(createLoanCallData)
-        assert.equal(createLoanCallCount.toString(), '1', 'Lending pool not called to create loan with escrow address')
-
-        assert(!shouldFail)
-      } catch (err) {
-        assert(shouldFail, err.message)
-      }
-    })
-  })
-
-  withData({
-    _1_borrower_account: [ NULL_ADDRESS, 15000000, baseNeededCollateral ],
-    _2_recipient_account: [ accounts[2], 15000000, baseNeededCollateral ],
-  }, function (
-    recipient,
-    amountToBorrow,
-    collateralRatio
-  ) {
-    it(t('user', 'takeOutLoan#3', 'Should able to take out an over collateralized loan with to their own wallet.', false), async function () {
-      // Setup
-      const afterAssertFn = await setupLoan({
-        recipient,
         maxLoanAmount: amountToBorrow,
         collateralRatio
       })
@@ -240,7 +190,38 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
 
       // Assertions
       const loan = await afterAssertFn(tx)
-      assert(loan.escrow.toString() === NULL_ADDRESS, "Escrow contract was created")
+
+      assert.notEqual(loan.escrow.toString(), NULL_ADDRESS, "Escrow contract was not created")
+      const count = await createdEscrowMock.invocationCountForMethod.call(escrowInterfaceEncoder.encodeInitialize())
+      assert.equal(count.toString(), '1', 'Escrow initializer was not called')
+
+      const pool = await LendingPool.at(lendingPoolInstance.address)
+      const createLoanCallData = pool.contract.methods.createLoan(amountToBorrow.toString(), loan.escrow.toString()).encodeABI()
+      const createLoanCallCount = await lendingPoolInstance.invocationCountForCalldata.call(createLoanCallData)
+      assert.equal(createLoanCallCount.toString(), '1', 'Lending pool not called to create loan with escrow address')
+    })
+  })
+
+  withData({
+    _1_base_collateral_needed: [ 15000000, baseNeededCollateral ],
+    _2_more_than_base_collateral: [ 15000000, baseNeededCollateral * 2 ],
+  }, function (
+    amountToBorrow,
+    collateralRatio
+  ) {
+    it(t('user', 'takeOutLoan#3', 'Should able to take out an over collateralized loan with to their own wallet.', false), async function () {
+      // Setup
+      const afterAssertFn = await setupLoan({
+        maxLoanAmount: amountToBorrow,
+        collateralRatio
+      })
+
+      // Invocation
+      const tx = await instance.takeOutLoan(mockLoanID, amountToBorrow, { from: borrower })
+
+      // Assertions
+      const loan = await afterAssertFn(tx)
+      assert.equal(loan.escrow.toString(), NULL_ADDRESS, "Escrow contract was created")
     })
   })
 })

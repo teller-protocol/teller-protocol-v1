@@ -12,7 +12,7 @@ const {
 } = require("../../../scripts/utils/assertions")
 const loanStatus = require("../../../test/utils/loanStatus")
 const helperActions = require("../../../scripts/utils/actions/helper");
-const { toDecimals } = require("../../../test/utils/consts");
+const { toDecimals, ONE_DAY, ONE_YEAR } = require("../../../test/utils/consts");
 const platformSettingNames = require("../../../test/utils/platformSettingsNames")
 
 module.exports = async (testContext) => {
@@ -36,7 +36,6 @@ module.exports = async (testContext) => {
   });
 
   // calculate required collateral ratio to get loan funds into borrower's wallet
-  const interestRate = 423
   const { value: overCollateralizedBuffer } = await settingsActions.getPlatformSettings(
     allContracts,
     { testContext },
@@ -55,9 +54,10 @@ module.exports = async (testContext) => {
   const collateralRatio = new BN(overCollateralizedBuffer)
     .plus(collateralBuffer)
     .plus(new BN(10000).minus(liquidateEthPrice))
-    .plus(interestRate).toFixed(0)
+    .toFixed(0)
 
   const depositFundsAmount = toDecimals(300, tokenInfo.decimals);
+  const durationInDays = 5;
   const maxAmountRequestLoanTerms = toDecimals(100, tokenInfo.decimals);
   const amountTakeOutValue = 50
   const amountTakeOut = toDecimals(amountTakeOutValue, tokenInfo.decimals);
@@ -69,14 +69,20 @@ module.exports = async (testContext) => {
   if (collTokenName.toLowerCase() === "link") {
     initialOraclePrice = "0.100704";
   }
+  const interestRate = 423
+  const interestOwed = new BN(amountTakeOutValue)
+    .multipliedBy(interestRate)
+    .div(10000)
+    .multipliedBy(durationInDays)
+    .multipliedBy(ONE_DAY)
+    .div(ONE_YEAR)
   collateralAmountDepositCollateral = new BN(amountTakeOutValue)
-    .plus(new BN(interestRate).div(100).multipliedBy(amountTakeOutValue))
+    .plus(interestOwed)
     .multipliedBy(initialOraclePrice)
     .multipliedBy(new BN(collateralRatio).div(10000))
     .toString()
-  collateralAmountDepositCollateral = toDecimals(collateralAmountDepositCollateral, collateralTokenInfo.decimals);
+  collateralAmountDepositCollateral = toDecimals(collateralAmountDepositCollateral, collateralTokenInfo.decimals).toFixed(0);
 
-  const durationInDays = 5;
   const signers = await accounts.getAllAt(12, 13);
   const borrowerTxConfig = await accounts.getTxConfigAt(1);
   const lenderTxConfig = await accounts.getTxConfigAt(0);

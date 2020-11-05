@@ -11,7 +11,7 @@ const {
 } = require("../../../scripts/utils/assertions")
 const loanStatus = require("../../../test/utils/loanStatus")
 const helperActions = require("../../../scripts/utils/actions/helper");
-const { toDecimals } = require("../../../test/utils/consts");
+const { toDecimals, ONE_DAY, ONE_YEAR } = require("../../../test/utils/consts");
 
 module.exports = async (testContext) => {
   const {
@@ -34,6 +34,7 @@ module.exports = async (testContext) => {
   });
 
   const depositFundsAmount = toDecimals(300, tokenInfo.decimals);
+  const durationInDays = 5;
   const maxAmountRequestLoanTerms = toDecimals(100, tokenInfo.decimals);
   const amountTakeOutValue = 50
   const amountTakeOut = toDecimals(amountTakeOutValue, tokenInfo.decimals);
@@ -47,14 +48,19 @@ module.exports = async (testContext) => {
   }
   const collateralRatio = 6000
   const interestRate = 423
+  const interestOwed = new BN(amountTakeOutValue)
+    .multipliedBy(interestRate)
+    .div(10000)
+    .multipliedBy(durationInDays)
+    .multipliedBy(ONE_DAY)
+    .div(ONE_YEAR)
   collateralAmountDepositCollateral = new BN(amountTakeOutValue)
-    .plus(new BN(interestRate).div(100).multipliedBy(amountTakeOutValue))
+    .plus(interestOwed)
     .multipliedBy(initialOraclePrice)
     .multipliedBy(new BN(collateralRatio).div(10000))
     .toString()
-  collateralAmountDepositCollateral = toDecimals(collateralAmountDepositCollateral, collateralTokenInfo.decimals);
+  collateralAmountDepositCollateral = toDecimals(collateralAmountDepositCollateral, collateralTokenInfo.decimals).toFixed(0);
 
-  const durationInDays = 5;
   const signers = await accounts.getAllAt(12, 13);
   const borrowerTxConfig = await accounts.getTxConfigAt(1);
   const lenderTxConfig = await accounts.getTxConfigAt(0);
@@ -71,6 +77,7 @@ module.exports = async (testContext) => {
       amountTakeOut,
       collateralAmountDepositCollateral,
       collateralRatio,
+      interestRate,
       durationInDays,
       signers,
       tokenInfo,
