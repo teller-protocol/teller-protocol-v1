@@ -24,6 +24,7 @@ contract("EscrowFactoryCreateEscrowTest", function(accounts) {
   let versionsRegistry;
 
   beforeEach(async () => {
+    const CETH = await Mock.new();
     loans = await Loans.new();
     escrowFactoryInstance = await EscrowFactory.new();
     versionsRegistry = await VersionsRegistry.new();
@@ -47,7 +48,8 @@ contract("EscrowFactoryCreateEscrowTest", function(accounts) {
             chainlinkAggregator.address,
             marketsState.address,
             interestValidator.address,
-            atmSettings.address
+            atmSettings.address,
+            CETH.address
           );
         }
       }
