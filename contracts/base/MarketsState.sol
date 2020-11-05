@@ -156,9 +156,12 @@ contract MarketsState is
         } else {
             uint8 cTokenDecimals = CErc20Interface(cTokenAddress).decimals();
             uint256 exchangeRate = CErc20Interface(cTokenAddress).exchangeRateStored();
-            uint256 diffDecimals = uint256(EXCHANGE_RATE_DECIMALS).sub(uint256(cTokenDecimals));
-            uint256 cLoanAmount = loanAmount.mul(10 ** diffDecimals).div(exchangeRate);
-            return markets[cTokenAddress][collateralAsset].getSupplyToDebtFor(cLoanAmount);
+            uint256 diffDecimals = uint256(EXCHANGE_RATE_DECIMALS).sub(
+                uint256(cTokenDecimals)
+            );
+            uint256 cLoanAmount = loanAmount.mul(10**diffDecimals).div(exchangeRate);
+            return
+                markets[cTokenAddress][collateralAsset].getSupplyToDebtFor(cLoanAmount);
         }
     }
 
