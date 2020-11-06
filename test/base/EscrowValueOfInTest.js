@@ -44,11 +44,12 @@ contract("EscrowValueOfInTest", function(accounts) {
 
       try {
         // Invocation
-        const value = await instance.externalValueOfIn.call(ETH_ADDRESS, ETH_ADDRESS, '1')
-
+        const value = await instance.externalValueOfIn.call(ETH_ADDRESS, ETH_ADDRESS, '1');
+        console.log({value});
         // Assertions
         assert.equal(value.toString(), expectedValue.toString(), 'Values do not match')
       } catch (error) {
+        console.log({error});
         assert(mustFail, error.message);
         assert.equal(error.message, expectedErrorMessage);
       }

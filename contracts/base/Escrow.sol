@@ -9,6 +9,7 @@ import "./TInitializable.sol";
 import "../interfaces/EscrowInterface.sol";
 import "../interfaces/LoansInterface.sol";
 import "../interfaces/IBaseProxy.sol";
+import "../providers/compound/CErc20Interface.sol";
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
@@ -257,16 +258,20 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         uint256 baseAmount
     ) internal view returns (uint256) {
 
+        /** Approach 1 */
+        bool success;
+        bytes memory returnData;
+        uint256 exchangeRate;
         // call function to base address for function signature of underlying
-        (bool success, bytes memory returnData) = baseAddress.staticcall(abi.encodeWithSignature("exchangeRateCurrent()"));
+        (success, returnData) = baseAddress.staticcall(abi.encodeWithSignature("exchangeRateStored()"));
         // if successful, use base address to call exchange rate function, convert base amount 
         if (success) {
-            uint256 exchangeRate = abi.decode(returnData, (uint256));
+            exchangeRate = abi.decode(returnData, (uint256));
             return exchangeRate.mul(baseAmount);
         // else check if base address is cETH and use that address for the exchange rate
         } else if (baseAddress == settings().CETH_ADDRESS()) {
-            (bool success, bytes memory returnData) = settings().CETH_ADDRESS().staticcall(abi.encodeWithSignature("exchangeRateStored()"));
-            uint256 exchangeRate = abi.decode(returnData, (uint256));
+            (success, returnData) = settings().CETH_ADDRESS().staticcall(abi.encodeWithSignature("exchangeRateStored()"));
+            exchangeRate = abi.decode(returnData, (uint256));
             return exchangeRate.mul(baseAmount);
         // if false, use the base address
         } else {
@@ -277,5 +282,21 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
                 baseAmount
             );
         }
+
+        /** Approach 2 */
+        // CErc20Interface cToken = CErc20Interface(baseAddress);
+
+        // if (cToken.exchangeRateStored() > 0) {
+        //     CErc20Interface cToken = CErc20Interface(baseAddress);
+        //     uint256 cTokenExchangeRate = cToken.exchangeRateStored();
+        //     return baseAmount.mul(cTokenExchangeRate);
+        // } else {
+        //     return
+        //     settings().chainlinkAggregator().valueFor(
+        //         baseAddress,
+        //         quoteAddress,
+        //         baseAmount
+        //     );
+        // }
     }
 }
