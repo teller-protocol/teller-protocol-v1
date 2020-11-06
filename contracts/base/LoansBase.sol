@@ -35,6 +35,7 @@ import "../interfaces/EscrowInterface.sol";
     @author develop@teller.finance
  */
 contract LoansBase is LoansInterface, Base {
+    using AddressLib for address payable;
     using SafeMath for uint256;
     using ERC20DetailedLib for ERC20Detailed;
 
@@ -173,14 +174,20 @@ contract LoansBase is LoansInterface, Base {
 
     /**
         @notice Checks whether the loan's collateral ratio is considered to be secured based on the settings collateral buffer value.
+        @param loanID Id of the loan to check.
         @return bool value of it being secured or not.
     */
     function isLoanSecured(uint256 loanID) external view returns (bool) {
-        return
-            loans[loanID].loanTerms.collateralRatio >=
-            settings().getPlatformSettingValue(
-                settings().consts().COLLATERAL_BUFFER_SETTING()
-            );
+        return _isLoanSecured(loanID);
+    }
+
+    /**
+        @notice Checks whether a loan is allowed to be deposited to an Externally Owned Account.
+        @param loanID Id of the loan to check.
+        @return bool indicating whether the loan with specified parameters can be deposited to an EOA.
+     */
+    function canLoanGoToEOA(uint256 loanID) external view returns (bool) {
+        return _canLoanGoToEOA(loans[loanID].loanTerms.collateralRatio);
     }
 
     /**
@@ -251,11 +258,7 @@ contract LoansBase is LoansInterface, Base {
 
         loans[loanID].borrowedAmount = amountBorrow;
         loans[loanID].principalOwed = amountBorrow;
-        loans[loanID].interestOwed = amountBorrow
-            .mul(loans[loanID].loanTerms.interestRate)
-            .mul(loans[loanID].loanTerms.duration)
-            .div(TEN_THOUSAND)
-            .div(SECONDS_PER_YEAR_4DP);
+        loans[loanID].interestOwed = _getInterestOwed(loanID, amountBorrow);
         loans[loanID].status = TellerCommon.LoanStatus.Active;
 
         // check that enough collateral has been provided for this loan
@@ -266,12 +269,24 @@ contract LoansBase is LoansInterface, Base {
         require(!collateralInfo.moreCollateralRequired, "MORE_COLLATERAL_REQUIRED");
 
         loans[loanID].loanStartTime = now;
-        loans[loanID].escrow = _createEscrow(loanID);
 
-        // We only send the loan to escrow contract for now.
-        lendingPool.createLoan(amountBorrow, loans[loanID].escrow);
+        address loanRecipient;
+        bool eoaAllowed = _canLoanGoToEOA(loans[loanID].loanTerms.collateralRatio);
+        if (eoaAllowed) {
+            loanRecipient = loans[loanID].loanTerms.recipient.isEmpty()
+                ? loans[loanID].loanTerms.borrower
+                : loans[loanID].loanTerms.recipient;
+        } else {
+            loans[loanID].escrow = _createEscrow(loanID);
+            loanRecipient = loans[loanID].escrow;
+        }
 
-        EscrowInterface(loans[loanID].escrow).initialize(address(this), loanID);
+        lendingPool.createLoan(amountBorrow, loanRecipient);
+
+        if (!eoaAllowed) {
+            loans[loanID].escrow.requireNotEmpty("ESCROW_CONTRACT_NOT_DEFINED");
+            EscrowInterface(loans[loanID].escrow).initialize(address(this), loanID);
+        }
 
         emit LoanTakenOut(
             loanID,
@@ -415,7 +430,7 @@ contract LoansBase is LoansInterface, Base {
         @return uint256 The total amount owed remaining
      */
     function getTotalOwed(uint256 loanID) public view returns (uint256) {
-        return loans[loanID].interestOwed.add(loans[loanID].principalOwed);
+        return _getTotalOwed(loanID);
     }
 
     /**
@@ -432,6 +447,44 @@ contract LoansBase is LoansInterface, Base {
     }
 
     /** Internal Functions */
+
+    /**
+        @notice Checks whether the loan's collateral ratio is considered to be secured based on the settings collateral buffer value.
+        @param loanID Id of the loan to check.
+        @return bool value of it being secured or not.
+    */
+    function _isLoanSecured(uint256 loanID) internal view returns (bool) {
+        return
+            loans[loanID].loanTerms.collateralRatio >=
+            settings().getPlatformSettingValue(
+                settings().consts().COLLATERAL_BUFFER_SETTING()
+            );
+    }
+
+    /**
+        @notice Checks whether a loan is allowed to be deposited to an Externally Owned Account.
+        @param collateralRatio Collateral ratio required by loan.
+        @return bool indicating whether the loan with specified parameters can be deposited to an EOA.
+     */
+    function _canLoanGoToEOA(uint256 collateralRatio) internal view returns (bool) {
+        uint256 overCollateralizedBuffer = settings().getPlatformSettingValue(
+            settings().consts().OVER_COLLATERALIZED_BUFFER_SETTING()
+        );
+        uint256 collateralBuffer = settings().getPlatformSettingValue(
+            settings().consts().COLLATERAL_BUFFER_SETTING()
+        );
+        uint256 liquidationReward = settings().consts().ONE_HUNDRED_PERCENT().sub(
+            settings().getPlatformSettingValue(
+                settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
+            )
+        );
+
+        return
+            collateralRatio >=
+            overCollateralizedBuffer
+                .add(collateralBuffer)
+                .add(liquidationReward);
+   }
 
     /**
         @notice Checks if the loan has an Escrow and claims any tokens then pays out the loan collateral.
@@ -561,17 +614,46 @@ contract LoansBase is LoansInterface, Base {
         view
         returns (uint256)
     {
+        uint256 loanAmount = _getTotalOwed(loanID);
+        uint256 collateralRatio = loans[loanID].loanTerms.collateralRatio;
+        return loanAmount.mul(collateralRatio).div(TEN_THOUSAND);
+    }
+
+    /**
+        @notice Returns the total amount owed for a specified loan
+        @param loanID The id of the loan to get the total amount owed
+     */
+     function _getTotalOwed(uint256 loanID)
+        internal
+        view
+        returns (uint256)
+    {
         TellerCommon.LoanStatus currentStatus = loans[loanID].status;
-        uint256 loanAmount;
         if (currentStatus == TellerCommon.LoanStatus.TermsSet) {
-            loanAmount = loans[loanID].loanTerms.maxLoanAmount;
+            uint256 interestOwed = _getInterestOwed(loanID, loans[loanID].loanTerms.maxLoanAmount);
+            return loans[loanID].loanTerms.maxLoanAmount.add(interestOwed);
         } else if (currentStatus == TellerCommon.LoanStatus.Active) {
-            loanAmount = getTotalOwed(loanID);
+            return loans[loanID].principalOwed.add(loans[loanID].interestOwed);
         } else {
             return 0;
         }
-        uint256 collateralRatio = loans[loanID].loanTerms.collateralRatio;
-        return loanAmount.mul(collateralRatio).div(TEN_THOUSAND);
+    }
+
+    /**
+        @notice Returns the amount of interest owed for a given loan and loan amount
+        @param loanID The id of the loan to get the owed interest
+        @param amountBorrow The principal of the loan to take out
+     */
+    function _getInterestOwed(uint256 loanID, uint256 amountBorrow)
+        internal
+        view
+        returns (uint256)
+    {
+        return amountBorrow
+            .mul(loans[loanID].loanTerms.interestRate)
+            .mul(loans[loanID].loanTerms.duration)
+            .div(TEN_THOUSAND)
+            .div(SECONDS_PER_YEAR_4DP);
     }
 
     /**
@@ -625,7 +707,12 @@ contract LoansBase is LoansInterface, Base {
         uint256 interestRate,
         uint256 collateralRatio,
         uint256 maxLoanAmount
-    ) internal view returns (TellerCommon.Loan memory) {
+    ) internal view returns (TellerCommon.Loan memory loan) {
+        request.borrower.requireNotEmpty("BORROWER_EMPTY");
+        if (request.recipient.isNotEmpty()) {
+            require(_canLoanGoToEOA(collateralRatio), "UNDER_COLL_WITH_RECIPIENT");
+        }
+
         uint256 termsExpiryTime = settings().getPlatformSettingValue(
             settings().consts().TERMS_EXPIRY_TIME_SETTING()
         );

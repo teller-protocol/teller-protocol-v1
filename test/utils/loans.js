@@ -1,24 +1,24 @@
-const { NULL_ADDRESS, ACTIVE } = require("./consts");
+const { NULL_ADDRESS, TERMS_SET } = require("./consts");
 
 const defaults = {
-  id: 1234,
+  id: 0,
   loanTerms: {
     borrower: NULL_ADDRESS,
     recipient: NULL_ADDRESS,
-    interestRate: 1,
-    collateralRatio: 1,
+    interestRate: 0,
+    collateralRatio: 0,
     maxLoanAmount: 100000000,
     duration: 7 * 60 * 60
   },
-  termsExpiry: 100000,
+  termsExpiry: 0,
   loanStartTime: Date.now(),
-  collateral: 1000000,
+  collateral: 0,
   lastCollateralIn: 0,
   principalOwed: 0,
   interestOwed: 0,
   borrowedAmount: 0,
   escrow: NULL_ADDRESS,
-  status: ACTIVE,
+  status: TERMS_SET,
   liquidated: false
 }
 
