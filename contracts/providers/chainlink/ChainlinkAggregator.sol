@@ -181,16 +181,20 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
      */
     function _priceFor(address src, address dst) internal view returns (int256) {
         (AggregatorV2V3Interface agg, bool inverse) = _aggregatorFor(src, dst);
-        uint8 srcDecimals = _decimalsFor(src);
         uint8 dstDecimals = _decimalsFor(dst);
-        int256 srcFactor = int256(TEN**srcDecimals);
         int256 dstFactor = int256(TEN**dstDecimals);
         if (address(agg) != address(0)) {
             int256 price = agg.latestAnswer();
-            if (inverse) {
-                return (srcFactor * dstFactor) / price;
+            uint8 resDecimals = agg.decimals();
+            if (dstDecimals > resDecimals) {
+                price = price * int256(TEN**(dstDecimals - resDecimals));
+            } else {
+                price = price / int256(TEN**(resDecimals - dstDecimals));
             }
-            return price;
+            int256 srcFactor = int256(TEN**_decimalsFor(src));
+            return inverse
+                ? srcFactor * dstFactor / price
+                : price;
         } else {
             address eth = settings().ETH_ADDRESS();
             dst.requireNotEqualTo(eth, "CANNOT_CALCULATE_VALUE");
