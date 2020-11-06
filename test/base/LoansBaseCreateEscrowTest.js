@@ -9,12 +9,12 @@ const { t } = require("../utils/consts");
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
-const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
+const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
 
-contract("BaseLoansCreateEscrowTest", function(accounts) {
+contract("LoansBaseCreateEscrowTest", function(accounts) {
   const escrowFactoryEncoder = new EscrowFactoryEncoder(web3)
 
   const owner = accounts[0];

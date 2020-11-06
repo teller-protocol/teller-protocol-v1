@@ -1,9 +1,11 @@
 const {
   loans: loansActions,
+  settings: settingsActions,
   blockchain: blockchainActions,
 } = require("./index");
 
 const chainlinkActions = require("./chainlink");
+const platformSettingNames = require("../../../test/utils/platformSettingsNames")
 
 const takeOutNewLoan = async function (
   allContracts,
@@ -17,7 +19,8 @@ const takeOutNewLoan = async function (
     maxAmountRequestLoanTerms,
     amountTakeOut,
     collateralAmountDepositCollateral,
-    secured = true,
+    collateralRatio,
+    interestRate = 4000,
 
     durationInDays,
     signers,
@@ -45,15 +48,23 @@ const takeOutNewLoan = async function (
     { amount: depositFundsAmount }
   );
 
+  if (collateralRatio == null) {
+    const { value } = await settingsActions.getPlatformSettings(
+      allContracts,
+      { testContext },
+      { settingName: platformSettingNames.CollateralBuffer }
+    )
+    collateralRatio = value
+  }
+
   // Requesting the loan terms.
-  const collateralRatio = secured ? 6000 : 0
   const loanTermsRequestTemplate = {
     amount: amountTakeOut,
     durationInDays,
     borrower: borrowerTxConfig.from,
   };
   const loanResponseTemplate = {
-    interestRate: 4000,
+    interestRate,
     collateralRatio,
     maxLoanAmount: maxAmountRequestLoanTerms,
     signers,

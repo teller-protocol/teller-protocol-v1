@@ -58,7 +58,7 @@ module.exports = async (testContext) => {
       maxAmountRequestLoanTerms,
       amountTakeOut,
       collateralAmountDepositCollateral,
-      secured: false,
+      collateralRatio: 0,
       durationInDays,
       signers,
       tokenInfo,

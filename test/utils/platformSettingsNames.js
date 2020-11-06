@@ -18,6 +18,8 @@ module.exports = {
     MaximumLoanDuration: "MaximumLoanDuration",
     // The setting name for the collateral buffer settings.
     CollateralBuffer: 'CollateralBuffer',
+    // The setting name for the over collateralized buffer settings.
+    OverCollateralizedBuffer: 'OverCollateralizedBuffer',
     // The setting name for the starting block offset number settings.
     StartingBlockOffsetNumber: 'StartingBlockOffsetNumber',
     // The setting name for the starting block number settings.

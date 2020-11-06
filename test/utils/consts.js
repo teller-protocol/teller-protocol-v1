@@ -17,6 +17,7 @@ const COVERAGE_NETWORK = 'http://127.0.0.1:8555';
 const FIVE_MIN = 60*5
 const ONE_HOUR = 3600 // 60 seconds * 60 minutes = 1 hour
 const ONE_DAY = ONE_HOUR*24
+const ONE_YEAR = ONE_DAY*365
 const THIRTY_DAYS = ONE_DAY*30
 const NON_EXISTENT = 0
 const TERMS_SET = 1
@@ -43,6 +44,7 @@ module.exports = {
     FIVE_MIN,
     ONE_HOUR,
     ONE_DAY,
+    ONE_YEAR,
     THIRTY_DAYS,
     REQUIRED_SUBMISSIONS,
     MAXIMUM_TOLERANCE,
