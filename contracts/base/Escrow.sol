@@ -38,12 +38,6 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
     using Address for address;
     using SafeMath for uint256;
 
-    // Numerical representation of 100.00 percent.
-    uint16 public constant ONE_HUNDRED_PERCENT = 10000;
-
-    // Ethereum decimal places.
-    uint8 public constant ETH_DECIMALS = 18;
-
     /** State Variables **/
 
     /**
@@ -111,55 +105,38 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         @notice Calculate this Escrow instance total value. 
         @return This Escrow instance total value expressed in ETH and Token value. 
      */
-    function calculateTotalValue() public view returns (TellerCommon.EscrowValue memory) {
+    function calculateTotalValue() public view returns (TellerCommon.EscrowValue memory value) {
         address[] memory tokens = getTokens();
-
-        uint256 valueInEth = 0;
-
         for (uint256 i = 0; i < tokens.length; i++) {
             if (tokens[i] == settings().WETH_ADDRESS()) {
-                valueInEth = valueInEth.add(_balanceOf(tokens[i]));
+                value.valueInEth = value.valueInEth.add(_balanceOf(tokens[i]));
             } else {
-                uint256 tokenEthValue = _valueOfIn(
-                    tokens[i],
-                    settings().ETH_ADDRESS(),
-                    _balanceOf(tokens[i])
+                value.valueInEth = value.valueInEth.add(
+                    _valueOfIn(
+                        tokens[i],
+                        settings().ETH_ADDRESS(),
+                        _balanceOf(tokens[i])
+                    )
                 );
-                valueInEth = valueInEth.add(tokenEthValue);
             }
         }
 
-        uint256 collateralValue = getLoan().collateral;
-        if (getLoan().loanTerms.collateralRatio > 0) {
-            uint256 bufferPercent = settings().getPlatformSettingValue(
-                settings().consts().COLLATERAL_BUFFER_SETTING()
-            );
-            uint256 buffer = collateralValue.mul(bufferPercent).div(ONE_HUNDRED_PERCENT);
-            collateralValue = collateralValue.sub(buffer);
-        }
-
         if (loans.collateralToken() == settings().ETH_ADDRESS()) {
-            valueInEth = valueInEth.add(collateralValue);
+            value.valueInEth = value.valueInEth.add(getLoan().collateral);
         } else {
             uint256 collateralEthValue = _valueOfIn(
                 loans.collateralToken(),
                 settings().ETH_ADDRESS(),
-                collateralValue
+                getLoan().collateral
             );
-            valueInEth = valueInEth.add(collateralEthValue);
+            value.valueInEth = value.valueInEth.add(collateralEthValue);
         }
 
-        uint256 valueInToken = _valueOfIn(
+        value.valueInToken = _valueOfIn(
             settings().ETH_ADDRESS(),
             loans.lendingToken(),
-            valueInEth
+            value.valueInEth
         );
-
-        return
-            TellerCommon.EscrowValue({
-                valueInEth: valueInEth,
-                valueInToken: valueInToken
-            });
     }
 
     /**
