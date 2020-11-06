@@ -4,7 +4,7 @@ const BigNumber = require("bignumber.js");
 const { t, NULL_ADDRESS, ACTIVE, TERMS_SET } = require("../utils/consts");
 const { createLoanTerms } = require("../utils/structs");
 const { createTestSettingsInstance } = require('../utils/settings-helper');
-const ERC20InterfaceEncoder = require("../utils/encoders/ERC20InterfaceEncoder");
+const { createLoan } = require('../utils/loans')
 const ChainlinkAggregatorEncoder = require("../utils/encoders/ChainlinkAggregatorEncoder");
 const LendingPoolInterfaceEncoder = require("../utils/encoders/LendingPoolInterfaceEncoder");
 
@@ -77,7 +77,15 @@ contract("LoansBaseGetCollateralInfoTest", function(accounts) {
 
       const loanID = 1
       const loanTerms = createLoanTerms(accounts[2], NULL_ADDRESS, 0, collateralRatio, loanAmount, 0);
-      await instance.setLoan(loanID, loanTerms, 0, 0, collateralAmount, 0, loanAmount, interestOwed, interestOwed, status, false);
+      const loan = createLoan({
+        id: loanID,
+        loanTerms,
+        collateral: collateralAmount,
+        principalOwed: loanAmount,
+        interestOwed,
+        status,
+      });
+      await instance.setLoan(loan);
 
       // Invocation
       const {
