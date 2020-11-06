@@ -28,6 +28,7 @@ const toDecimals = (amount, decimals) => {
 }
 
 module.exports = {
+    CTOKEN_DECIMALS: 8,
     ETH_ADDRESS,
     DUMMY_ADDRESS,
     NON_EXISTENT,
