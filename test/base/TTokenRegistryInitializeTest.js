@@ -17,6 +17,7 @@ contract('TTokenRegistryInitializeTest', function (accounts) {
     let settingsInstance;
 
     beforeEach('Setup for each test', async () => {
+        const CETH = await Mock.new();
         const pauser = accounts[0];
         const versionsRegistryInstance = await Mock.new();
         const constsInstance = await Mock.new();
@@ -45,7 +46,8 @@ contract('TTokenRegistryInitializeTest', function (accounts) {
                         pairAggregatorRegistryInstance.address,
                         marketsState.address,
                         interestValidator.address,
-                        atmSettings.address
+                        atmSettings.address,
+                        CETH.address
                     );
                 },
             },

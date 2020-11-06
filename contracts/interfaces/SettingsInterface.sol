@@ -316,6 +316,7 @@ interface SettingsInterface {
         @param marketsStateAddress the initial markets state address.
         @param interestValidatorAddress the initial interest validator address.
         @param atmSettingsAddress the initial ATM settings address.
+        @param cethTokenAddress compound CETH token address.
      */
     function initialize(
         address escrowFactoryAddress,
@@ -323,7 +324,8 @@ interface SettingsInterface {
         address chainlinkAggregatorAddress,
         address marketsStateAddress,
         address interestValidatorAddress,
-        address atmSettingsAddress
+        address atmSettingsAddress,
+        address cethTokenAddress
     ) external;
 
     /**
