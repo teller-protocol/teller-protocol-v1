@@ -4,7 +4,7 @@
   "license": "MIT",
   "main": "truffle-config.js",
   "scripts": {
-    "compile": "truffle compile",
+    "compile": "node --max-old-space-size=8192 ./node_modules/.bin/truffle compile",
     "lint-sol": "yarn solhint -f table \"./contracts/**/*.sol\"",
     "lint-js": "yarn eslint -f table \"./test/**/*.js\"",
     "test": "truffle test",
