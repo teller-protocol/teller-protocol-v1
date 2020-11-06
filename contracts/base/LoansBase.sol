@@ -187,7 +187,7 @@ contract LoansBase is LoansInterface, Base {
         @return bool indicating whether the loan with specified parameters can be deposited to an EOA.
      */
     function canLoanGoToEOA(uint256 loanID) external view returns (bool) {
-        return _canLoanGoToEOA(loans[loanID].loanTerms.collateralRatio, loans[loanID].loanTerms.interestRate);
+        return _canLoanGoToEOA(loans[loanID].loanTerms.collateralRatio);
     }
 
     /**
@@ -271,10 +271,7 @@ contract LoansBase is LoansInterface, Base {
         loans[loanID].loanStartTime = now;
 
         address loanRecipient;
-        bool eoaAllowed = _canLoanGoToEOA(
-            loans[loanID].loanTerms.collateralRatio,
-            loans[loanID].loanTerms.interestRate
-        );
+        bool eoaAllowed = _canLoanGoToEOA(loans[loanID].loanTerms.collateralRatio);
         if (eoaAllowed) {
             loanRecipient = loans[loanID].loanTerms.recipient.isEmpty()
                 ? loans[loanID].loanTerms.borrower
@@ -479,10 +476,9 @@ contract LoansBase is LoansInterface, Base {
     /**
         @notice Checks whether a loan is allowed to be deposited to an Externally Owned Account.
         @param collateralRatio Collateral ratio required by loan.
-        @param interestRate Interest rate for loan.
         @return bool indicating whether the loan with specified parameters can be deposited to an EOA.
      */
-    function _canLoanGoToEOA(uint256 collateralRatio, uint256 interestRate) internal view returns (bool) {
+    function _canLoanGoToEOA(uint256 collateralRatio) internal view returns (bool) {
         uint256 overCollateralizedBuffer = settings().getPlatformSettingValue(
             settings().consts().OVER_COLLATERALIZED_BUFFER_SETTING()
         );
@@ -658,7 +654,7 @@ contract LoansBase is LoansInterface, Base {
         @param loanID The id of the loan to get the owed interest
         @param amountBorrow The principal of the loan to take out
      */
-     function _getInterestOwed(uint256 loanID, uint256 amountBorrow)
+    function _getInterestOwed(uint256 loanID, uint256 amountBorrow)
         internal
         view
         returns (uint256)
@@ -721,7 +717,7 @@ contract LoansBase is LoansInterface, Base {
     ) internal view returns (TellerCommon.Loan memory loan) {
         request.borrower.requireNotEmpty("BORROWER_EMPTY");
         if (request.recipient.isNotEmpty()) {
-            require(_canLoanGoToEOA(collateralRatio, interestRate), "UNDER_COLL_WITH_RECIPIENT");
+            require(_canLoanGoToEOA(collateralRatio), "UNDER_COLL_WITH_RECIPIENT");
         }
 
         uint256 termsExpiryTime = settings().getPlatformSettingValue(
