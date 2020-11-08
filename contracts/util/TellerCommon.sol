@@ -10,35 +10,60 @@ import "./NumbersList.sol";
 library TellerCommon {
     enum LoanStatus {NonExistent, TermsSet, Active, Closed}
 
-    // The amount of interest owed to a borrower
-    // The interest is just that accrued until `timeLastAccrued`
+    /// @notice The amount of interest owed to a borrower
     struct AccruedInterest {
+        /// @notice Total amount of accrued interest for a lender
         uint256 totalAccruedInterest;
+
+        /// @notice The total amount of accrued interest claimed, but not yet withdrwan by the lender
         uint256 totalNotWithdrawn;
+
+        /// @notice The timestamp at which accrued interest was last claimed by the lender
         uint256 timeLastAccrued;
     }
 
-    // Represents a user signature
+    /// @notice Represents a user signature
     struct Signature {
+        /// @notice Nonce of the signer address used for authentication
         uint256 signerNonce;
+
+        /// @notice The recovery identifier represented by the last byte of a ECDSA signature as an int
         uint8 v;
+
+        /// @notice The random point x-coordinate of the signature respresented by the first 32 bytes of the generated ECDSA signature
         bytes32 r;
+
+        /// @notice The signature proof represented by the second 32 bytes of the generated ECDSA signature
         bytes32 s;
     }
 
-    // Consensus request object for accruing interest
+    /// @notice Consensus request object for accruing interest
     struct InterestRequest {
+        /// @notice The wallet address of the associated lender
         address lender;
+
+        /// @notice The address of the Teller consensus contract to which the request is being submitted
         address consensusAddress;
+
+        /// @notice Nonce of the lender address used for authentication
         uint256 requestNonce;
+
+        /// @notice The timestamp at which the interest accrual is being requested to start
         uint256 startTime;
+
+        /// @notice The timestamp at which the interest accrual caluculation stops
         uint256 endTime;
+
+        /// @notice The timestamp at which the request is submitted by the lender
         uint256 requestTime;
     }
 
-    // Consensus response object for accruing interest
+    /// @notice Consensus response object for accruing interest
     struct InterestResponse {
+        /// @notice The wallet address of the signer submitted the interest response of the submitted request
         address signer;
+
+        
         address consensusAddress;
         uint256 responseTime;
         uint256 interest;
