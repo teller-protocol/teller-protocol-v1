@@ -90,7 +90,7 @@ library TellerCommon {
         uint256 requestTime;
     }
 
-    /**/
+    /**
         @notice Borrower response object to take out a loan
         @param signer The waller address of the signer validating the interest request of the lender
         @param consensusAddress The address of the Teller loan consensus contract to which the request should be sent
