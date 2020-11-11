@@ -17,7 +17,7 @@ const Settings = artifacts.require("./base/Settings.sol");
 const Escrow = artifacts.require("./mock/base/EscrowMock.sol");
 const LoansBase = artifacts.require('./base/LoansBase.sol')
 
-contract("EscrowCalculateTotalValueTest", function(accounts) {
+contract("EscrowCalculateLoanValueTest", function(accounts) {
   const loansEncoder = new LoansBaseInterfaceEncoder(web3);
 
   let instance;
@@ -50,7 +50,7 @@ contract("EscrowCalculateTotalValueTest", function(accounts) {
     collateralIsEth,
     expectedValueInEth
   ) {
-    it(t("escrow", "calculateTotalValue", "Should be able to calculate its total value of all assets owned.", false), async function() {
+    it(t("escrow", "calculateLoanValue", "Should be able to calculate its total value of all assets owned.", false), async function() {
       const tokensAddresses = await createMocks(DAIMock, tokenAmounts.length);
 
       const lendingAddress = tokensAddresses[0];
@@ -86,7 +86,7 @@ contract("EscrowCalculateTotalValueTest", function(accounts) {
       await instance.mockValueOfIn(ETH_ADDRESS, lendingAddress, valueInToken);
 
       // Invocation
-      const value = await instance.calculateTotalValue.call();
+      const value = await instance.calculateLoanValue.call();
 
       // Assertions
       assert.equal(value.valueInEth.toString(), expectedValueInEth.toString());

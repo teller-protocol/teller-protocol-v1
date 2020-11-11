@@ -102,16 +102,17 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
     }
 
     /**
-        @notice Calculate this Escrow instance total value. 
-        @return This Escrow instance total value expressed in ETH and Token value. 
+        @notice Calculate the value of the loan by getting the value of all tokens the Escrow owns.
+        @return Escrow total value denoted in the lending token.
      */
-    function calculateTotalValue() public view returns (TellerCommon.EscrowValue memory value) {
+    function calculateLoanValue() public view returns (uint256) {
+        uint256 valueInEth;
         address[] memory tokens = getTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
             if (tokens[i] == settings().WETH_ADDRESS()) {
-                value.valueInEth = value.valueInEth.add(_balanceOf(tokens[i]));
+                valueInEth = valueInEth.add(_balanceOf(tokens[i]));
             } else {
-                value.valueInEth = value.valueInEth.add(
+                valueInEth = valueInEth.add(
                     _valueOfIn(
                         tokens[i],
                         settings().ETH_ADDRESS(),
@@ -121,30 +122,11 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
             }
         }
 
-        if (loans.collateralToken() == settings().ETH_ADDRESS()) {
-            value.valueInEth = value.valueInEth.add(getLoan().collateral);
-        } else {
-            uint256 collateralEthValue = _valueOfIn(
-                loans.collateralToken(),
-                settings().ETH_ADDRESS(),
-                getLoan().collateral
-            );
-            value.valueInEth = value.valueInEth.add(collateralEthValue);
-        }
-
-        value.valueInToken = _valueOfIn(
+        return _valueOfIn(
             settings().ETH_ADDRESS(),
             loans.lendingToken(),
-            value.valueInEth
+            valueInEth
         );
-    }
-
-    /**
-        @notice Checks if this Escrow loan value is undervalued based its token price.
-        @return true if this escrow loan is undervalued based on its token price.
-     */
-    function isUnderValued() external view returns (bool) {
-        return calculateTotalValue().valueInToken < loans.getTotalOwed(loanID);
     }
 
     /**
