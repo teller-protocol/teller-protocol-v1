@@ -2,8 +2,10 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Libraries
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/WhitelistedRole.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 
 // Contracts
 import "./BaseUpgradeable.sol";
@@ -12,6 +14,8 @@ import "./TInitializable.sol";
 // Interfaces
 import "../interfaces/MarketsStateInterface.sol";
 import "../util/MarketStateLib.sol";
+import "../util/AddressLib.sol";
+import "../providers/compound/CErc20Interface.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -34,18 +38,29 @@ contract MarketsState is
     WhitelistedRole,
     BaseUpgradeable
 {
+    using AddressLib for address;
     using Address for address;
     using MarketStateLib for MarketStateLib.MarketState;
+    using SafeMath for uint256;
 
     /** Constants */
+
+    uint8 internal constant EXCHANGE_RATE_DECIMALS = 18;
 
     /* State Variables */
 
     /**
-        @notice It maps a lent token => collateral token => Market state.
-        Example:
-            address(DAI) => address(LINK) => MarketState
-            address(DAI) => address(ETH) => MarketState
+        @notice It maps:
+        - The cToken address related with a given lent token => collateral token => Market state.
+        - If the lent token is not supported by Compound, this function uses the lent token address as key.
+        
+        Examples (supported by Compound):
+            address(cDAI) => address(LINK) => MarketState
+            address(cUSDC) => address(LINK) => MarketState
+        
+        Examples (not supported by Compound):
+            address(TokenA) => address(LINK) => MarketState
+            address(TokenB) => address(ETH) => MarketState
      */
     mapping(address => mapping(address => MarketStateLib.MarketState)) public markets;
 
@@ -61,7 +76,7 @@ contract MarketsState is
         address collateralAsset,
         uint256 amount
     ) external onlyWhitelisted() isInitialized() {
-        markets[borrowedAsset][collateralAsset].increaseRepayment(amount);
+        _getMarket(borrowedAsset, collateralAsset).increaseRepayment(amount);
     }
 
     /**
@@ -76,7 +91,7 @@ contract MarketsState is
         address collateralAsset,
         uint256 amount
     ) external onlyWhitelisted() isInitialized() {
-        markets[borrowedAsset][collateralAsset].increaseSupply(amount);
+        _getMarket(borrowedAsset, collateralAsset).increaseSupply(amount);
     }
 
     /**
@@ -91,7 +106,7 @@ contract MarketsState is
         address collateralAsset,
         uint256 amount
     ) external onlyWhitelisted() isInitialized() {
-        markets[borrowedAsset][collateralAsset].decreaseSupply(amount);
+        _getMarket(borrowedAsset, collateralAsset).decreaseSupply(amount);
     }
 
     /**
@@ -106,7 +121,7 @@ contract MarketsState is
         address collateralAsset,
         uint256 amount
     ) external onlyWhitelisted() isInitialized() {
-        markets[borrowedAsset][collateralAsset].increaseBorrow(amount);
+        _getMarket(borrowedAsset, collateralAsset).increaseBorrow(amount);
     }
 
     /**
@@ -135,7 +150,19 @@ contract MarketsState is
         address collateralAsset,
         uint256 loanAmount
     ) external view returns (uint256) {
-        return _getMarket(borrowedAsset, collateralAsset).getSupplyToDebtFor(loanAmount);
+        address cTokenAddress = _getCTokenAddress(borrowedAsset);
+        if (cTokenAddress.isEmpty()) {
+            return markets[borrowedAsset][collateralAsset].getSupplyToDebtFor(loanAmount);
+        } else {
+            uint8 cTokenDecimals = CErc20Interface(cTokenAddress).decimals();
+            uint256 exchangeRate = CErc20Interface(cTokenAddress).exchangeRateStored();
+            uint256 diffDecimals = uint256(EXCHANGE_RATE_DECIMALS).sub(
+                uint256(cTokenDecimals)
+            );
+            uint256 cLoanAmount = loanAmount.mul(10**diffDecimals).div(exchangeRate);
+            return
+                markets[cTokenAddress][collateralAsset].getSupplyToDebtFor(cLoanAmount);
+        }
     }
 
     /**
@@ -178,6 +205,20 @@ contract MarketsState is
         view
         returns (MarketStateLib.MarketState storage)
     {
-        return markets[borrowedAsset][collateralAsset];
+        address cTokenAddress = _getCTokenAddress(borrowedAsset);
+        if (cTokenAddress.isEmpty()) {
+            return markets[borrowedAsset][collateralAsset];
+        } else {
+            return markets[cTokenAddress][collateralAsset];
+        }
+    }
+
+    /**
+        @notice Gets the cToken address associated to a borrowed asset.
+        @param borrowedAsset borrowed address.
+        @return the cToken address (if Compound supported the asset). Otherwise it returns an empty address.
+     */
+    function _getCTokenAddress(address borrowedAsset) internal view returns (address) {
+        return settings().getCTokenAddress(borrowedAsset);
     }
 }

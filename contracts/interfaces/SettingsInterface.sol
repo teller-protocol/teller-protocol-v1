@@ -255,16 +255,6 @@ interface SettingsInterface {
         returns (AssetSettingsLib.AssetSettings memory);
 
     /**
-        @notice Get the cTokenAddress defined in the asset settings for a given asset address.
-        @param assetAddress asset address used to get the current settings.
-        @return the cTokenAddress.
-     */
-    function getCTokenAddress(address assetAddress)
-        external
-        view
-        returns (address);
-
-    /**
         @notice Tests whether amount exceeds the current maximum loan amount for a specific asset settings.
         @param assetAddress asset address to test the setting.
         @param amount amount to test.
@@ -305,7 +295,18 @@ interface SettingsInterface {
      */
     function chainlinkAggregator() external view returns (IChainlinkAggregator);
 
+    /**
+        @notice Get the current ATMSetting contract.
+        @return the current AtmSetting contract.
+     */
     function atmSettings() external view returns (IATMSettings);
+
+    /**
+        @notice Gets the cToken address for a given asset address.
+        @param assetAddress token address.
+        @return the cToken address for a given asset address.
+     */
+    function getCTokenAddress(address assetAddress) external view returns (address);
 
     /**
         @notice It initializes this settings contract instance.
@@ -315,6 +316,7 @@ interface SettingsInterface {
         @param marketsStateAddress the initial markets state address.
         @param interestValidatorAddress the initial interest validator address.
         @param atmSettingsAddress the initial ATM settings address.
+        @param cethTokenAddress compound CETH token address.
      */
     function initialize(
         address escrowFactoryAddress,
@@ -322,7 +324,8 @@ interface SettingsInterface {
         address chainlinkAggregatorAddress,
         address marketsStateAddress,
         address interestValidatorAddress,
-        address atmSettingsAddress
+        address atmSettingsAddress,
+        address cethTokenAddress
     ) external;
 
     /**

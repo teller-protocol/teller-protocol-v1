@@ -124,7 +124,7 @@ contract TokenCollateralLoans is LoansBase {
     /**
         @notice Initializes the current contract instance setting the required parameters, if allowed
         @param lendingPoolAddress Contract address of the lending pool
-        @param loanTermsConsensusAddress Contract adddress for loan term consensus
+        @param loanTermsConsensusAddress Contract address for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
         @param collateralTokenAddress Contract address for the collateral token.
      */
@@ -136,11 +136,7 @@ contract TokenCollateralLoans is LoansBase {
     ) external isNotInitialized() {
         collateralTokenAddress.requireNotEmpty("PROVIDE_COLL_TOKEN_ADDRESS");
 
-        _initialize(
-            lendingPoolAddress,
-            loanTermsConsensusAddress,
-            settingsAddress
-        );
+        _initialize(lendingPoolAddress, loanTermsConsensusAddress, settingsAddress);
 
         collateralToken = collateralTokenAddress;
     }

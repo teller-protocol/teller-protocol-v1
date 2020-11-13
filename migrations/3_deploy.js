@@ -57,7 +57,8 @@ module.exports = async function(deployer, network, accounts) {
   const deployerAccountIndex = env.getDefaultAddressIndex().getOrDefault();
   const deployerAccount = accounts[deployerAccountIndex];
   console.log(`Deployer account index is ${deployerAccountIndex} => ${deployerAccount}`);
-  const { maxGasLimit, tokens, chainlink, signers, compound, atms } = networkConfig;
+  const { maxGasLimit, tokens, atms, compound } = networkConfig;
+  assert(compound.CETH, `Compound CETH address not found for network ${network}.`);
   assert(maxGasLimit, `Max gas limit for network ${network} is undefined.`);
 
   // Validations
@@ -84,7 +85,6 @@ module.exports = async function(deployer, network, accounts) {
       { Contract: Escrow, name: logicNames.Escrow },
       { Contract: ChainlinkAggregator, name: logicNames.ChainlinkAggregator },
       { Contract: ATMGovernance, name: logicNames.ATMGovernance },
-      { Contract: ATMLiquidityMining, name: logicNames.ATMLiquidityMining },
       { Contract: TLRToken, name: logicNames.TLRToken },
       // Dapps
       { Contract: Uniswap, name: logicNames.Uniswap },
@@ -94,7 +94,6 @@ module.exports = async function(deployer, network, accounts) {
       { Contract: MarketsState, name: logicNames.MarketsState },
       { Contract: ATMSettings, name: logicNames.ATMSettings },
       { Contract: ATMFactory, name: logicNames.ATMFactory },
-      { Contract: ATMLiquidityMining, name: logicNames.ATMLiquidityMining },
       { Contract: MarketFactory, name: logicNames.MarketFactory },
       { Contract: TTokenRegistry, name : logicNames.TTokenRegistry },
     ];
@@ -149,6 +148,7 @@ module.exports = async function(deployer, network, accounts) {
       marketsStateInstance.address,
       NULL_ADDRESS, // Interest Validator is empty (0x0) in the first version.
       atmSettingsInstance.address,
+      compound.CETH
     );
 
     await initLogicVersions(

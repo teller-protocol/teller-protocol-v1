@@ -247,6 +247,13 @@ interface LoansInterface {
     function isLoanSecured(uint256 loanID) external view returns (bool);
 
     /**
+        @notice Checks whether a loan is allowed to be deposited to an Externally Owned Account.
+        @param loanID Id of the loan to check.
+        @return bool indicating whether the loan with specified parameters can be deposited to an EOA.
+     */
+    function canLoanGoToEOA(uint256 loanID) external view returns (bool);
+
+    /**
         @notice It gets the current liquidation info for a given loan id.
         @param loanID loan id to get the info.
         @return liquidationInfo get current liquidation info for the given loan id.

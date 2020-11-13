@@ -4,8 +4,6 @@ const {
 } = require('./consts');
 const initPlatformSettings = require('../../migrations/utils/init_settings/initPlatformSettings');
 
-const ChainlinkAggregator = artifacts.require('./base/providers/ChainlinkAggregator.sol')
-
 const INITIAL_VALUE = 1;
 const TEST_DEFAULT_VALUE = {
     requiredSubmissions: INITIAL_VALUE,
@@ -33,6 +31,7 @@ const createSettingsInstance = async (
             const marketsState = await Mock.new();
             const interestValidator = await Mock.new();
             const atmSettings = await Mock.new();
+            const ceth = await Mock.new();
             if (initialize) {
                 await instance.initialize(
                   escrowFactory.address,
@@ -41,6 +40,7 @@ const createSettingsInstance = async (
                   marketsState.address,
                   interestValidator.address,
                   atmSettings.address,
+                  ceth.address,
                 );
             }
             await onInitialize(
@@ -52,6 +52,7 @@ const createSettingsInstance = async (
                     marketsState,
                     interestValidator,
                     atmSettings,
+                    ceth,
                 }
             );
         } else {
@@ -65,6 +66,7 @@ const createSettingsInstance = async (
             const marketsState = await Mock.new();
             const interestValidator = await Mock.new();
             const atmSettings = await Mock.new();
+            const ceth = await Mock.new();
             await instance.initialize(
                 escrowFactory.address,
                 versionsRegistry.address,
@@ -72,6 +74,7 @@ const createSettingsInstance = async (
                 marketsState.address,
                 interestValidator.address,
                 atmSettings.address,
+                ceth.address,
             );
         }
     }

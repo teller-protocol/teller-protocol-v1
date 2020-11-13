@@ -75,7 +75,6 @@ interface LendingPoolInterface {
         address lendingTokenAddress,
         address lendersAddress,
         address loansAddress,
-        address cTokenAddress,
         address settingsAddress
     ) external;
 

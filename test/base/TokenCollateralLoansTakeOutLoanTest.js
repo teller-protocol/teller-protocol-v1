@@ -5,6 +5,7 @@ const { t, getLatestTimestamp, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE, TEN_TH
 const { createLoanTerms } = require("../utils/structs");
 const { loans } = require("../utils/events");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
+const { createLoan } = require('../utils/loans')
 
 const ERC20InterfaceEncoder = require("../utils/encoders/ERC20InterfaceEncoder");
 const ChainlinkAggregatorEncoder = require("../utils/encoders/ChainlinkAggregatorEncoder");
@@ -18,7 +19,6 @@ const LINKMock = artifacts.require("./mock/token/LINKMock.sol");
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
 const Loans = artifacts.require("./mock/base/TokenCollateralLoansMock.sol");
-const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
 
 contract("TokenCollateralLoansTakeOutLoanTest", function(accounts) {
   const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
@@ -121,7 +121,16 @@ contract("TokenCollateralLoansTakeOutLoanTest", function(accounts) {
 
       loanTerms.duration = loanDuration;
       loanTerms.recipient = recipient;
-      await instance.setLoan(mockLoanID, loanTerms, termsExpiry, 0, 40000, lastCollateralIn, 0, 0, loanTerms.maxLoanAmount, TERMS_SET, false);
+      const loan = createLoan({
+        id: mockLoanID,
+        loanTerms,
+        collateral: 40000,
+        lastCollateralIn,
+        borrowedAmount: loanTerms.maxLoanAmount,
+        status: TERMS_SET,
+        termsExpiry
+      });
+      await instance.setLoan(loan);
       await collateralTokenInstance.approve(instance.address, amountToBorrow, { from: borrower });
       try {
         // Invocation
@@ -146,9 +155,8 @@ contract("TokenCollateralLoansTakeOutLoanTest", function(accounts) {
           .emitted(mockLoanID, borrower, loan.escrow, amountToBorrow);
 
       } catch (error) {
-        assert(mustFail);
-        assert(error);
-        assert.equal(error.reason, expectedErrorMessage);
+        assert(mustFail, error.message);
+        assert.equal(error.reason, expectedErrorMessage, error.reason);
       }
     });
   });

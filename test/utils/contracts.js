@@ -21,7 +21,6 @@ module.exports = {
             lendingToken.address,
             lenders.address,
             loans.address,
-            cToken.address,
             settings.address,
         );
         return lenders;

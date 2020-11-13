@@ -19,7 +19,7 @@
   },
   "SafetyInterval": {
     "processOnDeployment": true,
-    "value": 60,
+    "value": 30,
     "min": 0,
     "max": "115792089237316195423570985008687907853269984665640564039457584007913129639935"
   },
@@ -46,6 +46,12 @@
     "value": 1500,
     "min": 0,
     "max": "115792089237316195423570985008687907853269984665640564039457584007913129639935"
+  },
+  "OverCollateralizedBuffer": {
+    "processOnDeployment": true,
+    "value": 13000,
+    "min": 11000,
+    "max": 50000
   },
   "StartingBlockOffsetNumber": {
     "processOnDeployment": true,

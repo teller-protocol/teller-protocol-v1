@@ -70,7 +70,9 @@ interface CErc20Interface {
         equal to: exchangeRate = (getCash() + totalBorrows() - totalReserves()) / totalSupply()
         @return The current exchange rate as an unsigned integer, scaled by 1e18.
      */
-    function exchangeRateCurrent() external view returns (uint256);
+    function exchangeRateCurrent() external returns (uint256);
+
+    function exchangeRateStored() external view returns (uint256);
 
     function decimals() external view returns (uint8);
 

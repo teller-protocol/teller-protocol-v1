@@ -56,6 +56,7 @@ contract LoansBaseMock is LoansBase, BaseMock {
     }
 
     function setLoan(TellerCommon.Loan memory loan) public {
+        require(loan.loanTerms.maxLoanAmount >= loan.borrowedAmount, "BORROWED_AMOUNT_EXCEEDS_MAX");
         loans[loan.id] = loan;
     }
 
@@ -96,11 +97,7 @@ contract LoansBaseMock is LoansBase, BaseMock {
         address settingsAddress,
         address
     ) external isNotInitialized() {
-        _initialize(
-            lendingPoolAddress,
-            loanTermsConsensusAddress,
-            settingsAddress
-        );
+        _initialize(lendingPoolAddress, loanTermsConsensusAddress, settingsAddress);
     }
 
     function depositCollateral(

@@ -8,7 +8,9 @@ module.exports = {
     platformSettings: require('./platformSettings.json'),
     signers: require('./signers.json'),
     atms: require('./atms.json'),
-    maxGasLimit: 8000000,
+    nodes: require('./nodes.json'),
+    loanTermsSignatureValidatorAddress: '0x56d376DE375377F085d78fF3aA4e5CB587ba1d73',
+    maxGasLimit: 6000000,
     toTxUrl: ({ tx }) => {
         return `https://rinkeby.etherscan.io/tx/${tx}`;
     },

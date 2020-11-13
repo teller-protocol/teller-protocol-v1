@@ -51,7 +51,11 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @return AggregatorV2V3Interface The Chainlink Aggregator address.
         @return bool whether or not the values from the Aggregator should be considered inverted.
      */
-    function aggregatorFor(address src, address dst) external view returns (AggregatorV2V3Interface, bool) {
+    function aggregatorFor(address src, address dst)
+        external
+        view
+        returns (AggregatorV2V3Interface, bool)
+    {
         return _aggregatorFor(src, dst);
     }
 
@@ -62,7 +66,11 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @param srcAmount Amount of the source token to convert into the destination token.
         @return uint256 Value of the source token amount in destination tokens.
      */
-    function valueFor(address src, address dst, uint256 srcAmount) external view returns (uint256) {
+    function valueFor(
+        address src,
+        address dst,
+        uint256 srcAmount
+    ) external view returns (uint256) {
         return _valueFor(src, dst, srcAmount);
     }
 
@@ -82,10 +90,20 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @param src Source token address.
         @param dst Destination token address.
      */
-    function add(address src, address dst, address aggregator) external onlyPauser {
+    function add(
+        address src,
+        address dst,
+        address aggregator
+    ) external onlyPauser {
         require(aggregators[src][dst] == address(0));
-        require(src.isContract() || src == settings().ETH_ADDRESS(), "TOKEN_A_NOT_CONTRACT");
-        require(dst.isContract() || dst == settings().ETH_ADDRESS(), "TOKEN_B_NOT_CONTRACT");
+        require(
+            src.isContract() || src == settings().ETH_ADDRESS(),
+            "TOKEN_A_NOT_CONTRACT"
+        );
+        require(
+            dst.isContract() || dst == settings().ETH_ADDRESS(),
+            "TOKEN_B_NOT_CONTRACT"
+        );
         require(aggregator.isContract(), "AGGREGATOR_NOT_CONTRACT");
         aggregators[src][dst] = aggregator;
     }
@@ -120,7 +138,11 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @return AggregatorV2V3Interface The Chainlink Aggregator address.
         @return bool whether or not the values from the Aggregator should be considered inverted.
      */
-    function _aggregatorFor(address src, address dst) internal view returns (AggregatorV2V3Interface aggregator, bool inverse) {
+    function _aggregatorFor(address src, address dst)
+        internal
+        view
+        returns (AggregatorV2V3Interface aggregator, bool inverse)
+    {
         if (src == settings().WETH_ADDRESS()) {
             src = settings().ETH_ADDRESS();
         }
@@ -129,7 +151,9 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         }
 
         inverse = aggregators[src][dst] == address(0);
-        aggregator = AggregatorV2V3Interface(inverse ? aggregators[dst][src] : aggregators[src][dst]);
+        aggregator = AggregatorV2V3Interface(
+            inverse ? aggregators[dst][src] : aggregators[src][dst]
+        );
     }
 
     /**
@@ -139,8 +163,13 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @param srcAmount Amount of the source token to convert into the destination token.
         @return uint256 Value of the source token amount in destination tokens.
      */
-    function _valueFor(address src, address dst, uint256 srcAmount) internal view returns (uint256) {
-        return srcAmount * uint256(_priceFor(src, dst)) / uint256(TEN**_decimalsFor(src));
+    function _valueFor(
+        address src,
+        address dst,
+        uint256 srcAmount
+    ) internal view returns (uint256) {
+        return
+            (srcAmount * uint256(_priceFor(src, dst))) / uint256(TEN**_decimalsFor(src));
     }
 
     /**
@@ -152,16 +181,20 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
      */
     function _priceFor(address src, address dst) internal view returns (int256) {
         (AggregatorV2V3Interface agg, bool inverse) = _aggregatorFor(src, dst);
-        uint8 srcDecimals = _decimalsFor(src);
         uint8 dstDecimals = _decimalsFor(dst);
-        int256 srcFactor = int256(TEN**srcDecimals);
         int256 dstFactor = int256(TEN**dstDecimals);
         if (address(agg) != address(0)) {
             int256 price = agg.latestAnswer();
-            if (inverse) {
-                return srcFactor * dstFactor / price;
+            uint8 resDecimals = agg.decimals();
+            if (dstDecimals > resDecimals) {
+                price = price * int256(TEN**(dstDecimals - resDecimals));
+            } else {
+                price = price / int256(TEN**(resDecimals - dstDecimals));
             }
-            return price;
+            int256 srcFactor = int256(TEN**_decimalsFor(src));
+            return inverse
+                ? srcFactor * dstFactor / price
+                : price;
         } else {
             address eth = settings().ETH_ADDRESS();
             dst.requireNotEqualTo(eth, "CANNOT_CALCULATE_VALUE");
@@ -169,7 +202,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
             int256 price1 = _priceFor(src, eth);
             int256 price2 = _priceFor(dst, eth);
 
-            return price1 * dstFactor / price2;
+            return (price1 * dstFactor) / price2;
         }
     }
 }

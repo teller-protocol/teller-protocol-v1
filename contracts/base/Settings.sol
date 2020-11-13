@@ -58,10 +58,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
      */
     bytes32 public constant CTOKEN_ADDRESS_ASSET_SETTING = "CTokenAddress";
     /**
-        @notice It defines the constant address that is the mainnet Compound Ether token.
-     */
-    address public constant CETH_ADDRESS = 0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5;
-    /**
         @notice It defines the constant address to represent ETHER.
      */
     address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -74,6 +70,11 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
 
     SettingsConsts public consts;
 
+    /**
+        @notice It defines Compound Ether token address on current network.
+     */
+    address public cethAddress;
+    
     /**
         @notice It represents a mapping to identify the lending pools paused and not paused.
 
@@ -121,7 +122,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @notice It is the global instance of the logic versions registry contract.
      */
     LogicVersionsRegistryInterface public versionsRegistry;
-
 
     /**
         @notice It is the global instance of the ChainlinkAggregator contract.
@@ -367,27 +367,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     }
 
     /**
-        @notice It sets the cToken address for a specific asset address.
-        @param assetAddress asset address to configure.
-        @param cTokenAddress the new cToken address to configure.
-     */
-    function _setCTokenAddress(address assetAddress, address cTokenAddress) internal {
-        if (assetAddress == ETH_ADDRESS) {
-            // NOTE: This is the address for the cETH contract. It is hardcoded because the contract does not have a
-            //       underlying() function on it to check that this is the correct contract.
-            cTokenAddress.requireEqualTo(CETH_ADDRESS, "CETH_ADDRESS_NOT_MATCH");
-        } else {
-            require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
-            if (cTokenAddress.isNotEmpty()) {
-                require(cTokenAddress.isContract(), "CTOKEN_MUST_BE_CONTRACT_OR_EMPTY");
-                require(CErc20Interface(cTokenAddress).underlying() == assetAddress, "UNDERLYING_ADDRESS_NOT_MATCH");
-            }
-        }
-
-        assetSettings[assetAddress].updateCTokenAddress(cTokenAddress);
-    }
-
-    /**
         @notice Tests whether amount exceeds the current maximum loan amount for a specific asset settings.
         @param assetAddress asset address to test the setting.
         @param amount amount to test.
@@ -423,9 +402,9 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     }
 
     /**
-        @notice Get the cTokenAddress defined in the asset settings for a given asset address.
-        @param assetAddress asset address used to get the current settings.
-        @return the cTokenAddress.
+        @notice Gets the cToken address for a given asset address.
+        @param assetAddress token address.
+        @return the cToken address for a given asset address.
      */
     function getCTokenAddress(address assetAddress) external view returns (address) {
         return assetSettings[assetAddress].cTokenAddress;
@@ -463,32 +442,30 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         address chainlinkAggregatorAddress,
         address marketsStateAddress,
         address interestValidatorAddress,
-        address atmSettingsAddress
+        address atmSettingsAddress,
+        address cethTokenAddress
     ) external isNotInitialized() {
         require(escrowFactoryAddress.isContract(), "ESCROW_FACTORY_MUST_BE_CONTRACT");
         require(versionsRegistryAddress.isContract(), "VERS_REGISTRY_MUST_BE_CONTRACT");
-        require(
-            chainlinkAggregatorAddress.isContract(),
-            "AGGREGATOR_MUST_BE_CONTRACT"
-        );
+        require(chainlinkAggregatorAddress.isContract(), "AGGREGATOR_MUST_BE_CONTRACT");
         require(marketsStateAddress.isContract(), "MARKETS_STATE_MUST_BE_CONTRACT");
         require(
             interestValidatorAddress.isEmpty() || interestValidatorAddress.isContract(),
             "INTEREST_VAL_MUST_BE_CONTRACT"
         );
         require(atmSettingsAddress.isContract(), "ATM_SETTINGS_MUST_BE_CONTRACT");
+        require(cethTokenAddress.isContract(), "CETH_ADDRESS_MUST_BE_CONTRACT");
 
         Pausable.initialize(msg.sender);
         TInitializable._initialize();
 
         escrowFactory = EscrowFactoryInterface(escrowFactoryAddress);
         versionsRegistry = LogicVersionsRegistryInterface(versionsRegistryAddress);
-        chainlinkAggregator = IChainlinkAggregator(
-            chainlinkAggregatorAddress
-        );
+        chainlinkAggregator = IChainlinkAggregator(chainlinkAggregatorAddress);
         marketsState = MarketsStateInterface(marketsStateAddress);
         interestValidator = InterestValidatorInterface(interestValidatorAddress);
         atmSettings = IATMSettings(atmSettingsAddress);
+        cethAddress = cethTokenAddress;
 
         consts = new SettingsConsts();
 
@@ -508,6 +485,30 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         returns (PlatformSettingsLib.PlatformSetting memory)
     {
         return platformSettings[settingName];
+    }
+
+    /**
+        @notice It sets the cToken address for a specific asset address.
+        @param assetAddress asset address to configure.
+        @param cTokenAddress the new cToken address to configure.
+     */
+    function _setCTokenAddress(address assetAddress, address cTokenAddress) internal {
+        if (assetAddress == ETH_ADDRESS) {
+            // NOTE: This is the address for the cETH contract. It is hardcoded because the contract does not have a
+            //       underlying() function on it to check that this is the correct contract.
+            cTokenAddress.requireEqualTo(cethAddress, "CETH_ADDRESS_NOT_MATCH");
+        } else {
+            require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
+            if (cTokenAddress.isNotEmpty()) {
+                require(cTokenAddress.isContract(), "CTOKEN_MUST_BE_CONTRACT_OR_EMPTY");
+                require(
+                    CErc20Interface(cTokenAddress).underlying() == assetAddress,
+                    "UNDERLYING_ADDRESS_NOT_MATCH"
+                );
+            }
+        }
+
+        assetSettings[assetAddress].updateCTokenAddress(cTokenAddress);
     }
 
     /** Private functions */
