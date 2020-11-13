@@ -2,15 +2,16 @@ pragma solidity 0.5.17;
 
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 import "./BaseUpgradeable.sol";
+
+// Interfaces
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
 
 // Libraries
 import "../util/AddressArrayLib.sol";
 
 contract BaseEscrowDapp is Ownable, BaseUpgradeable {
     using AddressArrayLib for address[];
-    using SafeERC20 for IERC20;
 
     /**
         @notice An array of tokens that are owned by this escrow.
