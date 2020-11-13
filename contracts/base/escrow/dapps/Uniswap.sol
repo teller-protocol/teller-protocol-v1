@@ -81,7 +81,7 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
 
         uint256 balanceBeforeSwap = _balanceOf(destination);
 
-        IERC20(source).approve(address(theRouter), sourceAmount);
+        IERC20(source).safeApprove(address(theRouter), sourceAmount);
         uint256[] memory amounts = theRouter.swapExactTokensForTokens(
             sourceAmount,
             minDestination,

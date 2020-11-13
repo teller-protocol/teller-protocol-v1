@@ -12,7 +12,7 @@ import "../interfaces/IBaseProxy.sol";
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 import "../util/SettingsConsts.sol";
 import "../util/TellerCommon.sol";
 
@@ -37,6 +37,7 @@ import "../util/TellerCommon.sol";
 contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
     using Address for address;
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
 
     /** State Variables **/
 
@@ -160,13 +161,10 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
             uint256 amountNeeded = amount > totalOwed
                 ? totalOwed.sub(balance)
                 : amount.sub(balance);
-
-            require(
-                token.transferFrom(msg.sender, address(this), amountNeeded),
-                "ESCROW_TRANSFER_FROM_FAILED"
-            );
+            
+            token.safeTransferFrom(msg.sender, address(this), amountNeeded);
         }
-        token.approve(loans.lendingPool(), amount);
+        token.safeApprove(loans.lendingPool(), amount);
 
         loans.repay(amount, loanID);
     }
@@ -190,7 +188,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         for (uint256 i = 0; i < tokens.length; i++) {
             uint256 balance = _balanceOf(tokens[i]);
             if (balance > 0) {
-                IERC20(tokens[i]).transfer(recipient, balance);
+                IERC20(tokens[i]).safeTransfer(recipient, balance);
             }
         }
 

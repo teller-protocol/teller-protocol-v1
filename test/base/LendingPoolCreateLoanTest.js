@@ -59,7 +59,7 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
     withData({
         _1_basic: [accounts[1], true, true, 10, false, 1000, undefined, false],
         _2_notLoanSender: [accounts[1], false, true, 10, false, 1000, 'ADDRESS_ISNT_LOANS_CONTRACT', true],
-        _3_transferFail: [accounts[1], true, false, 10, false, 1000, 'LENDING_TRANSFER_FAILED', true],
+        _3_transferFail: [accounts[1], true, false, 10, false, 1000, 'SafeERC20: ERC20 operation did not succeed', true],
         _4_compoundFails: [accounts[1], true, true, 10, true, 1000, 'COMPOUND_REDEEM_UNDERLYING_ERROR', true],
         _5_balanceFails: [accounts[1], true, true, 10, false, 0, 'LENDING_TOKEN_NOT_ENOUGH_BALANCE', true],
     }, function(

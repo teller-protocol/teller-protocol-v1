@@ -5,7 +5,7 @@ pragma solidity 0.5.17;
 // Commons
 
 // Interfaces
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
@@ -33,6 +33,7 @@ import "./Base.sol";
  */
 contract LendingPool is Base, LendingPoolInterface {
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
 
     /* State Variables */
 
@@ -286,7 +287,7 @@ contract LendingPool is Base, LendingPoolInterface {
         address cTokenAddress = cToken();
 
         // approve the cToken contract to take lending tokens
-        lendingToken.approve(cTokenAddress, amount);
+        lendingToken.safeApprove(cTokenAddress, amount);
 
         uint256 initialBalance = CErc20Interface(cTokenAddress).balanceOf(address(this));
 
@@ -348,8 +349,7 @@ contract LendingPool is Base, LendingPoolInterface {
     function tokenTransfer(address recipient, uint256 amount) private {
         uint256 currentBalance = lendingToken.balanceOf(address(this));
         require(currentBalance >= amount, "LENDING_TOKEN_NOT_ENOUGH_BALANCE");
-        bool transferResult = lendingToken.transfer(recipient, amount);
-        require(transferResult, "LENDING_TRANSFER_FAILED");
+        lendingToken.safeTransfer(recipient, amount);
     }
 
     /**
@@ -361,8 +361,7 @@ contract LendingPool is Base, LendingPoolInterface {
     function tokenTransferFrom(address from, uint256 amount) private {
         uint256 allowance = lendingToken.allowance(from, address(this));
         require(allowance >= amount, "LEND_TOKEN_NOT_ENOUGH_ALLOWANCE");
-        bool transferFromResult = lendingToken.transferFrom(from, address(this), amount);
-        require(transferFromResult, "LENDING_TRANSFER_FROM_FAILED");
+        lendingToken.safeTransferFrom(from, address(this), amount);
     }
 
     /**
