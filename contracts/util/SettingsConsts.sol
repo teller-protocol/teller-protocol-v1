@@ -12,6 +12,9 @@ pragma solidity 0.5.17;
 contract SettingsConsts {
     /** Constants */
 
+    // It represents 100% with 2 decimal places.
+    uint256 public constant ONE_HUNDRED_PERCENT = 10000;
+
     /**
         @notice The setting name for the required subsmission settings.
      */
@@ -59,11 +62,16 @@ contract SettingsConsts {
      */
     bytes32
         public constant REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING = "RequestLoanTermsRateLimit";
-
     /**
         @notice The setting name for the collateral buffer.
-        @notice It represents the percentage value (with 2 decimal places) of a collateral buffer. 
+        @notice It represents the percentage value (with 2 decimal places) of a collateral buffer.
             e.g.: collateral buffer at 100% is stored as 10000.
      */
     bytes32 public constant COLLATERAL_BUFFER_SETTING = "CollateralBuffer";
+    /**
+        @notice The setting name for the over collateralized buffer.
+        @notice It represents the percentage value (with 2 decimal places) of a over collateralized buffer.
+            e.g.: over collateralized buffer at 130% is stored as 13000.
+     */
+    bytes32 public constant OVER_COLLATERALIZED_BUFFER_SETTING = "OverCollateralizedBuffer";
 }

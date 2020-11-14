@@ -58,10 +58,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
      */
     bytes32 public constant CTOKEN_ADDRESS_ASSET_SETTING = "CTokenAddress";
     /**
-        @notice It defines the constant address that is the mainnet Compound Ether token.
-     */
-    address public constant CETH_ADDRESS = 0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5;
-    /**
         @notice It defines the constant address to represent ETHER.
      */
     address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -74,6 +70,11 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
 
     SettingsConsts public consts;
 
+    /**
+        @notice It defines Compound Ether token address on current network.
+     */
+    address public cethAddress;
+    
     /**
         @notice It represents a mapping to identify the lending pools paused and not paused.
 
@@ -441,7 +442,8 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         address chainlinkAggregatorAddress,
         address marketsStateAddress,
         address interestValidatorAddress,
-        address atmSettingsAddress
+        address atmSettingsAddress,
+        address cethTokenAddress
     ) external isNotInitialized() {
         require(escrowFactoryAddress.isContract(), "ESCROW_FACTORY_MUST_BE_CONTRACT");
         require(versionsRegistryAddress.isContract(), "VERS_REGISTRY_MUST_BE_CONTRACT");
@@ -452,6 +454,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
             "INTEREST_VAL_MUST_BE_CONTRACT"
         );
         require(atmSettingsAddress.isContract(), "ATM_SETTINGS_MUST_BE_CONTRACT");
+        require(cethTokenAddress.isContract(), "CETH_ADDRESS_MUST_BE_CONTRACT");
 
         Pausable.initialize(msg.sender);
         TInitializable._initialize();
@@ -462,6 +465,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         marketsState = MarketsStateInterface(marketsStateAddress);
         interestValidator = InterestValidatorInterface(interestValidatorAddress);
         atmSettings = IATMSettings(atmSettingsAddress);
+        cethAddress = cethTokenAddress;
 
         consts = new SettingsConsts();
 
@@ -492,7 +496,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         if (assetAddress == ETH_ADDRESS) {
             // NOTE: This is the address for the cETH contract. It is hardcoded because the contract does not have a
             //       underlying() function on it to check that this is the correct contract.
-            cTokenAddress.requireEqualTo(CETH_ADDRESS, "CETH_ADDRESS_NOT_MATCH");
+            cTokenAddress.requireEqualTo(cethAddress, "CETH_ADDRESS_NOT_MATCH");
         } else {
             require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
             if (cTokenAddress.isNotEmpty()) {

@@ -16,6 +16,7 @@ contract('TTokenRegistryIsTTokenTest', function (accounts) {
     const logicVersionsRegistryEncoder = new LogicVersionsRegistryEncoder(web3);
 
     beforeEach('Setup for each test', async () => {
+        const CETH = await Mock.new();
         const pauser = accounts[0];
         
         mocks = await createMocks(Mock, 10);
@@ -46,7 +47,8 @@ contract('TTokenRegistryIsTTokenTest', function (accounts) {
                         pairAggregatorRegistryInstance.address,
                         marketsState.address,
                         interestValidator.address,
-                        atmSettings.address
+                        atmSettings.address,
+                        CETH.address
                     );
                 },
             },
