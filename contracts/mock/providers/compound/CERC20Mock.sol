@@ -14,6 +14,7 @@ contract CERC20Mock is ERC20Mock {
 
     IERC20 public underlying;
     uint256 public multiplier;
+    uint256 internal _mockExchangeRate;
 
     constructor(
         string memory aName,
@@ -142,6 +143,18 @@ contract CERC20Mock is ERC20Mock {
     }
 
     function _mockChange() internal {}
+
+    function setMockExchangeRate(uint256 rate) external {
+        _mockExchangeRate = rate;
+    }
+
+    function exchangeRateStored() external view returns (uint256) {
+        if (_mockExchangeRate > 0) {
+            return _mockExchangeRate;
+        } else {
+            return block.number == 0 ? 0 : block.number / multiplier;
+        }
+    }
 
     function exchangeRateCurrent() external view returns (uint256) {
         return _exchangeRateCurrent();
