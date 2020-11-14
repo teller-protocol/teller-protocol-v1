@@ -257,11 +257,12 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         address quoteAddress,
         uint256 baseAmount
     ) internal view returns (uint256) {
-
         bool success;
         bytes memory returnData;
         // call function to base address for function signature of underlying
-        (success, returnData) = baseAddress.staticcall(abi.encodeWithSignature("balanceOfUnderlying(address)", address(this)));
+        (success, returnData) = baseAddress.staticcall(
+            abi.encodeWithSignature("balanceOfUnderlying(address)", address(this))
+        );
         // if successful, check baseAddress
         if (success) {
             baseAmount = abi.decode(returnData, (uint256));
@@ -270,13 +271,12 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
             } else {
                 baseAddress = CErc20Interface(baseAddress).underlying();
             }
-        } 
+        }
         return
-        settings().chainlinkAggregator().valueFor(
-            baseAddress,
-            quoteAddress,
-            baseAmount
-        );
-
+            settings().chainlinkAggregator().valueFor(
+                baseAddress,
+                quoteAddress,
+                baseAmount
+            );
     }
 }
