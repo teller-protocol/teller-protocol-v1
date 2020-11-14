@@ -106,18 +106,18 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         @notice Calculate this Escrow instance total value. 
         @return This Escrow instance total value expressed in ETH and Token value. 
      */
-    function calculateTotalValue() public view returns (TellerCommon.EscrowValue memory value) {
+    function calculateTotalValue()
+        public
+        view
+        returns (TellerCommon.EscrowValue memory value)
+    {
         address[] memory tokens = getTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
             if (tokens[i] == settings().WETH_ADDRESS()) {
                 value.valueInEth = value.valueInEth.add(_balanceOf(tokens[i]));
             } else {
                 value.valueInEth = value.valueInEth.add(
-                    _valueOfIn(
-                        tokens[i],
-                        settings().ETH_ADDRESS(),
-                        _balanceOf(tokens[i])
-                    )
+                    _valueOfIn(tokens[i], settings().ETH_ADDRESS(), _balanceOf(tokens[i]))
                 );
             }
         }
