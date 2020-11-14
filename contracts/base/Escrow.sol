@@ -243,7 +243,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         // if successful, check baseAddress
         if (success) {
             baseAmount = abi.decode(returnData, (uint256));
-            if (baseAddress == settings().CETH_ADDRESS()) {
+            if (baseAddress == settings().cethAddress()) {
                 baseAddress = settings().ETH_ADDRESS();
             } else {
                 baseAddress = CErc20Interface(baseAddress).underlying();

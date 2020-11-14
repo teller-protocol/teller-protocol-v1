@@ -344,5 +344,5 @@ interface SettingsInterface {
         @notice It gets the canonical CETH address used in the platform.
         @return the canonical CETH address used in the platform.
      */
-    function CETH_ADDRESS() external view returns (address);
+    function cethAddress() external view returns (address);
 }
