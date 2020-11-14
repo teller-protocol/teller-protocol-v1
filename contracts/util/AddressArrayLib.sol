@@ -33,15 +33,10 @@ library AddressArrayLib {
     {
         if (index >= self.length) return self;
 
-        if (index == self.length - 1) {
-            delete self[self.length - 1];
-            self.length--;
-            return self;
+        if (index != self.length - 1) {
+            address temp = self[self.length - 1];
+            self[index] = temp;
         }
-
-        address temp = self[self.length - 1];
-        self[self.length - 1] = self[index];
-        self[index] = temp;
 
         delete self[self.length - 1];
         self.length--;
@@ -61,7 +56,7 @@ library AddressArrayLib {
         view
         returns (bool found, uint256 indexAt)
     {
-        found = false;
+        found;
         for (indexAt = 0; indexAt < self.length; indexAt++) {
             found = self[indexAt] == item;
             if (found) {

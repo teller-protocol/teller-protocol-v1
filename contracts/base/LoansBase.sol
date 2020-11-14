@@ -4,8 +4,6 @@ pragma experimental ABIEncoderV2;
 // Libraries and common
 import "../util/TellerCommon.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
-import "../util/ERC20DetailedLib.sol";
 
 // Contracts
 import "./Base.sol";
@@ -37,7 +35,6 @@ import "../interfaces/EscrowInterface.sol";
 contract LoansBase is LoansInterface, Base {
     using AddressLib for address payable;
     using SafeMath for uint256;
-    using ERC20DetailedLib for ERC20Detailed;
 
     /* State Variables */
 
@@ -701,7 +698,7 @@ contract LoansBase is LoansInterface, Base {
         @param maxLoanAmount Maximum loan amount that can be taken out, set in the loan terms
         @return memory TellerCommon.Loan Loan struct as per the Teller platform
      */
-    function createLoan(
+    function _createLoan(
         uint256 loanID,
         TellerCommon.LoanRequest memory request,
         uint256 interestRate,
