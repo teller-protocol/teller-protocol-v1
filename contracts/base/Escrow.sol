@@ -180,11 +180,12 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
     */
     function claimTokens(address recipient) external {
         require(getLoan().status != TellerCommon.LoanStatus.Active, "LOAN_ACTIVE");
-        if (getLoan().liquidated) { // require liquidated 
+        if (getLoan().liquidated) {
+            // require liquidated
             require(recipient != getBorrower(), "RECIPIENT_CANNOT_BE_BORROWER");
             require(msg.sender == address(loans), "CALLER_MUST_BE_LOANS");
         } else {
-            require(recipient == getBorrower(), "RECIPIENT_MUST_BE_BORROWER"); // remove 
+            require(recipient == getBorrower(), "RECIPIENT_MUST_BE_BORROWER"); // remove
         }
 
         address[] memory tokens = getTokens();
@@ -205,7 +206,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         - and the sender should be the loans contract instance 
         
      */
-     /**
+    /**
         @notice Send the equivilant of tokens owned by this escrow (in collateral value) to the recipient,
         @dev The loan must not be active
         @dev The loan must be liquidated
@@ -225,7 +226,11 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
             uint256 balance = _balanceOf(tokens[i]);
             // get value of token balance in collateral value
             if (balance > 0) {
-                uint256 valueInCollateralToken = _valueOfIn(tokens[i], loans.collateralToken(), balance);
+                uint256 valueInCollateralToken = _valueOfIn(
+                    tokens[i],
+                    loans.collateralToken(),
+                    balance
+                );
                 // if <= value, transfer tokens
                 if (valueInCollateralToken <= valueLeftToTransfer) {
                     IERC20(tokens[i]).transfer(recipient, valueInCollateralToken);
@@ -233,7 +238,6 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
                 }
             }
         }
-        
     }
 
     /**

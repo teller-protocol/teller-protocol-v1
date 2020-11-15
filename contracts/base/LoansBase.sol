@@ -501,34 +501,47 @@ contract LoansBase is LoansInterface, Base {
                     quoteAddress,
                     baseAmount
                 ); */
-                uint256 totalOwed = _getTotalOwed(loanID);
-                uint256 amountToLiquidatorInLendingTokens = totalOwed.mul(105).div(100);
-                uint256 amountToLiquidatorInCollateralTokens = settings().chainlinkAggregator().valueFor(
-                    lendingPool.lendingToken(),
-                    collateralToken,
-                    amountToLiquidatorInLendingTokens
-                );
-                uint256 leftoverTokens;
-                /** - if converted collateral value > amount 
+            uint256 totalOwed = _getTotalOwed(loanID);
+            uint256 amountToLiquidatorInLendingTokens = totalOwed.mul(105).div(100);
+            uint256 amountToLiquidatorInCollateralTokens = settings()
+                .chainlinkAggregator()
+                .valueFor(
+                lendingPool.lendingToken(),
+                collateralToken,
+                amountToLiquidatorInLendingTokens
+            );
+            uint256 leftoverTokens;
+            /** - if converted collateral value > amount 
                     _payOutCollateral(loanID, amount, recipient);
                     - amount of value in tokens from the escrow to be claimed = converted collateral value - amount [if escrow exists], claimTokens(receipient, converted collateral value) - else the borrower has to call the claimTokens */
-                if (amountToLiquidatorInCollateralTokens > totalOwed) {
-                    _payOutCollateral(loanID, amount, recipient);
-                    leftoverTokens = amountToLiquidatorInCollateralTokens - totalOwed;
-                    EscrowInterface(loans[loanID].escrow).claimTokensByCollateralValue(loans[loanID].loanTerms.borrower, leftoverTokens);
-                } else if (amountToLiquidatorInCollateralTokens == totalOwed) {
-                    /** - if converted collateral value = amount
+            if (amountToLiquidatorInCollateralTokens > totalOwed) {
+                _payOutCollateral(loanID, amount, recipient);
+                leftoverTokens = amountToLiquidatorInCollateralTokens - totalOwed;
+                EscrowInterface(loans[loanID].escrow).claimTokensByCollateralValue(
+                    loans[loanID].loanTerms.borrower,
+                    leftoverTokens
+                );
+            } else if (amountToLiquidatorInCollateralTokens == totalOwed) {
+                /** - if converted collateral value = amount
                     _payOutCollateral(loanID, amount, recipient); */
-                    _payOutCollateral(loanID, amount, recipient);
-                } else if (amountToLiquidatorInCollateralTokens < amount) {
-                    /** - if converted collateral value < amount
+                _payOutCollateral(loanID, amount, recipient);
+            } else if (amountToLiquidatorInCollateralTokens < amount) {
+                /** - if converted collateral value < amount
                     _payOutCollateral(loanID, convertedCollateralValue, recipient);
                     _payOutCollateral(loanID, {amount - convertedCollateralValue}, loan.borrower);
                     */
-                    _payOutCollateral(loanID, amountToLiquidatorInCollateralTokens, recipient);
-                    leftoverTokens = amount - amountToLiquidatorInCollateralTokens;
-                    _payOutCollateral(loanID, leftoverTokens, loans[loanID].loanTerms.borrower);
-                }
+                _payOutCollateral(
+                    loanID,
+                    amountToLiquidatorInCollateralTokens,
+                    recipient
+                );
+                leftoverTokens = amount - amountToLiquidatorInCollateralTokens;
+                _payOutCollateral(
+                    loanID,
+                    leftoverTokens,
+                    loans[loanID].loanTerms.borrower
+                );
+            }
             // EscrowInterface(loans[loanID].escrow).claimTokens(recipient);
         }
         // _payOutCollateral(loanID, amount, recipient);
