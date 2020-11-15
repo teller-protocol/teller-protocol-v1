@@ -339,4 +339,10 @@ interface SettingsInterface {
         @return the canonical WETH address used in the platform.
      */
     function WETH_ADDRESS() external view returns (address);
+
+    /**
+        @notice It gets the canonical CETH address used in the platform.
+        @return the canonical CETH address used in the platform.
+     */
+    function cethAddress() external view returns (address);
 }
