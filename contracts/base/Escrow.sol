@@ -9,6 +9,7 @@ import "./TInitializable.sol";
 import "../interfaces/EscrowInterface.sol";
 import "../interfaces/LoansInterface.sol";
 import "../interfaces/IBaseProxy.sol";
+import "../providers/compound/CErc20Interface.sol";
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
@@ -231,6 +232,21 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         address quoteAddress,
         uint256 baseAmount
     ) internal view returns (uint256) {
+        bool success;
+        bytes memory returnData;
+        // call function to base address for function signature of underlying
+        (success, returnData) = baseAddress.staticcall(
+            abi.encodeWithSignature("balanceOfUnderlying(address)", address(this))
+        );
+        // if successful, check baseAddress
+        if (success) {
+            baseAmount = abi.decode(returnData, (uint256));
+            if (baseAddress == settings().cethAddress()) {
+                baseAddress = settings().ETH_ADDRESS();
+            } else {
+                baseAddress = CErc20Interface(baseAddress).underlying();
+            }
+        }
         return
             settings().chainlinkAggregator().valueFor(
                 baseAddress,

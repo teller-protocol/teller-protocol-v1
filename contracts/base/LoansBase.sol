@@ -2,9 +2,10 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Libraries and common
-import "../util/TellerCommon.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
+import "../util/TellerCommon.sol";
+import "../util/NumbersLib.sol";
 import "../util/ERC20DetailedLib.sol";
 
 // Contracts
@@ -37,6 +38,7 @@ import "../interfaces/EscrowInterface.sol";
 contract LoansBase is LoansInterface, Base {
     using AddressLib for address payable;
     using SafeMath for uint256;
+    using NumbersLib for uint256;
     using ERC20DetailedLib for ERC20Detailed;
 
     /* State Variables */
@@ -44,10 +46,6 @@ contract LoansBase is LoansInterface, Base {
     // Loan length will be inputted in seconds, with 4 decimal places. i.e. 30 days will be inputted as
     // 31536. Therefore in interest calculations we must divide by 31536000
     uint256 internal constant SECONDS_PER_YEAR_4DP = 31536000;
-
-    // For interestRate, collateral, and liquidation price, 7% is represented as 700. To find the value
-    // of something we must divide 700 by 100 to remove decimal places, and another 100 for percentage.
-    uint256 internal constant TEN_THOUSAND = 10000;
 
     bytes32 internal constant SUPPLY_TO_DEBT_ATM_SETTING = "SupplyToDebt";
 
@@ -614,7 +612,7 @@ contract LoansBase is LoansInterface, Base {
     {
         uint256 loanAmount = _getTotalOwed(loanID);
         uint256 collateralRatio = loans[loanID].loanTerms.collateralRatio;
-        return loanAmount.mul(collateralRatio).div(TEN_THOUSAND);
+        return loanAmount.percent(collateralRatio);
     }
 
     /**
@@ -646,11 +644,10 @@ contract LoansBase is LoansInterface, Base {
         view
         returns (uint256)
     {
-        return
+        return 
             amountBorrow
-                .mul(loans[loanID].loanTerms.interestRate)
+                .percent(loans[loanID].loanTerms.interestRate)
                 .mul(loans[loanID].loanTerms.duration)
-                .div(TEN_THOUSAND)
                 .div(SECONDS_PER_YEAR_4DP);
     }
 
@@ -677,7 +674,7 @@ contract LoansBase is LoansInterface, Base {
             liquidable: canLiquidateLoan(loanID),
             collateral: collateral,
             collateralInTokens: collateralInTokens,
-            amountToLiquidate: collateralInTokens.mul(liquidateEthPrice).div(TEN_THOUSAND)
+            amountToLiquidate: collateralInTokens.percent(liquidateEthPrice)
         });
     }
 

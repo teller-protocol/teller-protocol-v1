@@ -7,7 +7,7 @@
     "compile": "node --max-old-space-size=8192 ./node_modules/.bin/truffle compile",
     "lint-sol": "yarn solhint -f table \"./contracts/**/*.sol\"",
     "lint-js": "yarn eslint -f table \"./test/**/*.js\"",
-    "test": "truffle test",
+    "test": "yarn compile && truffle test",
     "start:ganache:mainnet": "node scripts/utils/forkMainnet.js",
     "deploy:mainnet": "truffle compile && truffle deploy --network mainnet --reset --to 3",
     "deploy:ropsten": "truffle compile && truffle deploy --network ropsten --reset --to 3",
