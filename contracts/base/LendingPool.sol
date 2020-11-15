@@ -280,10 +280,11 @@ contract LendingPool is Base, LendingPoolInterface {
         @return the amount of tokens deposited.
      */
     function _depositToCompoundIfSupported(uint256 amount) internal returns (uint256) {
-        if (_isCTokenNotSupported()) {
+        address cTokenAddress = cToken();
+
+        if (_isCTokenNotSupported(cTokenAddress)) {
             return amount;
         }
-        address cTokenAddress = cToken();
 
         // approve the cToken contract to take lending tokens
         lendingToken.approve(cTokenAddress, amount);
@@ -304,10 +305,11 @@ contract LendingPool is Base, LendingPoolInterface {
         @param amount amount of tokens to withdraw.
      */
     function _withdrawFromCompoundIfSupported(uint256 amount) internal returns (uint256) {
-        if (_isCTokenNotSupported()) {
+        address cTokenAddress = cToken();
+
+        if (_isCTokenNotSupported(cTokenAddress)) {
             return amount;
         }
-        address cTokenAddress = cToken();
 
         uint256 initialBalance = CErc20Interface(cTokenAddress).balanceOf(address(this));
 
@@ -325,8 +327,8 @@ contract LendingPool is Base, LendingPoolInterface {
         @notice It tests whether cToken address is defined (not 0x0) or not.
         @return true if the cToken address is not 0x0. Otherwise it returns false.
      */
-    function _isCTokenNotSupported() internal view returns (bool) {
-        return cToken() == address(0x0);
+    function _isCTokenNotSupported(address cTokenAddress) internal view returns (bool) {
+        return cTokenAddress == address(0x0);
     }
 
     /**

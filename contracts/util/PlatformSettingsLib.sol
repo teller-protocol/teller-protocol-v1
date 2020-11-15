@@ -43,7 +43,7 @@ library PlatformSettingsLib {
         @param self the current platform setting.
      */
     function requireNotExists(PlatformSetting storage self) internal view {
-        require(self.exists == false, "PLATFORM_SETTING_ALREADY_EXISTS");
+        require(!self.exists, "PLATFORM_SETTING_ALREADY_EXISTS");
     }
 
     /**
@@ -52,7 +52,7 @@ library PlatformSettingsLib {
         @param self the current platform setting.
      */
     function requireExists(PlatformSetting storage self) internal view {
-        require(self.exists == true, "PLATFORM_SETTING_NOT_EXISTS");
+        require(self.exists, "PLATFORM_SETTING_NOT_EXISTS");
     }
 
     /**

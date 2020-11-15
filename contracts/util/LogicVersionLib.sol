@@ -43,7 +43,7 @@ library LogicVersionLib {
         @param self the current logic version.
      */
     function requireNotExists(LogicVersion storage self) internal view {
-        require(self.exists == false, "LOGIC_ALREADY_EXISTS");
+        require(!self.exists, "LOGIC_ALREADY_EXISTS");
     }
 
     /**
@@ -52,7 +52,7 @@ library LogicVersionLib {
         @param self the current logic version.
      */
     function requireExists(LogicVersion storage self) internal view {
-        require(self.exists == true, "LOGIC_NOT_EXISTS");
+        require(self.exists, "LOGIC_NOT_EXISTS");
     }
 
     /**

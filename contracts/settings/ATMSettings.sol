@@ -46,7 +46,7 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
 
         i.e.: address(DAI) => address(ETH) => address(ATM Teller)
      */
-    mapping(address => mapping(address => address)) public marketToAtm;
+    mapping(address => mapping(address => address)) internal marketToAtm;
 
     /* Constructor */
 
@@ -57,8 +57,8 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
         @param atmAddress ATM address to pause.
      */
     function pauseATM(address atmAddress) external onlyPauser() isInitialized() {
-        require(settings().isPaused() == false, "PLATFORM_IS_ALREADY_PAUSED");
-        require(atmPaused[atmAddress] == false, "ATM_IS_ALREADY_PAUSED");
+        require(!settings().isPaused(), "PLATFORM_IS_ALREADY_PAUSED");
+        require(!atmPaused[atmAddress], "ATM_IS_ALREADY_PAUSED");
 
         atmPaused[atmAddress] = true;
 
@@ -70,8 +70,8 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
         @param atmAddress ATM address to unpause.
      */
     function unpauseATM(address atmAddress) external onlyPauser() isInitialized() {
-        require(settings().isPaused() == false, "PLATFORM_IS_PAUSED");
-        require(atmPaused[atmAddress] == true, "ATM_IS_NOT_PAUSED");
+        require(!settings().isPaused(), "PLATFORM_IS_PAUSED");
+        require(atmPaused[atmAddress], "ATM_IS_NOT_PAUSED");
 
         atmPaused[atmAddress] = false;
 

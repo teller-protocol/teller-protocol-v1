@@ -696,7 +696,7 @@ contract LoansBase is LoansInterface, Base {
         @param maxLoanAmount Maximum loan amount that can be taken out, set in the loan terms
         @return memory TellerCommon.Loan Loan struct as per the Teller platform
      */
-    function createLoan(
+    function _createLoan(
         uint256 loanID,
         TellerCommon.LoanRequest memory request,
         uint256 interestRate,

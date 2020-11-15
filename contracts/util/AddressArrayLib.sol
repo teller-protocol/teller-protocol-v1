@@ -10,43 +10,27 @@ library AddressArrayLib {
       @notice It adds an address value to the array.
       @param self current array.
       @param newItem new item to add.
-      @return the current array with the new item.
     */
-    function add(address[] storage self, address newItem)
-        internal
-        returns (address[] memory)
-    {
+    function add(address[] storage self, address newItem) internal {
         require(newItem != address(0x0), "EMPTY_ADDRESS_NOT_ALLOWED");
         self.push(newItem);
-        return self;
     }
 
     /**
       @notice It removes the value at the given index in an array.
       @param self the current array.
       @param index remove an item in a specific index.
-      @return the current array without the item removed.
     */
-    function removeAt(address[] storage self, uint256 index)
-        internal
-        returns (address[] memory)
-    {
-        if (index >= self.length) return self;
+    function removeAt(address[] storage self, uint256 index) internal {
+        if (index >= self.length) return;
 
-        if (index == self.length - 1) {
-            delete self[self.length - 1];
-            self.length--;
-            return self;
+        if (index != self.length - 1) {
+            address temp = self[self.length - 1];
+            self[index] = temp;
         }
-
-        address temp = self[self.length - 1];
-        self[self.length - 1] = self[index];
-        self[index] = temp;
 
         delete self[self.length - 1];
         self.length--;
-
-        return self;
     }
 
     /**
@@ -61,7 +45,6 @@ library AddressArrayLib {
         view
         returns (bool found, uint256 indexAt)
     {
-        found = false;
         for (indexAt = 0; indexAt < self.length; indexAt++) {
             found = self[indexAt] == item;
             if (found) {
@@ -77,13 +60,10 @@ library AddressArrayLib {
       @param item the item to remove.
       @return the current array without the removed item.
     */
-    function remove(address[] storage self, address item)
-        internal
-        returns (address[] memory)
-    {
+    function remove(address[] storage self, address item) internal {
         (bool found, uint256 indexAt) = getIndex(self, item);
-        if (!found) return self;
+        if (!found) return;
 
-        return removeAt(self, indexAt);
+        removeAt(self, indexAt);
     }
 }
