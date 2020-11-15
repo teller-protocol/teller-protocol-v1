@@ -11,9 +11,7 @@ library AddressArrayLib {
       @param self current array.
       @param newItem new item to add.
     */
-    function add(address[] storage self, address newItem)
-        internal
-    {
+    function add(address[] storage self, address newItem) internal {
         require(newItem != address(0x0), "EMPTY_ADDRESS_NOT_ALLOWED");
         self.push(newItem);
     }
@@ -23,9 +21,7 @@ library AddressArrayLib {
       @param self the current array.
       @param index remove an item in a specific index.
     */
-    function removeAt(address[] storage self, uint256 index)
-        internal
-    {
+    function removeAt(address[] storage self, uint256 index) internal {
         if (index >= self.length) return;
 
         if (index != self.length - 1) {
@@ -64,9 +60,7 @@ library AddressArrayLib {
       @param item the item to remove.
       @return the current array without the removed item.
     */
-    function remove(address[] storage self, address item)
-        internal
-    {
+    function remove(address[] storage self, address item) internal {
         (bool found, uint256 indexAt) = getIndex(self, item);
         if (!found) return self;
 
