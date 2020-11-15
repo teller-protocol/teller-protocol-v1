@@ -542,27 +542,23 @@ contract LoansBase is LoansInterface, Base {
     function _getCollateralNeededInTokens(uint256 loanID)
         internal
         view
-        returns (uint256 collateralNeededInTokens)
+        returns (uint256 neededInLendingTokens)
     {
         if (!_isLoanActiveOrSet(loanID) || loans[loanID].loanTerms.collateralRatio == 0) {
             return 0;
         }
 
-        bool useTotalOwed = loans[loanID].status == TellerCommon.LoanStatus.TermsSet ||
-            loans[loanID].escrow == address(0);
-        uint256 loanValue = useTotalOwed
-            ? _getTotalOwed(loanID)
-            : EscrowInterface(loans[loanID].escrow).calculateLoanValue();
-        collateralNeededInTokens = loanValue.percent(
-            loans[loanID].loanTerms.collateralRatio
-        );
+        uint256 owed = _getTotalOwed(loanID);
+        neededInLendingTokens = owed.percent(loans[loanID].loanTerms.collateralRatio);
 
+        // The collateral ratio includes the buffer required to take out a loan.
+        // If active, we should subtract the buffer amount to get our liquidation value.
         if (loans[loanID].status == TellerCommon.LoanStatus.Active) {
             uint256 bufferPercent = settings().getPlatformSettingValue(
                 settings().consts().COLLATERAL_BUFFER_SETTING()
             );
-            collateralNeededInTokens = collateralNeededInTokens.sub(
-                loanValue.percent(bufferPercent)
+            neededInLendingTokens = neededInLendingTokens.sub(
+                neededInLendingTokens.percent(bufferPercent)
             );
         }
     }
@@ -667,13 +663,36 @@ contract LoansBase is LoansInterface, Base {
     {
         liquidationInfo.collateralInfo = _getCollateralInfo(loanID);
 
-        uint256 collateralValue = liquidationInfo.collateralInfo.moreCollateralRequired
-            ? liquidationInfo.collateralInfo.valueInLendingTokens
-            : liquidationInfo.collateralInfo.neededInLendingTokens;
         uint256 liquidateEthPrice = settings().getPlatformSettingValue(
             settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
         );
-        liquidationInfo.amountToLiquidate = collateralValue.percent(liquidateEthPrice);
+        liquidationInfo.amountToLiquidate = _getTotalOwed(loanID).percent(
+            liquidateEthPrice
+        );
+
+        liquidationInfo.rewardInCollateral = liquidationInfo
+            .collateralInfo
+            .neededInCollateralTokens;
+        if (
+            liquidationInfo.collateralInfo.moreCollateralRequired &&
+            loans[loanID].escrow != address(0)
+        ) {
+            uint256 extraCollateralNeeded = liquidationInfo
+                .collateralInfo
+                .neededInCollateralTokens
+                .sub(liquidationInfo.collateralInfo.collateral);
+            uint256 escrowValue = settings().chainlinkAggregator().valueFor(
+                lendingPool.lendingToken(),
+                collateralToken,
+                EscrowInterface(loans[loanID].escrow).calculateLoanValue()
+            );
+            if (escrowValue <= extraCollateralNeeded) {
+                liquidationInfo.rewardInCollateral = liquidationInfo
+                    .collateralInfo
+                    .collateral
+                    .add(escrowValue);
+            }
+        }
 
         TellerCommon.Loan memory loan = loans[loanID];
         liquidationInfo.liquidable =

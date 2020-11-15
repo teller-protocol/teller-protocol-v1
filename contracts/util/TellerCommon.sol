@@ -120,14 +120,16 @@ library TellerCommon {
         @notice This struct is used to get the current liquidation info for a given loan id.
         @param collateralInfo information for the the given loan.
         @param amountToLiquidate the needed amount to liquidate the loan (if the liquidable parameter is true).
+        @param rewardInCollateral the value the liquidator will receive denoted in collateral tokens.
         @param liquidable true if the loan is liquidable. Otherwise it is false.
-
         @dev If the loan does not need to be liquidated, amountToLiquidate is the maximum payment amount of lending tokens that will be required to liquidate the loan.
         @dev If the loan can be liquidated, amountToLiquidate is the current payment amount of lending tokens that is needed to liquidate the loan.
+        @dev Liquidation reward is the value the liquidator will receive denoted in the collateral token. It will be, at maximum, the amount of collateral required. For under collateralized loans, the remaining value will be collected from tokens held by the loan's Escrow contract.
      */
     struct LoanLiquidationInfo {
         LoanCollateralInfo collateralInfo;
         uint256 amountToLiquidate;
+        uint256 rewardInCollateral;
         bool liquidable;
     }
 

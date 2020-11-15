@@ -311,8 +311,7 @@ const liquidateLoan = async (
 
   const {
     amountToLiquidate,
-    collateral,
-    collateralInTokens,
+    collateralInfo,
   } = await loans.getLiquidationInfo(loanId);
 
   const loansInfo = await loans.loans(loanId);
@@ -351,7 +350,7 @@ const liquidateLoan = async (
         loanId,
         loansInfo.loanTerms.borrower,
         txConfig.from,
-        collateral,
+        collateralInfo.collateral,
         amountToLiquidate
       );
     const finalTotalCollateral = BigNumber((await loans.totalCollateral()).toString());
