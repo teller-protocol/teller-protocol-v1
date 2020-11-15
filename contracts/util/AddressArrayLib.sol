@@ -62,7 +62,7 @@ library AddressArrayLib {
     */
     function remove(address[] storage self, address item) internal {
         (bool found, uint256 indexAt) = getIndex(self, item);
-        if (!found) return self;
+        if (!found) return;
 
         removeAt(self, indexAt);
     }
