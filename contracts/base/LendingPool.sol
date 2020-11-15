@@ -327,8 +327,8 @@ contract LendingPool is Base, LendingPoolInterface {
         @notice It tests whether cToken address is defined (not 0x0) or not.
         @return true if the cToken address is not 0x0. Otherwise it returns false.
      */
-    function _isCTokenNotSupported(address cToken) internal view returns (bool) {
-        return cToken == address(0x0);
+    function _isCTokenNotSupported(address cTokenAddress) internal view returns (bool) {
+        return cTokenAddress == address(0x0);
     }
 
     /**
