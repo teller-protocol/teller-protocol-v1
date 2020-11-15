@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // External Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
@@ -35,6 +35,7 @@ import "../../../providers/compound/CErc20Interface.sol";
 contract Compound is ICompound, BaseEscrowDapp {
     using AddressLib for address;
     using Address for address;
+    using SafeERC20 for IERC20;
 
     /* State Variables */
 
@@ -57,7 +58,7 @@ contract Compound is ICompound, BaseEscrowDapp {
 
         CErc20Interface cToken = _getCToken(tokenAddress);
         uint256 cTokenBalanceBeforeLend = cToken.balanceOf(address(this));
-        IERC20(tokenAddress).approve(address(cToken), amount);
+        IERC20(tokenAddress).safeApprove(address(cToken), amount);
         uint256 result = cToken.mint(amount);
         require(result == NO_ERROR, "COMPOUND_DEPOSIT_ERROR");
 

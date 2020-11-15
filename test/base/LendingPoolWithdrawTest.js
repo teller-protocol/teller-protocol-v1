@@ -48,7 +48,7 @@ contract('LendingPoolWithdrawTest', function (accounts) {
 
     withData({
         _1_basic: [accounts[0], true, 10, false, 1000, undefined, false],
-        _2_transferFail: [accounts[1], false, 50, false, 1000, 'LENDING_TRANSFER_FAILED', true],
+        _2_transferFail: [accounts[1], false, 50, false, 1000, 'SafeERC20: ERC20 operation did not succeed', true],
         _3_compoundFail: [accounts[1], true, 50, true, 1000, 'COMPOUND_REDEEM_UNDERLYING_ERROR', true],
         _4_balanceFail: [accounts[0], true, 10, false, 0, 'LENDING_TOKEN_NOT_ENOUGH_BALANCE', true],
     }, function(
