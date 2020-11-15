@@ -17,6 +17,7 @@ contract SettingsConsts {
 
     /**
         @notice The setting name for the required subsmission settings.
+        @notice This is the minimum number of node responses that will be required by the platform to either take out a loan, and to claim accrued interest. If the number of node responses are less than the ones specified here, the loan or accrued interest claim request will be rejected by the platform
      */
     bytes32 public constant REQUIRED_SUBMISSIONS_SETTING = "RequiredSubmissions";
     /**
@@ -30,7 +31,7 @@ contract SettingsConsts {
     bytes32 public constant MAXIMUM_TOLERANCE_SETTING = "MaximumTolerance";
     /**
         @notice The setting name for the response expiry length settings.
-        @notice This is the maximum time (in seconds) a node has to submit a response. After that time, the response is considered expired.
+        @notice This is the maximum time (in seconds) a node has to submit a response. After that time, the response is considered expired and will not be accepted by the protocol.
      */
     bytes32 public constant RESPONSE_EXPIRY_LENGTH_SETTING = "ResponseExpiryLength";
     /**
@@ -53,7 +54,7 @@ contract SettingsConsts {
     bytes32 public constant LIQUIDATE_ETH_PRICE_SETTING = "LiquidateEthPrice";
     /**
         @notice The setting name for the maximum loan duration settings.
-        @notice The maximum loan duration setting is defined in seconds.
+        @notice The maximum loan duration setting is defined in seconds. Loans will not be given for timespans larger than the one specified here.
      */
     bytes32 public constant MAXIMUM_LOAN_DURATION_SETTING = "MaximumLoanDuration";
     /**
@@ -64,12 +65,14 @@ contract SettingsConsts {
         public constant REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING = "RequestLoanTermsRateLimit";
     /**
         @notice The setting name for the collateral buffer.
+        @notice The collateral buffer is esentially a safety buffer above the collateral amount. It is required to ensure stability in times of market volatility during which the value of the collateral asset deposited can drop drastically.
         @notice It represents the percentage value (with 2 decimal places) of a collateral buffer.
             e.g.: collateral buffer at 100% is stored as 10000.
      */
     bytes32 public constant COLLATERAL_BUFFER_SETTING = "CollateralBuffer";
     /**
         @notice The setting name for the over collateralized buffer.
+        @notice Similar to the colleral buffer setting, the over collateralized buffer acts as a safety buffer against collateral asset prices. It is typically less than the collateral buffer given the excess value of collateral against the value of the loan.
         @notice It represents the percentage value (with 2 decimal places) of a over collateralized buffer.
             e.g.: over collateralized buffer at 130% is stored as 13000.
      */

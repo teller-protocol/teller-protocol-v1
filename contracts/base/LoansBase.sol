@@ -736,6 +736,15 @@ contract LoansBase is LoansInterface, Base {
             });
     }
 
+    /**
+        @notice Emits two events, one when loan terms are set and another IF collateral has been deposited during setting the loan terms
+        @param loanID The ID of the loan for which terms were set
+        @param request The Teller common loan request that was submitted by the borrower
+        @param interestRate The signed interest rate for the loan
+        @param collateralRatio The ratio of collateral to loan amount that was set by the signers
+        @param maxLoanAmount The largest amount of tokens that can be taken out based on the loan terms
+        @param depositedAmount The amount of collateral depositied when the loan terms were set, if 0 the collateral deposited event will not emit
+     */
     function _emitLoanTermsSetAndCollateralDepositedEventsIfApplicable(
         uint256 loanID,
         TellerCommon.LoanRequest memory request,
