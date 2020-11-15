@@ -644,7 +644,7 @@ contract LoansBase is LoansInterface, Base {
         view
         returns (uint256)
     {
-        return 
+        return
             amountBorrow
                 .percent(loans[loanID].loanTerms.interestRate)
                 .mul(loans[loanID].loanTerms.duration)
