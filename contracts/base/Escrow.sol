@@ -77,7 +77,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         address _impl = IBaseProxy(dappData.location).implementation();
         (bool success, ) = _impl.delegatecall(dappData.data);
 
-        if (success == false) {
+        if (!success) {
             assembly {
                 let ptr := mload(0x40)
                 let size := returndatasize
@@ -155,7 +155,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
      */
     function repay(uint256 amount) external onlyOwner {
         IERC20 token = IERC20(loans.lendingToken());
-        uint256 balance = _balanceOf(loans.lendingToken());
+        uint256 balance = _balanceOf(address(token));
         uint256 totalOwed = loans.getTotalOwed(loanID);
         if (balance < totalOwed && amount > balance) {
             uint256 amountNeeded = amount > totalOwed

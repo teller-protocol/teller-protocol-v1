@@ -78,7 +78,7 @@ contract EtherCollateralLoans is LoansBase {
             uint256 maxLoanAmount
         ) = loanTermsConsensus.processRequest(request, responses);
 
-        loans[loanID] = createLoan(
+        loans[loanID] = _createLoan(
             loanID,
             request,
             interestRate,

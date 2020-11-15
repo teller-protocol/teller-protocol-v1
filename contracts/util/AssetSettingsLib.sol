@@ -43,7 +43,7 @@ library AssetSettingsLib {
         @param self the current asset settings.
      */
     function requireNotExists(AssetSettings storage self) internal view {
-        require(exists(self) == false, "ASSET_SETTINGS_ALREADY_EXISTS");
+        require(!exists(self), "ASSET_SETTINGS_ALREADY_EXISTS");
     }
 
     /**
@@ -52,7 +52,7 @@ library AssetSettingsLib {
         @param self the current asset settings.
      */
     function requireExists(AssetSettings storage self) internal view {
-        require(exists(self) == true, "ASSET_SETTINGS_NOT_EXISTS");
+        require(exists(self), "ASSET_SETTINGS_NOT_EXISTS");
     }
 
     /**
