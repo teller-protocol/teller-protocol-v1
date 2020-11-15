@@ -51,6 +51,16 @@ interface EscrowInterface {
     function claimTokens(address recipient) external;
 
     /**
+        @notice Send the equivilant of tokens owned by this escrow (in collateral value) to the recipient,
+        @dev The loan must not be active
+        @dev The loan must be liquidated
+        @dev The recipeient must be the loans contract
+        @param recipient address to send the tokens to
+        @param value The value of escrow held tokens, to be claimed based on collateral value
+      */
+    function claimTokensByCollateralValue(address recipient, uint256 value) external;
+
+    /**
         @notice It initializes this escrow instance for a given loans address and loan id.
         @param loansAddress loans contract address.
         @param aLoanID the loan ID associated to this escrow instance.

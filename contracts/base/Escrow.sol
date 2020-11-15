@@ -180,11 +180,11 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
     */
     function claimTokens(address recipient) external {
         require(getLoan().status != TellerCommon.LoanStatus.Active, "LOAN_ACTIVE");
-        if (getLoan().liquidated) {
+        if (getLoan().liquidated) { // require liquidated 
             require(recipient != getBorrower(), "RECIPIENT_CANNOT_BE_BORROWER");
             require(msg.sender == address(loans), "CALLER_MUST_BE_LOANS");
         } else {
-            require(recipient == getBorrower(), "RECIPIENT_MUST_BE_BORROWER");
+            require(recipient == getBorrower(), "RECIPIENT_MUST_BE_BORROWER"); // remove 
         }
 
         address[] memory tokens = getTokens();
@@ -196,6 +196,44 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         }
 
         emit TokensClaimed(recipient);
+    }
+
+    /**
+        claimTokens(address recipient, uint256 value{denoted in collateral token}) 
+        - checks loan is closed 
+        - the loan must be liquidated 
+        - and the sender should be the loans contract instance 
+        
+     */
+     /**
+        @notice Send the equivilant of tokens owned by this escrow (in collateral value) to the recipient,
+        @dev The loan must not be active
+        @dev The loan must be liquidated
+        @dev The recipeient must be the loans contract
+        @param recipient address to send the tokens to
+        @param value The value of escrow held tokens, to be claimed based on collateral value
+      */
+    function claimTokensByCollateralValue(address recipient, uint256 value) external {
+        require(getLoan().status != TellerCommon.LoanStatus.Active, "LOAN_ACTIVE");
+        require(getLoan().liquidated, "LOAN_NOT_LIQUIDATED");
+        require(msg.sender == address(loans), "CALLER_MUST_BE_LOANS");
+
+        address[] memory tokens = getTokens();
+        uint256 valueLeftToTransfer = value;
+        // cycle through tokens
+        for (uint256 i = 0; i < tokens.length; i++) {
+            uint256 balance = _balanceOf(tokens[i]);
+            // get value of token balance in collateral value
+            if (balance > 0) {
+                uint256 valueInCollateralToken = _valueOfIn(tokens[i], loans.collateralToken(), balance);
+                // if <= value, transfer tokens
+                if (valueInCollateralToken <= valueLeftToTransfer) {
+                    IERC20(tokens[i]).transfer(recipient, valueInCollateralToken);
+                    valueLeftToTransfer = valueLeftToTransfer.sub(valueInCollateralToken);
+                }
+            }
+        }
+        
     }
 
     /**
