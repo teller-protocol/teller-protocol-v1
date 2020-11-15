@@ -10,28 +10,23 @@ library AddressArrayLib {
       @notice It adds an address value to the array.
       @param self current array.
       @param newItem new item to add.
-      @return the current array with the new item.
     */
     function add(address[] storage self, address newItem)
         internal
-        returns (address[] memory)
     {
         require(newItem != address(0x0), "EMPTY_ADDRESS_NOT_ALLOWED");
         self.push(newItem);
-        return self;
     }
 
     /**
       @notice It removes the value at the given index in an array.
       @param self the current array.
       @param index remove an item in a specific index.
-      @return the current array without the item removed.
     */
     function removeAt(address[] storage self, uint256 index)
         internal
-        returns (address[] memory)
     {
-        if (index >= self.length) return self;
+        if (index >= self.length) return;
 
         if (index != self.length - 1) {
             address temp = self[self.length - 1];
@@ -40,8 +35,6 @@ library AddressArrayLib {
 
         delete self[self.length - 1];
         self.length--;
-
-        return self;
     }
 
     /**
@@ -73,11 +66,10 @@ library AddressArrayLib {
     */
     function remove(address[] storage self, address item)
         internal
-        returns (address[] memory)
     {
         (bool found, uint256 indexAt) = getIndex(self, item);
         if (!found) return self;
 
-        return removeAt(self, indexAt);
+        removeAt(self, indexAt);
     }
 }
