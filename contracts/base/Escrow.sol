@@ -176,10 +176,10 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         @dev The recipient must either be the loan borrower OR the loan must be already liquidated.
         @param recipient address to send the tokens to.
     */
-    function claimTokens(address recipient) onlyOwner() external {
+    function claimTokens(address recipient) external onlyOwner() {
         require(getLoan().status == TellerCommon.LoanStatus.Closed, "LOAN_NOT_CLOSED");
         require(getLoan().liquidated, "LOAN_NOT_LIQUIDATED");
-            // require liquidated
+        // require liquidated
 
         address[] memory tokens = getTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
