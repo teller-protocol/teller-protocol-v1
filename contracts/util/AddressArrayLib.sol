@@ -56,7 +56,6 @@ library AddressArrayLib {
         view
         returns (bool found, uint256 indexAt)
     {
-        found;
         for (indexAt = 0; indexAt < self.length; indexAt++) {
             found = self[indexAt] == item;
             if (found) {
