@@ -481,10 +481,8 @@ contract LoansBase is LoansInterface, Base {
 
         return
             collateralRatio >=
-            overCollateralizedBuffer
-                .add(collateralBuffer)
-                .add(liquidationReward);
-   }
+            overCollateralizedBuffer.add(collateralBuffer).add(liquidationReward);
+    }
 
     /**
         @notice Checks if the loan has an Escrow and claims any tokens then pays out the loan collateral.
@@ -623,14 +621,13 @@ contract LoansBase is LoansInterface, Base {
         @notice Returns the total amount owed for a specified loan
         @param loanID The id of the loan to get the total amount owed
      */
-     function _getTotalOwed(uint256 loanID)
-        internal
-        view
-        returns (uint256)
-    {
+    function _getTotalOwed(uint256 loanID) internal view returns (uint256) {
         TellerCommon.LoanStatus currentStatus = loans[loanID].status;
         if (currentStatus == TellerCommon.LoanStatus.TermsSet) {
-            uint256 interestOwed = _getInterestOwed(loanID, loans[loanID].loanTerms.maxLoanAmount);
+            uint256 interestOwed = _getInterestOwed(
+                loanID,
+                loans[loanID].loanTerms.maxLoanAmount
+            );
             return loans[loanID].loanTerms.maxLoanAmount.add(interestOwed);
         } else if (currentStatus == TellerCommon.LoanStatus.Active) {
             return loans[loanID].principalOwed.add(loans[loanID].interestOwed);
@@ -649,11 +646,12 @@ contract LoansBase is LoansInterface, Base {
         view
         returns (uint256)
     {
-        return amountBorrow
-            .mul(loans[loanID].loanTerms.interestRate)
-            .mul(loans[loanID].loanTerms.duration)
-            .div(TEN_THOUSAND)
-            .div(SECONDS_PER_YEAR_4DP);
+        return
+            amountBorrow
+                .mul(loans[loanID].loanTerms.interestRate)
+                .mul(loans[loanID].loanTerms.duration)
+                .div(TEN_THOUSAND)
+                .div(SECONDS_PER_YEAR_4DP);
     }
 
     /**

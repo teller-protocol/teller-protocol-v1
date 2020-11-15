@@ -9,6 +9,7 @@ import "./TInitializable.sol";
 import "../interfaces/EscrowInterface.sol";
 import "../interfaces/LoansInterface.sol";
 import "../interfaces/IBaseProxy.sol";
+import "../providers/compound/CErc20Interface.sol";
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
@@ -105,18 +106,18 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         @notice Calculate this Escrow instance total value. 
         @return This Escrow instance total value expressed in ETH and Token value. 
      */
-    function calculateTotalValue() public view returns (TellerCommon.EscrowValue memory value) {
+    function calculateTotalValue()
+        public
+        view
+        returns (TellerCommon.EscrowValue memory value)
+    {
         address[] memory tokens = getTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
             if (tokens[i] == settings().WETH_ADDRESS()) {
                 value.valueInEth = value.valueInEth.add(_balanceOf(tokens[i]));
             } else {
                 value.valueInEth = value.valueInEth.add(
-                    _valueOfIn(
-                        tokens[i],
-                        settings().ETH_ADDRESS(),
-                        _balanceOf(tokens[i])
-                    )
+                    _valueOfIn(tokens[i], settings().ETH_ADDRESS(), _balanceOf(tokens[i]))
                 );
             }
         }
@@ -233,6 +234,21 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         address quoteAddress,
         uint256 baseAmount
     ) internal view returns (uint256) {
+        bool success;
+        bytes memory returnData;
+        // call function to base address for function signature of underlying
+        (success, returnData) = baseAddress.staticcall(
+            abi.encodeWithSignature("balanceOfUnderlying(address)", address(this))
+        );
+        // if successful, check baseAddress
+        if (success) {
+            baseAmount = abi.decode(returnData, (uint256));
+            if (baseAddress == settings().cethAddress()) {
+                baseAddress = settings().ETH_ADDRESS();
+            } else {
+                baseAddress = CErc20Interface(baseAddress).underlying();
+            }
+        }
         return
             settings().chainlinkAggregator().valueFor(
                 baseAddress,

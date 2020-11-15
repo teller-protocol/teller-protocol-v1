@@ -73,5 +73,6 @@ contract SettingsConsts {
         @notice It represents the percentage value (with 2 decimal places) of a over collateralized buffer.
             e.g.: over collateralized buffer at 130% is stored as 13000.
      */
-    bytes32 public constant OVER_COLLATERALIZED_BUFFER_SETTING = "OverCollateralizedBuffer";
+    bytes32
+        public constant OVER_COLLATERALIZED_BUFFER_SETTING = "OverCollateralizedBuffer";
 }
