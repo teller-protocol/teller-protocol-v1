@@ -176,15 +176,10 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         @dev The recipient must either be the loan borrower OR the loan must be already liquidated.
         @param recipient address to send the tokens to.
     */
-    function claimTokens(address recipient) external {
-        require(getLoan().status != TellerCommon.LoanStatus.Active, "LOAN_ACTIVE");
-        if (getLoan().liquidated) {
+    function claimTokens(address recipient) onlyOwner() external {
+        require(getLoan().status == TellerCommon.LoanStatus.Closed, "LOAN_NOT_CLOSED");
+        require(getLoan().liquidated, "LOAN_NOT_LIQUIDATED");
             // require liquidated
-            require(recipient != getBorrower(), "RECIPIENT_CANNOT_BE_BORROWER");
-            require(msg.sender == address(loans), "CALLER_MUST_BE_LOANS");
-        } else {
-            require(recipient == getBorrower(), "RECIPIENT_MUST_BE_BORROWER"); // remove
-        }
 
         address[] memory tokens = getTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
@@ -213,7 +208,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         @param value The value of escrow held tokens, to be claimed based on collateral value
       */
     function claimTokensByCollateralValue(address recipient, uint256 value) external {
-        require(getLoan().status != TellerCommon.LoanStatus.Active, "LOAN_ACTIVE");
+        require(getLoan().status == TellerCommon.LoanStatus.Closed, "LOAN_NOT_CLOSED");
         require(getLoan().liquidated, "LOAN_NOT_LIQUIDATED");
         require(msg.sender == address(loans), "CALLER_MUST_BE_LOANS");
 
@@ -231,7 +226,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
                 );
                 // if <= value, transfer tokens
                 if (valueInCollateralToken <= valueLeftToTransfer) {
-                    IERC20(tokens[i]).transfer(recipient, valueInCollateralToken);
+                    IERC20(tokens[i]).safeTransfer(recipient, valueInCollateralToken);
                     valueLeftToTransfer = valueLeftToTransfer.sub(valueInCollateralToken);
                 }
             }
