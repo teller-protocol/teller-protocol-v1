@@ -74,7 +74,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @notice It defines Compound Ether token address on current network.
      */
     address public cethAddress;
-    
+
     /**
         @notice It represents a mapping to identify the lending pools paused and not paused.
 
