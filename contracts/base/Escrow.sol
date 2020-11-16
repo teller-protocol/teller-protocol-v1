@@ -207,15 +207,13 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         address[] memory tokens = getTokens();
         uint256 valueLeftToTransfer = value;
         // cycle through tokens
-        for (uint256 i = 0; i < tokens.length; i++) {            
+        for (uint256 i = 0; i < tokens.length; i++) {
             uint256 balance = _balanceOf(tokens[i]);
             // get value of token balance in collateral value
             if (balance > 0) {
-                uint256 valueInCollateralToken = (tokens[i] == loans.collateralToken()) ? balance :  _valueOfIn(
-                    tokens[i],
-                    loans.collateralToken(),
-                    balance
-                );
+                uint256 valueInCollateralToken = (tokens[i] == loans.collateralToken())
+                    ? balance
+                    : _valueOfIn(tokens[i], loans.collateralToken(), balance);
                 // if <= value, transfer tokens
                 if (valueInCollateralToken <= valueLeftToTransfer) {
                     IERC20(tokens[i]).safeTransfer(recipient, valueInCollateralToken);
