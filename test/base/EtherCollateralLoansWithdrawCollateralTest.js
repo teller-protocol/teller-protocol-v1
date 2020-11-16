@@ -5,6 +5,7 @@ const { t, NULL_ADDRESS, ACTIVE } = require('../utils/consts');
 const { loans } = require('../utils/events');
 const { createLoanTerms } = require('../utils/structs');
 const { createTestSettingsInstance } = require('../utils/settings-helper');
+const { createLoan } = require('../utils/loans');
 
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const ChainlinkAggregatorEncoder = require('../utils/encoders/ChainlinkAggregatorEncoder');
@@ -87,7 +88,7 @@ contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
 
             const loan = createLoan({ id: mockLoanID, loanTerms, collateral: loanCollateral, principalOwed: loanPrincipalOwed, interestOwed: loanInterestOwed, borrowedAmount: loanTerms.maxLoanAmount, status: ACTIVE, liquidated: false});
 
-            await instance.setLoan(mockLoanID, loanTerms, 0, 0, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, loanTerms.maxLoanAmount, ACTIVE, false)
+            await instance.setLoan(loan);
             
             await instance.setTotalCollateral(totalCollateral)
             const totalBefore = await instance.totalCollateral.call()

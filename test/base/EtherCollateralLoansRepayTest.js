@@ -4,6 +4,7 @@ const { t, NULL_ADDRESS, ACTIVE, CLOSED } = require('../utils/consts');
 const { createLoanTerms } = require('../utils/structs');
 const BigNumber = require('bignumber.js');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const { createLoan } = require('../utils/loans');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -59,7 +60,8 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
     ) {
         it(t('user', 'repay', 'Should able to repay your loan.', false), async function() {
             // Setup
-            await instance.setLoan(mockLoanID, loanTerms, 0, 0, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, loanTerms.maxLoanAmount, ACTIVE, false)
+            const loan = createLoan({ id: mockLoanID, loanTerms, collateral: loanCollateral.toString(), principalOwed: loanPrincipalOwed, interestOwed: loanInterestOwed, borrowedAmount: loanTerms.maxLoanAmount, status: ACTIVE, liquidated: false });
+            await instance.setLoan(loan);
 
             await instance.setTotalCollateral(totalCollateral)
 

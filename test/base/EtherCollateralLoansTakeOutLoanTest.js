@@ -6,7 +6,8 @@ BigNumber.set({ DECIMAL_PLACES: 0, ROUNDING_MODE: BigNumber.ROUND_FLOOR });
 const { t, getLatestTimestamp, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE, TEN_THOUSAND, SECONDS_PER_YEAR_4DP } = require('../utils/consts')
 const settingsNames = require('../utils/platformSettingsNames')
 const { createLoanTerms } = require('../utils/structs')
-const { loans } = require('../utils/events')
+const { loans } = require('../utils/events');
+const { createLoan } = require('../utils/loans');
 
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder')
 const ChainlinkAggregatorEncoder = require('../utils/encoders/ChainlinkAggregatorEncoder')
@@ -104,9 +105,9 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
 
     const loanTerms = createLoanTerms(borrower, recipient, interestRate, collateralRatio, maxLoanAmount, loanDuration);
 
-    const loan = createLoan({ id: mockLoanID, loanTerms, collateral: lastCollateralIn, status: TERMS_SET, liquidated: false});
+    const loan = createLoan({ id: mockLoanID, loanTerms, collateral: lastCollateralIn, termsExpiry, status: TERMS_SET, liquidated: false});
 
-    await instance.setLoan(mockLoanID, loanTerms, termsExpiry, 0, 0, lastCollateralIn, 0, 0, 0, TERMS_SET, false)
+    await instance.setLoan(loan)
 
     return async function afterAssert(tx) {
       const loan = await instance.loans(mockLoanID)
@@ -167,7 +168,6 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
         // Invocation
         const tx = await instance.takeOutLoan(mockLoanID, amountToBorrow, { from: borrower })
         const loan = await afterAssert(tx)
-        console.log(loan)
       } catch (error) {
         assert.equal(error.reason, expectedErrorMessage, error.message)
       }

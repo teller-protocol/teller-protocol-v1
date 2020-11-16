@@ -89,8 +89,10 @@ contract("EtherCollateralLoansGetCollateralInfoTest", function(accounts) {
   ) {
     it(t("user", "getCollateralInfo", "Should able to get collateral info from a loan.", false), async function() {
       // Setup
-      const loanID = 1
+      const loanID = 1;
+      console.log({collateralRatio});
       const loanTerms = createLoanTerms(accounts[2], NULL_ADDRESS, 0, collateralRatio, loanAmount, 0);
+      console.log({loanTerms});
       const loan = createLoan({
         id: loanID,
         loanTerms,
