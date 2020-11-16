@@ -65,14 +65,14 @@ contract SettingsConsts {
         public constant REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING = "RequestLoanTermsRateLimit";
     /**
         @notice The setting name for the collateral buffer.
-        @notice The collateral buffer is esentially a safety buffer above the collateral amount. It is required to ensure stability in times of market volatility during which the value of the collateral asset deposited can drop drastically.
+        @notice The collateral buffer is a safety buffer above the required collateral amount to liquidate a loan. It is required to ensure the loan does not get liquidated immediately after the loan is taken out if the value of the collateral asset deposited drops drastically.
         @notice It represents the percentage value (with 2 decimal places) of a collateral buffer.
             e.g.: collateral buffer at 100% is stored as 10000.
      */
     bytes32 public constant COLLATERAL_BUFFER_SETTING = "CollateralBuffer";
     /**
         @notice The setting name for the over collateralized buffer.
-        @notice Similar to the colleral buffer setting, the over collateralized buffer acts as a safety buffer against collateral asset prices. It is typically less than the collateral buffer given the excess value of collateral against the value of the loan.
+        @notice The over collateralized buffer is the minimum required collateral ratio in order for a loan to be taken out without an Escrow contract and for the funds to go to the borrower's EOA (externally owned account).
         @notice It represents the percentage value (with 2 decimal places) of a over collateralized buffer.
             e.g.: over collateralized buffer at 130% is stored as 13000.
      */
