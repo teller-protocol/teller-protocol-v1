@@ -173,10 +173,9 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
     /**
         @notice Sends the tokens owned by this escrow to the recipient.
         @dev The loan must not be active.
-        @dev The recipient must either be the loan borrower OR the loan must be already liquidated.
-        @param recipient address to send the tokens to.
+        @dev The recipient must either be the loan borrower AND the loan must be already liquidated.
     */
-    function claimTokens(address recipient) external onlyOwner() {
+    function claimTokens() external onlyOwner() {
         require(getLoan().status == TellerCommon.LoanStatus.Closed, "LOAN_NOT_CLOSED");
         require(getLoan().liquidated, "LOAN_NOT_LIQUIDATED");
         // require liquidated
@@ -185,20 +184,13 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         for (uint256 i = 0; i < tokens.length; i++) {
             uint256 balance = _balanceOf(tokens[i]);
             if (balance > 0) {
-                IERC20(tokens[i]).safeTransfer(recipient, balance);
+                IERC20(tokens[i]).safeTransfer(msg.sender, balance);
             }
         }
 
-        emit TokensClaimed(recipient);
+        emit TokensClaimed(msg.sender);
     }
 
-    /**
-        claimTokens(address recipient, uint256 value{denoted in collateral token}) 
-        - checks loan is closed 
-        - the loan must be liquidated 
-        - and the sender should be the loans contract instance 
-        
-     */
     /**
         @notice Send the equivilant of tokens owned by this escrow (in collateral value) to the recipient,
         @dev The loan must not be active
@@ -215,11 +207,11 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         address[] memory tokens = getTokens();
         uint256 valueLeftToTransfer = value;
         // cycle through tokens
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i = 0; i < tokens.length; i++) {            
             uint256 balance = _balanceOf(tokens[i]);
             // get value of token balance in collateral value
             if (balance > 0) {
-                uint256 valueInCollateralToken = _valueOfIn(
+                uint256 valueInCollateralToken = (tokens[i] == loans.collateralToken()) ? balance :  _valueOfIn(
                     tokens[i],
                     loans.collateralToken(),
                     balance
@@ -228,9 +220,11 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
                 if (valueInCollateralToken <= valueLeftToTransfer) {
                     IERC20(tokens[i]).safeTransfer(recipient, valueInCollateralToken);
                     valueLeftToTransfer = valueLeftToTransfer.sub(valueInCollateralToken);
+                    _tokenUpdated(tokens[i]);
                 }
             }
         }
+        emit TokensClaimed(recipient);
     }
 
     /**
