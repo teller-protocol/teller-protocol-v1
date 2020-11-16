@@ -8,7 +8,7 @@ import "./NumbersList.sol";
  * @author develop@teller.finance
  */
 library TellerCommon {
-    enum LoanStatus {NonExistent, TermsSet, Active, Closed}
+    enum LoanStatus { NonExistent, TermsSet, Active, Closed }
 
     /**
         @notice The amount of interest owed to a borrower

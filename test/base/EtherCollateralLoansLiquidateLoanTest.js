@@ -6,6 +6,7 @@ const { t, NULL_ADDRESS, ACTIVE, CLOSED, getLatestTimestamp, ONE_HOUR, ONE_DAY }
 const { createLoanTerms } = require("../utils/structs");
 const Timer = require("../../scripts/utils/Timer");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
+const { createLoan } = require('../utils/loans');
 
 const ERC20InterfaceEncoder = require("../utils/encoders/ERC20InterfaceEncoder");
 const ChainlinkAggregatorEncoder = require("../utils/encoders/ChainlinkAggregatorEncoder");
@@ -67,10 +68,10 @@ contract("EtherCollateralLoansLiquidateLoanTest", function(accounts) {
   });
 
   withData({
-    _1_loan_expired: [ 1900000000, 32725581, BigNumber("6000000000000000000"), 6512, true, 30, BigNumber("6000000000000000000"), 6, false, undefined ],
-    _2_under_collateralized: [ 1900000000, 32725581, BigNumber("5942423100000000000"), 6512, false, 30, BigNumber("6000000000000000000"), 6, false, undefined ],
-    _3_collateral_ratio_zero: [ 1900000000, 32725581, BigNumber("0"), 0, false, 30, BigNumber("6000000000000000000"), 6, true, "DOESNT_NEED_LIQUIDATION" ],
-    _4_collateral_ratio_gt_zero_good_standing: [ 1900000000, 32725581, BigNumber("6000000000000000000"), 6512, false, 30, BigNumber("6000000000000000000"), 6, true, "DOESNT_NEED_LIQUIDATION" ]
+    _1_loan_expired: [ 1900000000, 32725581, "6000000000000000000", 6512, true, 30, BigNumber("6000000000000000000"), 6, false, undefined ],
+    _2_under_collateralized: [ 1900000000, 32725581, "5942423100000000000", 6512, false, 30, BigNumber("6000000000000000000"), 6, false, undefined ],
+    _3_collateral_ratio_zero: [ 1900000000, 32725581, "0", 0, false, 30, BigNumber("6000000000000000000"), 6, true, "DOESNT_NEED_LIQUIDATION" ],
+    _4_collateral_ratio_gt_zero_good_standing: [ 1900000000, 32725581, "6000000000000000000", 6512, false, 30, BigNumber("6000000000000000000"), 6, true, "DOESNT_NEED_LIQUIDATION" ]
   }, function(
     loanPrincipalOwed,
     loanInterestOwed,
@@ -103,7 +104,10 @@ contract("EtherCollateralLoansLiquidateLoanTest", function(accounts) {
       }
 
       const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, loanLength);
-      await instance.setLoan(mockLoanID, loanTerms, 0, loanStartTime, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, loanTerms.maxLoanAmount, ACTIVE, false);
+      
+      const loan = createLoan({ id: mockLoanID, loanTerms, loanStartTime, collateral: loanCollateral, principalOwed: loanPrincipalOwed, interestOwed: loanInterestOwed, borrowedAmount: loanTerms.maxLoanAmount, status: ACTIVE, liquidated: false});
+
+      await instance.setLoan(loan);
       await instance.setTotalCollateral(totalCollateral);
 
       // give the contract collateral (mock has a fallback)

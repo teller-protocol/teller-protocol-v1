@@ -70,10 +70,7 @@ library MarketStateLib {
         if (self.totalSupplied == 0 || self.totalBorrowed <= self.totalRepaid) {
             return 0;
         }
-        return
-            self.totalBorrowed
-                .sub(self.totalRepaid)
-                .ratioOf(self.totalSupplied);
+        return self.totalBorrowed.sub(self.totalRepaid).ratioOf(self.totalSupplied);
     }
 
     /**
@@ -98,9 +95,8 @@ library MarketStateLib {
             return 0;
         }
         return
-            self.totalBorrowed
-                .add(loanAmount)
-                .sub(self.totalRepaid)
-                .ratioOf(self.totalSupplied);
+            self.totalBorrowed.add(loanAmount).sub(self.totalRepaid).ratioOf(
+                self.totalSupplied
+            );
     }
 }

@@ -356,7 +356,7 @@ contract LoansBase is LoansInterface, Base {
         loans[loanID].liquidated = true;
 
         // the caller gets the collateral from the loan
-        _payOutLiquidator(loanID, msg.sender);
+        _payOutLiquidator(loanID, liquidationInfo, msg.sender);
 
         // the liquidator pays x% of the collateral price
         lendingPool.liquidationPayment(liquidationInfo.amountToLiquidate, msg.sender);
@@ -446,52 +446,27 @@ contract LoansBase is LoansInterface, Base {
     /**
         @notice Checks if the loan has an Escrow and claims any tokens then pays out the loan collateral.
         @dev See Escrow.claimTokens for more info.
+        @param loanID The ID of the loan which is being liquidated
+        @param liquidationInfo The Teller common liquidation struct that holds all the relevant liquidation info, such as the liquidation info
+        @param recipient The address of the liquidator where the liquidation reward will be sent to
     */
-    function _payOutLiquidator(uint256 loanID, address payable recipient) internal {
-        if (loans[loanID].escrow != address(0x0)) {
-            /**
-                - Check the value of the liquidator will get as a reward - total amount owed * 1.05 and converted into collateral asset 
-                settings().chainlinkAggregator().valueFor(
-                    baseAddress,
-                    quoteAddress,
-                    baseAmount
-                ); */
-            uint256 totalOwed = _getTotalOwed(loanID);
-            uint256 amountToLiquidatorInLendingTokens = totalOwed.percent(
-                settings().getPlatformValue(
-                    settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
-                )
+    function _payOutLiquidator(uint256 loanID, TellerCommon.LoanLiquidationInfo memory liquidationInfo, address payable recipient) internal {
+        if (liquidationInfo.rewardInCollateral < loans[loanID].collateral) {
+            _payOutCollateral(
+                loanID,
+                liquidationInfo.rewardInCollateral,
+                recipient
             );
-            uint256 amountToLiquidatorInCollateralTokens = settings()
-                .chainlinkAggregator()
-                .valueFor(
-                lendingPool.lendingToken(),
-                collateralToken,
-                amountToLiquidatorInLendingTokens
-            );
-            if (amountToLiquidatorInCollateralTokens < loans[loanID].collateral) {
-                /** - if converted collateral value < amount
-                    _payOutCollateral(loanID, convertedCollateralValue, recipient);
-                    _payOutCollateral(loanID, {amount - convertedCollateralValue}, loan.borrower);
-                    */
-                _payOutCollateral(
-                    loanID,
-                    amountToLiquidatorInCollateralTokens,
-                    recipient
+        } else if (liquidationInfo.rewardInCollateral >= loans[loanID].collateral) {
+            uint256 remainingCollateralAmount = liquidationInfo.rewardInCollateral - loans[loanID].collateral;
+
+            _payOutCollateral(loanID, loans[loanID].collateral, recipient);
+
+            if (remainingCollateralAmount > 0 && loans[loanID].escrow != address(0x0)) {
+                EscrowInterface(loans[loanID].escrow).claimTokensByCollateralValue(
+                    recipient,
+                    remainingCollateralAmount
                 );
-            } else if (amountToLiquidatorInCollateralTokens >= loans[loanID].collateral) {
-                /** - if converted collateral value > amount 
-                    _payOutCollateral(loanID, amount, recipient);
-                    - amount of value in tokens from the escrow to be claimed = converted collateral value - amount [if escrow exists], claimTokens(receipient, converted collateral value) - else the borrower has to call the claimTokens */
-                _payOutCollateral(loanID, amount, recipient);
-                uint256 remainingTokens = amountToLiquidatorInCollateralTokens -
-                    totalOwed;
-                if (remainingTokens > 0) {
-                    EscrowInterface(loans[loanID].escrow).claimTokensByCollateralValue(
-                        recipient,
-                        remainingTokens
-                    );
-                }
             }
         }
     }
