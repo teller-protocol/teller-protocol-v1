@@ -450,15 +450,16 @@ contract LoansBase is LoansInterface, Base {
         @param liquidationInfo The Teller common liquidation struct that holds all the relevant liquidation info, such as the liquidation info
         @param recipient The address of the liquidator where the liquidation reward will be sent to
     */
-    function _payOutLiquidator(uint256 loanID, TellerCommon.LoanLiquidationInfo memory liquidationInfo, address payable recipient) internal {
+    function _payOutLiquidator(
+        uint256 loanID,
+        TellerCommon.LoanLiquidationInfo memory liquidationInfo,
+        address payable recipient
+    ) internal {
         if (liquidationInfo.rewardInCollateral < loans[loanID].collateral) {
-            _payOutCollateral(
-                loanID,
-                liquidationInfo.rewardInCollateral,
-                recipient
-            );
+            _payOutCollateral(loanID, liquidationInfo.rewardInCollateral, recipient);
         } else if (liquidationInfo.rewardInCollateral >= loans[loanID].collateral) {
-            uint256 remainingCollateralAmount = liquidationInfo.rewardInCollateral - loans[loanID].collateral;
+            uint256 remainingCollateralAmount = liquidationInfo.rewardInCollateral -
+                loans[loanID].collateral;
 
             _payOutCollateral(loanID, loans[loanID].collateral, recipient);
 
