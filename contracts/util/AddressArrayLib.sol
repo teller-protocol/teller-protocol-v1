@@ -55,8 +55,8 @@ library AddressArrayLib {
     }
 
     /**
-      @notice It removes an address value to the array.
-      @param self current array.
+      @notice It removes an address value from the array.
+      @param self the current array.
       @param item the item to remove.
       @return the current array without the removed item.
     */
