@@ -675,17 +675,11 @@ contract LoansBase is LoansInterface, Base {
         returns (TellerCommon.LoanLiquidationInfo memory liquidationInfo)
     {
         liquidationInfo.collateralInfo = _getCollateralInfo(loanID);
-
-        uint256 liquidateEthPrice = settings().getPlatformSettingValue(
-            settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
-        );
-        liquidationInfo.amountToLiquidate = _getTotalOwed(loanID).percent(
-            liquidateEthPrice
-        );
-
+        liquidationInfo.amountToLiquidate = _getTotalOwed(loanID);
         liquidationInfo.rewardInCollateral = liquidationInfo
             .collateralInfo
             .neededInCollateralTokens;
+
         if (
             liquidationInfo.collateralInfo.moreCollateralRequired &&
             loans[loanID].escrow != address(0)
