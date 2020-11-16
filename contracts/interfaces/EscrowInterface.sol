@@ -22,19 +22,10 @@ interface EscrowInterface {
     function getBorrower() external view returns (address);
 
     /**
-        @notice Calculate this Escrow instance total value.
-        @return This Escrow instance total value expressed in ETH and Token value.
+        @notice Calculate the value of the loan by getting the value of all tokens the Escrow owns.
+        @return Escrow total value denoted in the lending token.
      */
-    function calculateTotalValue()
-        external
-        view
-        returns (TellerCommon.EscrowValue memory);
-
-    /**
-        @notice Checks if this Escrow loan value is undervalued based its token price.
-        @return true if this escrow loan is undervalued based on its token price.
-     */
-    function isUnderValued() external view returns (bool);
+    function calculateLoanValue() external view returns (uint256);
 
     /**
         @notice Repay this Escrow's loan.
@@ -49,6 +40,16 @@ interface EscrowInterface {
         @param recipient address to send the tokens to.
     */
     function claimTokens(address recipient) external;
+
+    /**
+        @notice Send the equivilant of tokens owned by this escrow (in collateral value) to the recipient,
+        @dev The loan must not be active
+        @dev The loan must be liquidated
+        @dev The recipeient must be the loans contract
+        @param recipient address to send the tokens to
+        @param value The value of escrow held tokens, to be claimed based on collateral value
+      */
+    function claimTokensByCollateralValue(address recipient, uint256 value) external;
 
     /**
         @notice It initializes this escrow instance for a given loans address and loan id.

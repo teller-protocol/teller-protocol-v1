@@ -92,7 +92,7 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         require(dapp.isContract(), "DAPP_ISNT_A_CONTRACT");
         require(!_isDapp(dapp), "DAPP_ALREADY_EXIST");
 
-        dapps[dapp] = TellerCommon.Dapp({exists: true, unsecured: unsecured});
+        dapps[dapp] = TellerCommon.Dapp({ exists: true, unsecured: unsecured });
         dappsList.add(dapp);
 
         emit NewDappAdded(msg.sender, dapp, unsecured);

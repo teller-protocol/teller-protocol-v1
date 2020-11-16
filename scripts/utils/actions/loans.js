@@ -310,10 +310,8 @@ const liquidateLoan = async (
   const initialLiquidatorTokenBalance = BigNumber((await token.balanceOf(txConfig.from)));
 
   const {
-    liquidable,
     amountToLiquidate,
-    collateral,
-    collateralInTokens,
+    collateralInfo,
   } = await loans.getLiquidationInfo(loanId);
 
   const loansInfo = await loans.loans(loanId);
@@ -352,7 +350,7 @@ const liquidateLoan = async (
         loanId,
         loansInfo.loanTerms.borrower,
         txConfig.from,
-        collateral,
+        collateralInfo.collateral,
         amountToLiquidate
       );
     const finalTotalCollateral = BigNumber((await loans.totalCollateral()).toString());
@@ -363,13 +361,9 @@ const liquidateLoan = async (
 
     // Asserting the escrow total values.
     const escrow = await getEscrow(allContracts, { testContext }, { loanId });
-    const {
-      valueInToken,
-      valueInEth,
-    } = await escrow.calculateTotalValue();
+    const loanValue = await escrow.calculateLoanValue();
     
-    assert.equal(valueInToken.toString(), '0');
-    assert.equal(valueInEth.toString(), '0');
+    assert.equal(loanValue.toString(), '0');
     
     // Asserting liquidator final lending token balance.
     const finalLiquidatorTokenBalance = BigNumber((await token.balanceOf(txConfig.from)));

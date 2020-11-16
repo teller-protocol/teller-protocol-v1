@@ -6,6 +6,7 @@ const { t, NULL_ADDRESS, ACTIVE, CLOSED, getLatestTimestamp, ONE_HOUR, ONE_DAY }
 const { createLoanTerms } = require("../utils/structs");
 const Timer = require("../../scripts/utils/Timer");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
+const { createLoan } = require('../utils/loans');
 
 const ERC20InterfaceEncoder = require("../utils/encoders/ERC20InterfaceEncoder");
 const ChainlinkAggregatorEncoder = require("../utils/encoders/ChainlinkAggregatorEncoder");
@@ -18,7 +19,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 
-contract("EtherCollateralLoansLiquidateTest", function(accounts) {
+contract("EtherCollateralLoansLiquidateLoanTest", function(accounts) {
   BigNumber.set({ DECIMAL_PLACES: 0, ROUNDING_MODE: 3 });
   const timer = new Timer(web3);
 
@@ -67,20 +68,19 @@ contract("EtherCollateralLoansLiquidateTest", function(accounts) {
   });
 
   withData({
-    _1_loan_expired: [ 1900000000, 32725581, BigNumber("6000000000000000000"), 6512, true, 300000, BigNumber("6000000000000000000"), 6, -400000, false, undefined ],
-    _2_under_collateralized: [ 1900000000, 32725581, BigNumber("5942423100000000000"), 6512, false, 300000, BigNumber("6000000000000000000"), 6, -400000, false, undefined ],
-    _3_collateralized_and_loan_duration_expired: [ 1900000000, 32725581, BigNumber("6000000000000000000"), 6512, false, 300000, BigNumber("6000000000000000000"), 6, -400000, false, undefined ],
-    _4_doesnt_need_liquidating: [ 1900000000, 32725581, BigNumber("6000000000000000000"), 6512, false, 300000, BigNumber("6000000000000000000"), 6, 100, true, "DOESNT_NEED_LIQUIDATION" ]
+    _1_loan_expired: [ 1900000000, 32725581, "6000000000000000000", 6512, true, 30, BigNumber("6000000000000000000"), 6, false, undefined ],
+    _2_under_collateralized: [ 1900000000, 32725581, "5942423100000000000", 6512, false, 30, BigNumber("6000000000000000000"), 6, false, undefined ],
+    _3_collateral_ratio_zero: [ 1900000000, 32725581, "0", 0, false, 30, BigNumber("6000000000000000000"), 6, true, "DOESNT_NEED_LIQUIDATION" ],
+    _4_collateral_ratio_gt_zero_good_standing: [ 1900000000, 32725581, "6000000000000000000", 6512, false, 30, BigNumber("6000000000000000000"), 6, true, "DOESNT_NEED_LIQUIDATION" ]
   }, function(
     loanPrincipalOwed,
     loanInterestOwed,
     loanCollateral,
     loanCollateralRatio,
-    loanExpired,
-    loanDuration,
+    expired,
+    loanDurationInDays,
     oracleValue,
     tokenDecimals,
-    loanStartedSecondsBack,
     mustFail,
     expectedErrorMessage
   ) {
@@ -96,17 +96,18 @@ contract("EtherCollateralLoansLiquidateTest", function(accounts) {
       await lendingTokenInstance.givenMethodReturnUint(encodeDecimals, tokenDecimals);
 
       // set up the loan information
-      const currentTime = await getLatestTimestamp();
-      const loanLength = Math.floor(loanDuration * ONE_DAY / 10000);
-      let loanExpiry = currentTime - loanLength;
-      if (!loanExpired) {
-        loanExpiry += ONE_HOUR;
-      }
       const currentTimestampSeconds = await timer.getCurrentTimestampInSeconds();
-      const loanStartTime = currentTimestampSeconds + loanStartedSecondsBack;
+      let loanLength = Math.floor(loanDurationInDays * ONE_DAY);
+      const loanStartTime = currentTimestampSeconds - loanLength;
+      if (!expired) {
+        loanLength += ONE_HOUR;
+      }
 
-      const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, loanDuration);
-      await instance.setLoan(mockLoanID, loanTerms, loanExpiry, loanStartTime, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, loanTerms.maxLoanAmount, ACTIVE, false);
+      const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, loanLength);
+      
+      const loan = createLoan({ id: mockLoanID, loanTerms, loanStartTime, collateral: loanCollateral, principalOwed: loanPrincipalOwed, interestOwed: loanInterestOwed, borrowedAmount: loanTerms.maxLoanAmount, status: ACTIVE, liquidated: false});
+
+      await instance.setLoan(loan);
       await instance.setTotalCollateral(totalCollateral);
 
       // give the contract collateral (mock has a fallback)
@@ -135,9 +136,8 @@ contract("EtherCollateralLoansLiquidateTest", function(accounts) {
         assert.equal(loan["liquidated"], true);
 
       } catch (error) {
-        assert(mustFail);
-        assert(error);
-        assert.equal(error.reason, expectedErrorMessage);
+        assert(mustFail, error.message);
+        assert.equal(error.reason, expectedErrorMessage, error.message);
       }
     });
   });

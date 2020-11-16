@@ -194,12 +194,10 @@ interface LoansInterface {
     function collateralToken() external view returns (address);
 
     /**
-        @notice A loan can be liquidated if it is: under collateralized or expired
-        @param loanID The ID of the loan to check
-        @return bool weather the loan can be liquidated
+        @notice Returns the total owed amount remaining for a specified loan
+        @param loanID The ID of the loan to be queried
+        @return uint256 The total amount owed remaining
      */
-    function canLiquidateLoan(uint256 loanID) external view returns (bool);
-
     function getTotalOwed(uint256 loanID) external view returns (uint256);
 
     /**
