@@ -2,6 +2,7 @@ pragma solidity 0.5.17;
 
 // External Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 
 // Common
 import "../../../util/AddressLib.sol";
@@ -32,6 +33,7 @@ import "../../../providers/uniswap/IUniswapV2Router02.sol";
 contract Uniswap is IUniswap, BaseEscrowDapp {
     using AddressLib for address;
     using Address for address;
+    using SafeERC20 for IERC20;
 
     /* Constants */
     /**
@@ -81,7 +83,7 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
 
         uint256 balanceBeforeSwap = _balanceOf(destination);
 
-        IERC20(source).approve(address(theRouter), sourceAmount);
+        IERC20(source).safeApprove(address(theRouter), sourceAmount);
         uint256[] memory amounts = theRouter.swapExactTokensForTokens(
             sourceAmount,
             minDestination,
