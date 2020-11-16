@@ -1,7 +1,7 @@
 // JS Libraries
 const LoansBaseInterfaceEncoder = require("../utils/encoders/LoansBaseInterfaceEncoder");
 const loanStatus = require("../utils/loanStatus");
-const { createLoan } = require('../utils/loans')
+const { createLoan } = require('../utils/loans');
 const { encodeLoanParameter } = require("../utils/loans");
 const { escrow } = require("../utils/events");
 const { withData } = require("leche");

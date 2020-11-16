@@ -102,7 +102,10 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
       oracleValue.toString()
     )
 
-    const loanTerms = createLoanTerms(borrower, recipient, interestRate, collateralRatio, maxLoanAmount, loanDuration)
+    const loanTerms = createLoanTerms(borrower, recipient, interestRate, collateralRatio, maxLoanAmount, loanDuration);
+
+    const loan = createLoan({ id: mockLoanID, loanTerms, collateral: lastCollateralIn, status: TERMS_SET, liquidated: false});
+
     await instance.setLoan(mockLoanID, loanTerms, termsExpiry, 0, 0, lastCollateralIn, 0, 0, 0, TERMS_SET, false)
 
     return async function afterAssert(tx) {

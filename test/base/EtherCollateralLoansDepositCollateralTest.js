@@ -2,6 +2,7 @@
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS, ACTIVE } = require('../utils/consts');
 const { createLoanTerms } = require('../utils/structs');
+const { createLoan } = require('../utils/loans');
 
 const { loans } = require('../utils/events');
 
@@ -51,6 +52,9 @@ contract('EtherCollateralLoansDepositCollateralTest', function (accounts) {
         it(t('user', 'depositCollateral', 'Should able to deposit collateral.', false), async function() {
             // Setup
             const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, 0, 0, 0)
+            
+            const loan = createLoan({ id: mockLoanID, loanTerms, loanStartTime, collateral: loanCollateral, principalOwed: loanPrincipalOwed, interestOwed: loanInterestOwed, borrowedAmount: loanTerms.maxLoanAmount, status: ACTIVE, liquidated: false});
+
             await instance.setLoan(mockLoanID, loanTerms, 0, 0, mockCollateral, 0, 0, 0, loanTerms.maxLoanAmount, ACTIVE, false)
 
             const ethAmount = incorrectEthValue ? msgValue+1 : msgValue

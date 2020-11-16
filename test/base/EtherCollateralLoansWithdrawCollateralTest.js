@@ -83,8 +83,12 @@ contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
     ) {
         it(t('user', 'withdrawCollateral', 'Should able to withdraw collateral.', false), async function() {
             // Setup
-            const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, 0)
+            const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, 0);
+
+            const loan = createLoan({ id: mockLoanID, loanTerms, collateral: loanCollateral, principalOwed: loanPrincipalOwed, interestOwed: loanInterestOwed, borrowedAmount: loanTerms.maxLoanAmount, status: ACTIVE, liquidated: false});
+
             await instance.setLoan(mockLoanID, loanTerms, 0, 0, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, loanTerms.maxLoanAmount, ACTIVE, false)
+            
             await instance.setTotalCollateral(totalCollateral)
             const totalBefore = await instance.totalCollateral.call()
             assert.equal(totalCollateral.toString(), totalBefore.toString(), 'collateral not set')
