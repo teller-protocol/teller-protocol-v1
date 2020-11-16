@@ -13,8 +13,7 @@ const assertLoanValues = async (
     interestOwed,
     liquidated,
     hasEscrow,
-    escrowTotalValueEth,
-    escrowTotalValueToken,
+    escrowLoanValue,
   }
 ) => {
   const { artifacts } = testContext
@@ -45,15 +44,10 @@ const assertLoanValues = async (
     }
   }
 
-  if (loanInfo.escrow !== NULL_ADDRESS &&(escrowTotalValueToken != null || escrowTotalValueEth != null)) {
+  if (loanInfo.escrow !== NULL_ADDRESS && escrowLoanValue != null) {
     const escrow = await artifacts.require('Escrow').at(loanInfo.escrow)
-    const { valueInToken, valueInEth } = await escrow.calculateTotalValue();
-    if (escrowTotalValueToken != null) {
-      assert.strictEqual(valueInToken.toString(), escrowTotalValueToken.toString(), 'Unexpected loan escrow valueInToken');
-    }
-    if (escrowTotalValueEth != null) {
-      assert.strictEqual(valueInEth.toString(), escrowTotalValueEth.toString(), 'Unexpected loan escrow valueInEth');
-    }
+    const loanValue = await escrow.calculateLoanValue();
+    assert.strictEqual(loanValue.toString(), escrowLoanValue.toString(), 'Unexpected loan escrow valueInToken');
   }
 };
 

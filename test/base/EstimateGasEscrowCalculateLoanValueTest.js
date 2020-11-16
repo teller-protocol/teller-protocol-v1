@@ -17,7 +17,7 @@ const DAIMock = artifacts.require("./mock/token/DAIMock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const Escrow = artifacts.require("./mock/base/EscrowMock.sol");
 
-contract("EstimateGasEscrowCalculateTotalValueTest", function(accounts) {
+contract("EstimateGasEscrowCalculateLoanValueTest", function(accounts) {
   const loansEncoder = new LoansBaseInterfaceEncoder(web3);
   
   const baseGasCost = 700000; // Gas cost with 1 token in wallet
@@ -61,7 +61,7 @@ contract("EstimateGasEscrowCalculateTotalValueTest", function(accounts) {
     collateralRatio,
     collateralIsEth
   ) {
-    it(t("escrow", "calculateTotalValue", "Should be able to calculate its total value of all assets owned.", false), async function() {
+    it(t("escrow", "calculateLoanValue", "Should be able to calculate its total value of all assets owned.", false), async function() {
       const tokensAddresses = await createMocks(DAIMock, tokenAmounts.length);
       await instance.externalSetTokens(tokensAddresses);
       const expectedMaxGas = expectedGasCost(tokenAmounts.length);
@@ -99,7 +99,7 @@ contract("EstimateGasEscrowCalculateTotalValueTest", function(accounts) {
       await instance.mockValueOfIn(ETH_ADDRESS, lendingAddress, valueInToken);
 
       // Invocation
-      const result = await instance.calculateTotalValue.estimateGas();
+      const result = await instance.calculateLoanValue.estimateGas();
       // Assertions
       assert(parseInt(result) <= expectedMaxGas, 'Gas usage exceeded network gas limit.');
     });

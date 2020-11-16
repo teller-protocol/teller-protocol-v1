@@ -51,6 +51,12 @@ contract EtherCollateralLoansMock is EtherCollateralLoans {
         });
     }
 
+    function setLoan(TellerCommon.Loan memory loan) public {
+        require(loan.loanTerms.maxLoanAmount >= loan.borrowedAmount, "BORROWED_AMOUNT_EXCEEDS_MAX");
+        totalCollateral += loan.collateral;
+        loans[loan.id] = loan;
+    }
+
     function externalCreateEscrow(uint256 loanID) external returns (address) {
         return super._createEscrow(loanID);
     }
