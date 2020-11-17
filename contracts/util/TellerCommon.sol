@@ -181,8 +181,9 @@ library TellerCommon {
     struct LoanCollateralInfo {
         uint256 collateral;
         uint256 valueInLendingTokens;
-        uint256 neededInLendingTokens;
-        uint256 neededInCollateralTokens;
+        uint256 escrowLoanValue;
+        int256 neededInLendingTokens;
+        int256 neededInCollateralTokens;
         bool moreCollateralRequired;
     }
 
@@ -199,7 +200,7 @@ library TellerCommon {
     struct LoanLiquidationInfo {
         LoanCollateralInfo collateralInfo;
         uint256 amountToLiquidate;
-        uint256 rewardInCollateral;
+        int256 rewardInCollateral;
         bool liquidable;
     }
 
