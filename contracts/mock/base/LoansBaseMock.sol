@@ -73,14 +73,14 @@ contract LoansBaseMock is LoansBase, BaseMock {
 
     function mockGetCollateralInfo(
         uint256 loanID,
-        uint256 neededInLending,
-        uint256 neededInCollateral
+        int256 neededInLending,
+        int256 neededInCollateral
     ) external {
         mockCollateralInfo[loanID].collateral = loans[loanID].collateral;
         mockCollateralInfo[loanID].neededInLendingTokens = neededInLending;
         mockCollateralInfo[loanID].neededInCollateralTokens = neededInCollateral;
         mockCollateralInfo[loanID].moreCollateralRequired =
-            neededInCollateral > loans[loanID].collateral;
+            neededInCollateral > int256(loans[loanID].collateral);
     }
 
     function _getCollateralInfo(uint256 loanID)

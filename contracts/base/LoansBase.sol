@@ -39,6 +39,7 @@ contract LoansBase is LoansInterface, Base {
     using AddressLib for address payable;
     using SafeMath for uint256;
     using NumbersLib for uint256;
+    using NumbersLib for int256;
     using ERC20DetailedLib for ERC20Detailed;
 
     /* State Variables */
@@ -200,10 +201,16 @@ contract LoansBase is LoansInterface, Base {
         require(msg.sender == loans[loanID].loanTerms.borrower, "CALLER_DOESNT_OWN_LOAN");
         require(amount > 0, "CANNOT_WITHDRAW_ZERO");
 
-        (, uint256 neededInCollateralTokens) = _getCollateralNeededInfo(loanID);
-        // Withdrawal amount holds the amount of excess collateral in the loan
-        uint256 withdrawalAmount = loans[loanID].collateral.sub(neededInCollateralTokens);
-        require(withdrawalAmount >= amount, "COLLATERAL_AMOUNT_TOO_HIGH");
+        (, int256 neededInCollateralTokens, ) = _getCollateralNeededInfo(loanID);
+        if (neededInCollateralTokens > 0) {
+            // Withdrawal amount holds the amount of excess collateral in the loan
+            uint256 withdrawalAmount = loans[loanID].collateral.sub(
+                uint256(neededInCollateralTokens)
+            );
+            require(withdrawalAmount >= amount, "COLLATERAL_AMOUNT_TOO_HIGH");
+        } else {
+            require(loans[loanID].collateral == amount, "COLLATERAL_AMOUNT_NOT_MATCH");
+        }
 
         // Update the contract total and the loan collateral total
         _payOutCollateral(loanID, amount, msg.sender);
@@ -455,14 +462,14 @@ contract LoansBase is LoansInterface, Base {
         TellerCommon.LoanLiquidationInfo memory liquidationInfo,
         address payable recipient
     ) internal {
-        if (liquidationInfo.rewardInCollateral < loans[loanID].collateral) {
-            _payOutCollateral(loanID, liquidationInfo.rewardInCollateral, recipient);
-        } else if (liquidationInfo.rewardInCollateral >= loans[loanID].collateral) {
-            uint256 remainingCollateralAmount = liquidationInfo.rewardInCollateral -
-                loans[loanID].collateral;
+        require(liquidationInfo.rewardInCollateral > 0, "LIQUIDATION_REWARD_NEGATIVE");
 
+        uint256 reward = uint256(liquidationInfo.rewardInCollateral);
+        if (reward < loans[loanID].collateral) {
+            _payOutCollateral(loanID, reward, recipient);
+        } else if (reward >= loans[loanID].collateral) {
+            uint256 remainingCollateralAmount = reward.sub(loans[loanID].collateral);
             _payOutCollateral(loanID, loans[loanID].collateral, recipient);
-
             if (remainingCollateralAmount > 0 && loans[loanID].escrow != address(0x0)) {
                 EscrowInterface(loans[loanID].escrow).claimTokensByCollateralValue(
                     recipient,
@@ -494,16 +501,20 @@ contract LoansBase is LoansInterface, Base {
         view
         returns (TellerCommon.LoanCollateralInfo memory)
     {
-        (uint256 neededInLending, uint256 neededInCollateral) = _getCollateralNeededInfo(
-            loanID
-        );
+        (
+            int256 neededInLending,
+            int256 neededInCollateral,
+            uint256 escrowLoanValue
+        ) = _getCollateralNeededInfo(loanID);
         return
             TellerCommon.LoanCollateralInfo({
                 collateral: loans[loanID].collateral,
                 valueInLendingTokens: _getCollateralInLendingTokens(loanID),
+                escrowLoanValue: escrowLoanValue,
                 neededInLendingTokens: neededInLending,
                 neededInCollateralTokens: neededInCollateral,
-                moreCollateralRequired: neededInCollateral > loans[loanID].collateral
+                moreCollateralRequired: neededInCollateral >
+                    int256(loans[loanID].collateral)
             });
     }
 
@@ -532,17 +543,32 @@ contract LoansBase is LoansInterface, Base {
     function _getCollateralNeededInfo(uint256 loanID)
         internal
         view
-        returns (uint256 neededInLendingTokens, uint256 neededInCollateralTokens)
+        returns (
+            int256 neededInLendingTokens,
+            int256 neededInCollateralTokens,
+            uint256 escrowLoanValue
+        )
     {
         // Get collateral needed in lending tokens.
-        neededInLendingTokens = _getCollateralNeededInTokens(loanID);
-        neededInCollateralTokens = neededInLendingTokens == 0
-            ? 0
-            : settings().chainlinkAggregator().valueFor(
+        (neededInLendingTokens, escrowLoanValue) = _getCollateralNeededInTokens(loanID);
+
+        if (neededInLendingTokens == 0) {
+            neededInCollateralTokens = 0;
+        } else {
+            uint256 value = settings().chainlinkAggregator().valueFor(
                 lendingPool.lendingToken(),
                 collateralToken,
-                neededInLendingTokens
+                uint256(
+                    neededInLendingTokens < 0
+                        ? -neededInLendingTokens
+                        : neededInLendingTokens
+                )
             );
+            neededInCollateralTokens = int256(value);
+            if (neededInLendingTokens < 0) {
+                neededInCollateralTokens *= -1;
+            }
+        }
     }
 
     /**
@@ -555,25 +581,45 @@ contract LoansBase is LoansInterface, Base {
     function _getCollateralNeededInTokens(uint256 loanID)
         internal
         view
-        returns (uint256 neededInLendingTokens)
+        returns (int256 neededInLendingTokens, uint256 escrowLoanValue)
     {
         if (!_isLoanActiveOrSet(loanID) || loans[loanID].loanTerms.collateralRatio == 0) {
-            return 0;
+            return (0, 0);
         }
 
-        uint256 owed = _getTotalOwed(loanID);
-        neededInLendingTokens = owed.percent(loans[loanID].loanTerms.collateralRatio);
+        /*
+            The collateral to principal owed ratio is the sum of:
+                * collateral buffer percent
+                * loan interest rate
+                * liquidation reward percent
+                * X factor of additional collateral
+        */
+        // To take out a loan (if status == TermsSet), the required collateral is (principal owed * the collateral ratio).
+        uint256 requiredRatio = loans[loanID].loanTerms.collateralRatio;
+        neededInLendingTokens = int256(loans[loanID].principalOwed);
 
-        // The collateral ratio includes the buffer required to take out a loan.
-        // If active, we should subtract the buffer amount to get our liquidation value.
+        // For the loan to not be liquidated (when status == Active), the minimum collateral is (principal owed * X collateral factor).
+        // If the loan has an escrow account, the minimum collateral is ((principal owed - escrow value) * X collateral factor).
         if (loans[loanID].status == TellerCommon.LoanStatus.Active) {
             uint256 bufferPercent = settings().getPlatformSettingValue(
                 settings().consts().COLLATERAL_BUFFER_SETTING()
             );
-            neededInLendingTokens = neededInLendingTokens.sub(
-                neededInLendingTokens.percent(bufferPercent)
+            uint256 liquidateEthPrice = settings().getPlatformSettingValue(
+                settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
             );
+            requiredRatio = requiredRatio
+                .sub(loans[loanID].loanTerms.interestRate)
+                .sub(bufferPercent)
+                .sub(liquidateEthPrice.diffOneHundredPercent());
+
+            if (loans[loanID].escrow != address(0)) {
+                escrowLoanValue = EscrowInterface(loans[loanID].escrow)
+                    .calculateLoanValue();
+                neededInLendingTokens -= int256(escrowLoanValue);
+            }
         }
+
+        neededInLendingTokens = neededInLendingTokens.percent(requiredRatio);
     }
 
     function _isLoanActiveOrSet(uint256 loanID) internal view returns (bool) {
@@ -614,19 +660,20 @@ contract LoansBase is LoansInterface, Base {
     }
 
     /**
-        @notice Make a payment towards the principal and interest for a specified loan
-        @param loanID The ID of the loan the payment is for
-        @param toPay The amount of tokens to pay to the loan
+        @notice Make a payment towards the interest and principal  for a specified loan.
+        @notice Payments are made towards the interest first.
+        @param loanID The ID of the loan the payment is for.
+        @param toPay The amount of tokens to pay to the loan.
      */
     function _payLoan(uint256 loanID, uint256 toPay) internal {
-        if (toPay > loans[loanID].principalOwed) {
-            uint256 leftToPay = toPay;
-            leftToPay = leftToPay.sub(loans[loanID].principalOwed);
-            loans[loanID].principalOwed = 0;
-            loans[loanID].interestOwed = loans[loanID].interestOwed.sub(leftToPay);
+        uint256 leftToPay = toPay;
+        if (loans[loanID].interestOwed > 0 && toPay > loans[loanID].interestOwed) {
+            leftToPay = toPay.sub(loans[loanID].interestOwed);
+            loans[loanID].interestOwed = 0;
         } else {
-            loans[loanID].principalOwed = loans[loanID].principalOwed.sub(toPay);
+            loans[loanID].interestOwed = loans[loanID].interestOwed.sub(toPay);
         }
+        loans[loanID].principalOwed = loans[loanID].principalOwed.sub(leftToPay);
     }
 
     /**
@@ -676,30 +723,19 @@ contract LoansBase is LoansInterface, Base {
     {
         liquidationInfo.collateralInfo = _getCollateralInfo(loanID);
         liquidationInfo.amountToLiquidate = _getTotalOwed(loanID);
-        liquidationInfo.rewardInCollateral = liquidationInfo
-            .collateralInfo
-            .neededInCollateralTokens;
 
-        if (
-            liquidationInfo.collateralInfo.moreCollateralRequired &&
-            loans[loanID].escrow != address(0)
-        ) {
-            uint256 extraCollateralNeeded = liquidationInfo
-                .collateralInfo
-                .neededInCollateralTokens
-                .sub(liquidationInfo.collateralInfo.collateral);
-            uint256 escrowValue = settings().chainlinkAggregator().valueFor(
-                lendingPool.lendingToken(),
-                collateralToken,
-                EscrowInterface(loans[loanID].escrow).calculateLoanValue()
-            );
-            if (escrowValue <= extraCollateralNeeded) {
-                liquidationInfo.rewardInCollateral = liquidationInfo
-                    .collateralInfo
-                    .collateral
-                    .add(escrowValue);
-            }
-        }
+        // Maximum reward is the calculated value of required collateral minus the principal owed (see _getCollateralNeededInTokens).
+        int256 maxReward = liquidationInfo.collateralInfo.neededInLendingTokens - int256(loans[loanID].principalOwed);
+        // Available value to payout the liquidator is the value left in collateral + the escrow value. Since the liquidator paid the amount owed, we subtract only the principal amount owed because the collateral ratio already includes the interest.
+        uint256 availableRewardValue = liquidationInfo
+            .collateralInfo
+            .valueInLendingTokens
+            .add(liquidationInfo.collateralInfo.escrowLoanValue)
+            .sub(loans[loanID].principalOwed);
+        // If there is more than the maximum reward available, only pay the liquidator the max and leave the rest for the borrower to claim.
+        liquidationInfo.rewardInCollateral = int256(availableRewardValue) < maxReward
+            ? int256(availableRewardValue)
+            : maxReward;
 
         TellerCommon.Loan memory loan = loans[loanID];
         liquidationInfo.liquidable =
