@@ -16,9 +16,10 @@ library NumbersLib {
     }
 
     function diffOneHundredPercent(uint256 self) internal pure returns (uint256) {
-        return ONE_HUNDRED_PERCENT() > self
-            ? ONE_HUNDRED_PERCENT().sub(self)
-            : self.sub(ONE_HUNDRED_PERCENT());
+        return
+            ONE_HUNDRED_PERCENT() > self
+                ? ONE_HUNDRED_PERCENT().sub(self)
+                : self.sub(ONE_HUNDRED_PERCENT());
     }
 
     /**
@@ -29,8 +30,9 @@ library NumbersLib {
     function percent(uint256 self, uint256 percentage) internal pure returns (uint256) {
         return self.mul(percentage).div(ONE_HUNDRED_PERCENT());
     }
+
     function percent(int256 self, uint256 percentage) internal pure returns (int256) {
-        return self * int(percentage) / int(ONE_HUNDRED_PERCENT());
+        return (self * int256(percentage)) / int256(ONE_HUNDRED_PERCENT());
     }
 
     function abs(int256 self) internal pure returns (uint256) {

@@ -725,7 +725,8 @@ contract LoansBase is LoansInterface, Base {
         liquidationInfo.amountToLiquidate = _getTotalOwed(loanID);
 
         // Maximum reward is the calculated value of required collateral minus the principal owed (see _getCollateralNeededInTokens).
-        int256 maxReward = liquidationInfo.collateralInfo.neededInLendingTokens - int256(loans[loanID].principalOwed);
+        int256 maxReward = liquidationInfo.collateralInfo.neededInLendingTokens -
+            int256(loans[loanID].principalOwed);
         // Available value to payout the liquidator is the value left in collateral + the escrow value. Since the liquidator paid the amount owed, we subtract only the principal amount owed because the collateral ratio already includes the interest.
         uint256 availableRewardValue = liquidationInfo
             .collateralInfo
