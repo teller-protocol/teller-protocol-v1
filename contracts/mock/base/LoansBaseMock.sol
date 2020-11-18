@@ -67,8 +67,8 @@ contract LoansBaseMock is LoansBase, BaseMock {
         loans[loanID].escrow = escrowAddress;
     }
 
-    function externalEscrowClaimTokens(uint256 loanID, address recipient) external {
-        EscrowInterface(loans[loanID].escrow).claimTokens(recipient);
+    function externalEscrowClaimTokens(uint256 loanID) external {
+        EscrowInterface(loans[loanID].escrow).claimTokens();
     }
 
     function mockGetCollateralInfo(

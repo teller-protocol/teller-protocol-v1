@@ -22,6 +22,11 @@ interface EscrowInterface {
     function getBorrower() external view returns (address);
 
     /**
+        @notice Returns this Escrow's loan instance. 
+     */
+    function getLoan() external view returns (TellerCommon.Loan memory);
+
+    /**
         @notice Calculate the value of the loan by getting the value of all tokens the Escrow owns.
         @return Escrow total value denoted in the lending token.
      */
@@ -36,10 +41,9 @@ interface EscrowInterface {
     /**
         @notice Sends the tokens owned by this escrow to the recipient.
         @dev The loan must not be active.
-        @dev The recipient must either be the loan borrower OR the loan must be already liquidated.
-        @param recipient address to send the tokens to.
+        @dev The recipient must either be the loan borrower AND the loan must be already liquidated.
     */
-    function claimTokens(address recipient) external;
+    function claimTokens() external;
 
     /**
         @notice Send the equivilant of tokens owned by this escrow (in collateral value) to the recipient,

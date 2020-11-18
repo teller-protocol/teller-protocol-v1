@@ -1,6 +1,7 @@
 // JS Libraries
 const { createLoanTerms } = require("../utils/structs");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
+const { createLoan } = require('../utils/loans');
 const { t, NULL_ADDRESS, ACTIVE } = require("../utils/consts");
 const withData = require("leche").withData;
 
@@ -79,7 +80,16 @@ contract("EscrowFactoryCreateEscrowTest", function(accounts) {
       // Setup
       const borrower = borrowerIndex === -1 ? NULL_ADDRESS : accounts[borrowerIndex];
       const loanTerms = createLoanTerms(borrower, NULL_ADDRESS, 0, 0, 0, 0);
-      await loans.setLoan(loanID, loanTerms, 0, 0, 123456, 0, 0, 0, loanTerms.maxLoanAmount, ACTIVE, false);
+
+      const loan = createLoan({
+        id: loanID,
+        loanTerms,
+        collateral: 123456,
+        borrowedAmount: loanTerms.maxLoanAmount,
+        status: ACTIVE,
+        liquidated: false
+      });
+      await loans.setLoan(loan);
 
       if (isPaused) {
         await settingsInstance.pause({ from: owner });

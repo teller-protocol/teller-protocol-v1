@@ -64,24 +64,23 @@ contract("EtherCollateralLoansGetCollateralInfoTest", function(accounts) {
   });
 
   withData({
-    _1_non_existent: [ NON_EXISTENT, 0, 0, false, 0, 0, 0, false ],
-    _2_closed: [ CLOSED, 10000, 100, false, 7000, 7000, 5000, false ],
+    // _1_non_existent: [ NON_EXISTENT, 0, 0, false, 0, 0, 0, false ],
+    // _2_closed: [ CLOSED, 10000, 100, false, 7000, 7000, 5000, false ],
     _3_terms_set_with_more_collateral_required: [ TERMS_SET, 10000, 100, false, 6000, 7000, 5000, true ],
-    _4_terms_set_with_expected_collateral: [ TERMS_SET, 10000, 100, false, 7000, 7000, 5000, false ],
-    _5_terms_set_with_extra_collateral: [ TERMS_SET, 10000, 100, false, 8000, 7000, 5000, false ],
-    _6_active_with_escrow_with_more_collateral_required: [ ACTIVE, 10000, 100, true, 10000, 6000, 7000, 5000, true ],
-    _7_active_with_escrow_with_expected_collateral: [ ACTIVE, 10000, 100, true, 10000, 7000, 7000, 5000, false ],
-    _8_active_with_escrow_with_extra_collateral: [ ACTIVE, 10000, 100, true, 10000, 8000, 7000, 5000, false ],
-    _9_active_with_no_escrow_with_more_collateral_required: [ ACTIVE, 10000, 100, false, 6000, 7000, 5000, true ],
-    _10_active_with_no_escrow_with_expected_collateral: [ ACTIVE, 10000, 100, false, 7000, 7000, 5000, false ],
-    _11_active_with_no_escrow_with_extra_collateral: [ ACTIVE, 10000, 100, false, 8000, 7000, 5000, false ],
-    _12_active_with_escrow_value_low: [ ACTIVE, 10000, 100, true, 5000, 8000, 7000, 5000, true ],
+    // _4_terms_set_with_expected_collateral: [ TERMS_SET, 10000, 100, false, 7000, 7000, 5000, false ],
+    // _5_terms_set_with_extra_collateral: [ TERMS_SET, 10000, 100, false, 8000, 7000, 5000, false ],
+    // _6_active_with_escrow_with_more_collateral_required: [ ACTIVE, 10000, 100, true, 10000, 6000, 7000, 5000, true ],
+    // _7_active_with_escrow_with_expected_collateral: [ ACTIVE, 10000, 100, true, 10000, 7000, 7000, 5000, false ],
+    // _8_active_with_escrow_with_extra_collateral: [ ACTIVE, 10000, 100, true, 10000, 8000, 7000, 5000, false ],
+    // _9_active_with_no_escrow_with_more_collateral_required: [ ACTIVE, 10000, 100, false, 6000, 7000, 5000, true ],
+    // _10_active_with_no_escrow_with_expected_collateral: [ ACTIVE, 10000, 100, false, 7000, 7000, 5000, false ],
+    // _11_active_with_no_escrow_with_extra_collateral: [ ACTIVE, 10000, 100, false, 8000, 7000, 5000, false ],
+    // _12_active_with_escrow_value_low: [ ACTIVE, 10000, 100, true, 8000, 7000, 5000, true ],
   }, function(
     status,
     loanAmount,
-    interestOwed,
+    interestRate,
     hasEscrow,
-    escrowValue,
     collateralAmount,
     neededInCollateral,
     collateralRatio,
@@ -90,9 +89,8 @@ contract("EtherCollateralLoansGetCollateralInfoTest", function(accounts) {
     it(t("user", "getCollateralInfo", "Should able to get collateral info from a loan.", false), async function() {
       // Setup
       const loanID = 1;
-      console.log({collateralRatio});
-      const loanTerms = createLoanTerms(accounts[2], NULL_ADDRESS, 0, collateralRatio, loanAmount, 0);
-      console.log({loanTerms});
+      const loanTerms = createLoanTerms(accounts[2], NULL_ADDRESS, interestRate, collateralRatio, loanAmount, 0);
+      const interestOwed = new BigNumber(loanAmount).multipliedBy(interestRate).div(10000).toString();
       const loan = createLoan({
         id: loanID,
         loanTerms,

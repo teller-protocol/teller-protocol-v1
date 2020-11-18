@@ -22,10 +22,12 @@ contract("EstimateGasEscrowClaimTokensTest", function(accounts) {
 
   let instance;
   let loans;
+  let borrower = accounts[2];
 
   beforeEach(async () => {
     instance = await Escrow.new();
     loans = await Mock.new();
+    await instance.mockInitialize(loans.address, 0, { from: borrower });
     await instance.mockLoans(loans.address);
   });
 
@@ -44,12 +46,11 @@ contract("EstimateGasEscrowClaimTokensTest", function(accounts) {
     tokenCount,
   ) {
     it(t("escrow", "claimTokens", "Should be able to claim all tokens in the escrow", false), async function() {
-      const borrower = accounts[2]
       await loans.givenMethodReturn(
         loansEncoder.encodeLoans(),
-        encodeLoanParameter(web3, { status: Closed, liquidated: false, loanTerms: { borrower } })
+        encodeLoanParameter(web3, { status: Closed, liquidated: true, loanTerms: { borrower } })
       );
-
+      
       const tokensAddresses = await createMocks(DAIMock, tokenCount);
       await instance.externalSetTokens(tokensAddresses);
       const expectedMaxGas = expectedGasCost(tokenCount);
@@ -60,7 +61,7 @@ contract("EstimateGasEscrowClaimTokensTest", function(accounts) {
       }
 
       // Invocation
-      const result = await instance.claimTokens.estimateGas(borrower);
+      const result = await instance.claimTokens.estimateGas({ from: borrower });
       
       // Assertions
       assert(parseInt(result) <= expectedMaxGas, 'Gas usage exceeded network gas limit.');

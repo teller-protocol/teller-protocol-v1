@@ -145,9 +145,9 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
     }
 
     /**
-        @notice Sends the tokens owned by this escrow to the recipient.
+        @notice Sends the tokens owned by this escrow to the owner.
         @dev The loan must not be active.
-        @dev The recipient must either be the loan borrower AND the loan must be already liquidated.
+        @dev The recipient must be the loan borrower AND the loan must be already liquidated.
     */
     function claimTokens() external onlyOwner() {
         require(getLoan().status == TellerCommon.LoanStatus.Closed, "LOAN_NOT_CLOSED");
