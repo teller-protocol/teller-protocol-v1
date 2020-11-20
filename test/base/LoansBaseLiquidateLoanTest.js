@@ -7,13 +7,13 @@ const { createLoanTerms } = require("../utils/structs");
 const Timer = require("../../scripts/utils/Timer");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const { createLoan, createLiquidationInfo } = require('../utils/loans');
+const { loans } = require('../utils/events');
 
 const ERC20InterfaceEncoder = require("../utils/encoders/ERC20InterfaceEncoder");
 const LendingPoolInterfaceEncoder = require("../utils/encoders/LendingPoolInterfaceEncoder");
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
-const DAI = artifacts.require("./mock/token/DAIMock.sol");
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
@@ -81,8 +81,8 @@ contract("LoansBaseLiquidateLoanTest", function(accounts) {
       amountToLiquidate: 0,
       rewardToLiquidate: 0,
       liquidable: false,
-      mustFail: false,
-      expectedErrorMessage: null 
+      mustFail: true,
+      expectedErrorMessage: "DOESNT_NEED_LIQUIDATION" 
   }],
     _2_is_liquidable: [ {
       loanPrincipalOwed: 0,
@@ -98,7 +98,7 @@ contract("LoansBaseLiquidateLoanTest", function(accounts) {
       moreCollateralRequired: false,
       amountToLiquidate: 0,
       rewardToLiquidate: 0,
-      liquidable: false,
+      liquidable: true,
       mustFail: false,
       expectedErrorMessage: null 
   }],
@@ -151,31 +151,22 @@ contract("LoansBaseLiquidateLoanTest", function(accounts) {
       await instance.setLoan(loan);
       await instance.mockLiquidationInfo(mockedLiquidationInfo);
 
-      // Mint tokens to the liquidator to mock the lendingPool.liquidationPayment method
-      const token = await DAI.new();
-      await token.mint(liquidator, "8000000000000000000");
-
       try {
-        const contractBalBefore = await web3.eth.getBalance(instance.address);
-        const liquidatorBefore = await web3.eth.getBalance(liquidator);
-        const liquidationInfo = await instance.getLiquidationInfo(mockLoanID);
-        console.log({liquidationInfo});
         const result = await instance.liquidateLoan(mockLoanID, { from: liquidator });
 
         assert(!mustFail, "It should have failed because data is invalid.");
         assert(result);
 
-        const totalAfter = await instance.totalCollateral.call();
-        const contractBalAfter = await web3.eth.getBalance(instance.address);
-        const liquidatorAfter = await web3.eth.getBalance(liquidator);
-        console.log({contractBalBefore, contractBalAfter});
-
         let loan = await instance.loans.call(mockLoanID);
 
-        assert.equal(parseInt(loan["collateral"]), 0, "Loan collateral not match");
-        assert.equal(totalCollateral.minus(loanCollateral).toFixed(), totalAfter.toString(), "Total collateral not match");
-        assert.equal(BigNumber(contractBalBefore).minus(loanCollateral).toFixed(), contractBalAfter.toString(), "Contract balance not match");
-        // assert(parseInt(liquidatorBefore) < parseInt(liquidatorAfter), "Liquidator balance not increased");
+        // - Assert loan status was changed
+        // - The liquidated bool on the loan is true
+        // - Event emitted 
+        
+        loans
+            .loanLiquidated(result)
+            .emitted(mockLoanID, loanBorrower, liquidator, loanCollateral, amountToLiquidate);
+
         assert.equal(parseInt(loan["status"]), CLOSED, "Loan not closed");
         assert.equal(loan["liquidated"], true, "Loan not liquidated");
 
