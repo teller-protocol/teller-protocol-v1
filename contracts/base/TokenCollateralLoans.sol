@@ -63,6 +63,9 @@ contract TokenCollateralLoans is LoansBase {
         );
         require(amount > 0, "CANNOT_DEPOSIT_ZERO");
 
+        // Transfer collateral tokens to this contract.
+        _collateralTokenTransferFrom(msg.sender, amount);
+
         // Update the loan collateral and total. Transfer tokens to this contract.
         _payInCollateral(loanID, amount);
 
@@ -88,37 +91,7 @@ contract TokenCollateralLoans is LoansBase {
         isBorrower(request.borrower)
         withValidLoanRequest(request)
     {
-        uint256 loanID = _getAndIncrementLoanID();
-
-        (
-            uint256 interestRate,
-            uint256 collateralRatio,
-            uint256 maxLoanAmount
-        ) = loanTermsConsensus.processRequest(request, responses);
-
-        loans[loanID] = _createLoan(
-            loanID,
-            request,
-            interestRate,
-            collateralRatio,
-            maxLoanAmount
-        );
-
-        if (collateralAmount > 0) {
-            // Update collateral, totalCollateral, and lastCollateralIn
-            _payInCollateral(loanID, collateralAmount);
-        }
-
-        borrowerLoans[request.borrower].push(loanID);
-
-        _emitLoanTermsSetAndCollateralDepositedEventsIfApplicable(
-            loanID,
-            request,
-            interestRate,
-            collateralRatio,
-            maxLoanAmount,
-            collateralAmount
-        );
+        _createLoan(request, responses, collateralAmount);
     }
 
     /**
@@ -131,18 +104,12 @@ contract TokenCollateralLoans is LoansBase {
     function initialize(
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
-        address loansUtilAddress,
         address settingsAddress,
         address collateralTokenAddress
     ) external isNotInitialized() {
         collateralTokenAddress.requireNotEmpty("PROVIDE_COLL_TOKEN_ADDRESS");
 
-        _initialize(
-            lendingPoolAddress,
-            loanTermsConsensusAddress,
-            loansUtilAddress,
-            settingsAddress
-        );
+        _initialize(lendingPoolAddress, loanTermsConsensusAddress, settingsAddress);
 
         collateralToken = collateralTokenAddress;
     }
@@ -162,18 +129,6 @@ contract TokenCollateralLoans is LoansBase {
         loans[loanID].collateral = loans[loanID].collateral.sub(amount);
 
         _collateralTokenTransfer(recipient, amount);
-    }
-
-    /**
-        @notice Pays collateral in for the associated loan
-        @param loanID The ID of the loan the collateral is for
-        @param amount The amount of collateral to be paid
-     */
-    function _payInCollateral(uint256 loanID, uint256 amount) internal {
-        // Update the total collateral and loan collateral
-        super._payInCollateral(loanID, amount);
-        // Transfer collateral tokens to this contract.
-        _collateralTokenTransferFrom(msg.sender, amount);
     }
 
     /**

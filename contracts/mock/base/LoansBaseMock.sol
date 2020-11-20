@@ -21,7 +21,7 @@ contract LoansBaseMock is LoansBase, BaseMock {
     ) internal {}
 
     function externalPayLoan(uint256 loanID, uint256 toPay) external {
-        _payLoan(loanID, toPay);
+        loans[loanID].payOff(toPay);
     }
 
     function externalIsSupplyToDebtRatioValid(uint256 newLoanAmount)
@@ -144,16 +144,10 @@ contract LoansBaseMock is LoansBase, BaseMock {
     function initialize(
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
-        address loansUtilAddress,
         address settingsAddress,
         address
     ) external isNotInitialized() {
-        _initialize(
-            lendingPoolAddress,
-            loanTermsConsensusAddress,
-            loansUtilAddress,
-            settingsAddress
-        );
+        _initialize(lendingPoolAddress, loanTermsConsensusAddress, settingsAddress);
     }
 
     function depositCollateral(

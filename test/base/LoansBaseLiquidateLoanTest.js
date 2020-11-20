@@ -2,14 +2,13 @@
 const withData = require("leche").withData;
 const BigNumber = require("bignumber.js");
 
-const { t, NULL_ADDRESS, ACTIVE, CLOSED, getLatestTimestamp, ONE_HOUR, ONE_DAY } = require("../utils/consts");
+const { t, NULL_ADDRESS, ACTIVE, CLOSED, ONE_HOUR, ONE_DAY } = require("../utils/consts");
 const { createLoanTerms } = require("../utils/structs");
 const Timer = require("../../scripts/utils/Timer");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const { createLoan, createLiquidationInfo } = require('../utils/loans');
 const { loans } = require('../utils/events');
 
-const ERC20InterfaceEncoder = require("../utils/encoders/ERC20InterfaceEncoder");
 const LendingPoolInterfaceEncoder = require("../utils/encoders/LendingPoolInterfaceEncoder");
 
 // Mock contracts
@@ -23,7 +22,6 @@ contract("LoansBaseLiquidateLoanTest", function(accounts) {
   BigNumber.set({ DECIMAL_PLACES: 0, ROUNDING_MODE: 3 });
   const timer = new Timer(web3);
 
-  const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
   const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
 
   let instance;
@@ -50,12 +48,10 @@ contract("LoansBaseLiquidateLoanTest", function(accounts) {
     lendingTokenInstance = await Mock.new();
     loanTermsConsInstance = await Mock.new();
     marketsInstance = await Mock.new();
-    loansUtilInstance = await Mock.new();
     instance = await Loans.new();
     await instance.initialize(
       lendingPoolInstance.address,
       loanTermsConsInstance.address,
-      loansUtilInstance.address,
       settingsInstance.address,
       marketsInstance.address
     );

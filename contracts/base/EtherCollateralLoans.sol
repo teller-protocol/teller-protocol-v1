@@ -38,8 +38,8 @@ contract EtherCollateralLoans is LoansBase {
         whenNotPaused()
         whenLendingPoolNotPaused(address(lendingPool))
     {
-        require(
-            loans[loanID].loanTerms.borrower == borrower,
+        borrower.requireEqualTo(
+            loans[loanID].loanTerms.borrower,
             "BORROWER_LOAN_ID_MISMATCH"
         );
         require(msg.value == amount, "INCORRECT_ETH_AMOUNT");
@@ -71,36 +71,7 @@ contract EtherCollateralLoans is LoansBase {
     {
         require(msg.value == collateralAmount, "INCORRECT_ETH_AMOUNT");
 
-        uint256 loanID = _getAndIncrementLoanID();
-        (
-            uint256 interestRate,
-            uint256 collateralRatio,
-            uint256 maxLoanAmount
-        ) = loanTermsConsensus.processRequest(request, responses);
-
-        loans[loanID] = _createLoan(
-            loanID,
-            request,
-            interestRate,
-            collateralRatio,
-            maxLoanAmount
-        );
-
-        if (msg.value > 0) {
-            // Update collateral, totalCollateral, and lastCollateralIn
-            _payInCollateral(loanID, msg.value);
-        }
-
-        borrowerLoans[request.borrower].push(loanID);
-
-        _emitLoanTermsSetAndCollateralDepositedEventsIfApplicable(
-            loanID,
-            request,
-            interestRate,
-            collateralRatio,
-            maxLoanAmount,
-            msg.value
-        );
+        _createLoan(request, responses, collateralAmount);
     }
 
     /**
@@ -112,16 +83,10 @@ contract EtherCollateralLoans is LoansBase {
     function initialize(
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
-        address loansUtilAddress,
         address settingsAddress,
         address
     ) external isNotInitialized() {
-        _initialize(
-            lendingPoolAddress,
-            loanTermsConsensusAddress,
-            loansUtilAddress,
-            settingsAddress
-        );
+        _initialize(lendingPoolAddress, loanTermsConsensusAddress, settingsAddress);
 
         collateralToken = settings().ETH_ADDRESS();
     }
