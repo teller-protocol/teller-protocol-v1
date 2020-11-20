@@ -12,6 +12,7 @@ import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
 import "../interfaces/SettingsInterface.sol";
 import "../interfaces/MarketFactoryInterface.sol";
+import "./LoansBase/LoansUtilInterface.sol";
 
 // Commons
 import "./DynamicProxy.sol";
@@ -51,6 +52,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         address(DAI) => address(LINK) => Market {...}
      */
     mapping(address => mapping(address => TellerCommon.Market)) markets;
+    LoansUtilInterface public loansUtil;
 
     /* Modifiers */
 
@@ -198,12 +200,13 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         @notice It initializes this market factory instance.
         @param settingsAddress the settings contract address.
      */
-    function initialize(address settingsAddress) external isNotInitialized() {
+    function initialize(address loansUtilAddress, address settingsAddress) external isNotInitialized() {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
 
         _initialize();
 
         _setSettings(settingsAddress);
+        loansUtil = LoansUtilInterface(loansUtilAddress);
     }
 
     /** Internal Functions */
@@ -438,6 +441,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         loansProxy.initialize(
             address(lendingPoolProxy),
             address(loanTermsConsensusProxy),
+            address(loansUtil),
             address(settings()),
             collateralToken
         );

@@ -222,6 +222,7 @@ interface LoansInterface {
     function initialize(
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
+        address loansUtilAddress,
         address settingsAddress,
         address collateralTokenAddress
     ) external;

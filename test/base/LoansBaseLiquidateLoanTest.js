@@ -6,25 +6,24 @@ const { t, NULL_ADDRESS, ACTIVE, CLOSED, getLatestTimestamp, ONE_HOUR, ONE_DAY }
 const { createLoanTerms } = require("../utils/structs");
 const Timer = require("../../scripts/utils/Timer");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
-const { createLoan } = require('../utils/loans');
+const { createLoan, createLiquidationInfo } = require('../utils/loans');
 
 const ERC20InterfaceEncoder = require("../utils/encoders/ERC20InterfaceEncoder");
-const ChainlinkAggregatorEncoder = require("../utils/encoders/ChainlinkAggregatorEncoder");
 const LendingPoolInterfaceEncoder = require("../utils/encoders/LendingPoolInterfaceEncoder");
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
+const DAI = artifacts.require("./mock/token/DAIMock.sol");
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
-const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
+const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 
-contract("EtherCollateralLoansLiquidateLoanTest", function(accounts) {
+contract("LoansBaseLiquidateLoanTest", function(accounts) {
   BigNumber.set({ DECIMAL_PLACES: 0, ROUNDING_MODE: 3 });
   const timer = new Timer(web3);
 
   const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
-  const chainlinkAggregatorEncoder = new ChainlinkAggregatorEncoder(web3);
   const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
 
   let instance;
@@ -33,7 +32,6 @@ contract("EtherCollateralLoansLiquidateLoanTest", function(accounts) {
   let lendingTokenInstance;
   let settingsInstance;
   let marketsInstance;
-  let chainlinkAggregatorInstance;
 
   const mockLoanID = 2831;
 
@@ -43,21 +41,21 @@ contract("EtherCollateralLoansLiquidateLoanTest", function(accounts) {
 
   beforeEach("Setup for each test", async () => {
     settingsInstance = await createTestSettingsInstance(Settings, {
-      Mock,
+      Mock, 
+      from: accounts[0],
       initialize: true,
-      onInitialize: (instance, { chainlinkAggregator }) => {
-        chainlinkAggregatorInstance = chainlinkAggregator
-      }
     });
 
     lendingPoolInstance = await Mock.new();
     lendingTokenInstance = await Mock.new();
     loanTermsConsInstance = await Mock.new();
     marketsInstance = await Mock.new();
+    loansUtilInstance = await Mock.new();
     instance = await Loans.new();
     await instance.initialize(
       lendingPoolInstance.address,
       loanTermsConsInstance.address,
+      loansUtilInstance.address,
       settingsInstance.address,
       marketsInstance.address
     );
@@ -68,32 +66,61 @@ contract("EtherCollateralLoansLiquidateLoanTest", function(accounts) {
   });
 
   withData({
-    _1_loan_expired: [ 1900000000, 32725581, "6000000000000000000", 6512, true, 30, BigNumber("6000000000000000000"), 6, false, undefined ],
-    _2_under_collateralized: [ 1900000000, 32725581, "5942423100000000000", 6512, false, 30, BigNumber("6000000000000000000"), 6, false, undefined ],
-    _3_collateral_ratio_zero: [ 1900000000, 32725581, "0", 0, false, 30, BigNumber("6000000000000000000"), 6, true, "DOESNT_NEED_LIQUIDATION" ],
-    _4_collateral_ratio_gt_zero_good_standing: [ 1900000000, 32725581, "6000000000000000000", 6512, false, 30, BigNumber("6000000000000000000"), 6, true, "DOESNT_NEED_LIQUIDATION" ]
-  }, function(
+    _1_not_liquidable: [ {
+      loanPrincipalOwed: 0,
+      loanInterestOwed: 0,
+      loanCollateral: 0,
+      loanCollateralRatio: 0,
+      expired: true,
+      loanDurationInDays: 0,
+      valueInLendingTokens: 0,
+      escrowLoanValue: 0,
+      neededInLendingTokens: 0,
+      neededInCollateralTokens: 0, 
+      moreCollateralRequired: false,
+      amountToLiquidate: 0,
+      rewardToLiquidate: 0,
+      liquidable: false,
+      mustFail: false,
+      expectedErrorMessage: null 
+  }],
+    _2_is_liquidable: [ {
+      loanPrincipalOwed: 0,
+      loanInterestOwed: 0,
+      loanCollateral: 0,
+      loanCollateralRatio: 0,
+      expired: true,
+      loanDurationInDays: 0,
+      valueInLendingTokens: 0,
+      escrowLoanValue: 0,
+      neededInLendingTokens: 0,
+      neededInCollateralTokens: 0, 
+      moreCollateralRequired: false,
+      amountToLiquidate: 0,
+      rewardToLiquidate: 0,
+      liquidable: false,
+      mustFail: false,
+      expectedErrorMessage: null 
+  }],
+  }, function({
     loanPrincipalOwed,
     loanInterestOwed,
     loanCollateral,
     loanCollateralRatio,
     expired,
     loanDurationInDays,
-    oracleValue,
-    tokenDecimals,
+    valueInLendingTokens,
+    escrowLoanValue,
+    neededInLendingTokens,
+    neededInCollateralTokens,
+    moreCollateralRequired,
+    amountToLiquidate,
+    rewardToLiquidate,
+    liquidable,
     mustFail,
     expectedErrorMessage
-  ) {
+  }) {
     it(t("user", "liquidate", "Should able to (or not) liquidate a loan.", mustFail), async function() {
-      // encode current token price
-      await chainlinkAggregatorInstance.givenMethodReturnUint(
-        chainlinkAggregatorEncoder.encodeValueFor(),
-        oracleValue.toString()
-      );
-
-      // encode token decimals
-      const encodeDecimals = erc20InterfaceEncoder.encodeDecimals();
-      await lendingTokenInstance.givenMethodReturnUint(encodeDecimals, tokenDecimals);
 
       // set up the loan information
       const currentTimestampSeconds = await timer.getCurrentTimestampInSeconds();
@@ -107,16 +134,32 @@ contract("EtherCollateralLoansLiquidateLoanTest", function(accounts) {
       
       const loan = createLoan({ id: mockLoanID, loanTerms, loanStartTime, collateral: loanCollateral, principalOwed: loanPrincipalOwed, interestOwed: loanInterestOwed, borrowedAmount: loanTerms.maxLoanAmount, status: ACTIVE, liquidated: false});
 
-      await instance.setLoan(loan);
-      await instance.setTotalCollateral(totalCollateral);
+      const mockedLiquidationInfo = createLiquidationInfo({
+        collateralInfo: {
+          collateral: loanCollateral,
+          valueInLendingTokens,
+          escrowLoanValue,
+          neededInLendingTokens,
+          neededInCollateralTokens,
+          moreCollateralRequired
+        },
+        amountToLiquidate,
+        rewardToLiquidate,
+        liquidable,
+      });
 
-      // give the contract collateral (mock has a fallback)
-      await web3.eth.sendTransaction({ from: accounts[1], to: instance.address, value: totalCollateral });
+      await instance.setLoan(loan);
+      await instance.mockLiquidationInfo(mockedLiquidationInfo);
+
+      // Mint tokens to the liquidator to mock the lendingPool.liquidationPayment method
+      const token = await DAI.new();
+      await token.mint(liquidator, "8000000000000000000");
 
       try {
         const contractBalBefore = await web3.eth.getBalance(instance.address);
         const liquidatorBefore = await web3.eth.getBalance(liquidator);
-
+        const liquidationInfo = await instance.getLiquidationInfo(mockLoanID);
+        console.log({liquidationInfo});
         const result = await instance.liquidateLoan(mockLoanID, { from: liquidator });
 
         assert(!mustFail, "It should have failed because data is invalid.");
@@ -125,15 +168,16 @@ contract("EtherCollateralLoansLiquidateLoanTest", function(accounts) {
         const totalAfter = await instance.totalCollateral.call();
         const contractBalAfter = await web3.eth.getBalance(instance.address);
         const liquidatorAfter = await web3.eth.getBalance(liquidator);
+        console.log({contractBalBefore, contractBalAfter});
 
         let loan = await instance.loans.call(mockLoanID);
 
-        assert.equal(parseInt(loan["collateral"]), 0);
-        assert.equal(totalCollateral.minus(loanCollateral).toFixed(), totalAfter.toString());
-        assert.equal(BigNumber(contractBalBefore).minus(loanCollateral).toFixed(), contractBalAfter.toString());
-        assert(parseInt(liquidatorBefore) < parseInt(liquidatorAfter));
-        assert.equal(parseInt(loan["status"]), CLOSED);
-        assert.equal(loan["liquidated"], true);
+        assert.equal(parseInt(loan["collateral"]), 0, "Loan collateral not match");
+        assert.equal(totalCollateral.minus(loanCollateral).toFixed(), totalAfter.toString(), "Total collateral not match");
+        assert.equal(BigNumber(contractBalBefore).minus(loanCollateral).toFixed(), contractBalAfter.toString(), "Contract balance not match");
+        // assert(parseInt(liquidatorBefore) < parseInt(liquidatorAfter), "Liquidator balance not increased");
+        assert.equal(parseInt(loan["status"]), CLOSED, "Loan not closed");
+        assert.equal(loan["liquidated"], true, "Loan not liquidated");
 
       } catch (error) {
         assert(mustFail, error.message);

@@ -4,6 +4,10 @@ pragma experimental ABIEncoderV2;
 import "../../base/EtherCollateralLoans.sol";
 
 contract EtherCollateralLoansMock is EtherCollateralLoans {
+
+    TellerCommon.LoanLiquidationInfo _mockLiquidationInfo;
+    bool _mockLiquidationInfoSet;
+
     function setLoanIDCounter(uint256 newLoanIdCounter) external {
         loanIDCounter = newLoanIdCounter;
     }
@@ -20,36 +24,18 @@ contract EtherCollateralLoansMock is EtherCollateralLoans {
         loans[loanID].escrow = escrowAddress;
     }
 
-    // function setLoan(
-    //     uint256 id,
-    //     TellerCommon.LoanTerms calldata loanTerms,
-    //     uint256 termsExpiry,
-    //     uint256 loanStartTime,
-    //     uint256 collateral,
-    //     uint256 lastCollateralIn,
-    //     uint256 principalOwed,
-    //     uint256 interestOwed,
-    //     uint256 borrowedAmount,
-    //     TellerCommon.LoanStatus status,
-    //     bool liquidated
-    // ) external {
-    //     require(loanTerms.maxLoanAmount >= borrowedAmount, "BORROWED_AMOUNT_EXCEEDS_MAX");
-    //     totalCollateral += collateral;
-    //     loans[id] = TellerCommon.Loan({
-    //         id: id,
-    //         loanTerms: loanTerms,
-    //         termsExpiry: termsExpiry,
-    //         loanStartTime: loanStartTime,
-    //         collateral: collateral,
-    //         lastCollateralIn: lastCollateralIn,
-    //         principalOwed: principalOwed,
-    //         interestOwed: interestOwed,
-    //         borrowedAmount: borrowedAmount,
-    //         escrow: address(0x0),
-    //         status: status,
-    //         liquidated: liquidated
-    //     });
-    // }
+    function mockLiquidationInfo(TellerCommon.LoanLiquidationInfo memory liquidationInfo) public {
+        _mockLiquidationInfo = liquidationInfo;
+        _mockLiquidationInfoSet = true;
+    }
+
+    function _getLiquidationInfo(uint256 loanID) internal view returns (TellerCommon.LoanLiquidationInfo memory) {
+        if (_mockLiquidationInfoSet) {
+            return _mockLiquidationInfo;
+        } else {
+            return super._getLiquidationInfo(loanID);
+        }
+    }
 
     function setLoan(TellerCommon.Loan memory loan) public {
         require(

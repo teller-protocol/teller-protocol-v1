@@ -131,12 +131,13 @@ contract TokenCollateralLoans is LoansBase {
     function initialize(
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
+        address loansUtilAddress,
         address settingsAddress,
         address collateralTokenAddress
     ) external isNotInitialized() {
         collateralTokenAddress.requireNotEmpty("PROVIDE_COLL_TOKEN_ADDRESS");
 
-        _initialize(lendingPoolAddress, loanTermsConsensusAddress, settingsAddress);
+        _initialize(lendingPoolAddress, loanTermsConsensusAddress, loansUtilAddress, settingsAddress);
 
         collateralToken = collateralTokenAddress;
     }

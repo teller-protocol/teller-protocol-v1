@@ -5,6 +5,14 @@ import "./BaseMock.sol";
 import "../../base/LoansBase.sol";
 
 contract LoansBaseMock is LoansBase, BaseMock {
+    
+    TellerCommon.LoanLiquidationInfo public _mockLiquidationInfo;
+    bool public _mockLiquidationInfoSet;
+    TellerCommon.LoanLiquidationInfo public _mockPayOutInfo;
+    uint256 _mockPayOutInfoLoanID;
+    address public _mockPayOutInfoRecipient;
+    bool public _mockPayOutInfoSet;
+
     mapping(uint256 => TellerCommon.LoanCollateralInfo) internal mockCollateralInfo;
 
     function _payOutCollateral(
@@ -71,6 +79,32 @@ contract LoansBaseMock is LoansBase, BaseMock {
         EscrowInterface(loans[loanID].escrow).claimTokens();
     }
 
+    function mockLiquidationInfo(TellerCommon.LoanLiquidationInfo memory liquidationInfo) public {
+        _mockLiquidationInfo = liquidationInfo;
+        _mockLiquidationInfoSet = true;
+    }
+
+    function _getLiquidationInfo(uint256 loanID) internal view returns (TellerCommon.LoanLiquidationInfo memory) {
+        if (_mockLiquidationInfoSet) {
+            return _mockLiquidationInfo;
+        } else {
+            return super._getLiquidationInfo(loanID);
+        }
+    }
+
+    function mockPayOutLiquidator(uint256 loanID, TellerCommon.LoanLiquidationInfo memory liquidationInfo, address payable recipient) public {
+        _mockPayOutInfo = liquidationInfo;
+        _mockPayOutInfoLoanID = loanID;
+        _mockPayOutInfoRecipient = recipient;
+        _mockPayOutInfoSet = true;
+    }
+
+    function _payOutLiquidator(uint256 loanID, TellerCommon.LoanLiquidationInfo memory liquidationInfo, address payable recipient) internal {
+        if (!_mockPayOutInfoSet) {
+            super._payOutLiquidator(loanID, liquidationInfo, recipient);
+        }
+    }
+
     function mockGetCollateralInfo(
         uint256 loanID,
         int256 neededInLending,
@@ -97,10 +131,11 @@ contract LoansBaseMock is LoansBase, BaseMock {
     function initialize(
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
+        address loansUtilAddress,
         address settingsAddress,
         address
     ) external isNotInitialized() {
-        _initialize(lendingPoolAddress, loanTermsConsensusAddress, settingsAddress);
+        _initialize(lendingPoolAddress, loanTermsConsensusAddress, loansUtilAddress, settingsAddress);
     }
 
     function depositCollateral(

@@ -17,6 +17,7 @@ import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
 import "../atm/ATMGovernanceInterface.sol";
 import "../interfaces/EscrowInterface.sol";
+import "./LoansBase/LoansUtilInterface.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -60,6 +61,8 @@ contract LoansBase is LoansInterface, Base {
     LendingPoolInterface public lendingPool;
 
     LoanTermsConsensusInterface public loanTermsConsensus;
+
+    LoansUtilInterface public loansUtil;
 
     mapping(address => uint256[]) public borrowerLoans;
 
@@ -182,7 +185,7 @@ contract LoansBase is LoansInterface, Base {
         @return bool indicating whether the loan with specified parameters can be deposited to an EOA.
      */
     function canLoanGoToEOA(uint256 loanID) external view returns (bool) {
-        return _canLoanGoToEOA(loans[loanID].loanTerms.collateralRatio);
+        return loansUtil.canLoanGoToEOA(loanID);
     }
 
     /**
@@ -266,7 +269,7 @@ contract LoansBase is LoansInterface, Base {
         loans[loanID].loanStartTime = now;
 
         address loanRecipient;
-        bool eoaAllowed = _canLoanGoToEOA(loans[loanID].loanTerms.collateralRatio);
+        bool eoaAllowed = loansUtil.canLoanGoToEOA(loans[loanID].loanTerms.collateralRatio);
         if (eoaAllowed) {
             loanRecipient = loans[loanID].loanTerms.recipient.isEmpty()
                 ? loans[loanID].loanTerms.borrower
@@ -428,29 +431,6 @@ contract LoansBase is LoansInterface, Base {
     }
 
     /**
-        @notice Checks whether a loan is allowed to be deposited to an Externally Owned Account.
-        @param collateralRatio Collateral ratio required by loan.
-        @return bool indicating whether the loan with specified parameters can be deposited to an EOA.
-     */
-    function _canLoanGoToEOA(uint256 collateralRatio) internal view returns (bool) {
-        uint256 overCollateralizedBuffer = settings().getPlatformSettingValue(
-            settings().consts().OVER_COLLATERALIZED_BUFFER_SETTING()
-        );
-        uint256 collateralBuffer = settings().getPlatformSettingValue(
-            settings().consts().COLLATERAL_BUFFER_SETTING()
-        );
-        uint256 liquidationReward = settings().consts().ONE_HUNDRED_PERCENT().sub(
-            settings().getPlatformSettingValue(
-                settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
-            )
-        );
-
-        return
-            collateralRatio >=
-            overCollateralizedBuffer.add(collateralBuffer).add(liquidationReward);
-    }
-
-    /**
         @notice Checks if the loan has an Escrow and claims any tokens then pays out the loan collateral.
         @dev See Escrow.claimTokens for more info.
         @param loanID The ID of the loan which is being liquidated
@@ -462,8 +442,9 @@ contract LoansBase is LoansInterface, Base {
         TellerCommon.LoanLiquidationInfo memory liquidationInfo,
         address payable recipient
     ) internal {
-        require(liquidationInfo.rewardInCollateral > 0, "LIQUIDATION_REWARD_NEGATIVE");
-
+        if (liquidationInfo.rewardInCollateral <= 0) {
+            return;
+        }
         uint256 reward = uint256(liquidationInfo.rewardInCollateral);
         if (reward < loans[loanID].collateral) {
             _payOutCollateral(loanID, reward, recipient);
@@ -637,6 +618,7 @@ contract LoansBase is LoansInterface, Base {
     function _initialize(
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
+        address loansUtilAddress,
         address settingsAddress
     ) internal isNotInitialized() {
         lendingPoolAddress.requireNotEmpty("PROVIDE_LENDING_POOL_ADDRESS");
@@ -646,6 +628,7 @@ contract LoansBase is LoansInterface, Base {
 
         lendingPool = LendingPoolInterface(lendingPoolAddress);
         loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
+        loansUtil = LoansUtilInterface(loansUtilAddress);
     }
 
     /**
@@ -728,14 +711,14 @@ contract LoansBase is LoansInterface, Base {
         int256 maxReward = liquidationInfo.collateralInfo.neededInLendingTokens -
             int256(loans[loanID].principalOwed);
         // Available value to payout the liquidator is the value left in collateral + the escrow value. Since the liquidator paid the amount owed, we subtract only the principal amount owed because the collateral ratio already includes the interest.
-        uint256 availableRewardValue = liquidationInfo
+        int256 availableRewardValue = int256(liquidationInfo
             .collateralInfo
-            .valueInLendingTokens
-            .add(liquidationInfo.collateralInfo.escrowLoanValue)
-            .sub(loans[loanID].principalOwed);
+            .valueInLendingTokens)
+            + int256(liquidationInfo.collateralInfo.escrowLoanValue)
+            - int256(loans[loanID].principalOwed);
         // If there is more than the maximum reward available, only pay the liquidator the max and leave the rest for the borrower to claim.
-        liquidationInfo.rewardInCollateral = int256(availableRewardValue) < maxReward
-            ? int256(availableRewardValue)
+        liquidationInfo.rewardInCollateral = availableRewardValue < maxReward
+            ? availableRewardValue
             : maxReward;
 
         TellerCommon.Loan memory loan = loans[loanID];
@@ -773,7 +756,7 @@ contract LoansBase is LoansInterface, Base {
     ) internal view returns (TellerCommon.Loan memory) {
         request.borrower.requireNotEmpty("BORROWER_EMPTY");
         if (request.recipient.isNotEmpty()) {
-            require(_canLoanGoToEOA(collateralRatio), "UNDER_COLL_WITH_RECIPIENT");
+            require(loansUtil.canLoanGoToEOA(collateralRatio), "UNDER_COLL_WITH_RECIPIENT");
         }
 
         uint256 termsExpiryTime = settings().getPlatformSettingValue(
