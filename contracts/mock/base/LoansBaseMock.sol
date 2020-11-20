@@ -5,7 +5,6 @@ import "./BaseMock.sol";
 import "../../base/LoansBase.sol";
 
 contract LoansBaseMock is LoansBase, BaseMock {
-    
     TellerCommon.LoanLiquidationInfo public _mockLiquidationInfo;
     bool public _mockLiquidationInfoSet;
     TellerCommon.LoanLiquidationInfo public _mockPayOutInfo;
@@ -79,12 +78,18 @@ contract LoansBaseMock is LoansBase, BaseMock {
         EscrowInterface(loans[loanID].escrow).claimTokens();
     }
 
-    function mockLiquidationInfo(TellerCommon.LoanLiquidationInfo memory liquidationInfo) public {
+    function mockLiquidationInfo(TellerCommon.LoanLiquidationInfo memory liquidationInfo)
+        public
+    {
         _mockLiquidationInfo = liquidationInfo;
         _mockLiquidationInfoSet = true;
     }
 
-    function _getLiquidationInfo(uint256 loanID) internal view returns (TellerCommon.LoanLiquidationInfo memory) {
+    function _getLiquidationInfo(uint256 loanID)
+        internal
+        view
+        returns (TellerCommon.LoanLiquidationInfo memory)
+    {
         if (_mockLiquidationInfoSet) {
             return _mockLiquidationInfo;
         } else {
@@ -92,14 +97,22 @@ contract LoansBaseMock is LoansBase, BaseMock {
         }
     }
 
-    function mockPayOutLiquidator(uint256 loanID, TellerCommon.LoanLiquidationInfo memory liquidationInfo, address payable recipient) public {
+    function mockPayOutLiquidator(
+        uint256 loanID,
+        TellerCommon.LoanLiquidationInfo memory liquidationInfo,
+        address payable recipient
+    ) public {
         _mockPayOutInfo = liquidationInfo;
         _mockPayOutInfoLoanID = loanID;
         _mockPayOutInfoRecipient = recipient;
         _mockPayOutInfoSet = true;
     }
 
-    function _payOutLiquidator(uint256 loanID, TellerCommon.LoanLiquidationInfo memory liquidationInfo, address payable recipient) internal {
+    function _payOutLiquidator(
+        uint256 loanID,
+        TellerCommon.LoanLiquidationInfo memory liquidationInfo,
+        address payable recipient
+    ) internal {
         if (!_mockPayOutInfoSet) {
             super._payOutLiquidator(loanID, liquidationInfo, recipient);
         }
@@ -135,7 +148,12 @@ contract LoansBaseMock is LoansBase, BaseMock {
         address settingsAddress,
         address
     ) external isNotInitialized() {
-        _initialize(lendingPoolAddress, loanTermsConsensusAddress, loansUtilAddress, settingsAddress);
+        _initialize(
+            lendingPoolAddress,
+            loanTermsConsensusAddress,
+            loansUtilAddress,
+            settingsAddress
+        );
     }
 
     function depositCollateral(

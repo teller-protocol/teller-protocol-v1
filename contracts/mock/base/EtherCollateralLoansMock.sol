@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 import "../../base/EtherCollateralLoans.sol";
 
 contract EtherCollateralLoansMock is EtherCollateralLoans {
-
     TellerCommon.LoanLiquidationInfo _mockLiquidationInfo;
     bool _mockLiquidationInfoSet;
 
@@ -24,12 +23,18 @@ contract EtherCollateralLoansMock is EtherCollateralLoans {
         loans[loanID].escrow = escrowAddress;
     }
 
-    function mockLiquidationInfo(TellerCommon.LoanLiquidationInfo memory liquidationInfo) public {
+    function mockLiquidationInfo(TellerCommon.LoanLiquidationInfo memory liquidationInfo)
+        public
+    {
         _mockLiquidationInfo = liquidationInfo;
         _mockLiquidationInfoSet = true;
     }
 
-    function _getLiquidationInfo(uint256 loanID) internal view returns (TellerCommon.LoanLiquidationInfo memory) {
+    function _getLiquidationInfo(uint256 loanID)
+        internal
+        view
+        returns (TellerCommon.LoanLiquidationInfo memory)
+    {
         if (_mockLiquidationInfoSet) {
             return _mockLiquidationInfo;
         } else {

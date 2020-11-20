@@ -30,6 +30,7 @@ import "./LoansUtilInterface.sol";
 
 contract LoansUtil is BaseUpgradeable, LoansUtilInterface {
     using SafeMath for uint256;
+
     /**
         @notice Checks whether a loan is allowed to be deposited to an Externally Owned Account.
         @param collateralRatio Collateral ratio required by loan.
@@ -52,5 +53,4 @@ contract LoansUtil is BaseUpgradeable, LoansUtilInterface {
             collateralRatio >=
             overCollateralizedBuffer.add(collateralBuffer).add(liquidationReward);
     }
-
 }

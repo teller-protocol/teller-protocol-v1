@@ -116,7 +116,12 @@ contract EtherCollateralLoans is LoansBase {
         address settingsAddress,
         address
     ) external isNotInitialized() {
-        _initialize(lendingPoolAddress, loanTermsConsensusAddress, loansUtilAddress, settingsAddress);
+        _initialize(
+            lendingPoolAddress,
+            loanTermsConsensusAddress,
+            loansUtilAddress,
+            settingsAddress
+        );
 
         collateralToken = settings().ETH_ADDRESS();
     }

@@ -200,7 +200,10 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         @notice It initializes this market factory instance.
         @param settingsAddress the settings contract address.
      */
-    function initialize(address loansUtilAddress, address settingsAddress) external isNotInitialized() {
+    function initialize(address loansUtilAddress, address settingsAddress)
+        external
+        isNotInitialized()
+    {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
 
         _initialize();

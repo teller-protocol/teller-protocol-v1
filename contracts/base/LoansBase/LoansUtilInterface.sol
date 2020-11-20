@@ -2,7 +2,6 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 interface LoansUtilInterface {
-
     /**
         @notice Checks whether a loan is allowed to be deposited to an Externally Owned Account.
         @param collateralRatio Collateral ratio required by loan.
