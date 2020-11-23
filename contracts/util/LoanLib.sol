@@ -338,6 +338,6 @@ library LoanLib {
             loan.interestOwed = loan.interestOwed.sub(toPay);
             return;
         }
-        loan.principalOwed = loan.principalOwed.sub(toPay); 
+        loan.principalOwed = loan.principalOwed.sub(toPay);
     }
 }
