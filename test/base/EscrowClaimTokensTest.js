@@ -26,17 +26,15 @@ contract("EscrowClaimTokensTest", function(accounts) {
   });
 
   withData({
-    _1_loan_active: [ loanStatus.Active, accounts[1], accounts[1], false, false, 0, 0, true, "LOAN_NOT_CLOSED" ],
-    _2_loan_not_liquidated_recipient_not_borrower: [ loanStatus.Closed, accounts[1], accounts[2], false, false, 0, 0, true, "LOAN_NOT_LIQUIDATED" ],
-    _3_loan_not_liquidated_recipient_is_borrower: [ loanStatus.Closed, accounts[1], accounts[1], false, false, 2, 1000, true, "LOAN_NOT_LIQUIDATED" ],
-    _4_loan_liquidated_recipient_not_borrower_caller_loans: [ loanStatus.Closed, accounts[1], accounts[2], true, true, 2, 1000, false, null ],
-    _5_loan_liquidated_recipient_is_borrower_caller_loans: [ loanStatus.Closed, accounts[1], accounts[1], true, true, 2, 1000, false, null ],
-    _6_loan_liquidated_recipient_not_borrower_caller_not_loans: [ loanStatus.Closed, accounts[1], accounts[2], false, true, 2, 1000, true, "CALLER_MUST_BE_LOANS" ],
+    _1_loan_active: [ loanStatus.Active, accounts[1], accounts[1], false, 0, 0, true, "LOAN_NOT_CLOSED" ],
+    _2_loan_not_liquidated_recipient_not_borrower: [ loanStatus.Closed, accounts[1], accounts[2], false, 0, 0, true, "LOAN_NOT_LIQUIDATED" ],
+    _3_loan_not_liquidated_recipient_is_borrower: [ loanStatus.Closed, accounts[1], accounts[1], false, 2, 1000, true, "LOAN_NOT_LIQUIDATED" ],
+    _4_loan_liquidated_recipient_is_borrower: [ loanStatus.Closed, accounts[1], accounts[1], true, 2, 1000, false, null ],
+    _5_loan_liquidated_recipient_not_borrower: [ loanStatus.Closed, accounts[1], accounts[2], true, 2, 1000, true, "CALLER_MUST_BE_LOANS" ],
   }, function(
     status,
     recipient,
     borrower,
-    callerIsLoans,
     liquidated,
     tokensCount,
     tokenBalance,
@@ -60,29 +58,23 @@ contract("EscrowClaimTokensTest", function(accounts) {
 
       try {
         // Invocation
-        let result
-        if (callerIsLoans) {
-          result = await loans.externalEscrowClaimTokens(loan.id, { from: borrower });
-        } else {
-          result = await instance.claimTokens({ from: borrower });
-        }
+        const result = await instance.claimTokens({ from: borrower });
+        
         // Assertions
         for (let i = 0; i < tokensCount; i++) {
           const token = await DAI.at(tokens[i]);
           const escrowBalance = await token.balanceOf(instance.address);
           const recipientBalance = await token.balanceOf(borrower);
           const loanBalance = await token.balanceOf(loans.address);
-          console.log({escrowBalance, recipientBalance, loanBalance});
 
           assert.equal(escrowBalance.toString(), '0', 'Token balance left in Escrow')
           assert.equal(recipientBalance.toString(), tokenBalance.toString(), 'Recipient did not receive tokens')
         }
 
-        if (!callerIsLoans) {
-          escrow
-            .tokensClaimed(result)
-            .emitted(borrower);
-        }
+        escrow
+          .tokensClaimed(result)
+          .emitted(borrower);
+        
       } catch (error) {
         assert(mustFail, error.message);
         assert.equal(error.reason, expectedErrorMessage);

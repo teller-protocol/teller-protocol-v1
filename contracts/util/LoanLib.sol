@@ -322,19 +322,22 @@ library LoanLib {
     }
 
     /**
-        @notice Make a payment towards the interest and principal  for a specified loan.
+        @notice Make a payment towards the interest and principal for a specified loan.
         @notice Payments are made towards the interest first.
         @param loan The loan the payment is for.
         @param toPay The amount of tokens to pay to the loan.
-     */
+    */
     function payOff(TellerCommon.Loan storage loan, uint256 toPay) internal {
-        uint256 leftToPay = toPay;
-        if (loan.interestOwed > 0 && toPay > loan.interestOwed) {
-            leftToPay = toPay.sub(loan.interestOwed);
+        if (toPay >= loan.interestOwed) {
+            toPay = toPay.sub(loan.interestOwed);
             loan.interestOwed = 0;
+            if (toPay == 0) {
+                return;
+            }
         } else {
             loan.interestOwed = loan.interestOwed.sub(toPay);
+            return;
         }
-        loan.principalOwed = loan.principalOwed.sub(leftToPay);
+        loan.principalOwed = loan.principalOwed.sub(toPay); 
     }
 }

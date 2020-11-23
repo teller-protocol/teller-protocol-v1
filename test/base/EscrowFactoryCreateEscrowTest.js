@@ -14,7 +14,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
 const Escrow = artifacts.require("./base/Escrow.sol");
 const Settings = artifacts.require("./base/Settings.sol");
-const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
+const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 const VersionsRegistry = artifacts.require("./base/LogicVersionsRegistry.sol");
 
 contract("EscrowFactoryCreateEscrowTest", function(accounts) {
@@ -55,7 +55,6 @@ contract("EscrowFactoryCreateEscrowTest", function(accounts) {
         }
       }
     );
-    await loans.externalSetSettings(settingsInstance.address);
 
     const escrowLogic = await Escrow.new();
     await versionsRegistry.initialize(settingsInstance.address);
