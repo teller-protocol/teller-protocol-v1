@@ -120,11 +120,7 @@ library LoanLib {
         @notice Returns the total amount owed for a specified loan.
         @param loan The loan to get the total amount owed.
      */
-    function getTotalOwed(TellerCommon.Loan storage loan)
-        public
-        view
-        returns (uint256)
-    {
+    function getTotalOwed(TellerCommon.Loan storage loan) public view returns (uint256) {
         if (loan.status == TellerCommon.LoanStatus.TermsSet) {
             uint256 interestOwed = getInterestOwedFor(loan, loan.loanTerms.maxLoanAmount);
             return loan.loanTerms.maxLoanAmount.add(interestOwed);

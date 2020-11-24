@@ -143,7 +143,7 @@ contract LoansBaseMock is LoansBase, BaseMock {
 
     function _getCollateralNeededInfo(uint256 loanID)
         internal
-        view 
+        view
         returns (
             int256 neededInLending,
             int256 neededInCollateral,
@@ -155,7 +155,8 @@ contract LoansBaseMock is LoansBase, BaseMock {
         neededInCollateral = info.neededInCollateralTokens;
         escrowLoanValue = info.collateral;
         if (info.collateral == 0) {
-            (neededInLending, neededInCollateral, escrowLoanValue) = super._getCollateralNeededInfo(loanID);
+            (neededInLending, neededInCollateral, escrowLoanValue) = super
+                ._getCollateralNeededInfo(loanID);
         }
     }
 
