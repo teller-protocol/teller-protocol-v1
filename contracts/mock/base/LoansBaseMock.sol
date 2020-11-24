@@ -141,6 +141,24 @@ contract LoansBaseMock is LoansBase, BaseMock {
         }
     }
 
+    function _getCollateralNeededInfo(uint256 loanID)
+        internal
+        view 
+        returns (
+            int256 neededInLending,
+            int256 neededInCollateral,
+            uint256 escrowLoanValue
+        )
+    {
+        TellerCommon.LoanCollateralInfo memory info = mockCollateralInfo[loanID];
+        neededInLending = info.neededInLendingTokens;
+        neededInCollateral = info.neededInCollateralTokens;
+        escrowLoanValue = info.collateral;
+        if (info.collateral == 0) {
+            (neededInLending, neededInCollateral, escrowLoanValue) = super._getCollateralNeededInfo(loanID);
+        }
+    }
+
     function initialize(
         address lendingPoolAddress,
         address loanTermsConsensusAddress,

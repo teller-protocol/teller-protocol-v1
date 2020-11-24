@@ -16,9 +16,12 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
-const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
+const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 
-contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
+contract('LoansBaseWithdrawCollateralTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     const chainlinkAggregatorEncoder = new ChainlinkAggregatorEncoder(web3);
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
@@ -49,6 +52,8 @@ contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
           });
 
         collateralTokenInstance = await Mock.new();
+        const loanLib = await LoanLib.new();
+        await Loans.link("LoanLib", loanLib.address);
         instance = await Loans.new();
         await instance.initialize(
             lendingPoolInstance.address,
@@ -90,25 +95,16 @@ contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
 
             await instance.setLoan(loan);
             
-            await instance.setTotalCollateral(totalCollateral)
-            const totalBefore = await instance.totalCollateral.call()
-            assert.equal(totalCollateral.toString(), totalBefore.toString(), 'collateral not set')
-
-            // give the contract collateral through a deposit (mock has a fallback)
-            await web3.eth.sendTransaction({ from: accounts[1], to: instance.address, value: totalCollateral });
-
-            // encode current token price
-            await chainlinkAggregatorInstance.givenMethodReturnUint(
-              chainlinkAggregatorEncoder.encodeValueFor(),
-              oracleValue.toString()
-            );
+            // mock get collateral needed info
+            await instance.mockGetCollateralInfo(mockLoanID, loanPrincipalOwed, loanCollateral)
 
             // encode token decimals
             const encodeDecimals = erc20InterfaceEncoder.encodeDecimals();
             await lendingTokenInstance.givenMethodReturnUint(encodeDecimals, tokenDecimals);
             try {
                 const contractBalBefore = await web3.eth.getBalance(instance.address)
-
+                const collateralInfo = await instance.getCollateralInfo(mockLoanID);
+                console.log({collateralInfo});
                 const tx = await instance.withdrawCollateral(withdrawalAmount, mockLoanID, { from: msgSender })
                 
                 // Assertions

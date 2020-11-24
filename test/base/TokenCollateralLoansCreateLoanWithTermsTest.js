@@ -29,6 +29,9 @@ const Loans = artifacts.require('./mock/base/TokenCollateralLoansMock.sol')
 const Settings = artifacts.require('./base/Settings.sol')
 const LoanTermsConsensus = artifacts.require('./base/LoanTermsConsensus.sol')
 
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
 const getAverage = (...values) => values !== undefined && values.length > 0 ?
   values.reduce((previous, current) => current += previous) / values.length
   : 0
@@ -112,7 +115,9 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
       lendingPoolInterfaceEncoder.encodeLendingToken(),
       lendingTokenInstance.address
     )
-
+    
+    const loanLib = await LoanLib.new();
+    await Loans.link("LoanLib", loanLib.address);
     instance = await Loans.new()
     await instance.initialize(
       lendingPoolInstance.address,

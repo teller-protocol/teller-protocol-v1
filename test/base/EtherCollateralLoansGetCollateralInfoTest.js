@@ -19,6 +19,9 @@ const LoansBase = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 const Settings = artifacts.require("./mock/base/Settings.sol");
 const ChainlinkAggregator = artifacts.require("./providers/chainlink/ChainlinkAggregator");
 
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
 contract("EtherCollateralLoansGetCollateralInfoTest", function(accounts) {
   BigNumber.set({ DECIMAL_PLACES: 0, ROUNDING_MODE: 3 });
   const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
@@ -53,7 +56,8 @@ contract("EtherCollateralLoansGetCollateralInfoTest", function(accounts) {
         [platformSettings.CollateralBuffer]: collateralBuffer
       }
     );
-
+    const loanLib = await LoanLib.new();
+    await LoansBase.link("LoanLib", loanLib.address);
     instance = await LoansBase.new();
     await instance.initialize(
       lendingPoolInstance.address,

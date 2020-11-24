@@ -71,7 +71,7 @@ library LoanLib {
         @return bool indicating whether the loan with specified parameters can be deposited to an EOA.
      */
     function canGoToEOA(TellerCommon.Loan storage loan, SettingsInterface settings)
-        internal
+        public
         view
         returns (bool)
     {
@@ -99,7 +99,7 @@ library LoanLib {
         @return bool value of it being secured or not.
     */
     function isSecured(TellerCommon.Loan storage loan, SettingsInterface settings)
-        internal
+        public
         view
         returns (bool)
     {
@@ -110,7 +110,7 @@ library LoanLib {
             );
     }
 
-    function isActiveOrSet(TellerCommon.Loan storage loan) internal view returns (bool) {
+    function isActiveOrSet(TellerCommon.Loan storage loan) public view returns (bool) {
         return
             loan.status == TellerCommon.LoanStatus.Active ||
             loan.status == TellerCommon.LoanStatus.TermsSet;
@@ -121,7 +121,7 @@ library LoanLib {
         @param loan The loan to get the total amount owed.
      */
     function getTotalOwed(TellerCommon.Loan storage loan)
-        internal
+        public
         view
         returns (uint256)
     {
@@ -141,7 +141,7 @@ library LoanLib {
         @param amountBorrow The principal of the loan to take out.
      */
     function getInterestOwedFor(TellerCommon.Loan storage loan, uint256 amountBorrow)
-        internal
+        public
         view
         returns (uint256)
     {
@@ -161,7 +161,7 @@ library LoanLib {
     function getCollateralInfo(
         TellerCommon.Loan storage loan,
         LoansInterface loansContract
-    ) internal view returns (TellerCommon.LoanCollateralInfo memory) {
+    ) public view returns (TellerCommon.LoanCollateralInfo memory) {
         (
             int256 neededInLending,
             int256 neededInCollateral,
@@ -181,7 +181,7 @@ library LoanLib {
     function getCollateralInLendingTokens(
         TellerCommon.Loan storage loan,
         LoansInterface loansContract
-    ) internal view returns (uint256) {
+    ) public view returns (uint256) {
         if (!isActiveOrSet(loan)) {
             return 0;
         }
@@ -204,7 +204,7 @@ library LoanLib {
         TellerCommon.Loan storage loan,
         LoansInterface loansContract
     )
-        internal
+        public
         view
         returns (
             int256 neededInLendingTokens,
@@ -248,7 +248,7 @@ library LoanLib {
     function getCollateralNeededInTokens(
         TellerCommon.Loan storage loan,
         SettingsInterface settings
-    ) internal view returns (int256 neededInLendingTokens, uint256 escrowLoanValue) {
+    ) public view returns (int256 neededInLendingTokens, uint256 escrowLoanValue) {
         if (!isActiveOrSet(loan) || loan.loanTerms.collateralRatio == 0) {
             return (0, 0);
         }
@@ -296,7 +296,7 @@ library LoanLib {
     function getLiquidationInfo(
         TellerCommon.Loan storage loan,
         LoansInterface loansContract
-    ) internal view returns (TellerCommon.LoanLiquidationInfo memory liquidationInfo) {
+    ) public view returns (TellerCommon.LoanLiquidationInfo memory liquidationInfo) {
         liquidationInfo.collateralInfo = getCollateralInfo(loan, loansContract);
         liquidationInfo.amountToLiquidate = getTotalOwed(loan);
 
@@ -327,7 +327,7 @@ library LoanLib {
         @param loan The loan the payment is for.
         @param toPay The amount of tokens to pay to the loan.
     */
-    function payOff(TellerCommon.Loan storage loan, uint256 toPay) internal {
+    function payOff(TellerCommon.Loan storage loan, uint256 toPay) public {
         if (toPay >= loan.interestOwed) {
             toPay = toPay.sub(loan.interestOwed);
             loan.interestOwed = 0;

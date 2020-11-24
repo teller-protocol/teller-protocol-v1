@@ -7,6 +7,8 @@ contract EtherCollateralLoansMock is EtherCollateralLoans {
     TellerCommon.LoanLiquidationInfo _mockLiquidationInfo;
     bool _mockLiquidationInfoSet;
 
+    mapping(uint256 => TellerCommon.LoanCollateralInfo) internal mockCollateralInfo;
+
     function setLoanIDCounter(uint256 newLoanIdCounter) external {
         loanIDCounter = newLoanIdCounter;
     }
@@ -21,6 +23,29 @@ contract EtherCollateralLoansMock is EtherCollateralLoans {
 
     function setEscrowForLoan(uint256 loanID, address escrowAddress) external {
         loans[loanID].escrow = escrowAddress;
+    }
+
+    function mockGetCollateralInfo(
+        uint256 loanID,
+        int256 neededInLending,
+        int256 neededInCollateral
+    ) external {
+        mockCollateralInfo[loanID].collateral = loans[loanID].collateral;
+        mockCollateralInfo[loanID].neededInLendingTokens = neededInLending;
+        mockCollateralInfo[loanID].neededInCollateralTokens = neededInCollateral;
+        mockCollateralInfo[loanID].moreCollateralRequired =
+            neededInCollateral > int256(loans[loanID].collateral);
+    }
+
+    function _getCollateralInfo(uint256 loanID)
+        internal
+        view
+        returns (TellerCommon.LoanCollateralInfo memory info)
+    {
+        info = mockCollateralInfo[loanID];
+        if (info.collateral == 0) {
+            info = super._getCollateralInfo(loanID);
+        }
     }
 
     function mockLiquidationInfo(TellerCommon.LoanLiquidationInfo memory liquidationInfo)

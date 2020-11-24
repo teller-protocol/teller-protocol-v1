@@ -14,6 +14,9 @@ const DAI = artifacts.require("./mock/token/DAIMock.sol");
 const Escrow = artifacts.require("./mock/base/EscrowMock.sol");
 const LoansBase = artifacts.require("./mock/base/LoansBaseMock.sol");
 
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
 contract("EscrowClaimTokensTest", function(accounts) {
   const loansEncoder = new LoansBaseInterfaceEncoder(web3);
 
@@ -21,6 +24,8 @@ contract("EscrowClaimTokensTest", function(accounts) {
   let instance;
 
   beforeEach(async () => {
+    const loanLib = await LoanLib.new();
+    await LoansBase.link("LoanLib", loanLib.address);
     loans = await LoansBase.new();
     instance = await Escrow.new();
   });

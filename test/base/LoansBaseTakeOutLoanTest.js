@@ -18,9 +18,12 @@ const LINKMock = artifacts.require("./mock/token/LINKMock.sol");
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
-const Loans = artifacts.require("./mock/base/TokenCollateralLoansMock.sol");
+const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 
-contract("TokenCollateralLoansTakeOutLoanTest", function(accounts) {
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
+contract("LoansBaseTakeOutLoanTest", function(accounts) {
   const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
   const chainlinkAggregatorEncoder = new ChainlinkAggregatorEncoder(web3);
   const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
@@ -61,6 +64,8 @@ contract("TokenCollateralLoansTakeOutLoanTest", function(accounts) {
       });
 
     loanTermsConsInstance = await Mock.new();
+    const loanLib = await LoanLib.new();
+    await Loans.link("LoanLib", loanLib.address);
     instance = await Loans.new();
     await instance.initialize(
       lendingPoolInstance.address,

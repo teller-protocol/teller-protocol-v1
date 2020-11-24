@@ -17,6 +17,9 @@ const Settings = artifacts.require("./base/Settings.sol");
 const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 const VersionsRegistry = artifacts.require("./base/LogicVersionsRegistry.sol");
 
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
 contract("EscrowFactoryCreateEscrowTest", function(accounts) {
   const owner = accounts[0];
   let escrowFactoryInstance;
@@ -26,6 +29,8 @@ contract("EscrowFactoryCreateEscrowTest", function(accounts) {
 
   beforeEach(async () => {
     const CETH = await Mock.new();
+    const loanLib = await LoanLib.new();
+    await Loans.link("LoanLib", loanLib.address);
     loans = await Loans.new();
     escrowFactoryInstance = await EscrowFactory.new();
     versionsRegistry = await VersionsRegistry.new();

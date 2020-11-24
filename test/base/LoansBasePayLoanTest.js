@@ -9,6 +9,9 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 // Smart contracts
 const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
 contract('LoansBasePayLoanTest', function (accounts) {
     let instance;
     let settingsInstance;
@@ -20,6 +23,8 @@ contract('LoansBasePayLoanTest', function (accounts) {
         const loanTermsConsInstance = await Mock.new();
         settingsInstance = await Mock.new();
         const collateralTokenInstance = await Mock.new();
+        const loanLib = await LoanLib.new();
+        await Loans.link("LoanLib", loanLib.address);
         instance = await Loans.new();
         await instance.initialize(
             lendingPoolInstance.address,

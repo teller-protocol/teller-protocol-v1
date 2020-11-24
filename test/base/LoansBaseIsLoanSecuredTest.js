@@ -12,6 +12,9 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
 contract("LoansBaseIsLoanSecuredTest", function(accounts) {
   let instance;
 
@@ -21,7 +24,8 @@ contract("LoansBaseIsLoanSecuredTest", function(accounts) {
     const settings = await createTestSettingsInstance(Settings, { from: accounts[0], Mock }, {
       [settingsNames.CollateralBuffer]: settingsCollateralBuffer
     });
-
+    const loanLib = await LoanLib.new();
+    await Loans.link("LoanLib", loanLib.address);
     instance = await Loans.new();
     await instance.externalInitialize(settings.address);
   });

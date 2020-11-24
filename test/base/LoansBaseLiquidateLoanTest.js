@@ -18,6 +18,9 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
 contract("LoansBaseLiquidateLoanTest", function(accounts) {
   BigNumber.set({ DECIMAL_PLACES: 0, ROUNDING_MODE: 3 });
   const timer = new Timer(web3);
@@ -48,6 +51,8 @@ contract("LoansBaseLiquidateLoanTest", function(accounts) {
     lendingTokenInstance = await Mock.new();
     loanTermsConsInstance = await Mock.new();
     marketsInstance = await Mock.new();
+    const loanLib = await LoanLib.new();
+    await Loans.link("LoanLib", loanLib.address);
     instance = await Loans.new();
     await instance.initialize(
       lendingPoolInstance.address,
