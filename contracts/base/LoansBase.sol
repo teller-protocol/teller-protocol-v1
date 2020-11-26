@@ -251,7 +251,6 @@ contract LoansBase is LoansInterface, Base {
             loans[loanID].loanTerms.duration,
             loans[loanID].termsExpiry
         );
-
     }
 
     /**
@@ -312,7 +311,6 @@ contract LoansBase is LoansInterface, Base {
         require(amount > 0, "CANNOT_DEPOSIT_ZERO");
         // Update the loan collateral and total. Transfer tokens to this contract.
         _payInCollateral(loanID, amount);
-
     }
 
     /**

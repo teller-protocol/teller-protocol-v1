@@ -38,10 +38,7 @@ contract TokenCollateralLoans is LoansBase {
 
     /** External Functions */
 
-    function _payInCollateral(uint256 loanID, uint256 amount) 
-        internal 
-        noMsgValue()
-    {
+    function _payInCollateral(uint256 loanID, uint256 amount) internal noMsgValue() {
         // Transfer collateral tokens to this contract.
         _collateralTokenTransferFrom(msg.sender, amount);
         super._payInCollateral(loanID, amount);

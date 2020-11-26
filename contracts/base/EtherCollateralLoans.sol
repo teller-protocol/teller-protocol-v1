@@ -21,7 +21,6 @@ import "./LoansBase.sol";
     @author develop@teller.finance
  */
 contract EtherCollateralLoans is LoansBase {
-
     /**
         @notice Initializes the current contract instance setting the required parameters
         @param lendingPoolAddress Contract address of the lending pool
@@ -42,13 +41,11 @@ contract EtherCollateralLoans is LoansBase {
     /** Internal Functions */
 
     /**
-        * @notice Deposit collateral tokens into a loan.
-        * @param loanID The ID of the loan the collateral is for
-        * @param amount The amount to deposit as collateral.
-    */
-    function _payInCollateral(uint256 loanID, uint256 amount) 
-        internal
-    {
+     * @notice Deposit collateral tokens into a loan.
+     * @param loanID The ID of the loan the collateral is for
+     * @param amount The amount to deposit as collateral.
+     */
+    function _payInCollateral(uint256 loanID, uint256 amount) internal {
         require(msg.value == amount, "INCORRECT_ETH_AMOUNT");
         super._payInCollateral(loanID, amount);
     }
