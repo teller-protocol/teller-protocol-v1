@@ -96,6 +96,7 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
         );
         borrowerToLastLoanTermRequest[request.borrower] = now;
 
+        // TODO: Remove redundant event
         emit TermsAccepted(
             request.borrower,
             request.requestNonce,

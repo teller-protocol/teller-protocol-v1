@@ -198,6 +198,63 @@ contract LoansBase is LoansInterface, Base {
     }
 
     /**
+        @notice Creates a loan with the loan request and terms
+        @param request Struct of the protocol loan request
+        @param responses List of structs of the protocol loan responses
+        @param collateralAmount Amount of collateral required for the loan
+    */
+    function createLoanWithTerms(
+        TellerCommon.LoanRequest calldata request,
+        TellerCommon.LoanResponse[] calldata responses,
+        uint256 collateralAmount
+    )
+        external
+        payable
+        isInitialized()
+        whenNotPaused()
+        isBorrower(request.borrower)
+        withValidLoanRequest(request)
+    {
+        uint256 loanID = _getAndIncrementLoanID();
+        if (collateralAmount > 0) {
+            _payInCollateral(loanID, collateralAmount);
+        }
+
+        (
+            uint256 interestRate,
+            uint256 collateralRatio,
+            uint256 maxLoanAmount
+        ) = loanTermsConsensus.processRequest(request, responses);
+
+        loans[loanID].init(
+            request,
+            settings(),
+            loanID,
+            interestRate,
+            collateralRatio,
+            maxLoanAmount
+        );
+
+        if (request.recipient.isNotEmpty()) {
+            require(loans[loanID].canGoToEOA(settings()), "UNDER_COLL_WITH_RECIPIENT");
+        }
+
+        borrowerLoans[request.borrower].push(loanID);
+
+        emit LoanTermsSet(
+            loanID,
+            msg.sender,
+            loans[loanID].loanTerms.recipient,
+            interestRate,
+            collateralRatio,
+            maxLoanAmount,
+            loans[loanID].loanTerms.duration,
+            loans[loanID].termsExpiry
+        );
+
+    }
+
+    /**
      * @notice Withdraw collateral from a loan, unless this isn't allowed
      * @param amount The amount of collateral token or ether the caller is hoping to withdraw.
      * @param loanID The ID of the loan the collateral is for
@@ -228,6 +285,34 @@ contract LoansBase is LoansInterface, Base {
         _payOutCollateral(loanID, amount, msg.sender);
 
         emit CollateralWithdrawn(loanID, msg.sender, amount);
+    }
+
+    /**
+     * @notice Deposit collateral tokens into a loan.
+     * @param borrower The address of the loan borrower.
+     * @param loanID The ID of the loan the collateral is for
+     * @param amount The amount to deposit as collateral.
+     */
+    function depositCollateral(
+        address borrower,
+        uint256 loanID,
+        uint256 amount
+    )
+        external
+        payable
+        loanActiveOrSet(loanID)
+        isInitialized()
+        whenNotPaused()
+        whenLendingPoolNotPaused(address(lendingPool))
+    {
+        borrower.requireEqualTo(
+            loans[loanID].loanTerms.borrower,
+            "BORROWER_LOAN_ID_MISMATCH"
+        );
+        require(amount > 0, "CANNOT_DEPOSIT_ZERO");
+        // Update the loan collateral and total. Transfer tokens to this contract.
+        _payInCollateral(loanID, amount);
+
     }
 
     /**
@@ -492,6 +577,7 @@ contract LoansBase is LoansInterface, Base {
         totalCollateral = totalCollateral.add(amount);
         loans[loanID].collateral = loans[loanID].collateral.add(amount);
         loans[loanID].lastCollateralIn = now;
+        emit CollateralDeposited(loanID, msg.sender, amount);
     }
 
     /**
@@ -501,58 +587,6 @@ contract LoansBase is LoansInterface, Base {
     function _getAndIncrementLoanID() internal returns (uint256 newLoanID) {
         newLoanID = loanIDCounter;
         loanIDCounter = loanIDCounter.add(1);
-    }
-
-    /**
-        @notice Creates a loan with the loan request
-        @param request Loan request as per the struct of the Teller platform
-        @return memory TellerCommon.Loan Loan struct as per the Teller platform
-        @param responses List of structs of the protocol loan responses
-        @param collateralAmount Amount of collateral required for the loan
-     */
-    function _createLoan(
-        TellerCommon.LoanRequest memory request,
-        TellerCommon.LoanResponse[] memory responses,
-        uint256 collateralAmount
-    ) internal {
-        (
-            uint256 interestRate,
-            uint256 collateralRatio,
-            uint256 maxLoanAmount
-        ) = loanTermsConsensus.processRequest(request, responses);
-
-        uint256 loanID = _getAndIncrementLoanID();
-        loans[loanID].init(
-            request,
-            settings(),
-            loanID,
-            interestRate,
-            collateralRatio,
-            maxLoanAmount
-        );
-
-        if (request.recipient.isNotEmpty()) {
-            require(loans[loanID].canGoToEOA(settings()), "UNDER_COLL_WITH_RECIPIENT");
-        }
-
-        borrowerLoans[request.borrower].push(loanID);
-
-        emit LoanTermsSet(
-            loanID,
-            request.borrower,
-            request.recipient,
-            interestRate,
-            collateralRatio,
-            maxLoanAmount,
-            request.duration,
-            loans[loanID].termsExpiry
-        );
-
-        if (collateralAmount > 0) {
-            // Update collateral, totalCollateral, and lastCollateralIn
-            _payInCollateral(loanID, collateralAmount);
-            emit CollateralDeposited(loanID, request.borrower, collateralAmount);
-        }
     }
 
     /**

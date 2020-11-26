@@ -32,7 +32,8 @@ contract("EtherCollateralLoansGetCollateralInfoTest", function(accounts) {
   let aggregatorInstance;
   let lendingPoolInstance;
   let lendingToken;
-  const collateralBuffer = 1500
+  const collateralBuffer = 1500;
+  const liquidatePrice = 9500;
 
   beforeEach("Setup for each test", async () => {
     lendingPoolInstance = await Mock.new();
@@ -53,7 +54,8 @@ contract("EtherCollateralLoansGetCollateralInfoTest", function(accounts) {
           aggregatorInstance = chainlinkAggregator;
         }
       }, {
-        [platformSettings.CollateralBuffer]: collateralBuffer
+        [platformSettings.CollateralBuffer]: collateralBuffer,
+        [platformSettings.LiquidateEthPrice]: liquidatePrice
       }
     );
     const loanLib = await LoanLib.new();
@@ -68,23 +70,23 @@ contract("EtherCollateralLoansGetCollateralInfoTest", function(accounts) {
   });
 
   withData({
-    // _1_non_existent: [ NON_EXISTENT, 0, 0, false, 0, 0, 0, false ],
-    // _2_closed: [ CLOSED, 10000, 100, false, 7000, 7000, 5000, false ],
-    _3_terms_set_with_more_collateral_required: [ TERMS_SET, 10000, 100, false, 6000, 7000, 5000, true ],
-    // _4_terms_set_with_expected_collateral: [ TERMS_SET, 10000, 100, false, 7000, 7000, 5000, false ],
-    // _5_terms_set_with_extra_collateral: [ TERMS_SET, 10000, 100, false, 8000, 7000, 5000, false ],
-    // _6_active_with_escrow_with_more_collateral_required: [ ACTIVE, 10000, 100, true, 10000, 6000, 7000, 5000, true ],
-    // _7_active_with_escrow_with_expected_collateral: [ ACTIVE, 10000, 100, true, 10000, 7000, 7000, 5000, false ],
-    // _8_active_with_escrow_with_extra_collateral: [ ACTIVE, 10000, 100, true, 10000, 8000, 7000, 5000, false ],
-    // _9_active_with_no_escrow_with_more_collateral_required: [ ACTIVE, 10000, 100, false, 6000, 7000, 5000, true ],
-    // _10_active_with_no_escrow_with_expected_collateral: [ ACTIVE, 10000, 100, false, 7000, 7000, 5000, false ],
-    // _11_active_with_no_escrow_with_extra_collateral: [ ACTIVE, 10000, 100, false, 8000, 7000, 5000, false ],
-    // _12_active_with_escrow_value_low: [ ACTIVE, 10000, 100, true, 8000, 7000, 5000, true ],
+    _1_non_existent: [ NON_EXISTENT, 0, 0, 0, 0, 0, 0, false ],
+    _2_closed: [ CLOSED, 10000, 100, 0, 7000, 7000, 5000, false ],
+    _3_terms_set_with_more_collateral_required: [ TERMS_SET, 10000, 100, 0, 6000, 7000, 5000, true ],
+    _4_terms_set_with_expected_collateral: [ TERMS_SET, 10000, 100, 0, 7000, 7000, 5000, false ],
+    _5_terms_set_with_extra_collateral: [ TERMS_SET, 10000, 100, 0, 8000, 7000, 5000, false ],
+    _6_active_with_escrow_with_more_collateral_required: [ ACTIVE, 10000, 100, 5000, 6000, 7000, 5000, true ],
+    _7_active_with_escrow_with_expected_collateral: [ ACTIVE, 10000, 100, 10000, 7000, 7000, 5000, false ],
+    _8_active_with_escrow_with_extra_collateral: [ ACTIVE, 10000, 100, 10000, 8000, 7000, 5000, false ],
+    _9_active_with_no_escrow_with_more_collateral_required: [ ACTIVE, 10000, 100, 0, 6000, 7000, 5000, true ],
+    _10_active_with_no_escrow_with_expected_collateral: [ ACTIVE, 10000, 100, 0, 7000, 7000, 5000, false ],
+    _11_active_with_no_escrow_with_extra_collateral: [ ACTIVE, 10000, 100, 0, 8000, 7000, 5000, false ],
+    _12_active_with_escrow_value_low: [ ACTIVE, 10000, 100, 1000, 6000, 7000, 5000, true ],
   }, function(
     status,
     loanAmount,
     interestRate,
-    hasEscrow,
+    escrowValue,
     collateralAmount,
     neededInCollateral,
     collateralRatio,
@@ -106,31 +108,32 @@ contract("EtherCollateralLoansGetCollateralInfoTest", function(accounts) {
       await instance.setLoan(loan);
 
       let escrow
-      if (hasEscrow) {
+      if (escrowValue > 0) {
         escrow = await Mock.new();
         await escrow.givenMethodReturnUint(
           escrowEncoder.encodeCalculateLoanValue(),
-          loanAmount.toString()
+          escrowValue.toString()
         )
         await instance.setEscrowForLoan(loanID, escrow.address);
       }
 
-      const owed = new BigNumber(loanAmount).plus(interestOwed)
-
       let collateralNeededInTokens;
+      let requiredRatio = new BigNumber(collateralRatio);
       switch (status) {
         case NON_EXISTENT:
         case CLOSED:
           collateralNeededInTokens = new BigNumber(0)
           break
         case TERMS_SET:
+          collateralNeededInTokens = new BigNumber(loanAmount);
+          break
         case ACTIVE:
-          collateralNeededInTokens = owed.multipliedBy(collateralRatio).div(10000)
-          if (status === ACTIVE) {
-            collateralNeededInTokens = collateralNeededInTokens.minus(owed.multipliedBy(collateralBuffer).div(10000))
-          }
+          collateralNeededInTokens = new BigNumber(loanAmount);
+          requiredRatio = requiredRatio.minus(interestRate).minus(collateralBuffer).minus(10000 - liquidatePrice);
+          collateralNeededInTokens = collateralNeededInTokens.minus(escrowValue);
           break
       }
+      collateralNeededInTokens = collateralNeededInTokens.multipliedBy(requiredRatio).div(10000);
 
       const aggregator = await ChainlinkAggregator.at(aggregatorInstance.address)
       const neededInCollateralTokensValueForCalldata = aggregator.contract.methods.valueFor(
@@ -155,40 +158,22 @@ contract("EtherCollateralLoansGetCollateralInfoTest", function(accounts) {
 
       const loanValues = await instance.loans(loanID)
 
-
       // Invocation
 
       // values for valueInLendingTokens and neededInCollateralTokens do not need to be validated because they are
       // calling chainlink to convert them. rather we should just check that the chainlink function is being called
       // with the proper values
+      const collateralInfo = await instance.getCollateralInfo(loanID);
       const {
         collateral: collateralResult,
         neededInLendingTokens: neededInLendingTokensResult,
         moreCollateralRequired: moreCollateralRequiredResult
-      } = await instance.getCollateralInfo(loanID);
+      } = collateralInfo;
 
       // Assertions
-      // if (hasEscrow) {
-      //   const invocationCount = await escrow.invocationCount.call()
-      //   const calculateLoanValueCount = await escrow.invocationCountForMethod.call(escrowEncoder.encodeCalculateLoanValue())
-      //   assert.equal(calculateLoanValueCount.toString(), "1", "Escrow calculateLoanValue was not called")
-      // }
-      //
-      // if (collateralNeededInTokens.gt(0)) {
-      //   const invocationCount = await aggregatorInstance.invocationCount.call()
-      //   const neededInCollateralTokensValueForCount = await aggregatorInstance.invocationCountForCalldata.call(neededInCollateralTokensValueForCalldata)
-      //   assert.equal(neededInCollateralTokensValueForCount.toString(), "1", "Chainlink aggregator valueFor not called for neededInCollateralTokens")
-      // }
-      //
-      // if (status === TERMS_SET || status === ACTIVE) {
-      //   const invocationCount = await aggregatorInstance.invocationCount.call()
-      //   const collateralInLendingTokensValueForCount = await aggregatorInstance.invocationCountForCalldata.call(collateralInLendingTokensValueForCalldata)
-      //   assert.equal(collateralInLendingTokensValueForCount.toString(), "1", "Chainlink aggregator valueFor not called for collateralInLendingTokens")
-      // }
-
-      assert.equal(collateralResult.toString(), collateralAmount.toString())
-      assert.equal(neededInLendingTokensResult.toString(), collateralNeededInTokens.toString());
-      assert.equal(moreCollateralRequiredResult, expectedMoreCollateralRequired);
+      assert.equal(collateralResult.toString(), collateralAmount.toString(), 'Collateral does not match')
+      assert.equal(neededInLendingTokensResult.toString(), collateralNeededInTokens.toString(), 'Lending tokens not match');
+      assert(moreCollateralRequiredResult === expectedMoreCollateralRequired, 'Expected result not match');
     });
   });
 });

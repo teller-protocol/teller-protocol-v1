@@ -68,7 +68,7 @@ contract('EtherCollateralLoansDepositCollateralTest', function (accounts) {
                 const contractBalBefore = await web3.eth.getBalance(instance.address)
                 const totalBefore = await instance.totalCollateral.call()
 
-                let tx = await instance.depositCollateral(specifiedBorrower, mockLoanID, ethAmount, { value: msgValue })
+                let tx = await instance.depositCollateral(specifiedBorrower, mockLoanID, ethAmount, { from: specifiedBorrower, value: msgValue })
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');

@@ -96,15 +96,13 @@ contract('LoansBaseWithdrawCollateralTest', function (accounts) {
             await instance.setLoan(loan);
             
             // mock get collateral needed info
-            await instance.mockGetCollateralInfo(mockLoanID, loanPrincipalOwed, loanCollateral)
+            await instance.mockGetCollateralInfo(mockLoanID, loanPrincipalOwed, oracleValue)
 
             // encode token decimals
             const encodeDecimals = erc20InterfaceEncoder.encodeDecimals();
             await lendingTokenInstance.givenMethodReturnUint(encodeDecimals, tokenDecimals);
             try {
                 const contractBalBefore = await web3.eth.getBalance(instance.address)
-                const collateralInfo = await instance.getCollateralInfo(mockLoanID);
-                console.log({collateralInfo});
                 const tx = await instance.withdrawCollateral(withdrawalAmount, mockLoanID, { from: msgSender })
                 
                 // Assertions
@@ -118,13 +116,13 @@ contract('LoansBaseWithdrawCollateralTest', function (accounts) {
 
                 let loan = await instance.loans.call(mockLoanID)
 
+                const wasCollateralPaidOut = await instance.paidOutCollateral.call();
+
                 loans
                     .collateralWithdrawn(tx)
                     .emitted(mockLoanID, loanBorrower, paidOut)
 
-                assert.equal(parseInt(loan.collateral), (loanCollateral - paidOut))
-                assert.equal(totalCollateral - paidOut, parseInt(totalAfter))
-                assert.equal(parseInt(contractBalBefore) - paidOut, parseInt(contractBalAfter))
+                assert(wasCollateralPaidOut, 'Expected payOutCollateral to be called');
             } catch (error) {
                 assert(mustFail, error.message);
                 assert.equal(error.reason, expectedErrorMessage);

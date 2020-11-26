@@ -11,6 +11,7 @@ contract LoansBaseMock is LoansBase, BaseMock {
     uint256 _mockPayOutInfoLoanID;
     address public _mockPayOutInfoRecipient;
     bool public _mockPayOutInfoSet;
+    bool public paidOutCollateral;
 
     mapping(uint256 => TellerCommon.LoanCollateralInfo) internal mockCollateralInfo;
 
@@ -18,7 +19,9 @@ contract LoansBaseMock is LoansBase, BaseMock {
         uint256 loanID,
         uint256 amount,
         address payable recipient
-    ) internal {}
+    ) internal {
+        paidOutCollateral = true;
+    }
 
     function externalPayLoan(uint256 loanID, uint256 toPay) external {
         loans[loanID].payOff(toPay);

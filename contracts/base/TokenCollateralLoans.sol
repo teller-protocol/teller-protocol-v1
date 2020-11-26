@@ -38,60 +38,13 @@ contract TokenCollateralLoans is LoansBase {
 
     /** External Functions */
 
-    /**
-     * @notice Deposit collateral tokens into a loan.
-     * @param borrower The address of the loan borrower.
-     * @param loanID The ID of the loan the collateral is for
-     * @param amount The amount to deposit as collateral.
-     */
-    function depositCollateral(
-        address borrower,
-        uint256 loanID,
-        uint256 amount
-    )
-        external
-        payable
+    function _payInCollateral(uint256 loanID, uint256 amount) 
+        internal 
         noMsgValue()
-        loanActiveOrSet(loanID)
-        isInitialized()
-        whenNotPaused()
-        whenLendingPoolNotPaused(address(lendingPool))
     {
-        borrower.requireEqualTo(
-            loans[loanID].loanTerms.borrower,
-            "BORROWER_LOAN_ID_MISMATCH"
-        );
-        require(amount > 0, "CANNOT_DEPOSIT_ZERO");
-
         // Transfer collateral tokens to this contract.
         _collateralTokenTransferFrom(msg.sender, amount);
-
-        // Update the loan collateral and total. Transfer tokens to this contract.
-        _payInCollateral(loanID, amount);
-
-        emit CollateralDeposited(loanID, borrower, amount);
-    }
-
-    /**
-        @notice Creates a loan with the loan request and terms
-        @param request Struct of the protocol loan request
-        @param responses List of structs of the protocol loan responses
-        @param collateralAmount Amount of collateral required for the loan
-     */
-    function createLoanWithTerms(
-        TellerCommon.LoanRequest calldata request,
-        TellerCommon.LoanResponse[] calldata responses,
-        uint256 collateralAmount
-    )
-        external
-        payable
-        noMsgValue()
-        isInitialized()
-        whenNotPaused()
-        isBorrower(request.borrower)
-        withValidLoanRequest(request)
-    {
-        _createLoan(request, responses, collateralAmount);
+        super._payInCollateral(loanID, amount);
     }
 
     /**

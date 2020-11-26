@@ -160,9 +160,9 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
         loanTermsConsensusEncoder.encodeProcessRequestReturn(interestRate, collateralRatio, maxLoanAmount)
       )
       await collateralToken.mint(accounts[borrowerIndex], mintAmount, { from: sender })
-      const initialTotalCollateral = await instance.totalCollateral()
+      const initialTotalCollateral = await instance.totalCollateral();
       const initialContractCollateralTokenBalance = await collateralToken.balanceOf(instance.address)
-      await collateralToken.approve(instance.address, approveCollateralAmount, { from: accounts[borrowerIndex] })
+      await collateralToken.approve(instance.address, approveCollateralAmount, { from: accounts[borrowerIndex] });
 
       // Invocation
       try {
@@ -185,9 +185,10 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
           { interestRate, collateralRatio, maxLoanAmount, collateralAmount, loanID, termsExpiry, txTime },
           loanRequest
         )
+        console.log(loan.collateral.toString(), expectedLoan.collateral.toString(), 'Terms')
         assertLoan(loan, expectedLoan)
-        assert.equal(parseInt(initialTotalCollateral) + collateralAmount, parseInt(finalTotalCollateral))
-        assert.equal(parseInt(initialContractCollateralTokenBalance) + collateralAmount, parseInt(finalContractCollateralTokenBalance))
+        assert.equal(parseInt(initialTotalCollateral) + collateralAmount, parseInt(finalTotalCollateral), 'Collateral not match')
+        assert.equal(parseInt(initialContractCollateralTokenBalance) + collateralAmount, parseInt(finalContractCollateralTokenBalance), 'Balance not match')
         loans
           .loanTermsSet(result)
           .emitted(
