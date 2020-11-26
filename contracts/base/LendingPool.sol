@@ -167,7 +167,13 @@ contract LendingPool is Base, LendingPoolInterface {
         tokenTransferFrom(liquidator, amount);
 
         // deposit them straight into compound
-        _depositToCompoundIfSupported(amount);
+        uint256 repaidAmount = _depositToCompoundIfSupported(amount);
+
+        _markets().increaseRepayment(
+            address(lendingToken),
+            LoansInterface(loans).collateralToken(),
+            repaidAmount
+        );
 
         // Emits event
         emit PaymentLiquidated(liquidator, amount);
@@ -328,7 +334,7 @@ contract LendingPool is Base, LendingPoolInterface {
         @notice It tests whether cToken address is defined (not 0x0) or not.
         @return true if the cToken address is not 0x0. Otherwise it returns false.
      */
-    function _isCTokenNotSupported(address cTokenAddress) internal view returns (bool) {
+    function _isCTokenNotSupported(address cTokenAddress) internal pure returns (bool) {
         return cTokenAddress == address(0x0);
     }
 
