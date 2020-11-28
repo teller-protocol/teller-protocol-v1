@@ -211,7 +211,7 @@ module.exports = async function(deployer, network, accounts) {
       { txConfig, ...networkConfig },
     );
 
-    await deployerApp.deploys([TDAI, TUSDC], txConfig);
+    await deployerApp.deploys([TDAI, TUSDC], settingsInstance.address, txConfig);
     console.log(`Deployed tokens: TDAI [${TDAI.address}] TUSDC [${TUSDC.address}] `);
     console.log(`Registering TDAI and TUSDC in TTokenRegistry`);
     await tTokenRegistryInstance.registerTToken(TDAI.address);
