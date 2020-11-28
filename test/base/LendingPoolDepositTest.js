@@ -142,7 +142,7 @@ contract('LendingPoolDepositTest', function (accounts) {
             // Setup
             // Overriding instances created during beforeEach() as a real TToken instance
             // is needed for this test. 
-            tTokenInstance = await TToken.new("TToken Name", "TTN", 0);
+            tTokenInstance = await TToken.new(settingsInstance.address, "TToken Name", "TTN", 0);
             lendersInstance = await Lenders.new();
 
             await lendersInstance.initialize(
