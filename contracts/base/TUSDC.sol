@@ -18,5 +18,8 @@ contract TUSDC is TToken {
      * @dev Calls TToken constructor with token details
      * @param settingsAddress the setting address.
      */
-    constructor(address settingsAddress) public TToken(settingsAddress, NAME, SYMBOL, DECIMALS) {}
+    constructor(address settingsAddress)
+        public
+        TToken(settingsAddress, NAME, SYMBOL, DECIMALS)
+    {}
 }
