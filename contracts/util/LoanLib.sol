@@ -110,6 +110,11 @@ library LoanLib {
             );
     }
 
+    /**
+        @notice Checks whether the status of a loan is Active or has Terms Set
+        @param loan The loan for which to check the status
+        @return bool value indicating if the loan is active or has terms set
+     */
     function isActiveOrSet(TellerCommon.Loan storage loan) public view returns (bool) {
         return
             loan.status == TellerCommon.LoanStatus.Active ||
@@ -174,6 +179,12 @@ library LoanLib {
             });
     }
 
+    /**
+        @notice Returns the collateral needed for a loan, in the lending token, needed to take out the loan or for it be liquidated.
+        @param loan The loan for which to get collateral information for
+        @param loansContract The loans contract instance associated with the loan
+        @return uint256 Collateral needed in lending token value
+     */
     function getCollateralInLendingTokens(
         TellerCommon.Loan storage loan,
         LoansInterface loansContract
@@ -193,8 +204,9 @@ library LoanLib {
         @notice Get information on the collateral needed for the loan.
         @param loan The loan to get collateral info for.
         @param loansContract The loans contract instance for the loan.
-        @return uint256 Collateral needed in Lending tokens.
-        @return uint256 Collateral needed in Collateral tokens (wei)
+        @return int256 Collateral needed in Lending tokens.
+        @return int256 Collateral needed in Collateral tokens (wei)
+        @return uint256 The value of the loan held in the escrow contract
      */
     function getCollateralNeededInfo(
         TellerCommon.Loan storage loan,

@@ -164,22 +164,22 @@ contract LoansBase is LoansInterface, Base {
         return lendingPool.cToken();
     }
 
-    // See LoanLib.isSecured
+    // See more details LoanLib.isSecured
     function isLoanSecured(uint256 loanID) external view returns (bool) {
         return loans[loanID].isSecured(settings());
     }
 
-    // See LoanLib.canGoToEOA
+    // See more details in LoanLib.canGoToEOA
     function canLoanGoToEOA(uint256 loanID) external view returns (bool) {
         return loans[loanID].canGoToEOA(settings());
     }
 
-    // See LoanLib.getTotalOwed
+    // See more details LoanLib.getTotalOwed
     function getTotalOwed(uint256 loanID) external view returns (uint256) {
         return loans[loanID].getTotalOwed();
     }
 
-    // See LoanLib.getCollateralInfo
+    // See more details LoanLib.getCollateralInfo
     function getCollateralInfo(uint256 loanID)
         external
         view
@@ -188,7 +188,7 @@ contract LoansBase is LoansInterface, Base {
         return _getCollateralInfo(loanID);
     }
 
-    // See LoanLib.getLiquidationInfo
+    // See more details LoanLib.getLiquidationInfo
     function getLiquidationInfo(uint256 loanID)
         external
         view
