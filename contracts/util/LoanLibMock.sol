@@ -3,7 +3,4 @@ pragma experimental ABIEncoderV2;
 
 import "../../util/LoanLib.sol";
 
-contract LoanLibMock is LibLib {
-
-
-}
+contract LoanLibMock is LibLib {}

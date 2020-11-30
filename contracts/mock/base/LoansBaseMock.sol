@@ -77,11 +77,22 @@ contract LoansBaseMock is LoansBase, BaseMock {
         loans[loanID].escrow = escrowAddress;
     }
 
-    function externalEscrowClaimTokensByCollateralValue(address recipient, uint256 amountToClaim, uint256 loanID) external {
-        EscrowInterface(loans[loanID].escrow).claimTokensByCollateralValue(recipient, amountToClaim);
+    function externalEscrowClaimTokensByCollateralValue(
+        address recipient,
+        uint256 amountToClaim,
+        uint256 loanID
+    ) external {
+        EscrowInterface(loans[loanID].escrow).claimTokensByCollateralValue(
+            recipient,
+            amountToClaim
+        );
     }
 
-    function externalPayOutLiquidator(uint256 loanID, TellerCommon.LoanLiquidationInfo calldata liquidationInfo, address payable recipient) external {
+    function externalPayOutLiquidator(
+        uint256 loanID,
+        TellerCommon.LoanLiquidationInfo calldata liquidationInfo,
+        address payable recipient
+    ) external {
         super._payOutLiquidator(loanID, liquidationInfo, recipient);
     }
 
