@@ -77,8 +77,12 @@ contract LoansBaseMock is LoansBase, BaseMock {
         loans[loanID].escrow = escrowAddress;
     }
 
-    function externalEscrowClaimTokens(uint256 loanID) external {
-        EscrowInterface(loans[loanID].escrow).claimTokens();
+    function externalEscrowClaimTokensByCollateralValue(address recipient, uint256 amountToClaim, uint256 loanID) external {
+        EscrowInterface(loans[loanID].escrow).claimTokensByCollateralValue(recipient, amountToClaim);
+    }
+
+    function externalPayOutLiquidator(uint256 loanID, TellerCommon.LoanLiquidationInfo calldata liquidationInfo, address payable recipient) external {
+        super._payOutLiquidator(loanID, liquidationInfo, recipient);
     }
 
     function mockLiquidationInfo(TellerCommon.LoanLiquidationInfo memory liquidationInfo)
@@ -167,9 +171,10 @@ contract LoansBaseMock is LoansBase, BaseMock {
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
-        address
+        address collateralTokenAddress
     ) external isNotInitialized() {
         _initialize(lendingPoolAddress, loanTermsConsensusAddress, settingsAddress);
+        collateralToken = collateralTokenAddress;
     }
 
     function depositCollateral(

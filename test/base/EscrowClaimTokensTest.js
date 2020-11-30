@@ -70,7 +70,6 @@ contract("EscrowClaimTokensTest", function(accounts) {
           const token = await DAI.at(tokens[i]);
           const escrowBalance = await token.balanceOf(instance.address);
           const recipientBalance = await token.balanceOf(borrower);
-          const loanBalance = await token.balanceOf(loans.address);
 
           assert.equal(escrowBalance.toString(), '0', 'Token balance left in Escrow')
           assert.equal(recipientBalance.toString(), tokenBalance.toString(), 'Recipient did not receive tokens')
