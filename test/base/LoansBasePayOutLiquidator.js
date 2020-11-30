@@ -133,7 +133,6 @@ contract("LoansBasePayOutLiquidatorTest", function(accounts) {
                 const result = await instance.externalPayOutLiquidator(mockLoanID, liquidationInfo, liquidator);
                 const afterPayOut = await instance.paidOutCollateral();
                 assert(result);
-                console.log({afterPayOut, result})
                 assert(afterPayOut, "Liquidator not paid");
             } catch (error) {
                 assert(mustFail, error.message);
