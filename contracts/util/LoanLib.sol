@@ -269,25 +269,30 @@ library LoanLib {
                 * X factor of additional collateral
         */
         // To take out a loan (if status == TermsSet), the required collateral is (principal owed * the collateral ratio - interest rate).
-        
 
         // For the loan to not be liquidated (when status == Active), the minimum collateral is (principal owed * (X collateral factor + liquidation reward)).
         // If the loan has an escrow account, the minimum collateral is ((principal owed - escrow value) * (X collateral factor + liquidation reward)).
         neededInLendingTokens = int256(loan.principalOwed);
         if (loan.status == TellerCommon.LoanStatus.TermsSet) {
-            neededInLendingTokens = neededInLendingTokens.percent(loan.loanTerms.collateralRatio);
+            neededInLendingTokens = neededInLendingTokens.percent(
+                loan.loanTerms.collateralRatio
+            );
         } else {
             uint256 bufferPercent = settings.getPlatformSettingValue(
                 settings.consts().COLLATERAL_BUFFER_SETTING()
             );
-            uint256 requiredRatio = loan.loanTerms.collateralRatio
+            uint256 requiredRatio = loan
+                .loanTerms
+                .collateralRatio
                 .sub(loan.loanTerms.interestRate)
                 .sub(bufferPercent);
             if (loan.escrow != address(0)) {
                 escrowLoanValue = EscrowInterface(loan.escrow).calculateLoanValue();
                 neededInLendingTokens += neededInLendingTokens - int256(escrowLoanValue);
             }
-            neededInLendingTokens = neededInLendingTokens.percent(requiredRatio) + int256(loan.interestOwed);
+            neededInLendingTokens =
+                neededInLendingTokens.percent(requiredRatio) +
+                int256(loan.interestOwed);
         }
     }
 
@@ -305,11 +310,15 @@ library LoanLib {
         liquidationInfo.amountToLiquidate = getTotalOwed(loan);
 
         // Maximum reward is the calculated value of required collateral minus the principal owed (see LoanLib.getCollateralNeededInTokens).+
-        uint256 availableValue = liquidationInfo.collateralInfo.valueInLendingTokens.add(liquidationInfo.collateralInfo.escrowLoanValue);
+        uint256 availableValue = liquidationInfo.collateralInfo.valueInLendingTokens.add(
+            liquidationInfo.collateralInfo.escrowLoanValue
+        );
         uint256 liquidationSetting = loansContract.settings().getPlatformSettingValue(
-                loansContract.settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
-            );
-        uint256 maxReward = liquidationInfo.amountToLiquidate.percent(liquidationSetting.diffOneHundredPercent());
+            loansContract.settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
+        );
+        uint256 maxReward = liquidationInfo.amountToLiquidate.percent(
+            liquidationSetting.diffOneHundredPercent()
+        );
         if (availableValue < liquidationInfo.amountToLiquidate + maxReward) {
             liquidationInfo.rewardInCollateral = int256(availableValue);
         } else {
