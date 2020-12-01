@@ -19,6 +19,9 @@ const {
 } = require('../assertions')
 const errorActions = require("./errors");
 const { assert } = require("chai");
+const {
+  settings: settingsActions
+} = require('./index');
 
 /**
  * Gets an amount of tokens requested based on the current network.
@@ -101,6 +104,26 @@ const requestLoanTerms = async (
     responseTime,
   } = loanResponseTemplate;
 
+  /**
+   * Get collateral buffer from settings 
+   * Grab liquidator amount percentage from settings
+   * Subtract collateral ratio - (collateral buffer - liquidator reward percentage - interest rate) - If negative throw an error saying incorrect collateral ratio
+   */ 
+  let { value } = await settingsActions.getPlatformSettings(
+    allContracts,
+    { testContext },
+    { settingName: platformSettingNames.CollateralBuffer }
+  );
+  const collateralBuffer = value;
+  let result = await settingsActions.getPlatformSettings(
+    allContracts,
+    { testContext },
+    { settingName: platformSettingNames.LiquidateEthPrice }
+  );
+  const liquidatorReward = 10000 - result.value;
+
+  const requiredRatio = collateralRatio - collateralBuffer - liquidatorReward - interestRate;
+
   const loanTermsRequestInfo = {
     borrower,
     recipient,
@@ -115,7 +138,7 @@ const requestLoanTerms = async (
     //        responseTime: currentTimestamp - 10,
     responseTime: currentTimestamp - 10,
     interestRate,
-    collateralRatio,
+    requiredRatio,
     maxLoanAmount: maxLoanAmount.toFixed(0),
     consensusAddress: loanTermsConsensus.address,
   };

@@ -118,22 +118,24 @@ contract("EtherCollateralLoansGetCollateralInfoTest", function(accounts) {
       }
 
       let collateralNeededInTokens;
-      let requiredRatio = new BigNumber(collateralRatio);
       switch (status) {
         case NON_EXISTENT:
         case CLOSED:
-          collateralNeededInTokens = new BigNumber(0)
+          collateralNeededInTokens = new BigNumber(0);
           break
         case TERMS_SET:
-          collateralNeededInTokens = new BigNumber(loanAmount);
+          collateralNeededInTokens = new BigNumber(loanAmount).multipliedBy(collateralRatio).div(10000);
           break
         case ACTIVE:
-          collateralNeededInTokens = new BigNumber(loanAmount);
-          requiredRatio = requiredRatio.minus(interestRate).minus(collateralBuffer).minus(10000 - liquidatePrice);
-          collateralNeededInTokens = collateralNeededInTokens.minus(escrowValue);
+          collateralNeededInTokens = new BigNumber(loanAmount)
+          if(escrowValue > 0) {
+            collateralNeededInTokens = collateralNeededInTokens
+              .plus(collateralNeededInTokens.minus(escrowValue));
+          }
+            
+          collateralNeededInTokens = collateralNeededInTokens.multipliedBy(new BigNumber(collateralRatio).minus(interestRate).minus(collateralBuffer)).div(10000).plus(interestOwed);
           break
       }
-      collateralNeededInTokens = collateralNeededInTokens.multipliedBy(requiredRatio).div(10000);
 
       const aggregator = await ChainlinkAggregator.at(aggregatorInstance.address)
       const neededInCollateralTokensValueForCalldata = aggregator.contract.methods.valueFor(
