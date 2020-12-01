@@ -12,7 +12,7 @@ const DAIMock = artifacts.require("./mock/token/DAIMock.sol")
 
 // Smart contracts
 const Lenders = artifacts.require("./base/Lenders.sol");
-const LendingPool = artifacts.require("./base/LendingPool.sol");
+const LendingPool = artifacts.require("./mock/base/LendingPoolMock.sol");
 
 contract('LendingPoolLiquidationPaymentTest', function (accounts) {
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
@@ -25,7 +25,8 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
     let interestConsensusInstance;
     let cTokenInstance;
     let settingsInstance;
-    let loansInstance = accounts[0];
+    let marketStateInstance;
+    let loansInstance;
     
     beforeEach('Setup for each test', async () => {
         tTokenInstance = await Mock.new();
@@ -34,6 +35,8 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
         interestConsensusInstance = await Mock.new();
         cTokenInstance = await Mock.new()
         settingsInstance = await Mock.new();
+        marketStateInstance = await Mock.new();
+        loansInstance = await Mock.new();
         lendersInstance = await Lenders.new();
 
         await cTokenInstance.givenMethodReturnAddress(
@@ -47,19 +50,24 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
           interestConsensusInstance.address,
           settingsInstance.address,
         );
+
+        await settingsInstance.givenMethodReturnAddress(
+            settingsInterfaceEncoder.encodeMarketsState(),
+            marketStateInstance.address
+        );
     });
 
     withData({
-        _1_cTokenSupported_basic: [accounts[1], loansInstance, true, true, 10, false, 1000, undefined, false],
-        _2_cTokenSupported_transferFromFail: [accounts[1], loansInstance, true, false, 10, false, 1000, "SafeERC20: ERC20 operation did not succeed", true],
-        _3_cTokenSupported_notLoansSender: [accounts[1], accounts[2], true, true, 71, false, 1000, 'ADDRESS_ISNT_LOANS_CONTRACT', true],
-        _4_cTokenSupported_compoundFail: [accounts[1], loansInstance, true, true, 10, true, 1000, 'COMPOUND_DEPOSIT_ERROR', true],
-        _5_cTokenNotSupported_basic: [accounts[1], loansInstance, false, true, 10, false, 1000, undefined, false],
-        _6_cTokenNotSupported_transferFromFail: [accounts[1], loansInstance, false, false, 10, false, 1000, "SafeERC20: ERC20 operation did not succeed", true],
-        _7_cTokenNotSupported_notLoansSender: [accounts[1], accounts[2], false, true, 71, false, 1000, 'ADDRESS_ISNT_LOANS_CONTRACT', true],
+        _1_cTokenSupported_basic: [accounts[1], true, true, true, 10, false, 1000, undefined, false],
+        _2_cTokenSupported_transferFromFail: [accounts[1], true, true, false, 10, false, 1000, "SafeERC20: ERC20 operation did not succeed", true],
+        _3_cTokenSupported_notLoansSender: [accounts[1], false, true, true, 71, false, 1000, 'ADDRESS_ISNT_LOANS_CONTRACT', true],
+        _4_cTokenSupported_compoundFail: [accounts[1], true, true, true, 10, true, 1000, 'COMPOUND_DEPOSIT_ERROR', true],
+        _5_cTokenNotSupported_basic: [accounts[1], true, false, true, 10, false, 1000, undefined, false],
+        _6_cTokenNotSupported_transferFromFail: [accounts[1], true, false, false, 10, false, 1000, "SafeERC20: ERC20 operation did not succeed", true],
+        _7_cTokenNotSupported_notLoansSender: [accounts[1], false, false, true, 71, false, 1000, 'ADDRESS_ISNT_LOANS_CONTRACT', true],
     }, function(
         liquidator,
-        sender,
+        mockRequireIsLoan,
         isCTokenSupported,
         transferFrom,
         amountToLiquidate,
@@ -70,17 +78,19 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
     ) {
         it(t('user', 'liquidationPayment', 'Should able (or not) to liquidate payment.', mustFail), async function() {
             // Setup
+            const sender = accounts[1];
             if(isCTokenSupported) {
                 await settingsInstance.givenMethodReturnAddress(
                     settingsInterfaceEncoder.encodeGetCTokenAddress(),
                     cTokenInstance.address
                 );
             }
+            await instance.mockRequireIsLoan(mockRequireIsLoan);
             await instance.initialize(
                 tTokenInstance.address,
                 daiInstance.address,
                 lendersInstance.address,
-                loansInstance,
+                loansInstance.address,
                 settingsInstance.address,
             );
             if (!transferFrom) {
