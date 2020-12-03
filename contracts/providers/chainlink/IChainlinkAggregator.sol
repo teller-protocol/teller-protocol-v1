@@ -32,6 +32,8 @@ interface IChainlinkAggregator {
         view
         returns (AggregatorV2V3Interface, bool);
 
+    function isTokenSupported(address tokenAddress) external view returns (bool);
+
     /**
         @notice It calculates the value of a token amount into another.
         @param src Source token address.
@@ -64,4 +66,17 @@ interface IChainlinkAggregator {
         address dst,
         address aggregator
     ) external;
+
+    /**
+        @notice It removes support for a Chainlink Aggregator pair.
+        @param src Source token address.
+        @param dst Destination token address.
+     */
+    function remove(address src, address dst) external;
+
+    /**
+        @notice It removes support for a Chainlink Aggregator.
+        @param tokenAddress Token to remove all markets for.
+     */
+    function remove(address tokenAddress) external;
 }
