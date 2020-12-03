@@ -65,7 +65,10 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
             if (blacklisted) {
                 instance.addNotAllowedAddress(user, { from: owner });
             }
-            if (stakeAmount > 0) { 
+
+            let userBalanceBefore = '0'
+            let liquidityBalanceBefore = '0'
+            if (stakeAmount > 0) {
                 await tToken.mint(user, stakeAmount, { from: owner });
                 userBalanceBefore = await tToken.balanceOf(user);
                 liquidityBalanceBefore = await tToken.balanceOf(instance.address);
