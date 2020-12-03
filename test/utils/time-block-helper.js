@@ -1,11 +1,11 @@
-advanceTimeAndBlock = async (time) => {
+const advanceTimeAndBlock = async (time) => {
     await advanceTime(time);
     await advanceBlock();
 
     return Promise.resolve(web3.eth.getBlock('latest'));
 }
 
-advanceTime = async (time) => {
+const advanceTime = async (time) => {
     return new Promise((resolve, reject) => {
         web3.currentProvider.send({
             jsonrpc: "2.0",
@@ -19,7 +19,7 @@ advanceTime = async (time) => {
     });
 }
 
-advanceBlock = async () => {
+const advanceBlock = async () => {
     return new Promise((resolve, reject) => {
         web3.currentProvider.send({
             jsonrpc: "2.0",
@@ -34,14 +34,14 @@ advanceBlock = async () => {
     });
 }
 
-advanceBlocks = async (blocks) => {
+const advanceBlocks = async (blocks) => {
     for (let i = 0; i < blocks; i++) {
         await advanceBlock();
     }
     return Promise.resolve(web3.eth.getBlock('latest'));
 }
 
-latestBlock = async () => {
+const latestBlock = async () => {
     return Promise.resolve(web3.eth.getBlock('latest'));
 }
 
