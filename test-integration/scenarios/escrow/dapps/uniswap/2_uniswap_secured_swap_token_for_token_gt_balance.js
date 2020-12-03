@@ -81,6 +81,6 @@ module.exports = async (testContext) => {
   const tokensPath = [ token, destinationToken ]
   const sourceAmount = new BigNumber(loan.borrowedAmount.toString()).plus(1).toString()
   await escrowActions.dapp.uniswap.swap(allContracts, context,
-    { tokensPath, sourceAmount, minDestination: '100000000000000000', shouldFail: true, expectedRevertReason: 'UNISWAP_INSUFFICIENT_SOURCE' }
+    { tokensPath, sourceAmount, minDestination: '100000000000000000', shouldFail: true, expectedRevertReason: 'UNI_INSUFFICIENT_SRC' }
   )
 };
