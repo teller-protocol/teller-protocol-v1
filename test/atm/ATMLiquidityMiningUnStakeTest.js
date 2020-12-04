@@ -164,7 +164,7 @@ contract('ATMLiquidityMiningUnStakeTest', function (accounts) {
         // Assertions
         assert(!mustFail, 'It should have failed because data is invalid.')
         // Validating result
-        liquidityBalanceAfter = parseInt(await tToken.balanceOf(instance.address))
+        const liquidityBalanceAfter = parseInt(await tToken.balanceOf(instance.address))
         assert.equal(userBalanceBefore, 0, 'user tTokens should have been sent to liquidity contract')
         assert.equal(liquidityBalanceAfter, 0, 'liquidity tToken balance not correct')
         const userBalanceAfter = parseInt(await tToken.balanceOf(user))
