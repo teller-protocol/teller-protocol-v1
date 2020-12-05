@@ -174,7 +174,9 @@ contract MarketsState is
             return markets[borrowedAsset][collateralAsset].getSupplyToDebtFor(loanAmount);
         } else {
             return
-                markets[cTokenAddress][collateralAsset].getSupplyToDebtFor(_getValueForAmount(borrowedAsset, loanAmount));
+                markets[cTokenAddress][collateralAsset].getSupplyToDebtFor(
+                    _getValueForAmount(borrowedAsset, loanAmount)
+                );
         }
     }
 
@@ -275,14 +277,12 @@ contract MarketsState is
             uint8 assetDecimals = ERC20Detailed(assetAddress).decimals();
             uint8 cTokenDecimals = CErc20Interface(cTokenAddress).decimals();
             uint256 exchangeRate = CErc20Interface(cTokenAddress).exchangeRateStored();
-            uint256 diffFactor = uint256(10)**uint256(EXCHANGE_RATE_DECIMALS).diff(
-                uint256(cTokenDecimals)
-            );
+            uint256 diffFactor = uint256(10) **
+                uint256(EXCHANGE_RATE_DECIMALS).diff(uint256(cTokenDecimals));
             // return amount.mul(10**diffDecimals).div(exchangeRate);
 
-
             // int256 price;
-            
+
             if (cTokenDecimals > EXCHANGE_RATE_DECIMALS) {
                 exchangeRate = exchangeRate.mul(diffFactor);
             } else {

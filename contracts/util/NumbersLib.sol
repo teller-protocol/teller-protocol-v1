@@ -22,10 +22,7 @@ library NumbersLib {
         @return uint256 The difference value
      */
     function diff(uint256 self, uint256 other) internal pure returns (uint256) {
-        return 
-            other > self
-                ? other.sub(self)
-                : self.sub(other);
+        return other > self ? other.sub(self) : self.sub(other);
     }
 
     /**
@@ -34,8 +31,7 @@ library NumbersLib {
         @return uint256 The percentage difference value
      */
     function diffOneHundredPercent(uint256 self) internal pure returns (uint256) {
-        return
-            diff(self, ONE_HUNDRED_PERCENT());
+        return diff(self, ONE_HUNDRED_PERCENT());
     }
 
     /**

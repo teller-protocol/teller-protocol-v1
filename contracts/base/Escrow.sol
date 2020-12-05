@@ -245,10 +245,8 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         if (returnData.length > 0) {
             uint8 cTokenDecimals = CErc20Interface(baseAddress).decimals();
             uint256 exchangeRate = abi.decode(returnData, (uint256));
-            uint256 diffFactor = uint256(10)**uint256(18).diff(
-                uint256(cTokenDecimals)
-            );
-            
+            uint256 diffFactor = uint256(10)**uint256(18).diff(uint256(cTokenDecimals));
+
             if (cTokenDecimals > uint256(18)) {
                 exchangeRate = exchangeRate.mul(diffFactor);
             } else {
@@ -264,7 +262,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
                 baseAddress = address(0x6B175474E89094C44Da98b954EedeAC495271d0F);
                 assetDecimals = ERC20Detailed(baseAddress).decimals();
             }
-            
+
             baseAmount = baseAmount.mul(exchangeRate).div(uint256(10)**assetDecimals);
         }
         return
@@ -275,7 +273,15 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
             );
     }
 
-    function anything(address baseAddress) external view returns(bool success, bytes memory returnData, uint256 exchangeRate){
+    function anything(address baseAddress)
+        external
+        view
+        returns (
+            bool success,
+            bytes memory returnData,
+            uint256 exchangeRate
+        )
+    {
         (success, returnData) = baseAddress.staticcall(
             abi.encodeWithSignature("exchangeRateStored()")
         );
