@@ -39,11 +39,11 @@ module.exports = async (testContext) => {
   let collateralAmountDepositCollateral;
   if (collTokenName.toLowerCase() === "eth") {
     initialOraclePrice = "0.00295835";
-    collateralAmountDepositCollateral = toDecimals(0.18, collateralTokenInfo.decimals);
+    collateralAmountDepositCollateral = toDecimals(1.18, collateralTokenInfo.decimals);
   }
   if (collTokenName.toLowerCase() === "link") {
     initialOraclePrice = "0.100704";
-    collateralAmountDepositCollateral = toDecimals(6.1, collateralTokenInfo.decimals);
+    collateralAmountDepositCollateral = toDecimals(16.1, collateralTokenInfo.decimals);
   }
   const durationInDays = 5;
   const signers = await accounts.getAllAt(12, 13);

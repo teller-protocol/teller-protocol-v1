@@ -19,9 +19,7 @@ const {
 } = require('../assertions')
 const errorActions = require("./errors");
 const { assert } = require("chai");
-const {
-  settings: settingsActions
-} = require('./index');
+const settingsActions = require('./settings');
 
 /**
  * Gets an amount of tokens requested based on the current network.
@@ -104,26 +102,6 @@ const requestLoanTerms = async (
     responseTime,
   } = loanResponseTemplate;
 
-  /**
-   * Get collateral buffer from settings 
-   * Grab liquidator amount percentage from settings
-   * Subtract collateral ratio - (collateral buffer - liquidator reward percentage - interest rate) - If negative throw an error saying incorrect collateral ratio
-   */ 
-  let { value } = await settingsActions.getPlatformSettings(
-    allContracts,
-    { testContext },
-    { settingName: platformSettingNames.CollateralBuffer }
-  );
-  const collateralBuffer = value;
-  let result = await settingsActions.getPlatformSettings(
-    allContracts,
-    { testContext },
-    { settingName: platformSettingNames.LiquidateEthPrice }
-  );
-  const liquidatorReward = 10000 - result.value;
-
-  const requiredRatio = collateralRatio - collateralBuffer - liquidatorReward - interestRate;
-
   const loanTermsRequestInfo = {
     borrower,
     recipient,
@@ -138,7 +116,7 @@ const requestLoanTerms = async (
     //        responseTime: currentTimestamp - 10,
     responseTime: currentTimestamp - 10,
     interestRate,
-    requiredRatio,
+    collateralRatio,
     maxLoanAmount: maxLoanAmount.toFixed(0),
     consensusAddress: loanTermsConsensus.address,
   };
@@ -247,6 +225,7 @@ const withdrawCollateral = async (
   {loanId, amount, expectedErrorMessage = undefined}
 ) => {
   console.log(`Withdrawing collateral ${amount} in loan id ${loanId}.`);
+
   const withdrawCollateralPromise = async () => await loans.withdrawCollateral(amount, loanId, txConfig);
   const initialTotalCollateral = await loans.totalCollateral();
   const {
@@ -334,7 +313,10 @@ const liquidateLoan = async (
 
   const {
     amountToLiquidate,
-    collateralInfo,
+    rewardInCollateral,
+    collateralInfo: {
+      collateral
+    },
   } = await loans.getLiquidationInfo(loanId);
 
   const loansInfo = await loans.loans(loanId);
@@ -373,20 +355,26 @@ const liquidateLoan = async (
         loanId,
         loansInfo.loanTerms.borrower,
         txConfig.from,
-        collateralInfo.collateral,
+        collateral,
         amountToLiquidate
       );
+    const collateralInfo = await loans.getCollateralInfo(loanId);
     const finalTotalCollateral = BigNumber((await loans.totalCollateral()).toString());
-    assert.equal(
-      initialTotalCollateral.minus(finalTotalCollateral).toString(),
-      collateral.toString()
-    );
-
-    // Asserting the escrow total values.
-    const escrow = await getEscrow(allContracts, { testContext }, { loanId });
-    const loanValue = await escrow.calculateLoanValue();
-    
-    assert.equal(loanValue.toString(), '0');
+    const remainingReward = new BigNumber(rewardInCollateral).minus(collateral);
+    if (rewardInCollateral >= collateral) {
+      assert.equal(
+        collateralInfo.collateral.toString(),
+        '0'
+      );
+      if (rewardInCollateral > collateral) {
+        // TODO: assert proper value in escrow was paid to liquidator
+      }
+    } else {
+      assert.equal(
+        collateralInfo.collateral.toString(),
+        new BigNumber(collateral).minus(rewardInCollateral).toString()
+      );  
+    }
     
     // Asserting liquidator final lending token balance.
     const finalLiquidatorTokenBalance = BigNumber((await token.balanceOf(txConfig.from)));

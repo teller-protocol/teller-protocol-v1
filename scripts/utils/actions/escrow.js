@@ -63,7 +63,7 @@ const claimTokensByLoanId = async (
   { loanId, recipient, shouldFail = false, expectedRevertReason }
 ) => {
   const escrow = await loansActions.getEscrow({ loans }, { testContext }, { loanId });
-  const txPromise = escrow.claimTokens(recipient, txConfig);
+  const txPromise = escrow.claimTokens(txConfig);
   await escrowAssertions.tokensClaimed({ txPromise, recipient, shouldFail, expectedRevertReason });
 };
 
@@ -75,7 +75,7 @@ const claimTokens = async (
   { txConfig, testContext },
   { recipient, shouldFail = false, expectedRevertReason }
 ) => {
-  const txPromise = escrow.claimTokens(recipient, txConfig);
+  const txPromise = escrow.claimTokens(txConfig);
   await escrowAssertions.tokensClaimed({ txPromise, recipient, shouldFail, expectedRevertReason });
 };
 

@@ -10,12 +10,14 @@ import "../interfaces/EscrowInterface.sol";
 import "../interfaces/LoansInterface.sol";
 import "../interfaces/IBaseProxy.sol";
 import "../providers/compound/CErc20Interface.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 import "../util/SettingsConsts.sol";
 import "../util/TellerCommon.sol";
+import "../util/NumbersLib.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -38,6 +40,7 @@ import "../util/TellerCommon.sol";
 contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
     using Address for address;
     using SafeMath for uint256;
+    using NumbersLib for uint256;
     using SafeERC20 for IERC20;
 
     /** State Variables **/
@@ -151,18 +154,16 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
     */
     function claimTokens() external onlyOwner() {
         require(getLoan().status == TellerCommon.LoanStatus.Closed, "LOAN_NOT_CLOSED");
-        require(getLoan().liquidated, "LOAN_NOT_LIQUIDATED");
-        // require liquidated
 
         address[] memory tokens = getTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
             uint256 balance = _balanceOf(tokens[i]);
             if (balance > 0) {
-                IERC20(tokens[i]).safeTransfer(msg.sender, balance);
+                IERC20(tokens[i]).safeTransfer(getBorrower(), balance);
             }
         }
 
-        emit TokensClaimed(msg.sender);
+        emit TokensClaimed(getBorrower());
     }
 
     /**
@@ -239,16 +240,32 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         bytes memory returnData;
         // call function to base address for function signature of underlying
         (success, returnData) = baseAddress.staticcall(
-            abi.encodeWithSignature("balanceOfUnderlying(address)", address(this))
+            abi.encodeWithSignature("exchangeRateStored()")
         );
-        // if successful, check baseAddress
-        if (success) {
-            baseAmount = abi.decode(returnData, (uint256));
+        if (returnData.length > 0) {
+            uint8 cTokenDecimals = CErc20Interface(baseAddress).decimals();
+            uint256 exchangeRate = abi.decode(returnData, (uint256));
+            uint256 diffFactor = uint256(10)**uint256(18).diff(
+                uint256(cTokenDecimals)
+            );
+            
+            if (cTokenDecimals > uint256(18)) {
+                exchangeRate = exchangeRate.mul(diffFactor);
+            } else {
+                exchangeRate = exchangeRate.div(diffFactor);
+            }
+
+            uint8 assetDecimals;
             if (baseAddress == settings().cethAddress()) {
                 baseAddress = settings().ETH_ADDRESS();
+                assetDecimals = uint8(18);
             } else {
-                baseAddress = CErc20Interface(baseAddress).underlying();
+                // baseAddress = CErc20Interface(baseAddress).underlying();
+                baseAddress = address(0x6B175474E89094C44Da98b954EedeAC495271d0F);
+                assetDecimals = ERC20Detailed(baseAddress).decimals();
             }
+            
+            baseAmount = baseAmount.mul(exchangeRate).div(uint256(10)**assetDecimals);
         }
         return
             settings().chainlinkAggregator().valueFor(
@@ -256,5 +273,12 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
                 quoteAddress,
                 baseAmount
             );
+    }
+
+    function anything(address baseAddress) external view returns(bool success, bytes memory returnData, uint256 exchangeRate){
+        (success, returnData) = baseAddress.staticcall(
+            abi.encodeWithSignature("exchangeRateStored()")
+        );
+        exchangeRate = abi.decode(returnData, (uint256));
     }
 }
