@@ -36,7 +36,7 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
 
   beforeEach("Setup for each test", async () => {
     const lendingPoolInstance = await Mock.new();
-    lendingTokenInstance = await Mock.new();
+    const lendingTokenInstance = await Mock.new();
     collateralTokenInstance = await LINKMock.new();
     const settingsInstance = await createTestSettingsInstance(
       Settings,
