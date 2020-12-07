@@ -24,6 +24,7 @@ const NON_EXISTENT = 0
 const TERMS_SET = 1
 const ACTIVE = 2
 const CLOSED = 3
+const LIQUIDATED = 4
 
 const toDecimals = (amount, decimals) => {
     return new BigNumber(amount).times(new BigNumber(10).pow(decimals));
@@ -37,6 +38,7 @@ module.exports = {
     TERMS_SET,
     ACTIVE,
     CLOSED,
+    LIQUIDATED,
     DEFAULT_DECIMALS,
     NULL_ADDRESS,
     NULL_BYTES,

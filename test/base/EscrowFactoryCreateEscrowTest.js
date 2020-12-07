@@ -91,7 +91,6 @@ contract("EscrowFactoryCreateEscrowTest", function(accounts) {
         collateral: 123456,
         borrowedAmount: loanTerms.maxLoanAmount,
         status: ACTIVE,
-        liquidated: false
       });
       await loans.setLoan(loan);
 

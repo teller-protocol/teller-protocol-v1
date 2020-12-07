@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require("leche").withData;
-const { t, NULL_ADDRESS, ACTIVE, CLOSED, ONE_DAY } = require("../utils/consts");
+const { t, NULL_ADDRESS, ACTIVE, ONE_DAY } = require("../utils/consts");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const { createLoanTerms } = require("../utils/structs");
 const { createLoan, createLiquidationInfo } = require("../utils/loans");
@@ -47,7 +47,6 @@ contract("LoansBasePayOutLiquidatorTest", function(accounts) {
             principalOwed: 15000,
             interestOwed: 300,
             status: ACTIVE,
-            liquidated: false,
             valueInLendingTokens: 15300,
             escrowLoanValue: 7000,
             neededInCollateralTokens: 410,
@@ -67,7 +66,6 @@ contract("LoansBasePayOutLiquidatorTest", function(accounts) {
             principalOwed: 10000,
             interestOwed: 200,
             status: ACTIVE,
-            liquidated: false,
             valueInLendingTokens: 12200,
             escrowLoanValue: 6000,
             neededInCollateralTokens: 210,
@@ -87,7 +85,6 @@ contract("LoansBasePayOutLiquidatorTest", function(accounts) {
         principalOwed,
         interestOwed,
         status,
-        liquidated,
         valueInLendingTokens,
         escrowLoanValue,
         neededInLendingTokens,
@@ -108,7 +105,7 @@ contract("LoansBasePayOutLiquidatorTest", function(accounts) {
 
             const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, loanLength);
 
-            const loan = createLoan({ id: mockLoanID, loanTerms, loanStartTime, principalOwed, interestOwed, borrowedAmount: loanTerms.maxLoanAmount, status, liquidated });
+            const loan = createLoan({ id: mockLoanID, loanTerms, loanStartTime, principalOwed, interestOwed, borrowedAmount: loanTerms.maxLoanAmount, status });
 
 
             // Mock liquidation info

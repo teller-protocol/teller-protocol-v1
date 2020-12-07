@@ -11,7 +11,6 @@ const assertLoanValues = async (
     collateral,
     principalOwed,
     interestOwed,
-    liquidated,
     hasEscrow,
     escrowLoanValue,
   }
@@ -31,9 +30,6 @@ const assertLoanValues = async (
   }
   if (interestOwed != null) {
     assert.strictEqual(loanInfo.interestOwed.toString(), interestOwed.toString(), 'Unexpected loan interestOwed');
-  }
-  if (liquidated != null) {
-    assert.strictEqual(loanInfo.liquidated, liquidated, 'Unexpected loan liquidated');
   }
 
   if (hasEscrow != null) {

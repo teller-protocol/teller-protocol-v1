@@ -65,7 +65,7 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
     ) {
         it(t('user', 'repay', 'Should able to repay your loan.', false), async function() {
             // Setup
-            const loan = createLoan({ id: mockLoanID, loanTerms, collateral: loanCollateral.toString(), principalOwed: loanPrincipalOwed, interestOwed: loanInterestOwed, borrowedAmount: loanTerms.maxLoanAmount, status: ACTIVE, liquidated: false });
+            const loan = createLoan({ id: mockLoanID, loanTerms, collateral: loanCollateral.toString(), principalOwed: loanPrincipalOwed, interestOwed: loanInterestOwed, borrowedAmount: loanTerms.maxLoanAmount, status: ACTIVE });
             await instance.setLoan(loan);
 
             await instance.setTotalCollateral(totalCollateral)

@@ -53,15 +53,14 @@ contract("EscrowClaimTokensByCollateralValueTest", function(accounts) {
   });
 
   withData({
-    _1_loan_active: [ loanStatus.Active, accounts[1], accounts[2], false, 0, 0, true, true, "LOAN_NOT_CLOSED" ],
-    _2_loan_closed_not_liquidated: [ loanStatus.Closed, accounts[1], accounts[2], false, 0, 0, true, true, "LOAN_NOT_LIQUIDATED" ],
-    _3_loan_liquidated: [ loanStatus.Closed, accounts[1], accounts[2], true, 2, 1000, true, false, null ],
-    _4_loan_liquidated_caller_not_loans_instance: [ loanStatus.Closed, accounts[1], accounts[2], true, 2, 1000, false, true, "CALLER_MUST_BE_LOANS" ],
+    _1_loan_active: [ loanStatus.Active, accounts[1], accounts[2], 0, 0, true, true, "LOAN_NOT_LIQUIDATED" ],
+    _2_loan_closed: [ loanStatus.Closed, accounts[1], accounts[2], 0, 0, true, true, "LOAN_NOT_LIQUIDATED" ],
+    _3_loan_liquidated: [ loanStatus.Liquidated, accounts[1], accounts[2], 2, 1000, true, false, null ],
+    _4_loan_liquidated_caller_not_loans_instance: [ loanStatus.Liquidated, accounts[1], accounts[2], 2, 1000, false, true, "CALLER_MUST_BE_LOANS" ],
   }, function(
     status,
     recipient,
     borrower,
-    liquidated,
     tokensCount,
     tokenBalance,
     isCallerLoans,
@@ -70,7 +69,7 @@ contract("EscrowClaimTokensByCollateralValueTest", function(accounts) {
   ) {
     it(t("user", "claimTokensByCollateralValue", "Should be able to claim tokens based on the value of collateral.", mustFail), async function() {
       // Setup
-      const loan = createLoan({ status, liquidated, escrow: instance.address, loanTerms: { borrower, recipient } });
+      const loan = createLoan({ status, escrow: instance.address, loanTerms: { borrower, recipient } });
       await loans.setLoan(loan);
       await instance.mockInitialize(loans.address, loan.id, { from: borrower });
 

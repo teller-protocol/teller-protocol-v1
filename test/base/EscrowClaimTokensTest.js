@@ -31,16 +31,15 @@ contract("EscrowClaimTokensTest", function(accounts) {
   });
 
   withData({
-    _1_loan_active: [ loanStatus.Active, accounts[1], accounts[1], false, 0, 0, true, "LOAN_NOT_CLOSED" ],
-    _2_loan_not_liquidated_recipient_not_borrower: [ loanStatus.Closed, accounts[1], accounts[2], false, 0, 0, true, "LOAN_NOT_LIQUIDATED" ],
-    _3_loan_not_liquidated_recipient_is_borrower: [ loanStatus.Closed, accounts[1], accounts[1], false, 2, 1000, true, "LOAN_NOT_LIQUIDATED" ],
-    _4_loan_liquidated_recipient_is_borrower: [ loanStatus.Closed, accounts[1], accounts[1], true, 2, 1000, false, null ],
-    _5_loan_liquidated_recipient_not_borrower: [ loanStatus.Closed, accounts[1], accounts[2], true, 2, 1000, true, "CALLER_MUST_BE_LOANS" ],
+    _1_loan_active: [ loanStatus.Active, accounts[1], accounts[1], 0, 0, true, "LOAN_NOT_LIQUIDATED" ],
+    _2_loan_not_liquidated_recipient_not_borrower: [ loanStatus.Closed, accounts[1], accounts[2], 0, 0, true, "LOAN_NOT_LIQUIDATED" ],
+    _3_loan_not_liquidated_recipient_is_borrower: [ loanStatus.Closed, accounts[1], accounts[1], 2, 1000, true, "LOAN_NOT_LIQUIDATED" ],
+    _4_loan_liquidated_recipient_is_borrower: [ loanStatus.Liquidated, accounts[1], accounts[1], 2, 1000, false, null ],
+    _5_loan_liquidated_recipient_not_borrower: [ loanStatus.Closed, accounts[1], accounts[2], 2, 1000, true, "CALLER_MUST_BE_LOANS" ],
   }, function(
     status,
     recipient,
     borrower,
-    liquidated,
     tokensCount,
     tokenBalance,
     mustFail,
@@ -48,7 +47,7 @@ contract("EscrowClaimTokensTest", function(accounts) {
   ) {
     it(t("user", "claimTokens", "Should be able to claim tokens after the loan is closed.", mustFail), async function() {
       // Setup
-      const loan = createLoan({ status, liquidated, escrow: instance.address, loanTerms: { borrower, recipient } });
+      const loan = createLoan({ status, escrow: instance.address, loanTerms: { borrower, recipient } });
       await loans.setLoan(loan);
       await instance.mockIsOwner(true, true);
       await instance.mockInitialize(loans.address, loan.id);

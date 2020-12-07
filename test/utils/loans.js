@@ -19,7 +19,6 @@ const defaults = {
   borrowedAmount: 0,
   escrow: NULL_ADDRESS,
   status: TERMS_SET,
-  liquidated: false
 }
 
 const collateralInfoDefaults = {
@@ -81,7 +80,6 @@ function encodeLoanParameter(web3, loan = defaults) {
       borrowedAmount: "uint256",
       escrow: "address",
       status: "uint256",
-      liquidated: "bool"
     }
   }, createLoan(loan));
 }

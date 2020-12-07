@@ -91,7 +91,7 @@ contract('LoansBaseWithdrawCollateralTest', function (accounts) {
             // Setup
             const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, 0);
 
-            const loan = createLoan({ id: mockLoanID, loanTerms, collateral: loanCollateral, principalOwed: loanPrincipalOwed, interestOwed: loanInterestOwed, borrowedAmount: loanTerms.maxLoanAmount, status: ACTIVE, liquidated: false});
+            const loan = createLoan({ id: mockLoanID, loanTerms, collateral: loanCollateral, principalOwed: loanPrincipalOwed, interestOwed: loanInterestOwed, borrowedAmount: loanTerms.maxLoanAmount, status: ACTIVE });
 
             await instance.setLoan(loan);
             

@@ -2,7 +2,7 @@
 const withData = require("leche").withData;
 const BigNumber = require("bignumber.js");
 
-const { t, NULL_ADDRESS, ACTIVE, CLOSED, ONE_HOUR, ONE_DAY } = require("../utils/consts");
+const { t, NULL_ADDRESS, ACTIVE, LIQUIDATED, ONE_HOUR, ONE_DAY } = require("../utils/consts");
 const { createLoanTerms } = require("../utils/structs");
 const Timer = require("../../scripts/utils/Timer");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
@@ -133,7 +133,7 @@ contract("LoansBaseLiquidateLoanTest", function(accounts) {
 
       const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, loanLength);
       
-      const loan = createLoan({ id: mockLoanID, loanTerms, loanStartTime, collateral: loanCollateral, principalOwed: loanPrincipalOwed, interestOwed: loanInterestOwed, borrowedAmount: loanTerms.maxLoanAmount, status: ACTIVE, liquidated: false});
+      const loan = createLoan({ id: mockLoanID, loanTerms, loanStartTime, collateral: loanCollateral, principalOwed: loanPrincipalOwed, interestOwed: loanInterestOwed, borrowedAmount: loanTerms.maxLoanAmount, status: ACTIVE });
 
       const mockedLiquidationInfo = createLiquidationInfo({
         collateralInfo: {
@@ -168,8 +168,7 @@ contract("LoansBaseLiquidateLoanTest", function(accounts) {
             .loanLiquidated(result)
             .emitted(mockLoanID, loanBorrower, liquidator, loanCollateral, amountToLiquidate);
 
-        assert.equal(parseInt(loan["status"]), CLOSED, "Loan not closed");
-        assert.equal(loan["liquidated"], true, "Loan not liquidated");
+        assert.equal(parseInt(loan["status"]), LIQUIDATED, "Loan not liquidated");
 
       } catch (error) {
         assert(mustFail, error.message);

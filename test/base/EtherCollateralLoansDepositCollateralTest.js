@@ -58,7 +58,7 @@ contract('EtherCollateralLoansDepositCollateralTest', function (accounts) {
             // Setup
             const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, 0, 0, 0)
             
-            const loan = createLoan({ id: mockLoanID, loanTerms, collateral: mockCollateral, borrowedAmount: loanTerms.maxLoanAmount, status: ACTIVE, liquidated: false});
+            const loan = createLoan({ id: mockLoanID, loanTerms, collateral: mockCollateral, borrowedAmount: loanTerms.maxLoanAmount, status: ACTIVE, });
 
             await instance.setLoan(loan);
 

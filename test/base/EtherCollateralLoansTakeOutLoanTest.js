@@ -110,7 +110,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
 
     const loanTerms = createLoanTerms(borrower, recipient, interestRate, collateralRatio, maxLoanAmount, loanDuration);
 
-    const loan = createLoan({ id: mockLoanID, loanTerms, collateral: lastCollateralIn, termsExpiry, status: TERMS_SET, liquidated: false});
+    const loan = createLoan({ id: mockLoanID, loanTerms, collateral: lastCollateralIn, termsExpiry, status: TERMS_SET });
 
     await instance.setLoan(loan)
 

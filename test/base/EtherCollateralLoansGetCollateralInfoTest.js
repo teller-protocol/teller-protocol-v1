@@ -2,7 +2,7 @@
 const withData = require("leche").withData;
 const BigNumber = require("bignumber.js");
 
-const { t, ETH_ADDRESS, NULL_ADDRESS, ACTIVE, TERMS_SET, CLOSED, NON_EXISTENT } = require("../utils/consts");
+const { t, ETH_ADDRESS, NULL_ADDRESS, ACTIVE, TERMS_SET, CLOSED, NON_EXISTENT, LIQUIDATED } = require("../utils/consts");
 const { createLoanTerms } = require("../utils/structs");
 const { createTestSettingsInstance } = require('../utils/settings-helper');
 const { createLoan } = require('../utils/loans')
@@ -82,6 +82,7 @@ contract("EtherCollateralLoansGetCollateralInfoTest", function(accounts) {
     _10_active_with_no_escrow_with_expected_collateral: [ ACTIVE, 10000, 100, 0, 7000, 7000, 5000, false ],
     _11_active_with_no_escrow_with_extra_collateral: [ ACTIVE, 10000, 100, 0, 8000, 7000, 5000, false ],
     _12_active_with_escrow_value_low: [ ACTIVE, 10000, 100, 1000, 6000, 7000, 5000, true ],
+    _13_liquidated: [ LIQUIDATED, 10000, 100, 0, 7000, 7000, 5000, false ],
   }, function(
     status,
     loanAmount,
@@ -120,6 +121,8 @@ contract("EtherCollateralLoansGetCollateralInfoTest", function(accounts) {
       let collateralNeededInTokens;
       switch (status) {
         case NON_EXISTENT:
+        case LIQUIDATED:
+          collateralNeededInTokens = new BigNumber(0);
         case CLOSED:
           collateralNeededInTokens = new BigNumber(0);
           break

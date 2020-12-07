@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, NON_EXISTENT, ACTIVE, TERMS_SET, CLOSED, NULL_ADDRESS, daysToSeconds, toDecimals } = require('../utils/consts');
+const { t, NON_EXISTENT, ACTIVE, TERMS_SET, CLOSED, LIQUIDATED, NULL_ADDRESS, daysToSeconds, toDecimals } = require('../utils/consts');
 const { createLoanRequest } = require('../utils/structs');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
@@ -40,6 +40,7 @@ contract('LoansBaseModifiersTest', function (accounts) {
         _2_loanTermsSet: [TERMS_SET, 'LOAN_NOT_ACTIVE', true],
         _3_loanActive: [ACTIVE, undefined, false],
         _4_loanClosed: [CLOSED, 'LOAN_NOT_ACTIVE', true],
+        _5_loanLiquidated: [LIQUIDATED, 'LOAN_NOT_ACTIVE', true]
     }, function(
         loanStatus,
         expectedErrorMessage,
@@ -71,6 +72,7 @@ contract('LoansBaseModifiersTest', function (accounts) {
         _2_loanTermsSet: [1, undefined, false],
         _3_loanActive: [2, 'LOAN_NOT_SET', true],
         _4_loanClosed: [3, 'LOAN_NOT_SET', true],
+        _5_loanLiquidated: [4, 'LOAN_NOT_SET', true]
     }, function(
         loanStatus,
         expectedErrorMessage,
@@ -102,6 +104,7 @@ contract('LoansBaseModifiersTest', function (accounts) {
         _2_loanTermsSet: [1, undefined, false],
         _3_loanActive: [2, undefined, false],
         _4_loanClosed: [3, 'LOAN_NOT_ACTIVE_OR_SET', true],
+        _5_loanLiquidated: [4, 'LOAN_NOT_ACTIVE_OR_SET', true]
     }, function(
         loanStatus,
         expectedErrorMessage,
