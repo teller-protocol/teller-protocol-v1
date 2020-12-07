@@ -62,6 +62,7 @@ contract LoansBase is LoansInterface, Base {
 
     mapping(uint256 => TellerCommon.Loan) public loans;
 
+    mapping(bytes32 => bool) public userIdHasLoan;
     /* Modifiers */
 
     /**
@@ -128,6 +129,11 @@ contract LoansBase is LoansInterface, Base {
         require(
             _isSupplyToDebtRatioValid(loanRequest.amount),
             "SUPPLY_TO_DEBT_EXCEEDS_MAX"
+        );
+
+        require(
+            loanRequest.userId == bytes32(0) || !userIdHasLoan[loanRequest.userId],
+            "USER_ID_HAS_LOAN"
         );
         _;
     }
@@ -240,6 +246,10 @@ contract LoansBase is LoansInterface, Base {
         }
 
         borrowerLoans[request.borrower].push(loanID);
+
+        if (request.userId != bytes32(0)) {
+            userIdHasLoan[request.userId] = true;
+        }
 
         emit LoanTermsSet(
             loanID,
@@ -419,6 +429,11 @@ contract LoansBase is LoansInterface, Base {
         // if the loan is now fully paid, close it and return collateral
         if (totalOwed == 0) {
             loans[loanID].status = TellerCommon.LoanStatus.Closed;
+
+            bytes32 userId = loans[loanID].userId;
+            if (userId != bytes32(0)) {
+                userIdHasLoan[userId] = false;
+            }
 
             uint256 collateralAmount = loans[loanID].collateral;
             _payOutCollateral(loanID, collateralAmount, loans[loanID].loanTerms.borrower);
