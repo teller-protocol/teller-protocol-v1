@@ -187,7 +187,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
             int256 price = agg.latestAnswer();
             uint8 resDecimals = agg.decimals();
             if (inverse) {
-                price = int256(TEN**(resDecimals+resDecimals)) / price;
+                price = int256(TEN**(resDecimals + resDecimals)) / price;
             }
             if (dstDecimals > resDecimals) {
                 price = price * int256(TEN**(dstDecimals - resDecimals));

@@ -271,5 +271,4 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
                 baseAmount
             );
     }
-
 }

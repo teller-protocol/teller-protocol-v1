@@ -264,7 +264,6 @@ contract LoansBase is LoansInterface, Base {
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused(address(lendingPool))
-        
     {
         require(msg.sender == loans[loanID].loanTerms.borrower, "CALLER_DOESNT_OWN_LOAN");
         require(amount > 0, "CANNOT_WITHDRAW_ZERO");
@@ -272,10 +271,11 @@ contract LoansBase is LoansInterface, Base {
         _withdrawCollateral(amount, loanID, neededInCollateralTokens);
     }
 
-    function _withdrawCollateral(uint256 amount, uint256 loanID, int256 neededInCollateralTokens)
-        private
-        nonReentrant()
-    {
+    function _withdrawCollateral(
+        uint256 amount,
+        uint256 loanID,
+        int256 neededInCollateralTokens
+    ) private nonReentrant() {
         if (neededInCollateralTokens > 0) {
             // Withdrawal amount holds the amount of excess collateral in the loan
             uint256 withdrawalAmount = loans[loanID].collateral.sub(
