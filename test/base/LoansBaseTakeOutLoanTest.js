@@ -27,6 +27,7 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
   let instance;
   let loanTermsConsInstance;
   let collateralTokenInstance;
+  let chainlinkAggregatorInstance;
 
   const mockLoanID = 0;
 
