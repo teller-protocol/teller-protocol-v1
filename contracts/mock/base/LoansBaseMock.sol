@@ -61,7 +61,8 @@ contract LoansBaseMock is LoansBase, BaseMock {
             borrowedAmount: borrowedAmount,
             escrow: address(0x0),
             status: status,
-            liquidated: liquidated
+            liquidated: liquidated,
+            userId: bytes32(0)
         });
     }
 
