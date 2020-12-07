@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, NULL_ADDRESS } = require('../utils/consts');
+const { t } = require('../utils/consts');
 const { lendingPool } = require('../utils/events');
 const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
 const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
@@ -40,7 +40,7 @@ contract('LendingPoolRepayTest', function (accounts) {
           cTokenEncoder.encodeUnderlying(),
           daiInstance.address
         )
-        marketsInstance = await Mock.new();
+        let marketsInstance = await Mock.new();
         loansInstance = await Mock.new();
 
         lendersInstance = await Lenders.new();

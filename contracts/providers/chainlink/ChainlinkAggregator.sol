@@ -9,6 +9,7 @@ import "../../base/TInitializable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../openzeppelin/SignedSafeMath.sol";
+import "../../util/AddressArrayLib.sol";
 
 // Interfaces
 import "./IChainlinkAggregator.sol";
@@ -32,6 +33,7 @@ import "./IChainlinkAggregator.sol";
 contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgradeable {
     using Address for address;
     using AddressLib for address;
+    using AddressArrayLib for AddressArrayLib.AddressArray;
     using SafeMath for uint256;
     using SignedSafeMath for int256;
 
@@ -39,8 +41,12 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
 
     uint256 internal constant TEN = 10;
 
-    // It is a mapping for Chainlink Aggregator contracts by baseTokenAddress => quoteTokenAddress => chainlinkAggregatorAddress
+    /*
+        @notice It is a mapping for Chainlink Aggregator contracts by baseTokenAddress => quoteTokenAddress => chainlinkAggregatorAddress
+     */
     mapping(address => mapping(address => address)) internal aggregators;
+
+    mapping(address => AddressArrayLib.AddressArray) internal supportedTokens;
 
     /* External Functions */
 
@@ -57,6 +63,19 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         returns (AggregatorV2V3Interface, bool)
     {
         return _aggregatorFor(src, dst);
+    }
+
+    /**
+        @notice It checks if the token is supported.
+        @param tokenAddress Token address to check support for.
+        @return bool whether or not the token is supported.
+     */
+    function isTokenSupported(address tokenAddress)
+        external
+        view
+        returns (bool isSupported)
+    {
+        return supportedTokens[tokenAddress].length() > 0;
     }
 
     /**
@@ -95,7 +114,9 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         address dst,
         address aggregator
     ) external onlyPauser {
-        require(aggregators[src][dst] == address(0));
+        (AggregatorV2V3Interface agg, ) = _aggregatorFor(src, dst);
+        address(agg).requireEmpty("CHAINLINK_PAIR_ALREADY_EXISTS");
+
         require(
             src.isContract() || src == settings().ETH_ADDRESS(),
             "TOKEN_A_NOT_CONTRACT"
@@ -105,7 +126,47 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
             "TOKEN_B_NOT_CONTRACT"
         );
         require(aggregator.isContract(), "AGGREGATOR_NOT_CONTRACT");
+
         aggregators[src][dst] = aggregator;
+        supportedTokens[src].add(dst);
+        supportedTokens[dst].add(src);
+    }
+
+    /**
+        @notice It removes support for a Chainlink Aggregator pair.
+        @param src Source token address.
+        @param dst Destination token address.
+     */
+    function remove(
+        address src,
+        address dst
+    ) external onlyPauser {
+        (AggregatorV2V3Interface agg, ) = _aggregatorFor(src, dst);
+        if (address(agg).isEmpty()) {
+            return;
+        }
+
+        aggregators[src][dst] = address(0);
+        supportedTokens[src].remove(dst);
+        supportedTokens[dst].remove(src);
+    }
+
+    /**
+        @notice It removes support for a Chainlink Aggregator.
+        @param tokenAddress Token to remove all markets for.
+     */
+    function remove(address tokenAddress) external onlyPauser {
+        address[] storage arr = supportedTokens[tokenAddress].array;
+        for (uint i; i < arr.length; i++) {
+            (AggregatorV2V3Interface agg, bool inverse) = _aggregatorFor(tokenAddress, arr[i]);
+            if (inverse) {
+                aggregators[arr[i]][tokenAddress] = address(0);
+            } else {
+                aggregators[tokenAddress][arr[i]] = address(0);
+            }
+        }
+
+        arr.length = 0;
     }
 
     /**

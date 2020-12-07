@@ -9,3 +9,4 @@ build
 .coverage_artifacts
 .coverage_contracts
 ignored
+types/truffle-contracts

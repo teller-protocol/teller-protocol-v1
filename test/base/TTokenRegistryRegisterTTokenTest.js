@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, NULL_ADDRESS, createMocks } = require('../utils/consts');
+const { t, NULL_ADDRESS } = require('../utils/consts');
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const { tTokenRegistry } = require('../utils/events');
 const LogicVersionsRegistryEncoder = require('../utils/encoders/LogicVersionsRegistryEncoder');
@@ -20,7 +20,6 @@ contract('TTokenRegistryRegisterTTokenTest', function (accounts) {
         const CETH = await Mock.new();
         const pauser = accounts[0];
         
-        mocks = await createMocks(Mock, 10);
         const versionsRegistryInstance = await Mock.new();
         const constsInstance = await Mock.new();
         await versionsRegistryInstance.givenMethodReturnAddress(
