@@ -196,6 +196,7 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
                     request.amount,
                     request.duration,
                     request.requestTime,
+                    request.userId,
                     _getChainId()
                 )
             );
