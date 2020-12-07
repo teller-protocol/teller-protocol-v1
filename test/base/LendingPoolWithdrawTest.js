@@ -118,7 +118,7 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     }, function(depositSender, depositAmount, recipient, amountToWithdraw, expectedErrorMessage, mustFail) {
         it(t('user', 'withdraw', 'Should able (or not) to withdraw DAIs.', mustFail), async function() {
             // Setup
-            const tTokenInstance = await TDAI.new();
+            const tTokenInstance = await TDAI.new(settingsInstance.address);
             const lendingTokenInstance = await Token.new();
             await tTokenInstance.addMinter(instance.address);
             await initContracts(

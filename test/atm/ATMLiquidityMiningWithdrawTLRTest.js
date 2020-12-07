@@ -49,7 +49,7 @@ contract('ATMLiquidityMiningWithdrawTLRTest', function (accounts) {
     await governance.initialize(settingsInstance.address, owner, INITIAL_REWARD)
     await governance.addGeneralSetting(SETTING_NAME, SETTING_VALUE, { from: owner })
     tlr = await TLRToken.new()
-    tToken = await TDAI.new()
+    tToken = await TDAI.new(settingsInstance.address)
     instance = await ATMLiquidityMining.new()
     await tlr.initialize('name', 'TLR', 10, 100000, 100, settingsInstance.address, governance.address)
     await tlr.addMinter(instance.address, { from: owner })
