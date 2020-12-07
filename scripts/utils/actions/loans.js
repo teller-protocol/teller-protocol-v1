@@ -307,9 +307,8 @@ const liquidateLoan = async (
   {loanId, expectedErrorMessage = undefined}
 ) => {
   console.log(`Liquidating loan id ${loanId}...`);
-  const {token, loans, lendingPool} = allContracts;
+  const {token, collateralToken, loans, lendingPool} = allContracts;
   const initialTotalCollateral = BigNumber((await loans.totalCollateral()).toString());
-  const initialLiquidatorTokenBalance = BigNumber((await token.balanceOf(txConfig.from)));
 
   const {
     amountToLiquidate,
@@ -333,6 +332,8 @@ const liquidateLoan = async (
     amountToLiquidate.toString(),
     txConfig
   );
+  
+  const liquidatorCollTokenBalanceBefore = await collateralToken.balanceOf(txConfig.from);
 
   const liquidateLoanPromise = async () => await loans.liquidateLoan(loanId, txConfig);
 
@@ -360,28 +361,22 @@ const liquidateLoan = async (
       );
     const collateralInfo = await loans.getCollateralInfo(loanId);
     const finalTotalCollateral = BigNumber((await loans.totalCollateral()).toString());
-    const remainingReward = new BigNumber(rewardInCollateral).minus(collateral);
-    if (rewardInCollateral >= collateral) {
-      assert.equal(
-        collateralInfo.collateral.toString(),
-        '0'
-      );
-      if (rewardInCollateral > collateral) {
-        // TODO: assert proper value in escrow was paid to liquidator
-      }
-    } else {
-      assert.equal(
-        collateralInfo.collateral.toString(),
-        new BigNumber(collateral).minus(rewardInCollateral).toString()
-      );  
-    }
+    const liquidatorCollTokenBalanceAfter = await collateralToken.balanceOf(txConfig.from);
+    const expectedCollateralValueIncrease = initialTotalCollateral.minus(finalTotalCollateral);
     
-    // Asserting liquidator final lending token balance.
-    const finalLiquidatorTokenBalance = BigNumber((await token.balanceOf(txConfig.from)));
-    assert.equal(
-      finalLiquidatorTokenBalance.minus(initialLiquidatorTokenBalance).toString(),
-      loansInfo.borrowedAmount.toString(),
-    );
+
+    if (parseInt(rewardInCollateral) > parseInt(collateral)) {
+      const remainingReward = new BigNumber(rewardInCollateral).minus(collateral);
+      assert.equal(
+        collateralInfo.collateral.toString(),
+        '0',
+        'Reward not sent to liquidator'
+      );
+      assert.equal(expectedCollateralValueIncrease, collateral, 'Collateral value not increased');
+      assert(remainingReward.gt(0));
+    } else {
+      assert.equal(expectedCollateralValueIncrease.toString(), rewardInCollateral.toString(), 'Reward not received');
+
   }
 };
 

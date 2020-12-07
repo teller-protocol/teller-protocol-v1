@@ -6,8 +6,8 @@ class EscrowInterfaceEncoder {
     }
 }
 
-EscrowInterfaceEncoder.prototype.encodeCalculateLoanValue = function() {
-    return encode(this.web3, 'calculateLoanValue()');
+EscrowInterfaceEncoder.prototype.encodeCalculateTotalValue = function() {
+    return encode(this.web3, 'calculateTotalValue()');
 }
 
 EscrowInterfaceEncoder.prototype.encodeInitialize = function() {

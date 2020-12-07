@@ -74,7 +74,7 @@ const printEscrow = async ({ settings, loans }, { testContext }, { loanId, token
 
     const Escrow = artifacts.require("./base/Escrow.sol");
     const escrow = await Escrow.at(loanInfo.escrow);
-    const loanValue = await escrow.calculateLoanValue();
+    const loanValue = await escrow.calculateTotalValue();
     const collateralBufferBytes32 = toBytes32(web3, platformSettingsNames.CollateralBuffer);
     const collateralBufferSetting = await settings.getPlatformSetting(collateralBufferBytes32);
     const collateralBuffer = parseInt(collateralBufferSetting.value);

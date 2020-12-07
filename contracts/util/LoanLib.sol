@@ -287,7 +287,7 @@ library LoanLib {
                 .sub(loan.loanTerms.interestRate)
                 .sub(bufferPercent);
             if (loan.escrow != address(0)) {
-                escrowLoanValue = EscrowInterface(loan.escrow).calculateLoanValue();
+                escrowLoanValue = EscrowInterface(loan.escrow).calculateTotalValue();
                 neededInLendingTokens += neededInLendingTokens - int256(escrowLoanValue);
             }
             neededInLendingTokens =

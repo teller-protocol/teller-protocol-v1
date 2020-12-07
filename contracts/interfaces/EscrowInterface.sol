@@ -30,7 +30,7 @@ interface EscrowInterface {
         @notice Calculate the value of the loan by getting the value of all tokens the Escrow owns.
         @return Escrow total value denoted in the lending token.
      */
-    function calculateLoanValue() external view returns (uint256);
+    function calculateTotalValue() external view returns (uint256);
 
     /**
         @notice Repay this Escrow's loan.

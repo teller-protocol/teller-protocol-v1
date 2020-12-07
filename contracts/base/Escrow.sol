@@ -110,7 +110,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         @notice Calculate the value of the loan by getting the value of all tokens the Escrow owns.
         @return Escrow total value denoted in the lending token.
      */
-    function calculateLoanValue() public view returns (uint256) {
+    function calculateTotalValue() public view returns (uint256) {
         uint256 valueInEth;
         address[] memory tokens = getTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
@@ -258,8 +258,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
                 baseAddress = settings().ETH_ADDRESS();
                 assetDecimals = uint8(18);
             } else {
-                // baseAddress = CErc20Interface(baseAddress).underlying();
-                baseAddress = address(0x6B175474E89094C44Da98b954EedeAC495271d0F);
+                baseAddress = CErc20Interface(baseAddress).underlying();
                 assetDecimals = ERC20Detailed(baseAddress).decimals();
             }
 
@@ -273,18 +272,4 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
             );
     }
 
-    function anything(address baseAddress)
-        external
-        view
-        returns (
-            bool success,
-            bytes memory returnData,
-            uint256 exchangeRate
-        )
-    {
-        (success, returnData) = baseAddress.staticcall(
-            abi.encodeWithSignature("exchangeRateStored()")
-        );
-        exchangeRate = abi.decode(returnData, (uint256));
-    }
 }

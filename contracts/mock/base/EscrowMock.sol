@@ -67,11 +67,11 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
         loanValue = aLoanValue;
     }
 
-    function calculateLoanValue() public view returns (uint256) {
+    function calculateTotalValue() public view returns (uint256) {
         if (mockedCalculateLoanValue) {
             return loanValue;
         } else {
-            return super.calculateLoanValue();
+            return super.calculateTotalValue();
         }
     }
 

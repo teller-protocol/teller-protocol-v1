@@ -111,7 +111,7 @@ contract("EtherCollateralLoansGetCollateralInfoTest", function(accounts) {
       if (escrowValue > 0) {
         escrow = await Mock.new();
         await escrow.givenMethodReturnUint(
-          escrowEncoder.encodeCalculateLoanValue(),
+          escrowEncoder.encodeCalculateTotalValue(),
           escrowValue.toString()
         )
         await instance.setEscrowForLoan(loanID, escrow.address);
