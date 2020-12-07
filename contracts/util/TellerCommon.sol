@@ -8,7 +8,7 @@ import "./NumbersList.sol";
  * @author develop@teller.finance
  */
 library TellerCommon {
-    enum LoanStatus { NonExistent, TermsSet, Active, Closed }
+    enum LoanStatus { NonExistent, TermsSet, Active, Closed, Liquidated }
 
     /**
         @notice The amount of interest owed to a borrower
@@ -79,6 +79,7 @@ library TellerCommon {
         @param amount The amount of tokens requested by the borrower for the loan
         @param duration The length of time in seconds that the loan has been requested for
         @param requestTime The timestamp at which the loan was requested
+        @param userId The unique identifier for the user
      */
     struct LoanRequest {
         address payable borrower;
@@ -154,7 +155,6 @@ library TellerCommon {
         @param borrowedAmount The total amount of the loan size taken out
         @param escrow The address of the escrow contract that holds the funds taken out in the loan on behalf of the borrower
         @param status The status of the loan currently based on the LoanStatus enum - NonExistent, TermsSet, Active, Closed
-        @param liquidated Flag marking if the loan has been liquidated or not 
      */
     struct Loan {
         uint256 id;
@@ -168,7 +168,6 @@ library TellerCommon {
         uint256 borrowedAmount;
         address escrow;
         LoanStatus status;
-        bool liquidated;
         bytes32 userId;
     }
 
