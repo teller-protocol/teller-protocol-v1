@@ -376,7 +376,7 @@ const liquidateLoan = async (
       assert(remainingReward.gt(0));
     } else {
       assert.equal(expectedCollateralValueIncrease.toString(), rewardInCollateral.toString(), 'Reward not received');
-
+    }
   }
 };
 
@@ -412,21 +412,21 @@ const printPairAggregatorInfo = async (
 };
 
 const getEscrow = async (
-    {loans},
-    {testContext},
-    {
-      loanId,
-    }
-  ) => {
-    const { artifacts } = testContext;
-    const Escrow = artifacts.require("./base/Escrow.sol");
-    const loanInfo = await loans.loans(loanId);
-    if(loanInfo.escrow ===  NULL_ADDRESS) {
-      return undefined;
-    }
-    const escrow = await Escrow.at(loanInfo.escrow);
-    return escrow;
-  };
+  {loans},
+  {testContext},
+  {
+    loanId,
+  }
+) => {
+  const { artifacts } = testContext;
+  const Escrow = artifacts.require("./base/Escrow.sol");
+  const loanInfo = await loans.loans(loanId);
+  if(loanInfo.escrow ===  NULL_ADDRESS) {
+    return undefined;
+  }
+  const escrow = await Escrow.at(loanInfo.escrow);
+  return escrow;
+};
 
 module.exports = {
   getFunds,
@@ -441,4 +441,4 @@ module.exports = {
   printPairAggregatorInfo,
   getEscrow,
   withdrawFunds,
-};
+}
