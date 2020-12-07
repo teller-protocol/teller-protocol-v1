@@ -45,8 +45,7 @@ contract LoansBaseMock is LoansBase, BaseMock {
         uint256 principalOwed,
         uint256 interestOwed,
         uint256 borrowedAmount,
-        TellerCommon.LoanStatus status,
-        bool liquidated
+        TellerCommon.LoanStatus status
     ) external {
         require(loanTerms.maxLoanAmount >= borrowedAmount, "BORROWED_AMOUNT_EXCEEDS_MAX");
         loans[id] = TellerCommon.Loan({
@@ -61,7 +60,6 @@ contract LoansBaseMock is LoansBase, BaseMock {
             borrowedAmount: borrowedAmount,
             escrow: address(0x0),
             status: status,
-            liquidated: liquidated,
             userId: bytes32(0)
         });
     }
