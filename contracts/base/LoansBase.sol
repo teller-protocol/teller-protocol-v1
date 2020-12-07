@@ -474,8 +474,7 @@ contract LoansBase is LoansInterface, Base {
         );
         require(liquidationInfo.liquidable, "DOESNT_NEED_LIQUIDATION");
 
-        loans[loanID].status = TellerCommon.LoanStatus.Closed;
-        loans[loanID].liquidated = true;
+        loans[loanID].status = TellerCommon.LoanStatus.Liquidated;
 
         // the caller gets the collateral from the loan
         _payOutLiquidator(loanID, liquidationInfo, msg.sender);
