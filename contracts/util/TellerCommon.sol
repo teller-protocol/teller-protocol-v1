@@ -107,6 +107,7 @@ library TellerCommon {
         uint256 interestRate;
         uint256 collateralRatio;
         uint256 maxLoanAmount;
+        bytes32 userId;
         Signature signature;
     }
 
