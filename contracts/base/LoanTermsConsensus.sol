@@ -169,7 +169,8 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
                     response.maxLoanAmount,
                     response.signature.signerNonce,
                     _getChainId(),
-                    requestHash
+                    requestHash,
+                    response.userId
                 )
             );
     }
