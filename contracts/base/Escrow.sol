@@ -153,7 +153,10 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         @dev The recipient must be the loan borrower AND the loan must be already liquidated.
     */
     function claimTokens() external onlyOwner() {
-        require(getLoan().status == TellerCommon.LoanStatus.Closed, "LOAN_NOT_CLOSED");
+        require(
+            getLoan().status == TellerCommon.LoanStatus.Liquidated,
+            "LOAN_NOT_LIQUIDATED"
+        );
 
         address[] memory tokens = getTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
@@ -175,8 +178,10 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         @param value The value of escrow held tokens, to be claimed based on collateral value
       */
     function claimTokensByCollateralValue(address recipient, uint256 value) external {
-        require(getLoan().status == TellerCommon.LoanStatus.Closed, "LOAN_NOT_CLOSED");
-        require(getLoan().liquidated, "LOAN_NOT_LIQUIDATED");
+        require(
+            getLoan().status == TellerCommon.LoanStatus.Liquidated,
+            "LOAN_NOT_LIQUIDATED"
+        );
         require(msg.sender == address(loans), "CALLER_MUST_BE_LOANS");
 
         address[] memory tokens = getTokens();
