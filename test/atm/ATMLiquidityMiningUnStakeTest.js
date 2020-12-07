@@ -41,7 +41,7 @@ contract("ATMLiquidityMiningUnStakeTest", function(accounts) {
         governance = await ATMGovernance.new();
         await governance.initialize(settingsInstance.address, owner, INITIAL_REWARD);
         tlr = await TLRToken.new();
-        tToken = await TDAI.new();
+        tToken = await TDAI.new(settingsInstance.address);
         instance = await ATMLiquidityMining.new();
         await instance.initialize(settingsInstance.address, governance.address, tlr.address, { from: owner });
     });
