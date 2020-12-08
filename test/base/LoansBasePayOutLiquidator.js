@@ -22,7 +22,7 @@ contract("LoansBasePayOutLiquidatorTest", function(accounts) {
     const mockLoanID = 3817;
 
     beforeEach("Setup for each test", async () => {
-        settingsInstance = await createTestSettingsInstance(Settings, {
+        const settingsInstance = await createTestSettingsInstance(Settings, {
             Mock,
             from: accounts[0],
             initialize: true,
