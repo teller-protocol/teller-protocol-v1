@@ -81,6 +81,7 @@ function encodeLoanParameter(web3, loan = defaults) {
       borrowedAmount: "uint256",
       escrow: "address",
       status: "uint256",
+      userId: "bytes32"
     }
   }, createLoan(loan));
 }
