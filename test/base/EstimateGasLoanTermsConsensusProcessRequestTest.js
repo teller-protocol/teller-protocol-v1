@@ -28,7 +28,7 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
     let instance
 
     const baseGasCost = 510000;
-    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 102000);
+    const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 122000);
 
     let loans
     const nodeOne = accounts[1]
