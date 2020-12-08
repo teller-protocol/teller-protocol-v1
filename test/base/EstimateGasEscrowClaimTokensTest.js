@@ -3,7 +3,7 @@ const BN = require("bignumber.js");
 const { withData } = require("leche");
 const { t, ETH_ADDRESS } = require("../utils/consts");
 const LoansBaseInterfaceEncoder = require("../utils/encoders/LoansBaseInterfaceEncoder");
-const { Closed } = require('../utils/loanStatus')
+const { Liquidated } = require('../utils/loanStatus')
 const { createMocks } = require("../utils/consts");
 const { encodeLoanParameter } = require("../utils/loans");
 
@@ -48,7 +48,7 @@ contract("EstimateGasEscrowClaimTokensTest", function(accounts) {
     it(t("escrow", "claimTokens", "Should be able to claim all tokens in the escrow", false), async function() {
       await loans.givenMethodReturn(
         loansEncoder.encodeLoans(),
-        encodeLoanParameter(web3, { status: Closed, liquidated: true, loanTerms: { borrower } })
+        encodeLoanParameter(web3, { status: Liquidated, loanTerms: { borrower } })
       );
       
       const tokensAddresses = await createMocks(DAIMock, tokenCount);
