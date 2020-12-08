@@ -19,6 +19,7 @@ const defaults = {
   borrowedAmount: 0,
   escrow: NULL_ADDRESS,
   status: TERMS_SET,
+  userId: "0x0"
 }
 
 const collateralInfoDefaults = {

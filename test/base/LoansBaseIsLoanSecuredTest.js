@@ -43,7 +43,7 @@ contract("LoansBaseIsLoanSecuredTest", function(accounts) {
       // Setup
       const loanTerms = createLoanTerms(NULL_ADDRESS, NULL_ADDRESS, 0, collateralRatio, 0, 0);
       const loanID = 1234;
-      await instance.setLoan(loanID, loanTerms, 0, 0, 0, 0, 0, 0, 0, 1, false);
+      await instance.setLoan(loanID, loanTerms, 0, 0, 0, 0, 0, 0, 0, 1);
 
       // Invocation
       const isSecured = await instance.isLoanSecured.call(loanID);

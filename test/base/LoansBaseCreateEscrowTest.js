@@ -59,7 +59,7 @@ contract("LoansBaseCreateEscrowTest", function(accounts) {
       try {
         const borrower = borrowerIndex === -1 ? NULL_ADDRESS : accounts[borrowerIndex];
         const loanTerms = createLoanTerms(borrower, NULL_ADDRESS, 0, 0, 0, 0);
-        await loansInstance.setLoan(loanID, loanTerms, 0, 0, 123456, 0, 0, 0, loanTerms.maxLoanAmount, ACTIVE, false);
+        await loansInstance.setLoan(loanID, loanTerms, 0, 0, 123456, 0, 0, 0, loanTerms.maxLoanAmount, ACTIVE);
 
         // Invocation
         let escrowAddress;

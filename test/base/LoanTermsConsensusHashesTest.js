@@ -41,7 +41,7 @@ contract('LoanTermsConsensusHashesTest', function (accounts) {
         requestTime,
     ) {    
         it(t('user', 'hashRequest', 'Should correctly calculate the hash for a request', false), async function() {
-            const request = createLoanRequest(borrower, recipient, requestNonce, amount, duration, requestTime, instance.address)
+            const request = createLoanRequest(borrower, recipient, requestNonce, amount, duration, requestTime, instance.address, "0x0")
             let expectedResult = ethUtil.bufferToHex(
                 hashLoanTermsRequest(
                     request,
@@ -72,7 +72,7 @@ contract('LoanTermsConsensusHashesTest', function (accounts) {
     ) {    
         it(t('user', 'hashResponse', 'Should correctly calculate the hash for a response', false), async function() {
             const response = createUnsignedLoanResponse(signer, responseTime, interestRate, collateralRatio, maxLoanAmount, signerNonce, instance.address)
-            const request = createLoanRequest(NULL_ADDRESS, NULL_ADDRESS, 52345, 2345234, 234534, 34534, consensusInstance.address)
+            const request = createLoanRequest(NULL_ADDRESS, NULL_ADDRESS, 52345, 2345234, 234534, 34534, consensusInstance.address, "0x0")
             const requestHash = ethUtil.bufferToHex(hashLoanTermsRequest(request, accounts[4], chainId))
 
             const expectedHash = ethUtil.bufferToHex(

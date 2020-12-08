@@ -119,6 +119,7 @@ const requestLoanTerms = async (
     collateralRatio,
     maxLoanAmount: maxLoanAmount.toFixed(0),
     consensusAddress: loanTermsConsensus.address,
+    userId: "0x0"
   };
   const loanTermsRequest = createLoanTermsRequest(
     loanTermsRequestInfo,

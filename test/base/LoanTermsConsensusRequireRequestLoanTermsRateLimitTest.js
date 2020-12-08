@@ -45,7 +45,7 @@ contract('LoanTermsConsensusRequireRequestLoanTermsRateLimitTest', function (acc
         it(t('user', 'requireRequestLoanTermsRateLimit', 'Should validate if request loan terms rate limit is valid or not.', mustFail), async function() {
             const borrower = accounts[2];
             const recipient = NULL_ADDRESS;
-            const request = createLoanRequest(borrower, recipient, 234764, 344673177, 34467317723, 234534, instance.address)
+            const request = createLoanRequest(borrower, recipient, 234764, 344673177, 34467317723, 234534, instance.address, "0x0")
             const currentTimestamp = isFirstTime ? 0 : (await timer.getCurrentTimestampInSeconds());
             const lastLoanTermsRequested = currentTimestamp - lastLoanTermsRequestedSecondsBack;
 

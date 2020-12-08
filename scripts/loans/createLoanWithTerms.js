@@ -61,6 +61,7 @@ module.exports = async (callback) => {
             requestTime: currentTimestamp,
             caller: loansInstance.address,
             consensusAddress,
+            userId: "0x0"
         };
         const loanTermsRequest = createLoanTermsRequest(loanTermsRequestInfo, chainId);
 

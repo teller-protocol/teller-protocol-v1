@@ -104,7 +104,7 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
             instance = await LoanTermsConsensusMock.new();
             await instance.initialize(owner, loansInstance.address, settings.address);
 
-            const loanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478, instance.address)
+            const loanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478, instance.address, "0x0")
             const requestHash = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, loansContract, chains.mainnet))
 
             const currentTime = await getLatestTimestamp()

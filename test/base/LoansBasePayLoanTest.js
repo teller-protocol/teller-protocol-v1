@@ -47,7 +47,7 @@ contract('LoansBasePayLoanTest', function (accounts) {
         it(t('user', 'payLoan', 'Should able to pay loan correctly.', false), async function() {
             // Setup
             const emptyLoanTerms = createLoanTerms(NULL_ADDRESS, NULL_ADDRESS, 0, 0, 0, 0)
-            await instance.setLoan(mockLoanID, emptyLoanTerms, 0, 0, 0, 0, mockPrincipalOwed, mockInterestOwed, emptyLoanTerms.maxLoanAmount, ACTIVE, false)
+            await instance.setLoan(mockLoanID, emptyLoanTerms, 0, 0, 0, 0, mockPrincipalOwed, mockInterestOwed, emptyLoanTerms.maxLoanAmount, ACTIVE)
             
             // Invocation
             await instance.externalPayLoan(mockLoanID, toPay)

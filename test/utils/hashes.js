@@ -73,7 +73,7 @@ function hashLoanTermsResponse(response, requestHash, chainId) {
 function hashLoanTermsRequest(request, caller, chainId) {
   return ethUtil.keccak256(
     abi.rawEncode(
-      ['address', 'address', 'address', 'address', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256'],
+      ['address', 'address', 'address', 'address', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes32', 'uint256'],
       [
         caller,
         request.borrower,
@@ -83,6 +83,7 @@ function hashLoanTermsRequest(request, caller, chainId) {
         request.amount,
         request.duration,
         request.requestTime,
+        request.userId,
         chainId,
       ]
     )

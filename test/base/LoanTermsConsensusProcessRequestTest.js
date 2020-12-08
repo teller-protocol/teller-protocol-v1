@@ -52,7 +52,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
         currentTime = await getLatestTimestamp()
         loansInstance = await Mock.new();
 
-        loanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478, instance.address)
+        loanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478, instance.address, "0x0")
 
         responseOne.consensusAddress = instance.address;
         responseTwo.consensusAddress = instance.address;

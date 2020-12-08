@@ -35,7 +35,7 @@ module.exports = {
         principalOwed, 
         interestOwed, 
         status,
-        liquidated
+        userId,
     ) => {
         return {
             loanID: loanID,
@@ -47,7 +47,7 @@ module.exports = {
             principalOwed: principalOwed,
             interestOwed: interestOwed,
             status: status,
-            liquidated: liquidated,
+            userId: userId,
         };
     },
     createLoanTerms: (borrower, recipient, interestRate, collateralRatio, maxLoanAmount, duration) => {
@@ -76,7 +76,7 @@ module.exports = {
             }
         }
     },
-    createLoanRequest: (borrower, recipient, requestNonce, amount, duration, requestTime, consensusAddress) => {
+    createLoanRequest: (borrower, recipient, requestNonce, amount, duration, requestTime, consensusAddress, userId) => {
         return {
             borrower: borrower,
             recipient: recipient,
@@ -85,6 +85,7 @@ module.exports = {
             amount: amount,
             duration: duration,
             requestTime: requestTime,
+            userId: userId
         }
     }
 }

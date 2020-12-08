@@ -63,7 +63,7 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
         const chainId = chains.mainnet;
         loans = await Mock.new();
 
-        loanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478, consensusAddress)
+        loanRequest = createLoanRequest(borrower, NULL_ADDRESS, requestNonce, 15029398, THIRTY_DAYS, 45612478, consensusAddress, "0x0")
         const requestHash = ethUtil.bufferToHex(hashLoanTermsRequest(loanRequest, loans.address, chainId))
 
         responseOne.responseTime = currentTime - (2 * ONE_DAY)

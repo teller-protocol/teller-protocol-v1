@@ -36,6 +36,7 @@ module.exports = {
             loanRequestInfo.duration,
             loanRequestInfo.requestTime,
             loanRequestInfo.consensusAddress,
+            loanRequestInfo.userId,
         );
         let requestHash = hashLoanTermsRequest(loanTermsRequest, loanRequestInfo.caller, chainId);
         requestHash = ethUtil.bufferToHex(requestHash);
