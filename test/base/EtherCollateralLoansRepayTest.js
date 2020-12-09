@@ -4,12 +4,16 @@ const { t, NULL_ADDRESS, ACTIVE, CLOSED } = require('../utils/consts');
 const { createLoanTerms } = require('../utils/structs');
 const BigNumber = require('bignumber.js');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const { createLoan } = require('../utils/loans');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
+
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
 
 contract('EtherCollateralLoansRepayTest', function (accounts) {
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
@@ -34,6 +38,8 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
             marketsInstance.address
         );
         const collateralTokenInstance = await Mock.new();
+        const loanLib = await LoanLib.new();
+        await Loans.link("LoanLib", loanLib.address);
         instance = await Loans.new();
         await instance.initialize(
             lendingPoolInstance.address,
@@ -59,7 +65,8 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
     ) {
         it(t('user', 'repay', 'Should able to repay your loan.', false), async function() {
             // Setup
-            await instance.setLoan(mockLoanID, loanTerms, 0, 0, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, loanTerms.maxLoanAmount, ACTIVE, false)
+            const loan = createLoan({ id: mockLoanID, loanTerms, collateral: loanCollateral.toString(), principalOwed: loanPrincipalOwed, interestOwed: loanInterestOwed, borrowedAmount: loanTerms.maxLoanAmount, status: ACTIVE, liquidated: false });
+            await instance.setLoan(loan);
 
             await instance.setTotalCollateral(totalCollateral)
 
@@ -83,25 +90,30 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
                 if (amountToPay > (loanPrincipalOwed + loanInterestOwed)) {
                     amountToPay = (loanPrincipalOwed + loanInterestOwed)
                 }
-                if (amountToPay < loanPrincipalOwed){
-                    newPrincipalOwed = loanPrincipalOwed - amountToPay
-                    newInterestOwed = loanInterestOwed
+                if (amountToPay < loanPrincipalOwed) {
+                    if (amountToPay >= loanInterestOwed) {
+                        newInterestOwed = 0;
+                        newPrincipalOwed = loanPrincipalOwed - (amountToPay - loanInterestOwed);
+                    } else {
+                        newInterestOwed = loanInterestOwed - amountToPay;
+                        newPrincipalOwed = loanPrincipalOwed;
+                    }
                 } else {
-                    newPrincipalOwed = 0
-                    newInterestOwed = loanInterestOwed - (amountToPay - loanPrincipalOwed)
+                    newInterestOwed = 0;
+                    newPrincipalOwed = loanPrincipalOwed - (amountToPay - loanInterestOwed);
                 }
 
                 let loan = await instance.loans.call(mockLoanID)
 
-                assert.equal(loan['principalOwed'].toString(), newPrincipalOwed)
-                assert.equal(loan['interestOwed'].toString(), newInterestOwed)
+                assert.equal(loan['principalOwed'].toString(), newPrincipalOwed, 'Principal not match')
+                assert.equal(loan['interestOwed'].toString(), newInterestOwed, 'Interest not match')
 
                 if (newPrincipalOwed + newInterestOwed == 0) {
                     assert.equal(parseInt(loan['collateral']), 0)
-                    assert.equal(totalCollateral.minus(loanCollateral).toFixed(), totalAfter.toString())
-                    assert.equal(BigNumber(contractBalBefore).minus(loanCollateral), contractBalAfter.toString())
-                    assert.equal(BigNumber(borrowerBalBefore).plus(loanCollateral), borrowerBalAfter.toString())
-                    assert.equal(parseInt(loan['status']), CLOSED)
+                    assert.equal(totalCollateral.minus(loanCollateral).toFixed(), totalAfter.toString(), 'Total collateral not match')
+                    assert.equal(BigNumber(contractBalBefore).minus(loanCollateral), contractBalAfter.toString(), 'Contract balance not match')
+                    assert.equal(BigNumber(borrowerBalBefore).plus(loanCollateral), borrowerBalAfter.toString(), 'Borrower balance not match')
+                    assert.equal(parseInt(loan['status']), CLOSED, 'Loan status not match')
                 }
             } catch (error) {
                 // Assertions

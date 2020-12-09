@@ -5,6 +5,7 @@ const { t, NULL_ADDRESS, ACTIVE } = require('../utils/consts');
 const { loans } = require('../utils/events');
 const { createLoanTerms } = require('../utils/structs');
 const { createTestSettingsInstance } = require('../utils/settings-helper');
+const { createLoan } = require('../utils/loans');
 
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const ChainlinkAggregatorEncoder = require('../utils/encoders/ChainlinkAggregatorEncoder');
@@ -15,9 +16,12 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
-const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
+const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 
-contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
+contract('LoansBaseWithdrawCollateralTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     const chainlinkAggregatorEncoder = new ChainlinkAggregatorEncoder(web3);
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
@@ -48,6 +52,8 @@ contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
           });
 
         collateralTokenInstance = await Mock.new();
+        const loanLib = await LoanLib.new();
+        await Loans.link("LoanLib", loanLib.address);
         instance = await Loans.new();
         await instance.initialize(
             lendingPoolInstance.address,
@@ -83,27 +89,20 @@ contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
     ) {
         it(t('user', 'withdrawCollateral', 'Should able to withdraw collateral.', false), async function() {
             // Setup
-            const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, 0)
-            await instance.setLoan(mockLoanID, loanTerms, 0, 0, loanCollateral, 0, loanPrincipalOwed, loanInterestOwed, loanTerms.maxLoanAmount, ACTIVE, false)
-            await instance.setTotalCollateral(totalCollateral)
-            const totalBefore = await instance.totalCollateral.call()
-            assert.equal(totalCollateral.toString(), totalBefore.toString(), 'collateral not set')
+            const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, loanCollateralRatio, 0, 0);
 
-            // give the contract collateral through a deposit (mock has a fallback)
-            await web3.eth.sendTransaction({ from: accounts[1], to: instance.address, value: totalCollateral });
+            const loan = createLoan({ id: mockLoanID, loanTerms, collateral: loanCollateral, principalOwed: loanPrincipalOwed, interestOwed: loanInterestOwed, borrowedAmount: loanTerms.maxLoanAmount, status: ACTIVE, liquidated: false});
 
-            // encode current token price
-            await chainlinkAggregatorInstance.givenMethodReturnUint(
-              chainlinkAggregatorEncoder.encodeValueFor(),
-              oracleValue.toString()
-            );
+            await instance.setLoan(loan);
+            
+            // mock get collateral needed info
+            await instance.mockGetCollateralInfo(mockLoanID, loanPrincipalOwed, oracleValue)
 
             // encode token decimals
             const encodeDecimals = erc20InterfaceEncoder.encodeDecimals();
             await lendingTokenInstance.givenMethodReturnUint(encodeDecimals, tokenDecimals);
             try {
                 const contractBalBefore = await web3.eth.getBalance(instance.address)
-
                 const tx = await instance.withdrawCollateral(withdrawalAmount, mockLoanID, { from: msgSender })
                 
                 // Assertions
@@ -117,13 +116,13 @@ contract('EtherCollateralLoansWithdrawCollateralTest', function (accounts) {
 
                 let loan = await instance.loans.call(mockLoanID)
 
+                const wasCollateralPaidOut = await instance.paidOutCollateral.call();
+
                 loans
                     .collateralWithdrawn(tx)
                     .emitted(mockLoanID, loanBorrower, paidOut)
 
-                assert.equal(parseInt(loan.collateral), (loanCollateral - paidOut))
-                assert.equal(totalCollateral - paidOut, parseInt(totalAfter))
-                assert.equal(parseInt(contractBalBefore) - paidOut, parseInt(contractBalAfter))
+                assert(wasCollateralPaidOut, 'Expected payOutCollateral to be called');
             } catch (error) {
                 assert(mustFail, error.message);
                 assert.equal(error.reason, expectedErrorMessage);

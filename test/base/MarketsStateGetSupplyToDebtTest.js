@@ -6,6 +6,8 @@ const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEnc
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
+const CERC20Mock = artifacts.require("./mock/providers/compound/CERC20Mock.sol");
+const ERC20Mock = artifacts.require("./mock/token/ERC20Mock.sol");
 
 // Smart contracts
 const MarketsState = artifacts.require("./base/MarketsState.sol");
@@ -17,9 +19,11 @@ contract('MarketsStateGetSupplyToDebtTest', function (accounts) {
     let instance;
     let settings;
     let cTokenInstance;
+    let underlyingTokenInstance;
     
     beforeEach('Setup for each test', async () => {
-        cTokenInstance = await Mock.new();
+        underlyingTokenInstance = await ERC20Mock.new('', '', 18, 10000);
+        cTokenInstance = await CERC20Mock.new('', '', 18, underlyingTokenInstance.address, 1);
         settings = await Mock.new();
         instance = await MarketsState.new();
         await instance.initialize(settings.address);
@@ -91,7 +95,7 @@ contract('MarketsStateGetSupplyToDebtTest', function (accounts) {
             ], 1, 3, 1 * 10000
         ],
         // (2000 borrow - 2040 repay + 0 newLoanAmount) / 2500 Supply = 0
-        _6_scenario: [
+        _8_scenario: [
             [
                 newAmount(1000, actions.Inc_Supply, 0, 1),
                 newAmount(500, actions.Borrow, 0, 1),
@@ -108,6 +112,9 @@ contract('MarketsStateGetSupplyToDebtTest', function (accounts) {
                 settingsInterfaceEncoder.encodeGetCTokenAddress(),
                 cTokenInstance.address
             );
+
+            await cTokenInstance.setMockExchangeRate(200);
+
             for (const { amount, type, borrowedIndex, collateralIndex } of previousAmounts) {
                 const borrowedAssset = mocks[borrowedIndex];
                 const collateralAssset = mocks[collateralIndex];

@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Deta
 import "../util/TellerCommon.sol";
 import "../util/NumbersLib.sol";
 import "../util/ERC20DetailedLib.sol";
+import "../util/LoanLib.sol";
 
 // Contracts
 import "./Base.sol";
@@ -36,16 +37,13 @@ import "../interfaces/EscrowInterface.sol";
     @author develop@teller.finance
  */
 contract LoansBase is LoansInterface, Base {
-    using AddressLib for address payable;
     using SafeMath for uint256;
     using NumbersLib for uint256;
+    using NumbersLib for int256;
     using ERC20DetailedLib for ERC20Detailed;
+    using LoanLib for TellerCommon.Loan;
 
     /* State Variables */
-
-    // Loan length will be inputted in seconds, with 4 decimal places. i.e. 30 days will be inputted as
-    // 31536. Therefore in interest calculations we must divide by 31536000
-    uint256 internal constant SECONDS_PER_YEAR_4DP = 31536000;
 
     bytes32 internal constant SUPPLY_TO_DEBT_ATM_SETTING = "SupplyToDebt";
 
@@ -105,11 +103,7 @@ contract LoansBase is LoansInterface, Base {
         @param loanID number of loan to check
      */
     modifier loanActiveOrSet(uint256 loanID) {
-        require(
-            loans[loanID].status == TellerCommon.LoanStatus.TermsSet ||
-                loans[loanID].status == TellerCommon.LoanStatus.Active,
-            "LOAN_NOT_ACTIVE_OR_SET"
-        );
+        require(loans[loanID].isActiveOrSet(), "LOAN_NOT_ACTIVE_OR_SET");
         _;
     }
 
@@ -170,22 +164,93 @@ contract LoansBase is LoansInterface, Base {
         return lendingPool.cToken();
     }
 
-    /**
-        @notice Checks whether the loan's collateral ratio is considered to be secured based on the settings collateral buffer value.
-        @param loanID Id of the loan to check.
-        @return bool value of it being secured or not.
-    */
+    // See more details LoanLib.isSecured
     function isLoanSecured(uint256 loanID) external view returns (bool) {
-        return _isLoanSecured(loanID);
+        return loans[loanID].isSecured(settings());
+    }
+
+    // See more details in LoanLib.canGoToEOA
+    function canLoanGoToEOA(uint256 loanID) external view returns (bool) {
+        return loans[loanID].canGoToEOA(settings());
+    }
+
+    // See more details LoanLib.getTotalOwed
+    function getTotalOwed(uint256 loanID) external view returns (uint256) {
+        return loans[loanID].getTotalOwed();
+    }
+
+    // See more details LoanLib.getCollateralInfo
+    function getCollateralInfo(uint256 loanID)
+        external
+        view
+        returns (TellerCommon.LoanCollateralInfo memory)
+    {
+        return _getCollateralInfo(loanID);
+    }
+
+    // See more details LoanLib.getLiquidationInfo
+    function getLiquidationInfo(uint256 loanID)
+        external
+        view
+        returns (TellerCommon.LoanLiquidationInfo memory)
+    {
+        return _getLiquidationInfo(loanID);
     }
 
     /**
-        @notice Checks whether a loan is allowed to be deposited to an Externally Owned Account.
-        @param loanID Id of the loan to check.
-        @return bool indicating whether the loan with specified parameters can be deposited to an EOA.
-     */
-    function canLoanGoToEOA(uint256 loanID) external view returns (bool) {
-        return _canLoanGoToEOA(loans[loanID].loanTerms.collateralRatio);
+        @notice Creates a loan with the loan request and terms
+        @param request Struct of the protocol loan request
+        @param responses List of structs of the protocol loan responses
+        @param collateralAmount Amount of collateral required for the loan
+    */
+    function createLoanWithTerms(
+        TellerCommon.LoanRequest calldata request,
+        TellerCommon.LoanResponse[] calldata responses,
+        uint256 collateralAmount
+    )
+        external
+        payable
+        isInitialized()
+        whenNotPaused()
+        isBorrower(request.borrower)
+        withValidLoanRequest(request)
+    {
+        uint256 loanID = _getAndIncrementLoanID();
+        if (collateralAmount > 0) {
+            _payInCollateral(loanID, collateralAmount);
+        }
+
+        (
+            uint256 interestRate,
+            uint256 collateralRatio,
+            uint256 maxLoanAmount
+        ) = loanTermsConsensus.processRequest(request, responses);
+
+        loans[loanID].init(
+            request,
+            settings(),
+            loanID,
+            interestRate,
+            collateralRatio,
+            maxLoanAmount
+        );
+
+        if (request.recipient.isNotEmpty()) {
+            require(loans[loanID].canGoToEOA(settings()), "UNDER_COLL_WITH_RECIPIENT");
+        }
+
+        borrowerLoans[request.borrower].push(loanID);
+
+        emit LoanTermsSet(
+            loanID,
+            msg.sender,
+            loans[loanID].loanTerms.recipient,
+            interestRate,
+            collateralRatio,
+            maxLoanAmount,
+            loans[loanID].loanTerms.duration,
+            loans[loanID].termsExpiry
+        );
     }
 
     /**
@@ -199,26 +264,59 @@ contract LoansBase is LoansInterface, Base {
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused(address(lendingPool))
-        nonReentrant()
     {
         require(msg.sender == loans[loanID].loanTerms.borrower, "CALLER_DOESNT_OWN_LOAN");
         require(amount > 0, "CANNOT_WITHDRAW_ZERO");
+        (, int256 neededInCollateralTokens, ) = _getCollateralNeededInfo(loanID);
+        _withdrawCollateral(amount, loanID, neededInCollateralTokens);
+    }
 
-        // Get the current collateral info.
-        TellerCommon.LoanCollateralInfo memory collateralInfo = _getCollateralInfo(
-            loanID
-        );
-
-        // Withdrawal amount holds the amount of excess collateral in the loan
-        uint256 withdrawalAmount = collateralInfo.collateral.sub(
-            collateralInfo.neededInCollateralTokens
-        );
-        require(withdrawalAmount >= amount, "COLLATERAL_AMOUNT_TOO_HIGH");
+    function _withdrawCollateral(
+        uint256 amount,
+        uint256 loanID,
+        int256 neededInCollateralTokens
+    ) private nonReentrant() {
+        if (neededInCollateralTokens > 0) {
+            // Withdrawal amount holds the amount of excess collateral in the loan
+            uint256 withdrawalAmount = loans[loanID].collateral.sub(
+                uint256(neededInCollateralTokens)
+            );
+            require(withdrawalAmount >= amount, "COLLATERAL_AMOUNT_TOO_HIGH");
+        } else {
+            require(loans[loanID].collateral == amount, "COLLATERAL_AMOUNT_NOT_MATCH");
+        }
 
         // Update the contract total and the loan collateral total
         _payOutCollateral(loanID, amount, msg.sender);
 
         emit CollateralWithdrawn(loanID, msg.sender, amount);
+    }
+
+    /**
+     * @notice Deposit collateral tokens into a loan.
+     * @param borrower The address of the loan borrower.
+     * @param loanID The ID of the loan the collateral is for
+     * @param amount The amount to deposit as collateral.
+     */
+    function depositCollateral(
+        address borrower,
+        uint256 loanID,
+        uint256 amount
+    )
+        external
+        payable
+        loanActiveOrSet(loanID)
+        isInitialized()
+        whenNotPaused()
+        whenLendingPoolNotPaused(address(lendingPool))
+    {
+        borrower.requireEqualTo(
+            loans[loanID].loanTerms.borrower,
+            "BORROWER_LOAN_ID_MISMATCH"
+        );
+        require(amount > 0, "CANNOT_DEPOSIT_ZERO");
+        // Update the loan collateral and total. Transfer tokens to this contract.
+        _payInCollateral(loanID, amount);
     }
 
     /**
@@ -256,20 +354,19 @@ contract LoansBase is LoansInterface, Base {
 
         loans[loanID].borrowedAmount = amountBorrow;
         loans[loanID].principalOwed = amountBorrow;
-        loans[loanID].interestOwed = _getInterestOwed(loanID, amountBorrow);
+        loans[loanID].interestOwed = loans[loanID].getInterestOwedFor(amountBorrow);
         loans[loanID].status = TellerCommon.LoanStatus.Active;
 
         // check that enough collateral has been provided for this loan
         TellerCommon.LoanCollateralInfo memory collateralInfo = _getCollateralInfo(
             loanID
         );
-
         require(!collateralInfo.moreCollateralRequired, "MORE_COLLATERAL_REQUIRED");
 
         loans[loanID].loanStartTime = now;
 
         address loanRecipient;
-        bool eoaAllowed = _canLoanGoToEOA(loans[loanID].loanTerms.collateralRatio);
+        bool eoaAllowed = loans[loanID].canGoToEOA(settings());
         if (eoaAllowed) {
             loanRecipient = loans[loanID].loanTerms.recipient.isEmpty()
                 ? loans[loanID].loanTerms.borrower
@@ -310,14 +407,14 @@ contract LoansBase is LoansInterface, Base {
         require(amount > 0, "AMOUNT_VALUE_REQUIRED");
         // calculate the actual amount to repay
         uint256 toPay = amount;
-        uint256 totalOwed = getTotalOwed(loanID);
+        uint256 totalOwed = loans[loanID].getTotalOwed();
         if (totalOwed < toPay) {
             toPay = totalOwed;
         }
 
         // update the amount owed on the loan
         totalOwed = totalOwed.sub(toPay);
-        _payLoan(loanID, toPay);
+        loans[loanID].payOff(toPay);
 
         // if the loan is now fully paid, close it and return collateral
         if (totalOwed == 0) {
@@ -366,7 +463,7 @@ contract LoansBase is LoansInterface, Base {
         loans[loanID].liquidated = true;
 
         // the caller gets the collateral from the loan
-        _payOutLoan(loanID, liquidationInfo.collateral, msg.sender);
+        _payOutLiquidator(loanID, liquidationInfo, msg.sender);
 
         // the liquidator pays x% of the collateral price
         lendingPool.liquidationPayment(liquidationInfo.amountToLiquidate, msg.sender);
@@ -375,127 +472,72 @@ contract LoansBase is LoansInterface, Base {
             loanID,
             loans[loanID].loanTerms.borrower,
             msg.sender,
-            liquidationInfo.collateral,
+            liquidationInfo.collateralInfo.collateral,
             liquidationInfo.amountToLiquidate
         );
     }
 
-    /**
-        @notice It getss the current liquidation info for a given loan id.
-        @param loanID loan id to get the info.
-        @return liquidationInfo get current liquidation info for the given loan id.
-     */
-    function getLiquidationInfo(uint256 loanID)
-        external
-        view
-        returns (TellerCommon.LoanLiquidationInfo memory liquidationInfo)
-    {
-        return _getLiquidationInfo(loanID);
-    }
+    /** Internal Functions */
 
-    /**
-        @notice A loan can be liquidated if it is: under collateralized or expired
-        @param loanID The ID of the loan to check
-        @return bool weather the loan can be liquidated
-     */
-    function canLiquidateLoan(uint256 loanID) public view returns (bool) {
-        if (
-            _isPaused() ||
-            _isPoolPaused(address(lendingPool)) ||
-            loans[loanID].status != TellerCommon.LoanStatus.Active
-        ) {
-            return false;
-        }
-
-        uint256 startTime = loans[loanID].loanStartTime;
-        uint256 duration = loans[loanID].loanTerms.duration;
-        bool isExpired = startTime.add(duration) < now;
-        if (isExpired) {
-            return true;
-        }
-
-        address escrowAddress = loans[loanID].escrow;
-        if (escrowAddress != address(0x0)) {
-            return EscrowInterface(escrowAddress).isUnderValued();
-        }
-
-        return _getCollateralInfo(loanID).moreCollateralRequired;
-    }
-
-    /**
-        @notice Returns the total owed amount remaining for a specified loan
-        @param loanID The ID of the loan to be queried
-        @return uint256 The total amount owed remaining
-     */
-    function getTotalOwed(uint256 loanID) public view returns (uint256) {
-        return _getTotalOwed(loanID);
-    }
-
-    /**
-        @notice Get collateral information of a specific loan
-        @param loanID of the loan to get info for
-        @return memory TellerCommon.LoanCollateralInfo Collateral information of the loan
-     */
-    function getCollateralInfo(uint256 loanID)
-        external
+    // See LoanLib.getCollateralInfo
+    function _getCollateralInfo(uint256 loanID)
+        internal
         view
         returns (TellerCommon.LoanCollateralInfo memory)
     {
-        return _getCollateralInfo(loanID);
+        return loans[loanID].getCollateralInfo(this);
     }
 
-    /** Internal Functions */
-
-    /**
-        @notice Checks whether the loan's collateral ratio is considered to be secured based on the settings collateral buffer value.
-        @param loanID Id of the loan to check.
-        @return bool value of it being secured or not.
-    */
-    function _isLoanSecured(uint256 loanID) internal view returns (bool) {
-        return
-            loans[loanID].loanTerms.collateralRatio >=
-            settings().getPlatformSettingValue(
-                settings().consts().COLLATERAL_BUFFER_SETTING()
-            );
+    // See LoanLib.getCollateralNeededInfo
+    function _getCollateralNeededInfo(uint256 loanID)
+        internal
+        view
+        returns (
+            int256 neededInLendingTokens,
+            int256 neededInCollateralTokens,
+            uint256 escrowLoanValue
+        )
+    {
+        return loans[loanID].getCollateralNeededInfo(this);
     }
 
-    /**
-        @notice Checks whether a loan is allowed to be deposited to an Externally Owned Account.
-        @param collateralRatio Collateral ratio required by loan.
-        @return bool indicating whether the loan with specified parameters can be deposited to an EOA.
-     */
-    function _canLoanGoToEOA(uint256 collateralRatio) internal view returns (bool) {
-        uint256 overCollateralizedBuffer = settings().getPlatformSettingValue(
-            settings().consts().OVER_COLLATERALIZED_BUFFER_SETTING()
-        );
-        uint256 collateralBuffer = settings().getPlatformSettingValue(
-            settings().consts().COLLATERAL_BUFFER_SETTING()
-        );
-        uint256 liquidationReward = settings().consts().ONE_HUNDRED_PERCENT().sub(
-            settings().getPlatformSettingValue(
-                settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
-            )
-        );
-
-        return
-            collateralRatio >=
-            overCollateralizedBuffer.add(collateralBuffer).add(liquidationReward);
+    // See LoanLib.getLiquidationInfo
+    function _getLiquidationInfo(uint256 loanID)
+        internal
+        view
+        returns (TellerCommon.LoanLiquidationInfo memory liquidationInfo)
+    {
+        return loans[loanID].getLiquidationInfo(this);
     }
 
     /**
         @notice Checks if the loan has an Escrow and claims any tokens then pays out the loan collateral.
         @dev See Escrow.claimTokens for more info.
+        @param loanID The ID of the loan which is being liquidated
+        @param liquidationInfo The Teller common liquidation struct that holds all the relevant liquidation info, such as the liquidation info
+        @param recipient The address of the liquidator where the liquidation reward will be sent to
     */
-    function _payOutLoan(
+    function _payOutLiquidator(
         uint256 loanID,
-        uint256 amount,
+        TellerCommon.LoanLiquidationInfo memory liquidationInfo,
         address payable recipient
     ) internal {
-        if (loans[loanID].escrow != address(0x0)) {
-            EscrowInterface(loans[loanID].escrow).claimTokens(recipient);
+        if (liquidationInfo.rewardInCollateral <= 0) {
+            return;
         }
-
-        _payOutCollateral(loanID, amount, recipient);
+        uint256 reward = uint256(liquidationInfo.rewardInCollateral);
+        if (reward < loans[loanID].collateral) {
+            _payOutCollateral(loanID, reward, recipient);
+        } else if (reward >= loans[loanID].collateral) {
+            uint256 remainingCollateralAmount = reward.sub(loans[loanID].collateral);
+            _payOutCollateral(loanID, loans[loanID].collateral, recipient);
+            if (remainingCollateralAmount > 0 && loans[loanID].escrow != address(0x0)) {
+                EscrowInterface(loans[loanID].escrow).claimTokensByCollateralValue(
+                    recipient,
+                    remainingCollateralAmount
+                );
+            }
+        }
     }
 
     /**
@@ -509,49 +551,6 @@ contract LoansBase is LoansInterface, Base {
         uint256 amount,
         address payable recipient
     ) internal;
-
-    /**
-        @notice Get collateral information of a specific loan
-        @param loanID of the loan to get info for
-        @return memory TellerCommon.LoanCollateralInfo Collateral information of the loan
-     */
-    function _getCollateralInfo(uint256 loanID)
-        internal
-        view
-        returns (TellerCommon.LoanCollateralInfo memory)
-    {
-        uint256 collateral = loans[loanID].collateral;
-        (uint256 neededInLending, uint256 neededInCollateral) = _getCollateralNeededInfo(
-            loanID
-        );
-        return
-            TellerCommon.LoanCollateralInfo({
-                collateral: collateral,
-                neededInLendingTokens: neededInLending,
-                neededInCollateralTokens: neededInCollateral,
-                moreCollateralRequired: neededInCollateral > collateral
-            });
-    }
-
-    /**
-        @notice Get information on the collateral needed for the loan
-        @param loanID The loan ID to get collateral info for
-        @return uint256 Collateral needed in Lending tokens
-        @return uint256 Collateral needed in Collateral tokens (wei)
-     */
-    function _getCollateralNeededInfo(uint256 loanID)
-        internal
-        view
-        returns (uint256 neededInLendingTokens, uint256 neededInCollateralTokens)
-    {
-        // Get collateral needed in lending tokens.
-        neededInLendingTokens = _getCollateralNeededInTokens(loanID);
-        neededInCollateralTokens = settings().chainlinkAggregator().valueFor(
-            lendingPool.lendingToken(),
-            collateralToken,
-            neededInLendingTokens
-        );
-    }
 
     /**
         @notice Initializes the current contract instance setting the required parameters.
@@ -582,100 +581,7 @@ contract LoansBase is LoansInterface, Base {
         totalCollateral = totalCollateral.add(amount);
         loans[loanID].collateral = loans[loanID].collateral.add(amount);
         loans[loanID].lastCollateralIn = now;
-    }
-
-    /**
-        @notice Make a payment towards the principal and interest for a specified loan
-        @param loanID The ID of the loan the payment is for
-        @param toPay The amount of tokens to pay to the loan
-     */
-    function _payLoan(uint256 loanID, uint256 toPay) internal {
-        if (toPay > loans[loanID].principalOwed) {
-            uint256 leftToPay = toPay;
-            leftToPay = leftToPay.sub(loans[loanID].principalOwed);
-            loans[loanID].principalOwed = 0;
-            loans[loanID].interestOwed = loans[loanID].interestOwed.sub(leftToPay);
-        } else {
-            loans[loanID].principalOwed = loans[loanID].principalOwed.sub(toPay);
-        }
-    }
-
-    /**
-        @notice Returns the value of collateral
-        @param loanID The loan ID to get collateral info for
-        @return uint256 The amount of collateral needed in lending tokens (not wei)
-     */
-    function _getCollateralNeededInTokens(uint256 loanID)
-        internal
-        view
-        returns (uint256)
-    {
-        uint256 loanAmount = _getTotalOwed(loanID);
-        uint256 collateralRatio = loans[loanID].loanTerms.collateralRatio;
-        return loanAmount.percent(collateralRatio);
-    }
-
-    /**
-        @notice Returns the total amount owed for a specified loan
-        @param loanID The id of the loan to get the total amount owed
-     */
-    function _getTotalOwed(uint256 loanID) internal view returns (uint256) {
-        TellerCommon.LoanStatus currentStatus = loans[loanID].status;
-        if (currentStatus == TellerCommon.LoanStatus.TermsSet) {
-            uint256 interestOwed = _getInterestOwed(
-                loanID,
-                loans[loanID].loanTerms.maxLoanAmount
-            );
-            return loans[loanID].loanTerms.maxLoanAmount.add(interestOwed);
-        } else if (currentStatus == TellerCommon.LoanStatus.Active) {
-            return loans[loanID].principalOwed.add(loans[loanID].interestOwed);
-        } else {
-            return 0;
-        }
-    }
-
-    /**
-        @notice Returns the amount of interest owed for a given loan and loan amount
-        @param loanID The id of the loan to get the owed interest
-        @param amountBorrow The principal of the loan to take out
-     */
-    function _getInterestOwed(uint256 loanID, uint256 amountBorrow)
-        internal
-        view
-        returns (uint256)
-    {
-        return
-            amountBorrow
-                .percent(loans[loanID].loanTerms.interestRate)
-                .mul(loans[loanID].loanTerms.duration)
-                .div(SECONDS_PER_YEAR_4DP);
-    }
-
-    /**
-        @notice It gets the current liquidation info for a given loan id.
-        @param loanID loan id to get the info.
-        @return liquidationInfo get current liquidation info for the given loan id.
-     */
-    function _getLiquidationInfo(uint256 loanID)
-        internal
-        view
-        returns (TellerCommon.LoanLiquidationInfo memory liquidationInfo)
-    {
-        uint256 collateral = loans[loanID].collateral;
-        uint256 liquidateEthPrice = settings().getPlatformSettingValue(
-            settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
-        );
-        uint256 collateralInTokens = settings().chainlinkAggregator().valueFor(
-            collateralToken,
-            lendingPool.lendingToken(),
-            collateral
-        );
-        liquidationInfo = TellerCommon.LoanLiquidationInfo({
-            liquidable: canLiquidateLoan(loanID),
-            collateral: collateral,
-            collateralInTokens: collateralInTokens,
-            amountToLiquidate: collateralInTokens.percent(liquidateEthPrice)
-        });
+        emit CollateralDeposited(loanID, msg.sender, amount);
     }
 
     /**
@@ -685,87 +591,6 @@ contract LoansBase is LoansInterface, Base {
     function _getAndIncrementLoanID() internal returns (uint256 newLoanID) {
         newLoanID = loanIDCounter;
         loanIDCounter = loanIDCounter.add(1);
-    }
-
-    /**
-        @notice Creates a loan with the loan request
-        @param loanID The ID of the loan
-        @param request Loan request as per the struct of the Teller platform
-        @param interestRate Interest rate set in the loan terms
-        @param collateralRatio Collateral ratio set in the loan terms
-        @param maxLoanAmount Maximum loan amount that can be taken out, set in the loan terms
-        @return memory TellerCommon.Loan Loan struct as per the Teller platform
-     */
-    function _createLoan(
-        uint256 loanID,
-        TellerCommon.LoanRequest memory request,
-        uint256 interestRate,
-        uint256 collateralRatio,
-        uint256 maxLoanAmount
-    ) internal view returns (TellerCommon.Loan memory loan) {
-        request.borrower.requireNotEmpty("BORROWER_EMPTY");
-        if (request.recipient.isNotEmpty()) {
-            require(_canLoanGoToEOA(collateralRatio), "UNDER_COLL_WITH_RECIPIENT");
-        }
-
-        uint256 termsExpiryTime = settings().getPlatformSettingValue(
-            settings().consts().TERMS_EXPIRY_TIME_SETTING()
-        );
-        uint256 termsExpiry = now.add(termsExpiryTime);
-        return
-            TellerCommon.Loan({
-                id: loanID,
-                loanTerms: TellerCommon.LoanTerms({
-                    borrower: request.borrower,
-                    recipient: request.recipient,
-                    interestRate: interestRate,
-                    collateralRatio: collateralRatio,
-                    maxLoanAmount: maxLoanAmount,
-                    duration: request.duration
-                }),
-                termsExpiry: termsExpiry,
-                loanStartTime: 0,
-                collateral: 0,
-                lastCollateralIn: 0,
-                principalOwed: 0,
-                interestOwed: 0,
-                borrowedAmount: 0,
-                escrow: address(0x0),
-                status: TellerCommon.LoanStatus.TermsSet,
-                liquidated: false
-            });
-    }
-
-    /**
-        @notice Emits two events, one when loan terms are set and another IF collateral has been deposited during setting the loan terms
-        @param loanID The ID of the loan for which terms were set
-        @param request The Teller common loan request that was submitted by the borrower
-        @param interestRate The signed interest rate for the loan
-        @param collateralRatio The ratio of collateral to loan amount that was set by the signers
-        @param maxLoanAmount The largest amount of tokens that can be taken out based on the loan terms
-        @param depositedAmount The amount of collateral depositied when the loan terms were set, if 0 the collateral deposited event will not emit
-     */
-    function _emitLoanTermsSetAndCollateralDepositedEventsIfApplicable(
-        uint256 loanID,
-        TellerCommon.LoanRequest memory request,
-        uint256 interestRate,
-        uint256 collateralRatio,
-        uint256 maxLoanAmount,
-        uint256 depositedAmount
-    ) internal {
-        emit LoanTermsSet(
-            loanID,
-            request.borrower,
-            request.recipient,
-            interestRate,
-            collateralRatio,
-            maxLoanAmount,
-            request.duration,
-            loans[loanID].termsExpiry
-        );
-        if (depositedAmount > 0) {
-            emit CollateralDeposited(loanID, request.borrower, depositedAmount);
-        }
     }
 
     /**

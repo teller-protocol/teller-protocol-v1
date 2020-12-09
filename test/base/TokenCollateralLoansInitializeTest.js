@@ -8,6 +8,9 @@ const Mock = artifacts.require('./mock/util/Mock.sol')
 // Smart contracts
 const Loans = artifacts.require('./base/TokenCollateralLoans.sol')
 
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
 contract('TokenCollateralLoansInitializeTest', function (accounts) {
   let mocks
 
@@ -33,6 +36,8 @@ contract('TokenCollateralLoansInitializeTest', function (accounts) {
   ) {
     it(t('user', 'initialize', 'Should (or not) be able to create a new instance.', mustFail), async function () {
       // Setup
+      const loanLib = await LoanLib.new();
+      await Loans.link("LoanLib", loanLib.address);
       const loansInstance = await Loans.new()
       const lendingPoolAddress = getInstance(mocks, lendingPoolIndex, 3)
       const loanTermsConsensusAddress = getInstance(mocks, loanTermsConsensusIndex, 4)

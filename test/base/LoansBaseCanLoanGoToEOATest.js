@@ -12,6 +12,9 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
 contract("LoansBaseCanLoanGoToEOATest", function(accounts) {
   let instance;
 
@@ -25,7 +28,8 @@ contract("LoansBaseCanLoanGoToEOATest", function(accounts) {
       [settingsNames.CollateralBuffer]: settingsCollateralBuffer,
       [settingsNames.LiquidateEthPrice]: settingsLiquidateEthPrice,
     });
-
+    const loanLib = await LoanLib.new();
+    await Loans.link("LoanLib", loanLib.address); 
     instance = await Loans.new();
     await instance.externalInitialize(settings.address);
   });

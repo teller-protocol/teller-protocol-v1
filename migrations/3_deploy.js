@@ -44,6 +44,8 @@ const TLRToken = artifacts.require("./atm/TLRToken.sol");
 // External providers
 const ChainlinkAggregator = artifacts.require("./providers/chainlink/ChainlinkAggregator.sol");
 const tokensRequired = ['DAI', 'USDC', 'LINK'];
+// Libraries
+const LoanLib = artifacts.require("./utils/LoanLib.sol");
 
 module.exports = async function(deployer, network, accounts) {
   if (network === 'test') return
@@ -95,9 +97,14 @@ module.exports = async function(deployer, network, accounts) {
       { Contract: MarketsState, name: logicNames.MarketsState },
       { Contract: ATMSettings, name: logicNames.ATMSettings },
       { Contract: ATMFactory, name: logicNames.ATMFactory },
+      { Contract: ATMLiquidityMining, name: logicNames.ATMLiquidityMining },
       { Contract: MarketFactory, name: logicNames.MarketFactory },
       { Contract: TTokenRegistry, name : logicNames.TTokenRegistry },
     ];
+
+    const loanLib = await LoanLib.new();
+    await TokenCollateralLoans.link("LoanLib", loanLib.address);
+    await EtherCollateralLoans.link("LoanLib", loanLib.address);
 
     const deployedLogicContractsMap = await deployLogicContracts(contracts, { deployerApp, txConfig, web3 });
 

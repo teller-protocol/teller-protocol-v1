@@ -16,6 +16,9 @@ const LINKMock = artifacts.require('./mock/token/LINKMock.sol')
 // Smart contracts
 const Loans = artifacts.require('./mock/base/TokenCollateralLoansMock.sol')
 
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
 contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
   const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3)
   const timer = new Timer(web3)
@@ -31,6 +34,8 @@ contract('TokenCollateralLoansDepositCollateralTest', function (accounts) {
     loanTermsConsInstance = await Mock.new()
     settingsInstance = await Mock.new()
     atmSettingsInstance = await Mock.new()
+    const loanLib = await LoanLib.new();
+    await Loans.link("LoanLib", loanLib.address);
     instance = await Loans.new()
   })
 

@@ -5,7 +5,8 @@ const {
 } = require("./index");
 
 const chainlinkActions = require("./chainlink");
-const platformSettingNames = require("../../../test/utils/platformSettingsNames")
+const platformSettingNames = require("../../../test/utils/platformSettingsNames");
+const BigNumber = require("bignumber.js");
 
 const takeOutNewLoan = async function (
   allContracts,
@@ -54,7 +55,12 @@ const takeOutNewLoan = async function (
       { testContext },
       { settingName: platformSettingNames.CollateralBuffer }
     )
-    collateralRatio = value
+    let result = await settingsActions.getPlatformSettings(
+      allContracts,
+      { testContext },
+      { settingName: platformSettingNames.LiquidateEthPrice }
+    );
+    collateralRatio = Number(value) + Number(interestRate)+ Number(result.value);
   }
 
   // Requesting the loan terms.

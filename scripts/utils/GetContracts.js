@@ -49,6 +49,10 @@ GetContracts.prototype.getTokenDeployed = async function({ tokens }, tokenName) 
             name: async () => Promise.resolve('ETH'),
             symbol: async () => Promise.resolve('ETH'),
             address: ETH_ADDRESS,
+            async balanceOf(address) {
+                const balance = await web3.eth.getBalance(address);
+                return balance.toString();
+            }
         };
     }
     const token = await this.getDeployed(tokens.get(tokenName));
@@ -63,6 +67,10 @@ GetContracts.prototype.getAllDeployed = async function({ teller, tokens }, token
             name: async () => Promise.resolve('ETH'),
             symbol: async () => Promise.resolve('ETH'),
             address: ETH_ADDRESS,
+            async balanceOf(address) {
+                const balance = await web3.eth.getBalance(address);
+                return balance.toString();
+            }
         };
     } else {
         collateralToken = await this.getDeployed(tokens.get(collTokenName));

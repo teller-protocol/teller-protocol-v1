@@ -23,6 +23,9 @@ const Loans = artifacts.require('./mock/base/EtherCollateralLoansMock.sol')
 const Settings = artifacts.require('./base/Settings.sol')
 const LoanTermsConsensus = artifacts.require('./base/LoanTermsConsensus.sol')
 
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
 contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
   const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3)
   const IAtmSettingsEncoder = new IATMSettingsEncoder(web3)
@@ -66,6 +69,8 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
         [settingsNames.TermsExpiryTime]: THIRTY_DAYS
       }
     )
+    const loanLib = await LoanLib.new();
+    await Loans.link("LoanLib", loanLib.address);
     instance = await Loans.new()
     await instance.initialize(
       lendingPoolInstance.address,
@@ -98,7 +103,7 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
   withData({
     _1_no_msg_value: [ AMOUNT_LOAN_REQUEST, 3, 0, 0, undefined, false ],
     _2_with_msg_value: [ AMOUNT_LOAN_REQUEST, 17, 500000, 500000, undefined, false ],
-    _3_msg_value_collateral_param_not_match_1: [ AMOUNT_LOAN_REQUEST, 17, 0, 500000, 'INCORRECT_ETH_AMOUNT', true ],
+    _3_msg_value_collateral_param_not_match_1: [ AMOUNT_LOAN_REQUEST, 17, 1, 500000, 'INCORRECT_ETH_AMOUNT', true ],
     _4_msg_value_collateral_param_not_match_2: [ AMOUNT_LOAN_REQUEST, 17, 500000, 0, 'INCORRECT_ETH_AMOUNT', true ],
     _5_msg_value_collateral_param_not_match_3: [ AMOUNT_LOAN_REQUEST, 17, 200000, 200001, 'INCORRECT_ETH_AMOUNT', true ],
     _6_no_msg_value_exceeds_max_amount: [ AMOUNT_LOAN_REQUEST - 400, 3, 0, 0, 'AMOUNT_EXCEEDS_MAX_AMOUNT', true ],
@@ -143,7 +148,6 @@ contract('EtherCollateralLoansCreateLoanWithTermsTest', function (accounts) {
 
       const totalBefore = await instance.totalCollateral.call()
       const contractBalBefore = await web3.eth.getBalance(instance.address)
-
       try {
         // Invocation
         const tx = await instance.createLoanWithTerms(

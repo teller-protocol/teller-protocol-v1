@@ -2,6 +2,7 @@
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS, ACTIVE } = require('../utils/consts');
 const { createLoanTerms } = require('../utils/structs');
+const { createLoan } = require('../utils/loans');
 
 const { loans } = require('../utils/events');
 
@@ -10,6 +11,9 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
 const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
+
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
 
 contract('EtherCollateralLoansDepositCollateralTest', function (accounts) {
     let instance;
@@ -25,6 +29,8 @@ contract('EtherCollateralLoansDepositCollateralTest', function (accounts) {
         loanTermsConsInstance = await Mock.new();
         settingsInstance = await Mock.new();
         atmSettingsInstance = await Mock.new();
+        const loanLib = await LoanLib.new();
+        await Loans.link("LoanLib", loanLib.address);
         instance = await Loans.new();
         await instance.initialize(
             lendingPoolInstance.address,
@@ -51,7 +57,10 @@ contract('EtherCollateralLoansDepositCollateralTest', function (accounts) {
         it(t('user', 'depositCollateral', 'Should able to deposit collateral.', false), async function() {
             // Setup
             const loanTerms = createLoanTerms(loanBorrower, NULL_ADDRESS, 0, 0, 0, 0)
-            await instance.setLoan(mockLoanID, loanTerms, 0, 0, mockCollateral, 0, 0, 0, loanTerms.maxLoanAmount, ACTIVE, false)
+            
+            const loan = createLoan({ id: mockLoanID, loanTerms, collateral: mockCollateral, borrowedAmount: loanTerms.maxLoanAmount, status: ACTIVE, liquidated: false});
+
+            await instance.setLoan(loan);
 
             const ethAmount = incorrectEthValue ? msgValue+1 : msgValue
 
@@ -59,7 +68,7 @@ contract('EtherCollateralLoansDepositCollateralTest', function (accounts) {
                 const contractBalBefore = await web3.eth.getBalance(instance.address)
                 const totalBefore = await instance.totalCollateral.call()
 
-                let tx = await instance.depositCollateral(specifiedBorrower, mockLoanID, ethAmount, { value: msgValue })
+                let tx = await instance.depositCollateral(specifiedBorrower, mockLoanID, ethAmount, { from: specifiedBorrower, value: msgValue })
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');

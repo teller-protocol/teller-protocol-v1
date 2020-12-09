@@ -37,16 +37,16 @@ module.exports = async (testContext) => {
   let currentOraclePrice;
   let collateralAmountDepositCollateral;
   if (collTokenName.toLowerCase() === "eth") {
-    currentOraclePrice = "0.002797359";
+    currentOraclePrice = "0.02797359";
     collateralAmountDepositCollateral = toDecimals(
-      0.17,
+      0.07,
       collateralTokenInfo.decimals
     );
   }
   if (collTokenName.toLowerCase() === "link") {
     currentOraclePrice = "0.100704";
     collateralAmountDepositCollateral = toDecimals(
-      3.1,
+      0.31,
       collateralTokenInfo.decimals
     );
   }

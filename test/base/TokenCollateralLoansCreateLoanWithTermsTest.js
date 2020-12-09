@@ -29,6 +29,9 @@ const Loans = artifacts.require('./mock/base/TokenCollateralLoansMock.sol')
 const Settings = artifacts.require('./base/Settings.sol')
 const LoanTermsConsensus = artifacts.require('./base/LoanTermsConsensus.sol')
 
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
 const getAverage = (...values) => values !== undefined && values.length > 0 ?
   values.reduce((previous, current) => current += previous) / values.length
   : 0
@@ -112,7 +115,9 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
       lendingPoolInterfaceEncoder.encodeLendingToken(),
       lendingTokenInstance.address
     )
-
+    
+    const loanLib = await LoanLib.new();
+    await Loans.link("LoanLib", loanLib.address);
     instance = await Loans.new()
     await instance.initialize(
       lendingPoolInstance.address,
@@ -155,9 +160,9 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
         loanTermsConsensusEncoder.encodeProcessRequestReturn(interestRate, collateralRatio, maxLoanAmount)
       )
       await collateralToken.mint(accounts[borrowerIndex], mintAmount, { from: sender })
-      const initialTotalCollateral = await instance.totalCollateral()
+      const initialTotalCollateral = await instance.totalCollateral();
       const initialContractCollateralTokenBalance = await collateralToken.balanceOf(instance.address)
-      await collateralToken.approve(instance.address, approveCollateralAmount, { from: accounts[borrowerIndex] })
+      await collateralToken.approve(instance.address, approveCollateralAmount, { from: accounts[borrowerIndex] });
 
       // Invocation
       try {
@@ -180,9 +185,10 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
           { interestRate, collateralRatio, maxLoanAmount, collateralAmount, loanID, termsExpiry, txTime },
           loanRequest
         )
+        console.log(loan.collateral.toString(), expectedLoan.collateral.toString(), 'Terms')
         assertLoan(loan, expectedLoan)
-        assert.equal(parseInt(initialTotalCollateral) + collateralAmount, parseInt(finalTotalCollateral))
-        assert.equal(parseInt(initialContractCollateralTokenBalance) + collateralAmount, parseInt(finalContractCollateralTokenBalance))
+        assert.equal(parseInt(initialTotalCollateral) + collateralAmount, parseInt(finalTotalCollateral), 'Collateral not match')
+        assert.equal(parseInt(initialContractCollateralTokenBalance) + collateralAmount, parseInt(finalContractCollateralTokenBalance), 'Balance not match')
         loans
           .loanTermsSet(result)
           .emitted(

@@ -247,13 +247,16 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         if (address(agg) != address(0)) {
             int256 price = agg.latestAnswer();
             uint8 resDecimals = agg.decimals();
+            if (inverse) {
+                price = int256(TEN**(resDecimals + resDecimals)) / price;
+            }
             if (dstDecimals > resDecimals) {
                 price = price * int256(TEN**(dstDecimals - resDecimals));
             } else {
                 price = price / int256(TEN**(resDecimals - dstDecimals));
             }
             int256 srcFactor = int256(TEN**_decimalsFor(src));
-            return inverse ? (srcFactor * dstFactor) / price : price;
+            return price;
         } else {
             address eth = settings().ETH_ADDRESS();
             dst.requireNotEqualTo(eth, "CANNOT_CALCULATE_VALUE");
