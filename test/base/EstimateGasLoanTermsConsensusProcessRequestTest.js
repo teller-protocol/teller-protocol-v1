@@ -27,7 +27,7 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
     const owner = accounts[0];
     let instance
 
-    const baseGasCost = 510000;
+    const baseGasCost = 511000;
     const expectedGasCost = (responses) => baseGasCost + ((responses -  1) * 122000);
 
     let loans
@@ -158,6 +158,7 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
                     from: sender
                 }
             );
+            console.log(expectedMaxGas, parseInt(result))
             assert(parseInt(result) <= expectedMaxGas, 'Expected max gas less than result.');
         })
     })
