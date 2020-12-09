@@ -78,18 +78,7 @@ library LoanLib {
         uint256 overCollateralizedBuffer = settings.getPlatformSettingValue(
             settings.consts().OVER_COLLATERALIZED_BUFFER_SETTING()
         );
-        uint256 collateralBuffer = settings.getPlatformSettingValue(
-            settings.consts().COLLATERAL_BUFFER_SETTING()
-        );
-        uint256 liquidationReward = settings.consts().ONE_HUNDRED_PERCENT().sub(
-            settings.getPlatformSettingValue(
-                settings.consts().LIQUIDATE_ETH_PRICE_SETTING()
-            )
-        );
-
-        return
-            loan.loanTerms.collateralRatio >=
-            overCollateralizedBuffer.add(collateralBuffer).add(liquidationReward);
+        return loan.loanTerms.collateralRatio >= overCollateralizedBuffer;
     }
 
     /**

@@ -1,11 +1,13 @@
 // JS Libraries
 const withData = require("leche").withData;
+const BN = require('bignumber.js')
 
-const { t, getLatestTimestamp, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE, TEN_THOUSAND, SECONDS_PER_YEAR_4DP } = require("../utils/consts");
+const { t, getLatestTimestamp, ONE_HOUR, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE, TEN_THOUSAND, SECONDS_PER_YEAR_4DP } = require("../utils/consts");
 const { createLoanTerms } = require("../utils/structs");
 const { loans } = require("../utils/events");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const { createLoan } = require('../utils/loans')
+const settingsNames = require('../utils/platformSettingsNames')
 
 const EscrowFactoryInterfaceEncoder = require("../utils/encoders/EscrowFactoryInterfaceEncoder");
 
@@ -30,6 +32,8 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
   let chainlinkAggregatorInstance;
 
   const mockLoanID = 0;
+  const overCollateralizedBuffer = 13000
+  const safetyInterval = FIVE_MIN
 
   const borrower = accounts[3];
 
@@ -54,6 +58,9 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
 
           chainlinkAggregatorInstance = chainlinkAggregator
         }
+      }, {
+        [settingsNames.OverCollateralizedBuffer]: overCollateralizedBuffer,
+        [settingsNames.SafetyInterval]: safetyInterval,
       });
 
     loanTermsConsInstance = await Mock.new();
@@ -90,19 +97,19 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
   ) {
     it(t("user", "takeOutLoan", "Should able to take out a loan.", false), async function() {
       // Setup
-      const timeNow = await getLatestTimestamp();
+      const timeNow = new BN(await getLatestTimestamp());
       await collateralTokenInstance.mint(loanTerms.borrower, amountToBorrow);
 
-      let termsExpiry = timeNow;
+      let termsExpiry
       if (termsExpired) {
-        termsExpiry -= 1;
+        termsExpiry = timeNow.minus(1);
       } else {
-        termsExpiry += FIVE_MIN;
+        termsExpiry = timeNow.plus(FIVE_MIN);
       }
 
-      let lastCollateralIn = timeNow + FIVE_MIN;
-      if (!collateralTooRecent) {
-        lastCollateralIn -= FIVE_MIN;
+      let lastCollateralIn = timeNow.minus(ONE_HOUR)
+      if (collateralTooRecent) {
+        lastCollateralIn = timeNow
       }
 
       loanTerms.duration = loanDuration;
@@ -111,10 +118,10 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
         id: mockLoanID,
         loanTerms,
         collateral: 40000,
-        lastCollateralIn,
+        lastCollateralIn: lastCollateralIn.toString(),
         borrowedAmount: loanTerms.maxLoanAmount,
         status: TERMS_SET,
-        termsExpiry
+        termsExpiry: termsExpiry.toString()
       });
       await instance.setLoan(loan);
       await collateralTokenInstance.approve(instance.address, amountToBorrow, { from: borrower });
@@ -136,11 +143,11 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
         const interestOwed = Math.floor(amountToBorrow * 1475 * loanDuration / TEN_THOUSAND / SECONDS_PER_YEAR_4DP);
         const loan = await instance.loans.call(mockLoanID);
 
-        assert.equal(loan.loanStartTime.toString(), txTime);
-        assert.equal(loan.principalOwed.toString(), amountToBorrow);
-        assert.equal(loan.interestOwed.toString(), interestOwed);
-        assert.equal(loan.status.toString(), ACTIVE);
-        assert(loan.escrow.toString() !== NULL_ADDRESS);
+        assert.equal(loan.loanStartTime.toString(), txTime, 'loan start time not match');
+        assert.equal(loan.principalOwed.toString(), amountToBorrow, 'loan principal owed not match');
+        assert.equal(loan.interestOwed.toString(), interestOwed, 'loan interest owed not match');
+        assert.equal(loan.status.toString(), ACTIVE, 'loan status not match');
+        assert(loan.escrow.toString() !== NULL_ADDRESS, 'loan does not have an escrow');
 
         loans
           .loanTakenOut(tx)
