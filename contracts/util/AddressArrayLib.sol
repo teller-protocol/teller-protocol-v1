@@ -29,6 +29,7 @@ library AddressArrayLib {
         newItem.requireNotEmpty("EMPTY_ADDRESS_NOT_ALLOWED");
         return self.push(newItem) - 1;
     }
+
     function add(AddressArray storage self, address addr) internal returns (uint256) {
         (bool found, uint256 index) = getIndex(self, addr);
         if (!found) {
@@ -53,9 +54,11 @@ library AddressArrayLib {
 
         self.length--;
     }
+
     function remove(AddressArray storage self, uint256 index) internal {
         removeAt(self.array, index);
     }
+
     function remove(AddressArray storage self, address addr) internal {
         (bool found, uint256 index) = getIndex(self, addr);
 
@@ -84,6 +87,7 @@ library AddressArrayLib {
         }
         return (found, indexAt);
     }
+
     function getIndex(AddressArray storage self, address addr)
         internal
         view
