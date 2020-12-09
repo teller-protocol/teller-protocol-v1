@@ -31,11 +31,9 @@ contract("EscrowClaimTokensTest", function(accounts) {
   });
 
   withData({
-    _1_loan_active: [ loanStatus.Active, accounts[1], accounts[1], 0, 0, true, "LOAN_NOT_LIQUIDATED" ],
-    _2_loan_not_liquidated_recipient_not_borrower: [ loanStatus.Closed, accounts[1], accounts[2], 0, 0, true, "LOAN_NOT_LIQUIDATED" ],
-    _3_loan_not_liquidated_recipient_is_borrower: [ loanStatus.Closed, accounts[1], accounts[1], 2, 1000, true, "LOAN_NOT_LIQUIDATED" ],
-    _4_loan_liquidated_recipient_is_borrower: [ loanStatus.Liquidated, accounts[1], accounts[1], 2, 1000, false, null ],
-    _5_loan_liquidated_recipient_not_borrower: [ loanStatus.Liquidated, accounts[1], accounts[2], 2, 1000, true, "CALLER_MUST_BE_LOANS" ],
+    _1_loan_active: [ loanStatus.Active, accounts[1], accounts[1], 0, 0, true, "LOAN_NOT_CLOSED" ],
+    _2_loan_closed_recipient_not_borrower: [ loanStatus.Closed, accounts[1], accounts[2], 0, 0, true, "CALLER_MUST_BE_LOANS" ],
+    _3_loan_closed_recipient_is_borrower: [ loanStatus.Closed, accounts[1], accounts[1], 2, 1000, false, null ],
   }, function(
     status,
     recipient,
