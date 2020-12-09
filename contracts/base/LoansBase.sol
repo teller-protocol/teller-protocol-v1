@@ -138,6 +138,11 @@ contract LoansBase is LoansInterface, Base {
         _;
     }
 
+    modifier withoutUserIdLoan(bytes32 userId) {
+        require(userId == bytes32(0) || !userIdHasLoan[userId], "USER_ID_HAS_LOAN");
+        _;
+    }
+
     /**
         @notice Get a list of all loans for a borrower
         @param borrower The borrower's address
@@ -220,6 +225,7 @@ contract LoansBase is LoansInterface, Base {
         whenNotPaused()
         isBorrower(request.borrower)
         withValidLoanRequest(request)
+        withoutUserIdLoan(request.userId)
     {
         uint256 loanID = _getAndIncrementLoanID();
         if (collateralAmount > 0) {
@@ -246,10 +252,6 @@ contract LoansBase is LoansInterface, Base {
         }
 
         borrowerLoans[request.borrower].push(loanID);
-
-        if (request.userId != bytes32(0)) {
-            userIdHasLoan[request.userId] = true;
-        }
 
         emit LoanTermsSet(
             loanID,
@@ -344,6 +346,7 @@ contract LoansBase is LoansInterface, Base {
         whenLendingPoolNotPaused(address(lendingPool))
         nonReentrant()
         isBorrower(loans[loanID].loanTerms.borrower)
+        withoutUserIdLoan(loans[loanID].userId)
     {
         require(
             loans[loanID].loanTerms.maxLoanAmount >= amountBorrow,
@@ -391,6 +394,10 @@ contract LoansBase is LoansInterface, Base {
         if (!eoaAllowed) {
             loans[loanID].escrow.requireNotEmpty("ESCROW_CONTRACT_NOT_DEFINED");
             EscrowInterface(loans[loanID].escrow).initialize(address(this), loanID);
+        }
+
+        if (loans[loanID].userId != bytes32(0)) {
+            userIdHasLoan[loans[loanID].userId] = true;
         }
 
         emit LoanTakenOut(
