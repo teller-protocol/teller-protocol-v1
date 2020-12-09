@@ -122,7 +122,6 @@ contract("EtherCollateralLoansGetCollateralInfoTest", function(accounts) {
       switch (status) {
         case NON_EXISTENT:
         case LIQUIDATED:
-          collateralNeededInTokens = new BigNumber(0);
         case CLOSED:
           collateralNeededInTokens = new BigNumber(0);
           break
