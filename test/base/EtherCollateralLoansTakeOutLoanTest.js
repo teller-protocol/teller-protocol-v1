@@ -46,7 +46,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
   const overCollateralizedBuffer = 13000
   const collateralBuffer = 1500
   const liquidateEthPrice = 9500
-  const baseNeededCollateral = overCollateralizedBuffer + collateralBuffer + (10000 - liquidateEthPrice)
+  const baseNeededCollateral = overCollateralizedBuffer
 
   beforeEach('Setup for each test', async () => {
     lendingPoolInstance = await Mock.new()

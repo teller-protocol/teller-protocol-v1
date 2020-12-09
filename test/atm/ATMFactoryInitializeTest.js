@@ -20,7 +20,8 @@ contract("ATMFactoryInitializeTest", function (accounts) {
         _1_basic: [0, undefined, false],
     }, function(settingsInstance, expectedErrorMessage, mustFail) {
         it(t("admin", "initialize", "Should be able to initialize an ATMFactory", mustFail), async function() {
-            // Setup 
+            // Setup
+            let settingsAddress
             if (settingsInstance == 0) {
                 settingsAddress = settings.address;
             } else {

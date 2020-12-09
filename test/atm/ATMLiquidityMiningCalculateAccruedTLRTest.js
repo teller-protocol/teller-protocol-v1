@@ -41,7 +41,7 @@ contract("ATMLiquidityMiningCalculateAccruedTLRTest", function(accounts) {
         governance = await ATMGovernance.new();
         await governance.initialize(settings.address, owner, INITIAL_REWARD);
         const tlr = await TLRToken.new();   
-        tToken = await TDAI.new();
+        tToken = await TDAI.new(settings.address);
         instance = await ATMLiquidityMining.new();
         await instance.initialize(settings.address, governance.address, tlr.address, { from: owner });
     });

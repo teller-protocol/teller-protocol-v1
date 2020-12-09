@@ -74,16 +74,20 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
         uint256 sourceAmount,
         uint256 minDestination
     ) internal {
-        require(path.length >= 2, "UNISWAP_PATH_TOO_SHORT");
+        require(path.length >= 2, "UNI_PATH_TOO_SHORT");
         address source = path[0];
         address destination = path[path.length - 1];
-        require(_balanceOf(source) >= sourceAmount, "UNISWAP_INSUFFICIENT_SOURCE");
-        source.requireNotEqualTo(destination, "UNISWAP_SOURCE_AND_DESTINATION_SAME");
-        require(minDestination > 0, "UNISWAP_MIN_DESTINATION_ZERO"); // what if there is no minimum?
+
+        require(settings().chainlinkAggregator().isTokenSupported(source), "UNI_SRC_NOT_SUPPORTED");
+        require(settings().chainlinkAggregator().isTokenSupported(destination), "UNI_DST_NOT_SUPPORTED");
+
+        require(_balanceOf(source) >= sourceAmount, "UNI_INSUFFICIENT_SRC");
+        source.requireNotEqualTo(destination, "UNI_SRC_DST_SAME");
+        require(minDestination > 0, "UNI_MIN_DST_ZERO"); // what if there is no minimum?
 
         uint256 balanceBeforeSwap = _balanceOf(destination);
 
-        IERC20(source).safeApprove(address(theRouter), sourceAmount);
+        IERC20(source).safeIncreaseAllowance(address(theRouter), sourceAmount);
         uint256[] memory amounts = theRouter.swapExactTokensForTokens(
             sourceAmount,
             minDestination,
@@ -95,9 +99,9 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
         uint256 balanceAfterSwap = _balanceOf(destination);
         require(
             balanceAfterSwap >= (balanceBeforeSwap + minDestination),
-            "UNISWAP_BALANCE_NOT_INCREASED"
+            "UNI_BALANCE_NOT_INCREASED"
         );
-        require(amounts.length == path.length, "UNISWAP_ERROR_SWAPPING");
+        require(amounts.length == path.length, "UNI_ERROR_SWAPPING");
         uint256 destinationAmount = amounts[amounts.length - 1];
 
         _tokenUpdated(source);

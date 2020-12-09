@@ -41,7 +41,7 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
         );
         await governance.initialize(settingsInstance.address, owner, INITIAL_REWARD);
         const tlr = await TLRToken.new();
-        tToken = await TDAI.new();
+        tToken = await TDAI.new(settingsInstance.address);
 
         instance = await ATMLiquidityMining.new();
         await instance.initialize(settingsInstance.address, governance.address, tlr.address, { from: owner });
@@ -65,7 +65,10 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
             if (blacklisted) {
                 instance.addNotAllowedAddress(user, { from: owner });
             }
-            if (stakeAmount > 0) { 
+
+            let userBalanceBefore = '0'
+            let liquidityBalanceBefore = '0'
+            if (stakeAmount > 0) {
                 await tToken.mint(user, stakeAmount, { from: owner });
                 userBalanceBefore = await tToken.balanceOf(user);
                 liquidityBalanceBefore = await tToken.balanceOf(instance.address);

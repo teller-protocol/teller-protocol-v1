@@ -5,9 +5,12 @@
   "main": "truffle-config.js",
   "scripts": {
     "compile": "node --max-old-space-size=8192 ./node_modules/.bin/truffle compile",
+    "typechain": "typechain --target truffle-v5 './build/**/*.json'",
+    "build:types": "yarn compile && yarn typechain",
+    "prepack": "yarn build:types",
     "lint-sol": "yarn solhint -f table \"./contracts/**/*.sol\"",
     "lint-js": "yarn eslint -f table \"./test/**/*.js\"",
-    "test": "yarn compile && truffle test",
+    "test": "truffle test",
     "start:ganache:mainnet": "node scripts/utils/forkMainnet.js",
     "deploy:mainnet": "truffle compile && truffle deploy --network mainnet --reset --to 3",
     "deploy:ropsten": "truffle compile && truffle deploy --network ropsten --reset --to 3",
@@ -23,6 +26,10 @@
   },
   "devDependencies": {
     "@gnosis.pm/mock-contract": "^3.0.7",
+    "@typechain/truffle-v5": "^3.0.0",
+    "@types/chai": "^4.2.14",
+    "@types/expect": "^24.3.0",
+    "@types/mocha": "^8.0.4",
     "axios": "^0.20.0",
     "bl": "^2.2.1",
     "chai": "^4.2.0",
@@ -48,6 +55,9 @@
     "truffle": "5.1.41",
     "truffle-assertions": "^0.9.2",
     "truffle-plugin-verify": "^0.3.10",
+    "ts-node": "^9.0.0",
+    "typechain": "^4.0.0",
+    "typescript": "^4.1.2",
     "yargs": "^15.3.1"
   },
   "dependencies": {
