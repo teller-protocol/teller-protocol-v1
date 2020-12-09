@@ -3,7 +3,7 @@ const BN = require("bignumber.js");
 const { withData } = require("leche");
 const { t, ETH_ADDRESS } = require("../utils/consts");
 const LoansBaseInterfaceEncoder = require("../utils/encoders/LoansBaseInterfaceEncoder");
-const { Liquidated } = require('../utils/loanStatus')
+const { Closed } = require('../utils/loanStatus')
 const { createMocks } = require("../utils/consts");
 const { encodeLoanParameter } = require("../utils/loans");
 
@@ -17,8 +17,8 @@ const Escrow = artifacts.require("./mock/base/EscrowMock.sol");
 contract("EstimateGasEscrowClaimTokensTest", function(accounts) {
   const loansEncoder = new LoansBaseInterfaceEncoder(web3);
   
-  const baseGasCost = 453453; // Gas cost with 1 token in wallet
-  const expectedGasCost = (tokens) => baseGasCost + ((tokens -  1) * 167151); // Gas cost > 1 token in wallet
+  const baseGasCost = 453475; // Gas cost with 1 token in wallet
+  const expectedGasCost = (tokens) => baseGasCost + ((tokens -  1) * 167200); // Gas cost > 1 token in wallet
 
   let instance;
   let loans;
@@ -48,7 +48,7 @@ contract("EstimateGasEscrowClaimTokensTest", function(accounts) {
     it(t("escrow", "claimTokens", "Should be able to claim all tokens in the escrow", false), async function() {
       await loans.givenMethodReturn(
         loansEncoder.encodeLoans(),
-        encodeLoanParameter(web3, { status: Liquidated, loanTerms: { borrower } })
+        encodeLoanParameter(web3, { status: Closed, loanTerms: { borrower } })
       );
       
       const tokensAddresses = await createMocks(DAIMock, tokenCount);
