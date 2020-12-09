@@ -430,10 +430,7 @@ contract LoansBase is LoansInterface, Base {
         if (totalOwed == 0) {
             loans[loanID].status = TellerCommon.LoanStatus.Closed;
 
-            bytes32 userId = loans[loanID].userId;
-            if (userId != bytes32(0)) {
-                userIdHasLoan[userId] = false;
-            }
+            _clearUserIdLoan(loanID);
 
             uint256 collateralAmount = loans[loanID].collateral;
             _payOutCollateral(loanID, collateralAmount, loans[loanID].loanTerms.borrower);
@@ -481,6 +478,8 @@ contract LoansBase is LoansInterface, Base {
 
         // the liquidator pays x% of the collateral price
         lendingPool.liquidationPayment(liquidationInfo.amountToLiquidate, msg.sender);
+
+        _clearUserIdLoan(loanID);
 
         emit LoanLiquidated(
             loanID,
@@ -639,5 +638,16 @@ contract LoansBase is LoansInterface, Base {
      */
     function _createEscrow(uint256 loanID) internal returns (address) {
         return settings().escrowFactory().createEscrow(address(this), loanID);
+    }
+
+    /**
+        @notice If the loan was tied to bank info (userId provided), reset the userId.
+        @param loanID loan id associated to the Escrow contract.
+     */
+    function _clearUserIdLoan(uint256 loanID) internal {
+        bytes32 userId = loans[loanID].userId;
+        if (userId != bytes32(0)) {
+            userIdHasLoan[userId] = false;
+        }
     }
 }
