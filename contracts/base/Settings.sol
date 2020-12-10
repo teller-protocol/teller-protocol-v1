@@ -143,6 +143,19 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
      */
     IATMSettings public atmSettings;
 
+    /**
+        @notice This mapping represents the list of wallet addresses that are allowed to interact with the protocol
+        
+        - The key is belongs to the user's wallet address
+        - The value is a boolean flag indicating if the address has permissions
+     */
+    mapping(address => bool) public authorizedAddresses;
+
+    /**
+        @notice Flag restricting the use of the Protocol to authorizedAddress
+     */
+    bool platformRestricted;
+
     /** Modifiers */
 
     /* Constructor */
@@ -425,6 +438,69 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
      */
     function requirePauserRole(address account) public view {
         require(hasPauserRole(account), "NOT_PAUSER");
+    }
+
+    /**
+        @notice Restricts the use of the Teller protocol to authorized wallet addresses only
+        @param restriction Bool turning the resitriction on or off
+     */
+    function restrictPlatform(bool restriction)
+        external
+        onlyPauser()
+        isInitialized()
+    {
+        platformRestricted = restriction;
+    }
+
+    /**
+        @notice Returns whether the platform is restricted or not
+        @return bool True if the platform is restricted, false if not
+     */
+    function isPlatformRestricted()
+        public
+        view
+        returns (bool)
+    {
+        return platformRestricted;
+    }
+
+    /**
+        @notice Adds a wallet address to the list of authorized wallets
+        @param addressToAdd The wallet address of the user being authorized
+     */
+    function addAuthorizedAddress(address addressToAdd)
+         external
+         onlyPauser()
+         isInitialized()
+    {
+        addressToAdd.requireNotEmpty("ADDRESS_ZERO");
+        authorizedAddresses[addressToAdd] = true;
+    }
+
+    /**
+        @notice Removes a wallet address from the list of authorized wallets
+        @param addressToRemove The wallet address of the user being unauthorized
+     */
+    function removeAuthorizedAddress(address addressToRemove)
+        external
+        onlyPauser()
+        isInitialized()
+    {
+        addressToRemove.requireNotEmpty("ADDRESS_ZERO");
+        authorizedAddresses[addressToRemove] = false;
+    }
+
+    /**
+        @notice Tests whether an account has authorization
+        @param account The account address to check for
+        @return True if account has authorization, false if it does not
+     */
+    function hasAuthorization(address account)
+        public
+        view
+        returns (bool)
+    {
+        return authorizedAddresses[account];
     }
 
     /**

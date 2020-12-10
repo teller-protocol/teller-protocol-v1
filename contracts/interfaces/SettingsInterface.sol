@@ -279,6 +279,25 @@ interface SettingsInterface {
     function requirePauserRole(address account) external view;
 
     /**
+        @notice Restricts the use of the Teller protocol to authorized wallet addresses only
+        @param restriction Bool turning the resitriction on or off
+     */
+    function restrictPlatform(bool restriction) external;
+
+    /**
+        @notice Returns whether the platform is restricted or not
+        @return bool True if the platform is restricted, false if not
+     */
+    function isPlatformRestricted() external view returns (bool);
+
+    /**
+        @notice Tests whether an account has authorization
+        @param account The account address to check for
+        @return True if account has authorization, false if it does not
+     */
+    function hasAuthorization(address account) external view returns (bool);
+
+    /**
         @notice Get the current EscrowFactory contract.
         @return the current EscrowFactory contract.
      */
