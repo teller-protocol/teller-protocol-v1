@@ -40,12 +40,12 @@ module.exports = async (testContext) => {
   if (collTokenName.toLowerCase() === "eth") {
     initialOraclePrice = "0.00295835";
     finalOraclePrice = toDecimals("0.63655835", 18);
-    collateralAmountDepositCollateral = toDecimals(0.18, collateralTokenInfo.decimals);
+    collateralAmountDepositCollateral = toDecimals(1.18, collateralTokenInfo.decimals);
   }
   if (collTokenName.toLowerCase() === "link") {
     initialOraclePrice = "0.100704";
     finalOraclePrice = toDecimals("10000.001704", 8);
-    collateralAmountDepositCollateral = toDecimals(6.1, collateralTokenInfo.decimals);
+    collateralAmountDepositCollateral = toDecimals(16.1, collateralTokenInfo.decimals);
   }
   const durationInDays = 5;
   const signers = await accounts.getAllAt(12, 13);

@@ -1,19 +1,42 @@
 pragma solidity 0.5.17;
 
+import "./AddressLib.sol";
+
 /**
     @notice Utility library of inline functions on the address arrays.
 
     @author develop@teller.finance
  */
 library AddressArrayLib {
+    using AddressLib for address;
+
+    struct AddressArray {
+        address[] array;
+        mapping(address => uint256) indices;
+    }
+
+    function length(AddressArray storage self) internal view returns (uint256) {
+        return self.array.length;
+    }
+
     /**
       @notice It adds an address value to the array.
       @param self current array.
       @param newItem new item to add.
+      @return index the item was added to.
     */
-    function add(address[] storage self, address newItem) internal {
-        require(newItem != address(0x0), "EMPTY_ADDRESS_NOT_ALLOWED");
-        self.push(newItem);
+    function add(address[] storage self, address newItem) internal returns (uint256) {
+        newItem.requireNotEmpty("EMPTY_ADDRESS_NOT_ALLOWED");
+        return self.push(newItem) - 1;
+    }
+    function add(AddressArray storage self, address addr) internal returns (uint256) {
+        (bool found, uint256 index) = getIndex(self, addr);
+        if (!found) {
+            index = add(self.array, addr);
+            self.indices[addr] = index;
+        }
+
+        return index;
     }
 
     /**
@@ -25,12 +48,20 @@ library AddressArrayLib {
         if (index >= self.length) return;
 
         if (index != self.length - 1) {
-            address temp = self[self.length - 1];
-            self[index] = temp;
+            self[index] = self[self.length - 1];
         }
 
-        delete self[self.length - 1];
         self.length--;
+    }
+    function remove(AddressArray storage self, uint256 index) internal {
+        removeAt(self.array, index);
+    }
+    function remove(AddressArray storage self, address addr) internal {
+        (bool found, uint256 index) = getIndex(self, addr);
+
+        if (!found) return;
+
+        removeAt(self.array, index);
     }
 
     /**
@@ -52,6 +83,16 @@ library AddressArrayLib {
             }
         }
         return (found, indexAt);
+    }
+    function getIndex(AddressArray storage self, address addr)
+        internal
+        view
+        returns (bool found, uint256 index)
+    {
+        if (self.array.length > 0) {
+            index = self.indices[addr];
+            found = self.array[index] == addr;
+        }
     }
 
     /**

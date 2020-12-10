@@ -1,15 +1,14 @@
 // JS Libraries
 const withData = require("leche").withData;
+const BN = require('bignumber.js')
 
-const { t, getLatestTimestamp, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE, TEN_THOUSAND, SECONDS_PER_YEAR_4DP } = require("../utils/consts");
+const { t, getLatestTimestamp, ONE_HOUR, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE, TEN_THOUSAND, SECONDS_PER_YEAR_4DP } = require("../utils/consts");
 const { createLoanTerms } = require("../utils/structs");
 const { loans } = require("../utils/events");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const { createLoan } = require('../utils/loans')
+const settingsNames = require('../utils/platformSettingsNames')
 
-const ERC20InterfaceEncoder = require("../utils/encoders/ERC20InterfaceEncoder");
-const ChainlinkAggregatorEncoder = require("../utils/encoders/ChainlinkAggregatorEncoder");
-const LendingPoolInterfaceEncoder = require("../utils/encoders/LendingPoolInterfaceEncoder");
 const EscrowFactoryInterfaceEncoder = require("../utils/encoders/EscrowFactoryInterfaceEncoder");
 
 // Mock contracts
@@ -18,22 +17,23 @@ const LINKMock = artifacts.require("./mock/token/LINKMock.sol");
 
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
-const Loans = artifacts.require("./mock/base/TokenCollateralLoansMock.sol");
+const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 
-contract("TokenCollateralLoansTakeOutLoanTest", function(accounts) {
-  const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
-  const chainlinkAggregatorEncoder = new ChainlinkAggregatorEncoder(web3);
-  const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
+contract("LoansBaseTakeOutLoanTest", function(accounts) {
   const escrowFactoryInterfaceEncoder = new EscrowFactoryInterfaceEncoder(web3);
 
   const owner = accounts[0];
   let instance;
-  let chainlinkAggregatorInstance;
   let loanTermsConsInstance;
-  let lendingTokenInstance;
   let collateralTokenInstance;
+  let chainlinkAggregatorInstance;
 
   const mockLoanID = 0;
+  const overCollateralizedBuffer = 13000
+  const safetyInterval = FIVE_MIN
 
   const borrower = accounts[3];
 
@@ -41,7 +41,7 @@ contract("TokenCollateralLoansTakeOutLoanTest", function(accounts) {
 
   beforeEach("Setup for each test", async () => {
     const lendingPoolInstance = await Mock.new();
-    lendingTokenInstance = await Mock.new();
+    const lendingTokenInstance = await Mock.new();
     collateralTokenInstance = await LINKMock.new();
     const settingsInstance = await createTestSettingsInstance(
       Settings,
@@ -58,9 +58,14 @@ contract("TokenCollateralLoansTakeOutLoanTest", function(accounts) {
 
           chainlinkAggregatorInstance = chainlinkAggregator
         }
+      }, {
+        [settingsNames.OverCollateralizedBuffer]: overCollateralizedBuffer,
+        [settingsNames.SafetyInterval]: safetyInterval,
       });
 
     loanTermsConsInstance = await Mock.new();
+    const loanLib = await LoanLib.new();
+    await Loans.link("LoanLib", loanLib.address);
     instance = await Loans.new();
     await instance.initialize(
       lendingPoolInstance.address,
@@ -69,18 +74,15 @@ contract("TokenCollateralLoansTakeOutLoanTest", function(accounts) {
       collateralTokenInstance.address
     );
 
-    // encode lending token address
-    const encodeLendingToken = lendingPoolInterfaceEncoder.encodeLendingToken();
-    await lendingPoolInstance.givenMethodReturnAddress(encodeLendingToken, lendingTokenInstance.address);
   });
 
   withData({
-    _1_max_loan_exceeded: [ 15000001, false, false, 300000, NULL_ADDRESS, 0, 0, true, "MAX_LOAN_EXCEEDED" ],
-    _2_loan_terms_expired: [ 15000000, true, false, 300000, NULL_ADDRESS, 0, 0, true, "LOAN_TERMS_EXPIRED" ],
-    _3_collateral_deposited_recently: [ 15000000, false, true, 300000, NULL_ADDRESS, 0, 0, true, "COLLATERAL_DEPOSITED_RECENTLY" ],
-    _4_more_collateral_needed: [ 15000000, false, false, 300000, NULL_ADDRESS, 45158, 18, true, "MORE_COLLATERAL_REQUIRED" ],
-    _5_successful_loan: [ 15000000, false, false, 300000, NULL_ADDRESS, 40000, 18, false, undefined ],
-    _6_with_recipient: [ 15000000, false, false, 300000, accounts[4], 40000, 18, false, undefined ]
+    _1_max_loan_exceeded: [ 15000001, false, false, 300000, NULL_ADDRESS, 0, 0, false, true, "MAX_LOAN_EXCEEDED" ],
+    _2_loan_terms_expired: [ 15000000, true, false, 300000, NULL_ADDRESS, 0, 0, false, true, "LOAN_TERMS_EXPIRED" ],
+    _3_collateral_deposited_recently: [ 15000000, false, true, 300000, NULL_ADDRESS, 0, 0, false, true, "COLLATERAL_DEPOSITED_RECENTLY" ],
+    _4_more_collateral_needed: [ 15000000, false, false, 300000, NULL_ADDRESS, 45158, 18, true, true, "MORE_COLLATERAL_REQUIRED" ],
+    _5_successful_loan: [ 15000000, false, false, 300000, NULL_ADDRESS, 40000, 18, false, false, undefined ],
+    _6_with_recipient: [ 15000000, false, false, 300000, accounts[4], 40000, 18, false, false, undefined ]
   }, function(
     amountToBorrow,
     termsExpired,
@@ -89,34 +91,25 @@ contract("TokenCollateralLoansTakeOutLoanTest", function(accounts) {
     recipient,
     oraclePrice,
     tokenDecimals,
+    moreCollateralRequired,
     mustFail,
     expectedErrorMessage
   ) {
     it(t("user", "takeOutLoan", "Should able to take out a loan.", false), async function() {
       // Setup
-      const timeNow = await getLatestTimestamp();
+      const timeNow = new BN(await getLatestTimestamp());
       await collateralTokenInstance.mint(loanTerms.borrower, amountToBorrow);
 
-      // encode current token price
-      await chainlinkAggregatorInstance.givenMethodReturnUint(
-        chainlinkAggregatorEncoder.encodeValueFor(),
-        oraclePrice.toString()
-      );
-
-      // encode token decimals
-      const encodeDecimals = erc20InterfaceEncoder.encodeDecimals();
-      await lendingTokenInstance.givenMethodReturnUint(encodeDecimals, tokenDecimals);
-
-      let termsExpiry = timeNow;
+      let termsExpiry
       if (termsExpired) {
-        termsExpiry -= 1;
+        termsExpiry = timeNow.minus(1);
       } else {
-        termsExpiry += FIVE_MIN;
+        termsExpiry = timeNow.plus(FIVE_MIN);
       }
 
-      let lastCollateralIn = timeNow + FIVE_MIN;
-      if (!collateralTooRecent) {
-        lastCollateralIn -= FIVE_MIN;
+      let lastCollateralIn = timeNow.minus(ONE_HOUR)
+      if (collateralTooRecent) {
+        lastCollateralIn = timeNow
       }
 
       loanTerms.duration = loanDuration;
@@ -125,13 +118,19 @@ contract("TokenCollateralLoansTakeOutLoanTest", function(accounts) {
         id: mockLoanID,
         loanTerms,
         collateral: 40000,
-        lastCollateralIn,
+        lastCollateralIn: lastCollateralIn.toString(),
         borrowedAmount: loanTerms.maxLoanAmount,
         status: TERMS_SET,
-        termsExpiry
+        termsExpiry: termsExpiry.toString()
       });
       await instance.setLoan(loan);
       await collateralTokenInstance.approve(instance.address, amountToBorrow, { from: borrower });
+      if (moreCollateralRequired) {
+        await instance.mockGetCollateralInfo(mockLoanID, loan.borrowedAmount, (loan.collateral*2))
+      } else {
+        await instance.mockGetCollateralInfo(mockLoanID, loan.borrowedAmount, loan.collateral)
+      }
+      
       try {
         // Invocation
         const tx = await instance.takeOutLoan(mockLoanID, amountToBorrow, { from: borrower });
@@ -144,11 +143,11 @@ contract("TokenCollateralLoansTakeOutLoanTest", function(accounts) {
         const interestOwed = Math.floor(amountToBorrow * 1475 * loanDuration / TEN_THOUSAND / SECONDS_PER_YEAR_4DP);
         const loan = await instance.loans.call(mockLoanID);
 
-        assert.equal(loan.loanStartTime.toString(), txTime);
-        assert.equal(loan.principalOwed.toString(), amountToBorrow);
-        assert.equal(loan.interestOwed.toString(), interestOwed);
-        assert.equal(loan.status.toString(), ACTIVE);
-        assert(loan.escrow.toString() !== NULL_ADDRESS);
+        assert.equal(loan.loanStartTime.toString(), txTime, 'loan start time not match');
+        assert.equal(loan.principalOwed.toString(), amountToBorrow, 'loan principal owed not match');
+        assert.equal(loan.interestOwed.toString(), interestOwed, 'loan interest owed not match');
+        assert.equal(loan.status.toString(), ACTIVE, 'loan status not match');
+        assert(loan.escrow.toString() !== NULL_ADDRESS, 'loan does not have an escrow');
 
         loans
           .loanTakenOut(tx)

@@ -8,6 +8,7 @@ const TERMS_EXPIRY_TIME = 'TermsExpiryTime';
 const LIQUIDATE_ETH_PRICE = 'LiquidateEthPrice';
 const DEFAULT_DECIMALS = 18;
 const ETH_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+const WETH_ADDRESS = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 const DUMMY_ADDRESS = '0x0000000000000000000000000000000000000123';
 const NULL_BYTES = '0x0000000000000000000000000000000000000000000000000000000000000000'
@@ -61,7 +62,7 @@ module.exports = {
     TEN_THOUSAND: 10000,
     t: function (who, func, desc, fail) {
         const failText = fail ? '\x1b[31mMustFail\x1b[0m .' : '\x1b[0m';
-        return '\x1b[32m.' + func + ' => \x1b[36m' + who + '\x1b[0m\033[01;34m : ' + desc + ' '+ failText;
+        return '\x1b[32m.' + func + ' => \x1b[36m' + who + '\x1b[0m\x1b[01;34m : ' + desc + ' '+ failText;
     },
     encode: (web3, signature) => {
         return web3.utils.sha3(signature).slice(0,10);

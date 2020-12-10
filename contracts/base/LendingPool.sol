@@ -76,7 +76,7 @@ contract LendingPool is Base, LendingPoolInterface {
         tokenTransferFrom(msg.sender, amount);
 
         // deposit them straight into compound
-        uint256 depositedAmount = _depositToCompoundIfSupported(amount);
+        _depositToCompoundIfSupported(amount);
 
         // Mint tToken tokens
         tTokenMint(msg.sender, amount);
@@ -84,7 +84,7 @@ contract LendingPool is Base, LendingPoolInterface {
         _markets().increaseSupply(
             address(lendingToken),
             LoansInterface(loans).collateralToken(),
-            depositedAmount
+            amount
         );
 
         // Emit event
@@ -107,7 +107,7 @@ contract LendingPool is Base, LendingPoolInterface {
         tToken.burn(msg.sender, amount);
 
         // Withdraw the tokens from compound
-        uint256 withdrawnAmount = _withdrawFromCompoundIfSupported(amount);
+        _withdrawFromCompoundIfSupported(amount);
 
         // Transfers tokens
         tokenTransfer(msg.sender, amount);
@@ -115,7 +115,7 @@ contract LendingPool is Base, LendingPoolInterface {
         _markets().decreaseSupply(
             address(lendingToken),
             LoansInterface(loans).collateralToken(),
-            withdrawnAmount
+            amount
         );
 
         // Emit event.
@@ -140,12 +140,12 @@ contract LendingPool is Base, LendingPoolInterface {
         tokenTransferFrom(borrower, amount);
 
         // deposit them straight into compound
-        uint256 repaidAmount = _depositToCompoundIfSupported(amount);
+        _depositToCompoundIfSupported(amount);
 
         _markets().increaseRepayment(
             address(lendingToken),
             LoansInterface(loans).collateralToken(),
-            repaidAmount
+            amount
         );
 
         // Emits event.
@@ -167,12 +167,12 @@ contract LendingPool is Base, LendingPoolInterface {
         tokenTransferFrom(liquidator, amount);
 
         // deposit them straight into compound
-        uint256 repaidAmount = _depositToCompoundIfSupported(amount);
+        _depositToCompoundIfSupported(amount);
 
         _markets().increaseRepayment(
             address(lendingToken),
             LoansInterface(loans).collateralToken(),
-            repaidAmount
+            amount
         );
 
         // Emits event
@@ -194,7 +194,7 @@ contract LendingPool is Base, LendingPoolInterface {
         whenLendingPoolNotPaused(address(this))
     {
         // Withdraw the tokens from compound if it is supported
-        uint256 withdrawnAmount = _withdrawFromCompoundIfSupported(amount);
+        _withdrawFromCompoundIfSupported(amount);
 
         // Transfer tokens to the borrower.
         tokenTransfer(borrower, amount);
@@ -202,7 +202,7 @@ contract LendingPool is Base, LendingPoolInterface {
         _markets().increaseBorrow(
             address(lendingToken),
             LoansInterface(loans).collateralToken(),
-            withdrawnAmount
+            amount
         );
     }
 
@@ -286,48 +286,36 @@ contract LendingPool is Base, LendingPoolInterface {
         @param amount amount to deposit.
         @return the amount of tokens deposited.
      */
-    function _depositToCompoundIfSupported(uint256 amount) internal returns (uint256) {
+    function _depositToCompoundIfSupported(uint256 amount) internal {
         address cTokenAddress = cToken();
 
         if (_isCTokenNotSupported(cTokenAddress)) {
-            return amount;
+            return;
         }
 
         // approve the cToken contract to take lending tokens
         lendingToken.safeApprove(cTokenAddress, amount);
 
-        uint256 initialBalance = CErc20Interface(cTokenAddress).balanceOf(address(this));
-
         // Now mint cTokens, which will take lending tokens
         uint256 mintResult = CErc20Interface(cTokenAddress).mint(amount);
         require(mintResult == 0, "COMPOUND_DEPOSIT_ERROR");
-
-        uint256 finalBalance = CErc20Interface(cTokenAddress).balanceOf(address(this));
-
-        return finalBalance.sub(initialBalance);
     }
 
     /**
         @notice It withdraws a given amount of tokens if the cToken is defined (not 0x0).
         @param amount amount of tokens to withdraw.
      */
-    function _withdrawFromCompoundIfSupported(uint256 amount) internal returns (uint256) {
+    function _withdrawFromCompoundIfSupported(uint256 amount) internal {
         address cTokenAddress = cToken();
 
         if (_isCTokenNotSupported(cTokenAddress)) {
-            return amount;
+            return;
         }
-
-        uint256 initialBalance = CErc20Interface(cTokenAddress).balanceOf(address(this));
 
         // this function withdraws 'amount' lending tokens from compound
         // another function exists to withdraw 'amount' cTokens of lending tokens
         uint256 redeemResult = CErc20Interface(cTokenAddress).redeemUnderlying(amount);
         require(redeemResult == 0, "COMPOUND_REDEEM_UNDERLYING_ERROR");
-
-        uint256 finalBalance = CErc20Interface(cTokenAddress).balanceOf(address(this));
-
-        return initialBalance.sub(finalBalance);
     }
 
     /**

@@ -15,6 +15,9 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
 contract("LoansBaseIsSupplyToDebtRatioValidTest", function(accounts) {
   const IAtmSettingsEncoder = new IATMSettingsEncoder(web3);
   const marketsStateInterfaceEncoder = new MarketsStateInterfaceEncoder(web3);
@@ -39,6 +42,8 @@ contract("LoansBaseIsSupplyToDebtRatioValidTest", function(accounts) {
     const lendingPoolInstance = await Mock.new();
     const loanTermsConsInstance = await Mock.new();
     const collateralTokenInstance = await Mock.new();
+    const loanLib = await LoanLib.new();
+    await Loans.link("LoanLib", loanLib.address);
     instance = await Loans.new();
     await instance.initialize(
       lendingPoolInstance.address,

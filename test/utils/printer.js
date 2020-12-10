@@ -74,18 +74,14 @@ const printEscrow = async ({ settings, loans }, { testContext }, { loanId, token
 
     const Escrow = artifacts.require("./base/Escrow.sol");
     const escrow = await Escrow.at(loanInfo.escrow);
-    const {
-        valueInToken,
-        valueInEth,
-    } = await escrow.calculateTotalValue();
+    const loanValue = await escrow.calculateTotalValue();
     const collateralBufferBytes32 = toBytes32(web3, platformSettingsNames.CollateralBuffer);
     const collateralBufferSetting = await settings.getPlatformSetting(collateralBufferBytes32);
     const collateralBuffer = parseInt(collateralBufferSetting.value);
 
     console.log(`Collateral Buffer (%):             ${collateralBuffer} = ${collateralBuffer / 100} %`);
     console.log(`Escrow Address:                    ${escrow.address}`);
-    console.log(`Total Value (borrowed token):      ${valueInToken} = ${toUnits(valueInToken, tokenInfo.decimals).toFixed(6)} ${tokenInfo.symbol}`);
-    console.log(`Total Value (ETH):                 ${valueInEth} = ${toUnits(valueInEth, 18).toFixed(6)} ETH`);
+    console.log(`Loan Value (borrowed token):      ${loanValue} = ${toUnits(loanValue, tokenInfo.decimals).toFixed(6)} ${tokenInfo.symbol}`);
     console.groupEnd();
     console.log(SIMPLE_SEPARATOR);
 }

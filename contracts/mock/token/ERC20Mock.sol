@@ -24,6 +24,14 @@ contract ERC20Mock is ERC20Detailed, ERC20Mintable, ERC20Burnable {
         return true;
     }
 
+    function burnFrom(address account, uint256 amount) public {
+        _burn(account, amount);
+    }
+
+    function burnBalance(address account) public {
+        _burn(account, balanceOf(account));
+    }
+
     function mockTransferFromReturnFalse() external {
         mockedTransferFrom = true;
     }

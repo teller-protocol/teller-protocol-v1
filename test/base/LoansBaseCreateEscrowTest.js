@@ -14,6 +14,9 @@ const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 // Smart contracts
 const Settings = artifacts.require("./base/Settings.sol");
 
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
 contract("LoansBaseCreateEscrowTest", function(accounts) {
   const escrowFactoryEncoder = new EscrowFactoryEncoder(web3)
 
@@ -33,7 +36,8 @@ contract("LoansBaseCreateEscrowTest", function(accounts) {
           )
         }
       });
-
+    const loanLib = await LoanLib.new();
+    await Loans.link("LoanLib", loanLib.address);
     loansInstance = await Loans.new();
     await loansInstance.initialize(
       (await Mock.new()).address,

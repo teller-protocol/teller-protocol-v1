@@ -6,7 +6,8 @@ BigNumber.set({ DECIMAL_PLACES: 0, ROUNDING_MODE: BigNumber.ROUND_FLOOR });
 const { t, getLatestTimestamp, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE, TEN_THOUSAND, SECONDS_PER_YEAR_4DP } = require('../utils/consts')
 const settingsNames = require('../utils/platformSettingsNames')
 const { createLoanTerms } = require('../utils/structs')
-const { loans } = require('../utils/events')
+const { loans } = require('../utils/events');
+const { createLoan } = require('../utils/loans');
 
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder')
 const ChainlinkAggregatorEncoder = require('../utils/encoders/ChainlinkAggregatorEncoder')
@@ -22,6 +23,9 @@ const Mock = artifacts.require('./mock/util/Mock.sol')
 const Settings = artifacts.require('./base/Settings.sol')
 const Loans = artifacts.require('./mock/base/EtherCollateralLoansMock.sol')
 const LendingPool = artifacts.require('./base/LendingPool.sol')
+
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
 
 contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
   const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3)
@@ -42,7 +46,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
   const overCollateralizedBuffer = 13000
   const collateralBuffer = 1500
   const liquidateEthPrice = 9500
-  const baseNeededCollateral = overCollateralizedBuffer + collateralBuffer + (10000 - liquidateEthPrice)
+  const baseNeededCollateral = overCollateralizedBuffer
 
   beforeEach('Setup for each test', async () => {
     lendingPoolInstance = await Mock.new()
@@ -68,6 +72,8 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
       })
 
     loanTermsConsInstance = await Mock.new()
+    const loanLib = await LoanLib.new();
+    await Loans.link("LoanLib", loanLib.address);
     instance = await Loans.new()
     await instance.initialize(
       lendingPoolInstance.address,
@@ -102,8 +108,11 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
       oracleValue.toString()
     )
 
-    const loanTerms = createLoanTerms(borrower, recipient, interestRate, collateralRatio, maxLoanAmount, loanDuration)
-    await instance.setLoan(mockLoanID, loanTerms, termsExpiry, 0, 0, lastCollateralIn, 0, 0, 0, TERMS_SET, false)
+    const loanTerms = createLoanTerms(borrower, recipient, interestRate, collateralRatio, maxLoanAmount, loanDuration);
+
+    const loan = createLoan({ id: mockLoanID, loanTerms, collateral: lastCollateralIn, termsExpiry, status: TERMS_SET, liquidated: false});
+
+    await instance.setLoan(loan)
 
     return async function afterAssert(tx) {
       const loan = await instance.loans(mockLoanID)
@@ -164,7 +173,6 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
         // Invocation
         const tx = await instance.takeOutLoan(mockLoanID, amountToBorrow, { from: borrower })
         const loan = await afterAssert(tx)
-        console.log(loan)
       } catch (error) {
         assert.equal(error.reason, expectedErrorMessage, error.message)
       }

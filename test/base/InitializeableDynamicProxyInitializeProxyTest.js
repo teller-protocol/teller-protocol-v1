@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, createMocks, NULL_ADDRESS, toBytes32 } = require('../utils/consts');
+const { t, toBytes32 } = require('../utils/consts');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 const LogicVersionsRegistryEncoder = require('../utils/encoders/LogicVersionsRegistryEncoder');
 const { assert } = require('chai');
@@ -16,9 +16,8 @@ contract('InitializeableDynamicProxyInitializeProxyTest', function (accounts) {
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     let instance;
     let versionsRegistry;
-    
+
     beforeEach('Setup for each test', async () => {
-        mocks = await createMocks(Mock, 10);
         instance = await InitializeableDynamicProxyMock.new();
 
         versionsRegistry = await Mock.new();

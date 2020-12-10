@@ -9,6 +9,9 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 // Smart contracts
 const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
 contract('LoansBasePayLoanTest', function (accounts) {
     let instance;
     let settingsInstance;
@@ -20,6 +23,8 @@ contract('LoansBasePayLoanTest', function (accounts) {
         const loanTermsConsInstance = await Mock.new();
         settingsInstance = await Mock.new();
         const collateralTokenInstance = await Mock.new();
+        const loanLib = await LoanLib.new();
+        await Loans.link("LoanLib", loanLib.address);
         instance = await Loans.new();
         await instance.initialize(
             lendingPoolInstance.address,
@@ -30,9 +35,9 @@ contract('LoansBasePayLoanTest', function (accounts) {
     });
 
     withData({
-        _1_less_than_principal: [150, 61, 73],
-        _2_more_than_principal: [150, 61, 198],
-        _3_no_principal_left: [0, 61, 45],
+        _1_less_than_interest: [150, 61, 53],
+        _2_more_than_interest: [150, 61, 198],
+        _3_no_interest_left: [61, 0, 45],
         _4_full_amount: [150, 61, 211],
     }, function(
         mockPrincipalOwed,
@@ -52,16 +57,16 @@ contract('LoansBasePayLoanTest', function (accounts) {
 
             let newPrincipalOwed = 0
             let newInterestOwed = 0
-            if (toPay < mockPrincipalOwed){
-                newPrincipalOwed = mockPrincipalOwed - toPay
-                newInterestOwed = mockInterestOwed
+            if (toPay >= mockInterestOwed){
+                newInterestOwed = 0;
+                toPay -= mockInterestOwed;
+                newPrincipalOwed = mockPrincipalOwed - toPay;
             } else {
-                newPrincipalOwed = 0
-                newInterestOwed = mockInterestOwed - (toPay - mockPrincipalOwed)
+                newInterestOwed = mockInterestOwed - toPay;
+                newPrincipalOwed = mockPrincipalOwed;
             }
-
-            assert.equal(loan.principalOwed.toString(), newPrincipalOwed)
-            assert.equal(loan.interestOwed.toString(), newInterestOwed)
+            assert.equal(loan.interestOwed.toString(), newInterestOwed);
+            assert.equal(loan.principalOwed.toString(), newPrincipalOwed);
 
         })
 

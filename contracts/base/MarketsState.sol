@@ -15,6 +15,7 @@ import "./TInitializable.sol";
 import "../interfaces/MarketsStateInterface.sol";
 import "../util/MarketStateLib.sol";
 import "../util/AddressLib.sol";
+import "../util/NumbersLib.sol";
 import "../providers/compound/CErc20Interface.sol";
 
 /*****************************************************************************************************/
@@ -42,6 +43,7 @@ contract MarketsState is
     using Address for address;
     using MarketStateLib for MarketStateLib.MarketState;
     using SafeMath for uint256;
+    using NumbersLib for uint256;
 
     /** Constants */
 
@@ -85,6 +87,7 @@ contract MarketsState is
         address collateralAsset,
         uint256 amount
     ) external onlyWhitelisted() isInitialized() {
+        amount = _getValueForAmount(borrowedAsset, amount);
         _getGlobalMarket(borrowedAsset).increaseRepayment(amount);
         _getMarket(borrowedAsset, collateralAsset).increaseRepayment(amount);
     }
@@ -101,6 +104,7 @@ contract MarketsState is
         address collateralAsset,
         uint256 amount
     ) external onlyWhitelisted() isInitialized() {
+        amount = _getValueForAmount(borrowedAsset, amount);
         _getGlobalMarket(borrowedAsset).increaseSupply(amount);
         _getMarket(borrowedAsset, collateralAsset).increaseSupply(amount);
     }
@@ -117,6 +121,7 @@ contract MarketsState is
         address collateralAsset,
         uint256 amount
     ) external onlyWhitelisted() isInitialized() {
+        amount = _getValueForAmount(borrowedAsset, amount);
         _getGlobalMarket(borrowedAsset).decreaseSupply(amount);
         _getMarket(borrowedAsset, collateralAsset).decreaseSupply(amount);
     }
@@ -133,6 +138,7 @@ contract MarketsState is
         address collateralAsset,
         uint256 amount
     ) external onlyWhitelisted() isInitialized() {
+        amount = _getValueForAmount(borrowedAsset, amount);
         _getGlobalMarket(borrowedAsset).increaseBorrow(amount);
         _getMarket(borrowedAsset, collateralAsset).increaseBorrow(amount);
     }
@@ -167,14 +173,10 @@ contract MarketsState is
         if (cTokenAddress.isEmpty()) {
             return markets[borrowedAsset][collateralAsset].getSupplyToDebtFor(loanAmount);
         } else {
-            uint8 cTokenDecimals = CErc20Interface(cTokenAddress).decimals();
-            uint256 exchangeRate = CErc20Interface(cTokenAddress).exchangeRateStored();
-            uint256 diffDecimals = uint256(EXCHANGE_RATE_DECIMALS).sub(
-                uint256(cTokenDecimals)
-            );
-            uint256 cLoanAmount = loanAmount.mul(10**diffDecimals).div(exchangeRate);
             return
-                markets[cTokenAddress][collateralAsset].getSupplyToDebtFor(cLoanAmount);
+                markets[cTokenAddress][collateralAsset].getSupplyToDebtFor(
+                    _getValueForAmount(borrowedAsset, loanAmount)
+                );
         }
     }
 
@@ -230,7 +232,12 @@ contract MarketsState is
         view
         returns (MarketStateLib.MarketState storage)
     {
-        return globalMarkets[borrowedAsset];
+        address cTokenAddress = _getCTokenAddress(borrowedAsset);
+        if (cTokenAddress.isEmpty()) {
+            return globalMarkets[borrowedAsset];
+        } else {
+            return globalMarkets[cTokenAddress];
+        }
     }
 
     /**
@@ -249,6 +256,39 @@ contract MarketsState is
             return markets[borrowedAsset][collateralAsset];
         } else {
             return markets[cTokenAddress][collateralAsset];
+        }
+    }
+
+    /**
+        @notice It returns the value of an amount in cToken value
+        @param assetAddress The address of the asset to be converted
+        @param amount The amount of the asset being converted
+        @return uint256 The value of the inputed amount in it's cToken equivilant value
+     */
+    function _getValueForAmount(address assetAddress, uint256 amount)
+        internal
+        view
+        returns (uint256)
+    {
+        address cTokenAddress = _getCTokenAddress(assetAddress);
+        if (cTokenAddress.isEmpty()) {
+            return amount;
+        } else {
+            uint8 assetDecimals = ERC20Detailed(assetAddress).decimals();
+            uint8 cTokenDecimals = CErc20Interface(cTokenAddress).decimals();
+            uint256 exchangeRate = CErc20Interface(cTokenAddress).exchangeRateStored();
+            uint256 diffFactor = uint256(10) **
+                uint256(EXCHANGE_RATE_DECIMALS).diff(uint256(cTokenDecimals));
+            // return amount.mul(10**diffDecimals).div(exchangeRate);
+
+            // int256 price;
+
+            if (cTokenDecimals > EXCHANGE_RATE_DECIMALS) {
+                exchangeRate = exchangeRate.mul(diffFactor);
+            } else {
+                exchangeRate = exchangeRate.div(diffFactor);
+            }
+            return amount.mul(exchangeRate).div(uint256(10)**assetDecimals);
         }
     }
 

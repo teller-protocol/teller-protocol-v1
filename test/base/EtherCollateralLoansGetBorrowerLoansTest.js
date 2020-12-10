@@ -20,6 +20,9 @@ const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
 contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
     const IAtmSettingsEncoder = new IATMSettingsEncoder(web3);
@@ -62,6 +65,9 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
             },
             {}
         );
+
+        const loanLib = await LoanLib.new();
+        await Loans.link("LoanLib", loanLib.address);
         instance = await Loans.new();
         await instance.initialize(
             lendingPoolInstance.address,

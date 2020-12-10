@@ -19,6 +19,7 @@ const {
 } = require('../assertions')
 const errorActions = require("./errors");
 const { assert } = require("chai");
+const settingsActions = require('./settings');
 
 /**
  * Gets an amount of tokens requested based on the current network.
@@ -224,6 +225,7 @@ const withdrawCollateral = async (
   {loanId, amount, expectedErrorMessage = undefined}
 ) => {
   console.log(`Withdrawing collateral ${amount} in loan id ${loanId}.`);
+
   const withdrawCollateralPromise = async () => await loans.withdrawCollateral(amount, loanId, txConfig);
   const initialTotalCollateral = await loans.totalCollateral();
   const {
@@ -305,15 +307,15 @@ const liquidateLoan = async (
   {loanId, expectedErrorMessage = undefined}
 ) => {
   console.log(`Liquidating loan id ${loanId}...`);
-  const {token, loans, lendingPool} = allContracts;
+  const {token, collateralToken, loans, lendingPool} = allContracts;
   const initialTotalCollateral = BigNumber((await loans.totalCollateral()).toString());
-  const initialLiquidatorTokenBalance = BigNumber((await token.balanceOf(txConfig.from)));
 
   const {
-    liquidable,
     amountToLiquidate,
-    collateral,
-    collateralInTokens,
+    rewardInCollateral,
+    collateralInfo: {
+      collateral
+    },
   } = await loans.getLiquidationInfo(loanId);
 
   const loansInfo = await loans.loans(loanId);
@@ -330,6 +332,8 @@ const liquidateLoan = async (
     amountToLiquidate.toString(),
     txConfig
   );
+  
+  const liquidatorCollTokenBalanceBefore = await collateralToken.balanceOf(txConfig.from);
 
   const liquidateLoanPromise = async () => await loans.liquidateLoan(loanId, txConfig);
 
@@ -355,28 +359,24 @@ const liquidateLoan = async (
         collateral,
         amountToLiquidate
       );
+    const collateralInfo = await loans.getCollateralInfo(loanId);
     const finalTotalCollateral = BigNumber((await loans.totalCollateral()).toString());
-    assert.equal(
-      initialTotalCollateral.minus(finalTotalCollateral).toString(),
-      collateral.toString()
-    );
+    const liquidatorCollTokenBalanceAfter = await collateralToken.balanceOf(txConfig.from);
+    const expectedCollateralValueIncrease = initialTotalCollateral.minus(finalTotalCollateral);
+    
 
-    // Asserting the escrow total values.
-    const escrow = await getEscrow(allContracts, { testContext }, { loanId });
-    const {
-      valueInToken,
-      valueInEth,
-    } = await escrow.calculateTotalValue();
-    
-    assert.equal(valueInToken.toString(), '0');
-    assert.equal(valueInEth.toString(), '0');
-    
-    // Asserting liquidator final lending token balance.
-    const finalLiquidatorTokenBalance = BigNumber((await token.balanceOf(txConfig.from)));
-    assert.equal(
-      finalLiquidatorTokenBalance.minus(initialLiquidatorTokenBalance).toString(),
-      loansInfo.borrowedAmount.toString(),
-    );
+    if (parseInt(rewardInCollateral) > parseInt(collateral)) {
+      const remainingReward = new BigNumber(rewardInCollateral).minus(collateral);
+      assert.equal(
+        collateralInfo.collateral.toString(),
+        '0',
+        'Reward not sent to liquidator'
+      );
+      assert.equal(expectedCollateralValueIncrease, collateral, 'Collateral value not increased');
+      assert(remainingReward.gt(0));
+    } else {
+      assert.equal(expectedCollateralValueIncrease.toString(), rewardInCollateral.toString(), 'Reward not received');
+    }
   }
 };
 
@@ -412,21 +412,21 @@ const printPairAggregatorInfo = async (
 };
 
 const getEscrow = async (
-    {loans},
-    {testContext},
-    {
-      loanId,
-    }
-  ) => {
-    const { artifacts } = testContext;
-    const Escrow = artifacts.require("./base/Escrow.sol");
-    const loanInfo = await loans.loans(loanId);
-    if(loanInfo.escrow ===  NULL_ADDRESS) {
-      return undefined;
-    }
-    const escrow = await Escrow.at(loanInfo.escrow);
-    return escrow;
-  };
+  {loans},
+  {testContext},
+  {
+    loanId,
+  }
+) => {
+  const { artifacts } = testContext;
+  const Escrow = artifacts.require("./base/Escrow.sol");
+  const loanInfo = await loans.loans(loanId);
+  if(loanInfo.escrow ===  NULL_ADDRESS) {
+    return undefined;
+  }
+  const escrow = await Escrow.at(loanInfo.escrow);
+  return escrow;
+};
 
 module.exports = {
   getFunds,
@@ -441,4 +441,4 @@ module.exports = {
   printPairAggregatorInfo,
   getEscrow,
   withdrawFunds,
-};
+}

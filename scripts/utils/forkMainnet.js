@@ -23,10 +23,10 @@ async function main() {
 
   const server = Ganache.server({
     unlocked_accounts: accountsToUnlock,
+    logger: console,
     locked: false,
     fork: host,
     network_id: 1,
-    debug: true,
     mnemonic,
     total_accounts: addressCountValue,
     default_balance_ether: 100000,
