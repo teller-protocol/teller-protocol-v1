@@ -137,10 +137,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @param src Source token address.
         @param dst Destination token address.
      */
-    function remove(
-        address src,
-        address dst
-    ) external onlyPauser {
+    function remove(address src, address dst) external onlyPauser {
         (AggregatorV2V3Interface agg, ) = _aggregatorFor(src, dst);
         if (address(agg).isEmpty()) {
             return;
@@ -157,8 +154,11 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
      */
     function remove(address tokenAddress) external onlyPauser {
         address[] storage arr = supportedTokens[tokenAddress].array;
-        for (uint i; i < arr.length; i++) {
-            (AggregatorV2V3Interface agg, bool inverse) = _aggregatorFor(tokenAddress, arr[i]);
+        for (uint256 i; i < arr.length; i++) {
+            (AggregatorV2V3Interface agg, bool inverse) = _aggregatorFor(
+                tokenAddress,
+                arr[i]
+            );
             if (inverse) {
                 aggregators[arr[i]][tokenAddress] = address(0);
             } else {

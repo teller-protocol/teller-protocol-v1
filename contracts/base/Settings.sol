@@ -444,11 +444,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @notice Restricts the use of the Teller protocol to authorized wallet addresses only
         @param restriction Bool turning the resitriction on or off
      */
-    function restrictPlatform(bool restriction)
-        external
-        onlyPauser()
-        isInitialized()
-    {
+    function restrictPlatform(bool restriction) external onlyPauser() isInitialized() {
         platformRestricted = restriction;
     }
 
@@ -456,11 +452,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @notice Returns whether the platform is restricted or not
         @return bool True if the platform is restricted, false if not
      */
-    function isPlatformRestricted()
-        public
-        view
-        returns (bool)
-    {
+    function isPlatformRestricted() public view returns (bool) {
         return platformRestricted;
     }
 
@@ -469,9 +461,9 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @param addressToAdd The wallet address of the user being authorized
      */
     function addAuthorizedAddress(address addressToAdd)
-         external
-         onlyPauser()
-         isInitialized()
+        external
+        onlyPauser()
+        isInitialized()
     {
         addressToAdd.requireNotEmpty("ADDRESS_ZERO");
         authorizedAddresses[addressToAdd] = true;
@@ -495,11 +487,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @param account The account address to check for
         @return True if account has authorization, false if it does not
      */
-    function hasAuthorization(address account)
-        public
-        view
-        returns (bool)
-    {
+    function hasAuthorization(address account) public view returns (bool) {
         return authorizedAddresses[account];
     }
 
