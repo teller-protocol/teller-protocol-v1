@@ -63,6 +63,7 @@ contract('SettingsAuthorizedRoleTest', function (accounts) {
                     1000,
                     { from: address }
                 );
+                assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
                 lendingPool
                     .tokenDeposited(result)
