@@ -424,20 +424,11 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     }
 
     /**
-        @notice Tests whether an account has the pauser role.
-        @param account account to test.
-        @return true if account has the pauser role. Otherwise it returns false.
-     */
-    function hasPauserRole(address account) public view returns (bool) {
-        return isPauser(account);
-    }
-
-    /**
         @notice Requires an account to have the pauser role.
         @param account account to test.
      */
     function requirePauserRole(address account) public view {
-        require(hasPauserRole(account), "NOT_PAUSER");
+        require(isPauser(account), "NOT_PAUSER");
     }
 
     /**
@@ -452,7 +443,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @notice Returns whether the platform is restricted or not
         @return bool True if the platform is restricted, false if not
      */
-    function isPlatformRestricted() public view returns (bool) {
+    function isPlatformRestricted() external view returns (bool) {
         return platformRestricted;
     }
 
@@ -488,7 +479,19 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @return True if account has authorization, false if it does not
      */
     function hasAuthorization(address account) public view returns (bool) {
-        return authorizedAddresses[account];
+        return
+            isPauser(account) ||
+            authorizedAddresses[account];
+            versionsRegistry.isProxyRegistered(account);
+    }
+
+    /**
+        @notice Requires an account to have platform authorization.
+        @dev Checks if an account address has authorization or proxy contract is registered.
+        @param account account to test.
+     */
+    function requireAuthorization(address account) public view {
+        require(!platformRestricted || hasAuthorization(account), "NOT_AUTHORIZED");
     }
 
     /**

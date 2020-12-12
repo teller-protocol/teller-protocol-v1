@@ -270,7 +270,7 @@ interface SettingsInterface {
         @param account account to test.
         @return true if account has the pauser role. Otherwise it returns false.
      */
-    function hasPauserRole(address account) external view returns (bool);
+    function isPauser(address account) external view returns (bool);
 
     /**
         @notice Requires an account to have the pauser role.
@@ -296,6 +296,12 @@ interface SettingsInterface {
         @return True if account has authorization, false if it does not
      */
     function hasAuthorization(address account) external view returns (bool);
+
+    /**
+        @notice Requires an account to have platform authorization.
+        @param account account to test.
+     */
+    function requireAuthorization(address account) external view;
 
     /**
         @notice Get the current EscrowFactory contract.

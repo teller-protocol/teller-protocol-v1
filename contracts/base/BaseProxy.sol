@@ -6,6 +6,7 @@ import "../interfaces/IBaseProxy.sol";
 // Contracts
 import "@openzeppelin/upgrades/contracts/upgradeability/Proxy.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "./BaseUpgradeable.sol";
 
 /**
     @notice It is the base Proxy contract for all other Proxy contracts.
@@ -13,7 +14,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
     @author develop@teller.finance
  */
-contract BaseProxy is IBaseProxy, Proxy {
+contract BaseProxy is IBaseProxy, BaseUpgradeable, Proxy {
     using Address for address;
 
     /**
@@ -22,5 +23,19 @@ contract BaseProxy is IBaseProxy, Proxy {
      */
     function implementation() external view returns (address) {
         return _implementation();
+    }
+
+    /** Internal Functions **/
+
+    /**
+     * @notice Overrides the _willFallback() function of Proxy, which enables some code to
+     * be executed prior to the fallback function. In this case, the purpose of this code
+     * is to check if the msg.sender has the authorization required to interact with the Teller protocol
+     */
+    function _willFallback() internal {
+        if (address(this) != msg.sender && address(settings()).isNotEmpty()) {
+            settings().requireAuthorization(msg.sender);
+        }
+        super._willFallback();
     }
 }
