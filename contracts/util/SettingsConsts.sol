@@ -78,4 +78,9 @@ contract SettingsConsts {
      */
     bytes32
         public constant OVER_COLLATERALIZED_BUFFER_SETTING = "OverCollateralizedBuffer";
+    /**
+        @notice The setting name for the maximum total value locked.
+        @notice The maximum total value locked is the supply cap for protocol, above which no additional deposits will be accepted.
+     */
+    bytes32 public constant MAXIMUM_TOTAL_VALUE_LOCKED = "MaximumTotalValueLocked";
 }

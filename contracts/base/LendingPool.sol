@@ -72,6 +72,13 @@ contract LendingPool is Base, LendingPoolInterface {
         whenNotPaused()
         whenLendingPoolNotPaused(address(this))
     {
+        uint256 maxTotalValueLocked = _getSettings().getPlatformSettingValue(
+            _getSettings().consts().MAXIMUM_TOTAL_VALUE_LOCKED()
+        );
+        require(
+            lendingToken.balanceOf(address(this)) <= maxTotalValueLocked,
+            "TVL_MAXED"
+        );
         // Transfering tokens to the LendingPool
         tokenTransferFrom(msg.sender, amount);
 

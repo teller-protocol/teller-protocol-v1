@@ -8,6 +8,8 @@ const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEnc
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
+const { createTestSettingsInstance } = require("../utils/settings-helper");
+const settingsNames = require("../utils/platformSettingsNames");
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -17,6 +19,7 @@ const Token = artifacts.require("./mock/token/DAIMock.sol");
 const Lenders = artifacts.require("./base/Lenders.sol");
 const LendingPool = artifacts.require("./base/LendingPool.sol");
 const TDAI = artifacts.require("./base/TDAI.sol");
+const Settings = artifacts.require("./base/Settings.sol");
 
 contract('LendingPoolWithdrawTest', function (accounts) {
     const burnableInterfaceEncoder = new BurnableInterfaceEncoder(web3);
@@ -35,15 +38,25 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         loansInstance = await Mock.new();
         consensusInstance = await Mock.new();
-        settingsInstance = await Mock.new();
+        // settingsInstance = await Mock.new();
         cTokenInstance = await Mock.new();
         marketsInstance = await Mock.new();
         instance = await LendingPool.new();
+        settingsInstance = await createTestSettingsInstance(
+            Settings,
+            { 
+                from: accounts[0],
+                Mock,
+                initialize: true,
+                onInitialize: async(instance, { marketsState, ceth }) => {
+                    marketsInstance = marketsState;
+                    cTokenInstance = ceth;
+                }});
 
-        await settingsInstance.givenMethodReturnAddress(
-            settingsInterfaceEncoder.encodeMarketsState(),
-            marketsInstance.address
-        );
+        // await settingsInstance.givenMethodReturnAddress(
+        //     settingsInterfaceEncoder.encodeMarketsState(),
+        //     marketsInstance.address
+        // );
     });
 
     withData({
@@ -68,10 +81,10 @@ contract('LendingPoolWithdrawTest', function (accounts) {
               cTokenEncoder.encodeUnderlying(),
               lendingTokenInstance.address
             )
-            await settingsInstance.givenMethodReturnAddress(
-                settingsInterfaceEncoder.encodeGetCTokenAddress(),
-                cTokenInstance.address
-            );
+            // await settingsInstance.givenMethodReturnAddress(
+            //     settingsInterfaceEncoder.encodeGetCTokenAddress(),
+            //     cTokenInstance.address
+            // );
             await initContracts(
                 settingsInstance,
                 cTokenInstance,
