@@ -56,7 +56,7 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         @dev It throws a require error if the platform is used.
      */
     modifier isNotPaused() {
-        require(!settings().isPaused(), "PLATFORM_IS_PAUSED");
+        require(!_getSettings().isPaused(), "PLATFORM_IS_PAUSED");
         _;
     }
 
@@ -75,11 +75,11 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         TellerCommon.Loan memory loan = LoansInterface(loansAddress).loans(loanID);
         require(loan.escrow == address(0x0), "LOAN_ESCROW_ALREADY_EXISTS");
 
-        bytes32 escrowLogicName = settings()
+        bytes32 escrowLogicName = _getSettings()
             .versionsRegistry()
             .consts()
             .ESCROW_LOGIC_NAME();
-        escrowAddress = address(new DynamicProxy(address(settings()), escrowLogicName));
+        escrowAddress = address(new DynamicProxy(address(_getSettings()), escrowLogicName));
         emit EscrowCreated(loan.loanTerms.borrower, loansAddress, loanID, escrowAddress);
     }
 

@@ -59,7 +59,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         @dev It throws a require error if the platform is used.
      */
     modifier isNotPaused() {
-        require(!settings().isPaused(), "PLATFORM_IS_PAUSED");
+        require(!_getSettings().isPaused(), "PLATFORM_IS_PAUSED");
         _;
     }
 
@@ -242,7 +242,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         @dev It is used to create all the market contracts (Lenders, LendingPool, Loans, and others).
      */
     function _createDynamicProxy(bytes32 logicName) internal returns (address) {
-        return address(new DynamicProxy(address(settings()), logicName));
+        return address(new DynamicProxy(address(_getSettings()), logicName));
     }
 
     /**
@@ -274,7 +274,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         require(tToken.isContract(), "TTOKEN_MUST_BE_CONTRACT");
         require(borrowedToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
-            collateralToken == settings().ETH_ADDRESS() || collateralToken.isContract(),
+            collateralToken == _getSettings().ETH_ADDRESS() || collateralToken.isContract(),
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
     }
@@ -344,28 +344,28 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
     {
         lendingPoolProxy = LendingPoolInterface(
             _createDynamicProxy(
-                settings().versionsRegistry().consts().LENDING_POOL_LOGIC_NAME()
+                _getSettings().versionsRegistry().consts().LENDING_POOL_LOGIC_NAME()
             )
         );
         interestConsensusProxy = InterestConsensusInterface(
             _createDynamicProxy(
-                settings().versionsRegistry().consts().INTEREST_CONSENSUS_LOGIC_NAME()
+                _getSettings().versionsRegistry().consts().INTEREST_CONSENSUS_LOGIC_NAME()
             )
         );
         lendersProxy = LendersInterface(
             _createDynamicProxy(
-                settings().versionsRegistry().consts().LENDERS_LOGIC_NAME()
+                _getSettings().versionsRegistry().consts().LENDERS_LOGIC_NAME()
             )
         );
         loanTermsConsensusProxy = LoanTermsConsensusInterface(
             _createDynamicProxy(
-                settings().versionsRegistry().consts().LOAN_TERMS_CONSENSUS_LOGIC_NAME()
+                _getSettings().versionsRegistry().consts().LOAN_TERMS_CONSENSUS_LOGIC_NAME()
             )
         );
-        if (collateralToken == settings().ETH_ADDRESS()) {
+        if (collateralToken == _getSettings().ETH_ADDRESS()) {
             loansProxy = LoansInterface(
                 _createDynamicProxy(
-                    settings()
+                    _getSettings()
                         .versionsRegistry()
                         .consts()
                         .ETHER_COLLATERAL_LOANS_LOGIC_NAME()
@@ -374,7 +374,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         } else {
             loansProxy = LoansInterface(
                 _createDynamicProxy(
-                    settings()
+                    _getSettings()
                         .versionsRegistry()
                         .consts()
                         .TOKEN_COLLATERAL_LOANS_LOGIC_NAME()
@@ -412,33 +412,33 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
             borrowedToken,
             address(lendersProxy),
             address(loansProxy),
-            address(settings())
+            address(_getSettings())
         );
         // Initializing InterestConsensus
         interestConsensusProxy.initialize(
             owner,
             address(lendersProxy),
-            address(settings())
+            address(_getSettings())
         );
         // Initializing Lenders
         lendersProxy.initialize(
             tToken,
             address(lendingPoolProxy),
             address(interestConsensusProxy),
-            address(settings())
+            address(_getSettings())
         );
         // Initializing LoanTermsConsensus
         loanTermsConsensusProxy.initialize(
             owner,
             address(loansProxy),
-            address(settings())
+            address(_getSettings())
         );
 
         // Initializing Loans
         loansProxy.initialize(
             address(lendingPoolProxy),
             address(loanTermsConsensusProxy),
-            address(settings()),
+            address(_getSettings()),
             collateralToken
         );
     }

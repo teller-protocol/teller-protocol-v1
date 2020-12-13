@@ -114,12 +114,12 @@ contract LoansBase is LoansInterface, Base {
         @param loanRequest to validate.
      */
     modifier withValidLoanRequest(TellerCommon.LoanRequest memory loanRequest) {
-        uint256 maxLoanDuration = settings().getPlatformSettingValue(
-            settings().consts().MAXIMUM_LOAN_DURATION_SETTING()
+        uint256 maxLoanDuration = _getSettings().getPlatformSettingValue(
+            _getSettings().consts().MAXIMUM_LOAN_DURATION_SETTING()
         );
         require(maxLoanDuration >= loanRequest.duration, "DURATION_EXCEEDS_MAX_DURATION");
 
-        bool exceedsMaxLoanAmount = settings().exceedsMaxLoanAmount(
+        bool exceedsMaxLoanAmount = _getSettings().exceedsMaxLoanAmount(
             lendingPool.lendingToken(),
             loanRequest.amount
         );
@@ -166,12 +166,12 @@ contract LoansBase is LoansInterface, Base {
 
     // See more details LoanLib.isSecured
     function isLoanSecured(uint256 loanID) external view returns (bool) {
-        return loans[loanID].isSecured(settings());
+        return loans[loanID].isSecured(_getSettings());
     }
 
     // See more details in LoanLib.canGoToEOA
     function canLoanGoToEOA(uint256 loanID) external view returns (bool) {
-        return loans[loanID].canGoToEOA(settings());
+        return loans[loanID].canGoToEOA(_getSettings());
     }
 
     // See more details LoanLib.getTotalOwed
@@ -228,7 +228,7 @@ contract LoansBase is LoansInterface, Base {
 
         loans[loanID].init(
             request,
-            settings(),
+            _getSettings(),
             loanID,
             interestRate,
             collateralRatio,
@@ -236,7 +236,7 @@ contract LoansBase is LoansInterface, Base {
         );
 
         if (request.recipient.isNotEmpty()) {
-            require(loans[loanID].canGoToEOA(settings()), "UNDER_COLL_WITH_RECIPIENT");
+            require(loans[loanID].canGoToEOA(_getSettings()), "UNDER_COLL_WITH_RECIPIENT");
         }
 
         borrowerLoans[request.borrower].push(loanID);
@@ -345,8 +345,8 @@ contract LoansBase is LoansInterface, Base {
         require(
             loans[loanID].lastCollateralIn <=
                 now.sub(
-                    settings().getPlatformSettingValue(
-                        settings().consts().SAFETY_INTERVAL_SETTING()
+                    _getSettings().getPlatformSettingValue(
+                        _getSettings().consts().SAFETY_INTERVAL_SETTING()
                     )
                 ),
             "COLLATERAL_DEPOSITED_RECENTLY"
@@ -366,7 +366,7 @@ contract LoansBase is LoansInterface, Base {
         loans[loanID].loanStartTime = now;
 
         address loanRecipient;
-        bool eoaAllowed = loans[loanID].canGoToEOA(settings());
+        bool eoaAllowed = loans[loanID].canGoToEOA(_getSettings());
         if (eoaAllowed) {
             loanRecipient = loans[loanID].loanTerms.recipient.isEmpty()
                 ? loans[loanID].loanTerms.borrower
@@ -603,7 +603,7 @@ contract LoansBase is LoansInterface, Base {
         view
         returns (bool)
     {
-        address atmAddressForMarket = settings().atmSettings().getATMForMarket(
+        address atmAddressForMarket = _getSettings().atmSettings().getATMForMarket(
             lendingPool.lendingToken(),
             collateralToken
         );
@@ -624,6 +624,6 @@ contract LoansBase is LoansInterface, Base {
         @return the new Escrow contract address.
      */
     function _createEscrow(uint256 loanID) internal returns (address) {
-        return settings().escrowFactory().createEscrow(address(this), loanID);
+        return _getSettings().escrowFactory().createEscrow(address(this), loanID);
     }
 }

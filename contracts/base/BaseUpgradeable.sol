@@ -34,7 +34,7 @@ contract BaseUpgradeable is IBaseUpgradeable {
         @dev Throws an error if the sender has not a pauser role.
      */
     modifier onlyPauser() {
-        settings().requirePauserRole(msg.sender);
+        _getSettings().requirePauserRole(msg.sender);
         _;
     }
 
@@ -44,15 +44,8 @@ contract BaseUpgradeable is IBaseUpgradeable {
         @notice The gets the settings contract address from the SETTINGS_SLOT.
         @dev This address should NOT change over the time. See details in the _setSettings(...) function.
      */
-    function settings() public view returns (SettingsInterface) {
-        address settingsAddress;
-
-        bytes32 slot = SETTINGS_SLOT;
-        assembly {
-            settingsAddress := sload(slot)
-        }
-
-        return SettingsInterface(settingsAddress);
+    function settings() external view returns (SettingsInterface) {
+        return _getSettings();
     }
 
     /**
@@ -71,6 +64,17 @@ contract BaseUpgradeable is IBaseUpgradeable {
 
     /** Internal Functions **/
 
+    function _getSettings() internal view returns (SettingsInterface) {
+        address settingsAddress;
+
+        bytes32 slot = SETTINGS_SLOT;
+        assembly {
+            settingsAddress := sload(slot)
+        }
+
+        return SettingsInterface(settingsAddress);
+    }
+
     /**
         @notice It sets the settings contract address for this contract instance.
         @dev As the settings must NOT change over the time, it verifies if it is already set before updating it.
@@ -78,7 +82,7 @@ contract BaseUpgradeable is IBaseUpgradeable {
      */
     function _setSettings(address settingsAddress) internal {
         // Prevent resetting the settings logic for standalone test deployments.
-        if (address(settings()).isNotEmpty()) {
+        if (address(_getSettings()).isNotEmpty()) {
             return;
         }
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
@@ -99,7 +103,7 @@ contract BaseUpgradeable is IBaseUpgradeable {
         // Prevent resetting the logic name for standalone test deployments.
         require(logicName() == "", "LOGIC_NAME_ALREADY_SET");
         require(
-            settings().versionsRegistry().hasLogicVersion(aLogicName),
+            _getSettings().versionsRegistry().hasLogicVersion(aLogicName),
             "LOGIC_NAME_NOT_EXIST"
         );
 

@@ -133,14 +133,14 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
         @param tlrInitialReward TLR initial reward set on Liquidity mining program associated with this ATM.
      */
     function _createGovernance(uint256 tlrInitialReward) internal returns (address) {
-        bytes32 atmGovernanceLogicName = settings()
+        bytes32 atmGovernanceLogicName = _getSettings()
             .versionsRegistry()
             .consts()
             .ATM_GOVERNANCE_LOGIC_NAME();
         ATMGovernanceInterface atmGovernanceProxy = ATMGovernanceInterface(
-            address(new DynamicProxy(address(settings()), atmGovernanceLogicName))
+            address(new DynamicProxy(address(_getSettings()), atmGovernanceLogicName))
         );
-        atmGovernanceProxy.initialize(address(settings()), msg.sender, tlrInitialReward);
+        atmGovernanceProxy.initialize(address(_getSettings()), msg.sender, tlrInitialReward);
         return address(atmGovernanceProxy);
     }
 
@@ -161,12 +161,12 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
         uint256 maxVestingPerWallet,
         address atmGovernanceProxyAddress
     ) internal returns (address) {
-        bytes32 tlrTokenLogicName = settings()
+        bytes32 tlrTokenLogicName = _getSettings()
             .versionsRegistry()
             .consts()
             .TLR_TOKEN_LOGIC_NAME();
         TLRTokenInterface tlrTokenProxy = TLRTokenInterface(
-            address(new DynamicProxy(address(settings()), tlrTokenLogicName))
+            address(new DynamicProxy(address(_getSettings()), tlrTokenLogicName))
         );
         tlrTokenProxy.initialize(
             name,
@@ -174,7 +174,7 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
             decimals,
             cap,
             maxVestingPerWallet,
-            address(settings()),
+            address(_getSettings()),
             atmGovernanceProxyAddress
         );
         return address(tlrTokenProxy);
@@ -189,14 +189,14 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
         internal
         returns (address)
     {
-        bytes32 liquidityMiningLogicName = settings()
+        bytes32 liquidityMiningLogicName = _getSettings()
             .versionsRegistry()
             .consts()
             .ATM_LIQUIDITY_MINING_LOGIC_NAME();
         ATMLiquidityMiningInterface liquidityMining = ATMLiquidityMiningInterface(
-            address(new DynamicProxy(address(settings()), liquidityMiningLogicName))
+            address(new DynamicProxy(address(_getSettings()), liquidityMiningLogicName))
         );
-        liquidityMining.initialize(address(settings()), governance, tlr);
+        liquidityMining.initialize(address(_getSettings()), governance, tlr);
         return address(liquidityMining);
     }
 }

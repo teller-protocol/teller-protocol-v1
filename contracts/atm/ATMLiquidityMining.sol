@@ -72,8 +72,8 @@ contract ATMLiquidityMining is
      */
     modifier whenNotPaused() {
         require(
-            !settings().isPaused() &&
-                !settings().atmSettings().isATMPaused(address(governance)),
+            !_getSettings().isPaused() &&
+                !_getSettings().atmSettings().isATMPaused(address(governance)),
             "ATM_IS_PAUSED"
         );
         _;
@@ -139,8 +139,8 @@ contract ATMLiquidityMining is
         isInitialized()
         whenNotPaused()
     {
-        // TODO: Check tToken is a Teller whitelisted token on settings().
-        //require(settings().tTokensRegistry().istTokenValid(tToken), "TTOKEN_IS_NOT_REGISTERED");
+        // TODO: Check tToken is a Teller whitelisted token on _getSettings().
+        //require(_getSettings().tTokensRegistry().istTokenValid(tToken), "TTOKEN_IS_NOT_REGISTERED");
         require(amount > 0, "STAKING_ZERO_NOT_ALLOWED");
         // Checking tToken balance
         require(
@@ -181,8 +181,8 @@ contract ATMLiquidityMining is
         isInitialized()
         whenNotPaused()
     {
-        // TODO: Check tToken is a Teller whitelisted token on settings().
-        //require(settings().tTokensRegistry().istTokenValid(tToken), "TTOKEN_IS_NOT_REGISTERED");
+        // TODO: Check tToken is a Teller whitelisted token on _getSettings().
+        //require(_getSettings().tTokensRegistry().istTokenValid(tToken), "TTOKEN_IS_NOT_REGISTERED");
         require(amount > 0, "UNSTAKING_ZERO_NOT_ALLOWED");
         uint256 tTokenStakedBalance = userStakeInfo[msg.sender][tToken]
             .tTokenStakedBalance;

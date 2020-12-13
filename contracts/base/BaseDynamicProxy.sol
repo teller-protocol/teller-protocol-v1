@@ -12,6 +12,6 @@ contract BaseDynamicProxy is BaseProxy {
         @return address of the current implementation
      */
     function _implementation() internal view returns (address) {
-        return settings().versionsRegistry().getLogicVersionAddress(logicName());
+        return _getSettings().versionsRegistry().getLogicVersionAddress(logicName());
     }
 }

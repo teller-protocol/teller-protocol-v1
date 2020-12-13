@@ -298,6 +298,6 @@ contract MarketsState is
         @return the cToken address (if Compound supported the asset). Otherwise it returns an empty address.
      */
     function _getCTokenAddress(address borrowedAsset) internal view returns (address) {
-        return settings().getCTokenAddress(borrowedAsset);
+        return _getSettings().getCTokenAddress(borrowedAsset);
     }
 }

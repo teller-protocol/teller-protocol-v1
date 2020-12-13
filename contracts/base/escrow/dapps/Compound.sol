@@ -148,6 +148,6 @@ contract Compound is ICompound, BaseEscrowDapp {
         @return cToken instance
      */
     function _getCToken(address tokenAddress) internal view returns (CErc20Interface) {
-        return CErc20Interface(settings().getCTokenAddress(tokenAddress));
+        return CErc20Interface(_getSettings().getCTokenAddress(tokenAddress));
     }
 }

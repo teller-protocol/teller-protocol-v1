@@ -33,8 +33,8 @@ contract BaseProxy is IBaseProxy, BaseUpgradeable, Proxy {
      * is to check if the msg.sender has the authorization required to interact with the Teller protocol
      */
     function _willFallback() internal {
-        if (address(this) != msg.sender && address(settings()).isNotEmpty()) {
-            settings().requireAuthorization(msg.sender);
+        if (address(this) != msg.sender && address(_getSettings()).isNotEmpty()) {
+            _getSettings().requireAuthorization(msg.sender);
         }
         super._willFallback();
     }
