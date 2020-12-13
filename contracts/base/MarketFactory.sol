@@ -274,7 +274,8 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         require(tToken.isContract(), "TTOKEN_MUST_BE_CONTRACT");
         require(borrowedToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
-            collateralToken == _getSettings().ETH_ADDRESS() || collateralToken.isContract(),
+            collateralToken == _getSettings().ETH_ADDRESS() ||
+                collateralToken.isContract(),
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
     }
@@ -359,7 +360,10 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         );
         loanTermsConsensusProxy = LoanTermsConsensusInterface(
             _createDynamicProxy(
-                _getSettings().versionsRegistry().consts().LOAN_TERMS_CONSENSUS_LOGIC_NAME()
+                _getSettings()
+                    .versionsRegistry()
+                    .consts()
+                    .LOAN_TERMS_CONSENSUS_LOGIC_NAME()
             )
         );
         if (collateralToken == _getSettings().ETH_ADDRESS()) {

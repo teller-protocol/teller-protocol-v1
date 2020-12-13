@@ -140,7 +140,11 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
         ATMGovernanceInterface atmGovernanceProxy = ATMGovernanceInterface(
             address(new DynamicProxy(address(_getSettings()), atmGovernanceLogicName))
         );
-        atmGovernanceProxy.initialize(address(_getSettings()), msg.sender, tlrInitialReward);
+        atmGovernanceProxy.initialize(
+            address(_getSettings()),
+            msg.sender,
+            tlrInitialReward
+        );
         return address(atmGovernanceProxy);
     }
 

@@ -236,7 +236,10 @@ contract LoansBase is LoansInterface, Base {
         );
 
         if (request.recipient.isNotEmpty()) {
-            require(loans[loanID].canGoToEOA(_getSettings()), "UNDER_COLL_WITH_RECIPIENT");
+            require(
+                loans[loanID].canGoToEOA(_getSettings()),
+                "UNDER_COLL_WITH_RECIPIENT"
+            );
         }
 
         borrowerLoans[request.borrower].push(loanID);

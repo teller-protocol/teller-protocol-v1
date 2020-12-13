@@ -118,7 +118,11 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
                 valueInEth = valueInEth.add(_balanceOf(tokens[i]));
             } else {
                 valueInEth = valueInEth.add(
-                    _valueOfIn(tokens[i], _getSettings().ETH_ADDRESS(), _balanceOf(tokens[i]))
+                    _valueOfIn(
+                        tokens[i],
+                        _getSettings().ETH_ADDRESS(),
+                        _balanceOf(tokens[i])
+                    )
                 );
             }
         }
