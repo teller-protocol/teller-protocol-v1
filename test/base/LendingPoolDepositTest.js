@@ -8,7 +8,6 @@ const {
 } = require('../utils/events');
 const MintableInterfaceEncoder = require('../utils/encoders/MintableInterfaceEncoder');
 const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const settingsNames = require("../utils/platformSettingsNames");
@@ -26,7 +25,6 @@ const Settings = artifacts.require("./base/Settings.sol");
 contract('LendingPoolDepositTest', function (accounts) {
     const mintableInterfaceEncoder = new MintableInterfaceEncoder(web3);
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     const cTokenEncoder = new CTokenInterfaceEncoder(web3)
 
     let instance;
@@ -48,12 +46,6 @@ contract('LendingPoolDepositTest', function (accounts) {
         interestConsensusInstance = await Mock.new();
         instance = await LendingPool.new();
         marketsInstance = await Mock.new();
-        // settingsInstance = await Mock.new();
-        // await settingsInstance.givenMethodReturnAddress(
-        //     settingsInterfaceEncoder.encodeMarketsState(),
-        //     marketsInstance.address
-        // );
-        
 
         cTokenInstance = await Mock.new();
         await cTokenInstance.givenMethodReturnAddress(
@@ -67,11 +59,13 @@ contract('LendingPoolDepositTest', function (accounts) {
                 from: accounts[0],
                 Mock,
                 initialize: true,
-                onInitialize: async(instance, { ceth }) => {
-                    cTokenInstance = ceth;
+                onInitialize: async(instance, { marketsState }) => {
+                    marketsInstance = marketsState;
                 }}, {
             [settingsNames.MaxTotalValueLocked]: settingsMaxTotalValueLocked,
           });
+          
+        await settingsInstance.createAssetSettings(daiInstance.address, cTokenInstance.address, 1000, { from: accounts[0] });
 
         lendersInstance = await Lenders.new();
         await lendersInstance.initialize(
@@ -96,6 +90,7 @@ contract('LendingPoolDepositTest', function (accounts) {
         _3_notDepositIntoCompound: [accounts[2], true, true, 100, true, 1000, "COMPOUND_DEPOSIT_ERROR", true],
         _4_notMint: [accounts[0], true, false, 60, false, 1000, 'TTOKEN_MINT_FAILED', true],
         _5_notAllowance: [accounts[0], true, true, 1, false, 0, "LEND_TOKEN_NOT_ENOUGH_ALLOWANCE", true],
+        _6_above_tvl_max: [accounts[0], true, true, 10000, false, 10000, "TVL_MAX", false],
     }, function (
         recipient,
         transferFrom,
@@ -108,10 +103,6 @@ contract('LendingPoolDepositTest', function (accounts) {
     ) {
         it(t('user', 'deposit', 'Should able (or not) to deposit DAIs.', mustFail), async function () {
             // Setup
-            // await settingsInstance.givenMethodReturnAddress(
-            //     settingsInterfaceEncoder.encodeGetCTokenAddress(),
-            //     cTokenInstance.address
-            // );
             if (!transferFrom) {
                 await daiInstance.mockTransferFromReturnFalse();
             }

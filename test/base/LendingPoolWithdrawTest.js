@@ -6,10 +6,8 @@ const { initContracts } = require('../utils/contracts');
 const BurnableInterfaceEncoder = require('../utils/encoders/BurnableInterfaceEncoder');
 const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
 const { createTestSettingsInstance } = require("../utils/settings-helper");
-const settingsNames = require("../utils/platformSettingsNames");
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -25,7 +23,6 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     const burnableInterfaceEncoder = new BurnableInterfaceEncoder(web3);
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     const cTokenEncoder = new CTokenInterfaceEncoder(web3)
 
     let instance;
@@ -48,15 +45,9 @@ contract('LendingPoolWithdrawTest', function (accounts) {
                 from: accounts[0],
                 Mock,
                 initialize: true,
-                onInitialize: async(instance, { marketsState, ceth }) => {
+                onInitialize: async(instance, { marketsState }) => {
                     marketsInstance = marketsState;
-                    cTokenInstance = ceth;
                 }});
-
-        // await settingsInstance.givenMethodReturnAddress(
-        //     settingsInterfaceEncoder.encodeMarketsState(),
-        //     marketsInstance.address
-        // );
     });
 
     withData({
@@ -81,10 +72,9 @@ contract('LendingPoolWithdrawTest', function (accounts) {
               cTokenEncoder.encodeUnderlying(),
               lendingTokenInstance.address
             )
-            // await settingsInstance.givenMethodReturnAddress(
-            //     settingsInterfaceEncoder.encodeGetCTokenAddress(),
-            //     cTokenInstance.address
-            // );
+
+            await settingsInstance.createAssetSettings(lendingTokenInstance.address, cTokenInstance.address, 1000, { from: accounts[0] });
+
             await initContracts(
                 settingsInstance,
                 cTokenInstance,
