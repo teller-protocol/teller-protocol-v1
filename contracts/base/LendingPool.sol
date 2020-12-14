@@ -76,7 +76,7 @@ contract LendingPool is Base, LendingPoolInterface {
             _getSettings().consts().MAXIMUM_TOTAL_VALUE_LOCKED()
         );
         require(
-            lendingToken.balanceOf(address(this)) <= maxTotalValueLocked,
+            lendingToken.balanceOf(address(this)).add(amount) <= maxTotalValueLocked,
             "TVL_MAXED"
         );
         // Transfering tokens to the LendingPool

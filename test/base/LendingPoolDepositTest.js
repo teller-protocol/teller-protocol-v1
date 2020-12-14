@@ -1,7 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const {
-    t, NULL_ADDRESS
+    t, NULL_ADDRESS, toBytes32
 } = require('../utils/consts');
 const {
     lendingPool, settings
@@ -61,11 +61,17 @@ contract('LendingPoolDepositTest', function (accounts) {
                 initialize: true,
                 onInitialize: async(instance, { marketsState }) => {
                     marketsInstance = marketsState;
-                }}, {
-            [settingsNames.MaxTotalValueLocked]: settingsMaxTotalValueLocked,
-          });
+                }});
           
         await settingsInstance.createAssetSettings(daiInstance.address, cTokenInstance.address, 1000, { from: accounts[0] });
+
+        await settingsInstance.createPlatformSetting(
+            toBytes32(web3, settingsNames.MaximumTotalValueLocked),
+            2000,
+            0,
+            2000,
+            { from: accounts[0] }
+        );
 
         lendersInstance = await Lenders.new();
         await lendersInstance.initialize(
@@ -82,6 +88,7 @@ contract('LendingPoolDepositTest', function (accounts) {
             loansInstance.address,
             settingsInstance.address,
         );
+
     });
 
     withData({
@@ -90,7 +97,7 @@ contract('LendingPoolDepositTest', function (accounts) {
         _3_notDepositIntoCompound: [accounts[2], true, true, 100, true, 1000, "COMPOUND_DEPOSIT_ERROR", true],
         _4_notMint: [accounts[0], true, false, 60, false, 1000, 'TTOKEN_MINT_FAILED', true],
         _5_notAllowance: [accounts[0], true, true, 1, false, 0, "LEND_TOKEN_NOT_ENOUGH_ALLOWANCE", true],
-        _6_above_tvl_max: [accounts[0], true, true, 10000, false, 10000, "TVL_MAX", false],
+        _6_above_tvl_max: [accounts[0], true, true, 10000, false, 10000, "TVL_MAXED", true],
     }, function (
         recipient,
         transferFrom,

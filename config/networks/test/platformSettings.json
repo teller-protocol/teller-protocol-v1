@@ -53,6 +53,12 @@
     "min": 11000,
     "max": 50000
   },
+  "MaximumTotalValueLocked": {
+    "processOnDeployment": true,
+    "value": 2000,
+    "min": 0,
+    "max": 2000
+  },
   "StartingBlockOffsetNumber": {
     "processOnDeployment": true,
     "value": 40,
