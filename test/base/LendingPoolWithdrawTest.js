@@ -1,6 +1,6 @@
 // JS Libraries
 const withData = require('leche').withData;
-const { t, NULL_ADDRESS } = require('../utils/consts');
+const { t, NULL_ADDRESS, toBytes32 } = require('../utils/consts');
 const { lendingPool } = require('../utils/events');
 const { initContracts } = require('../utils/contracts');
 const BurnableInterfaceEncoder = require('../utils/encoders/BurnableInterfaceEncoder');
@@ -8,6 +8,7 @@ const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEnc
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
 const { createTestSettingsInstance } = require("../utils/settings-helper");
+const settingsNames = require("../utils/platformSettingsNames");
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -35,7 +36,6 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         loansInstance = await Mock.new();
         consensusInstance = await Mock.new();
-        // settingsInstance = await Mock.new();
         cTokenInstance = await Mock.new();
         marketsInstance = await Mock.new();
         instance = await LendingPool.new();
@@ -121,6 +121,13 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     }, function(depositSender, depositAmount, recipient, amountToWithdraw, expectedErrorMessage, mustFail) {
         it(t('user', 'withdraw', 'Should able (or not) to withdraw DAIs.', mustFail), async function() {
             // Setup
+            await settingsInstance.createPlatformSetting(
+                toBytes32(web3, settingsNames.MaximumTotalValueLocked),
+                2000,
+                0,
+                2000,
+                { from: accounts[0] }
+            );
             const tTokenInstance = await TDAI.new(settingsInstance.address);
             const lendingTokenInstance = await Token.new();
             await tTokenInstance.addMinter(instance.address);
