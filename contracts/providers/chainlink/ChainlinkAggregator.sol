@@ -118,11 +118,11 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         address(agg).requireEmpty("CHAINLINK_PAIR_ALREADY_EXISTS");
 
         require(
-            src.isContract() || src == settings().ETH_ADDRESS(),
+            src.isContract() || src == _getSettings().ETH_ADDRESS(),
             "TOKEN_A_NOT_CONTRACT"
         );
         require(
-            dst.isContract() || dst == settings().ETH_ADDRESS(),
+            dst.isContract() || dst == _getSettings().ETH_ADDRESS(),
             "TOKEN_B_NOT_CONTRACT"
         );
         require(aggregator.isContract(), "AGGREGATOR_NOT_CONTRACT");
@@ -137,10 +137,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @param src Source token address.
         @param dst Destination token address.
      */
-    function remove(
-        address src,
-        address dst
-    ) external onlyPauser {
+    function remove(address src, address dst) external onlyPauser {
         (AggregatorV2V3Interface agg, ) = _aggregatorFor(src, dst);
         if (address(agg).isEmpty()) {
             return;
@@ -157,8 +154,11 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
      */
     function remove(address tokenAddress) external onlyPauser {
         address[] storage arr = supportedTokens[tokenAddress].array;
-        for (uint i; i < arr.length; i++) {
-            (AggregatorV2V3Interface agg, bool inverse) = _aggregatorFor(tokenAddress, arr[i]);
+        for (uint256 i; i < arr.length; i++) {
+            (AggregatorV2V3Interface agg, bool inverse) = _aggregatorFor(
+                tokenAddress,
+                arr[i]
+            );
             if (inverse) {
                 aggregators[arr[i]][tokenAddress] = address(0);
             } else {
@@ -189,7 +189,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @return uint8 Number of decimals the given token.
      */
     function _decimalsFor(address addr) internal view returns (uint8) {
-        return addr == settings().ETH_ADDRESS() ? 18 : ERC20Detailed(addr).decimals();
+        return addr == _getSettings().ETH_ADDRESS() ? 18 : ERC20Detailed(addr).decimals();
     }
 
     /**
@@ -204,11 +204,11 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         view
         returns (AggregatorV2V3Interface aggregator, bool inverse)
     {
-        if (src == settings().WETH_ADDRESS()) {
-            src = settings().ETH_ADDRESS();
+        if (src == _getSettings().WETH_ADDRESS()) {
+            src = _getSettings().ETH_ADDRESS();
         }
-        if (dst == settings().WETH_ADDRESS()) {
-            dst = settings().ETH_ADDRESS();
+        if (dst == _getSettings().WETH_ADDRESS()) {
+            dst = _getSettings().ETH_ADDRESS();
         }
 
         inverse = aggregators[src][dst] == address(0);
@@ -258,7 +258,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
             int256 srcFactor = int256(TEN**_decimalsFor(src));
             return price;
         } else {
-            address eth = settings().ETH_ADDRESS();
+            address eth = _getSettings().ETH_ADDRESS();
             dst.requireNotEqualTo(eth, "CANNOT_CALCULATE_VALUE");
 
             int256 price1 = _priceFor(src, eth);
