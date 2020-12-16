@@ -10,6 +10,7 @@ const { createLoan } = require('../utils/loans')
 const settingsNames = require('../utils/platformSettingsNames')
 
 const EscrowFactoryInterfaceEncoder = require("../utils/encoders/EscrowFactoryInterfaceEncoder");
+const IATMSettingsEncoder = require("../utils/encoders/IATMSettingsEncoder");
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -24,12 +25,14 @@ const LoanLib = artifacts.require("../util/LoanLib.sol");
 
 contract("LoansBaseTakeOutLoanTest", function(accounts) {
   const escrowFactoryInterfaceEncoder = new EscrowFactoryInterfaceEncoder(web3);
+  const IAtmSettingsEncoder = new IATMSettingsEncoder(web3);
 
   const owner = accounts[0];
   let instance;
   let loanTermsConsInstance;
   let collateralTokenInstance;
   let chainlinkAggregatorInstance;
+  let atmSettingsInstance;
 
   const mockLoanID = 0;
   const overCollateralizedBuffer = 13000
@@ -49,14 +52,15 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
         from: owner,
         Mock,
         initialize: true,
-        onInitialize: async (instance, { escrowFactory, chainlinkAggregator }) => {
+        onInitialize: async (instance, { escrowFactory, chainlinkAggregator, atmSettings }) => {
           const newEscrowInstance = await Mock.new();
           await escrowFactory.givenMethodReturnAddress(
             escrowFactoryInterfaceEncoder.encodeCreateEscrow(),
             newEscrowInstance.address
           );
 
-          chainlinkAggregatorInstance = chainlinkAggregator
+          chainlinkAggregatorInstance = chainlinkAggregator;
+          atmSettingsInstance = atmSettings;
         }
       }, {
         [settingsNames.OverCollateralizedBuffer]: overCollateralizedBuffer,
@@ -72,6 +76,11 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
       loanTermsConsInstance.address,
       settingsInstance.address,
       collateralTokenInstance.address
+    );
+    const atmGovernance = await Mock.new();
+    await atmSettingsInstance.givenMethodReturnAddress(
+      IAtmSettingsEncoder.encodeGetATMForMarket(),
+      atmGovernance.address
     );
 
   });
