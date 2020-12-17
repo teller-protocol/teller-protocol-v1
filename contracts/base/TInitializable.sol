@@ -15,8 +15,8 @@ pragma solidity 0.5.17;
 contract TInitializable {
     /* State Variables */
 
-    bytes32 internal constant IS_INITIALIZED_SLOT = keccak256(
-        "TInitializable.isInitialized"
+    bytes32 internal constant IS_INITIALIZED_SLOT = bytes32(
+        uint256(keccak256("TInitializable.isInitialized")) - 1
     );
 
     /** Modifiers */
