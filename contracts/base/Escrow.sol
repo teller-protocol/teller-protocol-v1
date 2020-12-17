@@ -69,7 +69,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         isInitialized()
         onlyOwner()
     {
-        TellerCommon.Dapp memory dapp = settings().escrowFactory().dapps(
+        TellerCommon.Dapp memory dapp = _getSettings().escrowFactory().dapps(
             dappData.location
         );
         require(dapp.exists, "DAPP_NOT_WHITELISTED");
@@ -114,16 +114,20 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         uint256 valueInEth;
         address[] memory tokens = getTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
-            if (tokens[i] == settings().WETH_ADDRESS()) {
+            if (tokens[i] == _getSettings().WETH_ADDRESS()) {
                 valueInEth = valueInEth.add(_balanceOf(tokens[i]));
             } else {
                 valueInEth = valueInEth.add(
-                    _valueOfIn(tokens[i], settings().ETH_ADDRESS(), _balanceOf(tokens[i]))
+                    _valueOfIn(
+                        tokens[i],
+                        _getSettings().ETH_ADDRESS(),
+                        _balanceOf(tokens[i])
+                    )
                 );
             }
         }
 
-        return _valueOfIn(settings().ETH_ADDRESS(), loans.lendingToken(), valueInEth);
+        return _valueOfIn(_getSettings().ETH_ADDRESS(), loans.lendingToken(), valueInEth);
     }
 
     /**
@@ -256,8 +260,8 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
             }
 
             uint8 assetDecimals;
-            if (baseAddress == settings().cethAddress()) {
-                baseAddress = settings().ETH_ADDRESS();
+            if (baseAddress == _getSettings().cethAddress()) {
+                baseAddress = _getSettings().ETH_ADDRESS();
                 assetDecimals = uint8(18);
             } else {
                 baseAddress = CErc20Interface(baseAddress).underlying();
@@ -267,7 +271,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
             baseAmount = baseAmount.mul(exchangeRate).div(uint256(10)**assetDecimals);
         }
         return
-            settings().chainlinkAggregator().valueFor(
+            _getSettings().chainlinkAggregator().valueFor(
                 baseAddress,
                 quoteAddress,
                 baseAmount

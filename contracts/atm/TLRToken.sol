@@ -49,7 +49,7 @@ contract TLRToken is
         @dev Throws an error is the Teller platform is paused
      */
     modifier whenNotPaused() {
-        require(!settings().atmSettings().isATMPaused(atmAddress), "ATM_IS_PAUSED");
+        require(!_getSettings().atmSettings().isATMPaused(atmAddress), "ATM_IS_PAUSED");
         _;
     }
 

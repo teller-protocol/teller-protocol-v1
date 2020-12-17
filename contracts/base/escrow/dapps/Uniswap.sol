@@ -79,11 +79,11 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
         address destination = path[path.length - 1];
 
         require(
-            settings().chainlinkAggregator().isTokenSupported(source),
+            _getSettings().chainlinkAggregator().isTokenSupported(source),
             "UNI_SRC_NOT_SUPPORTED"
         );
         require(
-            settings().chainlinkAggregator().isTokenSupported(destination),
+            _getSettings().chainlinkAggregator().isTokenSupported(destination),
             "UNI_DST_NOT_SUPPORTED"
         );
 

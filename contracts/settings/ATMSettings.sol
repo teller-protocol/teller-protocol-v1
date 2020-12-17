@@ -57,7 +57,7 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
         @param atmAddress ATM address to pause.
      */
     function pauseATM(address atmAddress) external onlyPauser() isInitialized() {
-        require(!settings().isPaused(), "PLATFORM_IS_ALREADY_PAUSED");
+        require(!_getSettings().isPaused(), "PLATFORM_IS_ALREADY_PAUSED");
         require(!atmPaused[atmAddress], "ATM_IS_ALREADY_PAUSED");
 
         atmPaused[atmAddress] = true;
@@ -70,7 +70,7 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
         @param atmAddress ATM address to unpause.
      */
     function unpauseATM(address atmAddress) external onlyPauser() isInitialized() {
-        require(!settings().isPaused(), "PLATFORM_IS_PAUSED");
+        require(!_getSettings().isPaused(), "PLATFORM_IS_PAUSED");
         require(atmPaused[atmAddress], "ATM_IS_NOT_PAUSED");
 
         atmPaused[atmAddress] = false;
@@ -84,7 +84,7 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
         @return true if ATM is paused. Otherwise it returns false.
      */
     function isATMPaused(address atmAddress) external view returns (bool) {
-        return settings().isPaused() || atmPaused[atmAddress];
+        return _getSettings().isPaused() || atmPaused[atmAddress];
     }
 
     /**
@@ -101,7 +101,8 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
         require(atmAddress.isContract(), "ATM_GOV_MUST_BE_CONTRACT");
         require(borrowedToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
-            collateralToken == settings().ETH_ADDRESS() || collateralToken.isContract(),
+            collateralToken == _getSettings().ETH_ADDRESS() ||
+                collateralToken.isContract(),
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
         require(
@@ -127,7 +128,8 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
     ) external onlyPauser() isInitialized() {
         require(borrowedToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
-            collateralToken == settings().ETH_ADDRESS() || collateralToken.isContract(),
+            collateralToken == _getSettings().ETH_ADDRESS() ||
+                collateralToken.isContract(),
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
         require(
@@ -164,7 +166,8 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
     {
         require(borrowedToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
-            collateralToken == settings().ETH_ADDRESS() || collateralToken.isContract(),
+            collateralToken == _getSettings().ETH_ADDRESS() ||
+                collateralToken.isContract(),
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
         require(

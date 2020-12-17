@@ -247,7 +247,7 @@ contract LendingPool is Base, LendingPoolInterface {
         @return Address of the cToken
      */
     function cToken() public view returns (address) {
-        return settings().getCTokenAddress(address(lendingToken));
+        return _getSettings().getCTokenAddress(address(lendingToken));
     }
 
     /**

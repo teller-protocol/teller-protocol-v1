@@ -118,11 +118,11 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         address(agg).requireEmpty("CHAINLINK_PAIR_ALREADY_EXISTS");
 
         require(
-            src.isContract() || src == settings().ETH_ADDRESS(),
+            src.isContract() || src == _getSettings().ETH_ADDRESS(),
             "TOKEN_A_NOT_CONTRACT"
         );
         require(
-            dst.isContract() || dst == settings().ETH_ADDRESS(),
+            dst.isContract() || dst == _getSettings().ETH_ADDRESS(),
             "TOKEN_B_NOT_CONTRACT"
         );
         require(aggregator.isContract(), "AGGREGATOR_NOT_CONTRACT");
@@ -189,7 +189,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @return uint8 Number of decimals the given token.
      */
     function _decimalsFor(address addr) internal view returns (uint8) {
-        return addr == settings().ETH_ADDRESS() ? 18 : ERC20Detailed(addr).decimals();
+        return addr == _getSettings().ETH_ADDRESS() ? 18 : ERC20Detailed(addr).decimals();
     }
 
     /**
@@ -204,11 +204,11 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         view
         returns (AggregatorV2V3Interface aggregator, bool inverse)
     {
-        if (src == settings().WETH_ADDRESS()) {
-            src = settings().ETH_ADDRESS();
+        if (src == _getSettings().WETH_ADDRESS()) {
+            src = _getSettings().ETH_ADDRESS();
         }
-        if (dst == settings().WETH_ADDRESS()) {
-            dst = settings().ETH_ADDRESS();
+        if (dst == _getSettings().WETH_ADDRESS()) {
+            dst = _getSettings().ETH_ADDRESS();
         }
 
         inverse = aggregators[src][dst] == address(0);
@@ -258,7 +258,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
             int256 srcFactor = int256(TEN**_decimalsFor(src));
             return price;
         } else {
-            address eth = settings().ETH_ADDRESS();
+            address eth = _getSettings().ETH_ADDRESS();
             dst.requireNotEqualTo(eth, "CANNOT_CALCULATE_VALUE");
 
             int256 price1 = _priceFor(src, eth);

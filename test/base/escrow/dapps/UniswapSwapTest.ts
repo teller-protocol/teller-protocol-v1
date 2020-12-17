@@ -1,5 +1,5 @@
 import { assert } from 'chai'
-const { withData } = require('leche')
+import { withData } from 'leche'
 
 import { deployUniswap, DeployUniswapResponse } from '../../../utils/setup/uniswap'
 import {
@@ -7,9 +7,8 @@ import {
   ERC20MockInstance,
   USDCMockInstance,
 } from '../../../../types/truffle-contracts'
-
-const { t } = require('../../../utils/consts')
-const { uniswap } = require('../../../utils/events')
+import { t } from '../../../utils/consts'
+import { uniswap } from '../../../utils/events'
 
 // Mock contracts
 const DAI = artifacts.require('DAIMock')

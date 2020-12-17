@@ -192,6 +192,7 @@ module.exports = async function(deployer, network, accounts) {
     await initializeProxy(logicNames.ATMSettings, atmSettingsInstance)
     await initializeProxy(logicNames.ATMFactory, atmFactoryInstance)
     await initializeProxy(logicNames.MarketFactory, marketFactoryInstance)
+    await initializeProxy(logicNames.TTokenRegistry, tTokenRegistryInstance)
 
     async function deployDapp(name, unsecured) {
       const info = deployedLogicContractsMap.get(name)
@@ -221,8 +222,8 @@ module.exports = async function(deployer, network, accounts) {
     await deployerApp.deploys([TDAI, TUSDC], settingsInstance.address, txConfig);
     console.log(`Deployed tokens: TDAI [${TDAI.address}] TUSDC [${TUSDC.address}] `);
     console.log(`Registering TDAI and TUSDC in TTokenRegistry`);
-    await tTokenRegistryInstance.registerTToken(TDAI.address);
-    await tTokenRegistryInstance.registerTToken(TUSDC.address);
+    await tTokenRegistryInstance.registerTToken(TDAI.address, txConfig);
+    await tTokenRegistryInstance.registerTToken(TUSDC.address, txConfig);
     console.log(`TDAI [${TDAI.address}] and TUSDC [${TUSDC.address}] added to TTokenRegistry`);
     console.log(`Creating Markets...`);
     const marketDefinitions = [
