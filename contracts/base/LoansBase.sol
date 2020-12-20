@@ -338,6 +338,7 @@ contract LoansBase is LoansInterface, Base {
         nonReentrant()
         isBorrower(loans[loanID].loanTerms.borrower)
     {
+        require(_isSupplyToDebtRatioValid(amountBorrow), "SUPPLY_TO_DEBT_EXCEEDS_MAX");
         require(
             loans[loanID].loanTerms.maxLoanAmount >= amountBorrow,
             "MAX_LOAN_EXCEEDED"

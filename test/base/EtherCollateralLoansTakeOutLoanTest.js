@@ -15,6 +15,7 @@ const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterf
 const EscrowFactoryInterfaceEncoder = require('../utils/encoders/EscrowFactoryInterfaceEncoder')
 const EscrowInterfaceEncoder = require('../utils/encoders/EscrowInterfaceEncoder')
 const { createTestSettingsInstance } = require('../utils/settings-helper')
+const IATMSettingsEncoder = require("../utils/encoders/IATMSettingsEncoder")
 
 // Mock contracts
 const Mock = artifacts.require('./mock/util/Mock.sol')
@@ -34,12 +35,14 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
   const escrowFactoryInterfaceEncoder = new EscrowFactoryInterfaceEncoder(web3)
   const escrowInterfaceEncoder = new EscrowInterfaceEncoder(web3)
   const owner = accounts[0]
+  const IAtmSettingsEncoder = new IATMSettingsEncoder(web3)
   let instance
   let chainlinkAggregatorInstance
   let lendingPoolInstance
   let loanTermsConsInstance
   let lendingTokenInstance
   let createdEscrowMock
+  let atmSettingsInstance
 
   const mockLoanID = 0
   const borrower = accounts[3]
@@ -58,18 +61,25 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
         from: owner,
         Mock,
         initialize: true,
-        onInitialize: async (instance, { escrowFactory, chainlinkAggregator }) => {
+        onInitialize: async (instance, { escrowFactory, chainlinkAggregator, atmSettings }) => {
           await escrowFactory.givenMethodReturnAddress(
             escrowFactoryInterfaceEncoder.encodeCreateEscrow(),
             createdEscrowMock.address
           )
           chainlinkAggregatorInstance = chainlinkAggregator
+          atmSettingsInstance = atmSettings
         }
       }, {
         [settingsNames.OverCollateralizedBuffer]: overCollateralizedBuffer,
         [settingsNames.CollateralBuffer]: collateralBuffer,
         [settingsNames.LiquidateEthPrice]: liquidateEthPrice,
       })
+
+    const atmGovernance = await Mock.new();
+    await atmSettingsInstance.givenMethodReturnAddress(
+      IAtmSettingsEncoder.encodeGetATMForMarket(),
+      atmGovernance.address
+    );
 
     loanTermsConsInstance = await Mock.new()
     const loanLib = await LoanLib.new();
