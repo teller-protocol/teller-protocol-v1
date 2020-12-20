@@ -21,11 +21,15 @@ contract BaseUpgradeable is IBaseUpgradeable {
     /**
         @notice It defines the slot where the settings contract address will be stored.
      */
-    bytes32 internal constant SETTINGS_SLOT = keccak256("BaseUpgradeable.settings");
+    bytes32 internal constant SETTINGS_SLOT = bytes32(
+        uint256(keccak256("BaseUpgradeable.settings")) - 1
+    );
     /**
         @notice It defines the slot where the logic name will be stored.
      */
-    bytes32 internal constant LOGIC_NAME_SLOT = keccak256("BaseUpgradeable.logicName");
+    bytes32 internal constant LOGIC_NAME_SLOT = bytes32(
+        uint256(keccak256("BaseUpgradeable.logicName")) - 1
+    );
 
     /** Modifiers **/
 
