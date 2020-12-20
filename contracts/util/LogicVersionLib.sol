@@ -75,6 +75,7 @@ library LogicVersionLib {
     {
         requireExists(self);
         require(self.logic != newLogic, "NEW_LOGIC_REQUIRED");
+        require(newLogic.isContract(), "LOGIC_MUST_BE_CONTRACT");
         oldLogic = self.logic;
         oldVersion = self.version;
         newVersion = self.version.add(1);
