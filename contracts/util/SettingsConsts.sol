@@ -82,5 +82,6 @@ contract SettingsConsts {
         @notice The setting name for the maximum total value locked.
         @notice The maximum total value locked is the supply cap for a pool protocol, above which no additional deposits will be accepted on this pool.
      */
-    bytes32 public constant POOL_MAXIMUM_TOTAL_VALUE_LOCKED = "PoolMaximumTotalValueLocked";
+    bytes32
+        public constant POOL_MAXIMUM_TOTAL_VALUE_LOCKED = "PoolMaximumTotalValueLocked";
 }
