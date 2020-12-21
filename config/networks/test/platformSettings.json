@@ -53,11 +53,11 @@
     "min": 11000,
     "max": 50000
   },
-  "MaximumTotalValueLocked": {
+  "PoolMaximumTotalValueLocked": {
     "processOnDeployment": true,
     "value": 100000,
     "min": 0,
-    "max": 100000
+    "max": "115792089237316195423570985008687907853269984665640564039457584007913129639935"
   },
   "StartingBlockOffsetNumber": {
     "processOnDeployment": true,

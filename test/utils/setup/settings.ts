@@ -32,7 +32,7 @@ interface PlatformSettings {
   // The setting name for the request loan terms rate limit settings.
   RequestLoanTermsRateLimit?: PlatformSettingValue
   // The setting name for the maximum total value locked settings.
-  MaximumTotalValueLocked?: PlatformSettingValue
+  PoolMaximumTotalValueLocked?: PlatformSettingValue
 }
 
 interface PlatformSettingValue {

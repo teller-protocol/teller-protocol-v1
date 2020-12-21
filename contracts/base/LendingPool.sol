@@ -73,7 +73,7 @@ contract LendingPool is Base, LendingPoolInterface {
         whenLendingPoolNotPaused(address(this))
     {
         uint256 maxTotalValueLocked = _getSettings().getPlatformSettingValue(
-            _getSettings().consts().MAXIMUM_TOTAL_VALUE_LOCKED()
+            _getSettings().consts().POOL_MAXIMUM_TOTAL_VALUE_LOCKED()
         );
         require(
             lendingToken.balanceOf(address(this)).add(amount) <= maxTotalValueLocked,

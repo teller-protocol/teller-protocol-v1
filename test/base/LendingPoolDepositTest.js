@@ -66,7 +66,7 @@ contract('LendingPoolDepositTest', function (accounts) {
         await settingsInstance.createAssetSettings(daiInstance.address, cTokenInstance.address, 1000, { from: accounts[0] });
 
         await settingsInstance.createPlatformSetting(
-            toBytes32(web3, settingsNames.MaximumTotalValueLocked),
+            toBytes32(web3, settingsNames.PoolMaximumTotalValueLocked),
             2000,
             0,
             2000,

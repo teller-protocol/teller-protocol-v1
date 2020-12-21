@@ -122,7 +122,7 @@ contract('LendingPoolWithdrawTest', function (accounts) {
         it(t('user', 'withdraw', 'Should able (or not) to withdraw DAIs.', mustFail), async function() {
             // Setup
             await settingsInstance.createPlatformSetting(
-                toBytes32(web3, settingsNames.MaximumTotalValueLocked),
+                toBytes32(web3, settingsNames.PoolMaximumTotalValueLocked),
                 2000,
                 0,
                 2000,
