@@ -98,7 +98,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
             if (nodeIsSignerRole) {
                 await instance.addSigner(nodeAddress)
             }
-            await instance.mockHasSubmitted(nodeAddress, lender, endTime, mockHasSubmitted)
+            await instance.mockHasSubmitted(nodeAddress, lender, requestNonce, mockHasSubmitted)
             await instance.mockSignerNonce(nodeAddress, signerNonce, mockSignerNonceTaken)
             await instance.mockInterestSubmissions(
                 lender,

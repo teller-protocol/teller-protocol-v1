@@ -95,7 +95,7 @@ contract InterestConsensus is InterestConsensusInterface, Consensus {
         _validateResponse(
             response.signer,
             request.lender,
-            request.endTime,
+            request.requestNonce,
             response.responseTime,
             responseHash,
             response.signature
