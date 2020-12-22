@@ -99,12 +99,7 @@ contract Consensus is Base, OwnerSignersRole {
             "SIGNER_NONCE_TAKEN"
         );
 
-        address signer = ECDSA.recover(
-            dataHash,
-            signature.v,
-            signature.r,
-            signature.s
-        );
+        address signer = ECDSA.recover(dataHash, signature.v, signature.r, signature.s);
         return (signer == expectedSigner);
     }
 
