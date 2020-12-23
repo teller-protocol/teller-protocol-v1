@@ -115,10 +115,6 @@ contract Base is TInitializable, BaseUpgradeable, ReentrancyGuard {
         return _getSettings().isPaused();
     }
 
-    function _markets() internal view returns (MarketsStateInterface) {
-        return _getSettings().marketsState();
-    }
-
     function _interestValidator() internal view returns (InterestValidatorInterface) {
         return _getSettings().interestValidator();
     }

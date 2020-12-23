@@ -129,11 +129,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     IChainlinkAggregator public chainlinkAggregator;
 
     /**
-        @notice The markets state.
-     */
-    MarketsStateInterface public marketsState;
-
-    /**
         @notice The current interest validator.
      */
     InterestValidatorInterface public interestValidator;
@@ -497,7 +492,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @param escrowFactoryAddress the initial escrow factory address.
         @param versionsRegistryAddress the initial versions registry address.
         @param chainlinkAggregatorAddress the initial pair aggregator registry address.
-        @param marketsStateAddress the initial markets state address.
         @param interestValidatorAddress the initial interest validator address.
         @param atmSettingsAddress the initial ATM settings address.
      */
@@ -505,7 +499,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         address escrowFactoryAddress,
         address versionsRegistryAddress,
         address chainlinkAggregatorAddress,
-        address marketsStateAddress,
         address interestValidatorAddress,
         address atmSettingsAddress,
         address cethTokenAddress
@@ -513,7 +506,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         require(escrowFactoryAddress.isContract(), "ESCROW_FACTORY_MUST_BE_CONTRACT");
         require(versionsRegistryAddress.isContract(), "VERS_REGISTRY_MUST_BE_CONTRACT");
         require(chainlinkAggregatorAddress.isContract(), "AGGREGATOR_MUST_BE_CONTRACT");
-        require(marketsStateAddress.isContract(), "MARKETS_STATE_MUST_BE_CONTRACT");
         require(
             interestValidatorAddress.isEmpty() || interestValidatorAddress.isContract(),
             "INTEREST_VAL_MUST_BE_CONTRACT"
@@ -527,7 +519,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         escrowFactory = EscrowFactoryInterface(escrowFactoryAddress);
         versionsRegistry = LogicVersionsRegistryInterface(versionsRegistryAddress);
         chainlinkAggregator = IChainlinkAggregator(chainlinkAggregatorAddress);
-        marketsState = MarketsStateInterface(marketsStateAddress);
         interestValidator = InterestValidatorInterface(interestValidatorAddress);
         atmSettings = IATMSettings(atmSettingsAddress);
         cethAddress = cethTokenAddress;

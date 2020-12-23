@@ -1,6 +1,13 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 // Libraries
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
+import "../util/MarketStateLib.sol";
+import "../util/AddressLib.sol";
+import "../util/NumbersLib.sol";
 
 // Commons
 
@@ -34,6 +41,14 @@ import "./Base.sol";
 contract LendingPool is Base, LendingPoolInterface {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
+    using AddressLib for address;
+    using Address for address;
+    using MarketStateLib for MarketStateLib.MarketState;
+    using NumbersLib for uint256;
+
+    /** Constants */
+
+    uint8 internal constant EXCHANGE_RATE_DECIMALS = 18;
 
     /* State Variables */
 
@@ -44,6 +59,21 @@ contract LendingPool is Base, LendingPoolInterface {
     LendersInterface public lenders;
 
     address public loans;
+
+    /**
+        @notice It maps:
+        - The cToken address related with a given lent token => collateral token => Market state.
+        - If the lent token is not supported by Compound, this function uses the lent token address as key.
+        
+        Examples (supported by Compound):
+            address(cDAI) => address(LINK) => MarketState
+            address(cUSDC) => address(LINK) => MarketState
+        
+        Examples (not supported by Compound):
+            address(TokenA) => address(LINK) => MarketState
+            address(TokenB) => address(ETH) => MarketState
+     */
+    mapping(address => mapping(address => MarketStateLib.MarketState)) public markets;
 
     /** Modifiers */
 
@@ -81,7 +111,7 @@ contract LendingPool is Base, LendingPoolInterface {
         // Mint tToken tokens
         tTokenMint(msg.sender, amount);
 
-        _markets().increaseSupply(
+        _increaseSupply(
             address(lendingToken),
             LoansInterface(loans).collateralToken(),
             amount
@@ -112,7 +142,7 @@ contract LendingPool is Base, LendingPoolInterface {
         // Transfers tokens
         tokenTransfer(msg.sender, amount);
 
-        _markets().decreaseSupply(
+        _decreaseSupply(
             address(lendingToken),
             LoansInterface(loans).collateralToken(),
             amount
@@ -142,7 +172,7 @@ contract LendingPool is Base, LendingPoolInterface {
         // deposit them straight into compound
         _depositToCompoundIfSupported(amount);
 
-        _markets().increaseRepayment(
+        _increaseRepayment(
             address(lendingToken),
             LoansInterface(loans).collateralToken(),
             amount
@@ -169,7 +199,7 @@ contract LendingPool is Base, LendingPoolInterface {
         // deposit them straight into compound
         _depositToCompoundIfSupported(amount);
 
-        _markets().increaseRepayment(
+        _increaseRepayment(
             address(lendingToken),
             LoansInterface(loans).collateralToken(),
             amount
@@ -199,7 +229,7 @@ contract LendingPool is Base, LendingPoolInterface {
         // Transfer tokens to the borrower.
         tokenTransfer(borrower, amount);
 
-        _markets().increaseBorrow(
+        _increaseBorrow(
             address(lendingToken),
             LoansInterface(loans).collateralToken(),
             amount
@@ -248,6 +278,43 @@ contract LendingPool is Base, LendingPoolInterface {
      */
     function cToken() public view returns (address) {
         return _getSettings().getCTokenAddress(address(lendingToken));
+    }
+
+    /**
+        @notice It gets the supply-to-debt (StD) ratio for a given market, including a new loan amount.
+        @param borrowedAsset borrowed asset address.
+        @param collateralAsset collateral asset address.
+        @param loanAmount a new loan amount to consider in the ratio.
+        @return the supply-to-debt ratio value.
+     */
+    function getSupplyToDebtFor(
+        address borrowedAsset,
+        address collateralAsset,
+        uint256 loanAmount
+    ) external view returns (uint256) {
+        address cTokenAddress = _getCTokenAddress(borrowedAsset);
+        if (cTokenAddress.isEmpty()) {
+            return markets[borrowedAsset][collateralAsset].getSupplyToDebtFor(loanAmount);
+        } else {
+            return
+                markets[cTokenAddress][collateralAsset].getSupplyToDebtFor(
+                    _getValueForAmount(borrowedAsset, loanAmount)
+                );
+        }
+    }
+
+    /**
+        @notice It gets the current market state.
+        @param borrowedAsset borrowed asset address.
+        @param collateralAsset collateral asset address.
+        @return the current market state.
+     */
+    function getMarket(address borrowedAsset, address collateralAsset)
+        external
+        view
+        returns (MarketStateLib.MarketState memory)
+    {
+        return _getMarket(borrowedAsset, collateralAsset);
     }
 
     /**
@@ -370,5 +437,130 @@ contract LendingPool is Base, LendingPoolInterface {
     function tTokenMint(address to, uint256 amount) private {
         bool mintResult = tToken.mint(to, amount);
         require(mintResult, "TTOKEN_MINT_FAILED");
+    }
+
+    /**
+        @notice It increases the repayment amount for a given market.
+        @notice This function is called every new repayment is received.
+        @param borrowedAsset borrowed asset address.
+        @param collateralAsset collateral asset address.
+        @param amount amount to add.
+     */
+    function _increaseRepayment(
+        address borrowedAsset,
+        address collateralAsset,
+        uint256 amount
+    ) internal isInitialized() {
+        amount = _getValueForAmount(borrowedAsset, amount);
+        _getMarket(borrowedAsset, collateralAsset).increaseRepayment(amount);
+    }
+
+    /**
+        @notice It increases the supply amount for a given market.
+        @notice This function is called every new deposit (Lenders) is received.
+        @param borrowedAsset borrowed asset address.
+        @param collateralAsset collateral asset address.
+        @param amount amount to add.
+     */
+    function _increaseSupply(
+        address borrowedAsset,
+        address collateralAsset,
+        uint256 amount
+    ) internal isInitialized() {
+        amount = _getValueForAmount(borrowedAsset, amount);
+        _getMarket(borrowedAsset, collateralAsset).increaseSupply(amount);
+    }
+
+    /**
+        @notice It decreases the supply amount for a given market.
+        @notice This function is called every new withdraw (Lenders) is done.
+        @param borrowedAsset borrowed asset address.
+        @param collateralAsset collateral asset address.
+        @param amount amount to decrease.
+     */
+    function _decreaseSupply(
+        address borrowedAsset,
+        address collateralAsset,
+        uint256 amount
+    ) internal isInitialized() {
+        amount = _getValueForAmount(borrowedAsset, amount);
+        _getMarket(borrowedAsset, collateralAsset).decreaseSupply(amount);
+    }
+
+    /**
+        @notice It increases the borrowed amount for a given market.
+        @notice This function is called every new loan is taken out
+        @param borrowedAsset borrowed asset address.
+        @param collateralAsset collateral asset address.
+        @param amount amount to add.
+     */
+    function _increaseBorrow(
+        address borrowedAsset,
+        address collateralAsset,
+        uint256 amount
+    ) internal isInitialized() {
+        amount = _getValueForAmount(borrowedAsset, amount);
+        _getMarket(borrowedAsset, collateralAsset).increaseBorrow(amount);
+    }
+
+    /**
+        @notice It gets the current market state.
+        @param borrowedAsset borrowed asset address.
+        @param collateralAsset collateral asset address.
+        @return the current market state.
+     */
+    function _getMarket(address borrowedAsset, address collateralAsset)
+        internal
+        view
+        returns (MarketStateLib.MarketState storage)
+    {
+        address cTokenAddress = _getCTokenAddress(borrowedAsset);
+        if (cTokenAddress.isEmpty()) {
+            return markets[borrowedAsset][collateralAsset];
+        } else {
+            return markets[cTokenAddress][collateralAsset];
+        }
+    }
+
+    /**
+        @notice It returns the value of an amount in cToken value
+        @param assetAddress The address of the asset to be converted
+        @param amount The amount of the asset being converted
+        @return uint256 The value of the inputed amount in it's cToken equivilant value
+     */
+    function _getValueForAmount(address assetAddress, uint256 amount)
+        internal
+        view
+        returns (uint256)
+    {
+        address cTokenAddress = _getCTokenAddress(assetAddress);
+        if (cTokenAddress.isEmpty()) {
+            return amount;
+        } else {
+            uint8 assetDecimals = ERC20Detailed(assetAddress).decimals();
+            uint8 cTokenDecimals = CErc20Interface(cTokenAddress).decimals();
+            uint256 exchangeRate = CErc20Interface(cTokenAddress).exchangeRateStored();
+            uint256 diffFactor = uint256(10) **
+                uint256(EXCHANGE_RATE_DECIMALS).diff(uint256(cTokenDecimals));
+            // return amount.mul(10**diffDecimals).div(exchangeRate);
+
+            // int256 price;
+
+            if (cTokenDecimals > EXCHANGE_RATE_DECIMALS) {
+                exchangeRate = exchangeRate.mul(diffFactor);
+            } else {
+                exchangeRate = exchangeRate.div(diffFactor);
+            }
+            return amount.mul(exchangeRate).div(uint256(10)**assetDecimals);
+        }
+    }
+
+    /**
+        @notice Gets the cToken address associated to a borrowed asset.
+        @param borrowedAsset borrowed address.
+        @return the cToken address (if Compound supported the asset). Otherwise it returns an empty address.
+     */
+    function _getCTokenAddress(address borrowedAsset) internal view returns (address) {
+        return _getSettings().getCTokenAddress(borrowedAsset);
     }
 }

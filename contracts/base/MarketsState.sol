@@ -67,15 +67,6 @@ contract MarketsState is
     mapping(address => mapping(address => MarketStateLib.MarketState)) public markets;
 
     /**
-        @notice It maps a borrowed asset to a global market state.
-
-        Examples
-            address(DAI) => MarketState
-            address(USDC) => MarketState
-     */
-    mapping(address => MarketStateLib.MarketState) public globalMarkets;
-
-    /**
         @notice It increases the repayment amount for a given market.
         @notice This function is called every new repayment is received.
         @param borrowedAsset borrowed asset address.
@@ -88,7 +79,6 @@ contract MarketsState is
         uint256 amount
     ) external onlyWhitelisted() isInitialized() {
         amount = _getValueForAmount(borrowedAsset, amount);
-        _getGlobalMarket(borrowedAsset).increaseRepayment(amount);
         _getMarket(borrowedAsset, collateralAsset).increaseRepayment(amount);
     }
 
@@ -105,7 +95,6 @@ contract MarketsState is
         uint256 amount
     ) external onlyWhitelisted() isInitialized() {
         amount = _getValueForAmount(borrowedAsset, amount);
-        _getGlobalMarket(borrowedAsset).increaseSupply(amount);
         _getMarket(borrowedAsset, collateralAsset).increaseSupply(amount);
     }
 
@@ -122,7 +111,6 @@ contract MarketsState is
         uint256 amount
     ) external onlyWhitelisted() isInitialized() {
         amount = _getValueForAmount(borrowedAsset, amount);
-        _getGlobalMarket(borrowedAsset).decreaseSupply(amount);
         _getMarket(borrowedAsset, collateralAsset).decreaseSupply(amount);
     }
 
@@ -139,7 +127,6 @@ contract MarketsState is
         uint256 amount
     ) external onlyWhitelisted() isInitialized() {
         amount = _getValueForAmount(borrowedAsset, amount);
-        _getGlobalMarket(borrowedAsset).increaseBorrow(amount);
         _getMarket(borrowedAsset, collateralAsset).increaseBorrow(amount);
     }
 
@@ -181,19 +168,6 @@ contract MarketsState is
     }
 
     /**
-        @notice It gets the current global market state for a given borrowed asset.
-        @param borrowedAsset borrowed asset address.
-        @return the current global market state.
-     */
-    function getGlobalMarket(address borrowedAsset)
-        external
-        view
-        returns (MarketStateLib.MarketState memory)
-    {
-        return _getGlobalMarket(borrowedAsset);
-    }
-
-    /**
         @notice It gets the current market state.
         @param borrowedAsset borrowed asset address.
         @param collateralAsset collateral asset address.
@@ -221,24 +195,6 @@ contract MarketsState is
     }
 
     /** Internal Functions */
-
-    /**
-        @notice It gets the global market state for a given borrowed asset.
-        @param borrowedAsset the borrowed asset aaddress.
-        @return the global market state.
-     */
-    function _getGlobalMarket(address borrowedAsset)
-        internal
-        view
-        returns (MarketStateLib.MarketState storage)
-    {
-        address cTokenAddress = _getCTokenAddress(borrowedAsset);
-        if (cTokenAddress.isEmpty()) {
-            return globalMarkets[borrowedAsset];
-        } else {
-            return globalMarkets[cTokenAddress];
-        }
-    }
 
     /**
         @notice It gets the current market state.

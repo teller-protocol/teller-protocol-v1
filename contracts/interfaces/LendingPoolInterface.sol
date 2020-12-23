@@ -1,4 +1,7 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
+
+import "../util/MarketStateLib.sol";
 
 /**
     @notice This interface defines the functions for a lending pool that holds all of the tokens that lenders transfer into the protocol.
@@ -60,6 +63,30 @@ interface LendingPoolInterface {
         @return the ERC20 lending token address.
     */
     function lendingToken() external view returns (address);
+
+    /**
+        @notice It gets the supply-to-debt (StD) ratio for a given market, including a new loan amount.
+        @param borrowedAsset borrowed asset address.
+        @param collateralAsset collateral asset address.
+        @param loanAmount a new loan amount to consider in the ratio.
+        @return the supply-to-debt ratio value.
+     */
+    function getSupplyToDebtFor(
+        address borrowedAsset,
+        address collateralAsset,
+        uint256 loanAmount
+    ) external view returns (uint256);
+
+    /**
+        @notice It gets the current market state.
+        @param borrowedAsset borrowed asset address.
+        @param collateralAsset collateral asset address.
+        @return the current market state.
+     */
+    function getMarket(address borrowedAsset, address collateralAsset)
+        external
+        view
+        returns (MarketStateLib.MarketState memory);
 
     /**
         @notice It initializes the contract state variables.
