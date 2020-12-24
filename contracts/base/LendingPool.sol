@@ -102,6 +102,13 @@ contract LendingPool is Base, LendingPoolInterface {
         whenNotPaused()
         whenLendingPoolNotPaused(address(this))
     {
+        uint256 maxTotalValueLocked = _getSettings().getPlatformSettingValue(
+            _getSettings().consts().POOL_MAXIMUM_TOTAL_VALUE_LOCKED()
+        );
+        require(
+            lendingToken.balanceOf(address(this)).add(amount) <= maxTotalValueLocked,
+            "TVL_MAXED"
+        );
         // Transfering tokens to the LendingPool
         tokenTransferFrom(msg.sender, amount);
 
@@ -111,10 +118,7 @@ contract LendingPool is Base, LendingPoolInterface {
         // Mint tToken tokens
         tTokenMint(msg.sender, amount);
 
-        _increaseSupply(
-            LoansInterface(loans).collateralToken(),
-            amount
-        );
+        _increaseSupply(LoansInterface(loans).collateralToken(), amount);
 
         // Emit event
         emit TokenDeposited(msg.sender, amount);
@@ -141,10 +145,7 @@ contract LendingPool is Base, LendingPoolInterface {
         // Transfers tokens
         tokenTransfer(msg.sender, amount);
 
-        _decreaseSupply(
-            LoansInterface(loans).collateralToken(),
-            amount
-        );
+        _decreaseSupply(LoansInterface(loans).collateralToken(), amount);
 
         // Emit event.
         emit TokenWithdrawn(msg.sender, amount);
@@ -170,10 +171,7 @@ contract LendingPool is Base, LendingPoolInterface {
         // deposit them straight into compound
         _depositToCompoundIfSupported(amount);
 
-        _increaseRepayment(
-            LoansInterface(loans).collateralToken(),
-            amount
-        );
+        _increaseRepayment(LoansInterface(loans).collateralToken(), amount);
 
         // Emits event.
         emit TokenRepaid(borrower, amount);
@@ -196,10 +194,7 @@ contract LendingPool is Base, LendingPoolInterface {
         // deposit them straight into compound
         _depositToCompoundIfSupported(amount);
 
-        _increaseRepayment(
-            LoansInterface(loans).collateralToken(),
-            amount
-        );
+        _increaseRepayment(LoansInterface(loans).collateralToken(), amount);
 
         // Emits event
         emit PaymentLiquidated(liquidator, amount);
@@ -225,10 +220,7 @@ contract LendingPool is Base, LendingPoolInterface {
         // Transfer tokens to the borrower.
         tokenTransfer(borrower, amount);
 
-        _increaseBorrow(
-            LoansInterface(loans).collateralToken(),
-            amount
-        );
+        _increaseBorrow(LoansInterface(loans).collateralToken(), amount);
     }
 
     /**
@@ -281,13 +273,17 @@ contract LendingPool is Base, LendingPoolInterface {
         @param loanAmount a new loan amount to consider in the ratio.
         @return the supply-to-debt ratio value.
      */
-    function getSupplyToDebtFor(
-        address collateralAsset,
-        uint256 loanAmount
-    ) external view returns (uint256) {
+    function getSupplyToDebtFor(address collateralAsset, uint256 loanAmount)
+        external
+        view
+        returns (uint256)
+    {
         address cTokenAddress = _getCTokenAddress();
         if (cTokenAddress.isEmpty()) {
-            return markets[address(lendingToken)][collateralAsset].getSupplyToDebtFor(loanAmount);
+            return
+                markets[address(lendingToken)][collateralAsset].getSupplyToDebtFor(
+                    loanAmount
+                );
         } else {
             return
                 markets[cTokenAddress][collateralAsset].getSupplyToDebtFor(
@@ -437,10 +433,10 @@ contract LendingPool is Base, LendingPoolInterface {
         @param collateralAsset collateral asset address.
         @param amount amount to add.
      */
-    function _increaseRepayment(
-        address collateralAsset,
-        uint256 amount
-    ) internal isInitialized() {
+    function _increaseRepayment(address collateralAsset, uint256 amount)
+        internal
+        isInitialized()
+    {
         amount = _getValueForAmount(amount);
         _getMarket(collateralAsset).increaseRepayment(amount);
     }
@@ -451,10 +447,10 @@ contract LendingPool is Base, LendingPoolInterface {
         @param collateralAsset collateral asset address.
         @param amount amount to add.
      */
-    function _increaseSupply(
-        address collateralAsset,
-        uint256 amount
-    ) internal isInitialized() {
+    function _increaseSupply(address collateralAsset, uint256 amount)
+        internal
+        isInitialized()
+    {
         amount = _getValueForAmount(amount);
         _getMarket(collateralAsset).increaseSupply(amount);
     }
@@ -465,10 +461,10 @@ contract LendingPool is Base, LendingPoolInterface {
         @param collateralAsset collateral asset address.
         @param amount amount to decrease.
      */
-    function _decreaseSupply(
-        address collateralAsset,
-        uint256 amount
-    ) internal isInitialized() {
+    function _decreaseSupply(address collateralAsset, uint256 amount)
+        internal
+        isInitialized()
+    {
         amount = _getValueForAmount(amount);
         _getMarket(collateralAsset).decreaseSupply(amount);
     }
@@ -479,10 +475,10 @@ contract LendingPool is Base, LendingPoolInterface {
         @param collateralAsset collateral asset address.
         @param amount amount to add.
      */
-    function _increaseBorrow(
-        address collateralAsset,
-        uint256 amount
-    ) internal isInitialized() {
+    function _increaseBorrow(address collateralAsset, uint256 amount)
+        internal
+        isInitialized()
+    {
         amount = _getValueForAmount(amount);
         _getMarket(collateralAsset).increaseBorrow(amount);
     }
@@ -510,11 +506,7 @@ contract LendingPool is Base, LendingPoolInterface {
         @param amount The amount of the asset being converted
         @return uint256 The value of the inputed amount in it's cToken equivilant value
      */
-    function _getValueForAmount(uint256 amount)
-        internal
-        view
-        returns (uint256)
-    {
+    function _getValueForAmount(uint256 amount) internal view returns (uint256) {
         address cTokenAddress = _getCTokenAddress();
         if (cTokenAddress.isEmpty()) {
             return amount;
