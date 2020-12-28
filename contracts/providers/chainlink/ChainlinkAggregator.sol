@@ -50,6 +50,10 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
 
     /* External Functions */
 
+    function getSupportedTokens(address token) public view returns (address[] memory) {
+        return supportedTokens[token].array;
+    }
+
     /**
         @notice It grabs the Chainlink Aggregator contract address for the token pair if it is supported.
         @param src Source token address.
@@ -62,6 +66,9 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         view
         returns (AggregatorV2V3Interface, bool)
     {
+        src = _normalizeTokenAddress(src);
+        dst = _normalizeTokenAddress(dst);
+
         return _aggregatorFor(src, dst);
     }
 
@@ -73,8 +80,10 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
     function isTokenSupported(address tokenAddress)
         external
         view
-        returns (bool isSupported)
+        returns (bool)
     {
+        tokenAddress = _normalizeTokenAddress(tokenAddress);
+
         return supportedTokens[tokenAddress].length() > 0;
     }
 
@@ -90,6 +99,9 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         address dst,
         uint256 srcAmount
     ) external view returns (uint256) {
+        src = _normalizeTokenAddress(src);
+        dst = _normalizeTokenAddress(dst);
+
         return _valueFor(src, dst, srcAmount);
     }
 
@@ -101,6 +113,9 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @return uint256 The latest answer as given from Chainlink.
      */
     function latestAnswerFor(address src, address dst) external view returns (int256) {
+        src = _normalizeTokenAddress(src);
+        dst = _normalizeTokenAddress(dst);
+
         return _priceFor(src, dst);
     }
 
@@ -114,6 +129,9 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         address dst,
         address aggregator
     ) external onlyPauser {
+        src = _normalizeTokenAddress(src);
+        dst = _normalizeTokenAddress(dst);
+
         (AggregatorV2V3Interface agg, ) = _aggregatorFor(src, dst);
         address(agg).requireEmpty("CHAINLINK_PAIR_ALREADY_EXISTS");
 
@@ -138,6 +156,9 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @param dst Destination token address.
      */
     function remove(address src, address dst) external onlyPauser {
+        src = _normalizeTokenAddress(src);
+        dst = _normalizeTokenAddress(dst);
+
         (AggregatorV2V3Interface agg, ) = _aggregatorFor(src, dst);
         if (address(agg).isEmpty()) {
             return;
@@ -153,6 +174,8 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @param tokenAddress Token to remove all markets for.
      */
     function remove(address tokenAddress) external onlyPauser {
+        tokenAddress = _normalizeTokenAddress(tokenAddress);
+
         address[] storage arr = supportedTokens[tokenAddress].array;
         for (uint256 i; i < arr.length; i++) {
             (AggregatorV2V3Interface agg, bool inverse) = _aggregatorFor(
@@ -183,6 +206,12 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
 
     /* Internal Functions */
 
+    function _normalizeTokenAddress(address tokenAddress) internal view returns (address) {
+        return tokenAddress == _getSettings().WETH_ADDRESS()
+            ? _getSettings().ETH_ADDRESS()
+            : tokenAddress;
+    }
+
     /**
         @notice It gets the number of decimals for a given token.
         @param addr Token address to get decimals for.
@@ -204,13 +233,6 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         view
         returns (AggregatorV2V3Interface aggregator, bool inverse)
     {
-        if (src == _getSettings().WETH_ADDRESS()) {
-            src = _getSettings().ETH_ADDRESS();
-        }
-        if (dst == _getSettings().WETH_ADDRESS()) {
-            dst = _getSettings().ETH_ADDRESS();
-        }
-
         inverse = aggregators[src][dst] == address(0);
         aggregator = AggregatorV2V3Interface(
             inverse ? aggregators[dst][src] : aggregators[src][dst]
