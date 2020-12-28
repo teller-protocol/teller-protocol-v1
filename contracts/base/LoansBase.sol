@@ -456,7 +456,6 @@ contract LoansBase is LoansInterface, Base {
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused(address(lendingPool))
-        nonReentrant()
     {
         TellerCommon.LoanLiquidationInfo memory liquidationInfo = _getLiquidationInfo(
             loanID
@@ -525,7 +524,7 @@ contract LoansBase is LoansInterface, Base {
         uint256 loanID,
         TellerCommon.LoanLiquidationInfo memory liquidationInfo,
         address payable recipient
-    ) internal {
+    ) private nonReentrant() {
         if (liquidationInfo.rewardInCollateral <= 0) {
             return;
         }
