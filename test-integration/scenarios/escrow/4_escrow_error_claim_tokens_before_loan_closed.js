@@ -80,7 +80,7 @@ module.exports = async (testContext) => {
   await escrowActions.claimTokens(
     { escrow: allContracts.escrow },
     { txConfig: borrowerTxConfig, testContext },
-    { recipient: loan.loanTerms.borrower, shouldFail: true, expectedRevertReason: "LOAN_ACTIVE" }
+    { recipient: loan.loanTerms.borrower, shouldFail: true, expectedRevertReason: "LOAN_NOT_CLOSED" }
   );
 
   await loansActions.printLoanInfo(

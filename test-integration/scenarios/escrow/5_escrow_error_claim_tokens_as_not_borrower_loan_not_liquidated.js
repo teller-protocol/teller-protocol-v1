@@ -85,7 +85,7 @@ module.exports = async (testContext) => {
   await escrowActions.claimTokens(
     { escrow: allContracts.escrow },
     { txConfig: lenderTxConfig, testContext },
-    { recipient: lenderTxConfig.from, shouldFail: true, expectedRevertReason: "RECIPIENT_MUST_BE_BORROWER" }
+    { recipient: lenderTxConfig.from, shouldFail: true, expectedRevertReason: "Ownable: caller is not the owner" }
   );
 
   await loansActions.printLoanInfo(

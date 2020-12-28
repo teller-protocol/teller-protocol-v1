@@ -21,7 +21,7 @@ const takeOutNewLoan = async function (
     amountTakeOut,
     collateralAmountDepositCollateral,
     collateralRatio,
-    interestRate = 4000,
+    interestRate = 400,
 
     durationInDays,
     signers,
@@ -60,7 +60,7 @@ const takeOutNewLoan = async function (
       { testContext },
       { settingName: platformSettingNames.LiquidateEthPrice }
     );
-    collateralRatio = Number(value) + Number(interestRate)+ Number(result.value);
+    collateralRatio = Number(value) + Number(interestRate) + (10000 - Number(result.value));
   }
 
   // Requesting the loan terms.
