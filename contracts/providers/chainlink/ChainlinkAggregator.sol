@@ -73,11 +73,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @param tokenAddress Token address to check support for.
         @return bool whether or not the token is supported.
      */
-    function isTokenSupported(address tokenAddress)
-        external
-        view
-        returns (bool)
-    {
+    function isTokenSupported(address tokenAddress) external view returns (bool) {
         tokenAddress = _normalizeTokenAddress(tokenAddress);
 
         return supportedTokens[tokenAddress].length() > 0;
@@ -202,10 +198,15 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
 
     /* Internal Functions */
 
-    function _normalizeTokenAddress(address tokenAddress) internal view returns (address) {
-        return tokenAddress == _getSettings().WETH_ADDRESS()
-            ? _getSettings().ETH_ADDRESS()
-            : tokenAddress;
+    function _normalizeTokenAddress(address tokenAddress)
+        internal
+        view
+        returns (address)
+    {
+        return
+            tokenAddress == _getSettings().WETH_ADDRESS()
+                ? _getSettings().ETH_ADDRESS()
+                : tokenAddress;
     }
 
     /**
