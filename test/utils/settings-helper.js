@@ -31,6 +31,7 @@ const createSettingsInstance = async (
             const marketsState = await Mock.new();
             const interestValidator = await Mock.new();
             const atmSettings = await Mock.new();
+            const weth = await Mock.new();
             const ceth = await Mock.new();
             if (initialize) {
                 await instance.initialize(
@@ -40,6 +41,7 @@ const createSettingsInstance = async (
                   marketsState.address,
                   interestValidator.address,
                   atmSettings.address,
+                  weth.address,
                   ceth.address,
                 );
             }
@@ -52,6 +54,7 @@ const createSettingsInstance = async (
                     marketsState,
                     interestValidator,
                     atmSettings,
+                    weth,
                     ceth,
                 }
             );
@@ -66,6 +69,7 @@ const createSettingsInstance = async (
             const marketsState = await Mock.new();
             const interestValidator = await Mock.new();
             const atmSettings = await Mock.new();
+            const weth = await Mock.new();
             const ceth = await Mock.new();
             await instance.initialize(
                 escrowFactory.address,
@@ -74,6 +78,7 @@ const createSettingsInstance = async (
                 marketsState.address,
                 interestValidator.address,
                 atmSettings.address,
+                weth.address,
                 ceth.address,
             );
         }
