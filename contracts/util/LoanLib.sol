@@ -20,7 +20,7 @@ library LoanLib {
     using AddressLib for address payable;
 
     // Loan length will be inputted in seconds.
-    uint256 internal constant SECONDS_PER_YEAR_4DP = 31536000;
+    uint256 internal constant SECONDS_PER_YEAR = 31536000;
 
     /**
         @notice Creates a loan with the loan request.
@@ -135,11 +135,23 @@ library LoanLib {
         view
         returns (uint256)
     {
+        return amountBorrow.percent(getInterestRate(loan));
+    }
+
+    /**
+        @notice Returns the interest rate for the loan duration.
+        @dev The interest rate on the loan terms is APY.
+        @param loan The loan to get the interest rate for.
+     */
+    function getInterestRate(TellerCommon.Loan memory loan)
+        public
+        view
+        returns (uint256)
+    {
         return
-            amountBorrow
-                .percent(loan.loanTerms.interestRate)
-                .mul(loan.loanTerms.duration)
-                .div(SECONDS_PER_YEAR_4DP);
+            loan.loanTerms.interestRate.mul(loan.loanTerms.duration).div(
+                SECONDS_PER_YEAR
+            );
     }
 
     /**
@@ -273,7 +285,7 @@ library LoanLib {
             uint256 requiredRatio = loan
                 .loanTerms
                 .collateralRatio
-                .sub(loan.loanTerms.interestRate)
+                .sub(getInterestRate(loan))
                 .sub(bufferPercent);
             if (loan.escrow != address(0)) {
                 escrowLoanValue = EscrowInterface(loan.escrow).calculateTotalValue();
