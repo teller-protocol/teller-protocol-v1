@@ -49,31 +49,41 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     using PlatformSettingsLib for PlatformSettingsLib.PlatformSetting;
 
     /** Constants */
+
+    /**
+        @notice The contract that hold global constant variables.
+        @dev It is set by the initialize function
+     */
+    SettingsConsts public consts;
+
     /**
         @notice The asset setting name for the maximum loan amount settings.
      */
     bytes32 public constant MAX_LOAN_AMOUNT_ASSET_SETTING = "MaxLoanAmount";
+
     /**
         @notice The asset setting name for cToken address settings.
      */
     bytes32 public constant CTOKEN_ADDRESS_ASSET_SETTING = "CTokenAddress";
+
     /**
         @notice It defines the constant address to represent ETHER.
      */
     address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
     /**
-        @notice It defines the constant address to represent WETH.
+        @notice It defines the constant address to represent the canonical WETH token.
+        @dev It is set via the initialize function.
      */
-    address public constant WETH_ADDRESS = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-
-    /* State Variables */
-
-    SettingsConsts public consts;
+    address public WETH_ADDRESS;
 
     /**
         @notice It defines Compound Ether token address on current network.
+        @dev It is set by the initialize function.
      */
-    address public cethAddress;
+    address public CETH_ADDRESS;
+
+    /* State Variables */
 
     /**
         @notice It represents a mapping to identify the lending pools paused and not paused.
@@ -500,6 +510,8 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @param marketsStateAddress the initial markets state address.
         @param interestValidatorAddress the initial interest validator address.
         @param atmSettingsAddress the initial ATM settings address.
+        @param wethTokenAddress canonical WETH token address.
+        @param cethTokenAddress compound CETH token address.
      */
     function initialize(
         address escrowFactoryAddress,
@@ -508,6 +520,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         address marketsStateAddress,
         address interestValidatorAddress,
         address atmSettingsAddress,
+        address wethTokenAddress,
         address cethTokenAddress
     ) external isNotInitialized() {
         require(escrowFactoryAddress.isContract(), "ESCROW_FACTORY_MUST_BE_CONTRACT");
@@ -530,7 +543,8 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         marketsState = MarketsStateInterface(marketsStateAddress);
         interestValidator = InterestValidatorInterface(interestValidatorAddress);
         atmSettings = IATMSettings(atmSettingsAddress);
-        cethAddress = cethTokenAddress;
+        WETH_ADDRESS = wethTokenAddress;
+        CETH_ADDRESS = cethTokenAddress;
 
         consts = new SettingsConsts();
 
@@ -561,7 +575,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         if (assetAddress == ETH_ADDRESS) {
             // NOTE: This is the address for the cETH contract. It is hardcoded because the contract does not have a
             //       underlying() function on it to check that this is the correct contract.
-            cTokenAddress.requireEqualTo(cethAddress, "CETH_ADDRESS_NOT_MATCH");
+            cTokenAddress.requireEqualTo(CETH_ADDRESS, "CETH_ADDRESS_NOT_MATCH");
         } else {
             require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
             if (cTokenAddress.isNotEmpty()) {

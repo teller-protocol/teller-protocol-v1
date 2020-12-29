@@ -50,10 +50,6 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
 
     /* External Functions */
 
-    function getSupportedTokens(address token) public view returns (address[] memory) {
-        return supportedTokens[token].array;
-    }
-
     /**
         @notice It grabs the Chainlink Aggregator contract address for the token pair if it is supported.
         @param src Source token address.
