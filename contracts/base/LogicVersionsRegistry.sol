@@ -131,7 +131,11 @@ contract LogicVersionsRegistry is
         @param logicName logic name to rollback.
         @param previousVersion the previous version to be used.
      */
-    function rollbackLogicVersion(bytes32 logicName, uint256 previousVersion) external onlyPauser() isInitialized() {
+    function rollbackLogicVersion(bytes32 logicName, uint256 previousVersion)
+        external
+        onlyPauser()
+        isInitialized()
+    {
         (
             uint256 currentVersion,
             address previousLogic,
@@ -222,7 +226,9 @@ contract LogicVersionsRegistry is
         view
         returns (address)
     {
-        return logicVersions[logicName].logicVersions[logicVersions[logicName].currentVersion];
+        return
+            logicVersions[logicName].logicVersions[logicVersions[logicName]
+                .currentVersion];
     }
 
     /**

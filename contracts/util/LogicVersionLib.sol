@@ -60,7 +60,7 @@ library LogicVersionLib {
         currentVersion = self.currentVersion;
         previousLogic = self.logicVersions[self.currentVersion];
         newLogic = self.logicVersions[previousVersion];
-        
+
         self.currentVersion = previousVersion;
     }
 
@@ -101,7 +101,10 @@ library LogicVersionLib {
         )
     {
         requireExists(self);
-        require(self.logicVersions[self.currentVersion] != newLogic, "NEW_LOGIC_REQUIRED");
+        require(
+            self.logicVersions[self.currentVersion] != newLogic,
+            "NEW_LOGIC_REQUIRED"
+        );
         require(newLogic.isContract(), "LOGIC_MUST_BE_CONTRACT");
         oldLogic = self.logicVersions[self.currentVersion];
         oldVersion = self.currentVersion;
@@ -123,7 +126,7 @@ library LogicVersionLib {
         requireExists(self);
         lastLogic = self.logicVersions[self.latestVersion];
         lastVersion = self.latestVersion;
-        
+
         self.logicVersions[self.currentVersion] = address(0x0);
         self.logicVersions[self.latestVersion] = address(0x0);
         self.currentVersion = 0;
