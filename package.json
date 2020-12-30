@@ -4,7 +4,7 @@
   "license": "MIT",
   "main": "truffle-config.js",
   "scripts": {
-    "compile": "node --max-old-space-size=8192 ./node_modules/.bin/truffle compile",
+    "compile": "node ./node_modules/.bin/truffle compile",
     "typechain": "typechain --target truffle-v5 './build/**/*.json'",
     "build:types": "yarn compile && yarn typechain",
     "prepack": "yarn build:types",
