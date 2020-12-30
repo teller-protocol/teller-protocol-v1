@@ -41,6 +41,24 @@ interface LogicVersionsRegistryInterface {
     );
 
     /**
+        @notice This event is emitted when a logic version is rollbacked.
+        @param logicName the logic name.
+        @param sender address that rollbacked it.
+        @param oldLogic the old logic address.
+        @param newLogic the new (or previous) logic address.
+        @param oldVersion the old version.
+        @param newVersion the new (previous) version.
+     */
+    event LogicVersionRollbacked(
+        bytes32 indexed logicName,
+        address indexed sender,
+        address oldLogic,
+        address newLogic,
+        uint256 oldVersion,
+        uint256 newVersion
+    );
+
+    /**
         @notice This event is emitted when a new logic version is updated.
         @param logicName new logic name.
         @param sender address that updated it.
@@ -91,6 +109,13 @@ interface LogicVersionsRegistryInterface {
     function removeLogicVersion(bytes32 logicName) external;
 
     /**
+        @notice It rollbacks a logic to a previous version.
+        @param logicName logic name to rollback.
+        @param previousVersion the previous version to be used.
+     */
+    function rollbackLogicVersion(bytes32 logicName, uint256 previousVersion) external;
+
+    /**
         @notice It gets the current logic version for a given logic name.
         @param logicName to get.
         @return the current logic version.
@@ -98,7 +123,11 @@ interface LogicVersionsRegistryInterface {
     function getLogicVersion(bytes32 logicName)
         external
         view
-        returns (LogicVersionLib.LogicVersion memory);
+        returns (
+            uint256 currentVersion,
+            uint256 latestVersion,
+            address logic
+        );
 
     /**
         @notice It gets the current logic address for a given logic name.
