@@ -48,7 +48,6 @@ contract LoansBaseMock is LoansBase, BaseMock {
         TellerCommon.LoanStatus status,
         bool liquidated
     ) external {
-        require(loanTerms.maxLoanAmount >= borrowedAmount, "BORROWED_AMOUNT_EXCEEDS_MAX");
         loans[id] = TellerCommon.Loan({
             id: id,
             loanTerms: loanTerms,
@@ -66,10 +65,6 @@ contract LoansBaseMock is LoansBase, BaseMock {
     }
 
     function setLoan(TellerCommon.Loan memory loan) public {
-        require(
-            loan.loanTerms.maxLoanAmount >= loan.borrowedAmount,
-            "BORROWED_AMOUNT_EXCEEDS_MAX"
-        );
         loans[loan.id] = loan;
     }
 

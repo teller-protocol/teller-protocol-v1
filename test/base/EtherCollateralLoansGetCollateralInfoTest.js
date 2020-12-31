@@ -2,7 +2,7 @@
 const withData = require("leche").withData;
 const BigNumber = require("bignumber.js");
 
-const { t, ETH_ADDRESS, NULL_ADDRESS, ACTIVE, TERMS_SET, CLOSED, NON_EXISTENT } = require("../utils/consts");
+const { t, ETH_ADDRESS, NULL_ADDRESS, ACTIVE, TERMS_SET, CLOSED, NON_EXISTENT, ONE_YEAR } = require("../utils/consts");
 const { createLoanTerms } = require("../utils/structs");
 const { createTestSettingsInstance } = require('../utils/settings-helper');
 const { createLoan } = require('../utils/loans')
@@ -95,8 +95,9 @@ contract("EtherCollateralLoansGetCollateralInfoTest", function(accounts) {
     it(t("user", "getCollateralInfo", "Should able to get collateral info from a loan.", false), async function() {
       // Setup
       const loanID = 1;
-      const loanTerms = createLoanTerms(accounts[2], NULL_ADDRESS, interestRate, collateralRatio, loanAmount, 0);
-      const interestOwed = new BigNumber(loanAmount).multipliedBy(interestRate).div(10000).toString();
+      const loanTerms = createLoanTerms(accounts[2], NULL_ADDRESS, interestRate, collateralRatio, loanAmount, 1000);
+      const interestRatio = new BigNumber(interestRate).multipliedBy(loanTerms.duration).div(ONE_YEAR)
+      const interestOwed = new BigNumber(loanAmount).multipliedBy(interestRatio).div(10000).toString();
       const loan = createLoan({
         id: loanID,
         loanTerms,
@@ -127,13 +128,19 @@ contract("EtherCollateralLoansGetCollateralInfoTest", function(accounts) {
           collateralNeededInTokens = new BigNumber(loanAmount).multipliedBy(collateralRatio).div(10000);
           break
         case ACTIVE:
-          collateralNeededInTokens = new BigNumber(loanAmount)
+          collateralNeededInTokens = new BigNumber(loanAmount).plus(interestOwed)
           if(escrowValue > 0) {
             collateralNeededInTokens = collateralNeededInTokens
               .plus(collateralNeededInTokens.minus(escrowValue));
           }
             
-          collateralNeededInTokens = collateralNeededInTokens.multipliedBy(new BigNumber(collateralRatio).minus(interestRate).minus(collateralBuffer)).div(10000).plus(interestOwed);
+          collateralNeededInTokens = collateralNeededInTokens
+            .multipliedBy(
+              new BigNumber(collateralRatio)
+                .minus(interestRatio)
+                .minus(collateralBuffer)
+            )
+            .div(10000);
           break
       }
 

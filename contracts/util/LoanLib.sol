@@ -135,15 +135,15 @@ library LoanLib {
         view
         returns (uint256)
     {
-        return amountBorrow.percent(getInterestRate(loan));
+        return amountBorrow.percent(getInterestRatio(loan));
     }
 
     /**
-        @notice Returns the interest rate for the loan duration.
+        @notice Returns the interest ratio based on the loan interest rate for the loan duration.
         @dev The interest rate on the loan terms is APY.
         @param loan The loan to get the interest rate for.
      */
-    function getInterestRate(TellerCommon.Loan memory loan)
+    function getInterestRatio(TellerCommon.Loan memory loan)
         public
         view
         returns (uint256)
@@ -279,21 +279,20 @@ library LoanLib {
                 loan.loanTerms.collateralRatio
             );
         } else {
+            neededInLendingTokens = int256(loan.principalOwed.add(loan.interestOwed));
             uint256 bufferPercent = settings.getPlatformSettingValue(
                 settings.consts().COLLATERAL_BUFFER_SETTING()
             );
             uint256 requiredRatio = loan
                 .loanTerms
                 .collateralRatio
-                .sub(getInterestRate(loan))
+                .sub(getInterestRatio(loan))
                 .sub(bufferPercent);
             if (loan.escrow != address(0)) {
                 escrowLoanValue = EscrowInterface(loan.escrow).calculateTotalValue();
                 neededInLendingTokens += neededInLendingTokens - int256(escrowLoanValue);
             }
-            neededInLendingTokens =
-                neededInLendingTokens.percent(requiredRatio) +
-                int256(loan.interestOwed);
+            neededInLendingTokens = neededInLendingTokens.percent(requiredRatio);
         }
     }
 
