@@ -20,7 +20,7 @@ library LoanLib {
     using AddressLib for address payable;
 
     // Loan length will be inputted in seconds.
-    uint256 internal constant SECONDS_PER_YEAR_4DP = 31536000;
+    uint256 internal constant SECONDS_PER_YEAR = 31536000;
 
     /**
         @notice Creates a loan with the loan request.
@@ -147,11 +147,23 @@ library LoanLib {
         view
         returns (uint256)
     {
+        return amountBorrow.percent(getInterestRatio(loan));
+    }
+
+    /**
+        @notice Returns the interest ratio based on the loan interest rate for the loan duration.
+        @dev The interest rate on the loan terms is APY.
+        @param loan The loan to get the interest rate for.
+     */
+    function getInterestRatio(TellerCommon.Loan memory loan)
+        public
+        view
+        returns (uint256)
+    {
         return
-            amountBorrow
-                .percent(loan.loanTerms.interestRate)
-                .mul(loan.loanTerms.duration)
-                .div(SECONDS_PER_YEAR_4DP);
+            loan.loanTerms.interestRate.mul(loan.loanTerms.duration).div(
+                SECONDS_PER_YEAR
+            );
     }
 
     /**
@@ -277,22 +289,20 @@ library LoanLib {
                 loan.loanTerms.collateralRatio
             );
         } else {
-            neededInLendingTokens = int256(loan.principalOwed);
+            neededInLendingTokens = int256(loan.principalOwed.add(loan.interestOwed));
             uint256 bufferPercent = settings.getPlatformSettingValue(
                 settings.consts().COLLATERAL_BUFFER_SETTING()
             );
             uint256 requiredRatio = loan
                 .loanTerms
                 .collateralRatio
-                .sub(loan.loanTerms.interestRate)
+                .sub(getInterestRatio(loan))
                 .sub(bufferPercent);
             if (loan.escrow != address(0)) {
                 escrowLoanValue = EscrowInterface(loan.escrow).calculateTotalValue();
                 neededInLendingTokens += neededInLendingTokens - int256(escrowLoanValue);
             }
-            neededInLendingTokens =
-                neededInLendingTokens.percent(requiredRatio) +
-                int256(loan.interestOwed);
+            neededInLendingTokens = neededInLendingTokens.percent(requiredRatio);
         }
     }
 

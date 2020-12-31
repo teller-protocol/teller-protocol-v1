@@ -33,13 +33,13 @@ contract('SettingsCreatePlatformSettingTest', function (accounts) {
             0, newSetting('mySetting', 1000, 0, 9000), undefined, false
         ],
         _2_invalid_value_lt_min: [
-            [], 0, newSetting('mySetting', 1000, 1001, 9000), 'VALUE_MUST_BE_GT_MIN_VALUE', true
+            [], 0, newSetting('mySetting', 1000, 1001, 9000), 'VALUE_MUST_BE_GTE_MIN_VALUE', true
         ],
         _3_valid_value_equal_min: [
             [], 0, newSetting('mySetting', 1000, 1000, 9000), undefined, false
         ],
         _4_invalid_value_gt_max: [
-            [], 0, newSetting('mySetting', 8501, 1000, 8500), 'VALUE_MUST_BE_LT_MAX_VALUE', true
+            [], 0, newSetting('mySetting', 8501, 1000, 8500), 'VALUE_MUST_BE_LTE_MAX_VALUE', true
         ],
         _5_valid_value_equal_max: [
             [], 0, newSetting('mySetting', 6000, 1000, 6000), undefined, false
@@ -66,11 +66,11 @@ contract('SettingsCreatePlatformSettingTest', function (accounts) {
         ],
         _9_invalid_max_value_overflow_uint256: [
             [],
-            0, newSetting('myCustomSettingB', 9000, 0, MAX_VALUE.plus(1)), 'VALUE_MUST_BE_LT_MAX_VALUE', true
+            0, newSetting('myCustomSettingB', 9000, 0, MAX_VALUE.plus(1)), 'VALUE_MUST_BE_LTE_MAX_VALUE', true
         ],
         _10_invalid_min_value_underflow_uint256: [
             [],
-            0, newSetting('myCustomSettingC', 9000, -1, 10000), 'VALUE_MUST_BE_GT_MIN_VALUE', true
+            0, newSetting('myCustomSettingC', 9000, -1, 10000), 'VALUE_MUST_BE_GTE_MIN_VALUE', true
         ],
         _11_invalid_empty_name: [
             [], 0, newSetting('', 1000, 1001, 9000), 'SETTING_NAME_MUST_BE_PROVIDED', true
