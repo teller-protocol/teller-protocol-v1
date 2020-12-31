@@ -3,7 +3,7 @@ const withData = require('leche').withData
 const BigNumber = require('bignumber.js')
 BigNumber.set({ DECIMAL_PLACES: 0, ROUNDING_MODE: BigNumber.ROUND_FLOOR });
 
-const { t, getLatestTimestamp, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE, TEN_THOUSAND, SECONDS_PER_YEAR_4DP } = require('../utils/consts')
+const { t, getLatestTimestamp, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE, TEN_THOUSAND, ONE_YEAR } = require('../utils/consts')
 const settingsNames = require('../utils/platformSettingsNames')
 const { createLoanTerms } = require('../utils/structs')
 const { loans } = require('../utils/events');
@@ -133,7 +133,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
         .multipliedBy(interestRate)
         .multipliedBy(loanDuration)
         .div(TEN_THOUSAND)
-        .div(SECONDS_PER_YEAR_4DP)
+        .div(ONE_YEAR)
         .toFixed(0)
       assert.equal(loan.interestOwed.toString(), interestOwed, "Loan interest owed invalid")
 

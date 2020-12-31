@@ -2,7 +2,7 @@
 const withData = require("leche").withData;
 const BN = require('bignumber.js')
 
-const { t, getLatestTimestamp, ONE_HOUR, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE, TEN_THOUSAND, SECONDS_PER_YEAR_4DP } = require("../utils/consts");
+const { t, getLatestTimestamp, ONE_HOUR, FIVE_MIN, NULL_ADDRESS, TERMS_SET, ACTIVE, TEN_THOUSAND, ONE_YEAR } = require("../utils/consts");
 const { createLoanTerms } = require("../utils/structs");
 const { loans } = require("../utils/events");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
@@ -42,8 +42,6 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
   const safetyInterval = FIVE_MIN
 
   const borrower = accounts[3];
-
-  let loanTerms = createLoanTerms(borrower, NULL_ADDRESS, 1475, 3564, 15000000, 0);
 
   beforeEach("Setup for each test", async () => {
     const lendingPoolInstance = await Mock.new();
@@ -112,7 +110,7 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
     it(t("user", "takeOutLoan", "Should able to take out a loan.", false), async function() {
       // Setup
       const timeNow = new BN(await getLatestTimestamp());
-      await collateralTokenInstance.mint(loanTerms.borrower, amountToBorrow);
+      await collateralTokenInstance.mint(borrower, amountToBorrow);
 
       let termsExpiry
       if (termsExpired) {
@@ -126,14 +124,13 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
         lastCollateralIn = timeNow
       }
 
-      loanTerms.duration = loanDuration;
-      loanTerms.recipient = recipient;
+      let loanTerms = createLoanTerms(borrower, recipient, 1475, 3564, 15000000, loanDuration);
       const loan = createLoan({
         id: mockLoanID,
         loanTerms,
         collateral: 40000,
         lastCollateralIn: lastCollateralIn.toString(),
-        borrowedAmount: loanTerms.maxLoanAmount,
+        borrowedAmount: amountToBorrow,
         status: TERMS_SET,
         termsExpiry: termsExpiry.toString()
       });
@@ -160,7 +157,8 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
         assert(tx);
 
         const txTime = (await web3.eth.getBlock(tx.receipt.blockNumber)).timestamp;
-        const interestOwed = Math.floor(amountToBorrow * 1475 * loanDuration / TEN_THOUSAND / SECONDS_PER_YEAR_4DP);
+        const interestRatio = new BN(loanTerms.interestRate).multipliedBy(loanTerms.duration).div(ONE_YEAR).toFixed(0)
+        const interestOwed = new BN(amountToBorrow).multipliedBy(interestRatio).div(10000).toFixed(0);
         const loan = await instance.loans.call(mockLoanID);
 
         assert.equal(loan.loanStartTime.toString(), txTime, 'loan start time not match');
