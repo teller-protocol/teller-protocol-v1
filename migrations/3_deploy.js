@@ -156,6 +156,7 @@ module.exports = async function(deployer, network, accounts) {
       marketsStateInstance.address,
       NULL_ADDRESS, // Interest Validator is empty (0x0) in the first version.
       atmSettingsInstance.address,
+      tokens.WETH,
       compound.CETH
     );
 

@@ -55,6 +55,7 @@ contract("EscrowFactoryCreateEscrowTest", function(accounts) {
             marketsState.address,
             interestValidator.address,
             atmSettings.address,
+            (await Mock.new()).address,
             CETH.address
           );
         }

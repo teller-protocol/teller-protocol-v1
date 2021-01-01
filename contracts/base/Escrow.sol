@@ -258,7 +258,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
             }
 
             uint8 assetDecimals;
-            if (baseAddress == _getSettings().cethAddress()) {
+            if (baseAddress == _getSettings().CETH_ADDRESS()) {
                 baseAddress = _getSettings().ETH_ADDRESS();
                 assetDecimals = uint8(18);
             } else {

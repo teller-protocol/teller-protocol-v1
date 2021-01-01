@@ -120,9 +120,21 @@ library LoanLib {
             return loan.loanTerms.maxLoanAmount.add(interestOwed);
         } else if (loan.status == TellerCommon.LoanStatus.Active) {
             return loan.principalOwed.add(loan.interestOwed);
-        } else {
-            return 0;
         }
+        return 0;
+    }
+
+    /**
+        @notice Returns the total amount owed for a specified loan.
+        @param loan The loan to get the total amount owed.
+     */
+    function getLoanAmount(TellerCommon.Loan storage loan) public view returns (uint256) {
+        if (loan.status == TellerCommon.LoanStatus.TermsSet) {
+            return loan.loanTerms.maxLoanAmount;
+        } else if (loan.status == TellerCommon.LoanStatus.Active) {
+            return loan.borrowedAmount;
+        }
+        return 0;
     }
 
     /**
@@ -269,13 +281,11 @@ library LoanLib {
                 * liquidation reward percent
                 * X factor of additional collateral
         */
-        // To take out a loan (if status == TermsSet), the required collateral is (principal owed * the collateral ratio - interest rate).
-
-        // For the loan to not be liquidated (when status == Active), the minimum collateral is (principal owed * (X collateral factor + liquidation reward)).
-        // If the loan has an escrow account, the minimum collateral is ((principal owed - escrow value) * (X collateral factor + liquidation reward)).
-        neededInLendingTokens = int256(loan.principalOwed);
+        // * To take out a loan (if status == TermsSet), the required collateral is (max loan amount * the collateral ratio).
+        // * For the loan to not be liquidated (when status == Active), the minimum collateral is (principal owed * (X collateral factor + liquidation reward)).
+        // * If the loan has an escrow account, the minimum collateral is ((principal owed - escrow value) * (X collateral factor + liquidation reward)).
         if (loan.status == TellerCommon.LoanStatus.TermsSet) {
-            neededInLendingTokens = neededInLendingTokens.percent(
+            neededInLendingTokens = int256(getLoanAmount(loan)).percent(
                 loan.loanTerms.collateralRatio
             );
         } else {
