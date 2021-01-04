@@ -30,7 +30,11 @@ interface LendingPoolInterface {
         @param interestAmount amount of tokens towards the interest.
         @param borrower address that is repaying the loan.
      */
-    function repay(uint256 principalAmount, uint256 interestAmount, address borrower) external;
+    function repay(
+        uint256 principalAmount,
+        uint256 interestAmount,
+        address borrower
+    ) external;
 
     /**
         @notice Once a loan is liquidated, it transfers the amount of tokens to the liquidator address.

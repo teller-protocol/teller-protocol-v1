@@ -350,7 +350,10 @@ library LoanLib {
         @return principalPaid the amount of principal paid back
         @return interestPaid the amount of interest paid back
     */
-    function payOff(TellerCommon.Loan storage loan, uint256 toPay) public returns (uint256, uint256) {
+    function payOff(TellerCommon.Loan storage loan, uint256 toPay)
+        public
+        returns (uint256, uint256)
+    {
         uint256 interestPaid;
 
         if (toPay >= loan.interestOwed) {
@@ -363,9 +366,9 @@ library LoanLib {
         } else {
             interestPaid = toPay;
             loan.interestOwed = loan.interestOwed.sub(toPay);
-                return (0, interestPaid);
+            return (0, interestPaid);
         }
-        
+
         uint256 principalPaid = toPay;
         loan.principalOwed = loan.principalOwed.sub(toPay);
         return (principalPaid, interestPaid);

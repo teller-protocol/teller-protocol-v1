@@ -131,12 +131,11 @@ contract LendingPool is Base, LendingPoolInterface {
         @param interestAmount amount of tokens towards the interest.
         @param borrower address that is repaying the loan.
      */
-    function repay(uint256 principalAmount, uint256 interestAmount, address borrower)
-        external
-        isInitialized()
-        isLoan()
-        whenLendingPoolNotPaused(address(this))
-    {
+    function repay(
+        uint256 principalAmount,
+        uint256 interestAmount,
+        address borrower
+    ) external isInitialized() isLoan() whenLendingPoolNotPaused(address(this)) {
         uint256 totalAmount = principalAmount.add(interestAmount);
 
         // Transfers tokens to LendingPool.
