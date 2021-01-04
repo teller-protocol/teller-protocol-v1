@@ -126,6 +126,11 @@ interface SettingsInterface {
         uint256 newValue
     );
 
+    function settingTimelocks(bytes32)
+        external
+        view
+        returns (uint256 time, uint256 newValue);
+
     /**
         @notice It creates a new platform setting given a setting name, value, min and max values.
         @param settingName setting name to create.

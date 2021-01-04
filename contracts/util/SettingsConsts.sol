@@ -78,4 +78,6 @@ contract SettingsConsts {
      */
     bytes32
         public constant OVER_COLLATERALIZED_BUFFER_SETTING = "OverCollateralizedBuffer";
+
+    bytes32 public constant TIMELOCK_SETTING = "TimelockSetting";
 }

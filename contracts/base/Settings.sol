@@ -83,7 +83,19 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
      */
     address public CETH_ADDRESS;
 
+    /* Structs */
+
+    struct SettingTimelock {
+        uint256 time;
+        uint256 newValue;
+    }
+
     /* State Variables */
+
+    /**
+        @notice Maps a setting name to the time it was submitted for timelock and its new value.
+     */
+    mapping(bytes32 => SettingTimelock) public settingTimelocks;
 
     /**
         @notice It represents a mapping to identify the lending pools paused and not paused.
@@ -164,9 +176,29 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     /**
         @notice Flag restricting the use of the Protocol to authorizedAddress
      */
-    bool platformRestricted;
+    bool private platformRestricted;
 
     /** Modifiers */
+
+    /**
+        @notice Checks if a setting change's timelock has elapsed.
+        @notice If no timelock setting exists, we don't enforce a timelock.
+        @param settingName the name of the setting to check the timelock for.
+        @param newValue the new value of the setting which needs to be equivalent in the timelock.
+     */
+    modifier timelockedSetting(bytes32 settingName, uint256 newValue) {
+        if (platformSettings[consts.TIMELOCK_SETTING].exists) {
+            SettingTimelock memory settingTimelock = settingTimelocks[settingName];
+            require(settingTimelock.time != 0, "SETTING_NOT_TIMELOCKED");
+            require(
+                settingTimelock.time <=
+                    now - platformSettings[consts.TIMELOCK_SETTING].value,
+                "MINIMUM_TIMELOCK_NOT_ELAPSED"
+            );
+            require(settingTimelock.newValue == newValue, "TIMELOCK_NEWVALUE_MISMATCH");
+        }
+        _;
+    }
 
     /* Constructor */
 
@@ -202,6 +234,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         external
         onlyPauser()
         isInitialized()
+        timelockedSetting(settingName, newValue)
     {
         uint256 oldValue = platformSettings[settingName].update(newValue);
 
