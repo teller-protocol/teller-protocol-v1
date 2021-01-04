@@ -62,4 +62,14 @@ interface InterestConsensusInterface {
         address aCallerAddress,
         address aSettingAddress
     ) external;
+
+    function interestSubmissions(address, uint256)
+        external
+        view
+        returns (
+            uint256 count,
+            uint256 max,
+            uint256 min,
+            uint256 sum
+        );
 }

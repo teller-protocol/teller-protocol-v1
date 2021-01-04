@@ -238,6 +238,27 @@ interface SettingsInterface {
      */
     function updateCTokenAddress(address assetAddress, address newCTokenAddress) external;
 
+    function assetSettings(address)
+        external
+        view
+        returns (
+            address cTokenAddress,
+            uint256 maxLoanAmount,
+            bool initialized
+        );
+
+    function assets() external view returns (address[] memory);
+
+    function platformSettings(bytes32)
+        external
+        view
+        returns (
+            uint256 value,
+            uint256 min,
+            uint256 max,
+            bool exists
+        );
+
     /**
         @notice Gets the current asset addresses list.
         @return the asset addresses list.
