@@ -157,6 +157,22 @@ interface SettingsInterface {
     function updatePlatformSetting(bytes32 settingName, uint256 newValue) external;
 
     /**
+        @notice Creates a new timelock for a setting change.
+        @dev Doesn't allow timelocking a setting which already has a timelock.
+        @dev Sets the timelock's time to `now`.
+        @param settingName name of the setting.
+        @param newValue new value of the setting.
+     */
+    function timelockSetting(bytes32 settingName, uint256 newValue) external;
+
+    /**
+        @notice Removes a setting timelock.
+        @notice Useful when a planned setting change is no longer wanted.
+        @param settingName name of the setting to remove the timelock for.
+     */
+    function removeTimelock(bytes32 settingName) external;
+
+    /**
         @notice Removes a current platform setting given a setting name.
         @param settingName to remove.
      */
