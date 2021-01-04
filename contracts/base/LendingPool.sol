@@ -127,29 +127,42 @@ contract LendingPool is Base, LendingPoolInterface {
         @dev This function can be called ONLY by the Loans contract.
         @dev It requires a ERC20.approve call before calling it.
         @dev It throws a require error if borrower called ERC20.approve function before calling it.
-        @param amount of tokens.
+        @param principalAmount amount of tokens towards the principal.
+        @param interestAmount amount of tokens towards the interest.
         @param borrower address that is repaying the loan.
      */
-    function repay(uint256 amount, address borrower)
+    function repay(uint256 principalAmount, uint256 interestAmount, address borrower)
         external
         isInitialized()
         isLoan()
         whenLendingPoolNotPaused(address(this))
     {
+        uint256 totalAmount = principalAmount.add(interestAmount);
+
         // Transfers tokens to LendingPool.
-        tokenTransferFrom(borrower, amount);
+        tokenTransferFrom(borrower, totalAmount);
 
         // deposit them straight into compound
-        _depositToCompoundIfSupported(amount);
+        _depositToCompoundIfSupported(totalAmount);
 
-        _markets().increaseRepayment(
-            address(lendingToken),
-            LoansInterface(loans).collateralToken(),
-            amount
-        );
+        if (principalAmount > 0) {
+            _markets().increaseRepayment(
+                address(lendingToken),
+                LoansInterface(loans).collateralToken(),
+                principalAmount
+            );
+        }
+
+        if (interestAmount > 0) {
+            _markets().increaseSupply(
+                address(lendingToken),
+                LoansInterface(loans).collateralToken(),
+                interestAmount
+            );
+        }
 
         // Emits event.
-        emit TokenRepaid(borrower, amount);
+        emit TokenRepaid(borrower, totalAmount);
     }
 
     /**

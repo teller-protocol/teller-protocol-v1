@@ -26,10 +26,11 @@ interface LendingPoolInterface {
         @dev This function can be called ONLY by the Loans contract.
         @dev It requires a ERC20.approve call before calling it.
         @dev It throws a require error if borrower called ERC20.approve function before calling it.
-        @param amount of tokens.
+        @param principalAmount amount of tokens towards the principal.
+        @param interestAmount amount of tokens towards the interest.
         @param borrower address that is repaying the loan.
      */
-    function repay(uint256 amount, address borrower) external;
+    function repay(uint256 principalAmount, uint256 interestAmount, address borrower) external;
 
     /**
         @notice Once a loan is liquidated, it transfers the amount of tokens to the liquidator address.

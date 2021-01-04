@@ -23,8 +23,8 @@ contract LoansBaseMock is LoansBase, BaseMock {
         paidOutCollateral = true;
     }
 
-    function externalPayLoan(uint256 loanID, uint256 toPay) external {
-        loans[loanID].payOff(toPay);
+    function externalPayLoan(uint256 loanID, uint256 toPay) external returns (uint256, uint256) {
+        return loans[loanID].payOff(toPay);
     }
 
     function externalIsSupplyToDebtRatioValid(uint256 newLoanAmount)
