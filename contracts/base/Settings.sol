@@ -187,12 +187,12 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @param newValue the new value of the setting which needs to be equivalent in the timelock.
      */
     modifier timelockedSetting(bytes32 settingName, uint256 newValue) {
-        if (platformSettings[consts.TIMELOCK_SETTING].exists) {
+        if (platformSettings[consts.TIMELOCK_SETTING()].exists) {
             SettingTimelock memory settingTimelock = settingTimelocks[settingName];
             require(settingTimelock.time != 0, "SETTING_NOT_TIMELOCKED");
             require(
                 settingTimelock.time <=
-                    now - platformSettings[consts.TIMELOCK_SETTING].value,
+                    now - platformSettings[consts.TIMELOCK_SETTING()].value,
                 "MINIMUM_TIMELOCK_NOT_ELAPSED"
             );
             require(settingTimelock.newValue == newValue, "TIMELOCK_NEWVALUE_MISMATCH");
