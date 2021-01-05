@@ -5,7 +5,8 @@ pragma solidity 0.5.17;
 // Commons
 
 // Interfaces
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
 import "../interfaces/LoansInterface.sol";
@@ -31,11 +32,12 @@ import "./Base.sol";
     @author develop@teller.finance
  */
 contract LendingPool is Base, LendingPoolInterface {
+    using SafeMath for uint256;
+    using SafeERC20 for IERC20;
+
     /* State Variables */
 
     IERC20 public lendingToken;
-
-    address public cToken;
 
     TTokenInterface public tToken;
 
@@ -50,7 +52,7 @@ contract LendingPool is Base, LendingPoolInterface {
         @dev It throws a require error if parameter is not equal to loans contract address.
      */
     modifier isLoan() {
-        loans.requireEqualTo(msg.sender, "ADDRESS_ISNT_LOANS_CONTRACT");
+        _requireIsLoan();
         _;
     }
 
@@ -125,23 +127,41 @@ contract LendingPool is Base, LendingPoolInterface {
         @dev This function can be called ONLY by the Loans contract.
         @dev It requires a ERC20.approve call before calling it.
         @dev It throws a require error if borrower called ERC20.approve function before calling it.
-        @param amount of tokens.
+        @param principalAmount amount of tokens towards the principal.
+        @param interestAmount amount of tokens towards the interest.
         @param borrower address that is repaying the loan.
      */
-    function repay(uint256 amount, address borrower)
-        external
-        isInitialized()
-        isLoan()
-        whenLendingPoolNotPaused(address(this))
-    {
+    function repay(
+        uint256 principalAmount,
+        uint256 interestAmount,
+        address borrower
+    ) external isInitialized() isLoan() whenLendingPoolNotPaused(address(this)) {
+        uint256 totalAmount = principalAmount.add(interestAmount);
+
         // Transfers tokens to LendingPool.
-        tokenTransferFrom(borrower, amount);
+        tokenTransferFrom(borrower, totalAmount);
 
         // deposit them straight into compound
-        _depositToCompoundIfSupported(amount);
+        _depositToCompoundIfSupported(totalAmount);
+
+        if (principalAmount > 0) {
+            _markets().increaseRepayment(
+                address(lendingToken),
+                LoansInterface(loans).collateralToken(),
+                principalAmount
+            );
+        }
+
+        if (interestAmount > 0) {
+            _markets().increaseSupply(
+                address(lendingToken),
+                LoansInterface(loans).collateralToken(),
+                interestAmount
+            );
+        }
 
         // Emits event.
-        emit TokenRepaid(borrower, amount);
+        emit TokenRepaid(borrower, totalAmount);
     }
 
     /**
@@ -160,6 +180,12 @@ contract LendingPool is Base, LendingPoolInterface {
 
         // deposit them straight into compound
         _depositToCompoundIfSupported(amount);
+
+        _markets().increaseRepayment(
+            address(lendingToken),
+            LoansInterface(loans).collateralToken(),
+            amount
+        );
 
         // Emits event
         emit PaymentLiquidated(liquidator, amount);
@@ -184,6 +210,12 @@ contract LendingPool is Base, LendingPoolInterface {
 
         // Transfer tokens to the borrower.
         tokenTransfer(borrower, amount);
+
+        _markets().increaseBorrow(
+            address(lendingToken),
+            LoansInterface(loans).collateralToken(),
+            amount
+        );
     }
 
     /**
@@ -223,6 +255,14 @@ contract LendingPool is Base, LendingPoolInterface {
     }
 
     /**
+        @notice Returns the cToken in the lending pool
+        @return Address of the cToken
+     */
+    function cToken() public view returns (address) {
+        return _getSettings().getCTokenAddress(address(lendingToken));
+    }
+
+    /**
         @notice It initializes the contract state variables.
         @param tTokenAddress tToken token address.
         @param lendingTokenAddress ERC20 token address.
@@ -236,7 +276,6 @@ contract LendingPool is Base, LendingPoolInterface {
         address lendingTokenAddress,
         address lendersAddress,
         address loansAddress,
-        address cTokenAddress,
         address settingsAddress
     ) external isNotInitialized() {
         tTokenAddress.requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
@@ -250,7 +289,6 @@ contract LendingPool is Base, LendingPoolInterface {
         lendingToken = IERC20(lendingTokenAddress);
         lenders = LendersInterface(lendersAddress);
         loans = loansAddress;
-        cToken = cTokenAddress;
     }
 
     /** Internal functions */
@@ -258,16 +296,20 @@ contract LendingPool is Base, LendingPoolInterface {
     /**
         @notice It deposits a given amount of tokens to Compound only if the cToken is not empty.
         @param amount amount to deposit.
+        @return the amount of tokens deposited.
      */
     function _depositToCompoundIfSupported(uint256 amount) internal {
-        if (_isCTokenNotSupported()) {
+        address cTokenAddress = cToken();
+
+        if (_isCTokenNotSupported(cTokenAddress)) {
             return;
         }
+
         // approve the cToken contract to take lending tokens
-        lendingToken.approve(address(cToken), amount);
+        lendingToken.safeApprove(cTokenAddress, amount);
 
         // Now mint cTokens, which will take lending tokens
-        uint256 mintResult = CErc20Interface(cToken).mint(amount);
+        uint256 mintResult = CErc20Interface(cTokenAddress).mint(amount);
         require(mintResult == 0, "COMPOUND_DEPOSIT_ERROR");
     }
 
@@ -276,21 +318,32 @@ contract LendingPool is Base, LendingPoolInterface {
         @param amount amount of tokens to withdraw.
      */
     function _withdrawFromCompoundIfSupported(uint256 amount) internal {
-        if (_isCTokenNotSupported()) {
+        address cTokenAddress = cToken();
+
+        if (_isCTokenNotSupported(cTokenAddress)) {
             return;
         }
+
         // this function withdraws 'amount' lending tokens from compound
         // another function exists to withdraw 'amount' cTokens of lending tokens
-        uint256 redeemResult = CErc20Interface(cToken).redeemUnderlying(amount);
-        require(redeemResult == 0, "COMPOUND_WITHDRAWAL_ERROR");
+        uint256 redeemResult = CErc20Interface(cTokenAddress).redeemUnderlying(amount);
+        require(redeemResult == 0, "COMPOUND_REDEEM_UNDERLYING_ERROR");
     }
 
     /**
         @notice It tests whether cToken address is defined (not 0x0) or not.
         @return true if the cToken address is not 0x0. Otherwise it returns false.
      */
-    function _isCTokenNotSupported() internal view returns (bool) {
-        return address(cToken) == address(0x0);
+    function _isCTokenNotSupported(address cTokenAddress) internal pure returns (bool) {
+        return cTokenAddress == address(0x0);
+    }
+
+    /**
+        @notice It validates whether transaction sender is the loans contract address.@
+        @dev This function is overriden in some mock contracts for testing purposes.
+     */
+    function _requireIsLoan() internal view {
+        loans.requireEqualTo(msg.sender, "ADDRESS_ISNT_LOANS_CONTRACT");
     }
 
     /** Private functions */
@@ -304,8 +357,7 @@ contract LendingPool is Base, LendingPoolInterface {
     function tokenTransfer(address recipient, uint256 amount) private {
         uint256 currentBalance = lendingToken.balanceOf(address(this));
         require(currentBalance >= amount, "LENDING_TOKEN_NOT_ENOUGH_BALANCE");
-        bool transferResult = lendingToken.transfer(recipient, amount);
-        require(transferResult, "LENDING_TRANSFER_FAILED");
+        lendingToken.safeTransfer(recipient, amount);
     }
 
     /**
@@ -317,8 +369,7 @@ contract LendingPool is Base, LendingPoolInterface {
     function tokenTransferFrom(address from, uint256 amount) private {
         uint256 allowance = lendingToken.allowance(from, address(this));
         require(allowance >= amount, "LEND_TOKEN_NOT_ENOUGH_ALLOWANCE");
-        bool transferFromResult = lendingToken.transferFrom(from, address(this), amount);
-        require(transferFromResult, "LENDING_TRANSFER_FROM_FAILED");
+        lendingToken.safeTransferFrom(from, address(this), amount);
     }
 
     /**

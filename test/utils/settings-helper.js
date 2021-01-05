@@ -27,18 +27,22 @@ const createSettingsInstance = async (
         if(Mock !== undefined) {
             const escrowFactory = await Mock.new();
             const versionsRegistry = await Mock.new();
-            const pairAggregatorRegistry = await Mock.new();
+            const chainlinkAggregator = await Mock.new();
             const marketsState = await Mock.new();
             const interestValidator = await Mock.new();
             const atmSettings = await Mock.new();
+            const weth = await Mock.new();
+            const ceth = await Mock.new();
             if (initialize) {
                 await instance.initialize(
                   escrowFactory.address,
                   versionsRegistry.address,
-                  pairAggregatorRegistry.address,
+                  chainlinkAggregator.address,
                   marketsState.address,
                   interestValidator.address,
                   atmSettings.address,
+                  weth.address,
+                  ceth.address,
                 );
             }
             await onInitialize(
@@ -46,10 +50,12 @@ const createSettingsInstance = async (
                 {
                     escrowFactory,
                     versionsRegistry,
-                    pairAggregatorRegistry,
+                    chainlinkAggregator,
                     marketsState,
                     interestValidator,
                     atmSettings,
+                    weth,
+                    ceth,
                 }
             );
         } else {
@@ -59,17 +65,21 @@ const createSettingsInstance = async (
         if(Mock !== undefined) {
             const escrowFactory = await Mock.new();
             const versionsRegistry = await Mock.new();
-            const pairAggregatorRegistry = await Mock.new();
+            const chainlinkAggregator = await Mock.new();
             const marketsState = await Mock.new();
             const interestValidator = await Mock.new();
             const atmSettings = await Mock.new();
+            const weth = await Mock.new();
+            const ceth = await Mock.new();
             await instance.initialize(
                 escrowFactory.address,
                 versionsRegistry.address,
-                pairAggregatorRegistry.address,
+                chainlinkAggregator.address,
                 marketsState.address,
                 interestValidator.address,
                 atmSettings.address,
+                weth.address,
+                ceth.address,
             );
         }
     }

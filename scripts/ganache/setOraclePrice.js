@@ -1,51 +1,55 @@
-// Smart contracts
-const PairAggregatorMock = artifacts.require('./mock/providers/chainlink/PairAggregatorMock.sol');
+const BigNumber = require("bignumber.js");
 
 // Util classes
-const BigNumber = require('bignumber.js');
-BigNumber.set({ DECIMAL_PLACES: 0, ROUNDING_MODE: 3 });
+const { printPairAggregator } = require('../../test/utils/printer')
+const {
+  chainlink: chainlinkActions,
+  tokens: tokenActions,
+} = require("../utils/actions");
+const { teller, tokens } = require("../utils/contracts");
 const { ganache: readParams } = require("../utils/cli-builder");
-const { getDecimals, getOracleAggregatorInfo } = require("../../test/utils/collateral-helper");
-const ProcessArgs = require('../utils/ProcessArgs');
-const { toDecimals } = require('../../test/utils/consts');
-const { TOKEN_NAME, COLL_TOKEN_NAME, NEW_VALUE } = require('../utils/cli/names');
+const { BASE_TOKEN_NAME, QUOTE_TOKEN_NAME, NEW_VALUE } = require("../utils/cli/names");
+const ProcessArgs = require("../utils/ProcessArgs");
 const processArgs = new ProcessArgs(readParams.setOraclePrice().argv);
 
 module.exports = async (callback) => {
-    try {
-        const tokenName = processArgs.getValue(TOKEN_NAME.name);
-        const collTokenName = processArgs.getValue(COLL_TOKEN_NAME.name);
-        const newValue = processArgs.getValue(NEW_VALUE.name);
+  try {
+    const baseTokenName = processArgs.getValue(BASE_TOKEN_NAME.name);
+    const quoteTokenName = processArgs.getValue(QUOTE_TOKEN_NAME.name);
+    const newValue = processArgs.getValue(NEW_VALUE.name);
 
-        const getContracts = processArgs.createGetContracts(artifacts);
+    const getContracts = processArgs.createGetContracts(artifacts);
+    const chainlinkAggregator = await getContracts.getDeployed(teller.chainlinkAggregator());
+    const baseToken = await getContracts.getTokenDeployed({ tokens }, baseTokenName);
+    const quoteToken = await getContracts.getTokenDeployed({ tokens }, quoteTokenName);
 
-        const oracleAggregatorInstance = await getContracts.getDeployed(getOracleAggregatorInfo(tokenName, collTokenName));
+    const baseTokenInfo = await tokenActions.getInfo({ token: baseToken })
+    const quoteTokenInfo = await tokenActions.getInfo({ token: quoteToken })
 
-        const chainlinkAggregatorAddress = await oracleAggregatorInstance.aggregator();
+    console.log();
+    console.log("Current Price:");
+    await printPairAggregator(
+      { chainlinkAggregator },
+      { tokenInfo: baseTokenInfo, collateralTokenInfo: quoteTokenInfo }
+    )
 
-        const chainlinkAggregator = await PairAggregatorMock.at(chainlinkAggregatorAddress);
+    await chainlinkActions.setPrice(
+      { chainlinkAggregator, token: baseToken, collateralToken: quoteToken },
+      { testContext: { artifacts } },
+      { price: newValue }
+    );
 
-        const collTokenDecimals = await getDecimals(getContracts, collTokenName);
-        const tokenDecimals = await getDecimals(getContracts, tokenName);
+    console.log();
+    console.log("New Price:");
+    await printPairAggregator(
+      { chainlinkAggregator },
+      { tokenInfo: baseTokenInfo, collateralTokenInfo: quoteTokenInfo }
+    )
 
-        const tokenWhole = await toDecimals(1, tokenDecimals);
-        const collNewValueWhole = await toDecimals(newValue, collTokenDecimals);
-
-        const currentOraclePrice = await chainlinkAggregator.latestAnswer();
-        console.log();
-        console.log('Current Price');
-        console.log(`${tokenWhole} ${tokenName} == ${currentOraclePrice.toString()} ${collTokenName}`);
-
-        console.log();
-        console.log('New Price');
-        console.log(`${tokenWhole} ${tokenName} == ${collNewValueWhole} ${collTokenName}`);
-
-        await chainlinkAggregator.setLatestAnswer(collNewValueWhole);
-
-        console.log('>>>> The script finished successfully. <<<<');
-        callback();
-    } catch (error) {
-        console.log(error);
-        callback(error);
-    }
+    console.log(">>>> The script finished successfully. <<<<");
+    callback();
+  } catch (error) {
+    console.log(error);
+    callback(error);
+  }
 };

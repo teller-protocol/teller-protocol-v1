@@ -1,6 +1,7 @@
 pragma solidity 0.5.17;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "./NumbersLib.sol";
 
 /**
  * @dev Utility library of inline functions on NumbersList.Values
@@ -9,9 +10,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
  */
 library NumbersList {
     using SafeMath for uint256;
-
-    // Given a whole number percentage, multiply by it and then divide by this.
-    uint256 private constant PERCENTAGE_TO_DECIMAL = 10000;
+    using NumbersLib for uint256;
 
     // Holds values to can calculate the threshold of a list of numbers
     struct Values {
@@ -92,9 +91,7 @@ library NumbersList {
             return false;
         }
         uint256 average = getAverage(self);
-        uint256 toleranceAmount = average.mul(tolerancePercentage).div(
-            PERCENTAGE_TO_DECIMAL
-        );
+        uint256 toleranceAmount = average.percent(tolerancePercentage);
 
         uint256 minTolerance = average.sub(toleranceAmount);
         if (self.min < minTolerance) {

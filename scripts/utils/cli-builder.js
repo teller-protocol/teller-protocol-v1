@@ -28,13 +28,15 @@ const {
     addTokenNames,
     addRequiredSubmissions,
     addSafetyInterval,
-    addTestTokenName,
     addMinValue,
     addMaxValue,
     addBackRounds,
     addMinAmount,
     addLogicName,
     addContractName,
+    addRevertTest,
+    addCollTokenNames,
+    addVerbose,
 } = require("./cli/params");
 
 const addBase = (yargs) => {
@@ -59,16 +61,18 @@ const addLoansBase = (yargs) => {
 
 module.exports = {
     ganacheTest: () => {
-        yargs.scriptName("yarn test:ganache");
+        yargs.scriptName("yarn test:ganache*");
         addNetwork(yargs);
         addRevert(yargs);
+        addRevertTest(yargs);
         addInitialNonce(yargs);
         addSignerAddress(yargs);
         addSignerUrl(yargs);
         addTokenNames(yargs);
+        addCollTokenNames(yargs);
         addRequiredSubmissions(yargs);
         addSafetyInterval(yargs);
-        addTestTokenName(yargs);
+        addVerbose(yargs);
         return yargs;
     },
     lendingPool: {
@@ -234,6 +238,11 @@ module.exports = {
             addBase(yargs);
             return yargs;
         },
+        viewAsset: () => {
+            addBase(yargs);
+            addTokenName(yargs);
+            return yargs;
+        },
         updatePlatformSetting: () => {
             addBase(yargs);
             addNewValue(yargs);
@@ -308,6 +317,7 @@ module.exports = {
             addTokenName(yargs);
             addCollTokenName(yargs);
             addBackRounds(yargs);
+            addAmount(yargs)
             return yargs;
         },
     },

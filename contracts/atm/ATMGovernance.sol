@@ -1,4 +1,5 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 // External Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
@@ -7,6 +8,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "../util/AddressArrayLib.sol";
 import "../util/AddressLib.sol";
 import "../base/TInitializable.sol";
+import "./ATMCommon.sol";
 
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/SignerRole.sol";
@@ -57,6 +59,9 @@ contract ATMGovernance is
 
     // List of ATM Data providers per data type
     mapping(uint8 => address[]) public dataProviders;
+
+    // List of TLR rewards initialized with at least 1 value during ATMGovernance creation.
+    ATMCommon.TLRReward[] public tlrRewards;
 
     // Unique CRA - Credit Risk Algorithm github hash to use in this ATM
     string public cra;
@@ -273,18 +278,47 @@ contract ATMGovernance is
     }
 
     /**
+        @notice Adds a new TLR Reward value effective immediately since current block.
+     */
+    function addTLRReward(uint256 rewardAmount) external onlySigner() isInitialized() {
+        ATMCommon.TLRReward memory latestReward = tlrRewards[tlrRewards.length - 1];
+        require(
+            latestReward.tlrPerBlockPertToken != rewardAmount,
+            "PREVIOUS_AND_NEW_VALUE_ARE_EQUAL"
+        );
+        require(
+            latestReward.startBlockNumber < block.number,
+            "TLR_REWARD_ALREADY_SET_FOR_BLOCK"
+        );
+        tlrRewards.push(
+            ATMCommon.TLRReward({
+                startBlockNumber: block.number,
+                tlrPerBlockPertToken: rewardAmount
+            })
+        );
+        emit TLRRewardAdded(msg.sender, tlrRewards.length, block.number, rewardAmount);
+    }
+
+    /**
         @notice It initializes this ATM Governance instance.
         @param settingsAddress the initial settings address.
         @param ownerAddress the owner address for this ATM Governance.
+        @param tlrInitialReward TLR initial reward set on Liquidity mining program associated with this ATM.
      */
-    function initialize(address settingsAddress, address ownerAddress)
-        external
-        isNotInitialized()
-    {
+    function initialize(
+        address settingsAddress,
+        address ownerAddress,
+        uint256 tlrInitialReward
+    ) external isNotInitialized() {
         _setSettings(settingsAddress);
 
         SignerRole.initialize(ownerAddress);
         TInitializable._initialize();
+        ATMCommon.TLRReward memory setupReward = ATMCommon.TLRReward({
+            startBlockNumber: block.number,
+            tlrPerBlockPertToken: tlrInitialReward
+        });
+        tlrRewards.push(setupReward);
     }
 
     /* External Constant functions */
@@ -332,5 +366,12 @@ contract ATMGovernance is
      */
     function getCRA() external view returns (string memory) {
         return cra;
+    }
+
+    /**
+        @notice Returns the complete list of rewards used on this ATM instance.
+     */
+    function getTLRRewards() external view returns (ATMCommon.TLRReward[] memory) {
+        return tlrRewards;
     }
 }

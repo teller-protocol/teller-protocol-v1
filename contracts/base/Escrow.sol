@@ -2,21 +2,22 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
-import "./BaseUpgradeable.sol";
 import "./BaseEscrowDapp.sol";
 import "./TInitializable.sol";
 
 // Interfaces
 import "../interfaces/EscrowInterface.sol";
 import "../interfaces/LoansInterface.sol";
-import "../interfaces/PairAggregatorInterface.sol";
+import "../interfaces/IBaseProxy.sol";
+import "../providers/compound/CErc20Interface.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 import "../util/SettingsConsts.sol";
 import "../util/TellerCommon.sol";
-import "../providers/openzeppelin/SignedSafeMath.sol";
+import "../util/NumbersLib.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -36,16 +37,11 @@ import "../providers/openzeppelin/SignedSafeMath.sol";
 
     @author develop@teller.finance
  */
-contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowDapp {
+contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
     using Address for address;
     using SafeMath for uint256;
-    using SignedSafeMath for uint256;
-
-    // Numerical representation of 100.00 percent.
-    uint16 public constant ONE_HUNDRED_PERCENT = 10000;
-
-    // Ethereum decimal places.
-    uint8 public constant ETH_DECIMALS = 18;
+    using NumbersLib for uint256;
+    using SafeERC20 for IERC20;
 
     /** State Variables **/
 
@@ -73,7 +69,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
         isInitialized()
         onlyOwner()
     {
-        TellerCommon.Dapp memory dapp = settings().escrowFactory().dapps(
+        TellerCommon.Dapp memory dapp = _getSettings().escrowFactory().dapps(
             dappData.location
         );
         require(dapp.exists, "DAPP_NOT_WHITELISTED");
@@ -82,9 +78,17 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
             "DAPP_UNSECURED_NOT_ALLOWED"
         );
 
-        (bool success, ) = dappData.location.delegatecall(dappData.data);
+        address _impl = IBaseProxy(dappData.location).implementation();
+        (bool success, ) = _impl.delegatecall(dappData.data);
 
-        require(success, "DAPP_CALL_FAILED");
+        if (!success) {
+            assembly {
+                let ptr := mload(0x40)
+                let size := returndatasize
+                returndatacopy(ptr, 0, size)
+                revert(ptr, size)
+            }
+        }
     }
 
     /**
@@ -103,62 +107,27 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
     }
 
     /**
-        @notice Calculate this Escrow instance total value. 
-        @return This Escrow instance total value expressed in ETH and Token value. 
+        @notice Calculate the value of the loan by getting the value of all tokens the Escrow owns.
+        @return Escrow total value denoted in the lending token.
      */
-    function calculateTotalValue() public view returns (TellerCommon.EscrowValue memory) {
+    function calculateTotalValue() public view returns (uint256) {
+        uint256 valueInEth;
         address[] memory tokens = getTokens();
-
-        uint256 valueInEth = 0;
-
         for (uint256 i = 0; i < tokens.length; i++) {
-            uint256 tokenEthValue = _valueOfIn(
-                tokens[i],
-                settings().ETH_ADDRESS(),
-                _balanceOf(tokens[i])
-            );
-            valueInEth = valueInEth.add(tokenEthValue);
+            if (tokens[i] == _getSettings().WETH_ADDRESS()) {
+                valueInEth = valueInEth.add(_balanceOf(tokens[i]));
+            } else {
+                valueInEth = valueInEth.add(
+                    _valueOfIn(
+                        tokens[i],
+                        _getSettings().ETH_ADDRESS(),
+                        _balanceOf(tokens[i])
+                    )
+                );
+            }
         }
 
-        uint256 collateralValue = getLoan().collateral;
-        if (getLoan().loanTerms.collateralRatio > 0) {
-            uint256 bufferPercent = settings().getPlatformSettingValue(
-                settings().consts().COLLATERAL_BUFFER_SETTING()
-            );
-            uint256 buffer = collateralValue.mul(bufferPercent).div(ONE_HUNDRED_PERCENT);
-            collateralValue = collateralValue.sub(buffer);
-        }
-
-        if (loans.collateralToken() == settings().ETH_ADDRESS()) {
-            valueInEth = valueInEth.add(collateralValue);
-        } else {
-            uint256 collateralEthValue = _valueOfIn(
-                loans.collateralToken(),
-                settings().ETH_ADDRESS(),
-                collateralValue
-            );
-            valueInEth = valueInEth.add(collateralEthValue);
-        }
-
-        uint256 valueInToken = _valueOfIn(
-            settings().ETH_ADDRESS(),
-            loans.lendingToken(),
-            valueInEth
-        );
-
-        return
-            TellerCommon.EscrowValue({
-                valueInEth: valueInEth,
-                valueInToken: valueInToken
-            });
-    }
-
-    /**
-        @notice Checks if this Escrow loan value is undervalued based its token price.
-        @return true if this escrow loan is undervalued based on its token price.
-     */
-    function isUnderValued() external view returns (bool) {
-        return calculateTotalValue().valueInToken < loans.getTotalOwed(loanID);
+        return _valueOfIn(_getSettings().ETH_ADDRESS(), loans.lendingToken(), valueInEth);
     }
 
     /**
@@ -168,46 +137,70 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
      */
     function repay(uint256 amount) external onlyOwner {
         IERC20 token = IERC20(loans.lendingToken());
-        uint256 balance = _balanceOf(loans.lendingToken());
+        uint256 balance = _balanceOf(address(token));
         uint256 totalOwed = loans.getTotalOwed(loanID);
         if (balance < totalOwed && amount > balance) {
             uint256 amountNeeded = amount > totalOwed
                 ? totalOwed.sub(balance)
                 : amount.sub(balance);
 
-            require(
-                token.transferFrom(msg.sender, address(this), amountNeeded),
-                "ESCROW_TRANSFER_FROM_FAILED"
-            );
+            token.safeTransferFrom(msg.sender, address(this), amountNeeded);
         }
-        token.approve(loans.lendingPool(), amount);
+        token.safeApprove(loans.lendingPool(), amount);
 
         loans.repay(amount, loanID);
     }
 
     /**
-        @notice Sends the tokens owned by this escrow to the recipient.
+        @notice Sends the tokens owned by this escrow to the owner.
         @dev The loan must not be active.
-        @dev The recipient must either be the loan borrower OR the loan must be already liquidated.
-        @param recipient address to send the tokens to.
+        @dev The recipient must be the loan borrower AND the loan must be already liquidated.
     */
-    function claimTokens(address recipient) external {
-        require(getLoan().status != TellerCommon.LoanStatus.Active, "LOAN_ACTIVE");
-        if (getLoan().liquidated) {
-            require(recipient != getBorrower(), "RECIPIENT_CANNOT_BE_BORROWER");
-            require(msg.sender == address(loans), "CALLER_MUST_BE_LOANS");
-        } else {
-            require(recipient == getBorrower(), "RECIPIENT_MUST_BE_BORROWER");
-        }
+    function claimTokens() external onlyOwner() {
+        require(getLoan().status == TellerCommon.LoanStatus.Closed, "LOAN_NOT_CLOSED");
 
         address[] memory tokens = getTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
             uint256 balance = _balanceOf(tokens[i]);
             if (balance > 0) {
-                IERC20(tokens[i]).transfer(recipient, balance);
+                IERC20(tokens[i]).safeTransfer(getBorrower(), balance);
             }
         }
 
+        emit TokensClaimed(getBorrower());
+    }
+
+    /**
+        @notice Send the equivilant of tokens owned by this escrow (in collateral value) to the recipient,
+        @dev The loan must not be active
+        @dev The loan must be liquidated
+        @dev The recipeient must be the loans contract
+        @param recipient address to send the tokens to
+        @param value The value of escrow held tokens, to be claimed based on collateral value
+      */
+    function claimTokensByCollateralValue(address recipient, uint256 value) external {
+        require(getLoan().status == TellerCommon.LoanStatus.Closed, "LOAN_NOT_CLOSED");
+        require(getLoan().liquidated, "LOAN_NOT_LIQUIDATED");
+        require(msg.sender == address(loans), "CALLER_MUST_BE_LOANS");
+
+        address[] memory tokens = getTokens();
+        uint256 valueLeftToTransfer = value;
+        // cycle through tokens
+        for (uint256 i = 0; i < tokens.length; i++) {
+            uint256 balance = _balanceOf(tokens[i]);
+            // get value of token balance in collateral value
+            if (balance > 0) {
+                uint256 valueInCollateralToken = (tokens[i] == loans.collateralToken())
+                    ? balance
+                    : _valueOfIn(tokens[i], loans.collateralToken(), balance);
+                // if <= value, transfer tokens
+                if (valueInCollateralToken <= valueLeftToTransfer) {
+                    IERC20(tokens[i]).safeTransfer(recipient, valueInCollateralToken);
+                    valueLeftToTransfer = valueLeftToTransfer.sub(valueInCollateralToken);
+                    _tokenUpdated(tokens[i]);
+                }
+            }
+        }
         emit TokensClaimed(recipient);
     }
 
@@ -236,42 +229,50 @@ contract Escrow is EscrowInterface, TInitializable, BaseUpgradeable, BaseEscrowD
     /** Internal Functions */
 
     /**
-        @notice Calculate this Escrow instance loan value in ETH or Token price.
-        @return Loan value in ETH or Token price based on baseAddress.
-        @param baseAddress base token or ETH address.
+        @notice Calculate a value of a token amount.
+        @param baseAddress base token address.
         @param quoteAddress quote token address.
-        @param baseAmount amount of base token or ETH.
+        @param baseAmount amount of base token.
+        @return Value of baseAmount in quote token.
     */
     function _valueOfIn(
         address baseAddress,
         address quoteAddress,
         uint256 baseAmount
     ) internal view returns (uint256) {
-        uint8 baseDecimals = baseAddress == settings().ETH_ADDRESS()
-            ? ETH_DECIMALS
-            : ERC20Detailed(baseAddress).decimals();
-        PairAggregatorInterface aggregator = _getAggregatorFor(baseAddress, quoteAddress);
-        uint256 oneTokenPrice = uint256(aggregator.getLatestAnswer());
-        uint256 oneUnit = uint256(10)**baseDecimals;
-        return baseAmount.mul(oneTokenPrice).div(oneUnit);
-    }
-
-    /**
-        @notice Returns Chainlink pair aggregator for token or revert if not found.
-        @param base base token address.
-        @param quote quote token address.
-        @return PairAggregator instance found for this tokens pair.
-     */
-    function _getAggregatorFor(address base, address quote)
-        internal
-        view
-        returns (PairAggregatorInterface)
-    {
-        require(
-            settings().pairAggregatorRegistry().hasPairAggregator(base, quote),
-            "CHAINLINK_PAIR_AGGREGATOR_NOT_EXISTS"
+        bool success;
+        bytes memory returnData;
+        // call function to base address for function signature of underlying
+        (success, returnData) = baseAddress.staticcall(
+            abi.encodeWithSignature("exchangeRateStored()")
         );
+        if (returnData.length > 0) {
+            uint8 cTokenDecimals = CErc20Interface(baseAddress).decimals();
+            uint256 exchangeRate = abi.decode(returnData, (uint256));
+            uint256 diffFactor = uint256(10)**uint256(18).diff(uint256(cTokenDecimals));
 
-        return settings().pairAggregatorRegistry().getPairAggregator(base, quote);
+            if (cTokenDecimals > uint256(18)) {
+                exchangeRate = exchangeRate.mul(diffFactor);
+            } else {
+                exchangeRate = exchangeRate.div(diffFactor);
+            }
+
+            uint8 assetDecimals;
+            if (baseAddress == _getSettings().CETH_ADDRESS()) {
+                baseAddress = _getSettings().ETH_ADDRESS();
+                assetDecimals = uint8(18);
+            } else {
+                baseAddress = CErc20Interface(baseAddress).underlying();
+                assetDecimals = ERC20Detailed(baseAddress).decimals();
+            }
+
+            baseAmount = baseAmount.mul(exchangeRate).div(uint256(10)**assetDecimals);
+        }
+        return
+            _getSettings().chainlinkAggregator().valueFor(
+                baseAddress,
+                quoteAddress,
+                baseAmount
+            );
     }
 }

@@ -19,7 +19,8 @@ import "../interfaces/SettingsInterface.sol";
 import "../interfaces/EscrowFactoryInterface.sol";
 import "../interfaces/MarketsStateInterface.sol";
 import "../interfaces/InterestValidatorInterface.sol";
-import "../providers/chainlink/IChainlinkPairAggregatorRegistry.sol";
+import "../providers/chainlink/IChainlinkAggregator.sol";
+import "../providers/compound/CErc20Interface.sol";
 import "../settings/IATMSettings.sol";
 
 /*****************************************************************************************************/
@@ -48,22 +49,41 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     using PlatformSettingsLib for PlatformSettingsLib.PlatformSetting;
 
     /** Constants */
+
+    /**
+        @notice The contract that hold global constant variables.
+        @dev It is set by the initialize function
+     */
+    SettingsConsts public consts;
+
     /**
         @notice The asset setting name for the maximum loan amount settings.
      */
     bytes32 public constant MAX_LOAN_AMOUNT_ASSET_SETTING = "MaxLoanAmount";
+
     /**
         @notice The asset setting name for cToken address settings.
      */
     bytes32 public constant CTOKEN_ADDRESS_ASSET_SETTING = "CTokenAddress";
+
     /**
         @notice It defines the constant address to represent ETHER.
      */
     address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-    /* State Variables */
+    /**
+        @notice It defines the constant address to represent the canonical WETH token.
+        @dev It is set via the initialize function.
+     */
+    address public WETH_ADDRESS;
 
-    SettingsConsts public consts;
+    /**
+        @notice It defines Compound Ether token address on current network.
+        @dev It is set by the initialize function.
+     */
+    address public CETH_ADDRESS;
+
+    /* State Variables */
 
     /**
         @notice It represents a mapping to identify the lending pools paused and not paused.
@@ -114,9 +134,9 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     LogicVersionsRegistryInterface public versionsRegistry;
 
     /**
-        @notice It is the global instance of the ChainlinkPairAggregatorRegistry contract.
+        @notice It is the global instance of the ChainlinkAggregator contract.
      */
-    IChainlinkPairAggregatorRegistry public pairAggregatorRegistry;
+    IChainlinkAggregator public chainlinkAggregator;
 
     /**
         @notice The markets state.
@@ -132,6 +152,19 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @notice The current ATM settings.
      */
     IATMSettings public atmSettings;
+
+    /**
+        @notice This mapping represents the list of wallet addresses that are allowed to interact with the protocol
+        
+        - The key is belongs to the user's wallet address
+        - The value is a boolean flag indicating if the address has permissions
+     */
+    mapping(address => bool) public authorizedAddresses;
+
+    /**
+        @notice Flag restricting the use of the Protocol to authorizedAddress
+     */
+    bool platformRestricted;
 
     /** Modifiers */
 
@@ -280,11 +313,12 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         address cTokenAddress,
         uint256 maxLoanAmount
     ) external onlyPauser() isInitialized() {
-        require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
-
         assetSettings[assetAddress].requireNotExists();
+        assetSettings[assetAddress].initialize(maxLoanAmount);
 
-        assetSettings[assetAddress].initialize(cTokenAddress, maxLoanAmount);
+        if (cTokenAddress.isNotEmpty()) {
+            _setCTokenAddress(assetAddress, cTokenAddress);
+        }
 
         assets.add(assetAddress);
 
@@ -344,7 +378,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     {
         address oldCTokenAddress = assetSettings[assetAddress].cTokenAddress;
 
-        assetSettings[assetAddress].updateCTokenAddress(newCTokenAddress);
+        _setCTokenAddress(assetAddress, newCTokenAddress);
 
         emit AssetSettingsAddressUpdated(
             CTOKEN_ADDRESS_ASSET_SETTING,
@@ -391,12 +425,12 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     }
 
     /**
-        @notice Tests whether an account has the pauser role.
-        @param account account to test.
-        @return true if account has the pauser role. Otherwise it returns false.
+        @notice Gets the cToken address for a given asset address.
+        @param assetAddress token address.
+        @return the cToken address for a given asset address.
      */
-    function hasPauserRole(address account) public view returns (bool) {
-        return isPauser(account);
+    function getCTokenAddress(address assetAddress) external view returns (address) {
+        return assetSettings[assetAddress].cTokenAddress;
     }
 
     /**
@@ -404,50 +438,113 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @param account account to test.
      */
     function requirePauserRole(address account) public view {
-        require(hasPauserRole(account), "NOT_PAUSER");
+        require(isPauser(account), "NOT_PAUSER");
+    }
+
+    /**
+        @notice Restricts the use of the Teller protocol to authorized wallet addresses only
+        @param restriction Bool turning the resitriction on or off
+     */
+    function restrictPlatform(bool restriction) external onlyPauser() isInitialized() {
+        platformRestricted = restriction;
+    }
+
+    /**
+        @notice Returns whether the platform is restricted or not
+        @return bool True if the platform is restricted, false if not
+     */
+    function isPlatformRestricted() external view returns (bool) {
+        return platformRestricted;
+    }
+
+    /**
+        @notice Adds a wallet address to the list of authorized wallets
+        @param addressToAdd The wallet address of the user being authorized
+     */
+    function addAuthorizedAddress(address addressToAdd)
+        external
+        onlyPauser()
+        isInitialized()
+    {
+        addressToAdd.requireNotEmpty("ADDRESS_ZERO");
+        authorizedAddresses[addressToAdd] = true;
+    }
+
+    /**
+        @notice Removes a wallet address from the list of authorized wallets
+        @param addressToRemove The wallet address of the user being unauthorized
+     */
+    function removeAuthorizedAddress(address addressToRemove)
+        external
+        onlyPauser()
+        isInitialized()
+    {
+        addressToRemove.requireNotEmpty("ADDRESS_ZERO");
+        authorizedAddresses[addressToRemove] = false;
+    }
+
+    /**
+        @notice Tests whether an account has authorization
+        @param account The account address to check for
+        @return True if account has authorization, false if it does not
+     */
+    function hasAuthorization(address account) public view returns (bool) {
+        return isPauser(account) || authorizedAddresses[account];
+        versionsRegistry.isProxyRegistered(account);
+    }
+
+    /**
+        @notice Requires an account to have platform authorization.
+        @dev Checks if an account address has authorization or proxy contract is registered.
+        @param account account to test.
+     */
+    function requireAuthorization(address account) public view {
+        require(!platformRestricted || hasAuthorization(account), "NOT_AUTHORIZED");
     }
 
     /**
         @notice It initializes this settings contract instance.
         @param escrowFactoryAddress the initial escrow factory address.
         @param versionsRegistryAddress the initial versions registry address.
-        @param pairAggregatorRegistryAddress the initial pair aggregator registry address.
+        @param chainlinkAggregatorAddress the initial pair aggregator registry address.
         @param marketsStateAddress the initial markets state address.
         @param interestValidatorAddress the initial interest validator address.
         @param atmSettingsAddress the initial ATM settings address.
+        @param wethTokenAddress canonical WETH token address.
+        @param cethTokenAddress compound CETH token address.
      */
     function initialize(
         address escrowFactoryAddress,
         address versionsRegistryAddress,
-        address pairAggregatorRegistryAddress,
+        address chainlinkAggregatorAddress,
         address marketsStateAddress,
         address interestValidatorAddress,
-        address atmSettingsAddress
+        address atmSettingsAddress,
+        address wethTokenAddress,
+        address cethTokenAddress
     ) external isNotInitialized() {
         require(escrowFactoryAddress.isContract(), "ESCROW_FACTORY_MUST_BE_CONTRACT");
         require(versionsRegistryAddress.isContract(), "VERS_REGISTRY_MUST_BE_CONTRACT");
-        require(
-            pairAggregatorRegistryAddress.isContract(),
-            "AGGR_REGISTRY_MUST_BE_CONTRACT"
-        );
+        require(chainlinkAggregatorAddress.isContract(), "AGGREGATOR_MUST_BE_CONTRACT");
         require(marketsStateAddress.isContract(), "MARKETS_STATE_MUST_BE_CONTRACT");
         require(
             interestValidatorAddress.isEmpty() || interestValidatorAddress.isContract(),
             "INTEREST_VAL_MUST_BE_CONTRACT"
         );
         require(atmSettingsAddress.isContract(), "ATM_SETTINGS_MUST_BE_CONTRACT");
+        require(cethTokenAddress.isContract(), "CETH_ADDRESS_MUST_BE_CONTRACT");
 
         Pausable.initialize(msg.sender);
         TInitializable._initialize();
 
         escrowFactory = EscrowFactoryInterface(escrowFactoryAddress);
         versionsRegistry = LogicVersionsRegistryInterface(versionsRegistryAddress);
-        pairAggregatorRegistry = IChainlinkPairAggregatorRegistry(
-            pairAggregatorRegistryAddress
-        );
+        chainlinkAggregator = IChainlinkAggregator(chainlinkAggregatorAddress);
         marketsState = MarketsStateInterface(marketsStateAddress);
         interestValidator = InterestValidatorInterface(interestValidatorAddress);
         atmSettings = IATMSettings(atmSettingsAddress);
+        WETH_ADDRESS = wethTokenAddress;
+        CETH_ADDRESS = cethTokenAddress;
 
         consts = new SettingsConsts();
 
@@ -467,6 +564,30 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         returns (PlatformSettingsLib.PlatformSetting memory)
     {
         return platformSettings[settingName];
+    }
+
+    /**
+        @notice It sets the cToken address for a specific asset address.
+        @param assetAddress asset address to configure.
+        @param cTokenAddress the new cToken address to configure.
+     */
+    function _setCTokenAddress(address assetAddress, address cTokenAddress) internal {
+        if (assetAddress == ETH_ADDRESS) {
+            // NOTE: This is the address for the cETH contract. It is hardcoded because the contract does not have a
+            //       underlying() function on it to check that this is the correct contract.
+            cTokenAddress.requireEqualTo(CETH_ADDRESS, "CETH_ADDRESS_NOT_MATCH");
+        } else {
+            require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
+            if (cTokenAddress.isNotEmpty()) {
+                require(cTokenAddress.isContract(), "CTOKEN_MUST_BE_CONTRACT_OR_EMPTY");
+                require(
+                    CErc20Interface(cTokenAddress).underlying() == assetAddress,
+                    "UNDERLYING_ADDRESS_NOT_MATCH"
+                );
+            }
+        }
+
+        assetSettings[assetAddress].updateCTokenAddress(cTokenAddress);
     }
 
     /** Private functions */

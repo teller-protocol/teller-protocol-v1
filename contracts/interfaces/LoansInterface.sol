@@ -101,17 +101,6 @@ interface LoansInterface {
     );
 
     /**
-        @notice This event is emitted when a the price oracle instance is updated.
-        @param oldPriceOracle the previous price oracle address.
-        @param newPriceOracle the new price oracle address.
-     */
-    event PriceOracleUpdated(
-        address indexed sender,
-        address indexed oldPriceOracle,
-        address indexed newPriceOracle
-    );
-
-    /**
         @notice Returns a list of all loans for a borrower
         @param borrower Account address of the borrower
      */
@@ -175,22 +164,10 @@ interface LoansInterface {
     function liquidateLoan(uint256 loanID) external;
 
     /**
-        @notice Get the current price oracle
-        @return address Contract address of the price oracle
-     */
-    function priceOracle() external view returns (address);
-
-    /**
         @notice Returns the lending token in the lending pool
         @return address Contract address of the lending pool
      */
     function lendingPool() external view returns (address);
-
-    /**
-        @notice Returns the lending token in the lending pool
-        @return address Contract address of the lending token
-     */
-    function lendingToken() external view returns (address);
 
     /**
         @notice Returns the total amount of collateral
@@ -205,53 +182,16 @@ interface LoansInterface {
     function loanIDCounter() external view returns (uint256);
 
     /**
+        @notice Returns the lending token in the lending pool
+        @return address Contract address of the lending token
+     */
+    function lendingToken() external view returns (address);
+
+    /**
         @notice Returns the collateral token
         @return address Contract address of the token
      */
     function collateralToken() external view returns (address);
-
-    /**
-        @notice A loan can be liquidated if it is: under collateralized or expired
-        @param loanID The ID of the loan to check
-        @return bool weather the loan can be liquidated
-     */
-    function canLiquidateLoan(uint256 loanID) external view returns (bool);
-
-    function getTotalOwed(uint256 loanID) external view returns (uint256);
-
-    /**
-        @notice Get collateral information of a specific loan
-        @param loanID ID of the loan to get info for
-        @return memory TellerCommon.LoanCollateralInfo Collateral information of the loan
-     */
-    function getCollateralInfo(uint256 loanID)
-        external
-        view
-        returns (TellerCommon.LoanCollateralInfo memory);
-
-    /**
-        @notice Updates the current price oracle instance.
-        @param newPriceOracle the new price oracle address.
-     */
-    function setPriceOracle(address newPriceOracle) external;
-
-    function settings() external view returns (SettingsInterface);
-
-    /**
-        @notice Initializes the current contract instance setting the required parameters, if allowed
-        @param priceOracleAddress Contract address of the price oracle
-        @param lendingPoolAddress Contract address of the lending pool
-        @param loanTermsConsensusAddress Contract adddress for loan term consensus
-        @param settingsAddress Contract address for the configuration of the platform
-        @param collateralTokenAddress Contract address for the collateral token
-     */
-    function initialize(
-        address priceOracleAddress,
-        address lendingPoolAddress,
-        address loanTermsConsensusAddress,
-        address settingsAddress,
-        address collateralTokenAddress
-    ) external;
 
     /**
         @notice Returns the tToken in the lending pool
@@ -266,8 +206,43 @@ interface LoansInterface {
     function cToken() external view returns (address);
 
     /**
-        @notice Returns whether or not the loan is considered secured.
-        @return bool Whether or not the loan is considered secured.
+        @notice Returns the total owed amount remaining for a specified loan
+        @param loanID The ID of the loan to be queried
+        @return uint256 The total amount owed remaining
      */
+    function getTotalOwed(uint256 loanID) external view returns (uint256);
+
+    function settings() external view returns (SettingsInterface);
+
+    // See LoanLib.isSecured
     function isLoanSecured(uint256 loanID) external view returns (bool);
+
+    // See LoanLib.canGoToEOA
+    function canLoanGoToEOA(uint256 loanID) external view returns (bool);
+
+    // See LoanLib.getCollateralInfo
+    function getCollateralInfo(uint256 loanID)
+        external
+        view
+        returns (TellerCommon.LoanCollateralInfo memory);
+
+    // See LoanLib.getLiquidationInfo
+    function getLiquidationInfo(uint256 loanID)
+        external
+        view
+        returns (TellerCommon.LoanLiquidationInfo memory liquidationInfo);
+
+    /**
+        @notice Initializes the current contract instance setting the required parameters, if allowed
+        @param lendingPoolAddress Contract address of the lending pool
+        @param loanTermsConsensusAddress Contract address for loan term consensus
+        @param settingsAddress Contract address for the configuration of the platform
+        @param collateralTokenAddress Contract address for the collateral token
+     */
+    function initialize(
+        address lendingPoolAddress,
+        address loanTermsConsensusAddress,
+        address settingsAddress,
+        address collateralTokenAddress
+    ) external;
 }

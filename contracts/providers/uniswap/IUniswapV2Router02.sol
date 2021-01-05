@@ -6,6 +6,11 @@ pragma solidity 0.5.17;
  */
 interface IUniswapV2Router02 {
     /**
+        @notice It returns the address of the canonical WETH address;
+    */
+    function WETH() external pure returns (address);
+
+    /**
         @notice Swaps an exact amount of input tokens for as many output tokens as possible, along the route determined by the path. The first element of path is the input token, the last is the output token, and any intermediate elements represent intermediate pairs to trade through (if, for example, a direct pair does not exist).
         @param amountIn The amount of input tokens to send.
         @param amountOutMin The minimum amount of output tokens that must be received for the transaction not to revert.
@@ -51,6 +56,29 @@ interface IUniswapV2Router02 {
      */
     function swapExactETHForTokens(
         uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external payable returns (uint256[] memory amounts);
+
+    function swapTokensForExactTokens(
+        uint256 amountOut,
+        uint256 amountInMax,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external returns (uint256[] memory amounts);
+
+    function swapTokensForExactETH(
+        uint256 amountOut,
+        uint256 amountInMax,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external returns (uint256[] memory amounts);
+
+    function swapETHForExactTokens(
+        uint256 amountOut,
         address[] calldata path,
         address to,
         uint256 deadline

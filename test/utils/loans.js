@@ -1,25 +1,41 @@
-const { NULL_ADDRESS, ACTIVE } = require("./consts");
+const { NULL_ADDRESS, TERMS_SET } = require("./consts");
 
 const defaults = {
-  id: 1234,
+  id: 0,
   loanTerms: {
     borrower: NULL_ADDRESS,
     recipient: NULL_ADDRESS,
-    interestRate: 1,
-    collateralRatio: 1,
+    interestRate: 0,
+    collateralRatio: 0,
     maxLoanAmount: 100000000,
     duration: 7 * 60 * 60
   },
-  termsExpiry: 100000,
+  termsExpiry: 0,
   loanStartTime: Date.now(),
-  collateral: 1000000,
+  collateral: 0,
   lastCollateralIn: 0,
   principalOwed: 0,
   interestOwed: 0,
   borrowedAmount: 0,
   escrow: NULL_ADDRESS,
-  status: ACTIVE,
+  status: TERMS_SET,
   liquidated: false
+}
+
+const collateralInfoDefaults = {
+  collateral: 0,
+  valueInLendingTokens: 0,
+  escrowLoanValue: 0,
+  neededInLendingTokens: 0, 
+  neededInCollateralTokens: 0, 
+  moreCollateralRequired: false, 
+}
+
+const liquidationInfoDefaults = {
+  collateralInfo: collateralInfoDefaults,
+  amountToLiquidate: 0, 
+  rewardInCollateral: 0, 
+  liquidable: false, 
 }
 
 function createLoan(loan = defaults) {
@@ -29,6 +45,17 @@ function createLoan(loan = defaults) {
     loanTerms: {
       ...defaults.loanTerms,
       ...(loan.loanTerms || {})
+    }
+  }
+}
+
+function createLiquidationInfo(liquidationInfo = liquidationDefaults) {
+  return {
+    ...liquidationInfoDefaults,
+    ...liquidationInfo,
+    collateralInfo: {
+      ...liquidationInfoDefaults.collateralInfo,
+      ...(liquidationInfo.collateral || {})
     }
   }
 }
@@ -59,7 +86,27 @@ function encodeLoanParameter(web3, loan = defaults) {
   }, createLoan(loan));
 }
 
+function encodeLiquidationParameter(web3, liquidationInfo = liquidationDefaults) {
+  return web3.eth.abi.encodeParameter({
+    LiquidationInfo: {
+      collateralInfo: {
+        collateral: "uint256", 
+        valueInLendingTokens: "uint256", 
+        escrowLoanValue: "uint256", 
+        neededInLendingTokens: "uint256", 
+        neededInCollateralTokens: "uint256",
+        moreCollateralRequired: "bool",
+      },
+      amountToLiquidate: "uint256", 
+      rewardInCollateral: "uint256", 
+      liquidable: "bool", 
+    }
+  }, createLiquidation(liquidationInfo));
+}
+
 module.exports = {
   createLoan,
-  encodeLoanParameter
+  encodeLoanParameter,
+  createLiquidationInfo,
+  encodeLiquidationParameter
 }

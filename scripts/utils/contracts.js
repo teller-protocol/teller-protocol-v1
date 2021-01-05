@@ -9,13 +9,6 @@ const internalLoans = (collateralToken, tokenName, artifactName = 'Loans') => {
         artifactName,
     }
 };
-const internalOracle = (sourceToken, targetToken, artifactName = 'ChainlinkPairAggregator') => {
-    return {
-        keyName: TELLER_KEY,
-        contractName: `ChainlinkPairAggregator_${sourceToken.toUpperCase()}_${targetToken.toUpperCase()}`,
-        artifactName,
-    };
-};
 const internalLendingPool = (collateralToken, tokenName, artifactName = 'LendingPool') => {
     return {
         keyName: TELLER_KEY,
@@ -51,14 +44,6 @@ const ttoken = (tokenName) => {
         artifactName: undefined,
     };
 };
-const internalChainlink = (sourceTokenName, targetTokenName, artifactName = 'PairAggregatorMock') => {
-    return {
-        addressOnProperty: 'address',
-        keyName: 'chainlink',
-        contractName: `${sourceTokenName.toUpperCase()}_${targetTokenName.toUpperCase()}`,
-        artifactName,
-    };
-};
 
 const customCollateralToken = (collateralToken) => {
     const collToken = collateralToken.toUpperCase();
@@ -78,11 +63,6 @@ const customCollateralToken = (collateralToken) => {
         },
         lenders: (tokenName, artifactName = 'Lenders') => {
             return internalLenders(collToken, tokenName, artifactName);
-        },
-        chainlink: {
-            usdc_eth: () => internalChainlink('USDC', collToken),
-            dai_eth: () => internalChainlink('DAI', collToken),
-            custom: (tokenName) => internalChainlink(tokenName.toUpperCase(), collToken),
         }
     };
 }
@@ -99,27 +79,27 @@ module.exports = {
                 artifactName,
             };
         },
-        pairAggregatorRegistry: (artifactName = 'IChainlinkPairAggregatorRegistry') => {
+        chainlinkAggregator: (artifactName = 'IChainlinkAggregator') => {
             return {
                 keyName: TELLER_KEY,
-                contractName: `ChainlinkPairAggregatorRegistry_Proxy`,
+                contractName: `ChainlinkAggregator_Proxy`,
                 artifactName,
             };
         },
-        oracles: () => ({
-            usdc_eth: (artifactName = 'ChainlinkPairAggregator') => internalOracle('USDC', 'ETH', artifactName),
-            dai_eth: (artifactName = 'ChainlinkPairAggregator') => internalOracle('DAI', 'ETH', artifactName),
-            usdc_link: (artifactName = 'ChainlinkPairAggregator') => internalOracle('USDC', 'LINK', artifactName),
-            dai_link: (artifactName = 'ChainlinkPairAggregator') => internalOracle('DAI', 'LINK', artifactName),
-            custom: (sourceTokenName, targetTokenName, artifactName = 'ChainlinkPairAggregator') =>
-                internalOracle(sourceTokenName.toUpperCase(), targetTokenName.toUpperCase(), artifactName),
-        }),
         settings: () => {
             return {
                 keyName: TELLER_KEY,
                 contractName: 'Settings_Proxy',
                 artifactName: 'Settings',
             };
+        },
+        proxy: (contractLogicName, atAddress) => {
+            return {
+                keyName: TELLER_KEY,
+                contractName: `${contractLogicName}_Proxy`,
+                atAddress,
+                artifactName: `${contractLogicName}`
+            }
         }
     },
     tokens: {
@@ -146,9 +126,5 @@ module.exports = {
                 artifactName,
             };
         },
-    },
-    chainlink: {
-        custom: (sourceTokenName, targetTokenName) =>
-            internalChainlink(sourceTokenName.toUpperCase(), targetTokenName.toUpperCase()),
     }
 };

@@ -5,13 +5,16 @@ pragma experimental ABIEncoderV2;
 import "./BaseUpgradeable.sol";
 import "./TInitializable.sol";
 
-// Commons
+// Commons and Libraries
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "../util/AddressLib.sol";
 import "../util/LogicVersionLib.sol";
 import "../util/LogicVersionsConsts.sol";
 import "../util/TellerCommon.sol";
 
 // Interfaces
 import "../interfaces/LogicVersionsRegistryInterface.sol";
+import "../interfaces/IBaseProxy.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -34,6 +37,7 @@ contract LogicVersionsRegistry is
     BaseUpgradeable
 {
     using LogicVersionLib for LogicVersionLib.LogicVersion;
+    using Address for address;
 
     /** Constants */
 
@@ -48,7 +52,12 @@ contract LogicVersionsRegistry is
             bytes32("EtherCollateralLoans") => { logic: "0x123...789", version: 1 }.
             bytes32("LendingPool") => { logic: "0x456...987", version: 3 }.
      */
-    mapping(bytes32 => LogicVersionLib.LogicVersion) public logicVersions;
+    mapping(bytes32 => LogicVersionLib.LogicVersion) internal logicVersions;
+
+    /**
+        @notice It keeps a record of all the proxies that are registered in the platform.
+      */
+    mapping(address => bool) internal registeredProxies;
 
     /** Modifiers */
 
@@ -151,6 +160,23 @@ contract LogicVersionsRegistry is
      */
     function hasLogicVersion(bytes32 logicName) external view returns (bool) {
         return _getLogicVersion(logicName).exists;
+    }
+
+    /**
+        @notice Checks if an address is registered as a platform proxy.
+        @param proxy Address to check if is registered.
+        @return boolean if registered or not
+      */
+    function isProxyRegistered(address proxy) external view returns (bool) {
+        (, bytes memory returnData) = proxy.staticcall(
+            abi.encodeWithSignature("logicName()")
+        );
+        if (returnData.length > 0) {
+            bytes32 logicName = abi.decode(returnData, (bytes32));
+            return proxy == _getLogicVersion(logicName).logic;
+        }
+
+        return false;
     }
 
     /**

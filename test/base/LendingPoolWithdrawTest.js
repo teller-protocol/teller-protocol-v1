@@ -7,6 +7,7 @@ const BurnableInterfaceEncoder = require('../utils/encoders/BurnableInterfaceEnc
 const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -22,6 +23,8 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const cTokenEncoder = new CTokenInterfaceEncoder(web3)
+
     let instance;
     let loansInstance;
     let consensusInstance;
@@ -45,8 +48,8 @@ contract('LendingPoolWithdrawTest', function (accounts) {
 
     withData({
         _1_basic: [accounts[0], true, 10, false, 1000, undefined, false],
-        _2_transferFail: [accounts[1], false, 50, false, 1000, 'LENDING_TRANSFER_FAILED', true],
-        _3_compoundFail: [accounts[1], true, 50, true, 1000, 'COMPOUND_WITHDRAWAL_ERROR', true],
+        _2_transferFail: [accounts[1], false, 50, false, 1000, 'SafeERC20: ERC20 operation did not succeed', true],
+        _3_compoundFail: [accounts[1], true, 50, true, 1000, 'COMPOUND_REDEEM_UNDERLYING_ERROR', true],
         _4_balanceFail: [accounts[0], true, 10, false, 0, 'LENDING_TOKEN_NOT_ENOUGH_BALANCE', true],
     }, function(
         recipient,
@@ -61,6 +64,14 @@ contract('LendingPoolWithdrawTest', function (accounts) {
             // Setup
             const tTokenInstance = await Mock.new();
             const lendingTokenInstance = await Mock.new();
+            await cTokenInstance.givenMethodReturnAddress(
+              cTokenEncoder.encodeUnderlying(),
+              lendingTokenInstance.address
+            )
+            await settingsInstance.givenMethodReturnAddress(
+                settingsInterfaceEncoder.encodeGetCTokenAddress(),
+                cTokenInstance.address
+            );
             await initContracts(
                 settingsInstance,
                 cTokenInstance,
@@ -107,7 +118,7 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     }, function(depositSender, depositAmount, recipient, amountToWithdraw, expectedErrorMessage, mustFail) {
         it(t('user', 'withdraw', 'Should able (or not) to withdraw DAIs.', mustFail), async function() {
             // Setup
-            const tTokenInstance = await TDAI.new();
+            const tTokenInstance = await TDAI.new(settingsInstance.address);
             const lendingTokenInstance = await Token.new();
             await tTokenInstance.addMinter(instance.address);
             await initContracts(

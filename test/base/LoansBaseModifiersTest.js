@@ -11,20 +11,23 @@ const SettingsMock = artifacts.require("./mock/base/SettingsMock.sol");
 // Smart contracts
 const LoansBaseModifiersMock = artifacts.require("./mock/base/LoansBaseModifiersMock.sol");
 
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
 contract('LoansBaseModifiersTest', function (accounts) {
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     let instance
     let settingsInstance;
     
     beforeEach('Setup for each test', async () => {
-        const priceOracle = await Mock.new();
         const lendingPool = await Mock.new();
         const loanTermsConsensus = await Mock.new();
         const markets = await Mock.new();
         settingsInstance = await SettingsMock.new();
+        const loanLib = await LoanLib.new();
+        await LoansBaseModifiersMock.link("LoanLib", loanLib.address);
         instance = await LoansBaseModifiersMock.new();
         await instance.initialize(
-            priceOracle.address,
             lendingPool.address,
             loanTermsConsensus.address,
             settingsInstance.address,

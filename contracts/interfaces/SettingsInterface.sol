@@ -7,9 +7,9 @@ import "./MarketsStateInterface.sol";
 import "./InterestValidatorInterface.sol";
 import "./EscrowFactoryInterface.sol";
 import "./LogicVersionsRegistryInterface.sol";
-import "../providers/chainlink/IChainlinkPairAggregatorRegistry.sol";
 import "../settings/IATMSettings.sol";
 import "../util/SettingsConsts.sol";
+import "../providers/chainlink/IChainlinkAggregator.sol";
 
 /**
     @notice This interface defines all function to manage the platform configuration.
@@ -270,13 +270,38 @@ interface SettingsInterface {
         @param account account to test.
         @return true if account has the pauser role. Otherwise it returns false.
      */
-    function hasPauserRole(address account) external view returns (bool);
+    function isPauser(address account) external view returns (bool);
 
     /**
         @notice Requires an account to have the pauser role.
         @param account account to test.
      */
     function requirePauserRole(address account) external view;
+
+    /**
+        @notice Restricts the use of the Teller protocol to authorized wallet addresses only
+        @param restriction Bool turning the resitriction on or off
+     */
+    function restrictPlatform(bool restriction) external;
+
+    /**
+        @notice Returns whether the platform is restricted or not
+        @return bool True if the platform is restricted, false if not
+     */
+    function isPlatformRestricted() external view returns (bool);
+
+    /**
+        @notice Tests whether an account has authorization
+        @param account The account address to check for
+        @return True if account has authorization, false if it does not
+     */
+    function hasAuthorization(address account) external view returns (bool);
+
+    /**
+        @notice Requires an account to have platform authorization.
+        @param account account to test.
+     */
+    function requireAuthorization(address account) external view;
 
     /**
         @notice Get the current EscrowFactory contract.
@@ -291,32 +316,43 @@ interface SettingsInterface {
     function interestValidator() external view returns (InterestValidatorInterface);
 
     /**
-        @notice Get the current ChainlinkPairAggregatorRegistry contract.
-        @return the current ChainlinkPairAggregatorRegistry contract.
+        @notice It is the global instance of the ChainlinkAggregator contract.
      */
-    function pairAggregatorRegistry()
-        external
-        view
-        returns (IChainlinkPairAggregatorRegistry);
+    function chainlinkAggregator() external view returns (IChainlinkAggregator);
 
+    /**
+        @notice Get the current ATMSetting contract.
+        @return the current AtmSetting contract.
+     */
     function atmSettings() external view returns (IATMSettings);
+
+    /**
+        @notice Gets the cToken address for a given asset address.
+        @param assetAddress token address.
+        @return the cToken address for a given asset address.
+     */
+    function getCTokenAddress(address assetAddress) external view returns (address);
 
     /**
         @notice It initializes this settings contract instance.
         @param escrowFactoryAddress the initial escrow factory address.
         @param versionsRegistryAddress the initial versions registry address.
-        @param pairAggregatorRegistryAddress the initial pair aggregator registry address.
+        @param chainlinkAggregatorAddress the initial pair aggregator registry address.
         @param marketsStateAddress the initial markets state address.
         @param interestValidatorAddress the initial interest validator address.
         @param atmSettingsAddress the initial ATM settings address.
+        @param wethTokenAddress canonical WETH token address.
+        @param cethTokenAddress compound CETH token address.
      */
     function initialize(
         address escrowFactoryAddress,
         address versionsRegistryAddress,
-        address pairAggregatorRegistryAddress,
+        address chainlinkAggregatorAddress,
         address marketsStateAddress,
         address interestValidatorAddress,
-        address atmSettingsAddress
+        address atmSettingsAddress,
+        address wethTokenAddress,
+        address cethTokenAddress
     ) external;
 
     /**
@@ -324,4 +360,16 @@ interface SettingsInterface {
         @return the ETH address used in the platform.
      */
     function ETH_ADDRESS() external view returns (address);
+
+    /**
+        @notice It gets the canonical WETH address used in the platform.
+        @return the canonical WETH address used in the platform.
+     */
+    function WETH_ADDRESS() external view returns (address);
+
+    /**
+        @notice It gets the canonical CETH address used in the platform.
+        @return the canonical CETH address used in the platform.
+     */
+    function CETH_ADDRESS() external view returns (address);
 }

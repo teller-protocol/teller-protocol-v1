@@ -1,6 +1,7 @@
 pragma solidity 0.5.17;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "./NumbersLib.sol";
 
 /**
  * @notice Utility library of inline functions on the MarketState struct.
@@ -9,9 +10,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
  */
 library MarketStateLib {
     using SafeMath for uint256;
-
-    // Multiply by this to convert a number into a percentage.
-    uint256 private constant TO_PERCENTAGE = 10000;
+    using NumbersLib for uint256;
 
     struct MarketState {
         uint256 totalSupplied;
@@ -71,10 +70,7 @@ library MarketStateLib {
         if (self.totalSupplied == 0 || self.totalBorrowed <= self.totalRepaid) {
             return 0;
         }
-        return
-            self.totalBorrowed.sub(self.totalRepaid).mul(TO_PERCENTAGE).div(
-                self.totalSupplied
-            );
+        return self.totalBorrowed.sub(self.totalRepaid).ratioOf(self.totalSupplied);
     }
 
     /**
@@ -99,11 +95,8 @@ library MarketStateLib {
             return 0;
         }
         return
-            self
-                .totalBorrowed
-                .add(loanAmount)
-                .sub(self.totalRepaid)
-                .mul(TO_PERCENTAGE)
-                .div(self.totalSupplied);
+            self.totalBorrowed.add(loanAmount).sub(self.totalRepaid).ratioOf(
+                self.totalSupplied
+            );
     }
 }

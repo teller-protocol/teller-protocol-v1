@@ -1,6 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t, createMocks } = require('../utils/consts');
+const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -11,12 +12,15 @@ const MarketsState = artifacts.require("./base/MarketsState.sol");
 const actions = { Supply: 'Supply', Borrow: 'Borrow', Repay: 'Repay' };
 
 contract('MarketsStateModifiersTest', function (accounts) {
+    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
     const owner = accounts[0];
     let mocks;
     let instance;
     let settings;
+    let cTokenInstance;
     
     beforeEach('Setup for each test', async () => {
+        cTokenInstance = await Mock.new();
         settings = await Mock.new();
         instance = await MarketsState.new();
         await instance.initialize(settings.address);
@@ -31,6 +35,10 @@ contract('MarketsStateModifiersTest', function (accounts) {
     }, function(adminIndexes, senderIndex, action, expectedErrorMessage, mustFail) {
         it(t('user', 'onlyWhitelisted', 'Should be able (or not) to call the increase function.', mustFail), async function() {
             // Setup
+            await settings.givenMethodReturnAddress(
+                settingsInterfaceEncoder.encodeGetCTokenAddress(),
+                cTokenInstance.address
+            );
             for (const adminIndex of adminIndexes) {
                 const admin = accounts[adminIndex];
                 await instance.addWhitelisted(admin, { from: owner });
