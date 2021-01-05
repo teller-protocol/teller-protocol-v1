@@ -418,7 +418,7 @@ contract LoansBase is LoansInterface, Base {
 
         // update the amount owed on the loan
         totalOwed = totalOwed.sub(toPay);
-        loans[loanID].payOff(toPay);
+        (uint256 principalAmount, uint256 interestAmount) = loans[loanID].payOff(toPay);
 
         // if the loan is now fully paid, close it and return collateral
         if (totalOwed == 0) {
@@ -435,7 +435,7 @@ contract LoansBase is LoansInterface, Base {
         }
 
         // collect the money from the payer
-        lendingPool.repay(toPay, msg.sender);
+        lendingPool.repay(principalAmount, interestAmount, msg.sender);
 
         emit LoanRepaid(
             loanID,

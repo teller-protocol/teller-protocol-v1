@@ -57,20 +57,21 @@ contract('LendingPoolRepayTest', function (accounts) {
     });
 
     withData({
-        _1_cTokenSupported_basic: [accounts[1], true, true, true, 10, false, 1000, undefined, false],
-        _2_cTokenSupported_notLoan: [accounts[1], true, false, true, 10, false, 1000, 'ADDRESS_ISNT_LOANS_CONTRACT', true],
-        _3_cTokenSupported_transferFail: [accounts[1], true, true, false, 200, false, 1000, "SafeERC20: ERC20 operation did not succeed", true],
-        _4_cTokenSupported_compoundFail: [accounts[1], true, true, true, 10, true, 1000, 'COMPOUND_DEPOSIT_ERROR', true],
-        _6_cTokenNotSupported_basic: [accounts[1], false, true, true, 10, false, 1000, undefined, false],
-        _7_cTokenNotSupported_notLoan: [accounts[1], false, false, true, 10, false, 1000, 'ADDRESS_ISNT_LOANS_CONTRACT', true],
-        _8_cTokenNotSupported_transferFail: [accounts[1], false, true, false, 200, false, 1000, "SafeERC20: ERC20 operation did not succeed", true],
-        _9_cTokenNotSupported_allowanceFail: [accounts[1], false, true, true, 10, false, 0, "LEND_TOKEN_NOT_ENOUGH_ALLOWANCE", true],
+        _1_cTokenSupported_basic: [accounts[1], true, true, true, 10, 5, false, 1000, undefined, false],
+        _2_cTokenSupported_notLoan: [accounts[1], true, false, true, 10, 5, false, 1000, 'ADDRESS_ISNT_LOANS_CONTRACT', true],
+        _3_cTokenSupported_transferFail: [accounts[1], true, true, false, 200, 5, false, 1000, "SafeERC20: ERC20 operation did not succeed", true],
+        _4_cTokenSupported_compoundFail: [accounts[1], true, true, true, 10, 5, true, 1000, 'COMPOUND_DEPOSIT_ERROR', true],
+        _6_cTokenNotSupported_basic: [accounts[1], false, true, true, 10, 5, false, 1000, undefined, false],
+        _7_cTokenNotSupported_notLoan: [accounts[1], false, false, true, 10, 5, false, 1000, 'ADDRESS_ISNT_LOANS_CONTRACT', true],
+        _8_cTokenNotSupported_transferFail: [accounts[1], false, true, false, 200, 5, false, 1000, "SafeERC20: ERC20 operation did not succeed", true],
+        _9_cTokenNotSupported_allowanceFail: [accounts[1], false, true, true, 10, 5, false, 0, "LEND_TOKEN_NOT_ENOUGH_ALLOWANCE", true],
     }, function(
         borrower,
         isCTokenSupported,
         mockRequireIsLoan,
         transferFrom,
-        amountToRepay,
+        principalToRepay,
+        interestToRepay,
         compoundFails,
         allowance,
         expectedErrorMessage,
@@ -78,6 +79,7 @@ contract('LendingPoolRepayTest', function (accounts) {
     ) {
         const approvedAmount = allowance;
         it(t('user', 'repay', 'Should able (or not) to repay loan.', mustFail), async function() {
+            const totalToRepay = principalToRepay + interestToRepay
             // Setup
             const sender = accounts[1];
             if(isCTokenSupported) {
@@ -99,7 +101,7 @@ contract('LendingPoolRepayTest', function (accounts) {
             const encodeCompMint = compoundInterfaceEncoder.encodeMint();
             await cTokenInstance.givenMethodReturnUint(encodeCompMint, mintResponse);
             
-            await daiInstance.mint(sender, amountToRepay);
+            await daiInstance.mint(sender, totalToRepay);
             await daiInstance.approve(instance.address, approvedAmount, { from: sender });
             if (!transferFrom) {
                 await daiInstance.mockTransferFromReturnFalse();
@@ -107,13 +109,13 @@ contract('LendingPoolRepayTest', function (accounts) {
             
             try {
                 // Invocation
-                const result = await instance.repay(amountToRepay, borrower, { from: sender });
+                const result = await instance.repay(principalToRepay, interestToRepay, borrower, { from: sender });
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
                 assert(result);
                 lendingPool
                     .tokenRepaid(result)
-                    .emitted(borrower, amountToRepay);
+                    .emitted(borrower, totalToRepay);
             } catch (error) {
                 // Assertions
                 assert(mustFail, error.message);
