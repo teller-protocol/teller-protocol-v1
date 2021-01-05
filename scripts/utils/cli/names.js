@@ -12,6 +12,7 @@ const DEFAULT_SIGNER_ADDRESSES = [
 const DEFAULT_COLLATERAL_TOKEN_NAME = 'ETH';
 const DEFAULT_TEST_TOKEN_NAME = 'DAI';
 const DEFAULT_TOKEN_NAMES = ['DAI', 'USDC'];
+const DEFAULT_COLL_TOKEN_NAMES = ['ETH', 'LINK'];
 const DEFAULT_REQUIRED_SUBMISSIONS = 2;
 const DEFAULT_SAFETY_INTERVAL = 1;
 
@@ -30,6 +31,21 @@ module.exports = {
         name: 'collTokenName',
         alias: 'CTN',
         default: DEFAULT_COLLATERAL_TOKEN_NAME,
+    },
+    COLL_TOKEN_NAMES: {
+        name: 'collTokenNames',
+        alias: 'CTNS',
+        default: DEFAULT_COLL_TOKEN_NAMES,
+    },
+    BASE_TOKEN_NAME: {
+        name: 'baseTokenName',
+        alias: 'BTN',
+        default: undefined
+    },
+    QUOTE_TOKEN_NAME: {
+        name: 'quoteTokenName',
+        alias: 'QTN',
+        default: undefined
     },
     SENDER_INDEX: {
         name: 'senderIndex',
@@ -131,6 +147,11 @@ module.exports = {
         alias: 'R',
         default: false,
     },
+    REVERT_TEST: {
+        name: 'revertTest',
+        alias: 'RT',
+        default: false,
+    },
     INITIAL_NONCE: {
         name: 'initialNonce',
         alias: 'IN',
@@ -184,7 +205,7 @@ module.exports = {
     BACK_ROUNDS: {
         name: 'backRounds',
         alias: 'BR',
-        default: 1,
+        default: 0,
     },
     MIN_AMOUNT: {
         name: 'minAmount',
@@ -200,5 +221,10 @@ module.exports = {
         name: 'contractName',
         alias: 'CN',
         default: undefined,
+    },
+    VERBOSE: {
+        name: 'verbose',
+        alias: 'V',
+        default: false,
     },
 };

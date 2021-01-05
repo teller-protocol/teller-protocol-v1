@@ -18,29 +18,23 @@ library AssetSettingsLib {
         @param maxLoanAmount max loan amount configured for the asset.
      */
     struct AssetSettings {
-        // It prepresents the cTokenAddress or 0x0.
+        // It represents the cTokenAddress or 0x0.
         address cTokenAddress;
         // It represents the maximum loan amount to borrow.
         uint256 maxLoanAmount;
+        // It represents if the setting has been initialized.
+        bool initialized;
     }
 
     /**
         @notice It initializes the struct instance with the given parameters.
-        @param cTokenAddress the initial cToken address.
         @param maxLoanAmount the initial max loan amount.
      */
-    function initialize(
-        AssetSettings storage self,
-        address cTokenAddress,
-        uint256 maxLoanAmount
-    ) internal {
+    function initialize(AssetSettings storage self, uint256 maxLoanAmount) internal {
+        requireNotExists(self);
         require(maxLoanAmount > 0, "INIT_MAX_AMOUNT_REQUIRED");
-        require(
-            cTokenAddress.isEmpty() || cTokenAddress.isContract(),
-            "CTOKEN_MUST_BE_CONTRACT_OR_EMPTY"
-        );
-        self.cTokenAddress = cTokenAddress;
         self.maxLoanAmount = maxLoanAmount;
+        self.initialized = true;
     }
 
     /**
@@ -49,7 +43,7 @@ library AssetSettingsLib {
         @param self the current asset settings.
      */
     function requireNotExists(AssetSettings storage self) internal view {
-        require(exists(self) == false, "ASSET_SETTINGS_ALREADY_EXISTS");
+        require(!exists(self), "ASSET_SETTINGS_ALREADY_EXISTS");
     }
 
     /**
@@ -58,16 +52,16 @@ library AssetSettingsLib {
         @param self the current asset settings.
      */
     function requireExists(AssetSettings storage self) internal view {
-        require(exists(self) == true, "ASSET_SETTINGS_NOT_EXISTS");
+        require(exists(self), "ASSET_SETTINGS_NOT_EXISTS");
     }
 
     /**
         @notice Tests whether the current asset settings exists or not.
         @param self the current asset settings.
-        @return true if the current settings exists (max loan amount higher than zero). Otherwise it returns false.
+        @return true if the current settings exists.
      */
     function exists(AssetSettings storage self) internal view returns (bool) {
-        return self.maxLoanAmount > 0;
+        return self.initialized;
     }
 
     /**
@@ -81,6 +75,7 @@ library AssetSettingsLib {
         view
         returns (bool)
     {
+        requireExists(self);
         return amount > self.maxLoanAmount;
     }
 

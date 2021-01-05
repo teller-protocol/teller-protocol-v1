@@ -33,11 +33,10 @@ contract("UpgradeableProxyInitializeProxyTest", function(accounts) {
 
             try {
                 // Invocation
-                const result = await instance.initializeProxy(settingsAddress, initLogicAddress);
+                await instance.initializeProxy(settingsAddress, initLogicAddress);
 
                 // Assertions
                 assert(!mustFail, 'It should have failed because data is invalid.');
-                assert(result);
 
                 const expectedSettings = await instance.settings();
 

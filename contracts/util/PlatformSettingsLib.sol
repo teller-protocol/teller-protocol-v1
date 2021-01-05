@@ -29,8 +29,8 @@ library PlatformSettingsLib {
         uint256 max
     ) internal {
         requireNotExists(self);
-        require(value >= min, "VALUE_MUST_BE_GT_MIN_VALUE");
-        require(value <= max, "VALUE_MUST_BE_LT_MAX_VALUE");
+        require(value >= min, "VALUE_MUST_BE_GTE_MIN_VALUE");
+        require(value <= max, "VALUE_MUST_BE_LTE_MAX_VALUE");
         self.value = value;
         self.min = min;
         self.max = max;
@@ -43,7 +43,7 @@ library PlatformSettingsLib {
         @param self the current platform setting.
      */
     function requireNotExists(PlatformSetting storage self) internal view {
-        require(self.exists == false, "PLATFORM_SETTING_ALREADY_EXISTS");
+        require(!self.exists, "PLATFORM_SETTING_ALREADY_EXISTS");
     }
 
     /**
@@ -52,7 +52,7 @@ library PlatformSettingsLib {
         @param self the current platform setting.
      */
     function requireExists(PlatformSetting storage self) internal view {
-        require(self.exists == true, "PLATFORM_SETTING_NOT_EXISTS");
+        require(self.exists, "PLATFORM_SETTING_NOT_EXISTS");
     }
 
     /**
@@ -70,8 +70,8 @@ library PlatformSettingsLib {
     {
         requireExists(self);
         require(self.value != newValue, "NEW_VALUE_REQUIRED");
-        require(newValue >= self.min, "NEW_VALUE_MUST_BE_GT_MIN_VALUE");
-        require(newValue <= self.max, "NEW_VALUE_MUST_BE_LT_MAX_VALUE");
+        require(newValue >= self.min, "NEW_VALUE_MUST_BE_GTE_MIN_VALUE");
+        require(newValue <= self.max, "NEW_VALUE_MUST_BE_LTE_MAX_VALUE");
         oldValue = self.value;
         self.value = newValue;
     }

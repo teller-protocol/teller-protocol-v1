@@ -8,6 +8,7 @@ const TERMS_EXPIRY_TIME = 'TermsExpiryTime';
 const LIQUIDATE_ETH_PRICE = 'LiquidateEthPrice';
 const DEFAULT_DECIMALS = 18;
 const ETH_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+const WETH_ADDRESS = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 const DUMMY_ADDRESS = '0x0000000000000000000000000000000000000123';
 const NULL_BYTES = '0x0000000000000000000000000000000000000000000000000000000000000000'
@@ -17,6 +18,7 @@ const COVERAGE_NETWORK = 'http://127.0.0.1:8555';
 const FIVE_MIN = 60*5
 const ONE_HOUR = 3600 // 60 seconds * 60 minutes = 1 hour
 const ONE_DAY = ONE_HOUR*24
+const ONE_YEAR = ONE_DAY*365
 const THIRTY_DAYS = ONE_DAY*30
 const NON_EXISTENT = 0
 const TERMS_SET = 1
@@ -28,6 +30,7 @@ const toDecimals = (amount, decimals) => {
 }
 
 module.exports = {
+    CTOKEN_DECIMALS: 8,
     ETH_ADDRESS,
     DUMMY_ADDRESS,
     NON_EXISTENT,
@@ -43,6 +46,7 @@ module.exports = {
     FIVE_MIN,
     ONE_HOUR,
     ONE_DAY,
+    ONE_YEAR,
     THIRTY_DAYS,
     REQUIRED_SUBMISSIONS,
     MAXIMUM_TOLERANCE,
@@ -50,15 +54,12 @@ module.exports = {
     SAFETY_INTERVAL,
     TERMS_EXPIRY_TIME,
     LIQUIDATE_ETH_PRICE,
-    // Loan length will be inputted in seconds, with 4 decimal places. i.e. 30 days will be inputted as
-    // 31536. Therefore in interest calculations we must divide by 31536000
-    SECONDS_PER_YEAR_4DP: 31536000,
     // For interestRate, collateral, and liquidation price, 7% is represented as 700. To find the value
     // of something we must divide 700 by 100 to remove decimal places, and another 100 for percentage.
     TEN_THOUSAND: 10000,
     t: function (who, func, desc, fail) {
         const failText = fail ? '\x1b[31mMustFail\x1b[0m .' : '\x1b[0m';
-        return '\x1b[32m.' + func + ' => \x1b[36m' + who + '\x1b[0m\033[01;34m : ' + desc + ' '+ failText;
+        return '\x1b[32m.' + func + ' => \x1b[36m' + who + '\x1b[0m\x1b[01;34m : ' + desc + ' '+ failText;
     },
     encode: (web3, signature) => {
         return web3.utils.sha3(signature).slice(0,10);
@@ -71,6 +72,9 @@ module.exports = {
     },
     daysToSeconds: (days) => {
         return parseInt(days.toString()) * 24 * 60 * 60;
+    },
+    daysToMinutes: (days) => {
+        return parseInt(days.toString()) * 24 * 60;
     },
     secondsToDays: (seconds) => {
         return parseInt(seconds.toString()) / (24 * 60 * 60);

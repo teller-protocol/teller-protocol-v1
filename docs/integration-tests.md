@@ -20,7 +20,7 @@ Before describing the steps, please, check you already have cloned the following
   - ```git clone git@github.com:teller-protocol/subgraph.git```
   - ```yarn install``` in the root folder.
 
-- **[Our own TheGraph node](https://github.com/teller-protocol/graph-node)**: *This repository is used to create a local TheGraph node using a script (.sh) file. So, it can be executed repeatedly without the need to remove the data generated in the Docker volume folders.*
+- **[Our own TheGraph node](https://github.com/teller-protocol/graph-node)**: *This repository is used to create a local TheGraph node using a script (.sh) file.*
 
   - ```git clone git@github.com:teller-protocol/graph-node.git```
 
@@ -43,27 +43,17 @@ Finally, you will able to execute the integration tests (or scripts) on the loca
 
 ## Setup
 
-1- Start a local Ganache instance (using Docker).
+1- Start a local Ganache mainnet fork.
 
-> The current command will unzip a ZIP file into a specific folder. This execution might throw an error depending on the OS.
-> It requires to have installed the ```unzip``` command.
->  
-> - If you use Linux: ```sudo apt-get install unzip```
-> - If you use Windows, this process doesn't work on PowerShell. You need to install WSL2 (Windows Subsystem Linux v2). See more details [here](https://devblogs.microsoft.com/commandline/wsl2-will-be-generally-available-in-windows-10-version-2004/).
+> This step starts a local ganache mainnet fork from Infura. Unless you have an Infura Project ID that has access to the archive state of the node, after some time,
+> trying to submit transactions will fail due to Infura. You will need to restart this process of creating a new ganache fork and deploying the contracts again.
 
 In a new command window, go to the folder where you cloned the *Smart Contract* repository (***this repository***), and execute:
 
 ```sh
-yarn start:ganache:docker
+yarn start:ganache:mainnet
+yarn deploy:ganache:mainnet
 ```
-
-As result, you should see:
-
-![Start Ganache Using Docker](./images/integration-tests/yarn-start-ganache-docker.png)
-
-> Please, **DON'T use** the pre-configured mnemonic in a production environment. It is **ONLY** for local testing purposes.
-
-You already have a Ganache instance running locally.
 
 2- Start a local TheGraph node.
 
@@ -77,7 +67,7 @@ In a new command window, go to the folder where you cloned the *Our own TheGraph
 
 After some seconds, you should see:
 
-![Start Ganache Using Docker](./images/integration-tests/start-thegraph-node.png)
+![](./images/integration-tests/start-thegraph-node.png)
 
 3- Deploy the subgraph on the local TheGraph node.
 
@@ -102,7 +92,7 @@ yarn deploy:ganache
 
 As result, you should see:
 
-![Start Ganache Using Docker](./images/integration-tests/yarn-deploy-ganache.png)
+![](./images/integration-tests/yarn-deploy-ganache.png)
 
 Congrats! You already finished the configuration!
 

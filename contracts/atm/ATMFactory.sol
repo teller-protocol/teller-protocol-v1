@@ -1,4 +1,5 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 // External Libraries
 
@@ -9,8 +10,10 @@ import "../base/DynamicProxy.sol";
 
 // Interfaces
 import "./TLRTokenInterface.sol";
+import "./TLRToken.sol";
 import "./ATMGovernanceInterface.sol";
-import "../atm/ATMFactoryInterface.sol";
+import "./ATMFactoryInterface.sol";
+import "./ATMLiquidityMiningInterface.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -56,45 +59,35 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
         string calldata symbol,
         uint8 decimals,
         uint256 cap,
-        uint256 maxVestingPerWallet
+        uint256 maxVestingPerWallet,
+        uint256 tlrInitialReward
     ) external onlyPauser() isInitialized() returns (address) {
-        address owner = msg.sender;
-
-        bytes32 tlrTokenLogicName = settings()
-            .versionsRegistry()
-            .consts()
-            .TLR_TOKEN_LOGIC_NAME();
-        TLRTokenInterface tlrTokenProxy = TLRTokenInterface(
-            address(new DynamicProxy(address(settings()), tlrTokenLogicName))
-        );
-
-        bytes32 atmGovernanceLogicName = settings()
-            .versionsRegistry()
-            .consts()
-            .ATM_GOVERNANCE_LOGIC_NAME();
-        ATMGovernanceInterface atmGovernanceProxy = ATMGovernanceInterface(
-            address(new DynamicProxy(address(settings()), atmGovernanceLogicName))
-        );
-        atmGovernanceProxy.initialize(address(settings()), owner);
-        address atmGovernanceProxyAddress = address(atmGovernanceProxy);
-
-        tlrTokenProxy.initialize(
+        address atmGovernanceProxyAddress = _createGovernance(tlrInitialReward);
+        address tlrTokenProxyAddress = _createTLRToken(
             name,
             symbol,
             decimals,
             cap,
             maxVestingPerWallet,
-            address(settings()),
             atmGovernanceProxyAddress
         );
-        address tlrTokenProxyAddress = address(tlrTokenProxy);
+        address liquidityMiningAddress = _createLiquidityMining(
+            atmGovernanceProxyAddress,
+            tlrTokenProxyAddress
+        );
+        TLRToken(tlrTokenProxyAddress).addMinter(liquidityMiningAddress);
 
         atms[atmGovernanceProxyAddress] = true;
         tlrTokens[atmGovernanceProxyAddress] = tlrTokenProxyAddress;
         atmsList.add(atmGovernanceProxyAddress);
 
         // Emit new ATM created event.
-        emit ATMCreated(owner, atmGovernanceProxyAddress, tlrTokenProxyAddress);
+        emit ATMCreated(
+            msg.sender,
+            atmGovernanceProxyAddress,
+            tlrTokenProxyAddress,
+            liquidityMiningAddress
+        );
 
         return atmGovernanceProxyAddress;
     }
@@ -133,5 +126,81 @@ contract ATMFactory is ATMFactoryInterface, TInitializable, BaseUpgradeable {
      */
     function getATMs() external view returns (address[] memory) {
         return atmsList;
+    }
+
+    /**
+        @notice Helper function to create a new ATMGovernance instance.
+        @param tlrInitialReward TLR initial reward set on Liquidity mining program associated with this ATM.
+     */
+    function _createGovernance(uint256 tlrInitialReward) internal returns (address) {
+        bytes32 atmGovernanceLogicName = _getSettings()
+            .versionsRegistry()
+            .consts()
+            .ATM_GOVERNANCE_LOGIC_NAME();
+        ATMGovernanceInterface atmGovernanceProxy = ATMGovernanceInterface(
+            address(new DynamicProxy(address(_getSettings()), atmGovernanceLogicName))
+        );
+        atmGovernanceProxy.initialize(
+            address(_getSettings()),
+            msg.sender,
+            tlrInitialReward
+        );
+        return address(atmGovernanceProxy);
+    }
+
+    /**
+        @notice Helper function to create a new TLR token instance associated with new ATM.
+        @param name TLR token name.
+        @param symbol TLR token symbol.
+        @param decimals  TLR token decimals.
+        @param cap  TLR token max cap.
+        @param maxVestingPerWallet  TLR token max amount of vestings per address.
+        @param atmGovernanceProxyAddress ATMGovernance instance associated with this new TLR instance. 
+     */
+    function _createTLRToken(
+        string memory name,
+        string memory symbol,
+        uint8 decimals,
+        uint256 cap,
+        uint256 maxVestingPerWallet,
+        address atmGovernanceProxyAddress
+    ) internal returns (address) {
+        bytes32 tlrTokenLogicName = _getSettings()
+            .versionsRegistry()
+            .consts()
+            .TLR_TOKEN_LOGIC_NAME();
+        TLRTokenInterface tlrTokenProxy = TLRTokenInterface(
+            address(new DynamicProxy(address(_getSettings()), tlrTokenLogicName))
+        );
+        tlrTokenProxy.initialize(
+            name,
+            symbol,
+            decimals,
+            cap,
+            maxVestingPerWallet,
+            address(_getSettings()),
+            atmGovernanceProxyAddress
+        );
+        return address(tlrTokenProxy);
+    }
+
+    /**
+        @notice Helper function to create a new Liquidity Mining program instance.
+        @param governance ATMGovernance instance address associated to this new Liquidity Mining.
+        @param tlr TLRToken instance address associated to this new Liquidity Mining.
+     */
+    function _createLiquidityMining(address governance, address tlr)
+        internal
+        returns (address)
+    {
+        bytes32 liquidityMiningLogicName = _getSettings()
+            .versionsRegistry()
+            .consts()
+            .ATM_LIQUIDITY_MINING_LOGIC_NAME();
+        ATMLiquidityMiningInterface liquidityMining = ATMLiquidityMiningInterface(
+            address(new DynamicProxy(address(_getSettings()), liquidityMiningLogicName))
+        );
+        liquidityMining.initialize(address(_getSettings()), governance, tlr);
+        return address(liquidityMining);
     }
 }

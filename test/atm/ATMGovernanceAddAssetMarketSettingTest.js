@@ -22,11 +22,12 @@ contract('ATMGovernanceAddAssetMarketSettingTest', function (accounts) {
     const owner = accounts[0];
     let instance;
     let settingsInstance;
+    const ANY_VALUE = 1;
 
     beforeEach('Setup for each test', async () => {
         settingsInstance = await Mock.new();
         instance = await ATMGovernance.new();
-        await instance.initialize(settingsInstance.address, owner);
+        await instance.initialize(settingsInstance.address, owner, ANY_VALUE);
     });
 
     // Testing values
@@ -69,9 +70,8 @@ contract('ATMGovernanceAddAssetMarketSettingTest', function (accounts) {
 
             } catch (error) {
                 // Assertions
-                assert(mustFail);
-                assert(error);
-                assert.equal(error.reason, expectedErrorMessage);
+                assert(mustFail, error.message);
+                assert.equal(error.reason, expectedErrorMessage, error.message);
             }
         });
     });

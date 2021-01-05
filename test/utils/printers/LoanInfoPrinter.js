@@ -8,7 +8,7 @@ const Timer = require('../../../scripts/utils/Timer');
 const TEN_THOUSAND = 10000;
 const TEN_HUNDRED = 100;
 const ETH_DECIMALS = 18;
-
+// TODO Remove after removing who are using it.
 class LoanInfoPrinter {
     constructor(web3, loanInfo, token, collateralToken) {
         this.web3 = web3;

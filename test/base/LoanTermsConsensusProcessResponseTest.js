@@ -161,7 +161,7 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
 
                 loanTermsConsensus
                     .termsSubmitted(result)
-                    .emitted(nodeAddress, borrower, requestNonce, interestRate, collateralRatio, maxLoanAmount.toFixed());
+                    .emitted(nodeAddress, borrower, requestNonce, loanResponse.signature.signerNonce, interestRate, collateralRatio, maxLoanAmount.toFixed());
 
                 let submissions = await instance.termSubmissions.call(borrower, requestNonce)
 

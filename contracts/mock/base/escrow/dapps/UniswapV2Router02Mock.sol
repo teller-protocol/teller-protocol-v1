@@ -7,6 +7,12 @@ contract UniswapV2Router02Mock is IUniswapV2Router02 {
     uint24 public constant DONT_ALTER_BALANCE = 999999;
     uint24 public constant SIMULATE_UNISWAP_RESPONSE_ERROR = 777777;
 
+    address public WETH;
+
+    constructor(address wethAddress) public {
+        WETH = wethAddress;
+    }
+
     /**
         @notice This function swaps tokens for tokens.
         @dev We are using amountOutMin special numbers as flags to change behaviour.
@@ -48,6 +54,29 @@ contract UniswapV2Router02Mock is IUniswapV2Router02 {
     ) external payable returns (uint256[] memory amounts) {
         return _swap(amountOutMin, path, to, deadline);
     }
+
+    function swapTokensForExactTokens(
+        uint256 amountOut,
+        uint256 amountInMax,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external returns (uint256[] memory amounts) {}
+
+    function swapTokensForExactETH(
+        uint256 amountOut,
+        uint256 amountInMax,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external returns (uint256[] memory amounts) {}
+
+    function swapETHForExactTokens(
+        uint256 amountOut,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external payable returns (uint256[] memory amounts) {}
 
     function _swap(
         uint256 amountOutMin,

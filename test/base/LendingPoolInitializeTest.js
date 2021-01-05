@@ -18,21 +18,19 @@ contract('LendingPoolInitializeTest', function (accounts) {
     const getInstance = (refs, index, accountIndex) => index === -1 ? NULL_ADDRESS: index === 99 ? accounts[accountIndex] : refs[index];
 
     withData({
-        _2_notTdai: [-1, 3, 4, 5, 6, 7, 'TTOKEN_ADDRESS_IS_REQUIRED', true],
-        _1_basic: [2, 3, 4, 5, 6, 7, undefined, false],
-        _3_notDai: [2, -1, 4, 5, 6, 7, 'TOKEN_ADDRESS_IS_REQUIRED', true],
-        _4_notLenderInfo: [2, 3, -1, 5, 6, 7, 'LENDERS_ADDRESS_IS_REQUIRED', true],
-        _5_notLoanInfo: [2, 3, 4, -1, 6, 7, 'LOANS_ADDRESS_IS_REQUIRED', true],
-        _6_notCToken: [2, 3, 4, 5, -1, 7, undefined, false],
-        _7_notTdai_notLoanInfo: [-1, 3, 4, -1, 6, 7, 'TTOKEN_ADDRESS_IS_REQUIRED', true],
-        _8_notDai_notLenderInfo: [2, -1, -1, 5, 6, 7, 'TOKEN_ADDRESS_IS_REQUIRED', true],
-        _9_notSettings: [2, 3, 4, 5, 6, -1, 'SETTINGS_MUST_BE_PROVIDED', true],
+        _2_notTdai: [-1, 3, 4, 5, 6, 'TTOKEN_ADDRESS_IS_REQUIRED', true],
+        _1_basic: [2, 3, 4, 5, 6, undefined, false],
+        _3_notDai: [2, -1, 4, 5, 6, 'TOKEN_ADDRESS_IS_REQUIRED', true],
+        _4_notLenderInfo: [2, 3, -1, 5, 6, 'LENDERS_ADDRESS_IS_REQUIRED', true],
+        _5_notLoanInfo: [2, 3, 4, -1, 6, 'LOANS_ADDRESS_IS_REQUIRED', true],
+        _6_notTdai_notLoanInfo: [-1, 3, 4, -1, 6, 'TTOKEN_ADDRESS_IS_REQUIRED', true],
+        _7_notDai_notLenderInfo: [2, -1, -1, 5, 6, 'TOKEN_ADDRESS_IS_REQUIRED', true],
+        _8_notSettings: [2, 3, 4, 5, -1, 'SETTINGS_MUST_BE_PROVIDED', true],
     }, function(
         tdaiIndex,
         daiIndex,
         lenderInfoIndex,
         loanInfoIndex,
-        cTokenIndex,
         settingsIndex,
         expectedErrorMessage,
         mustFail
@@ -44,7 +42,6 @@ contract('LendingPoolInitializeTest', function (accounts) {
             const daiAddress = getInstance(mocks, daiIndex, 3);
             const lendersAddress = getInstance(mocks, lenderInfoIndex, 4)
             const loanInfoAddress = getInstance(mocks, loanInfoIndex, 5)
-            const cTokenAddress = getInstance(mocks, cTokenIndex, 6);
             const settingsAddress = getInstance(mocks, settingsIndex, 7);
 
             try {
@@ -54,7 +51,6 @@ contract('LendingPoolInitializeTest', function (accounts) {
                     daiAddress,
                     lendersAddress,
                     loanInfoAddress,
-                    cTokenAddress,
                     settingsAddress
                 );
                 
