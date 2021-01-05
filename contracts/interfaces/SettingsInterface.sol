@@ -238,6 +238,18 @@ interface SettingsInterface {
      */
     function updateCTokenAddress(address assetAddress, address newCTokenAddress) external;
 
+    function assetSettings(address)
+        external
+        view
+        returns (AssetSettingsLib.AssetSettings memory);
+
+    function assets(uint256) external view returns (address);
+
+    function platformSettings(bytes32)
+        external
+        view
+        returns (PlatformSettingsLib.PlatformSetting memory);
+
     /**
         @notice Gets the current asset addresses list.
         @return the asset addresses list.

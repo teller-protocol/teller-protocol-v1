@@ -62,4 +62,9 @@ interface InterestConsensusInterface {
         address aCallerAddress,
         address aSettingAddress
     ) external;
+
+    function interestSubmissions(address, uint256)
+        external
+        view
+        returns (NumbersList.Values memory);
 }
