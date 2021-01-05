@@ -125,7 +125,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         dst = _normalizeTokenAddress(dst);
 
         (AggregatorV2V3Interface agg, ) = _aggregatorFor(src, dst);
-        address(agg).requireEmpty("CHAINLINK_PAIR_ALREADY_EXISTS");
+        require(address(agg).isEmpty(), "CHAINLINK_PAIR_ALREADY_EXISTS");
 
         require(
             src.isContract() || src == _getSettings().ETH_ADDRESS(),

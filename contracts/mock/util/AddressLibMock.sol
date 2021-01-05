@@ -31,10 +31,6 @@ contract AddressLibMock {
         self.requireNotEmpty(REQUIRE_NOT_EMPTY_ERROR_MESSAGE);
     }
 
-    function requireEmpty(address self) external pure {
-        self.requireEmpty(REQUIRE_EMPTY_ERROR_MESSAGE);
-    }
-
     function requireEqualTo(address left, address right) external pure {
         left.requireEqualTo(right, REQUIRE_EQUAL_TO_ERROR_MESSAGE);
     }

@@ -69,30 +69,6 @@ contract('AddressLibTest', function (accounts) {
     });
 
     withData({
-        _1_basic: [-1, undefined, false],
-        _2_empty: [0, 'ADDRESS_MUST_BE_EMPTY', true]
-    }, function(addressIndex, expectedErrorMessage, mustFail) {
-        it(t('user', 'requireEmpty', 'Should be able to require address is not empty.', false), async function() {
-            // Setup
-            const address = addressIndex === -1 ? NULL_ADDRESS : accounts[addressIndex];
-
-            try {
-                // Invocation
-                const result = await instance.requireEmpty(address);
-                
-                // Assertions
-                assert(!mustFail, 'It should have failed because data is invalid.');
-                assert(result);
-            } catch (error) {
-                // Assertions
-                assert(mustFail);
-                assert(error);
-                assert(error.message.endsWith(expectedErrorMessage));
-            }
-        });
-    });
-
-    withData({
         _1_basic: [0, 1, false],
         _2_equalEmpty: [-1, -1, true],
         _3_emptyAndNotEmpty: [-1, 1, false],

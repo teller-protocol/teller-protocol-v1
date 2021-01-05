@@ -56,15 +56,6 @@ library AddressLib {
     }
 
     /**
-     * @dev Throws an error if address is not all 0s
-     * @param self The address this function was called on
-     * @param message Error message if address is not all 0s
-     */
-    function requireEmpty(address self, string memory message) internal pure {
-        require(isEmpty(self), message);
-    }
-
-    /**
      * @dev Throws an error if address is not the same as another address
      * @param self The address this function was called on
      * @param other The address to check against itself
