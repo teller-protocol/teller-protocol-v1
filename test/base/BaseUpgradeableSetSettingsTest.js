@@ -51,9 +51,8 @@ contract('BaseUpgradeableTest', function (accounts) {
                 }
             } catch (error) {
                 // Assertions
-                assert(mustFail);
-                assert(error);
-                assert.equal(error.reason, expectedErrorMessage);
+                assert(mustFail, error.message);
+                assert.equal(error.reason, expectedErrorMessage, error.message);
             }
         });
     });
