@@ -41,5 +41,8 @@ contract LogicVersionsConsts {
     bytes32 public constant ATM_FACTORY_LOGIC_NAME = keccak256("ATMFactory");
     bytes32 public constant ATM_SETTINGS_LOGIC_NAME = keccak256("ATMSettings");
     bytes32 public constant ATM_GOVERNANCE_LOGIC_NAME = keccak256("ATMGovernance");
+    bytes32 public constant ATM_LIQUIDITY_MINING_LOGIC_NAME = keccak256(
+        "ATMLiquidityMining"
+    );
     bytes32 public constant TLR_TOKEN_LOGIC_NAME = keccak256("TLRToken");
 }
