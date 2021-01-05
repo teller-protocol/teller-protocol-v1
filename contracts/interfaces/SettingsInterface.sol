@@ -241,23 +241,14 @@ interface SettingsInterface {
     function assetSettings(address)
         external
         view
-        returns (
-            address cTokenAddress,
-            uint256 maxLoanAmount,
-            bool initialized
-        );
+        returns (AssetSettingsLib.AssetSettings memory);
 
-    function assets() external view returns (address[] memory);
+    function assets(uint256) external view returns (address);
 
     function platformSettings(bytes32)
         external
         view
-        returns (
-            uint256 value,
-            uint256 min,
-            uint256 max,
-            bool exists
-        );
+        returns (PlatformSettingsLib.PlatformSetting memory);
 
     /**
         @notice Gets the current asset addresses list.
