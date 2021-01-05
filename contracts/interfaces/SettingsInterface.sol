@@ -249,10 +249,10 @@ interface SettingsInterface {
         @param assetAddress asset address used to get the current settings.
         @return the current asset settings.
      */
-    function getAssetSettings(address assetAddress)
-        external
-        view
-        returns (AssetSettingsLib.AssetSettings memory);
+    // function getAssetSettings(address assetAddress)
+    //     external
+    //     view
+    //     returns (AssetSettingsLib.AssetSettings memory);
 
     /**
         @notice Tests whether amount exceeds the current maximum loan amount for a specific asset settings.

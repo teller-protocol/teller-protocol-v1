@@ -1,4 +1,5 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "./AddressLib.sol";
@@ -14,12 +15,13 @@ library AssetSettingsLib {
 
     /**
         @notice This struct manages the asset settings in the platform.
-        @param cTokenAddress cToken address associated to the asset. 
+        @param tokenAddresses the token addresses associated to the asset. 
         @param maxLoanAmount max loan amount configured for the asset.
      */
     struct AssetSettings {
-        // It represents the cTokenAddress or 0x0.
-        address cTokenAddress;
+        // It represents a mapping of the token name and the tokenAddress or 0x0.
+        // address tokenAddress;
+        mapping(bytes32 => address) tokenAddresses;
         // It represents the maximum loan amount to borrow.
         uint256 maxLoanAmount;
         // It represents if the setting has been initialized.
@@ -88,9 +90,36 @@ library AssetSettingsLib {
         internal
     {
         requireExists(self);
-        require(self.cTokenAddress != newCTokenAddress, "NEW_CTOKEN_ADDRESS_REQUIRED");
-        self.cTokenAddress = newCTokenAddress;
+        require(
+            self.tokenAddresses[keccak256("CTokenAddress")] != newCTokenAddress,
+            "NEW_CTOKEN_ADDRESS_REQUIRED"
+        );
+        self.tokenAddresses[keccak256("CTokenAddress")] = newCTokenAddress;
     }
+
+    /**
+        @notice It updates the a token address for a given protocol name.
+        @param self the current asset settings.
+        @param tokenName the name of the token to update the address for
+        @param newTokenAddress the new Token address to set.
+     */
+    function updateTokenAddress(
+        AssetSettings storage self,
+        bytes32 tokenName,
+        address newTokenAddress
+    ) internal {
+        requireExists(self);
+        require(
+            self.tokenAddresses[tokenName] != newTokenAddress,
+            "NEW_TOKEN_ADDRESS_REQUIRED"
+        );
+        self.tokenAddresses[tokenName] = newTokenAddress;
+    }
+
+    /**
+        @notice It updates the address for a given token
+        @param 
+     */
 
     /**
         @notice It updates the max loan amount.

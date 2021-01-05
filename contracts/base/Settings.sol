@@ -376,7 +376,9 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         onlyPauser()
         isInitialized()
     {
-        address oldCTokenAddress = assetSettings[assetAddress].cTokenAddress;
+        address oldCTokenAddress = assetSettings[assetAddress].tokenAddresses[keccak256(
+            "CTokenAddress"
+        )];
 
         _setCTokenAddress(assetAddress, newCTokenAddress);
 
@@ -386,6 +388,30 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
             assetAddress,
             oldCTokenAddress,
             newCTokenAddress
+        );
+    }
+
+    /**
+        @notice It updates the token address of a given protocol for a specific asset address
+        @param assetAddress asset address to configure.
+        @param tokenName the protocol token name to update.
+        @param newTokenAddress the new token address to configure.
+     */
+    function updateTokenAddress(
+        address assetAddress,
+        bytes32 tokenName,
+        address newTokenAddress
+    ) external onlyPauser() isInitialized() {
+        address oldTokenAddress = assetSettings[assetAddress].tokenAddresses[tokenName];
+
+        _setTokenAddress(assetAddress, tokenName, newTokenAddress);
+
+        emit AssetSettingsAddressUpdated(
+            tokenName,
+            msg.sender,
+            assetAddress,
+            oldTokenAddress,
+            newTokenAddress
         );
     }
 
@@ -416,13 +442,13 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @param assetAddress asset address used to get the current settings.
         @return the current asset settings.
      */
-    function getAssetSettings(address assetAddress)
-        external
-        view
-        returns (AssetSettingsLib.AssetSettings memory)
-    {
-        return assetSettings[assetAddress];
-    }
+    // function getAssetSettings(address assetAddress)
+    //     external
+    //     view
+    //     returns (AssetSettingsLib.AssetSettings memory)
+    // {
+    //     return assetSettings[assetAddress];
+    // }
 
     /**
         @notice Gets the cToken address for a given asset address.
@@ -430,7 +456,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @return the cToken address for a given asset address.
      */
     function getCTokenAddress(address assetAddress) external view returns (address) {
-        return assetSettings[assetAddress].cTokenAddress;
+        return assetSettings[assetAddress].tokenAddresses[keccak256("CTokenAddress")];
     }
 
     /**
@@ -588,6 +614,35 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         }
 
         assetSettings[assetAddress].updateCTokenAddress(cTokenAddress);
+    }
+
+    /**
+        @notice It sets the cToken address for a specific asset address.
+        @param assetAddress asset address to configure.
+        @param tokenName the protocol token name to update
+        @param tokenAddress the new ctoken address to configure.
+     */
+    function _setTokenAddress(
+        address assetAddress,
+        bytes32 tokenName,
+        address tokenAddress
+    ) internal {
+        if (assetAddress == ETH_ADDRESS) {
+            // NOTE: This is the address for the cETH contract. It is hardcoded because the contract does not have a
+            //       underlying() function on it to check that this is the correct contract.
+            tokenAddress.requireEqualTo(CETH_ADDRESS, "CETH_ADDRESS_NOT_MATCH");
+        } else {
+            require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
+            if (tokenAddress.isNotEmpty()) {
+                require(tokenAddress.isContract(), "CTOKEN_MUST_BE_CONTRACT_OR_EMPTY");
+                require(
+                    CErc20Interface(tokenAddress).underlying() == assetAddress,
+                    "UNDERLYING_ADDRESS_NOT_MATCH"
+                );
+            }
+        }
+
+        assetSettings[assetAddress].updateTokenAddress(tokenName, tokenAddress);
     }
 
     /** Private functions */
