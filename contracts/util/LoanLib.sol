@@ -352,25 +352,22 @@ library LoanLib {
     */
     function payOff(TellerCommon.Loan storage loan, uint256 toPay)
         public
-        returns (uint256, uint256)
+        returns (uint256 principalPaid, uint256 interestPaid)
     {
-        uint256 interestPaid;
-
-        if (toPay >= loan.interestOwed) {
-            interestPaid = loan.interestOwed;
-            toPay = toPay.sub(interestPaid);
-            loan.interestOwed = 0;
-            if (toPay == 0) {
-                return (0, interestPaid);
-            }
-        } else {
+        if (toPay < loan.interestOwed) {
             interestPaid = toPay;
             loan.interestOwed = loan.interestOwed.sub(toPay);
-            return (0, interestPaid);
-        }
+        } else {
+            if (loan.interestOwed > 0) {
+                interestPaid = loan.interestOwed;
+                toPay = toPay.sub(interestPaid);
+                loan.interestOwed = 0;
+            }
 
-        uint256 principalPaid = toPay;
-        loan.principalOwed = loan.principalOwed.sub(toPay);
-        return (principalPaid, interestPaid);
+            if (toPay > 0) {
+                principalPaid = toPay;
+                loan.principalOwed = loan.principalOwed.sub(toPay);
+            }
+        }
     }
 }
