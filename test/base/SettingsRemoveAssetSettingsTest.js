@@ -4,6 +4,7 @@ const { t, NULL_ADDRESS, toDecimals } = require('../utils/consts');
 const { createAssetSettings } = require('../utils/asset-settings-helper');
 const { settings } = require('../utils/events');
 const { createTestSettingsInstance } = require('../utils/settings-helper');
+const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -12,6 +13,8 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 
 contract('SettingsRemoveAssetSettingsTest', function (accounts) {
+    const cTokenEncoder = new CTokenInterfaceEncoder(web3)
+
     let owner = accounts[0];
     let assetInstance;
     let cTokenInstance;
@@ -19,6 +22,10 @@ contract('SettingsRemoveAssetSettingsTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         assetInstance = await Mock.new();
         cTokenInstance = await Mock.new();
+        await cTokenInstance.givenMethodReturnAddress(
+          cTokenEncoder.encodeUnderlying(),
+          assetInstance.address
+        )
     });
 
     const getSenderAddress = (addressIndex) => {

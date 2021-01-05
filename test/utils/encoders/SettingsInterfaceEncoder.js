@@ -59,4 +59,8 @@ SettingsInterfaceEncoder.prototype.encodeGetAssetSettings = function() {
     return encode(this.web3, 'getAssetSettings(address)');
 }
 
+SettingsInterfaceEncoder.prototype.encodeGetCTokenAddress = function() {
+    return encode(this.web3, 'getCTokenAddress(address)');
+}
+
 module.exports = SettingsInterfaceEncoder;

@@ -1,4 +1,7 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
+
+import "./ATMCommon.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -151,6 +154,20 @@ interface ATMGovernanceInterface {
      */
     event CRASet(address indexed sender, string craCommitHash);
 
+    /**
+        @notice Emitted when a new TLR Reward was added.
+        @param sender msg.sender address.
+        @param rewardIndex reward index in rewards array.
+        @param startBlockNumber block number where this reward takes place.
+        @param tlrPerBlockPertToken amount of TLR tokens to accrue per block per tToken staked. 
+     */
+    event TLRRewardAdded(
+        address indexed sender,
+        uint256 rewardIndex,
+        uint256 startBlockNumber,
+        uint256 tlrPerBlockPertToken
+    );
+
     /* External Functions */
 
     /**
@@ -234,8 +251,15 @@ interface ATMGovernanceInterface {
     /**
         @notice Sets the CRA - Credit Risk Algorithm to be used on this specific ATM.
                 CRA is represented by a Github commit hash of the newly proposed algorithm.
+        @param cra Github CRA commit hash.
      */
     function setCRA(string calldata cra) external;
+
+    /**
+        @notice Adds a new TLR reward on this ATM starting from current block.
+        @param rewardAmount New TLR reward amount.
+     */
+    function addTLRReward(uint256 rewardAmount) external;
 
     /* External Constant functions */
 
@@ -272,9 +296,19 @@ interface ATMGovernanceInterface {
     function getCRA() external view returns (string memory);
 
     /**
+        @notice Returns the complete list of rewards used on this ATM instance.
+     */
+    function getTLRRewards() external view returns (ATMCommon.TLRReward[] memory);
+
+    /**
         @notice It initializes this ATM Governance instance.
         @param settingsAddress the initial settings address.
         @param ownerAddress the owner address for this ATM Governance.
+        @param tlrInitialReward ATM Liquidity Mining TLR reward.
      */
-    function initialize(address settingsAddress, address ownerAddress) external;
+    function initialize(
+        address settingsAddress,
+        address ownerAddress,
+        uint256 tlrInitialReward
+    ) external;
 }

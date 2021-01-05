@@ -45,9 +45,9 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
     });
 
     withData({
-        _1_basic: [ ADMIN_INDEX, true, "TokenName", "TKN", 18, 1000, 20000, undefined, false ],
-        _2_notAdmin: [ 0, false, "TokenName", "TKN", 18, 1000, 20000, true, "NOT_PAUSER" ],
-    }, function(senderIndex, addAsPauserRole, name, symbol, decimals, cap, maxVesting, mustFail, expectedErrorMessage) {
+        _1_basic: [ ADMIN_INDEX, true, "TokenName", "TKN", 18, 1000, 20000, 1, undefined, false ],
+        _2_notAdmin: [ 0, false, "TokenName", "TKN", 18, 1000, 20000, 1, true, "NOT_PAUSER" ],
+    }, function(senderIndex, addAsPauserRole, name, symbol, decimals, cap, maxVesting, tlrInitialReward, mustFail, expectedErrorMessage) {
         it(t("admin", "createATM", "Should be able to create an ATM.", mustFail), async function() {
             // Setup
             const sender = accounts[senderIndex];
@@ -65,6 +65,7 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
                     decimals,
                     cap,
                     maxVesting,
+                    tlrInitialReward,
                     {from : sender }
                 );
                 // Assertions

@@ -9,6 +9,7 @@ const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/stru
 const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
 const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
@@ -19,16 +20,20 @@ const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
+
 contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
     const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
     const IAtmSettingsEncoder = new IATMSettingsEncoder(web3);
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const cTokenEncoder = new CTokenInterfaceEncoder(web3)
+
     let instance;
     let loanTermsConsInstance;
     let lendingPoolInstance;
     let loanTermsConsTemplate;
     let processRequestEncoding;
-    let oracleInstance;
     let settingsInstance;
     let lendingTokenInstance;
     let collateralTokenInstance;
@@ -46,39 +51,25 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         lendingTokenInstance = await Mock.new();
         lendingPoolInstance = await Mock.new();
-        oracleInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
         collateralTokenInstance = await Mock.new();
-        atmSettingsInstance = await Mock.new();
         settingsInstance = await createTestSettingsInstance(
             Settings,
             {
                 from: owner,
                 Mock,
-                onInitialize: async (
-                    instance,
-                    {
-                        escrowFactory,
-                        versionsRegistry,
-                        pairAggregatorRegistry,
-                        marketsState,
-                        interestValidator,
-                    }) => {
-                    await instance.initialize(
-                        escrowFactory.address,
-                        versionsRegistry.address,
-                        pairAggregatorRegistry.address,
-                        marketsState.address,
-                        interestValidator.address,
-                        atmSettingsInstance.address,
-                    );
+                initialize: true,
+                onInitialize: async (instance, { atmSettings }) => {
+                    atmSettingsInstance = atmSettings
                 },
             },
             {}
         );
+
+        const loanLib = await LoanLib.new();
+        await Loans.link("LoanLib", loanLib.address);
         instance = await Loans.new();
         await instance.initialize(
-            oracleInstance.address,
             lendingPoolInstance.address,
             loanTermsConsInstance.address,
             settingsInstance.address,
@@ -126,6 +117,10 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
                 )
             )
             const cTokenInstance = await Mock.new();
+            await cTokenInstance.givenMethodReturnAddress(
+              cTokenEncoder.encodeUnderlying(),
+              lendingTokenInstance.address
+            )
             await settingsInstance.createAssetSettings(
                 lendingTokenInstance.address,
                 cTokenInstance.address,

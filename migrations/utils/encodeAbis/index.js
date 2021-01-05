@@ -52,7 +52,7 @@ module.exports = {
             web3,
             escrowFactoryAddress,
             versionsRegistryAddress,
-            pairAggregatorRegistryAddress,
+            chainlinkAggregatorAddress,
             marketsStateAddress,
             interestValidatorAddress,
             atmSettingsAddress,
@@ -60,7 +60,7 @@ module.exports = {
             const params = [
                 escrowFactoryAddress,
                 versionsRegistryAddress,
-                pairAggregatorRegistryAddress,
+                chainlinkAggregatorAddress,
                 marketsStateAddress,
                 interestValidatorAddress,
                 atmSettingsAddress

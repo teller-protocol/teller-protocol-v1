@@ -2,9 +2,13 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 import "../../base/EtherCollateralLoans.sol";
-import "./LoansBaseMock.sol";
 
 contract EtherCollateralLoansMock is EtherCollateralLoans {
+    TellerCommon.LoanLiquidationInfo _mockLiquidationInfo;
+    bool _mockLiquidationInfoSet;
+
+    mapping(uint256 => TellerCommon.LoanCollateralInfo) internal mockCollateralInfo;
+
     function setLoanIDCounter(uint256 newLoanIdCounter) external {
         loanIDCounter = newLoanIdCounter;
     }
@@ -21,35 +25,51 @@ contract EtherCollateralLoansMock is EtherCollateralLoans {
         loans[loanID].escrow = escrowAddress;
     }
 
-    function setLoan(
-        uint256 id,
-        TellerCommon.LoanTerms calldata loanTerms,
-        uint256 termsExpiry,
-        uint256 loanStartTime,
-        uint256 collateral,
-        uint256 lastCollateralIn,
-        uint256 principalOwed,
-        uint256 interestOwed,
-        uint256 borrowedAmount,
-        TellerCommon.LoanStatus status,
-        bool liquidated
+    function mockGetCollateralInfo(
+        uint256 loanID,
+        int256 neededInLending,
+        int256 neededInCollateral
     ) external {
-        require(loanTerms.maxLoanAmount >= borrowedAmount, "BORROWED_AMOUNT_EXCEEDS_MAX");
-        totalCollateral += collateral;
-        loans[id] = TellerCommon.Loan({
-            id: id,
-            loanTerms: loanTerms,
-            termsExpiry: termsExpiry,
-            loanStartTime: loanStartTime,
-            collateral: collateral,
-            lastCollateralIn: lastCollateralIn,
-            principalOwed: principalOwed,
-            interestOwed: interestOwed,
-            borrowedAmount: borrowedAmount,
-            escrow: address(0x0),
-            status: status,
-            liquidated: liquidated
-        });
+        mockCollateralInfo[loanID].collateral = loans[loanID].collateral;
+        mockCollateralInfo[loanID].neededInLendingTokens = neededInLending;
+        mockCollateralInfo[loanID].neededInCollateralTokens = neededInCollateral;
+        mockCollateralInfo[loanID].moreCollateralRequired =
+            neededInCollateral > int256(loans[loanID].collateral);
+    }
+
+    function _getCollateralInfo(uint256 loanID)
+        internal
+        view
+        returns (TellerCommon.LoanCollateralInfo memory info)
+    {
+        info = mockCollateralInfo[loanID];
+        if (info.collateral == 0) {
+            info = super._getCollateralInfo(loanID);
+        }
+    }
+
+    function mockLiquidationInfo(TellerCommon.LoanLiquidationInfo memory liquidationInfo)
+        public
+    {
+        _mockLiquidationInfo = liquidationInfo;
+        _mockLiquidationInfoSet = true;
+    }
+
+    function _getLiquidationInfo(uint256 loanID)
+        internal
+        view
+        returns (TellerCommon.LoanLiquidationInfo memory)
+    {
+        if (_mockLiquidationInfoSet) {
+            return _mockLiquidationInfo;
+        } else {
+            return super._getLiquidationInfo(loanID);
+        }
+    }
+
+    function setLoan(TellerCommon.Loan memory loan) public {
+        totalCollateral += loan.collateral;
+        loans[loan.id] = loan;
     }
 
     function externalCreateEscrow(uint256 loanID) external returns (address) {

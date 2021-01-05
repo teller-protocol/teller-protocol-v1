@@ -115,6 +115,13 @@ interface LogicVersionsRegistryInterface {
     function hasLogicVersion(bytes32 logicName) external view returns (bool);
 
     /**
+        @notice Checks if an address is registered as a platform proxy.
+        @param proxy Address to check if is registered.
+        @return boolean if registered or not
+      */
+    function isProxyRegistered(address proxy) external view returns (bool);
+
+    /**
         @notice It initializes this logic versions registry contract instance.
         @param settingsAddress the settings contract address.
      */

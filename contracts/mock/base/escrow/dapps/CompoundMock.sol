@@ -7,7 +7,8 @@ import "./DappMock.sol";
     @notice This mock is used to expose a payable fallback function on tests.f
  */
 contract CompoundMock is DappMock, Compound {
-    constructor() public {
+    constructor(address settingsAddress) public {
         Ownable.initialize(msg.sender);
+        _setSettings(settingsAddress);
     }
 }

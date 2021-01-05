@@ -67,8 +67,8 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
     {
         require(
             responses.length >=
-                settings().getPlatformSettingValue(
-                    settings().consts().REQUIRED_SUBMISSIONS_SETTING()
+                _getSettings().getPlatformSettingValue(
+                    _getSettings().consts().REQUIRED_SUBMISSIONS_SETTING()
                 ),
             "LOANTERM_INSUFFICIENT_RESPONSES"
         );
@@ -96,6 +96,7 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
         );
         borrowerToLastLoanTermRequest[request.borrower] = now;
 
+        // TODO: Remove redundant event
         emit TermsAccepted(
             request.borrower,
             request.requestNonce,
@@ -141,6 +142,7 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
             response.signer,
             request.borrower,
             request.requestNonce,
+            response.signature.signerNonce,
             response.interestRate,
             response.collateralRatio,
             response.maxLoanAmount
@@ -212,8 +214,8 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
         if (borrowerToLastLoanTermRequest[request.borrower] == 0) {
             return;
         }
-        uint256 requestLoanTermsRateLimit = settings().getPlatformSettingValue(
-            settings().consts().REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING()
+        uint256 requestLoanTermsRateLimit = _getSettings().getPlatformSettingValue(
+            _getSettings().consts().REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING()
         );
         require(
             borrowerToLastLoanTermRequest[request.borrower].add(
