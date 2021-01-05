@@ -2,6 +2,7 @@ pragma solidity 0.5.17;
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "../util/ECDSALib.sol";
 import "../util/TellerCommon.sol";
 import "../util/NumbersList.sol";
 
@@ -98,7 +99,7 @@ contract Consensus is Base, OwnerSignersRole {
             "SIGNER_NONCE_TAKEN"
         );
 
-        address signer = ecrecover(
+        address signer = ECDSA.recover(
             keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", dataHash)),
             signature.v,
             signature.r,
