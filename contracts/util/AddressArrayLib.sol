@@ -1,52 +1,70 @@
 pragma solidity 0.5.17;
 
+import "./AddressLib.sol";
+
 /**
     @notice Utility library of inline functions on the address arrays.
 
     @author develop@teller.finance
  */
 library AddressArrayLib {
+    using AddressLib for address;
+
+    struct AddressArray {
+        address[] array;
+        mapping(address => uint256) indices;
+    }
+
+    function length(AddressArray storage self) internal view returns (uint256) {
+        return self.array.length;
+    }
+
     /**
       @notice It adds an address value to the array.
       @param self current array.
       @param newItem new item to add.
-      @return the current array with the new item.
+      @return index the item was added to.
     */
-    function add(address[] storage self, address newItem)
-        internal
-        returns (address[] memory)
-    {
-        require(newItem != address(0x0), "EMPTY_ADDRESS_NOT_ALLOWED");
-        self.push(newItem);
-        return self;
+    function add(address[] storage self, address newItem) internal returns (uint256) {
+        newItem.requireNotEmpty("EMPTY_ADDRESS_NOT_ALLOWED");
+        return self.push(newItem) - 1;
+    }
+
+    function add(AddressArray storage self, address addr) internal returns (uint256) {
+        (bool found, uint256 index) = getIndex(self, addr);
+        if (!found) {
+            index = add(self.array, addr);
+            self.indices[addr] = index;
+        }
+
+        return index;
     }
 
     /**
       @notice It removes the value at the given index in an array.
       @param self the current array.
       @param index remove an item in a specific index.
-      @return the current array without the item removed.
     */
-    function removeAt(address[] storage self, uint256 index)
-        internal
-        returns (address[] memory)
-    {
-        if (index >= self.length) return self;
+    function removeAt(address[] storage self, uint256 index) internal {
+        if (index >= self.length) return;
 
-        if (index == self.length - 1) {
-            delete self[self.length - 1];
-            self.length--;
-            return self;
+        if (index != self.length - 1) {
+            self[index] = self[self.length - 1];
         }
 
-        address temp = self[self.length - 1];
-        self[self.length - 1] = self[index];
-        self[index] = temp;
-
-        delete self[self.length - 1];
         self.length--;
+    }
 
-        return self;
+    function remove(AddressArray storage self, uint256 index) internal {
+        removeAt(self.array, index);
+    }
+
+    function remove(AddressArray storage self, address addr) internal {
+        (bool found, uint256 index) = getIndex(self, addr);
+
+        if (!found) return;
+
+        removeAt(self.array, index);
     }
 
     /**
@@ -61,7 +79,6 @@ library AddressArrayLib {
         view
         returns (bool found, uint256 indexAt)
     {
-        found = false;
         for (indexAt = 0; indexAt < self.length; indexAt++) {
             found = self[indexAt] == item;
             if (found) {
@@ -71,19 +88,27 @@ library AddressArrayLib {
         return (found, indexAt);
     }
 
+    function getIndex(AddressArray storage self, address addr)
+        internal
+        view
+        returns (bool found, uint256 index)
+    {
+        if (self.array.length > 0) {
+            index = self.indices[addr];
+            found = self.array[index] == addr;
+        }
+    }
+
     /**
-      @notice It removes an address value to the array.
-      @param self current array.
+      @notice It removes an address value from the array.
+      @param self the current array.
       @param item the item to remove.
       @return the current array without the removed item.
     */
-    function remove(address[] storage self, address item)
-        internal
-        returns (address[] memory)
-    {
+    function remove(address[] storage self, address item) internal {
         (bool found, uint256 indexAt) = getIndex(self, item);
-        if (!found) return self;
+        if (!found) return;
 
-        return removeAt(self, indexAt);
+        removeAt(self, indexAt);
     }
 }

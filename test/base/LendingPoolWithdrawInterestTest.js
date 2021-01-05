@@ -6,6 +6,7 @@ const BurnableInterfaceEncoder = require('../utils/encoders/BurnableInterfaceEnc
 const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
 const InterestValidatorInterfaceEncoder = require('../utils/encoders/InterestValidatorInterfaceEncoder');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -19,6 +20,8 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
     const interestValidatorInterfaceEncoder = new InterestValidatorInterfaceEncoder(web3);
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const cTokenEncoder = new CTokenInterfaceEncoder(web3)
+
     let instance;
     let tTokenInstance;
     let lendingTokenInstance;
@@ -40,7 +43,12 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
         lendersInstance = await Lenders.new();
         marketsInstance = await Mock.new();
         interestValidatorInstance = await Mock.new();
-        
+
+        await cTokenInstance.givenMethodReturnAddress(
+          cTokenEncoder.encodeUnderlying(),
+          lendingTokenInstance.address
+        )
+
         instance = await LendingPool.new();
         await lendersInstance.initialize(
             tTokenInstance.address,
@@ -54,13 +62,13 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
         _1_cTokenSupported_basic: [true, accounts[0], true, true, 10, 10, 10, false, { supported: false, isValid: true }, undefined, false],
         _2_cTokenSupported_basic: [true, accounts[0], true, true, 40, 30, 25, false, { supported: false, isValid: true }, 'AMOUNT_EXCEEDS_AVAILABLE_AMOUNT', true],
         _3_cTokenSupported_basic: [true, accounts[0], true, true, 40, 25, 30, false, { supported: false, isValid: true }, undefined, false],
-        _4_cTokenSupported_transferFail: [true, accounts[1], true, false, 50, 50, 50, false, { supported: false, isValid: true }, 'LENDING_TRANSFER_FAILED', true],
-        _5_cTokenSupported_notEnoughBalance: [true, accounts[1], true, true, 49, 50, 50, true, { supported: false, isValid: true }, 'COMPOUND_WITHDRAWAL_ERROR', true],
+        _4_cTokenSupported_transferFail: [true, accounts[1], true, false, 50, 50, 50, false, { supported: false, isValid: true }, 'SafeERC20: ERC20 operation did not succeed', true],
+        _5_cTokenSupported_notEnoughBalance: [true, accounts[1], true, true, 49, 50, 50, true, { supported: false, isValid: true }, 'LENDING_TOKEN_NOT_ENOUGH_BALANCE', true],
         _6_cTokenSupported_notEqualAddresses: [false, accounts[1], true, true, 49, 50, 50, true, { supported: false, isValid: true }, 'SENDER_ISNT_LENDING_POOL', true],
         _7_cTokenNotSupported_basic: [true, accounts[0], false, true, 10, 10, 10, false, { supported: false, isValid: true }, undefined, false],
         _8_cTokenNotSupported_basic: [true, accounts[0], false, true, 40, 30, 25, false, { supported: false, isValid: true }, 'AMOUNT_EXCEEDS_AVAILABLE_AMOUNT', true],
         _9_cTokenNotSupported_basic: [true, accounts[0], false, true, 40, 25, 30, false, { supported: false, isValid: true }, undefined, false],
-        _10_cTokenNotSupported_transferFail: [true, accounts[1], false, false, 50, 50, 50, false, { supported: false, isValid: true }, 'LENDING_TRANSFER_FAILED', true],
+        _10_cTokenNotSupported_transferFail: [true, accounts[1], false, false, 50, 50, 50, false, { supported: false, isValid: true }, 'SafeERC20: ERC20 operation did not succeed', true],
         _11_cTokenNotSupported_notEqualAddresses: [false, accounts[1], true, true, 49, 50, 50, false, { supported: false, isValid: true }, 'SENDER_ISNT_LENDING_POOL', true],
         _12_validatorSupportedAndValid_valid: [true, accounts[0], true, true, 40, 25, 30, false, { supported: true, isValid: true }, undefined, false],
         _13_validatorSupportedAndNotValid_invalid: [true, accounts[0], true, true, 40, 25, 30, false, { supported: true, isValid: false }, 'INTEREST_TO_WITHDRAW_IS_INVALID', true],
@@ -95,7 +103,6 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
                 lendingTokenInstance.address,
                 lendersInstance.address,
                 loansInstance.address,
-                cTokenAddress,
                 settingsInstance.address,
             );
             await lendersInstance.mockLenderInfo(

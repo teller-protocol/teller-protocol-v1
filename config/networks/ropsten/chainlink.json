@@ -1,0 +1,22 @@
+{
+  "USDC_ETH": {
+    "baseTokenName": "USDC",
+    "quoteTokenName": "ETH",
+    "address": "0xE48d431DB6cdf5E361c554fA95826a44A27d1167"
+  },
+  "DAI_ETH": {
+    "baseTokenName": "DAI",
+    "quoteTokenName": "ETH",
+    "address": "0xd63bAd023755e15c7B4ce99dB8B71100A0736d43"
+  },
+  "LINK_DAI": {
+    "baseTokenName": "LINK",
+    "quoteTokenName": "DAI",
+    "address": "0x5029aeAdB0b1371EfCfC7b2b1C824756bDF12D28"
+  },
+  "LINK_USDC": {
+    "baseTokenName": "LINK",
+    "quoteTokenName": "USDC",
+    "address": "0xD4d78d8e18d4717F5eE8801335eE5b5B97a4b824"
+  }
+}

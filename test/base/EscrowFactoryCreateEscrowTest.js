@@ -1,6 +1,7 @@
 // JS Libraries
 const { createLoanTerms } = require("../utils/structs");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
+const { createLoan } = require('../utils/loans');
 const { t, NULL_ADDRESS, ACTIVE } = require("../utils/consts");
 const withData = require("leche").withData;
 
@@ -13,8 +14,11 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const EscrowFactory = artifacts.require("./base/EscrowFactory.sol");
 const Escrow = artifacts.require("./base/Escrow.sol");
 const Settings = artifacts.require("./base/Settings.sol");
-const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
+const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 const VersionsRegistry = artifacts.require("./base/LogicVersionsRegistry.sol");
+
+// Libraries
+const LoanLib = artifacts.require("../util/LoanLib.sol");
 
 contract("EscrowFactoryCreateEscrowTest", function(accounts) {
   const owner = accounts[0];
@@ -24,6 +28,9 @@ contract("EscrowFactoryCreateEscrowTest", function(accounts) {
   let versionsRegistry;
 
   beforeEach(async () => {
+    const CETH = await Mock.new();
+    const loanLib = await LoanLib.new();
+    await Loans.link("LoanLib", loanLib.address);
     loans = await Loans.new();
     escrowFactoryInstance = await EscrowFactory.new();
     versionsRegistry = await VersionsRegistry.new();
@@ -38,21 +45,22 @@ contract("EscrowFactoryCreateEscrowTest", function(accounts) {
           {
             marketsState,
             interestValidator,
-            pairAggregatorRegistry,
+            chainlinkAggregator,
             atmSettings
           }) => {
           await instance.initialize(
             escrowFactoryInstance.address,
             versionsRegistry.address,
-            pairAggregatorRegistry.address,
+            chainlinkAggregator.address,
             marketsState.address,
             interestValidator.address,
-            atmSettings.address
+            atmSettings.address,
+            (await Mock.new()).address,
+            CETH.address
           );
         }
       }
     );
-    await loans.externalSetSettings(settingsInstance.address);
 
     const escrowLogic = await Escrow.new();
     await versionsRegistry.initialize(settingsInstance.address);
@@ -77,7 +85,16 @@ contract("EscrowFactoryCreateEscrowTest", function(accounts) {
       // Setup
       const borrower = borrowerIndex === -1 ? NULL_ADDRESS : accounts[borrowerIndex];
       const loanTerms = createLoanTerms(borrower, NULL_ADDRESS, 0, 0, 0, 0);
-      await loans.setLoan(loanID, loanTerms, 0, 0, 123456, 0, 0, 0, loanTerms.maxLoanAmount, ACTIVE, false);
+
+      const loan = createLoan({
+        id: loanID,
+        loanTerms,
+        collateral: 123456,
+        borrowedAmount: loanTerms.maxLoanAmount,
+        status: ACTIVE,
+        liquidated: false
+      });
+      await loans.setLoan(loan);
 
       if (isPaused) {
         await settingsInstance.pause({ from: owner });

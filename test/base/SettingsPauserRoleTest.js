@@ -20,33 +20,6 @@ contract('SettingsPauserRoleTest', function (accounts) {
     });
 
     withData({
-        _1_is_owner: [ownerIndex, false, true, null, false],
-        _2_allowed: [2, true, true, undefined, false],
-        _3_not_allowed: [1, false, false, 'NOT_PAUSER', true],
-    }, function(addressIndex, callAddPauser, expectedResponse, expectedErrorMessage, mustFail) {
-        it(t('user', 'hasPauserRole', 'Should (or not) have the Pauser role.', mustFail), async function() {
-            // Setup
-            const address = accounts[addressIndex];
-            if (callAddPauser) {
-                await instance.addPauser(address);
-            }
-
-            try {
-                // Invocation
-                const hasPauserRole = await instance.hasPauserRole(address);
-
-                // Assertions
-                assert.equal(hasPauserRole, expectedResponse, 'Pauser role not correct.')
-            } catch (error) {
-                // Assertions
-                assert(mustFail);
-                assert(error);
-                assert.equal(error.reason, expectedErrorMessage);
-            }
-        });
-    });
-
-    withData({
         _1_is_owner: [ownerIndex, false, null, false],
         _2_allowed: [2, true, undefined, false],
         _3_not_allowed: [1, false, 'NOT_PAUSER', true],

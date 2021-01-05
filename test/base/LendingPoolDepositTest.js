@@ -6,13 +6,14 @@ const {
 const {
     lendingPool
 } = require('../utils/events');
-const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
 const MintableInterfaceEncoder = require('../utils/encoders/MintableInterfaceEncoder');
 const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
+const DAIMock = artifacts.require("./mock/token/DAIMock.sol")
 
 // Smart contracts
 const Lenders = artifacts.require("./base/Lenders.sol");
@@ -20,10 +21,10 @@ const LendingPool = artifacts.require("./base/LendingPool.sol");
 const TToken = artifacts.require("./base/TToken.sol");
 
 contract('LendingPoolDepositTest', function (accounts) {
-    const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
     const mintableInterfaceEncoder = new MintableInterfaceEncoder(web3);
     const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
     const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const cTokenEncoder = new CTokenInterfaceEncoder(web3)
 
     let instance;
     let tTokenInstance;
@@ -37,7 +38,7 @@ contract('LendingPoolDepositTest', function (accounts) {
 
     beforeEach('Setup for each test', async () => {
         tTokenInstance = await Mock.new();
-        daiInstance = await Mock.new();
+        daiInstance = await DAIMock.new();
         loansInstance = await Mock.new();
         interestConsensusInstance = await Mock.new();
         instance = await LendingPool.new();
@@ -47,7 +48,13 @@ contract('LendingPoolDepositTest', function (accounts) {
             settingsInterfaceEncoder.encodeMarketsState(),
             marketsInstance.address
         );
+
         cTokenInstance = await Mock.new();
+        await cTokenInstance.givenMethodReturnAddress(
+          cTokenEncoder.encodeUnderlying(),
+          daiInstance.address
+        )
+
         lendersInstance = await Lenders.new();
         await lendersInstance.initialize(
             tTokenInstance.address,
@@ -61,14 +68,13 @@ contract('LendingPoolDepositTest', function (accounts) {
             daiInstance.address,
             lendersInstance.address,
             loansInstance.address,
-            cTokenInstance.address,
             settingsInstance.address,
         );
     });
 
     withData({
         _1_basic: [accounts[0], true, true, 1, false, 1000, undefined, false],
-        _2_notTransferFromEnoughBalance: [accounts[2], false, true, 100, false, 1000, "LENDING_TRANSFER_FROM_FAILED", true],
+        _2_notTransferFromEnoughBalance: [accounts[2], false, true, 100, false, 1000, "SafeERC20: ERC20 operation did not succeed", true],
         _3_notDepositIntoCompound: [accounts[2], true, true, 100, true, 1000, "COMPOUND_DEPOSIT_ERROR", true],
         _4_notMint: [accounts[0], true, false, 60, false, 1000, 'TTOKEN_MINT_FAILED', true],
         _5_notAllowance: [accounts[0], true, true, 1, false, 0, "LEND_TOKEN_NOT_ENOUGH_ALLOWANCE", true],
@@ -84,15 +90,21 @@ contract('LendingPoolDepositTest', function (accounts) {
     ) {
         it(t('user', 'deposit', 'Should able (or not) to deposit DAIs.', mustFail), async function () {
             // Setup
-            const encodeTransferFrom = erc20InterfaceEncoder.encodeTransferFrom();
-            await daiInstance.givenMethodReturnBool(encodeTransferFrom, transferFrom);
+            await settingsInstance.givenMethodReturnAddress(
+                settingsInterfaceEncoder.encodeGetCTokenAddress(),
+                cTokenInstance.address
+            );
+            if (!transferFrom) {
+                await daiInstance.mockTransferFromReturnFalse();
+            }
             const encodeMint = mintableInterfaceEncoder.encodeMint();
             await tTokenInstance.givenMethodReturnBool(encodeMint, mint);
             const mintResponse = compoundFails ? 1 : 0
             const encodeCompMint = compoundInterfaceEncoder.encodeMint();
             await cTokenInstance.givenMethodReturnUint(encodeCompMint, mintResponse);
-            const encodeAllowance = erc20InterfaceEncoder.encodeAllowance();
-            await daiInstance.givenMethodReturnUint(encodeAllowance, allowance);
+
+            await daiInstance.mint(recipient, allowance);
+            await daiInstance.approve(instance.address, allowance, { from: recipient });
 
             try {
                 // Invocation
@@ -130,7 +142,7 @@ contract('LendingPoolDepositTest', function (accounts) {
             // Setup
             // Overriding instances created during beforeEach() as a real TToken instance
             // is needed for this test. 
-            tTokenInstance = await TToken.new("TToken Name", "TTN", 0);
+            tTokenInstance = await TToken.new(settingsInstance.address, "TToken Name", "TTN", 0);
             lendersInstance = await Lenders.new();
 
             await lendersInstance.initialize(
@@ -145,17 +157,17 @@ contract('LendingPoolDepositTest', function (accounts) {
                 daiInstance.address,
                 lendersInstance.address,
                 loansInstance.address,
-                cTokenInstance.address,
                 settingsInstance.address,
             );
 
-            const encodeTransferFrom = erc20InterfaceEncoder.encodeTransferFrom();
-            await daiInstance.givenMethodReturnBool(encodeTransferFrom, transferFrom);
+            if (!transferFrom) {
+                await daiInstance.mockTransferFromReturnFalse();
+            }
             const mintResponse = compoundFails ? 1 : 0
             const encodeCompMint = compoundInterfaceEncoder.encodeMint();
             await cTokenInstance.givenMethodReturnUint(encodeCompMint, mintResponse);
-            const encodeAllowance = erc20InterfaceEncoder.encodeAllowance();
-            await daiInstance.givenMethodReturnUint(encodeAllowance, allowance);
+            await daiInstance.mint(recipient, allowance);
+            await daiInstance.approve(instance.address, allowance, { from: recipient });
 
             try {
                 // Invocation

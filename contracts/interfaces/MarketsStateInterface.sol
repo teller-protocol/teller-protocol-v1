@@ -96,6 +96,16 @@ interface MarketsStateInterface {
         view
         returns (MarketStateLib.MarketState memory);
 
+    /**
+        @notice It gets the current global market state for a given borrowed asset.
+        @param borrowedAsset borrowed asset address.
+        @return the current global market state.
+     */
+    function getGlobalMarket(address borrowedAsset)
+        external
+        view
+        returns (MarketStateLib.MarketState memory);
+
     function isWhitelisted(address account) external view returns (bool);
 
     function addWhitelisted(address account) external;

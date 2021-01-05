@@ -103,7 +103,7 @@ contract Base is TInitializable, BaseUpgradeable, ReentrancyGuard {
         @return true if the lending pool address is  paused. Otherwise it returns false.
      */
     function _isPoolPaused(address poolAddress) internal view returns (bool) {
-        return settings().lendingPoolPaused(poolAddress);
+        return _getSettings().lendingPoolPaused(poolAddress);
     }
 
     /**
@@ -111,15 +111,15 @@ contract Base is TInitializable, BaseUpgradeable, ReentrancyGuard {
         @return true if platform is paused. Otherwise it returns false.
      */
     function _isPaused() internal view returns (bool) {
-        return settings().isPaused();
+        return _getSettings().isPaused();
     }
 
     function _markets() internal view returns (MarketsStateInterface) {
-        return settings().marketsState();
+        return _getSettings().marketsState();
     }
 
     function _interestValidator() internal view returns (InterestValidatorInterface) {
-        return settings().interestValidator();
+        return _getSettings().interestValidator();
     }
 
     /** Private functions */

@@ -30,7 +30,7 @@ contract InitializeableDynamicProxy is BaseDynamicProxy, BaseUpgradeabilityProxy
         @notice Uses double underscore (__) to avoid any collision in implementation contracts.
      */
     function __isInitialized() public view returns (bool) {
-        return address(settings()) != address(0x0);
+        return address(_getSettings()) != address(0x0);
     }
 
     /**

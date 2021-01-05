@@ -16,6 +16,10 @@ contract TDAI is TToken {
     /* Constructor */
     /**
      * @dev Calls TToken constructor with token details
+     * @param settingsAddress the setting address.
      */
-    constructor() public TToken(NAME, SYMBOL, DECIMALS) {}
+    constructor(address settingsAddress)
+        public
+        TToken(settingsAddress, NAME, SYMBOL, DECIMALS)
+    {}
 }

@@ -5,32 +5,29 @@ import "./BaseMock.sol";
 import "../../base/LoansBase.sol";
 
 contract LoansBaseMock is LoansBase, BaseMock {
+    TellerCommon.LoanLiquidationInfo public _mockLiquidationInfo;
+    bool public _mockLiquidationInfoSet;
+    TellerCommon.LoanLiquidationInfo public _mockPayOutInfo;
+    uint256 _mockPayOutInfoLoanID;
+    address public _mockPayOutInfoRecipient;
+    bool public _mockPayOutInfoSet;
+    bool public paidOutCollateral;
+
     mapping(uint256 => TellerCommon.LoanCollateralInfo) internal mockCollateralInfo;
 
     function _payOutCollateral(
         uint256 loanID,
         uint256 amount,
         address payable recipient
-    ) internal {}
-
-    function externalPayLoan(uint256 loanID, uint256 toPay) external {
-        _payLoan(loanID, toPay);
+    ) internal {
+        paidOutCollateral = true;
     }
 
-    function externalConvertWeiToToken(uint256 weiAmount)
+    function externalPayLoan(uint256 loanID, uint256 toPay)
         external
-        view
-        returns (uint256)
+        returns (uint256, uint256)
     {
-        return _convertWeiToToken(weiAmount);
-    }
-
-    function externalConvertTokenToWei(uint256 tokenAmount)
-        external
-        view
-        returns (uint256)
-    {
-        return _convertTokenToWei(tokenAmount);
+        return loans[loanID].payOff(toPay);
     }
 
     function externalIsSupplyToDebtRatioValid(uint256 newLoanAmount)
@@ -54,7 +51,6 @@ contract LoansBaseMock is LoansBase, BaseMock {
         TellerCommon.LoanStatus status,
         bool liquidated
     ) external {
-        require(loanTerms.maxLoanAmount >= borrowedAmount, "BORROWED_AMOUNT_EXCEEDS_MAX");
         loans[id] = TellerCommon.Loan({
             id: id,
             loanTerms: loanTerms,
@@ -79,20 +75,75 @@ contract LoansBaseMock is LoansBase, BaseMock {
         loans[loanID].escrow = escrowAddress;
     }
 
-    function externalEscrowClaimTokens(uint256 loanID, address recipient) external {
-        EscrowInterface(loans[loanID].escrow).claimTokens(recipient);
+    function externalEscrowClaimTokensByCollateralValue(
+        address recipient,
+        uint256 amountToClaim,
+        uint256 loanID
+    ) external {
+        EscrowInterface(loans[loanID].escrow).claimTokensByCollateralValue(
+            recipient,
+            amountToClaim
+        );
+    }
+
+    function externalPayOutLiquidator(
+        uint256 loanID,
+        TellerCommon.LoanLiquidationInfo calldata liquidationInfo,
+        address payable recipient
+    ) external {
+        super._payOutLiquidator(loanID, liquidationInfo, recipient);
+    }
+
+    function mockLiquidationInfo(TellerCommon.LoanLiquidationInfo memory liquidationInfo)
+        public
+    {
+        _mockLiquidationInfo = liquidationInfo;
+        _mockLiquidationInfoSet = true;
+    }
+
+    function _getLiquidationInfo(uint256 loanID)
+        internal
+        view
+        returns (TellerCommon.LoanLiquidationInfo memory)
+    {
+        if (_mockLiquidationInfoSet) {
+            return _mockLiquidationInfo;
+        } else {
+            return super._getLiquidationInfo(loanID);
+        }
+    }
+
+    function mockPayOutLiquidator(
+        uint256 loanID,
+        TellerCommon.LoanLiquidationInfo memory liquidationInfo,
+        address payable recipient
+    ) public {
+        _mockPayOutInfo = liquidationInfo;
+        _mockPayOutInfoLoanID = loanID;
+        _mockPayOutInfoRecipient = recipient;
+        _mockPayOutInfoSet = true;
+    }
+
+    function _payOutLiquidator(
+        uint256 loanID,
+        TellerCommon.LoanLiquidationInfo memory liquidationInfo,
+        address payable recipient
+    ) internal {
+        if (!_mockPayOutInfoSet) {
+            super._payOutLiquidator(loanID, liquidationInfo, recipient);
+        }
     }
 
     function mockGetCollateralInfo(
         uint256 loanID,
-        uint256 neededInLending,
-        uint256 neededInCollateral
+        int256 neededInLending,
+        int256 neededInCollateral
     ) external {
         mockCollateralInfo[loanID].collateral = loans[loanID].collateral;
         mockCollateralInfo[loanID].neededInLendingTokens = neededInLending;
         mockCollateralInfo[loanID].neededInCollateralTokens = neededInCollateral;
         mockCollateralInfo[loanID].moreCollateralRequired =
-            neededInCollateral > loans[loanID].collateral;
+            neededInCollateral > int256(loans[loanID].collateral);
     }
 
     function _getCollateralInfo(uint256 loanID)
@@ -106,19 +157,33 @@ contract LoansBaseMock is LoansBase, BaseMock {
         }
     }
 
+    function _getCollateralNeededInfo(uint256 loanID)
+        internal
+        view
+        returns (
+            int256 neededInLending,
+            int256 neededInCollateral,
+            uint256 escrowLoanValue
+        )
+    {
+        TellerCommon.LoanCollateralInfo memory info = mockCollateralInfo[loanID];
+        neededInLending = info.neededInLendingTokens;
+        neededInCollateral = info.neededInCollateralTokens;
+        escrowLoanValue = info.collateral;
+        if (info.collateral == 0) {
+            (neededInLending, neededInCollateral, escrowLoanValue) = super
+                ._getCollateralNeededInfo(loanID);
+        }
+    }
+
     function initialize(
-        address priceOracleAddress,
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
-        address
+        address collateralTokenAddress
     ) external isNotInitialized() {
-        _initialize(
-            priceOracleAddress,
-            lendingPoolAddress,
-            loanTermsConsensusAddress,
-            settingsAddress
-        );
+        _initialize(lendingPoolAddress, loanTermsConsensusAddress, settingsAddress);
+        collateralToken = collateralTokenAddress;
     }
 
     function depositCollateral(
