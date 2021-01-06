@@ -30,4 +30,4 @@ jobs:
           CHANGED_FILES: "${{ steps.files.outputs.added_modified  }}"
         run: |
           CHANGED_TEST_FILES=`echo "$CHANGED_FILES" | tr " " '\n' | grep 'test/' | tr '\n' " "`
-          if [ "$CHANGED_TEST_FILES" ]; then yarn && yarn compile && yarn test $CHANGED_TEST_FILES; fi
+          if [ "$CHANGED_TEST_FILES" ]; then yarn && yarn compile && yarn typechain && yarn test $CHANGED_TEST_FILES; fi

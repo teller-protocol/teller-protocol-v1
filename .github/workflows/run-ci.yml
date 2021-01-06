@@ -24,6 +24,9 @@ jobs:
       - name: Compiling Smart Contracts
         run: |
           yarn compile
+      - name: Generate Types
+        run: |
+          yarn typechain
       - name: Executing Code Coverage Report
         run: |
           yarn test:coverage
