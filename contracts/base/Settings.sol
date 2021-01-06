@@ -113,7 +113,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     /**
         @notice It contains all the current assets.
      */
-    address[] public assets;
+    address[] private assets;
 
     /**
         @notice This mapping represents the platform settings where:
