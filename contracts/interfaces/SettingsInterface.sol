@@ -243,8 +243,6 @@ interface SettingsInterface {
         view
         returns (AssetSettingsLib.AssetSettings memory);
 
-    function assets(uint256) external view returns (address);
-
     function platformSettings(bytes32)
         external
         view
