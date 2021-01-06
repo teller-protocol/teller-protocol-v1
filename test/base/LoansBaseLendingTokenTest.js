@@ -1,7 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS } = require('../utils/consts');
-const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
+const LendingPoolEncoder = require('../utils/encoders/LendingPoolEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -13,7 +13,7 @@ const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 const LoanLib = artifacts.require("../util/LoanLib.sol");
 
 contract('LoansBaseLendingTokenTest', function (accounts) {
-    const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
+    const lendingPoolEncoder = new LendingPoolEncoder(web3);
     let instance;
     let lendingPoolInstance;
     beforeEach('Setup for each test', async () => {
@@ -39,7 +39,7 @@ contract('LoansBaseLendingTokenTest', function (accounts) {
         it(t('user', 'lendingToken', 'Should able to get the lending token address.', false), async function() {
             // Setup
             const lendingTokenAddress = lendingTokenIndex === -1 ? NULL_ADDRESS: accounts[lendingTokenIndex];
-            const encodeLendingToken = lendingPoolInterfaceEncoder.encodeLendingToken();
+            const encodeLendingToken = lendingPoolEncoder.encodeLendingToken();
             await lendingPoolInstance.givenMethodReturnAddress(encodeLendingToken, lendingTokenAddress);
 
             // Invocation

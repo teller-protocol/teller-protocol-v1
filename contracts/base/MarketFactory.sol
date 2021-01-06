@@ -5,13 +5,13 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Interfaces
-import "../interfaces/LoansInterface.sol";
-import "../interfaces/InterestConsensusInterface.sol";
-import "../interfaces/LoanTermsConsensusInterface.sol";
-import "../interfaces/LendingPoolInterface.sol";
-import "../interfaces/LendersInterface.sol";
-import "../interfaces/SettingsInterface.sol";
-import "../interfaces/MarketFactoryInterface.sol";
+import "../interfaces/ILoans.sol";
+import "../interfaces/IInterestConsensus.sol";
+import "../interfaces/ILoanTermsConsensus.sol";
+import "../interfaces/ILendingPool.sol";
+import "../interfaces/ILenders.sol";
+import "../interfaces/ISettings.sol";
+import "../interfaces/IMarketFactory.sol";
 
 // Commons
 import "./DynamicProxy.sol";
@@ -33,7 +33,7 @@ import "./TInitializable.sol";
 
     @author develop@teller.finance
  */
-contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterface {
+contract MarketFactory is TInitializable, BaseUpgradeable, IMarketFactory {
     using Address for address;
 
     /** Constants */
@@ -106,11 +106,11 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         address owner = msg.sender;
 
         (
-            LendingPoolInterface lendingPoolProxy,
-            InterestConsensusInterface interestConsensusProxy,
-            LendersInterface lendersProxy,
-            LoanTermsConsensusInterface loanTermsConsensusProxy,
-            LoansInterface loansProxy
+            ILendingPool lendingPoolProxy,
+            IInterestConsensus interestConsensusProxy,
+            ILenders lendersProxy,
+            ILoanTermsConsensus loanTermsConsensusProxy,
+            ILoans loansProxy
         ) = _createAndInitializeProxies(owner, tToken, borrowedToken, collateralToken);
 
         _addMarket(
@@ -295,11 +295,11 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
     )
         internal
         returns (
-            LendingPoolInterface lendingPoolProxy,
-            InterestConsensusInterface interestConsensusProxy,
-            LendersInterface lendersProxy,
-            LoanTermsConsensusInterface loanTermsConsensusProxy,
-            LoansInterface loansProxy
+            ILendingPool lendingPoolProxy,
+            IInterestConsensus interestConsensusProxy,
+            ILenders lendersProxy,
+            ILoanTermsConsensus loanTermsConsensusProxy,
+            ILoans loansProxy
         )
     {
         // Creating proxies
@@ -336,29 +336,29 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
     function _createProxies(address collateralToken)
         internal
         returns (
-            LendingPoolInterface lendingPoolProxy,
-            InterestConsensusInterface interestConsensusProxy,
-            LendersInterface lendersProxy,
-            LoanTermsConsensusInterface loanTermsConsensusProxy,
-            LoansInterface loansProxy
+            ILendingPool lendingPoolProxy,
+            IInterestConsensus interestConsensusProxy,
+            ILenders lendersProxy,
+            ILoanTermsConsensus loanTermsConsensusProxy,
+            ILoans loansProxy
         )
     {
-        lendingPoolProxy = LendingPoolInterface(
+        lendingPoolProxy = ILendingPool(
             _createDynamicProxy(
                 _getSettings().versionsRegistry().consts().LENDING_POOL_LOGIC_NAME()
             )
         );
-        interestConsensusProxy = InterestConsensusInterface(
+        interestConsensusProxy = IInterestConsensus(
             _createDynamicProxy(
                 _getSettings().versionsRegistry().consts().INTEREST_CONSENSUS_LOGIC_NAME()
             )
         );
-        lendersProxy = LendersInterface(
+        lendersProxy = ILenders(
             _createDynamicProxy(
                 _getSettings().versionsRegistry().consts().LENDERS_LOGIC_NAME()
             )
         );
-        loanTermsConsensusProxy = LoanTermsConsensusInterface(
+        loanTermsConsensusProxy = ILoanTermsConsensus(
             _createDynamicProxy(
                 _getSettings()
                     .versionsRegistry()
@@ -367,7 +367,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
             )
         );
         if (collateralToken == _getSettings().ETH_ADDRESS()) {
-            loansProxy = LoansInterface(
+            loansProxy = ILoans(
                 _createDynamicProxy(
                     _getSettings()
                         .versionsRegistry()
@@ -376,7 +376,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
                 )
             );
         } else {
-            loansProxy = LoansInterface(
+            loansProxy = ILoans(
                 _createDynamicProxy(
                     _getSettings()
                         .versionsRegistry()
@@ -404,11 +404,11 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         address tToken,
         address borrowedToken,
         address collateralToken,
-        LendingPoolInterface lendingPoolProxy,
-        InterestConsensusInterface interestConsensusProxy,
-        LendersInterface lendersProxy,
-        LoanTermsConsensusInterface loanTermsConsensusProxy,
-        LoansInterface loansProxy
+        ILendingPool lendingPoolProxy,
+        IInterestConsensus interestConsensusProxy,
+        ILenders lendersProxy,
+        ILoanTermsConsensus loanTermsConsensusProxy,
+        ILoans loansProxy
     ) internal {
         // Initializing LendingPool
         lendingPoolProxy.initialize(

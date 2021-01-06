@@ -9,9 +9,9 @@ import "../util/AddressLib.sol";
 import "./TInitializable.sol";
 
 // Interfaces
-import "../interfaces/SettingsInterface.sol";
-import "../interfaces/MarketsStateInterface.sol";
-import "../interfaces/InterestValidatorInterface.sol";
+import "../interfaces/ISettings.sol";
+import "../interfaces/IMarketsState.sol";
+import "../interfaces/IInterestValidator.sol";
 
 // Contracts
 import "./BaseUpgradeable.sol";
@@ -114,11 +114,11 @@ contract Base is TInitializable, BaseUpgradeable, ReentrancyGuard {
         return _getSettings().isPaused();
     }
 
-    function _markets() internal view returns (MarketsStateInterface) {
+    function _markets() internal view returns (IMarketsState) {
         return _getSettings().marketsState();
     }
 
-    function _interestValidator() internal view returns (InterestValidatorInterface) {
+    function _interestValidator() internal view returns (IInterestValidator) {
         return _getSettings().interestValidator();
     }
 

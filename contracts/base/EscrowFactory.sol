@@ -9,9 +9,9 @@ import "./DynamicProxy.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Interfaces
-import "../interfaces/LoansInterface.sol";
-import "../interfaces/EscrowFactoryInterface.sol";
-import "../interfaces/EscrowInterface.sol";
+import "../interfaces/ILoans.sol";
+import "../interfaces/IEscrowFactory.sol";
+import "../interfaces/IEscrow.sol";
 
 // Commons
 import "../util/AddressLib.sol";
@@ -32,7 +32,7 @@ import "../util/AddressArrayLib.sol";
 
     @author develop@teller.finance
  */
-contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeable {
+contract EscrowFactory is IEscrowFactory, TInitializable, BaseUpgradeable {
     using AddressArrayLib for address[];
     using AddressLib for address;
     using Address for address;
@@ -72,7 +72,7 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         isNotPaused()
         returns (address escrowAddress)
     {
-        TellerCommon.Loan memory loan = LoansInterface(loansAddress).loans(loanID);
+        TellerCommon.Loan memory loan = ILoans(loansAddress).loans(loanID);
         require(loan.escrow == address(0x0), "LOAN_ESCROW_ALREADY_EXISTS");
 
         bytes32 escrowLogicName = _getSettings()

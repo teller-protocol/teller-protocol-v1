@@ -4,7 +4,7 @@ const { t } = require('../utils/consts');
 const { dappMockABI } = require('../../migrations/utils/encodeAbis');
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const EscrowFactoryEncoder = require("../utils/encoders/EscrowFactoryEncoder");
-const LoansBaseInterfaceEncoder = require("../utils/encoders/LoansBaseInterfaceEncoder");
+const ILoansBaseEncoder = require("../utils/encoders/LoansBaseEncoder");
 const { encodeDappConfigParameter } = require("../utils/escrow");
 
 // Mock contracts
@@ -16,7 +16,7 @@ const Escrow = artifacts.require("./mock/base/EscrowMock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 
 contract('EscrowCallDappTest', function (accounts) {
-  const loansEncoder = new LoansBaseInterfaceEncoder(web3);
+  const loansEncoder = new ILoansBaseEncoder(web3);
   const escrowFactoryEncoder = new EscrowFactoryEncoder(web3)
 
   const owner = accounts[0];

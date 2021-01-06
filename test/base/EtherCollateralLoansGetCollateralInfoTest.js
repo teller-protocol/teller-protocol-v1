@@ -7,9 +7,8 @@ const { createLoanTerms } = require("../utils/structs");
 const { createTestSettingsInstance } = require('../utils/settings-helper');
 const { createLoan } = require('../utils/loans')
 const platformSettings = require("../utils/platformSettingsNames")
-const ChainlinkAggregatorEncoder = require("../utils/encoders/ChainlinkAggregatorEncoder");
-const LendingPoolInterfaceEncoder = require("../utils/encoders/LendingPoolInterfaceEncoder");
-const EscrowInterfaceEncoder = require("../utils/encoders/EscrowInterfaceEncoder");
+const LendingPoolEncoder = require("../utils/encoders/LendingPoolEncoder");
+const EscrowEncoder = require("../utils/encoders/EscrowEncoder");
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -24,9 +23,8 @@ const LoanLib = artifacts.require("../util/LoanLib.sol");
 
 contract("EtherCollateralLoansGetCollateralInfoTest", function(accounts) {
   BigNumber.set({ DECIMAL_PLACES: 0, ROUNDING_MODE: 3 });
-  const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
-  const chainlinkAggregatorEncoder = new ChainlinkAggregatorEncoder(web3);
-  const escrowEncoder = new EscrowInterfaceEncoder(web3);
+  const lendingPoolEncoder = new LendingPoolEncoder(web3);
+  const escrowEncoder = new EscrowEncoder(web3);
 
   let instance;
   let aggregatorInstance;
@@ -39,7 +37,7 @@ contract("EtherCollateralLoansGetCollateralInfoTest", function(accounts) {
     lendingPoolInstance = await Mock.new();
     lendingToken = await Mock.new();
     await lendingPoolInstance.givenMethodReturnAddress(
-      lendingPoolInterfaceEncoder.encodeLendingToken(),
+      lendingPoolEncoder.encodeLendingToken(),
       lendingToken.address
     );
 

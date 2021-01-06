@@ -13,11 +13,11 @@ import "../util/LoanLib.sol";
 import "./Base.sol";
 
 // Interfaces
-import "../interfaces/LendingPoolInterface.sol";
-import "../interfaces/LoanTermsConsensusInterface.sol";
-import "../interfaces/LoansInterface.sol";
-import "../atm/ATMGovernanceInterface.sol";
-import "../interfaces/EscrowInterface.sol";
+import "../interfaces/ILendingPool.sol";
+import "../interfaces/ILoanTermsConsensus.sol";
+import "../interfaces/ILoans.sol";
+import "../atm/IATMGovernance.sol";
+import "../interfaces/IEscrow.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -32,11 +32,11 @@ import "../interfaces/EscrowInterface.sol";
 /*****************************************************************************************************/
 /**
     @notice This contract is used as a basis for the creation of the different types of loans across the platform
-    @notice It implements the Base contract from Teller and the LoansInterface
+    @notice It implements the Base contract from Teller and the ILoans
 
     @author develop@teller.finance
  */
-contract LoansBase is LoansInterface, Base {
+contract LoansBase is ILoans, Base {
     using SafeMath for uint256;
     using NumbersLib for uint256;
     using NumbersLib for int256;
@@ -45,7 +45,7 @@ contract LoansBase is LoansInterface, Base {
 
     /* State Variables */
 
-    bytes32 internal constant SUPPLY_TO_DEBT_ATM_SETTING = "SupplyToDebt";
+    bytes32 internal constant MAX_DEBT_RATIO_ATM_SETTING = "MaxDebtRatio";
 
     uint256 public totalCollateral;
 
@@ -54,9 +54,9 @@ contract LoansBase is LoansInterface, Base {
     // At any time, this variable stores the next available loan ID
     uint256 public loanIDCounter;
 
-    LendingPoolInterface public lendingPool;
+    ILendingPool public lendingPool;
 
-    LoanTermsConsensusInterface public loanTermsConsensus;
+    ILoanTermsConsensus public loanTermsConsensus;
 
     mapping(address => uint256[]) public borrowerLoans;
 
@@ -126,8 +126,8 @@ contract LoansBase is LoansInterface, Base {
         require(!exceedsMaxLoanAmount, "AMOUNT_EXCEEDS_MAX_AMOUNT");
 
         require(
-            _isSupplyToDebtRatioValid(loanRequest.amount),
-            "SUPPLY_TO_DEBT_EXCEEDS_MAX"
+            _isDebtRatioValid(loanRequest.amount),
+            "DEBT_RATIO_EXCEEDS_MAX"
         );
         _;
     }
@@ -338,7 +338,7 @@ contract LoansBase is LoansInterface, Base {
         nonReentrant()
         isBorrower(loans[loanID].loanTerms.borrower)
     {
-        require(_isSupplyToDebtRatioValid(amountBorrow), "SUPPLY_TO_DEBT_EXCEEDS_MAX");
+        require(_isDebtRatioValid(amountBorrow), "DEBT_RATIO_EXCEEDS_MAX");
         require(
             loans[loanID].loanTerms.maxLoanAmount >= amountBorrow,
             "MAX_LOAN_EXCEEDED"
@@ -384,7 +384,7 @@ contract LoansBase is LoansInterface, Base {
 
         if (!eoaAllowed) {
             loans[loanID].escrow.requireNotEmpty("ESCROW_CONTRACT_NOT_DEFINED");
-            EscrowInterface(loans[loanID].escrow).initialize(address(this), loanID);
+            IEscrow(loans[loanID].escrow).initialize(address(this), loanID);
         }
 
         emit LoanTakenOut(
@@ -536,7 +536,7 @@ contract LoansBase is LoansInterface, Base {
             uint256 remainingCollateralAmount = reward.sub(loans[loanID].collateral);
             _payOutCollateral(loanID, loans[loanID].collateral, recipient);
             if (remainingCollateralAmount > 0 && loans[loanID].escrow != address(0x0)) {
-                EscrowInterface(loans[loanID].escrow).claimTokensByCollateralValue(
+                IEscrow(loans[loanID].escrow).claimTokensByCollateralValue(
                     recipient,
                     remainingCollateralAmount
                 );
@@ -572,8 +572,8 @@ contract LoansBase is LoansInterface, Base {
 
         _initialize(settingsAddress);
 
-        lendingPool = LendingPoolInterface(lendingPoolAddress);
-        loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
+        lendingPool = ILendingPool(lendingPoolAddress);
+        loanTermsConsensus = ILoanTermsConsensus(loanTermsConsensusAddress);
     }
 
     /**
@@ -598,11 +598,11 @@ contract LoansBase is LoansInterface, Base {
     }
 
     /**
-        @notice It validates whether supply to debt (StD) ratio is valid including the loan amount.
-        @param newLoanAmount the new loan amount to consider o the StD ratio.
+        @notice It validates whether the debt ratio is valid including the loan amount.
+        @param newLoanAmount the new loan amount to consider for the debt ratio.
         @return true if the ratio is valid. Otherwise it returns false.
      */
-    function _isSupplyToDebtRatioValid(uint256 newLoanAmount)
+    function _isDebtRatioValid(uint256 newLoanAmount)
         internal
         view
         returns (bool)
@@ -612,14 +612,14 @@ contract LoansBase is LoansInterface, Base {
             collateralToken
         );
         require(atmAddressForMarket != address(0x0), "ATM_NOT_FOUND_FOR_MARKET");
-        uint256 supplyToDebtMarketLimit = ATMGovernanceInterface(atmAddressForMarket)
-            .getGeneralSetting(SUPPLY_TO_DEBT_ATM_SETTING);
-        uint256 currentSupplyToDebtMarket = _markets().getSupplyToDebtFor(
+        uint256 debtRatioLimit = IATMGovernance(atmAddressForMarket)
+            .getGeneralSetting(MAX_DEBT_RATIO_ATM_SETTING);
+        uint256 currentDebtRatio = _markets().getDebtRatioFor(
             lendingPool.lendingToken(),
             collateralToken,
             newLoanAmount
         );
-        return currentSupplyToDebtMarket <= supplyToDebtMarketLimit;
+        return currentDebtRatio <= debtRatioLimit;
     }
 
     /**

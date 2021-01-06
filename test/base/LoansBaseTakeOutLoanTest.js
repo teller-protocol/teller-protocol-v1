@@ -9,9 +9,9 @@ const { createTestSettingsInstance } = require("../utils/settings-helper");
 const { createLoan } = require('../utils/loans')
 const settingsNames = require('../utils/platformSettingsNames')
 
-const EscrowFactoryInterfaceEncoder = require("../utils/encoders/EscrowFactoryInterfaceEncoder");
-const IATMSettingsEncoder = require("../utils/encoders/IATMSettingsEncoder");
-const MarketsStateInterfaceEncoder = require("../utils/encoders/MarketsStateInterfaceEncoder");
+const EscrowFactoryEncoder = require("../utils/encoders/EscrowFactoryEncoder");
+const ATMSettingsEncoder = require("../utils/encoders/ATMSettingsEncoder");
+const MarketsStateEncoder = require("../utils/encoders/MarketsStateEncoder");
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -25,9 +25,9 @@ const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 const LoanLib = artifacts.require("../util/LoanLib.sol");
 
 contract("LoansBaseTakeOutLoanTest", function(accounts) {
-  const escrowFactoryInterfaceEncoder = new EscrowFactoryInterfaceEncoder(web3);
-  const IAtmSettingsEncoder = new IATMSettingsEncoder(web3);
-  const MarketsStateEncoder = new MarketsStateInterfaceEncoder(web3);
+  const escrowFactoryEncoder = new EscrowFactoryEncoder(web3);
+  const atmSettingsEncoder = new ATMSettingsEncoder(web3);
+  const marketsStateEncoder = new MarketsStateEncoder(web3);
 
   const owner = accounts[0];
   let instance;
@@ -56,7 +56,7 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
         onInitialize: async (instance, { escrowFactory, chainlinkAggregator, atmSettings, marketsState }) => {
           const newEscrowInstance = await Mock.new();
           await escrowFactory.givenMethodReturnAddress(
-            escrowFactoryInterfaceEncoder.encodeCreateEscrow(),
+            escrowFactoryEncoder.encodeCreateEscrow(),
             newEscrowInstance.address
           );
 
@@ -81,7 +81,7 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
     );
     const atmGovernance = await Mock.new();
     await atmSettingsInstance.givenMethodReturnAddress(
-      IAtmSettingsEncoder.encodeGetATMForMarket(),
+      atmSettingsEncoder.encodeGetATMForMarket(),
       atmGovernance.address
     );
 
@@ -94,7 +94,7 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
     _4_more_collateral_needed: [ 15000000, false, false, 300000, NULL_ADDRESS, 45158, false, true, true, "MORE_COLLATERAL_REQUIRED" ],
     _5_successful_loan: [ 15000000, false, false, 300000, NULL_ADDRESS, 40000, false, false, false, undefined ],
     _6_with_recipient: [ 15000000, false, false, 300000, accounts[4], 40000, false, false, false, undefined ],
-    _7_supply_to_debt_maxed: [ 15000000, false, false, 300000, accounts[4], 40000, true, false, true, 'SUPPLY_TO_DEBT_EXCEEDS_MAX' ]
+    _7_debt_ratio_maxed: [ 15000000, false, false, 300000, accounts[4], 40000, true, false, true, 'DEBT_RATIO_EXCEEDS_MAX' ]
   }, function(
     amountToBorrow,
     termsExpired,
@@ -102,7 +102,7 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
     loanDuration,
     recipient,
     oraclePrice,
-    supplyToDebtInvalid,
+    debtRatioInvalid,
     moreCollateralRequired,
     mustFail,
     expectedErrorMessage
@@ -141,9 +141,9 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
       } else {
         await instance.mockGetCollateralInfo(mockLoanID, loan.borrowedAmount, loan.collateral)
       }
-      if (supplyToDebtInvalid) {
+      if (debtRatioInvalid) {
         await marketsStateInstance.givenMethodReturnUint(
-          MarketsStateEncoder.encodeGetSupplyToDebtFor(),
+          marketsStateEncoder.encodeGetDebtRatioFor(),
           2000,
         );
       }

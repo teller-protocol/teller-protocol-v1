@@ -2,7 +2,7 @@
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS, toBytes32 } = require('../utils/consts');
 const LogicVersionsRegistryEncoder = require('../utils/encoders/LogicVersionsRegistryEncoder');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const SettingsEncoder = require('../utils/encoders/SettingsEncoder');
 const { assert } = require('chai');
 
 // Mock contracts
@@ -13,7 +13,7 @@ const BaseUpgradeableMock = artifacts.require("./mock/base/BaseUpgradeableMock.s
 
 contract('BaseUpgradeableSetLogicNameTest', function (accounts) {
     const logicVersionsRegistryEncoder = new LogicVersionsRegistryEncoder(web3);
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const settingsEncoder = new SettingsEncoder(web3);
     let instance;
     let versionsRegistry;
     
@@ -24,7 +24,7 @@ contract('BaseUpgradeableSetLogicNameTest', function (accounts) {
         await instance.externalSetSettings(settings.address);
 
         await settings.givenMethodReturnAddress(
-            settingsInterfaceEncoder.encodeVersionsRegistry(),
+            settingsEncoder.encodeVersionsRegistry(),
             versionsRegistry.address
         );
     });

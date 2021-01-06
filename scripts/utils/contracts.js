@@ -72,7 +72,7 @@ module.exports = {
         eth: () => customCollateralToken(ETH),
         link: () => customCollateralToken(LINK),
         custom: (collateralToken) => customCollateralToken(collateralToken),
-        logicVersionsRegistry: (artifactName = 'LogicVersionsRegistryInterface') => {
+        logicVersionsRegistry: (artifactName = 'ILogicVersionsRegistry') => {
             return {
                 keyName: TELLER_KEY,
                 contractName: `LogicVersionsRegistry_Proxy`,

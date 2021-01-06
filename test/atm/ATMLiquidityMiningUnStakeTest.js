@@ -13,12 +13,12 @@ const TDAI = artifacts.require('./base/TDAI.sol')
 const TLRToken = artifacts.require('./atm/TLRToken.sol')
 const ATMGovernance = artifacts.require('./atm/ATMGovernance.sol')
 const ATMLiquidityMining = artifacts.require('./atm/ATMLiquidityMining.sol')
-const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder')
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder')
+const ATMSettingsEncoder = require('../utils/encoders/ATMSettingsEncoder')
+const SettingsEncoder = require('../utils/encoders/SettingsEncoder')
 
 contract('ATMLiquidityMiningUnStakeTest', function (accounts) {
-  const atmSettingsEncoder = new IATMSettingsEncoder(web3)
-  const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3)
+  const atmSettingsEncoder = new ATMSettingsEncoder(web3)
+  const settingsEncoder = new SettingsEncoder(web3)
   const owner = accounts[0]
   const user = accounts[2]
   const INITIAL_REWARD = 1
@@ -36,7 +36,7 @@ contract('ATMLiquidityMiningUnStakeTest', function (accounts) {
       false
     )
     await settingsInstance.givenMethodReturnAddress(
-      settingsInterfaceEncoder.encodeATMSettings(),
+      settingsEncoder.encodeATMSettings(),
       atmSettingsInstance.address
     )
     governance = await ATMGovernance.new()

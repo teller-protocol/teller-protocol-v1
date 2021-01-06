@@ -15,7 +15,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/SignerRo
 import "../base/BaseUpgradeable.sol";
 
 // Interfaces
-import "./ATMGovernanceInterface.sol";
+import "./IATMGovernance.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -32,12 +32,7 @@ import "./ATMGovernanceInterface.sol";
 
     @author develop@teller.finance
  */
-contract ATMGovernance is
-    ATMGovernanceInterface,
-    TInitializable,
-    SignerRole,
-    BaseUpgradeable
-{
+contract ATMGovernance is IATMGovernance, TInitializable, SignerRole, BaseUpgradeable {
     using AddressArrayLib for address[];
     using AddressLib for address;
     using Address for address;

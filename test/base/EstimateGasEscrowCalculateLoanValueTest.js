@@ -2,7 +2,7 @@
 const BN = require("bignumber.js");
 const { withData } = require("leche");
 const { t, ETH_ADDRESS } = require("../utils/consts");
-const LoansBaseInterfaceEncoder = require("../utils/encoders/LoansBaseInterfaceEncoder");
+const ILoansBaseEncoder = require("../utils/encoders/LoansBaseEncoder");
 const settingsNames = require("../utils/platformSettingsNames");
 const { toBytes32 } = require("../utils/consts");
 const { createMocks } = require("../utils/consts");
@@ -18,7 +18,7 @@ const Settings = artifacts.require("./base/Settings.sol");
 const Escrow = artifacts.require("./mock/base/EscrowMock.sol");
 
 contract("EstimateGasEscrowCalculateTotalValueTest", function(accounts) {
-  const loansEncoder = new LoansBaseInterfaceEncoder(web3);
+  const loansEncoder = new ILoansBaseEncoder(web3);
   
   const baseGasCost = 700000; // Gas cost with 1 token in wallet
   const expectedGasCost = (tokens) => baseGasCost + ((tokens -  1) * 10000); // Gas cost > 1 token in wallet

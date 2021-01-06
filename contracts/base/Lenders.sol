@@ -9,8 +9,8 @@ import "../util/AddressLib.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
 // Interfaces
-import "../interfaces/LendersInterface.sol";
-import "../interfaces/InterestConsensusInterface.sol";
+import "../interfaces/ILenders.sol";
+import "../interfaces/IInterestConsensus.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -27,14 +27,14 @@ import "../interfaces/InterestConsensusInterface.sol";
 
     @author develop@teller.finance
  */
-contract Lenders is Base, LendersInterface {
+contract Lenders is Base, ILenders {
     using AddressLib for address;
     using SafeMath for uint256;
 
     /* State Variables */
 
     address public lendingPool;
-    InterestConsensusInterface public interestConsensus;
+    IInterestConsensus public interestConsensus;
 
     address public tToken;
 
@@ -158,7 +158,7 @@ contract Lenders is Base, LendersInterface {
 
         tToken = tTokenAddress;
         lendingPool = lendingPoolAddress;
-        interestConsensus = InterestConsensusInterface(interestConsensusAddress);
+        interestConsensus = IInterestConsensus(interestConsensusAddress);
     }
 
     /** Internal Functions */

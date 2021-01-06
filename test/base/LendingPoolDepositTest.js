@@ -7,9 +7,8 @@ const {
     lendingPool
 } = require('../utils/events');
 const MintableInterfaceEncoder = require('../utils/encoders/MintableInterfaceEncoder');
-const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
-const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
+const SettingsEncoder = require('../utils/encoders/SettingsEncoder');
+const CTokenEncoder = require('../utils/encoders/CTokenEncoder')
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -22,9 +21,8 @@ const TToken = artifacts.require("./base/TToken.sol");
 
 contract('LendingPoolDepositTest', function (accounts) {
     const mintableInterfaceEncoder = new MintableInterfaceEncoder(web3);
-    const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
-    const cTokenEncoder = new CTokenInterfaceEncoder(web3)
+    const settingsEncoder = new SettingsEncoder(web3);
+    const cTokenEncoder = new CTokenEncoder(web3)
 
     let instance;
     let tTokenInstance;
@@ -45,7 +43,7 @@ contract('LendingPoolDepositTest', function (accounts) {
         marketsInstance = await Mock.new();
         settingsInstance = await Mock.new();
         await settingsInstance.givenMethodReturnAddress(
-            settingsInterfaceEncoder.encodeMarketsState(),
+            settingsEncoder.encodeMarketsState(),
             marketsInstance.address
         );
 
@@ -91,7 +89,7 @@ contract('LendingPoolDepositTest', function (accounts) {
         it(t('user', 'deposit', 'Should able (or not) to deposit DAIs.', mustFail), async function () {
             // Setup
             await settingsInstance.givenMethodReturnAddress(
-                settingsInterfaceEncoder.encodeGetCTokenAddress(),
+                settingsEncoder.encodeGetCTokenAddress(),
                 cTokenInstance.address
             );
             if (!transferFrom) {
@@ -100,7 +98,7 @@ contract('LendingPoolDepositTest', function (accounts) {
             const encodeMint = mintableInterfaceEncoder.encodeMint();
             await tTokenInstance.givenMethodReturnBool(encodeMint, mint);
             const mintResponse = compoundFails ? 1 : 0
-            const encodeCompMint = compoundInterfaceEncoder.encodeMint();
+            const encodeCompMint = cTokenEncoder.encodeMint();
             await cTokenInstance.givenMethodReturnUint(encodeCompMint, mintResponse);
 
             await daiInstance.mint(recipient, allowance);
@@ -164,7 +162,7 @@ contract('LendingPoolDepositTest', function (accounts) {
                 await daiInstance.mockTransferFromReturnFalse();
             }
             const mintResponse = compoundFails ? 1 : 0
-            const encodeCompMint = compoundInterfaceEncoder.encodeMint();
+            const encodeCompMint = cTokenEncoder.encodeMint();
             await cTokenInstance.givenMethodReturnUint(encodeCompMint, mintResponse);
             await daiInstance.mint(recipient, allowance);
             await daiInstance.approve(instance.address, allowance, { from: recipient });

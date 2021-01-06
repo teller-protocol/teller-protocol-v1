@@ -2,7 +2,7 @@
 const withData = require('leche').withData;
 const { t, createMocks } = require('../utils/consts');
 const { atmSettings } = require('../utils/events');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const SettingsEncoder = require('../utils/encoders/SettingsEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -11,7 +11,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
 
 contract('ATMSettingsRemoveATMToMarketTest', function (accounts) {
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const settingsEncoder = new SettingsEncoder(web3);
     const owner = accounts[0];
     let instance;
     let settings;
@@ -47,11 +47,11 @@ contract('ATMSettingsRemoveATMToMarketTest', function (accounts) {
             const sender = accounts[senderIndex];
             if(!encodeHasPauserRole) {
                 await settings.givenMethodRevertWithMessage(
-                    settingsInterfaceEncoder.encodeRequirePauserRole(),
+                    settingsEncoder.encodeRequirePauserRole(),
                     "NOT_PAUSER"
                 );
             }
-            await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), encodeIsPaused);
+            await settings.givenMethodReturnBool(settingsEncoder.encodeIsPaused(), encodeIsPaused);
             const borrowedToken = atmToMarket.borrowedTokenIndex === 99 ? accounts[0] : mocks[atmToMarket.borrowedTokenIndex];
             const collateralToken = atmToMarket.collateralTokenIndex === 99 ? accounts[1] : mocks[atmToMarket.collateralTokenIndex];
 

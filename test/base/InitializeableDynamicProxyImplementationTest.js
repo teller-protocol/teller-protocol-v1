@@ -1,7 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t, toBytes32 } = require('../utils/consts');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const SettingsEncoder = require('../utils/encoders/SettingsEncoder');
 const LogicVersionsRegistryEncoder = require('../utils/encoders/LogicVersionsRegistryEncoder');
 const { assert } = require('chai');
 
@@ -14,7 +14,7 @@ const UpgradableV1 = artifacts.require("./mock/upgradable/UpgradableV1.sol");
 
 contract('InitializeableDynamicProxyImplementationTest', function (accounts) {
     const logicVersionsRegistryEncoder = new LogicVersionsRegistryEncoder(web3);
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const settingsEncoder = new SettingsEncoder(web3);
     let instance;
     let versionsRegistry;
 
@@ -45,7 +45,7 @@ contract('InitializeableDynamicProxyImplementationTest', function (accounts) {
                     initializeProxyImpl.address
                 );
                 await settings.givenMethodReturnAddress(
-                    settingsInterfaceEncoder.encodeVersionsRegistry(),
+                    settingsEncoder.encodeVersionsRegistry(),
                     versionsRegistry.address
                 );
                 await instance.initializeProxy(settings.address, logicNameBytes32, {from: sender});

@@ -7,10 +7,10 @@ pragma solidity 0.5.17;
 // Interfaces
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "../interfaces/LendingPoolInterface.sol";
-import "../interfaces/LendersInterface.sol";
-import "../interfaces/LoansInterface.sol";
-import "../interfaces/TTokenInterface.sol";
+import "../interfaces/ILendingPool.sol";
+import "../interfaces/ILenders.sol";
+import "../interfaces/ILoans.sol";
+import "../interfaces/ITToken.sol";
 import "../providers/compound/CErc20Interface.sol";
 
 // Contracts
@@ -31,7 +31,7 @@ import "./Base.sol";
 
     @author develop@teller.finance
  */
-contract LendingPool is Base, LendingPoolInterface {
+contract LendingPool is Base, ILendingPool {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -39,9 +39,9 @@ contract LendingPool is Base, LendingPoolInterface {
 
     IERC20 public lendingToken;
 
-    TTokenInterface public tToken;
+    ITToken public tToken;
 
-    LendersInterface public lenders;
+    ILenders public lenders;
 
     address public loans;
 
@@ -83,7 +83,7 @@ contract LendingPool is Base, LendingPoolInterface {
 
         _markets().increaseSupply(
             address(lendingToken),
-            LoansInterface(loans).collateralToken(),
+            ILoans(loans).collateralToken(),
             amount
         );
 
@@ -114,7 +114,7 @@ contract LendingPool is Base, LendingPoolInterface {
 
         _markets().decreaseSupply(
             address(lendingToken),
-            LoansInterface(loans).collateralToken(),
+            ILoans(loans).collateralToken(),
             amount
         );
 
@@ -147,7 +147,7 @@ contract LendingPool is Base, LendingPoolInterface {
         if (principalAmount > 0) {
             _markets().increaseRepayment(
                 address(lendingToken),
-                LoansInterface(loans).collateralToken(),
+                ILoans(loans).collateralToken(),
                 principalAmount
             );
         }
@@ -155,7 +155,7 @@ contract LendingPool is Base, LendingPoolInterface {
         if (interestAmount > 0) {
             _markets().increaseSupply(
                 address(lendingToken),
-                LoansInterface(loans).collateralToken(),
+                ILoans(loans).collateralToken(),
                 interestAmount
             );
         }
@@ -183,7 +183,7 @@ contract LendingPool is Base, LendingPoolInterface {
 
         _markets().increaseRepayment(
             address(lendingToken),
-            LoansInterface(loans).collateralToken(),
+            ILoans(loans).collateralToken(),
             amount
         );
 
@@ -196,7 +196,7 @@ contract LendingPool is Base, LendingPoolInterface {
 
         @param amount of tokens to transfer.
         @param borrower address which will receive the tokens.
-        @dev This function only can be invoked by the LoansInterface implementation.
+        @dev This function only can be invoked by the ILoans implementation.
         @dev It withdraws the lending tokens from Compound before transferring tokens to the borrower.
      */
     function createLoan(uint256 amount, address borrower)
@@ -213,7 +213,7 @@ contract LendingPool is Base, LendingPoolInterface {
 
         _markets().increaseBorrow(
             address(lendingToken),
-            LoansInterface(loans).collateralToken(),
+            ILoans(loans).collateralToken(),
             amount
         );
     }
@@ -230,12 +230,12 @@ contract LendingPool is Base, LendingPoolInterface {
         whenLendingPoolNotPaused(address(this))
     {
         address lender = msg.sender;
-        InterestValidatorInterface interestValidator = _interestValidator();
+        IInterestValidator interestValidator = _interestValidator();
         require(
             address(interestValidator) == address(0x0) ||
                 interestValidator.isInterestValid(
                     address(lendingToken),
-                    LoansInterface(loans).collateralToken(),
+                    ILoans(loans).collateralToken(),
                     lender,
                     amount
                 ),
@@ -285,9 +285,9 @@ contract LendingPool is Base, LendingPoolInterface {
 
         _initialize(settingsAddress);
 
-        tToken = TTokenInterface(tTokenAddress);
+        tToken = ITToken(tTokenAddress);
         lendingToken = IERC20(lendingTokenAddress);
-        lenders = LendersInterface(lendersAddress);
+        lenders = ILenders(lendersAddress);
         loans = loansAddress;
     }
 

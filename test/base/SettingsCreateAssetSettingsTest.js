@@ -4,7 +4,7 @@ const { t, NULL_ADDRESS, toDecimals, encode } = require('../utils/consts');
 const { settings } = require('../utils/events');
 const { createAssetSettings } = require('../utils/asset-settings-helper');
 const { createTestSettingsInstance } = require('../utils/settings-helper');
-const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
+const CTokenInterfaceEncoder = require('../utils/encoders/CTokenEncoder')
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");

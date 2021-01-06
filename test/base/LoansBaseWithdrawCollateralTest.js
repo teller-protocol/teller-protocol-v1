@@ -8,8 +8,7 @@ const { createTestSettingsInstance } = require('../utils/settings-helper');
 const { createLoan } = require('../utils/loans');
 
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
-const ChainlinkAggregatorEncoder = require('../utils/encoders/ChainlinkAggregatorEncoder');
-const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
+const LendingPoolEncoder = require('../utils/encoders/LendingPoolEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -23,8 +22,7 @@ const LoanLib = artifacts.require("../util/LoanLib.sol");
 
 contract('LoansBaseWithdrawCollateralTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
-    const chainlinkAggregatorEncoder = new ChainlinkAggregatorEncoder(web3);
-    const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
+    const lendingPoolEncoder = new LendingPoolEncoder(web3);
 
     let instance;
     let chainlinkAggregatorInstance;
@@ -63,7 +61,7 @@ contract('LoansBaseWithdrawCollateralTest', function (accounts) {
         )
 
         // encode lending token address
-        const encodeLendingToken = lendingPoolInterfaceEncoder.encodeLendingToken();
+        const encodeLendingToken = lendingPoolEncoder.encodeLendingToken();
         await lendingPoolInstance.givenMethodReturnAddress(encodeLendingToken, lendingTokenInstance.address);
     });
 

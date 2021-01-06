@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import "./Consensus.sol";
 
 // Interfaces
-import "../interfaces/LoanTermsConsensusInterface.sol";
+import "../interfaces/ILoanTermsConsensus.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -22,7 +22,7 @@ import "../interfaces/LoanTermsConsensusInterface.sol";
 
     @author develop@teller.finance
  */
-contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
+contract LoanTermsConsensus is ILoanTermsConsensus, Consensus {
     /* Mappings */
     /**
         @notice It identifies the loan terms submissions for a given borrower address and a request nonce.

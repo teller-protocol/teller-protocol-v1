@@ -1,5 +1,5 @@
 // JS Libraries
-const IATMSettingsEncoder = require("../utils/encoders/IATMSettingsEncoder");
+const ATMSettingsEncoder = require("../utils/encoders/ATMSettingsEncoder");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
@@ -13,7 +13,7 @@ const Settings = artifacts.require("./base/Settings.sol");
 
 contract('TLRTokenInitializeTest', function (accounts) {
     const owner = accounts[0];
-    const encoder = new IATMSettingsEncoder(web3)
+    const encoder = new ATMSettingsEncoder(web3)
 
     withData({
         _1_initialize_basic: ['Teller Token', 'TLR', 18, 10000, 50, undefined, false],

@@ -2,7 +2,7 @@
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS, createMocks } = require('../utils/consts');
 const { atmSettings } = require('../utils/events');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const SettingsEncoder = require('../utils/encoders/SettingsEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -11,7 +11,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
 
 contract('ATMSettingsUnpauseATMTest', function (accounts) {
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const settingsEncoder = new SettingsEncoder(web3);
     const owner = accounts[0];
     let instance;
     let settings;
@@ -39,10 +39,10 @@ contract('ATMSettingsUnpauseATMTest', function (accounts) {
             }
             const sender = accounts[senderIndex];
             const atmAddress = atmIndex === -1 ? NULL_ADDRESS : mocks[atmIndex];
-            await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), encodeIsPaused);
+            await settings.givenMethodReturnBool(settingsEncoder.encodeIsPaused(), encodeIsPaused);
             if(!encodeHasPauserRole) {
                 await settings.givenMethodRevertWithMessage(
-                    settingsInterfaceEncoder.encodeRequirePauserRole(),
+                    settingsEncoder.encodeRequirePauserRole(),
                     "NOT_PAUSER"
                 );
             }

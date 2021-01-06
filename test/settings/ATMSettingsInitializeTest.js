@@ -1,7 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData
 const { t, NULL_ADDRESS, createMocks } = require('../utils/consts')
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder')
+const SettingsEncoder = require('../utils/encoders/SettingsEncoder')
 
 // Mock contracts
 const Mock = artifacts.require('./mock/util/Mock.sol')
@@ -10,13 +10,13 @@ const Mock = artifacts.require('./mock/util/Mock.sol')
 const ATMSettings = artifacts.require('./settings/ATMSettings.sol')
 
 contract('ATMSettingsInitializeTest', function (accounts) {
-  const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3)
+  const settingsEncoder = new SettingsEncoder(web3)
   let mocks
 
   beforeEach('Setup for each test', async () => {
     const settings = await Mock.new()
-    await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeHasPauserRole(), true)
-    await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), false)
+    await settings.givenMethodReturnBool(settingsEncoder.encodeHasPauserRole(), true)
+    await settings.givenMethodReturnBool(settingsEncoder.encodeIsPaused(), false)
 
     mocks = await createMocks(Mock, 10)
   })

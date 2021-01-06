@@ -30,12 +30,12 @@ contract LoansBaseMock is LoansBase, BaseMock {
         return loans[loanID].payOff(toPay);
     }
 
-    function externalIsSupplyToDebtRatioValid(uint256 newLoanAmount)
+    function externalIsDebtRatioValid(uint256 newLoanAmount)
         external
         view
         returns (bool)
     {
-        return super._isSupplyToDebtRatioValid(newLoanAmount);
+        return super._isDebtRatioValid(newLoanAmount);
     }
 
     function setLoan(
@@ -80,7 +80,7 @@ contract LoansBaseMock is LoansBase, BaseMock {
         uint256 amountToClaim,
         uint256 loanID
     ) external {
-        EscrowInterface(loans[loanID].escrow).claimTokensByCollateralValue(
+        IEscrow(loans[loanID].escrow).claimTokensByCollateralValue(
             recipient,
             amountToClaim
         );

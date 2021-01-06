@@ -3,8 +3,8 @@ const withData = require('leche').withData;
 const { t  } = require('../utils/consts');
 const Timer = require('../../scripts/utils/Timer');
 const { tlrToken } = require('../utils/events');
-const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const ATMSettingsEncoder = require('../utils/encoders/ATMSettingsEncoder');
+const SettingsEncoder = require('../utils/encoders/SettingsEncoder');
 const { assert } = require('chai');
 
  // Mock contracts
@@ -14,8 +14,8 @@ const { assert } = require('chai');
 const TLRToken = artifacts.require("./TLRToken.sol");
 
 contract('EstimateGasTLRTokenWithdrawVestedTest', function (accounts) {
-    const atmSettingsEncoder = new IATMSettingsEncoder(web3);
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const atmSettingsEncoder = new ATMSettingsEncoder(web3);
+    const settingsEncoder = new SettingsEncoder(web3);
     let settingsInstance;
     let atmSettingsInstance;
     let atmInstance;
@@ -49,7 +49,7 @@ contract('EstimateGasTLRTokenWithdrawVestedTest', function (accounts) {
                             atmInstance.address
                         );
         await settingsInstance.givenMethodReturnAddress(
-            settingsInterfaceEncoder.encodeATMSettings(),
+            settingsEncoder.encodeATMSettings(),
             atmSettingsInstance.address
         );
     });

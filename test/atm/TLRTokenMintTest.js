@@ -1,8 +1,8 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS  } = require('../utils/consts');
-const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const ATMSettingsEncoder = require('../utils/encoders/ATMSettingsEncoder');
+const SettingsEncoder = require('../utils/encoders/SettingsEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -11,8 +11,8 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const TLRToken = artifacts.require("./TLRToken.sol");
 
 contract('TLRTokenMintTest', function (accounts) {
-    const atmSettingsEncoder = new IATMSettingsEncoder(web3);
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const atmSettingsEncoder = new ATMSettingsEncoder(web3);
+    const settingsEncoder = new SettingsEncoder(web3);
     let atmSettingsInstance;
     let settingsInstance;
     let atmInstance;
@@ -35,7 +35,7 @@ contract('TLRTokenMintTest', function (accounts) {
                             atmInstance.address
                         );
         await settingsInstance.givenMethodReturnAddress(
-            settingsInterfaceEncoder.encodeATMSettings(),
+            settingsEncoder.encodeATMSettings(),
             atmSettingsInstance.address
         );
     });
@@ -60,7 +60,7 @@ contract('TLRTokenMintTest', function (accounts) {
             );
             if(!senderHasPauserRole) {
                 await settingsInstance.givenMethodRevertWithMessage(
-                    settingsInterfaceEncoder.encodeRequirePauserRole(),
+                    settingsEncoder.encodeRequirePauserRole(),
                     "NOT_PAUSER"
                 );
             }

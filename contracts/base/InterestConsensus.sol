@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 // Libraries
 
 // Interfaces
-import "../interfaces/InterestConsensusInterface.sol";
+import "../interfaces/IInterestConsensus.sol";
 
 // Contracts
 import "./Consensus.sol";
@@ -24,7 +24,7 @@ import "./Consensus.sol";
 
     @author develop@teller.finance
  */
-contract InterestConsensus is InterestConsensusInterface, Consensus {
+contract InterestConsensus is IInterestConsensus, Consensus {
     /* State Variables */
 
     // mapping of (lender, endTime) to the aggregated node submissions for their request

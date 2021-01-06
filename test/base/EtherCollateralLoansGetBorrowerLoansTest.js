@@ -6,10 +6,9 @@ const {
   NULL_ADDRESS,
 } = require('../utils/consts');
 const { createLoanRequest, createUnsignedLoanResponse } = require('../utils/structs');
-const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder');
-const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
-const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
+const LendingPoolEncoder = require('../utils/encoders/LendingPoolEncoder');
+const ATMSettingsEncoder = require('../utils/encoders/ATMSettingsEncoder');
+const CTokenInterfaceEncoder = require('../utils/encoders/CTokenEncoder')
 const { createTestSettingsInstance } = require('../utils/settings-helper');
 
 // Mock contracts
@@ -24,9 +23,8 @@ const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 const LoanLib = artifacts.require("../util/LoanLib.sol");
 
 contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
-    const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
-    const IAtmSettingsEncoder = new IATMSettingsEncoder(web3);
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const lendingPoolEncoder = new LendingPoolEncoder(web3);
+    const atmSettingsEncoder = new ATMSettingsEncoder(web3);
     const cTokenEncoder = new CTokenInterfaceEncoder(web3)
 
     let instance;
@@ -87,12 +85,12 @@ contract('EtherCollateralLoansGetBorrowerLoansTest', function (accounts) {
             .processRequest(emptyRequest, [responseOne])
             .encodeABI();
         
-        const encodeLendingToken = lendingPoolInterfaceEncoder.encodeLendingToken();
+        const encodeLendingToken = lendingPoolEncoder.encodeLendingToken();
         lendingPoolInstance.givenMethodReturnAddress(encodeLendingToken, lendingTokenInstance.address);
 
         const atmForMarketInstance = await Mock.new();
         atmSettingsInstance.givenMethodReturnAddress(
-            IAtmSettingsEncoder.encodeGetATMForMarket(),
+            atmSettingsEncoder.encodeGetATMForMarket(),
             atmForMarketInstance.address
         );
     });

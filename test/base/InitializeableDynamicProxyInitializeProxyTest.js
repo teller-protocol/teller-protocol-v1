@@ -1,7 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t, toBytes32 } = require('../utils/consts');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const SettingsEncoder = require('../utils/encoders/SettingsEncoder');
 const LogicVersionsRegistryEncoder = require('../utils/encoders/LogicVersionsRegistryEncoder');
 const { assert } = require('chai');
 
@@ -13,7 +13,7 @@ const InitializeableDynamicProxyMock = artifacts.require("./mock/base/Initialize
 
 contract('InitializeableDynamicProxyInitializeProxyTest', function (accounts) {
     const logicVersionsRegistryEncoder = new LogicVersionsRegistryEncoder(web3);
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const settingsEncoder = new SettingsEncoder(web3);
     let instance;
     let versionsRegistry;
 
@@ -40,7 +40,7 @@ contract('InitializeableDynamicProxyInitializeProxyTest', function (accounts) {
             if(previousLogicName !== undefined) {
                 previousLogicNameBytes32 = toBytes32(web3, previousLogicName);
                 await previousSettings.givenMethodReturnAddress(
-                    settingsInterfaceEncoder.encodeVersionsRegistry(),
+                    settingsEncoder.encodeVersionsRegistry(),
                     versionsRegistry.address
                 );
                 await instance.initializeProxy(
@@ -52,7 +52,7 @@ contract('InitializeableDynamicProxyInitializeProxyTest', function (accounts) {
 
             const settings = await Mock.new();
             await settings.givenMethodReturnAddress(
-                settingsInterfaceEncoder.encodeVersionsRegistry(),
+                settingsEncoder.encodeVersionsRegistry(),
                 versionsRegistry.address
             );
 

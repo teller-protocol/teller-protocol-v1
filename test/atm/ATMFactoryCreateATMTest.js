@@ -4,7 +4,7 @@ const withData = require("leche").withData;
 const { t } = require("../utils/consts");
 const { atmFactory } = require('../utils/events');
 const LogicVersionsRegistryEncoder = require('../utils/encoders/LogicVersionsRegistryEncoder');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const SettingsEncoder = require('../utils/encoders/SettingsEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -14,7 +14,7 @@ const ATMFactory = artifacts.require("./atm/ATMFactory.sol");
 
 contract("ATMFactoryCreateATMTest", function(accounts) {
     const logicVersionsRegistryEncoder = new LogicVersionsRegistryEncoder(web3);
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const settingsEncoder = new SettingsEncoder(web3);
     const ADMIN_INDEX = 1; 
 
     let settingsInstance;
@@ -37,7 +37,7 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
         );
         settingsInstance = await Mock.new();
         await settingsInstance.givenMethodReturnAddress(
-            settingsInterfaceEncoder.encodeVersionsRegistry(),
+            settingsEncoder.encodeVersionsRegistry(),
             versionsRegistry.address
         );
         instance = await ATMFactory.new();
@@ -53,7 +53,7 @@ contract("ATMFactoryCreateATMTest", function(accounts) {
             const sender = accounts[senderIndex];
             if(!addAsPauserRole) {
                 await settingsInstance.givenMethodRevertWithMessage(
-                    settingsInterfaceEncoder.encodeRequirePauserRole(),
+                    settingsEncoder.encodeRequirePauserRole(),
                     "NOT_PAUSER"
                 );
             }

@@ -1,5 +1,5 @@
 // JS Libraries
-const LoansBaseInterfaceEncoder = require("../utils/encoders/LoansBaseInterfaceEncoder");
+const ILoansBaseEncoder = require("../utils/encoders/LoansBaseEncoder");
 const loanStatus = require("../utils/loanStatus");
 const { createLoan } = require('../utils/loans');
 const { encodeLoanParameter } = require("../utils/loans");
@@ -18,7 +18,7 @@ const LoansBase = artifacts.require("./mock/base/LoansBaseMock.sol");
 const LoanLib = artifacts.require("../util/LoanLib.sol");
 
 contract("EscrowClaimTokensTest", function(accounts) {
-  const loansEncoder = new LoansBaseInterfaceEncoder(web3);
+  const loansEncoder = new ILoansBaseEncoder(web3);
 
   let loans;
   let instance;

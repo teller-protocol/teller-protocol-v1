@@ -2,9 +2,8 @@
 const withData = require('leche').withData;
 const { t } = require('../utils/consts');
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder');
-const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
-const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const CTokenEncoder = require('../utils/encoders/CTokenEncoder')
+const SettingsEncoder = require('../utils/encoders/SettingsEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -15,9 +14,8 @@ const LendingPool = artifacts.require("./mock/base/LendingPoolMock.sol");
 
 contract('LendingPoolCreateLoanTest', function (accounts) {
     const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3);
-    const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
-    const cTokenEncoder = new CTokenInterfaceEncoder(web3)
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const cTokenEncoder = new CTokenEncoder(web3)
+    const settingsEncoder = new SettingsEncoder(web3);
     let instance;
     let tTokenInstance;
     let daiInstance;
@@ -77,12 +75,12 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
             const sender = accounts[1];
             await instance.mockRequireIsLoan(mockRequireIsLoan);
             await settingsInstance.givenMethodReturnAddress(
-                settingsInterfaceEncoder.encodeGetCTokenAddress(),
+                settingsEncoder.encodeGetCTokenAddress(),
                 cTokenInstance.address
             );
             const marketsState = await Mock.new();
             await settingsInstance.givenMethodReturnAddress(
-                settingsInterfaceEncoder.encodeMarketsState(),
+                settingsEncoder.encodeMarketsState(),
                 marketsState.address
             );
 
@@ -90,7 +88,7 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
             await daiInstance.givenMethodReturnBool(encodeTransfer, transfer);
             
             const redeemResponse = compoundFails ? 1 : 0
-            const encodeRedeemUnderlying = compoundInterfaceEncoder.encodeRedeemUnderlying();
+            const encodeRedeemUnderlying = cTokenEncoder.encodeRedeemUnderlying();
             await cTokenInstance.givenMethodReturnUint(encodeRedeemUnderlying, redeemResponse);
 
             const encodeBalanceOf = erc20InterfaceEncoder.encodeBalanceOf();

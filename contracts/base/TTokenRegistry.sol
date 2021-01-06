@@ -5,7 +5,7 @@ import "./BaseUpgradeable.sol";
 import "./TInitializable.sol";
 
 // Interfaces
-import "../interfaces/TTokenRegistryInterface.sol";
+import "../interfaces/ITTokenRegistry.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -22,7 +22,7 @@ import "../interfaces/TTokenRegistryInterface.sol";
 
     @author develop@teller.finance
  */
-contract TTokenRegistry is TTokenRegistryInterface, TInitializable, BaseUpgradeable {
+contract TTokenRegistry is ITTokenRegistry, TInitializable, BaseUpgradeable {
     /* State Variables */
 
     /**

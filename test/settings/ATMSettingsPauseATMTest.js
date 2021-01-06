@@ -2,7 +2,7 @@
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS, createMocks } = require('../utils/consts');
 const { atmSettings } = require('../utils/events');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const SettingsEncoder = require('../utils/encoders/SettingsEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -11,7 +11,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
 
 contract('ATMSettingsPauseATMTest', function (accounts) {
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const settingsEncoder = new SettingsEncoder(web3);
     const owner = accounts[0];
     let instance;
     let settings;
@@ -34,16 +34,16 @@ contract('ATMSettingsPauseATMTest', function (accounts) {
     }, function(previousATMs, atmIndex, senderIndex, encodeIsATM, encodeHasPauserRole, encodeIsPaused, expectedErrorMessage, mustFail) {
         it(t('user', 'pauseATM', 'Should (or not) be able to pause an ATM.', mustFail), async function() {
             // Setup
-            await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), false);
+            await settings.givenMethodReturnBool(settingsEncoder.encodeIsPaused(), false);
             for (const previousATMIndex of previousATMs) {
                 await instance.pauseATM(mocks[previousATMIndex], { from: owner });
             }
             const sender = accounts[senderIndex];
             const atmAddress = atmIndex === -1 ? NULL_ADDRESS : mocks[atmIndex];
-            await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), encodeIsPaused);
+            await settings.givenMethodReturnBool(settingsEncoder.encodeIsPaused(), encodeIsPaused);
             if(!encodeHasPauserRole) {
                 await settings.givenMethodRevertWithMessage(
-                    settingsInterfaceEncoder.encodeRequirePauserRole(),
+                    settingsEncoder.encodeRequirePauserRole(),
                     'NOT_PAUSER'
                 );
             }

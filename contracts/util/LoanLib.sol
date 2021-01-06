@@ -7,9 +7,9 @@ import "../util/TellerCommon.sol";
 import "../util/AddressLib.sol";
 
 // Interfaces
-import "../interfaces/SettingsInterface.sol";
-import "../interfaces/EscrowInterface.sol";
-import "../interfaces/LoansInterface.sol";
+import "../interfaces/ISettings.sol";
+import "../interfaces/IEscrow.sol";
+import "../interfaces/ILoans.sol";
 
 // Contracts
 
@@ -35,7 +35,7 @@ library LoanLib {
     function init(
         TellerCommon.Loan storage loan,
         TellerCommon.LoanRequest memory request,
-        SettingsInterface settings,
+        ISettings settings,
         uint256 loanID,
         uint256 interestRate,
         uint256 collateralRatio,
@@ -70,7 +70,7 @@ library LoanLib {
         @param settings The settings instance for the platform.
         @return bool indicating whether the loan with specified parameters can be deposited to an EOA.
      */
-    function canGoToEOA(TellerCommon.Loan storage loan, SettingsInterface settings)
+    function canGoToEOA(TellerCommon.Loan storage loan, ISettings settings)
         public
         view
         returns (bool)
@@ -87,7 +87,7 @@ library LoanLib {
         @param settings The settings instance for the platform.
         @return bool value of it being secured or not.
     */
-    function isSecured(TellerCommon.Loan storage loan, SettingsInterface settings)
+    function isSecured(TellerCommon.Loan storage loan, ISettings settings)
         public
         view
         returns (bool)
@@ -172,10 +172,11 @@ library LoanLib {
         @param loansContract The loans contract instance for the loan.
         @return memory TellerCommon.LoanCollateralInfo Collateral information of the loan.
      */
-    function getCollateralInfo(
-        TellerCommon.Loan storage loan,
-        LoansInterface loansContract
-    ) public view returns (TellerCommon.LoanCollateralInfo memory) {
+    function getCollateralInfo(TellerCommon.Loan storage loan, ILoans loansContract)
+        public
+        view
+        returns (TellerCommon.LoanCollateralInfo memory)
+    {
         (
             int256 neededInLending,
             int256 neededInCollateral,
@@ -200,7 +201,7 @@ library LoanLib {
      */
     function getCollateralInLendingTokens(
         TellerCommon.Loan storage loan,
-        LoansInterface loansContract
+        ILoans loansContract
     ) public view returns (uint256) {
         if (!isActiveOrSet(loan)) {
             return 0;
@@ -221,10 +222,7 @@ library LoanLib {
         @return int256 Collateral needed in Collateral tokens (wei)
         @return uint256 The value of the loan held in the escrow contract
      */
-    function getCollateralNeededInfo(
-        TellerCommon.Loan storage loan,
-        LoansInterface loansContract
-    )
+    function getCollateralNeededInfo(TellerCommon.Loan storage loan, ILoans loansContract)
         public
         view
         returns (
@@ -268,7 +266,7 @@ library LoanLib {
      */
     function getCollateralNeededInTokens(
         TellerCommon.Loan storage loan,
-        SettingsInterface settings
+        ISettings settings
     ) public view returns (int256 neededInLendingTokens, uint256 escrowLoanValue) {
         if (!isActiveOrSet(loan) || loan.loanTerms.collateralRatio == 0) {
             return (0, 0);
@@ -299,7 +297,7 @@ library LoanLib {
                 .sub(getInterestRatio(loan))
                 .sub(bufferPercent);
             if (loan.escrow != address(0)) {
-                escrowLoanValue = EscrowInterface(loan.escrow).calculateTotalValue();
+                escrowLoanValue = IEscrow(loan.escrow).calculateTotalValue();
                 neededInLendingTokens += neededInLendingTokens - int256(escrowLoanValue);
             }
             neededInLendingTokens = neededInLendingTokens.percent(requiredRatio);
@@ -312,10 +310,11 @@ library LoanLib {
         @param loansContract The loans contract instance for the loan.
         @return liquidationInfo get current liquidation info for the given loan id.
      */
-    function getLiquidationInfo(
-        TellerCommon.Loan storage loan,
-        LoansInterface loansContract
-    ) public view returns (TellerCommon.LoanLiquidationInfo memory liquidationInfo) {
+    function getLiquidationInfo(TellerCommon.Loan storage loan, ILoans loansContract)
+        public
+        view
+        returns (TellerCommon.LoanLiquidationInfo memory liquidationInfo)
+    {
         liquidationInfo.collateralInfo = getCollateralInfo(loan, loansContract);
         liquidationInfo.amountToLiquidate = getTotalOwed(loan);
 

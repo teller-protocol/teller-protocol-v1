@@ -1,4 +1,4 @@
-const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
+const CTokenInterfaceEncoder = require('./encoders/CTokenEncoder')
 
 const createAssetSettings = async (MockReference, instance, sender, previousAssetsInfo) => {
     const cTokenEncoder = new CTokenInterfaceEncoder(web3)

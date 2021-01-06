@@ -3,7 +3,7 @@ const withData = require('leche').withData;
 const { t } = require('../utils/consts');
 const { createLoanRequest } = require('../utils/structs');
 const { NULL_ADDRESS } = require('../utils/consts');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const SettingsEncoder = require('../utils/encoders/SettingsEncoder');
 const Timer = require('../../scripts/utils/Timer');
 
 // Smart contracts
@@ -12,7 +12,7 @@ const SettingsMock = artifacts.require("./mock/base/SettingsMock.sol");
 const LoanTermsConsensusMock = artifacts.require("./mock/base/LoanTermsConsensusMock.sol");
 
 contract('LoanTermsConsensusRequireRequestLoanTermsRateLimitTest', function (accounts) {
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const settingsEncoder = new SettingsEncoder(web3);
     const timer = new Timer(web3);
     const owner = accounts[1];
     let instance
@@ -55,7 +55,7 @@ contract('LoanTermsConsensusRequireRequestLoanTermsRateLimitTest', function (acc
             );
             
             await settingsInstance.givenMethodReturnUint(
-                settingsInterfaceEncoder.encodeGetPlatformSettingValue(),
+                settingsEncoder.encodeGetPlatformSettingValue(),
                 currentSetting,
             );
             try {

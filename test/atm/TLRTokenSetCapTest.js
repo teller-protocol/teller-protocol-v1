@@ -2,8 +2,8 @@
 const withData = require('leche').withData;
 const { t  } = require('../utils/consts');
 const { tlrToken } = require('../utils/events');
-const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const ATMSettingsEncoder = require('../utils/encoders/ATMSettingsEncoder');
+const SettingsEncoder = require('../utils/encoders/SettingsEncoder');
 
  // Mock contracts
  const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -12,8 +12,8 @@ const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEnc
 const TLRToken = artifacts.require("./TLRToken.sol");
 
 contract('TLRTokenSetCapTest', function (accounts) {
-    const atmSettingsEncoder = new IATMSettingsEncoder(web3);
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const atmSettingsEncoder = new ATMSettingsEncoder(web3);
+    const settingsEncoder = new SettingsEncoder(web3);
     let atmSettingsInstance;
     let atmInstance;
     let instance;
@@ -40,7 +40,7 @@ contract('TLRTokenSetCapTest', function (accounts) {
                             atmInstance.address
                         );
         await settingsInstance.givenMethodReturnAddress(
-            settingsInterfaceEncoder.encodeATMSettings(),
+            settingsEncoder.encodeATMSettings(),
             atmSettingsInstance.address
         );
     });
@@ -58,7 +58,7 @@ contract('TLRTokenSetCapTest', function (accounts) {
         it(t('agent', 'setCap', 'Should or should not be able to set cap correctly', mustFail), async function() {
             if(!isOwner) {
                 await settingsInstance.givenMethodRevertWithMessage(
-                    settingsInterfaceEncoder.encodeRequirePauserRole(),
+                    settingsEncoder.encodeRequirePauserRole(),
                     'NOT_PAUSER'
                 );
             }

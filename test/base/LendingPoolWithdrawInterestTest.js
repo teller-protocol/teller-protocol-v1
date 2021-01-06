@@ -3,10 +3,9 @@ const withData = require('leche').withData;
 const { t, NULL_ADDRESS } = require('../utils/consts');
 const { lendingPool } = require('../utils/events');
 const BurnableInterfaceEncoder = require('../utils/encoders/BurnableInterfaceEncoder');
-const CompoundInterfaceEncoder = require('../utils/encoders/CompoundInterfaceEncoder');
-const InterestValidatorInterfaceEncoder = require('../utils/encoders/InterestValidatorInterfaceEncoder');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
-const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
+const InterestValidatorEncoder = require('../utils/encoders/InterestValidatorEncoder');
+const SettingsEncoder = require('../utils/encoders/SettingsEncoder');
+const CTokenEncoder = require('../utils/encoders/CTokenEncoder')
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -17,10 +16,9 @@ const LendingPool = artifacts.require("./base/LendingPool.sol");
 
 contract('LendingPoolWithdrawInterestTest', function (accounts) {
     const burnableInterfaceEncoder = new BurnableInterfaceEncoder(web3);
-    const compoundInterfaceEncoder = new CompoundInterfaceEncoder(web3);
-    const interestValidatorInterfaceEncoder = new InterestValidatorInterfaceEncoder(web3);
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
-    const cTokenEncoder = new CTokenInterfaceEncoder(web3)
+    const interestValidatorEncoder = new InterestValidatorEncoder(web3);
+    const settingsEncoder = new SettingsEncoder(web3);
+    const cTokenEncoder = new CTokenEncoder(web3)
 
     let instance;
     let tTokenInstance;
@@ -91,11 +89,11 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
 
             const interestValidatorAddress = interestValidatorInfo.supported ? interestValidatorInstance.address : NULL_ADDRESS;
             await settingsInstance.givenMethodReturnAddress(
-                settingsInterfaceEncoder.encodeInterestValidator(),
+                settingsEncoder.encodeInterestValidator(),
                 interestValidatorAddress
             );
             if(interestValidatorInfo.supported) {
-                const encodeIsInterestValid = interestValidatorInterfaceEncoder.encodeIsInterestValid();
+                const encodeIsInterestValid = interestValidatorEncoder.encodeIsInterestValid();
                 await interestValidatorInstance.givenMethodReturnBool(encodeIsInterestValid, interestValidatorInfo.isValid);
             }
             await instance.initialize(
@@ -114,7 +112,7 @@ contract('LendingPoolWithdrawInterestTest', function (accounts) {
             await lendersInstance.mockAddressesEqual(areAddressesEqual);
 
             const redeemResponse = compoundFails ? 1 : 0
-            const encodeRedeemUnderlying = compoundInterfaceEncoder.encodeRedeemUnderlying();
+            const encodeRedeemUnderlying = cTokenEncoder.encodeRedeemUnderlying();
             await cTokenInstance.givenMethodReturnUint(encodeRedeemUnderlying, redeemResponse)
 
             const encodeTransfer = burnableInterfaceEncoder.encodeTransfer();

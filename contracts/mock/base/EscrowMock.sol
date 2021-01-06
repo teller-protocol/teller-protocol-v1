@@ -59,7 +59,7 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
     }
 
     function mockLoans(address loansAddress) external {
-        loans = LoansInterface(loansAddress);
+        loans = ILoans(loansAddress);
     }
 
     function mockCalculateLoanValue(uint256 aLoanValue) public {
@@ -80,7 +80,7 @@ contract EscrowMock is Escrow, BaseEscrowDappMock {
     }
 
     function mockInitialize(address loansAddress, uint256 aLoanID) external {
-        loans = LoansInterface(loansAddress);
+        loans = ILoans(loansAddress);
         loanID = aLoanID;
 
         Ownable.initialize(msg.sender);

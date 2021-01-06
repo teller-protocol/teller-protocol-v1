@@ -2,7 +2,7 @@
 const withData = require('leche').withData;
 const { t, createMocks } = require('../utils/consts');
 const actions = require('../utils/marketStateActions.js');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const SettingsEncoder = require('../utils/encoders/SettingsEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -13,7 +13,7 @@ const ERC20Mock = artifacts.require("./mock/token/ERC20Mock.sol");
 const MarketsState = artifacts.require("./base/MarketsState.sol");
 
 contract('MarketsStateGetMarketTest', function (accounts) {
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const settingsEncoder = new SettingsEncoder(web3);
     const owner = accounts[0];
     let mocks;
     let instance;
@@ -106,7 +106,7 @@ contract('MarketsStateGetMarketTest', function (accounts) {
         it(t('user', 'getMarket', 'Should be able to get the market info.', false), async function() {
             // Setup
             await settings.givenMethodReturnAddress(
-                settingsInterfaceEncoder.encodeGetCTokenAddress(),
+                settingsEncoder.encodeGetCTokenAddress(),
                 cTokenInstance.address
             );
 

@@ -2,7 +2,7 @@
 const withData = require('leche').withData;
 const { t, NON_EXISTENT, ACTIVE, TERMS_SET, CLOSED, NULL_ADDRESS, daysToSeconds, toDecimals } = require('../utils/consts');
 const { createLoanRequest } = require('../utils/structs');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const SettingsEncoder = require('../utils/encoders/SettingsEncoder');
 
 // Mock constracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -15,7 +15,7 @@ const LoansBaseModifiersMock = artifacts.require("./mock/base/LoansBaseModifiers
 const LoanLib = artifacts.require("../util/LoanLib.sol");
 
 contract('LoansBaseModifiersTest', function (accounts) {
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const settingsEncoder = new SettingsEncoder(web3);
     let instance
     let settingsInstance;
     
@@ -161,13 +161,13 @@ contract('LoansBaseModifiersTest', function (accounts) {
     withData({
         _1_valid: [1, daysToSeconds(10), toDecimals(100, 18), daysToSeconds(60), true, undefined, false],
         _2_duration_invalid: [1, daysToSeconds(100), toDecimals(150, 18), daysToSeconds(80), true, 'DURATION_EXCEEDS_MAX_DURATION', true],
-        _3_std_invalid: [1, daysToSeconds(10), toDecimals(100, 18), daysToSeconds(60), false, 'SUPPLY_TO_DEBT_EXCEEDS_MAX', true],
+        _3_std_invalid: [1, daysToSeconds(10), toDecimals(100, 18), daysToSeconds(60), false, 'DEBT_RATIO_EXCEEDS_MAX', true],
     }, function(
         borrowerIndex,
         duration,
         amount,
         maxLoanDurationResponse,
-        isSupplyToDebtRatioValidResponse,
+        isDebtRatioValidResponse,
         expectedErrorMessage,
         mustFail
     ) {    
@@ -176,9 +176,9 @@ contract('LoansBaseModifiersTest', function (accounts) {
             const borrower = accounts[borrowerIndex];
             const consensusInstance = await Mock.new();
             const loanRequest = createLoanRequest(borrower, NULL_ADDRESS, 3, amount.toFixed(0), duration, 19, consensusInstance.address);
-            const encodeGetPlatformSettingValue = settingsInterfaceEncoder.encodeGetPlatformSettingValue();
+            const encodeGetPlatformSettingValue = settingsEncoder.encodeGetPlatformSettingValue();
             await settingsInstance.givenMethodReturnUint(encodeGetPlatformSettingValue, maxLoanDurationResponse);
-            await instance.setMockIsSupplyToDebtRatioValid(true, isSupplyToDebtRatioValidResponse);
+            await instance.mockIsDebtRatioValid(true, isDebtRatioValidResponse);
 
             try {
                 // Invocation

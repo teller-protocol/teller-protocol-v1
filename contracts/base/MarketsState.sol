@@ -12,7 +12,7 @@ import "./BaseUpgradeable.sol";
 import "./TInitializable.sol";
 
 // Interfaces
-import "../interfaces/MarketsStateInterface.sol";
+import "../interfaces/IMarketsState.sol";
 import "../util/MarketStateLib.sol";
 import "../util/AddressLib.sol";
 import "../util/NumbersLib.sol";
@@ -33,12 +33,7 @@ import "../providers/compound/CErc20Interface.sol";
 
     @author develop@teller.finance
  */
-contract MarketsState is
-    MarketsStateInterface,
-    TInitializable,
-    WhitelistedRole,
-    BaseUpgradeable
-{
+contract MarketsState is IMarketsState, TInitializable, WhitelistedRole, BaseUpgradeable {
     using AddressLib for address;
     using Address for address;
     using MarketStateLib for MarketStateLib.MarketState;
@@ -144,37 +139,37 @@ contract MarketsState is
     }
 
     /**
-        @notice It gets the current supply-to-debt (StD) ratio for a given market.
+        @notice It gets the current debt ratio for a given market.
         @param borrowedAsset borrowed asset address.
         @param collateralAsset collateral asset address.
-        @return the supply-to-debt ratio value.
+        @return the debt ratio value.
      */
-    function getSupplyToDebt(address borrowedAsset, address collateralAsset)
+    function getDebtRatio(address borrowedAsset, address collateralAsset)
         external
         view
         returns (uint256)
     {
-        return _getMarket(borrowedAsset, collateralAsset).getSupplyToDebt();
+        return _getMarket(borrowedAsset, collateralAsset).getDebtRatio();
     }
 
     /**
-        @notice It gets the supply-to-debt (StD) ratio for a given market, including a new loan amount.
+        @notice It gets the debt ratio for a given market, including a new loan amount.
         @param borrowedAsset borrowed asset address.
         @param collateralAsset collateral asset address.
         @param loanAmount a new loan amount to consider in the ratio.
-        @return the supply-to-debt ratio value.
+        @return the debt ratio value.
      */
-    function getSupplyToDebtFor(
+    function getDebtRatioFor(
         address borrowedAsset,
         address collateralAsset,
         uint256 loanAmount
     ) external view returns (uint256) {
         address cTokenAddress = _getCTokenAddress(borrowedAsset);
         if (cTokenAddress.isEmpty()) {
-            return markets[borrowedAsset][collateralAsset].getSupplyToDebtFor(loanAmount);
+            return markets[borrowedAsset][collateralAsset].getDebtRatioFor(loanAmount);
         } else {
             return
-                markets[cTokenAddress][collateralAsset].getSupplyToDebtFor(
+                markets[cTokenAddress][collateralAsset].getDebtRatioFor(
                     _getValueForAmount(borrowedAsset, loanAmount)
                 );
         }
@@ -224,7 +219,7 @@ contract MarketsState is
 
     /**
         @notice It gets the global market state for a given borrowed asset.
-        @param borrowedAsset the borrowed asset aaddress.
+        @param borrowedAsset the borrowed asset address.
         @return the global market state.
      */
     function _getGlobalMarket(address borrowedAsset)

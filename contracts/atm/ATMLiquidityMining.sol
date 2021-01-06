@@ -12,10 +12,10 @@ import "../base/TInitializable.sol";
 import "../base/BaseUpgradeable.sol";
 
 // Interfaces
-import "./ATMGovernanceInterface.sol";
-import "./TLRTokenInterface.sol";
-import "./ATMLiquidityMiningInterface.sol";
-import "../interfaces/TTokenInterface.sol";
+import "./IATMGovernance.sol";
+import "./ITLRToken.sol";
+import "./IATMLiquidityMining.sol";
+import "../interfaces/ITToken.sol";
 
 // Libraries
 import "./ATMCommon.sol";
@@ -35,11 +35,7 @@ import "./ATMCommon.sol";
     @dev It uses specific configuration from ATM Governance instance. 
     @author develop@teller.finance
  */
-contract ATMLiquidityMining is
-    ATMLiquidityMiningInterface,
-    TInitializable,
-    BaseUpgradeable
-{
+contract ATMLiquidityMining is IATMLiquidityMining, TInitializable, BaseUpgradeable {
     using SafeMath for uint256;
 
     /* Constants */
@@ -50,9 +46,9 @@ contract ATMLiquidityMining is
 
     /* State Variables */
 
-    ATMGovernanceInterface private governance;
+    IATMGovernance private governance;
 
-    TLRTokenInterface private tlrToken;
+    ITLRToken private tlrToken;
 
     // List of staking information for every user divided by tToken.
     mapping(address => mapping(address => ATMCommon.UserStakeInfo)) public userStakeInfo;
@@ -94,8 +90,8 @@ contract ATMLiquidityMining is
         require(atmGovernanceAddress.isContract(), "GOVERNANCE_MUST_BE_A_CONTRACT");
         require(tlrTokenAddress.isContract(), "TLRTOKEN_MUST_BE_A_CONTRACT");
         _setSettings(settingsAddress);
-        governance = ATMGovernanceInterface(atmGovernanceAddress);
-        tlrToken = TLRTokenInterface(tlrTokenAddress);
+        governance = IATMGovernance(atmGovernanceAddress);
+        tlrToken = ITLRToken(tlrTokenAddress);
         TInitializable._initialize();
     }
 
@@ -144,7 +140,7 @@ contract ATMLiquidityMining is
         require(amount > 0, "STAKING_ZERO_NOT_ALLOWED");
         // Checking tToken balance
         require(
-            TTokenInterface(tToken).balanceOf(msg.sender) >= amount,
+            ITToken(tToken).balanceOf(msg.sender) >= amount,
             "INSUFFICIENT_TTOKENS_TO_STAKE"
         );
         // Update use stake info
@@ -155,7 +151,7 @@ contract ATMLiquidityMining is
         });
         // Transferring tTokens for staking
         require(
-            TTokenInterface(tToken).transferFrom(msg.sender, address(this), amount),
+            ITToken(tToken).transferFrom(msg.sender, address(this), amount),
             "STAKE_TTOKEN_TRANSFER_FAILED"
         );
         userStakeInfo[msg.sender][tToken] = userInfo;
@@ -197,7 +193,7 @@ contract ATMLiquidityMining is
         userStakeInfo[msg.sender][tToken] = userInfo;
         // Send tTokens back to user
         require(
-            TTokenInterface(tToken).transfer(msg.sender, amount),
+            ITToken(tToken).transfer(msg.sender, amount),
             "UNSTAKE_TTOKEN_TRANSFER_FAILED"
         );
 
@@ -249,7 +245,7 @@ contract ATMLiquidityMining is
         @param tToken tToken address we want to obtain the balance.
      */
     function gettTokenTotalBalance(address tToken) external view returns (uint256) {
-        return TTokenInterface(tToken).balanceOf(address(this));
+        return ITToken(tToken).balanceOf(address(this));
     }
 
     /**

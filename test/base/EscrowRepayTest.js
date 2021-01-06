@@ -1,5 +1,5 @@
 // JS Libraries
-const LoansBaseInterfaceEncoder = require("../utils/encoders/LoansBaseInterfaceEncoder");
+const ILoansBaseEncoder = require("../utils/encoders/LoansBaseEncoder");
 const { escrow } = require("../utils/events");
 const { withData } = require("leche");
 const { t } = require("../utils/consts");
@@ -12,7 +12,7 @@ const DAI = artifacts.require("./mock/token/DAIMock.sol");
 const Escrow = artifacts.require("./mock/base/EscrowMock.sol");
 
 contract("EscrowRepayTest", function(accounts) {
-  const loansEncoder = new LoansBaseInterfaceEncoder(web3);
+  const loansEncoder = new ILoansBaseEncoder(web3);
 
   let dai;
   let loans;

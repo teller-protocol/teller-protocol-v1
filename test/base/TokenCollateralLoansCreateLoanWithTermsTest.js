@@ -16,9 +16,9 @@ const { assertLoan } = require('../utils/assertions')
 
 const Timer = require('../../scripts/utils/Timer')
 const LoanTermsConsensusEncoder = require('../utils/encoders/LoanTermsConsensusEncoder')
-const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder')
-const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder')
-const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
+const LendingPoolEncoder = require('../utils/encoders/LendingPoolEncoder')
+const ATMSettingsEncoder = require('../utils/encoders/ATMSettingsEncoder')
+const CTokenInterfaceEncoder = require('../utils/encoders/CTokenEncoder')
 
 // Mock contracts
 const Mock = artifacts.require('./mock/util/Mock.sol')
@@ -61,8 +61,8 @@ const createTermsSetExpectedLoan = (
 }
 
 contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
-  const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3)
-  const IATmSettingsEncoder = new IATMSettingsEncoder(web3)
+  const lendingPoolEncoder = new LendingPoolEncoder(web3)
+  const atmSettingsEncoder = new ATMSettingsEncoder(web3)
   const cTokenEncoder = new CTokenInterfaceEncoder(web3)
 
   let loanTermsConsensusEncoder
@@ -96,7 +96,7 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
         onInitialize: async (instance, { atmSettings }) => {
           const atmForMarketInstance = await Mock.new()
           atmSettings.givenMethodReturnAddress(
-            IATmSettingsEncoder.encodeGetATMForMarket(),
+            atmSettingsEncoder.encodeGetATMForMarket(),
             atmForMarketInstance.address
           )
         }
@@ -112,7 +112,7 @@ contract('TokenCollateralLoansCreateLoanWithTermsTest', function (accounts) {
 
     const lendingPoolInstance = await Mock.new()
     lendingPoolInstance.givenMethodReturnAddress(
-      lendingPoolInterfaceEncoder.encodeLendingToken(),
+      lendingPoolEncoder.encodeLendingToken(),
       lendingTokenInstance.address
     )
     

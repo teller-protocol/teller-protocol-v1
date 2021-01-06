@@ -9,7 +9,7 @@ const { createTestSettingsInstance } = require("../utils/settings-helper");
 const { createLoan, createLiquidationInfo } = require('../utils/loans');
 const { loans } = require('../utils/events');
 
-const LendingPoolInterfaceEncoder = require("../utils/encoders/LendingPoolInterfaceEncoder");
+const LendingPoolEncoder = require("../utils/encoders/LendingPoolEncoder");
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -25,7 +25,7 @@ contract("LoansBaseLiquidateLoanTest", function(accounts) {
   BigNumber.set({ DECIMAL_PLACES: 0, ROUNDING_MODE: 3 });
   const timer = new Timer(web3);
 
-  const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3);
+  const lendingPoolEncoder = new LendingPoolEncoder(web3);
 
   let instance;
   let loanTermsConsInstance;
@@ -62,7 +62,7 @@ contract("LoansBaseLiquidateLoanTest", function(accounts) {
     );
 
     // encode lending token address
-    const encodeLendingToken = lendingPoolInterfaceEncoder.encodeLendingToken();
+    const encodeLendingToken = lendingPoolEncoder.encodeLendingToken();
     await lendingPoolInstance.givenMethodReturnAddress(encodeLendingToken, lendingTokenInstance.address);
   });
 

@@ -11,11 +11,11 @@ const { createLoan } = require('../utils/loans');
 
 const ERC20InterfaceEncoder = require('../utils/encoders/ERC20InterfaceEncoder')
 const ChainlinkAggregatorEncoder = require('../utils/encoders/ChainlinkAggregatorEncoder')
-const LendingPoolInterfaceEncoder = require('../utils/encoders/LendingPoolInterfaceEncoder')
-const EscrowFactoryInterfaceEncoder = require('../utils/encoders/EscrowFactoryInterfaceEncoder')
-const EscrowInterfaceEncoder = require('../utils/encoders/EscrowInterfaceEncoder')
+const LendingPoolEncoder = require('../utils/encoders/LendingPoolEncoder')
+const EscrowFactoryEncoder = require('../utils/encoders/EscrowFactoryEncoder')
+const EscrowEncoder = require('../utils/encoders/EscrowEncoder')
 const { createTestSettingsInstance } = require('../utils/settings-helper')
-const IATMSettingsEncoder = require("../utils/encoders/IATMSettingsEncoder")
+const ATMSettingsEncoder = require("../utils/encoders/ATMSettingsEncoder")
 
 // Mock contracts
 const Mock = artifacts.require('./mock/util/Mock.sol')
@@ -31,11 +31,11 @@ const LoanLib = artifacts.require("../util/LoanLib.sol");
 contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
   const erc20InterfaceEncoder = new ERC20InterfaceEncoder(web3)
   const chainlinkAggregatorEncoder = new ChainlinkAggregatorEncoder(web3)
-  const lendingPoolInterfaceEncoder = new LendingPoolInterfaceEncoder(web3)
-  const escrowFactoryInterfaceEncoder = new EscrowFactoryInterfaceEncoder(web3)
-  const escrowInterfaceEncoder = new EscrowInterfaceEncoder(web3)
+  const lendingPoolEncoder = new LendingPoolEncoder(web3)
+  const escrowFactoryEncoder = new EscrowFactoryEncoder(web3)
+  const escrowEncoder = new EscrowEncoder(web3)
   const owner = accounts[0]
-  const IAtmSettingsEncoder = new IATMSettingsEncoder(web3)
+  const atmSettingsEncoder = new ATMSettingsEncoder(web3)
   let instance
   let chainlinkAggregatorInstance
   let lendingPoolInstance
@@ -63,7 +63,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
         initialize: true,
         onInitialize: async (instance, { escrowFactory, chainlinkAggregator, atmSettings }) => {
           await escrowFactory.givenMethodReturnAddress(
-            escrowFactoryInterfaceEncoder.encodeCreateEscrow(),
+            escrowFactoryEncoder.encodeCreateEscrow(),
             createdEscrowMock.address
           )
           chainlinkAggregatorInstance = chainlinkAggregator
@@ -77,7 +77,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
 
     const atmGovernance = await Mock.new();
     await atmSettingsInstance.givenMethodReturnAddress(
-      IAtmSettingsEncoder.encodeGetATMForMarket(),
+      atmSettingsEncoder.encodeGetATMForMarket(),
       atmGovernance.address
     );
 
@@ -95,7 +95,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
     lendingTokenInstance = await Mock.new()
     const encodeDecimals = erc20InterfaceEncoder.encodeDecimals()
     await lendingTokenInstance.givenMethodReturnUint(encodeDecimals, 18)
-    const encodeLendingToken = lendingPoolInterfaceEncoder.encodeLendingToken()
+    const encodeLendingToken = lendingPoolEncoder.encodeLendingToken()
     await lendingPoolInstance.givenMethodReturnAddress(encodeLendingToken, lendingTokenInstance.address)
   })
 
@@ -210,7 +210,7 @@ contract('EtherCollateralLoansTakeOutLoanTest', function (accounts) {
       const loan = await afterAssertFn(tx)
 
       assert.notEqual(loan.escrow.toString(), NULL_ADDRESS, "Escrow contract was not created")
-      const count = await createdEscrowMock.invocationCountForMethod.call(escrowInterfaceEncoder.encodeInitialize())
+      const count = await createdEscrowMock.invocationCountForMethod.call(escrowEncoder.encodeInitialize())
       assert.equal(count.toString(), '1', 'Escrow initializer was not called')
 
       const pool = await LendingPool.at(lendingPoolInstance.address)

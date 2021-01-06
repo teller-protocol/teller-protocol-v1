@@ -6,8 +6,8 @@ import "./BaseEscrowDapp.sol";
 import "./TInitializable.sol";
 
 // Interfaces
-import "../interfaces/EscrowInterface.sol";
-import "../interfaces/LoansInterface.sol";
+import "../interfaces/IEscrow.sol";
+import "../interfaces/ILoans.sol";
 import "../interfaces/IBaseProxy.sol";
 import "../providers/compound/CErc20Interface.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
@@ -37,7 +37,7 @@ import "../util/NumbersLib.sol";
 
     @author develop@teller.finance
  */
-contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
+contract Escrow is IEscrow, TInitializable, BaseEscrowDapp {
     using Address for address;
     using SafeMath for uint256;
     using NumbersLib for uint256;
@@ -48,7 +48,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
     /**
         @notice It is the current loans contract instance.
      */
-    LoansInterface public loans;
+    ILoans public loans;
 
     /**
         @notice This loan id refers the loan in the loans contract.
@@ -212,7 +212,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
     function initialize(address loansAddress, uint256 aLoanID) public isNotInitialized() {
         require(loansAddress.isContract(), "LOANS_MUST_BE_A_CONTRACT");
 
-        loans = LoansInterface(loansAddress);
+        loans = ILoans(loansAddress);
         loanID = aLoanID;
 
         Ownable.initialize(getBorrower());

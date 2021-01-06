@@ -5,7 +5,7 @@ const { createTestSettingsInstance } = require("../utils/settings-helper");
 const { marketFactory } = require("../utils/events");
 
 const LogicVersionsRegistryEncoder = require("../utils/encoders/LogicVersionsRegistryEncoder");
-const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
+const CTokenInterfaceEncoder = require('../utils/encoders/CTokenEncoder')
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");

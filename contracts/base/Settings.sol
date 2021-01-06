@@ -15,10 +15,10 @@ import "./BaseUpgradeable.sol";
 import "./TInitializable.sol";
 
 // Interfaces
-import "../interfaces/SettingsInterface.sol";
-import "../interfaces/EscrowFactoryInterface.sol";
-import "../interfaces/MarketsStateInterface.sol";
-import "../interfaces/InterestValidatorInterface.sol";
+import "../interfaces/ISettings.sol";
+import "../interfaces/IEscrowFactory.sol";
+import "../interfaces/IMarketsState.sol";
+import "../interfaces/IInterestValidator.sol";
 import "../providers/chainlink/IChainlinkAggregator.sol";
 import "../providers/compound/CErc20Interface.sol";
 import "../settings/IATMSettings.sol";
@@ -41,7 +41,7 @@ import "../settings/IATMSettings.sol";
 
     @author develop@teller.finance
  */
-contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeable {
+contract Settings is ISettings, TInitializable, Pausable, BaseUpgradeable {
     using AddressLib for address;
     using Address for address;
     using AssetSettingsLib for AssetSettingsLib.AssetSettings;
@@ -126,12 +126,12 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     /**
         @notice It is the global instance of the EscrowFactory contract.
      */
-    EscrowFactoryInterface public escrowFactory;
+    IEscrowFactory public escrowFactory;
 
     /**
         @notice It is the global instance of the logic versions registry contract.
      */
-    LogicVersionsRegistryInterface public versionsRegistry;
+    ILogicVersionsRegistry public versionsRegistry;
 
     /**
         @notice It is the global instance of the ChainlinkAggregator contract.
@@ -141,12 +141,12 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     /**
         @notice The markets state.
      */
-    MarketsStateInterface public marketsState;
+    IMarketsState public marketsState;
 
     /**
         @notice The current interest validator.
      */
-    InterestValidatorInterface public interestValidator;
+    IInterestValidator public interestValidator;
 
     /**
         @notice The current ATM settings.
@@ -537,11 +537,11 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         Pausable.initialize(msg.sender);
         TInitializable._initialize();
 
-        escrowFactory = EscrowFactoryInterface(escrowFactoryAddress);
-        versionsRegistry = LogicVersionsRegistryInterface(versionsRegistryAddress);
+        escrowFactory = IEscrowFactory(escrowFactoryAddress);
+        versionsRegistry = ILogicVersionsRegistry(versionsRegistryAddress);
         chainlinkAggregator = IChainlinkAggregator(chainlinkAggregatorAddress);
-        marketsState = MarketsStateInterface(marketsStateAddress);
-        interestValidator = InterestValidatorInterface(interestValidatorAddress);
+        marketsState = IMarketsState(marketsStateAddress);
+        interestValidator = IInterestValidator(interestValidatorAddress);
         atmSettings = IATMSettings(atmSettingsAddress);
         WETH_ADDRESS = wethTokenAddress;
         CETH_ADDRESS = cethTokenAddress;

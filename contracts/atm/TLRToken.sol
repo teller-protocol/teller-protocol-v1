@@ -6,7 +6,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Deta
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Burnable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Arrays.sol";
-import "./TLRTokenInterface.sol";
+import "./ITLRToken.sol";
 
 import "../base/TInitializable.sol";
 import "../base/BaseUpgradeable.sol";
@@ -28,7 +28,7 @@ import "../base/BaseUpgradeable.sol";
  */
 
 contract TLRToken is
-    TLRTokenInterface,
+    ITLRToken,
     ERC20Detailed,
     ERC20Mintable,
     ERC20Burnable,

@@ -3,20 +3,20 @@ pragma solidity 0.5.17;
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
-import "../interfaces/TTokenInterface.sol";
-import "../interfaces/SettingsInterface.sol";
+import "../interfaces/ITToken.sol";
+import "../interfaces/ISettings.sol";
 
 /**
  * @notice This contract represents a wrapped token within the Teller protocol
  *
  * @author develop@teller.finance
  */
-contract TToken is TTokenInterface, ERC20Detailed, ERC20Mintable {
+contract TToken is ITToken, ERC20Detailed, ERC20Mintable {
     using Address for address;
 
     /** State Variables */
 
-    SettingsInterface private settings;
+    ISettings private settings;
 
     /* Constructor */
     /**
@@ -32,7 +32,7 @@ contract TToken is TTokenInterface, ERC20Detailed, ERC20Mintable {
         uint8 decimals
     ) public {
         require(settingsAddress.isContract(), "SETTINGS_MUST_BE_CONTRACT");
-        settings = SettingsInterface(settingsAddress);
+        settings = ISettings(settingsAddress);
         ERC20Detailed.initialize(name, symbol, decimals);
         ERC20Mintable.initialize(msg.sender);
     }
@@ -55,7 +55,7 @@ contract TToken is TTokenInterface, ERC20Detailed, ERC20Mintable {
         @notice Gets the current settings contract.
         @return the setting contract instance.
      */
-    function _settings() internal view returns (SettingsInterface) {
+    function _settings() internal view returns (ISettings) {
         return settings;
     }
 }

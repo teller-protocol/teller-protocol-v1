@@ -1,7 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t, createMocks } = require('../utils/consts');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const SettingsEncoder = require('../utils/encoders/SettingsEncoder');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -12,7 +12,7 @@ const MarketsState = artifacts.require("./base/MarketsState.sol");
 const actions = { Supply: 'Supply', Borrow: 'Borrow', Repay: 'Repay' };
 
 contract('MarketsStateModifiersTest', function (accounts) {
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const settingsEncoder = new SettingsEncoder(web3);
     const owner = accounts[0];
     let mocks;
     let instance;
@@ -36,7 +36,7 @@ contract('MarketsStateModifiersTest', function (accounts) {
         it(t('user', 'onlyWhitelisted', 'Should be able (or not) to call the increase function.', mustFail), async function() {
             // Setup
             await settings.givenMethodReturnAddress(
-                settingsInterfaceEncoder.encodeGetCTokenAddress(),
+                settingsEncoder.encodeGetCTokenAddress(),
                 cTokenInstance.address
             );
             for (const adminIndex of adminIndexes) {

@@ -1,7 +1,7 @@
 // JS Libraries
 const { withData } = require('leche')
 const { t } = require('../utils/consts')
-const LoansBaseInterfaceEncoder = require('../utils/encoders/LoansBaseInterfaceEncoder')
+const ILoansBaseEncoder = require('../utils/encoders/LoansBaseEncoder')
 const { encodeLoanParameter } = require('../utils/loans')
 
 // Mock contracts
@@ -12,7 +12,7 @@ const DAI = artifacts.require('./mock/tokens/DAIMock.sol')
 const Escrow = artifacts.require('./base/Escrow.sol')
 
 contract('EscrowInitializeTest', function (accounts) {
-  const loansEncoder = new LoansBaseInterfaceEncoder(web3)
+  const loansEncoder = new ILoansBaseEncoder(web3)
 
   let escrow
   let dai

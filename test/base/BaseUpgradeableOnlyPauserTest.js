@@ -1,7 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS } = require('../utils/consts');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
+const SettingsEncoder = require('../utils/encoders/SettingsEncoder');
 const { assert } = require('chai');
 
 // Mock contracts
@@ -11,7 +11,7 @@ const BaseUpgradeableMock = artifacts.require("./mock/base/BaseUpgradeableMock.s
 // Smart contracts
 
 contract('BaseUpgradeableOnlyPauserTest', function (accounts) {
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
+    const settingsEncoder = new SettingsEncoder(web3);
     let instance;
     let settings;
     
@@ -30,7 +30,7 @@ contract('BaseUpgradeableOnlyPauserTest', function (accounts) {
             const sender = accounts[0];
             if(!senderHasPauserRole) {
                 await settings.givenMethodRevertWithMessage(
-                    settingsInterfaceEncoder.encodeRequirePauserRole(),
+                    settingsEncoder.encodeRequirePauserRole(),
                     "NOT_PAUSER"
                 );
             }

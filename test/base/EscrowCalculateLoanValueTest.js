@@ -1,7 +1,7 @@
 // JS Libraries
 const { withData } = require("leche");
 const { t, ETH_ADDRESS, } = require("../utils/consts");
-const LoansBaseInterfaceEncoder = require("../utils/encoders/LoansBaseInterfaceEncoder");
+const ILoansBaseEncoder = require("../utils/encoders/LoansBaseEncoder");
 const { createMocks } = require("../utils/consts");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 
@@ -15,7 +15,7 @@ const Escrow = artifacts.require("./mock/base/EscrowMock.sol");
 const LoansBase = artifacts.require('./base/LoansBase.sol')
 
 contract("EscrowCalculateTotalValueTest", function(accounts) {
-  const loansEncoder = new LoansBaseInterfaceEncoder(web3);
+  const loansEncoder = new ILoansBaseEncoder(web3);
 
   let instance;
 
