@@ -12,7 +12,7 @@ library NumbersList {
     using SafeMath for uint256;
     using NumbersLib for uint256;
 
-    // Holds values to can calculate the threshold of a list of numbers
+    // Holds values to calculate the threshold of a list of numbers
     struct Values {
         uint256 count; // The total number of numbers added
         uint256 max; // The maximum number that was added
