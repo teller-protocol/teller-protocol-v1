@@ -98,7 +98,7 @@ contract Base is TInitializable, BaseUpgradeable, ReentrancyGuard {
     }
 
     /**
-        @notice Gets if a specific lending pool address is paused or not.
+        @notice Checks if a specific lending pool address is paused or not.
         @param poolAddress lending pool address to check.
         @return true if the lending pool address is  paused. Otherwise it returns false.
      */
@@ -107,7 +107,7 @@ contract Base is TInitializable, BaseUpgradeable, ReentrancyGuard {
     }
 
     /**
-        @notice Gets if the platform is paused or not.
+        @notice Checks if the platform is paused or not.
         @return true if platform is paused. Otherwise it returns false.
      */
     function _isPaused() internal view returns (bool) {
