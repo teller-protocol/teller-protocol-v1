@@ -10,7 +10,7 @@ import "../util/TellerCommon.sol";
  */
 interface EscrowFactoryInterface {
     /**
-        @notice It gets a dapp configuration based its contract address.
+        @notice It gets a dapp configuration based on its contract address.
         @param dapp dapp address.
         @return TellerCommon.Dapp dapp configuration.
      */
