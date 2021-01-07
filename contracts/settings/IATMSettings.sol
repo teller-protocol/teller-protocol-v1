@@ -79,7 +79,7 @@ interface IATMSettings {
     /** External Functions */
 
     /**
-        @notice It pauses an given ATM.
+        @notice It pauses a given ATM.
         @param atmAddress ATM address to pause.
      */
     function pauseATM(address atmAddress) external;
