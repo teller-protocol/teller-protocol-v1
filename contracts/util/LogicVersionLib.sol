@@ -85,7 +85,7 @@ library LogicVersionLib {
     }
 
     /**
-        @notice It removes a current logic versionn.
+        @notice It removes a current logic version.
         @param self the current logic version to remove.
      */
     function remove(LogicVersion storage self)
