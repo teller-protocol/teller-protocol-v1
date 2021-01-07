@@ -78,7 +78,7 @@ interface LogicVersionsRegistryInterface {
     ) external;
 
     /**
-        @notice It update a current logic address given a logic name.
+        @notice It updates a current logic address given a logic name.
         @param logicName logic name to update.
         @param newLogic the new logic address to set.
      */
