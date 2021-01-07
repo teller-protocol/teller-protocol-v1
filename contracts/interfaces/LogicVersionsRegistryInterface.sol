@@ -28,7 +28,7 @@ interface LogicVersionsRegistryInterface {
 
     /**
         @notice This event is emitted when a current logic version is removed.
-        @param logicName new logic name.
+        @param logicName logic name.
         @param sender address that removed it.
         @param lastLogic last logic address where the logic was.
         @param lastVersion last version for the logic address.
@@ -41,8 +41,8 @@ interface LogicVersionsRegistryInterface {
     );
 
     /**
-        @notice This event is emitted when a new logic version is updated.
-        @param logicName new logic name.
+        @notice This event is emitted when a logic version is updated.
+        @param logicName logic name.
         @param sender address that updated it.
         @param oldLogic the old logic address.
         @param newLogic the new logic address.
