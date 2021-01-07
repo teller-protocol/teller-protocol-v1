@@ -2,8 +2,8 @@ const {
   minutesToSeconds,
 } = require("../../../test/utils/consts");
 
-const advanceMinutes = async ({timer}, {testContext}, {minutes}) => {
-  const {network} = testContext;
+const advanceMinutes = async ({}, {testContext}, {minutes}) => {
+  const { timer, network } = testContext;
   if(!['ganache', 'ganache-mainnet'].includes(network.toLowerCase())) {
     return;
   }

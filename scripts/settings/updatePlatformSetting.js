@@ -29,11 +29,11 @@ module.exports = async (callback) => {
 
         printPlatformSetting(currentSettingResult, { settingName, settingNameBytes32 });
 
-        const result = await settings.updatePlatformSetting(settingNameBytes32, newValue, senderTxConfig);
+        const result = await settings.updatePlatformSettingWithTimelock(settingNameBytes32, newValue, senderTxConfig);
         console.log(toTxUrl(result));
 
         const updatedSettingResult = await settings.getPlatformSetting(settingNameBytes32);
-        console.log(`Updated Value:`);
+        console.log(`Pending New Value:`);
         printPlatformSetting(updatedSettingResult, { settingName, settingNameBytes32 });
 
         console.log('>>>> The script finished successfully. <<<<');

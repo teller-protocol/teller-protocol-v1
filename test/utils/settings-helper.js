@@ -121,11 +121,15 @@ module.exports = {
 
         return await createSettingsInstance(Settings, { txConfig: { from }, Mock, initialize, onInitialize }, platformSettings);
     },
-    printPlatformSetting: ({value, min, max, exists}, { settingName, settingNameBytes32 }) => {
+    printPlatformSetting: ({value, min, max, exists, timelock}, { settingName, settingNameBytes32 }) => {
         console.log(`Setting Name / Bytes32:    ${settingName} / ${settingNameBytes32}`);
-        console.log(`Exists?:           ${exists.toString()}`);
-        console.log(`Current Value:     ${value.toString()}`);
-        console.log(`Min:               ${min.toString()}`);
-        console.log(`Max:               ${max.toString()}`);
+        console.log(`Exists?:                   ${exists.toString()}`);
+        console.log(`Current Value:             ${value.toString()}`);
+        console.log(`Min:                       ${min.toString()}`);
+        console.log(`Max:                       ${max.toString()}`);
+        console.log(`Pending Timelock:`)
+        console.log(`    Locked Until:          ${timelock.lockedUntil.toString()}`)
+        console.log(`    New Value:             ${timelock.newValue.toString()}`)
+        console.log(`    Remove?:               ${timelock.remove.toString()}`)
     },
 };

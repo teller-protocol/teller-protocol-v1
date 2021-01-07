@@ -5,10 +5,10 @@ const Accounts = require('../utils/Accounts');
 const { teller } = require("../utils/contracts");
 const { settings: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
-const { SENDER_INDEX, SETTING_NAME } = require('../utils/cli/names');
+const { SENDER_INDEX, SETTING_NAME, NEW_VALUE } = require('../utils/cli/names');
 const { toBytes32 } = require('../../test/utils/consts');
 const { printPlatformSetting } = require('../../test/utils/settings-helper');
-const processArgs = new ProcessArgs(readParams.removePlatformSetting().argv);
+const processArgs = new ProcessArgs(readParams.applyPlatformSetting().argv);
 
 module.exports = async (callback) => {
     try {
@@ -28,15 +28,12 @@ module.exports = async (callback) => {
 
         printPlatformSetting(currentSettingResult, { settingName, settingNameBytes32 });
 
-        const result = await settings.removePlatformSettingWithTimelock(
-            settingNameBytes32,
-            senderTxConfig
-        );
+        const result = await settings.applyPlatformSettingTimelock(settingNameBytes32, senderTxConfig);
         console.log(toTxUrl(result));
 
-        const removedSettingResult = await settings.getPlatformSetting(settingNameBytes32);
-        console.log(`Pending New Value:`);
-        printPlatformSetting(removedSettingResult, { settingName, settingNameBytes32 });
+        const updatedSettingResult = await settings.getPlatformSetting(settingNameBytes32);
+        console.log(`Updated Value:`);
+        printPlatformSetting(updatedSettingResult, { settingName, settingNameBytes32 });
 
         console.log('>>>> The script finished successfully. <<<<');
         callback();

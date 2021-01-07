@@ -56,6 +56,19 @@ interface SettingsInterface {
         uint256 newValue
     );
 
+    event PlatformSettingRemoveWithTimelock(
+        bytes32 indexed settingName,
+        address indexed sender,
+        uint256 lockedUntil
+    );
+
+    event PlatformSettingUpdateWithTimelock(
+        bytes32 indexed settingName,
+        address indexed sender,
+        uint256 newValue,
+        uint256 lockedUntil
+    );
+
     /**
         @notice This event is emitted when a lending pool is paused.
         @param account address that paused the lending pool.
@@ -126,11 +139,6 @@ interface SettingsInterface {
         uint256 newValue
     );
 
-    function settingTimelocks(bytes32)
-        external
-        view
-        returns (uint256 time, uint256 newValue);
-
     /**
         @notice It creates a new platform setting given a setting name, value, min and max values.
         @param settingName setting name to create.
@@ -149,34 +157,31 @@ interface SettingsInterface {
 
     /**
         @notice It updates an existent platform setting given a setting name.
-        @notice It only allows to update the value (not the min or max values).
-        @notice In case you need to update the min or max values, you need to remove it, and create it again.
         @param settingName setting name to update.
-        @param newValue the new value to set.
      */
-    function updatePlatformSetting(bytes32 settingName, uint256 newValue) external;
+    function applyPlatformSettingTimelock(bytes32 settingName) external;
 
     /**
         @notice Creates a new timelock for a setting change.
-        @dev Doesn't allow timelocking a setting which already has a timelock.
-        @dev Sets the timelock's time to `now`.
+        @dev It only allows to update the value (not the min or max values).
+        @dev In case you need to update the min or max values, you need to remove it, and create it again.
         @param settingName name of the setting.
         @param newValue new value of the setting.
      */
-    function timelockSetting(bytes32 settingName, uint256 newValue) external;
+    function updatePlatformSettingWithTimelock(bytes32 settingName, uint256 newValue) external;
+
+    /**
+        @notice Creates a new timelock for a platform setting removal.
+        @param settingName name of the setting.
+     */
+    function removePlatformSettingWithTimelock(bytes32 settingName) external;
 
     /**
         @notice Removes a setting timelock.
         @notice Useful when a planned setting change is no longer wanted.
         @param settingName name of the setting to remove the timelock for.
      */
-    function removeTimelock(bytes32 settingName) external;
-
-    /**
-        @notice Removes a current platform setting given a setting name.
-        @param settingName to remove.
-     */
-    function removePlatformSetting(bytes32 settingName) external;
+    function removePlatformSettingTimelock(bytes32 settingName) external;
 
     /**
         @notice It gets the current platform setting for a given setting name

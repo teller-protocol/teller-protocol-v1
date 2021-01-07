@@ -78,6 +78,9 @@ contract SettingsConsts {
      */
     bytes32
         public constant OVER_COLLATERALIZED_BUFFER_SETTING = "OverCollateralizedBuffer";
-
-    bytes32 public constant TIMELOCK_SETTING = "TimelockSetting";
+    /**
+        @notice The setting name for timelocking a platform setting value.
+        @notice When a platform setting is updated, the timestamp is recorded and further modification of the setting value may only happen after the amount of time (denoted in seconds) passes specified by this setting value.
+     */
+    bytes32 public constant TIMELOCK_DURATION = "TimelockDuration";
 }

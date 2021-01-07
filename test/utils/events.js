@@ -493,6 +493,18 @@ module.exports = {
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
         },
+        platformSettingUpdateWithTimelock: tx => {
+            const name = 'PlatformSettingUpdateWithTimelock';
+            return {
+                name: name,
+                emitted: (settingName, sender, newValue) => emitted(tx, name, ev => {
+                    assert.equal(ev.settingName.toString(), settingName.toString(), 'settingName does not match');
+                    assert.equal(ev.sender.toString(), sender.toString(), 'sender does not match');
+                    assert.equal(ev.newValue.toString(), newValue.toString(), 'newValue does not match');
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
         platformSettingRemoved: tx => {
             const name = 'PlatformSettingRemoved';
             return {
@@ -500,6 +512,17 @@ module.exports = {
                 emitted: (settingName, sender, lastValue) => emitted(tx, name, ev => {
                     assert.equal(ev.settingName.toString(), settingName.toString(), 'settingName does not match');
                     assert.equal(ev.lastValue.toString(), lastValue.toString(), 'lastValue does not match');
+                    assert.equal(ev.sender.toString(), sender.toString(), 'sender does not match');
+                }),
+                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
+            };
+        },
+        platformSettingRemoveWithTimelock: tx => {
+            const name = 'PlatformSettingRemoveWithTimelock';
+            return {
+                name: name,
+                emitted: (settingName, sender) => emitted(tx, name, ev => {
+                    assert.equal(ev.settingName.toString(), settingName.toString(), 'settingName does not match');
                     assert.equal(ev.sender.toString(), sender.toString(), 'sender does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)

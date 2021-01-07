@@ -77,6 +77,7 @@ const depositFunds = async (
   lendingPoolEvents
     .tokenDeposited(depositResult)
     .emitted(txConfig.from, amount);
+  console.log((await token.balanceOf(lendingPool.address)).toString())
   return depositResult;
 };
 

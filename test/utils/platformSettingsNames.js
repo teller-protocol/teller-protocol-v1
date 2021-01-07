@@ -26,5 +26,5 @@ module.exports = {
     StartingBlockNumber: 'StartingBlockNumber',
     // The setting name for the request loan terms rate limit settings.
     RequestLoanTermsRateLimit: 'RequestLoanTermsRateLimit',
-
+    TimelockDuration: 'TimelockDuration'
 }

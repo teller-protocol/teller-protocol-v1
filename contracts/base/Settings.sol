@@ -83,19 +83,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
      */
     address public CETH_ADDRESS;
 
-    /* Structs */
-
-    struct SettingTimelock {
-        uint256 time;
-        uint256 newValue;
-    }
-
     /* State Variables */
-
-    /**
-        @notice Maps a setting name to the time it was submitted for timelock and its new value.
-     */
-    mapping(bytes32 => SettingTimelock) public settingTimelocks;
 
     /**
         @notice It represents a mapping to identify the lending pools paused and not paused.
@@ -180,28 +168,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
 
     /** Modifiers */
 
-    /**
-        @notice Checks if a setting change's timelock has elapsed.
-        @notice If no timelock setting exists, we don't enforce a timelock.
-        @param settingName the name of the setting to check the timelock for.
-        @param newValue the new value of the setting which needs to be equivalent in the timelock.
-     */
-    modifier timelockedSetting(bytes32 settingName, uint256 newValue) {
-        if (platformSettings[consts.TIMELOCK_SETTING()].exists) {
-            SettingTimelock memory settingTimelock = settingTimelocks[settingName];
-            require(settingTimelock.time != 0, "SETTING_NOT_TIMELOCKED");
-            require(
-                settingTimelock.time <=
-                    now - platformSettings[consts.TIMELOCK_SETTING()].value,
-                "MINIMUM_TIMELOCK_NOT_ELAPSED"
-            );
-            require(settingTimelock.newValue == newValue, "TIMELOCK_NEWVALUE_MISMATCH");
-        }
-        _;
-    }
-
-    /* Constructor */
-
     /** External Functions */
 
     /**
@@ -225,61 +191,88 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
 
     /**
         @notice It updates an existent platform setting given a setting name.
-        @notice It only allows to update the value (not the min or max values).
-        @notice In case you need to update the min or max values, you need to remove it, and create it again.
-        @dev Calls `delete` on the the timelock for the setting.
+        @dev It only allows to update the value (not the min or max values).
+        @dev In case you need to update the min or max values, you need to remove it, and create it again.
         @param settingName setting name to update.
-        @param newValue the new value to set.
      */
-    function updatePlatformSetting(bytes32 settingName, uint256 newValue)
+    function applyPlatformSettingTimelock(bytes32 settingName)
         external
         onlyPauser()
         isInitialized()
-        timelockedSetting(settingName, newValue)
     {
-        uint256 oldValue = platformSettings[settingName].update(newValue);
-        delete settingTimelocks[settingName];
-        emit PlatformSettingUpdated(settingName, msg.sender, oldValue, newValue);
+        PlatformSettingsLib.PlatformSetting storage setting = platformSettings[settingName];
+        setting.requireTimelock();
+
+        uint256 oldValue = setting.value;
+        if (setting.timelock.remove) {
+            delete platformSettings[settingName];
+
+            emit PlatformSettingRemoved(settingName, oldValue, msg.sender);
+        } else {
+            setting.value = setting.timelock.newValue;
+            delete setting.timelock;
+
+            emit PlatformSettingUpdated(
+                settingName,
+                msg.sender,
+                oldValue,
+                setting.value
+            );
+        }
     }
 
     /**
-        @notice Creates a new timelock for a setting change.
-        @dev Doesn't allow timelocking a setting which already has a timelock.
-        @dev Sets the timelock's time to `now`.
+        @notice Creates a new timelock for a platform setting change.
+        @dev It only allows to update the value (not the min or max values).
+        @dev In case you need to update the min or max values, you need to remove it, and create it again.
         @param settingName name of the setting.
         @param newValue new value of the setting.
      */
-    function timelockSetting(bytes32 settingName, uint256 newValue)
+    function updatePlatformSettingWithTimelock(bytes32 settingName, uint256 newValue)
         external
         onlyPauser()
         isInitialized()
     {
-        require(settingTimelocks[settingName].time == 0, "TIMELOCK_ALREADY_EXISTS");
-        settingTimelocks[settingName] = SettingTimelock(now, newValue);
+        platformSettings[settingName].updateWithTimelock(
+            newValue,
+            platformSettings[consts.TIMELOCK_DURATION()].value
+        );
+
+        emit PlatformSettingUpdateWithTimelock(
+            settingName,
+            msg.sender,
+            newValue,
+            platformSettings[settingName].timelock.lockedUntil
+        );
     }
 
     /**
-        @notice Removes a setting timelock.
+        @notice Creates a new timelock for a platform setting removal.
+        @param settingName name of the setting.
+     */
+    function removePlatformSettingWithTimelock(bytes32 settingName)
+        external
+        onlyPauser()
+        isInitialized()
+    {
+        platformSettings[settingName].removeWithTimelock(
+            platformSettings[consts.TIMELOCK_DURATION()].value
+        );
+
+        emit PlatformSettingRemoveWithTimelock(
+            settingName,
+            msg.sender,
+            platformSettings[settingName].timelock.lockedUntil
+        );
+    }
+
+    /**
+        @notice Removes a platform setting timelock.
         @notice Useful when a planned setting change is no longer wanted.
         @param settingName name of the setting to remove the timelock for.
      */
-    function removeTimelock(bytes32 settingName) external onlyPauser() isInitialized() {
-        delete settingTimelocks[settingName];
-    }
-
-    /**
-        @notice Removes a current platform setting given a setting name.
-        @param settingName to remove.
-     */
-    function removePlatformSetting(bytes32 settingName)
-        external
-        onlyPauser()
-        isInitialized()
-    {
-        uint256 oldValue = platformSettings[settingName].value;
-        platformSettings[settingName].remove();
-
-        emit PlatformSettingRemoved(settingName, oldValue, msg.sender);
+    function removePlatformSettingTimelock(bytes32 settingName) external onlyPauser() isInitialized() {
+        delete platformSettings[settingName].timelock;
     }
 
     /**

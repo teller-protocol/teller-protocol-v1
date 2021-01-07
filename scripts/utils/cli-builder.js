@@ -243,18 +243,24 @@ module.exports = {
             addTokenName(yargs);
             return yargs;
         },
-        updatePlatformSetting: () => {
-            addBase(yargs);
-            addNewValue(yargs);
-            addSettingName(yargs);
-            addSenderIndex(yargs);
-            return yargs;
-        },
         createPlatformSetting: () => {
             addBase(yargs);
             addNewValue(yargs);
             addMinValue(yargs);
             addMaxValue(yargs);
+            addSettingName(yargs);
+            addSenderIndex(yargs);
+            return yargs;
+        },
+        applyPlatformSetting: () => {
+            addBase(yargs);
+            addSettingName(yargs);
+            addSenderIndex(yargs);
+            return yargs;
+        },
+        updatePlatformSetting: () => {
+            addBase(yargs);
+            addNewValue(yargs);
             addSettingName(yargs);
             addSenderIndex(yargs);
             return yargs;

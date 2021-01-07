@@ -6,6 +6,7 @@ const {
     toBytes32,
 } = require('../utils/consts');
 const { settings } = require('../utils/events');
+const settingsNames = require('../utils/platformSettingsNames');
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -18,7 +19,9 @@ contract('SettingsRemovePlatformSettingTest', function (accounts) {
     let instance;
     
     beforeEach('Setup for each test', async () => {
-        instance = await createTestSettingsInstance(Settings, { from: owner, Mock });
+        instance = await createTestSettingsInstance(Settings, { from: owner, Mock }, {
+            [settingsNames.TimelockDuration]: 0
+        });
     });
 
     const newSetting = (name, value, min = 0, max = value * 2) => ({name, nameBytes32: toBytes32(web3, name), value, min, max});
@@ -62,33 +65,33 @@ contract('SettingsRemovePlatformSettingTest', function (accounts) {
 
             try {
                 // Invocation
-                const result = await instance.removePlatformSetting(
+                const removeWithTimelockResult = await instance.removePlatformSettingWithTimelock(
                     platformNameToRemoveBytes32,
                     { from: sender }
                 );
-                
-                // Assertions
-                assert(!mustFail, 'It should have failed because data is invalid.');
-                assert(result);
+                const applyTimelockResult = await instance.applyPlatformSettingTimelock(
+                  platformNameToRemoveBytes32,
+                  { from: sender }
+                );
 
+                // Assertions
                 const previousSetting = previousSettings.find( (item) => item.name === platformNameToRemove);
 
                 settings
-                    .platformSettingRemoved(result)
+                  .platformSettingRemoveWithTimelock(removeWithTimelockResult)
+                  .emitted(
+                    platformNameToRemoveBytes32,
+                    sender,
+                  );
+                settings
+                    .platformSettingRemoved(applyTimelockResult)
                     .emitted(
                         platformNameToRemoveBytes32,
                         sender,
                         previousSetting.value,
                     );
-                
-                const platformSettingResult = await instance.getPlatformSetting(
-                    platformNameToRemoveBytes32,
-                );
 
-                assert.equal(platformSettingResult.exists.toString(), 'false');
-                assert.equal(platformSettingResult.value.toString(), '0');
-                assert.equal(platformSettingResult.min.toString(), '0');
-                assert.equal(platformSettingResult.max.toString(), '0');
+                assert(!mustFail, 'It should have failed because data is invalid.');
             } catch (error) {
                 // Assertions
                 assert(mustFail);
