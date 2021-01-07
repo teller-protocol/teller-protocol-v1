@@ -74,7 +74,7 @@ interface SettingsInterface {
     );
 
     /**
-        @notice This event is emitted when an new asset settings is created.
+        @notice This event is emitted when a new asset settings is created.
         @param sender the transaction sender address.
         @param assetAddress the asset address used to create the settings.
         @param cTokenAddress cToken address to configure for the asset.
