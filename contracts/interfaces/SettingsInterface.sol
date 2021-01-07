@@ -245,16 +245,6 @@ interface SettingsInterface {
     function getAssets() external view returns (address[] memory);
 
     /**
-        @notice Get the current asset settings for a given asset address.
-        @param assetAddress asset address used to get the current settings.
-        @return the current asset settings.
-     */
-    // function getAssetSettings(address assetAddress)
-    //     external
-    //     view
-    //     returns (AssetSettingsLib.AssetSettings memory);
-
-    /**
         @notice Tests whether amount exceeds the current maximum loan amount for a specific asset settings.
         @param assetAddress asset address to test the setting.
         @param amount amount to test.

@@ -92,7 +92,11 @@ library CacheLib {
         @param key The key for which the address value is being updated.
         @param newAddress The new address being set.
      */
-    function updateAddress(Cache storage self, bytes32 key, address newAddress)
+    function updateAddress(
+        Cache storage self,
+        bytes32 key,
+        address newAddress
+    )
         internal
     {
         requireExists(self);
@@ -104,12 +108,34 @@ library CacheLib {
     }
 
     /**
+        @notice Retrieves the address value for a given key name.
+        @param self The current cache
+        @param key The key for which the address value is being retrieved.
+        @return The stored address value.
+     */
+    function getAddress(
+        Cache storage self,
+        bytes32 key
+    )
+        internal
+        view
+        returns (address)
+    {
+        requireExists(self);
+        return self.addresses[key];
+    }
+
+    /**
         @notice Updates the uint value for a given key name.
         @param self The current cache
         @param key The key for which the uint value is being updated.
         @param newValue The new value being set.
      */
-    function updateUint(Cache storage self, bytes32 key, uint256 newValue)
+    function updateUint(
+        Cache storage self,
+        bytes32 key,
+        uint256 newValue
+    )
         internal
     {
         requireExists(self);
@@ -121,13 +147,35 @@ library CacheLib {
     }
 
     /**
+        @notice Retrieves the uint value for a given key name.
+        @param self The current cache
+        @param key The key for which the uint value is being retrieved.
+        @return The stored uint256 value.
+     */
+    function getUint(
+        Cache storage self,
+        bytes32 key
+    )
+        internal
+        view
+        returns (uint256)
+    {
+        requireExists(self);
+        return self.uints[key];
+    }
+
+    /**
         @notice Tests whether a given uint value is greater than the current stored value for a given key.
         @param self The current cache
         @param key The key for which the uint value is being updated.
         @param amount The value being tested.
         @return bool True if the value exceed the stored value.
      */
-    function exceedsUint(Cache storage self, bytes32 key, uint256 amount)
+    function exceedsUint(
+        Cache storage self,
+        bytes32 key,
+        uint256 amount
+    )
         internal
         view
         returns (bool)
@@ -142,7 +190,11 @@ library CacheLib {
         @param key The key for which the int value is being updated.
         @param newValue The new value being set.
      */
-    function updateInt(Cache storage self, bytes32 key, int256 newValue)
+    function updateInt(
+        Cache storage self,
+        bytes32 key,
+        int256 newValue
+    )
         internal
     {
         requireExists(self);
@@ -154,12 +206,34 @@ library CacheLib {
     }
 
     /**
+        @notice Retrieves the int value for a given key name.
+        @param self The current cache
+        @param key The key for which the int value is being requested.
+        @return The stored in256 value.
+     */
+    function getInt(
+        Cache storage self,
+        bytes32 key
+    )
+        internal
+        view
+        returns (int256)
+    {
+        requireExists(self);
+        return self.ints[key];
+    }
+
+    /**
         @notice Updates the bytes value for a given key name.
         @param self The current cache
         @param key The key for which the bytes value is being updated.
         @param newBites The new value being set.
      */
-    function updateBites(Cache storage self, bytes32 key, bytes32 newBites)
+    function updateBites(
+        Cache storage self,
+        bytes32 key,
+        bytes32 newBites
+    )
         internal
     {
         requireExists(self);
@@ -168,6 +242,23 @@ library CacheLib {
             "NEW_BYTES_REQUIRED"
         );
         self.bites[key] = newBites;
+    }
+
+    /**
+        @notice Retrieves the bytes value for a given key name.
+        @param self The current cache
+        @param key The key for which the bytes value is being retrieved.
+        @return The stored bytes32 value.
+     */
+    function getBites(
+        Cache storage self,
+        bytes32 key
+    )
+        internal
+        returns (bytes32)
+    {
+        requireExists(self);
+        return self.bites[key];
     }
 
     /**
@@ -187,5 +278,22 @@ library CacheLib {
         self.bools[key] = newBool;
     }
 
+    /**
+        @notice Retrieves the bool value for a given key name.
+        @param self The current cache
+        @param key The key for which the bool value is being retrieved.
+        @return The stored boolean value.
+     */
+    function getBool(
+        Cache storage self,
+        bytes32 key
+    )
+        internal
+        view
+        returns (bool)
+    {
+        requireExists(self);
+        return self.bools[key];
+    }
 
 }

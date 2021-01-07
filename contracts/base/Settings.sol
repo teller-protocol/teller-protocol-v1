@@ -441,19 +441,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     }
 
     /**
-        @notice Get the current asset settings for a given asset address.
-        @param assetAddress asset address used to get the current settings.
-        @return the current asset settings.
-     */
-    // function getAssetSettings(address assetAddress)
-    //     external
-    //     view
-    //     returns (AssetSettingsLib.AssetSettings memory)
-    // {
-    //     return assetSettings[assetAddress];
-    // }
-
-    /**
         @notice Gets the cToken address for a given asset address.
         @param assetAddress token address.
         @return the cToken address for a given asset address.
