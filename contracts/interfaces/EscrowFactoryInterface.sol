@@ -27,7 +27,7 @@ interface EscrowFactoryInterface {
     /**
         @notice It adds a new dapp to the factory.
         @param dapp address to add in this factory.
-        @param unsecured boolean to describe in the dapp is allowed to be used with unsecured loans.
+        @param unsecured boolean to describe if the dapp is allowed to be used with unsecured loans.
      */
     function addDapp(address dapp, bool unsecured) external;
 
