@@ -7,6 +7,7 @@ import "../util/AddressLib.sol";
 import "../util/AssetSettingsLib.sol";
 import "../util/PlatformSettingsLib.sol";
 import "../util/AddressArrayLib.sol";
+import "../util/CacheLib.sol";
 
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/lifecycle/Pausable.sol";
@@ -45,14 +46,15 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     using AddressLib for address;
     using Address for address;
     using AssetSettingsLib for AssetSettingsLib.AssetSettings;
+    using CacheLib for CacheLib.Cache;
     using AddressArrayLib for address[];
     using PlatformSettingsLib for PlatformSettingsLib.PlatformSetting;
 
     /** Constants */
 
     /**
-        @notice The contract that hold global constant variables.
-        @dev It is set by the initialize function
+        @notice The contract that holds global constant variables.
+        @dev It is set by the initialize function.
      */
     SettingsConsts public consts;
 
@@ -108,7 +110,8 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
             maxLoanAmount = 500 USDC (max)
         }
      */
-    mapping(address => AssetSettingsLib.AssetSettings) public assetSettings;
+    // mapping(address => AssetSettingsLib.AssetSettings) public assetSettings;
+    mapping(address => CacheLib.Cache) internal assetSettings;
 
     /**
         @notice It contains all the current assets.
@@ -314,7 +317,9 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         uint256 maxLoanAmount
     ) external onlyPauser() isInitialized() {
         assetSettings[assetAddress].requireNotExists();
-        assetSettings[assetAddress].initialize(maxLoanAmount);
+        assetSettings[assetAddress].initialize();
+
+        // assetSettings[assetAddress].initialize(maxLoanAmount);
 
         if (cTokenAddress.isNotEmpty()) {
             _setCTokenAddress(assetAddress, cTokenAddress);
@@ -353,9 +358,9 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         onlyPauser()
         isInitialized()
     {
-        uint256 oldMaxLoanAmount = assetSettings[assetAddress].maxLoanAmount;
+        uint256 oldMaxLoanAmount = assetSettings[assetAddress].uints[MAX_LOAN_AMOUNT_ASSET_SETTING];
 
-        assetSettings[assetAddress].updateMaxLoanAmount(newMaxLoanAmount);
+        assetSettings[assetAddress].updateUint(MAX_LOAN_AMOUNT_ASSET_SETTING, newMaxLoanAmount);
 
         emit AssetSettingsUintUpdated(
             MAX_LOAN_AMOUNT_ASSET_SETTING,
@@ -376,9 +381,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         onlyPauser()
         isInitialized()
     {
-        address oldCTokenAddress = assetSettings[assetAddress].tokenAddresses[keccak256(
-            "CTokenAddress"
-        )];
+        address oldCTokenAddress = assetSettings[assetAddress].addresses[CTOKEN_ADDRESS_ASSET_SETTING];
 
         _setCTokenAddress(assetAddress, newCTokenAddress);
 
@@ -402,7 +405,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         bytes32 tokenName,
         address newTokenAddress
     ) external onlyPauser() isInitialized() {
-        address oldTokenAddress = assetSettings[assetAddress].tokenAddresses[tokenName];
+        address oldTokenAddress = assetSettings[assetAddress].addresses[tokenName];
 
         _setTokenAddress(assetAddress, tokenName, newTokenAddress);
 
@@ -426,7 +429,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         view
         returns (bool)
     {
-        return assetSettings[assetAddress].exceedsMaxLoanAmount(amount);
+        return assetSettings[assetAddress].exceedsUint(MAX_LOAN_AMOUNT_ASSET_SETTING , amount);
     }
 
     /**
@@ -456,7 +459,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @return the cToken address for a given asset address.
      */
     function getCTokenAddress(address assetAddress) external view returns (address) {
-        return assetSettings[assetAddress].tokenAddresses[keccak256("CTokenAddress")];
+        return assetSettings[assetAddress].addresses[CTOKEN_ADDRESS_ASSET_SETTING];
     }
 
     /**
@@ -613,7 +616,8 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
             }
         }
 
-        assetSettings[assetAddress].updateCTokenAddress(cTokenAddress);
+        assetSettings[assetAddress].updateAddress(CTOKEN_ADDRESS_ASSET_SETTING, cTokenAddress);
+        // assetSettings[assetAddress].updateCTokenAddress(cTokenAddress);
     }
 
     /**
@@ -642,7 +646,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
             }
         }
 
-        assetSettings[assetAddress].updateTokenAddress(tokenName, tokenAddress);
+        assetSettings[assetAddress].updateAddress(tokenName, tokenAddress);
     }
 
     /** Private functions */
