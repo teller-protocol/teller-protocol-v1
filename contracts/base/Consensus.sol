@@ -60,6 +60,11 @@ contract Consensus is Base, OwnerSignersRole {
         _;
     }
 
+    modifier onlyEnoughSubmissions(uint256 responseCount) {
+        require(responseCount >= _signerCount - 1, "INSUFFICIENT_NUMBER_OF_RESPONSES");
+        _;
+    }
+
     /**
         @notice It initializes this consensus contract.
         @dev The caller address must be the loans contract for LoanTermsConsensus, and the lenders contract for InterestConsensus.

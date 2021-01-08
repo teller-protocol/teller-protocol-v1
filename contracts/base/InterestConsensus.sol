@@ -44,14 +44,13 @@ contract InterestConsensus is InterestConsensusInterface, Consensus {
     function processRequest(
         TellerCommon.InterestRequest calldata request,
         TellerCommon.InterestResponse[] calldata responses
-    ) external isInitialized() isCaller(msg.sender) returns (uint256) {
-        require(
-            responses.length >=
-                _getSettings().getPlatformSettingValue(
-                    _getSettings().consts().REQUIRED_SUBMISSIONS_SETTING()
-                ),
-            "INTEREST_INSUFFICIENT_RESPONSES"
-        );
+    )
+        external
+        isInitialized()
+        isCaller(msg.sender)
+        onlyEnoughSubmissions(responses.length)
+        returns (uint256)
+    {
         require(
             !requestNonceTaken[request.lender][request.requestNonce],
             "INTEREST_REQUEST_NONCE_TAKEN"
