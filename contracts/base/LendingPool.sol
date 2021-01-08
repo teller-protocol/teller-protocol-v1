@@ -17,7 +17,6 @@ import "../providers/compound/CErc20Interface.sol";
 
 // Contracts
 import "./Base.sol";
-import "./LoansBase.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
