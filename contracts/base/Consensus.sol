@@ -61,7 +61,19 @@ contract Consensus is Base, OwnerSignersRole {
     }
 
     modifier onlyEnoughSubmissions(uint256 responseCount) {
-        require(responseCount >= _signerCount - 1, "INSUFFICIENT_NUMBER_OF_RESPONSES");
+        require(
+            responseCount >=
+                _signerCount
+                    .mul(
+                    _getSettings()
+                        .platformSettings(
+                        _getSettings().consts().REQUIRED_SUBMISSIONS_PERCENTAGE_SETTING()
+                    )
+                        .value
+                )
+                    .div(10000),
+            "INSUFFICIENT_NUMBER_OF_RESPONSES"
+        );
         _;
     }
 
