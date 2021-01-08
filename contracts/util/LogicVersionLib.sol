@@ -5,7 +5,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
 /**
-    @notice This libraries manages the functions for the logic version struct.
+    @notice This library manages the functions for the logic version struct.
 
     @author develop@teller.finance
  */
@@ -85,7 +85,7 @@ library LogicVersionLib {
     }
 
     /**
-        @notice It removes a current logic versionn.
+        @notice It removes a current logic version.
         @param self the current logic version to remove.
      */
     function remove(LogicVersion storage self)

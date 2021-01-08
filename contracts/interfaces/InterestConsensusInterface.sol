@@ -11,7 +11,7 @@ import "../util/TellerCommon.sol";
 interface InterestConsensusInterface {
     /**
         @notice This event is emitted when an interest response is submitted or processed.
-        @param signer node signer
+        @param signer node signer.
         @param lender address.
         @param requestNonce request nonce.
         @param endTime request end time.

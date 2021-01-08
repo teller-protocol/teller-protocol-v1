@@ -17,7 +17,7 @@ contract SettingsConsts {
 
     /**
         @notice The setting name for the required subsmission settings.
-        @notice This is the minimum number of node responses that will be required by the platform to either take out a loan, and to claim accrued interest. If the number of node responses are less than the ones specified here, the loan or accrued interest claim request will be rejected by the platform
+        @notice This is the minimum number of node responses that will be required by the platform to either take out a loan or to claim accrued interest. If the number of node responses are less than the ones specified here, the loan or accrued interest claim request will be rejected by the platform
      */
     bytes32 public constant REQUIRED_SUBMISSIONS_SETTING = "RequiredSubmissions";
     /**

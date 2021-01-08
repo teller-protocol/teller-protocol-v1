@@ -11,7 +11,7 @@ import "../util/MarketStateLib.sol";
 interface MarketsStateInterface {
     /**
         @notice It increases the repayment amount for a given market.
-        @notice This function is called every new repayment is received.
+        @notice This function is called when every new repayment is received.
         @param borrowedAsset borrowed asset address.
         @param collateralAsset collateral asset address.
         @param amount amount to add.
@@ -24,7 +24,7 @@ interface MarketsStateInterface {
 
     /**
         @notice It increases the supply amount for a given market.
-        @notice This function is called every new deposit (Lenders) is received.
+        @notice This function is called when every new deposit (Lenders) is received.
         @param borrowedAsset borrowed asset address.
         @param collateralAsset collateral asset address.
         @param amount amount to add.
@@ -37,7 +37,7 @@ interface MarketsStateInterface {
 
     /**
         @notice It decreases the supply amount for a given market.
-        @notice This function is called every new withdraw (Lenders) is done.
+        @notice This function is called when every new withdraw (Lenders) is done.
         @param borrowedAsset borrowed asset address.
         @param collateralAsset collateral asset address.
         @param amount amount to decrease.
@@ -50,7 +50,7 @@ interface MarketsStateInterface {
 
     /**
         @notice It increases the borrowed amount for a given market.
-        @notice This function is called every new loan is taken out.
+        @notice This function is called when every new loan is taken out.
         @param borrowedAsset borrowed asset address.
         @param collateralAsset collateral asset address.
         @param amount amount to add.
