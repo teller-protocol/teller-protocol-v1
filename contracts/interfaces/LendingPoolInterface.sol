@@ -1,4 +1,7 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
+
+import "../util/MarketStateLib.sol";
 
 /**
     @notice This interface defines the functions for a lending pool that holds all of the tokens that lenders transfer into the protocol.
@@ -106,6 +109,10 @@ interface LendingPoolInterface {
         @return the Loans contract address.
     */
     function loans() external view returns (address);
+
+    function getMarketState() external view returns (MarketStateLib.MarketState memory);
+
+    function getSupplyToDebtFor(uint256 loanAmount) external view returns (uint256);
 
     /**
         @notice This event is emitted when an user deposits tokens into the pool.

@@ -30,20 +30,13 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     let consensusInstance;
     let cTokenInstance;
     let settingsInstance;
-    let marketsInstance;
-    
+
     beforeEach('Setup for each test', async () => {
         loansInstance = await Mock.new();
         consensusInstance = await Mock.new();
         settingsInstance = await Mock.new();
         cTokenInstance = await Mock.new();
-        marketsInstance = await Mock.new();
         instance = await LendingPool.new();
-
-        await settingsInstance.givenMethodReturnAddress(
-            settingsInterfaceEncoder.encodeMarketsState(),
-            marketsInstance.address
-        );
     });
 
     withData({

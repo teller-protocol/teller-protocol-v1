@@ -28,7 +28,6 @@ const createSettingsInstance = async (
             const escrowFactory = await Mock.new();
             const versionsRegistry = await Mock.new();
             const chainlinkAggregator = await Mock.new();
-            const marketsState = await Mock.new();
             const interestValidator = await Mock.new();
             const atmSettings = await Mock.new();
             const weth = await Mock.new();
@@ -38,7 +37,6 @@ const createSettingsInstance = async (
                   escrowFactory.address,
                   versionsRegistry.address,
                   chainlinkAggregator.address,
-                  marketsState.address,
                   interestValidator.address,
                   atmSettings.address,
                   weth.address,
@@ -51,7 +49,6 @@ const createSettingsInstance = async (
                     escrowFactory,
                     versionsRegistry,
                     chainlinkAggregator,
-                    marketsState,
                     interestValidator,
                     atmSettings,
                     weth,
@@ -66,7 +63,6 @@ const createSettingsInstance = async (
             const escrowFactory = await Mock.new();
             const versionsRegistry = await Mock.new();
             const chainlinkAggregator = await Mock.new();
-            const marketsState = await Mock.new();
             const interestValidator = await Mock.new();
             const atmSettings = await Mock.new();
             const weth = await Mock.new();
@@ -75,7 +71,6 @@ const createSettingsInstance = async (
                 escrowFactory.address,
                 versionsRegistry.address,
                 chainlinkAggregator.address,
-                marketsState.address,
                 interestValidator.address,
                 atmSettings.address,
                 weth.address,

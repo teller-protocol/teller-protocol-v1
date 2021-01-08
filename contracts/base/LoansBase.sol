@@ -614,9 +614,7 @@ contract LoansBase is LoansInterface, Base {
         require(atmAddressForMarket != address(0x0), "ATM_NOT_FOUND_FOR_MARKET");
         uint256 supplyToDebtMarketLimit = ATMGovernanceInterface(atmAddressForMarket)
             .getGeneralSetting(SUPPLY_TO_DEBT_ATM_SETTING);
-        uint256 currentSupplyToDebtMarket = _markets().getSupplyToDebtFor(
-            lendingPool.lendingToken(),
-            collateralToken,
+        uint256 currentSupplyToDebtMarket = lendingPool.getSupplyToDebtFor(
             newLoanAmount
         );
         return currentSupplyToDebtMarket <= supplyToDebtMarketLimit;

@@ -14,9 +14,11 @@ import "../interfaces/SettingsInterface.sol";
 import "../interfaces/MarketFactoryInterface.sol";
 
 // Commons
-import "./DynamicProxy.sol";
 import "../util/TellerCommon.sol";
+
+// Contracts
 import "./TInitializable.sol";
+import "./DynamicProxy.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/

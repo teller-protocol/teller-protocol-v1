@@ -11,7 +11,7 @@ const settingsNames = require('../utils/platformSettingsNames')
 
 const EscrowFactoryInterfaceEncoder = require("../utils/encoders/EscrowFactoryInterfaceEncoder");
 const IATMSettingsEncoder = require("../utils/encoders/IATMSettingsEncoder");
-const MarketsStateInterfaceEncoder = require("../utils/encoders/MarketsStateInterfaceEncoder");
+const LendingPoolInterfaceEncoder = require("../utils/encoders/LendingPoolInterfaceEncoder");
 
 // Mock contracts
 const Mock = artifacts.require("./mock/util/Mock.sol");
@@ -27,7 +27,7 @@ const LoanLib = artifacts.require("../util/LoanLib.sol");
 contract("LoansBaseTakeOutLoanTest", function(accounts) {
   const escrowFactoryInterfaceEncoder = new EscrowFactoryInterfaceEncoder(web3);
   const IAtmSettingsEncoder = new IATMSettingsEncoder(web3);
-  const MarketsStateEncoder = new MarketsStateInterfaceEncoder(web3);
+  const lendingPoolEncoder = new LendingPoolInterfaceEncoder(web3);
 
   const owner = accounts[0];
   let instance;
@@ -35,7 +35,7 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
   let collateralTokenInstance;
   let chainlinkAggregatorInstance;
   let atmSettingsInstance;
-  let marketsStateInstance;
+  let lendingPoolInstance;
 
   const mockLoanID = 0;
   const overCollateralizedBuffer = 13000
@@ -44,8 +44,7 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
   const borrower = accounts[3];
 
   beforeEach("Setup for each test", async () => {
-    const lendingPoolInstance = await Mock.new();
-    const lendingTokenInstance = await Mock.new();
+    lendingPoolInstance = await Mock.new();
     collateralTokenInstance = await LINKMock.new();
     const settingsInstance = await createTestSettingsInstance(
       Settings,
@@ -53,7 +52,7 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
         from: owner,
         Mock,
         initialize: true,
-        onInitialize: async (instance, { escrowFactory, chainlinkAggregator, atmSettings, marketsState }) => {
+        onInitialize: async (instance, { escrowFactory, chainlinkAggregator, atmSettings }) => {
           const newEscrowInstance = await Mock.new();
           await escrowFactory.givenMethodReturnAddress(
             escrowFactoryInterfaceEncoder.encodeCreateEscrow(),
@@ -62,7 +61,6 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
 
           chainlinkAggregatorInstance = chainlinkAggregator;
           atmSettingsInstance = atmSettings;
-          marketsStateInstance = marketsState;
         }
       }, {
         [settingsNames.OverCollateralizedBuffer]: overCollateralizedBuffer,
@@ -142,8 +140,8 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
         await instance.mockGetCollateralInfo(mockLoanID, loan.borrowedAmount, loan.collateral)
       }
       if (supplyToDebtInvalid) {
-        await marketsStateInstance.givenMethodReturnUint(
-          MarketsStateEncoder.encodeGetSupplyToDebtFor(),
+        await lendingPoolInstance.givenMethodReturnUint(
+          lendingPoolEncoder.encodeGetSupplyToDebtFor(),
           2000,
         );
       }

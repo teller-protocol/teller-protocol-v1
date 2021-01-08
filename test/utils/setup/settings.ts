@@ -43,7 +43,6 @@ interface SettingsInitData {
   escrowFactoryAddress?: string
   versionsRegistryAddress?: string
   chainlinkAggregatorAddress?: string
-  marketsStateAddress?: string
   interestValidatorAddress?: string
   atmSettingsAddress?: string
   wethTokenAddress?: string
@@ -60,7 +59,6 @@ export async function deploySettings(config: SettingsConfig): Promise<DeploySett
   const escrowFactoryAddress = config.initData?.escrowFactoryAddress ?? (await Mock.new()).address
   const versionsRegistryAddress = config.initData?.versionsRegistryAddress ?? (await Mock.new()).address
   const chainlinkAggregatorAddress = config.initData?.chainlinkAggregatorAddress ?? (await Mock.new()).address
-  const marketsStateAddress = config.initData?.marketsStateAddress ?? (await Mock.new()).address
   const interestValidatorAddress = config.initData?.interestValidatorAddress ?? (await Mock.new()).address
   const atmSettingsAddress = config.initData?.atmSettingsAddress ?? (await Mock.new()).address
   const wethTokenAddress = config.initData?.wethTokenAddress ?? (await Mock.new()).address
@@ -70,7 +68,6 @@ export async function deploySettings(config: SettingsConfig): Promise<DeploySett
     escrowFactoryAddress,
     versionsRegistryAddress,
     chainlinkAggregatorAddress,
-    marketsStateAddress,
     interestValidatorAddress,
     atmSettingsAddress,
     wethTokenAddress,
@@ -99,7 +96,6 @@ export async function deploySettings(config: SettingsConfig): Promise<DeploySett
     escrowFactoryAddress,
     versionsRegistryAddress,
     chainlinkAggregatorAddress,
-    marketsStateAddress,
     interestValidatorAddress,
     atmSettingsAddress,
     wethTokenAddress,

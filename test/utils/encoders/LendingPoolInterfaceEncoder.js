@@ -11,4 +11,8 @@ LendingPoolInterfaceEncoder.prototype.encodeLendingToken = function() {
     return encode(this.web3, 'lendingToken()');
 }
 
+LendingPoolInterfaceEncoder.prototype.encodeGetSupplyToDebtFor = function() {
+    return encode(this.web3, 'getSupplyToDebtFor(uint256)');
+}
+
 module.exports = LendingPoolInterfaceEncoder;

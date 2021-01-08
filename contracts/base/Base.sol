@@ -10,7 +10,6 @@ import "./TInitializable.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
-import "../interfaces/MarketsStateInterface.sol";
 import "../interfaces/InterestValidatorInterface.sol";
 
 // Contracts
@@ -112,10 +111,6 @@ contract Base is TInitializable, BaseUpgradeable, ReentrancyGuard {
      */
     function _isPaused() internal view returns (bool) {
         return _getSettings().isPaused();
-    }
-
-    function _markets() internal view returns (MarketsStateInterface) {
-        return _getSettings().marketsState();
     }
 
     function _interestValidator() internal view returns (InterestValidatorInterface) {

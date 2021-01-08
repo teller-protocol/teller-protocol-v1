@@ -5,7 +5,7 @@ const { t, NULL_ADDRESS } = require("../utils/consts");
 const { createTestSettingsInstance } = require("../utils/settings-helper");
 
 const IATMSettingsEncoder = require("../utils/encoders/IATMSettingsEncoder");
-const MarketsStateInterfaceEncoder = require("../utils/encoders/MarketsStateInterfaceEncoder");
+const LendingPoolInterfaceEncoder = require("../utils/encoders/LendingPoolInterfaceEncoder");
 const ATMGovernanceInterfaceEncoder = require("../utils/encoders/ATMGovernanceInterfaceEncoder");
 
 // Mock contracts
@@ -20,11 +20,11 @@ const LoanLib = artifacts.require("../util/LoanLib.sol");
 
 contract("LoansBaseIsSupplyToDebtRatioValidTest", function(accounts) {
   const IAtmSettingsEncoder = new IATMSettingsEncoder(web3);
-  const marketsStateInterfaceEncoder = new MarketsStateInterfaceEncoder(web3);
+  const lendingPoolEncoder = new LendingPoolInterfaceEncoder(web3);
   const atmGovernanceInterfaceEncoder = new ATMGovernanceInterfaceEncoder(web3);
 
   let instance;
-  let marketsInstance;
+  let lendingPoolInstance;
   let atmSettingsInstance;
 
   beforeEach("Setup for each test", async () => {
@@ -33,13 +33,12 @@ contract("LoansBaseIsSupplyToDebtRatioValidTest", function(accounts) {
       {
         Mock,
         initialize: true,
-        onInitialize: async (instance, { marketsState, atmSettings }) => {
-          marketsInstance = marketsState;
+        onInitialize: async (instance, { atmSettings }) => {
           atmSettingsInstance = atmSettings;
         }
       });
 
-    const lendingPoolInstance = await Mock.new();
+    lendingPoolInstance = await Mock.new();
     const loanTermsConsInstance = await Mock.new();
     const collateralTokenInstance = await Mock.new();
     const loanLib = await LoanLib.new();
@@ -79,8 +78,8 @@ contract("LoansBaseIsSupplyToDebtRatioValidTest", function(accounts) {
         atmGovernanceInterfaceEncoder.encodeGetGeneralSetting(),
         getGeneralSettingResponse
       );
-      await marketsInstance.givenMethodReturnUint(
-        marketsStateInterfaceEncoder.encodeGetSupplyToDebtFor(),
+      await lendingPoolInstance.givenMethodReturnUint(
+        lendingPoolEncoder.encodeGetSupplyToDebtFor(),
         getSupplyToDebtForResponse
       );
 

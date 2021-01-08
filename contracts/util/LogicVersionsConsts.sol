@@ -37,7 +37,6 @@ contract LogicVersionsConsts {
     bytes32 public constant LOGIC_VERSIONS_REGISTRY_LOGIC_NAME = keccak256(
         "LogicVersionsRegistry"
     );
-    bytes32 public constant MARKETS_STATE_LOGIC_NAME = keccak256("MarketsState");
     bytes32 public constant ATM_FACTORY_LOGIC_NAME = keccak256("ATMFactory");
     bytes32 public constant ATM_SETTINGS_LOGIC_NAME = keccak256("ATMSettings");
     bytes32 public constant ATM_GOVERNANCE_LOGIC_NAME = keccak256("ATMGovernance");

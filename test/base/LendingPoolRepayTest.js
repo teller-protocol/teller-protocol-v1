@@ -40,7 +40,6 @@ contract('LendingPoolRepayTest', function (accounts) {
           cTokenEncoder.encodeUnderlying(),
           daiInstance.address
         )
-        let marketsInstance = await Mock.new();
         loansInstance = await Mock.new();
 
         lendersInstance = await Lenders.new();
@@ -49,10 +48,6 @@ contract('LendingPoolRepayTest', function (accounts) {
             instance.address,
             interestConsensusInstance.address,
             settingsInstance.address,
-        );
-        await settingsInstance.givenMethodReturnAddress(
-            settingsInterfaceEncoder.encodeMarketsState(),
-            marketsInstance.address
         );
     });
 
