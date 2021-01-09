@@ -11,7 +11,6 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const DAIMock = artifacts.require("./mock/token/DAIMock.sol")
 
 // Smart contracts
-const Lenders = artifacts.require("./base/Lenders.sol");
 const LendingPool = artifacts.require("./mock/base/LendingPoolMock.sol");
 
 contract('LendingPoolLiquidationPaymentTest', function (accounts) {
@@ -21,7 +20,6 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
     let instance;
     let tTokenInstance;
     let daiInstance;
-    let lendersInstance;
     let cTokenInstance;
     let settingsInstance;
     let loansInstance;
@@ -33,18 +31,11 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
         cTokenInstance = await Mock.new()
         settingsInstance = await Mock.new();
         loansInstance = await Mock.new();
-        lendersInstance = await Lenders.new();
 
         await cTokenInstance.givenMethodReturnAddress(
           cTokenEncoder.encodeUnderlying(),
           daiInstance.address
         )
-
-        await lendersInstance.initialize(
-          tTokenInstance.address,
-          instance.address,
-          settingsInstance.address,
-        );
     });
 
     withData({
@@ -79,7 +70,6 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
             await instance.initialize(
                 tTokenInstance.address,
                 daiInstance.address,
-                lendersInstance.address,
                 loansInstance.address,
                 settingsInstance.address,
             );

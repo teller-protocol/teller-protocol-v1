@@ -27,7 +27,6 @@ const EscrowFactory = artifacts.require('./base/EscrowFactory.sol');
 const MarketFactory = artifacts.require('./base/MarketFactory.sol');
 const LogicVersionsRegistry = artifacts.require('./base/LogicVersionsRegistry.sol');
 const Escrow = artifacts.require('./base/Escrow.sol');
-const Lenders = artifacts.require("./base/Lenders.sol");
 const EtherCollateralLoans = artifacts.require("./base/EtherCollateralLoans.sol");
 const TokenCollateralLoans = artifacts.require("./base/TokenCollateralLoans.sol");
 const LendingPool = artifacts.require("./base/LendingPool.sol");
@@ -77,7 +76,6 @@ module.exports = async function(deployer, network, accounts) {
     const contracts = [
       // Logic
       { Contract: LendingPool, name: logicNames.LendingPool },
-      { Contract: Lenders, name: logicNames.Lenders },
       { Contract: TokenCollateralLoans, name: logicNames.TokenCollateralLoans },
       { Contract: EtherCollateralLoans, name: logicNames.EtherCollateralLoans },
       { Contract: LoanTermsConsensus, name: logicNames.LoanTermsConsensus },

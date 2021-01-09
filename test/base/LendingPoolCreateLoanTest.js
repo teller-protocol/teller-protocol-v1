@@ -10,7 +10,6 @@ const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEnc
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const Lenders = artifacts.require("./base/Lenders.sol");
 const LendingPool = artifacts.require("./mock/base/LendingPoolMock.sol");
 
 contract('LendingPoolCreateLoanTest', function (accounts) {
@@ -21,7 +20,6 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
     let instance;
     let tTokenInstance;
     let daiInstance;
-    let lendersInstance;
     let cTokenInstance;
     let settingsInstance;
     let loansInstance;
@@ -39,15 +37,9 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
           daiInstance.address
         )
 
-        lendersInstance = await Lenders.new(
-          tTokenInstance.address,
-          instance.address,
-        );
-
         await instance.initialize(
             tTokenInstance.address,
             daiInstance.address,
-            lendersInstance.address,
             loansInstance.address,
             settingsInstance.address,
         );

@@ -10,7 +10,6 @@ import "./NumbersList.sol";
 library TellerCommon {
     enum LoanStatus { NonExistent, TermsSet, Active, Closed }
 
-
     /**
         @notice Represents a user signature
         @param signerNonce Nonce of the signer address used for authentication

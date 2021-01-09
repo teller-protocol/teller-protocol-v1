@@ -44,8 +44,6 @@ module.exports = {
         'DAIMock',
         'USDCMock',
         'LINKMock',
-        'LendersMock',
-        'LendersModifiersMock',
         'Mock',
         'EtherCollateralLoansMock',
         'TokenCollateralLoansMock',

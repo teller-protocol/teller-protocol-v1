@@ -282,25 +282,22 @@ contract LendingPool is Base, LendingPoolInterface {
             "INTEREST_TO_WITHDRAW_IS_INVALID"
         );
 
-        // update the lenders record, returning the actual amount to withdraw
-        uint256 amountToWithdraw = lenders.withdrawInterest(lender, amount);
-
         address cTokenAddress = cToken();
         if (cTokenAddress != address(0)) {
             // Withdraw tokens from Compound
             // Decrease the Compound market supply
             compoundMarketState.decreaseSupply(
-                _withdrawFromCompound(cTokenAddress, amountToWithdraw)
+                _withdrawFromCompound(cTokenAddress, amount)
             );
         } else {
             // Decrease the market supply
-            marketState.decreaseSupply(amountToWithdraw);
+            marketState.decreaseSupply(amount);
         }
 
         // Transfer tokens to the lender.
-        tokenTransfer(lender, amountToWithdraw);
+        tokenTransfer(lender, amount);
 
-        emit InterestWithdrawn(lender, amountToWithdraw);
+        emit InterestWithdrawn(lender, amount);
     }
 
     function getMarketState() external view returns (MarketStateLib.MarketState memory) {
@@ -323,7 +320,6 @@ contract LendingPool is Base, LendingPoolInterface {
         @notice It initializes the contract state variables.
         @param tTokenAddress tToken token address.
         @param lendingTokenAddress ERC20 token address.
-        @param lendersAddress Lenders contract address.
         @param loansAddress Loans contract address.
         @param settingsAddress Settings contract address.
         @dev It throws a require error if the contract is already initialized.
@@ -331,20 +327,17 @@ contract LendingPool is Base, LendingPoolInterface {
     function initialize(
         address tTokenAddress,
         address lendingTokenAddress,
-        address lendersAddress,
         address loansAddress,
         address settingsAddress
     ) external isNotInitialized() {
         tTokenAddress.requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
         lendingTokenAddress.requireNotEmpty("TOKEN_ADDRESS_IS_REQUIRED");
-        lendersAddress.requireNotEmpty("LENDERS_ADDRESS_IS_REQUIRED");
         loansAddress.requireNotEmpty("LOANS_ADDRESS_IS_REQUIRED");
 
         _initialize(settingsAddress);
 
         tToken = TTokenInterface(tTokenAddress);
         lendingToken = IERC20Detailed(lendingTokenAddress);
-        lenders = LendersInterface(lendersAddress);
         loans = loansAddress;
 
         require(

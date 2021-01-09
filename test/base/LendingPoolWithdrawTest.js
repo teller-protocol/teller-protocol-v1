@@ -14,7 +14,6 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const Token = artifacts.require("./mock/token/DAIMock.sol");
 
 // Smart contracts
-const Lenders = artifacts.require("./base/Lenders.sol");
 const LendingPool = artifacts.require("./base/LendingPool.sol");
 const TDAI = artifacts.require("./base/TDAI.sol");
 
@@ -73,7 +72,6 @@ contract('LendingPoolWithdrawTest', function (accounts) {
                 consensusInstance,
                 lendingTokenInstance,
                 loansInstance,
-                Lenders,
             );
             const encodeTransfer = burnableInterfaceEncoder.encodeTransfer();
             await lendingTokenInstance.givenMethodReturnBool(encodeTransfer, transfer);
@@ -122,7 +120,6 @@ contract('LendingPoolWithdrawTest', function (accounts) {
                 consensusInstance,
                 lendingTokenInstance,
                 loansInstance,
-                Lenders,
             );
             await lendingTokenInstance.approve(instance.address, depositAmount, { from: depositSender });
             await instance.deposit(depositAmount, { from: depositSender });
