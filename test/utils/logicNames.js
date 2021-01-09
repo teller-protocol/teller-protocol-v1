@@ -4,7 +4,6 @@ module.exports = {
     TokenCollateralLoans: 'TokenCollateralLoans',
     EtherCollateralLoans: 'EtherCollateralLoans',
     LoanTermsConsensus: 'LoanTermsConsensus',
-    InterestConsensus: 'InterestConsensus',
     EscrowFactory: 'EscrowFactory',
     Escrow: 'Escrow',
     ChainlinkAggregator: 'ChainlinkAggregator',

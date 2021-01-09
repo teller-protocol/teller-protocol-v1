@@ -31,7 +31,6 @@ contract('LendingPoolDepositTest', function (accounts) {
     let daiInstance;
     let lendersInstance;
     let loansInstance;
-    let interestConsensusInstance;
     let cTokenInstance;
     let settingsInstance;
 
@@ -39,7 +38,6 @@ contract('LendingPoolDepositTest', function (accounts) {
         tTokenInstance = await Mock.new();
         daiInstance = await DAIMock.new();
         loansInstance = await Mock.new();
-        interestConsensusInstance = await Mock.new();
         instance = await LendingPool.new();
         settingsInstance = await Mock.new();
 
@@ -53,7 +51,6 @@ contract('LendingPoolDepositTest', function (accounts) {
         await lendersInstance.initialize(
             tTokenInstance.address,
             instance.address,
-            interestConsensusInstance.address,
             settingsInstance.address,
         );
 
@@ -142,7 +139,6 @@ contract('LendingPoolDepositTest', function (accounts) {
             await lendersInstance.initialize(
                 tTokenInstance.address,
                 instance.address,
-                interestConsensusInstance.address,
                 settingsInstance.address,
             );
             instance = await LendingPool.new();

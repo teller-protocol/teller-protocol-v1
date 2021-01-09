@@ -52,7 +52,6 @@ module.exports = {
         'LoansBaseMock',
         'LendingPoolMock',
         'InitializableModifiersMock',
-        'InterestConsensusMock',
         'NumbersListMock',
         'BaseMock',
         'ConsensusMock',

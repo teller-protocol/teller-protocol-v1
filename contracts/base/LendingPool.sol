@@ -10,7 +10,6 @@ import "../util/CompoundRatesLib.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../interfaces/LendingPoolInterface.sol";
-import "../interfaces/LendersInterface.sol";
 import "../interfaces/LoansInterface.sol";
 import "../interfaces/IERC20Detailed.sol";
 import "../interfaces/TTokenInterface.sol";
@@ -30,7 +29,7 @@ import "./Base.sol";
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
-    @notice The LendingPool contract holds all of the tokens that lenders transfer into the protocol. It is the contract that lenders interact with to deposit and withdraw their tokens including interest. The LendingPool interacts with the Lenders contract to ensure token balances and interest owed is kept up to date.
+    @notice The LendingPool contract holds all of the tokens that lenders transfer into the protocol. It is the contract that lenders interact with to deposit and withdraw their tokens including interest.
 
     @author develop@teller.finance
  */
@@ -45,8 +44,6 @@ contract LendingPool is Base, LendingPoolInterface {
     IERC20Detailed public lendingToken;
 
     TTokenInterface public tToken;
-
-    LendersInterface public lenders;
 
     address public loans;
 

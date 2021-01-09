@@ -6,7 +6,6 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Interfaces
 import "../interfaces/LoansInterface.sol";
-import "../interfaces/InterestConsensusInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
@@ -109,7 +108,6 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
 
         (
             LendingPoolInterface lendingPoolProxy,
-            InterestConsensusInterface interestConsensusProxy,
             LendersInterface lendersProxy,
             LoanTermsConsensusInterface loanTermsConsensusProxy,
             LoansInterface loansProxy
@@ -121,8 +119,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
             address(loansProxy),
             address(lendersProxy),
             address(lendingPoolProxy),
-            address(loanTermsConsensusProxy),
-            address(interestConsensusProxy)
+            address(loanTermsConsensusProxy)
         );
 
         emit NewMarketCreated(
@@ -132,8 +129,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
             address(loansProxy),
             address(lendersProxy),
             address(lendingPoolProxy),
-            address(loanTermsConsensusProxy),
-            address(interestConsensusProxy)
+            address(loanTermsConsensusProxy)
         );
     }
 
@@ -218,7 +214,6 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         @param lenders the new lenders contracct address.
         @param lendingPool the new lending pool contract address.
         @param loanTermsConsensus the new loan terms consensus contract address.
-        @param interestConsensus the new interest consensus contract address.
      */
     function _addMarket(
         address borrowedToken,
@@ -226,15 +221,13 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         address loans,
         address lenders,
         address lendingPool,
-        address loanTermsConsensus,
-        address interestConsensus
+        address loanTermsConsensus
     ) internal {
         markets[borrowedToken][collateralToken] = TellerCommon.Market({
             loans: loans,
             lenders: lenders,
             lendingPool: lendingPool,
             loanTermsConsensus: loanTermsConsensus,
-            interestConsensus: interestConsensus,
             exists: true
         });
     }
@@ -298,7 +291,6 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         internal
         returns (
             LendingPoolInterface lendingPoolProxy,
-            InterestConsensusInterface interestConsensusProxy,
             LendersInterface lendersProxy,
             LoanTermsConsensusInterface loanTermsConsensusProxy,
             LoansInterface loansProxy
@@ -307,7 +299,6 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         // Creating proxies
         (
             lendingPoolProxy,
-            interestConsensusProxy,
             lendersProxy,
             loanTermsConsensusProxy,
             loansProxy
@@ -320,7 +311,6 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
             borrowedToken,
             collateralToken,
             lendingPoolProxy,
-            interestConsensusProxy,
             lendersProxy,
             loanTermsConsensusProxy,
             loansProxy
@@ -330,7 +320,6 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
     /**
         @notice Creates the proxies for:
             - LendingPool
-            - InterestConsensus
             - Lenders
             - LoanTermsConsensus
         @return the proxy instances.
@@ -339,7 +328,6 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         internal
         returns (
             LendingPoolInterface lendingPoolProxy,
-            InterestConsensusInterface interestConsensusProxy,
             LendersInterface lendersProxy,
             LoanTermsConsensusInterface loanTermsConsensusProxy,
             LoansInterface loansProxy
@@ -348,11 +336,6 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         lendingPoolProxy = LendingPoolInterface(
             _createDynamicProxy(
                 _getSettings().versionsRegistry().consts().LENDING_POOL_LOGIC_NAME()
-            )
-        );
-        interestConsensusProxy = InterestConsensusInterface(
-            _createDynamicProxy(
-                _getSettings().versionsRegistry().consts().INTEREST_CONSENSUS_LOGIC_NAME()
             )
         );
         lendersProxy = LendersInterface(
@@ -396,7 +379,6 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         @param borrowedToken the borrowed token address.
         @param collateralToken the collateral token address.
         @param lendingPoolProxy the new lending pool proxy instance.
-        @param interestConsensusProxy the new interest consensus proxy instance.
         @param lendersProxy the new lenders proxy instance.
         @param loanTermsConsensusProxy the new loan terms consensus proxy instance.
         @param loansProxy the new loans proxy instance.
@@ -407,7 +389,6 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         address borrowedToken,
         address collateralToken,
         LendingPoolInterface lendingPoolProxy,
-        InterestConsensusInterface interestConsensusProxy,
         LendersInterface lendersProxy,
         LoanTermsConsensusInterface loanTermsConsensusProxy,
         LoansInterface loansProxy
@@ -420,17 +401,10 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
             address(loansProxy),
             address(_getSettings())
         );
-        // Initializing InterestConsensus
-        interestConsensusProxy.initialize(
-            owner,
-            address(lendersProxy),
-            address(_getSettings())
-        );
         // Initializing Lenders
         lendersProxy.initialize(
             tToken,
             address(lendingPoolProxy),
-            address(interestConsensusProxy),
             address(_getSettings())
         );
         // Initializing LoanTermsConsensus

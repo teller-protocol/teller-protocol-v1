@@ -22,7 +22,6 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
     let tTokenInstance;
     let daiInstance;
     let lendersInstance;
-    let interestConsensusInstance;
     let cTokenInstance;
     let settingsInstance;
     let loansInstance;
@@ -30,7 +29,6 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         tTokenInstance = await Mock.new();
         daiInstance = await Mock.new();
-        interestConsensusInstance = await Mock.new();
         cTokenInstance = await Mock.new();
         settingsInstance = await Mock.new();
         loansInstance = await Mock.new();
@@ -44,7 +42,6 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
         lendersInstance = await Lenders.new(
           tTokenInstance.address,
           instance.address,
-          interestConsensusInstance.address,
         );
 
         await instance.initialize(
