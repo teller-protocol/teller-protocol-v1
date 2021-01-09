@@ -119,14 +119,14 @@ interface LendingPoolInterface {
         @param sender address.
         @param amount of tokens.
      */
-    event TokenDeposited(address indexed sender, uint256 amount);
+    event TokenDeposited(address indexed sender, uint256 amount, uint256 tTokenAmount);
 
     /**
         @notice This event is emitted when an user withdraws tokens from the pool.
         @param sender address that withdrew the tokens.
         @param amount of tokens.
      */
-    event TokenWithdrawn(address indexed sender, uint256 amount);
+    event TokenWithdrawn(address indexed sender, uint256 amount, uint256 tTokenAmount);
 
     /**
         @notice This event is emitted when an borrower repaid a loan.

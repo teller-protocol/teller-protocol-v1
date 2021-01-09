@@ -12,6 +12,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
 import "../interfaces/LoansInterface.sol";
+import "../interfaces/IERC20Detailed.sol";
 import "../interfaces/TTokenInterface.sol";
 import "../providers/compound/CErc20Interface.sol";
 
@@ -35,19 +36,22 @@ import "./Base.sol";
  */
 contract LendingPool is Base, LendingPoolInterface {
     using SafeMath for uint256;
-    using SafeERC20 for IERC20;
+    using SafeERC20 for IERC20Detailed;
     using MarketStateLib for MarketStateLib.MarketState;
     using CompoundRatesLib for CErc20Interface;
 
     /* State Variables */
 
-    IERC20 public lendingToken;
+    IERC20Detailed public lendingToken;
 
     TTokenInterface public tToken;
 
     LendersInterface public lenders;
 
     address public loans;
+
+    uint256 public constant EXCHANGE_RATE_DECIMALS = 18;
+    uint256 public exchangeRate = 10 ** EXCHANGE_RATE_DECIMALS;
 
     MarketStateLib.MarketState internal marketState;
 
@@ -72,68 +76,84 @@ contract LendingPool is Base, LendingPoolInterface {
         @notice It allows users to deposit tokens into the pool.
         @dev the user must call ERC20.approve function previously.
         @dev If the cToken is available (not 0x0), it deposits the lending token amount into Compound directly.
-        @param amount of tokens to deposit in the pool.
+        @param lendingTokenAmount of tokens to deposit in the pool.
     */
-    function deposit(uint256 amount)
+    function deposit(uint256 lendingTokenAmount)
         external
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused(address(this))
     {
+        // Update the exchange rate as the tokens in compound will have gained interest
+        _updateExchangeRate();
+
+        uint256 tTokenAmount = lendingTokenAmount
+            .mul(EXCHANGE_RATE_DECIMALS)
+            .div(exchangeRate);
+
         // Transfering tokens to the LendingPool
-        tokenTransferFrom(msg.sender, amount);
+        tokenTransferFrom(msg.sender, lendingTokenAmount);
 
         address cTokenAddress = cToken();
         if (cTokenAddress != address(0)) {
             // Deposit tokens straight into Compound
             // Increase the Compound market supply
             compoundMarketState.increaseSupply(
-                _depositToCompound(cTokenAddress, amount)
+                _depositToCompound(cTokenAddress, lendingTokenAmount)
             );
         } else {
             // Increase the market supply
-            marketState.increaseSupply(amount);
+            marketState.increaseSupply(lendingTokenAmount);
         }
 
         // Mint tToken tokens
-        tTokenMint(msg.sender, amount);
+        // The new lendingToken and tToken are in proportion to one another
+        // So the exchange rate need not be updated again
+        tTokenMint(msg.sender, tTokenAmount);
 
         // Emit event
-        emit TokenDeposited(msg.sender, amount);
+        emit TokenDeposited(msg.sender, lendingTokenAmount, tTokenAmount);
     }
 
     /**
         @notice It allows any tToken holder to burn their tToken tokens and withdraw their tokens.
         @dev If the cToken is available (not 0x0), it withdraws the lending tokens from Compound before transferring the tokens to the holder.
-        @param amount of tokens to withdraw.
+        @param lendingTokenAmount of tokens to withdraw.
      */
-    function withdraw(uint256 amount)
+    function withdraw(uint256 lendingTokenAmount)
         external
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused(address(this))
         nonReentrant()
     {
+        // Update the exchange rate as the tokens in compound will have gained interest
+        _updateExchangeRate();
+
+        uint256 tTokenAmount = lendingTokenAmount
+            .mul(EXCHANGE_RATE_DECIMALS)
+            .div(exchangeRate);
+
         // Burn tToken tokens.
-        tToken.burn(msg.sender, amount);
+        tToken.burn(msg.sender, tTokenAmount);
 
         address cTokenAddress = cToken();
         if (cTokenAddress != address(0)) {
             // Withdraw tokens from Compound
             // Decrease the Compound market supply
             compoundMarketState.decreaseSupply(
-                _withdrawFromCompound(cTokenAddress, amount)
+                _withdrawFromCompound(cTokenAddress, lendingTokenAmount)
             );
         } else {
             // Decrease the market supply
-            marketState.decreaseSupply(amount);
+            marketState.decreaseSupply(lendingTokenAmount);
         }
 
         // Transfers tokens
-        tokenTransfer(msg.sender, amount);
+        tokenTransfer(msg.sender, lendingTokenAmount);
 
         // Emit event.
-        emit TokenWithdrawn(msg.sender, amount);
+        emit TokenWithdrawn(msg.sender, lendingTokenAmount, tTokenAmount);
     }
 
     /**
@@ -169,6 +189,9 @@ contract LendingPool is Base, LendingPoolInterface {
         if (interestAmount > 0) {
             stateToUpdate.increaseSupply(interestAmount);
         }
+
+        // Update the exchange rate having updated the balance, compound balance, and market state
+        _updateExchangeRate();
 
         // Emits event.
         emit TokenRepaid(borrower, totalAmount);
@@ -232,6 +255,10 @@ contract LendingPool is Base, LendingPoolInterface {
 
         // Transfer tokens to the borrower.
         tokenTransfer(borrower, amount);
+
+        // Total lendingTokens remains the same as totalOnLoan has increased and the compound balance
+        // has decreased. However compound interest may have increased since the last tx, so we update the rate
+        _updateExchangeRate();
     }
 
     /**
@@ -319,9 +346,14 @@ contract LendingPool is Base, LendingPoolInterface {
         _initialize(settingsAddress);
 
         tToken = TTokenInterface(tTokenAddress);
-        lendingToken = IERC20(lendingTokenAddress);
+        lendingToken = IERC20Detailed(lendingTokenAddress);
         lenders = LendersInterface(lendersAddress);
         loans = loansAddress;
+
+        require(
+            tToken.decimals() == lendingToken.decimals(),
+            "TTOKEN_DECIMALS_INCORRECT"
+        );
     }
 
     /** Internal functions */
@@ -341,6 +373,39 @@ contract LendingPool is Base, LendingPoolInterface {
                 CErc20Interface(cTokenAddress).valueInUnderlying(compoundMarketState.totalBorrowed)
             );
         }
+    }
+
+    function _updateExchangeRate() internal {
+        // calculate the total lendingToken in the protocol (on loan + not on loan)
+        MarketStateLib.MarketState memory lendingTokenMarket = _markets().getGlobalMarket(address(4));
+        
+        uint256 totalOnLoan = lendingTokenMarket.totalBorrowed.sub(lendingTokenMarket.totalRepaid);
+        uint256 totalNotOnLoan;
+
+        address cTokenAddress = cToken();
+        
+        if (_isCTokenNotSupported(cTokenAddress)) {
+            totalNotOnLoan = lendingToken.balanceOf(address(this));
+        } else {
+            totalNotOnLoan = CErc20Interface(cTokenAddress).balanceOfUnderlying(address(this));
+        }
+
+        // In case the compound balance has increased due to interest, update the total supply
+        if (totalNotOnLoan > lendingTokenMarket.totalSupplied) {
+            _markets().increaseSupply(
+                address(lendingToken),
+                LoansInterface(loans).collateralToken(),
+                totalNotOnLoan.sub(lendingTokenMarket.totalSupplied)
+            );
+        }
+
+        uint256 totalLendingToken = totalOnLoan.add(totalNotOnLoan);
+
+        // fetch total TToken for this lending token
+        uint256 totalTToken = tToken.totalSupply();
+
+        // exchange rate = lending tokens per ttoken (with EXCHANGE_RATE_DECIMALS)
+        exchangeRate = totalLendingToken.mul(EXCHANGE_RATE_DECIMALS).div(totalTToken);
     }
 
     /**

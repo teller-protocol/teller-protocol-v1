@@ -10,6 +10,13 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.so
  * @author develop@teller.finance
  */
 contract TTokenInterface is IERC20 {
+
+    /**
+     * @notice function to fetch the number of decimal places a TToken has
+     * @return the number of decimals
+     */
+    function decimals() external view returns (uint8);
+
     /**
      * @notice Reduce account supply of specified token amount
      * @param account The account to burn tokens from
