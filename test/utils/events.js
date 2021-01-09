@@ -785,7 +785,6 @@ module.exports = {
                     borrowedToken,
                     collateralToken,
                     loans,
-                    lenders,
                     lendingPool,
                     loanTermsConsensus
                 ) => emitted(tx, name, ev => {
@@ -793,7 +792,6 @@ module.exports = {
                     assert.equal(ev.borrowedToken.toString(), borrowedToken.toString(), 'borrowedToken does not match');
                     assert.equal(ev.collateralToken.toString(), collateralToken.toString(), 'collateralToken does not match');
                     assert.equal(ev.loans.toString(), loans.toString(), 'loans does not match');
-                    assert.equal(ev.lenders.toString(), lenders.toString(), 'lenders does not match');
                     assert.equal(ev.lendingPool.toString(), lendingPool.toString(), 'lendingPool does not match');
                     assert.equal(ev.loanTermsConsensus.toString(), loanTermsConsensus.toString(), 'loanTermsConsensus does not match');
                 }),

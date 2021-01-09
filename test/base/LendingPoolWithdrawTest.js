@@ -66,10 +66,8 @@ contract('LendingPoolWithdrawTest', function (accounts) {
             );
             await initContracts(
                 settingsInstance,
-                cTokenInstance,
                 instance,
                 tTokenInstance,
-                consensusInstance,
                 lendingTokenInstance,
                 loansInstance,
             );
@@ -114,10 +112,8 @@ contract('LendingPoolWithdrawTest', function (accounts) {
             await tTokenInstance.addMinter(instance.address);
             await initContracts(
                 settingsInstance,
-                cTokenInstance,
                 instance,
                 tTokenInstance,
-                consensusInstance,
                 lendingTokenInstance,
                 loansInstance,
             );

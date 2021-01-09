@@ -73,7 +73,6 @@ interface LendingPoolInterface {
         @notice It initializes the contract state variables.
         @param tTokenAddress tToken token address.
         @param lendingTokenAddress ERC20 token address.
-        @param lendersAddress Lenders contract address.
         @param loansAddress Loans contract address.
         @param settingsAddress Settings contract address.
         @dev It throws a require error if the contract is already initialized.
@@ -81,7 +80,6 @@ interface LendingPoolInterface {
     function initialize(
         address tTokenAddress,
         address lendingTokenAddress,
-        address lendersAddress,
         address loansAddress,
         address settingsAddress
     ) external;
@@ -97,12 +95,6 @@ interface LendingPoolInterface {
         @return the tToken address.
     */
     function tToken() external view returns (address);
-
-    /**
-        @notice It gets the Lenders contract address.
-        @return the Lenders contract address.
-    */
-    function lenders() external view returns (address);
 
     /**
         @notice It gets the Loans contract address.

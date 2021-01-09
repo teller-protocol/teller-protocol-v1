@@ -258,48 +258,6 @@ contract LendingPool is Base, LendingPoolInterface {
         _updateExchangeRate();
     }
 
-    /**
-        @notice It allows the lenders to withdraw interest.
-        @param amount interest amount to withdraw.
-        @dev It withdraws lending tokens from Compound before transferring the tokens to the lender.
-     */
-    function withdrawInterest(uint256 amount)
-        external
-        isInitialized()
-        whenNotPaused()
-        whenLendingPoolNotPaused(address(this))
-    {
-        address lender = msg.sender;
-        InterestValidatorInterface interestValidator = _interestValidator();
-        require(
-            address(interestValidator) == address(0x0) ||
-                interestValidator.isInterestValid(
-                    address(lendingToken),
-                    LoansInterface(loans).collateralToken(),
-                    lender,
-                    amount
-                ),
-            "INTEREST_TO_WITHDRAW_IS_INVALID"
-        );
-
-        address cTokenAddress = cToken();
-        if (cTokenAddress != address(0)) {
-            // Withdraw tokens from Compound
-            // Decrease the Compound market supply
-            compoundMarketState.decreaseSupply(
-                _withdrawFromCompound(cTokenAddress, amount)
-            );
-        } else {
-            // Decrease the market supply
-            marketState.decreaseSupply(amount);
-        }
-
-        // Transfer tokens to the lender.
-        tokenTransfer(lender, amount);
-
-        emit InterestWithdrawn(lender, amount);
-    }
-
     function getMarketState() external view returns (MarketStateLib.MarketState memory) {
         return _getMarketState();
     }

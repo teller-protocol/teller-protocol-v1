@@ -289,11 +289,9 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         )
     {
         // Creating proxies
-        (
-            lendingPoolProxy,
-            loanTermsConsensusProxy,
-            loansProxy
-        ) = _createProxies(collateralToken);
+        (lendingPoolProxy, loanTermsConsensusProxy, loansProxy) = _createProxies(
+            collateralToken
+        );
 
         // Initializing proxies.
         _initializeProxies(

@@ -44,7 +44,6 @@ interface MarketFactoryInterface {
         address indexed borrowedToken,
         address indexed collateralToken,
         address loans,
-        address lenders,
         address lendingPool,
         address loanTermsConsensus
     );
