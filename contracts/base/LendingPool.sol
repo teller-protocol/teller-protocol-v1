@@ -51,7 +51,7 @@ contract LendingPool is Base, LendingPoolInterface {
     address public loans;
 
     uint256 public constant EXCHANGE_RATE_DECIMALS = 18;
-    uint256 public exchangeRate = 10 ** EXCHANGE_RATE_DECIMALS;
+    uint256 public exchangeRate = 10**EXCHANGE_RATE_DECIMALS;
 
     MarketStateLib.MarketState internal marketState;
 
@@ -87,9 +87,9 @@ contract LendingPool is Base, LendingPoolInterface {
         // Update the exchange rate as the tokens in compound will have gained interest
         _updateExchangeRate();
 
-        uint256 tTokenAmount = lendingTokenAmount
-            .mul(EXCHANGE_RATE_DECIMALS)
-            .div(exchangeRate);
+        uint256 tTokenAmount = lendingTokenAmount.mul(EXCHANGE_RATE_DECIMALS).div(
+            exchangeRate
+        );
 
         // Transfering tokens to the LendingPool
         tokenTransferFrom(msg.sender, lendingTokenAmount);
@@ -130,9 +130,9 @@ contract LendingPool is Base, LendingPoolInterface {
         // Update the exchange rate as the tokens in compound will have gained interest
         _updateExchangeRate();
 
-        uint256 tTokenAmount = lendingTokenAmount
-            .mul(EXCHANGE_RATE_DECIMALS)
-            .div(exchangeRate);
+        uint256 tTokenAmount = lendingTokenAmount.mul(EXCHANGE_RATE_DECIMALS).div(
+            exchangeRate
+        );
 
         // Burn tToken tokens.
         tToken.burn(msg.sender, tTokenAmount);
@@ -377,17 +377,23 @@ contract LendingPool is Base, LendingPoolInterface {
 
     function _updateExchangeRate() internal {
         // calculate the total lendingToken in the protocol (on loan + not on loan)
-        MarketStateLib.MarketState memory lendingTokenMarket = _markets().getGlobalMarket(address(4));
-        
-        uint256 totalOnLoan = lendingTokenMarket.totalBorrowed.sub(lendingTokenMarket.totalRepaid);
+        MarketStateLib.MarketState memory lendingTokenMarket = _markets().getGlobalMarket(
+            address(4)
+        );
+
+        uint256 totalOnLoan = lendingTokenMarket.totalBorrowed.sub(
+            lendingTokenMarket.totalRepaid
+        );
         uint256 totalNotOnLoan;
 
         address cTokenAddress = cToken();
-        
+
         if (_isCTokenNotSupported(cTokenAddress)) {
             totalNotOnLoan = lendingToken.balanceOf(address(this));
         } else {
-            totalNotOnLoan = CErc20Interface(cTokenAddress).balanceOfUnderlying(address(this));
+            totalNotOnLoan = CErc20Interface(cTokenAddress).balanceOfUnderlying(
+                address(this)
+            );
         }
 
         // In case the compound balance has increased due to interest, update the total supply

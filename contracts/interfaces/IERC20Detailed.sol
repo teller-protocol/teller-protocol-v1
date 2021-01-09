@@ -10,11 +10,9 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.so
  * @author develop@teller.finance
  */
 contract IERC20Detailed is IERC20 {
-
     /**
      * @notice function to fetch the number of decimal places a token has
      * @return the number of decimals
      */
     function decimals() external view returns (uint8);
-
 }
