@@ -60,18 +60,22 @@ contract Consensus is Base, OwnerSignersRole {
         _;
     }
 
+    /**
+        @notice Checks if the number of responses is greater or equal to a percentage of
+        the number of signers.
+     */
     modifier onlyEnoughSubmissions(uint256 responseCount) {
+        SettingsInterface settings = _getSettings();
+        uint256 percentageRequired = settings
+            .platformSettings(settings.consts().REQUIRED_SUBMISSIONS_PERCENTAGE_SETTING())
+            .value;
+        // https://stackoverflow.com/questions/17005364/dividing-two-integers-and-rounding-up-the-result-without-using-floating-point
+        uint256 minimumResponseCount = _signerCount.mul(percentageRequired).add(9999).div(
+            10000
+        );
+
         require(
-            responseCount >=
-                _signerCount
-                    .mul(
-                    _getSettings()
-                        .platformSettings(
-                        _getSettings().consts().REQUIRED_SUBMISSIONS_PERCENTAGE_SETTING()
-                    )
-                        .value
-                )
-                    .div(10000),
+            responseCount >= minimumResponseCount,
             "INSUFFICIENT_NUMBER_OF_RESPONSES"
         );
         _;
