@@ -117,16 +117,6 @@ contract LogicVersionsRegistry is
     }
 
     /**
-        @notice It removes a current logic version given a logic name.
-        @param logicName logic name to remove.
-     */
-    function removeLogicVersion(bytes32 logicName) external onlyPauser() isInitialized() {
-        (address lastLogic, uint256 lastVersion) = logicVersions[logicName].remove();
-
-        emit LogicVersionRemoved(logicName, msg.sender, lastLogic, lastVersion);
-    }
-
-    /**
         @notice It rollbacks a logic to a previous version.
         @param logicName logic name to rollback.
         @param previousVersion the previous version to be used.

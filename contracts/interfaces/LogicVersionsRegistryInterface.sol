@@ -27,20 +27,6 @@ interface LogicVersionsRegistryInterface {
     );
 
     /**
-        @notice This event is emitted when a current logic version is removed.
-        @param logicName new logic name.
-        @param sender address that removed it.
-        @param lastLogic last logic address where the logic was.
-        @param lastVersion last version for the logic address.
-     */
-    event LogicVersionRemoved(
-        bytes32 indexed logicName,
-        address indexed sender,
-        address lastLogic,
-        uint256 lastVersion
-    );
-
-    /**
         @notice This event is emitted when a logic version is rollbacked.
         @param logicName the logic name.
         @param sender address that rollbacked it.
