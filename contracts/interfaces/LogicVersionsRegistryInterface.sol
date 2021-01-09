@@ -89,12 +89,6 @@ interface LogicVersionsRegistryInterface {
     function updateLogicAddress(bytes32 logicName, address newLogic) external;
 
     /**
-        @notice It removes a current logic version given a logic name.
-        @param logicName logic name to remove.
-     */
-    function removeLogicVersion(bytes32 logicName) external;
-
-    /**
         @notice It rollbacks a logic to a previous version.
         @param logicName logic name to rollback.
         @param previousVersion the previous version to be used.
