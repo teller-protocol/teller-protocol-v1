@@ -12,7 +12,7 @@ library NumbersList {
     using SafeMath for uint256;
     using NumbersLib for uint256;
 
-    // Holds values to can calculate the threshold of a list of numbers
+    // Holds values to calculate the threshold of a list of numbers
     struct Values {
         uint256 count; // The total number of numbers added
         uint256 max; // The maximum number that was added
@@ -76,7 +76,7 @@ library NumbersList {
     }
 
     /**
-     * @dev Checks if the min and max numbers are with in the acceptable tolerance
+     * @dev Checks if the min and max numbers are within the acceptable tolerance
      * @param self The Value this function was called on
      * @param tolerancePercentage Acceptable tolerance percentage as a whole number
      * The percentage should be entered with 2 decimal places. e.g. 2.5% should be entered as 250.

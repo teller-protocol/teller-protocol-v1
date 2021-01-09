@@ -104,7 +104,7 @@ contract Consensus is Base, OwnerSignersRole {
     /**
         @notice It validates whether a signature is valid or not, verifying the signer and nonce.
         @param signature signature to validate.
-        @param dataHash to use to recover the signer.
+        @param dataHash used to recover the signer.
         @param expectedSigner the expected signer address.
         @return true if the expected signer is equal to the signer. Otherwise it returns false.
      */
