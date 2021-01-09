@@ -28,7 +28,6 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
     let settings
     const loansContract = accounts[1]
     const nodeAddress = accounts[2]
-    const requiredSubs = 5
     const tolerance = 0
     const borrower = accounts[3]
     const requestNonce = 142
@@ -93,7 +92,7 @@ contract('LoanTermsConsensusProcessResponseTest', function (accounts) {
                 Settings,
                 { from: owner, Mock },
                 {
-                    [settingsNames.RequiredSubmissions]: requiredSubs,
+                    [settingsNames.RequiredSubmissionsPercentage]: 2000,
                     [settingsNames.MaximumTolerance]: tolerance,
                     [settingsNames.ResponseExpiryLength]: THIRTY_DAYS,
                     [settingsNames.TermsExpiryTime]: THIRTY_DAYS,

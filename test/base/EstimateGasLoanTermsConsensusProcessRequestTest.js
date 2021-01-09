@@ -136,7 +136,7 @@ contract('EstimateGasLoanTermsConsensusProcessRequestTest', function (accounts) 
                 Settings,
                 { from: owner, Mock },
                 {
-                    [settingsNames.RequiredSubmissions]: responses.length,
+                    [settingsNames.RequiredSubmissionsPercentage]: 10000,
                     [settingsNames.MaximumTolerance]: tolerance,
                     [settingsNames.ResponseExpiryLength]: THIRTY_DAYS,
                     [settingsNames.TermsExpiryTime]: THIRTY_DAYS,
