@@ -114,23 +114,4 @@ library LogicVersionLib {
         self.latestVersion = newVersion;
         self.logicVersions[newVersion] = newLogic;
     }
-
-    /**
-        @notice It removes a current logic version.
-        @param self the current logic version to remove.
-     */
-    function remove(LogicVersion storage self)
-        internal
-        returns (address lastLogic, uint256 lastVersion)
-    {
-        requireExists(self);
-        lastLogic = self.logicVersions[self.latestVersion];
-        lastVersion = self.latestVersion;
-
-        self.logicVersions[self.currentVersion] = address(0x0);
-        self.logicVersions[self.latestVersion] = address(0x0);
-        self.currentVersion = 0;
-        self.latestVersion = 0;
-        self.exists = false;
-    }
 }
