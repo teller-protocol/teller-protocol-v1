@@ -112,7 +112,7 @@ interface LendingPoolInterface {
 
     function getMarketState() external view returns (MarketStateLib.MarketState memory);
 
-    function getSupplyToDebtFor(uint256 loanAmount) external view returns (uint256);
+    function getDebtRatioFor(uint256 loanAmount) external view returns (uint256);
 
     /**
         @notice This event is emitted when an user deposits tokens into the pool.

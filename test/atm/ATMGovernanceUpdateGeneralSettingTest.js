@@ -19,7 +19,7 @@ contract('ATMGovernanceUpdateGeneralSettingTest', function (accounts) {
     let settingsInstance;
 
     // Testing values
-    const SETTING_NAME = toBytes32(web3, 'supplyToDebtRatio');
+    const SETTING_NAME = toBytes32(web3, 'debtRatio');
     const SETTING_OLD_VALUE = 4400;
     const SETTING_NEW_VALUE = 5044;
     const EMPTY_SETTING_NAME = toBytes32(web3, '');

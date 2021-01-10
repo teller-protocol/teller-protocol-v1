@@ -68,7 +68,7 @@ library MarketStateLib {
         @param loanAmount a new loan amount to consider in the ratio.
         @return the supply-to-debt ratio value.
      */
-    function getSupplyToDebtFor(MarketState memory self, uint256 loanAmount)
+    function getDebtRatioFor(MarketState memory self, uint256 loanAmount)
         internal
         view
         returns (uint256)

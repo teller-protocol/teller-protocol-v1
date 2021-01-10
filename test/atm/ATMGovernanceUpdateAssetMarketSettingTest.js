@@ -27,7 +27,7 @@ contract('ATMGovernanceUpdateAssetMarketSettingTest', function (accounts) {
     });
 
     // Testing values
-    const SETTING_NAME = toBytes32(web3, 'supplyToDebtRatio');
+    const SETTING_NAME = toBytes32(web3, 'debtRatio');
     const NOT_INSERTED_SETTING_NAME = toBytes32(web3, 'neverAdded');
     const SETTING_OLD_VALUE = 5044;
     const SETTING_NEW_VALUE = 1111;

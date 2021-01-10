@@ -1,19 +1,21 @@
 // JS Libraries
-const { withData } = require("leche");
-const { t } = require("../utils/consts");
+import { LendingPoolMockInstance } from "../../types/truffle-contracts";
+import { withData } from "leche";
+
+import { t } from "../utils/consts";
 
 // Mock contracts
-const Mock = artifacts.require("./mock/util/Mock.sol");
+const Mock = artifacts.require("Mock");
 
 // Smart contracts
-const LendingPool = artifacts.require("LendingPoolMock.sol");
+const LendingPool = artifacts.require("LendingPoolMock");
 
-contract("LendingPoolGetSupplyToDebtForTest", function(accounts) {
-  let instance;
+contract("LendingPoolGetDebtRatioForTest", function(accounts) {
+  let instance: LendingPoolMockInstance;
 
-  beforeEach("Setup for each test", async () => {
+  before(async () => {
     instance = await LendingPool.new();
-    await instance.initialize(
+    await instance.methods["initialize(address,address,address,address,address)"](
       (await Mock.new()).address,
       (await Mock.new()).address,
       (await Mock.new()).address,
@@ -22,7 +24,17 @@ contract("LendingPoolGetSupplyToDebtForTest", function(accounts) {
     );
   });
 
-  withData({
+  interface TestData {
+    marketState: {
+      totalSupplied: number,
+      totalRepaid: number,
+      totalBorrowed: number
+    },
+    newLoanAmount: number,
+    expectedDebtRatio: number
+  }
+
+  withData<TestData>({
     // (500 borrow - 100 repay + 500 newLoanAmount) / 2000 Supply = 0.45
     _1_scenario: {
       marketState: {
@@ -77,19 +89,23 @@ contract("LendingPoolGetSupplyToDebtForTest", function(accounts) {
     _6_scenario: {
       marketState: {
         totalSupplied: 2500,
-        totalRepaid: 2040,
+        totalRepaid: 2000,
         totalBorrowed: 2000
       },
       newLoanAmount: 0,
       expectedDebtRatio: 0
     }
-  }, function({ marketState, newLoanAmount, expectedDebtRatio }) {
-    it(t("user", "getSupplyToDebtFor", "Should be able to get the supply to debt value.", false), async function() {
+  }, function({
+    marketState,
+    newLoanAmount,
+    expectedDebtRatio
+  }) {
+    it(t("user", "getDebtRatioFor", "Should be able to get the supply to debt value.", false), async function() {
       // Setup
       await instance.mockMarketState(marketState.totalSupplied, marketState.totalRepaid, marketState.totalBorrowed);
 
       // Invocation
-      const result = await instance.getSupplyToDebtFor(newLoanAmount);
+      const result = await instance.getDebtRatioFor(newLoanAmount);
 
       // Assertions
       assert.equal(result.toString(), expectedDebtRatio.toString());

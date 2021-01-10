@@ -283,8 +283,8 @@ contract LendingPool is Base, LendingPoolInterface {
         return _getMarketState();
     }
 
-    function getSupplyToDebtFor(uint256 loanAmount) external view returns (uint256) {
-        return _getMarketState().getSupplyToDebtFor(loanAmount);
+    function getDebtRatioFor(uint256 loanAmount) external view returns (uint256) {
+        return _getMarketState().getDebtRatioFor(loanAmount);
     }
 
     /**

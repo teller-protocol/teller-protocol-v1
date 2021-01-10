@@ -19,7 +19,7 @@ module.exports = async function(
             name,
             token,
             tlrInitialReward,
-            supplyToDebt,
+            maxDebtRatio,
             markets,
         } = atmInfo;
         console.log(`Creating ATM ${atmKey}: ${token.name}/${token.symbol}/${token.decimals} - Max. Cap.: ${token.maxCap} - Max. Vestings per Wallet: ${token.maxVestingPerWallet}`);
@@ -40,10 +40,10 @@ module.exports = async function(
 
         const atmGovernanceProxyInstance = await ATMGovernance.at(lastATMGovernanceProxyAddress);
         
-        console.log(`Configuring ATM ${lastATMGovernanceProxyAddress}: SupplyToDebt = ${supplyToDebt}`);
+        console.log(`Configuring ATM ${lastATMGovernanceProxyAddress}: MaxDebtRatio = ${maxDebtRatio}`);
         await atmGovernanceProxyInstance.addGeneralSetting(
-            toBytes32(web3, atmGovernanceSettingsNames.SupplyToDebt),
-            supplyToDebt,
+            toBytes32(web3, atmGovernanceSettingsNames.MaxDebtRatio),
+            maxDebtRatio,
             txConfig,
         );
 

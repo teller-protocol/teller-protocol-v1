@@ -100,7 +100,7 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
     loanDuration,
     recipient,
     oraclePrice,
-    supplyToDebtInvalid,
+    debtRatioInvalid,
     moreCollateralRequired,
     mustFail,
     expectedErrorMessage
@@ -139,9 +139,9 @@ contract("LoansBaseTakeOutLoanTest", function(accounts) {
       } else {
         await instance.mockGetCollateralInfo(mockLoanID, loan.borrowedAmount, loan.collateral)
       }
-      if (supplyToDebtInvalid) {
+      if (debtRatioInvalid) {
         await lendingPoolInstance.givenMethodReturnUint(
-          lendingPoolEncoder.encodeGetSupplyToDebtFor(),
+          lendingPoolEncoder.encodeGetDebtRatioFor(),
           2000,
         );
       }
