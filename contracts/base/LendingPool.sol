@@ -47,8 +47,7 @@ contract LendingPool is Base, LendingPoolInterface {
 
     address public loans;
 
-    uint256 public constant EXCHANGE_RATE_DECIMALS = 18;
-    uint256 public exchangeRate = 10**EXCHANGE_RATE_DECIMALS;
+    uint256 public constant EXCHANGE_RATE_SCALE = 10**18;
 
     MarketStateLib.MarketState internal marketState;
 
@@ -81,11 +80,8 @@ contract LendingPool is Base, LendingPoolInterface {
         whenNotPaused()
         whenLendingPoolNotPaused(address(this))
     {
-        // Update the exchange rate as the tokens in compound will have gained interest
-        _updateExchangeRate();
-
-        uint256 tTokenAmount = lendingTokenAmount.mul(EXCHANGE_RATE_DECIMALS).div(
-            exchangeRate
+        uint256 tTokenAmount = lendingTokenAmount.mul(EXCHANGE_RATE_SCALE).div(
+            _exchangeRate()
         );
 
         // Transfering tokens to the LendingPool
@@ -124,11 +120,8 @@ contract LendingPool is Base, LendingPoolInterface {
         whenLendingPoolNotPaused(address(this))
         nonReentrant()
     {
-        // Update the exchange rate as the tokens in compound will have gained interest
-        _updateExchangeRate();
-
-        uint256 tTokenAmount = lendingTokenAmount.mul(EXCHANGE_RATE_DECIMALS).div(
-            exchangeRate
+        uint256 tTokenAmount = lendingTokenAmount.mul(EXCHANGE_RATE_SCALE).div(
+            _exchangeRate()
         );
 
         // Burn tToken tokens.
@@ -186,9 +179,6 @@ contract LendingPool is Base, LendingPoolInterface {
         if (interestAmount > 0) {
             stateToUpdate.increaseSupply(interestAmount);
         }
-
-        // Update the exchange rate having updated the balance, compound balance, and market state
-        _updateExchangeRate();
 
         // Emits event.
         emit TokenRepaid(borrower, totalAmount);
@@ -252,10 +242,6 @@ contract LendingPool is Base, LendingPoolInterface {
 
         // Transfer tokens to the borrower.
         tokenTransfer(borrower, amount);
-
-        // Total lendingTokens remains the same as totalOnLoan has increased and the compound balance
-        // has decreased. However compound interest may have increased since the last tx, so we update the rate
-        _updateExchangeRate();
     }
 
     function getMarketState() external view returns (MarketStateLib.MarketState memory) {
@@ -272,6 +258,14 @@ contract LendingPool is Base, LendingPoolInterface {
      */
     function cToken() public view returns (address) {
         return _getSettings().getCTokenAddress(address(lendingToken));
+    }
+
+    function exchangeRate() external view returns (uint256) {
+        return _exchangeRate();
+    }
+
+    function _exchangeRate() internal view returns (uint256) {
+        return _getMarketState().totalSupplied.mul(10**18).div(tToken.totalSupply());
     }
 
     /**
@@ -321,45 +315,6 @@ contract LendingPool is Base, LendingPoolInterface {
                 CErc20Interface(cTokenAddress).valueInUnderlying(compoundMarketState.totalBorrowed)
             );
         }
-    }
-
-    function _updateExchangeRate() internal {
-        // calculate the total lendingToken in the protocol (on loan + not on loan)
-        MarketStateLib.MarketState memory lendingTokenMarket = _markets().getGlobalMarket(
-            address(4)
-        );
-
-        uint256 totalOnLoan = lendingTokenMarket.totalBorrowed.sub(
-            lendingTokenMarket.totalRepaid
-        );
-        uint256 totalNotOnLoan;
-
-        address cTokenAddress = cToken();
-
-        if (_isCTokenNotSupported(cTokenAddress)) {
-            totalNotOnLoan = lendingToken.balanceOf(address(this));
-        } else {
-            totalNotOnLoan = CErc20Interface(cTokenAddress).balanceOfUnderlying(
-                address(this)
-            );
-        }
-
-        // In case the compound balance has increased due to interest, update the total supply
-        if (totalNotOnLoan > lendingTokenMarket.totalSupplied) {
-            _markets().increaseSupply(
-                address(lendingToken),
-                LoansInterface(loans).collateralToken(),
-                totalNotOnLoan.sub(lendingTokenMarket.totalSupplied)
-            );
-        }
-
-        uint256 totalLendingToken = totalOnLoan.add(totalNotOnLoan);
-
-        // fetch total TToken for this lending token
-        uint256 totalTToken = tToken.totalSupply();
-
-        // exchange rate = lending tokens per ttoken (with EXCHANGE_RATE_DECIMALS)
-        exchangeRate = totalLendingToken.mul(EXCHANGE_RATE_DECIMALS).div(totalTToken);
     }
 
     /**
