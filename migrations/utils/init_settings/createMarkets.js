@@ -36,17 +36,12 @@ module.exports = async function (
         collateralTokenAddress,
       );
       console.log(`Market ${borrowedTokenName} / ${collateralTokenName}: Loans (proxy): ${marketInfo.loans}`);
-      console.log(`Market ${borrowedTokenName} / ${collateralTokenName}: Lenders (proxy): ${marketInfo.lenders}`);
       console.log(`Market ${borrowedTokenName} / ${collateralTokenName}: Lending pool (proxy): ${marketInfo.lendingPool}`);
       console.log(`Market ${borrowedTokenName} / ${collateralTokenName}: Loan term consensus (proxy): ${marketInfo.loanTermsConsensus}`);
 
       deployerApp.addContractInfo({
         name: `${collateralTokenName}_Loans_t${borrowedTokenName}_Proxy`,
         address: marketInfo.loans
-      });
-      deployerApp.addContractInfo({
-        name: `${collateralTokenName}_Lenders_t${borrowedTokenName}_Proxy`,
-        address: marketInfo.lenders
       });
       deployerApp.addContractInfo({
         name: `${collateralTokenName}_LendingPool_t${borrowedTokenName}_Proxy`,

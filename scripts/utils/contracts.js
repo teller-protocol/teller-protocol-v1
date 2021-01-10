@@ -23,13 +23,6 @@ const internalLoanTermsConsensus = (collateralToken, tokenName, artifactName = '
         artifactName,
     };
 };
-const internalLenders = (collateralToken, tokenName, artifactName = 'Lenders') => {
-    return {
-        keyName: TELLER_KEY,
-        contractName: `${collateralToken.toUpperCase()}_Lenders_t${tokenName.toUpperCase()}_Proxy`,
-        artifactName,
-    };
-};
 const ttoken = (tokenName) => {
     return {
         keyName: TELLER_KEY,
@@ -51,9 +44,6 @@ const customCollateralToken = (collateralToken) => {
         loanTermsConsensus: (tokenName, artifactName = 'LoanTermsConsensus') => {
             return internalLoanTermsConsensus(collToken, tokenName, artifactName);
         },
-        lenders: (tokenName, artifactName = 'Lenders') => {
-            return internalLenders(collToken, tokenName, artifactName);
-        }
     };
 }
 module.exports = {
