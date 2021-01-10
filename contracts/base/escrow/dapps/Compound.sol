@@ -57,27 +57,19 @@ contract Compound is ICompound, BaseEscrowDapp {
         require(_balanceOf(tokenAddress) >= amount, "COMPOUND_INSUFFICIENT_UNDERLYING");
 
         CErc20Interface cToken = _getCToken(tokenAddress);
-        uint256 cTokenBalanceBeforeLend = cToken.balanceOf(address(this));
         IERC20(tokenAddress).safeApprove(address(cToken), amount);
         uint256 result = cToken.mint(amount);
         require(result == NO_ERROR, "COMPOUND_DEPOSIT_ERROR");
 
-        uint256 cTokenBalanceAfterLend = cToken.balanceOf(address(this));
-        require(
-            cTokenBalanceAfterLend > cTokenBalanceBeforeLend,
-            "COMPOUND_BALANCE_NOT_INCREASED"
-        );
-
         _tokenUpdated(address(cToken));
         _tokenUpdated(tokenAddress);
 
-        uint256 tokenBalanceAfterLend = _balanceOf(tokenAddress);
         emit CompoundLended(
             tokenAddress,
             address(cToken),
             amount,
-            tokenBalanceAfterLend,
-            cTokenBalanceAfterLend
+            _balanceOf(tokenAddress),
+            cToken.balanceOf(address(this))
         );
     }
 
@@ -114,30 +106,22 @@ contract Compound is ICompound, BaseEscrowDapp {
         bool isUnderlying
     ) internal {
         address tokenAddress = cToken.underlying();
-        uint256 tokenBalanceBeforeRedeem = _balanceOf(tokenAddress);
         uint256 result = isUnderlying
             ? cToken.redeemUnderlying(amount)
             : cToken.redeem(amount);
         require(result != TOKEN_INSUFFICIENT_BALANCE, "COMPOUND_INSUFFICIENT_BALANCE");
         require(result == NO_ERROR, "COMPOUND_WITHDRAWAL_ERROR");
 
-        uint256 tokenBalanceAfterRedeem = _balanceOf(tokenAddress);
-        bool afterRedeemBalanceCheck = isUnderlying
-            ? tokenBalanceAfterRedeem == tokenBalanceBeforeRedeem + amount
-            : tokenBalanceAfterRedeem > tokenBalanceBeforeRedeem;
-        require(afterRedeemBalanceCheck, "COMPOUND_BALANCE_NOT_INCREASED");
-
         _tokenUpdated(address(cToken));
         _tokenUpdated(tokenAddress);
 
-        uint256 cTokenBalanceAfterRedeem = cToken.balanceOf(address(this));
         emit CompoundRedeemed(
             tokenAddress,
             address(cToken),
             amount,
             isUnderlying,
-            tokenBalanceAfterRedeem,
-            cTokenBalanceAfterRedeem
+            _balanceOf(tokenAddress),
+            cToken.balanceOf(address(this))
         );
     }
 

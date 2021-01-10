@@ -47,7 +47,7 @@ contract('LendingPoolRepayTest', function (accounts) {
         _1_cTokenSupported_basic: [accounts[1], true, true, true, 10, 5, 1000, undefined, false],
         _2_cTokenSupported_notLoan: [accounts[1], true, false, true, 10, 5, 1000, 'ADDRESS_ISNT_LOANS_CONTRACT', true],
         _3_cTokenSupported_transferFail: [accounts[1], true, true, false, 200, 5, 1000, "SafeERC20: ERC20 operation did not succeed", true],
-        _4_cTokenSupported_compoundFail: [accounts[1], true, true, true, 77777777, 5, 77777777, 'COMPOUND_DEPOSIT_ERROR', true],
+        _4_cTokenSupported_compoundFail: [accounts[1], true, true, true, 77777777, 0, 77777777, 'COMPOUND_DEPOSIT_ERROR', true],
         _6_cTokenNotSupported_basic: [accounts[1], false, true, true, 10, 5, 1000, undefined, false],
         _7_cTokenNotSupported_notLoan: [accounts[1], false, false, true, 10, 5, 1000, 'ADDRESS_ISNT_LOANS_CONTRACT', true],
         _8_cTokenNotSupported_transferFail: [accounts[1], false, true, false, 200, 5, 1000, "SafeERC20: ERC20 operation did not succeed", true],

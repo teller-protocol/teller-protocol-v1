@@ -167,7 +167,7 @@ contract('LoansBaseModifiersTest', function (accounts) {
         duration,
         amount,
         maxLoanDurationResponse,
-        isDebtRatioRatioValidResponse,
+        isDebtRatioValidResponse,
         expectedErrorMessage,
         mustFail
     ) {    
@@ -178,7 +178,7 @@ contract('LoansBaseModifiersTest', function (accounts) {
             const loanRequest = createLoanRequest(borrower, NULL_ADDRESS, 3, amount.toFixed(0), duration, 19, consensusInstance.address);
             const encodeGetPlatformSettingValue = settingsInterfaceEncoder.encodeGetPlatformSettingValue();
             await settingsInstance.givenMethodReturnUint(encodeGetPlatformSettingValue, maxLoanDurationResponse);
-            await instance.setMockIsDebtRatioRatioValid(true, isDebtRatioRatioValidResponse);
+            await instance.setMockIsDebtRatioValid(true, isDebtRatioValidResponse);
 
             try {
                 // Invocation
