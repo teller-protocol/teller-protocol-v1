@@ -1,6 +1,5 @@
 module.exports = {
     LendingPool: 'LendingPool',
-    Lenders: 'Lenders',
     TokenCollateralLoans: 'TokenCollateralLoans',
     EtherCollateralLoans: 'EtherCollateralLoans',
     LoanTermsConsensus: 'LoanTermsConsensus',
