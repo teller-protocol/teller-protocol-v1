@@ -54,11 +54,6 @@ contract LogicVersionsRegistry is
      */
     mapping(bytes32 => LogicVersionLib.LogicVersion) internal logicVersions;
 
-    /**
-        @notice It keeps a record of all the proxies that are registered in the platform.
-      */
-    mapping(address => bool) internal registeredProxies;
-
     /** Modifiers */
 
     /* Constructor */
@@ -122,13 +117,29 @@ contract LogicVersionsRegistry is
     }
 
     /**
-        @notice It removes a current logic version given a logic name.
-        @param logicName logic name to remove.
+        @notice It rollbacks a logic to a previous version.
+        @param logicName logic name to rollback.
+        @param previousVersion the previous version to be used.
      */
-    function removeLogicVersion(bytes32 logicName) external onlyPauser() isInitialized() {
-        (address lastLogic, uint256 lastVersion) = logicVersions[logicName].remove();
+    function rollbackLogicVersion(bytes32 logicName, uint256 previousVersion)
+        external
+        onlyPauser()
+        isInitialized()
+    {
+        (
+            uint256 currentVersion,
+            address previousLogic,
+            address newLogic
+        ) = logicVersions[logicName].rollback(previousVersion);
 
-        emit LogicVersionRemoved(logicName, msg.sender, lastLogic, lastVersion);
+        emit LogicVersionRollbacked(
+            logicName,
+            msg.sender,
+            previousLogic,
+            newLogic,
+            currentVersion,
+            previousVersion
+        );
     }
 
     /**
@@ -139,9 +150,17 @@ contract LogicVersionsRegistry is
     function getLogicVersion(bytes32 logicName)
         external
         view
-        returns (LogicVersionLib.LogicVersion memory)
+        returns (
+            uint256 currentVersion,
+            uint256 latestVersion,
+            address logic
+        )
     {
-        return _getLogicVersion(logicName);
+        LogicVersionLib.LogicVersion memory logicVersion = _getLogicVersion(logicName);
+
+        currentVersion = logicVersion.currentVersion;
+        latestVersion = logicVersion.latestVersion;
+        logic = _getCurrentLogicVersionAddress(logicName);
     }
 
     /**
@@ -150,7 +169,7 @@ contract LogicVersionsRegistry is
         @return the current logic address.
      */
     function getLogicVersionAddress(bytes32 logicName) external view returns (address) {
-        return _getLogicVersion(logicName).logic;
+        return _getCurrentLogicVersionAddress(logicName);
     }
 
     /**
@@ -173,7 +192,7 @@ contract LogicVersionsRegistry is
         );
         if (returnData.length > 0) {
             bytes32 logicName = abi.decode(returnData, (bytes32));
-            return proxy == _getLogicVersion(logicName).logic;
+            return proxy == _getCurrentLogicVersionAddress(logicName);
         }
 
         return false;
@@ -191,6 +210,16 @@ contract LogicVersionsRegistry is
     }
 
     /** Internal functions */
+
+    function _getCurrentLogicVersionAddress(bytes32 logicName)
+        internal
+        view
+        returns (address)
+    {
+        return
+            logicVersions[logicName].logicVersions[logicVersions[logicName]
+                .currentVersion];
+    }
 
     /**
         @notice It gets the logic version for a given logic name.

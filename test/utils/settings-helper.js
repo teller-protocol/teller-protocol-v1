@@ -6,7 +6,7 @@ const initPlatformSettings = require('../../migrations/utils/init_settings/initP
 
 const INITIAL_VALUE = 1;
 const TEST_DEFAULT_VALUE = {
-    requiredSubmissions: INITIAL_VALUE,
+    requiredSubmissionsPercentage: INITIAL_VALUE,
     maximumTolerance: INITIAL_VALUE,
     responseExpiryLength: INITIAL_VALUE,
     safetyInterval: INITIAL_VALUE,

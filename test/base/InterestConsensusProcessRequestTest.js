@@ -84,35 +84,35 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
 
     withData({
         _1_insufficient_responses: [
-            undefined, 3, 320, [responseOne, responseTwo], true, 'INTEREST_INSUFFICIENT_RESPONSES'
+            undefined, 10000, 320, [responseOne, responseTwo], true, 'INSUFFICIENT_NUMBER_OF_RESPONSES'
         ],
         _2_one_response_successful: [
-            undefined, 1, 320, [responseOne], false, undefined
+            undefined, 1000, 320, [responseOne], false, undefined
         ],
         _3_responses_just_over_tolerance: [  // average = 34860, tolerance = 1115, max is 35976 (1 too much)
-            undefined, 4, 320, [responseOne, responseTwo, responseThree, responseFour], true, 'RESPONSES_TOO_VARIED'
+            undefined, 1000, 320, [responseOne, responseTwo, responseThree, responseFour], true, 'RESPONSES_TOO_VARIED'
         ],
         _4_responses_just_within_tolerance: [  // average = 34861, tolerance = 1115, max is 35976 (perfect)
-            undefined, 4, 320, [responseOne, responseTwo, responseFour, responseFive], false, undefined
+            undefined, 1000, 320, [responseOne, responseTwo, responseFour, responseFive], false, undefined
         ],
         _5_zero_tolerance: [
-            undefined, 1, 0, [responseTwo, responseThree], false, undefined
+            undefined, 1000, 0, [responseTwo, responseThree], false, undefined
         ],
         _6_two_responses_same_signer: [     // responseThree and five have the same signer
-            undefined, 4, 320, [responseOne, responseThree, responseTwo, responseFive], true, 'SIGNER_ALREADY_SUBMITTED'
+            undefined, 1000, 320, [responseOne, responseThree, responseTwo, responseFive], true, 'SIGNER_ALREADY_SUBMITTED'
         ],
         _7_expired_response: [
-            undefined, 4, 320, [responseOne, responseTwo, responseExpired, responseFive], true, 'RESPONSE_EXPIRED'
+            undefined, 1000, 320, [responseOne, responseTwo, responseExpired, responseFive], true, 'RESPONSE_EXPIRED'
         ],
         _8_responses_invalid_response_chainid: [
-            undefined, 4, 320, [responseOne, responseTwo, responseFour, responseInvalidChainId], true, 'SIGNATURE_INVALID'
+            undefined, 1000, 320, [responseOne, responseTwo, responseFour, responseInvalidChainId], true, 'SIGNATURE_INVALID'
         ],
         _9_responses_invalid_request_nonce_taken: [
-            { nonce: requestNonce, lender: lender }, 3, 320, [responseOne, responseTwo, responseFour], true, 'INTEREST_REQUEST_NONCE_TAKEN'
+            { nonce: requestNonce, lender: lender }, 1000, 320, [responseOne, responseTwo, responseFour], true, 'INTEREST_REQUEST_NONCE_TAKEN'
         ],
     }, function(
         requestNonceTaken,
-        reqSubmissions,
+        reqSubmissionsPercentage,
         tolerance,
         responses,
         mustFail,
@@ -125,14 +125,13 @@ contract('InterestConsensusProcessRequestTest', function (accounts) {
                 Settings,
                 { from: owner, Mock },
                 {
-                    [settingsNames.RequiredSubmissions]: reqSubmissions,
+                    [settingsNames.RequiredSubmissionsPercentage]: reqSubmissionsPercentage,
                     [settingsNames.MaximumTolerance]: tolerance,
                     [settingsNames.ResponseExpiryLength]: THIRTY_DAYS,
                     [settingsNames.TermsExpiryTime]: THIRTY_DAYS,
                     [settingsNames.LiquidateEthPrice]: 9500,
                 }
             );
-
             // The sender validation (equal to the lenders contract) is mocked (InterestConsensusMock _isCaller(...) function) to allow execute the unit test.
             const sender = accounts[1];
             await instance.initialize(owner,lenders.address, settings.address);

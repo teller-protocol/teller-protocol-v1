@@ -30,6 +30,7 @@ import "../base/Base.sol";
 contract Consensus is Base, OwnerSignersRole {
     using SafeMath for uint256;
     using NumbersList for NumbersList.Values;
+    using NumbersLib for uint256;
 
     // Has signer address already submitted their answer for (user, identifier)?
     mapping(address => mapping(address => mapping(uint256 => bool))) public hasSubmitted;
@@ -57,6 +58,25 @@ contract Consensus is Base, OwnerSignersRole {
      */
     modifier isCaller(address sender) {
         require(_isCaller(sender), "SENDER_HASNT_PERMISSIONS");
+        _;
+    }
+
+    /**
+        @notice Checks if the number of responses is greater or equal to a percentage of
+        the number of signers.
+     */
+    modifier onlyEnoughSubmissions(uint256 responseCount) {
+        uint256 percentageRequired =_getSettings()
+            .platformSettings(
+                _getSettings().consts().REQUIRED_SUBMISSIONS_PERCENTAGE_SETTING()
+            )
+            .value;
+
+
+        require(
+            responseCount.ratioOf(_signerCount) >= percentageRequired,
+            "INSUFFICIENT_NUMBER_OF_RESPONSES"
+        );
         _;
     }
 
