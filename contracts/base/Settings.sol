@@ -14,7 +14,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/lifecycle/Pausable.so
 import "../util/SettingsConsts.sol";
 import "./BaseUpgradeable.sol";
 import "./TInitializable.sol";
-import "./AssetSettings.sol";
+import "./DynamicProxy.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
@@ -24,6 +24,7 @@ import "../interfaces/InterestValidatorInterface.sol";
 import "../providers/chainlink/IChainlinkAggregator.sol";
 import "../providers/compound/CErc20Interface.sol";
 import "../settings/IATMSettings.sol";
+import "../interfaces/AssetSettingsInterface.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -67,6 +68,11 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @notice The asset setting name for cToken address settings.
      */
     bytes32 public constant CTOKEN_ADDRESS_ASSET_SETTING = keccak256("CTokenAddress");
+
+    /**
+        @notice The logic name for the Asset setttings contract instance
+     */
+    bytes32 public constant ASSET_SETTINGS_LOGIC_NAME = keccak256("AssetSettings");
 
     /**
         @notice It defines the constant address to represent ETHER.
@@ -114,7 +120,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     /**
         @notice It is the global instance of the AssetSettings contract.
      */
-    AssetSettings public assetSettings;
+    AssetSettingsInterface public assetSettings;
 
     /**
         @notice It contains all the current assets.
@@ -535,7 +541,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
 
         consts = new SettingsConsts();
 
-        assetSettings = new AssetSettings();
+        assetSettings = AssetSettingsInterface(address(new DynamicProxy(address(this), ASSET_SETTINGS_LOGIC_NAME)));
 
         _setSettings(address(this));
     }
