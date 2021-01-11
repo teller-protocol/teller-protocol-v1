@@ -45,4 +45,5 @@ contract LogicVersionsConsts {
         "ATMLiquidityMining"
     );
     bytes32 public constant TLR_TOKEN_LOGIC_NAME = keccak256("TLRToken");
+    bytes32 public constant ASSET_SETTINGS_LOGIC_NAME = keccak256("AssetSettings");
 }

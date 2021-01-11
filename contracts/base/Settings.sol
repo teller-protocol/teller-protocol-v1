@@ -541,7 +541,9 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
 
         consts = new SettingsConsts();
 
-        assetSettings = AssetSettingsInterface(address(new DynamicProxy(address(this), ASSET_SETTINGS_LOGIC_NAME)));
+        assetSettings = AssetSettingsInterface(
+            address(new DynamicProxy(address(this), ASSET_SETTINGS_LOGIC_NAME))
+        );
 
         _setSettings(address(this));
     }

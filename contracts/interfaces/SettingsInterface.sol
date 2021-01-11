@@ -238,7 +238,6 @@ interface SettingsInterface {
      */
     function updateCTokenAddress(address assetAddress, address newCTokenAddress) external;
 
-
     function platformSettings(bytes32)
         external
         view
