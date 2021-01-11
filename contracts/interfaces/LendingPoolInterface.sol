@@ -57,13 +57,6 @@ interface LendingPoolInterface {
     function createLoan(uint256 amount, address borrower) external;
 
     /**
-        @notice It allows a lender to withdraw a specific amount of interest.
-        @param amount to withdraw.
-        @dev It throws a require error if amount exceeds the current accrued interest.
-    */
-    function withdrawInterest(uint256 amount) external;
-
-    /**
         @notice It gets the lending token address.
         @return the ERC20 lending token address.
     */
