@@ -14,8 +14,8 @@ const Mock = artifacts.require('Mock');
 const Token = artifacts.require('DAIMock');
 
 // Smart contracts
-const LendingPool = artifacts.require('LendingPoolMock');
-const TDAI = artifacts.require('TDAI');
+const LendingPool = artifacts.require("LendingPoolMock");
+const TDAI = artifacts.require("TDAIMock");
 
 contract('LendingPoolWithdrawTest', function (accounts) {
   const burnableInterfaceEncoder = new BurnableInterfaceEncoder(web3);
@@ -148,7 +148,8 @@ contract('LendingPoolWithdrawTest', function (accounts) {
         t('user', 'withdrawAll', 'Should (or not) be able to withdraw all DAI', mustFail),
         async () => {
           // Setup
-          const tTokenInstance = await TDAI.new(settingsInstance.address);
+          const tTokenInstance = await TDAI.new(instance.address);
+          const lendingTokenInstance = await Token.at(await tTokenInstance.underlying());
           await tTokenInstance.addMinter(instance.address);
           await initContracts(
             settingsInstance,
