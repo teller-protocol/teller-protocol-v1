@@ -9,6 +9,9 @@ import "../util/CompoundRatesLib.sol";
 // Interfaces
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router01.sol";
+import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
+import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LendersInterface.sol";
 import "../interfaces/LoansInterface.sol";
@@ -52,6 +55,12 @@ contract LendingPool is Base, LendingPoolInterface {
     MarketStateLib.MarketState internal marketState;
 
     MarketStateLib.MarketState internal compoundMarketState;
+    IERC20 private compToken;
+
+    IUniswapV2Router02 private uniswapRouter;
+
+    IUniswapV2Pair private compWethPair;
+    IUniswapV2Pair private wethLTPair;
 
     /** Modifiers */
 
@@ -87,9 +96,7 @@ contract LendingPool is Base, LendingPoolInterface {
         if (cTokenAddress != address(0)) {
             // Deposit tokens straight into Compound
             // Increase the Compound market supply
-            compoundMarketState.increaseSupply(
-                _depositToCompound(cTokenAddress, amount)
-            );
+            compoundMarketState.increaseSupply(_depositToCompound(cTokenAddress, amount));
         } else {
             // Increase the market supply
             marketState.increaseSupply(amount);
@@ -309,7 +316,10 @@ contract LendingPool is Base, LendingPoolInterface {
         address lendingTokenAddress,
         address lendersAddress,
         address loansAddress,
-        address settingsAddress
+        address settingsAddress,
+        address compTokenAddress,
+        address uniswapRouterAddress,
+        address uniswapFactoryAddress
     ) external isNotInitialized() {
         tTokenAddress.requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
         lendingTokenAddress.requireNotEmpty("TOKEN_ADDRESS_IS_REQUIRED");
@@ -322,23 +332,46 @@ contract LendingPool is Base, LendingPoolInterface {
         lendingToken = IERC20(lendingTokenAddress);
         lenders = LendersInterface(lendersAddress);
         loans = loansAddress;
+        compToken = IERC20(compTokenAddress);
+        uniswapRouter = IUniswapV2Router01(uniswapRouterAddress);
+
+        IUniswapV2Factory uniswapFactory = IUniswapV2Factory(uniswapFactoryAddress);
+
+        compWethPair = uniswapFactory.getPair(
+            compTokenAddress,
+            _getSettings().WETH_ADDRESS()
+        );
+        wethLTPair = uniswapFactory.getPair(
+            _getSettings().WETH_ADDRESS(),
+            lendingTokenAddress
+        );
     }
 
     /** Internal functions */
 
-    function _getMarketState() internal view returns (MarketStateLib.MarketState memory state) {
+    function _getMarketState()
+        internal
+        view
+        returns (MarketStateLib.MarketState memory state)
+    {
         state = marketState;
 
         address cTokenAddress = cToken();
         if (cTokenAddress != address(0) && compoundMarketState.totalSupplied > 0) {
             state.totalSupplied = state.totalSupplied.add(
-                CErc20Interface(cTokenAddress).valueInUnderlying(compoundMarketState.totalSupplied)
+                CErc20Interface(cTokenAddress).valueInUnderlying(
+                    compoundMarketState.totalSupplied
+                )
             );
             state.totalRepaid = state.totalRepaid.add(
-                CErc20Interface(cTokenAddress).valueInUnderlying(compoundMarketState.totalRepaid)
+                CErc20Interface(cTokenAddress).valueInUnderlying(
+                    compoundMarketState.totalRepaid
+                )
             );
             state.totalBorrowed = state.totalBorrowed.add(
-                CErc20Interface(cTokenAddress).valueInUnderlying(compoundMarketState.totalBorrowed)
+                CErc20Interface(cTokenAddress).valueInUnderlying(
+                    compoundMarketState.totalBorrowed
+                )
             );
         }
     }
@@ -348,7 +381,10 @@ contract LendingPool is Base, LendingPoolInterface {
         @param amount amount to deposit.
         @return the amount of tokens deposited.
      */
-    function _depositToCompound(address cTokenAddress, uint256 amount) internal returns (uint256) {
+    function _depositToCompound(address cTokenAddress, uint256 amount)
+        internal
+        returns (uint256)
+    {
         // approve the cToken contract to take lending tokens
         lendingToken.safeApprove(cTokenAddress, amount);
 
@@ -366,7 +402,10 @@ contract LendingPool is Base, LendingPoolInterface {
         @notice It withdraws a given amount of tokens if the cToken is defined (not 0x0).
         @param amount amount of tokens to withdraw.
      */
-    function _withdrawFromCompound(address cTokenAddress, uint256 amount) internal returns (uint256) {
+    function _withdrawFromCompound(address cTokenAddress, uint256 amount)
+        internal
+        returns (uint256)
+    {
         uint256 balanceBefore = CErc20Interface(cTokenAddress).balanceOf(address(this));
 
         // this function withdraws 'amount' lending tokens from compound
@@ -422,5 +461,66 @@ contract LendingPool is Base, LendingPoolInterface {
     function tTokenMint(address to, uint256 amount) private {
         bool mintResult = tToken.mint(to, amount);
         require(mintResult, "TTOKEN_MINT_FAILED");
+    }
+
+    /**
+        @notice It swaps the lending pool's accumualted COMP for the lendingToken
+        using Uniswap and deposits it into Compound.
+     */
+    function swapAccumulatedComp() private {
+        // amount which goes into the swap is COMP balance of the lending pool.
+        uint256 compBalance = compToken.balanceOf(address(this));
+
+        // get uniswap reserves for COMP-WETH
+        (uint256 reservesCompWeth0, uint256 reservesCompWeth1) = uniswapPath[0]
+            .getReserves();
+        (uint256 reservesCompWethComp, uint256 reservesCompWethWeth) = address(
+            compToken
+        ) == uniswapPath[0].token0()
+            ? (reservesCompWeth0, reservesCompWeth1)
+            : (reservesCompWeth1, reservesCompWeth0);
+
+        // get uniswap reserves for WETH-LT
+        (uint256 reservesWethLT0, uint256 reservesWethLT1) = uniswapPath[1].getReserves();
+        (uint256 reservesWethLTWeth, uint256 reservesWethLTLT) = _getSettings()
+            .WETH_ADDRESS() == uniswapPath[1].token0()
+            ? (reservesWethLT0, reservesWethLT1)
+            : (reservesWethLT1, reservesWethLT0);
+
+        // uniswap's quoted amount of WETH coming out of the COMP-WETH swap
+        uint256 wethOutQuote = uniswapRouter.quote(
+            compBalance,
+            reservesCompWethComp,
+            reservesCompWethWeth
+        );
+        // uniswap's quoted amount of LendingToken coming out of WETH-LT swap
+        uint256 lendingTokenOutQuote = uniswapRouter.quote(
+            wethOutQuote,
+            reservesWethLTWeth,
+            reservesWethLTLT
+        );
+
+        // minimum amount of LendingToken at the end of the swap for it to go through (slippage)
+        uint256 amountOutMin = lendingTokenOutQuote.percent(9500);
+
+        compToken.safeApprove(address(uniswapRouter), compBalance);
+
+        uint256[] amounts = uniswapRouter.swapExactTokensForTokens(
+            compBalance,
+            amountOutMin,
+            [address(compToken), _getSettings().WETH_ADDRESS(), address(lendingToken)],
+            address(this),
+            now + 1200
+        );
+
+        uint256 amountOut = amounts[amount.length - 1];
+
+        _depositToCompoundIfSupported(amountOut);
+
+        _markets().increaseSupply(
+            address(lendingToken),
+            LoansInterface(loans).collateralToken(),
+            amountOut
+        );
     }
 }

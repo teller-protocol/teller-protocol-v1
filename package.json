@@ -66,6 +66,7 @@
     "@openzeppelin/contracts": "2.5.1",
     "@openzeppelin/contracts-ethereum-package": "2.5.0",
     "@openzeppelin/upgrades": "^2.8.0",
+    "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "bignumber.js": "^9.0.0",
     "elliptic": "^6.5.3",
     "ethers": "^5.0.12",
