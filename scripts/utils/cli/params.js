@@ -26,7 +26,7 @@ const {
   SIGNER_ADDRESS,
   SIGNER_URL,
   TOKEN_NAMES,
-  REQUIRED_SUBMISSIONS,
+  REQUIRED_SUBMISSIONS_PERCENTAGE,
   SAFETY_INTERVAL,
   TEST_TOKEN_NAME,
   MAX_LOAN_AMOUNT,
@@ -213,7 +213,10 @@ module.exports.addCTokenName = (yargs, defaultParam = CTOKEN_NAME.default) => {
   );
 };
 
-module.exports.addMaxLoanAmount = (yargs, defaultParam = MAX_LOAN_AMOUNT.default) => {
+module.exports.addMaxLoanAmount = (
+  yargs,
+  defaultParam = MAX_LOAN_AMOUNT.default
+) => {
   newOption(
     yargs,
     MAX_LOAN_AMOUNT.name,
@@ -410,7 +413,10 @@ module.exports.addRevertTest = (yargs, defaultParam = REVERT_TEST.default) => {
   );
 };
 
-module.exports.addCollTokenNames = (yargs, defaultParam = COLL_TOKEN_NAMES.default) => {
+module.exports.addCollTokenNames = (
+  yargs,
+  defaultParam = COLL_TOKEN_NAMES.default
+) => {
   newOption(
     yargs,
     COLL_TOKEN_NAMES.name,
@@ -473,12 +479,12 @@ module.exports.addTokenNames = (yargs, defaultParam = TOKEN_NAMES.default) => {
 
 module.exports.addRequiredSubmissions = (
   yargs,
-  defaultParam = REQUIRED_SUBMISSIONS.default
+  defaultParam = REQUIRED_SUBMISSIONS_PERCENTAGE.default
 ) => {
   newOption(
     yargs,
-    REQUIRED_SUBMISSIONS.name,
-    REQUIRED_SUBMISSIONS.alias,
+    REQUIRED_SUBMISSIONS_PERCENTAGE.name,
+    REQUIRED_SUBMISSIONS_PERCENTAGE.alias,
     "number",
     `Used to set as min required (responses) submissions when a borrower asks to node validators to sign responses. By default ${defaultParam}`,
     defaultParam
@@ -499,10 +505,7 @@ module.exports.addSafetyInterval = (
   );
 };
 
-module.exports.addMinAmount = (
-  yargs,
-  defaultParam = MIN_AMOUNT.default
-) => {
+module.exports.addMinAmount = (yargs, defaultParam = MIN_AMOUNT.default) => {
   newOption(
     yargs,
     MIN_AMOUNT.name,
@@ -524,7 +527,10 @@ module.exports.addLogicName = (yargs, defaultParam = LOGIC_NAME.default) => {
   );
 };
 
-module.exports.addContractName = (yargs, defaultParam = CONTRACT_NAME.default) => {
+module.exports.addContractName = (
+  yargs,
+  defaultParam = CONTRACT_NAME.default
+) => {
   newOption(
     yargs,
     CONTRACT_NAME.name,

@@ -59,19 +59,13 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
         external
         isInitialized()
         isCaller(msg.sender)
+        onlyEnoughSubmissions(responses.length)
         returns (
             uint256 interestRate,
             uint256 collateralRatio,
             uint256 maxLoanAmount
         )
     {
-        require(
-            responses.length >=
-                _getSettings().getPlatformSettingValue(
-                    _getSettings().consts().REQUIRED_SUBMISSIONS_SETTING()
-                ),
-            "LOANTERM_INSUFFICIENT_RESPONSES"
-        );
         _requireRequestLoanTermsRateLimit(request);
         require(
             !requestNonceTaken[request.borrower][request.requestNonce],
