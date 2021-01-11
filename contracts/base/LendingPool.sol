@@ -291,11 +291,6 @@ contract LendingPool is Base, LendingPoolInterface {
         tToken = TTokenInterface(tTokenAddress);
         lendingToken = IERC20Detailed(lendingTokenAddress);
         loans = loansAddress;
-
-        require(
-            tToken.decimals() == lendingToken.decimals(),
-            "TTOKEN_DECIMALS_INCORRECT"
-        );
     }
 
     /** Internal functions */

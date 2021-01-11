@@ -15,8 +15,7 @@ contract("LendingPoolGetDebtRatioForTest", function(accounts) {
 
   before(async () => {
     instance = await LendingPool.new();
-    await instance.methods["initialize(address,address,address,address,address)"](
-      (await Mock.new()).address,
+    await instance.methods["initialize(address,address,address,address)"](
       (await Mock.new()).address,
       (await Mock.new()).address,
       (await Mock.new()).address,

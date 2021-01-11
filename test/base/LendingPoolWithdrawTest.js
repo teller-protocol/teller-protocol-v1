@@ -10,12 +10,12 @@ const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEnc
 const CTokenInterfaceEncoder = require('../utils/encoders/CTokenInterfaceEncoder')
 
 // Mock contracts
-const Mock = artifacts.require("./mock/util/Mock.sol");
-const Token = artifacts.require("./mock/token/DAIMock.sol");
+const Mock = artifacts.require("Mock");
+const Token = artifacts.require("DAIMock");
 
 // Smart contracts
-const LendingPool = artifacts.require("./base/LendingPool.sol");
-const TDAI = artifacts.require("./base/TDAI.sol");
+const LendingPool = artifacts.require("LendingPoolMock");
+const TDAI = artifacts.require("TDAI");
 
 contract('LendingPoolWithdrawTest', function (accounts) {
     const burnableInterfaceEncoder = new BurnableInterfaceEncoder(web3);
@@ -36,6 +36,8 @@ contract('LendingPoolWithdrawTest', function (accounts) {
         settingsInstance = await Mock.new();
         cTokenInstance = await Mock.new();
         instance = await LendingPool.new();
+
+        await instance.mockMarketState(10000000000000, 0, 0)
     });
 
     withData({
