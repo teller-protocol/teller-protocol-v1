@@ -265,7 +265,10 @@ contract LendingPool is Base, LendingPoolInterface {
     }
 
     function _exchangeRate() internal view returns (uint256) {
-        return _getMarketState().totalSupplied.mul(10**18).div(tToken.totalSupply());
+        if (tToken.totalSupply() == 0) {
+            return EXCHANGE_RATE_SCALE;
+        }
+        return _getMarketState().totalSupplied.mul(EXCHANGE_RATE_SCALE).div(tToken.totalSupply());
     }
 
     /**
