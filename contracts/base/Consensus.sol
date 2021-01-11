@@ -30,6 +30,7 @@ import "../base/Base.sol";
 contract Consensus is Base, OwnerSignersRole {
     using SafeMath for uint256;
     using NumbersList for NumbersList.Values;
+    using NumbersLib for uint256;
 
     // Has signer address already submitted their answer for (user, identifier)?
     mapping(address => mapping(address => mapping(uint256 => bool))) public hasSubmitted;
@@ -65,17 +66,15 @@ contract Consensus is Base, OwnerSignersRole {
         the number of signers.
      */
     modifier onlyEnoughSubmissions(uint256 responseCount) {
-        SettingsInterface settings = _getSettings();
-        uint256 percentageRequired = settings
-            .platformSettings(settings.consts().REQUIRED_SUBMISSIONS_PERCENTAGE_SETTING())
+        uint256 percentageRequired =_getSettings()
+            .platformSettings(
+                _getSettings().consts().REQUIRED_SUBMISSIONS_PERCENTAGE_SETTING()
+            )
             .value;
-        // https://stackoverflow.com/questions/17005364/dividing-two-integers-and-rounding-up-the-result-without-using-floating-point
-        uint256 minimumResponseCount = _signerCount.mul(percentageRequired).add(9999).div(
-            10000
-        );
+
 
         require(
-            responseCount >= minimumResponseCount,
+            responseCount.ratioOf(_signerCount) >= percentageRequired,
             "INSUFFICIENT_NUMBER_OF_RESPONSES"
         );
         _;
