@@ -13,6 +13,8 @@ library CacheLib {
     using AddressLib for address;
     using Address for address;
 
+    enum CacheType { Address, Uint, Int, Byte, Bool }
+
     /**
         @notice This struct manages the cache of the library instance.
         @param addresses A mapping of address values mapped to cache keys in bytes. 
@@ -44,9 +46,7 @@ library CacheLib {
         @notice Initializes the cache instance.
         @param self The current cache
      */
-    function initialize(Cache storage self) 
-        internal
-    {
+    function initialize(Cache storage self) internal {
         requireNotExists(self);
         self.bools[INITIALIZED] = true;
     }
@@ -55,10 +55,7 @@ library CacheLib {
         @notice Checks whether the current cache does not, throwing an error if it does.
         @param self The current cache
      */
-    function requireNotExists(Cache storage self)
-        internal
-        view
-    {
+    function requireNotExists(Cache storage self) internal view {
         require(!exists(self), "CACHE_ALREADY_EXISTS");
     }
 
@@ -66,10 +63,7 @@ library CacheLib {
         @notice Checks whether the current cache exists, throwing an error if the cache does not.
         @param self The current cache
      */
-    function requireExists(Cache storage self)
-        internal
-        view
-    {
+    function requireExists(Cache storage self) internal view {
         require(exists(self), "CACHE_DOES_NOT_EXIST");
     }
 
@@ -78,11 +72,7 @@ library CacheLib {
         @param self The current cache.
         @return bool True if the cache exists.
      */
-    function exists(Cache storage self)
-        internal
-        view
-        returns (bool)
-    {
+    function exists(Cache storage self) internal view returns (bool) {
         return self.bools[INITIALIZED];
     }
 
@@ -96,33 +86,10 @@ library CacheLib {
         Cache storage self,
         bytes32 key,
         address newAddress
-    )
-        internal
-    {
+    ) internal {
         requireExists(self);
-        require(
-            self.addresses[key] != newAddress,
-            "NEW_ADDRESS_REQUIRED"
-        );
+        require(self.addresses[key] != newAddress, "NEW_ADDRESS_REQUIRED");
         self.addresses[key] = newAddress;
-    }
-
-    /**
-        @notice Retrieves the address value for a given key name.
-        @param self The current cache
-        @param key The key for which the address value is being retrieved.
-        @return The stored address value.
-     */
-    function getAddress(
-        Cache storage self,
-        bytes32 key
-    )
-        internal
-        view
-        returns (address)
-    {
-        requireExists(self);
-        return self.addresses[key];
     }
 
     /**
@@ -135,33 +102,10 @@ library CacheLib {
         Cache storage self,
         bytes32 key,
         uint256 newValue
-    )
-        internal
-    {
+    ) internal {
         requireExists(self);
-        require(
-            self.uints[key] != newValue,
-            "NEW_UINT_REQUIRED"
-        );
+        require(self.uints[key] != newValue, "NEW_UINT_REQUIRED");
         self.uints[key] = newValue;
-    }
-
-    /**
-        @notice Retrieves the uint value for a given key name.
-        @param self The current cache
-        @param key The key for which the uint value is being retrieved.
-        @return The stored uint256 value.
-     */
-    function getUint(
-        Cache storage self,
-        bytes32 key
-    )
-        internal
-        view
-        returns (uint256)
-    {
-        requireExists(self);
-        return self.uints[key];
     }
 
     /**
@@ -175,11 +119,7 @@ library CacheLib {
         Cache storage self,
         bytes32 key,
         uint256 amount
-    )
-        internal
-        view
-        returns (bool)
-    {
+    ) internal view returns (bool) {
         requireExists(self);
         return amount > self.uints[key];
     }
@@ -194,33 +134,10 @@ library CacheLib {
         Cache storage self,
         bytes32 key,
         int256 newValue
-    )
-        internal
-    {
+    ) internal {
         requireExists(self);
-        require(
-            self.ints[key] != newValue,
-            "NEW_INT_REQUIRED"
-        );
+        require(self.ints[key] != newValue, "NEW_INT_REQUIRED");
         self.ints[key] = newValue;
-    }
-
-    /**
-        @notice Retrieves the int value for a given key name.
-        @param self The current cache
-        @param key The key for which the int value is being requested.
-        @return The stored in256 value.
-     */
-    function getInt(
-        Cache storage self,
-        bytes32 key
-    )
-        internal
-        view
-        returns (int256)
-    {
-        requireExists(self);
-        return self.ints[key];
     }
 
     /**
@@ -233,32 +150,10 @@ library CacheLib {
         Cache storage self,
         bytes32 key,
         bytes32 newBites
-    )
-        internal
-    {
+    ) internal {
         requireExists(self);
-        require(
-            self.bites[key] != newBites,
-            "NEW_BYTES_REQUIRED"
-        );
+        require(self.bites[key] != newBites, "NEW_BYTES_REQUIRED");
         self.bites[key] = newBites;
-    }
-
-    /**
-        @notice Retrieves the bytes value for a given key name.
-        @param self The current cache
-        @param key The key for which the bytes value is being retrieved.
-        @return The stored bytes32 value.
-     */
-    function getBites(
-        Cache storage self,
-        bytes32 key
-    )
-        internal
-        returns (bytes32)
-    {
-        requireExists(self);
-        return self.bites[key];
     }
 
     /**
@@ -267,33 +162,37 @@ library CacheLib {
         @param key The key for which the bool value is being updated.
         @param newBool The new value being set.
      */
-    function updateBool(Cache storage self, bytes32 key, bool newBool)
-        internal
-    {
+    function updateBool(
+        Cache storage self,
+        bytes32 key,
+        bool newBool
+    ) internal {
         requireExists(self);
-        require(
-            self.bools[key] != newBool,
-            "NEW_BOOLEAN_REQUIRED"
-        );
+        require(self.bools[key] != newBool, "NEW_BOOLEAN_REQUIRED");
         self.bools[key] = newBool;
     }
 
     /**
-        @notice Retrieves the bool value for a given key name.
-        @param self The current cache
-        @param key The key for which the bool value is being retrieved.
-        @return The stored boolean value.
      */
-    function getBool(
+    function clearCache(
         Cache storage self,
-        bytes32 key
-    )
-        internal
-        view
-        returns (bool)
-    {
+        bytes32[5] memory keysToClear,
+        CacheType[5] memory keyTypes
+    ) internal {
         requireExists(self);
-        return self.bools[key];
+        require(keysToClear.length == keyTypes.length, "ARRAY_LENGTHS_MISMATCH");
+        for (uint256 i; i <= keysToClear.length; i++) {
+            if (keyTypes[i] == CacheType.Address) {
+                delete self.addresses[keysToClear[i]];
+            } else if (keyTypes[i] == CacheType.Uint) {
+                delete self.uints[keysToClear[i]];
+            } else if (keyTypes[i] == CacheType.Int) {
+                delete self.ints[keysToClear[i]];
+            } else if (keyTypes[i] == CacheType.Byte) {
+                delete self.bites[keysToClear[i]];
+            } else if (keyTypes[i] == CacheType.Bool) {
+                delete self.bools[keysToClear[i]];
+            }
+        }
     }
-
 }

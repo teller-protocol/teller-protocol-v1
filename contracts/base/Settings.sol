@@ -14,6 +14,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/lifecycle/Pausable.so
 import "../util/SettingsConsts.sol";
 import "./BaseUpgradeable.sol";
 import "./TInitializable.sol";
+import "./AssetSettings.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
@@ -46,7 +47,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     using AddressLib for address;
     using Address for address;
     using AssetSettingsLib for AssetSettingsLib.AssetSettings;
-    using CacheLib for CacheLib.Cache;
     using AddressArrayLib for address[];
     using PlatformSettingsLib for PlatformSettingsLib.PlatformSetting;
 
@@ -61,12 +61,12 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     /**
         @notice The asset setting name for the maximum loan amount settings.
      */
-    bytes32 public constant MAX_LOAN_AMOUNT_ASSET_SETTING = "MaxLoanAmount";
+    bytes32 public constant MAX_LOAN_AMOUNT_ASSET_SETTING = keccak256("MaxLoanAmount");
 
     /**
         @notice The asset setting name for cToken address settings.
      */
-    bytes32 public constant CTOKEN_ADDRESS_ASSET_SETTING = "CTokenAddress";
+    bytes32 public constant CTOKEN_ADDRESS_ASSET_SETTING = keccak256("CTokenAddress");
 
     /**
         @notice It defines the constant address to represent ETHER.
@@ -110,8 +110,11 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
             maxLoanAmount = 500 USDC (max)
         }
      */
-    // mapping(address => AssetSettingsLib.AssetSettings) public assetSettings;
-    mapping(address => CacheLib.Cache) internal assetSettings;
+
+    /**
+        @notice It is the global instance of the AssetSettings contract.
+     */
+    AssetSettings public assetSettings;
 
     /**
         @notice It contains all the current assets.
@@ -316,14 +319,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         address cTokenAddress,
         uint256 maxLoanAmount
     ) external onlyPauser() isInitialized() {
-        assetSettings[assetAddress].requireNotExists();
-        assetSettings[assetAddress].initialize();
-
-        // assetSettings[assetAddress].initialize(maxLoanAmount);
-
-        if (cTokenAddress.isNotEmpty()) {
-            _setCTokenAddress(assetAddress, cTokenAddress);
-        }
+        assetSettings.createAssetSetting(assetAddress, cTokenAddress, maxLoanAmount);
 
         assets.add(assetAddress);
 
@@ -340,9 +336,8 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         isInitialized()
     {
         assetAddress.requireNotEmpty("ASSET_ADDRESS_IS_REQUIRED");
-        assetSettings[assetAddress].requireExists();
 
-        delete assetSettings[assetAddress];
+        assetSettings.removeAsset(assetAddress);
         assets.remove(assetAddress);
 
         emit AssetSettingsRemoved(msg.sender, assetAddress);
@@ -358,9 +353,9 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         onlyPauser()
         isInitialized()
     {
-        uint256 oldMaxLoanAmount = assetSettings[assetAddress].uints[MAX_LOAN_AMOUNT_ASSET_SETTING];
+        uint256 oldMaxLoanAmount = assetSettings.getMaxLoanAmount(assetAddress);
 
-        assetSettings[assetAddress].updateUint(MAX_LOAN_AMOUNT_ASSET_SETTING, newMaxLoanAmount);
+        assetSettings.updateMaxLoanAmount(assetAddress, newMaxLoanAmount);
 
         emit AssetSettingsUintUpdated(
             MAX_LOAN_AMOUNT_ASSET_SETTING,
@@ -381,7 +376,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         onlyPauser()
         isInitialized()
     {
-        address oldCTokenAddress = assetSettings[assetAddress].addresses[CTOKEN_ADDRESS_ASSET_SETTING];
+        address oldCTokenAddress = assetSettings.getCTokenAddress(assetAddress);
 
         _setCTokenAddress(assetAddress, newCTokenAddress);
 
@@ -391,30 +386,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
             assetAddress,
             oldCTokenAddress,
             newCTokenAddress
-        );
-    }
-
-    /**
-        @notice It updates the token address of a given protocol for a specific asset address
-        @param assetAddress asset address to configure.
-        @param tokenName the protocol token name to update.
-        @param newTokenAddress the new token address to configure.
-     */
-    function updateTokenAddress(
-        address assetAddress,
-        bytes32 tokenName,
-        address newTokenAddress
-    ) external onlyPauser() isInitialized() {
-        address oldTokenAddress = assetSettings[assetAddress].addresses[tokenName];
-
-        _setTokenAddress(assetAddress, tokenName, newTokenAddress);
-
-        emit AssetSettingsAddressUpdated(
-            tokenName,
-            msg.sender,
-            assetAddress,
-            oldTokenAddress,
-            newTokenAddress
         );
     }
 
@@ -429,7 +400,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         view
         returns (bool)
     {
-        return assetSettings[assetAddress].exceedsUint(MAX_LOAN_AMOUNT_ASSET_SETTING , amount);
+        return assetSettings.exceedsMaxLoanAmount(assetAddress, amount);
     }
 
     /**
@@ -446,7 +417,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @return the cToken address for a given asset address.
      */
     function getCTokenAddress(address assetAddress) external view returns (address) {
-        return assetSettings[assetAddress].addresses[CTOKEN_ADDRESS_ASSET_SETTING];
+        return assetSettings.getCTokenAddress(assetAddress);
     }
 
     /**
@@ -564,6 +535,8 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
 
         consts = new SettingsConsts();
 
+        assetSettings = new AssetSettings();
+
         _setSettings(address(this));
     }
 
@@ -603,38 +576,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
             }
         }
 
-        assetSettings[assetAddress].updateAddress(CTOKEN_ADDRESS_ASSET_SETTING, cTokenAddress);
-        // assetSettings[assetAddress].updateCTokenAddress(cTokenAddress);
+        assetSettings.updateCTokenAddress(assetAddress, cTokenAddress);
     }
-
-    /**
-        @notice It sets the cToken address for a specific asset address.
-        @param assetAddress asset address to configure.
-        @param tokenName the protocol token name to update
-        @param tokenAddress the new ctoken address to configure.
-     */
-    function _setTokenAddress(
-        address assetAddress,
-        bytes32 tokenName,
-        address tokenAddress
-    ) internal {
-        if (assetAddress == ETH_ADDRESS) {
-            // NOTE: This is the address for the cETH contract. It is hardcoded because the contract does not have a
-            //       underlying() function on it to check that this is the correct contract.
-            tokenAddress.requireEqualTo(CETH_ADDRESS, "CETH_ADDRESS_NOT_MATCH");
-        } else {
-            require(assetAddress.isContract(), "ASSET_ADDRESS_MUST_BE_CONTRACT");
-            if (tokenAddress.isNotEmpty()) {
-                require(tokenAddress.isContract(), "CTOKEN_MUST_BE_CONTRACT_OR_EMPTY");
-                require(
-                    CErc20Interface(tokenAddress).underlying() == assetAddress,
-                    "UNDERLYING_ADDRESS_NOT_MATCH"
-                );
-            }
-        }
-
-        assetSettings[assetAddress].updateAddress(tokenName, tokenAddress);
-    }
-
-    /** Private functions */
 }

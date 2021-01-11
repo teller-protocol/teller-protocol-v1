@@ -1,6 +1,7 @@
 // JS Libraries
 const withData = require('leche').withData;
 const { t, NULL_ADDRESS, toDecimals, encode } = require('../utils/consts');
+const { MaxLoanAmountSetting } = require('../utils/asset-settings-names');
 const { settings } = require('../utils/events');
 const { createAssetSettings } = require('../utils/asset-settings-helper');
 const { createTestSettingsInstance } = require('../utils/settings-helper');
@@ -110,11 +111,11 @@ contract('SettingsCreateAssetSettingsTest', function (accounts) {
                 { maxLoanAmount: toDecimals(1000, 18) }
             ], true, 3, {useCurrentSetting: false, index: 99}, 99, 2000, undefined, false
         ],
-        _6_invalid_max_loan_amount_zero: [[], false, 0, {useCurrentSetting: false, index: 99}, 99, 0, 'INIT_MAX_AMOUNT_REQUIRED', true],
+        _6_invalid_max_loan_amount_zero: [[], false, 0, {useCurrentSetting: false, index: 99}, 99, 0, 'NEW_UINT_REQUIRED', true],
         _7_invalid_asset_already_exist: [[
             { maxLoanAmount: toDecimals(1900, 18) },
             { maxLoanAmount: toDecimals(2000, 18) }
-        ], false, 0, {useCurrentSetting: true, index: 1}, 99, 2100, 'ASSET_SETTINGS_ALREADY_EXISTS', true],
+        ], false, 0, {useCurrentSetting: true, index: 1}, 99, 2100, 'CACHE_ALREADY_EXISTS', true],
     }, function(
         previousAssetsInfo,
         addAsPauserRole,
@@ -162,11 +163,13 @@ contract('SettingsCreateAssetSettingsTest', function (accounts) {
                         cTokenAddress,
                         maxLoanAmount,
                     );
-               
-                const assetSettingsResult = await instance.getAssetSettings(assetAddress);
-                assert.equal(assetSettingsResult.cTokenAddress.toString(), cTokenAddress.toString());
-                assert.equal(assetSettingsResult.maxLoanAmount.toString(), maxLoanAmount.toString());
-                
+
+                const cTokenAddressResult = await instance.getCTokenAddress(assetAddress);
+                const maxLoanResult = await instance.getAssetSettingsUint(assetAddress, MaxLoanAmountSetting);
+                console.log({cTokenAddressResult, maxLoanResult});
+                assert.equal(cTokenAddressResult.toString(), cTokenAddress.toString(), 'Asset address incorrect');
+                assert.equal(maxLoanResult.toString(), maxLoanAmount.toString(), 'Max loan result incorrect');
+
                 const afterAssets = await instance.getAssets();
                 assert.equal(afterAssets.length, beforeAssets.length + 1);
                 assert.equal(afterAssets[afterAssets.length - 1], assetAddress);
