@@ -32,7 +32,10 @@ import "./Base.sol";
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
-    @notice The LendingPool contract holds all of the tokens that lenders transfer into the protocol. It is the contract that lenders interact with to deposit and withdraw their tokens including interest. The LendingPool interacts with the Lenders contract to ensure token balances and interest owed is kept up to date.
+    @notice The LendingPool contract holds all of the tokens that lenders transfer into the protocol.
+    It is the contract that lenders interact with to deposit and withdraw their tokens including interest.
+    The LendingPool interacts with the Lenders contract to ensure token balances and interest owed is
+    kept up to date.
 
     @author develop@teller.finance
  */
@@ -111,7 +114,8 @@ contract LendingPool is Base, LendingPoolInterface {
 
     /**
         @notice It allows any tToken holder to burn their tToken tokens and withdraw their tokens.
-        @dev If the cToken is available (not 0x0), it withdraws the lending tokens from Compound before transferring the tokens to the holder.
+        @dev If the cToken is available (not 0x0), it withdraws the lending tokens from Compound before
+        transferring the tokens to the holder.
         @param amount of tokens to withdraw.
      */
     function withdraw(uint256 amount)
@@ -513,14 +517,18 @@ contract LendingPool is Base, LendingPoolInterface {
             now + 1200
         );
 
-        uint256 amountOut = amounts[amount.length - 1];
+        uint256 amountOut = amounts[amounts.length - 1];
 
-        _depositToCompoundIfSupported(amountOut);
-
-        _markets().increaseSupply(
-            address(lendingToken),
-            LoansInterface(loans).collateralToken(),
-            amountOut
-        );
+        address cTokenAddress = cToken();
+        if (cTokenAddress != address(0)) {
+            // Deposit tokens straight into Compound
+            // Increase the Compound market supply
+            compoundMarketState.increaseSupply(
+                _depositToCompound(cTokenAddress, amountOut)
+            );
+        } else {
+            // Increase the market supply
+            marketState.increaseSupply(amountOut);
+        }
     }
 }
