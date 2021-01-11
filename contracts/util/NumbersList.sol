@@ -54,20 +54,6 @@ library NumbersList {
     }
 
     /**
-     * @dev Checks if the sum has been changed `totalRequiredValues` times
-     * @param self The Value this function was called on
-     * @param totalRequiredValues The maximum amount of numbers to be added to the sum
-     * @return boolean
-     */
-    function isFinalized(Values storage self, uint256 totalRequiredValues)
-        internal
-        view
-        returns (bool)
-    {
-        return valuesCount(self) >= totalRequiredValues;
-    }
-
-    /**
      * @param self The Value this function was called on
      * @return the average number that was used to calculate the sum
      */
