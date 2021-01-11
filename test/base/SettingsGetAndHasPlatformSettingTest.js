@@ -27,7 +27,7 @@ contract('SettingsGetAndHasPlatformSettingTest', function (accounts) {
         _1_maximumLoanDuration: [settingsNames.MaximumLoanDuration, newSetting(1000, 0, 1001)],
         _2_safetyInterval: [settingsNames.SafetyInterval, newSetting(1000, 200, 2000)],
         _3_maximumTolerance: [settingsNames.MaximumTolerance, newSetting(1200, 100, 2000)],
-        _4_requiredSubmissions: [settingsNames.RequiredSubmissions, newSetting(400, 0, 4500)],
+        _4_requiredSubmissionsPercentage: [settingsNames.RequiredSubmissionsPercentage, newSetting(8000, 0, 10000)],
         _5_responseExpiryLength: [settingsNames.ResponseExpiryLength, newSetting(735, 0, 9000)],
         _6_termsExpiryTime: [settingsNames.TermsExpiryTime, newSetting(2225, 0, 20000)],
         _7_liquidateEthPrice: [settingsNames.LiquidateEthPrice, newSetting(9325, 9324, 10000)],
@@ -57,7 +57,7 @@ contract('SettingsGetAndHasPlatformSettingTest', function (accounts) {
 
     withData({
         _1_has: [settingsNames.MaximumLoanDuration, newSetting(1000, 0, 1001), settingsNames.MaximumLoanDuration, true],
-        _2_hasnt: [settingsNames.MaximumTolerance, newSetting(1000, 0, 1001), settingsNames.RequiredSubmissions, false],
+        _2_hasnt: [settingsNames.MaximumTolerance, newSetting(1000, 0, 1001), settingsNames.RequiredSubmissionsPercentage, false],
     }, function(settingKey, currentValue, settingNameToTest, expectedResult) {
         it(t('user', `hasPlatformSetting`, `Should be able to get the current platform setting (${settingKey}) value.`, false), async function() {
             // Setup

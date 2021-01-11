@@ -64,7 +64,7 @@ contract("EscrowFactoryCreateEscrowTest", function(accounts) {
 
     const escrowLogic = await Escrow.new();
     await versionsRegistry.initialize(settingsInstance.address);
-    await versionsRegistry.createLogicVersion(toBytes32(web3, "Escrow"), escrowLogic.address);
+    await versionsRegistry.createLogicVersion(web3.utils.soliditySha3("Escrow"), escrowLogic.address);
   });
 
   withData({

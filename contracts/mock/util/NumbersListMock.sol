@@ -16,10 +16,6 @@ contract NumbersListMock {
         return values.count;
     }
 
-    function isFinalized(uint256 totalRequiredValues) external view returns (bool) {
-        return values.isFinalized(totalRequiredValues);
-    }
-
     function getAverage() external view returns (uint256) {
         return values.getAverage();
     }

@@ -74,7 +74,7 @@ interface SettingsInterface {
     );
 
     /**
-        @notice This event is emitted when an new asset settings is created.
+        @notice This event is emitted when a new asset settings is created.
         @param sender the transaction sender address.
         @param assetAddress the asset address used to create the settings.
         @param cTokenAddress cToken address to configure for the asset.
@@ -237,6 +237,16 @@ interface SettingsInterface {
         @param newCTokenAddress the new cToken address to configure.
      */
     function updateCTokenAddress(address assetAddress, address newCTokenAddress) external;
+
+    function assetSettings(address)
+        external
+        view
+        returns (AssetSettingsLib.AssetSettings memory);
+
+    function platformSettings(bytes32)
+        external
+        view
+        returns (PlatformSettingsLib.PlatformSetting memory);
 
     /**
         @notice Gets the current asset addresses list.

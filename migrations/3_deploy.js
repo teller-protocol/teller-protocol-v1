@@ -198,7 +198,7 @@ module.exports = async function(deployer, network, accounts) {
     async function deployDapp(name, unsecured) {
       const info = deployedLogicContractsMap.get(name)
       assert(info, `Deployed logic info is undefined for logic name ${name}.`)
-      const proxy = await deployerApp.deployWith(`${info.name}_Proxy`, DynamicProxy, 'teller', settingsInstance.address, toBytes32(web3, name), txConfig)
+      const proxy = await deployerApp.deployWith(`${info.name}_Proxy`, DynamicProxy, 'teller', settingsInstance.address, info.nameBytes32, txConfig)
 
       // Register dapp
       await escrowFactoryInstance.addDapp(proxy.address, unsecured)

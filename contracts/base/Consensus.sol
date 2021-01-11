@@ -2,6 +2,7 @@ pragma solidity 0.5.17;
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "../util/ECDSALib.sol";
 import "../util/TellerCommon.sol";
 import "../util/NumbersList.sol";
 
@@ -29,6 +30,7 @@ import "../base/Base.sol";
 contract Consensus is Base, OwnerSignersRole {
     using SafeMath for uint256;
     using NumbersList for NumbersList.Values;
+    using NumbersLib for uint256;
 
     // Has signer address already submitted their answer for (user, identifier)?
     mapping(address => mapping(address => mapping(uint256 => bool))) public hasSubmitted;
@@ -60,6 +62,25 @@ contract Consensus is Base, OwnerSignersRole {
     }
 
     /**
+        @notice Checks if the number of responses is greater or equal to a percentage of
+        the number of signers.
+     */
+    modifier onlyEnoughSubmissions(uint256 responseCount) {
+        uint256 percentageRequired =_getSettings()
+            .platformSettings(
+                _getSettings().consts().REQUIRED_SUBMISSIONS_PERCENTAGE_SETTING()
+            )
+            .value;
+
+
+        require(
+            responseCount.ratioOf(_signerCount) >= percentageRequired,
+            "INSUFFICIENT_NUMBER_OF_RESPONSES"
+        );
+        _;
+    }
+
+    /**
         @notice It initializes this consensus contract.
         @dev The caller address must be the loans contract for LoanTermsConsensus, and the lenders contract for InterestConsensus.
         @param owner the owner address.
@@ -82,7 +103,7 @@ contract Consensus is Base, OwnerSignersRole {
     /**
         @notice It validates whether a signature is valid or not, verifying the signer and nonce.
         @param signature signature to validate.
-        @param dataHash to use to recover the signer.
+        @param dataHash used to recover the signer.
         @param expectedSigner the expected signer address.
         @return true if the expected signer is equal to the signer. Otherwise it returns false.
      */
@@ -98,7 +119,7 @@ contract Consensus is Base, OwnerSignersRole {
             "SIGNER_NONCE_TAKEN"
         );
 
-        address signer = ecrecover(
+        address signer = ECDSA.recover(
             keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", dataHash)),
             signature.v,
             signature.r,
