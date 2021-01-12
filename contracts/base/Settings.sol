@@ -111,11 +111,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     mapping(address => AssetSettingsLib.AssetSettings) public assetSettings;
 
     /**
-        @notice It contains all the current assets.
-     */
-    address[] private assets;
-
-    /**
         @notice This mapping represents the platform settings where:
 
         - The key is the platform setting name.
@@ -155,7 +150,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
 
     /**
         @notice This mapping represents the list of wallet addresses that are allowed to interact with the protocol
-        
         - The key is belongs to the user's wallet address
         - The value is a boolean flag indicating if the address has permissions
      */
@@ -164,7 +158,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     /**
         @notice Flag restricting the use of the Protocol to authorizedAddress
      */
-    bool platformRestricted;
+    bool private platformRestricted;
 
     /** Modifiers */
 
@@ -320,7 +314,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
             _setCTokenAddress(assetAddress, cTokenAddress);
         }
 
-        assets.add(assetAddress);
+        assetController.addAsset(assetAddress);
 
         emit AssetSettingsCreated(msg.sender, assetAddress, cTokenAddress, maxLoanAmount);
     }
@@ -338,7 +332,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         assetSettings[assetAddress].requireExists();
 
         delete assetSettings[assetAddress];
-        assets.remove(assetAddress);
+        assetController.removeAsset(assetAddress);
 
         emit AssetSettingsRemoved(msg.sender, assetAddress);
     }
@@ -408,7 +402,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @return the asset addresses list.
      */
     function getAssets() external view returns (address[] memory) {
-        return assets;
+        return assetController.getAssets();
     }
 
     /**
