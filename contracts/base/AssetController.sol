@@ -12,6 +12,8 @@ contract AssetController is IAssetController {
 
     ISwapper public uniswapController;
 
+    ICompoundComptroller public compoundComptroller;
+
     AddressArrayLib.AddressArray private assets;
 
     mapping(string => address) public assetBySymbol;
@@ -30,12 +32,20 @@ contract AssetController is IAssetController {
         delete assetBySymbol[ERC20Detailed(asset).symbol()];
     }
 
-    function initialize(address uniswapControllerAddress) external {
+    function initialize(
+        address uniswapControllerAddress,
+        address compoundComptrollerAddress
+    ) external {
         require(
             uniswapControllerAddress.isContract(),
             "UNISWAP_CONTROLLER_MUST_BE_CONTRACT"
         );
+        require(
+            compoundComptrollerAddress.isContract(),
+            "COMPOUND_COMPTROLLER_MUST_BE_CONTRACT"
+        );
 
-        uniswapController = IUniswapController(uniswapControllerAddress);
+        uniswapController = ISwapper(uniswapControllerAddress);
+        compoundComptroller = ICompoundComptroller(compoundComptrollerAddress);
     }
 }

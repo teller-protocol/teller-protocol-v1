@@ -454,7 +454,17 @@ contract LendingPool is Base, LendingPoolInterface {
         @notice It swaps the lending pool's accumualted COMP for the lendingToken
         using Uniswap and deposits it into Compound.
      */
-    function swapAccumulatedComp() private {
+    function swapAccumulatedComp() external {
+        // Function only runs if a cToken exists for the LendingToken.
+        address cTokenAddress = cToken();
+        require(cTokenAddress != address(0), "COMPOUND_NOT_SUPPORTED");
+
+        // Claim COMP for earned for LendingToken.
+        _getSettings().assetController().compoundComptroller().claimComp(
+            address(this),
+            [cTokenAddress]
+        );
+
         // Amount which goes into the swap is COMP balance of the lending pool.
         uint256 amountIn = compToken.balanceOf(address(this));
         // Path of the swap is always COMP -> WETH -> LendingToken.
