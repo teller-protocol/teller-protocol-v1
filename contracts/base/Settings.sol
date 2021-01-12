@@ -21,6 +21,7 @@ import "../interfaces/InterestValidatorInterface.sol";
 import "../providers/chainlink/IChainlinkAggregator.sol";
 import "../providers/compound/CErc20Interface.sol";
 import "../settings/IATMSettings.sol";
+import "../interfaces/IAssetController.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -146,6 +147,11 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @notice The current ATM settings.
      */
     IATMSettings public atmSettings;
+
+    /**
+        @notice The asset controller.
+     */
+    IAssetController public assetController;
 
     /**
         @notice This mapping represents the list of wallet addresses that are allowed to interact with the protocol
@@ -513,7 +519,8 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         address interestValidatorAddress,
         address atmSettingsAddress,
         address wethTokenAddress,
-        address cethTokenAddress
+        address cethTokenAddress,
+        address assetControllerAddress
     ) external isNotInitialized() {
         require(escrowFactoryAddress.isContract(), "ESCROW_FACTORY_MUST_BE_CONTRACT");
         require(versionsRegistryAddress.isContract(), "VERS_REGISTRY_MUST_BE_CONTRACT");
@@ -524,6 +531,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         );
         require(atmSettingsAddress.isContract(), "ATM_SETTINGS_MUST_BE_CONTRACT");
         require(cethTokenAddress.isContract(), "CETH_ADDRESS_MUST_BE_CONTRACT");
+        require(assetControllerAddress.isContract(), "ASSET_CONTROLLER_MUST_BE_CONTRACT");
 
         Pausable.initialize(msg.sender);
         TInitializable._initialize();
@@ -535,6 +543,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         atmSettings = IATMSettings(atmSettingsAddress);
         WETH_ADDRESS = wethTokenAddress;
         CETH_ADDRESS = cethTokenAddress;
+        assetController = IAssetController(assetControllerAddress);
 
         consts = new SettingsConsts();
 

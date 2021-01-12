@@ -58,12 +58,8 @@ contract LendingPool is Base, LendingPoolInterface {
     MarketStateLib.MarketState internal marketState;
 
     MarketStateLib.MarketState internal compoundMarketState;
+
     IERC20 private compToken;
-
-    IUniswapV2Router02 private uniswapRouter;
-
-    IUniswapV2Pair private compWethPair;
-    IUniswapV2Pair private wethLTPair;
 
     /** Modifiers */
 
@@ -321,9 +317,7 @@ contract LendingPool is Base, LendingPoolInterface {
         address lendersAddress,
         address loansAddress,
         address settingsAddress,
-        address compTokenAddress,
-        address uniswapRouterAddress,
-        address uniswapFactoryAddress
+        address compTokenAddress
     ) external isNotInitialized() {
         tTokenAddress.requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
         lendingTokenAddress.requireNotEmpty("TOKEN_ADDRESS_IS_REQUIRED");
@@ -337,18 +331,6 @@ contract LendingPool is Base, LendingPoolInterface {
         lenders = LendersInterface(lendersAddress);
         loans = loansAddress;
         compToken = IERC20(compTokenAddress);
-        uniswapRouter = IUniswapV2Router01(uniswapRouterAddress);
-
-        IUniswapV2Factory uniswapFactory = IUniswapV2Factory(uniswapFactoryAddress);
-
-        compWethPair = uniswapFactory.getPair(
-            compTokenAddress,
-            _getSettings().WETH_ADDRESS()
-        );
-        wethLTPair = uniswapFactory.getPair(
-            _getSettings().WETH_ADDRESS(),
-            lendingTokenAddress
-        );
     }
 
     /** Internal functions */
@@ -472,53 +454,18 @@ contract LendingPool is Base, LendingPoolInterface {
         using Uniswap and deposits it into Compound.
      */
     function swapAccumulatedComp() private {
-        // amount which goes into the swap is COMP balance of the lending pool.
-        uint256 compBalance = compToken.balanceOf(address(this));
+        // Amount which goes into the swap is COMP balance of the lending pool.
+        uint256 amountIn = compToken.balanceOf(address(this));
+        // Path of the swap is always COMP -> WETH -> LendingToken.
+        address[] path = [compToken, _getSettings().WETH_ADDRESS(), lendingToken];
 
-        // get uniswap reserves for COMP-WETH
-        (uint256 reservesCompWeth0, uint256 reservesCompWeth1) = uniswapPath[0]
-            .getReserves();
-        (uint256 reservesCompWethComp, uint256 reservesCompWethWeth) = address(
-            compToken
-        ) == uniswapPath[0].token0()
-            ? (reservesCompWeth0, reservesCompWeth1)
-            : (reservesCompWeth1, reservesCompWeth0);
-
-        // get uniswap reserves for WETH-LT
-        (uint256 reservesWethLT0, uint256 reservesWethLT1) = uniswapPath[1].getReserves();
-        (uint256 reservesWethLTWeth, uint256 reservesWethLTLT) = _getSettings()
-            .WETH_ADDRESS() == uniswapPath[1].token0()
-            ? (reservesWethLT0, reservesWethLT1)
-            : (reservesWethLT1, reservesWethLT0);
-
-        // uniswap's quoted amount of WETH coming out of the COMP-WETH swap
-        uint256 wethOutQuote = uniswapRouter.quote(
-            compBalance,
-            reservesCompWethComp,
-            reservesCompWethWeth
-        );
-        // uniswap's quoted amount of LendingToken coming out of WETH-LT swap
-        uint256 lendingTokenOutQuote = uniswapRouter.quote(
-            wethOutQuote,
-            reservesWethLTWeth,
-            reservesWethLTLT
+        // Swap comp for lending token.
+        uint256 amountOut = _getSettings().assetController().uniswapController().swap(
+            amountIn,
+            path
         );
 
-        // minimum amount of LendingToken at the end of the swap for it to go through (slippage)
-        uint256 amountOutMin = lendingTokenOutQuote.percent(9500);
-
-        compToken.safeApprove(address(uniswapRouter), compBalance);
-
-        uint256[] amounts = uniswapRouter.swapExactTokensForTokens(
-            compBalance,
-            amountOutMin,
-            [address(compToken), _getSettings().WETH_ADDRESS(), address(lendingToken)],
-            address(this),
-            now + 1200
-        );
-
-        uint256 amountOut = amounts[amounts.length - 1];
-
+        // Deposit LendingToken back into compound if supported.
         address cTokenAddress = cToken();
         if (cTokenAddress != address(0)) {
             // Deposit tokens straight into Compound

@@ -9,6 +9,7 @@ import "./LogicVersionsRegistryInterface.sol";
 import "../settings/IATMSettings.sol";
 import "../util/SettingsConsts.sol";
 import "../providers/chainlink/IChainlinkAggregator.sol";
+import "./IAssetController.sol";
 
 /**
     @notice This interface defines all function to manage the platform configuration.
@@ -332,6 +333,8 @@ interface SettingsInterface {
         @return the current AtmSetting contract.
      */
     function atmSettings() external view returns (IATMSettings);
+
+    function assetController() external view returns (IAssetController);
 
     /**
         @notice Gets the cToken address for a given asset address.

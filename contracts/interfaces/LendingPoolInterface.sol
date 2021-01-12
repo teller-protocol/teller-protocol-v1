@@ -64,6 +64,12 @@ interface LendingPoolInterface {
     function withdrawInterest(uint256 amount) external;
 
     /**
+        @notice It swaps COMP token accumulated by the lending pool for LendingToken
+        and deposits LendingToken back into Compound.
+     */
+    function swapAccumulatedComp() external;
+
+    /**
         @notice It gets the lending token address.
         @return the ERC20 lending token address.
     */
