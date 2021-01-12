@@ -18,22 +18,14 @@ contract UniswapController is Base, ISwapper {
     IChainlinkAggregator private chainlink;
 
     uint256 private minAmountOutPercent;
-    uint256 private maxSecondsToSwap;
 
-    function initialize(uint256 _minAmountOutPercent, uint256 _maxSecondsToSwap)
-        external
-    {
+    function initialize(uint256 _minAmountOutPercent) external {
         require(
             _minAmountOutPercent >= 8000 && _minAmountOutPercent < 10000,
             "MIN_AMOUNT_INVALID"
         );
-        require(
-            _maxSecondsToSwap > 0 && _maxSecondsToSwap <= 3600,
-            "MAX_SECONDS_INVALID"
-        );
 
         minAmountOutPercent = _minAmountOutPercent;
-        maxSecondsToSwap = _maxSecondsToSwap;
         chainlink = _getSettings().chainlinkAggregator();
     }
 
@@ -53,7 +45,7 @@ contract UniswapController is Base, ISwapper {
             amountOutMin,
             path,
             address(this),
-            now + maxSecondsToSwap
+            now
         );
 
         return amounts[amounts.length - 1];
