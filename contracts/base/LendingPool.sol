@@ -450,7 +450,7 @@ contract LendingPool is Base, LendingPoolInterface {
         @notice It swaps the lending pool's accumualted COMP for the lendingToken
         using Uniswap and deposits it into Compound.
      */
-    function swapAccumulatedComp() external {
+    function swapAccumulatedComp() internal {
         // Function only runs if a cToken exists for the LendingToken.
         address cTokenAddress = cToken();
         require(cTokenAddress != address(0), "COMPOUND_NOT_SUPPORTED");
