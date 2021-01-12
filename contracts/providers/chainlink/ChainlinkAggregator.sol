@@ -50,6 +50,14 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
 
     /* External Functions */
 
+    function getTokensSupportedBy(address tokenAddress)
+        external
+        view
+        returns (address[] memory)
+    {
+        return supportedTokens[tokenAddress].array;
+    }
+
     /**
         @notice It grabs the Chainlink Aggregator contract address for the token pair if it is supported.
         @param src Source token address.
@@ -277,13 +285,17 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
             int256 srcFactor = int256(TEN**_decimalsFor(src));
             return price;
         } else {
-            address eth = _getSettings().ETH_ADDRESS();
-            dst.requireNotEqualTo(eth, "CANNOT_CALCULATE_VALUE");
+            for (uint256 i; i < supportedTokens[src].array.length; i++) {
+                address routeToken = supportedTokens[src].array[i];
+                (bool found, ) = supportedTokens[routeToken].getIndex(dst);
+                if (found) {
+                    int256 price1 = _priceFor(src, routeToken);
+                    int256 price2 = _priceFor(dst, routeToken);
 
-            int256 price1 = _priceFor(src, eth);
-            int256 price2 = _priceFor(dst, eth);
-
-            return (price1 * dstFactor) / price2;
+                    return (price1 * dstFactor) / price2;
+                }
+            }
+            revert("CANNOT_CALCULATE_VALUE");
         }
     }
 }
