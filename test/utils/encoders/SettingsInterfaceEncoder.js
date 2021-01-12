@@ -27,10 +27,6 @@ SettingsInterfaceEncoder.prototype.encodeIsPoolPaused = function() {
     return encode(this.web3, 'isPoolPaused(address)');
 }
 
-SettingsInterfaceEncoder.prototype.encodeMarketsState = function() {
-    return encode(this.web3, 'marketsState()');
-}
-
 SettingsInterfaceEncoder.prototype.encodeEscrowFactory = function() {
     return encode(this.web3, 'escrowFactory()');
 }
@@ -41,10 +37,6 @@ SettingsInterfaceEncoder.prototype.encodeETH_ADDRESS = function() {
 
 SettingsInterfaceEncoder.prototype.encodeATMSettings = function() {
     return encode(this.web3, 'atmSettings()');
-}
-
-SettingsInterfaceEncoder.prototype.encodeMarketsState = function() {
-    return encode(this.web3, 'marketsState()');
 }
 
 SettingsInterfaceEncoder.prototype.encodeVersionsRegistry = function() {

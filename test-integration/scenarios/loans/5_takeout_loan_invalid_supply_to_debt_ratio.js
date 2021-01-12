@@ -23,9 +23,10 @@ module.exports = async (testContext) => {
     token: collateralToken,
   });
 
-  const depositFundsAmount = toDecimals(1, tokenInfo.decimals);
+  const depositFundsAmount = toDecimals(0, tokenInfo.decimals);
+  const marketState = await allContracts.lendingPool.getMarketState()
   const maxAmountRequestLoanTerms = toDecimals(1000, tokenInfo.decimals);
-  const amountTakeOut = toDecimals(1000, tokenInfo.decimals);
+  const amountTakeOut = toDecimals(marketState.totalSupplied.toString(), tokenInfo.decimals);
   let initialOraclePrice;
   let collateralAmountDepositCollateral;
   let collateralAmountWithdrawCollateral;

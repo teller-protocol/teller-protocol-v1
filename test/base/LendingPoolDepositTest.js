@@ -34,7 +34,6 @@ contract('LendingPoolDepositTest', function (accounts) {
     let interestConsensusInstance;
     let cTokenInstance;
     let settingsInstance;
-    let marketsInstance;
 
     beforeEach('Setup for each test', async () => {
         tTokenInstance = await Mock.new();
@@ -42,12 +41,7 @@ contract('LendingPoolDepositTest', function (accounts) {
         loansInstance = await Mock.new();
         interestConsensusInstance = await Mock.new();
         instance = await LendingPool.new();
-        marketsInstance = await Mock.new();
         settingsInstance = await Mock.new();
-        await settingsInstance.givenMethodReturnAddress(
-            settingsInterfaceEncoder.encodeMarketsState(),
-            marketsInstance.address
-        );
 
         cTokenInstance = await Mock.new();
         await cTokenInstance.givenMethodReturnAddress(

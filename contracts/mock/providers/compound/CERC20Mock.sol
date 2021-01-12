@@ -31,7 +31,7 @@ contract CERC20Mock is ERC20Mock {
 
     function mint(uint256 mintAmount) external returns (uint256) {
         if (SIMULATE_COMPOUND_MINT_ERROR == mintAmount) {
-            return NO_ERROR;
+            return SIMULATE_COMPOUND_MINT_ERROR;
         }
         uint256 cAmount = _getCTokensAmount(mintAmount);
         underlying.transferFrom(msg.sender, address(this), mintAmount);

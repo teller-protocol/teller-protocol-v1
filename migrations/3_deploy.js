@@ -23,7 +23,6 @@ const TUSDC = artifacts.require("./base/TUSDC.sol");
 const TTokenRegistry = artifacts.require("./base/TTokenRegistry.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
-const MarketsState = artifacts.require("./base/MarketsState.sol");
 const EscrowFactory = artifacts.require('./base/EscrowFactory.sol');
 const MarketFactory = artifacts.require('./base/MarketFactory.sol');
 const LogicVersionsRegistry = artifacts.require('./base/LogicVersionsRegistry.sol');
@@ -94,7 +93,6 @@ module.exports = async function(deployer, network, accounts) {
       { Contract: Compound, name: logicNames.Compound },
       // Initializables
       { Contract: EscrowFactory, name: logicNames.EscrowFactory },
-      { Contract: MarketsState, name: logicNames.MarketsState },
       { Contract: ATMSettings, name: logicNames.ATMSettings },
       { Contract: ATMFactory, name: logicNames.ATMFactory },
       { Contract: ATMLiquidityMining, name: logicNames.ATMLiquidityMining },
@@ -129,7 +127,6 @@ module.exports = async function(deployer, network, accounts) {
 
     const escrowFactoryInstance = await deployInitializableDynamicProxy(logicNames.EscrowFactory)
     const chainlinkAggregatorInstance = await deployInitializableDynamicProxy(logicNames.ChainlinkAggregator)
-    const marketsStateInstance = await deployInitializableDynamicProxy(logicNames.MarketsState)
     const atmSettingsInstance = await deployInitializableDynamicProxy(logicNames.ATMSettings)
     const atmFactoryInstance = await deployInitializableDynamicProxy(logicNames.ATMFactory)
     const marketFactoryInstance = await deployInitializableDynamicProxy(logicNames.MarketFactory)
@@ -153,7 +150,6 @@ module.exports = async function(deployer, network, accounts) {
       escrowFactoryInstance.address,
       logicVersionsRegistryInstance.address,
       chainlinkAggregatorInstance.address,
-      marketsStateInstance.address,
       NULL_ADDRESS, // Interest Validator is empty (0x0) in the first version.
       atmSettingsInstance.address,
       tokens.WETH,
@@ -189,7 +185,6 @@ module.exports = async function(deployer, network, accounts) {
 
     await initializeProxy(logicNames.EscrowFactory, escrowFactoryInstance)
     await initializeProxy(logicNames.ChainlinkAggregator, chainlinkAggregatorInstance)
-    await initializeProxy(logicNames.MarketsState, marketsStateInstance)
     await initializeProxy(logicNames.ATMSettings, atmSettingsInstance)
     await initializeProxy(logicNames.ATMFactory, atmFactoryInstance)
     await initializeProxy(logicNames.MarketFactory, marketFactoryInstance)
@@ -236,7 +231,7 @@ module.exports = async function(deployer, network, accounts) {
 
     await createMarkets(
       marketDefinitions,
-      { marketFactoryInstance, marketsStateInstance },
+      { marketFactoryInstance },
       { txConfig, deployerApp, ...networkConfig },
       { LoanTermsConsensus, InterestConsensus, ERC20Mintable }
     );

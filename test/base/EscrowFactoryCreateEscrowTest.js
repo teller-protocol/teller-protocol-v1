@@ -43,7 +43,6 @@ contract("EscrowFactoryCreateEscrowTest", function(accounts) {
         onInitialize: async (
           instance,
           {
-            marketsState,
             interestValidator,
             chainlinkAggregator,
             atmSettings
@@ -52,7 +51,6 @@ contract("EscrowFactoryCreateEscrowTest", function(accounts) {
             escrowFactoryInstance.address,
             versionsRegistry.address,
             chainlinkAggregator.address,
-            marketsState.address,
             interestValidator.address,
             atmSettings.address,
             (await Mock.new()).address,

@@ -9,7 +9,7 @@
       "maxVestingPerWallet": 50
     },
     "tlrInitialReward": 0,
-    "supplyToDebt": 5000,
+    "maxDebtRatio": 5000,
     "markets": [
       {
         "borrowedToken": "DAI",

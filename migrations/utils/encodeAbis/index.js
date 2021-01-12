@@ -53,7 +53,6 @@ module.exports = {
             escrowFactoryAddress,
             versionsRegistryAddress,
             chainlinkAggregatorAddress,
-            marketsStateAddress,
             interestValidatorAddress,
             atmSettingsAddress,
             ) => {
@@ -61,7 +60,6 @@ module.exports = {
                 escrowFactoryAddress,
                 versionsRegistryAddress,
                 chainlinkAggregatorAddress,
-                marketsStateAddress,
                 interestValidatorAddress,
                 atmSettingsAddress
             ];
@@ -82,7 +80,6 @@ module.exports = {
             loansAddress,
             cTokenAddress,
             settingsAddress,
-            marketsStateAddress,
             interestValidatorAddress,
         ) => {
             const params = [
@@ -92,7 +89,6 @@ module.exports = {
                 loansAddress,
                 cTokenAddress,
                 settingsAddress,
-                marketsStateAddress,
                 interestValidatorAddress
             ];
             return encodeData(

@@ -80,11 +80,6 @@ contract('LendingPoolCreateLoanTest', function (accounts) {
                 settingsInterfaceEncoder.encodeGetCTokenAddress(),
                 cTokenInstance.address
             );
-            const marketsState = await Mock.new();
-            await settingsInstance.givenMethodReturnAddress(
-                settingsInterfaceEncoder.encodeMarketsState(),
-                marketsState.address
-            );
 
             const encodeTransfer = erc20InterfaceEncoder.encodeTransfer();
             await daiInstance.givenMethodReturnBool(encodeTransfer, transfer);

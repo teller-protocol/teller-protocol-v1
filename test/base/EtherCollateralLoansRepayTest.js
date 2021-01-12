@@ -3,7 +3,6 @@ const withData = require('leche').withData;
 const { t, NULL_ADDRESS, ACTIVE, CLOSED } = require('../utils/consts');
 const { createLoanTerms } = require('../utils/structs');
 const BigNumber = require('bignumber.js');
-const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 const { createLoan } = require('../utils/loans');
 
 // Mock contracts
@@ -16,8 +15,6 @@ const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 const LoanLib = artifacts.require("../util/LoanLib.sol");
 
 contract('EtherCollateralLoansRepayTest', function (accounts) {
-    const settingsInterfaceEncoder = new SettingsInterfaceEncoder(web3);
-
     let instance;
     let loanTermsConsInstance;
     let lendingPoolInstance;
@@ -31,12 +28,7 @@ contract('EtherCollateralLoansRepayTest', function (accounts) {
     beforeEach('Setup for each test', async () => {
         lendingPoolInstance = await Mock.new();
         loanTermsConsInstance = await Mock.new();
-        const marketsInstance = await Mock.new();
         settingsInstance = await Mock.new();
-        await settingsInstance.givenMethodReturnAddress(
-            settingsInterfaceEncoder.encodeMarketsState(),
-            marketsInstance.address
-        );
         const collateralTokenInstance = await Mock.new();
         const loanLib = await LoanLib.new();
         await Loans.link("LoanLib", loanLib.address);

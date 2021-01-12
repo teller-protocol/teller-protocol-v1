@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "../util/AssetSettingsLib.sol";
 import "../util/PlatformSettingsLib.sol";
-import "./MarketsStateInterface.sol";
 import "./InterestValidatorInterface.sol";
 import "./EscrowFactoryInterface.sol";
 import "./LogicVersionsRegistryInterface.sol";
@@ -306,8 +305,6 @@ interface SettingsInterface {
 
     function versionsRegistry() external view returns (LogicVersionsRegistryInterface);
 
-    function marketsState() external view returns (MarketsStateInterface);
-
     function interestValidator() external view returns (InterestValidatorInterface);
 
     /**
@@ -333,7 +330,6 @@ interface SettingsInterface {
         @param escrowFactoryAddress the initial escrow factory address.
         @param versionsRegistryAddress the initial versions registry address.
         @param chainlinkAggregatorAddress the initial pair aggregator registry address.
-        @param marketsStateAddress the initial markets state address.
         @param interestValidatorAddress the initial interest validator address.
         @param atmSettingsAddress the initial ATM settings address.
         @param wethTokenAddress canonical WETH token address.
@@ -343,7 +339,6 @@ interface SettingsInterface {
         address escrowFactoryAddress,
         address versionsRegistryAddress,
         address chainlinkAggregatorAddress,
-        address marketsStateAddress,
         address interestValidatorAddress,
         address atmSettingsAddress,
         address wethTokenAddress,
