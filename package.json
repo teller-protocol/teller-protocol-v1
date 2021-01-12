@@ -84,13 +84,7 @@
         }
     },
     "lint-staged": {
-        "*.sol": [
-            "prettier --write"
-        ],
-        "*.{js,ts}": [
-            "prettier --write"
-        ],
-        "*.{json,md}": [
+        "*.{sol,js,ts,json,md}": [
             "prettier --write"
         ]
     }
