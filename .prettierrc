@@ -1,6 +1,6 @@
 {
     "printWidth": 90,
-    "tabWidth": 4,
+    "tabWidth": 2,
     "useTabs": false,
     "singleQuote": false,
     "bracketSpacing": true,
@@ -9,6 +9,7 @@
         {
             "files": "*.sol",
             "options": {
+                "tabWidth": 4,
                 "explicitTypes": "always"
             }
         }
