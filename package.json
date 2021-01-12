@@ -10,7 +10,7 @@
         "prepack": "yarn build:types",
         "lint-sol": "yarn solhint -f table \"./contracts/**/*.sol\"",
         "lint-js": "yarn eslint test test-integration -f table -ext ts,js --fix",
-        "lint-json": "prettier ",
+        "lint-json": "prettier",
         "test": "truffle test",
         "start:ganache:mainnet": "node scripts/utils/forkMainnet.js",
         "deploy:mainnet": "truffle compile && truffle deploy --network mainnet --reset --to 3",
