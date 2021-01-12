@@ -47,8 +47,8 @@ contract ATMGovernance is
     /* State Variables */
 
     // List of general ATM settings. We don't accept settings equal to zero.
-    // Example: supplyToDebtRatio  => 5044 = percentage 50.44
-    // Example: supplyToDebtRatio => 1 = percentage 00.01
+    // Example: debtRatio  => 5044 = percentage 50.44
+    // Example: debtRatio => 1 = percentage 00.01
     mapping(bytes32 => uint256) public generalSettings;
 
     // List of Market specific Asset settings on this ATM

@@ -37,7 +37,6 @@ contract('TTokenRegistryRegisterTTokenTest', function (accounts) {
                     instance,
                     {
                         escrowFactory,
-                        marketsState,
                         interestValidator,
                         atmSettings,
                     }) => {
@@ -45,7 +44,6 @@ contract('TTokenRegistryRegisterTTokenTest', function (accounts) {
                         escrowFactory.address,
                         versionsRegistryInstance.address,
                         pairAggregatorRegistryInstance.address,
-                        marketsState.address,
                         interestValidator.address,
                         atmSettings.address,
                         (await Mock.new()).address,

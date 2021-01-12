@@ -9,7 +9,7 @@ module.exports = async function (
 ) {
     console.log('\n\n');
     console.log(`Creating ${marketDefinitions.length} markets.`);
-    const { marketFactoryInstance, marketsStateInstance } = instances;
+    const { marketFactoryInstance } = instances;
     const { tokens, txConfig, signers, deployerApp } = params;
     const { LoanTermsConsensus, InterestConsensus, ERC20Mintable } = artifacts;
     
@@ -66,10 +66,6 @@ module.exports = async function (
       const tTokenInstance = await ERC20Mintable.at(tTokenAddress);
       await tTokenInstance.addMinter(marketInfo.lendingPool, txConfig);
       
-      console.log(`MarketsState (${marketsStateInstance.address}): Adding as whitelisted ${marketInfo.loans} (loans proxy). Sender: ${txConfig.from}`);
-      await marketsStateInstance.addWhitelisted(marketInfo.loans, txConfig);
-      console.log(`MarketsState (${marketsStateInstance.address}): Adding as whitelisted ${marketInfo.lendingPool} (lending pool proxy). Sender: ${txConfig.from}`);
-      await marketsStateInstance.addWhitelisted(marketInfo.lendingPool, txConfig);
       const loanTermsConsensusInstance = await LoanTermsConsensus.at(marketInfo.loanTermsConsensus);
       const interestConsensusInstance = await InterestConsensus.at(marketInfo.interestConsensus);
 

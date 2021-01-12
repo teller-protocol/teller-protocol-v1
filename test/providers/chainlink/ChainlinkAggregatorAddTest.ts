@@ -8,7 +8,7 @@ import { ChainlinkAggregatorInstance, SettingsInstance } from '../../../types/tr
 
 const Mock = artifacts.require('Mock')
 
-contract('ChainlinkAggregatorAddForTest', function (accounts) {
+contract('ChainlinkAggregatorAddTest', function (accounts) {
   const ownerIndex = 0
 
   let instance: ChainlinkAggregatorInstance

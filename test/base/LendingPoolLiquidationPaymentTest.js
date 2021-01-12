@@ -25,7 +25,6 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
     let interestConsensusInstance;
     let cTokenInstance;
     let settingsInstance;
-    let marketStateInstance;
     let loansInstance;
     
     beforeEach('Setup for each test', async () => {
@@ -35,7 +34,6 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
         interestConsensusInstance = await Mock.new();
         cTokenInstance = await Mock.new()
         settingsInstance = await Mock.new();
-        marketStateInstance = await Mock.new();
         loansInstance = await Mock.new();
         lendersInstance = await Lenders.new();
 
@@ -49,11 +47,6 @@ contract('LendingPoolLiquidationPaymentTest', function (accounts) {
           instance.address,
           interestConsensusInstance.address,
           settingsInstance.address,
-        );
-
-        await settingsInstance.givenMethodReturnAddress(
-            settingsInterfaceEncoder.encodeMarketsState(),
-            marketStateInstance.address
         );
     });
 

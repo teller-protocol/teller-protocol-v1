@@ -45,7 +45,7 @@ contract LoansBase is LoansInterface, Base {
 
     /* State Variables */
 
-    bytes32 internal constant SUPPLY_TO_DEBT_ATM_SETTING = "SupplyToDebt";
+    bytes32 internal constant MAX_DEBT_RATIO_ATM_SETTING = "MaxDebtRatio";
 
     uint256 public totalCollateral;
 
@@ -126,7 +126,7 @@ contract LoansBase is LoansInterface, Base {
         require(!exceedsMaxLoanAmount, "AMOUNT_EXCEEDS_MAX_AMOUNT");
 
         require(
-            _isSupplyToDebtRatioValid(loanRequest.amount),
+            _isDebtRatioValid(loanRequest.amount),
             "SUPPLY_TO_DEBT_EXCEEDS_MAX"
         );
         _;
@@ -338,7 +338,7 @@ contract LoansBase is LoansInterface, Base {
         nonReentrant()
         isBorrower(loans[loanID].loanTerms.borrower)
     {
-        require(_isSupplyToDebtRatioValid(amountBorrow), "SUPPLY_TO_DEBT_EXCEEDS_MAX");
+        require(_isDebtRatioValid(amountBorrow), "SUPPLY_TO_DEBT_EXCEEDS_MAX");
         require(
             loans[loanID].loanTerms.maxLoanAmount >= amountBorrow,
             "MAX_LOAN_EXCEEDED"
@@ -602,7 +602,7 @@ contract LoansBase is LoansInterface, Base {
         @param newLoanAmount the new loan amount to consider o the StD ratio.
         @return true if the ratio is valid. Otherwise it returns false.
      */
-    function _isSupplyToDebtRatioValid(uint256 newLoanAmount)
+    function _isDebtRatioValid(uint256 newLoanAmount)
         internal
         view
         returns (bool)
@@ -612,14 +612,12 @@ contract LoansBase is LoansInterface, Base {
             collateralToken
         );
         require(atmAddressForMarket != address(0x0), "ATM_NOT_FOUND_FOR_MARKET");
-        uint256 supplyToDebtMarketLimit = ATMGovernanceInterface(atmAddressForMarket)
-            .getGeneralSetting(SUPPLY_TO_DEBT_ATM_SETTING);
-        uint256 currentSupplyToDebtMarket = _markets().getSupplyToDebtFor(
-            lendingPool.lendingToken(),
-            collateralToken,
+        uint256 debtRatioLimit = ATMGovernanceInterface(atmAddressForMarket)
+            .getGeneralSetting(MAX_DEBT_RATIO_ATM_SETTING);
+        uint256 currentDebtRatio = lendingPool.getDebtRatioFor(
             newLoanAmount
         );
-        return currentSupplyToDebtMarket <= supplyToDebtMarketLimit;
+        return currentDebtRatio <= debtRatioLimit;
     }
 
     /**

@@ -32,8 +32,7 @@ contract("CompoundRedeemTest", function(accounts) {
     _1_successful_redeem: [ 80, 100, false, false, null ],
     _2_successful_redeem_all: [ 80, 100, true, false, null ],
     _3_insufficient_balance: [ 100, 0, false, true, "COMPOUND_INSUFFICIENT_BALANCE" ],
-    _4_compound_return_error: [ SIMULATE_COMPOUND_REDEEM_UNDERLYING_ERROR, SIMULATE_COMPOUND_REDEEM_UNDERLYING_ERROR, false, true, "COMPOUND_BALANCE_NOT_INCREASED" ],
-    _5_compound_redeem_error: [ SIMULATE_COMPOUND_REDEEM_UNDERLYING_RETURN_ERROR, SIMULATE_COMPOUND_REDEEM_UNDERLYING_RETURN_ERROR, false, true, "COMPOUND_WITHDRAWAL_ERROR" ],
+    _4_compound_redeem_error: [ SIMULATE_COMPOUND_REDEEM_UNDERLYING_RETURN_ERROR, SIMULATE_COMPOUND_REDEEM_UNDERLYING_RETURN_ERROR, false, true, "COMPOUND_WITHDRAWAL_ERROR" ],
    }, function(
     amount,
     balance,
