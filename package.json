@@ -85,7 +85,6 @@
     },
     "lint-staged": {
         "*.sol": [
-            "echo test",
             "prettier --write"
         ],
         "*.{js,ts}": [
