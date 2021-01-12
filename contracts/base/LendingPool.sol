@@ -60,8 +60,6 @@ contract LendingPool is Base, LendingPoolInterface {
 
     MarketStateLib.MarketState internal compoundMarketState;
 
-    IERC20 private compToken;
-
     /** Modifiers */
 
     /**
@@ -317,8 +315,7 @@ contract LendingPool is Base, LendingPoolInterface {
         address lendingTokenAddress,
         address lendersAddress,
         address loansAddress,
-        address settingsAddress,
-        address compTokenAddress
+        address settingsAddress
     ) external isNotInitialized() {
         tTokenAddress.requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
         lendingTokenAddress.requireNotEmpty("TOKEN_ADDRESS_IS_REQUIRED");
@@ -331,7 +328,6 @@ contract LendingPool is Base, LendingPoolInterface {
         lendingToken = IERC20(lendingTokenAddress);
         lenders = LendersInterface(lendersAddress);
         loans = loansAddress;
-        compToken = IERC20(compTokenAddress);
     }
 
     /** Internal functions */
@@ -465,8 +461,11 @@ contract LendingPool is Base, LendingPoolInterface {
             [cTokenAddress]
         );
 
+        IERC20 compToken = _getSettings().assetController().assetBySymbol("COMP");
+
         // Amount which goes into the swap is COMP balance of the lending pool.
         uint256 amountIn = compToken.balanceOf(address(this));
+
         // Path of the swap is always COMP -> WETH -> LendingToken.
         address[] path = [compToken, _getSettings().WETH_ADDRESS(), lendingToken];
 
