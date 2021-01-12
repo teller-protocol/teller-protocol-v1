@@ -6,19 +6,25 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "../util/NumbersLib.sol";
 import "./Base.sol";
+import "../interfaces/IUniswapController.sol";
 
 contract UniswapController is Base, IUniswapController {
     using NumbersLib for *;
     using SafeERC20 for IERC20;
 
-    IUniswapV2Factory public factory;
-    IUniswapV2Router01 public router;
+    IUniswapV2Factory private factory;
+
+    IUniswapV2Router01 private constant ROUTER = IUniswapV2Router01(
+        0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D
+    );
+
     IChainlinkAggregator private chainlink;
+
     uint256 private minAmountOutPercent;
+    uint256 private maxSecondsToSwap;
 
     function initialize(
         address factoryAddress,
-        address routerAddress,
         uint256 _minAmountOutPercent,
         uint256 _maxSecondsToSwap
     ) external {
@@ -32,14 +38,14 @@ contract UniswapController is Base, IUniswapController {
         );
 
         minAmountOutPercent = _minAmountOutPercent;
+        maxSecondsToSwap = _maxSecondsToSwap;
         factory = IUniswapV2Factory(factoryAddress);
-        router = IUniswapV2Router01(routerAddress);
         chainlink = _getSettings().chainlinkAggregator();
     }
 
     function swap(uint256 amountIn, address[] path) external returns (uint256 amountOut) {
         IERC20 srcToken = IERC20(path[0]);
-        srcToken.safeIncreaseAllowance(router, amountIn);
+        srcToken.safeIncreaseAllowance(ROUTER, amountIn);
 
         uint256 chainlinkQuote = chainlink.valueFor(
             path[0],
@@ -48,12 +54,12 @@ contract UniswapController is Base, IUniswapController {
         );
         uint256 amountOutMin = chainlinkQuote.percent(minAmountOutPercent);
 
-        uint256[] amounts = router.swapExactTokensForTokens(
+        uint256[] amounts = ROUTER.swapExactTokensForTokenrouters(
             amountIn,
             amountOutMin,
             path,
             address(this),
-            now + 1200
+            now + maxSecondsToSwap
         );
 
         return amounts[amounts.length - 1];
