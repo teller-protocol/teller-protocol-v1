@@ -17,6 +17,7 @@ import "../interfaces/LendersInterface.sol";
 import "../interfaces/LoansInterface.sol";
 import "../interfaces/TTokenInterface.sol";
 import "../providers/compound/CErc20Interface.sol";
+import "../interfaces/ISwapper.sol";
 
 // Contracts
 import "./Base.sol";
@@ -460,10 +461,16 @@ contract LendingPool is Base, LendingPoolInterface {
         address[] path = [compToken, _getSettings().WETH_ADDRESS(), lendingToken];
 
         // Swap comp for lending token.
-        uint256 amountOut = _getSettings().assetController().uniswapController().swap(
-            amountIn,
-            path
+        (bool swapSuccess, bytes result) = _getSettings()
+            .assetController()
+            .uniswapController()
+            .delegatecall(
+            abi.encodeWithSignature(ISwapper.SWAP_SIGNATURE, amountIn, path)
         );
+
+        require(swapSuccess, "SWAP_FAILED");
+
+        uint256 amountOut = uint256(result);
 
         // Deposit LendingToken back into compound if supported.
         address cTokenAddress = cToken();

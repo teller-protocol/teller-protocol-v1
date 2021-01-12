@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
-import "../interfaces/IUniswapController.sol";
+import "../interfaces/ISwapper.sol";
 import "../util/AddressArrayLib.sol";
 import "../interfaces/IAssetController.sol";
 
@@ -10,7 +10,7 @@ contract AssetController is IAssetController {
     using Address for address;
     using AddressArrayLib for AddressArrayLib.AddressArray;
 
-    IUniswapController public uniswapController;
+    ISwapper public uniswapController;
 
     AddressArrayLib.AddressArray private assets;
 

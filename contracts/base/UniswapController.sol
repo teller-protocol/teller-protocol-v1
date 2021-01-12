@@ -3,11 +3,11 @@ pragma solidity 0.5.17;
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router01.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "../interfaces/ISwapper.sol";
 import "../util/NumbersLib.sol";
 import "./Base.sol";
-import "../interfaces/IUniswapController.sol";
 
-contract UniswapController is Base, IUniswapController {
+contract UniswapController is Base, ISwapper {
     using NumbersLib for *;
     using SafeERC20 for IERC20;
 

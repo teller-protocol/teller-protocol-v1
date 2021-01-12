@@ -1,6 +1,6 @@
 pragma solidity 0.5.17;
 
-import "./IUniswapController.sol";
+import "./ISwapper.sol";
 
 interface IAssetController {
     function initialize(address uniswapControllerAddress) external;
@@ -9,7 +9,7 @@ interface IAssetController {
 
     function removeAsset(address asset) external;
 
-    function uniswapController() external view returns (IUniswapController);
+    function uniswapController() external view returns (ISwapper);
 
     function getAssets() external view returns (address[] memory);
 
