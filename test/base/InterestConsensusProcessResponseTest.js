@@ -26,7 +26,6 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
     let instance;
     const lendersContract = accounts[1]
     const nodeAddress = accounts[2]
-    const submissions = 5
     const tolerance = 0
     const endTime = 34567
     const lender = accounts[3]
@@ -75,7 +74,7 @@ contract('InterestConsensusProcessResponseTest', function (accounts) {
                 Settings,
                 { from: owner, Mock },
                 {
-                    [settingsNames.RequiredSubmissions]: submissions,
+                    [settingsNames.RequiredSubmissionsPercentage]: 10000,
                     [settingsNames.MaximumTolerance]: tolerance,
                     [settingsNames.ResponseExpiryLength]: THIRTY_DAYS,
                     [settingsNames.TermsExpiryTime]: THIRTY_DAYS,

@@ -18,7 +18,7 @@ const Loans = artifacts.require("./mock/base/LoansBaseMock.sol");
 // Libraries
 const LoanLib = artifacts.require("../util/LoanLib.sol");
 
-contract("LoansBaseIsSupplyToDebtRatioValidTest", function(accounts) {
+contract("LoansBaseIsDebtRatioValidTest", function(accounts) {
   const IAtmSettingsEncoder = new IATMSettingsEncoder(web3);
   const lendingPoolEncoder = new LendingPoolInterfaceEncoder(web3);
   const atmGovernanceInterfaceEncoder = new ATMGovernanceInterfaceEncoder(web3);
@@ -61,12 +61,12 @@ contract("LoansBaseIsSupplyToDebtRatioValidTest", function(accounts) {
     loanAmount,
     useEmptyATMGovernanceAddress,
     getGeneralSettingResponse,
-    getSupplyToDebtForResponse,
+    getDebtRatioForResponse,
     expectedResult,
     expectedErrorMessage,
     mustFail
   ) {
-    it(t("user", "_isSupplyToDebtRatioValid", "Should able to test whether is StD ratio is valid or not.", mustFail), async function() {
+    it(t("user", "_isDebtRatioValid", "Should able to test whether is StD ratio is valid or not.", mustFail), async function() {
       // Setup
       const atmGovernanceInstance = await Mock.new();
       const atmGovernanceAddress = useEmptyATMGovernanceAddress ? NULL_ADDRESS : atmGovernanceInstance.address;
@@ -79,22 +79,21 @@ contract("LoansBaseIsSupplyToDebtRatioValidTest", function(accounts) {
         getGeneralSettingResponse
       );
       await lendingPoolInstance.givenMethodReturnUint(
-        lendingPoolEncoder.encodeGetSupplyToDebtFor(),
-        getSupplyToDebtForResponse
+        lendingPoolEncoder.encodeGetDebtRatioFor(),
+        getDebtRatioForResponse
       );
 
       try {
         // Invocation
-        const result = await instance.externalIsSupplyToDebtRatioValid(loanAmount);
+        const result = await instance.externalIsDebtRatioValid(loanAmount);
 
         // Assertions
         assert(!mustFail, "It should have failed because data is invalid.");
         assert.equal(result.toString(), expectedResult.toString());
       } catch (error) {
         // Assertions
-        assert(mustFail);
-        assert(error);
-        assert(error.message.includes(expectedErrorMessage));
+        assert(mustFail, error.message);
+        assert(error.message.includes(expectedErrorMessage), error.message);
       }
     });
   });

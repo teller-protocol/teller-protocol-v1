@@ -14,13 +14,16 @@ library LogicVersionLib {
     using Address for address;
 
     /**
-        @notice It stores the current version for a given logic address.
-        @param logic the logic address.
-        @param version the current version for the given logic address.
+        @notice It stores all the versions for a given logic.
+        @param currentVersion the current version.
+        @param latestVersion the latest version.
+        @param logicVersions mapping version to logic address.
+        @param exists boolean to test whether this logic version exists or not.
      */
     struct LogicVersion {
-        address logic;
-        uint256 version;
+        uint256 currentVersion;
+        uint256 latestVersion;
+        mapping(uint256 => address) logicVersions;
         bool exists;
     }
 
@@ -32,9 +35,33 @@ library LogicVersionLib {
     function initialize(LogicVersion storage self, address logic) internal {
         requireNotExists(self);
         require(logic.isContract(), "LOGIC_MUST_BE_CONTRACT");
-        self.logic = logic;
-        self.version = 0;
+        self.currentVersion = 0;
+        self.latestVersion = 0;
+        self.logicVersions[self.currentVersion] = logic;
         self.exists = true;
+    }
+
+    /**
+        @notice It rollbacks a logic to a previous version.
+        @param self the current logic version instance.
+        @param previousVersion the previous version to be used.
+     */
+    function rollback(LogicVersion storage self, uint256 previousVersion)
+        internal
+        returns (
+            uint256 currentVersion,
+            address previousLogic,
+            address newLogic
+        )
+    {
+        requireExists(self);
+        require(self.currentVersion != previousVersion, "CURRENT_VERSION_MUST_BE_DIFF");
+        require(self.latestVersion >= previousVersion, "VERSION_MUST_BE_LTE_LATEST");
+        currentVersion = self.currentVersion;
+        previousLogic = self.logicVersions[self.currentVersion];
+        newLogic = self.logicVersions[previousVersion];
+
+        self.currentVersion = previousVersion;
     }
 
     /**
@@ -74,29 +101,17 @@ library LogicVersionLib {
         )
     {
         requireExists(self);
-        require(self.logic != newLogic, "NEW_LOGIC_REQUIRED");
+        require(
+            self.logicVersions[self.currentVersion] != newLogic,
+            "NEW_LOGIC_REQUIRED"
+        );
         require(newLogic.isContract(), "LOGIC_MUST_BE_CONTRACT");
-        oldLogic = self.logic;
-        oldVersion = self.version;
-        newVersion = self.version.add(1);
+        oldLogic = self.logicVersions[self.currentVersion];
+        oldVersion = self.currentVersion;
+        newVersion = self.latestVersion.add(1);
 
-        self.logic = newLogic;
-        self.version = newVersion;
-    }
-
-    /**
-        @notice It removes a current logic version.
-        @param self the current logic version to remove.
-     */
-    function remove(LogicVersion storage self)
-        internal
-        returns (address lastLogic, uint256 lastVersion)
-    {
-        requireExists(self);
-        lastLogic = self.logic;
-        lastVersion = self.version;
-        self.logic = address(0x0);
-        self.version = 0;
-        self.exists = false;
+        self.currentVersion = newVersion;
+        self.latestVersion = newVersion;
+        self.logicVersions[newVersion] = newLogic;
     }
 }

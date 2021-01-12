@@ -27,6 +27,8 @@ contract OwnerSignersRole is Ownable {
 
     Roles.Role private _signers;
 
+    uint256 public _signerCount;
+
     /**
         @notice Gets whether an account address is a signer or not.
         @param account address to test.
@@ -44,6 +46,7 @@ contract OwnerSignersRole is Ownable {
      */
     function addSigner(address account) public onlyOwner {
         _addSigner(account);
+        _signerCount++;
     }
 
     /**
@@ -70,6 +73,7 @@ contract OwnerSignersRole is Ownable {
      */
     function removeSigner(address account) public onlyOwner {
         _removeSigner(account);
+        _signerCount--;
     }
 
     /**

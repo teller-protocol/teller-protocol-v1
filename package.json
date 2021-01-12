@@ -9,7 +9,8 @@
     "build:types": "yarn compile && yarn typechain",
     "prepack": "yarn build:types",
     "lint-sol": "yarn solhint -f table \"./contracts/**/*.sol\"",
-    "lint-js": "yarn eslint -f table \"./test/**/*.js\"",
+    "lint-js": "yarn eslint test test-integration -f table -ext ts,js --fix",
+    "lint-json": "prettier ",
     "test": "truffle test",
     "start:ganache:mainnet": "node scripts/utils/forkMainnet.js",
     "deploy:mainnet": "truffle compile && truffle deploy --network mainnet --reset --to 3",
@@ -44,6 +45,7 @@
     "husky": "^4.2.3",
     "jsonfile": "^6.0.1",
     "leche": "^2.3.0",
+    "lint-staged": "^10.5.3",
     "lodash": "^4.17.19",
     "mocha": "^7.1.0",
     "node-fetch": "^2.6.1",
@@ -78,7 +80,20 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "yarn format:prettier"
+      "pre-commit": "lint-staged"
     }
+  },
+  "lint-staged": {
+    "*.sol": [
+      "yarn lint-sol",
+      "prettier --write"
+    ],
+    "*.{js,ts}": [
+      "yarn lint-js",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
   }
 }

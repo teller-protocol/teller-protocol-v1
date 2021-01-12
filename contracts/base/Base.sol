@@ -3,7 +3,6 @@ pragma solidity 0.5.17;
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
-import "../util/AddressLib.sol";
 
 // Commons
 import "./TInitializable.sol";

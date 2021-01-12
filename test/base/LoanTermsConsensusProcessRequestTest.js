@@ -85,37 +85,37 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
 
     withData({
         _1_insufficient_responses: [
-            3, 320, undefined, undefined, [responseOne, responseTwo], true, 'LOANTERM_INSUFFICIENT_RESPONSES'
+            10000, 320, undefined, undefined, [responseOne, responseTwo], true, 'INSUFFICIENT_NUMBER_OF_RESPONSES'
         ],
         _2_one_response_successful: [
-            1, 320, undefined, undefined, [responseOne], false, undefined
+            2000, 320, undefined, undefined, [responseOne], false, undefined
         ],
         _3_responses_just_over_tolerance: [  
-            4, 310, undefined, undefined, [responseOne, responseTwo, responseThree, responseFour], true, 'RESPONSES_TOO_VARIED'
+            8000, 310, undefined, undefined, [responseOne, responseTwo, responseThree, responseFour], true, 'RESPONSES_TOO_VARIED'
         ],
         _4_responses_just_within_tolerance: [
-            4, 320, undefined, undefined, [responseOne, responseTwo, responseFour, responseFive], false, undefined
+            8000, 320, undefined, undefined, [responseOne, responseTwo, responseFour, responseFive], false, undefined
         ],
         _5_zero_tolerance: [
-            1, 0, undefined, undefined, [responseTwo, responseThree], false, undefined
+            4000, 0, undefined, undefined, [responseTwo, responseThree], false, undefined
         ],
         _6_two_responses_same_signer: [     // responseThree and five have the same signer
-            4, 320, undefined, undefined, [responseOne, responseThree, responseTwo, responseFive], true, 'SIGNER_ALREADY_SUBMITTED'
+            8000, 320, undefined, undefined, [responseOne, responseThree, responseTwo, responseFive], true, 'SIGNER_ALREADY_SUBMITTED'
         ],
         _7_expired_response: [
-            4, 320, undefined, undefined, [responseOne, responseTwo, responseFour, responseExpired], true, 'RESPONSE_EXPIRED'
+            8000, 320, undefined, undefined, [responseOne, responseTwo, responseFour, responseExpired], true, 'RESPONSE_EXPIRED'
         ],
         _8_signer_nonce_taken: [
-            3, 320, { nonce: 0, signer: nodeOne }, undefined, [responseFive, responseOne, responseTwo], true, 'SIGNER_NONCE_TAKEN'
+            6000, 320, { nonce: 0, signer: nodeOne }, undefined, [responseFive, responseOne, responseTwo], true, 'SIGNER_NONCE_TAKEN'
         ],
         _9_responses_invalid_sig_chainid: [
-            4, 320, undefined, undefined, [responseOne, responseTwo, responseFour, responseInvalidChainId], true, 'SIGNATURE_INVALID'
+            8000, 320, undefined, undefined, [responseOne, responseTwo, responseFour, responseInvalidChainId], true, 'SIGNATURE_INVALID'
         ],
         _10_borrower_nonce_taken: [
-            3, 360, undefined, { nonce: requestNonce, borrower: borrower }, [responseFive, responseOne, responseTwo], true, 'LOAN_TERMS_REQUEST_NONCE_TAKEN'
+            6000, 360, undefined, { nonce: requestNonce, borrower: borrower }, [responseFive, responseOne, responseTwo], true, 'LOAN_TERMS_REQUEST_NONCE_TAKEN'
         ],
     }, function(
-        reqSubmissions,
+        reqSubmissionsPercentage,
         tolerance,
         signerNonceTaken,
         requestNonceTaken,
@@ -129,7 +129,7 @@ contract('LoanTermsConsensusProcessRequestTest', function (accounts) {
                 Settings,
                 { from: owner, Mock },
                 {
-                    [settingsNames.RequiredSubmissions]: reqSubmissions,
+                    [settingsNames.RequiredSubmissionsPercentage]: reqSubmissionsPercentage,
                     [settingsNames.MaximumTolerance]: tolerance,
                     [settingsNames.ResponseExpiryLength]: THIRTY_DAYS,
                     [settingsNames.TermsExpiryTime]: THIRTY_DAYS,

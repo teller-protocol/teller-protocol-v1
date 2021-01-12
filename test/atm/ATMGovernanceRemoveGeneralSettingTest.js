@@ -27,7 +27,7 @@ contract('ATMGovernanceRemoveGeneralSettingTest', function (accounts) {
     });
 
     // Testing values
-    const SETTING_NAME = toBytes32(web3, 'supplyToDebtRatio');
+    const SETTING_NAME = toBytes32(web3, 'debtRatio');
     const NON_EXISTING_NAME = toBytes32(web3, 'NON-EXISTING');
     const SETTING_VALUE = 5044;
     const EMPTY_SETTING_NAME = toBytes32(web3, '');
