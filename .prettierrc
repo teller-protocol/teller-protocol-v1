@@ -2,13 +2,15 @@
   "printWidth": 90,
   "tabWidth": 2,
   "useTabs": false,
-  "singleQuote": false,
+  "singleQuote": true,
   "bracketSpacing": true,
   "semi": true,
   "overrides": [
     {
       "files": "*.sol",
       "options": {
+        "tabWidth": 4,
+        "singleQuote": false,
         "explicitTypes": "always"
       }
     }
