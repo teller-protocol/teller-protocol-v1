@@ -7,7 +7,6 @@ const Accounts = require('../scripts/utils/Accounts');
 const Nonces = require('../scripts/utils/Nonces');
 const Swapper = require('./utils/Swapper')
 const { printSeparatorLine } = require('../test/utils/consts');
-const executeInitializers = require('./initializers');
 const chains = require('../test/utils/chains');
 const { REVERT, NETWORK, REVERT_TEST, INITIAL_NONCE, TOKEN_NAMES, COLL_TOKEN_NAMES, VERBOSE } = require('../scripts/utils/cli/names');
 
@@ -45,7 +44,7 @@ module.exports = async (callback) => {
     let snapshotId;
     try {
         const getContracts = processArgs.createGetContracts(artifacts);
-        
+
         snapshotId = await timer.takeSnapshot();
 
         const uniswapArtifact = await UniswapSwapper.new();
@@ -65,11 +64,6 @@ module.exports = async (callback) => {
             swapper,
             verbose,
         };
-
-        await executeInitializers(
-            processArgs.createInitializersConfig(),
-            { processArgs, getContracts, accounts, web3 },
-        );
 
         for (const testKey in tests) {
             let test = tests[testKey];

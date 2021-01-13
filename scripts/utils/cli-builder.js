@@ -26,8 +26,6 @@ const {
     addSignerAddress,
     addSignerUrl,
     addTokenNames,
-    addRequiredSubmissions,
-    addSafetyInterval,
     addMinValue,
     addMaxValue,
     addBackRounds,
@@ -70,8 +68,6 @@ module.exports = {
         addSignerUrl(yargs);
         addTokenNames(yargs);
         addCollTokenNames(yargs);
-        addRequiredSubmissions(yargs);
-        addSafetyInterval(yargs);
         addVerbose(yargs);
         return yargs;
     },
