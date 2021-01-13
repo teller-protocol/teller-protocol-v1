@@ -9,6 +9,7 @@
     {
       "files": "*.sol",
       "options": {
+        "tabWidth": 4,
         "explicitTypes": "always"
       }
     }
