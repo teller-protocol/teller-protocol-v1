@@ -120,6 +120,11 @@ contract LendingPool is Base, LendingPoolInterface {
         whenLendingPoolNotPaused(address(this))
         nonReentrant()
     {
+        require(
+            lendingToken.balanceOf(msg.sender) >= lendingTokenAmount,
+            "LENDING_TOKEN_NOT_ENOUGH_BALANCE"
+        );
+
         uint256 tTokenAmount = lendingTokenAmount.mul(EXCHANGE_RATE_SCALE).div(
             _exchangeRate()
         );
@@ -268,7 +273,10 @@ contract LendingPool is Base, LendingPoolInterface {
         if (tToken.totalSupply() == 0) {
             return EXCHANGE_RATE_SCALE;
         }
-        return _getMarketState().totalSupplied.mul(EXCHANGE_RATE_SCALE).div(tToken.totalSupply());
+        return
+            _getMarketState().totalSupplied.mul(EXCHANGE_RATE_SCALE).div(
+                tToken.totalSupply()
+            );
     }
 
     /**
@@ -298,19 +306,29 @@ contract LendingPool is Base, LendingPoolInterface {
 
     /** Internal functions */
 
-    function _getMarketState() internal view returns (MarketStateLib.MarketState memory state) {
+    function _getMarketState()
+        internal
+        view
+        returns (MarketStateLib.MarketState memory state)
+    {
         state = marketState;
 
         address cTokenAddress = cToken();
         if (cTokenAddress != address(0) && compoundMarketState.totalSupplied > 0) {
             state.totalSupplied = state.totalSupplied.add(
-                CErc20Interface(cTokenAddress).valueInUnderlying(compoundMarketState.totalSupplied)
+                CErc20Interface(cTokenAddress).valueInUnderlying(
+                    compoundMarketState.totalSupplied
+                )
             );
             state.totalRepaid = state.totalRepaid.add(
-                CErc20Interface(cTokenAddress).valueInUnderlying(compoundMarketState.totalRepaid)
+                CErc20Interface(cTokenAddress).valueInUnderlying(
+                    compoundMarketState.totalRepaid
+                )
             );
             state.totalBorrowed = state.totalBorrowed.add(
-                CErc20Interface(cTokenAddress).valueInUnderlying(compoundMarketState.totalBorrowed)
+                CErc20Interface(cTokenAddress).valueInUnderlying(
+                    compoundMarketState.totalBorrowed
+                )
             );
         }
     }
@@ -320,7 +338,10 @@ contract LendingPool is Base, LendingPoolInterface {
         @param amount amount to deposit.
         @return the amount of tokens deposited.
      */
-    function _depositToCompound(address cTokenAddress, uint256 amount) internal returns (uint256) {
+    function _depositToCompound(address cTokenAddress, uint256 amount)
+        internal
+        returns (uint256)
+    {
         // approve the cToken contract to take lending tokens
         lendingToken.safeApprove(cTokenAddress, amount);
 
@@ -338,7 +359,10 @@ contract LendingPool is Base, LendingPoolInterface {
         @notice It withdraws a given amount of tokens if the cToken is defined (not 0x0).
         @param amount amount of tokens to withdraw.
      */
-    function _withdrawFromCompound(address cTokenAddress, uint256 amount) internal returns (uint256) {
+    function _withdrawFromCompound(address cTokenAddress, uint256 amount)
+        internal
+        returns (uint256)
+    {
         uint256 balanceBefore = CErc20Interface(cTokenAddress).balanceOf(address(this));
 
         // this function withdraws 'amount' lending tokens from compound
