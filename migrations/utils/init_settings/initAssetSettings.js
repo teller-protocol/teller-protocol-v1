@@ -1,8 +1,8 @@
 const assert = require("assert");
 const { ETH_ADDRESS } = require("../../../config/consts");
-const {
-  toDecimals
-} = require("../../../test/utils/consts");
+const { toDecimals } = require("../../../test/utils/consts");
+const { settings } = require("../../../test/utils/events");
+const AssetSettings = artifacts.require("AssetSettings");
 
 /**
  * We set all assets settings.
@@ -11,25 +11,23 @@ const {
  * @param param1 contains the settings we need for the asset.
  * @param param2 contains an ERC20Detailed instance.
  */
-module.exports = async function(
-  settingsInstance, {
-    assetSettings,
-    tokens,
-    compound,
-    txConfig,
-    network
-  }, {
-    ERC20
-  }
+module.exports = async function (
+  settingsInstance,
+  { assetSettings, tokens, compound, txConfig, network },
+  { ERC20 }
 ) {
   console.log("Configuring asset settings.");
+  const assetSetting = await AssetSettings.at(await settingsInstance.assetSettings());
   for (const tokenName of Object.keys(assetSettings)) {
     const tokenConfig = assetSettings[tokenName];
 
     const tokenAddress = tokens[tokenName.toUpperCase()];
     assert(tokenAddress, `Token address (${tokenName}) not found (${network}).`);
     const cTokenAddress = compound[tokenConfig.cToken.toUpperCase()];
-    assert(cTokenAddress, `cToken address (${tokenConfig.cToken}) not found (${network}).`);
+    assert(
+      cTokenAddress,
+      `cToken address (${tokenConfig.cToken}) not found (${network}).`
+    );
 
     let decimals = 18;
     if (tokenAddress !== ETH_ADDRESS) {
@@ -38,8 +36,14 @@ module.exports = async function(
     }
     const maxLoanAmountWithDecimals = toDecimals(tokenConfig.maxLoanAmount, decimals);
 
-    console.log(`Configuring asset: ${tokenName} (${tokenAddress}) / ${tokenConfig.cToken} (${cTokenAddress}) / Max Loan Amount: ${tokenConfig.maxLoanAmount} (${decimals} decimals / ${maxLoanAmountWithDecimals.toFixed(0)})`);
-    await settingsInstance.createAssetSettings(
+    console.log(
+      `Configuring asset: ${tokenName} (${tokenAddress}) / ${
+        tokenConfig.cToken
+      } (${cTokenAddress}) / Max Loan Amount: ${
+        tokenConfig.maxLoanAmount
+      } (${decimals} decimals / ${maxLoanAmountWithDecimals.toFixed(0)})`
+    );
+    await assetSetting.createAssetSetting(
       tokenAddress,
       cTokenAddress,
       maxLoanAmountWithDecimals,
