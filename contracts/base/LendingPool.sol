@@ -120,14 +120,42 @@ contract LendingPool is Base, LendingPoolInterface {
         whenLendingPoolNotPaused(address(this))
         nonReentrant()
     {
-        require(
-            lendingToken.balanceOf(msg.sender) >= lendingTokenAmount,
-            "LENDING_TOKEN_NOT_ENOUGH_BALANCE"
-        );
-
         uint256 tTokenAmount = lendingTokenAmount.mul(EXCHANGE_RATE_SCALE).div(
             _exchangeRate()
         );
+
+        // Burn tToken tokens.
+        tToken.burn(msg.sender, tTokenAmount);
+
+        address cTokenAddress = cToken();
+        if (cTokenAddress != address(0)) {
+            // Withdraw tokens from Compound
+            // Decrease the Compound market supply
+            compoundMarketState.decreaseSupply(
+                _withdrawFromCompound(cTokenAddress, lendingTokenAmount)
+            );
+        } else {
+            // Decrease the market supply
+            marketState.decreaseSupply(lendingTokenAmount);
+        }
+
+        // Transfers tokens
+        tokenTransfer(msg.sender, lendingTokenAmount);
+
+        // Emit event.
+        emit TokenWithdrawn(msg.sender, lendingTokenAmount, tTokenAmount);
+    }
+
+    function withdrawAll()
+        external
+        isInitialized()
+        whenNotPaused()
+        whenLendingPoolNotPaused(address(this))
+        nonReentrant()
+    {
+        uint256 tTokenAmount = tToken.balanceOf(msg.sender);
+        uint256 lendingTokenAmount = (tTokenAmount * _exchangeRate()) /
+            EXCHANGE_RATE_SCALE;
 
         // Burn tToken tokens.
         tToken.burn(msg.sender, tTokenAmount);
