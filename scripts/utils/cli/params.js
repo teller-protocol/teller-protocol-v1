@@ -477,34 +477,6 @@ module.exports.addTokenNames = (yargs, defaultParam = TOKEN_NAMES.default) => {
   );
 };
 
-module.exports.addRequiredSubmissions = (
-  yargs,
-  defaultParam = REQUIRED_SUBMISSIONS_PERCENTAGE.default
-) => {
-  newOption(
-    yargs,
-    REQUIRED_SUBMISSIONS_PERCENTAGE.name,
-    REQUIRED_SUBMISSIONS_PERCENTAGE.alias,
-    "number",
-    `Used to set as min required (responses) submissions when a borrower asks to node validators to sign responses. By default ${defaultParam}`,
-    defaultParam
-  );
-};
-
-module.exports.addSafetyInterval = (
-  yargs,
-  defaultParam = SAFETY_INTERVAL.default
-) => {
-  newOption(
-    yargs,
-    SAFETY_INTERVAL.name,
-    SAFETY_INTERVAL.alias,
-    "number",
-    "Used to set as min time window (in seconds) between last time borrower deposited collateral and when the borrower takes out the loan.",
-    defaultParam
-  );
-};
-
 module.exports.addMinAmount = (yargs, defaultParam = MIN_AMOUNT.default) => {
   newOption(
     yargs,
