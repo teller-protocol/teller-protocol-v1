@@ -137,6 +137,55 @@ contract('LendingPoolWithdrawTest', function (accounts) {
 
   withData(
     {
+      _1_basic: [accounts[0], 100, accounts[0], undefined, false],
+    },
+    function (depositSender, depositAmount, recipient, expectedErrorMessage, mustFail) {
+      it(
+        t('user', 'withdrawAll', 'Should (or not) be able to withdraw all DAI', mustFail),
+        async () => {
+          // Setup
+          const tTokenInstance = await TDAI.new(settingsInstance.address);
+          const lendingTokenInstance = await Token.new();
+          await tTokenInstance.addMinter(instance.address);
+          await initContracts(
+            settingsInstance,
+            instance,
+            tTokenInstance,
+            lendingTokenInstance,
+            loansInstance
+          );
+          await lendingTokenInstance.approve(instance.address, depositAmount, {
+            from: depositSender,
+          });
+          await instance.deposit(depositAmount, { from: depositSender });
+          const things = await instance.calculateThing();
+          console.log(Object.values(things).map((value) => value.toString()));
+          try {
+            // Invocation
+            const result = await instance.withdrawAll({
+              from: recipient,
+            });
+
+            console.log(result);
+
+            // Assertions
+            assert(!mustFail, 'It should have failed because data is invalid.');
+            assert(result[0] === depositAmount);
+            lendingPool.tokenWithdrawn(result).emitted(recipient, amountToWithdraw);
+          } catch (error) {
+            console.log(error);
+            // Assertions
+            assert(mustFail);
+            assert(error);
+            assert.equal(error.reason, expectedErrorMessage);
+          }
+        }
+      );
+    }
+  );
+
+  withData(
+    {
       _1_basic: [accounts[0], 100, accounts[0], 10, undefined, false],
       _2_recipientNotEnoughTDaiBalance: [
         accounts[0],

@@ -127,18 +127,41 @@ contract LendingPool is Base, LendingPoolInterface {
         _withdraw(lendingTokenAmount, tTokenAmount);
     }
 
+    function calculateThing()
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        )
+    {
+        uint256 tTokenAmount = tToken.balanceOf(msg.sender);
+        uint256 rate = _exchangeRate();
+        uint256 lendingTokenAmount = (tTokenAmount * rate) / EXCHANGE_RATE_SCALE;
+        uint256 totalSupplied = _getMarketState().totalSupplied;
+        uint256 tTokenSupplied = tToken.totalSupply();
+
+        return (tTokenAmount, lendingTokenAmount, rate, totalSupplied, tTokenSupplied);
+    }
+
     function withdrawAll()
         external
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused(address(this))
         nonReentrant()
+        returns (uint256)
     {
         uint256 tTokenAmount = tToken.balanceOf(msg.sender);
         uint256 lendingTokenAmount = (tTokenAmount * _exchangeRate()) /
             EXCHANGE_RATE_SCALE;
 
         _withdraw(lendingTokenAmount, tTokenAmount);
+
+        return lendingTokenAmount;
     }
 
     /**
