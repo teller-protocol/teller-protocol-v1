@@ -29,20 +29,13 @@ contract UniswapController is Base, ISwapper {
         chainlink = _getSettings().chainlinkAggregator();
     }
 
-    function swap(uint256 amountIn, address[] path) external returns (uint256 amountOut) {
+    function swap(uint256 amountIn, address[] path) external returns (uint256) {
         IERC20 srcToken = IERC20(path[0]);
         srcToken.safeIncreaseAllowance(ROUTER, amountIn);
 
-        uint256 chainlinkQuote = chainlink.valueFor(
-            path[0],
-            path[path.length - 1],
-            amountIn
-        );
-        uint256 amountOutMin = chainlinkQuote.percent(minAmountOutPercent);
-
-        uint256[] amounts = ROUTER.swapExactTokensForTokenrouters(
+        uint256[] amounts = ROUTER.swapExactTokensForToken(
             amountIn,
-            amountOutMin,
+            ROUTER.getAmountsOut(amountIn, path)[path.length - 1],
             path,
             address(this),
             now

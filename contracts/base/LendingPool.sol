@@ -447,14 +447,10 @@ contract LendingPool is Base, LendingPoolInterface {
     }
 
     /**
-        @notice It swaps the lending pool's accumualted COMP for the lendingToken
-        using Uniswap and deposits it into Compound.
+        @notice It swaps the lending pool's accumualted COMP for the lendingToken.
+        @dev Only call this if cToken() != address(0).
      */
-    function swapAccumulatedComp() internal {
-        // Function only runs if a cToken exists for the LendingToken.
-        address cTokenAddress = cToken();
-        require(cTokenAddress != address(0), "COMPOUND_NOT_SUPPORTED");
-
+    function _swapAccumulatedComp() internal returns (uint256) {
         // Claim COMP for earned for LendingToken.
         _getSettings().assetController().compoundComptroller().claimComp(
             address(this),
@@ -465,6 +461,8 @@ contract LendingPool is Base, LendingPoolInterface {
 
         // Amount which goes into the swap is COMP balance of the lending pool.
         uint256 amountIn = compToken.balanceOf(address(this));
+
+        if (amountIn == 0) return 0;
 
         // Path of the swap is always COMP -> WETH -> LendingToken.
         address[] path = [compToken, _getSettings().WETH_ADDRESS(), lendingToken];
@@ -479,19 +477,6 @@ contract LendingPool is Base, LendingPoolInterface {
 
         require(swapSuccess, "SWAP_FAILED");
 
-        uint256 amountOut = uint256(result);
-
-        // Deposit LendingToken back into compound if supported.
-        address cTokenAddress = cToken();
-        if (cTokenAddress != address(0)) {
-            // Deposit tokens straight into Compound
-            // Increase the Compound market supply
-            compoundMarketState.increaseSupply(
-                _depositToCompound(cTokenAddress, amountOut)
-            );
-        } else {
-            // Increase the market supply
-            marketState.increaseSupply(amountOut);
-        }
+        return uint256(result);
     }
 }
