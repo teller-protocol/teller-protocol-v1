@@ -124,26 +124,7 @@ contract LendingPool is Base, LendingPoolInterface {
             _exchangeRate()
         );
 
-        // Burn tToken tokens.
-        tToken.burn(msg.sender, tTokenAmount);
-
-        address cTokenAddress = cToken();
-        if (cTokenAddress != address(0)) {
-            // Withdraw tokens from Compound
-            // Decrease the Compound market supply
-            compoundMarketState.decreaseSupply(
-                _withdrawFromCompound(cTokenAddress, lendingTokenAmount)
-            );
-        } else {
-            // Decrease the market supply
-            marketState.decreaseSupply(lendingTokenAmount);
-        }
-
-        // Transfers tokens
-        tokenTransfer(msg.sender, lendingTokenAmount);
-
-        // Emit event.
-        emit TokenWithdrawn(msg.sender, lendingTokenAmount, tTokenAmount);
+        _withdraw(lendingTokenAmount, tTokenAmount);
     }
 
     function withdrawAll()
@@ -157,26 +138,7 @@ contract LendingPool is Base, LendingPoolInterface {
         uint256 lendingTokenAmount = (tTokenAmount * _exchangeRate()) /
             EXCHANGE_RATE_SCALE;
 
-        // Burn tToken tokens.
-        tToken.burn(msg.sender, tTokenAmount);
-
-        address cTokenAddress = cToken();
-        if (cTokenAddress != address(0)) {
-            // Withdraw tokens from Compound
-            // Decrease the Compound market supply
-            compoundMarketState.decreaseSupply(
-                _withdrawFromCompound(cTokenAddress, lendingTokenAmount)
-            );
-        } else {
-            // Decrease the market supply
-            marketState.decreaseSupply(lendingTokenAmount);
-        }
-
-        // Transfers tokens
-        tokenTransfer(msg.sender, lendingTokenAmount);
-
-        // Emit event.
-        emit TokenWithdrawn(msg.sender, lendingTokenAmount, tTokenAmount);
+        _withdraw(lendingTokenAmount, tTokenAmount);
     }
 
     /**
@@ -359,6 +321,29 @@ contract LendingPool is Base, LendingPoolInterface {
                 )
             );
         }
+    }
+
+    function _withdraw(uint256 lendingTokenAmount, uint256 tTokenAmount) internal {
+        // Burn tToken tokens.
+        tToken.burn(msg.sender, tTokenAmount);
+
+        address cTokenAddress = cToken();
+        if (cTokenAddress != address(0)) {
+            // Withdraw tokens from Compound
+            // Decrease the Compound market supply
+            compoundMarketState.decreaseSupply(
+                _withdrawFromCompound(cTokenAddress, lendingTokenAmount)
+            );
+        } else {
+            // Decrease the market supply
+            marketState.decreaseSupply(lendingTokenAmount);
+        }
+
+        // Transfers tokens
+        tokenTransfer(msg.sender, lendingTokenAmount);
+
+        // Emit event.
+        emit TokenWithdrawn(msg.sender, lendingTokenAmount, tTokenAmount);
     }
 
     /**
