@@ -246,29 +246,29 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     return assets[assetAddress].uints[MAX_TOTAL_VALUE_LOCKED_SETTING];
   }
 
-//   /**
-//     @notice It removes a configuration for a given asset on the platform.
-//     @param assetAddress asset address to remove.
-//     */
-//   function removeAsset(address assetAddress) external onlyPauser() {
-//     assets[assetAddress].requireExists();
-//     assets[assetAddress].clearCache(
-//       [
-//         MAX_LOAN_AMOUNT_ASSET_SETTING,
-//         MAX_TOTAL_VALUE_LOCKED_SETTING,
-//         CTOKEN_ADDRESS_ASSET_SETTING,
-//         YEARN_VAULT_ADDRESS_ASSET_SETTING,
-//         CRV_POOL_ADDRESS_ASSET_SETTING
-//       ],
-//       [
-//         CacheLib.CacheType.Uint,
-//         CacheLib.CacheType.Uint,
-//         CacheLib.CacheType.Address,
-//         CacheLib.CacheType.Address,
-//         CacheLib.CacheType.Address
-//       ]
-//     );
-//     delete assets[assetAddress];
-//     emit AssetSettingsRemoved(msg.sender, assetAddress);
-//   }
+  /**
+    @notice It removes a configuration for a given asset on the platform.
+    @param assetAddress asset address to remove.
+    */
+  function removeAsset(address assetAddress) external onlyPauser() {
+    assets[assetAddress].requireExists();
+    assets[assetAddress].clearCache(
+      [
+        MAX_LOAN_AMOUNT_ASSET_SETTING,
+        MAX_TOTAL_VALUE_LOCKED_SETTING,
+        CTOKEN_ADDRESS_ASSET_SETTING,
+        YEARN_VAULT_ADDRESS_ASSET_SETTING,
+        CRV_POOL_ADDRESS_ASSET_SETTING
+      ],
+      [
+        CacheLib.CacheType.Uint,
+        CacheLib.CacheType.Uint,
+        CacheLib.CacheType.Address,
+        CacheLib.CacheType.Address,
+        CacheLib.CacheType.Address
+      ]
+    );
+    delete assets[assetAddress];
+    emit AssetSettingsRemoved(msg.sender, assetAddress);
+  }
 }

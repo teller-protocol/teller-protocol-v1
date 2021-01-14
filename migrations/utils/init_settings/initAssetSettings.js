@@ -2,7 +2,7 @@ const assert = require("assert");
 const { ETH_ADDRESS } = require("../../../config/consts");
 const { toDecimals } = require("../../../test/utils/consts");
 const { settings } = require("../../../test/utils/events");
-const AssetSettings = artifacts.require("AssetSettings");
+const AssetSettingsInterface = artifacts.require("AssetSettingsInterface");
 
 /**
  * We set all assets settings.
@@ -17,7 +17,7 @@ module.exports = async function (
   { ERC20 }
 ) {
   console.log("Configuring asset settings.");
-  const assetSetting = await AssetSettings.at(await settingsInstance.assetSettings());
+  const assetSettingsInstance = await AssetSettingsInterface.at(await settingsInstance.assetSettings());
   for (const tokenName of Object.keys(assetSettings)) {
     const tokenConfig = assetSettings[tokenName];
 
@@ -43,11 +43,24 @@ module.exports = async function (
         tokenConfig.maxLoanAmount
       } (${decimals} decimals / ${maxLoanAmountWithDecimals.toFixed(0)})`
     );
-    await assetSetting.createAssetSetting(
+    await assetSettingsInstance.createAssetSetting(
       tokenAddress,
       cTokenAddress,
       maxLoanAmountWithDecimals,
       txConfig
     );
+    const maxTVLAmountWithDecimals = toDecimals(tokenConfig.maxTVLAmount, decimals);
+    console.log(
+      `Configuring asset: ${tokenName} (${tokenAddress}) / ${
+        tokenConfig.cToken
+      } (${cTokenAddress}) / Max TVL Amount: ${
+        tokenConfig.maxTVLAmount
+      } (${decimals} decimals / ${maxTVLAmountWithDecimals.toFixed(0)})`
+    );
+    await assetSettingsInstance.updateMaxTVL(
+      tokenAddress,
+      maxTVLAmountWithDecimals,
+      txConfig
+    )
   }
 };
