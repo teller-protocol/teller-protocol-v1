@@ -127,40 +127,6 @@ contract LendingPool is Base, LendingPoolInterface {
         _withdraw(lendingTokenAmount, tTokenAmount);
     }
 
-    function calculateOtherThing()
-        external
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256
-        )
-    {
-        uint256 lendingTokenAmount = lendingToken.balanceOf(msg.sender);
-        uint256 rate = _exchangeRate();
-        uint256 tTokenAmount = lendingTokenAmount.mul(EXCHANGE_RATE_SCALE).div(
-            _exchangeRate()
-        );
-
-        return (lendingTokenAmount, tTokenAmount, rate);
-    }
-
-    function calculateThing()
-        external
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256
-        )
-    {
-        uint256 tTokenAmount = tToken.balanceOf(msg.sender);
-        uint256 lendingTokenAmount = (tTokenAmount * _exchangeRate()) /
-            EXCHANGE_RATE_SCALE;
-
-        return (tTokenAmount, lendingTokenAmount, lendingToken.balanceOf(address(this)));
-    }
-
     function withdrawAll()
         external
         isInitialized()
@@ -169,6 +135,8 @@ contract LendingPool is Base, LendingPoolInterface {
         nonReentrant()
         returns (uint256)
     {
+        // 100 000000000000000000
+        //
         uint256 tTokenAmount = tToken.balanceOf(msg.sender);
         uint256 lendingTokenAmount = (tTokenAmount * _exchangeRate()) /
             EXCHANGE_RATE_SCALE;
@@ -306,6 +274,32 @@ contract LendingPool is Base, LendingPoolInterface {
             );
     }
 
+    // function _exchangeRateForTToken(uint256 tTokenAmount)
+    //     internal
+    //     view
+    //     returns (uint256)
+    // {
+    //     if (tToken.totalSupply() == 0) {
+    //         return tTokenAmount;
+    //     }
+    //     return
+    //         _getMarketState().totalSupplied.mul(tTokenAmount).div(tToken.totalSupply());
+    // }
+
+    // function _exchangeRateForUnderlying(uint256 underlyingAmount)
+    //     internal
+    //     view
+    //     returns (uint256)
+    // {
+    //     if (tToken.totalSupply() == 0) {
+    //         return 10**lendingToken.decimals();
+    //     }
+    //     return
+    //         tToken.totalSupply().mul(underlyingAmount).div(
+    //             _getMarketState().totalSupplied
+    //         );
+    // }
+
     /**
         @notice It initializes the contract state variables.
         @param tTokenAddress tToken token address.
@@ -425,7 +419,7 @@ contract LendingPool is Base, LendingPoolInterface {
     }
 
     /**
-        @notice It validates whether transaction sender is the loans contract address.@
+        @notice It validates whether transaction sender is the loans contract address.
         @dev This function is overriden in some mock contracts for testing purposes.
      */
     function _requireIsLoan() internal view {
