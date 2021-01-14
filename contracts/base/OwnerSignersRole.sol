@@ -46,7 +46,6 @@ contract OwnerSignersRole is Ownable {
      */
     function addSigner(address account) public onlyOwner {
         _addSigner(account);
-        _signerCount++;
     }
 
     /**
@@ -73,7 +72,6 @@ contract OwnerSignersRole is Ownable {
      */
     function removeSigner(address account) public onlyOwner {
         _removeSigner(account);
-        _signerCount--;
     }
 
     /**
@@ -82,6 +80,7 @@ contract OwnerSignersRole is Ownable {
      */
     function _addSigner(address account) internal {
         _signers.add(account);
+        _signerCount = _signerCount + 1;
         emit SignerAdded(account);
     }
 
@@ -91,6 +90,7 @@ contract OwnerSignersRole is Ownable {
      */
     function _removeSigner(address account) internal {
         _signers.remove(account);
+        _signerCount = _signerCount - 1;
         emit SignerRemoved(account);
     }
 }
