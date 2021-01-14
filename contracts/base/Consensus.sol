@@ -72,7 +72,6 @@ contract Consensus is Base, OwnerSignersRole {
             )
             .value;
 
-
         require(
             responseCount.ratioOf(_signerCount) >= percentageRequired,
             "INSUFFICIENT_NUMBER_OF_RESPONSES"
