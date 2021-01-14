@@ -29,6 +29,7 @@ contract('LendingPoolWithdrawTest', function (accounts) {
   let consensusInstance;
   let cTokenInstance;
   let settingsInstance;
+  let lendingTokenInstance;
 
   beforeEach('Setup for each test', async () => {
     loansInstance = await Mock.new();
@@ -36,8 +37,11 @@ contract('LendingPoolWithdrawTest', function (accounts) {
     settingsInstance = await Mock.new();
     cTokenInstance = await Mock.new();
     instance = await LendingPool.new();
+    lendingTokenInstance = await Token.new();
 
-    await instance.mockMarketState(10000000000000, 0, 0);
+    const mintAmount = 10000000000000;
+    await instance.mockMarketState(mintAmount, 0, 0);
+    await lendingTokenInstance.mint(instance.address, mintAmount);
   });
 
   withData(
@@ -145,7 +149,6 @@ contract('LendingPoolWithdrawTest', function (accounts) {
         async () => {
           // Setup
           const tTokenInstance = await TDAI.new(settingsInstance.address);
-          const lendingTokenInstance = await Token.new();
           await tTokenInstance.addMinter(instance.address);
           await initContracts(
             settingsInstance,
@@ -158,20 +161,23 @@ contract('LendingPoolWithdrawTest', function (accounts) {
             from: depositSender,
           });
           await instance.deposit(depositAmount, { from: depositSender });
-          const things = await instance.calculateThing();
-          console.log(Object.values(things).map((value) => value.toString()));
+
+          const totalLendingTokens = await lendingTokenInstance.balanceOf(
+            instance.address
+          );
+
+          console.log(totalLendingTokens);
+
           try {
             // Invocation
             const result = await instance.withdrawAll({
               from: recipient,
             });
 
-            console.log(result);
-
             // Assertions
             assert(!mustFail, 'It should have failed because data is invalid.');
-            assert(result[0] === depositAmount);
-            lendingPool.tokenWithdrawn(result).emitted(recipient, amountToWithdraw);
+            assert(result);
+            lendingPool.tokenWithdrawn(result).emitted(recipient, totalLendingTokens);
           } catch (error) {
             console.log(error);
             // Assertions

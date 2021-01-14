@@ -127,24 +127,38 @@ contract LendingPool is Base, LendingPoolInterface {
         _withdraw(lendingTokenAmount, tTokenAmount);
     }
 
+    function calculateOtherThing()
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256
+        )
+    {
+        uint256 lendingTokenAmount = lendingToken.balanceOf(msg.sender);
+        uint256 rate = _exchangeRate();
+        uint256 tTokenAmount = lendingTokenAmount.mul(EXCHANGE_RATE_SCALE).div(
+            _exchangeRate()
+        );
+
+        return (lendingTokenAmount, tTokenAmount, rate);
+    }
+
     function calculateThing()
         external
         view
         returns (
             uint256,
             uint256,
-            uint256,
-            uint256,
             uint256
         )
     {
         uint256 tTokenAmount = tToken.balanceOf(msg.sender);
-        uint256 rate = _exchangeRate();
-        uint256 lendingTokenAmount = (tTokenAmount * rate) / EXCHANGE_RATE_SCALE;
-        uint256 totalSupplied = _getMarketState().totalSupplied;
-        uint256 tTokenSupplied = tToken.totalSupply();
+        uint256 lendingTokenAmount = (tTokenAmount * _exchangeRate()) /
+            EXCHANGE_RATE_SCALE;
 
-        return (tTokenAmount, lendingTokenAmount, rate, totalSupplied, tTokenSupplied);
+        return (tTokenAmount, lendingTokenAmount, lendingToken.balanceOf(address(this)));
     }
 
     function withdrawAll()
@@ -350,6 +364,9 @@ contract LendingPool is Base, LendingPoolInterface {
         // Burn tToken tokens.
         tToken.burn(msg.sender, tTokenAmount);
 
+        // Transfers tokens
+        tokenTransfer(msg.sender, lendingTokenAmount);
+
         address cTokenAddress = cToken();
         if (cTokenAddress != address(0)) {
             // Withdraw tokens from Compound
@@ -361,9 +378,6 @@ contract LendingPool is Base, LendingPoolInterface {
             // Decrease the market supply
             marketState.decreaseSupply(lendingTokenAmount);
         }
-
-        // Transfers tokens
-        tokenTransfer(msg.sender, lendingTokenAmount);
 
         // Emit event.
         emit TokenWithdrawn(msg.sender, lendingTokenAmount, tTokenAmount);
