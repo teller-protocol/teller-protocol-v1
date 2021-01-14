@@ -13,7 +13,7 @@ library CacheLib {
   using AddressLib for address;
   using Address for address;
 
-  enum CacheType { Address, Uint, Int, Byte, Bool }
+//   enum CacheType { Address, Uint, Int, Byte, Bool }
 
   /**
         @notice This struct manages the cache of the library instance.
@@ -40,7 +40,7 @@ library CacheLib {
   /**
         @notice The constant for the initialization check
      */
-  bytes32 private constant INITIALIZED = keccak256("Initialized");
+//   bytes32 private constant INITIALIZED = keccak256("Initialized");
 
   /**
         @notice Initializes the cache instance.
@@ -48,7 +48,7 @@ library CacheLib {
      */
   function initialize(Cache storage self) internal {
     requireNotExists(self);
-    self.bools[INITIALIZED] = true;
+    self.bools[keccak256("Initialized")] = true;
   }
 
   /**
@@ -73,7 +73,7 @@ library CacheLib {
         @return bool True if the cache exists.
      */
   function exists(Cache storage self) internal view returns (bool) {
-    return self.bools[INITIALIZED];
+    return self.bools[keccak256("Initialized")];
   }
 
   /**
@@ -174,25 +174,25 @@ library CacheLib {
 
   /**
    */
-  function clearCache(
-    Cache storage self,
-    bytes32[5] memory keysToClear,
-    CacheType[5] memory keyTypes
-  ) internal {
-    requireExists(self);
-    require(keysToClear.length == keyTypes.length, "ARRAY_LENGTHS_MISMATCH");
-    for (uint256 i; i <= keysToClear.length; i++) {
-      if (keyTypes[i] == CacheType.Address) {
-        delete self.addresses[keysToClear[i]];
-      } else if (keyTypes[i] == CacheType.Uint) {
-        delete self.uints[keysToClear[i]];
-      } else if (keyTypes[i] == CacheType.Int) {
-        delete self.ints[keysToClear[i]];
-      } else if (keyTypes[i] == CacheType.Byte) {
-        delete self.bites[keysToClear[i]];
-      } else if (keyTypes[i] == CacheType.Bool) {
-        delete self.bools[keysToClear[i]];
-      }
-    }
-  }
+//   function clearCache(
+//     Cache storage self,
+//     bytes32[5] memory keysToClear,
+//     CacheType[5] memory keyTypes
+//   ) internal {
+//     requireExists(self);
+//     require(keysToClear.length == keyTypes.length, "ARRAY_LENGTHS_MISMATCH");
+//     for (uint256 i; i <= keysToClear.length; i++) {
+//       if (keyTypes[i] == CacheType.Address) {
+//         delete self.addresses[keysToClear[i]];
+//       } else if (keyTypes[i] == CacheType.Uint) {
+//         delete self.uints[keysToClear[i]];
+//       } else if (keyTypes[i] == CacheType.Int) {
+//         delete self.ints[keysToClear[i]];
+//       } else if (keyTypes[i] == CacheType.Byte) {
+//         delete self.bites[keysToClear[i]];
+//       } else if (keyTypes[i] == CacheType.Bool) {
+//         delete self.bools[keysToClear[i]];
+//       }
+//     }
+//   }
 }

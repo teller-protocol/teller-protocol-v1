@@ -2,7 +2,7 @@
 const withData = require("leche").withData;
 const abi = require("ethereumjs-abi");
 const settingsNames = require("../utils/platformSettingsNames");
-const { t, NULL_ADDRESS, TERMS_SET, THIRTY_DAYS } = require("../utils/consts");
+const { t, NULL_ADDRESS, TERMS_SET, THIRTY_DAYS, encode } = require("../utils/consts");
 const { loans } = require("../utils/events");
 const { createLoanRequest, createUnsignedLoanResponse } = require("../utils/structs");
 const LendingPoolInterfaceEncoder = require("../utils/encoders/LendingPoolInterfaceEncoder");
@@ -17,6 +17,8 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const Loans = artifacts.require("./mock/base/EtherCollateralLoansMock.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
+const AssetSettings = artifacts.require("./interfaces/AssetSettings.sol");
+const AssetSettingsInterface = artifacts.require("./interfaces/AssetSettingsInterface.sol");
 
 // Libraries
 const LoanLib = artifacts.require("../util/LoanLib.sol");
@@ -36,6 +38,7 @@ contract("EtherCollateralLoansCreateLoanWithTermsTest", function (accounts) {
   let lendingTokenInstance;
   let collateralTokenInstance;
   let atmSettingsInstance;
+  let versionsRegistryInstance;
 
   const borrowerAddress = accounts[2];
   const AMOUNT_LOAN_REQUEST = 12000;
@@ -56,14 +59,20 @@ contract("EtherCollateralLoansCreateLoanWithTermsTest", function (accounts) {
         from: owner,
         Mock,
         initialize: true,
-        onInitialize: async (instance, { atmSettings }) => {
+        onInitialize: async (instance, { atmSettings, versionsRegistry }) => {
           atmSettingsInstance = atmSettings;
+          versionsRegistryInstance = versionsRegistry;
         },
       },
       {
         [settingsNames.TermsExpiryTime]: THIRTY_DAYS,
       }
     );
+
+    await versionsRegistryInstance.givenMethodReturnBool(
+        encode(web3, "isProxyRegistered(address)"), true
+    );
+
     const loanLib = await LoanLib.new();
     await Loans.link("LoanLib", loanLib.address);
     instance = await Loans.new();
@@ -131,12 +140,12 @@ contract("EtherCollateralLoansCreateLoanWithTermsTest", function (accounts) {
   withData(
     {
       _1_no_msg_value: [AMOUNT_LOAN_REQUEST, 3, 0, 0, undefined, false],
-      // _2_with_msg_value: [ AMOUNT_LOAN_REQUEST, 17, 500000, 500000, undefined, false ],
-      // _3_msg_value_collateral_param_not_match_1: [ AMOUNT_LOAN_REQUEST, 17, 1, 500000, 'INCORRECT_ETH_AMOUNT', true ],
-      // _4_msg_value_collateral_param_not_match_2: [ AMOUNT_LOAN_REQUEST, 17, 500000, 0, 'INCORRECT_ETH_AMOUNT', true ],
-      // _5_msg_value_collateral_param_not_match_3: [ AMOUNT_LOAN_REQUEST, 17, 200000, 200001, 'INCORRECT_ETH_AMOUNT', true ],
-      // _6_no_msg_value_exceeds_max_amount: [ AMOUNT_LOAN_REQUEST - 400, 3, 0, 0, 'AMOUNT_EXCEEDS_MAX_AMOUNT', true ],
-      // _7_with_msg_value_exceeds_max_amount: [ AMOUNT_LOAN_REQUEST - 1, 17, 500000, 500000, 'AMOUNT_EXCEEDS_MAX_AMOUNT', true ]
+    //   _2_with_msg_value: [ AMOUNT_LOAN_REQUEST, 17, 500000, 500000, undefined, false ],
+    //   _3_msg_value_collateral_param_not_match_1: [ AMOUNT_LOAN_REQUEST, 17, 1, 500000, 'INCORRECT_ETH_AMOUNT', true ],
+    //   _4_msg_value_collateral_param_not_match_2: [ AMOUNT_LOAN_REQUEST, 17, 500000, 0, 'INCORRECT_ETH_AMOUNT', true ],
+    //   _5_msg_value_collateral_param_not_match_3: [ AMOUNT_LOAN_REQUEST, 17, 200000, 200001, 'INCORRECT_ETH_AMOUNT', true ],
+    //   _6_no_msg_value_exceeds_max_amount: [ AMOUNT_LOAN_REQUEST - 400, 3, 0, 0, 'AMOUNT_EXCEEDS_MAX_AMOUNT', true ],
+    //   _7_with_msg_value_exceeds_max_amount: [ AMOUNT_LOAN_REQUEST - 1, 17, 500000, 500000, 'AMOUNT_EXCEEDS_MAX_AMOUNT', true ]
     },
     function (
       assetSettingMaxAmount,
@@ -172,14 +181,20 @@ contract("EtherCollateralLoansCreateLoanWithTermsTest", function (accounts) {
             lendingTokenInstance.address
           );
           try {
-            await settingsInstance.createAssetSettings(
-              lendingTokenInstance.address,
-              cTokenInstance.address,
-              assetSettingMaxAmount,
-              {
-                from: owner,
-              }
-            );
+            console.log(await settingsInstance.assetSettings())
+            const assetSettings = await AssetSettingsInterface.at(await settingsInstance.assetSettings());
+            // const assetSettings = await AssetSettings.new();
+            // await assetSettings.initialize(settingsInstance.address);
+            // await assetSettings.createAssetSetting(
+            //   lendingTokenInstance.address,
+            //   cTokenInstance.address,
+            //   assetSettingMaxAmount,
+            //   {
+            //     from: owner,
+            //   }
+            // );
+            const ting = await settingsInstance.getCTokenAddress(lendingTokenInstance.address);
+            console.log({ting})
           } catch (error) {
             console.log({ error });
           }

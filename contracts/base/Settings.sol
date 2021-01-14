@@ -328,7 +328,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @param account account to test.
      */
   function requirePauserRole(address account) public view {
-    require(isPauser(account), "NOT_PAUSER");
+    require(isPauser(account) || account == address(this), "NOT_PAUSER");
   }
 
   /**
@@ -379,8 +379,8 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @return True if account has authorization, false if it does not
      */
   function hasAuthorization(address account) public view returns (bool) {
-    return isPauser(account) || authorizedAddresses[account];
-    versionsRegistry.isProxyRegistered(account);
+    return isPauser(account) || authorizedAddresses[account] || versionsRegistry.isProxyRegistered(account);
+
   }
 
   /**

@@ -71,59 +71,6 @@ interface SettingsInterface {
   event LendingPoolUnpaused(address indexed account, address indexed lendingPoolAddress);
 
   /**
-        @notice This event is emitted when a new asset settings is created.
-        @param sender the transaction sender address.
-        @param assetAddress the asset address used to create the settings.
-        @param cTokenAddress cToken address to configure for the asset.
-        @param maxLoanAmount max loan amount to configure for the asset.
-     */
-  event AssetSettingsCreated(
-    address indexed sender,
-    address indexed assetAddress,
-    address cTokenAddress,
-    uint256 maxLoanAmount
-  );
-
-  /**
-        @notice This event is emitted when an asset settings is removed.
-        @param sender the transaction sender address.
-        @param assetAddress the asset address used to remove the settings.
-     */
-  event AssetSettingsRemoved(address indexed sender, address indexed assetAddress);
-
-  /**
-        @notice This event is emitted when an asset settings (address type) is updated.
-        @param assetSettingName asset setting name updated.
-        @param sender the transaction sender address.
-        @param assetAddress the asset address used to update the asset settings.
-        @param oldValue old value used for the asset setting.
-        @param newValue the value updated.
-     */
-  event AssetSettingsAddressUpdated(
-    bytes32 indexed assetSettingName,
-    address indexed sender,
-    address indexed assetAddress,
-    address oldValue,
-    address newValue
-  );
-
-  /**
-        @notice This event is emitted when an asset settings (uint256 type) is updated.
-        @param assetSettingName asset setting name updated.
-        @param sender the transaction sender address.
-        @param assetAddress the asset address used to update the asset settings.
-        @param oldValue old value used for the asset setting.
-        @param newValue the value updated.
-     */
-  event AssetSettingsUintUpdated(
-    bytes32 indexed assetSettingName,
-    address indexed sender,
-    address indexed assetAddress,
-    uint256 oldValue,
-    uint256 newValue
-  );
-
-  /**
         @notice It creates a new platform setting given a setting name, value, min and max values.
         @param settingName setting name to create.
         @param value the initial value for the given setting name.
