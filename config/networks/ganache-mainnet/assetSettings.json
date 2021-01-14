@@ -2,7 +2,7 @@
   "DAI": {
     "cToken": "CDAI",
     "maxLoanAmount": 1000,
-    "maxTVLAmount": 200000
+    "maxTVLAmount": 100000
   },
   "USDC": {
     "cToken": "CUSDC",
