@@ -8,8 +8,15 @@
     "target": "es2017",
     "allowJs": true,
     "strict": true,
-    "typeRoots": ["./node_modules/@types", "./types"],
+    "typeRoots": ["./node_modules/@types", "./types"]
   },
-  "include": ["./test", "./scripts", "./migrations", "./test-integration", "./types", "./node_modules/@types"],
+  "include": [
+    "./test",
+    "./scripts",
+    "./migrations",
+    "./test-integration",
+    "./types",
+    "./node_modules/@types"
+  ],
   "exclude": ["./node_modules/**/*", "./contracts", "./build", "./docs"]
 }
