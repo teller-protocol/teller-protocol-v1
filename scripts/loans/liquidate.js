@@ -10,6 +10,7 @@ const processArgs = new ProcessArgs(readParams.liquidate().argv);
 module.exports = async (callback) => {
     try {
         const tokenName = processArgs.getValue('tokenName');
+        const collTokenName = processArgs.getValue('collTokenName');
         const loanId = processArgs.getValue('loanId');
         const senderIndex = processArgs.getValue('senderIndex');
         const accounts = new Accounts(web3);
@@ -17,7 +18,7 @@ module.exports = async (callback) => {
         const { toTxUrl } = appConf.networkConfig;
 
         const getContracts = processArgs.createGetContracts(artifacts);
-        const loansInstance = await getContracts.getDeployed(teller.loans(tokenName));
+        const loansInstance = await getContracts.getDeployed(teller.custom(collTokenName).loans(tokenName));
 
         const sender = await accounts.getAt(senderIndex);
         const txConfig = { from: sender };

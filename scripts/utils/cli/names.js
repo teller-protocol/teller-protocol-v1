@@ -13,8 +13,6 @@ const DEFAULT_COLLATERAL_TOKEN_NAME = "ETH";
 const DEFAULT_TEST_TOKEN_NAME = "DAI";
 const DEFAULT_TOKEN_NAMES = ["DAI", "USDC"];
 const DEFAULT_COLL_TOKEN_NAMES = ["ETH", "LINK"];
-const DEFAULT_REQUIRED_SUBMISSIONS_PERCENTAGE = 8000;
-const DEFAULT_SAFETY_INTERVAL = 1;
 
 module.exports = {
   NETWORK: {
@@ -171,16 +169,6 @@ module.exports = {
     name: "tokenNames",
     alias: "TNS",
     default: DEFAULT_TOKEN_NAMES,
-  },
-  REQUIRED_SUBMISSIONS_PERCENTAGE: {
-    name: "requiredSubmissionsPercentage",
-    alias: "RSP",
-    default: DEFAULT_REQUIRED_SUBMISSIONS_PERCENTAGE,
-  },
-  SAFETY_INTERVAL: {
-    name: "safetyInterval",
-    alias: "SI",
-    default: DEFAULT_SAFETY_INTERVAL,
   },
   TEST_TOKEN_NAME: {
     name: "testTokenName",
