@@ -11,7 +11,7 @@ library NumbersLib {
     using SafeMath for uint256;
 
     // It represents 100% with 2 decimal places.
-    function ONE_HUNDRED_PERCENT() internal pure returns (uint256) {
+    function oneHundredPercent() internal pure returns (uint256) {
         return 10000;
     }
 
@@ -31,7 +31,7 @@ library NumbersLib {
         @return uint256 The percentage difference value
      */
     function diffOneHundredPercent(uint256 self) internal pure returns (uint256) {
-        return diff(self, ONE_HUNDRED_PERCENT());
+        return diff(self, oneHundredPercent());
     }
 
     /**
@@ -40,11 +40,11 @@ library NumbersLib {
      * @param percentage The percentage value to calculate with 2 decimal places (10000 = 100%).
      */
     function percent(uint256 self, uint256 percentage) internal pure returns (uint256) {
-        return self.mul(percentage).div(ONE_HUNDRED_PERCENT());
+        return self.mul(percentage).div(oneHundredPercent());
     }
 
     function percent(int256 self, uint256 percentage) internal pure returns (int256) {
-        return (self * int256(percentage)) / int256(ONE_HUNDRED_PERCENT());
+        return (self * int256(percentage)) / int256(oneHundredPercent());
     }
 
     function abs(int256 self) internal pure returns (uint256) {
@@ -58,6 +58,6 @@ library NumbersLib {
      * @return Ratio of 2 numbers with 2 decimal places (10000 = 100%).
      */
     function ratioOf(uint256 self, uint256 num) internal pure returns (uint256) {
-        return self.mul(ONE_HUNDRED_PERCENT()).div(num);
+        return self.mul(oneHundredPercent()).div(num);
     }
 }

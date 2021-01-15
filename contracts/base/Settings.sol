@@ -34,9 +34,13 @@ import "../settings/IATMSettings.sol";
 /*****************************************************************************************************/
 /**
     @notice This contract manages the configuration of the platform.
-    @dev The platform settings functions (create, update, and remove) don't include the whenNotPaused() modifier because we might need to use them in both cases (when the platform is paused and not paused).
+    @dev The platform settings functions (create, update, and remove) don't include the whenNotPaused()
+    modifier because we might need to use them in both cases (when the platform is paused and not paused).
         Example:
-            - There is a potential issue and before analyzing it, we pause the platform to avoid funds losses. Finally, as result of the analysis, we decided to update a platform setting (or create a new one for the cloud nodes). In this scenario, if the modifier is present, we couldn't update the setting (because the platform is paused).
+            - There is a potential issue and before analyzing it, we pause the platform to avoid funds
+            losses. Finally, as result of the analysis, we decided to update a platform setting (or create
+            a new one for the cloud nodes). In this scenario, if the modifier is present, we couldn't update
+            the setting (because the platform is paused).
 
     @author develop@teller.finance
  */
@@ -70,6 +74,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
      */
     address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
+    /* solhint-disable var-name-mixedcase */
     /**
         @notice It defines the constant address to represent the canonical WETH token.
         @dev It is set via the initialize function.
@@ -81,6 +86,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @dev It is set by the initialize function.
      */
     address public CETH_ADDRESS;
+    /* solhint-enable var-name-mixedcase */
 
     /* State Variables */
 
@@ -149,7 +155,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
 
     /**
         @notice This mapping represents the list of wallet addresses that are allowed to interact with the protocol
-        
+
         - The key is belongs to the user's wallet address
         - The value is a boolean flag indicating if the address has permissions
      */
@@ -158,7 +164,7 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     /**
         @notice Flag restricting the use of the Protocol to authorizedAddress
      */
-    bool platformRestricted;
+    bool private platformRestricted;
 
     /** Modifiers */
 

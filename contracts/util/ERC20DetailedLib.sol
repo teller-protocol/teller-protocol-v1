@@ -4,7 +4,8 @@ import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 
 /**
-    @notice This library helps contracts to validate amounts (balances and allowances) when a 'transfer' or 'transferFrom' is executed.
+    @notice This library helps contracts to validate amounts (balances and allowances) when a 'transfer'
+    or 'transferFrom' is executed.
 
     @author develop@teller.finance
  */

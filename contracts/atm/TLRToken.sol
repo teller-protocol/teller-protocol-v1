@@ -75,7 +75,8 @@ contract TLRToken is
     }
 
     /* Mappings */
-    mapping(address => mapping(uint256 => VestingTokens)) private _vestingBalances; // Mapping user address to vesting id, which in turn is mapped to the VestingTokens struct
+    // Mapping user address to vesting id, which in turn is mapped to the VestingTokens struct
+    mapping(address => mapping(uint256 => VestingTokens)) private _vestingBalances;
     mapping(address => uint256) public vestingCount;
     mapping(address => uint256) public assignedTokens;
     mapping(address => Snapshots) private _accountBalanceSnapshots;
@@ -387,7 +388,8 @@ contract TLRToken is
     }
 
     /**
-        @notice Returns the element from the id array with the index of the smallest value that is larger if not found, unless it doesn't exist
+        @notice Returns the element from the id array with the index of the smallest value that is
+        larger if not found, unless it doesn't exist
         @param snapshotId The id of the snapshot being createc
         @param snapshots The struct of the snapshots being queried
      */

@@ -23,7 +23,8 @@ import "../interfaces/InterestConsensusInterface.sol";
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
-    @notice This contract interacts with the LendingPool contract to ensure token balances and interest owed is kept up to date. It tracks the interest for lenders.
+    @notice This contract interacts with the LendingPool contract to ensure token balances and
+    interest owed is kept up to date. It tracks the interest for lenders.
 
     @author develop@teller.finance
  */
@@ -174,7 +175,9 @@ contract Lenders is Base, LendersInterface {
         view
         returns (bool)
     {
-        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
+        // silence state mutability warning without generating bytecode
+        // see https://github.com/ethereum/solidity/issues/2691
+        this;
         return leftAddress.isEqualTo(rightAddress);
     }
 

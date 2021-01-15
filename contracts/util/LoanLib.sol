@@ -82,7 +82,8 @@ library LoanLib {
     }
 
     /**
-        @notice Checks whether the loan's collateral ratio is considered to be secured based on the settings collateral buffer value.
+        @notice Checks whether the loan's collateral ratio is considered to be secured based on the
+        settings collateral buffer value.
         @param loan The loan to check.
         @param settings The settings instance for the platform.
         @return bool value of it being secured or not.
@@ -193,7 +194,8 @@ library LoanLib {
     }
 
     /**
-        @notice Returns the collateral needed for a loan, in the lending token, needed to take out the loan or for it be liquidated.
+        @notice Returns the collateral needed for a loan, in the lending token, needed to take out the
+        loan or for it be liquidated.
         @param loan The loan for which to get collateral information for
         @param loansContract The loans contract instance associated with the loan
         @return uint256 Collateral needed in lending token value
@@ -259,7 +261,8 @@ library LoanLib {
     }
 
     /**
-        @notice Returns the minimum collateral value threshold, in the lending token, needed to take out the loan or for it be liquidated.
+        @notice Returns the minimum collateral value threshold, in the lending token, needed to take out
+        the loan or for it be liquidated.
         @dev If the loan status is TermsSet, then the value is whats needed to take out the loan.
         @dev If the loan status is Active, then the value is the threshold at which the loan can be liquidated at.
         @param loan The loan to get needed collateral info for.
@@ -280,10 +283,15 @@ library LoanLib {
                 * loan interest rate
                 * liquidation reward percent
                 * X factor of additional collateral
+
+            * To take out a loan (if status == TermsSet), the required collateral is
+                (max loan amount * the collateral ratio).
+            * For the loan to not be liquidated (when status == Active), the minimum collateral is
+                (principal owed * (X collateral factor + liquidation reward)).
+            * If the loan has an escrow account, the minimum collateral is
+                ((principal owed - escrow value) * (X collateral factor + liquidation reward)).
         */
-        // * To take out a loan (if status == TermsSet), the required collateral is (max loan amount * the collateral ratio).
-        // * For the loan to not be liquidated (when status == Active), the minimum collateral is (principal owed * (X collateral factor + liquidation reward)).
-        // * If the loan has an escrow account, the minimum collateral is ((principal owed - escrow value) * (X collateral factor + liquidation reward)).
+
         if (loan.status == TellerCommon.LoanStatus.TermsSet) {
             neededInLendingTokens = int256(getLoanAmount(loan)).percent(
                 loan.loanTerms.collateralRatio
@@ -319,7 +327,8 @@ library LoanLib {
         liquidationInfo.collateralInfo = getCollateralInfo(loan, loansContract);
         liquidationInfo.amountToLiquidate = getTotalOwed(loan);
 
-        // Maximum reward is the calculated value of required collateral minus the principal owed (see LoanLib.getCollateralNeededInTokens).+
+        // Maximum reward is the calculated value of required collateral minus the principal owed
+        // (see LoanLib.getCollateralNeededInTokens).
         uint256 availableValue = liquidationInfo.collateralInfo.valueInLendingTokens.add(
             liquidationInfo.collateralInfo.escrowLoanValue
         );

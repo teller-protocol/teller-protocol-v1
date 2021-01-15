@@ -39,7 +39,7 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
         This mapping identify the last request timestamp for a given borrower address.
 
             Example:    address(0x123...789) = timestamp(now)
-        
+
         It is used as rate limit per borrower address.
      */
     mapping(address => uint256) public borrowerToLastLoanTermRequest;
@@ -196,7 +196,8 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
     }
 
     /**
-        @notice It validates whether the time window between the last loan terms request and current one exceeds the maximum rate limit.
+        @notice It validates whether the time window between the last loan terms request and current
+        one exceeds the maximum rate limit.
         @param request the new request.
         @dev It throws a require error if the request rate limit exceeds the maximum.
      */

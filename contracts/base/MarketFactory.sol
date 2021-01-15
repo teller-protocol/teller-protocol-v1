@@ -52,7 +52,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         address(DAI) => address(ETH) => Market {...}
         address(DAI) => address(LINK) => Market {...}
      */
-    mapping(address => mapping(address => TellerCommon.Market)) markets;
+    mapping(address => mapping(address => TellerCommon.Market)) private markets;
 
     /* Modifiers */
 

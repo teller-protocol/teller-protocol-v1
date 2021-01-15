@@ -5,7 +5,8 @@ import "@openzeppelin/upgrades/contracts/upgradeability/BaseUpgradeabilityProxy.
 import "./BaseDynamicProxy.sol";
 
 /**
-    @notice This is used as a proxy contract in the deployment process, allowing to us to make upgreadable the contracts. 
+    @notice This is used as a proxy contract in the deployment process, allowing to us to make
+    upgreadable the contracts.
     @dev The platform uses two types of proxies:
     - BaseDynamicProxy
     - BaseUpgradeabilityProxy (from OpenZeppelin).

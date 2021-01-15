@@ -139,8 +139,6 @@ interface SettingsInterface {
         uint256 maxValue
     ) external;
 
-    function consts() external view returns (SettingsConsts);
-
     /**
         @notice It updates an existent platform setting given a setting name.
         @notice It only allows to update the value (not the min or max values).
@@ -155,43 +153,6 @@ interface SettingsInterface {
         @param settingName to remove.
      */
     function removePlatformSetting(bytes32 settingName) external;
-
-    /**
-        @notice It gets the current platform setting for a given setting name
-        @param settingName to get.
-        @return the current platform setting.
-     */
-    function getPlatformSetting(bytes32 settingName)
-        external
-        view
-        returns (PlatformSettingsLib.PlatformSetting memory);
-
-    /**
-        @notice It gets the current platform setting value for a given setting name
-        @param settingName to get.
-        @return the current platform setting value.
-     */
-    function getPlatformSettingValue(bytes32 settingName) external view returns (uint256);
-
-    /**
-        @notice It tests whether a setting name is already configured.
-        @param settingName setting name to test.
-        @return true if the setting is already configured. Otherwise it returns false.
-     */
-    function hasPlatformSetting(bytes32 settingName) external view returns (bool);
-
-    /**
-        @notice It gets whether the platform is paused or not.
-        @return true if platform is paused. Otherwise it returns false.
-     */
-    function isPaused() external view returns (bool);
-
-    /**
-        @notice It gets whether a lending pool is paused or not.
-        @param lendingPoolAddress lending pool address to test.
-        @return true if the lending pool is paused. Otherwise it returns false.
-     */
-    function lendingPoolPaused(address lendingPoolAddress) external view returns (bool);
 
     /**
         @notice It pauses a specific lending pool.
@@ -236,6 +197,71 @@ interface SettingsInterface {
         @param newCTokenAddress the new cToken address to configure.
      */
     function updateCTokenAddress(address assetAddress, address newCTokenAddress) external;
+
+    /**
+        @notice Restricts the use of the Teller protocol to authorized wallet addresses only
+        @param restriction Bool turning the resitriction on or off
+     */
+    function restrictPlatform(bool restriction) external;
+
+    /**
+        @notice It initializes this settings contract instance.
+        @param escrowFactoryAddress the initial escrow factory address.
+        @param versionsRegistryAddress the initial versions registry address.
+        @param chainlinkAggregatorAddress the initial pair aggregator registry address.
+        @param interestValidatorAddress the initial interest validator address.
+        @param atmSettingsAddress the initial ATM settings address.
+        @param wethTokenAddress canonical WETH token address.
+        @param cethTokenAddress compound CETH token address.
+     */
+    function initialize(
+        address escrowFactoryAddress,
+        address versionsRegistryAddress,
+        address chainlinkAggregatorAddress,
+        address interestValidatorAddress,
+        address atmSettingsAddress,
+        address wethTokenAddress,
+        address cethTokenAddress
+    ) external;
+
+    /**
+        @notice It gets the current platform setting for a given setting name
+        @param settingName to get.
+        @return the current platform setting.
+     */
+    function getPlatformSetting(bytes32 settingName)
+        external
+        view
+        returns (PlatformSettingsLib.PlatformSetting memory);
+
+    /**
+        @notice It gets the current platform setting value for a given setting name
+        @param settingName to get.
+        @return the current platform setting value.
+     */
+    function getPlatformSettingValue(bytes32 settingName) external view returns (uint256);
+
+    /**
+        @notice It tests whether a setting name is already configured.
+        @param settingName setting name to test.
+        @return true if the setting is already configured. Otherwise it returns false.
+     */
+    function hasPlatformSetting(bytes32 settingName) external view returns (bool);
+
+    /**
+        @notice It gets whether the platform is paused or not.
+        @return true if platform is paused. Otherwise it returns false.
+     */
+    function isPaused() external view returns (bool);
+
+    function consts() external view returns (SettingsConsts);
+
+    /**
+        @notice It gets whether a lending pool is paused or not.
+        @param lendingPoolAddress lending pool address to test.
+        @return true if the lending pool is paused. Otherwise it returns false.
+     */
+    function lendingPoolPaused(address lendingPoolAddress) external view returns (bool);
 
     function assetSettings(address)
         external
@@ -288,12 +314,6 @@ interface SettingsInterface {
     function requirePauserRole(address account) external view;
 
     /**
-        @notice Restricts the use of the Teller protocol to authorized wallet addresses only
-        @param restriction Bool turning the resitriction on or off
-     */
-    function restrictPlatform(bool restriction) external;
-
-    /**
         @notice Returns whether the platform is restricted or not
         @return bool True if the platform is restricted, false if not
      */
@@ -340,26 +360,7 @@ interface SettingsInterface {
      */
     function getCTokenAddress(address assetAddress) external view returns (address);
 
-    /**
-        @notice It initializes this settings contract instance.
-        @param escrowFactoryAddress the initial escrow factory address.
-        @param versionsRegistryAddress the initial versions registry address.
-        @param chainlinkAggregatorAddress the initial pair aggregator registry address.
-        @param interestValidatorAddress the initial interest validator address.
-        @param atmSettingsAddress the initial ATM settings address.
-        @param wethTokenAddress canonical WETH token address.
-        @param cethTokenAddress compound CETH token address.
-     */
-    function initialize(
-        address escrowFactoryAddress,
-        address versionsRegistryAddress,
-        address chainlinkAggregatorAddress,
-        address interestValidatorAddress,
-        address atmSettingsAddress,
-        address wethTokenAddress,
-        address cethTokenAddress
-    ) external;
-
+    /* solhint-disable func-name-mixedcase */
     /**
         @notice It gets the ETH address used in the platform.
         @return the ETH address used in the platform.
@@ -377,4 +378,5 @@ interface SettingsInterface {
         @return the canonical CETH address used in the platform.
      */
     function CETH_ADDRESS() external view returns (address);
+    /* solhint-enable func-name-mixedcase */
 }

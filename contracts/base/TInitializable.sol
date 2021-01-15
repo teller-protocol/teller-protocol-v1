@@ -7,7 +7,8 @@ pragma solidity 0.5.17;
 // Interfaces
 
 /**
-    @notice This contract is used to initialize the contract variables using a function (initialize) instead of constructor.
+    @notice This contract is used to initialize the contract variables using a function (initialize)
+    instead of constructor.
     @notice It makes the creation process easier avoiding circular dependencies.
 
     @author develop@teller.finance

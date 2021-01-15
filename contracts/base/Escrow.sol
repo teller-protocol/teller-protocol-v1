@@ -61,7 +61,8 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
     /** Public Functions **/
 
     /**
-        @notice It calls a given dapp using a delegatecall function by a borrower owned the current loan id associated to this escrow contract.
+        @notice It calls a given dapp using a delegatecall function by a borrower owned the current loan
+        id associated to this escrow contract.
         @param dappData the current dapp data to be executed.
      */
     function callDapp(TellerCommon.DappData calldata dappData)
@@ -100,7 +101,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
     }
 
     /**
-        @notice Returns this Escrow's loan instance. 
+        @notice Returns this Escrow's loan instance.
      */
     function getLoan() public view returns (TellerCommon.Loan memory) {
         return loans.loans(loanID);
@@ -132,8 +133,10 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
 
     /**
         @notice Repay this Escrow's loan.
-        @dev If the Escrow's balance of the borrowed token is less than the amount to repay, transfer tokens from the sender's wallet.
-        @dev Only the owner of the Escrow can call this. If someone else wants to make a payment, they should call the loans contract directly.
+        @dev If the Escrow's balance of the borrowed token is less than the amount to repay, transfer
+        tokens from the sender's wallet.
+        @dev Only the owner of the Escrow can call this. If someone else wants to make a payment, they
+        should call the loans contract directly.
      */
     function repay(uint256 amount) external onlyOwner {
         IERC20 token = IERC20(loans.lendingToken());
