@@ -187,24 +187,21 @@ contract LendingPool is Base, LendingPoolInterface {
         address borrower
     ) external isInitialized() isLoan() whenLendingPoolNotPaused(address(this)) {
         uint256 totalAmount = principalAmount.add(interestAmount);
+        require(totalAmount > 0, "REPAY_ZERO");
 
         // Transfers tokens to LendingPool.
         tokenTransferFrom(borrower, totalAmount);
 
-        MarketStateLib.MarketState storage stateToUpdate = marketState;
         address cTokenAddress = cToken();
         if (cTokenAddress != address(0)) {
-            stateToUpdate = compoundMarketState;
-            principalAmount = _depositToCompound(cTokenAddress, principalAmount);
-            interestAmount = _depositToCompound(cTokenAddress, interestAmount);
+            compoundMarketState.increaseRepayment(
+                _depositToCompound(cTokenAddress, principalAmount)
+            );
+        } else {
+            marketState.increaseRepayment(principalAmount);
         }
 
-        if (principalAmount > 0) {
-            stateToUpdate.increaseRepayment(principalAmount);
-        }
-        if (interestAmount > 0) {
-            stateToUpdate.increaseSupply(interestAmount);
-        }
+        marketState.increaseSupply(interestAmount);
 
         // Emits event.
         emit TokenRepaid(borrower, totalAmount);

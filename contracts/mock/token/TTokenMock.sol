@@ -13,11 +13,12 @@ contract TTokenMock is TToken {
     /**
      * @dev Calls TToken constructor with token details
      * @param lendingPoolAddress the lending pool address.
+     * @param settingsAddress the settings address.
      */
-    constructor(address underlyingTokenAddress, address lendingPoolAddress)
+    constructor(address underlyingTokenAddress, address lendingPoolAddress, address settingsAddress)
         public
-        TToken(underlyingTokenAddress, lendingPoolAddress)
     {
+        initialize(underlyingTokenAddress, lendingPoolAddress, settingsAddress);
         _addMinter(msg.sender);
     }
 }

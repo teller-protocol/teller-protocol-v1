@@ -112,34 +112,35 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
 
+        address settingsAddress = address(_getSettings());
         LoanTermsConsensusInterface loanTermsConsensus = _createLoanTermsConsensus();
         LoansInterface loans = _createLoans(collateralToken);
 
         LendingPoolInterface lendingPool = marketRegistry.lendingPools(lendingToken);
-        TTokenInterface tToken;
         if (address(lendingPool) == address(0)) {
             lendingPool = _createLendingPool();
+            TTokenInterface tToken = _createTToken();
+
+            tToken.initialize(lendingToken, address(lendingPool), settingsAddress);
             lendingPool.initialize(
                 marketRegistry,
-                new TToken(lendingToken, address(lendingPool)),
-                address(_getSettings())
+                tToken,
+                address(settingsAddress)
             );
-        } else {
-            tToken = lendingPool.tToken();
         }
 
         // Initializing LoanTermsConsensus
         loanTermsConsensus.initialize(
             msg.sender,
             address(loans),
-            address(_getSettings())
+            address(settingsAddress)
         );
 
         // Initializing Loans
         loans.initialize(
             address(lendingPool),
             address(loanTermsConsensus),
-            address(_getSettings()),
+            address(settingsAddress),
             collateralToken
         );
 
@@ -281,6 +282,18 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         returns (TellerCommon.Market memory)
     {
         return markets[lendingToken][collateralToken];
+    }
+
+    /**
+        @notice Creates a proxy contract for LendingPool.
+        @return a new LendingPool instance.
+     */
+    function _createTToken() internal returns (TTokenInterface) {
+        return TTokenInterface(
+            _createDynamicProxy(
+                _getSettings().versionsRegistry().consts().TTOKEN_LOGIC_NAME()
+            )
+        );
     }
 
     /**

@@ -26,6 +26,7 @@ const LogicVersionsRegistry = artifacts.require('./base/LogicVersionsRegistry.so
 const Escrow = artifacts.require('./base/Escrow.sol');
 const EtherCollateralLoans = artifacts.require("./base/EtherCollateralLoans.sol");
 const TokenCollateralLoans = artifacts.require("./base/TokenCollateralLoans.sol");
+const TToken = artifacts.require("TToken");
 const LendingPool = artifacts.require("./base/LendingPool.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 const Uniswap = artifacts.require("./base/escrow/dapps/Uniswap.sol");
@@ -72,6 +73,7 @@ module.exports = async function(deployer, network, accounts) {
 
     const contracts = [
       // Logic
+      { Contract: TToken, name: logicNames.TToken },
       { Contract: LendingPool, name: logicNames.LendingPool },
       { Contract: TokenCollateralLoans, name: logicNames.TokenCollateralLoans },
       { Contract: EtherCollateralLoans, name: logicNames.EtherCollateralLoans },

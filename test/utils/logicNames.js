@@ -1,4 +1,5 @@
 module.exports = {
+    TToken: 'TToken',
     LendingPool: 'LendingPool',
     TokenCollateralLoans: 'TokenCollateralLoans',
     EtherCollateralLoans: 'EtherCollateralLoans',

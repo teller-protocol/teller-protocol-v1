@@ -23,7 +23,6 @@ module.exports = async (testContext) => {
     token: collateralToken,
   });
 
-  const depositFundsAmount = toDecimals(0, tokenInfo.decimals);
   const marketState = await allContracts.lendingPool.getMarketState()
   const maxAmountRequestLoanTerms = toDecimals(1000, tokenInfo.decimals);
   const amountTakeOut = toDecimals(marketState.totalSupplied.toString(), tokenInfo.decimals);
@@ -55,13 +54,6 @@ module.exports = async (testContext) => {
     allContracts,
     {testContext},
     {tokenInfo, collateralTokenInfo}
-  );
-
-  // Deposit tokens on lending pool.
-  await loansActions.depositFunds(
-    allContracts,
-    {txConfig: lenderTxConfig, testContext},
-    {amount: depositFundsAmount}
   );
 
   // Requesting the loan terms.

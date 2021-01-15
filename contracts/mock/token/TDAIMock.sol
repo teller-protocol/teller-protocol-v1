@@ -13,9 +13,10 @@ contract TDAIMock is TTokenMock {
     /**
      * @dev Calls TToken constructor with token details
      * @param lendingPoolAddress the lending pool address.
+     * @param settingsAddress the settings address.
      */
-    constructor(address lendingPoolAddress)
+    constructor(address lendingPoolAddress, address settingsAddress)
         public
-        TTokenMock(address(new DAIMock()), lendingPoolAddress)
+        TTokenMock(address(new DAIMock()), lendingPoolAddress, settingsAddress)
     {}
 }

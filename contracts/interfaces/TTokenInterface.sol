@@ -109,4 +109,11 @@ interface TTokenInterface {
      * @return true if successful
      */
     function mint(address account, uint256 amount) external returns (bool);
+
+    /**
+     * @param underlyingTokenAddress the token address this TToken is for.
+     * @param lendingPoolAddress the address of the lending pool this token is linked to. It is only used to add it as a minter.
+     * @param settingsAddress the settings address.
+     */
+    function initialize(address underlyingTokenAddress, address lendingPoolAddress, address settingsAddress) external;
 }
