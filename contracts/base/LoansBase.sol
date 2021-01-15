@@ -125,10 +125,7 @@ contract LoansBase is LoansInterface, Base {
         );
         require(!exceedsMaxLoanAmount, "AMOUNT_EXCEEDS_MAX_AMOUNT");
 
-        require(
-            _isDebtRatioValid(loanRequest.amount),
-            "SUPPLY_TO_DEBT_EXCEEDS_MAX"
-        );
+        require(_isDebtRatioValid(loanRequest.amount), "SUPPLY_TO_DEBT_EXCEEDS_MAX");
         _;
     }
 
@@ -515,10 +512,28 @@ contract LoansBase is LoansInterface, Base {
     }
 
     /**
+        @notice It validates whether supply to debt (StD) ratio is valid including the loan amount.
+        @param newLoanAmount the new loan amount to consider o the StD ratio.
+        @return true if the ratio is valid. Otherwise it returns false.
+     */
+    function _isDebtRatioValid(uint256 newLoanAmount) internal view returns (bool) {
+        address atmAddressForMarket = _getSettings().atmSettings().getATMForMarket(
+            lendingPool.lendingToken(),
+            collateralToken
+        );
+        require(atmAddressForMarket != address(0x0), "ATM_NOT_FOUND_FOR_MARKET");
+        uint256 debtRatioLimit = ATMGovernanceInterface(atmAddressForMarket)
+            .getGeneralSetting(MAX_DEBT_RATIO_ATM_SETTING);
+        uint256 currentDebtRatio = lendingPool.getDebtRatioFor(newLoanAmount);
+        return currentDebtRatio <= debtRatioLimit;
+    }
+
+    /**
         @notice Checks if the loan has an Escrow and claims any tokens then pays out the loan collateral.
         @dev See Escrow.claimTokens for more info.
         @param loanID The ID of the loan which is being liquidated
-        @param liquidationInfo The Teller common liquidation struct that holds all the relevant liquidation info, such as the liquidation info
+        @param liquidationInfo The Teller common liquidation struct that holds all the relevant
+        liquidation info, such as the liquidation info
         @param recipient The address of the liquidator where the liquidation reward will be sent to
     */
     function _payOutLiquidator(
@@ -595,29 +610,6 @@ contract LoansBase is LoansInterface, Base {
     function _getAndIncrementLoanID() internal returns (uint256 newLoanID) {
         newLoanID = loanIDCounter;
         loanIDCounter = loanIDCounter.add(1);
-    }
-
-    /**
-        @notice It validates whether supply to debt (StD) ratio is valid including the loan amount.
-        @param newLoanAmount the new loan amount to consider o the StD ratio.
-        @return true if the ratio is valid. Otherwise it returns false.
-     */
-    function _isDebtRatioValid(uint256 newLoanAmount)
-        internal
-        view
-        returns (bool)
-    {
-        address atmAddressForMarket = _getSettings().atmSettings().getATMForMarket(
-            lendingPool.lendingToken(),
-            collateralToken
-        );
-        require(atmAddressForMarket != address(0x0), "ATM_NOT_FOUND_FOR_MARKET");
-        uint256 debtRatioLimit = ATMGovernanceInterface(atmAddressForMarket)
-            .getGeneralSetting(MAX_DEBT_RATIO_ATM_SETTING);
-        uint256 currentDebtRatio = lendingPool.getDebtRatioFor(
-            newLoanAmount
-        );
-        return currentDebtRatio <= debtRatioLimit;
     }
 
     /**

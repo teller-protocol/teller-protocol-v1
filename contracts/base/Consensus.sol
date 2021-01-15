@@ -66,10 +66,10 @@ contract Consensus is Base, OwnerSignersRole {
         the number of signers.
      */
     modifier onlyEnoughSubmissions(uint256 responseCount) {
-        uint256 percentageRequired =_getSettings()
+        uint256 percentageRequired = _getSettings()
             .platformSettings(
-                _getSettings().consts().REQUIRED_SUBMISSIONS_PERCENTAGE_SETTING()
-            )
+            _getSettings().consts().REQUIRED_SUBMISSIONS_PERCENTAGE_SETTING()
+        )
             .value;
 
         require(

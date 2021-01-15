@@ -29,7 +29,10 @@ import "./Base.sol";
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
-    @notice The LendingPool contract holds all of the tokens that lenders transfer into the protocol. It is the contract that lenders interact with to deposit and withdraw their tokens including interest. The LendingPool interacts with the Lenders contract to ensure token balances and interest owed is kept up to date.
+    @notice The LendingPool contract holds all of the tokens that lenders transfer into the protocol.
+    It is the contract that lenders interact with to deposit and withdraw their tokens including interest.
+    The LendingPool interacts with the Lenders contract to ensure token balances and interest owed is kept
+    up to date.
 
     @author develop@teller.finance
  */
@@ -87,9 +90,7 @@ contract LendingPool is Base, LendingPoolInterface {
         if (cTokenAddress != address(0)) {
             // Deposit tokens straight into Compound
             // Increase the Compound market supply
-            compoundMarketState.increaseSupply(
-                _depositToCompound(cTokenAddress, amount)
-            );
+            compoundMarketState.increaseSupply(_depositToCompound(cTokenAddress, amount));
         } else {
             // Increase the market supply
             marketState.increaseSupply(amount);
@@ -104,7 +105,8 @@ contract LendingPool is Base, LendingPoolInterface {
 
     /**
         @notice It allows any tToken holder to burn their tToken tokens and withdraw their tokens.
-        @dev If the cToken is available (not 0x0), it withdraws the lending tokens from Compound before transferring the tokens to the holder.
+        @dev If the cToken is available (not 0x0), it withdraws the lending tokens from Compound before
+        transferring the tokens to the holder.
         @param amount of tokens to withdraw.
      */
     function withdraw(uint256 amount)
@@ -326,19 +328,29 @@ contract LendingPool is Base, LendingPoolInterface {
 
     /** Internal functions */
 
-    function _getMarketState() internal view returns (MarketStateLib.MarketState memory state) {
+    function _getMarketState()
+        internal
+        view
+        returns (MarketStateLib.MarketState memory state)
+    {
         state = marketState;
 
         address cTokenAddress = cToken();
         if (cTokenAddress != address(0) && compoundMarketState.totalSupplied > 0) {
             state.totalSupplied = state.totalSupplied.add(
-                CErc20Interface(cTokenAddress).valueInUnderlying(compoundMarketState.totalSupplied)
+                CErc20Interface(cTokenAddress).valueInUnderlying(
+                    compoundMarketState.totalSupplied
+                )
             );
             state.totalRepaid = state.totalRepaid.add(
-                CErc20Interface(cTokenAddress).valueInUnderlying(compoundMarketState.totalRepaid)
+                CErc20Interface(cTokenAddress).valueInUnderlying(
+                    compoundMarketState.totalRepaid
+                )
             );
             state.totalBorrowed = state.totalBorrowed.add(
-                CErc20Interface(cTokenAddress).valueInUnderlying(compoundMarketState.totalBorrowed)
+                CErc20Interface(cTokenAddress).valueInUnderlying(
+                    compoundMarketState.totalBorrowed
+                )
             );
         }
     }
@@ -348,7 +360,10 @@ contract LendingPool is Base, LendingPoolInterface {
         @param amount amount to deposit.
         @return the amount of tokens deposited.
      */
-    function _depositToCompound(address cTokenAddress, uint256 amount) internal returns (uint256) {
+    function _depositToCompound(address cTokenAddress, uint256 amount)
+        internal
+        returns (uint256)
+    {
         // approve the cToken contract to take lending tokens
         lendingToken.safeApprove(cTokenAddress, amount);
 
@@ -366,7 +381,10 @@ contract LendingPool is Base, LendingPoolInterface {
         @notice It withdraws a given amount of tokens if the cToken is defined (not 0x0).
         @param amount amount of tokens to withdraw.
      */
-    function _withdrawFromCompound(address cTokenAddress, uint256 amount) internal returns (uint256) {
+    function _withdrawFromCompound(address cTokenAddress, uint256 amount)
+        internal
+        returns (uint256)
+    {
         uint256 balanceBefore = CErc20Interface(cTokenAddress).balanceOf(address(this));
 
         // this function withdraws 'amount' lending tokens from compound
