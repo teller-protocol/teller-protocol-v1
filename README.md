@@ -10,15 +10,15 @@ If you would like to contribute, we encourage you to submit a PR directly or joi
 
 ## Resources
 
-* Website → https://teller.finance/
-* Twitter → https://twitter.com/useteller
-* Discord → https://discord.com/invite/Ujnvh8d
+- Website → https://teller.finance/
+- Twitter → https://twitter.com/useteller
+- Discord → https://discord.com/invite/Ujnvh8d
 
 ## Prerequisites
 
 ### NodeJS Version
 
-To avoid any issue with the NodeJS version, please check it before continuing. It should be >= *v10.15.3* and =< *lts/dubnium / v10.21.0*.
+To avoid any issue with the NodeJS version, please check it before continuing. It should be >= _v10.15.3_ and =< _lts/dubnium / v10.21.0_.
 
 ### Install Global Dependencies
 
@@ -26,9 +26,10 @@ To make the development process easier, we use [Truffle](https://www.trufflesuit
 
 At this moment, the team is using Truffle v5.1.16.
 
-```yarn global add truffle@5.1.16```
+`yarn global add truffle@5.1.16`
 
-### Create a ```.ENV``` file
+### Create a `.ENV` file
+
 <a name="readme-create-env-file"></a>
 
 You already have a `.env.template` in the root folder. Just copy/paste the `.env.template` file, and create the `.env` in the root folder.
@@ -37,8 +38,8 @@ Most of the environment variables already have a default value in the template f
 
 You only need to set/modify the following ones if you want to use a testnet or mainnet networks:
 
-- *INFURA_KEY*: This is used to deploy smart contracts on a testnet or mainnet.
-- *MNEMONIC_KEY*: This is used to deploy smart contracts on a network or interact with a network. **The default value is used to interact with Ganache locally.**
+- _INFURA_KEY_: This is used to deploy smart contracts on a testnet or mainnet.
+- _MNEMONIC_KEY_: This is used to deploy smart contracts on a network or interact with a network. **The default value is used to interact with Ganache locally.**
 
 ### Verifying Versions
 
@@ -51,15 +52,16 @@ Node v10.15.3
 Web3.js v1.2.1
 ```
 
-> This is important to have a stable NodeJS version installed. At the moment of writing this document, the team is using the NodeJS *lts/dubnium / v10.17.0* without issues.
+> This is important to have a stable NodeJS version installed. At the moment of writing this document, the team is using the NodeJS _lts/dubnium / v10.17.0_ without issues.
 
 ## Get Started
+
 <a name="readme-get-started"></a>
 
 To get started, you need to install the dependencies:
 
-- Using Yarn: ```yarn install```
-- Using NPM: ```npm install```
+- Using Yarn: `yarn install`
+- Using NPM: `npm install`
 
 After checking the prerequisites, you are able to execute the unit tests, and code coverage.
 
@@ -67,7 +69,7 @@ After checking the prerequisites, you are able to execute the unit tests, and co
 
 Execute the command:
 
-```yarn test```
+`yarn test`
 
 As result, you should see:
 
@@ -77,7 +79,7 @@ As result, you should see:
 
 Execute:
 
-```yarn test:coverage```
+`yarn test:coverage`
 
 As result, you should see:
 
@@ -91,4 +93,5 @@ As result, you should see:
 - To configure a new Chainlink Oracle [here](./docs/chainlink-configuration.md).
 
 ---
+
 © Copyright 2020, Teller
