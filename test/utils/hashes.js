@@ -1,5 +1,5 @@
-const ethUtil = require('ethereumjs-util')
-const abi = require('ethereumjs-abi')
+const ethUtil = require('ethereumjs-util');
+const abi = require('ethereumjs-abi');
 
 function hashLoan(loan) {
   return ethUtil.keccak256(
@@ -14,7 +14,7 @@ function hashLoan(loan) {
         loan.signerNonce,
       ]
     )
-  )
+  );
 }
 
 function hashInterestResponse(response, requestHash, chainId) {
@@ -30,13 +30,22 @@ function hashInterestResponse(response, requestHash, chainId) {
         requestHash,
       ]
     )
-  )
+  );
 }
 
 function hashInterestRequest(request, caller, chainId) {
   return ethUtil.keccak256(
     abi.rawEncode(
-      ['address', 'address', 'address', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256'],
+      [
+        'address',
+        'address',
+        'address',
+        'uint256',
+        'uint256',
+        'uint256',
+        'uint256',
+        'uint256',
+      ],
       [
         caller,
         request.lender,
@@ -48,14 +57,22 @@ function hashInterestRequest(request, caller, chainId) {
         chainId,
       ]
     )
-  )
+  );
 }
-
 
 function hashLoanTermsResponse(response, requestHash, chainId) {
   return ethUtil.keccak256(
     abi.rawEncode(
-      ['address', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes32'],
+      [
+        'address',
+        'uint256',
+        'uint256',
+        'uint256',
+        'uint256',
+        'uint256',
+        'uint256',
+        'bytes32',
+      ],
       [
         response.consensusAddress,
         response.responseTime,
@@ -64,16 +81,26 @@ function hashLoanTermsResponse(response, requestHash, chainId) {
         response.maxLoanAmount,
         response.signature.signerNonce,
         chainId,
-        requestHash
+        requestHash,
       ]
     )
-  )
+  );
 }
 
 function hashLoanTermsRequest(request, caller, chainId) {
   return ethUtil.keccak256(
     abi.rawEncode(
-      ['address', 'address', 'address', 'address', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256'],
+      [
+        'address',
+        'address',
+        'address',
+        'address',
+        'uint256',
+        'uint256',
+        'uint256',
+        'uint256',
+        'uint256',
+      ],
       [
         caller,
         request.borrower,
@@ -86,37 +113,43 @@ function hashLoanTermsRequest(request, caller, chainId) {
         chainId,
       ]
     )
-  )
+  );
 }
 
 async function signHash(web3, signer, hash) {
   const signature = await web3.eth.sign(ethUtil.bufferToHex(hash), signer);
-  const { v, r, s } = ethUtil.fromRpcSig(signature)
+  const { v, r, s } = ethUtil.fromRpcSig(signature);
   return {
     v: String(v),
     r: ethUtil.bufferToHex(r),
     s: ethUtil.bufferToHex(s),
-  }
+  };
 }
 
-async function createInterestResponseSig(web3, signer, interestResponse, requestHash, chainId) {
-  const responseHash = hashInterestResponse(interestResponse, requestHash, chainId)
+async function createInterestResponseSig(
+  web3,
+  signer,
+  interestResponse,
+  requestHash,
+  chainId
+) {
+  const responseHash = hashInterestResponse(interestResponse, requestHash, chainId);
   const signature = await web3.eth.sign(ethUtil.bufferToHex(responseHash), signer);
-  const { v, r, s } = ethUtil.fromRpcSig(signature)
-  interestResponse.signature.v = String(v)
-  interestResponse.signature.r = ethUtil.bufferToHex(r)
-  interestResponse.signature.s = ethUtil.bufferToHex(s)
-  return interestResponse
+  const { v, r, s } = ethUtil.fromRpcSig(signature);
+  interestResponse.signature.v = String(v);
+  interestResponse.signature.r = ethUtil.bufferToHex(r);
+  interestResponse.signature.s = ethUtil.bufferToHex(s);
+  return interestResponse;
 }
 
 async function createLoanResponseSig(web3, signer, loanResponse, requestHash, chainId) {
-  const responseHash = hashLoanTermsResponse(loanResponse, requestHash, chainId)
+  const responseHash = hashLoanTermsResponse(loanResponse, requestHash, chainId);
   const signature = await web3.eth.sign(ethUtil.bufferToHex(responseHash), signer);
-  const { v, r, s } = ethUtil.fromRpcSig(signature)
-  loanResponse.signature.v = String(v)
-  loanResponse.signature.r = ethUtil.bufferToHex(r)
-  loanResponse.signature.s = ethUtil.bufferToHex(s)
-  return loanResponse
+  const { v, r, s } = ethUtil.fromRpcSig(signature);
+  loanResponse.signature.v = String(v);
+  loanResponse.signature.r = ethUtil.bufferToHex(r);
+  loanResponse.signature.s = ethUtil.bufferToHex(s);
+  return loanResponse;
 }
 
 module.exports = {
@@ -127,5 +160,5 @@ module.exports = {
   hashLoanTermsRequest,
   signHash,
   createInterestResponseSig,
-  createLoanResponseSig
-}
+  createLoanResponseSig,
+};

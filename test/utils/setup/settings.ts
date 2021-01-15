@@ -1,70 +1,81 @@
-import { SettingsInstance } from '../../../types/truffle-contracts'
-import { toBytes32 } from '../consts'
-import { DeployConfig } from './types'
+import { SettingsInstance } from '../../../types/truffle-contracts';
+import { toBytes32 } from '../consts';
+import { DeployConfig } from './types';
 
-const Settings = artifacts.require('Settings')
-const Mock = artifacts.require('Mock')
+const Settings = artifacts.require('Settings');
+const Mock = artifacts.require('Mock');
 
 interface SettingsConfig extends DeployConfig {
-  initData?: SettingsInitData
-  platformSettings?: PlatformSettings
+  initData?: SettingsInitData;
+  platformSettings?: PlatformSettings;
 }
 
 interface PlatformSettings {
   // The setting name for the required subsmission settings.
-  RequiredSubmissions?: PlatformSettingValue
+  RequiredSubmissions?: PlatformSettingValue;
   // The setting name for the maximum tolerance settings.
-  MaximumTolerance?: PlatformSettingValue
+  MaximumTolerance?: PlatformSettingValue;
   // The setting name for the response expiry length settings.
-  ResponseExpiryLength?: PlatformSettingValue
+  ResponseExpiryLength?: PlatformSettingValue;
   //The setting name for the safety interval settings.
-  SafetyInterval?: PlatformSettingValue
+  SafetyInterval?: PlatformSettingValue;
   // The setting name for the term expiry time settings.
-  TermsExpiryTime?: PlatformSettingValue
+  TermsExpiryTime?: PlatformSettingValue;
   // The setting name for the liquidate ETH price settings.
-  LiquidateEthPrice?: PlatformSettingValue
+  LiquidateEthPrice?: PlatformSettingValue;
   // The setting name for the maximum loan duration settings.
-  MaximumLoanDuration?: PlatformSettingValue
+  MaximumLoanDuration?: PlatformSettingValue;
   // The setting name for the collateral buffer settings.
-  CollateralBuffer?: PlatformSettingValue
+  CollateralBuffer?: PlatformSettingValue;
   // The setting name for the over collateralized buffer settings.
-  OverCollateralizedBuffer?: PlatformSettingValue
+  OverCollateralizedBuffer?: PlatformSettingValue;
   // The setting name for the request loan terms rate limit settings.
-  RequestLoanTermsRateLimit?: PlatformSettingValue
+  RequestLoanTermsRateLimit?: PlatformSettingValue;
 }
 
 interface PlatformSettingValue {
-  min?: number | string
-  max?: number | string
-  value?: number | string
+  min?: number | string;
+  max?: number | string;
+  value?: number | string;
 }
 
 interface SettingsInitData {
-  escrowFactoryAddress?: string
-  versionsRegistryAddress?: string
-  chainlinkAggregatorAddress?: string
-  interestValidatorAddress?: string
-  atmSettingsAddress?: string
-  wethTokenAddress?: string
-  cethTokenAddress?: string
+  escrowFactoryAddress?: string;
+  versionsRegistryAddress?: string;
+  chainlinkAggregatorAddress?: string;
+  interestValidatorAddress?: string;
+  atmSettingsAddress?: string;
+  wethTokenAddress?: string;
+  cethTokenAddress?: string;
 }
 
 export interface DeploySettingsResponse extends Required<SettingsInitData> {
-  settings: SettingsInstance
+  settings: SettingsInstance;
 }
 
-export async function deploySettings(config: SettingsConfig): Promise<DeploySettingsResponse> {
-  const settings = await Settings.new()
+export async function deploySettings(
+  config: SettingsConfig
+): Promise<DeploySettingsResponse> {
+  const settings = await Settings.new();
 
-  const escrowFactoryAddress = config.initData?.escrowFactoryAddress ?? (await Mock.new()).address
-  const versionsRegistryAddress = config.initData?.versionsRegistryAddress ?? (await Mock.new()).address
-  const chainlinkAggregatorAddress = config.initData?.chainlinkAggregatorAddress ?? (await Mock.new()).address
-  const interestValidatorAddress = config.initData?.interestValidatorAddress ?? (await Mock.new()).address
-  const atmSettingsAddress = config.initData?.atmSettingsAddress ?? (await Mock.new()).address
-  const wethTokenAddress = config.initData?.wethTokenAddress ?? (await Mock.new()).address
-  const cethTokenAddress = config.initData?.cethTokenAddress ?? (await Mock.new()).address
+  const escrowFactoryAddress =
+    config.initData?.escrowFactoryAddress ?? (await Mock.new()).address;
+  const versionsRegistryAddress =
+    config.initData?.versionsRegistryAddress ?? (await Mock.new()).address;
+  const chainlinkAggregatorAddress =
+    config.initData?.chainlinkAggregatorAddress ?? (await Mock.new()).address;
+  const interestValidatorAddress =
+    config.initData?.interestValidatorAddress ?? (await Mock.new()).address;
+  const atmSettingsAddress =
+    config.initData?.atmSettingsAddress ?? (await Mock.new()).address;
+  const wethTokenAddress =
+    config.initData?.wethTokenAddress ?? (await Mock.new()).address;
+  const cethTokenAddress =
+    config.initData?.cethTokenAddress ?? (await Mock.new()).address;
 
-  await settings.methods['initialize(address,address,address,address,address,address,address)'](
+  await settings.methods[
+    'initialize(address,address,address,address,address,address,address)'
+  ](
     escrowFactoryAddress,
     versionsRegistryAddress,
     chainlinkAggregatorAddress,
@@ -73,14 +84,14 @@ export async function deploySettings(config: SettingsConfig): Promise<DeploySett
     wethTokenAddress,
     cethTokenAddress,
     {
-      from: config.deployerAddress
+      from: config.deployerAddress,
     }
-  )
+  );
 
-  const platformSettings: PlatformSettings = require(`../../../config/networks/${config.network}/platformSettings.json`)
+  const platformSettings: PlatformSettings = require(`../../../config/networks/${config.network}/platformSettings.json`);
   for (const settingName in platformSettings) {
-    const settingValue: PlatformSettingValue = platformSettings[settingName]
-    if (!settingValue.value) continue
+    const settingValue: PlatformSettingValue = platformSettings[settingName];
+    if (!settingValue.value) continue;
 
     await settings.createPlatformSetting(
       toBytes32(web3, settingName),
@@ -99,6 +110,6 @@ export async function deploySettings(config: SettingsConfig): Promise<DeploySett
     interestValidatorAddress,
     atmSettingsAddress,
     wethTokenAddress,
-    cethTokenAddress
-  }
+    cethTokenAddress,
+  };
 }

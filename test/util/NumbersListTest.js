@@ -1,14 +1,14 @@
 // JS Libraries
-const withData = require("leche").withData;
-const {t} = require("../utils/consts");
+const withData = require('leche').withData;
+const { t } = require('../utils/consts');
 
 // Smart contracts
-const NumbersListMock = artifacts.require("./mock/util/NumbersListMock.sol");
+const NumbersListMock = artifacts.require('./mock/util/NumbersListMock.sol');
 
-contract("NumbersListTest", function (accounts) {
+contract('NumbersListTest', function (accounts) {
   let instance;
 
-  beforeEach("Setup for each test", async () => {
+  beforeEach('Setup for each test', async () => {
     instance = await NumbersListMock.new();
   });
 
@@ -18,7 +18,7 @@ contract("NumbersListTest", function (accounts) {
     },
     function (values) {
       it(
-        t("user", "addValue", "Should be able to add a new value.", false),
+        t('user', 'addValue', 'Should be able to add a new value.', false),
         async function () {
           // Setup
 
@@ -42,7 +42,7 @@ contract("NumbersListTest", function (accounts) {
     },
     function (values, expectedAverage) {
       it(
-        t("user", "getAverage", "Should be able to get the average.", false),
+        t('user', 'getAverage', 'Should be able to get the average.', false),
         async function () {
           // Setup
           for (const value of values) {
@@ -69,12 +69,7 @@ contract("NumbersListTest", function (accounts) {
     },
     function (values, expectedMin, expectedMax, expectedSum) {
       it(
-        t(
-          "user",
-          "min/max/sum/count",
-          "Should be able to get min/max/sum/count.",
-          false
-        ),
+        t('user', 'min/max/sum/count', 'Should be able to get min/max/sum/count.', false),
         async function () {
           // Setup
           for (const value of values) {
@@ -82,7 +77,7 @@ contract("NumbersListTest", function (accounts) {
           }
 
           // Invocation
-          const {min, max, sum, count} = await instance.values();
+          const { min, max, sum, count } = await instance.values();
 
           // Assertions
           assert.equal(min.toString(), expectedMin.toString());
@@ -114,12 +109,7 @@ contract("NumbersListTest", function (accounts) {
     },
     function (values, tolerance, expectedResult) {
       it(
-        t(
-          "user",
-          "isWithinTolerance",
-          "Should be able to get min/max/sum.",
-          false
-        ),
+        t('user', 'isWithinTolerance', 'Should be able to get min/max/sum.', false),
         async function () {
           // Setup
           for (const value of values) {

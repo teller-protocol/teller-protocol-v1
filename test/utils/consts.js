@@ -1,21 +1,20 @@
-const {BigNumber} = require("bignumber.js");
+const { BigNumber } = require('bignumber.js');
 
-const REQUIRED_SUBMISSIONS_PERCENTAGE = "RequiredSubmissionsPercentage";
-const MAXIMUM_TOLERANCE = "MaximumTolerance";
-const RESPONSE_EXPIRY_LENGTH = "ResponseExpiryLength";
-const SAFETY_INTERVAL = "SafetyInterval";
-const TERMS_EXPIRY_TIME = "TermsExpiryTime";
-const LIQUIDATE_ETH_PRICE = "LiquidateEthPrice";
+const REQUIRED_SUBMISSIONS_PERCENTAGE = 'RequiredSubmissionsPercentage';
+const MAXIMUM_TOLERANCE = 'MaximumTolerance';
+const RESPONSE_EXPIRY_LENGTH = 'ResponseExpiryLength';
+const SAFETY_INTERVAL = 'SafetyInterval';
+const TERMS_EXPIRY_TIME = 'TermsExpiryTime';
+const LIQUIDATE_ETH_PRICE = 'LiquidateEthPrice';
 const DEFAULT_DECIMALS = 18;
-const ETH_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
-const WETH_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
-const NULL_ADDRESS = "0x0000000000000000000000000000000000000000";
-const DUMMY_ADDRESS = "0x0000000000000000000000000000000000000123";
-const NULL_BYTES =
-  "0x0000000000000000000000000000000000000000000000000000000000000000";
+const ETH_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+const WETH_ADDRESS = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
+const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
+const DUMMY_ADDRESS = '0x0000000000000000000000000000000000000123';
+const NULL_BYTES = '0x0000000000000000000000000000000000000000000000000000000000000000';
 const ZERO = new BigNumber(0);
-const NETWORK_PROVIDER = "http://127.0.0.1:7545";
-const COVERAGE_NETWORK = "http://127.0.0.1:8555";
+const NETWORK_PROVIDER = 'http://127.0.0.1:7545';
+const COVERAGE_NETWORK = 'http://127.0.0.1:8555';
 const FIVE_MIN = 60 * 5;
 const ONE_HOUR = 3600; // 60 seconds * 60 minutes = 1 hour
 const ONE_DAY = ONE_HOUR * 24;
@@ -59,15 +58,15 @@ module.exports = {
   // of something we must divide 700 by 100 to remove decimal places, and another 100 for percentage.
   TEN_THOUSAND: 10000,
   t: function (who, func, desc, fail) {
-    const failText = fail ? "\x1b[31mMustFail\x1b[0m ." : "\x1b[0m";
+    const failText = fail ? '\x1b[31mMustFail\x1b[0m .' : '\x1b[0m';
     return (
-      "\x1b[32m." +
+      '\x1b[32m.' +
       func +
-      " => \x1b[36m" +
+      ' => \x1b[36m' +
       who +
-      "\x1b[0m\x1b[01;34m : " +
+      '\x1b[0m\x1b[01;34m : ' +
       desc +
-      " " +
+      ' ' +
       failText
     );
   },
@@ -99,11 +98,11 @@ module.exports = {
     return parseInt(days.toString()) * 24 * 60 * 60;
   },
   getLatestTimestamp: async () => {
-    return (await web3.eth.getBlock("latest")).timestamp;
+    return (await web3.eth.getBlock('latest')).timestamp;
   },
   sum: (a, b) => parseInt(a.toString()) + parseInt(b.toString()),
   toBytes32: (web3, text) => {
-    return web3.utils.padRight(web3.utils.stringToHex(text), 64, "0");
+    return web3.utils.padRight(web3.utils.stringToHex(text), 64, '0');
   },
   toDecimals,
   toTokenDecimals: async (token, amount) => {
@@ -113,7 +112,7 @@ module.exports = {
   toUnits: (amount, decimals) => {
     return new BigNumber(amount).div(new BigNumber(10).pow(decimals));
   },
-  printSeparatorLine: (length = 100, separator = "-") => {
+  printSeparatorLine: (length = 100, separator = '-') => {
     console.log(`\n${separator.repeat(length)}\n`);
   },
   createMocks: async (Mock, total) => {
