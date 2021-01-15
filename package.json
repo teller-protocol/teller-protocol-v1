@@ -5,7 +5,7 @@
   "main": "truffle-config.js",
   "scripts": {
     "compile": "node --max-old-space-size=8192 ./node_modules/.bin/truffle compile",
-    "typechain": "typechain --target truffle-v5 './build/contracts/*.json'",
+    "typechain": "typechain --target truffle-v5 './build/**/*.json'",
     "build:types": "yarn compile && yarn typechain",
     "prepack": "yarn build:types",
     "lint-sol": "yarn solhint -f table \"./contracts/**/*.sol\"",
@@ -22,9 +22,9 @@
     "test:ganache:mainnet": "truffle exec ./test-integration/main.js --network ganache-mainnet",
     "format:prettier": "prettier --write contracts/**/**/**/**/**/**.sol",
     "format:prettier:print": "prettier contracts/**/**/**/**/**/**.sol",
-    "verify:ropsten": "truffle run verify TDAI TUSDC Settings ATMSettings MarketsState EscrowFactory MarketFactory LogicVersionsRegistry Escrow EtherCollateralLoans TokenCollateralLoans LendingPool LoanTermsConsensus ATMFactory ATMGovernance TLRToken ChainlinkAggregator --network ropsten",
-    "verify:mainnet": "truffle run verify TDAI TUSDC Settings ATMSettings MarketsState EscrowFactory MarketFactory LogicVersionsRegistry Escrow EtherCollateralLoans TokenCollateralLoans LendingPool LoanTermsConsensus ATMFactory ATMGovernance TLRToken ChainlinkAggregator --network mainnet",
-    "verify:rinkeby": "truffle run verify TDAI TUSDC Settings ATMSettings MarketsState EscrowFactory MarketFactory LogicVersionsRegistry Escrow EtherCollateralLoans TokenCollateralLoans LendingPool LoanTermsConsensus ATMFactory ATMGovernance TLRToken ChainlinkAggregator --network rinkeby"
+    "verify:ropsten": "truffle run verify TDAI TUSDC Settings ATMSettings MarketsState EscrowFactory MarketFactory LogicVersionsRegistry Escrow Lenders EtherCollateralLoans TokenCollateralLoans LendingPool InterestConsensus LoanTermsConsensus ATMFactory ATMGovernance TLRToken ChainlinkAggregator --network ropsten",
+    "verify:mainnet": "truffle run verify TDAI TUSDC Settings ATMSettings MarketsState EscrowFactory MarketFactory LogicVersionsRegistry Escrow Lenders EtherCollateralLoans TokenCollateralLoans LendingPool InterestConsensus LoanTermsConsensus ATMFactory ATMGovernance TLRToken ChainlinkAggregator --network mainnet",
+    "verify:rinkeby": "truffle run verify TDAI TUSDC Settings ATMSettings MarketsState EscrowFactory MarketFactory LogicVersionsRegistry Escrow Lenders EtherCollateralLoans TokenCollateralLoans LendingPool InterestConsensus LoanTermsConsensus ATMFactory ATMGovernance TLRToken ChainlinkAggregator --network rinkeby"
   },
   "devDependencies": {
     "@gnosis.pm/mock-contract": "^3.0.7",
@@ -84,11 +84,10 @@
   },
   "lint-staged": {
     "*.sol": [
-      "yarn solhint -f table --fix",
+      "yarn solhint -f table",
       "prettier --write"
     ],
     "*.{js,ts}": [
-      "yarn eslint -f table --fix",
       "prettier --write"
     ],
     "*.{json,md}": [

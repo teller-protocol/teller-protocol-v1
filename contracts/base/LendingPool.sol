@@ -126,7 +126,9 @@ contract LendingPool is Base, LendingPoolInterface {
         nonReentrant()
     {
         uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
+
         require(tTokenAmount > 0, "WITHDRAW_TTOKEN_DUST");
+        require(tToken.balanceOf(msg.sender) > tTokenAmount, "TTOKEN_NOT_ENOUGH_BALANCE");
 
         _withdraw(lendingTokenAmount, tTokenAmount);
     }
