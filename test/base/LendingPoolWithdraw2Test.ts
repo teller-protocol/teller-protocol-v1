@@ -38,14 +38,11 @@ contract('LendingPoolWithdrawTest', (accounts: string[]) => {
   });
 
   it('Should claim all tokens in the pool due to one lender and no repayments', async () => {
-    const balanceBeforeDeposit = await lendingTokenInstance.balanceOf(accounts[0]);
     await lendingTokenInstance.approve(lendingPoolInstance.address, 50, {
       from: accounts[0],
     });
     await lendingPoolInstance.deposit(50, { from: accounts[0] });
     const result = await lendingPoolInstance.withdrawAll({ from: accounts[0] });
-    const balanceAfterWithdrawal = await lendingTokenInstance.balanceOf(accounts[0]);
-    assert(balanceBeforeDeposit.toString() == balanceAfterWithdrawal.toString());
     lendingPool.tokenWithdrawn(result).emitted(accounts[0], 50);
   });
 
@@ -60,62 +57,80 @@ contract('LendingPoolWithdrawTest', (accounts: string[]) => {
     await lendingPoolInstance.deposit(50, { from: accounts[0] });
 
     // Second Account deposits
-    const balanceBeforeDeposit = await lendingTokenInstance.balanceOf(accounts[1]);
-    await lendingTokenInstance.approve(
-      lendingPoolInstance.address,
-      balanceBeforeDeposit,
-      { from: accounts[1] }
-    );
-    await lendingPoolInstance.deposit(balanceBeforeDeposit, { from: accounts[1] });
+    await lendingTokenInstance.approve(lendingPoolInstance.address, 100, {
+      from: accounts[1],
+    });
+    await lendingPoolInstance.deposit(100, { from: accounts[1] });
 
     // Withdraw all from second account
     const result = await lendingPoolInstance.withdrawAll({ from: accounts[1] });
-    const balanceAfterWithdrawal = await lendingTokenInstance.balanceOf(accounts[1]);
-    assert(balanceBeforeDeposit.toString() == balanceAfterWithdrawal.toString());
-    lendingPool.tokenWithdrawn(result).emitted(accounts[1], balanceBeforeDeposit);
+    lendingPool.tokenWithdrawn(result).emitted(accounts[1], 100);
   });
 
   it('Should withdraw all interest due to single lender and repayments', async () => {
-    await lendingTokenInstance.approve(lendingPoolInstance.address, 50, {
-      from: accounts[0],
-    });
-    await lendingPoolInstance.deposit(50, { from: accounts[0] });
+    const depositAmount = BigInt(5000e18);
+    const repayPrincipalAmount = BigInt(100e18);
+    const repayInterestAmount = BigInt(20e18);
+
+    await lendingTokenInstance.approve(
+      lendingPoolInstance.address,
+      depositAmount.toString(),
+      {
+        from: accounts[0],
+      }
+    );
+    await lendingPoolInstance.deposit(depositAmount.toString(), { from: accounts[0] });
 
     // Repay
-    await lendingTokenInstance.approve(lendingPoolInstance.address, 70);
-    await lendingPoolInstance.repay(20, 50, accounts[0]);
+    await lendingTokenInstance.approve(
+      lendingPoolInstance.address,
+      (repayPrincipalAmount + repayInterestAmount).toString()
+    );
+    await lendingPoolInstance.repay(
+      repayPrincipalAmount.toString(),
+      repayInterestAmount.toString(),
+      accounts[0]
+    );
 
     // Withdraw all
     const result = await lendingPoolInstance.withdrawAll({ from: accounts[0] });
 
-    lendingPool.tokenWithdrawn(result).emitted(accounts[0], 100);
+    lendingPool
+      .tokenWithdrawn(result)
+      .emitted(accounts[0], depositAmount + repayInterestAmount);
   });
 
   it('Should withdraw proportional amount of interest due to multiple lenders and repayments', async () => {
+    const lender1Amount = (50e18).toString();
+    const lender2Amount = (100e18).toString();
+    const principalAmount = (50e18).toString();
+    const interestAmount = (10e18).toString();
+    const repaymentAmount = (60e18).toString();
+
     // Transfer to second account
-    await lendingTokenInstance.transfer(accounts[1], (100e18).toString());
+    await lendingTokenInstance.transfer(accounts[1], lender2Amount.toString());
 
     // First account deposits
-    await lendingTokenInstance.approve(lendingPoolInstance.address, (50e18).toString(), {
+    await lendingTokenInstance.approve(lendingPoolInstance.address, lender1Amount, {
       from: accounts[0],
     });
-    await lendingPoolInstance.deposit((50e18).toString(), { from: accounts[0] });
+    await lendingPoolInstance.deposit(lender1Amount, { from: accounts[0] });
 
     // Second Account deposits
-    await lendingTokenInstance.approve(lendingPoolInstance.address, (100e18).toString(), {
+    await lendingTokenInstance.approve(lendingPoolInstance.address, lender2Amount, {
       from: accounts[1],
     });
-    await lendingPoolInstance.deposit((100e18).toString(), { from: accounts[1] });
+    await lendingPoolInstance.deposit(lender2Amount, { from: accounts[1] });
 
     // Repay
-    await lendingTokenInstance.approve(lendingPoolInstance.address, (60e18).toString());
-    await lendingPoolInstance.repay((50e18).toString(), (10e18).toString(), accounts[0]);
+    await lendingTokenInstance.approve(lendingPoolInstance.address, repaymentAmount);
+    await lendingPoolInstance.repay(principalAmount, interestAmount, accounts[0]);
 
     // Withdraw all
     const result = await lendingPoolInstance.withdrawAll({ from: accounts[1] });
 
     lendingPool
       .tokenWithdrawn(result)
-      .emitted(accounts[1], Math.floor(100e18 + (10e18 * 100e18) / 150e18).toString());
+      .emitted(accounts[1], BigInt('106666666666666666666'));
   });
 });
