@@ -350,17 +350,21 @@ contract LendingPool is Base, LendingPoolInterface {
         state.totalSupplied = _getTotalSupplied();
 
         address cTokenAddress = cToken();
-        if (cTokenAddress != address(0) && compoundMarketState.totalSupplied > 0) {
-            state.totalRepaid = state.totalRepaid.add(
-                CErc20Interface(cTokenAddress).valueInUnderlying(
-                    compoundMarketState.totalRepaid
-                )
-            );
-            state.totalBorrowed = state.totalBorrowed.add(
-                CErc20Interface(cTokenAddress).valueInUnderlying(
-                    compoundMarketState.totalBorrowed
-                )
-            );
+        if (cTokenAddress != address(0)) {
+            if (compoundMarketState.totalRepaid > 0) {
+                state.totalRepaid = state.totalRepaid.add(
+                    CErc20Interface(cTokenAddress).valueInUnderlying(
+                        compoundMarketState.totalRepaid
+                    )
+                );
+            }
+            if (compoundMarketState.totalBorrowed > 0) {
+                state.totalBorrowed = state.totalBorrowed.add(
+                    CErc20Interface(cTokenAddress).valueInUnderlying(
+                        compoundMarketState.totalBorrowed
+                    )
+                );
+            }
         }
     }
 
@@ -374,6 +378,8 @@ contract LendingPool is Base, LendingPoolInterface {
         returns (uint256 totalSupplied)
     {
         totalSupplied = marketState.totalSupplied;
+
+        address cTokenAddress = cToken();
         if (cTokenAddress != address(0) && compoundMarketState.totalSupplied > 0) {
             totalSupplied = totalSupplied.add(
                 CErc20Interface(cTokenAddress).valueInUnderlying(
