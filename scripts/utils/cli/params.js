@@ -39,7 +39,7 @@ const {
   REVERT_TEST,
   COLL_TOKEN_NAMES,
   VERBOSE,
-} = require("./names");
+} = require('./names');
 
 const newOption = (argv, name, alias, type, description, defaultValue) => {
   argv.option(name, {
@@ -47,10 +47,10 @@ const newOption = (argv, name, alias, type, description, defaultValue) => {
     type,
     description,
     default: defaultValue,
-    string: type === "string",
-    number: type === "number",
-    boolean: type === "boolean",
-    array: type === "array",
+    string: type === 'string',
+    number: type === 'number',
+    boolean: type === 'boolean',
+    array: type === 'array',
     required: true,
   });
 };
@@ -60,7 +60,7 @@ module.exports.addNetwork = (yargs, defaultParam = NETWORK.default) => {
     yargs,
     NETWORK.name,
     NETWORK.alias,
-    "string",
+    'string',
     `Sets the network to use in the execution. By default: ${defaultParam}`,
     defaultParam
   );
@@ -71,49 +71,40 @@ module.exports.addTokenName = (yargs, defaultParam = TOKEN_NAME.default) => {
     yargs,
     TOKEN_NAME.name,
     TOKEN_NAME.alias,
-    "string",
+    'string',
     `Token to use when the script is executed. By default: ${defaultParam}`,
     defaultParam
   );
 };
 
-module.exports.addCollTokenName = (
-  yargs,
-  defaultParam = COLL_TOKEN_NAME.default
-) => {
+module.exports.addCollTokenName = (yargs, defaultParam = COLL_TOKEN_NAME.default) => {
   newOption(
     yargs,
     COLL_TOKEN_NAME.name,
     COLL_TOKEN_NAME.alias,
-    "string",
+    'string',
     `Collateral token used to send the transaction. By default: ${defaultParam}`,
     defaultParam
   );
 };
 
-module.exports.addSenderIndex = (
-  yargs,
-  defaultParam = SENDER_INDEX.default
-) => {
+module.exports.addSenderIndex = (yargs, defaultParam = SENDER_INDEX.default) => {
   newOption(
     yargs,
     SENDER_INDEX.name,
     SENDER_INDEX.alias,
-    "number",
+    'number',
     `Index account (0 based) used to send the transaction. By default: ${defaultParam}`,
     defaultParam
   );
 };
 
-module.exports.addSenderIndex = (
-  yargs,
-  defaultParam = RECEIVER_INDEX.default
-) => {
+module.exports.addSenderIndex = (yargs, defaultParam = RECEIVER_INDEX.default) => {
   newOption(
     yargs,
     RECEIVER_INDEX.name,
     RECEIVER_INDEX.alias,
-    "number",
+    'number',
     `Address (index) that will receive the tokens. By default: ${defaultParam}`,
     defaultParam
   );
@@ -124,7 +115,7 @@ module.exports.addAmount = (yargs, defaultParam = AMOUNT.default) => {
     yargs,
     AMOUNT.name,
     AMOUNT.alias,
-    "number",
+    'number',
     `Amount to send in transaction. By default: ${defaultParam}`,
     defaultParam
   );
@@ -135,7 +126,7 @@ module.exports.addNewValue = (yargs, defaultParam = NEW_VALUE.default) => {
     yargs,
     NEW_VALUE.name,
     NEW_VALUE.alias,
-    "string",
+    'string',
     `New value to se in the settings. By default: ${defaultParam}`,
     defaultParam
   );
@@ -146,7 +137,7 @@ module.exports.addMaxValue = (yargs, defaultParam = MAX_VALUE.default) => {
     yargs,
     MAX_VALUE.name,
     MAX_VALUE.alias,
-    "string",
+    'string',
     `Max value to set in the settings. By default: ${defaultParam}`,
     defaultParam
   );
@@ -157,7 +148,7 @@ module.exports.addMinValue = (yargs, defaultParam = MIN_VALUE.default) => {
     yargs,
     MIN_VALUE.name,
     MIN_VALUE.alias,
-    "string",
+    'string',
     `Min value to set in the settings. By default: ${defaultParam}`,
     defaultParam
   );
@@ -168,21 +159,18 @@ module.exports.addLoanId = (yargs, defaultParam = LOAN_ID.default) => {
     yargs,
     LOAN_ID.name,
     LOAN_ID.alias,
-    "number",
+    'number',
     `Loan ID to use in the transaction. By default: ${defaultParam}`,
     defaultParam
   );
 };
 
-module.exports.addSettingName = (
-  yargs,
-  defaultParam = SETTING_NAME.default
-) => {
+module.exports.addSettingName = (yargs, defaultParam = SETTING_NAME.default) => {
   newOption(
     yargs,
     SETTING_NAME.name,
     SETTING_NAME.alias,
-    "string",
+    'string',
     `Setting name to connfigure. By default  ${defaultParam}`,
     defaultParam
   );
@@ -196,7 +184,7 @@ module.exports.addAssetSettingName = (
     yargs,
     ASSET_SETTING_NAME.name,
     ASSET_SETTING_NAME.alias,
-    "string",
+    'string',
     `Asset setting name to configure. By default  ${defaultParam}`,
     defaultParam
   );
@@ -207,105 +195,84 @@ module.exports.addCTokenName = (yargs, defaultParam = CTOKEN_NAME.default) => {
     yargs,
     CTOKEN_NAME.name,
     CTOKEN_NAME.alias,
-    "string",
+    'string',
     `CToken name to use in the transaction. By default ${defaultParam}`,
     defaultParam
   );
 };
 
-module.exports.addMaxLoanAmount = (
-  yargs,
-  defaultParam = MAX_LOAN_AMOUNT.default
-) => {
+module.exports.addMaxLoanAmount = (yargs, defaultParam = MAX_LOAN_AMOUNT.default) => {
   newOption(
     yargs,
     MAX_LOAN_AMOUNT.name,
     MAX_LOAN_AMOUNT.alias,
-    "number",
+    'number',
     `Max loan amount to use in the transaction. By default ${defaultParam}`,
     defaultParam
   );
 };
 
-module.exports.addBorrowerIndex = (
-  yargs,
-  defaultParam = BORROWER_INDEX.default
-) => {
+module.exports.addBorrowerIndex = (yargs, defaultParam = BORROWER_INDEX.default) => {
   newOption(
     yargs,
     BORROWER_INDEX.name,
     BORROWER_INDEX.alias,
-    "number",
+    'number',
     `Index account to use as borrower. By default ${defaultParam}`,
     defaultParam
   );
 };
 
-module.exports.addInitialLoanId = (
-  yargs,
-  defaultParam = INITIAL_LOAN_ID.default
-) => {
+module.exports.addInitialLoanId = (yargs, defaultParam = INITIAL_LOAN_ID.default) => {
   newOption(
     yargs,
     INITIAL_LOAN_ID.name,
     INITIAL_LOAN_ID.alias,
-    "number",
+    'number',
     `Initial loan ID to use. By default ${defaultParam}`,
     defaultParam
   );
 };
 
-module.exports.addFinalLoanId = (
-  yargs,
-  defaultParam = FINAL_LOAN_ID.default
-) => {
+module.exports.addFinalLoanId = (yargs, defaultParam = FINAL_LOAN_ID.default) => {
   newOption(
     yargs,
     FINAL_LOAN_ID.name,
     FINAL_LOAN_ID.alias,
-    "number",
+    'number',
     `Initial loan ID to use. By default ${defaultParam}`,
     defaultParam
   );
 };
 
-module.exports.addRecipientIndex = (
-  yargs,
-  defaultParam = RECIPIENT_INDEX.default
-) => {
+module.exports.addRecipientIndex = (yargs, defaultParam = RECIPIENT_INDEX.default) => {
   newOption(
     yargs,
     RECIPIENT_INDEX.name,
     RECIPIENT_INDEX.alias,
-    "number",
+    'number',
     `Index account to use as recipient. By default ${defaultParam} (0x0 address).`,
     defaultParam
   );
 };
 
-module.exports.addDurationDays = (
-  yargs,
-  defaultParam = DURATION_DAYS.default
-) => {
+module.exports.addDurationDays = (yargs, defaultParam = DURATION_DAYS.default) => {
   newOption(
     yargs,
     DURATION_DAYS.name,
     DURATION_DAYS.alias,
-    "number",
+    'number',
     `Total of days for the loan (duration). By default ${defaultParam}.`,
     defaultParam
   );
 };
 
-module.exports.addReceiverIndex = (
-  yargs,
-  defaultParam = RECEIVER_INDEX.default
-) => {
+module.exports.addReceiverIndex = (yargs, defaultParam = RECEIVER_INDEX.default) => {
   newOption(
     yargs,
     RECEIVER_INDEX.name,
     RECEIVER_INDEX.alias,
-    "number",
+    'number',
     `Address (index) that will receive the tokens. By default ${defaultParam}`,
     defaultParam
   );
@@ -316,7 +283,7 @@ module.exports.addSeconds = (yargs, defaultParam = SECONDS.default) => {
     yargs,
     SECONDS.name,
     SECONDS.alias,
-    "number",
+    'number',
     `Seconds to advance. By default: ${defaultParam}`,
     defaultParam
   );
@@ -327,7 +294,7 @@ module.exports.addCollAmount = (yargs, defaultParam = COLL_AMOUNT.default) => {
     yargs,
     COLL_AMOUNT.name,
     COLL_AMOUNT.alias,
-    "number",
+    'number',
     `Amount to send as collateral. By default ${defaultParam}`,
     defaultParam
   );
@@ -338,7 +305,7 @@ module.exports.addBackRounds = (yargs, defaultParam = BACK_ROUNDS.default) => {
     yargs,
     BACK_ROUNDS.name,
     BACK_ROUNDS.alias,
-    "number",
+    'number',
     `Total back rounds to get an oracle price. By default ${defaultParam}`,
     defaultParam
   );
@@ -349,7 +316,7 @@ module.exports.addNonce = (yargs, defaultParam = NONCE.default) => {
     yargs,
     NONCE.name,
     NONCE.alias,
-    "number",
+    'number',
     `Nonce value to use in the signatures. By default ${defaultParam}.`,
     defaultParam
   );
@@ -360,7 +327,7 @@ module.exports.addAddresses = (yargs, defaultParam = ADDRESSES.default) => {
     yargs,
     ADDRESSES.name,
     ADDRESSES.alias,
-    "string",
+    'string',
     `Addresses to add as signers. By default ${defaultParam}`,
     defaultParam
   );
@@ -371,21 +338,18 @@ module.exports.addBorrower = (yargs, defaultParam = BORROWER.default) => {
     yargs,
     BORROWER.name,
     BORROWER.alias,
-    "string",
+    'string',
     `Borrower address. By default ${defaultParam}`,
     defaultParam
   );
 };
 
-module.exports.addAccountIndex = (
-  yargs,
-  defaultParam = ACCOUNT_INDEX.default
-) => {
+module.exports.addAccountIndex = (yargs, defaultParam = ACCOUNT_INDEX.default) => {
   newOption(
     yargs,
     ACCOUNT_INDEX.name,
     ACCOUNT_INDEX.alias,
-    "number",
+    'number',
     `Address (index) to use in the transaction. By default ${defaultParam}`,
     defaultParam
   );
@@ -396,7 +360,7 @@ module.exports.addRevert = (yargs, defaultParam = REVERT.default) => {
     yargs,
     REVERT.name,
     REVERT.alias,
-    "boolean",
+    'boolean',
     `Sets whether the process reverts the changes after running all the integration tests. By default ${defaultParam}`,
     defaultParam
   );
@@ -407,49 +371,40 @@ module.exports.addRevertTest = (yargs, defaultParam = REVERT_TEST.default) => {
     yargs,
     REVERT_TEST.name,
     REVERT_TEST.alias,
-    "boolean",
+    'boolean',
     `Sets whether the process reverts the changes after running each integration test. By default ${defaultParam}`,
     defaultParam
   );
 };
 
-module.exports.addCollTokenNames = (
-  yargs,
-  defaultParam = COLL_TOKEN_NAMES.default
-) => {
+module.exports.addCollTokenNames = (yargs, defaultParam = COLL_TOKEN_NAMES.default) => {
   newOption(
     yargs,
     COLL_TOKEN_NAMES.name,
     COLL_TOKEN_NAMES.alias,
-    "array",
+    'array',
     `The collateral token names used in the integration tests. By default ${defaultParam}`,
     defaultParam
   );
 };
 
-module.exports.addInitialNonce = (
-  yargs,
-  defaultParam = INITIAL_NONCE.default
-) => {
+module.exports.addInitialNonce = (yargs, defaultParam = INITIAL_NONCE.default) => {
   newOption(
     yargs,
     INITIAL_NONCE.name,
     INITIAL_NONCE.alias,
-    "number",
+    'number',
     `Sets the initial nonce number to be used to sign messages. By default ${defaultParam}`,
     defaultParam
   );
 };
 
-module.exports.addSignerAddress = (
-  yargs,
-  defaultParam = SIGNER_ADDRESS.default
-) => {
+module.exports.addSignerAddress = (yargs, defaultParam = SIGNER_ADDRESS.default) => {
   newOption(
     yargs,
     SIGNER_ADDRESS.name,
     SIGNER_ADDRESS.alias,
-    "array",
+    'array',
     `Adds an address as signer. It supports multiple signers (multiple params). They will be added as signers in the execution context (integration tests). By default ${defaultParam}`,
     defaultParam
   );
@@ -460,7 +415,7 @@ module.exports.addSignerUrl = (yargs, defaultParam = SIGNER_URL.default) => {
     yargs,
     SIGNER_URL.name,
     SIGNER_URL.alias,
-    "array",
+    'array',
     `Adds an URL endpoint as signer. It supports multiple signers (multiple params). They will be requested when a borrower/lender needs to get a consensus in the execution context (integration tests). By default ${defaultParam}`,
     defaultParam
   );
@@ -471,7 +426,7 @@ module.exports.addTokenNames = (yargs, defaultParam = TOKEN_NAMES.default) => {
     yargs,
     TOKEN_NAMES.name,
     TOKEN_NAMES.alias,
-    "array",
+    'array',
     `Used to execute the integration tests. By default ${defaultParam}`,
     defaultParam
   );
@@ -482,7 +437,7 @@ module.exports.addMinAmount = (yargs, defaultParam = MIN_AMOUNT.default) => {
     yargs,
     MIN_AMOUNT.name,
     MIN_AMOUNT.alias,
-    "number",
+    'number',
     `This represents the minimum amount of tokens that an address should have. It is used in the integration tests and validation scripts. By default ${defaultParam}`,
     defaultParam
   );
@@ -493,21 +448,18 @@ module.exports.addLogicName = (yargs, defaultParam = LOGIC_NAME.default) => {
     yargs,
     LOGIC_NAME.name,
     LOGIC_NAME.alias,
-    "string",
+    'string',
     `The current logic name. By default ${defaultParam}`,
     defaultParam
   );
 };
 
-module.exports.addContractName = (
-  yargs,
-  defaultParam = CONTRACT_NAME.default
-) => {
+module.exports.addContractName = (yargs, defaultParam = CONTRACT_NAME.default) => {
   newOption(
     yargs,
     CONTRACT_NAME.name,
     CONTRACT_NAME.alias,
-    "string",
+    'string',
     `The contract name to update. It should be equal to the contract name (including cases). By default ${defaultParam}`,
     defaultParam
   );
@@ -518,7 +470,7 @@ module.exports.addVerbose = (yargs, defaultParam = VERBOSE.default) => {
     yargs,
     VERBOSE.name,
     VERBOSE.alias,
-    "boolean",
+    'boolean',
     `Used in integration tests to print info out. By default ${defaultParam}`,
     defaultParam
   );

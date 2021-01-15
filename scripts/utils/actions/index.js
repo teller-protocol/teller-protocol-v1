@@ -7,12 +7,12 @@ const errors = require('./errors');
 const settings = require('./settings');
 
 module.exports = {
-    loans,
-    oracles: chainlink,
-    chainlink,
-    escrow,
-    blockchain,
-    tokens,
-    errors,
-    settings,
+  loans,
+  oracles: chainlink,
+  chainlink,
+  escrow,
+  blockchain,
+  tokens,
+  errors,
+  settings,
 };

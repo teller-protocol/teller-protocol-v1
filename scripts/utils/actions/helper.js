@@ -2,11 +2,11 @@ const {
   loans: loansActions,
   settings: settingsActions,
   blockchain: blockchainActions,
-} = require("./index");
+} = require('./index');
 
-const chainlinkActions = require("./chainlink");
-const platformSettingNames = require("../../../test/utils/platformSettingsNames");
-const BigNumber = require("bignumber.js");
+const chainlinkActions = require('./chainlink');
+const platformSettingNames = require('../../../test/utils/platformSettingsNames');
+const BigNumber = require('bignumber.js');
 
 const takeOutNewLoan = async function (
   allContracts,
@@ -54,13 +54,14 @@ const takeOutNewLoan = async function (
       allContracts,
       { testContext },
       { settingName: platformSettingNames.CollateralBuffer }
-    )
+    );
     let result = await settingsActions.getPlatformSettings(
       allContracts,
       { testContext },
       { settingName: platformSettingNames.LiquidateEthPrice }
     );
-    collateralRatio = Number(value) + Number(interestRate) + (10000 - Number(result.value));
+    collateralRatio =
+      Number(value) + Number(interestRate) + (10000 - Number(result.value));
   }
 
   // Requesting the loan terms.
@@ -74,7 +75,7 @@ const takeOutNewLoan = async function (
     collateralRatio,
     maxLoanAmount: maxAmountRequestLoanTerms,
     signers,
-    responseTime: 50
+    responseTime: 50,
   };
   const loanInfoRequestLoanTerms = await loansActions.requestLoanTerms(
     allContracts,
@@ -85,8 +86,8 @@ const takeOutNewLoan = async function (
   // Depositing collateral.
   await loansActions.depositCollateral(
     allContracts,
-    {txConfig: borrowerTxConfig, testContext},
-    {loanId: loanInfoRequestLoanTerms.id, amount: collateralAmountDepositCollateral}
+    { txConfig: borrowerTxConfig, testContext },
+    { loanId: loanInfoRequestLoanTerms.id, amount: collateralAmountDepositCollateral }
   );
 
   await blockchainActions.advanceMinutes({ timer }, { testContext }, { minutes: 2 });

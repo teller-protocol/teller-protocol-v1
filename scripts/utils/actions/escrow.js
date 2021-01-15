@@ -1,19 +1,16 @@
-const assert = require("assert");
-const truffleAssert = require('truffle-assertions')
-const BigNumber = require("bignumber.js");
+const assert = require('assert');
+const truffleAssert = require('truffle-assertions');
+const BigNumber = require('bignumber.js');
 
-const loansActions = require("./loans");
-const {
-  tokens: tokensAssertions,
-  escrow: escrowAssertions,
-} = require("../assertions");
+const loansActions = require('./loans');
+const { tokens: tokensAssertions, escrow: escrowAssertions } = require('../assertions');
 const {
   escrow: escrowEvents,
   uniswap: uniswapEvents,
-  compound: compoundEvents
-} = require("../../../test/utils/events");
-const { teller } = require("../contracts");
-const logicNames = require("../../../test/utils/logicNames");
+  compound: compoundEvents,
+} = require('../../../test/utils/events');
+const { teller } = require('../contracts');
+const logicNames = require('../../../test/utils/logicNames');
 
 /**
  * Repays the loan for an amount.
@@ -64,7 +61,12 @@ const claimTokensByLoanId = async (
 ) => {
   const escrow = await loansActions.getEscrow({ loans }, { testContext }, { loanId });
   const txPromise = escrow.claimTokens(txConfig);
-  await escrowAssertions.tokensClaimed({ txPromise, recipient, shouldFail, expectedRevertReason });
+  await escrowAssertions.tokensClaimed({
+    txPromise,
+    recipient,
+    shouldFail,
+    expectedRevertReason,
+  });
 };
 
 /**
@@ -76,7 +78,12 @@ const claimTokens = async (
   { recipient, shouldFail = false, expectedRevertReason }
 ) => {
   const txPromise = escrow.claimTokens(txConfig);
-  await escrowAssertions.tokensClaimed({ txPromise, recipient, shouldFail, expectedRevertReason });
+  await escrowAssertions.tokensClaimed({
+    txPromise,
+    recipient,
+    shouldFail,
+    expectedRevertReason,
+  });
 };
 
 const callDapp = async (
@@ -84,10 +91,13 @@ const callDapp = async (
   { txConfig, testContext },
   { dappName, fnName, args }
 ) => {
-  const { address: location, contract: dappContract } = await testContext.getContracts.getDeployed(teller.proxy(dappName));
+  const {
+    address: location,
+    contract: dappContract,
+  } = await testContext.getContracts.getDeployed(teller.proxy(dappName));
   const dappData = {
     location,
-    data: dappContract.methods[fnName](...args).encodeABI()
+    data: dappContract.methods[fnName](...args).encodeABI(),
   };
   return escrow.callDapp(dappData, txConfig);
 };
@@ -107,25 +117,27 @@ const uniswapSwap = async (
   const tokenBBalanceBefore = (await tokenB.balanceOf(escrow.address)).toString();
 
   const path = tokensPath.map(({ address }) => address);
-  const args = [ path, sourceAmount, minDestination ];
+  const args = [path, sourceAmount, minDestination];
   const fn = callDapp(
     { escrow },
     { txConfig, testContext },
-    { dappName: logicNames.Uniswap, fnName: "swap", args }
+    { dappName: logicNames.Uniswap, fnName: 'swap', args }
   );
 
   if (shouldFail) {
     try {
-      await assert.rejects(fn, "Expected swap to fail");
+      await assert.rejects(fn, 'Expected swap to fail');
     } catch (error) {
       assert.strictEqual(error.reason, expectedRevertReason, error.message);
     }
   } else {
-    await assert.doesNotReject(fn, "Expected swap to be successful");
+    await assert.doesNotReject(fn, 'Expected swap to be successful');
 
-    const swapResult = await fn
-    const uniswap = await testContext.getContracts.getDeployed(teller.proxy('Uniswap', escrow.address));
-    const txResult = await truffleAssert.createTransactionResult(uniswap, swapResult.tx)
+    const swapResult = await fn;
+    const uniswap = await testContext.getContracts.getDeployed(
+      teller.proxy('Uniswap', escrow.address)
+    );
+    const txResult = await truffleAssert.createTransactionResult(uniswap, swapResult.tx);
     uniswapEvents
       .uniswapSwapped(txResult)
       .emitted(tokenA.address, tokenB.address, sourceAmount);
@@ -155,21 +167,29 @@ const compoundLend = async (
   const tokenBalanceBefore = (await token.balanceOf(escrow.address)).toString();
   const cTokenBalanceBefore = (await cToken.balanceOf(escrow.address)).toString();
 
-  const args = [ token.address, amount ];
+  const args = [token.address, amount];
   const lendResult = await callDapp(
     { escrow },
     { txConfig, testContext },
-    { dappName: logicNames.Compound, fnName: "lend", args }
+    { dappName: logicNames.Compound, fnName: 'lend', args }
   );
 
   const tokenBalanceAfter = (await token.balanceOf(escrow.address)).toString();
   const cTokenBalanceAfter = (await cToken.balanceOf(escrow.address)).toString();
 
-  const compound = await testContext.getContracts.getDeployed(teller.proxy('Compound', escrow.address));
-  const txResult = await truffleAssert.createTransactionResult(compound, lendResult.tx)
+  const compound = await testContext.getContracts.getDeployed(
+    teller.proxy('Compound', escrow.address)
+  );
+  const txResult = await truffleAssert.createTransactionResult(compound, lendResult.tx);
   compoundEvents
     .compoundLended(txResult)
-    .emitted(token.address, cToken.address, amount, tokenBalanceAfter, cTokenBalanceAfter);
+    .emitted(
+      token.address,
+      cToken.address,
+      amount,
+      tokenBalanceAfter,
+      cTokenBalanceAfter
+    );
 
   await tokensAssertions.balanceLt(
     { token },
@@ -194,32 +214,44 @@ const compoundRedeem = async (
   const tokenBalanceBefore = (await token.balanceOf(escrow.address)).toString();
   const cTokenBalanceBefore = (await cToken.balanceOf(escrow.address)).toString();
 
-  const args = [ token.address, amount ];
+  const args = [token.address, amount];
   const fn = callDapp(
     { escrow },
     { txConfig, testContext },
-    { dappName: logicNames.Compound, fnName: "redeem", args }
+    { dappName: logicNames.Compound, fnName: 'redeem', args }
   );
 
   if (shouldFail) {
     try {
-      await assert.rejects(fn, "Expected redeem to fail");
+      await assert.rejects(fn, 'Expected redeem to fail');
     } catch (error) {
       assert.strictEqual(error.reason, expectedRevertReason, error.message);
     }
   } else {
-    await assert.doesNotReject(fn, "Expected redeem to be successful");
+    await assert.doesNotReject(fn, 'Expected redeem to be successful');
 
-    const redeemResult = await fn
+    const redeemResult = await fn;
 
     const tokenBalanceAfter = (await token.balanceOf(escrow.address)).toString();
     const cTokenBalanceAfter = (await cToken.balanceOf(escrow.address)).toString();
 
-    const compound = await testContext.getContracts.getDeployed(teller.proxy('Compound', escrow.address));
-    const txResult = await truffleAssert.createTransactionResult(compound, redeemResult.tx)
+    const compound = await testContext.getContracts.getDeployed(
+      teller.proxy('Compound', escrow.address)
+    );
+    const txResult = await truffleAssert.createTransactionResult(
+      compound,
+      redeemResult.tx
+    );
     compoundEvents
       .compoundRedeemed(txResult)
-      .emitted(token.address, cToken.address, amount, true, tokenBalanceAfter, cTokenBalanceAfter);
+      .emitted(
+        token.address,
+        cToken.address,
+        amount,
+        true,
+        tokenBalanceAfter,
+        cTokenBalanceAfter
+      );
 
     await tokensAssertions.balanceLt(
       { token: cToken },
@@ -229,7 +261,10 @@ const compoundRedeem = async (
     await tokensAssertions.balanceIs(
       { token },
       { testContext },
-      { address: escrow.address, expectedBalance: new BigNumber(tokenBalanceBefore).plus(amount).toString() }
+      {
+        address: escrow.address,
+        expectedBalance: new BigNumber(tokenBalanceBefore).plus(amount).toString(),
+      }
     );
   }
 };
@@ -244,26 +279,35 @@ const compoundRedeemAll = async (
   const tokenBalanceBefore = (await token.balanceOf(escrow.address)).toString();
   const cTokenBalanceBefore = (await cToken.balanceOf(escrow.address)).toString();
 
-  const args = [ token.address ];
+  const args = [token.address];
   const redeemResult = await callDapp(
     { escrow },
     { txConfig, testContext },
-    { dappName: logicNames.Compound, fnName: "redeemAll", args }
+    { dappName: logicNames.Compound, fnName: 'redeemAll', args }
   );
 
   const tokenBalanceAfter = (await token.balanceOf(escrow.address)).toString();
   const cTokenBalanceAfter = (await cToken.balanceOf(escrow.address)).toString();
 
-  const compound = await testContext.getContracts.getDeployed(teller.proxy('Compound', escrow.address));
-  const txResult = await truffleAssert.createTransactionResult(compound, redeemResult.tx)
+  const compound = await testContext.getContracts.getDeployed(
+    teller.proxy('Compound', escrow.address)
+  );
+  const txResult = await truffleAssert.createTransactionResult(compound, redeemResult.tx);
   compoundEvents
     .compoundRedeemed(txResult)
-    .emitted(token.address, cToken.address, cTokenBalanceBefore, false, tokenBalanceAfter, cTokenBalanceAfter);
+    .emitted(
+      token.address,
+      cToken.address,
+      cTokenBalanceBefore,
+      false,
+      tokenBalanceAfter,
+      cTokenBalanceAfter
+    );
 
   await tokensAssertions.balanceIs(
     { token: cToken },
     { testContext },
-    { address: escrow.address, expectedBalance: "0" }
+    { address: escrow.address, expectedBalance: '0' }
   );
   await tokensAssertions.balanceGt(
     { token },
@@ -279,12 +323,12 @@ module.exports = {
   claimTokensByLoanId,
   dapp: {
     uniswap: {
-      swap: uniswapSwap
+      swap: uniswapSwap,
     },
     compound: {
       lend: compoundLend,
       redeem: compoundRedeem,
-      redeemAll: compoundRedeemAll
-    }
-  }
+      redeemAll: compoundRedeemAll,
+    },
+  },
 };
