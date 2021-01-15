@@ -43,7 +43,8 @@ contract Consensus is Base, OwnerSignersRole {
     address public callerAddress;
 
     /**
-        @notice It tracks each request nonce value that borrower (in LoanTermsConsensus) or lender (in InterestConsensus) used in the loan terms and interest requests.
+        @notice It tracks each request nonce value that borrower (in LoanTermsConsensus) or lender
+        (in InterestConsensus) used in the loan terms and interest requests.
 
         @dev The first key represents the address (borrower or lender depending on the consensus contract).
         @dev The second key represents the request nonce value.
@@ -81,7 +82,8 @@ contract Consensus is Base, OwnerSignersRole {
 
     /**
         @notice It initializes this consensus contract.
-        @dev The caller address must be the loans contract for LoanTermsConsensus, and the lenders contract for InterestConsensus.
+        @dev The caller address must be the loans contract for LoanTermsConsensus, and the lenders
+        contract for InterestConsensus.
         @param owner the owner address.
         @param aCallerAddress the contract that will call it.
         @param aSettingAddress the settings contract address.
@@ -191,7 +193,9 @@ contract Consensus is Base, OwnerSignersRole {
         @return the current chain id.
      */
     function _getChainId() internal view returns (uint256) {
-        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
+        // silence state mutability warning without generating bytecode
+        // see https://github.com/ethereum/solidity/issues/2691
+        this;
         uint256 id;
         assembly {
             id := chainid()
