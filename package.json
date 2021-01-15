@@ -5,7 +5,7 @@
   "main": "truffle-config.js",
   "scripts": {
     "compile": "node --max-old-space-size=8192 ./node_modules/.bin/truffle compile",
-    "typechain": "typechain --target truffle-v5 './build/**/*.json'",
+    "typechain": "typechain --target truffle-v5 './build/contracts/*.json'",
     "build:types": "yarn compile && yarn typechain",
     "prepack": "yarn build:types",
     "lint-sol": "yarn solhint -f table \"./contracts/**/*.sol\"",
@@ -84,11 +84,10 @@
   },
   "lint-staged": {
     "*.sol": [
-      "yarn solhint -f table --fix",
+      "yarn solhint -f table",
       "prettier --write"
     ],
     "*.{js,ts}": [
-      "yarn eslint -f table --fix",
       "prettier --write"
     ],
     "*.{json,md}": [
