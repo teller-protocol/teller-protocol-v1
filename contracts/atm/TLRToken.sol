@@ -242,11 +242,12 @@ contract TLRToken is
         require(assignedTokens[msg.sender] > 0, "ACCOUNT_DOESNT_HAVE_VESTING");
 
         uint256 transferableTokens = _transferableTokens(msg.sender, block.timestamp);
+        assignedTokens[msg.sender] = assignedTokens[msg.sender].sub(transferableTokens);
+
         _transfer(address(this), msg.sender, transferableTokens);
         _snapshot();
         _updateAccountSnapshot(msg.sender);
         _updateAccountSnapshot(address(this));
-        assignedTokens[msg.sender] = assignedTokens[msg.sender].sub(transferableTokens);
         emit VestingClaimed(msg.sender, transferableTokens);
     }
 
