@@ -83,7 +83,15 @@
     }
   },
   "lint-staged": {
-    "*.{sol,js,ts,json,md}": [
+    "*.sol": [
+      "yarn solhint -f table --fix",
+      "prettier --write"
+    ],
+    "*.{js,ts}": [
+      "yarn eslint -f table --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
       "prettier --write"
     ]
   }
