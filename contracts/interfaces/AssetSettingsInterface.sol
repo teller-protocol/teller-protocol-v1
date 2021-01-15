@@ -161,5 +161,5 @@ interface AssetSettingsInterface {
         @notice It removes a configuration for a given asset on the platform.
         @param assetAddress asset address to remove.
      */
-//   function removeAsset(address assetAddress) external;
+  function removeAsset(address assetAddress) external;
 }

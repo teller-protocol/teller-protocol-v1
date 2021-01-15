@@ -31,6 +31,14 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
   using AddressLib for address;
   using CacheLib for CacheLib.Cache;
 
+  /**
+        @notice This mapping represents the asset settings where:
+
+        - The key is the asset address.
+        - The value is the Cache for all asset settings. It includes the settings addresses, uints, ints, bytes and boolean values.
+     */
+  mapping(address => CacheLib.Cache) internal assets;
+
   /** Constants */
   /**
         @notice The asset setting name for cToken address settings.
@@ -58,21 +66,6 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
   bytes32 internal constant MAX_TOTAL_VALUE_LOCKED_SETTING = keccak256("MaxTVLAmount");
 
   /**
-        @notice This mapping represents the asset settings where:
-
-        - The key is the asset address.
-        - The value is the Cache for all asset settings. It includes the settings addresses, uints, ints, bytes and boolean values.
-     */
-  mapping(address => CacheLib.Cache) internal assets;
-
-//   function initialize(address settingsAddress)
-//     public
-//     isNotInitialized()
-//   {
-//     _setSettings(settingsAddress);
-//   }
-
-  /**
     @notice It creates an asset with the given parameters.
     @param assetAddress asset address used to create the new setting.
     @param cTokenAddress cToken address used to configure the asset setting.
@@ -85,11 +78,12 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
   ) external {
     assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
     cTokenAddress.requireNotEmpty("CTOKEN_ADDRESS_REQUIRED");
-    require(maxLoanAmount > 0, "INIT_MAX_AMOUNT_REQUIRED");
 
     assets[assetAddress].initialize();
     assets[assetAddress].updateAddress(CTOKEN_ADDRESS_ASSET_SETTING, cTokenAddress);
-    assets[assetAddress].updateUint(MAX_LOAN_AMOUNT_ASSET_SETTING, maxLoanAmount);
+    if (maxLoanAmount > 0) {
+      assets[assetAddress].updateUint(MAX_LOAN_AMOUNT_ASSET_SETTING, maxLoanAmount);
+    }
 
     emit AssetSettingsCreated(msg.sender, assetAddress, cTokenAddress, maxLoanAmount);
   }
@@ -101,7 +95,7 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     */
   function updateCTokenAddress(address assetAddress, address cTokenAddress)
     external
-    // onlyPauser()
+    onlyPauser()
   {
     cTokenAddress.requireNotEmpty("CTOKEN_ADDRESS_REQUIRED");
     address oldCTokenAddress = assets[assetAddress].addresses[CTOKEN_ADDRESS_ASSET_SETTING];
@@ -135,7 +129,7 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     */
   function updateYVaultAddressSetting(address assetAddress, address yVaultAddress)
     external
-    // onlyPauser()
+    onlyPauser()
   {
     assets[assetAddress].updateAddress(YEARN_VAULT_ADDRESS_ASSET_SETTING, yVaultAddress);
   }
@@ -158,7 +152,7 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     */
   function updateCRVPoolAddressSetting(address assetAddress, address crvPoolAddress)
     external
-    // onlyPauser()
+    onlyPauser()
   {
     assets[assetAddress].updateAddress(CRV_POOL_ADDRESS_ASSET_SETTING, crvPoolAddress);
   }
@@ -181,7 +175,7 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     */
   function updateMaxLoanAmount(address assetAddress, uint256 newMaxLoanAmount)
     external
-    // onlyPauser()
+    onlyPauser()
   {
     assets[assetAddress].requireExists();
     uint256 oldMaxLoanAmount = assets[assetAddress].uints[MAX_LOAN_AMOUNT_ASSET_SETTING];
@@ -229,11 +223,12 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     */
   function updateMaxTVL(address assetAddress, uint256 newMaxTVLAmount)
     external
-    // onlyPauser()
+    onlyPauser()
   {
     assets[assetAddress].requireExists();
-
-    assets[assetAddress].updateUint(MAX_TOTAL_VALUE_LOCKED_SETTING, newMaxTVLAmount);
+    if (newMaxTVLAmount > 0) {
+      assets[assetAddress].updateUint(MAX_TOTAL_VALUE_LOCKED_SETTING, newMaxTVLAmount);
+    }
   }
 
   /**

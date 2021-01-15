@@ -19,10 +19,6 @@ module.exports = {
     */
   DEFAULT_MAX_AMOUNT: 1000,
   /**
-   *    This is used as a default amount to configure the max TVL amount.
-   */
-  DEFAULT_MAX_TVL_AMOUNT: 100000,
-  /**
    * Represents the initial version of the Node Component.
    *
    * e.g.: 10000 => represents : 1.00.00

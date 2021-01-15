@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "../util/AddressLib.sol";
-import "../util/AssetSettingsLib.sol";
 import "../util/PlatformSettingsLib.sol";
 import "../util/AddressArrayLib.sol";
 import "../util/CacheLib.sol";
@@ -47,7 +46,6 @@ import "../interfaces/AssetSettingsInterface.sol";
 contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeable {
   using AddressLib for address;
   using Address for address;
-  using AssetSettingsLib for AssetSettingsLib.AssetSettings;
   using AddressArrayLib for address[];
   using PlatformSettingsLib for PlatformSettingsLib.PlatformSetting;
 
