@@ -20,6 +20,5 @@ contract TUSDC is TToken {
      */
     constructor(address settingsAddress)
         public
-        TToken(settingsAddress, NAME, SYMBOL, DECIMALS)
     {}
 }

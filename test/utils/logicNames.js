@@ -8,7 +8,6 @@ module.exports = {
     ChainlinkAggregator: 'ChainlinkAggregator',
     Settings: 'Settings',
     LogicVersionsRegistry: 'LogicVersionsRegistry',
-    TTokenRegistry: 'TTokenRegistry',
     ATMFactory: 'ATMFactory',
     ATMSettings: 'ATMSettings',
     ATMGovernance: 'ATMGovernance',

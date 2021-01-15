@@ -18,8 +18,6 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const ERC20Mintable = artifacts.require('@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol');
 
 // Official Smart Contracts
-const TDAI = artifacts.require("./base/TDAI.sol");
-const TUSDC = artifacts.require("./base/TUSDC.sol");
 const TTokenRegistry = artifacts.require("./base/TTokenRegistry.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
@@ -93,7 +91,6 @@ module.exports = async function(deployer, network, accounts) {
       { Contract: ATMFactory, name: logicNames.ATMFactory },
       { Contract: ATMLiquidityMining, name: logicNames.ATMLiquidityMining },
       { Contract: MarketFactory, name: logicNames.MarketFactory },
-      { Contract: TTokenRegistry, name : logicNames.TTokenRegistry },
     ];
 
     const loanLib = await LoanLib.new();
@@ -126,7 +123,6 @@ module.exports = async function(deployer, network, accounts) {
     const atmSettingsInstance = await deployInitializableDynamicProxy(logicNames.ATMSettings)
     const atmFactoryInstance = await deployInitializableDynamicProxy(logicNames.ATMFactory)
     const marketFactoryInstance = await deployInitializableDynamicProxy(logicNames.MarketFactory)
-    const tTokenRegistryInstance = await deployInitializableDynamicProxy(logicNames.TTokenRegistry)
 
     console.log(`Deploying LogicVersionsRegistry...`)
     const logicVersionsRegistryLogic = await deployerApp.deployWith('LogicVersionsRegistry', LogicVersionsRegistry, 'teller', txConfig)
@@ -184,7 +180,6 @@ module.exports = async function(deployer, network, accounts) {
     await initializeProxy(logicNames.ATMSettings, atmSettingsInstance)
     await initializeProxy(logicNames.ATMFactory, atmFactoryInstance)
     await initializeProxy(logicNames.MarketFactory, marketFactoryInstance)
-    await initializeProxy(logicNames.TTokenRegistry, tTokenRegistryInstance)
 
     async function deployDapp(name, unsecured) {
       const info = deployedLogicContractsMap.get(name)
@@ -211,20 +206,13 @@ module.exports = async function(deployer, network, accounts) {
       { txConfig, ...networkConfig },
     );
 
-    await deployerApp.deploys([TDAI, TUSDC], settingsInstance.address, txConfig);
-    console.log(`Deployed tokens: TDAI [${TDAI.address}] TUSDC [${TUSDC.address}] `);
-    console.log(`Registering TDAI and TUSDC in TTokenRegistry`);
-    await tTokenRegistryInstance.registerTToken(TDAI.address, txConfig);
-    await tTokenRegistryInstance.registerTToken(TUSDC.address, txConfig);
-    console.log(`TDAI [${TDAI.address}] and TUSDC [${TUSDC.address}] added to TTokenRegistry`);
     console.log(`Creating Markets...`);
     const marketDefinitions = [
-      { tTokenAddress: TDAI.address, borrowedTokenName: 'DAI', collateralTokenName: 'ETH' },
-      { tTokenAddress: TDAI.address, borrowedTokenName: 'DAI', collateralTokenName: 'LINK' },
-      { tTokenAddress: TUSDC.address, borrowedTokenName: 'USDC', collateralTokenName: 'ETH' },
-      { tTokenAddress: TUSDC.address, borrowedTokenName: 'USDC', collateralTokenName: 'LINK' },
+      { lendingTokenName: 'DAI', collateralTokenName: 'ETH' },
+      // { lendingTokenName: 'DAI', collateralTokenName: 'LINK' },
+      { lendingTokenName: 'USDC', collateralTokenName: 'ETH' },
+      // { lendingTokenName: 'USDC', collateralTokenName: 'LINK' },
     ];
-
     await createMarkets(
       marketDefinitions,
       { marketFactoryInstance },

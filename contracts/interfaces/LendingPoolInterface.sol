@@ -1,7 +1,11 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
+// Utils
 import "../util/MarketStateLib.sol";
+
+// Interfaces
+import "./TTokenInterface.sol";
 
 /**
     @notice This interface defines the functions for a lending pool that holds all of the tokens that lenders transfer into the protocol.
@@ -60,19 +64,17 @@ interface LendingPoolInterface {
         @notice It gets the lending token address.
         @return the ERC20 lending token address.
     */
-    function lendingToken() external view returns (address);
+    function lendingToken() external view returns (ERC20Detailed);
 
     /**
         @notice It initializes the contract state variables.
-        @param tTokenAddress tToken token address.
-        @param lendingTokenAddress ERC20 token address.
+        @param aTToken the Teller token to link to the lending pool.
         @param loansAddress Loans contract address.
         @param settingsAddress Settings contract address.
         @dev It throws a require error if the contract is already initialized.
      */
     function initialize(
-        address tTokenAddress,
-        address lendingTokenAddress,
+        TTokenInterface aTToken,
         address loansAddress,
         address settingsAddress
     ) external;

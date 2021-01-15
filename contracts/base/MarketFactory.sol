@@ -10,6 +10,7 @@ import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/SettingsInterface.sol";
 import "../interfaces/MarketFactoryInterface.sol";
+import "../interfaces/TTokenRegistryInterface.sol";
 
 // Commons
 import "../util/TellerCommon.sol";
@@ -17,6 +18,8 @@ import "../util/TellerCommon.sol";
 // Contracts
 import "./TInitializable.sol";
 import "./DynamicProxy.sol";
+import "./TTokenRegistry.sol";
+import "./TToken.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -52,6 +55,8 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
      */
     mapping(address => mapping(address => TellerCommon.Market)) markets;
 
+    TTokenRegistryInterface public tTokenRegistry;
+
     /* Modifiers */
 
     /**
@@ -65,13 +70,13 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
 
     /**
         @notice It checks whether a market exists or not for a given borrowed/collateral tokens.
-        @param borrowedToken the borrowed token address.
+        @param lendingToken the borrowed token address.
         @param collateralToken the collateral token address.
         @dev It throws a require error if the market already exists.
      */
-    modifier marketNotExist(address borrowedToken, address collateralToken) {
+    modifier marketNotExist(address lendingToken, address collateralToken) {
         require(
-            !_getMarket(borrowedToken, collateralToken).exists,
+            !_getMarket(lendingToken, collateralToken).exists,
             "MARKET_ALREADY_EXIST"
         );
         _;
@@ -79,12 +84,12 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
 
     /**
         @notice It checks whether a market exists or not for a given borrowed/collateral tokens.
-        @param borrowedToken the borrowed token address.
+        @param lendingToken the borrowed token address.
         @param collateralToken the collateral token address.
         @dev It throws a require error if the market doesn't exist.
      */
-    modifier marketExist(address borrowedToken, address collateralToken) {
-        require(_getMarket(borrowedToken, collateralToken).exists, "MARKET_NOT_EXIST");
+    modifier marketExist(address lendingToken, address collateralToken) {
+        require(_getMarket(lendingToken, collateralToken).exists, "MARKET_NOT_EXIST");
         _;
     }
 
@@ -93,26 +98,30 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
     /**
         @notice It creates a new market for a given TToken and borrowed/collateral tokens.
         @dev It uses the Settings.ETH_ADDRESS to represent the ETHER.
-        @param tToken the TToken address.
-        @param borrowedToken the borrowed token address.
+        @param lendingToken the token address used to create the lending pool and TToken.
         @param collateralToken the collateral token address.
      */
     function createMarket(
-        address tToken,
-        address borrowedToken,
+        address lendingToken,
         address collateralToken
-    ) external onlyPauser() isNotPaused() isInitialized() {
-        _requireCreateMarket(tToken, borrowedToken, collateralToken);
+    ) external isInitialized() isNotPaused() onlyPauser() {
+        require(lendingToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
+        require(
+            collateralToken == _getSettings().ETH_ADDRESS() ||
+            collateralToken.isContract(),
+            "COLL_TOKEN_MUST_BE_CONTRACT"
+        );
+
         address owner = msg.sender;
 
         (
             LendingPoolInterface lendingPoolProxy,
             LoanTermsConsensusInterface loanTermsConsensusProxy,
             LoansInterface loansProxy
-        ) = _createAndInitializeProxies(owner, tToken, borrowedToken, collateralToken);
+        ) = _createAndInitializeProxies(owner, lendingToken, collateralToken);
 
         _addMarket(
-            borrowedToken,
+            lendingToken,
             collateralToken,
             address(loansProxy),
             address(lendingPoolProxy),
@@ -121,7 +130,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
 
         emit NewMarketCreated(
             owner,
-            borrowedToken,
+            lendingToken,
             collateralToken,
             address(loansProxy),
             address(lendingPoolProxy),
@@ -131,61 +140,61 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
 
     /**
         @notice It removes a current market for a given borrowed/collateral tokens.
-        @param borrowedToken the borrowed token address.
+        @param lendingToken the borrowed token address.
         @param collateralToken the collateral token address.
      */
-    function removeMarket(address borrowedToken, address collateralToken)
+    function removeMarket(address lendingToken, address collateralToken)
         external
         onlyPauser()
         isNotPaused()
         isInitialized()
-        marketExist(borrowedToken, collateralToken)
+        marketExist(lendingToken, collateralToken)
     {
-        delete markets[borrowedToken][collateralToken];
+        delete markets[lendingToken][collateralToken];
 
-        emit MarketRemoved(msg.sender, borrowedToken, collateralToken);
+        emit MarketRemoved(msg.sender, lendingToken, collateralToken);
     }
 
     /**
         @notice It gets the current addresses for a given borrowed/collateral token.
-        @param borrowedToken the borrowed token address.
+        @param lendingToken the borrowed token address.
         @param collateralToken the collateral token address.
         @return a struct with the contract addresses for the given market.
      */
-    function getMarket(address borrowedToken, address collateralToken)
+    function getMarket(address lendingToken, address collateralToken)
         external
         view
         returns (TellerCommon.Market memory)
     {
-        return _getMarket(borrowedToken, collateralToken);
+        return _getMarket(lendingToken, collateralToken);
     }
 
     /**
         @notice It tests whether a market exists or not for a given borrowed/collateral tokens.
-        @param borrowedToken the borrowed token address.
+        @param lendingToken the borrowed token address.
         @param collateralToken the collateral token address.
         @return true if the market exists for the given borrowed/collateral tokens. Otherwise it returns false.
      */
-    function existMarket(address borrowedToken, address collateralToken)
+    function existMarket(address lendingToken, address collateralToken)
         external
         view
         returns (bool)
     {
-        return _getMarket(borrowedToken, collateralToken).exists;
+        return _getMarket(lendingToken, collateralToken).exists;
     }
 
     /**
         @notice It tests whether a market exists or not for a given borrowed/collateral tokens.
-        @param borrowedToken the borrowed token address.
+        @param lendingToken the borrowed token address.
         @param collateralToken the collateral token address.
         @return true if the market doesn't exist for the given borrowed/collateral tokens. Otherwise it returns false.
      */
-    function notExistMarket(address borrowedToken, address collateralToken)
+    function notExistMarket(address lendingToken, address collateralToken)
         external
         view
         returns (bool)
     {
-        return !_getMarket(borrowedToken, collateralToken).exists;
+        return !_getMarket(lendingToken, collateralToken).exists;
     }
 
     /**
@@ -198,26 +207,28 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         _initialize();
 
         _setSettings(settingsAddress);
+
+        tTokenRegistry = new TTokenRegistry();
     }
 
     /** Internal Functions */
 
     /**
         @notice It adds a market in the internal mapping.
-        @param borrowedToken the borrowed token address.
+        @param lendingToken the borrowed token address.
         @param collateralToken the collateral token address.
         @param loans the new loans contract address.
         @param lendingPool the new lending pool contract address.
         @param loanTermsConsensus the new loan terms consensus contract address.
      */
     function _addMarket(
-        address borrowedToken,
+        address lendingToken,
         address collateralToken,
         address loans,
         address lendingPool,
         address loanTermsConsensus
     ) internal {
-        markets[borrowedToken][collateralToken] = TellerCommon.Market({
+        markets[lendingToken][collateralToken] = TellerCommon.Market({
             loans: loans,
             lendingPool: lendingPool,
             loanTermsConsensus: loanTermsConsensus,
@@ -235,50 +246,27 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
 
     /**
         @notice It gets the current addresses for a given borrowed/collateral token.
-        @param borrowedToken the borrowed token address.
+        @param lendingToken the borrowed token address.
         @param collateralToken the collateral token address.
         @return a struct with the contract addresses for the given market.
      */
-    function _getMarket(address borrowedToken, address collateralToken)
+    function _getMarket(address lendingToken, address collateralToken)
         internal
         view
         returns (TellerCommon.Market memory)
     {
-        return markets[borrowedToken][collateralToken];
-    }
-
-    /**
-        @notice It validates the TToken, borrowed and collateral token addresses.
-        @param tToken the TToken contract address.
-        @param borrowedToken the borrowed token address.
-        @param collateralToken the collateral token address.
-        @dev It throws a require error if any param is invalid.
-     */
-    function _requireCreateMarket(
-        address tToken,
-        address borrowedToken,
-        address collateralToken
-    ) internal view marketNotExist(borrowedToken, collateralToken) {
-        require(tToken.isContract(), "TTOKEN_MUST_BE_CONTRACT");
-        require(borrowedToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
-        require(
-            collateralToken == _getSettings().ETH_ADDRESS() ||
-                collateralToken.isContract(),
-            "COLL_TOKEN_MUST_BE_CONTRACT"
-        );
+        return markets[lendingToken][collateralToken];
     }
 
     /**
         @notice It creates and initializes the proxies used for the given tToken, and borrowed/collateral tokens.
         @param owner the owner address (or sender transaction).
-        @param tToken the tToken address.
-        @param borrowedToken the borrowed token address.
+        @param lendingToken the borrowed token address.
         @param collateralToken the collateral token address.
      */
     function _createAndInitializeProxies(
         address owner,
-        address tToken,
-        address borrowedToken,
+        address lendingToken,
         address collateralToken
     )
         internal
@@ -293,11 +281,13 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
             collateralToken
         );
 
+        TTokenInterface tToken = new TToken(lendingToken, address(lendingPoolProxy));
+        tTokenRegistry.registerTToken(tToken);
+
         // Initializing proxies.
         _initializeProxies(
             owner,
             tToken,
-            borrowedToken,
             collateralToken,
             lendingPoolProxy,
             loanTermsConsensusProxy,
@@ -357,7 +347,6 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         @notice It initializes all the new proxies.
         @param owner the owner address (or sender transaction).
         @param tToken the tToken address.
-        @param borrowedToken the borrowed token address.
         @param collateralToken the collateral token address.
         @param lendingPoolProxy the new lending pool proxy instance.
         @param loanTermsConsensusProxy the new loan terms consensus proxy instance.
@@ -365,8 +354,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
      */
     function _initializeProxies(
         address owner,
-        address tToken,
-        address borrowedToken,
+        TTokenInterface tToken,
         address collateralToken,
         LendingPoolInterface lendingPoolProxy,
         LoanTermsConsensusInterface loanTermsConsensusProxy,
@@ -375,7 +363,6 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         // Initializing LendingPool
         lendingPoolProxy.initialize(
             tToken,
-            borrowedToken,
             address(loansProxy),
             address(_getSettings())
         );

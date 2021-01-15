@@ -13,24 +13,23 @@ interface MarketFactoryInterface {
     /** External Functions */
 
     function createMarket(
-        address tToken,
-        address borrowedToken,
+        address lendingToken,
         address collateralToken
     ) external;
 
-    function removeMarket(address borrowedToken, address collateralToken) external;
+    function removeMarket(address lendingToken, address collateralToken) external;
 
-    function getMarket(address borrowedToken, address collateralToken)
+    function getMarket(address lendingToken, address collateralToken)
         external
         view
         returns (TellerCommon.Market memory);
 
-    function existMarket(address borrowedToken, address collateralToken)
+    function existMarket(address lendingToken, address collateralToken)
         external
         view
         returns (bool);
 
-    function notExistMarket(address borrowedToken, address collateralToken)
+    function notExistMarket(address lendingToken, address collateralToken)
         external
         view
         returns (bool);
@@ -41,7 +40,7 @@ interface MarketFactoryInterface {
 
     event NewMarketCreated(
         address indexed sender,
-        address indexed borrowedToken,
+        address indexed lendingToken,
         address indexed collateralToken,
         address loans,
         address lendingPool,
@@ -50,7 +49,7 @@ interface MarketFactoryInterface {
 
     event MarketRemoved(
         address indexed sender,
-        address indexed borrowedToken,
+        address indexed lendingToken,
         address indexed collateralToken
     );
 }

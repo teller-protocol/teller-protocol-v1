@@ -43,7 +43,7 @@ contract("ChainlinkAggregatorValueForTest", function(accounts) {
     _2_eth_usd_oracle: [100, 18, 18, 1.2, 8, false, null ]
   }, function(
     borrowedAmount,
-    borrowedTokenDecimals,
+    lendingTokenDecimals,
     collateralTokenDecimals,
     chainlinkResponsePrice,
     chainlinkResponseDecimals,
@@ -52,7 +52,7 @@ contract("ChainlinkAggregatorValueForTest", function(accounts) {
   ) {
     it(t("loans", "latestAnswerFor", "Should be able (or not) to get the latest answer for a market.", mustFail), async function() {
       try {
-        const borrowedToken = await mockERC20({ decimals: borrowedTokenDecimals }, { Mock, encoder: erc20InterfaceEncoder });
+        const lendingToken = await mockERC20({ decimals: lendingTokenDecimals }, { Mock, encoder: erc20InterfaceEncoder });
         const collateralToken = await mockERC20({ decimals: collateralTokenDecimals }, { Mock, encoder: erc20InterfaceEncoder });
         const chainlinkAggregator = await Mock.new();
         await chainlinkAggregator.givenMethodReturnUint(
@@ -65,22 +65,22 @@ contract("ChainlinkAggregatorValueForTest", function(accounts) {
         );
 
         await instance.add(
-          borrowedToken.address,
+          lendingToken.address,
           collateralToken.address,
           chainlinkAggregator.address
         );
-        const borrowedAmountWithDecimals = toDecimals(borrowedAmount, borrowedTokenDecimals);
+        const borrowedAmountWithDecimals = toDecimals(borrowedAmount, lendingTokenDecimals);
 
         // Invocation
         const valueForResult = await instance.valueFor(
-          borrowedToken.address,
+          lendingToken.address,
           collateralToken.address,
           borrowedAmountWithDecimals.toFixed(0),
         );
 
         // Assertions
         const aggregatorForResult = await instance.aggregatorFor(
-          borrowedToken.address,
+          lendingToken.address,
           collateralToken.address,
         );
 

@@ -120,7 +120,7 @@ contract LoansBase is LoansInterface, Base {
         require(maxLoanDuration >= loanRequest.duration, "DURATION_EXCEEDS_MAX_DURATION");
 
         bool exceedsMaxLoanAmount = _getSettings().exceedsMaxLoanAmount(
-            lendingPool.lendingToken(),
+            address(lendingPool.lendingToken()),
             loanRequest.amount
         );
         require(!exceedsMaxLoanAmount, "AMOUNT_EXCEEDS_MAX_AMOUNT");
@@ -145,7 +145,7 @@ contract LoansBase is LoansInterface, Base {
         @return Address of the lending token
      */
     function lendingToken() external view returns (address) {
-        return lendingPool.lendingToken();
+        return address(lendingPool.lendingToken());
     }
 
     /**
@@ -608,7 +608,7 @@ contract LoansBase is LoansInterface, Base {
         returns (bool)
     {
         address atmAddressForMarket = _getSettings().atmSettings().getATMForMarket(
-            lendingPool.lendingToken(),
+            address(lendingPool.lendingToken()),
             collateralToken
         );
         require(atmAddressForMarket != address(0x0), "ATM_NOT_FOUND_FOR_MARKET");

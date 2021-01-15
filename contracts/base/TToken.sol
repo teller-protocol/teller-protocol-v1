@@ -1,8 +1,11 @@
 pragma solidity 0.5.17;
 
+// Utils
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+
+// Interfaces
 import "../interfaces/TTokenInterface.sol";
 import "../interfaces/SettingsInterface.sol";
 
@@ -16,25 +19,26 @@ contract TToken is TTokenInterface, ERC20Detailed, ERC20Mintable {
 
     /** State Variables */
 
-    SettingsInterface private settings;
+    /**
+        @notice The token that is the underlying assets for this Teller token.
+     */
+    ERC20Detailed public underlying;
 
     /* Constructor */
     /**
-     * @param settingsAddress the setting address.
-     * @param name The name of the token
-     * @param symbol The symbol of the token
-     * @param decimals The amount of decimals for the token
+     * @param underlyingTokenAddress the token address this TToken is for.
+     * @param lendingPoolAddress the address of the lending pool this token is linked to. It is only used to add it as a minter.
      */
-    constructor(
-        address settingsAddress,
-        string memory name,
-        string memory symbol,
-        uint8 decimals
-    ) public {
-        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_CONTRACT");
-        settings = SettingsInterface(settingsAddress);
-        ERC20Detailed.initialize(name, symbol, decimals);
-        ERC20Mintable.initialize(msg.sender);
+    constructor(address underlyingTokenAddress, address lendingPoolAddress) public {
+        require(underlyingTokenAddress.isContract(), "SETTINGS_MUST_BE_CONTRACT");
+        underlying = ERC20Detailed(underlyingTokenAddress);
+
+        ERC20Detailed.initialize(
+            string(abi.encodePacked("Teller ", underlying.name())),
+            string(abi.encodePacked("t", underlying.symbol())),
+            underlying.decimals()
+        );
+        ERC20Mintable.initialize(lendingPoolAddress);
     }
 
     /* Public Functions */
@@ -47,15 +51,5 @@ contract TToken is TTokenInterface, ERC20Detailed, ERC20Mintable {
     function burn(address account, uint256 amount) public onlyMinter returns (bool) {
         _burn(account, amount);
         return true;
-    }
-
-    /** Internal Functions */
-
-    /**
-        @notice Gets the current settings contract.
-        @return the setting contract instance.
-     */
-    function _settings() internal view returns (SettingsInterface) {
-        return settings;
     }
 }

@@ -91,6 +91,7 @@ interface ATMLiquidityMiningInterface {
     /**
         @notice Withdraws accrued TLR tokens by sending them to msg.sender owned account. This operation updates
          the user stake info for the sender (userStakeInfo[msg.sender]).
+        @param tToken the Teller token used to mine with.
         @param amount amount of accrued TLR Tokens to withdraw.
      */
     function withdrawTLR(address tToken, uint256 amount) external;

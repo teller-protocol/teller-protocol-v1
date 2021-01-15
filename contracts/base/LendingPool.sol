@@ -12,7 +12,6 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoansInterface.sol";
-import "../interfaces/IERC20Detailed.sol";
 import "../interfaces/TTokenInterface.sol";
 import "../providers/compound/CErc20Interface.sol";
 
@@ -37,14 +36,14 @@ import "./Base.sol";
  */
 contract LendingPool is Base, LendingPoolInterface {
     using SafeMath for uint256;
-    using SafeERC20 for IERC20Detailed;
+    using SafeERC20 for ERC20Detailed;
     using MarketStateLib for MarketStateLib.MarketState;
     using CompoundRatesLib for CErc20Interface;
     using NumbersLib for uint256;
 
     /* State Variables */
 
-    IERC20Detailed public lendingToken;
+    ERC20Detailed public lendingToken;
 
     TTokenInterface public tToken;
 
@@ -312,27 +311,23 @@ contract LendingPool is Base, LendingPoolInterface {
 
     /**
         @notice It initializes the contract state variables.
-        @param tTokenAddress tToken token address.
-        @param lendingTokenAddress ERC20 token address.
+        @param aTToken the Teller token to link to the lending pool.
         @param loansAddress Loans contract address.
         @param settingsAddress Settings contract address.
         @dev It throws a require error if the contract is already initialized.
      */
     function initialize(
-        address tTokenAddress,
-        address lendingTokenAddress,
+        TTokenInterface aTToken,
         address loansAddress,
         address settingsAddress
     ) external isNotInitialized() {
-        tTokenAddress.requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
-        lendingTokenAddress.requireNotEmpty("TOKEN_ADDRESS_IS_REQUIRED");
+        address(aTToken).requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
         loansAddress.requireNotEmpty("LOANS_ADDRESS_IS_REQUIRED");
 
         _initialize(settingsAddress);
 
-        tToken = TTokenInterface(tTokenAddress);
-        lendingToken = IERC20Detailed(lendingTokenAddress);
-        loans = loansAddress;
+        tToken = aTToken;
+        lendingToken = tToken.underlying();
     }
 
     /** Internal functions */
