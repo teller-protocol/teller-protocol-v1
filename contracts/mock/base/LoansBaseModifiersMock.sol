@@ -10,19 +10,14 @@ contract LoansBaseModifiersMock is EtherCollateralLoans {
     bool public mockIsDebtRatioValid;
     bool public returnIsDebtRatioValid;
 
-    function setMockIsDebtRatioValid(
-        bool result,
-        bool aResponseIsDebtRatioValid
-    ) external {
+    function setMockIsDebtRatioValid(bool result, bool aResponseIsDebtRatioValid)
+        external
+    {
         mockIsDebtRatioValid = result;
         returnIsDebtRatioValid = aResponseIsDebtRatioValid;
     }
 
-    function _isDebtRatioValid(uint256 newLoanAmount)
-        internal
-        view
-        returns (bool)
-    {
+    function _isDebtRatioValid(uint256 newLoanAmount) internal view returns (bool) {
         if (!mockIsDebtRatioValid) {
             return super._isDebtRatioValid(newLoanAmount);
         }
