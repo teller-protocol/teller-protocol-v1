@@ -289,6 +289,10 @@ contract LendingPool is Base, LendingPoolInterface {
         return _exchangeRate();
     }
 
+    /**
+        @notice It calculates the current exchange rate for the TToken based on the total supply of the lending token.
+        @return the exchange rate for 1 TToken to the underlying token.
+     */
     function _exchangeRate() internal view returns (uint256) {
         if (tToken.totalSupply() == 0) {
             return
@@ -301,8 +305,7 @@ contract LendingPool is Base, LendingPoolInterface {
         }
 
         return
-            _getMarketState()
-                .totalSupplied
+            _getTotalSupplied()
                 .mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS))
                 .div(tToken.totalSupply());
     }
@@ -334,20 +337,20 @@ contract LendingPool is Base, LendingPoolInterface {
 
     /** Internal functions */
 
+    /**
+        @notice It calculates the market state values across all markets.
+        @return a MarketState struct that represents the global values across all markets.
+     */
     function _getMarketState()
         internal
         view
         returns (MarketStateLib.MarketState memory state)
     {
         state = marketState;
+        state.totalSupplied = _getTotalSupplied();
 
         address cTokenAddress = cToken();
         if (cTokenAddress != address(0) && compoundMarketState.totalSupplied > 0) {
-            state.totalSupplied = state.totalSupplied.add(
-                CErc20Interface(cTokenAddress).valueInUnderlying(
-                    compoundMarketState.totalSupplied
-                )
-            );
             state.totalRepaid = state.totalRepaid.add(
                 CErc20Interface(cTokenAddress).valueInUnderlying(
                     compoundMarketState.totalRepaid
@@ -356,6 +359,25 @@ contract LendingPool is Base, LendingPoolInterface {
             state.totalBorrowed = state.totalBorrowed.add(
                 CErc20Interface(cTokenAddress).valueInUnderlying(
                     compoundMarketState.totalBorrowed
+                )
+            );
+        }
+    }
+
+    /**
+        @notice It calculates the total supply of the lending token across all markets.
+        @return the total supply denoted in the lending token.
+     */
+    function _getTotalSupplied()
+        internal
+        view
+        returns (uint256 totalSupplied)
+    {
+        totalSupplied = marketState.totalSupplied;
+        if (cTokenAddress != address(0) && compoundMarketState.totalSupplied > 0) {
+            totalSupplied = totalSupplied.add(
+                CErc20Interface(cTokenAddress).valueInUnderlying(
+                    compoundMarketState.totalSupplied
                 )
             );
         }
