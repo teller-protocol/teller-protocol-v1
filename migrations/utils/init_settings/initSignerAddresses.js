@@ -4,7 +4,7 @@
     The configuration file is 'signers.js' and it is located in each 'network' folder within the 'config' folder.
  */
 module.exports = async function(
-    { loanTermsConsensusInstance, interestConsensusInstance },
+    { loanTermsConsensusInstance },
     { signers, txConfig, },
     { },
 ) {
@@ -18,6 +18,4 @@ module.exports = async function(
     console.log(`New addresses (${signerAddresses.length}) to add as signers: ${signerAddresses}.`);
     console.log(`LoanTermsConsensus (${loanTermsConsensusInstance.address}): adding ${signerAddresses.length} accounts as signers.`);
     await loanTermsConsensusInstance.addSigners(signerAddresses, txConfig);
-    console.log(`InteresstConsensus (${interestConsensusInstance.address}): adding ${signerAddresses.length} accounts as signers.`);
-    await interestConsensusInstance.addSigners(signerAddresses, txConfig);
 }

@@ -43,7 +43,7 @@ contract Consensus is Base, OwnerSignersRole {
     address public callerAddress;
 
     /**
-        @notice It tracks each request nonce value that borrower (in LoanTermsConsensus) or lender (in InterestConsensus) used in the loan terms and interest requests.
+        @notice It tracks each request nonce value that borrower (in LoanTermsConsensus) used in the loan terms and interest requests.
 
         @dev The first key represents the address (borrower or lender depending on the consensus contract).
         @dev The second key represents the request nonce value.
@@ -81,7 +81,7 @@ contract Consensus is Base, OwnerSignersRole {
 
     /**
         @notice It initializes this consensus contract.
-        @dev The caller address must be the loans contract for LoanTermsConsensus, and the lenders contract for InterestConsensus.
+        @dev The caller address must be the loans contract for LoanTermsConsensus.
         @param owner the owner address.
         @param aCallerAddress the contract that will call it.
         @param aSettingAddress the settings contract address.

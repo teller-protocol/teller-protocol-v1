@@ -76,7 +76,6 @@ module.exports = {
             web3,
             tTokenAddress,
             tokenAddress,
-            lendersAddress,
             loansAddress,
             cTokenAddress,
             settingsAddress,
@@ -85,7 +84,6 @@ module.exports = {
             const params = [
                 tTokenAddress,
                 tokenAddress,
-                lendersAddress,
                 loansAddress,
                 cTokenAddress,
                 settingsAddress,

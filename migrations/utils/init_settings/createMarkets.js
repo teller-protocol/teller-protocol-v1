@@ -11,7 +11,7 @@ module.exports = async function (
     console.log(`Creating ${marketDefinitions.length} markets.`);
     const { marketFactoryInstance } = instances;
     const { tokens, txConfig, signers, deployerApp } = params;
-    const { LoanTermsConsensus, InterestConsensus, ERC20Mintable } = artifacts;
+    const { LoanTermsConsensus, ERC20Mintable } = artifacts;
     
     for (const marketDefinition of marketDefinitions) {
       console.log('\n');
@@ -36,18 +36,12 @@ module.exports = async function (
         collateralTokenAddress,
       );
       console.log(`Market ${borrowedTokenName} / ${collateralTokenName}: Loans (proxy): ${marketInfo.loans}`);
-      console.log(`Market ${borrowedTokenName} / ${collateralTokenName}: Lenders (proxy): ${marketInfo.lenders}`);
       console.log(`Market ${borrowedTokenName} / ${collateralTokenName}: Lending pool (proxy): ${marketInfo.lendingPool}`);
       console.log(`Market ${borrowedTokenName} / ${collateralTokenName}: Loan term consensus (proxy): ${marketInfo.loanTermsConsensus}`);
-      console.log(`Market ${borrowedTokenName} / ${collateralTokenName}: Interest consensus (proxy): ${marketInfo.interestConsensus}`);
 
       deployerApp.addContractInfo({
         name: `${collateralTokenName}_Loans_t${borrowedTokenName}_Proxy`,
         address: marketInfo.loans
-      });
-      deployerApp.addContractInfo({
-        name: `${collateralTokenName}_Lenders_t${borrowedTokenName}_Proxy`,
-        address: marketInfo.lenders
       });
       deployerApp.addContractInfo({
         name: `${collateralTokenName}_LendingPool_t${borrowedTokenName}_Proxy`,
@@ -57,20 +51,15 @@ module.exports = async function (
         name: `${collateralTokenName}_LoanTermsConsensus_t${borrowedTokenName}_Proxy`,
         address: marketInfo.loanTermsConsensus
       });
-      deployerApp.addContractInfo({
-        name: `${collateralTokenName}_InterestConsensus_t${borrowedTokenName}_Proxy`,
-        address: marketInfo.interestConsensus
-      });
 
       console.log(`TToken (${tTokenAddress}): Adding as minter ${marketInfo.lendingPool} (LendingPool). Sender: ${txConfig.from}`);
       const tTokenInstance = await ERC20Mintable.at(tTokenAddress);
       await tTokenInstance.addMinter(marketInfo.lendingPool, txConfig);
       
       const loanTermsConsensusInstance = await LoanTermsConsensus.at(marketInfo.loanTermsConsensus);
-      const interestConsensusInstance = await InterestConsensus.at(marketInfo.interestConsensus);
 
       await initSignerAddresses(
-        { loanTermsConsensusInstance, interestConsensusInstance },
+        { loanTermsConsensusInstance },
         { signers, txConfig },
         { },
       );

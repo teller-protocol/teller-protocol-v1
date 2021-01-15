@@ -8,21 +8,12 @@ module.exports = {
             lenderData.lastAccruedInterest
         );
     },
-    initContracts: async (settings, cToken, lendingPool, tToken, consensus, lendingToken, loans, Lenders) => {
-        const lenders = await Lenders.new();
-        await lenders.initialize(
-            tToken.address,
-            lendingPool.address,
-            consensus.address,
-            settings.address,
-        );
+    initContracts: async (settings, lendingPool, tToken, lendingToken, loans) => {
         await lendingPool.initialize(
             tToken.address,
             lendingToken.address,
-            lenders.address,
             loans.address,
             settings.address,
         );
-        return lenders;
     },
 }

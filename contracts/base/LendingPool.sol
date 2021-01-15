@@ -3,6 +3,7 @@ pragma experimental ABIEncoderV2;
 
 // Libraries
 import "../util/CompoundRatesLib.sol";
+import "../util/NumbersLib.sol";
 
 // Commons
 
@@ -10,8 +11,8 @@ import "../util/CompoundRatesLib.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../interfaces/LendingPoolInterface.sol";
-import "../interfaces/LendersInterface.sol";
 import "../interfaces/LoansInterface.sol";
+import "../interfaces/IERC20Detailed.sol";
 import "../interfaces/TTokenInterface.sol";
 import "../providers/compound/CErc20Interface.sol";
 
@@ -29,25 +30,27 @@ import "./Base.sol";
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
-    @notice The LendingPool contract holds all of the tokens that lenders transfer into the protocol. It is the contract that lenders interact with to deposit and withdraw their tokens including interest. The LendingPool interacts with the Lenders contract to ensure token balances and interest owed is kept up to date.
+    @notice The LendingPool contract holds all of the tokens that lenders transfer into the protocol.
+    It is the contract that lenders interact with to deposit and withdraw their tokens including interest.
 
     @author develop@teller.finance
  */
 contract LendingPool is Base, LendingPoolInterface {
     using SafeMath for uint256;
-    using SafeERC20 for IERC20;
+    using SafeERC20 for IERC20Detailed;
     using MarketStateLib for MarketStateLib.MarketState;
     using CompoundRatesLib for CErc20Interface;
+    using NumbersLib for uint256;
 
     /* State Variables */
 
-    IERC20 public lendingToken;
+    IERC20Detailed public lendingToken;
 
     TTokenInterface public tToken;
 
-    LendersInterface public lenders;
-
     address public loans;
+
+    uint8 public constant EXCHANGE_RATE_DECIMALS = 36;
 
     MarketStateLib.MarketState internal marketState;
 
@@ -72,68 +75,100 @@ contract LendingPool is Base, LendingPoolInterface {
         @notice It allows users to deposit tokens into the pool.
         @dev the user must call ERC20.approve function previously.
         @dev If the cToken is available (not 0x0), it deposits the lending token amount into Compound directly.
-        @param amount of tokens to deposit in the pool.
+        @param lendingTokenAmount of tokens to deposit in the pool.
     */
-    function deposit(uint256 amount)
+    function deposit(uint256 lendingTokenAmount)
         external
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused(address(this))
     {
+        uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
+
         // Transfering tokens to the LendingPool
-        tokenTransferFrom(msg.sender, amount);
+        tokenTransferFrom(msg.sender, lendingTokenAmount);
 
         address cTokenAddress = cToken();
-        if (cTokenAddress != address(0)) {
+        if (
+            cTokenAddress != address(0) &&
+            CErc20Interface(cTokenAddress).valueOfUnderlying(lendingTokenAmount) > 0
+        ) {
             // Deposit tokens straight into Compound
             // Increase the Compound market supply
             compoundMarketState.increaseSupply(
-                _depositToCompound(cTokenAddress, amount)
+                _depositToCompound(cTokenAddress, lendingTokenAmount)
             );
         } else {
             // Increase the market supply
-            marketState.increaseSupply(amount);
+            marketState.increaseSupply(lendingTokenAmount);
         }
 
         // Mint tToken tokens
-        tTokenMint(msg.sender, amount);
+        // The new lendingToken and tToken are in proportion to one another
+        // So the exchange rate need not be updated again
+        tTokenMint(msg.sender, tTokenAmount);
 
         // Emit event
-        emit TokenDeposited(msg.sender, amount);
+        emit TokenDeposited(msg.sender, lendingTokenAmount, tTokenAmount);
     }
 
     /**
         @notice It allows any tToken holder to burn their tToken tokens and withdraw their tokens.
-        @dev If the cToken is available (not 0x0), it withdraws the lending tokens from Compound before transferring the tokens to the holder.
-        @param amount of tokens to withdraw.
+        @dev If the cToken is available (not 0x0), it withdraws the lending tokens from Compound before
+        transferring the tokens to the holder.
+        @param lendingTokenAmount of tokens to withdraw.
      */
-    function withdraw(uint256 amount)
+    function withdraw(uint256 lendingTokenAmount)
         external
         isInitialized()
         whenNotPaused()
         whenLendingPoolNotPaused(address(this))
         nonReentrant()
     {
-        // Burn tToken tokens.
-        tToken.burn(msg.sender, amount);
+        uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
 
-        address cTokenAddress = cToken();
-        if (cTokenAddress != address(0)) {
-            // Withdraw tokens from Compound
-            // Decrease the Compound market supply
-            compoundMarketState.decreaseSupply(
-                _withdrawFromCompound(cTokenAddress, amount)
+        require(tTokenAmount > 0, "WITHDRAW_TTOKEN_DUST");
+        require(tToken.balanceOf(msg.sender) > tTokenAmount, "TTOKEN_NOT_ENOUGH_BALANCE");
+
+        _withdraw(lendingTokenAmount, tTokenAmount);
+    }
+
+    function _tTokensForLendingTokens(uint256 lendingTokenAmount)
+        internal
+        view
+        returns (uint256)
+    {
+        return
+            lendingTokenAmount.mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS)).div(
+                _exchangeRate()
             );
-        } else {
-            // Decrease the market supply
-            marketState.decreaseSupply(amount);
-        }
+    }
 
-        // Transfers tokens
-        tokenTransfer(msg.sender, amount);
+    function _lendingTokensForTTokens(uint256 tTokenAmount)
+        internal
+        view
+        returns (uint256)
+    {
+        return
+            tTokenAmount.mul(_exchangeRate()).div(
+                uint256(10)**uint256(EXCHANGE_RATE_DECIMALS)
+            );
+    }
 
-        // Emit event.
-        emit TokenWithdrawn(msg.sender, amount);
+    function withdrawAll()
+        external
+        isInitialized()
+        whenNotPaused()
+        whenLendingPoolNotPaused(address(this))
+        nonReentrant()
+        returns (uint256)
+    {
+        uint256 tTokenAmount = tToken.balanceOf(msg.sender);
+        uint256 lendingTokenAmount = _lendingTokensForTTokens(tTokenAmount);
+
+        _withdraw(lendingTokenAmount, tTokenAmount);
+
+        return lendingTokenAmount;
     }
 
     /**
@@ -234,51 +269,6 @@ contract LendingPool is Base, LendingPoolInterface {
         tokenTransfer(borrower, amount);
     }
 
-    /**
-        @notice It allows the lenders to withdraw interest.
-        @param amount interest amount to withdraw.
-        @dev It withdraws lending tokens from Compound before transferring the tokens to the lender.
-     */
-    function withdrawInterest(uint256 amount)
-        external
-        isInitialized()
-        whenNotPaused()
-        whenLendingPoolNotPaused(address(this))
-    {
-        address lender = msg.sender;
-        InterestValidatorInterface interestValidator = _interestValidator();
-        require(
-            address(interestValidator) == address(0x0) ||
-                interestValidator.isInterestValid(
-                    address(lendingToken),
-                    LoansInterface(loans).collateralToken(),
-                    lender,
-                    amount
-                ),
-            "INTEREST_TO_WITHDRAW_IS_INVALID"
-        );
-
-        // update the lenders record, returning the actual amount to withdraw
-        uint256 amountToWithdraw = lenders.withdrawInterest(lender, amount);
-
-        address cTokenAddress = cToken();
-        if (cTokenAddress != address(0)) {
-            // Withdraw tokens from Compound
-            // Decrease the Compound market supply
-            compoundMarketState.decreaseSupply(
-                _withdrawFromCompound(cTokenAddress, amountToWithdraw)
-            );
-        } else {
-            // Decrease the market supply
-            marketState.decreaseSupply(amountToWithdraw);
-        }
-
-        // Transfer tokens to the lender.
-        tokenTransfer(lender, amountToWithdraw);
-
-        emit InterestWithdrawn(lender, amountToWithdraw);
-    }
-
     function getMarketState() external view returns (MarketStateLib.MarketState memory) {
         return _getMarketState();
     }
@@ -295,11 +285,35 @@ contract LendingPool is Base, LendingPoolInterface {
         return _getSettings().getCTokenAddress(address(lendingToken));
     }
 
+    function exchangeRate() external view returns (uint256) {
+        return _exchangeRate();
+    }
+
+    /**
+        @notice It calculates the current exchange rate for the TToken based on the total supply of the lending token.
+        @return the exchange rate for 1 TToken to the underlying token.
+     */
+    function _exchangeRate() internal view returns (uint256) {
+        if (tToken.totalSupply() == 0) {
+            return
+                uint256(10) **
+                    uint256(
+                        int8(EXCHANGE_RATE_DECIMALS) +
+                            int8(lendingToken.decimals()) -
+                            int8(tToken.decimals())
+                    );
+        }
+
+        return
+            _getTotalSupplied()
+                .mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS))
+                .div(tToken.totalSupply());
+    }
+
     /**
         @notice It initializes the contract state variables.
         @param tTokenAddress tToken token address.
         @param lendingTokenAddress ERC20 token address.
-        @param lendersAddress Lenders contract address.
         @param loansAddress Loans contract address.
         @param settingsAddress Settings contract address.
         @dev It throws a require error if the contract is already initialized.
@@ -307,40 +321,89 @@ contract LendingPool is Base, LendingPoolInterface {
     function initialize(
         address tTokenAddress,
         address lendingTokenAddress,
-        address lendersAddress,
         address loansAddress,
         address settingsAddress
     ) external isNotInitialized() {
         tTokenAddress.requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
         lendingTokenAddress.requireNotEmpty("TOKEN_ADDRESS_IS_REQUIRED");
-        lendersAddress.requireNotEmpty("LENDERS_ADDRESS_IS_REQUIRED");
         loansAddress.requireNotEmpty("LOANS_ADDRESS_IS_REQUIRED");
 
         _initialize(settingsAddress);
 
         tToken = TTokenInterface(tTokenAddress);
-        lendingToken = IERC20(lendingTokenAddress);
-        lenders = LendersInterface(lendersAddress);
+        lendingToken = IERC20Detailed(lendingTokenAddress);
         loans = loansAddress;
     }
 
     /** Internal functions */
 
-    function _getMarketState() internal view returns (MarketStateLib.MarketState memory state) {
+    /**
+        @notice It calculates the market state values across all markets.
+        @return a MarketState struct that represents the global values across all markets.
+     */
+    function _getMarketState()
+        internal
+        view
+        returns (MarketStateLib.MarketState memory state)
+    {
         state = marketState;
+        state.totalSupplied = _getTotalSupplied();
 
         address cTokenAddress = cToken();
         if (cTokenAddress != address(0) && compoundMarketState.totalSupplied > 0) {
-            state.totalSupplied = state.totalSupplied.add(
-                CErc20Interface(cTokenAddress).valueInUnderlying(compoundMarketState.totalSupplied)
-            );
             state.totalRepaid = state.totalRepaid.add(
-                CErc20Interface(cTokenAddress).valueInUnderlying(compoundMarketState.totalRepaid)
+                CErc20Interface(cTokenAddress).valueInUnderlying(
+                    compoundMarketState.totalRepaid
+                )
             );
             state.totalBorrowed = state.totalBorrowed.add(
-                CErc20Interface(cTokenAddress).valueInUnderlying(compoundMarketState.totalBorrowed)
+                CErc20Interface(cTokenAddress).valueInUnderlying(
+                    compoundMarketState.totalBorrowed
+                )
             );
         }
+    }
+
+    /**
+        @notice It calculates the total supply of the lending token across all markets.
+        @return the total supply denoted in the lending token.
+     */
+    function _getTotalSupplied()
+        internal
+        view
+        returns (uint256 totalSupplied)
+    {
+        totalSupplied = marketState.totalSupplied;
+        if (cTokenAddress != address(0) && compoundMarketState.totalSupplied > 0) {
+            totalSupplied = totalSupplied.add(
+                CErc20Interface(cTokenAddress).valueInUnderlying(
+                    compoundMarketState.totalSupplied
+                )
+            );
+        }
+    }
+
+    function _withdraw(uint256 lendingTokenAmount, uint256 tTokenAmount) internal {
+        // Burn tToken tokens.
+        tToken.burn(msg.sender, tTokenAmount);
+
+        // Transfers tokens
+        tokenTransfer(msg.sender, lendingTokenAmount);
+
+        address cTokenAddress = cToken();
+        if (cTokenAddress != address(0)) {
+            // Withdraw tokens from Compound
+            // Decrease the Compound market supply
+            compoundMarketState.decreaseSupply(
+                _withdrawFromCompound(cTokenAddress, lendingTokenAmount)
+            );
+        } else {
+            // Decrease the market supply
+            marketState.decreaseSupply(lendingTokenAmount);
+        }
+
+        // Emit event.
+        emit TokenWithdrawn(msg.sender, lendingTokenAmount, tTokenAmount);
     }
 
     /**
@@ -348,7 +411,10 @@ contract LendingPool is Base, LendingPoolInterface {
         @param amount amount to deposit.
         @return the amount of tokens deposited.
      */
-    function _depositToCompound(address cTokenAddress, uint256 amount) internal returns (uint256) {
+    function _depositToCompound(address cTokenAddress, uint256 amount)
+        internal
+        returns (uint256)
+    {
         // approve the cToken contract to take lending tokens
         lendingToken.safeApprove(cTokenAddress, amount);
 
@@ -359,14 +425,20 @@ contract LendingPool is Base, LendingPoolInterface {
         require(mintResult == 0, "COMPOUND_DEPOSIT_ERROR");
 
         uint256 balanceAfter = CErc20Interface(cTokenAddress).balanceOf(address(this));
-        return balanceAfter.sub(balanceBefore);
+        uint256 difference = balanceAfter.sub(balanceBefore);
+        require(difference > 0, "DEPOSIT_CTOKEN_DUST");
+
+        return difference;
     }
 
     /**
         @notice It withdraws a given amount of tokens if the cToken is defined (not 0x0).
         @param amount amount of tokens to withdraw.
      */
-    function _withdrawFromCompound(address cTokenAddress, uint256 amount) internal returns (uint256) {
+    function _withdrawFromCompound(address cTokenAddress, uint256 amount)
+        internal
+        returns (uint256)
+    {
         uint256 balanceBefore = CErc20Interface(cTokenAddress).balanceOf(address(this));
 
         // this function withdraws 'amount' lending tokens from compound
@@ -379,7 +451,7 @@ contract LendingPool is Base, LendingPoolInterface {
     }
 
     /**
-        @notice It validates whether transaction sender is the loans contract address.@
+        @notice It validates whether transaction sender is the loans contract address.
         @dev This function is overriden in some mock contracts for testing purposes.
      */
     function _requireIsLoan() internal view {

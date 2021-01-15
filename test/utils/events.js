@@ -77,31 +77,6 @@ module.exports = {
             };
         },
     },
-    lenders: {
-        accruedInterestUpdated: tx => {
-            const name = 'AccruedInterestUpdated';
-            return {
-                name: name,
-                emitted: (lender, totalNotWithdrawn, totalAccruedInterest) => emitted(tx, name, ev => {
-                    assert.equal(ev.lender, lender, 'lender does not match');
-                    assert.equal(ev.totalNotWithdrawn.toString(), totalNotWithdrawn.toString(), 'totalNotWithdrawn does not match');
-                    assert.equal(ev.totalAccruedInterest.toString(), totalAccruedInterest.toString(), 'totalAccruedInterest does not match');
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
-        accruedInterestWithdrawn: tx => {
-            const name = 'AccruedInterestWithdrawn';
-            return {
-                name: name,
-                emitted: (recipient, amount) => emitted(tx, name, ev => {
-                    assert.equal(ev.recipient, recipient, 'recipient does not match');
-                    assert.equal(ev.amount.toString(), amount.toString(), 'amount does not match');
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
-    },
     lendingPool: {
         tokenDeposited: tx => {
             const name = 'TokenDeposited';
@@ -258,39 +233,6 @@ module.exports = {
                     assert.equal(ev.sender.toString(), sender.toString(), 'sender does not match');
                     assert.equal(ev.oldPriceOracle, oldPriceOracle, 'oldPriceOracle does not match');
                     assert.equal(ev.newPriceOracle, newPriceOracle, 'newPriceOracle does not match');
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
-    },
-    interestConsensus: {
-        interestSubmitted: tx => {
-            const name = 'InterestSubmitted';
-            return {
-                name: name,
-                emitted: (signer, lender, requestNonce, endTime, interest) => truffleAssert.eventEmitted(tx, name, ev => {
-                    return (
-                        ev.signer.toString() === signer.toString() && 
-                        ev.lender.toString() === lender.toString() &&
-                        ev.requestNonce.toString() === requestNonce.toString() &&
-                        ev.endTime.toString() === endTime.toString() &&
-                        ev.interest.toString() === interest.toString()
-                    );
-                }),
-                notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
-            };
-        },
-        interestAccepted: tx => {
-            const name = 'InterestAccepted';
-            return {
-                name: name,
-                emitted: (lender, requestNonce, endTime, interest) => truffleAssert.eventEmitted(tx, name, ev => {
-                    return (
-                        ev.lender === lender && 
-                        ev.requestNonce.toString() === requestNonce.toString() &&
-                        ev.endTime.toString() === endTime.toString() &&
-                        ev.interest.toString() === interest.toString()
-                    )
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
@@ -843,19 +785,15 @@ module.exports = {
                     borrowedToken,
                     collateralToken,
                     loans,
-                    lenders,
                     lendingPool,
-                    loanTermsConsensus,
-                    interestConsensus
+                    loanTermsConsensus
                 ) => emitted(tx, name, ev => {
                     assert.equal(ev.sender.toString(), sender.toString(), 'sender does not match');
                     assert.equal(ev.borrowedToken.toString(), borrowedToken.toString(), 'borrowedToken does not match');
                     assert.equal(ev.collateralToken.toString(), collateralToken.toString(), 'collateralToken does not match');
                     assert.equal(ev.loans.toString(), loans.toString(), 'loans does not match');
-                    assert.equal(ev.lenders.toString(), lenders.toString(), 'lenders does not match');
                     assert.equal(ev.lendingPool.toString(), lendingPool.toString(), 'lendingPool does not match');
                     assert.equal(ev.loanTermsConsensus.toString(), loanTermsConsensus.toString(), 'loanTermsConsensus does not match');
-                    assert.equal(ev.interestConsensus.toString(), interestConsensus.toString(), 'interestConsensus does not match');
                 }),
                 notEmitted: (assertFunction = () => {} ) => notEmitted(tx, name, assertFunction)
             };
