@@ -85,8 +85,6 @@ contract LendingPool is Base, LendingPoolInterface {
     {
         uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
 
-        // require(tTokenAmount > 0, "TTOKEN_DUST");
-
         // Transfering tokens to the LendingPool
         tokenTransferFrom(msg.sender, lendingTokenAmount);
 
