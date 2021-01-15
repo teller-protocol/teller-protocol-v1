@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 // Libraries
 import "../util/CompoundRatesLib.sol";
 import "../util/NumbersLib.sol";
+import "../util/AddressArrayLib.sol";
 
 // Commons
 
@@ -14,6 +15,7 @@ import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoansInterface.sol";
 import "../interfaces/TTokenInterface.sol";
 import "../providers/compound/CErc20Interface.sol";
+import "../interfaces/IMarketRegistry.sol";
 
 // Contracts
 import "./Base.sol";
@@ -47,9 +49,9 @@ contract LendingPool is Base, LendingPoolInterface {
 
     TTokenInterface public tToken;
 
-    address public loans;
-
     uint8 public constant EXCHANGE_RATE_DECIMALS = 36;
+
+    IMarketRegistry public marketRegistry;
 
     MarketStateLib.MarketState internal marketState;
 
@@ -311,21 +313,21 @@ contract LendingPool is Base, LendingPoolInterface {
 
     /**
         @notice It initializes the contract state variables.
+        @param aMarketRegistry the MarketRegistry contract.
         @param aTToken the Teller token to link to the lending pool.
-        @param loansAddress Loans contract address.
         @param settingsAddress Settings contract address.
         @dev It throws a require error if the contract is already initialized.
      */
     function initialize(
+        IMarketRegistry aMarketRegistry,
         TTokenInterface aTToken,
-        address loansAddress,
         address settingsAddress
     ) external isNotInitialized() {
         address(aTToken).requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
-        loansAddress.requireNotEmpty("LOANS_ADDRESS_IS_REQUIRED");
 
         _initialize(settingsAddress);
 
+        marketRegistry = aMarketRegistry;
         tToken = aTToken;
         lendingToken = tToken.underlying();
     }
@@ -456,7 +458,7 @@ contract LendingPool is Base, LendingPoolInterface {
         @dev This function is overriden in some mock contracts for testing purposes.
      */
     function _requireIsLoan() internal view {
-        loans.requireEqualTo(msg.sender, "ADDRESS_ISNT_LOANS_CONTRACT");
+        require(marketRegistry.loansRegistry(address(this), msg.sender), "ADDRESS_ISNT_LOANS_CONTRACT");
     }
 
     /** Private functions */

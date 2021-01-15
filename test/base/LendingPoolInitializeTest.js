@@ -18,18 +18,16 @@ contract('LendingPoolInitializeTest', function (accounts) {
     const getInstance = (refs, index, accountIndex) => index === -1 ? NULL_ADDRESS: index === 99 ? accounts[accountIndex] : refs[index];
 
     withData({
-        _2_notTdai: [-1, 3, 4, 5, 6, 'TTOKEN_ADDRESS_IS_REQUIRED', true],
-        _1_basic: [2, 3, 4, 5, 6, undefined, false],
-        _3_notDai: [2, -1, 4, 5, 6, 'TOKEN_ADDRESS_IS_REQUIRED', true],
-        _4_notLoanInfo: [2, 3, 4, -1, 6, 'LOANS_ADDRESS_IS_REQUIRED', true],
-        _5_notTdai_notLoanInfo: [-1, 3, 4, -1, 6, 'TTOKEN_ADDRESS_IS_REQUIRED', true],
-        _6_notDai_notLenderInfo: [2, -1, -1, 5, 6, 'TOKEN_ADDRESS_IS_REQUIRED', true],
-        _7_notSettings: [2, 3, 4, 5, -1, 'SETTINGS_MUST_BE_PROVIDED', true],
+        _1_notTdai: [-1, 3, 4, 6, 'TTOKEN_ADDRESS_IS_REQUIRED', true],
+        _2_basic: [2, 3, 4, 6, undefined, false],
+        _3_notDai: [2, -1, 4, 6, 'TOKEN_ADDRESS_IS_REQUIRED', true],
+        _4_notTdai: [-1, 3, 4, 6, 'TTOKEN_ADDRESS_IS_REQUIRED', true],
+        _5_notDai_notLenderInfo: [2, -1, -1, 6, 'TOKEN_ADDRESS_IS_REQUIRED', true],
+        _6_notSettings: [2, 3, 4, -1, 'SETTINGS_MUST_BE_PROVIDED', true],
     }, function(
         tdaiIndex,
         daiIndex,
         lenderInfoIndex,
-        loanInfoIndex,
         settingsIndex,
         expectedErrorMessage,
         mustFail
@@ -39,7 +37,6 @@ contract('LendingPoolInitializeTest', function (accounts) {
             const lendingPoolInstance = await LendingPool.new();
             const tTokenAddress = getInstance(mocks, tdaiIndex, 2);
             const daiAddress = getInstance(mocks, daiIndex, 3);
-            const loanInfoAddress = getInstance(mocks, loanInfoIndex, 5)
             const settingsAddress = getInstance(mocks, settingsIndex, 7);
 
             try {
@@ -47,7 +44,6 @@ contract('LendingPoolInitializeTest', function (accounts) {
                 const result = await lendingPoolInstance.initialize(
                     tTokenAddress,
                     daiAddress,
-                    loanInfoAddress,
                     settingsAddress
                 );
                 

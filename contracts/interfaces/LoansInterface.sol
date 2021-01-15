@@ -3,6 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "../util/TellerCommon.sol";
 import "./SettingsInterface.sol";
+import "./TTokenInterface.sol";
 
 /**
     @notice This interface defines the functions to work with the Teller loans protocol
@@ -197,7 +198,7 @@ interface LoansInterface {
         @notice Returns the tToken in the lending pool
         @return Address of the tToken
      */
-    function tToken() external view returns (address);
+    function tToken() external view returns (TTokenInterface);
 
     /**
         @notice Returns the cToken in the lending pool

@@ -6,6 +6,7 @@ import "../util/MarketStateLib.sol";
 
 // Interfaces
 import "./TTokenInterface.sol";
+import "./IMarketRegistry.sol";
 
 /**
     @notice This interface defines the functions for a lending pool that holds all of the tokens that lenders transfer into the protocol.
@@ -68,14 +69,14 @@ interface LendingPoolInterface {
 
     /**
         @notice It initializes the contract state variables.
+        @param aMarketRegistry the MarketRegistry contract.
         @param aTToken the Teller token to link to the lending pool.
-        @param loansAddress Loans contract address.
         @param settingsAddress Settings contract address.
         @dev It throws a require error if the contract is already initialized.
      */
     function initialize(
+        IMarketRegistry aMarketRegistry,
         TTokenInterface aTToken,
-        address loansAddress,
         address settingsAddress
     ) external;
 
@@ -89,13 +90,7 @@ interface LendingPoolInterface {
         @notice It gets the tToken address.
         @return the tToken address.
     */
-    function tToken() external view returns (address);
-
-    /**
-        @notice It gets the Loans contract address.
-        @return the Loans contract address.
-    */
-    function loans() external view returns (address);
+    function tToken() external view returns (TTokenInterface);
 
     function getMarketState() external view returns (MarketStateLib.MarketState memory);
 

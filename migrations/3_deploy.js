@@ -18,7 +18,6 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const ERC20Mintable = artifacts.require('@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol');
 
 // Official Smart Contracts
-const TTokenRegistry = artifacts.require("./base/TTokenRegistry.sol");
 const Settings = artifacts.require("./base/Settings.sol");
 const ATMSettings = artifacts.require("./settings/ATMSettings.sol");
 const EscrowFactory = artifacts.require('./base/EscrowFactory.sol');
@@ -209,9 +208,9 @@ module.exports = async function(deployer, network, accounts) {
     console.log(`Creating Markets...`);
     const marketDefinitions = [
       { lendingTokenName: 'DAI', collateralTokenName: 'ETH' },
-      // { lendingTokenName: 'DAI', collateralTokenName: 'LINK' },
+      { lendingTokenName: 'DAI', collateralTokenName: 'LINK' },
       { lendingTokenName: 'USDC', collateralTokenName: 'ETH' },
-      // { lendingTokenName: 'USDC', collateralTokenName: 'LINK' },
+      { lendingTokenName: 'USDC', collateralTokenName: 'LINK' },
     ];
     await createMarkets(
       marketDefinitions,

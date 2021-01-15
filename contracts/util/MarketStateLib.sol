@@ -70,7 +70,7 @@ library MarketStateLib {
      */
     function getDebtRatioFor(MarketState memory self, uint256 loanAmount)
         internal
-        view
+        pure
         returns (uint256)
     {
         if (self.totalSupplied == 0) {

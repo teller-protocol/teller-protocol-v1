@@ -10,7 +10,7 @@ import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/SettingsInterface.sol";
 import "../interfaces/MarketFactoryInterface.sol";
-import "../interfaces/TTokenRegistryInterface.sol";
+import "../interfaces/IMarketRegistry.sol";
 
 // Commons
 import "../util/TellerCommon.sol";
@@ -18,7 +18,7 @@ import "../util/TellerCommon.sol";
 // Contracts
 import "./TInitializable.sol";
 import "./DynamicProxy.sol";
-import "./TTokenRegistry.sol";
+import "./MarketRegistry.sol";
 import "./TToken.sol";
 
 /*****************************************************************************************************/
@@ -55,7 +55,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
      */
     mapping(address => mapping(address => TellerCommon.Market)) markets;
 
-    TTokenRegistryInterface public tTokenRegistry;
+    IMarketRegistry public marketRegistry;
 
     /* Modifiers */
 
@@ -112,29 +112,54 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
 
-        address owner = msg.sender;
+        LoanTermsConsensusInterface loanTermsConsensus = _createLoanTermsConsensus();
+        LoansInterface loans = _createLoans(collateralToken);
 
-        (
-            LendingPoolInterface lendingPoolProxy,
-            LoanTermsConsensusInterface loanTermsConsensusProxy,
-            LoansInterface loansProxy
-        ) = _createAndInitializeProxies(owner, lendingToken, collateralToken);
+        LendingPoolInterface lendingPool = marketRegistry.lendingPools(lendingToken);
+        TTokenInterface tToken;
+        if (address(lendingPool) == address(0)) {
+            lendingPool = _createLendingPool();
+            lendingPool.initialize(
+                marketRegistry,
+                new TToken(lendingToken, address(lendingPool)),
+                address(_getSettings())
+            );
+        } else {
+            tToken = lendingPool.tToken();
+        }
+
+        // Initializing LoanTermsConsensus
+        loanTermsConsensus.initialize(
+            msg.sender,
+            address(loans),
+            address(_getSettings())
+        );
+
+        // Initializing Loans
+        loans.initialize(
+            address(lendingPool),
+            address(loanTermsConsensus),
+            address(_getSettings()),
+            collateralToken
+        );
+
+        marketRegistry.registerMarket(lendingPool, loans);
 
         _addMarket(
             lendingToken,
             collateralToken,
-            address(loansProxy),
-            address(lendingPoolProxy),
-            address(loanTermsConsensusProxy)
+            address(loans),
+            address(lendingPool),
+            address(loanTermsConsensus)
         );
 
         emit NewMarketCreated(
-            owner,
+            msg.sender,
             lendingToken,
             collateralToken,
-            address(loansProxy),
-            address(lendingPoolProxy),
-            address(loanTermsConsensusProxy)
+            address(loans),
+            address(lendingPool),
+            address(loanTermsConsensus)
         );
     }
 
@@ -208,7 +233,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
 
         _setSettings(settingsAddress);
 
-        tTokenRegistry = new TTokenRegistry();
+        marketRegistry = new MarketRegistry();
     }
 
     /** Internal Functions */
@@ -259,126 +284,37 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
     }
 
     /**
-        @notice It creates and initializes the proxies used for the given tToken, and borrowed/collateral tokens.
-        @param owner the owner address (or sender transaction).
-        @param lendingToken the borrowed token address.
-        @param collateralToken the collateral token address.
+        @notice Creates a proxy contract for LendingPool.
+        @return a new LendingPool instance.
      */
-    function _createAndInitializeProxies(
-        address owner,
-        address lendingToken,
-        address collateralToken
-    )
-        internal
-        returns (
-            LendingPoolInterface lendingPoolProxy,
-            LoanTermsConsensusInterface loanTermsConsensusProxy,
-            LoansInterface loansProxy
-        )
-    {
-        // Creating proxies
-        (lendingPoolProxy, loanTermsConsensusProxy, loansProxy) = _createProxies(
-            collateralToken
-        );
-
-        TTokenInterface tToken = new TToken(lendingToken, address(lendingPoolProxy));
-        tTokenRegistry.registerTToken(tToken);
-
-        // Initializing proxies.
-        _initializeProxies(
-            owner,
-            tToken,
-            collateralToken,
-            lendingPoolProxy,
-            loanTermsConsensusProxy,
-            loansProxy
-        );
-    }
-
-    /**
-        @notice Creates the proxies for:
-            - LendingPool
-            - LoanTermsConsensus
-        @return the proxy instances.
-     */
-    function _createProxies(address collateralToken)
-        internal
-        returns (
-            LendingPoolInterface lendingPoolProxy,
-            LoanTermsConsensusInterface loanTermsConsensusProxy,
-            LoansInterface loansProxy
-        )
-    {
-        lendingPoolProxy = LendingPoolInterface(
+    function _createLendingPool() internal returns (LendingPoolInterface) {
+        return LendingPoolInterface(
             _createDynamicProxy(
                 _getSettings().versionsRegistry().consts().LENDING_POOL_LOGIC_NAME()
             )
         );
-        loanTermsConsensusProxy = LoanTermsConsensusInterface(
-            _createDynamicProxy(
-                _getSettings()
-                    .versionsRegistry()
-                    .consts()
-                    .LOAN_TERMS_CONSENSUS_LOGIC_NAME()
-            )
-        );
-        if (collateralToken == _getSettings().ETH_ADDRESS()) {
-            loansProxy = LoansInterface(
-                _createDynamicProxy(
-                    _getSettings()
-                        .versionsRegistry()
-                        .consts()
-                        .ETHER_COLLATERAL_LOANS_LOGIC_NAME()
-                )
-            );
-        } else {
-            loansProxy = LoansInterface(
-                _createDynamicProxy(
-                    _getSettings()
-                        .versionsRegistry()
-                        .consts()
-                        .TOKEN_COLLATERAL_LOANS_LOGIC_NAME()
-                )
-            );
-        }
     }
 
     /**
-        @notice It initializes all the new proxies.
-        @param owner the owner address (or sender transaction).
-        @param tToken the tToken address.
-        @param collateralToken the collateral token address.
-        @param lendingPoolProxy the new lending pool proxy instance.
-        @param loanTermsConsensusProxy the new loan terms consensus proxy instance.
-        @param loansProxy the new loans proxy instance.
+        @notice Creates a proxy contract for LoanTermsConsensus.
+        @return a new LoanTermsConsensus instance.
      */
-    function _initializeProxies(
-        address owner,
-        TTokenInterface tToken,
-        address collateralToken,
-        LendingPoolInterface lendingPoolProxy,
-        LoanTermsConsensusInterface loanTermsConsensusProxy,
-        LoansInterface loansProxy
-    ) internal {
-        // Initializing LendingPool
-        lendingPoolProxy.initialize(
-            tToken,
-            address(loansProxy),
-            address(_getSettings())
+    function _createLoanTermsConsensus() internal returns (LoanTermsConsensusInterface) {
+        return LoanTermsConsensusInterface(
+            _createDynamicProxy(
+                _getSettings().versionsRegistry().consts().LOAN_TERMS_CONSENSUS_LOGIC_NAME()
+            )
         );
-        // Initializing LoanTermsConsensus
-        loanTermsConsensusProxy.initialize(
-            owner,
-            address(loansProxy),
-            address(_getSettings())
-        );
+    }
 
-        // Initializing Loans
-        loansProxy.initialize(
-            address(lendingPoolProxy),
-            address(loanTermsConsensusProxy),
-            address(_getSettings()),
-            collateralToken
-        );
+    /**
+        @notice Creates a proxy contract for Loans.
+        @return a new Loans instance.
+     */
+    function _createLoans(address collateralToken) internal returns (LoansInterface) {
+        bytes32 logicName = collateralToken == _getSettings().ETH_ADDRESS()
+            ? _getSettings().versionsRegistry().consts().ETHER_COLLATERAL_LOANS_LOGIC_NAME()
+            : _getSettings().versionsRegistry().consts().TOKEN_COLLATERAL_LOANS_LOGIC_NAME();
+        return LoansInterface(_createDynamicProxy(logicName));
     }
 }

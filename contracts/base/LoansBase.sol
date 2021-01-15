@@ -152,7 +152,7 @@ contract LoansBase is LoansInterface, Base {
         @notice Returns the tToken in the lending pool
         @return Address of the tToken
      */
-    function tToken() external view returns (address) {
+    function tToken() external view returns (TTokenInterface) {
         return lendingPool.tToken();
     }
 
