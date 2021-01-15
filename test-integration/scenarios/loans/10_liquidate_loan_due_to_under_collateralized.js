@@ -1,31 +1,24 @@
 // Util classes
-const {teller, tokens} = require("../../../scripts/utils/contracts");
+const { teller, tokens } = require('../../../scripts/utils/contracts');
 const {
   loans: loansActions,
   tokens: tokensActions,
   oracles: oraclesActions,
-} = require("../../../scripts/utils/actions");
-const helperActions = require("../../../scripts/utils/actions/helper");
-const {toDecimals} = require("../../../test/utils/consts");
+} = require('../../../scripts/utils/actions');
+const helperActions = require('../../../scripts/utils/actions/helper');
+const { toDecimals } = require('../../../test/utils/consts');
 
 module.exports = async (testContext) => {
-  const {
-    accounts,
-    getContracts,
-    collTokenName,
-    tokenName,
-  } = testContext;
-  console.log(
-    "Scenario: Loans#10 - Liquidate loan due to under collateralized."
-  );
+  const { accounts, getContracts, collTokenName, tokenName } = testContext;
+  console.log('Scenario: Loans#10 - Liquidate loan due to under collateralized.');
 
   const allContracts = await getContracts.getAllDeployed(
-    {teller, tokens},
+    { teller, tokens },
     tokenName,
     collTokenName
   );
-  const {token, collateralToken } = allContracts;
-  const tokenInfo = await tokensActions.getInfo({token});
+  const { token, collateralToken } = allContracts;
+  const tokenInfo = await tokensActions.getInfo({ token });
   const collateralTokenInfo = await tokensActions.getInfo({
     token: collateralToken,
   });
@@ -37,14 +30,14 @@ module.exports = async (testContext) => {
   let initialOraclePrice;
   let finalOraclePrice;
   let collateralAmountDepositCollateral;
-  if (collTokenName.toLowerCase() === "eth") {
-    initialOraclePrice = "0.00295835";
-    finalOraclePrice = toDecimals("0.63655835", 18);
+  if (collTokenName.toLowerCase() === 'eth') {
+    initialOraclePrice = '0.00295835';
+    finalOraclePrice = toDecimals('0.63655835', 18);
     collateralAmountDepositCollateral = toDecimals(1.18, collateralTokenInfo.decimals);
   }
-  if (collTokenName.toLowerCase() === "link") {
-    initialOraclePrice = "0.100704";
-    finalOraclePrice = toDecimals("10000.001704", 8);
+  if (collTokenName.toLowerCase() === 'link') {
+    initialOraclePrice = '0.100704';
+    finalOraclePrice = toDecimals('10000.001704', 8);
     collateralAmountDepositCollateral = toDecimals(16.1, collateralTokenInfo.decimals);
   }
   const durationInDays = 5;
@@ -55,7 +48,7 @@ module.exports = async (testContext) => {
 
   const loan = await helperActions.takeOutNewLoan(
     allContracts,
-    {testContext},
+    { testContext },
     {
       borrowerTxConfig,
       oraclePrice: initialOraclePrice,
@@ -73,7 +66,7 @@ module.exports = async (testContext) => {
 
   await loansActions.printLoanInfo(
     allContracts,
-    {testContext},
+    { testContext },
     {
       loanId: loan.id,
       collateralTokenInfo,
@@ -94,7 +87,7 @@ module.exports = async (testContext) => {
 
   await loansActions.printLoanInfo(
     allContracts,
-    {testContext},
+    { testContext },
     {
       loanId: loan.id,
       collateralTokenInfo,
@@ -104,7 +97,7 @@ module.exports = async (testContext) => {
 
   await loansActions.liquidateLoan(
     allContracts,
-    {testContext, txConfig: liquidatorTxConfig},
+    { testContext, txConfig: liquidatorTxConfig },
     {
       loanId: loan.id,
       amount: amountLiquidateLoan,

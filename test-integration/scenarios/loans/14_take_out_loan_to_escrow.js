@@ -1,34 +1,29 @@
-const BN = require('bignumber.js')
+const BN = require('bignumber.js');
 
-const {teller, tokens} = require("../../../scripts/utils/contracts");
+const { teller, tokens } = require('../../../scripts/utils/contracts');
 const {
   loans: loansActions,
   tokens: tokensActions,
-} = require("../../../scripts/utils/actions");
+} = require('../../../scripts/utils/actions');
 const {
   loans: loansAssertions,
   tokens: tokensAssertions,
-} = require("../../../scripts/utils/assertions")
-const loanStatus = require("../../../test/utils/loanStatus")
-const helperActions = require("../../../scripts/utils/actions/helper");
-const { toDecimals, ONE_DAY, ONE_YEAR } = require("../../../test/utils/consts");
+} = require('../../../scripts/utils/assertions');
+const loanStatus = require('../../../test/utils/loanStatus');
+const helperActions = require('../../../scripts/utils/actions/helper');
+const { toDecimals, ONE_DAY, ONE_YEAR } = require('../../../test/utils/consts');
 
 module.exports = async (testContext) => {
-  const {
-    getContracts,
-    accounts,
-    collTokenName,
-    tokenName,
-  } = testContext;
-  console.log("Scenario: Loans#14 - Take out loan to escrow contract.");
+  const { getContracts, accounts, collTokenName, tokenName } = testContext;
+  console.log('Scenario: Loans#14 - Take out loan to escrow contract.');
 
   const allContracts = await getContracts.getAllDeployed(
-    {teller, tokens},
+    { teller, tokens },
     tokenName,
     collTokenName
   );
-  const {token, collateralToken} = allContracts;
-  const tokenInfo = await tokensActions.getInfo({token});
+  const { token, collateralToken } = allContracts;
+  const tokenInfo = await tokensActions.getInfo({ token });
   const collateralTokenInfo = await tokensActions.getInfo({
     token: collateralToken,
   });
@@ -36,30 +31,33 @@ module.exports = async (testContext) => {
   const depositFundsAmount = toDecimals(300, tokenInfo.decimals);
   const durationInDays = 5;
   const maxAmountRequestLoanTerms = toDecimals(100, tokenInfo.decimals);
-  const amountTakeOutValue = 50
+  const amountTakeOutValue = 50;
   const amountTakeOut = toDecimals(amountTakeOutValue, tokenInfo.decimals);
   let initialOraclePrice;
   let collateralAmountDepositCollateral;
-  if (collTokenName.toLowerCase() === "eth") {
-    initialOraclePrice = "0.00295835";
+  if (collTokenName.toLowerCase() === 'eth') {
+    initialOraclePrice = '0.00295835';
   }
-  if (collTokenName.toLowerCase() === "link") {
-    initialOraclePrice = "0.100704";
+  if (collTokenName.toLowerCase() === 'link') {
+    initialOraclePrice = '0.100704';
   }
-  const collateralRatio = 6000
-  const interestRate = 423
+  const collateralRatio = 6000;
+  const interestRate = 423;
   const interestOwed = new BN(amountTakeOutValue)
     .multipliedBy(interestRate)
     .div(10000)
     .multipliedBy(durationInDays)
     .multipliedBy(ONE_DAY)
-    .div(ONE_YEAR)
+    .div(ONE_YEAR);
   collateralAmountDepositCollateral = new BN(amountTakeOutValue)
     .plus(interestOwed)
     .multipliedBy(initialOraclePrice)
     .multipliedBy(new BN(collateralRatio).div(10000))
-    .toString()
-  collateralAmountDepositCollateral = toDecimals(collateralAmountDepositCollateral, collateralTokenInfo.decimals).toFixed(0);
+    .toString();
+  collateralAmountDepositCollateral = toDecimals(
+    collateralAmountDepositCollateral,
+    collateralTokenInfo.decimals
+  ).toFixed(0);
 
   const signers = await accounts.getAllAt(12, 13);
   const borrowerTxConfig = await accounts.getTxConfigAt(1);
@@ -67,7 +65,7 @@ module.exports = async (testContext) => {
 
   const loan = await helperActions.takeOutNewLoan(
     allContracts,
-    {testContext},
+    { testContext },
     {
       borrowerTxConfig,
       oraclePrice: initialOraclePrice,
@@ -83,7 +81,7 @@ module.exports = async (testContext) => {
       tokenInfo,
       collateralTokenInfo,
     }
-  )
+  );
 
   await loansAssertions.assertLoanValues(
     allContracts,
@@ -91,18 +89,18 @@ module.exports = async (testContext) => {
     {
       id: loan.id,
       status: loanStatus.Active,
-      hasEscrow: true
+      hasEscrow: true,
     }
-  )
+  );
 
   await tokensAssertions.balanceIs(
     allContracts,
     { testContext },
     {
       address: loan.escrow,
-      expectedBalance: loan.borrowedAmount.toString()
+      expectedBalance: loan.borrowedAmount.toString(),
     }
-  )
+  );
 
   await loansActions.printLoanInfo(
     allContracts,

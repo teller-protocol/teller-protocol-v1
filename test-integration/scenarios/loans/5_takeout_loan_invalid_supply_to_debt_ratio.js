@@ -1,42 +1,45 @@
 // Util classes
-const {teller, tokens} = require("../../../scripts/utils/contracts");
+const { teller, tokens } = require('../../../scripts/utils/contracts');
 const {
   loans: loansActions,
   oracles: oraclesActions,
   tokens: tokensActions,
-} = require("../../../scripts/utils/actions");
-const {toDecimals} = require("../../../test/utils/consts");
+} = require('../../../scripts/utils/actions');
+const { toDecimals } = require('../../../test/utils/consts');
 
 module.exports = async (testContext) => {
-  const {accounts, getContracts, collTokenName, tokenName} = testContext;
+  const { accounts, getContracts, collTokenName, tokenName } = testContext;
   console.log(
-    "Scenario: Loans#5 - Error taking out loan with invalid supply to debt ratio."
+    'Scenario: Loans#5 - Error taking out loan with invalid supply to debt ratio.'
   );
   const allContracts = await getContracts.getAllDeployed(
-    {teller, tokens},
+    { teller, tokens },
     tokenName,
     collTokenName
   );
-  const {token, collateralToken} = allContracts;
-  const tokenInfo = await tokensActions.getInfo({token});
+  const { token, collateralToken } = allContracts;
+  const tokenInfo = await tokensActions.getInfo({ token });
   const collateralTokenInfo = await tokensActions.getInfo({
     token: collateralToken,
   });
 
   const depositFundsAmount = toDecimals(0, tokenInfo.decimals);
-  const marketState = await allContracts.lendingPool.getMarketState()
+  const marketState = await allContracts.lendingPool.getMarketState();
   const maxAmountRequestLoanTerms = toDecimals(1000, tokenInfo.decimals);
-  const amountTakeOut = toDecimals(marketState.totalSupplied.toString(), tokenInfo.decimals);
+  const amountTakeOut = toDecimals(
+    marketState.totalSupplied.toString(),
+    tokenInfo.decimals
+  );
   let initialOraclePrice;
   let collateralAmountDepositCollateral;
   let collateralAmountWithdrawCollateral;
-  if (collTokenName.toLowerCase() === "eth") {
-    initialOraclePrice = "0.00295835";
+  if (collTokenName.toLowerCase() === 'eth') {
+    initialOraclePrice = '0.00295835';
     collateralAmountDepositCollateral = toDecimals(5.25, collateralTokenInfo.decimals);
     collateralAmountWithdrawCollateral = toDecimals(0.1, collateralTokenInfo.decimals);
   }
-  if (collTokenName.toLowerCase() === "link") {
-    initialOraclePrice = "0.100704";
+  if (collTokenName.toLowerCase() === 'link') {
+    initialOraclePrice = '0.100704';
     collateralAmountDepositCollateral = toDecimals(60.1, collateralTokenInfo.decimals);
     collateralAmountWithdrawCollateral = toDecimals(0.2, collateralTokenInfo.decimals);
   }
@@ -48,20 +51,20 @@ module.exports = async (testContext) => {
   // Sets Initial Oracle Price
   await oraclesActions.setPrice(
     allContracts,
-    {testContext},
-    {price: initialOraclePrice}
+    { testContext },
+    { price: initialOraclePrice }
   );
   await loansActions.printPairAggregatorInfo(
     allContracts,
-    {testContext},
-    {tokenInfo, collateralTokenInfo}
+    { testContext },
+    { tokenInfo, collateralTokenInfo }
   );
 
   // Deposit tokens on lending pool.
   await loansActions.depositFunds(
     allContracts,
-    {txConfig: lenderTxConfig, testContext},
-    {amount: depositFundsAmount}
+    { txConfig: lenderTxConfig, testContext },
+    { amount: depositFundsAmount }
   );
 
   // Requesting the loan terms.
@@ -79,11 +82,11 @@ module.exports = async (testContext) => {
   };
   await loansActions.requestLoanTerms(
     allContracts,
-    {txConfig: borrowerTxConfig, testContext},
+    { txConfig: borrowerTxConfig, testContext },
     {
       loanTermsRequestTemplate,
       loanResponseTemplate,
-      expectedErrorMessage: "SUPPLY_TO_DEBT_EXCEEDS_MAX",
+      expectedErrorMessage: 'SUPPLY_TO_DEBT_EXCEEDS_MAX',
     }
   );
 };

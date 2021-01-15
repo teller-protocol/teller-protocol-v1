@@ -1,26 +1,26 @@
 // Util classes
-const {teller, tokens} = require("../../../scripts/utils/contracts");
+const { teller, tokens } = require('../../../scripts/utils/contracts');
 const {
   loans: loansActions,
   oracles: oraclesActions,
   tokens: tokensActions,
   blockchain: blockchainActions,
-} = require("../../../scripts/utils/actions");
-const { toDecimals } = require("../../../test/utils/consts");
-const { MAX_VALUE } = require("../../../config/consts");
+} = require('../../../scripts/utils/actions');
+const { toDecimals } = require('../../../test/utils/consts');
+const { MAX_VALUE } = require('../../../config/consts');
 
 module.exports = async (testContext) => {
-  const {accounts, getContracts, collTokenName, timer, tokenName} = testContext;
+  const { accounts, getContracts, collTokenName, timer, tokenName } = testContext;
   console.log(
-    "Scenario: Loans#9 - Error requesting loan terms due to loan duration exceeds max duration."
+    'Scenario: Loans#9 - Error requesting loan terms due to loan duration exceeds max duration.'
   );
   const allContracts = await getContracts.getAllDeployed(
-    {teller, tokens},
+    { teller, tokens },
     tokenName,
     collTokenName
   );
-  const {token, collateralToken} = allContracts;
-  const tokenInfo = await tokensActions.getInfo({token});
+  const { token, collateralToken } = allContracts;
+  const tokenInfo = await tokensActions.getInfo({ token });
   const collateralTokenInfo = await tokensActions.getInfo({
     token: collateralToken,
   });
@@ -28,11 +28,11 @@ module.exports = async (testContext) => {
   const maxAmountRequestLoanTerms = toDecimals(100, tokenInfo.decimals);
   const amountTakeOut = toDecimals(100, tokenInfo.decimals);
   let initialOraclePrice;
-  if (collTokenName.toLowerCase() === "eth") {
-    initialOraclePrice = "0.00295835";
+  if (collTokenName.toLowerCase() === 'eth') {
+    initialOraclePrice = '0.00295835';
   }
-  if (collTokenName.toLowerCase() === "link") {
-    initialOraclePrice = "0.100704";
+  if (collTokenName.toLowerCase() === 'link') {
+    initialOraclePrice = '0.100704';
   }
   const durationInDays = 61;
   const signers = await accounts.getAllAt(12, 13);
@@ -42,20 +42,20 @@ module.exports = async (testContext) => {
   // Sets Initial Oracle Price
   await oraclesActions.setPrice(
     allContracts,
-    {testContext},
-    {price: initialOraclePrice}
+    { testContext },
+    { price: initialOraclePrice }
   );
   await loansActions.printPairAggregatorInfo(
     allContracts,
-    {testContext},
-    {tokenInfo, collateralTokenInfo}
+    { testContext },
+    { tokenInfo, collateralTokenInfo }
   );
 
   // Deposit tokens on lending pool.
   await loansActions.depositFunds(
     allContracts,
-    {txConfig: lenderTxConfig, testContext},
-    {amount: depositFundsAmount}
+    { txConfig: lenderTxConfig, testContext },
+    { amount: depositFundsAmount }
   );
 
   // Requesting the loan terms.
@@ -73,11 +73,11 @@ module.exports = async (testContext) => {
   };
   await loansActions.requestLoanTerms(
     allContracts,
-    {txConfig: borrowerTxConfig, testContext},
+    { txConfig: borrowerTxConfig, testContext },
     {
       loanTermsRequestTemplate,
       loanResponseTemplate,
-      expectedErrorMessage: 'DURATION_EXCEEDS_MAX_DURATION'
+      expectedErrorMessage: 'DURATION_EXCEEDS_MAX_DURATION',
     }
   );
 };

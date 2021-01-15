@@ -1,26 +1,26 @@
 // Util classes
-const {teller, tokens} = require("../../../scripts/utils/contracts");
+const { teller, tokens } = require('../../../scripts/utils/contracts');
 const {
   loans: loansActions,
   oracles: oraclesActions,
   tokens: tokensActions,
   blockchain: blockchainActions,
-} = require("../../../scripts/utils/actions");
-const { toDecimals } = require("../../../test/utils/consts");
-const { MAX_VALUE } = require("../../../config/consts");
+} = require('../../../scripts/utils/actions');
+const { toDecimals } = require('../../../test/utils/consts');
+const { MAX_VALUE } = require('../../../config/consts');
 
 module.exports = async (testContext) => {
-  const {accounts, getContracts, collTokenName, timer, tokenName} = testContext;
+  const { accounts, getContracts, collTokenName, timer, tokenName } = testContext;
   console.log(
-    "Scenario: Loans#7 - Error taking out loan due to invalid borrower address (to call takeOutLoan)."
+    'Scenario: Loans#7 - Error taking out loan due to invalid borrower address (to call takeOutLoan).'
   );
   const allContracts = await getContracts.getAllDeployed(
-    {teller, tokens},
+    { teller, tokens },
     tokenName,
     collTokenName
   );
-  const {token, collateralToken} = allContracts;
-  const tokenInfo = await tokensActions.getInfo({token});
+  const { token, collateralToken } = allContracts;
+  const tokenInfo = await tokensActions.getInfo({ token });
   const collateralTokenInfo = await tokensActions.getInfo({
     token: collateralToken,
   });
@@ -30,13 +30,13 @@ module.exports = async (testContext) => {
   let initialOraclePrice;
   let collateralAmountDepositCollateral;
   let collateralAmountWithdrawCollateral;
-  if (collTokenName.toLowerCase() === "eth") {
-    initialOraclePrice = "0.00295835";
+  if (collTokenName.toLowerCase() === 'eth') {
+    initialOraclePrice = '0.00295835';
     collateralAmountDepositCollateral = toDecimals(3.25, collateralTokenInfo.decimals);
     collateralAmountWithdrawCollateral = toDecimals(0.1, collateralTokenInfo.decimals);
   }
-  if (collTokenName.toLowerCase() === "link") {
-    initialOraclePrice = "0.100704";
+  if (collTokenName.toLowerCase() === 'link') {
+    initialOraclePrice = '0.100704';
     collateralAmountDepositCollateral = toDecimals(7.1, collateralTokenInfo.decimals);
     collateralAmountWithdrawCollateral = toDecimals(0.2, collateralTokenInfo.decimals);
   }
@@ -49,20 +49,20 @@ module.exports = async (testContext) => {
   // Sets Initial Oracle Price
   await oraclesActions.setPrice(
     allContracts,
-    {testContext},
-    {price: initialOraclePrice}
+    { testContext },
+    { price: initialOraclePrice }
   );
   await loansActions.printPairAggregatorInfo(
     allContracts,
-    {testContext},
-    {tokenInfo, collateralTokenInfo}
+    { testContext },
+    { tokenInfo, collateralTokenInfo }
   );
 
   // Deposit tokens on lending pool.
   await loansActions.depositFunds(
     allContracts,
-    {txConfig: lenderTxConfig, testContext},
-    {amount: depositFundsAmount}
+    { txConfig: lenderTxConfig, testContext },
+    { amount: depositFundsAmount }
   );
 
   // Requesting the loan terms.
@@ -80,7 +80,7 @@ module.exports = async (testContext) => {
   };
   const loanInfoRequestLoanTerms = await loansActions.requestLoanTerms(
     allContracts,
-    {txConfig: borrowerTxConfig, testContext},
+    { txConfig: borrowerTxConfig, testContext },
     {
       loanTermsRequestTemplate,
       loanResponseTemplate,
@@ -90,18 +90,18 @@ module.exports = async (testContext) => {
   // Depositing collateral.
   await loansActions.depositCollateral(
     allContracts,
-    {txConfig: borrowerTxConfig, testContext},
+    { txConfig: borrowerTxConfig, testContext },
     {
       loanId: loanInfoRequestLoanTerms.id,
       amount: collateralAmountDepositCollateral,
     }
   );
 
-  await blockchainActions.advanceMinutes({timer}, {testContext}, {minutes: 2});
+  await blockchainActions.advanceMinutes({ timer }, { testContext }, { minutes: 2 });
 
   await loansActions.printLoanInfo(
     allContracts,
-    {testContext},
+    { testContext },
     {
       loanId: loanInfoRequestLoanTerms.id,
       collateralTokenInfo,
@@ -112,11 +112,11 @@ module.exports = async (testContext) => {
   // Take out a loan.
   await loansActions.takeOutLoan(
     allContracts,
-    {txConfig: takerOutTxConfig, testContext},
+    { txConfig: takerOutTxConfig, testContext },
     {
       loanId: loanInfoRequestLoanTerms.id,
       amount: amountTakeOut,
-      expectedErrorMessage: "BORROWER_MUST_BE_SENDER",
+      expectedErrorMessage: 'BORROWER_MUST_BE_SENDER',
     }
   );
 };

@@ -1,23 +1,16 @@
-const { teller, tokens } = require("../../../scripts/utils/contracts");
+const { teller, tokens } = require('../../../scripts/utils/contracts');
 const {
   loans: loansActions,
   escrow: escrowActions,
-  tokens: tokensActions
-} = require("../../../scripts/utils/actions");
-const {
-  loans: loansAssertions
-} = require('../../../scripts/utils/assertions')
-const helperActions = require("../../../scripts/utils/actions/helper");
-const { toDecimals } = require("../../../test/utils/consts");
+  tokens: tokensActions,
+} = require('../../../scripts/utils/actions');
+const { loans: loansAssertions } = require('../../../scripts/utils/assertions');
+const helperActions = require('../../../scripts/utils/actions/helper');
+const { toDecimals } = require('../../../test/utils/consts');
 
 module.exports = async (testContext) => {
-  const {
-    getContracts,
-    accounts,
-    collTokenName,
-    tokenName
-  } = testContext;
-  console.log("Scenario: Escrow#3 - Claim tokens after loan is closed");
+  const { getContracts, accounts, collTokenName, tokenName } = testContext;
+  console.log('Scenario: Escrow#3 - Claim tokens after loan is closed');
 
   const allContracts = await getContracts.getAllDeployed(
     { teller, tokens },
@@ -27,7 +20,7 @@ module.exports = async (testContext) => {
   const { token, collateralToken, loans } = allContracts;
   const tokenInfo = await tokensActions.getInfo({ token });
   const collateralTokenInfo = await tokensActions.getInfo({
-    token: collateralToken
+    token: collateralToken,
   });
 
   const depositFundsAmount = toDecimals(300, tokenInfo.decimals);
@@ -36,13 +29,13 @@ module.exports = async (testContext) => {
   let initialOraclePrice;
   let collateralAmountDepositCollateral;
   let collateralAmountWithdrawCollateral;
-  if (collTokenName.toLowerCase() === "eth") {
-    initialOraclePrice = "0.00295835"
+  if (collTokenName.toLowerCase() === 'eth') {
+    initialOraclePrice = '0.00295835';
     collateralAmountDepositCollateral = toDecimals(0.2, collateralTokenInfo.decimals);
     collateralAmountWithdrawCollateral = toDecimals(0.1, collateralTokenInfo.decimals);
   }
-  if (collTokenName.toLowerCase() === "link") {
-    initialOraclePrice = "0.100704"
+  if (collTokenName.toLowerCase() === 'link') {
+    initialOraclePrice = '0.100704';
     collateralAmountDepositCollateral = toDecimals(6.1, collateralTokenInfo.decimals);
     collateralAmountWithdrawCollateral = toDecimals(1, collateralTokenInfo.decimals);
   }
@@ -65,7 +58,7 @@ module.exports = async (testContext) => {
       durationInDays,
       signers,
       tokenInfo,
-      collateralTokenInfo
+      collateralTokenInfo,
     }
   );
 
@@ -73,20 +66,20 @@ module.exports = async (testContext) => {
     allContracts,
     { testContext },
     {
-      loanId: loan.id
+      loanId: loan.id,
     }
   );
 
   await escrowActions.repayInFull(allContracts, {
     txConfig: borrowerTxConfig,
-    testContext
-  })
+    testContext,
+  });
 
   await escrowActions.claimTokens(
     { escrow: allContracts.escrow },
     { txConfig: borrowerTxConfig, testContext },
     { recipient: loan.loanTerms.borrower }
-  )
+  );
 
   await loansActions.printLoanInfo(
     allContracts,
@@ -94,7 +87,7 @@ module.exports = async (testContext) => {
     {
       loanId: loan.id,
       collateralTokenInfo,
-      tokenInfo
+      tokenInfo,
     }
   );
 };
