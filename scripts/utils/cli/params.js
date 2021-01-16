@@ -26,8 +26,7 @@ const {
   SIGNER_ADDRESS,
   SIGNER_URL,
   TOKEN_NAMES,
-  REQUIRED_SUBMISSIONS_PERCENTAGE,
-  SAFETY_INTERVAL,
+  MAX_TVL_AMOUNT,
   TEST_TOKEN_NAME,
   MAX_LOAN_AMOUNT,
   MIN_VALUE,
@@ -223,6 +222,20 @@ module.exports.addMaxLoanAmount = (
     MAX_LOAN_AMOUNT.alias,
     "number",
     `Max loan amount to use in the transaction. By default ${defaultParam}`,
+    defaultParam
+  );
+};
+
+module.exports.addMaxTVLAmount = (
+  yargs,
+  defaultParam = MAX_TVL_AMOUNT.default
+) => {
+  newOption(
+    yargs,
+    MAX_TVL_AMOUNT.name,
+    MAX_TVL_AMOUNT.alias,
+    "number",
+    `Max TVL amount to use in the transaction. By default ${defaultParam}`,
     defaultParam
   );
 };

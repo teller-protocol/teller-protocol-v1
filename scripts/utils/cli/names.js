@@ -180,6 +180,11 @@ module.exports = {
     alias: "MLA",
     default: undefined,
   },
+  MAX_TVL_AMOUNT: {
+    name: "maxTVLAmount",
+    alias: "TVL",
+    default: undefined,
+  },
   MAX_VALUE: {
     name: "maxValue",
     alias: "MAV",
