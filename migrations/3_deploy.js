@@ -27,11 +27,9 @@ const EscrowFactory = artifacts.require('./base/EscrowFactory.sol');
 const MarketFactory = artifacts.require('./base/MarketFactory.sol');
 const LogicVersionsRegistry = artifacts.require('./base/LogicVersionsRegistry.sol');
 const Escrow = artifacts.require('./base/Escrow.sol');
-const Lenders = artifacts.require("./base/Lenders.sol");
 const EtherCollateralLoans = artifacts.require("./base/EtherCollateralLoans.sol");
 const TokenCollateralLoans = artifacts.require("./base/TokenCollateralLoans.sol");
 const LendingPool = artifacts.require("./base/LendingPool.sol");
-const InterestConsensus = artifacts.require("./base/InterestConsensus.sol");
 const LoanTermsConsensus = artifacts.require("./base/LoanTermsConsensus.sol");
 const Uniswap = artifacts.require("./base/escrow/dapps/Uniswap.sol");
 const Compound = artifacts.require("./base/escrow/dapps/Compound.sol");
@@ -78,11 +76,9 @@ module.exports = async function(deployer, network, accounts) {
     const contracts = [
       // Logic
       { Contract: LendingPool, name: logicNames.LendingPool },
-      { Contract: Lenders, name: logicNames.Lenders },
       { Contract: TokenCollateralLoans, name: logicNames.TokenCollateralLoans },
       { Contract: EtherCollateralLoans, name: logicNames.EtherCollateralLoans },
       { Contract: LoanTermsConsensus, name: logicNames.LoanTermsConsensus },
-      { Contract: InterestConsensus, name: logicNames.InterestConsensus },
       { Contract: Escrow, name: logicNames.Escrow },
       { Contract: ChainlinkAggregator, name: logicNames.ChainlinkAggregator },
       { Contract: ATMGovernance, name: logicNames.ATMGovernance },
@@ -233,7 +229,7 @@ module.exports = async function(deployer, network, accounts) {
       marketDefinitions,
       { marketFactoryInstance },
       { txConfig, deployerApp, ...networkConfig },
-      { LoanTermsConsensus, InterestConsensus, ERC20Mintable }
+      { LoanTermsConsensus, ERC20Mintable }
     );
 
     deployerApp.print();

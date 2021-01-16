@@ -10,7 +10,6 @@ const DAIMock = artifacts.require("DAIMock")
 const CERC20Mock = artifacts.require("CERC20Mock")
 
 // Smart contracts
-const Lenders = artifacts.require("Lenders");
 const LendingPool = artifacts.require("LendingPoolMock");
 
 contract('LendingPoolRepayTest', function (accounts) {
@@ -19,8 +18,6 @@ contract('LendingPoolRepayTest', function (accounts) {
     let instance;
     let tTokenInstance;
     let daiInstance;
-    let lendersInstance;
-    let interestConsensusInstance;
     let cTokenInstance;
     let settingsInstance;
     let loansInstance;
@@ -29,18 +26,9 @@ contract('LendingPoolRepayTest', function (accounts) {
         tTokenInstance = await Mock.new();
         daiInstance = await DAIMock.new();
         instance = await LendingPool.new();
-        interestConsensusInstance = await Mock.new();
         cTokenInstance = await CERC20Mock.new("CDAI", "CDAI", 8, daiInstance.address, 1)
         settingsInstance = await Mock.new();
         loansInstance = await Mock.new();
-
-        lendersInstance = await Lenders.new();
-        await lendersInstance.initialize(
-            tTokenInstance.address,
-            instance.address,
-            interestConsensusInstance.address,
-            settingsInstance.address,
-        );
     });
 
     withData({
@@ -78,7 +66,6 @@ contract('LendingPoolRepayTest', function (accounts) {
             await instance.initialize(
                 tTokenInstance.address,
                 daiInstance.address,
-                lendersInstance.address,
                 loansInstance.address,
                 settingsInstance.address,
             );

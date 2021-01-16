@@ -34,7 +34,6 @@ contract("LendingPoolGetMarketStateTest", function(accounts) {
       (await Mock.new()).address,
       (await Mock.new()).address,
       (await Mock.new()).address,
-      (await Mock.new()).address,
       settings.address
     );
   });

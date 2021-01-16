@@ -129,10 +129,8 @@ contract("MarketFactoryCreateMarketTest", function(accounts) {
             borrowedTokenAddress,
             collateralTokenAddress,
             newMarket.loans,
-            newMarket.lenders,
             newMarket.lendingPool,
-            newMarket.loanTermsConsensus,
-            newMarket.interestConsensus
+            newMarket.loanTermsConsensus
           );
       } catch (error) {
         // Assertions

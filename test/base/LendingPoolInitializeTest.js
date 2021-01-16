@@ -21,11 +21,10 @@ contract('LendingPoolInitializeTest', function (accounts) {
         _2_notTdai: [-1, 3, 4, 5, 6, 'TTOKEN_ADDRESS_IS_REQUIRED', true],
         _1_basic: [2, 3, 4, 5, 6, undefined, false],
         _3_notDai: [2, -1, 4, 5, 6, 'TOKEN_ADDRESS_IS_REQUIRED', true],
-        _4_notLenderInfo: [2, 3, -1, 5, 6, 'LENDERS_ADDRESS_IS_REQUIRED', true],
-        _5_notLoanInfo: [2, 3, 4, -1, 6, 'LOANS_ADDRESS_IS_REQUIRED', true],
-        _6_notTdai_notLoanInfo: [-1, 3, 4, -1, 6, 'TTOKEN_ADDRESS_IS_REQUIRED', true],
-        _7_notDai_notLenderInfo: [2, -1, -1, 5, 6, 'TOKEN_ADDRESS_IS_REQUIRED', true],
-        _8_notSettings: [2, 3, 4, 5, -1, 'SETTINGS_MUST_BE_PROVIDED', true],
+        _4_notLoanInfo: [2, 3, 4, -1, 6, 'LOANS_ADDRESS_IS_REQUIRED', true],
+        _5_notTdai_notLoanInfo: [-1, 3, 4, -1, 6, 'TTOKEN_ADDRESS_IS_REQUIRED', true],
+        _6_notDai_notLenderInfo: [2, -1, -1, 5, 6, 'TOKEN_ADDRESS_IS_REQUIRED', true],
+        _7_notSettings: [2, 3, 4, 5, -1, 'SETTINGS_MUST_BE_PROVIDED', true],
     }, function(
         tdaiIndex,
         daiIndex,
@@ -40,7 +39,6 @@ contract('LendingPoolInitializeTest', function (accounts) {
             const lendingPoolInstance = await LendingPool.new();
             const tTokenAddress = getInstance(mocks, tdaiIndex, 2);
             const daiAddress = getInstance(mocks, daiIndex, 3);
-            const lendersAddress = getInstance(mocks, lenderInfoIndex, 4)
             const loanInfoAddress = getInstance(mocks, loanInfoIndex, 5)
             const settingsAddress = getInstance(mocks, settingsIndex, 7);
 
@@ -49,7 +47,6 @@ contract('LendingPoolInitializeTest', function (accounts) {
                 const result = await lendingPoolInstance.initialize(
                     tTokenAddress,
                     daiAddress,
-                    lendersAddress,
                     loanInfoAddress,
                     settingsAddress
                 );

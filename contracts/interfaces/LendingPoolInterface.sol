@@ -57,13 +57,6 @@ interface LendingPoolInterface {
     function createLoan(uint256 amount, address borrower) external;
 
     /**
-        @notice It allows a lender to withdraw a specific amount of interest.
-        @param amount to withdraw.
-        @dev It throws a require error if amount exceeds the current accrued interest.
-    */
-    function withdrawInterest(uint256 amount) external;
-
-    /**
         @notice It gets the lending token address.
         @return the ERC20 lending token address.
     */
@@ -73,7 +66,6 @@ interface LendingPoolInterface {
         @notice It initializes the contract state variables.
         @param tTokenAddress tToken token address.
         @param lendingTokenAddress ERC20 token address.
-        @param lendersAddress Lenders contract address.
         @param loansAddress Loans contract address.
         @param settingsAddress Settings contract address.
         @dev It throws a require error if the contract is already initialized.
@@ -81,7 +73,6 @@ interface LendingPoolInterface {
     function initialize(
         address tTokenAddress,
         address lendingTokenAddress,
-        address lendersAddress,
         address loansAddress,
         address settingsAddress
     ) external;
@@ -99,12 +90,6 @@ interface LendingPoolInterface {
     function tToken() external view returns (address);
 
     /**
-        @notice It gets the Lenders contract address.
-        @return the Lenders contract address.
-    */
-    function lenders() external view returns (address);
-
-    /**
         @notice It gets the Loans contract address.
         @return the Loans contract address.
     */
@@ -119,14 +104,14 @@ interface LendingPoolInterface {
         @param sender address.
         @param amount of tokens.
      */
-    event TokenDeposited(address indexed sender, uint256 amount);
+    event TokenDeposited(address indexed sender, uint256 amount, uint256 tTokenAmount);
 
     /**
         @notice This event is emitted when an user withdraws tokens from the pool.
         @param sender address that withdrew the tokens.
         @param amount of tokens.
      */
-    event TokenWithdrawn(address indexed sender, uint256 amount);
+    event TokenWithdrawn(address indexed sender, uint256 amount, uint256 tTokenAmount);
 
     /**
         @notice This event is emitted when an borrower repaid a loan.

@@ -1,6 +1,6 @@
 pragma solidity 0.5.17;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
+import "./IERC20Detailed.sol";
 
 /**
  * @notice This contract represents a wrapped token within the Teller protocol
@@ -9,7 +9,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.so
  *
  * @author develop@teller.finance
  */
-contract TTokenInterface is IERC20 {
+contract TTokenInterface is IERC20Detailed {
     /**
      * @notice Reduce account supply of specified token amount
      * @param account The account to burn tokens from

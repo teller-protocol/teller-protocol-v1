@@ -12,7 +12,6 @@ pragma solidity 0.5.17;
 contract LogicVersionsConsts {
     /** Constants */
     bytes32 public constant LENDING_POOL_LOGIC_NAME = keccak256("LendingPool");
-    bytes32 public constant LENDERS_LOGIC_NAME = keccak256("Lenders");
     bytes32 public constant TOKEN_COLLATERAL_LOANS_LOGIC_NAME = keccak256(
         "TokenCollateralLoans"
     );
@@ -21,9 +20,6 @@ contract LogicVersionsConsts {
     );
     bytes32 public constant LOAN_TERMS_CONSENSUS_LOGIC_NAME = keccak256(
         "LoanTermsConsensus"
-    );
-    bytes32 public constant INTEREST_CONSENSUS_LOGIC_NAME = keccak256(
-        "InterestConsensus"
     );
     bytes32 public constant ESCROW_FACTORY_LOGIC_NAME = keccak256("EscrowFactory");
     bytes32 public constant ESCROW_LOGIC_NAME = keccak256("Escrow");

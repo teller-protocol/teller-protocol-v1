@@ -16,7 +16,6 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const DAIMock = artifacts.require("./mock/token/DAIMock.sol")
 
 // Smart contracts
-const Lenders = artifacts.require("./base/Lenders.sol");
 const LendingPool = artifacts.require("./base/LendingPool.sol");
 const TToken = artifacts.require("./base/TToken.sol");
 
@@ -29,9 +28,7 @@ contract('LendingPoolDepositTest', function (accounts) {
     let instance;
     let tTokenInstance;
     let daiInstance;
-    let lendersInstance;
     let loansInstance;
-    let interestConsensusInstance;
     let cTokenInstance;
     let settingsInstance;
 
@@ -39,7 +36,6 @@ contract('LendingPoolDepositTest', function (accounts) {
         tTokenInstance = await Mock.new();
         daiInstance = await DAIMock.new();
         loansInstance = await Mock.new();
-        interestConsensusInstance = await Mock.new();
         instance = await LendingPool.new();
         settingsInstance = await Mock.new();
 
@@ -49,18 +45,9 @@ contract('LendingPoolDepositTest', function (accounts) {
           daiInstance.address
         )
 
-        lendersInstance = await Lenders.new();
-        await lendersInstance.initialize(
-            tTokenInstance.address,
-            instance.address,
-            interestConsensusInstance.address,
-            settingsInstance.address,
-        );
-
         await instance.initialize(
             tTokenInstance.address,
             daiInstance.address,
-            lendersInstance.address,
             loansInstance.address,
             settingsInstance.address,
         );
@@ -137,19 +124,11 @@ contract('LendingPoolDepositTest', function (accounts) {
             // Overriding instances created during beforeEach() as a real TToken instance
             // is needed for this test. 
             tTokenInstance = await TToken.new(settingsInstance.address, "TToken Name", "TTN", 0);
-            lendersInstance = await Lenders.new();
 
-            await lendersInstance.initialize(
-                tTokenInstance.address,
-                instance.address,
-                interestConsensusInstance.address,
-                settingsInstance.address,
-            );
             instance = await LendingPool.new();
             await instance.initialize(
                 tTokenInstance.address,
                 daiInstance.address,
-                lendersInstance.address,
                 loansInstance.address,
                 settingsInstance.address,
             );
