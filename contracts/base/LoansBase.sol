@@ -118,16 +118,13 @@ contract LoansBase is LoansInterface, Base {
         );
         require(maxLoanDuration >= loanRequest.duration, "DURATION_EXCEEDS_MAX_DURATION");
 
-        bool exceedsMaxLoanAmount = _getSettings().exceedsMaxLoanAmount(
+        bool exceedsMaxLoanAmount = _getSettings().assetSettings().exceedsMaxLoanAmount(
             address(lendingPool.lendingToken()),
             loanRequest.amount
         );
         require(!exceedsMaxLoanAmount, "AMOUNT_EXCEEDS_MAX_AMOUNT");
 
-        require(
-            _isDebtRatioValid(loanRequest.amount),
-            "SUPPLY_TO_DEBT_EXCEEDS_MAX"
-        );
+        require(_isDebtRatioValid(loanRequest.amount), "SUPPLY_TO_DEBT_EXCEEDS_MAX");
         _;
     }
 
@@ -605,11 +602,7 @@ contract LoansBase is LoansInterface, Base {
         @param newLoanAmount the new loan amount to consider o the StD ratio.
         @return true if the ratio is valid. Otherwise it returns false.
      */
-    function _isDebtRatioValid(uint256 newLoanAmount)
-        internal
-        view
-        returns (bool)
-    {
+    function _isDebtRatioValid(uint256 newLoanAmount) internal view returns (bool) {
         address atmAddressForMarket = _getSettings().atmSettings().getATMForMarket(
             address(lendingPool.lendingToken()),
             collateralToken
@@ -617,9 +610,7 @@ contract LoansBase is LoansInterface, Base {
         require(atmAddressForMarket != address(0x0), "ATM_NOT_FOUND_FOR_MARKET");
         uint256 debtRatioLimit = ATMGovernanceInterface(atmAddressForMarket)
             .getGeneralSetting(MAX_DEBT_RATIO_ATM_SETTING);
-        uint256 currentDebtRatio = lendingPool.getDebtRatioFor(
-            newLoanAmount
-        );
+        uint256 currentDebtRatio = lendingPool.getDebtRatioFor(newLoanAmount);
         return currentDebtRatio <= debtRatioLimit;
     }
 
