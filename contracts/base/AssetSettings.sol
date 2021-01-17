@@ -226,9 +226,7 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     onlyPauser()
   {
     assets[assetAddress].requireExists();
-    if (newMaxTVLAmount > 0) {
-      assets[assetAddress].updateUint(MAX_TOTAL_VALUE_LOCKED_SETTING, newMaxTVLAmount);
-    }
+    assets[assetAddress].updateUint(MAX_TOTAL_VALUE_LOCKED_SETTING, newMaxTVLAmount);
   }
 
   /**
