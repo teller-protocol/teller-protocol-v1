@@ -2,11 +2,13 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Utils
-import "../util/MarketStateLib.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 
 // Interfaces
-import "./TTokenInterface.sol";
 import "./IMarketRegistry.sol";
+
+// Contracts
+import "../base/TToken.sol";
 
 /**
     @notice This interface defines the functions for a lending pool that holds all of the tokens that lenders transfer into the protocol.
@@ -45,14 +47,6 @@ interface LendingPoolInterface {
     ) external;
 
     /**
-        @notice Once a loan is liquidated, it transfers the amount of tokens to the liquidator address.
-        @param amount of tokens to liquidate.
-        @param liquidator address to receive the tokens.
-        @dev It throws a require error if this contract hasn't enough token balance.
-     */
-    function liquidationPayment(uint256 amount, address liquidator) external;
-
-    /**
         @notice Once the loan is created, it transfers the amount of tokens to the borrower.
         @param amount of tokens to transfer.
         @param borrower address which will receive the tokens.
@@ -76,7 +70,7 @@ interface LendingPoolInterface {
      */
     function initialize(
         IMarketRegistry aMarketRegistry,
-        TTokenInterface aTToken,
+        TToken aTToken,
         address settingsAddress
     ) external;
 
@@ -90,9 +84,17 @@ interface LendingPoolInterface {
         @notice It gets the tToken address.
         @return the tToken address.
     */
-    function tToken() external view returns (TTokenInterface);
+    function tToken() external view returns (TToken);
 
-    function getMarketState() external view returns (MarketStateLib.MarketState memory);
+    /**
+        @notice It calculates the market state values across all markets.
+        @return values that represent the global state across all markets.
+     */
+    function getMarketState() external view returns (
+        uint256 totalSupplied,
+        uint256 totalBorrowed,
+        uint256 totalRepaid
+    );
 
     function getDebtRatioFor(uint256 loanAmount) external view returns (uint256);
 
@@ -123,13 +125,6 @@ interface LendingPoolInterface {
         @param amount of tokens.
      */
     event InterestWithdrawn(address indexed lender, uint256 amount);
-
-    /**
-        @notice This event is emitted when a liquidator liquidates a loan.
-        @param liquidator address.
-        @param amount of tokens.
-     */
-    event PaymentLiquidated(address indexed liquidator, uint256 amount);
 
     /**
         @notice This event is emitted when the interest validator is updated.

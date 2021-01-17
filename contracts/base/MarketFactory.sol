@@ -119,7 +119,7 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         LendingPoolInterface lendingPool = marketRegistry.lendingPools(lendingToken);
         if (address(lendingPool) == address(0)) {
             lendingPool = _createLendingPool();
-            TTokenInterface tToken = _createTToken();
+            TToken tToken = _createTToken();
 
             tToken.initialize(lendingToken, address(lendingPool), settingsAddress);
             lendingPool.initialize(
@@ -288,8 +288,8 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         @notice Creates a proxy contract for LendingPool.
         @return a new LendingPool instance.
      */
-    function _createTToken() internal returns (TTokenInterface) {
-        return TTokenInterface(
+    function _createTToken() internal returns (TToken) {
+        return TToken(
             _createDynamicProxy(
                 _getSettings().versionsRegistry().consts().TTOKEN_LOGIC_NAME()
             )

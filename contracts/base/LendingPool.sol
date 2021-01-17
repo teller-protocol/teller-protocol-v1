@@ -13,12 +13,12 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoansInterface.sol";
-import "../interfaces/TTokenInterface.sol";
 import "../providers/compound/CErc20Interface.sol";
 import "../interfaces/IMarketRegistry.sol";
 
 // Contracts
 import "./Base.sol";
+import "./TToken.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -39,23 +39,22 @@ import "./Base.sol";
 contract LendingPool is Base, LendingPoolInterface {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
-    using MarketStateLib for MarketStateLib.MarketState;
     using CompoundRatesLib for CErc20Interface;
     using NumbersLib for uint256;
 
     /* State Variables */
 
-    ERC20Detailed public lendingToken;
+    TToken public tToken;
 
-    TTokenInterface public tToken;
+    ERC20Detailed public lendingToken;
 
     uint8 public constant EXCHANGE_RATE_DECIMALS = 36;
 
     IMarketRegistry public marketRegistry;
 
-    MarketStateLib.MarketState internal marketState;
+    uint256 internal _totalBorrowed;
 
-    MarketStateLib.MarketState internal compoundMarketState;
+    uint256 internal _totalRepaid;
 
     /** Modifiers */
 
@@ -94,19 +93,10 @@ contract LendingPool is Base, LendingPoolInterface {
             cTokenAddress != address(0) &&
             CErc20Interface(cTokenAddress).valueOfUnderlying(lendingTokenAmount) > 0
         ) {
-            // Deposit tokens straight into Compound
-            // Increase the Compound market supply
-            compoundMarketState.increaseSupply(
-                _depositToCompound(cTokenAddress, lendingTokenAmount)
-            );
-        } else {
-            // Increase the market supply
-            marketState.increaseSupply(lendingTokenAmount);
+            _depositToCompound(cTokenAddress, lendingTokenAmount);
         }
 
         // Mint tToken tokens
-        // The new lendingToken and tToken are in proportion to one another
-        // So the exchange rate need not be updated again
         tTokenMint(msg.sender, tTokenAmount);
 
         // Emit event
@@ -132,28 +122,6 @@ contract LendingPool is Base, LendingPoolInterface {
         require(tToken.balanceOf(msg.sender) > tTokenAmount, "TTOKEN_NOT_ENOUGH_BALANCE");
 
         _withdraw(lendingTokenAmount, tTokenAmount);
-    }
-
-    function _tTokensForLendingTokens(uint256 lendingTokenAmount)
-        internal
-        view
-        returns (uint256)
-    {
-        return
-            lendingTokenAmount.mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS)).div(
-                _exchangeRate()
-            );
-    }
-
-    function _lendingTokensForTTokens(uint256 tTokenAmount)
-        internal
-        view
-        returns (uint256)
-    {
-        return
-            tTokenAmount.mul(_exchangeRate()).div(
-                uint256(10)**uint256(EXCHANGE_RATE_DECIMALS)
-            );
     }
 
     function withdrawAll()
@@ -192,49 +160,15 @@ contract LendingPool is Base, LendingPoolInterface {
         // Transfers tokens to LendingPool.
         tokenTransferFrom(borrower, totalAmount);
 
+        _totalRepaid = _totalRepaid.add(principalAmount);
+
         address cTokenAddress = cToken();
         if (cTokenAddress != address(0)) {
-            compoundMarketState.increaseRepayment(
-                _depositToCompound(cTokenAddress, principalAmount)
-            );
-        } else {
-            marketState.increaseRepayment(principalAmount);
+            _depositToCompound(cTokenAddress, totalAmount);
         }
-
-        marketState.increaseSupply(interestAmount);
 
         // Emits event.
         emit TokenRepaid(borrower, totalAmount);
-    }
-
-    /**
-        @notice Once a loan is liquidated, it transfers tokens from the liquidator to the lending pool.
-        @param amount of tokens to liquidate.
-        @param liquidator address used to liquidate the loan.
-     */
-    function liquidationPayment(uint256 amount, address liquidator)
-        external
-        isInitialized()
-        isLoan()
-        whenLendingPoolNotPaused(address(this))
-    {
-        // Transfers tokens from liquidator to lending pool
-        tokenTransferFrom(liquidator, amount);
-
-        address cTokenAddress = cToken();
-        if (cTokenAddress != address(0)) {
-            // Deposit tokens straight into Compound
-            // Increase the Compound market repayment
-            compoundMarketState.increaseRepayment(
-                _depositToCompound(cTokenAddress, amount)
-            );
-        } else {
-            // Increase the market repayment
-            marketState.increaseRepayment(amount);
-        }
-
-        // Emits event
-        emit PaymentLiquidated(liquidator, amount);
     }
 
     /**
@@ -251,28 +185,47 @@ contract LendingPool is Base, LendingPoolInterface {
         isLoan()
         whenLendingPoolNotPaused(address(this))
     {
-        address cTokenAddress = cToken();
-        if (cTokenAddress != address(0)) {
-            // Withdraw tokens from Compound
-            // Increase the Compound market borrowed amount
-            compoundMarketState.increaseBorrow(
-                _withdrawFromCompound(cTokenAddress, amount)
-            );
-        } else {
-            // Increase the market borrowed amount
-            marketState.increaseBorrow(amount);
+        uint256 lendingTokenBalance = lendingToken.balanceOf(address(this));
+        if (lendingTokenBalance < amount) {
+            address cTokenAddress = cToken();
+            if (cTokenAddress != address(0)) {
+                _withdrawFromCompound(cTokenAddress, amount.sub(lendingTokenBalance));
+            }
         }
 
         // Transfer tokens to the borrower.
         tokenTransfer(borrower, amount);
+
+        _totalBorrowed = _totalBorrowed.add(amount);
     }
 
-    function getMarketState() external view returns (MarketStateLib.MarketState memory) {
+    /**
+        @notice It calculates the market state values across all markets.
+        @return values that represent the global state across all markets.
+     */
+    function getMarketState() external view returns (
+        uint256 totalSupplied,
+        uint256 totalBorrowed,
+        uint256 totalRepaid
+    ) {
         return _getMarketState();
     }
 
+    /**
+        @notice It gets the supply-to-debt (StD) ratio for a given market, including a new loan amount.
+        @notice The formula to calculate StD ratio (including a new loan amount) is:
+
+            StD = (SUM(total borrowed) - SUM(total repaid) + NewLoanAmount) / SUM(total supplied)
+
+        @notice The value has 2 decimal places.
+            Example:
+                100 => 1%
+        @param loanAmount a new loan amount to consider in the ratio.
+        @return the supply-to-debt ratio value.
+     */
     function getDebtRatioFor(uint256 loanAmount) external view returns (uint256) {
-        return _getMarketState().getDebtRatioFor(loanAmount);
+        uint256 totalSupplied = _getTotalSupplied();
+        return totalSupplied == 0 ? 0 : _totalBorrowed.add(loanAmount).sub(_totalRepaid).ratioOf(totalSupplied);
     }
 
     /**
@@ -283,29 +236,12 @@ contract LendingPool is Base, LendingPoolInterface {
         return _getSettings().getCTokenAddress(address(lendingToken));
     }
 
-    function exchangeRate() external view returns (uint256) {
-        return _exchangeRate();
-    }
-
     /**
         @notice It calculates the current exchange rate for the TToken based on the total supply of the lending token.
         @return the exchange rate for 1 TToken to the underlying token.
      */
-    function _exchangeRate() internal view returns (uint256) {
-        if (tToken.totalSupply() == 0) {
-            return
-                uint256(10) **
-                    uint256(
-                        int8(EXCHANGE_RATE_DECIMALS) +
-                            int8(lendingToken.decimals()) -
-                            int8(tToken.decimals())
-                    );
-        }
-
-        return
-            _getTotalSupplied()
-                .mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS))
-                .div(tToken.totalSupply());
+    function exchangeRate() external view returns (uint256) {
+        return _exchangeRate();
     }
 
     /**
@@ -317,7 +253,7 @@ contract LendingPool is Base, LendingPoolInterface {
      */
     function initialize(
         IMarketRegistry aMarketRegistry,
-        TTokenInterface aTToken,
+        TToken aTToken,
         address settingsAddress
     ) external isNotInitialized() {
         address(aTToken).requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
@@ -332,34 +268,36 @@ contract LendingPool is Base, LendingPoolInterface {
     /** Internal functions */
 
     /**
+        @notice It calculates the current exchange rate for the TToken based on the total supply of the lending token.
+        @return the exchange rate for 1 TToken to the underlying token.
+     */
+    function _exchangeRate() internal view returns (uint256) {
+        if (tToken.totalSupply() == 0) {
+            return uint256(10) ** uint256(int8(EXCHANGE_RATE_DECIMALS));
+        }
+
+        return
+            _getTotalSupplied()
+                .mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS))
+                .div(tToken.totalSupply());
+    }
+
+    /**
         @notice It calculates the market state values across all markets.
-        @return a MarketState struct that represents the global values across all markets.
+        @return values that represent the global state across all markets.
      */
     function _getMarketState()
         internal
         view
-        returns (MarketStateLib.MarketState memory state)
+        returns (
+            uint256 totalSupplied,
+            uint256 totalBorrowed,
+            uint256 totalRepaid
+        )
     {
-        state = marketState;
-        state.totalSupplied = _getTotalSupplied();
-
-        address cTokenAddress = cToken();
-        if (cTokenAddress != address(0)) {
-            if (compoundMarketState.totalRepaid > 0) {
-                state.totalRepaid = state.totalRepaid.add(
-                    CErc20Interface(cTokenAddress).valueInUnderlying(
-                        compoundMarketState.totalRepaid
-                    )
-                );
-            }
-            if (compoundMarketState.totalBorrowed > 0) {
-                state.totalBorrowed = state.totalBorrowed.add(
-                    CErc20Interface(cTokenAddress).valueInUnderlying(
-                        compoundMarketState.totalBorrowed
-                    )
-                );
-            }
-        }
+        totalSupplied = _getTotalSupplied();
+        totalBorrowed = _totalBorrowed;
+        totalRepaid = _totalRepaid;
     }
 
     /**
@@ -371,39 +309,56 @@ contract LendingPool is Base, LendingPoolInterface {
         view
         returns (uint256 totalSupplied)
     {
-        totalSupplied = marketState.totalSupplied;
+        totalSupplied = lendingToken.balanceOf(address(this));
 
         address cTokenAddress = cToken();
-        if (cTokenAddress != address(0) && compoundMarketState.totalSupplied > 0) {
+        if (cTokenAddress != address(0)) {
             totalSupplied = totalSupplied.add(
                 CErc20Interface(cTokenAddress).valueInUnderlying(
-                    compoundMarketState.totalSupplied
+                    CErc20Interface(cTokenAddress).balanceOf(address(this))
                 )
             );
         }
     }
 
     function _withdraw(uint256 lendingTokenAmount, uint256 tTokenAmount) internal {
+        uint256 lendingTokenBalance = lendingToken.balanceOf(address(this));
+
+        address cTokenAddress = cToken();
+        if (cTokenAddress != address(0)) {
+            _withdrawFromCompound(cTokenAddress, lendingTokenAmount.sub(lendingTokenBalance));
+        }
+
         // Burn tToken tokens.
         tToken.burn(msg.sender, tTokenAmount);
 
         // Transfers tokens
         tokenTransfer(msg.sender, lendingTokenAmount);
 
-        address cTokenAddress = cToken();
-        if (cTokenAddress != address(0)) {
-            // Withdraw tokens from Compound
-            // Decrease the Compound market supply
-            compoundMarketState.decreaseSupply(
-                _withdrawFromCompound(cTokenAddress, lendingTokenAmount)
-            );
-        } else {
-            // Decrease the market supply
-            marketState.decreaseSupply(lendingTokenAmount);
-        }
-
         // Emit event.
         emit TokenWithdrawn(msg.sender, lendingTokenAmount, tTokenAmount);
+    }
+
+    function _tTokensForLendingTokens(uint256 lendingTokenAmount)
+        internal
+        view
+        returns (uint256)
+    {
+        return
+            lendingTokenAmount.mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS)).div(
+                _exchangeRate()
+            );
+    }
+
+    function _lendingTokensForTTokens(uint256 tTokenAmount)
+        internal
+        view
+        returns (uint256)
+    {
+        return
+            tTokenAmount.mul(_exchangeRate()).div(
+                uint256(10)**uint256(EXCHANGE_RATE_DECIMALS)
+            );
     }
 
     /**

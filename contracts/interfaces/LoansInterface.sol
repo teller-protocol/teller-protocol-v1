@@ -1,9 +1,14 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
+// Commons
 import "../util/TellerCommon.sol";
+
+// Interfaces
 import "./SettingsInterface.sol";
-import "./TTokenInterface.sol";
+
+// Contracts
+import "../base/TToken.sol";
 
 /**
     @notice This interface defines the functions to work with the Teller loans protocol
@@ -198,7 +203,7 @@ interface LoansInterface {
         @notice Returns the tToken in the lending pool
         @return Address of the tToken
      */
-    function tToken() external view returns (TTokenInterface);
+    function tToken() external view returns (TToken);
 
     /**
         @notice Returns the cToken in the lending pool

@@ -6,7 +6,6 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mint
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Interfaces
-import "../interfaces/TTokenInterface.sol";
 import "../interfaces/SettingsInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 
@@ -18,7 +17,7 @@ import "./BaseUpgradeable.sol";
  *
  * @author develop@teller.finance
  */
-contract TToken is TTokenInterface, BaseUpgradeable, ERC20Detailed, ERC20Mintable {
+contract TToken is BaseUpgradeable, ERC20Detailed, ERC20Mintable {
     using Address for address;
 
     /** State Variables */

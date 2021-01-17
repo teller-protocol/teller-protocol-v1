@@ -33,7 +33,7 @@ module.exports = async (callback) => {
         const logicVersionsRegistry = await getContracts.getDeployed(teller.logicVersionsRegistry());
         console.log(`Using LogicVersionsRegistry:   ${logicVersionsRegistry.address}`);
 
-        const logicNameBytes32 = toBytes32(web3, logicName);
+        const logicNameBytes32 = web3.utils.soliditySha3(logicName);
         
         const hasLogicVersionResult = await logicVersionsRegistry.hasLogicVersion(logicNameBytes32, senderTxConfig);
         assert(hasLogicVersionResult, `Logic name ${logicName} / ${logicNameBytes32} is not registered.`);

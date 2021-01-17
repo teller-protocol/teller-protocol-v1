@@ -4,7 +4,6 @@ pragma solidity 0.5.17;
 import "../util/AddressArrayLib.sol";
 
 // Interfaces
-import "./TTokenInterface.sol";
 import "./LendingPoolInterface.sol";
 import "./LoansInterface.sol";
 

@@ -17,16 +17,4 @@ contract LendingPoolMock is LendingPool {
             super._requireIsLoan();
         }
     }
-
-    function mockMarketState(uint256 totalSupplied, uint256 totalRepaid, uint256 totalBorrowed) external {
-        marketState.totalSupplied = totalSupplied;
-        marketState.totalRepaid = totalRepaid;
-        marketState.totalBorrowed = totalBorrowed;
-    }
-
-    function mockCompoundMarketState(uint256 totalSupplied, uint256 totalRepaid, uint256 totalBorrowed) external {
-        compoundMarketState.totalSupplied = totalSupplied;
-        compoundMarketState.totalRepaid = totalRepaid;
-        compoundMarketState.totalBorrowed = totalBorrowed;
-    }
 }
