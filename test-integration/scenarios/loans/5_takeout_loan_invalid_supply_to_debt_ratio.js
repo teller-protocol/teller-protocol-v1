@@ -1,4 +1,5 @@
 // Util classes
+const BN = require('bignumber.js')
 const {teller, tokens} = require("../../../scripts/utils/contracts");
 const {
   loans: loansActions,
@@ -25,7 +26,7 @@ module.exports = async (testContext) => {
 
   const marketState = await allContracts.lendingPool.getMarketState()
   const maxAmountRequestLoanTerms = toDecimals(1000, tokenInfo.decimals);
-  const amountTakeOut = toDecimals(marketState.totalSupplied.toString(), tokenInfo.decimals);
+  const amountTakeOut = new BN(marketState.totalSupplied.toString());
   let initialOraclePrice;
   let collateralAmountDepositCollateral;
   let collateralAmountWithdrawCollateral;
