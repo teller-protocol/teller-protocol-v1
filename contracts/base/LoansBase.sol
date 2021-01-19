@@ -466,11 +466,11 @@ contract LoansBase is LoansInterface, Base {
             msg.sender
         );
 
-        // the caller gets the collateral from the loan
-        _payOutLiquidator(loanID, liquidationInfo, msg.sender);
-
         loans[loanID].status = TellerCommon.LoanStatus.Closed;
         loans[loanID].liquidated = true;
+
+        // the caller gets the collateral from the loan
+        _payOutLiquidator(loanID, liquidationInfo, msg.sender);
 
         emit LoanLiquidated(
             loanID,
