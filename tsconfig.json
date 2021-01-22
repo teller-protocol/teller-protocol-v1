@@ -5,11 +5,18 @@
     "allowSyntheticDefaultImports": true,
     "module": "commonjs",
     "resolveJsonModule": true,
-    "target": "es2017",
+    "target": "ES6",
     "allowJs": true,
     "strict": true,
-    "typeRoots": ["./node_modules/@types", "./types"],
+    "typeRoots": ["./node_modules/@types", "./types", "./typechain"]
   },
-  "include": ["./test", "./scripts", "./migrations", "./test-integration", "./types", "./node_modules/@types"],
+  "include": [
+    "./test",
+    "./scripts",
+    "./migrations",
+    "./test-integration",
+    "./types",
+    "./node_modules/@types"
+  ],
   "exclude": ["./node_modules/**/*", "./contracts", "./build", "./docs"]
 }
