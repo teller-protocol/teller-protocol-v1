@@ -1,0 +1,15 @@
+// This is an example from https://zokrates.github.io/gettingstarted.html
+import "hashes/sha256/512bit" as sha256
+import "utils/casts/u32_to_field" as u32_to_field
+
+def main(private u32[8] collateralRatio, private u32[8] collateralRatioSecret, field lockedCollateralRatio, field identifier) -> (bool, u32[8]):
+    field collateralRatioField = 0
+
+    for field i in 0..8 do
+        collateralRatioField = collateralRatioField + u32_to_field(collateralRatio[i])
+    endfor
+
+	bool enoughCollateral = lockedCollateralRatio > collateralRatioField
+  u32[8] hash = sha256(collateralRatio, collateralRatioSecret)
+
+	return enoughCollateral,hash
