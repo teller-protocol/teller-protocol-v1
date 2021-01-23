@@ -84,7 +84,7 @@ contract LendingPool is Base, LendingPoolInterface {
         whenLendingPoolNotPaused(address(this))
     {
         require(
-            _getTotalSupplied() <= _getSettings().assetSettings().getMaxTVLAmount(address(lendingToken)),
+            (_getTotalSupplied().add(lendingTokenAmount)) <= _getSettings().assetSettings().getMaxTVLAmount(address(lendingToken)),
             "MAX_TVL_REACHED"
         );
         uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
