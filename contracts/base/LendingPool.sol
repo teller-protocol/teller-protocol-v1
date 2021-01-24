@@ -304,12 +304,14 @@ contract LendingPool is Base, LendingPoolInterface {
         returns (
             uint256 totalSupplied,
             uint256 totalBorrowed,
-            uint256 totalRepaid
+            uint256 totalRepaid,
+            uint256 totalOnLoan
         )
     {
         totalSupplied = _getTotalSupplied();
         totalBorrowed = _totalBorrowed;
         totalRepaid = _totalRepaid;
+        totalOnLoan = _totalBorrowed.sub(totalRepaid);
     }
 
     /**
