@@ -84,7 +84,8 @@ contract LendingPool is Base, LendingPoolInterface {
         whenLendingPoolNotPaused(address(this))
     {
         require(
-            (_getTotalSupplied().add(lendingTokenAmount)) <= _getSettings().assetSettings().getMaxTVLAmount(address(lendingToken)),
+            (_getTotalSupplied().add(lendingTokenAmount)) <=
+                _getSettings().assetSettings().getMaxTVLAmount(address(lendingToken)),
             "MAX_TVL_REACHED"
         );
         uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
@@ -207,11 +208,15 @@ contract LendingPool is Base, LendingPoolInterface {
         @notice It calculates the market state values across all markets.
         @return values that represent the global state across all markets.
      */
-    function getMarketState() external view returns (
-        uint256 totalSupplied,
-        uint256 totalBorrowed,
-        uint256 totalRepaid
-    ) {
+    function getMarketState()
+        external
+        view
+        returns (
+            uint256 totalSupplied,
+            uint256 totalBorrowed,
+            uint256 totalRepaid
+        )
+    {
         return _getMarketState();
     }
 
@@ -229,7 +234,10 @@ contract LendingPool is Base, LendingPoolInterface {
      */
     function getDebtRatioFor(uint256 loanAmount) external view returns (uint256) {
         uint256 totalSupplied = _getTotalSupplied();
-        return totalSupplied == 0 ? 0 : _totalBorrowed.add(loanAmount).sub(_totalRepaid).ratioOf(totalSupplied);
+        return
+            totalSupplied == 0
+                ? 0
+                : _totalBorrowed.add(loanAmount).sub(_totalRepaid).ratioOf(totalSupplied);
     }
 
     /**
@@ -277,11 +285,13 @@ contract LendingPool is Base, LendingPoolInterface {
      */
     function _exchangeRate() internal view returns (uint256) {
         if (tToken.totalSupply() == 0) {
-            return uint256(10) ** uint256(int8(EXCHANGE_RATE_DECIMALS));
+            return uint256(10)**uint256(int8(EXCHANGE_RATE_DECIMALS));
         }
 
         return
             _getTotalSupplied()
+                .add(_totalBorrowed)
+                .sub(_totalRepaid)
                 .mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS))
                 .div(tToken.totalSupply());
     }
@@ -308,11 +318,7 @@ contract LendingPool is Base, LendingPoolInterface {
         @notice It calculates the total supply of the lending token across all markets.
         @return the total supply denoted in the lending token.
      */
-    function _getTotalSupplied()
-        internal
-        view
-        returns (uint256 totalSupplied)
-    {
+    function _getTotalSupplied() internal view returns (uint256 totalSupplied) {
         totalSupplied = lendingToken.balanceOf(address(this));
 
         address cTokenAddress = cToken();
@@ -330,7 +336,10 @@ contract LendingPool is Base, LendingPoolInterface {
 
         address cTokenAddress = cToken();
         if (cTokenAddress != address(0)) {
-            _withdrawFromCompound(cTokenAddress, lendingTokenAmount.sub(lendingTokenBalance));
+            _withdrawFromCompound(
+                cTokenAddress,
+                lendingTokenAmount.sub(lendingTokenBalance)
+            );
         }
 
         // Burn tToken tokens.
@@ -414,7 +423,10 @@ contract LendingPool is Base, LendingPoolInterface {
         @dev This function is overriden in some mock contracts for testing purposes.
      */
     function _requireIsLoan() internal view {
-        require(marketRegistry.loansRegistry(address(this), msg.sender), "ADDRESS_ISNT_LOANS_CONTRACT");
+        require(
+            marketRegistry.loansRegistry(address(this), msg.sender),
+            "ADDRESS_ISNT_LOANS_CONTRACT"
+        );
     }
 
     /** Private functions */
