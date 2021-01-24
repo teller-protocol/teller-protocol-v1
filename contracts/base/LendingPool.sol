@@ -83,7 +83,11 @@ contract LendingPool is Base, LendingPoolInterface {
         whenNotPaused()
         whenLendingPoolNotPaused(address(this))
     {
-        require(_getMarketState().totalSupplied <= _getSettings().assetSettings().getMaxTVLAmount(address(lendingToken)), "MAX_TVL_REACHED");
+        require(
+            _getMarketState().totalSupplied <=
+                _getSettings().assetSettings().getMaxTVLAmount(address(lendingToken)),
+            "MAX_TVL_REACHED"
+        );
         uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
 
         // Transfering tokens to the LendingPool
@@ -305,8 +309,12 @@ contract LendingPool is Base, LendingPoolInterface {
                     );
         }
 
+        MarketStateLib.MarketState memory _marketState = _getMarketState();
+
         return
-            _getTotalSupplied()
+            _marketState
+                .totalSupplied
+                .add(_marketState.totalBorrowed)
                 .mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS))
                 .div(tToken.totalSupply());
     }
@@ -373,11 +381,7 @@ contract LendingPool is Base, LendingPoolInterface {
         @notice It calculates the total supply of the lending token across all markets.
         @return the total supply denoted in the lending token.
      */
-    function _getTotalSupplied()
-        internal
-        view
-        returns (uint256 totalSupplied)
-    {
+    function _getTotalSupplied() internal view returns (uint256 totalSupplied) {
         totalSupplied = marketState.totalSupplied;
 
         address cTokenAddress = cToken();
