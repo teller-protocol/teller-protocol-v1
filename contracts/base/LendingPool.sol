@@ -221,16 +221,16 @@ contract LendingPool is Base, LendingPoolInterface {
     }
 
     /**
-        @notice It gets the supply-to-debt (StD) ratio for a given market, including a new loan amount.
-        @notice The formula to calculate StD ratio (including a new loan amount) is:
+        @notice It gets the debt-to-supply (DtS) ratio for a given market, including a new loan amount.
+        @notice The formula to calculate DtS ratio (including a new loan amount) is:
 
-            StD = (SUM(total borrowed) - SUM(total repaid) + NewLoanAmount) / SUM(total supplied)
+            DtS = (SUM(total borrowed) - SUM(total repaid) + NewLoanAmount) / SUM(total supplied)
 
         @notice The value has 2 decimal places.
             Example:
                 100 => 1%
         @param loanAmount a new loan amount to consider in the ratio.
-        @return the supply-to-debt ratio value.
+        @return the debt-to-supply ratio value.
      */
     function getDebtRatioFor(uint256 loanAmount) external view returns (uint256) {
         uint256 totalSupplied = _getTotalSupplied();
@@ -289,11 +289,9 @@ contract LendingPool is Base, LendingPoolInterface {
         }
 
         return
-            _getTotalSupplied()
-                .add(_totalBorrowed)
-                .sub(_totalRepaid)
-                .mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS))
-                .div(tToken.totalSupply());
+            _getTotalSupplied().mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS)).div(
+                tToken.totalSupply()
+            );
     }
 
     /**
@@ -319,7 +317,9 @@ contract LendingPool is Base, LendingPoolInterface {
         @return the total supply denoted in the lending token.
      */
     function _getTotalSupplied() internal view returns (uint256 totalSupplied) {
-        totalSupplied = lendingToken.balanceOf(address(this));
+        totalSupplied = lendingToken.balanceOf(address(this)).add(
+            _totalBorrowed.sub(_totalRepaid)
+        );
 
         address cTokenAddress = cToken();
         if (cTokenAddress != address(0)) {
