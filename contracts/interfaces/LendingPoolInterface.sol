@@ -88,6 +88,32 @@ interface LendingPoolInterface {
     function tToken() external view returns (TToken);
 
     /**
+        @notice It returns the balance of underlying tokens a lender owns with the amount
+        of TTokens owned and the current exchange rate.
+        @return a lender's balance of the underlying token in the pool.
+     */
+    function balanceOfUnderlying(address lender) external view returns (uint256);
+
+    /**
+        @notice Returns the total amount of interest earned by a lender.
+        @dev This value includes already claimed + unclaimed interest earned.
+        @return total interest earned by lender.
+     */
+    function getLenderInterestEarned(address lender) external view returns (uint256);
+
+    /**
+        @notice Returns the amount of claimable interest a lender has earned.
+        @return claimable interest value.
+     */
+    function getClaimableInterestEarned(address lender) external view returns (uint256);
+
+    /**
+        @notice Returns the total amount of interest the pool has earned from repaying loans.
+        @return total interest earned from loans.
+     */
+    function totalInterestEarned() external view returns (uint256);
+
+    /**
         @notice It calculates the market state values across all markets.
         @return values that represent the global state across all markets.
      */

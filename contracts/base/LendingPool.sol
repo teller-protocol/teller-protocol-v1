@@ -52,9 +52,20 @@ contract LendingPool is Base, LendingPoolInterface {
 
     IMarketRegistry public marketRegistry;
 
+    // The total amount of underlying asset that has been originally been supplied by each lender not including interest earned.
+    mapping(address => uint256) internal _totalSuppliedUnderlyingLender;
+
+    // The total amount of underlying asset that has been lent out for loans.
     uint256 internal _totalBorrowed;
 
+    // The total amount of underlying asset that has been repaid from loans.
     uint256 internal _totalRepaid;
+
+    // The total amount of underlying interest that has been claimed for each lender.
+    mapping(address => uint256) internal _totalInterestEarnedLender;
+
+    // The total amount of underlying interest the pool has earned from loans being repaid.
+    uint256 public totalInterestEarned;
 
     /** Modifiers */
 
@@ -90,7 +101,9 @@ contract LendingPool is Base, LendingPoolInterface {
         );
         uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
 
-        // Transfering tokens to the LendingPool
+        _totalSuppliedUnderlyingLender[msg.sender] = _totalSuppliedUnderlyingLender[msg.sender].add(lendingTokenAmount);
+
+        // Transferring tokens to the LendingPool
         tokenTransferFrom(msg.sender, lendingTokenAmount);
 
         address cTokenAddress = cToken();
@@ -166,6 +179,7 @@ contract LendingPool is Base, LendingPoolInterface {
         tokenTransferFrom(borrower, totalAmount);
 
         _totalRepaid = _totalRepaid.add(principalAmount);
+        totalInterestEarned = totalInterestEarned.add(interestAmount);
 
         address cTokenAddress = cToken();
         if (cTokenAddress != address(0)) {
@@ -218,6 +232,33 @@ contract LendingPool is Base, LendingPoolInterface {
         )
     {
         return _getMarketState();
+    }
+
+    /**
+        @notice It returns the balance of underlying tokens a lender owns with the amount
+        of TTokens owned and the current exchange rate.
+        @return a lender's balance of the underlying token in the pool.
+     */
+    function balanceOfUnderlying(address lender) external view returns (uint256) {
+        return _lendingTokensForTTokens(tToken.balanceOf(lender));
+    }
+
+    /**
+        @notice Returns the total amount of interest earned by a lender.
+        @dev This value includes already claimed + unclaimed interest earned.
+        @return total interest earned by lender.
+     */
+    function getLenderInterestEarned(address lender) external view returns (uint256) {
+        uint256 currentLenderInterest = _calculateCurrentLenderInterestEarned(msg.sender);
+        return _totalInterestEarnedLender[lender].add(currentLenderInterest);
+    }
+
+    /**
+        @notice Returns the amount of claimable interest a lender has earned.
+        @return claimable interest value.
+     */
+    function getClaimableInterestEarned(address lender) external view returns (uint256) {
+        return _calculateCurrentLenderInterestEarned(msg.sender);
     }
 
     /**
@@ -278,6 +319,11 @@ contract LendingPool is Base, LendingPoolInterface {
     }
 
     /** Internal functions */
+
+    function _calculateCurrentLenderInterestEarned(address lender) internal returns (uint256) {
+        uint256 lenderUnderlyingBalance = _lendingTokensForTTokens(tToken.balanceOf(lender));
+        return lenderUnderlyingBalance.sub(_totalSuppliedUnderlyingLender[lender]);
+    }
 
     /**
         @notice It calculates the current exchange rate for the TToken based on the total supply of the lending token.
@@ -343,6 +389,16 @@ contract LendingPool is Base, LendingPoolInterface {
                 lendingTokenAmount.sub(lendingTokenBalance)
             );
         }
+
+        uint256 currentLenderInterest = _calculateCurrentLenderInterestEarned(msg.sender);
+        uint256 totalSuppliedDiff;
+        if (lendingTokenAmount > currentLenderInterest) {
+            totalSuppliedDiff = lendingTokenAmount.sub(currentLenderInterest);
+            _totalInterestEarnedLender[msg.sender] = _totalInterestEarnedLender[lender].add(currentLenderInterest);
+        } else {
+            _totalInterestEarnedLender[msg.sender] = _totalInterestEarnedLender[lender].add(lendingTokenAmount);
+        }
+        _totalSuppliedUnderlyingLender[msg.sender] = _totalSuppliedUnderlyingLender[msg.sender].sub(totalSuppliedDiff);
 
         // Burn tToken tokens.
         tToken.burn(msg.sender, tTokenAmount);
