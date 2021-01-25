@@ -228,7 +228,8 @@ contract LendingPool is Base, LendingPoolInterface {
         returns (
             uint256 totalSupplied,
             uint256 totalBorrowed,
-            uint256 totalRepaid
+            uint256 totalRepaid,
+            uint256 totalOnLoan
         )
     {
         return _getMarketState();
@@ -320,7 +321,7 @@ contract LendingPool is Base, LendingPoolInterface {
 
     /** Internal functions */
 
-    function _calculateCurrentLenderInterestEarned(address lender) internal returns (uint256) {
+    function _calculateCurrentLenderInterestEarned(address lender) internal view returns (uint256) {
         uint256 lenderUnderlyingBalance = _lendingTokensForTTokens(tToken.balanceOf(lender));
         return lenderUnderlyingBalance.sub(_totalSuppliedUnderlyingLender[lender]);
     }
@@ -394,9 +395,9 @@ contract LendingPool is Base, LendingPoolInterface {
         uint256 totalSuppliedDiff;
         if (lendingTokenAmount > currentLenderInterest) {
             totalSuppliedDiff = lendingTokenAmount.sub(currentLenderInterest);
-            _totalInterestEarnedLender[msg.sender] = _totalInterestEarnedLender[lender].add(currentLenderInterest);
+            _totalInterestEarnedLender[msg.sender] = _totalInterestEarnedLender[msg.sender].add(currentLenderInterest);
         } else {
-            _totalInterestEarnedLender[msg.sender] = _totalInterestEarnedLender[lender].add(lendingTokenAmount);
+            _totalInterestEarnedLender[msg.sender] = _totalInterestEarnedLender[msg.sender].add(lendingTokenAmount);
         }
         _totalSuppliedUnderlyingLender[msg.sender] = _totalSuppliedUnderlyingLender[msg.sender].sub(totalSuppliedDiff);
 
