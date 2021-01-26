@@ -1,8 +1,11 @@
-import '@nomiclabs/hardhat-waffle';
+import 'hardhat-deploy';
+import 'hardhat-deploy-ethers';
 import 'hardhat-typechain';
-import '@nomiclabs/hardhat-etherscan';
-
+import '@nomiclabs/hardhat-waffle';
+import '@nomiclabs/hardhat-ethers';
+import { HardhatUserConfig } from 'hardhat/types';
 import configureEnv from './config/env';
+
 const envConfig = configureEnv();
 
 // Environment Configuration
@@ -13,7 +16,12 @@ const gasKeyValue = envConfig.getGasWei().getOrDefault();
 const gasPriceKeyValue = envConfig.getGasPriceGwei().getOrDefault();
 const etherscanApiKey = envConfig.getEtherscanApiKey().get();
 
-export default {
+export default <HardhatUserConfig>{
+  namedAccounts: {
+    deployer: {
+      default: 0,
+    },
+  },
   etherscan: {
     apiKey: etherscanApiKey,
   },

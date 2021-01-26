@@ -38,34 +38,34 @@ contract LoansBaseMock is LoansBase, BaseMock {
         return super._isDebtRatioValid(newLoanAmount);
     }
 
-    function setLoan(
-        uint256 id,
-        TellerCommon.LoanTerms calldata loanTerms,
-        uint256 termsExpiry,
-        uint256 loanStartTime,
-        uint256 collateral,
-        uint256 lastCollateralIn,
-        uint256 principalOwed,
-        uint256 interestOwed,
-        uint256 borrowedAmount,
-        TellerCommon.LoanStatus status,
-        bool liquidated
-    ) external {
-        loans[id] = TellerCommon.Loan({
-            id: id,
-            loanTerms: loanTerms,
-            termsExpiry: termsExpiry,
-            loanStartTime: loanStartTime,
-            collateral: collateral,
-            lastCollateralIn: lastCollateralIn,
-            principalOwed: principalOwed,
-            interestOwed: interestOwed,
-            borrowedAmount: borrowedAmount,
-            escrow: address(0x0),
-            status: status,
-            liquidated: liquidated
-        });
-    }
+    // function setLoan(
+    //     uint256 id,
+    //     TellerCommon.LoanTerms calldata loanTerms,
+    //     uint256 termsExpiry,
+    //     uint256 loanStartTime,
+    //     uint256 collateral,
+    //     uint256 lastCollateralIn,
+    //     uint256 principalOwed,
+    //     uint256 interestOwed,
+    //     uint256 borrowedAmount,
+    //     TellerCommon.LoanStatus status,
+    //     bool liquidated
+    // ) external {
+    //     loans[id] = TellerCommon.Loan({
+    //         id: id,
+    //         loanTerms: loanTerms,
+    //         termsExpiry: termsExpiry,
+    //         loanStartTime: loanStartTime,
+    //         collateral: collateral,
+    //         lastCollateralIn: lastCollateralIn,
+    //         principalOwed: principalOwed,
+    //         interestOwed: interestOwed,
+    //         borrowedAmount: borrowedAmount,
+    //         escrow: address(0x0),
+    //         status: status,
+    //         liquidated: liquidated
+    //     });
+    // }
 
     function setLoan(TellerCommon.Loan memory loan) public {
         loans[loan.id] = loan;

@@ -8,15 +8,16 @@
     "target": "ES6",
     "allowJs": true,
     "strict": true,
-    "typeRoots": ["./node_modules/@types", "./types", "./typechain"]
+    "typeRoots": ["./types", "./typechain"]
   },
+  "files": ["hardhat.config.ts"],
   "include": [
     "./test",
     "./scripts",
+    "./deploy",
     "./migrations",
     "./test-integration",
-    "./types",
-    "./node_modules/@types"
+    "./test-hardhat"
   ],
-  "exclude": ["./node_modules/**/*", "./contracts", "./build", "./docs"]
+  "exclude": ["./contracts", "./build", "./artifacts", "./docs"]
 }
