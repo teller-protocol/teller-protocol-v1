@@ -11,7 +11,8 @@ import "./IMarketRegistry.sol";
 import "../base/TToken.sol";
 
 /**
-    @notice This interface defines the functions for a lending pool that holds all of the tokens that lenders transfer into the protocol.
+    @notice This interface defines the functions for a lending pool that holds all of the tokens
+    that lenders transfer into the protocol.
 
     @author develop@teller.finance
  */
@@ -32,7 +33,7 @@ interface LendingPoolInterface {
     function withdraw(uint256 amount) external;
 
     /**
-        @notice It allows a borrower repaying their loan. 
+        @notice It allows a borrower repaying their loan.
         @dev This function can be called ONLY by the Loans contract.
         @dev It requires a ERC20.approve call before calling it.
         @dev It throws a require error if borrower called ERC20.approve function before calling it.
@@ -87,15 +88,57 @@ interface LendingPoolInterface {
     function tToken() external view returns (TToken);
 
     /**
+        @notice It returns the balance of underlying tokens a lender owns with the amount
+        of TTokens owned and the current exchange rate.
+        @return a lender's balance of the underlying token in the pool.
+     */
+    function balanceOfUnderlying(address lender) external view returns (uint256);
+
+    /**
+        @notice Returns the total amount of interest earned by a lender.
+        @dev This value includes already claimed + unclaimed interest earned.
+        @return total interest earned by lender.
+     */
+    function getLenderInterestEarned(address lender) external view returns (uint256);
+
+    /**
+        @notice Returns the amount of claimable interest a lender has earned.
+        @return claimable interest value.
+     */
+    function getClaimableInterestEarned(address lender) external view returns (uint256);
+
+    /**
+        @notice Returns the total amount of interest the pool has earned from repaying loans.
+        @return total interest earned from loans.
+     */
+    function totalInterestEarned() external view returns (uint256);
+
+    /**
         @notice It calculates the market state values across all markets.
         @return values that represent the global state across all markets.
      */
-    function getMarketState() external view returns (
-        uint256 totalSupplied,
-        uint256 totalBorrowed,
-        uint256 totalRepaid
-    );
+    function getMarketState()
+        external
+        view
+        returns (
+            uint256 totalSupplied,
+            uint256 totalBorrowed,
+            uint256 totalRepaid,
+            uint256 totalOnLoan
+        );
 
+    /**
+        @notice It gets the debt-to-supply (DtS) ratio for a given market, including a new loan amount.
+        @notice The formula to calculate DtS ratio (including a new loan amount) is:
+
+            DtS = (SUM(total borrowed) - SUM(total repaid) + NewLoanAmount) / SUM(total supplied)
+
+        @notice The value has 2 decimal places.
+            Example:
+                100 => 1%
+        @param loanAmount a new loan amount to consider in the ratio.
+        @return the debt-to-supply ratio value.
+     */
     function getDebtRatioFor(uint256 loanAmount) external view returns (uint256);
 
     /**

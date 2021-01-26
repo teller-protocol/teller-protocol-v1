@@ -52,9 +52,20 @@ contract LendingPool is Base, LendingPoolInterface {
 
     IMarketRegistry public marketRegistry;
 
+    // The total amount of underlying asset that has been originally been supplied by each lender not including interest earned.
+    mapping(address => uint256) internal _totalSuppliedUnderlyingLender;
+
+    // The total amount of underlying asset that has been lent out for loans.
     uint256 internal _totalBorrowed;
 
+    // The total amount of underlying asset that has been repaid from loans.
     uint256 internal _totalRepaid;
+
+    // The total amount of underlying interest that has been claimed for each lender.
+    mapping(address => uint256) internal _totalInterestEarnedLender;
+
+    // The total amount of underlying interest the pool has earned from loans being repaid.
+    uint256 public totalInterestEarned;
 
     /** Modifiers */
 
@@ -84,12 +95,15 @@ contract LendingPool is Base, LendingPoolInterface {
         whenLendingPoolNotPaused(address(this))
     {
         require(
-            _getTotalSupplied() <= _getSettings().assetSettings().getMaxTVLAmount(address(lendingToken)),
+            _getTotalSupplied().add(lendingTokenAmount) <=
+                _getSettings().assetSettings().getMaxTVLAmount(address(lendingToken)),
             "MAX_TVL_REACHED"
         );
         uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
 
-        // Transfering tokens to the LendingPool
+        _totalSuppliedUnderlyingLender[msg.sender] = _totalSuppliedUnderlyingLender[msg.sender].add(lendingTokenAmount);
+
+        // Transferring tokens to the LendingPool
         tokenTransferFrom(msg.sender, lendingTokenAmount);
 
         address cTokenAddress = cToken();
@@ -165,6 +179,7 @@ contract LendingPool is Base, LendingPoolInterface {
         tokenTransferFrom(borrower, totalAmount);
 
         _totalRepaid = _totalRepaid.add(principalAmount);
+        totalInterestEarned = totalInterestEarned.add(interestAmount);
 
         address cTokenAddress = cToken();
         if (cTokenAddress != address(0)) {
@@ -207,29 +222,64 @@ contract LendingPool is Base, LendingPoolInterface {
         @notice It calculates the market state values across all markets.
         @return values that represent the global state across all markets.
      */
-    function getMarketState() external view returns (
-        uint256 totalSupplied,
-        uint256 totalBorrowed,
-        uint256 totalRepaid
-    ) {
+    function getMarketState()
+        external
+        view
+        returns (
+            uint256 totalSupplied,
+            uint256 totalBorrowed,
+            uint256 totalRepaid,
+            uint256 totalOnLoan
+        )
+    {
         return _getMarketState();
     }
 
     /**
-        @notice It gets the supply-to-debt (StD) ratio for a given market, including a new loan amount.
-        @notice The formula to calculate StD ratio (including a new loan amount) is:
+        @notice It returns the balance of underlying tokens a lender owns with the amount
+        of TTokens owned and the current exchange rate.
+        @return a lender's balance of the underlying token in the pool.
+     */
+    function balanceOfUnderlying(address lender) external view returns (uint256) {
+        return _lendingTokensForTTokens(tToken.balanceOf(lender));
+    }
 
-            StD = (SUM(total borrowed) - SUM(total repaid) + NewLoanAmount) / SUM(total supplied)
+    /**
+        @notice Returns the total amount of interest earned by a lender.
+        @dev This value includes already claimed + unclaimed interest earned.
+        @return total interest earned by lender.
+     */
+    function getLenderInterestEarned(address lender) external view returns (uint256) {
+        uint256 currentLenderInterest = _calculateCurrentLenderInterestEarned(msg.sender);
+        return _totalInterestEarnedLender[lender].add(currentLenderInterest);
+    }
+
+    /**
+        @notice Returns the amount of claimable interest a lender has earned.
+        @return claimable interest value.
+     */
+    function getClaimableInterestEarned(address lender) external view returns (uint256) {
+        return _calculateCurrentLenderInterestEarned(msg.sender);
+    }
+
+    /**
+        @notice It gets the debt-to-supply (DtS) ratio for a given market, including a new loan amount.
+        @notice The formula to calculate DtS ratio (including a new loan amount) is:
+
+            DtS = (SUM(total borrowed) - SUM(total repaid) + NewLoanAmount) / SUM(total supplied)
 
         @notice The value has 2 decimal places.
             Example:
                 100 => 1%
         @param loanAmount a new loan amount to consider in the ratio.
-        @return the supply-to-debt ratio value.
+        @return the debt-to-supply ratio value.
      */
     function getDebtRatioFor(uint256 loanAmount) external view returns (uint256) {
         uint256 totalSupplied = _getTotalSupplied();
-        return totalSupplied == 0 ? 0 : _totalBorrowed.add(loanAmount).sub(_totalRepaid).ratioOf(totalSupplied);
+        return
+            totalSupplied == 0
+                ? 0
+                : _totalBorrowed.add(loanAmount).sub(_totalRepaid).ratioOf(totalSupplied);
     }
 
     /**
@@ -271,19 +321,24 @@ contract LendingPool is Base, LendingPoolInterface {
 
     /** Internal functions */
 
+    function _calculateCurrentLenderInterestEarned(address lender) internal view returns (uint256) {
+        uint256 lenderUnderlyingBalance = _lendingTokensForTTokens(tToken.balanceOf(lender));
+        return lenderUnderlyingBalance.sub(_totalSuppliedUnderlyingLender[lender]);
+    }
+
     /**
         @notice It calculates the current exchange rate for the TToken based on the total supply of the lending token.
         @return the exchange rate for 1 TToken to the underlying token.
      */
     function _exchangeRate() internal view returns (uint256) {
         if (tToken.totalSupply() == 0) {
-            return uint256(10) ** uint256(int8(EXCHANGE_RATE_DECIMALS));
+            return uint256(10)**uint256(int8(EXCHANGE_RATE_DECIMALS));
         }
 
         return
-            _getTotalSupplied()
-                .mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS))
-                .div(tToken.totalSupply());
+            _getTotalSupplied().mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS)).div(
+                tToken.totalSupply()
+            );
     }
 
     /**
@@ -296,24 +351,24 @@ contract LendingPool is Base, LendingPoolInterface {
         returns (
             uint256 totalSupplied,
             uint256 totalBorrowed,
-            uint256 totalRepaid
+            uint256 totalRepaid,
+            uint256 totalOnLoan
         )
     {
         totalSupplied = _getTotalSupplied();
         totalBorrowed = _totalBorrowed;
         totalRepaid = _totalRepaid;
+        totalOnLoan = _totalBorrowed.sub(totalRepaid);
     }
 
     /**
         @notice It calculates the total supply of the lending token across all markets.
         @return the total supply denoted in the lending token.
      */
-    function _getTotalSupplied()
-        internal
-        view
-        returns (uint256 totalSupplied)
-    {
-        totalSupplied = lendingToken.balanceOf(address(this));
+    function _getTotalSupplied() internal view returns (uint256 totalSupplied) {
+        totalSupplied = lendingToken.balanceOf(address(this)).add(
+            _totalBorrowed.sub(_totalRepaid)
+        );
 
         address cTokenAddress = cToken();
         if (cTokenAddress != address(0)) {
@@ -330,8 +385,21 @@ contract LendingPool is Base, LendingPoolInterface {
 
         address cTokenAddress = cToken();
         if (cTokenAddress != address(0)) {
-            _withdrawFromCompound(cTokenAddress, lendingTokenAmount.sub(lendingTokenBalance));
+            _withdrawFromCompound(
+                cTokenAddress,
+                lendingTokenAmount.sub(lendingTokenBalance)
+            );
         }
+
+        uint256 currentLenderInterest = _calculateCurrentLenderInterestEarned(msg.sender);
+        uint256 totalSuppliedDiff;
+        if (lendingTokenAmount > currentLenderInterest) {
+            totalSuppliedDiff = lendingTokenAmount.sub(currentLenderInterest);
+            _totalInterestEarnedLender[msg.sender] = _totalInterestEarnedLender[msg.sender].add(currentLenderInterest);
+        } else {
+            _totalInterestEarnedLender[msg.sender] = _totalInterestEarnedLender[msg.sender].add(lendingTokenAmount);
+        }
+        _totalSuppliedUnderlyingLender[msg.sender] = _totalSuppliedUnderlyingLender[msg.sender].sub(totalSuppliedDiff);
 
         // Burn tToken tokens.
         tToken.burn(msg.sender, tTokenAmount);
@@ -414,7 +482,10 @@ contract LendingPool is Base, LendingPoolInterface {
         @dev This function is overriden in some mock contracts for testing purposes.
      */
     function _requireIsLoan() internal view {
-        require(marketRegistry.loansRegistry(address(this), msg.sender), "ADDRESS_ISNT_LOANS_CONTRACT");
+        require(
+            marketRegistry.loansRegistry(address(this), msg.sender),
+            "ADDRESS_ISNT_LOANS_CONTRACT"
+        );
     }
 
     /** Private functions */

@@ -39,7 +39,7 @@ module.exports = async function(
         console.log(`New ATM created (for key: ${name}) at address ${lastATMGovernanceProxyAddress}.`);
 
         const atmGovernanceProxyInstance = await ATMGovernance.at(lastATMGovernanceProxyAddress);
-        
+
         console.log(`Configuring ATM ${lastATMGovernanceProxyAddress}: MaxDebtRatio = ${maxDebtRatio}`);
         await atmGovernanceProxyInstance.addGeneralSetting(
             toBytes32(web3, atmGovernanceSettingsNames.MaxDebtRatio),
@@ -49,15 +49,15 @@ module.exports = async function(
 
         for (const market of markets) {
             const {
-                borrowedToken, collateralToken,
+                lendingToken, collateralToken,
             } = market;
-            const borrowedTokenAddress = tokens[borrowedToken.toUpperCase()];
+            const lendingTokenAddress = tokens[lendingToken.toUpperCase()];
             const collateralTokenAddress = tokens[collateralToken.toUpperCase()];
-            assert(borrowedTokenAddress, `Token ${borrowedToken} is undefined.`);
+            assert(lendingTokenAddress, `Token ${lendingToken} is undefined.`);
             assert(collateralTokenAddress, `Token ${collateralToken} is undefined.`);
-            console.log(`Configuring market ${borrowedToken}/${collateralToken} for ATM ${name} / ${lastATMGovernanceProxyAddress}.`);
+            console.log(`Configuring market ${lendingToken}/${collateralToken} for ATM ${name} / ${lastATMGovernanceProxyAddress}.`);
             await atmSettings.setATMToMarket(
-                borrowedTokenAddress,
+                lendingTokenAddress,
                 collateralTokenAddress,
                 lastATMGovernanceProxyAddress,
                 txConfig,
