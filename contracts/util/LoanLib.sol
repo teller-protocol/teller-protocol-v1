@@ -157,7 +157,7 @@ library LoanLib {
      */
     function getInterestRatio(TellerCommon.Loan memory loan)
         public
-        view
+        pure
         returns (uint256)
     {
         return

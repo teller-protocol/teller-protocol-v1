@@ -3,10 +3,9 @@ pragma experimental ABIEncoderV2;
 
 // Libraries and common
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 import "../util/TellerCommon.sol";
 import "../util/NumbersLib.sol";
-import "../util/ERC20DetailedLib.sol";
 import "../util/LoanLib.sol";
 
 // Contracts
@@ -38,9 +37,9 @@ import "../interfaces/EscrowInterface.sol";
  */
 contract LoansBase is LoansInterface, Base {
     using SafeMath for uint256;
+    using SafeERC20 for ERC20Detailed;
     using NumbersLib for uint256;
     using NumbersLib for int256;
-    using ERC20DetailedLib for ERC20Detailed;
     using LoanLib for TellerCommon.Loan;
 
     /* State Variables */
@@ -120,7 +119,7 @@ contract LoansBase is LoansInterface, Base {
         require(maxLoanDuration >= loanRequest.duration, "DURATION_EXCEEDS_MAX_DURATION");
 
         bool exceedsMaxLoanAmount = _getSettings().assetSettings().exceedsMaxLoanAmount(
-            lendingPool.lendingToken(),
+            address(lendingPool.lendingToken()),
             loanRequest.amount
         );
         require(!exceedsMaxLoanAmount, "AMOUNT_EXCEEDS_MAX_AMOUNT");
@@ -142,14 +141,14 @@ contract LoansBase is LoansInterface, Base {
         @return Address of the lending token
      */
     function lendingToken() external view returns (address) {
-        return lendingPool.lendingToken();
+        return address(lendingPool.lendingToken());
     }
 
     /**
         @notice Returns the tToken in the lending pool
         @return Address of the tToken
      */
-    function tToken() external view returns (address) {
+    function tToken() external view returns (TToken) {
         return lendingPool.tToken();
     }
 
@@ -460,11 +459,15 @@ contract LoansBase is LoansInterface, Base {
         );
         require(liquidationInfo.liquidable, "DOESNT_NEED_LIQUIDATION");
 
+        // the liquidator pays the amount still owed on the loan
+        lendingPool.repay(
+            loans[loanID].principalOwed,
+            loans[loanID].interestOwed,
+            msg.sender
+        );
+
         loans[loanID].status = TellerCommon.LoanStatus.Closed;
         loans[loanID].liquidated = true;
-
-        // the liquidator pays x% of the collateral price
-        lendingPool.liquidationPayment(liquidationInfo.amountToLiquidate, msg.sender);
 
         // the caller gets the collateral from the loan
         _payOutLiquidator(loanID, liquidationInfo, msg.sender);
@@ -601,7 +604,7 @@ contract LoansBase is LoansInterface, Base {
      */
     function _isDebtRatioValid(uint256 newLoanAmount) internal view returns (bool) {
         address atmAddressForMarket = _getSettings().atmSettings().getATMForMarket(
-            lendingPool.lendingToken(),
+            address(lendingPool.lendingToken()),
             collateralToken
         );
         require(atmAddressForMarket != address(0x0), "ATM_NOT_FOUND_FOR_MARKET");

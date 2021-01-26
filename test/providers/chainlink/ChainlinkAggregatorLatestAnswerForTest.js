@@ -41,7 +41,7 @@ contract("ChainlinkAggregatorLatestAnswerForTest", function(accounts) {
     _2_eth_usd_oracle: [ 18, 18, 1.2, 8, toDecimals(1.2, 18), false, null ],
     _3_usdc_eth_oracle: [ 6, 18, 1.2, 18, toDecimals(1.2, 18), false, null ],
   }, function(
-    borrowedTokenDecimals,
+    lendingTokenDecimals,
     collateralTokenDecimals,
     chainlinkResponsePrice,
     chainlinkResponseDecimals,
@@ -51,7 +51,7 @@ contract("ChainlinkAggregatorLatestAnswerForTest", function(accounts) {
   ) {
     it(t("loans", "latestAnswerFor", "Should be able (or not) to get the latest answer for a market.", mustFail), async function() {
       try {
-        const borrowedToken = await mockERC20({ decimals: borrowedTokenDecimals }, { Mock, encoder: erc20InterfaceEncoder });
+        const lendingToken = await mockERC20({ decimals: lendingTokenDecimals }, { Mock, encoder: erc20InterfaceEncoder });
         const collateralToken = await mockERC20({ decimals: collateralTokenDecimals }, { Mock, encoder: erc20InterfaceEncoder });
         const chainlinkAggregator = await Mock.new();
         await chainlinkAggregator.givenMethodReturnUint(
@@ -64,21 +64,21 @@ contract("ChainlinkAggregatorLatestAnswerForTest", function(accounts) {
         );
 
         await instance.add(
-          borrowedToken.address,
+          lendingToken.address,
           collateralToken.address,
           chainlinkAggregator.address
         );
 
         // Invocation
         const latestPriceForResult = await instance.latestAnswerFor(
-          borrowedToken.address,
+          lendingToken.address,
           collateralToken.address,
         );
 
 
         // Assertions
         const aggregatorForResult = await instance.aggregatorFor(
-          borrowedToken.address,
+          lendingToken.address,
           collateralToken.address,
         );
 

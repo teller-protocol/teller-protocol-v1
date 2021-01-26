@@ -10,7 +10,14 @@ build
 .coverage_contracts
 ignored
 types/truffle-contracts
+<<<<<<< HEAD
 typechain
 cache
 artifacts
 .vscode
+=======
+circuits
+artifacts
+cache
+typechain
+>>>>>>> ceff853e5c57d2ee05e3542bd78943f96090a2a5

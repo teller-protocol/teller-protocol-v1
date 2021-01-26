@@ -9,7 +9,7 @@ const { liquidityMining } = require("../utils/events");
 const Mock = artifacts.require("./mock/util/Mock.sol");
 
 // Smart contracts
-const TDAI = artifacts.require("./base/TDAI.sol");
+const TDAI = artifacts.require("TDAIMock");
 const TLRToken = artifacts.require("./atm/TLRToken.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 const ATMLiquidityMining = artifacts.require("./atm/ATMLiquidityMining.sol");
@@ -41,7 +41,7 @@ contract("ATMLiquidityMiningStakeTest", function(accounts) {
         );
         await governance.initialize(settingsInstance.address, owner, INITIAL_REWARD);
         const tlr = await TLRToken.new();
-        tToken = await TDAI.new(settingsInstance.address);
+        tToken = await TDAI.new((await Mock.new()).address);
 
         instance = await ATMLiquidityMining.new();
         await instance.initialize(settingsInstance.address, governance.address, tlr.address, { from: owner });

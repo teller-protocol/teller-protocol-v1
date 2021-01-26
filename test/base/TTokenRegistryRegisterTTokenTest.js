@@ -9,7 +9,7 @@ const LogicVersionsRegistryEncoder = require('../utils/encoders/LogicVersionsReg
 const Mock = artifacts.require('./mock/util/Mock.sol');
 
 // Smart Contracts
-const TTokenRegistry = artifacts.require('./base/TTokenRegistry.sol');
+const TTokenRegistry = artifacts.require('./base/MarketRegistry.sol');
 const Settings = artifacts.require("./base/Settings.sol");
 
 contract('TTokenRegistryRegisterTTokenTest', function (accounts) {

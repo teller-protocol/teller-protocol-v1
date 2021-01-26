@@ -8,7 +8,7 @@ const LogicVersionsRegistryEncoder = require('../utils/encoders/LogicVersionsReg
 const Mock = artifacts.require('./mock/util/Mock.sol');
 
 // Smart Contracts
-const TTokenRegistry = artifacts.require('./base/TTokenRegistry.sol');
+const TTokenRegistry = artifacts.require('./base/MarketRegistry.sol');
 const Settings = artifacts.require("./base/Settings.sol");
 
 contract('TTokenRegistryInitializeTest', function (accounts) {
@@ -64,7 +64,7 @@ contract('TTokenRegistryInitializeTest', function (accounts) {
         expectedErrorMessage,
         mustFail
     ) {
-        it(t('user', 'initialize', 'Should (or should not) be able to initialize the TTokenRegistry contract.', mustFail), async function() {
+        it(t('user', 'initialize', 'Should (or should not) be able to initialize the MarketRegistry contract.', mustFail), async function() {
             // Setup
             
 

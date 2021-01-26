@@ -10,12 +10,12 @@ import "../base/TInitializable.sol";
 
 // Contracts
 import "../base/BaseUpgradeable.sol";
+import "../base/TToken.sol";
 
 // Interfaces
 import "./ATMGovernanceInterface.sol";
 import "./TLRTokenInterface.sol";
 import "./ATMLiquidityMiningInterface.sol";
-import "../interfaces/TTokenInterface.sol";
 
 // Libraries
 import "./ATMCommon.sol";
@@ -144,7 +144,7 @@ contract ATMLiquidityMining is
         require(amount > 0, "STAKING_ZERO_NOT_ALLOWED");
         // Checking tToken balance
         require(
-            TTokenInterface(tToken).balanceOf(msg.sender) >= amount,
+            TToken(tToken).balanceOf(msg.sender) >= amount,
             "INSUFFICIENT_TTOKENS_TO_STAKE"
         );
         // Update use stake info
@@ -155,7 +155,7 @@ contract ATMLiquidityMining is
         });
         // Transferring tTokens for staking
         require(
-            TTokenInterface(tToken).transferFrom(msg.sender, address(this), amount),
+            TToken(tToken).transferFrom(msg.sender, address(this), amount),
             "STAKE_TTOKEN_TRANSFER_FAILED"
         );
         userStakeInfo[msg.sender][tToken] = userInfo;
@@ -197,7 +197,7 @@ contract ATMLiquidityMining is
         userStakeInfo[msg.sender][tToken] = userInfo;
         // Send tTokens back to user
         require(
-            TTokenInterface(tToken).transfer(msg.sender, amount),
+            TToken(tToken).transfer(msg.sender, amount),
             "UNSTAKE_TTOKEN_TRANSFER_FAILED"
         );
 
@@ -214,6 +214,7 @@ contract ATMLiquidityMining is
     /**
         @notice Withdraws accrued TLR tokens by sending them to msg.sender owned account. This operation updates
          the user stake info for the sender (userStakeInfo[msg.sender]).
+        @param tToken the Teller token used to mine with.
         @param amount amount of accrued TLR Tokens to withdraw.
      */
     function withdrawTLR(address tToken, uint256 amount)
@@ -249,7 +250,7 @@ contract ATMLiquidityMining is
         @param tToken tToken address we want to obtain the balance.
      */
     function gettTokenTotalBalance(address tToken) external view returns (uint256) {
-        return TTokenInterface(tToken).balanceOf(address(this));
+        return TToken(tToken).balanceOf(address(this));
     }
 
     /**

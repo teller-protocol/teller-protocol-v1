@@ -1,41 +1,37 @@
 pragma solidity 0.5.17;
 
+// Utils
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
-import "../interfaces/TTokenInterface.sol";
+
+// Interfaces
 import "../interfaces/SettingsInterface.sol";
+import "../interfaces/LendingPoolInterface.sol";
+
+// Contracts
+import "./BaseUpgradeable.sol";
 
 /**
  * @notice This contract represents a wrapped token within the Teller protocol
  *
  * @author develop@teller.finance
  */
-contract TToken is TTokenInterface, ERC20Detailed, ERC20Mintable {
+contract TToken is BaseUpgradeable, ERC20Detailed, ERC20Mintable {
     using Address for address;
 
     /** State Variables */
 
-    SettingsInterface private settings;
-
-    /* Constructor */
     /**
-     * @param settingsAddress the setting address.
-     * @param name The name of the token
-     * @param symbol The symbol of the token
-     * @param decimals The amount of decimals for the token
+        @notice The token that is the underlying assets for this Teller token.
      */
-    constructor(
-        address settingsAddress,
-        string memory name,
-        string memory symbol,
-        uint8 decimals
-    ) public {
-        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_CONTRACT");
-        settings = SettingsInterface(settingsAddress);
-        ERC20Detailed.initialize(name, symbol, decimals);
-        ERC20Mintable.initialize(msg.sender);
-    }
+    ERC20Detailed public underlying;
+
+    /**
+        @notice The LendingPool linked to this Teller Token.
+     */
+    LendingPoolInterface public lendingPool;
+
 
     /* Public Functions */
     /**
@@ -49,13 +45,32 @@ contract TToken is TTokenInterface, ERC20Detailed, ERC20Mintable {
         return true;
     }
 
-    /** Internal Functions */
-
     /**
-        @notice Gets the current settings contract.
-        @return the setting contract instance.
+     * @param underlyingTokenAddress the token address this TToken is for.
+     * @param lendingPoolAddress the address of the lending pool this token is linked to. It is only used to add it as a minter.
+     * @param settingsAddress the settings address.
      */
-    function _settings() internal view returns (SettingsInterface) {
-        return settings;
+    function initialize(
+        address underlyingTokenAddress,
+        address lendingPoolAddress,
+        address settingsAddress
+    )
+        public
+        initializer
+    {
+        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
+        require(underlyingTokenAddress.isContract(), "UNDERLYING_MUST_BE_CONTRACT");
+        require(lendingPoolAddress.isContract(), "LP_MUST_BE_CONTRACT");
+
+        underlying = ERC20Detailed(underlyingTokenAddress);
+        lendingPool = LendingPoolInterface(lendingPoolAddress);
+        _setSettings(settingsAddress);
+
+        ERC20Detailed.initialize(
+            string(abi.encodePacked("Teller ", underlying.name())),
+            string(abi.encodePacked("t", underlying.symbol())),
+            underlying.decimals()
+        );
+        ERC20Mintable.initialize(lendingPoolAddress);
     }
 }
