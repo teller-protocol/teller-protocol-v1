@@ -25,7 +25,7 @@ contract('ATMSettingsSetATMToMarketTest', function (accounts) {
         await instance.initialize(settings.address);
     });
 
-    const newAtM = (borrowedTokenIndex, collateralTokenIndex, atmAddressIndex) => ({borrowedTokenIndex, collateralTokenIndex, atmAddressIndex});
+    const newAtM = (lendingTokenIndex, collateralTokenIndex, atmAddressIndex) => ({lendingTokenIndex, collateralTokenIndex, atmAddressIndex});
 
     withData({
         _1_basic: [[], newAtM(0, 1, 2), 0, true, false, undefined, false],
@@ -40,7 +40,7 @@ contract('ATMSettingsSetATMToMarketTest', function (accounts) {
             // Setup
             for (const previousATMIndex of previousATMToMarkets) {
                 await instance.setATMToMarket(
-                    mocks[previousATMIndex.borrowedTokenIndex],
+                    mocks[previousATMIndex.lendingTokenIndex],
                     mocks[previousATMIndex.collateralTokenIndex],
                     mocks[previousATMIndex.atmAddressIndex],
                     { from: owner }
@@ -55,13 +55,13 @@ contract('ATMSettingsSetATMToMarketTest', function (accounts) {
                 );
             }
             await settings.givenMethodReturnBool(settingsInterfaceEncoder.encodeIsPaused(), encodeIsPaused);
-            const borrowedToken = atmToMarket.borrowedTokenIndex === 99 ? accounts[0] : mocks[atmToMarket.borrowedTokenIndex];
+            const lendingToken = atmToMarket.lendingTokenIndex === 99 ? accounts[0] : mocks[atmToMarket.lendingTokenIndex];
             const collateralToken = atmToMarket.collateralTokenIndex === 99 ? accounts[1] : mocks[atmToMarket.collateralTokenIndex];
 
             try {
                 // Invocation
                 const result = await instance.setATMToMarket(
-                    borrowedToken,
+                    lendingToken,
                     collateralToken,
                     atmAddress,
                     { from: sender }
@@ -71,18 +71,18 @@ contract('ATMSettingsSetATMToMarketTest', function (accounts) {
                 assert(!mustFail, 'It should have failed because data is invalid.');
 
                 const atmAddressResult = await instance.getATMForMarket(
-                    borrowedToken,
+                    lendingToken,
                     collateralToken
                 );
                 assert.equal(atmAddress, atmAddressResult);
 
                 const isATMForMarketResult = await instance.isATMForMarket(
-                    borrowedToken, collateralToken, atmAddress);
+                    lendingToken, collateralToken, atmAddress);
                 assert.equal(isATMForMarketResult, true);
 
                 atmSettings
                     .marketToAtmSet(result)
-                    .emitted(borrowedToken, collateralToken, atmAddress, sender);
+                    .emitted(lendingToken, collateralToken, atmAddress, sender);
 
             } catch (error) {
                 // Assertions

@@ -11,7 +11,7 @@ const Mock = artifacts.require("./mock/util/Mock.sol");
 const TLRToken = artifacts.require("./atm/TLRToken.sol");
 const ATMGovernance = artifacts.require("./atm/ATMGovernance.sol");
 const ATMLiquidityMining = artifacts.require("./atm/ATMLiquidityMining.sol");
-const TDAI = artifacts.require("./base/TDAI.sol");
+const TDAI = artifacts.require("TDAIMock");
 const IATMSettingsEncoder = require('../utils/encoders/IATMSettingsEncoder');
 const SettingsInterfaceEncoder = require('../utils/encoders/SettingsInterfaceEncoder');
 
@@ -41,7 +41,7 @@ contract("ATMLiquidityMiningCalculateAccruedTLRTest", function(accounts) {
         governance = await ATMGovernance.new();
         await governance.initialize(settings.address, owner, INITIAL_REWARD);
         const tlr = await TLRToken.new();   
-        tToken = await TDAI.new(settings.address);
+        tToken = await TDAI.new((await Mock.new()).address);
         instance = await ATMLiquidityMining.new();
         await instance.initialize(settings.address, governance.address, tlr.address, { from: owner });
     });

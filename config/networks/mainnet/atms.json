@@ -12,7 +12,7 @@
     "maxDebtRatio": 5000,
     "markets": [
       {
-        "borrowedToken": "DAI",
+        "lendingToken": "DAI",
         "collateralToken": "ETH"
       },
       {

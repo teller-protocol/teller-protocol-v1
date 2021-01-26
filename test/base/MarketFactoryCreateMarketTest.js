@@ -69,7 +69,7 @@ contract("MarketFactoryCreateMarketTest", function(accounts) {
     senderIndex,
     pausePlatform,
     tTokenIndex,
-    borrowedTokenIndex,
+    lendingTokenIndex,
     collateralTokenIndex,
     cTokenAddressResponseIndex,
     mustFail,
@@ -79,7 +79,7 @@ contract("MarketFactoryCreateMarketTest", function(accounts) {
       // Setup
       const sender = accounts[senderIndex];
       const tTokenAddress = getInstance(mocks, tTokenIndex, 2);
-      const borrowedTokenAddress = getInstance(mocks, borrowedTokenIndex, 3);
+      const lendingTokenAddress = getInstance(mocks, lendingTokenIndex, 3);
       const collateralTokenAddress = collateralTokenIndex === 100 ? ETH_ADDRESS : getInstance(mocks, collateralTokenIndex, 4);
 
       let cTokenAddressResponse = getInstance(mocks, cTokenAddressResponseIndex, 5);
@@ -87,7 +87,7 @@ contract("MarketFactoryCreateMarketTest", function(accounts) {
         const cTokenInstance = await Mock.at(cTokenAddressResponse)
         await cTokenInstance.givenMethodReturnAddress(
           cTokenEncoder.encodeUnderlying(),
-          borrowedTokenAddress
+          lendingTokenAddress
         )
       }
 
@@ -95,9 +95,9 @@ contract("MarketFactoryCreateMarketTest", function(accounts) {
         logicVersionsRegistryEncoder.encodeHasLogicVersion(),
         true
       );
-      if (borrowedTokenIndex !== 99 && borrowedTokenIndex !== -1) {
+      if (lendingTokenIndex !== 99 && lendingTokenIndex !== -1) {
         await settingsInstance.createAssetSettings(
-          borrowedTokenAddress,
+          lendingTokenAddress,
           cTokenAddressResponse,
           "10000",
           { from: owner }
@@ -111,7 +111,7 @@ contract("MarketFactoryCreateMarketTest", function(accounts) {
         // Invocation
         const result = await instance.createMarket(
           tTokenAddress,
-          borrowedTokenAddress,
+          lendingTokenAddress,
           collateralTokenAddress,
           { from: sender }
         );
@@ -119,14 +119,14 @@ contract("MarketFactoryCreateMarketTest", function(accounts) {
         assert(!mustFail, "It should have failed because data is invalid.");
         assert(result);
 
-        const newMarket = await instance.getMarket(borrowedTokenAddress, collateralTokenAddress);
+        const newMarket = await instance.getMarket(lendingTokenAddress, collateralTokenAddress);
 
         assert(newMarket.exists);
         marketFactory
           .newMarketCreated(result)
           .emitted(
             sender,
-            borrowedTokenAddress,
+            lendingTokenAddress,
             collateralTokenAddress,
             newMarket.loans,
             newMarket.lendingPool,
