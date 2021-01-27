@@ -599,7 +599,17 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
         uint256 loanID,
         uint256 amount,
         address payable recipient
-    ) internal;
+    ) internal {
+        totalCollateral = totalCollateral.sub(amount);
+        loans[loanID].collateral = loans[loanID].collateral.sub(amount);
+        if (collateralToken == _getSettings().ETH_ADDRESS()) {
+            // Ether collateral
+            recipient.transfer(amount);
+        } else {
+            // Token collateral
+            _collateralTokenTransfer(recipient, amount);
+        }
+    }
 
     /**
         @notice Initializes the current contract instance setting the required parameters.
@@ -632,6 +642,15 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
         @param amount The amount of collateral to be paid
      */
     function _payInCollateral(uint256 loanID, uint256 amount) internal {
+        if (collateralToken == _getSettings().ETH_ADDRESS()) {
+            // Ether collateral
+            require(msg.value == amount, "INCORRECT_ETH_AMOUNT");
+        } else {
+            // Token collateral
+            require(msg.value == 0, "TOKEN_LOANS_VALUE_MUST_BE_ZERO");
+            _collateralTokenTransferFrom(msg.sender, amount);
+        }
+
         totalCollateral = totalCollateral.add(amount);
         loans[loanID].collateral = loans[loanID].collateral.add(amount);
         loans[loanID].lastCollateralIn = now;
@@ -672,5 +691,23 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
      */
     function _createEscrow(uint256 loanID) internal returns (address) {
         return settings.escrowFactory().createEscrow(address(this), loanID);
+    }
+
+    /**
+        @notice It transfers an amount of collateral tokens to a specific address.
+        @param recipient The address which will receive the tokens.
+        @param amount The amount of tokens to transfer.
+     */
+    function _collateralTokenTransfer(address recipient, uint256 amount) internal {
+        ERC20Detailed(collateralToken).safeTransfer(recipient, amount);
+    }
+
+    /**
+        @notice It transfers an amount of collateral tokens from an address to this contract.
+        @param from The address where the tokens will transfer from.
+        @param amount The amount to be transferred.
+     */
+    function _collateralTokenTransferFrom(address from, uint256 amount) internal {
+        ERC20Detailed(collateralToken).safeTransferFrom(from, address(this), amount);
     }
 }
