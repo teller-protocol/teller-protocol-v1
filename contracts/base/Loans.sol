@@ -290,7 +290,7 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
         uint256 amount,
         uint256 loanID,
         int256 neededInCollateralTokens
-    ) private nonReentrant() {
+    ) private nonReentrant {
         if (loans[loanID].status == TellerCommon.LoanStatus.Active) {
             if (neededInCollateralTokens > 0) {
                 // Withdrawal amount holds the amount of excess collateral in the loan
@@ -357,7 +357,7 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
         isInitialized
         whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
-        nonReentrant()
+        nonReentrant
         isBorrower(loans[loanID].loanTerms.borrower)
         onlyAuthorized
     {
@@ -558,7 +558,7 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
         @dev See Escrow.claimTokens for more info.
         @param loanID The ID of the loan which is being liquidated
         @param liquidationInfo The Teller common liquidation struct that holds all the relevant liquidation info,
-        such as the liquidation info
+            such as the liquidation info
         @param recipient The address of the liquidator where the liquidation reward will be sent to
     */
     function _payOutLiquidator(
@@ -602,7 +602,7 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
     ) internal {
         totalCollateral = totalCollateral.sub(amount);
         loans[loanID].collateral = loans[loanID].collateral.sub(amount);
-        if (collateralToken == _getSettings().ETH_ADDRESS()) {
+        if (collateralToken == settings.ETH_ADDRESS()) {
             // Ether collateral
             recipient.transfer(amount);
         } else {
@@ -620,7 +620,8 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
     function _initialize(
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
-        address settingsAddress
+        address settingsAddress,
+        address collateralTokenAddress
     ) internal isNotInitialized {
         lendingPoolAddress.requireNotEmpty("PROVIDE_LENDING_POOL_ADDRESS");
         loanTermsConsensusAddress.requireNotEmpty(
@@ -634,6 +635,8 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
         loanTermsConsensus = LoanTermsConsensusInterface(
             loanTermsConsensusAddress
         );
+
+        collateralToken = collateralTokenAddress;
     }
 
     /**
@@ -642,7 +645,7 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
         @param amount The amount of collateral to be paid
      */
     function _payInCollateral(uint256 loanID, uint256 amount) internal {
-        if (collateralToken == _getSettings().ETH_ADDRESS()) {
+        if (collateralToken == settings.ETH_ADDRESS()) {
             // Ether collateral
             require(msg.value == amount, "INCORRECT_ETH_AMOUNT");
         } else {
@@ -698,7 +701,9 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
         @param recipient The address which will receive the tokens.
         @param amount The amount of tokens to transfer.
      */
-    function _collateralTokenTransfer(address recipient, uint256 amount) internal {
+    function _collateralTokenTransfer(address recipient, uint256 amount)
+        internal
+    {
         ERC20Detailed(collateralToken).safeTransfer(recipient, amount);
     }
 
@@ -707,7 +712,13 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
         @param from The address where the tokens will transfer from.
         @param amount The amount to be transferred.
      */
-    function _collateralTokenTransferFrom(address from, uint256 amount) internal {
-        ERC20Detailed(collateralToken).safeTransferFrom(from, address(this), amount);
+    function _collateralTokenTransferFrom(address from, uint256 amount)
+        internal
+    {
+        ERC20Detailed(collateralToken).safeTransferFrom(
+            from,
+            address(this),
+            amount
+        );
     }
 }
