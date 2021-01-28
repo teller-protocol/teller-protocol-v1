@@ -210,9 +210,9 @@ module.exports = async function(deployer, network, accounts) {
     console.log(`Creating Markets...`);
     const marketDefinitions = [
       { lendingTokenName: 'DAI', collateralTokenName: 'ETH' },
-      { lendingTokenName: 'DAI', collateralTokenName: 'LINK' },
-      { lendingTokenName: 'USDC', collateralTokenName: 'ETH' },
-      { lendingTokenName: 'USDC', collateralTokenName: 'LINK' },
+      // { lendingTokenName: 'DAI', collateralTokenName: 'LINK' },
+      // { lendingTokenName: 'USDC', collateralTokenName: 'ETH' },
+      // { lendingTokenName: 'USDC', collateralTokenName: 'LINK' },
     ];
     await createMarkets(
       marketDefinitions,
