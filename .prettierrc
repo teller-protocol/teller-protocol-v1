@@ -4,7 +4,7 @@
   "useTabs": false,
   "singleQuote": true,
   "bracketSpacing": true,
-  "semi": true,
+  "semi": false,
   "overrides": [
     {
       "files": "*.sol",
@@ -12,6 +12,12 @@
         "tabWidth": 4,
         "singleQuote": false,
         "explicitTypes": "always"
+      }
+    },
+    {
+      "files": "*.ts",
+      "options": {
+        "printWidth": 130
       }
     }
   ]

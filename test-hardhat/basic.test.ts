@@ -1,38 +1,26 @@
-import { assert } from 'chai';
-import { deployments } from 'hardhat';
-import { EscrowFactory } from '../typechain';
+import { assert } from 'chai'
+import { deployments } from 'hardhat'
+import { EscrowFactory, LoanTermsConsensus, Settings } from '../typechain'
 
 export const setup = deployments.createFixture(async ({ deployments, getNamedAccounts, ethers }, options) => {
-  // ensure to start from a fresh deployments
-  await deployments.fixture();
-  const { deployer, user1 } = await getNamedAccounts();
-  const escrowFactory = (await ethers.getContract('EscrowFactory')) as EscrowFactory;
-
-  const addy = escrowFactory.address;
-
-  console.log(addy);
+  // ensure to start from fresh test-tagged deployment functions execution
+  await deployments.fixture(['test'])
+  const settings_ProxyDeployment = await deployments.get('Settings_Proxy')
+  const { deployer, user1 } = await getNamedAccounts()
+  const settings = (await ethers.getContractAt('Settings', settings_ProxyDeployment.address)) as Settings
 
   return {
-    escrowFactory: {
-      address: addy,
-    },
+    settings,
     accounts: {
       deployer,
-      user1,
     },
-  };
-});
+  }
+})
 
 describe('Token', () => {
   it('testing 1 2 3', async function () {
-    const {
-      escrowFactory: { address: addy },
-      accounts,
-    } = await setup();
-
-    console.log(addy, accounts);
-
-    assert(typeof addy === 'string' && addy.length === 42);
-    assert(Object.keys(accounts).length > 0);
-  });
-});
+    const { accounts, settings } = await setup()
+    const result = await settings.isPaused()
+    assert(result == false)
+  })
+})

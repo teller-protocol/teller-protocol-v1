@@ -1,45 +1,37 @@
-import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { DeployFunction } from 'hardhat-deploy/types';
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
+import { DeployFunction } from 'hardhat-deploy/types'
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
     deployments: { execute, log, read, deploy },
     getNamedAccounts,
     ethers,
-  } = hre;
-  const { deployer, admin } = await getNamedAccounts();
+  } = hre
+  const { deployer } = await getNamedAccounts()
 
-  // Deploy LoanLib to link it to EtherCollateralLoans and TokenCollateralLoans
-  const loanLib = await deploy('LoanLib', { from: deployer });
+  // Contracts without proxy
+  await deploy('TLRToken', { from: deployer })
+  const loanLib = await deploy('LoanLib', { from: deployer })
+  await deploy('TokenCollateralLoans', { from: deployer, libraries: { LoanLib: loanLib.address } })
+  await deploy('EtherCollateralLoans', { from: deployer, libraries: { LoanLib: loanLib.address } })
 
-  await deploy('TokenCollateralLoans', {
-    from: deployer,
-    libraries: {
-      LoanLib: loanLib.address,
-    },
-  });
-
-  await deploy('EtherCollateralLoans', {
-    from: deployer,
-    libraries: {
-      LoanLib: loanLib.address,
-    },
-  });
+  await deploy('Settings_Logic', { from: deployer, contract: 'Settings' })
+  await deploy('LogicVersionsRegistry_Logic', { from: deployer, contract: 'LogicVersionsRegistry' })
 
   // await deploy('TToken')
-  await deploy('LendingPool', { from: deployer });
-  await deploy('LoanTermsConsensus', { from: deployer });
-  await deploy('Escrow', { from: deployer });
-  await deploy('ChainlinkAggregator', { from: deployer });
-  await deploy('ATMGovernance', { from: deployer });
-  await deploy('ATMLiquidityMining', { from: deployer });
-  await deploy('TLRToken', { from: deployer });
-  await deploy('Uniswap', { from: deployer });
-  await deploy('Compound', { from: deployer });
-  await deploy('EscrowFactory', { from: deployer });
-  await deploy('ATMSettings', { from: deployer });
-  await deploy('ATMFactory', { from: deployer });
-  await deploy('MarketFactory', { from: deployer });
-};
+  await deploy('LendingPool_Logic', { from: deployer, contract: 'LendingPool' })
+  await deploy('LoanTermsConsensus_Logic', { from: deployer, contract: 'LoanTermsConsensus' })
+  await deploy('Escrow_Logic', { from: deployer, contract: 'Escrow' })
+  await deploy('ChainlinkAggregator_Logic', { from: deployer, contract: 'ChainlinkAggregator' })
+  await deploy('ATMGovernance_Logic', { from: deployer, contract: 'ATMGovernance' })
+  await deploy('ATMLiquidityMining_Logic', { from: deployer, contract: 'ATMLiquidityMining' })
+  await deploy('Uniswap_Logic', { from: deployer, contract: 'Uniswap' })
+  await deploy('Compound_Logic', { from: deployer, contract: 'Compound' })
+  await deploy('EscrowFactory_Logic', { from: deployer, contract: 'EscrowFactory' })
+  await deploy('ATMSettings_Logic', { from: deployer, contract: 'ATMSettings' })
+  await deploy('ATMFactory_Logic', { from: deployer, contract: 'ATMFactory' })
+  await deploy('MarketFactory_Logic', { from: deployer, contract: 'MarketFactory' })
+}
 
-export default func;
+export default func
+func.tags = ['test', 'live']

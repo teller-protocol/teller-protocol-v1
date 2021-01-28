@@ -1,0 +1,15 @@
+{
+  "teller": {
+    "name": "Teller",
+    "token": {
+      "name": "Teller Token",
+      "symbol": "TLR",
+      "decimals": 18,
+      "maxCap": 100000000000,
+      "maxVestingPerWallet": 50
+    },
+    "tlrInitialReward": 0,
+    "maxDebtRatio": 5000,
+    "markets": []
+  }
+}

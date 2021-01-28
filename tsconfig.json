@@ -5,7 +5,7 @@
     "allowSyntheticDefaultImports": true,
     "module": "commonjs",
     "resolveJsonModule": true,
-    "target": "ES6",
+    "target": "ESNext",
     "allowJs": true,
     "strict": true,
     "typeRoots": ["./types", "./typechain"]
