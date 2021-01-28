@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 // Libraries and common
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
+import "../providers/weth/IWETH.sol";
 import "../util/TellerCommon.sol";
 import "../util/NumbersLib.sol";
 import "../util/LoanLib.sol";
@@ -604,6 +605,7 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
         loans[loanID].collateral = loans[loanID].collateral.sub(amount);
         if (collateralToken == settings.ETH_ADDRESS()) {
             // Ether collateral
+            IWETH(settings.WETH_ADDRESS()).withdraw(amount);
             recipient.transfer(amount);
         } else {
             // Token collateral
@@ -648,6 +650,7 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
         if (collateralToken == settings.ETH_ADDRESS()) {
             // Ether collateral
             require(msg.value == amount, "INCORRECT_ETH_AMOUNT");
+            IWETH(settings.WETH_ADDRESS()).deposit(amount);
         } else {
             // Token collateral
             require(msg.value == 0, "TOKEN_LOANS_VALUE_MUST_BE_ZERO");
