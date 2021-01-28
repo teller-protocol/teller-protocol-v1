@@ -607,7 +607,7 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
             recipient.transfer(amount);
         } else {
             // Token collateral
-            _collateralTokenTransfer(recipient, amount);
+            ERC20Detailed(collateralToken).safeTransfer(recipient, amount);
         }
     }
 
@@ -651,7 +651,7 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
         } else {
             // Token collateral
             require(msg.value == 0, "TOKEN_LOANS_VALUE_MUST_BE_ZERO");
-            _collateralTokenTransferFrom(msg.sender, amount);
+            ERC20Detailed(collateralToken).safeTransferFrom(msg.sender, address(this), amount);
         }
 
         totalCollateral = totalCollateral.add(amount);
@@ -694,31 +694,5 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
      */
     function _createEscrow(uint256 loanID) internal returns (address) {
         return settings.escrowFactory().createEscrow(address(this), loanID);
-    }
-
-    /**
-        @notice It transfers an amount of collateral tokens to a specific address.
-        @param recipient The address which will receive the tokens.
-        @param amount The amount of tokens to transfer.
-     */
-    function _collateralTokenTransfer(address recipient, uint256 amount)
-        internal
-    {
-        ERC20Detailed(collateralToken).safeTransfer(recipient, amount);
-    }
-
-    /**
-        @notice It transfers an amount of collateral tokens from an address to this contract.
-        @param from The address where the tokens will transfer from.
-        @param amount The amount to be transferred.
-     */
-    function _collateralTokenTransferFrom(address from, uint256 amount)
-        internal
-    {
-        ERC20Detailed(collateralToken).safeTransferFrom(
-            from,
-            address(this),
-            amount
-        );
     }
 }
