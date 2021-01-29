@@ -250,7 +250,7 @@ contract LendingPool is Base, LendingPoolInterface {
         @return total interest earned by lender.
      */
     function getLenderInterestEarned(address lender) external view returns (uint256) {
-        uint256 currentLenderInterest = _calculateCurrentLenderInterestEarned(msg.sender);
+        uint256 currentLenderInterest = _calculateCurrentLenderInterestEarned(lender);
         return _totalInterestEarnedLender[lender].add(currentLenderInterest);
     }
 
@@ -259,7 +259,7 @@ contract LendingPool is Base, LendingPoolInterface {
         @return claimable interest value.
      */
     function getClaimableInterestEarned(address lender) external view returns (uint256) {
-        return _calculateCurrentLenderInterestEarned(msg.sender);
+        return _calculateCurrentLenderInterestEarned(lender);
     }
 
     /**
