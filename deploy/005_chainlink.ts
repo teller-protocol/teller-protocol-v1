@@ -14,6 +14,7 @@ const func: DeployFunction = async function ({ network, deployments: { get }, et
     chainlinkAggregator_ProxyDeployment.address
   )) as ChainlinkAggregator
 
+  return
   for (const [_, { address, baseTokenName, quoteTokenName }] of Object.entries(env.networkConfig.chainlink)) {
     const baseTokenAddress = tokens[baseTokenName]
     const quoteTokenAddress = tokens[quoteTokenName]

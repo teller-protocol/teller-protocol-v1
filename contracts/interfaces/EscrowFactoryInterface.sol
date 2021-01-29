@@ -52,9 +52,8 @@ interface EscrowFactoryInterface {
 
     /**
         @notice It initializes this escrow contract factory instance.
-        @param settingsAddress the settings contract address.
      */
-    function initialize(address settingsAddress) external;
+    function initialize() external;
 
     /**
         @notice This event is emitted when a new Escrow contract is created.

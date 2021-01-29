@@ -13,17 +13,21 @@ import "@openzeppelin/contracts-ethereum-package/contracts/lifecycle/Pausable.so
 import "../util/SettingsConsts.sol";
 import "./BaseUpgradeable.sol";
 import "./TInitializable.sol";
+import "./UpgradeableProxy.sol";
 import "./DynamicProxy.sol";
 import "./AssetSettings.sol";
+import "./LogicVersionsRegistry.sol";
+import "./EscrowFactory.sol";
+import "../providers/chainlink/ChainlinkAggregator.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
 import "../interfaces/EscrowFactoryInterface.sol";
-import "../interfaces/InterestValidatorInterface.sol";
 import "../providers/chainlink/IChainlinkAggregator.sol";
 import "../providers/compound/CErc20Interface.sol";
 import "../settings/IATMSettings.sol";
 import "../interfaces/AssetSettingsInterface.sol";
+import "../interfaces/MarketFactoryInterface.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -56,21 +60,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @dev It is set by the initialize function.
      */
   SettingsConsts public consts;
-
-  /**
-        @notice The asset setting name for the maximum loan amount settings.
-     */
-  bytes32 public constant MAX_LOAN_AMOUNT_ASSET_SETTING = keccak256("MaxLoanAmount");
-
-  /**
-        @notice The asset setting name for cToken address settings.
-     */
-  bytes32 public constant CTOKEN_ADDRESS_ASSET_SETTING = keccak256("CTokenAddress");
-
-  /**
-        @notice The logic name for the Asset setttings contract instance
-     */
-  bytes32 public constant ASSET_SETTINGS_LOGIC_NAME = keccak256("AssetSettings");
 
   /**
         @notice It defines the constant address to represent ETHER.
@@ -144,9 +133,9 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
   IChainlinkAggregator public chainlinkAggregator;
 
   /**
-        @notice The current interest validator.
+        @notice It is the global instance of the MarketFactory contract.
      */
-  InterestValidatorInterface public interestValidator;
+  MarketFactoryInterface public marketFactory;
 
   /**
         @notice The current ATM settings.
@@ -392,41 +381,20 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
 
   /**
         @notice It initializes this settings contract instance.
-        @param escrowFactoryAddress the initial escrow factory address.
-        @param versionsRegistryAddress the initial versions registry address.
-        @param chainlinkAggregatorAddress the initial pair aggregator registry address.
-        @param interestValidatorAddress the initial interest validator address.
-        @param atmSettingsAddress the initial ATM settings address.
+        @param versionsRegistryLogicAddress LogicVersionsRegistry logic address.
         @param wethTokenAddress canonical WETH token address.
         @param cethTokenAddress compound CETH token address.
      */
   function initialize(
-    address escrowFactoryAddress,
-    address versionsRegistryAddress,
-    address chainlinkAggregatorAddress,
-    address interestValidatorAddress,
-    address atmSettingsAddress,
+    address versionsRegistryLogicAddress,
     address wethTokenAddress,
     address cethTokenAddress
   ) external isNotInitialized() {
-    require(escrowFactoryAddress.isContract(), "ESCROW_FACTORY_MUST_BE_CONTRACT");
-    require(versionsRegistryAddress.isContract(), "VERS_REGISTRY_MUST_BE_CONTRACT");
-    require(chainlinkAggregatorAddress.isContract(), "AGGREGATOR_MUST_BE_CONTRACT");
-    require(
-      interestValidatorAddress.isEmpty() || interestValidatorAddress.isContract(),
-      "INTEREST_VAL_MUST_BE_CONTRACT"
-    );
-    require(atmSettingsAddress.isContract(), "ATM_SETTINGS_MUST_BE_CONTRACT");
     require(cethTokenAddress.isContract(), "CETH_ADDRESS_MUST_BE_CONTRACT");
 
     Pausable.initialize(msg.sender);
     TInitializable._initialize();
 
-    escrowFactory = EscrowFactoryInterface(escrowFactoryAddress);
-    versionsRegistry = LogicVersionsRegistryInterface(versionsRegistryAddress);
-    chainlinkAggregator = IChainlinkAggregator(chainlinkAggregatorAddress);
-    interestValidator = InterestValidatorInterface(interestValidatorAddress);
-    atmSettings = IATMSettings(atmSettingsAddress);
     WETH_ADDRESS = wethTokenAddress;
     CETH_ADDRESS = cethTokenAddress;
 
@@ -434,20 +402,35 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
 
     _setSettings(address(this));
 
-    assetSettings = new AssetSettings();
-    versionsRegistry.createLogicVersion(
-      ASSET_SETTINGS_LOGIC_NAME,
-      address(assetSettings)
-    );
-    DynamicProxy assetSettingsProxy = new DynamicProxy(
-      address(this),
-      ASSET_SETTINGS_LOGIC_NAME
-    );
+    UpgradeableProxy logicVersionsRegistryProxy = new UpgradeableProxy();
+    logicVersionsRegistryProxy.initializeProxy(address(this), versionsRegistryLogicAddress);
+    versionsRegistry = LogicVersionsRegistryInterface(address(logicVersionsRegistryProxy));
 
-    assetSettings = AssetSettingsInterface(address(assetSettingsProxy));
+    assetSettings = AssetSettingsInterface(
+      _deployDynamicProxy(versionsRegistry.consts().ASSET_SETTINGS_LOGIC_NAME())
+    );
+    chainlinkAggregator = IChainlinkAggregator(
+      _deployDynamicProxy(versionsRegistry.consts().CHAINLINK_PAIR_AGGREGATOR_LOGIC_NAME())
+    );
+    escrowFactory = EscrowFactoryInterface(
+      _deployDynamicProxy(versionsRegistry.consts().ESCROW_FACTORY_LOGIC_NAME())
+    );
+    marketFactory = MarketFactoryInterface(
+      _deployDynamicProxy(versionsRegistry.consts().MARKET_FACTORY_LOGIC_NAME())
+    );
+  }
+
+  function postLogicVersionsRegistered() external {
+    chainlinkAggregator.initialize();
+    escrowFactory.initialize();
+    marketFactory.initialize();
   }
 
   /** Internal functions */
+
+  function _deployDynamicProxy(bytes32 logicName) internal returns (address) {
+    return address(new DynamicProxy(address(this), logicName));
+  }
 
   /**
         @notice It gets the platform setting for a given setting name.

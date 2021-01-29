@@ -34,7 +34,12 @@ export default <HardhatUserConfig>{
     },
   },
   networks: {
-    hardhat: {},
+    hardhat: {
+      forking: {
+        url: `https://eth-mainnet.alchemyapi.io/v2/QmTWJK5MH1mmVSJdJ6VJFiX1Qfk6S36J`,
+        blockNumber: 11752861
+      },
+    },
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${infuraKeyValue}`,
       chainId: 4,
