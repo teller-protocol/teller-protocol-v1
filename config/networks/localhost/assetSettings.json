@@ -1,0 +1,17 @@
+{
+  "DAI": {
+    "cToken": "CDAI",
+    "maxLoanAmount": 1000,
+    "maxTVLAmount": 100000
+  },
+  "USDC": {
+    "cToken": "CUSDC",
+    "maxLoanAmount": 1000,
+    "maxTVLAmount": 100000
+  },
+  "ETH": {
+    "cToken": "CETH",
+    "maxLoanAmount": 0,
+    "maxTVLAmount": 0
+  }
+}

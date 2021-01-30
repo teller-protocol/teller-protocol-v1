@@ -8,13 +8,12 @@ const func: DeployFunction = async function ({ network, deployments: { get }, et
 
   const { tokens } = env.networkConfig
 
-  const chainlinkAggregator_ProxyDeployment = await get('ChainlinkAggregator_Proxy')
+  const chainlinkAggregator_ProxyDeployment = await get('ChainlinkAggregator')
   const chainlinkAggregator = (await ethers.getContractAt(
     'ChainlinkAggregator',
     chainlinkAggregator_ProxyDeployment.address
   )) as ChainlinkAggregator
 
-  return
   for (const [_, { address, baseTokenName, quoteTokenName }] of Object.entries(env.networkConfig.chainlink)) {
     const baseTokenAddress = tokens[baseTokenName]
     const quoteTokenAddress = tokens[quoteTokenName]
@@ -23,4 +22,4 @@ const func: DeployFunction = async function ({ network, deployments: { get }, et
   }
 }
 export default func
-func.tags = ['test', 'live']
+func.tags = ['test', 'live', 'chainlink-aggregator']

@@ -16,7 +16,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const env = envConfig(network.name) as EnvConfig
 
-  const settings_ProxyDeployment = await get('Settings_Proxy')
+  const settings_ProxyDeployment = await get('Settings')
   const settings = (await ethers.getContractAt('Settings', settings_ProxyDeployment.address)) as Settings
 
   for (const [platformSettingName, { value, min, max, processOnDeployment }] of Object.entries(
@@ -26,4 +26,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   }
 }
 export default func
-func.tags = ['test', 'live']
+func.tags = ['test', 'live', 'platform-settings']
+func.dependencies = ['settings']

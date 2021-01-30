@@ -1,7 +1,7 @@
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { logicNames } from '../test/utils/logicNames'
-import { Compound, EscrowFactory, Uniswap } from '../typechain'
+import { Compound, EscrowFactory, Settings, Uniswap } from '../typechain'
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
@@ -11,21 +11,22 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   } = hre
   const { deployer } = await getNamedAccounts()
 
-  const settings_ProxyDeployment = await get('Settings_Proxy')
-  const escrowFactory_ProxyDeployment = await get('EscrowFactory_Proxy')
+  const settings_ProxyDeployment = await get('Settings')
 
-  const uniswap_ProxyDeployment = await deploy('Uniswap_Proxy', {
+  const settings = (await ethers.getContractAt('Settings', settings_ProxyDeployment.address)) as Settings
+
+  const uniswap_ProxyDeployment = await deploy('Uniswap', {
     from: deployer,
     contract: 'DynamicProxy',
     args: [settings_ProxyDeployment.address, logicNames.Uniswap],
   })
-  const compound_ProxyDeployment = await deploy('Compound_Proxy', {
+  const compound_ProxyDeployment = await deploy('Compound', {
     from: deployer,
     contract: 'DynamicProxy',
     args: [settings_ProxyDeployment.address, logicNames.Compound],
   })
 
-  const escrowFactory = (await ethers.getContractAt('EscrowFactory', escrowFactory_ProxyDeployment.address)) as EscrowFactory
+  const escrowFactory = (await ethers.getContractAt('EscrowFactory', await settings.escrowFactory())) as EscrowFactory
   const uniswap = (await ethers.getContractAt('Uniswap', uniswap_ProxyDeployment.address)) as Uniswap
   const compound = (await ethers.getContractAt('Compound', compound_ProxyDeployment.address)) as Compound
 

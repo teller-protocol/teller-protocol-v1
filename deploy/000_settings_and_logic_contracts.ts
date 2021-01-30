@@ -1,9 +1,10 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { LogicVersionsRegistry, Settings, UpgradeableProxy } from "../typechain";
+import { LogicVersionsRegistry, Settings, UpgradeableProxy } from '../typechain'
 import envConfig from '../config'
-import { logicNames } from "../test/utils/logicNames";
+import { logicNames } from '../test/utils/logicNames'
+import { EnvConfig } from '../test/types'
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
@@ -13,82 +14,88 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     ethers,
   } = hre
   const { deployer } = await getNamedAccounts()
-  const env = envConfig(network.name)
+  const env = envConfig(network.name) as EnvConfig
+  console.log(network.name, env.networkConfig.compound.CETH)
 
   // Contracts without proxy
   const loanLib = await deploy('LoanLib', { from: deployer })
   const { address: tokenCollateralLoansLogicAddress } = await deploy('TokenCollateralLoans', {
     from: deployer,
-    libraries: { LoanLib: loanLib.address }
+    libraries: { LoanLib: loanLib.address },
   })
   const { address: etherCollateralLoansLogicAddress } = await deploy('EtherCollateralLoans', {
     from: deployer,
-    libraries: { LoanLib: loanLib.address }
+    libraries: { LoanLib: loanLib.address },
   })
 
   const { address: logicVersionsRegistryLogicAddress } = await deploy('LogicVersionsRegistry_Logic', {
     from: deployer,
-    contract: 'LogicVersionsRegistry'
+    contract: 'LogicVersionsRegistry',
   })
 
   const { address: assetSettingsLogicAddress } = await deploy('AssetSettings_Logic', {
     from: deployer,
-    contract: 'AssetSettings'
+    contract: 'AssetSettings',
+    log: true,
   })
   const { address: chainlinkAggregatorLogicAddress } = await deploy('ChainlinkAggregator_Logic', {
     from: deployer,
-    contract: 'ChainlinkAggregator'
+    contract: 'ChainlinkAggregator',
   })
   const { address: ttokenLogicAddress } = await deploy('TToken_Logic', {
     from: deployer,
-    contract: 'TToken'
+    contract: 'TToken',
   })
   const { address: lendingPoolLogicAddress } = await deploy('LendingPool_Logic', {
     from: deployer,
-    contract: 'LendingPool'
+    contract: 'LendingPool',
   })
   const { address: loanTermsConsensusLogicAddress } = await deploy('LoanTermsConsensus_Logic', {
     from: deployer,
-    contract: 'LoanTermsConsensus'
+    contract: 'LoanTermsConsensus',
   })
   const { address: escrowLogicAddress } = await deploy('Escrow_Logic', {
     from: deployer,
-    contract: 'Escrow'
+    contract: 'Escrow',
   })
+  console.log('PASSING 1')
 
   // Factories
   const { address: escrowFactoryLogicAddress } = await deploy('EscrowFactory_Logic', {
     from: deployer,
-    contract: 'EscrowFactory'
+    contract: 'EscrowFactory',
   })
   const { address: marketFactoryLogicAddress } = await deploy('MarketFactory_Logic', {
     from: deployer,
-    contract: 'MarketFactory'
+    contract: 'MarketFactory',
   })
 
   // Dapps
   const { address: uniswapLogicAddress } = await deploy('Uniswap_Logic', {
     from: deployer,
-    contract: 'Uniswap'
+    contract: 'Uniswap',
   })
   const { address: compoundLogicAddress } = await deploy('Compound_Logic', {
     from: deployer,
-    contract: 'Compound'
+    contract: 'Compound',
   })
-
 
   const { address: settingsLogicAddress } = await deploy('Settings_Logic', {
     from: deployer,
-    contract: 'Settings'
+    contract: 'Settings',
   })
+
+  console.log('PASSING 2')
+
   const { address: settingsAddress } = await deploy('Settings', {
     from: deployer,
-    contract: 'UpgradeableProxy'
+    contract: 'UpgradeableProxy',
   })
   const settingsProxy = (await ethers.getContractAt('UpgradeableProxy', settingsAddress)) as UpgradeableProxy
   await settingsProxy.initializeProxy(settingsAddress, settingsLogicAddress)
   const settings = (await ethers.getContractAt('Settings', settingsAddress)) as Settings
-  await settings["initialize(address,address,address)"](
+
+  await settings['initialize(address,address,address)'](
     logicVersionsRegistryLogicAddress,
     env.networkConfig.tokens.WETH,
     env.networkConfig.compound.CETH
@@ -120,4 +127,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 }
 
 export default func
-func.tags = ['test', 'live', 'settings']
+func.tags = ['test', 'live', 'settings', 'debug']

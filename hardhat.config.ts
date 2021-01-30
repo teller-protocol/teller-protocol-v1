@@ -1,7 +1,7 @@
 import 'hardhat-deploy'
-import 'hardhat-deploy-ethers'
-import 'hardhat-typechain'
+// import 'hardhat-typechain'
 import '@nomiclabs/hardhat-waffle'
+import 'hardhat-contract-sizer'
 import { HardhatUserConfig } from 'hardhat/types'
 import configureEnv from './config/env'
 
@@ -37,7 +37,11 @@ export default <HardhatUserConfig>{
     hardhat: {
       forking: {
         url: `https://eth-mainnet.alchemyapi.io/v2/QmTWJK5MH1mmVSJdJ6VJFiX1Qfk6S36J`,
-        blockNumber: 11752861
+      },
+    },
+    localhost: {
+      forking: {
+        url: `https://eth-mainnet.alchemyapi.io/v2/QmTWJK5MH1mmVSJdJ6VJFiX1Qfk6S36J`,
       },
     },
     rinkeby: {
