@@ -359,6 +359,21 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
   }
 
   /**
+        @notice Adds a list of wallet addresses to the list of authorized wallets
+        @param addressesToAdd The list of wallet addresses being authorized
+     */
+  function addAuthorizedAddressList(address[] calldata addressesToAdd)
+    external
+    onlyPauser()
+    isInitialized()
+  {
+    for(uint256 i = 0; i < addressesToAdd.length; i++) {
+        addressesToAdd[i].requireNotEmpty("ADDRESS_ZERO");
+        authorizedAddresses[addressesToAdd[i]] = true;
+    }
+  }
+
+  /**
         @notice Removes a wallet address from the list of authorized wallets
         @param addressToRemove The wallet address of the user being unauthorized
      */
