@@ -44,8 +44,6 @@ contract LoansBase is LoansInterface, Base {
 
     /* State Variables */
 
-    bytes32 internal constant MAX_DEBT_RATIO_ATM_SETTING = "MaxDebtRatio";
-
     uint256 public totalCollateral;
 
     address public collateralToken;
@@ -603,15 +601,10 @@ contract LoansBase is LoansInterface, Base {
         @return true if the ratio is valid. Otherwise it returns false.
      */
     function _isDebtRatioValid(uint256 newLoanAmount) internal view returns (bool) {
-        address atmAddressForMarket = _getSettings().atmSettings().getATMForMarket(
-            address(lendingPool.lendingToken()),
-            collateralToken
+        uint256 maxDebtRatio = _getSettings().assetSettings().getMaxDebtRatio(
+            address(lendingPool.lendingToken())
         );
-        require(atmAddressForMarket != address(0x0), "ATM_NOT_FOUND_FOR_MARKET");
-        uint256 debtRatioLimit = ATMGovernanceInterface(atmAddressForMarket)
-            .getGeneralSetting(MAX_DEBT_RATIO_ATM_SETTING);
-        uint256 currentDebtRatio = lendingPool.getDebtRatioFor(newLoanAmount);
-        return currentDebtRatio <= debtRatioLimit;
+        return lendingPool.getDebtRatioFor(newLoanAmount) <= maxDebtRatio;
     }
 
     /**

@@ -66,6 +66,11 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
   bytes32 internal constant MAX_TOTAL_VALUE_LOCKED_SETTING = keccak256("MaxTVLAmount");
 
   /**
+        @notice The asset setting name for the maximum debt ratio settings.
+     */
+  bytes32 internal constant MAX_DEBT_RATIO_SETTING = keccak256("MaxDebtRatio");
+
+  /**
     @notice It creates an asset with the given parameters.
     @param assetAddress asset address used to create the new setting.
     @param cTokenAddress cToken address used to configure the asset setting.
@@ -89,7 +94,7 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
   }
 
   /**
-    @notice It updates the cToken address associted with an asset.
+    @notice It updates the cToken address associated with an asset.
     @param assetAddress asset address to configure.
     @param cTokenAddress the new cToken address to configure.
     */
@@ -112,7 +117,7 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
   }
 
   /**
-    @notice It returns the cToken address associted with an asset.
+    @notice It returns the cToken address associated with an asset.
     @param assetAddress asset address to get the associated cToken for.
     @return The associated cToken address
     */
@@ -123,7 +128,7 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
   }
 
   /**
-    @notice It updates the yearn vault address associted with an asset.
+    @notice It updates the yearn vault address associated with an asset.
     @param assetAddress asset address to configure.
     @param yVaultAddress the new yVault address to configure.
     */
@@ -135,7 +140,7 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
   }
 
   /**
-    @notice It returns the yearn vault address associted with an asset.
+    @notice It returns the yearn vault address associated with an asset.
     @param assetAddress asset address to get the associated yearn vault address for.
     @return The address of the yearn vault.
     */
@@ -146,7 +151,7 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
   }
 
   /**
-    @notice It updates the curve pool address associted with an asset.
+    @notice It updates the curve pool address associated with an asset.
     @param assetAddress asset address to configure.
     @param crvPoolAddress the new Curve pool address to configure.
     */
@@ -158,7 +163,7 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
   }
 
   /**
-    @notice It returns the curve pool address associted with an asset.
+    @notice It returns the curve pool address associated with an asset.
     @param assetAddress asset address to get the associated curve pool address for.
     @return The address of the curve pool.
     */
@@ -217,7 +222,7 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
   }
 
   /**
-    @notice It updates the max total vaule locked amount for a given asset.
+    @notice It updates the max total value locked amount for a given asset.
     @param assetAddress asset address used to update the max loan amount.
     @param newMaxTVLAmount the new max total vault locked amount to set.
     */
@@ -239,6 +244,32 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     assets[assetAddress].requireExists();
 
     return assets[assetAddress].uints[MAX_TOTAL_VALUE_LOCKED_SETTING];
+  }
+
+  /**
+    @notice It updates the max debt ratio for a given asset.
+    @dev The ratio value has 2 decimal places. I.e 100 = 1%
+    @param assetAddress asset address used to update the max debt ratio.
+    @param newMaxDebtRatio the new max debt ratio to set.
+    */
+  function updateMaxDebtRatio(address assetAddress, uint256 newMaxDebtRatio)
+    external
+    onlyPauser()
+  {
+    assets[assetAddress].requireExists();
+    if (newMaxDebtRatio != assets[assetAddress].uints[MAX_DEBT_RATIO_SETTING]) {
+      assets[assetAddress].updateUint(MAX_DEBT_RATIO_SETTING, newMaxDebtRatio);
+    }
+  }
+
+  /**
+    @notice Returns the max debt ratio for a given asset.
+    @dev The ratio value has 2 decimal places. I.e 100 = 1%
+    @param assetAddress asset address to retrieve the max debt ratio.
+    */
+  function getMaxDebtRatio(address assetAddress) external view returns (uint256) {
+    assets[assetAddress].requireExists();
+    return assets[assetAddress].uints[MAX_DEBT_RATIO_SETTING];
   }
 
   /**

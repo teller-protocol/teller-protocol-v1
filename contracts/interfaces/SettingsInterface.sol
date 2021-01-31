@@ -228,7 +228,6 @@ interface SettingsInterface {
         @param versionsRegistryAddress the initial versions registry address.
         @param chainlinkAggregatorAddress the initial pair aggregator registry address.
         @param interestValidatorAddress the initial interest validator address.
-        @param atmSettingsAddress the initial ATM settings address.
         @param wethTokenAddress canonical WETH token address.
         @param cethTokenAddress compound CETH token address.
      */
@@ -237,7 +236,6 @@ interface SettingsInterface {
     address versionsRegistryAddress,
     address chainlinkAggregatorAddress,
     address interestValidatorAddress,
-    address atmSettingsAddress,
     address wethTokenAddress,
     address cethTokenAddress
   ) external;

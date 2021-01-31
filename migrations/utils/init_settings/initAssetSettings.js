@@ -35,7 +35,6 @@ module.exports = async function (
       decimals = await tokenInstance.decimals();
     }
     const maxLoanAmountWithDecimals = toDecimals(tokenConfig.maxLoanAmount, decimals);
-
     console.log(
       `Configuring asset: ${tokenName} (${tokenAddress}) / ${
         tokenConfig.cToken
@@ -49,17 +48,27 @@ module.exports = async function (
       maxLoanAmountWithDecimals,
       txConfig
     );
+
     const maxTVLAmountWithDecimals = toDecimals(tokenConfig.maxTVLAmount, decimals);
     console.log(
-      `Configuring asset: ${tokenName} (${tokenAddress}) / ${
-        tokenConfig.cToken
-      } (${cTokenAddress}) / Max TVL Amount: ${
+      `Configuring asset: ${tokenName} (${tokenAddress}) / Max TVL Amount: ${
         tokenConfig.maxTVLAmount
       } (${decimals} decimals / ${maxTVLAmountWithDecimals.toFixed(0)})`
     );
     await assetSettingsInstance.updateMaxTVL(
       tokenAddress,
       maxTVLAmountWithDecimals,
+      txConfig
+    )
+
+    console.log(
+      `Configuring asset: ${tokenName} (${tokenAddress}) / Max Debt Ratio: ${
+        tokenConfig.maxDebtRatio
+      }`
+    );
+    await assetSettingsInstance.updateMaxDebtRatio(
+      tokenAddress,
+      tokenConfig.maxDebtRatio,
       txConfig
     )
   }

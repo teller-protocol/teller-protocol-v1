@@ -158,6 +158,21 @@ interface AssetSettingsInterface {
   function getMaxTVLAmount(address assetAddress) external view returns (uint256);
 
   /**
+    @notice It updates the max debt ratio for a given asset.
+    @dev The ratio value has 2 decimal places. I.e 100 = 1%
+    @param assetAddress asset address used to update the max debt ratio.
+    @param newMaxDebtRatio the new max debt ratio to set.
+    */
+  function updateMaxDebtRatio(address assetAddress, uint256 newMaxDebtRatio) external;
+
+  /**
+    @notice Returns the max debt ratio for a given asset.
+    @dev The ratio value has 2 decimal places. I.e 100 = 1%
+    @param assetAddress asset address to retrieve the max debt ratio.
+    */
+  function getMaxDebtRatio(address assetAddress) external view returns (uint256);
+
+  /**
         @notice It removes a configuration for a given asset on the platform.
         @param assetAddress asset address to remove.
      */

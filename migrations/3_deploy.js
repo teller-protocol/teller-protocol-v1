@@ -80,17 +80,17 @@ module.exports = async function(deployer, network, accounts) {
       { Contract: LoanTermsConsensus, name: logicNames.LoanTermsConsensus },
       { Contract: Escrow, name: logicNames.Escrow },
       { Contract: ChainlinkAggregator, name: logicNames.ChainlinkAggregator },
-      { Contract: ATMGovernance, name: logicNames.ATMGovernance },
-      { Contract: ATMLiquidityMining, name: logicNames.ATMLiquidityMining },
-      { Contract: TLRToken, name: logicNames.TLRToken },
+      // { Contract: ATMGovernance, name: logicNames.ATMGovernance },
+      // { Contract: ATMLiquidityMining, name: logicNames.ATMLiquidityMining },
+      // { Contract: TLRToken, name: logicNames.TLRToken },
       // Dapps
       { Contract: Uniswap, name: logicNames.Uniswap },
       { Contract: Compound, name: logicNames.Compound },
       // Initializables
       { Contract: EscrowFactory, name: logicNames.EscrowFactory },
-      { Contract: ATMSettings, name: logicNames.ATMSettings },
-      { Contract: ATMFactory, name: logicNames.ATMFactory },
-      { Contract: ATMLiquidityMining, name: logicNames.ATMLiquidityMining },
+      // { Contract: ATMSettings, name: logicNames.ATMSettings },
+      // { Contract: ATMFactory, name: logicNames.ATMFactory },
+      // { Contract: ATMLiquidityMining, name: logicNames.ATMLiquidityMining },
       { Contract: MarketFactory, name: logicNames.MarketFactory },
     ];
 
@@ -121,8 +121,8 @@ module.exports = async function(deployer, network, accounts) {
 
     const escrowFactoryInstance = await deployInitializableDynamicProxy(logicNames.EscrowFactory)
     const chainlinkAggregatorInstance = await deployInitializableDynamicProxy(logicNames.ChainlinkAggregator)
-    const atmSettingsInstance = await deployInitializableDynamicProxy(logicNames.ATMSettings)
-    const atmFactoryInstance = await deployInitializableDynamicProxy(logicNames.ATMFactory)
+    // const atmSettingsInstance = await deployInitializableDynamicProxy(logicNames.ATMSettings)
+    // const atmFactoryInstance = await deployInitializableDynamicProxy(logicNames.ATMFactory)
     const marketFactoryInstance = await deployInitializableDynamicProxy(logicNames.MarketFactory)
 
     console.log(`Deploying LogicVersionsRegistry...`)
@@ -144,7 +144,7 @@ module.exports = async function(deployer, network, accounts) {
       logicVersionsRegistryInstance.address,
       chainlinkAggregatorInstance.address,
       NULL_ADDRESS, // Interest Validator is empty (0x0) in the first version.
-      atmSettingsInstance.address,
+      // atmSettingsInstance.address,
       tokens.WETH,
       compound.CETH
     );
@@ -178,8 +178,8 @@ module.exports = async function(deployer, network, accounts) {
 
     await initializeProxy(logicNames.EscrowFactory, escrowFactoryInstance)
     await initializeProxy(logicNames.ChainlinkAggregator, chainlinkAggregatorInstance)
-    await initializeProxy(logicNames.ATMSettings, atmSettingsInstance)
-    await initializeProxy(logicNames.ATMFactory, atmFactoryInstance)
+    // await initializeProxy(logicNames.ATMSettings, atmSettingsInstance)
+    // await initializeProxy(logicNames.ATMFactory, atmFactoryInstance)
     await initializeProxy(logicNames.MarketFactory, marketFactoryInstance)
 
     async function deployDapp(name, unsecured) {
@@ -196,11 +196,11 @@ module.exports = async function(deployer, network, accounts) {
     await deployDapp(logicNames.Uniswap, false)
     await deployDapp(logicNames.Compound, true)
 
-    await initATMs(
-      { atmFactory: atmFactoryInstance, atmSettings: atmSettingsInstance },
-      { atms, tokens, txConfig, web3 },
-      { ATMGovernance },
-    );
+    // await initATMs(
+    //   { atmFactory: atmFactoryInstance, atmSettings: atmSettingsInstance },
+    //   { atms, tokens, txConfig, web3 },
+    //   { ATMGovernance },
+    // );
 
     await initPairAggregators(
       { chainlinkAggregatorInstance },
@@ -210,9 +210,9 @@ module.exports = async function(deployer, network, accounts) {
     console.log(`Creating Markets...`);
     const marketDefinitions = [
       { lendingTokenName: 'DAI', collateralTokenName: 'ETH' },
-      { lendingTokenName: 'DAI', collateralTokenName: 'LINK' },
-      { lendingTokenName: 'USDC', collateralTokenName: 'ETH' },
-      { lendingTokenName: 'USDC', collateralTokenName: 'LINK' },
+      // { lendingTokenName: 'DAI', collateralTokenName: 'LINK' },
+      // { lendingTokenName: 'USDC', collateralTokenName: 'ETH' },
+      // { lendingTokenName: 'USDC', collateralTokenName: 'LINK' },
     ];
     await createMarkets(
       marketDefinitions,
