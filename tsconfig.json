@@ -7,8 +7,7 @@
     "resolveJsonModule": true,
     "target": "ESNext",
     "allowJs": true,
-    "strict": true,
-    "typeRoots": ["./types", "./typechain"]
+    "strict": true
   },
   "files": ["hardhat.config.ts"],
   "include": [
@@ -17,7 +16,8 @@
     "./deploy",
     "./migrations",
     "./test-integration",
-    "./test"
+    "./test",
+    "./types"
   ],
   "exclude": ["./contracts", "./build", "./artifacts", "./docs"]
 }

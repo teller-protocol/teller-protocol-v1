@@ -9,6 +9,7 @@
     "lint-json": "prettier ",
     "node": "yarn hardhat node --no-deploy",
     "test": "yarn hardhat test --network localhost",
+    "types": "yarn typechain --target ethers-v5  --outDir types/typechain --glob 'artifacts/**/*.sol/*[!.dbg].json'",
     "format:prettier": "prettier --write contracts/**/**/**/**/**/**.sol",
     "format:prettier:print": "prettier contracts/**/**/**/**/**/**.sol"
   },
