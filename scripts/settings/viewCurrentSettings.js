@@ -4,9 +4,9 @@
 const { teller } = require("../../scripts/utils/contracts");
 const { settings: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
-const { printPlatformSetting } = require("../../test/utils/settings-helper");
-const platformSettingsNames = require("../../test/utils/platformSettingsNames");
-const { toBytes32 } = require("../../test/utils/consts");
+const { printPlatformSetting } = require("../../test-old/utils/settings-helper");
+const platformSettingsNames = require("../../test-old/utils/platformSettingsNames");
+const { toBytes32 } = require("../../test-old/utils/consts");
 const processArgs = new ProcessArgs(readParams.view().argv);
 
 const callAndPrintPlatformSetting = async (settings, settingName, { web3 }) => {

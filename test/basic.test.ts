@@ -1,6 +1,6 @@
 import { assert } from 'chai'
 import { deployments } from 'hardhat'
-import { EscrowFactory, LoanTermsConsensus, Settings } from '../typechain'
+import { EscrowFactory, LoanTermsConsensus, Settings } from '../types/typechain'
 
 export const setup = deployments.createFixture(async ({ deployments, getNamedAccounts, ethers }, options) => {
   // ensure to start from fresh test-tagged deployment functions execution

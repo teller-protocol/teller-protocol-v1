@@ -1,11 +1,11 @@
 const assert = require('assert');
-const logicNames = require('../test/utils/logicNames');
+const logicNames = require('../test-old/utils/logicNames');
 const DeployerApp = require('./utils/DeployerApp');
 const initSettings = require('./utils/init_settings');
 const initATMs = require('./utils/init_settings/initATMs');
 const initLogicVersions = require('./utils/init_settings/initLogicVersions');
 const deployLogicContracts = require('./utils/init_settings/deployLogicContracts');
-const { NULL_ADDRESS, toBytes32 } = require('../test/utils/consts');
+const { NULL_ADDRESS, toBytes32 } = require('../test-old/utils/consts');
 const initPairAggregators = require('./utils/init_settings/initPairAggregators');
 const createMarkets = require('./utils/init_settings/createMarkets');
 

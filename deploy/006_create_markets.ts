@@ -1,7 +1,7 @@
 import { DeployFunction } from 'hardhat-deploy/dist/types'
-import { LoanTermsConsensus, MarketFactory } from '../typechain'
+import { LoanTermsConsensus, MarketFactory } from '../types/typechain'
 import envConfig from '../config'
-import { EnvConfig } from '../test/types'
+import { EnvConfig } from '../test-old/types'
 
 const func: DeployFunction = async function ({ deployments: { get, read, save, getDeploymentsFromAddress }, ethers, network }) {
   const marketFactory_ProxyDeployment = await get('MarketFactory_Proxy')

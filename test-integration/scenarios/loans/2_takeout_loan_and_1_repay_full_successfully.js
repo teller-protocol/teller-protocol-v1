@@ -12,7 +12,7 @@ const {
 } = require("../../../scripts/utils/assertions");
 const {
   toDecimals,
-} = require("../../../test/utils/consts");
+} = require("../../../test-old/utils/consts");
 
 module.exports = async (testContext) => {
   const {

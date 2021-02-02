@@ -7,7 +7,7 @@ const { tokens: readParams } = require("../utils/cli-builder");
 const { tokens } = require("../utils/contracts");
 const Accounts = require('../utils/Accounts');
 const ProcessArgs = require('../utils/ProcessArgs');
-const { toUnits, toDecimals } = require("../../test/utils/consts");
+const { toUnits, toDecimals } = require("../../test-old/utils/consts");
 const { TOKEN_NAME, ACCOUNT_INDEX, MIN_AMOUNT } = require("../utils/cli/names");
 const processArgs = new ProcessArgs(readParams.requireBalanceOf().argv);
 

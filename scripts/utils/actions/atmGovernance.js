@@ -1,5 +1,5 @@
 const BigNumber = require("bignumber.js");
-const { atmGovernance: atmGovernanceEvents } = require("../../../test/utils/events");
+const { atmGovernance: atmGovernanceEvents } = require("../../../test-old/utils/events");
 
 const addGeneralSetting = async (
   {atmGovernance},

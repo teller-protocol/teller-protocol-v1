@@ -7,7 +7,7 @@ const {
 const {
     DUMMY_ADDRESS,
     NULL_ADDRESS
-} = require('../../test/utils/consts');
+} = require('../utils/consts');
 const {
     atmGovernance
 } = require('../utils/events');

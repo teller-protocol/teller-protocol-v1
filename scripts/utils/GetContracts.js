@@ -1,6 +1,6 @@
 const _ = require('lodash');
 const assert = require('assert');
-const { NULL_ADDRESS, ETH_ADDRESS } = require('../../test/utils/consts');
+const { NULL_ADDRESS, ETH_ADDRESS } = require('../../test-old/utils/consts');
 
 class GetContracts {
     constructor(artifacts, networkConf) {

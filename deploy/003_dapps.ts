@@ -1,7 +1,7 @@
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-import { logicNames } from '../test/utils/logicNames'
-import { Compound, EscrowFactory, Settings, Uniswap } from '../typechain'
+import { logicNames } from '../test-old/utils/logicNames'
+import { Compound, EscrowFactory, Settings, Uniswap } from '../types/typechain'
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {

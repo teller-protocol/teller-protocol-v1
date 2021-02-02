@@ -7,7 +7,7 @@ const ProcessArgs = require('../utils/ProcessArgs');
 
 const { logicVersion: readParams } = require("../utils/cli-builder");
 const { SENDER_INDEX, LOGIC_NAME, CONTRACT_NAME } = require('../utils/cli/names');
-const { toBytes32 } = require('../../test/utils/consts');
+const { toBytes32 } = require('../../test-old/utils/consts');
 const { assert } = require("chai");
 const processArgs = new ProcessArgs(readParams.updateLogicVersion().argv);
 

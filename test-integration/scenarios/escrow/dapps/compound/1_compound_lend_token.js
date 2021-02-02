@@ -4,7 +4,7 @@ const {
   escrow: escrowActions,
   tokens: tokensActions,
 } = require("../../../../../scripts/utils/actions");
-const { toDecimals } = require("../../../../../test/utils/consts");
+const { toDecimals } = require("../../../../../test-old/utils/consts");
 const helperActions = require("../../../../../scripts/utils/actions/helper");
 
 module.exports = async (testContext) => {

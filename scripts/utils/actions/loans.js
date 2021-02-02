@@ -1,19 +1,19 @@
 const BigNumber = require("bignumber.js");
-const platformSettingsNames = require("../../../test/utils/platformSettingsNames");
+const platformSettingsNames = require("../../../test-old/utils/platformSettingsNames");
 const {
   NULL_ADDRESS,
   ONE_DAY,
   toBytes32,
-} = require("../../../test/utils/consts");
+} = require("../../../test-old/utils/consts");
 const {
   createMultipleSignedLoanTermsResponses,
   createLoanTermsRequest,
-} = require("../../../test/utils/loan-terms-helper");
-const { printLoanDetails, printPairAggregator } = require("../../../test/utils/printer");
+} = require("../../../test-old/utils/loan-terms-helper");
+const { printLoanDetails, printPairAggregator } = require("../../../test-old/utils/printer");
 const {
   lendingPool: lendingPoolEvents,
   loans: loansEvents,
-} = require("../../../test/utils/events");
+} = require("../../../test-old/utils/events");
 const {
   tokens: tokensAssertions
 } = require('../assertions')

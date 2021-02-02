@@ -6,9 +6,9 @@ const { teller, tokens } = require("../utils/contracts");
 const { settings: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
 const { SENDER_INDEX, ASSET_SETTING_NAME, NEW_VALUE, TOKEN_NAME } = require('../utils/cli/names');
-const { toBytes32 } = require('../../test/utils/consts');
-const { printAssetSettings } = require('../../test/utils/asset-settings-helper');
-const getAssetSettingsMap = require('../../test/utils/asset-settings-map');
+const { toBytes32 } = require('../../test-old/utils/consts');
+const { printAssetSettings } = require('../../test-old/utils/asset-settings-helper');
+const getAssetSettingsMap = require('../../test-old/utils/asset-settings-map');
 const processArgs = new ProcessArgs(readParams.updateAssetSetting().argv);
 
 module.exports = async (callback) => {

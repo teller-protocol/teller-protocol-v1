@@ -6,8 +6,8 @@ const {
   tokens: tokensActions,
   settings: settingsActions,
 } = require("../../../scripts/utils/actions");
-const {toDecimals} = require("../../../test/utils/consts");
-const platformSettingsNames = require("../../../test/utils/platformSettingsNames");
+const {toDecimals} = require("../../../test-old/utils/consts");
+const platformSettingsNames = require("../../../test-old/utils/platformSettingsNames");
 
 module.exports = async (testContext) => {
   const {accounts, getContracts, collTokenName, tokenName} = testContext;

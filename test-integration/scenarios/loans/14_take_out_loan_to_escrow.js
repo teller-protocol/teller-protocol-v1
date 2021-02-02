@@ -9,9 +9,9 @@ const {
   loans: loansAssertions,
   tokens: tokensAssertions,
 } = require("../../../scripts/utils/assertions")
-const loanStatus = require("../../../test/utils/loanStatus")
+const loanStatus = require("../../../test-old/utils/loanStatus")
 const helperActions = require("../../../scripts/utils/actions/helper");
-const { toDecimals, ONE_DAY, ONE_YEAR } = require("../../../test/utils/consts");
+const { toDecimals, ONE_DAY, ONE_YEAR } = require("../../../test-old/utils/consts");
 
 module.exports = async (testContext) => {
   const {

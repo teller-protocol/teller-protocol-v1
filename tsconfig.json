@@ -12,12 +12,12 @@
   },
   "files": ["hardhat.config.ts"],
   "include": [
-    "./test",
+    "./test-old",
     "./scripts",
     "./deploy",
     "./migrations",
     "./test-integration",
-    "./test-hardhat"
+    "./test"
   ],
   "exclude": ["./contracts", "./build", "./artifacts", "./docs"]
 }

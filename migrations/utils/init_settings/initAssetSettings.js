@@ -1,7 +1,7 @@
 const assert = require("assert");
 const { ETH_ADDRESS } = require("../../../config/consts");
-const { toDecimals } = require("../../../test/utils/consts");
-const { settings } = require("../../../test/utils/events");
+const { toDecimals } = require("../../../test-old/utils/consts");
+const { settings } = require("../../../test-old/utils/events");
 const AssetSettingsInterface = artifacts.require("AssetSettingsInterface");
 
 /**

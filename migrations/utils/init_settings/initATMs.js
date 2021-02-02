@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const assert = require('assert');
-const { toBytes32 } = require('../../../test/utils/consts');
-const atmGovernanceSettingsNames = require('../../../test/utils/atmGovernanceSettingsNames');
+const { toBytes32 } = require('../../../test-old/utils/consts');
+const atmGovernanceSettingsNames = require('../../../test-old/utils/atmGovernanceSettingsNames');
 
 
 module.exports = async function(

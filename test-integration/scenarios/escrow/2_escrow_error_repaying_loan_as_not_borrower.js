@@ -8,8 +8,8 @@ const {
   loans: loansAssertions,
 } = require("../../../scripts/utils/assertions");
 const helperActions = require("../../../scripts/utils/actions/helper");
-const { toDecimals } = require("../../../test/utils/consts");
-const loanStatus = require("../../../test/utils/loanStatus");
+const { toDecimals } = require("../../../test-old/utils/consts");
+const loanStatus = require("../../../test-old/utils/loanStatus");
 
 module.exports = async (testContext) => {
   const {

@@ -1,7 +1,7 @@
 import { DeployFunction } from 'hardhat-deploy/dist/types'
 import envConfig from '../config'
-import { EnvConfig } from '../test/types'
-import { ChainlinkAggregator } from '../typechain'
+import { EnvConfig } from '../test-old/types'
+import { ChainlinkAggregator } from '../types/typechain'
 
 const func: DeployFunction = async function ({ network, deployments: { get }, ethers }) {
   const env = envConfig(network.name) as EnvConfig

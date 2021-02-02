@@ -1,5 +1,5 @@
 const assert = require("assert");
-const { toBytes32 } = require("../../../test/utils/consts");
+const { toBytes32 } = require("../../../test-old/utils/consts");
 
 const updatePlatformSettings = async ({ settings }, { txConfig, testContext }, { settingName, newValue}) => {
   const { web3 } =  testContext;

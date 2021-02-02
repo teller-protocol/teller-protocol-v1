@@ -7,7 +7,7 @@ const {
   blockchain: blockchainActions,
 } = require("../../../scripts/utils/actions");
 const helperActions = require("../../../scripts/utils/actions/helper");
-const {toDecimals, daysToMinutes } = require("../../../test/utils/consts");
+const {toDecimals, daysToMinutes } = require("../../../test-old/utils/consts");
 
 module.exports = async (testContext) => {
   const {

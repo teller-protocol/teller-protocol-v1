@@ -6,8 +6,8 @@ const ProcessArgs = require('../scripts/utils/ProcessArgs');
 const Accounts = require('../scripts/utils/Accounts');
 const Nonces = require('../scripts/utils/Nonces');
 const Swapper = require('./utils/Swapper')
-const { printSeparatorLine } = require('../test/utils/consts');
-const chains = require('../test/utils/chains');
+const { printSeparatorLine } = require('../test-old/utils/consts');
+const chains = require('../test-old/utils/chains');
 const { REVERT, NETWORK, REVERT_TEST, INITIAL_NONCE, TOKEN_NAMES, COLL_TOKEN_NAMES, VERBOSE } = require('../scripts/utils/cli/names');
 
 const UniswapSwapper = artifacts.require('./mock/providers/uniswap/Swapper.sol')

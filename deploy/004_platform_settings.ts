@@ -2,8 +2,8 @@ import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import envConfig from '../config'
 import { formatBytes32String } from 'ethers/lib/utils'
-import { Settings } from '../typechain'
-import { EnvConfig } from '../test/types'
+import { Settings } from '../types/typechain'
+import { EnvConfig } from '../test-old/types'
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {

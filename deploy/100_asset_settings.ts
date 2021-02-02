@@ -1,10 +1,10 @@
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-import { logicNames } from '../test/utils/logicNames'
-import { Compound, ERC20, ERC20Detailed, EscrowFactory, Settings, Uniswap } from '../typechain'
+import { logicNames } from '../test-old/utils/logicNames'
+import { Compound, ERC20, ERC20Detailed, EscrowFactory, Settings, Uniswap } from '../types/typechain'
 import envConfig from '../config'
-import { EnvConfig } from '../test/types'
-import { ETH_ADDRESS } from '../test/utils/consts'
+import { EnvConfig } from '../test-old/types'
+import { ETH_ADDRESS } from '../test-old/utils/consts'
 
 const toDecimals = (num: string | number, decimals: number): string => (BigInt(num) * 10n ** BigInt(decimals)).toString()
 

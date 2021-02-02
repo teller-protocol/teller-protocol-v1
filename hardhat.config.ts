@@ -1,8 +1,7 @@
 import 'hardhat-deploy'
-// import 'hardhat-typechain'
 import '@nomiclabs/hardhat-waffle'
 import 'hardhat-contract-sizer'
-import { HardhatUserConfig } from 'hardhat/types'
+import { HardhatUserConfig } from "hardhat/config";
 import configureEnv from './config/env'
 
 const envConfig = configureEnv()
@@ -32,6 +31,10 @@ export default <HardhatUserConfig>{
         runs: 200,
       },
     },
+  },
+  typechain: {
+    outDir: 'types/typechain',
+    target: 'ethers-v5'
   },
   networks: {
     hardhat: {

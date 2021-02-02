@@ -6,7 +6,7 @@ const {
   oracles: oraclesActions,
   tokens: tokensActions,
 } = require("../../../scripts/utils/actions");
-const {toDecimals} = require("../../../test/utils/consts");
+const {toDecimals} = require("../../../test-old/utils/consts");
 
 module.exports = async (testContext) => {
   const {accounts, getContracts, collTokenName, tokenName} = testContext;

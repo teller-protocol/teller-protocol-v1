@@ -5,7 +5,7 @@
   "main": "truffle-config.js",
   "scripts": {
     "lint-sol": "yarn solhint -f table \"./contracts/**/*.sol\"",
-    "lint-js": "yarn eslint test test-integration -f table -ext ts,js --fix",
+    "lint-ts": "yarn eslint . -f table -ext ts,js --fix",
     "lint-json": "prettier ",
     "node": "yarn hardhat node --no-deploy",
     "test": "yarn hardhat test --network localhost",

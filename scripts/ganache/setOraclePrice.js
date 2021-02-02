@@ -1,7 +1,7 @@
 const BigNumber = require("bignumber.js");
 
 // Util classes
-const { printPairAggregator } = require('../../test/utils/printer')
+const { printPairAggregator } = require('../../test-old/utils/printer')
 const {
   chainlink: chainlinkActions,
   tokens: tokenActions,
