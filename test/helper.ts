@@ -1,5 +1,5 @@
 import { Contract } from 'ethers';
-import { ethers } from 'hardhat';
+import { ethers, network } from 'hardhat';
 import { task } from 'hardhat/config';
 import { send } from 'process';
 import {
@@ -226,6 +226,11 @@ export class TestHelper {
     this.marketFactoryHelper = new MarketFactoryTestHelper(contracts, accounts);
     this.compoundHelper = new CompoundTestHelper(contracts, accounts);
     this.uniswapHelper = new UniswapTestHelper(contracts, accounts);
+  }
+
+  public async advanceBlockTimestamp(blockTimestampTo: number) {
+    await network.provider.send("evm_setNextBlockTimestamp", [blockTimestampTo]);
+    await network.provider.send("evm_mine");
   }
 
 }
