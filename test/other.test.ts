@@ -9,12 +9,12 @@ describe('Basic', () => {
     const { contracts } = await setupProtocol();
     helper = new TestHelper(contracts);
     await helper.setupContracts();
-    await helper.setDummyValue('888');
+    await helper.setDummyValue('777');
   });
 
   it('Should run in parallel', async () => {
     const originalDummyValue = await helper.getDummyValue();
-    const newValue = '889';
+    const newValue = '778';
     await helper.setDummyValue(newValue);
     const newValueGot = await helper.getDummyValue();
     console.log({

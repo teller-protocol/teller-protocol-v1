@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "sourceMap": true,
+    "sourceMap": false,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "module": "commonjs",
@@ -10,14 +10,6 @@
     "strict": true
   },
   "files": ["hardhat.config.ts"],
-  "include": [
-    "./test-old",
-    "./scripts",
-    "./deploy",
-    "./migrations",
-    "./test-integration",
-    "./test",
-    "./types"
-  ],
-  "exclude": ["./contracts", "./build", "./artifacts", "./docs"]
+  "include": ["./test", "./types"],
+  "exclude": ["./contracts", "./build", "./artifacts", "./docs", "./cache", "./coverage"]
 }

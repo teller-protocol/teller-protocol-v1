@@ -1,18 +1,18 @@
-import 'hardhat-deploy'
-import '@nomiclabs/hardhat-waffle'
-import 'hardhat-contract-sizer'
-import { HardhatUserConfig } from "hardhat/config";
-import configureEnv from './config/env'
+import '@nomiclabs/hardhat-waffle';
+import '@nomiclabs/hardhat-ethers';
+import { HardhatUserConfig } from 'hardhat/config';
 
-const envConfig = configureEnv()
+import configureEnv from './config/env';
+
+const envConfig = configureEnv();
 
 // Environment Configuration
-const addressCountValue = envConfig.getAddressCount().getOrDefault()
-const mnemonicKeyValue = envConfig.getMnemonic().get()
-const infuraKeyValue = envConfig.getInfuraKey().get()
-const gasKeyValue = envConfig.getGasWei().getOrDefault()
-const gasPriceKeyValue = envConfig.getGasPriceGwei().getOrDefault()
-const etherscanApiKey = envConfig.getEtherscanApiKey().get()
+const addressCountValue = envConfig.getAddressCount().getOrDefault();
+const mnemonicKeyValue = envConfig.getMnemonic().get();
+const infuraKeyValue = envConfig.getInfuraKey().get();
+const gasKeyValue = envConfig.getGasWei().getOrDefault();
+const gasPriceKeyValue = envConfig.getGasPriceGwei().getOrDefault();
+const etherscanApiKey = envConfig.getEtherscanApiKey().get();
 
 export default <HardhatUserConfig>{
   namedAccounts: {
@@ -32,14 +32,11 @@ export default <HardhatUserConfig>{
       },
     },
   },
-  typechain: {
-    outDir: 'types/typechain',
-    target: 'ethers-v5'
-  },
   networks: {
     hardhat: {
       forking: {
         url: `https://eth-mainnet.alchemyapi.io/v2/QmTWJK5MH1mmVSJdJ6VJFiX1Qfk6S36J`,
+        blockNumber: 11806209,
       },
     },
     localhost: {
@@ -76,4 +73,4 @@ export default <HardhatUserConfig>{
       // gasPrice: web3.utils.toWei(gasPriceKeyValue, 'gwei'),
     },
   },
-}
+};
