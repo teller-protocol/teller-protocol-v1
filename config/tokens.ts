@@ -1,0 +1,20 @@
+export const tokensConfigsByNetwork: Record<string, Record<string, string>> = {
+  mainnet: {
+    CDAI: '0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643',
+    CUSDC: '0x39aa39c021dfbae8fac545936693ac917d5e7563',
+    CETH: '0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5',
+    ETH: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+    WETH: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    DAI: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
+    USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+    USDT: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+    LINK: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
+    WBTC: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
+    SNX: '0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f',
+    MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2',
+    YFI: '0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e',
+    LEND: '0x80fB784B7eD66730e8b1DBd9820aFD29931aab03',
+  },
+};
+
+export const tokens = (network: string) => tokensConfigsByNetwork[network];

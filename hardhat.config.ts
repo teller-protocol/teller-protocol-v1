@@ -15,11 +15,6 @@ const gasPriceKeyValue = envConfig.getGasPriceGwei().getOrDefault();
 const etherscanApiKey = envConfig.getEtherscanApiKey().get();
 
 export default <HardhatUserConfig>{
-  namedAccounts: {
-    deployer: {
-      default: 0,
-    },
-  },
   etherscan: {
     apiKey: etherscanApiKey,
   },
@@ -34,15 +29,15 @@ export default <HardhatUserConfig>{
   },
   networks: {
     hardhat: {
+      blockGasLimit: 999999999999,
       forking: {
         url: `https://eth-mainnet.alchemyapi.io/v2/QmTWJK5MH1mmVSJdJ6VJFiX1Qfk6S36J`,
         blockNumber: 11806209,
+        enabled: true,
       },
     },
     localhost: {
-      forking: {
-        url: `https://eth-mainnet.alchemyapi.io/v2/QmTWJK5MH1mmVSJdJ6VJFiX1Qfk6S36J`,
-      },
+      gas: 10000000,
     },
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${infuraKeyValue}`,
