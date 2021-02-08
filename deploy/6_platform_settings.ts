@@ -2,6 +2,45 @@
 // import { AssetSettings, Settings } from '../../../typechain';
 // import { helper } from '../helper';
 
+import { formatBytes32String } from 'ethers/lib/utils';
+import { DeployFunction } from 'hardhat-deploy/dist/types';
+import { helper } from './refactor/helper';
+
+const createPlatformSettings: DeployFunction = async ({ getNamedAccounts, deployments }) => {
+  const { deployer } = await getNamedAccounts();
+
+  for (const [platformSetting, { max, min, processOnDeployment, value }] of Object.entries(helper.platformSettings)) {
+    if (processOnDeployment)
+      await deployments.execute(
+        'Settings',
+        { from: deployer },
+        'createPlatformSetting',
+        formatBytes32String(platformSetting),
+        value,
+        min,
+        max
+      );
+  }
+
+  const tokens = helper.tokens;
+
+  for (const [asset, { cToken, maxLoanAmount, maxTVLAmount }] of Object.entries(helper.assetSettings)) {
+    await deployments.execute(
+      'AssetSettings',
+      { from: deployer },
+      'createAssetSetting',
+      tokens[asset],
+      tokens[cToken],
+      maxLoanAmount
+    );
+    await deployments.execute('AssetSettings', { from: deployer }, 'updateMaxTVL', tokens[asset], maxTVLAmount);
+  }
+};
+
+createPlatformSettings.tags = ['test'];
+
+export default createPlatformSettings;
+
 // export async function createPlatformSettings() {
 //   const settingsProxyAddress = helper.deployments.Settings_Proxy.address;
 //   const settingsInstance = await helper.make<Settings>('Settings', settingsProxyAddress);

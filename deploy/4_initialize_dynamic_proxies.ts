@@ -1,26 +1,30 @@
-// import { formatBytes32String } from 'ethers/lib/utils';
-// import { ethers } from 'hardhat';
-// import { InitializeableDynamicProxy } from '../../../typechain';
-// import { helper } from '../helper';
+import { ethers } from 'ethers';
+import { DeployFunction } from 'hardhat-deploy/dist/types';
 
-// export async function initializeProxies() {
-//   const logicNames = [
-//     {
-//       identifier: 'ETH_DAI_Loans_Proxy',
-//       logicName: 'EtherCollateralLoans',
-//     },
-//     { identifier: 'ETH_DAI_LendingPool_Proxy', logicName: 'LendingPool' },
-//     { identifier: 'ETH_DAI_LoanTermsConsensus_Proxy', logicName: 'LoanTermsConsensus' },
-//   ];
+const initializeDynamicProxies: DeployFunction = async ({ getNamedAccounts, deployments }) => {
+  const { deployer } = await getNamedAccounts();
+  const settings = await deployments.get('Settings');
 
-//   const settingsProxyAddress = helper.deployments.Settings_Proxy.address;
+  const contracts = [
+    {
+      proxyIdentifier: 'ETH_DAI_Loans_Proxy',
+      logicNameBytes32: ethers.utils.id('Loans'),
+    },
+    {
+      proxyIdentifier: 'ETH_DAI_LendingPool_Proxy',
+      logicNameBytes32: ethers.utils.id('LendingPool'),
+    },
+    {
+      proxyIdentifier: 'ETH_DAI_LoanTermsConsensus_Proxy',
+      logicNameBytes32: ethers.utils.id('LoanTermsConsensus'),
+    },
+  ];
 
-//   for (const { identifier, logicName } of logicNames) {
-//     const logicNameBytes32 = ethers.utils.solidityKeccak256(['bytes32'], [formatBytes32String(logicName)]);
-//     await helper.call(identifier, 'initializeProxy', async () => {
-//       const proxyAddress = helper.deployments[identifier].address;
-//       const proxy = await helper.make<InitializeableDynamicProxy>('InitializeableDynamicProxy', proxyAddress);
-//       await proxy.initializeProxy(settingsProxyAddress, logicNameBytes32);
-//     });
-//   }
-// }
+  for (const { proxyIdentifier, logicNameBytes32 } of contracts) {
+    await deployments.execute(proxyIdentifier, { from: deployer }, 'initializeProxy', settings.address, logicNameBytes32);
+  }
+};
+
+initializeDynamicProxies.tags = ['test'];
+
+export default initializeDynamicProxies;

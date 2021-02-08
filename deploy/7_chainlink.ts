@@ -1,17 +1,26 @@
 // import { ChainlinkAggregator, Settings } from '../../../typechain';
 // import { helper } from '../helper';
 
-// export async function addChainlinkPairs(): Promise<void> {
-//   const settingsProxyAddress = helper.deployments.Settings_Proxy.address;
-//   const settingsInstance = await helper.make<Settings>('Settings', settingsProxyAddress);
-//   const chainlinkAddress = await settingsInstance.chainlinkAggregator();
-//   const chainlinkInstance = await helper.make<ChainlinkAggregator>('ChainlinkAggregator', chainlinkAddress);
+import { DeployFunction } from 'hardhat-deploy/dist/types';
+import { helper } from './refactor/helper';
 
-//   const tokens = helper.tokens;
+const addChainlinkPairs: DeployFunction = async ({ getNamedAccounts, deployments }) => {
+  const { deployer } = await getNamedAccounts();
 
-//   for (const [pair, { address, baseTokenName, quoteTokenName }] of Object.entries(helper.chainlink)) {
-//     await helper.call('ChainlinkAggregator_Logic', `add_${pair}`, async () => {
-//       await chainlinkInstance.add(tokens[baseTokenName], tokens[quoteTokenName], address);
-//     });
-//   }
-// }
+  const tokens = helper.tokens;
+
+  for (const { address, baseTokenName, quoteTokenName } of Object.values(helper.chainlink)) {
+    await deployments.execute(
+      'ChainlinkAggregator',
+      { from: deployer },
+      'add',
+      tokens[baseTokenName],
+      tokens[quoteTokenName],
+      address
+    );
+  }
+};
+
+addChainlinkPairs.tags = ['test'];
+
+export default addChainlinkPairs;
