@@ -5,21 +5,6 @@ const deployProxies: DeployFunction = async ({ deployments, getNamedAccounts }) 
 
   const proxyContracts = [
     {
-      identifier: 'ETH_DAI_Loans_Proxy',
-      logicContractName: 'Loans',
-      proxyContractName: 'InitializeableDynamicProxy',
-    },
-    {
-      identifier: 'ETH_DAI_LendingPool_Proxy',
-      logicContractName: 'LendingPool',
-      proxyContractName: 'InitializeableDynamicProxy',
-    },
-    {
-      identifier: 'ETH_DAI_LoanTermsConsensus_Proxy',
-      logicContractName: 'LoanTermsConsensus',
-      proxyContractName: 'InitializeableDynamicProxy',
-    },
-    {
       identifier: 'Settings_Proxy',
       logicContractName: 'Settings',
       proxyContractName: 'UpgradeableProxy',

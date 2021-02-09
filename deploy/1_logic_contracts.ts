@@ -5,6 +5,10 @@ const deployLogicContracts: DeployFunction = async ({ deployments, getNamedAccou
 
   const logicContracts = [
     {
+      identifier: 'TDAI_Logic',
+      contractName: 'TToken',
+    },
+    {
       identifier: 'ETH_DAI_Loans_Logic',
       contractName: 'Loans',
       libraries: {

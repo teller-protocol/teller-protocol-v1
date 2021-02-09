@@ -1,5 +1,5 @@
 import { DeployFunction } from 'hardhat-deploy/dist/types';
-import { helper } from './refactor/helper';
+import { helper } from '../test-utils/deploy-helper';
 
 const initializeSettings: DeployFunction = async ({ getNamedAccounts, deployments }) => {
   const { deployer } = await getNamedAccounts();

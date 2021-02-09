@@ -2,7 +2,7 @@
 // import { helper } from '../helper';
 
 import { DeployFunction } from 'hardhat-deploy/dist/types';
-import { helper } from './refactor/helper';
+import { helper } from '../test-utils/deploy-helper';
 
 const addChainlinkPairs: DeployFunction = async ({ getNamedAccounts, deployments }) => {
   const { deployer } = await getNamedAccounts();

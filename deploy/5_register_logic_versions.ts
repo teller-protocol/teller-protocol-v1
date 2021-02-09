@@ -9,11 +9,9 @@ import { DeployFunction } from 'hardhat-deploy/dist/types';
 const registerLogicVersions: DeployFunction = async ({ getNamedAccounts, deployments }) => {
   const { deployer } = await getNamedAccounts();
 
-  const settings = await deployments.get('Settings');
-  const logicVersionsRegistry = await deployments.get('LogicVersionsRegistry');
-
   const logicNames = [
     { identifier: 'ChainlinkAggregator_Logic', logicName: ethers.utils.id('ChainlinkAggregator') },
+    { identifier: 'TDAI_Logic', logicName: ethers.utils.id('TToken') },
     { identifier: 'ETH_DAI_Loans_Logic', logicName: ethers.utils.id('EtherCollateralLoans') },
     { identifier: 'ETH_DAI_LendingPool_Logic', logicName: ethers.utils.id('LendingPool') },
     { identifier: 'ETH_DAI_LoanTermsConsensus_Logic', logicName: ethers.utils.id('LoanTermsConsensus') },
