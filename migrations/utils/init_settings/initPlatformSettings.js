@@ -48,27 +48,27 @@ module.exports = async function(
     { },
 ) {
     if (verbose) console.log('Configuring platform settings.')
-    // for (const platformSettingName of Object.keys(platformSettings)) {
-    //     const { value, min, max, processOnDeployment } = platformSettings[platformSettingName];
-    //     assert(!_.isUndefined(min), `Platform setting min value for ${platformSettingName} must be provided.`);
-    //     assert(!_.isUndefined(max), `Platform setting max value for ${platformSettingName} must be provided.`);
-    //     assert(!_.isUndefined(processOnDeployment), `Platform setting 'processOnDeployment' for ${platformSettingName} must be provided.`);
+    for (const platformSettingName of Object.keys(platformSettings)) {
+        const { value, min, max, processOnDeployment } = platformSettings[platformSettingName];
+        assert(!_.isUndefined(min), `Platform setting min value for ${platformSettingName} must be provided.`);
+        assert(!_.isUndefined(max), `Platform setting max value for ${platformSettingName} must be provided.`);
+        assert(!_.isUndefined(processOnDeployment), `Platform setting 'processOnDeployment' for ${platformSettingName} must be provided.`);
 
-    //     if(!processOnDeployment) {
-    //         if (verbose) console.log(`Platform setting value ${platformSettingName} is not processed. It will be configured manually.`);
-    //         continue;
-    //     }
-    //     assert(!_.isUndefined(value), `Platform setting for ${platformSettingName} must be provided.`);
-    //     if (verbose) console.log(`Configuring platform setting ${platformSettingName}. Value: ${value} - min: ${min} - max: ${max}`);
+        if(!processOnDeployment) {
+            if (verbose) console.log(`Platform setting value ${platformSettingName} is not processed. It will be configured manually.`);
+            continue;
+        }
+        assert(!_.isUndefined(value), `Platform setting for ${platformSettingName} must be provided.`);
+        if (verbose) console.log(`Configuring platform setting ${platformSettingName}. Value: ${value} - min: ${min} - max: ${max}`);
 
-    //     await settingsInstance.createPlatformSetting(
-    //         toBytes32(web3, platformSettingName),
-    //         value,
-    //         min,
-    //         max,
-    //         txConfig,
-    //     );
-    // }
+        await settingsInstance.createPlatformSetting(
+            toBytes32(web3, platformSettingName),
+            value,
+            min,
+            max,
+            txConfig,
+        );
+    }
 
     // Configuring StartingBlockNumber manually due to it is based on the current block number.
     // await configureStartingBlockNumber(

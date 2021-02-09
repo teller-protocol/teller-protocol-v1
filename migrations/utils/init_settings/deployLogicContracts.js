@@ -10,8 +10,7 @@ module.exports = async function (
     for (const logicContract of logicContracts) {
         const { Contract, name, address } = logicContract;
         const logicNameBytes32 = web3.utils.soliditySha3(name);
-        // await deployerApp.deploy(Contract, txConfig);
-        Contract.address = address;
+        await deployerApp.deploy(Contract, txConfig);
         console.log(`Deploying logic contract: ${name} - key: ${logicNameBytes32} - logic address: ${Contract.address}`);
         result.set(name, {
             name,
