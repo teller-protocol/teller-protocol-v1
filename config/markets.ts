@@ -55,7 +55,7 @@ const marketsConfigsByNetwork: Config<Market[]> = {
       collateralToken: 'LINK'
     }
   ],
-  fork: [
+  hardhat: [
     {
       borrowedToken: 'DAI',
       collateralToken: 'ETH'

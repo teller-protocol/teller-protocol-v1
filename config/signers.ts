@@ -93,7 +93,7 @@ export const signersConfigsByNetwork: Config<Signers> = {
     '_27': '0xF2b469F237A67c53059bcF0965AC50EB91dB7D69',
     '_28': '0x8f1b0b14af6C014132BdF21eccEB46F0cC0B401E'
   },
-  fork: {
+  hardhat: {
     '_1': '0x8A986034A0972bFBE9bCa9dA02FCc0Dc3289335a',
     '_2': '0x0b09d37BDa56D934a6F7c181cfE27090a3461Da0',
     '_3': '0xA91c5DCd0A6Ed24C3d18bf9C2a8D7Ac04B2B5b05',

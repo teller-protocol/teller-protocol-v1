@@ -23,7 +23,7 @@ export const atmsConfigsByNetwork: Config<ATMs> = {
   ropsten: {
     teller
   },
-  fork: {
+  hardhat: {
     teller
   },
   mainnet: {

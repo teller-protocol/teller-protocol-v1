@@ -56,7 +56,7 @@ export const tokensConfigsByNetwork: Config<Tokens> = {
     USDC: '0x0D9C8723B343A8368BebE0B5E89273fF8D712e3C',
     LINK: '0x20fE562d797A42Dcb3399062AE9546cd06f63280'
   },
-  fork: mainnetTokens,
+  hardhat: mainnetTokens,
   mainnet: mainnetTokens
 }
 

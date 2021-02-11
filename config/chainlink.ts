@@ -126,7 +126,7 @@ const chainlinkConfigsByNetwork: Config<Chainlink> = {
       address: '0xD4d78d8e18d4717F5eE8801335eE5b5B97a4b824'
     }
   },
-  fork: mainnetChainlink,
+  hardhat: mainnetChainlink,
   mainnet: mainnetChainlink
 }
 

@@ -11,7 +11,7 @@ export const nodesConfigsByNetwork: Config<Nodes> = {
   ropsten: {
     sypeer: 'https://node-sypeer.layr1.com'
   },
-  fork: {
+  hardhat: {
 
   },
   mainnet: {

@@ -52,7 +52,7 @@ const assetSettingsConfigsByNetwork: Config<AssetSettings> = {
       maxTVLAmount: 0
     }
   },
-  fork: {
+  hardhat: {
     DAI: {
       cToken: 'CDAI',
       maxLoanAmount: 10000,
