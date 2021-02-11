@@ -1,4 +1,4 @@
-export type Network = 'rinkeby' | 'kovan' | 'ropsten' | 'hardhat' | 'mainnet'
+export type Network = 'rinkeby' | 'kovan' | 'ropsten' | 'hardhat' | 'localhost' | 'mainnet'
 
 export type Config<T> = {
   [N in Network]: T

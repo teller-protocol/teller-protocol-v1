@@ -57,6 +57,7 @@ export const tokensConfigsByNetwork: Config<Tokens> = {
     LINK: '0x20fE562d797A42Dcb3399062AE9546cd06f63280'
   },
   hardhat: mainnetTokens,
+  localhost: mainnetTokens,
   mainnet: mainnetTokens
 }
 

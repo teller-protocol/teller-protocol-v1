@@ -127,6 +127,7 @@ const chainlinkConfigsByNetwork: Config<Chainlink> = {
     }
   },
   hardhat: mainnetChainlink,
+  localhost: mainnetChainlink,
   mainnet: mainnetChainlink
 }
 

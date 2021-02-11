@@ -14,6 +14,9 @@ export const nodesConfigsByNetwork: Config<Nodes> = {
   hardhat: {
 
   },
+  localhost: {
+
+  },
   mainnet: {
 
   }

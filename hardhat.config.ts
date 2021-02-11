@@ -30,6 +30,7 @@ export default <HardhatUserConfig>{
       rinkeby: 1,
       ropsten: 1,
       hardhat: 1,
+      localhost: 1,
       mainnet: 1
     }
   },
@@ -53,6 +54,12 @@ export default <HardhatUserConfig>{
         blockNumber: 11806209,
         enabled: true
       },
+      chainId: 1,
+      accounts
+    },
+    // Uses the forked node from the hardhat network above
+    localhost: {
+      url: 'http://127.0.0.1:8545',
       chainId: 1,
       accounts
     },

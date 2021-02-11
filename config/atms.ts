@@ -13,6 +13,10 @@ const teller: ATM = {
   maxDebtRatio: 5000
 }
 
+const mainnetATMs: ATMs = {
+  teller
+}
+
 export const atmsConfigsByNetwork: Config<ATMs> = {
   kovan: {
     teller
@@ -23,12 +27,9 @@ export const atmsConfigsByNetwork: Config<ATMs> = {
   ropsten: {
     teller
   },
-  hardhat: {
-    teller
-  },
-  mainnet: {
-    teller
-  }
+  hardhat: mainnetATMs,
+  localhost: mainnetATMs,
+  mainnet: mainnetATMs
 }
 
 export const getATMs = (network: Network) => atmsConfigsByNetwork[network]
