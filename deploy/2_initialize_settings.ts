@@ -28,7 +28,6 @@ const initializeSettings: DeployFunction = async (hre) => {
     tokens.WETH,
     tokens.CETH
   )
-  await settings.post
 
   const logicVersionsRegistryProxyAddress = await settings.versionsRegistry()
   await deployments.save('LogicVersionsRegistry', {

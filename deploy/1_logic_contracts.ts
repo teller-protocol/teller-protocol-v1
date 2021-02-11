@@ -3,7 +3,6 @@ import { DeployFunction } from 'hardhat-deploy/types'
 import { deploy, deployLogic } from '../utils/deployHelpers'
 
 const deployLogicContracts: DeployFunction = async (hre) => {
-  console.log(hre.network.name)
   const { address: loanLibAddress } = await deploy({
     hre,
     contract: 'LoanLib'

@@ -26,7 +26,8 @@ extendEnvironment((hre) => {
 
       if (config) {
         if (config.from) {
-          contract = contract.attach(config.from)
+          const signer = ethers.provider.getSigner(config.from)
+          contract = contract.connect(signer)
         }
       }
 
