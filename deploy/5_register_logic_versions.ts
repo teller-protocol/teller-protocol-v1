@@ -3,7 +3,7 @@ import { DeployFunction } from 'hardhat-deploy/dist/types'
 import { LogicVersionsRegistry, Settings } from '../types/typechain'
 
 const registerLogicVersions: DeployFunction = async (hre) => {
-  const { getNamedAccounts, deployments, ethers } = hre
+  const { getNamedAccounts, deployments, contracts, ethers } = hre
   const { deployer } = await getNamedAccounts()
 
   const logicNames = [
@@ -27,13 +27,13 @@ const registerLogicVersions: DeployFunction = async (hre) => {
     }))
   )
 
-  const { address: versionsRegistryAddress } = await deployments.get('LogicVersionsRegistry')
-  const versionsRegistry = await ethers.getContractAt('LogicVersionsRegistry', versionsRegistryAddress) as LogicVersionsRegistry
-  await versionsRegistry.attach(deployer).createLogicVersions(requests)
+  const versionsRegistry = await contracts.get<LogicVersionsRegistry>('LogicVersionsRegistry', {
+    from: deployer
+  })
+  await versionsRegistry.createLogicVersions(requests)
 
-  const { address: settingsAddress } = await deployments.get('Settings')
-  const settings = await ethers.getContractAt('Settings', settingsAddress) as Settings
-  await settings.attach(deployer).postLogicVersionsRegistered()
+  const settings = await contracts.get<Settings>('Settings', { from: deployer })
+  await settings.postLogicVersionsRegistered()
 }
 
 registerLogicVersions.tags = [ 'register-logic' ]

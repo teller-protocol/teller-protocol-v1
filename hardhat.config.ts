@@ -5,6 +5,8 @@ import { HardhatUserConfig } from 'hardhat/config'
 import { config } from 'dotenv'
 import { HardhatNetworkHDAccountsUserConfig } from 'hardhat/types'
 
+import './utils/getContract'
+
 config()
 
 const accounts: HardhatNetworkHDAccountsUserConfig = {

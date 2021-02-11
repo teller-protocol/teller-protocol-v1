@@ -1,5 +1,6 @@
 import { formatBytes32String } from 'ethers/lib/utils'
-import { DeployFunction } from 'hardhat-deploy/dist/types'
+import { DeployFunction } from 'hardhat-deploy/types'
+
 import { AssetSettings, Settings } from '../types/typechain'
 import { getPlatformSettings } from '../config/platform-settings'
 import { getAssetSettings } from '../config/asset-settings'
@@ -7,13 +8,11 @@ import { getTokens } from '../config/tokens'
 import { Network } from '../types/custom/config-types'
 
 const createPlatformSettings: DeployFunction = async (hre) => {
-  const { getNamedAccounts, deployments, ethers, network } = hre
+  const { getNamedAccounts, contracts, ethers, network } = hre
   const { deployer } = await getNamedAccounts()
 
-  const { address: settingsAddress } = await deployments.get('Settings')
-  const settings = await ethers.getContractAt('Settings', settingsAddress) as Settings
-  const assetSettingsAddress = await settings.assetSettings()
-  const assetSettings = await ethers.getContractAt('AssetSettings', assetSettingsAddress) as AssetSettings
+  const settings = await contracts.get<Settings>('Settings', { from: deployer })
+  const assetSettings = await contracts.get<AssetSettings>('AssetSettings', { from: deployer })
 
   const platformSettings = getPlatformSettings(<Network>network.name)
   for (const [ settingName, setting ] of Object.entries(platformSettings)) {
@@ -25,7 +24,7 @@ const createPlatformSettings: DeployFunction = async (hre) => {
     } = setting
 
     if (processOnDeployment)
-      await settings.attach(deployer).createPlatformSetting(
+      await settings.createPlatformSetting(
         formatBytes32String(settingName),
         value,
         min,
@@ -42,12 +41,12 @@ const createPlatformSettings: DeployFunction = async (hre) => {
       maxTVLAmount
     } = setting
 
-    await assetSettings.attach(deployer).createAssetSetting(
+    await assetSettings.createAssetSetting(
       tokens[assetSymbol],
       tokens[cToken],
       maxLoanAmount
     )
-    await assetSettings.attach(deployer).updateMaxTVL(
+    await assetSettings.updateMaxTVL(
       tokens[assetSymbol],
       maxTVLAmount
     )

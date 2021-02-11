@@ -6,7 +6,7 @@ import { getTokens } from '../config/tokens'
 import { Network } from '../types/custom/config-types'
 
 const initializeSettings: DeployFunction = async (hre) => {
-  const { getNamedAccounts, deployments, ethers, network } = hre
+  const { getNamedAccounts, deployments, contracts, ethers, network } = hre
   const { deployer } = await getNamedAccounts()
 
   const tokens = getTokens(<Network>network.name)
@@ -22,8 +22,8 @@ const initializeSettings: DeployFunction = async (hre) => {
     settingsProxy.address,
     settingsLogic.address
   )
-  const settings = await ethers.getContractAt('Settings', settingsProxy.address) as Settings
-  await settings.attach(deployer)['initialize(address,address,address)'](
+  const settings = await contracts.get<Settings>('Settings', { from: deployer })
+  await settings['initialize(address,address,address)'](
     logicVersionsRegistryLogic.address,
     tokens.WETH,
     tokens.CETH
