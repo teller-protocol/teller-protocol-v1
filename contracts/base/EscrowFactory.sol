@@ -82,6 +82,7 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         escrowAddress = address(
             new DynamicProxy(address(_getSettings()), escrowLogicName)
         );
+        _getSettings().addAuthorizedAddress(escrowAddress);
         emit EscrowCreated(loan.loanTerms.borrower, loansAddress, loanID, escrowAddress);
     }
 

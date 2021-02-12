@@ -137,7 +137,9 @@ module.exports = {
       gas: gasKeyValue,
       gasPrice: web3.utils.toWei(gasPriceKeyValue, 'gwei'),
       network_id: '1',
-      skipDryRun: false,
+      networkCheckTimeout: 1000000000,
+      timeoutBlocks: 200,
+      skipDryRun: true,
     },
     ['ganache-mainnet']: {
       host: '127.0.0.1',

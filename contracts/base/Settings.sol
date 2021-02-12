@@ -354,7 +354,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     onlyPauser()
     isInitialized()
   {
-    addressToAdd.requireNotEmpty("ADDRESS_ZERO");
     authorizedAddresses[addressToAdd] = true;
   }
 
@@ -382,7 +381,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     onlyPauser()
     isInitialized()
   {
-    addressToRemove.requireNotEmpty("ADDRESS_ZERO");
     authorizedAddresses[addressToRemove] = false;
   }
 
