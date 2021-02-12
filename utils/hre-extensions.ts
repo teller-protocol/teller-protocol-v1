@@ -1,11 +1,12 @@
 import { extendEnvironment } from 'hardhat/config'
-import { Contract } from 'ethers'
+import { Contract, Signer } from 'ethers'
 import '@nomiclabs/hardhat-ethers'
 import 'hardhat-deploy'
 
 declare module "hardhat/types/runtime" {
   interface HardhatRuntimeEnvironment {
     contracts: ContractsExtension
+    getNamedSigner(name: string): Promise<Signer>
   }
 }
 
@@ -14,11 +15,11 @@ interface ContractsExtension {
 }
 
 interface Config {
-  from?: string
+  from?: string | Signer
 }
 
 extendEnvironment((hre) => {
-  const { deployments, ethers } = hre
+  const { deployments, ethers, getNamedAccounts } = hre
   hre.contracts = {
     async get<C extends Contract>(name: string, config?: Config): Promise<C> {
       const { address } = await deployments.get(name)
@@ -26,12 +27,18 @@ extendEnvironment((hre) => {
 
       if (config) {
         if (config.from) {
-          const signer = ethers.provider.getSigner(config.from)
+          const signer = Signer.isSigner(config.from)
+            ? config.from
+            : ethers.provider.getSigner(config.from)
           contract = contract.connect(signer)
         }
       }
 
       return contract as C
     }
+  },
+  hre.getNamedSigner = async (name: string): Promise<Signer> => {
+    const accounts = await getNamedAccounts()
+    return ethers.provider.getSigner(accounts[name])
   }
 })
