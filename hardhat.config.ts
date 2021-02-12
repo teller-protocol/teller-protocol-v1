@@ -5,6 +5,7 @@ import { HardhatUserConfig } from 'hardhat/config'
 import { config } from 'dotenv'
 import { HardhatNetworkHDAccountsUserConfig } from 'hardhat/types'
 
+import './tasks'
 import './utils/hre-extensions'
 
 config()

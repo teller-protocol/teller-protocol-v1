@@ -2,11 +2,14 @@ import { Signer } from '@ethersproject/abstract-signer';
 import { Contract } from '@ethersproject/contracts';
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { deployments, ethers, contracts, getNamedSigner } from 'hardhat'
+import hre from 'hardhat'
 import { LendingPool, Settings } from '../types/typechain'
+import { getMarket } from '../tasks'
 
 chai.should();
 chai.use(chaiAsPromised)
+
+const { deployments, ethers, contracts, getNamedSigner } = hre
 
 describe('Settings', async () => {
   let settings: Settings
@@ -24,7 +27,7 @@ describe('Settings', async () => {
     beforeEach(async () => {
       // Get snapshot
       await deployments.fixture('platform-settings')
-      settings = await contracts.get<Settings>('Settings', { from: deployer })
+      settings = await contracts.get('Settings', { from: deployer })
     })
 
     it('Should be able to update a platform setting as a pauser', async () => {
@@ -64,7 +67,7 @@ describe('Settings', async () => {
     // Setup for snapshot tests
     beforeEach(async () => {
       await deployments.fixture('platform-settings')
-      settings = await contracts.get<Settings>('Settings', { from: deployer })
+      settings = await contracts.get('Settings', { from: deployer })
 
     })
 
@@ -98,14 +101,19 @@ describe('Settings', async () => {
     })
   })
 
-  describe.skip('Pause lending pool', () => {
-    let lendingPool: Contract
+  describe('Pause lending pool', () => {
+    let lendingPool: LendingPool
     // Setup for snapshot tests
     beforeEach(async () => {
       await deployments.fixture('markets')
-      settings = await contracts.get<Settings>('Settings', { from: deployer })
+      settings = await contracts.get('Settings', { from: deployer })
 
-      lendingPool = await contracts.get<LendingPool>('LendingPool', { from: deployer })
+      const { lendingPoolAddress } = await getMarket({
+        lendTokenSym: 'DAI',
+        collTokenSym: 'ETH'
+      }, hre)
+
+      lendingPool = await contracts.get('LendingPool', { at: lendingPoolAddress })
     })
 
     it('Should be able to remove a platform setting as a pauser', async () => {
@@ -115,7 +123,7 @@ describe('Settings', async () => {
           lendingPool.address
         )
 
-      const result: Boolean = await settings.isPaused()
+      const result = await settings.isPaused()
 
       // Assert setting
       result.should.equal(true)

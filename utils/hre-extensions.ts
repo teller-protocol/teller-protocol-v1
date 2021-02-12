@@ -16,13 +16,16 @@ interface ContractsExtension {
 
 interface Config {
   from?: string | Signer
+  at?: string
 }
 
 extendEnvironment((hre) => {
   const { deployments, ethers, getNamedAccounts } = hre
   hre.contracts = {
     async get<C extends Contract>(name: string, config?: Config): Promise<C> {
-      const { address } = await deployments.get(name)
+      const { address } = config?.at
+        ? { address: config.at }
+        : await deployments.get(name)
       let contract = await ethers.getContractAt(name, address)
 
       if (config) {
@@ -36,7 +39,7 @@ extendEnvironment((hre) => {
 
       return contract as C
     }
-  },
+  }
   hre.getNamedSigner = async (name: string): Promise<Signer> => {
     const accounts = await getNamedAccounts()
     return ethers.provider.getSigner(accounts[name])
