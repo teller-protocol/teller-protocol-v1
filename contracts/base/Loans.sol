@@ -35,7 +35,7 @@ import "../interfaces/EscrowInterface.sol";
 
     @author develop@teller.finance
  */
-contract LoansBase is LoansInterface, Base {
+contract Loans is LoansInterface, Base {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
     using NumbersLib for uint256;
@@ -113,15 +113,17 @@ contract LoansBase is LoansInterface, Base {
         @param loanRequest to validate.
      */
     modifier withValidLoanRequest(TellerCommon.LoanRequest memory loanRequest) {
-        uint256 maxLoanDuration = _getSettings().getPlatformSettingValue(
-            _getSettings().consts().MAXIMUM_LOAN_DURATION_SETTING()
-        );
+        uint256 maxLoanDuration =
+            _getSettings().getPlatformSettingValue(
+                _getSettings().consts().MAXIMUM_LOAN_DURATION_SETTING()
+            );
         require(maxLoanDuration >= loanRequest.duration, "DURATION_EXCEEDS_MAX_DURATION");
 
-        bool exceedsMaxLoanAmount = _getSettings().assetSettings().exceedsMaxLoanAmount(
-            address(lendingPool.lendingToken()),
-            loanRequest.amount
-        );
+        bool exceedsMaxLoanAmount =
+            _getSettings().assetSettings().exceedsMaxLoanAmount(
+                address(lendingPool.lendingToken()),
+                loanRequest.amount
+            );
         require(!exceedsMaxLoanAmount, "AMOUNT_EXCEEDS_MAX_AMOUNT");
 
         require(_isDebtRatioValid(loanRequest.amount), "SUPPLY_TO_DEBT_EXCEEDS_MAX");
@@ -216,11 +218,8 @@ contract LoansBase is LoansInterface, Base {
             _payInCollateral(loanID, collateralAmount);
         }
 
-        (
-            uint256 interestRate,
-            uint256 collateralRatio,
-            uint256 maxLoanAmount
-        ) = loanTermsConsensus.processRequest(request, responses);
+        (uint256 interestRate, uint256 collateralRatio, uint256 maxLoanAmount) =
+            loanTermsConsensus.processRequest(request, responses);
 
         loans[loanID].init(
             request,
@@ -277,9 +276,8 @@ contract LoansBase is LoansInterface, Base {
     ) private nonReentrant() {
         if (neededInCollateralTokens > 0) {
             // Withdrawal amount holds the amount of excess collateral in the loan
-            uint256 withdrawalAmount = loans[loanID].collateral.sub(
-                uint256(neededInCollateralTokens)
-            );
+            uint256 withdrawalAmount =
+                loans[loanID].collateral.sub(uint256(neededInCollateralTokens));
             require(withdrawalAmount >= amount, "COLLATERAL_AMOUNT_TOO_HIGH");
         } else {
             require(loans[loanID].collateral == amount, "COLLATERAL_AMOUNT_NOT_MATCH");
@@ -358,9 +356,8 @@ contract LoansBase is LoansInterface, Base {
         loans[loanID].status = TellerCommon.LoanStatus.Active;
 
         // check that enough collateral has been provided for this loan
-        TellerCommon.LoanCollateralInfo memory collateralInfo = _getCollateralInfo(
-            loanID
-        );
+        TellerCommon.LoanCollateralInfo memory collateralInfo =
+            _getCollateralInfo(loanID);
         require(!collateralInfo.moreCollateralRequired, "MORE_COLLATERAL_REQUIRED");
 
         loans[loanID].loanStartTime = now;
@@ -454,9 +451,8 @@ contract LoansBase is LoansInterface, Base {
         whenLendingPoolNotPaused(address(lendingPool))
         nonReentrant()
     {
-        TellerCommon.LoanLiquidationInfo memory liquidationInfo = _getLiquidationInfo(
-            loanID
-        );
+        TellerCommon.LoanLiquidationInfo memory liquidationInfo =
+            _getLiquidationInfo(loanID);
         require(liquidationInfo.liquidable, "DOESNT_NEED_LIQUIDATION");
 
         // the liquidator pays the amount still owed on the loan
@@ -518,7 +514,8 @@ contract LoansBase is LoansInterface, Base {
         @notice Checks if the loan has an Escrow and claims any tokens then pays out the loan collateral.
         @dev See Escrow.claimTokens for more info.
         @param loanID The ID of the loan which is being liquidated
-        @param liquidationInfo The Teller common liquidation struct that holds all the relevant liquidation info, such as the liquidation info
+        @param liquidationInfo The Teller common liquidation struct that holds all the relevant liquidation info,
+        such as the liquidation info
         @param recipient The address of the liquidator where the liquidation reward will be sent to
     */
     function _payOutLiquidator(
@@ -603,13 +600,16 @@ contract LoansBase is LoansInterface, Base {
         @return true if the ratio is valid. Otherwise it returns false.
      */
     function _isDebtRatioValid(uint256 newLoanAmount) internal view returns (bool) {
-        address atmAddressForMarket = _getSettings().atmSettings().getATMForMarket(
-            address(lendingPool.lendingToken()),
-            collateralToken
-        );
+        address atmAddressForMarket =
+            _getSettings().atmSettings().getATMForMarket(
+                address(lendingPool.lendingToken()),
+                collateralToken
+            );
         require(atmAddressForMarket != address(0x0), "ATM_NOT_FOUND_FOR_MARKET");
-        uint256 debtRatioLimit = ATMGovernanceInterface(atmAddressForMarket)
-            .getGeneralSetting(MAX_DEBT_RATIO_ATM_SETTING);
+        uint256 debtRatioLimit =
+            ATMGovernanceInterface(atmAddressForMarket).getGeneralSetting(
+                MAX_DEBT_RATIO_ATM_SETTING
+            );
         uint256 currentDebtRatio = lendingPool.getDebtRatioFor(newLoanAmount);
         return currentDebtRatio <= debtRatioLimit;
     }

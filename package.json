@@ -36,6 +36,7 @@
     "ganache-time-traveler": "^1.0.5",
     "hardhat": "^2.0.8",
     "hardhat-contract-sizer": "^2.0.2",
+    "hardhat-deploy": "^0.7.0-beta.44",
     "hardhat-typechain": "^0.3.4",
     "husky": "^4.2.3",
     "jsonfile": "^6.0.1",

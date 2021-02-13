@@ -1,6 +1,6 @@
 import { deployments } from 'hardhat';
 
-describe('Basic', () => {
+describe('Other', () => {
   before(async () => {
     await deployments.fixture('test');
   });

@@ -1,5 +1,7 @@
 import '@nomiclabs/hardhat-waffle';
 import '@nomiclabs/hardhat-ethers';
+import 'hardhat-deploy';
+
 import { HardhatUserConfig } from 'hardhat/config';
 
 import configureEnv from './config/env';
@@ -25,6 +27,14 @@ export default <HardhatUserConfig>{
         enabled: true,
         runs: 200,
       },
+    },
+  },
+  namedAccounts: {
+    deployer: {
+      localhost: 1,
+      hardhat: 1,
+      rinkeby: 0,
+      mainnet: 1,
     },
   },
   networks: {

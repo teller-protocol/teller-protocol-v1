@@ -1,4 +1,4 @@
-import { Contract } from 'ethers';
+import { BigNumber, Contract } from 'ethers';
 import { readFileSync, writeFileSync } from 'fs';
 import { ethers, network } from 'hardhat';
 import { join } from 'path';
@@ -6,6 +6,7 @@ import { tokens } from '../../config/tokens';
 import { PlatformSetting, platformSettings } from '../../config/platform-settings';
 import { chainlink, ChainlinkPair } from '../../config/chainlink';
 import { AssetSetting, assetSettings } from '../../config/asset-settings';
+import { markets } from '../../config/markets';
 
 type Deployments = Record<
   string,
@@ -21,16 +22,21 @@ class Helper {
   public platformSettings: Record<string, PlatformSetting>;
   public chainlink: Record<string, ChainlinkPair>;
   public assetSettings: Record<string, AssetSetting>;
-
+  public markets: { collateralToken: string; borrowedToken: string }[];
+  public deployerIndex: number = 0;
   private deploymentPath: string = '';
 
   constructor(public network: string, public id?: string) {
     if (id) this.deploymentPath = join(__dirname, `../deployments/${this.network}/${this.id}.json`);
-    if (['localhost', 'hardhat'].includes(network)) network = 'mainnet';
+    if (['localhost', 'hardhat'].includes(network)) {
+      this.deployerIndex = 1;
+      network = 'mainnet';
+    }
     this.tokens = tokens(network);
     this.platformSettings = platformSettings(network);
     this.chainlink = chainlink(network);
     this.assetSettings = assetSettings(network);
+    this.markets = markets(network);
   }
 
   public async load() {
@@ -39,14 +45,13 @@ class Helper {
   }
 
   public async deploy(identifier: string, contractName: string, args?: any[], libraries?: Record<string, string>): Promise<void> {
+    const deployer = (await ethers.getSigners())[this.deployerIndex];
     if (this.deployments[identifier]) {
       console.log(`Not repeating deployment of ${identifier} (${this.deployments[identifier].address})`);
       return;
     }
-    console.log(`Deploying ${identifier} (${contractName})`);
     const factory = await ethers.getContractFactory(contractName, { libraries });
-    console.log(await ethers.provider.getBalance(ethers.provider.getSigner().getAddress()));
-    const contract = await factory.deploy(...(args ?? [{ gasLimit: 999999999999, gasPrice: 1 }]));
+    const contract = await factory.connect(deployer).deploy(...(args ?? [{ gasLimit: 999999999999, gasPrice: 1 }]));
     await ethers.provider.send('evm_mine', []);
 
     this.deployments[identifier] = {
@@ -54,7 +59,7 @@ class Helper {
       calls: {},
     };
     if (this.id) await this.save();
-    console.log(contract.address);
+    console.log(`Deployed ${identifier}/${contractName} - ${contract.address}`);
   }
 
   public async call(identifier: string, step: string, executor: () => Promise<any>) {

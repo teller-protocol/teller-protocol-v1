@@ -1,12 +1,14 @@
-import { helper } from '../helper';
+import { DeployFunction } from 'hardhat-deploy/dist/types';
 
-export async function deployLogicContracts(): Promise<void> {
+const deployLogicContracts: DeployFunction = async ({ deployments, getNamedAccounts }) => {
+  const { deployer } = await getNamedAccounts();
+
   const logicContracts = [
     {
       identifier: 'ETH_DAI_Loans_Logic',
-      contractName: 'LoansBase',
+      contractName: 'Loans',
       libraries: {
-        LoanLib: helper.deployments.LoanLib.address,
+        LoanLib: (await deployments.get('LoanLib')).address,
       },
     },
     {
@@ -52,5 +54,9 @@ export async function deployLogicContracts(): Promise<void> {
   ];
 
   for (const { identifier, contractName, libraries } of logicContracts)
-    await helper.deploy(identifier, contractName, [], libraries);
-}
+    await deployments.deploy(identifier, { from: deployer, contract: contractName, libraries });
+};
+
+deployLogicContracts.tags = ['test'];
+
+export default deployLogicContracts;
