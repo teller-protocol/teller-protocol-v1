@@ -1,5 +1,4 @@
 import { Signer } from '@ethersproject/abstract-signer';
-import { Contract } from '@ethersproject/contracts';
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import hre from 'hardhat'
@@ -116,28 +115,82 @@ describe('Settings', async () => {
       lendingPool = await contracts.get('LendingPool', { at: lendingPoolAddress })
     })
 
-    it('Should be able to remove a platform setting as a pauser', async () => {
-      // Update setting
+    it('Should be able to pause a lending pool as a pauser', async () => {
+      // Pause lending pool
       await settings
         .pauseLendingPool(
           lendingPool.address
         )
 
-      const result = await settings.isPaused()
+      // Try to deposit into lending pool
+      const fn = () =>
+        lendingPool
+          .deposit(
+            100
+          )
 
-      // Assert setting
-      result.should.equal(true)
+      await fn().should.be.rejectedWith('LENDING_POOL_IS_PAUSED')
+
     })
 
-    it('Should not be able to remove a platform setting as not a pauser', async () => {
+    it('Should not be able to pause a lending pool as not a pauser', async () => {
       // Sender address
       const { 6: notPauser } = await ethers.getSigners()
 
-      // Try to update setting
+      // Try to pause lending pool
       const fn = () =>
         settings
           .connect(notPauser)
           .pauseLendingPool(
+            lendingPool.address
+          )
+
+      await fn().should.be.rejectedWith('NOT_PAUSER')
+    })
+  })
+
+  describe('Unpause lending pool', () => {
+    let lendingPool: LendingPool
+    // Setup for snapshot tests
+    beforeEach(async () => {
+      await deployments.fixture('markets')
+      settings = await contracts.get('Settings', { from: deployer })
+
+      const { lendingPoolAddress } = await getMarket({
+        lendTokenSym: 'DAI',
+        collTokenSym: 'ETH'
+      }, hre)
+
+      lendingPool = await contracts.get('LendingPool', { at: lendingPoolAddress })
+
+      // Pause lending pool
+      await settings
+        .pauseLendingPool(
+          lendingPool.address
+        )
+    })
+
+    it('Should be able to unpause a lending pool as a pauser', async () => {
+      // Try to unpause lending pool
+      const fn = () =>
+        settings
+          .unpauseLendingPool(
+            lendingPool.address
+          )
+
+      await fn().should.be.fulfilled
+
+    })
+
+    it('Should not be able to unpause a lending pool as not a pauser', async () => {
+      // Sender address
+      const { 6: notPauser } = await ethers.getSigners()
+
+      // Try to unpause lending pool
+      const fn = () =>
+        settings
+          .connect(notPauser)
+          .unpauseLendingPool(
             lendingPool.address
           )
 
