@@ -17,6 +17,9 @@ describe('AssetSettings', async () => {
   let assetAddress: Address
   let cTokenAddress: Address
   let emptyAddress = "0x0000000000000000000000000000000000000000"
+  let maxLoan = 1000
+  let maxTVL = 100000
+  let maxDebtRatio = 5000
 
   // Setup for global tests
   beforeEach(async () => {
@@ -49,7 +52,9 @@ describe('AssetSettings', async () => {
           .createAssetSetting(
             assetAddress,
             cTokenAddress,
-            1000
+            maxLoan,
+            maxTVL,
+            maxDebtRatio
           )
 
       await fn().should.be.rejectedWith('CACHE_ALREADY_EXISTS')
@@ -63,7 +68,9 @@ describe('AssetSettings', async () => {
           .createAssetSetting(
             cTokenAddress,
             assetAddress,
-            1000
+            maxLoan,
+            maxTVL,
+            maxDebtRatio
           )
 
       await fn().should.be.fulfilled
@@ -80,7 +87,9 @@ describe('AssetSettings', async () => {
           .createAssetSetting(
             assetAddress,
             cTokenAddress,
-            1000
+            maxLoan,
+            maxTVL,
+            maxDebtRatio
           )
 
       await fn().should.be.rejectedWith('NOT_PAUSER')
@@ -96,7 +105,9 @@ describe('AssetSettings', async () => {
           .createAssetSetting(
             assetAddress,
             emptyAddress,
-            1000
+            maxLoan,
+            maxTVL,
+            maxDebtRatio
           )
 
       await fn().should.be.rejectedWith('CTOKEN_ADDRESS_REQUIRED')
@@ -112,7 +123,9 @@ describe('AssetSettings', async () => {
           .createAssetSetting(
             emptyAddress,
             cTokenAddress,
-            1000
+            maxLoan,
+            maxTVL,
+            maxDebtRatio
           )
 
       await fn().should.be.rejectedWith('ASSET_ADDRESS_REQUIRED')
