@@ -1,22 +1,28 @@
-import { DeployFunction } from 'hardhat-deploy/dist/types';
-import { helper } from '../test-utils/deploy-helper';
+import { DeployFunction } from 'hardhat-deploy/dist/types'
+import { getTokens } from '../config/tokens'
+import { getMarkets } from '../config/markets'
+import { Network } from '../types/custom/config-types'
 
-const createMarkets: DeployFunction = async ({ getNamedAccounts, deployments }) => {
-  const { deployer } = await getNamedAccounts();
+const createMarkets: DeployFunction = async (hre) => {
+  const { getNamedAccounts, deployments, network } = hre
+  const { deployer } = await getNamedAccounts()
 
-  const tokens = helper.tokens;
+  const tokens = getTokens(<Network>network.name)
+  const markets = getMarkets(<Network>network.name)
 
-  for (const { borrowedToken, collateralToken } of helper.markets) {
+  for (const market of markets) {
+    const { borrowedToken, collateralToken } = market
     await deployments.execute(
       'MarketFactory',
       { from: deployer },
       'createMarket',
       tokens[borrowedToken],
       tokens[collateralToken]
-    );
+    )
   }
-};
+}
 
-createMarkets.tags = ['test'];
+createMarkets.tags = [ 'markets' ]
+createMarkets.dependencies = [ 'platform-settings' ]
 
-export default createMarkets;
+export default createMarkets

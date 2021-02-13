@@ -4,7 +4,7 @@
   "useTabs": false,
   "singleQuote": true,
   "bracketSpacing": true,
-  "semi": true,
+  "semi": false,
   "overrides": [
     {
       "files": "*.sol",

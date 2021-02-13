@@ -1,66 +1,86 @@
-import { DeployFunction } from 'hardhat-deploy/dist/types';
+import { DeployFunction } from 'hardhat-deploy/types'
 
-const deployLogicContracts: DeployFunction = async ({ deployments, getNamedAccounts }) => {
-  const { deployer } = await getNamedAccounts();
+import { deploy, deployLogic } from '../utils/deployHelpers'
 
-  const logicContracts = [
-    {
-      identifier: 'TDAI_Logic',
-      contractName: 'TToken',
-    },
-    {
-      identifier: 'ETH_DAI_Loans_Logic',
-      contractName: 'Loans',
-      libraries: {
-        LoanLib: (await deployments.get('LoanLib')).address,
-      },
-    },
-    {
-      identifier: 'ChainlinkAggregator_Logic',
-      contractName: 'ChainlinkAggregator',
-    },
-    {
-      identifier: 'ETH_DAI_LendingPool_Logic',
-      contractName: 'LendingPool',
-    },
-    {
-      identifier: 'ETH_DAI_LoanTermsConsensus_Logic',
-      contractName: 'LoanTermsConsensus',
-    },
-    {
-      identifier: 'EscrowFactory_Logic',
-      contractName: 'EscrowFactory',
-    },
-    {
-      identifier: 'MarketFactory_Logic',
-      contractName: 'MarketFactory',
-    },
-    {
-      identifier: 'Uniswap_Logic',
-      contractName: 'Uniswap',
-    },
-    {
-      identifier: 'Compound_Logic',
-      contractName: 'Compound',
-    },
-    {
-      identifier: 'Settings_Logic',
-      contractName: 'Settings',
-    },
-    {
-      identifier: 'LogicVersionsRegistry_Logic',
-      contractName: 'LogicVersionsRegistry',
-    },
-    {
-      identifier: 'AssetSettings_Logic',
-      contractName: 'AssetSettings',
-    },
-  ];
+const deployLogicContracts: DeployFunction = async (hre) => {
+  console.log(hre.network.name)
+  const { address: loanLibAddress } = await deploy({
+    hre,
+    contract: 'LoanLib'
+  })
 
-  for (const { identifier, contractName, libraries } of logicContracts)
-    await deployments.deploy(identifier, { from: deployer, contract: contractName, libraries });
-};
+  await deployLogic({
+    hre,
+    contract: 'TToken'
+  })
 
-deployLogicContracts.tags = ['test'];
+  await deployLogic({
+    hre,
+    contract: 'EtherCollateralLoans',
+    libraries: {
+      LoanLib: loanLibAddress
+    }
+  })
 
-export default deployLogicContracts;
+  await deployLogic({
+    hre,
+    contract: 'TokenCollateralLoans',
+    libraries: {
+      LoanLib: loanLibAddress
+    }
+  })
+
+  await deployLogic({
+    hre,
+    contract: 'ChainlinkAggregator'
+  })
+
+  await deployLogic({
+    hre,
+    contract: 'LendingPool'
+  })
+
+  await deployLogic({
+    hre,
+    contract: 'LoanTermsConsensus'
+  })
+
+  await deployLogic({
+    hre,
+    contract: 'EscrowFactory'
+  })
+
+  await deployLogic({
+    hre,
+    contract: 'MarketFactory'
+  })
+
+  await deployLogic({
+    hre,
+    contract: 'Uniswap'
+  })
+
+  await deployLogic({
+    hre,
+    contract: 'Compound'
+  })
+
+  await deployLogic({
+    hre,
+    contract: 'Settings'
+  })
+
+  await deployLogic({
+    hre,
+    contract: 'LogicVersionsRegistry'
+  })
+
+  await deployLogic({
+    hre,
+    contract: 'AssetSettings'
+  })
+}
+
+deployLogicContracts.tags = [ 'logic' ]
+
+export default deployLogicContracts

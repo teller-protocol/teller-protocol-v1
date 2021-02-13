@@ -1,15 +1,17 @@
-// import { ChainlinkAggregator, Settings } from '../../../typechain';
-// import { helper } from '../helper';
+import { DeployFunction } from 'hardhat-deploy/dist/types'
+import { getTokens } from '../config/tokens'
+import { getChainlink } from '../config/chainlink'
+import { Network } from '../types/custom/config-types'
 
-import { DeployFunction } from 'hardhat-deploy/dist/types';
-import { helper } from '../test-utils/deploy-helper';
+const addChainlinkPairs: DeployFunction = async (hre) => {
+  const { getNamedAccounts, deployments, network } = hre
+  const { deployer } = await getNamedAccounts()
 
-const addChainlinkPairs: DeployFunction = async ({ getNamedAccounts, deployments }) => {
-  const { deployer } = await getNamedAccounts();
+  const tokens = getTokens(<Network>network.name)
+  const chainlink = getChainlink(<Network>network.name)
 
-  const tokens = helper.tokens;
-
-  for (const { address, baseTokenName, quoteTokenName } of Object.values(helper.chainlink)) {
+  for (const chainlinkPair of Object.values(chainlink)) {
+    const { address, baseTokenName, quoteTokenName } = chainlinkPair
     await deployments.execute(
       'ChainlinkAggregator',
       { from: deployer },
@@ -17,10 +19,11 @@ const addChainlinkPairs: DeployFunction = async ({ getNamedAccounts, deployments
       tokens[baseTokenName],
       tokens[quoteTokenName],
       address
-    );
+    )
   }
-};
+}
 
-addChainlinkPairs.tags = ['test'];
+addChainlinkPairs.tags = [ 'chainlink' ]
+addChainlinkPairs.dependencies = [ 'settings' ]
 
-export default addChainlinkPairs;
+export default addChainlinkPairs

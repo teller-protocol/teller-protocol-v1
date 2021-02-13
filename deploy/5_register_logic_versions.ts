@@ -1,73 +1,42 @@
-// import { formatBytes32String } from 'ethers/lib/utils';
-// import { ethers } from 'hardhat';
-// import { LogicVersionsRegistry, Settings } from '../../../typechain';
-// import { helper } from '../helper';
+import { DeployFunction } from 'hardhat-deploy/dist/types'
 
-import { ethers } from 'ethers';
-import { DeployFunction } from 'hardhat-deploy/dist/types';
+import { LogicVersionsRegistry, Settings } from '../types/typechain'
 
-const registerLogicVersions: DeployFunction = async ({ getNamedAccounts, deployments }) => {
-  const { deployer } = await getNamedAccounts();
+const registerLogicVersions: DeployFunction = async (hre) => {
+  const { getNamedAccounts, deployments, ethers } = hre
+  const { deployer } = await getNamedAccounts()
 
   const logicNames = [
     { identifier: 'ChainlinkAggregator_Logic', logicName: ethers.utils.id('ChainlinkAggregator') },
-    { identifier: 'TDAI_Logic', logicName: ethers.utils.id('TToken') },
-    { identifier: 'ETH_DAI_Loans_Logic', logicName: ethers.utils.id('EtherCollateralLoans') },
-    { identifier: 'ETH_DAI_LendingPool_Logic', logicName: ethers.utils.id('LendingPool') },
-    { identifier: 'ETH_DAI_LoanTermsConsensus_Logic', logicName: ethers.utils.id('LoanTermsConsensus') },
+    { identifier: 'TToken_Logic', logicName: ethers.utils.id('TToken') },
+    { identifier: 'EtherCollateralLoans_Logic', logicName: ethers.utils.id('EtherCollateralLoans') },
+    { identifier: 'TokenCollateralLoans_Logic', logicName: ethers.utils.id('TokenCollateralLoans') },
+    { identifier: 'LendingPool_Logic', logicName: ethers.utils.id('LendingPool') },
+    { identifier: 'LoanTermsConsensus_Logic', logicName: ethers.utils.id('LoanTermsConsensus') },
     { identifier: 'EscrowFactory_Logic', logicName: ethers.utils.id('EscrowFactory') },
     { identifier: 'MarketFactory_Logic', logicName: ethers.utils.id('MarketFactory') },
     { identifier: 'Uniswap_Logic', logicName: ethers.utils.id('Uniswap') },
     { identifier: 'Compound_Logic', logicName: ethers.utils.id('Compound') },
-    { identifier: 'AssetSettings_Logic', logicName: ethers.utils.id('AssetSettings') },
-  ];
+    { identifier: 'AssetSettings_Logic', logicName: ethers.utils.id('AssetSettings') }
+  ]
 
   const requests = await Promise.all(
     logicNames.map(async ({ identifier, logicName }) => ({
       logic: (await deployments.get(identifier)).address,
-      logicName,
+      logicName
     }))
-  );
+  )
 
-  await deployments.execute('LogicVersionsRegistry', { from: deployer }, 'createLogicVersions', requests);
-  await deployments.execute('Settings', { from: deployer }, 'postLogicVersionsRegistered');
-};
+  const { address: versionsRegistryAddress } = await deployments.get('LogicVersionsRegistry')
+  const versionsRegistry = await ethers.getContractAt('LogicVersionsRegistry', versionsRegistryAddress) as LogicVersionsRegistry
+  await versionsRegistry.attach(deployer).createLogicVersions(requests)
 
-registerLogicVersions.tags = ['test'];
+  const { address: settingsAddress } = await deployments.get('Settings')
+  const settings = await ethers.getContractAt('Settings', settingsAddress) as Settings
+  await settings.attach(deployer).postLogicVersionsRegistered()
+}
 
-export default registerLogicVersions;
+registerLogicVersions.tags = [ 'register-logic' ]
+registerLogicVersions.dependencies = [ 'settings', 'dynamic-proxies' ]
 
-// export async function registerLogicVersions(): Promise<void> {
-//   const logicNames = [
-//     { identifier: 'ChainlinkAggregator_Logic', logicName: 'ChainlinkAggregator' },
-//     { identifier: 'ETH_DAI_Loans_Logic', logicName: 'EtherCollateralLoans' },
-//     { identifier: 'ETH_DAI_LendingPool_Logic', logicName: 'LendingPool' },
-//     { identifier: 'ETH_DAI_LoanTermsConsensus_Logic', logicName: 'LoanTermsConsensus' },
-//     { identifier: 'EscrowFactory_Logic', logicName: 'EscrowFactory' },
-//     { identifier: 'MarketFactory_Logic', logicName: 'MarketFactory' },
-//     { identifier: 'Uniswap_Logic', logicName: 'Uniswap' },
-//     { identifier: 'Compound_Logic', logicName: 'Compound' },
-//     { identifier: 'AssetSettings_Logic', logicName: 'AssetSettings' },
-//   ];
-
-//   const settingsProxyAddress = helper.deployments.Settings_Proxy.address;
-//   const settingsInstance = await helper.make<Settings>('Settings', settingsProxyAddress);
-//   const logicVersionsRegistryAddress = await settingsInstance.versionsRegistry();
-//   const logicVersionsRegistryInstance = await helper.make<LogicVersionsRegistry>(
-//     'LogicVersionsRegistry',
-//     logicVersionsRegistryAddress
-//   );
-
-//   const logicVersionsRegistryRequest = logicNames.map(({ logicName, identifier }) => ({
-//     logic: helper.deployments[identifier].address,
-//     logicName: ethers.utils.solidityKeccak256(['bytes32'], [formatBytes32String(logicName)]),
-//   }));
-
-//   await helper.call('LogicVersionsRegistry_Logic', 'createLogicVersions', async () => {
-//     await logicVersionsRegistryInstance.createLogicVersions(logicVersionsRegistryRequest);
-//   });
-
-//   await helper.call('Settings_Proxy', 'postLogicVersionsRegistered', async () => {
-//     await settingsInstance.postLogicVersionsRegistered();
-//   });
-// }
+export default registerLogicVersions

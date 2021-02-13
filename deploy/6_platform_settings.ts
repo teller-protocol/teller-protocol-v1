@@ -1,68 +1,60 @@
-// import { formatBytes32String } from 'ethers/lib/utils';
-// import { AssetSettings, Settings } from '../../../typechain';
-// import { helper } from '../helper';
+import { formatBytes32String } from 'ethers/lib/utils'
+import { DeployFunction } from 'hardhat-deploy/dist/types'
+import { AssetSettings, Settings } from '../types/typechain'
+import { getPlatformSettings } from '../config/platform-settings'
+import { getAssetSettings } from '../config/asset-settings'
+import { getTokens } from '../config/tokens'
+import { Network } from '../types/custom/config-types'
 
-import { formatBytes32String } from 'ethers/lib/utils';
-import { DeployFunction } from 'hardhat-deploy/dist/types';
-import { helper } from '../test-utils/deploy-helper';
+const createPlatformSettings: DeployFunction = async (hre) => {
+  const { getNamedAccounts, deployments, ethers, network } = hre
+  const { deployer } = await getNamedAccounts()
 
-const createPlatformSettings: DeployFunction = async ({ getNamedAccounts, deployments }) => {
-  const { deployer } = await getNamedAccounts();
+  const { address: settingsAddress } = await deployments.get('Settings')
+  const settings = await ethers.getContractAt('Settings', settingsAddress) as Settings
+  const assetSettingsAddress = await settings.assetSettings()
+  const assetSettings = await ethers.getContractAt('AssetSettings', assetSettingsAddress) as AssetSettings
 
-  for (const [platformSetting, { max, min, processOnDeployment, value }] of Object.entries(helper.platformSettings)) {
+  const platformSettings = getPlatformSettings(<Network>network.name)
+  for (const [ settingName, setting ] of Object.entries(platformSettings)) {
+    const {
+      max,
+      min,
+      processOnDeployment,
+      value
+    } = setting
+
     if (processOnDeployment)
-      await deployments.execute(
-        'Settings',
-        { from: deployer },
-        'createPlatformSetting',
-        formatBytes32String(platformSetting),
+      await settings.attach(deployer).createPlatformSetting(
+        formatBytes32String(settingName),
         value,
         min,
         max
-      );
+      )
   }
 
-  const tokens = helper.tokens;
+  const tokens = getTokens(<Network>network.name)
+  const assetSettingsConfig = getAssetSettings(<Network>network.name)
+  for (const [ assetSymbol, setting ] of Object.entries(assetSettingsConfig)) {
+    const {
+      cToken,
+      maxLoanAmount,
+      maxTVLAmount
+    } = setting
 
-  for (const [asset, { cToken, maxLoanAmount, maxTVLAmount }] of Object.entries(helper.assetSettings)) {
-    await deployments.execute(
-      'AssetSettings',
-      { from: deployer },
-      'createAssetSetting',
-      tokens[asset],
+    await assetSettings.attach(deployer).createAssetSetting(
+      tokens[assetSymbol],
       tokens[cToken],
       maxLoanAmount
-    );
-    await deployments.execute('AssetSettings', { from: deployer }, 'updateMaxTVL', tokens[asset], maxTVLAmount);
+    )
+    await assetSettings.attach(deployer).updateMaxTVL(
+      tokens[assetSymbol],
+      maxTVLAmount
+    )
   }
-};
+}
 
-createPlatformSettings.tags = ['test'];
+createPlatformSettings.tags = [ 'platform-settings' ]
+createPlatformSettings.dependencies = [ 'register-logic' ]
 
-export default createPlatformSettings;
-
-// export async function createPlatformSettings() {
-//   const settingsProxyAddress = helper.deployments.Settings_Proxy.address;
-//   const settingsInstance = await helper.make<Settings>('Settings', settingsProxyAddress);
-
-//   for (const [platformSetting, { max, min, processOnDeployment, value }] of Object.entries(helper.platformSettings)) {
-//     if (processOnDeployment)
-//       await helper.call('Settings_Proxy', `createPlatformSetting_${platformSetting}`, async () => {
-//         console.log(`Creating platform setting ${platformSetting}`);
-//         await settingsInstance.createPlatformSetting(formatBytes32String(platformSetting), value, min, max);
-//       });
-//   }
-
-//   const assetSettingsAddress = await settingsInstance.assetSettings();
-//   const assetSettingsInstance = await helper.make<AssetSettings>('AssetSettings', assetSettingsAddress);
-
-//   const tokens = helper.tokens;
-
-//   for (const [asset, { cToken, maxLoanAmount, maxTVLAmount }] of Object.entries(helper.assetSettings)) {
-//     await helper.call('AssetSettings_Logic', `createAssetSetting_${asset}`, async () => {
-//       console.log(`Creating asset setting ${asset} - ${JSON.stringify({ cToken, maxLoanAmount, maxTVLAmount })}`);
-//       await assetSettingsInstance.createAssetSetting(tokens[asset], tokens[cToken], maxLoanAmount);
-//       await assetSettingsInstance.updateMaxTVL(tokens[asset], maxTVLAmount);
-//     });
-//   }
-// }
+export default createPlatformSettings

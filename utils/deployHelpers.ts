@@ -2,11 +2,9 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Libraries } from 'hardhat-deploy/types'
 import { Contract } from 'ethers'
 
-import { Settings, UpgradeableProxy } from '../types/typechain'
-import { EnvConfig } from '../test-old/types'
-import envConfig from '../config'
+import { UpgradeableProxy } from '../types/typechain'
 
-interface DeployArgs {
+export interface DeployArgs {
   hre: HardhatRuntimeEnvironment
   contract: string
   name?: string
@@ -35,68 +33,33 @@ export const deploy = async (args: DeployArgs): Promise<Contract> => {
   return ethers.getContractAt(args.contract, address)
 }
 
-interface DeployLogicArgs extends Omit<DeployArgs, 'name'> {}
+export interface DeployLogicArgs extends Omit<DeployArgs, 'name'> {}
 
-export const deployLogic = async (args: DeployLogicArgs): Promise<Contract> =>
-  deploy({
+export const deployLogic = async (args: DeployLogicArgs): Promise<void> => {
+  await deploy({
     ...args,
     name: `${args.contract}_Logic`
   })
-
-interface DeployUpgradeableProxyArgs {
-  hre: HardhatRuntimeEnvironment
-  contract: string
-  logicAddress: string
-  settingsAddress: string
 }
 
-export const deployUpgradeableProxy = async (args: DeployUpgradeableProxyArgs): Promise<Contract> => {
+export const deployUpgradeableProxy = async (args: DeployArgs): Promise<UpgradeableProxy> => {
   const {
     hre: {
-      ethers
+      deployments
     }
   } = args
 
+  const name = `${args.contract}_Proxy`
   const proxy = await deploy({
     hre: args.hre,
-    name: args.contract,
+    name,
     contract: 'UpgradeableProxy'
   }) as UpgradeableProxy
-  await proxy.initializeProxy(args.settingsAddress, args.logicAddress)
-  return ethers.getContractAt(args.contract, proxy.address)
-}
 
-interface DeploySettingsArgs {
-  hre: HardhatRuntimeEnvironment
-  logicAddress: string
-}
-
-export const deploySettings = async (args: DeploySettingsArgs): Promise<Settings> => {
-  const {
-    hre: {
-      ethers,
-      network
-    }
-  } = args
-  const env = envConfig(network.name) as EnvConfig
-
-  const { address: logicVersionsRegistryLogicAddress } = await deployLogic({
-    hre: args.hre,
-    contract: 'LogicVersionsRegistry'
+  const { abi } = await deployments.getArtifact(args.contract)
+  await deployments.save(args.contract, {
+    abi,
+    address: proxy.address
   })
-
-  const proxy = await deploy({
-    hre: args.hre,
-    name: 'Settings_Proxy',
-    contract: 'UpgradeableProxy'
-  }) as UpgradeableProxy
-  await proxy.initializeProxy(proxy.address, args.logicAddress)
-
-  const settings = await ethers.getContractAt('Settings', proxy.address) as Settings
-  await settings['initialize(address,address,address)'](
-    logicVersionsRegistryLogicAddress,
-    env.networkConfig.tokens.WETH,
-    env.networkConfig.compound.CETH
-  )
-  return settings
+  return proxy
 }
