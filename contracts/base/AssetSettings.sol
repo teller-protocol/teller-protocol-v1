@@ -75,7 +75,10 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     address assetAddress,
     address cTokenAddress,
     uint256 maxLoanAmount
-  ) external {
+  )
+    external
+    onlyPauser()
+    {
     assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
     cTokenAddress.requireNotEmpty("CTOKEN_ADDRESS_REQUIRED");
 
