@@ -307,6 +307,11 @@ module.exports = {
             addSenderIndex(yargs);
             return yargs;
         },
+        addAuthorizedAddressList: () => {
+            addBase(yargs);
+            addSenderIndex(yargs);
+            return yargs;
+        },
     },
     oracle: {
         getPrices: () => {

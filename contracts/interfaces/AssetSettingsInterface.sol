@@ -69,11 +69,15 @@ interface AssetSettingsInterface {
         @param assetAddress asset address used to create the new setting.
         @param cTokenAddress cToken address used to configure the asset setting.
         @param maxLoanAmount the initial max loan amount.
-     */
+        @param maxTVLAmount the initial max total value locked amount.
+        @param maxDebtRatio the initial max debt ratio amount.
+    */
   function createAssetSetting(
     address assetAddress,
     address cTokenAddress,
-    uint256 maxLoanAmount
+    uint256 maxLoanAmount,
+    uint256 maxTVLAmount,
+    uint256 maxDebtRatio
   ) external;
 
   /**
@@ -156,6 +160,21 @@ interface AssetSettingsInterface {
         @param assetAddress asset address to retrieve the max total value locked amount.
      */
   function getMaxTVLAmount(address assetAddress) external view returns (uint256);
+
+  /**
+    @notice It updates the max debt ratio for a given asset.
+    @dev The ratio value has 2 decimal places. I.e 100 = 1%
+    @param assetAddress asset address used to update the max debt ratio.
+    @param newMaxDebtRatio the new max debt ratio to set.
+    */
+  function updateMaxDebtRatio(address assetAddress, uint256 newMaxDebtRatio) external;
+
+  /**
+    @notice Returns the max debt ratio for a given asset.
+    @dev The ratio value has 2 decimal places. I.e 100 = 1%
+    @param assetAddress asset address to retrieve the max debt ratio.
+    */
+  function getMaxDebtRatio(address assetAddress) external view returns (uint256);
 
   /**
         @notice It removes a configuration for a given asset on the platform.

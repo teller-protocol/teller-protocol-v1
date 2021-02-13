@@ -8,6 +8,7 @@ const InitializeableDynamicProxy = artifacts.require("./base/InitializeableDynam
 const PairAggregatorMock = artifacts.require("./mock/providers/chainlink/PairAggregatorMock.sol");
 
 module.exports = async function(deployer, network, accounts) {
+  return;
   // We only deploy the Chainlink mocks on the ganache-mainnet netwotk.
   if (![ "ganache-mainnet", "ropsten" ].includes(network)) return;
 

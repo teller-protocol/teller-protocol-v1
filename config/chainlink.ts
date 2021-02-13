@@ -45,17 +45,7 @@ const mainnetChainlink: Chainlink = {
   LINK_ETH: {
     baseTokenName: 'LINK',
     quoteTokenName: 'ETH',
-    address: '0xFf2c64f454EAf1b9ee8c204404A73E287A567A44'
-  },
-  LINK_DAI: {
-    baseTokenName: 'LINK',
-    quoteTokenName: 'DAI',
-    address: '0x8cf81F00a4249563111d615cb59C935f8e1C6Cce'
-  },
-  LINK_USDC: {
-    baseTokenName: 'LINK',
-    quoteTokenName: 'USDC',
-    address: '0x6c3FCC05b84A8e9E12Da2bC66f4cf218A9CE3486'
+    address: '0xDC530D9457755926550b59e8ECcdaE7624181557'
   }
 }
 

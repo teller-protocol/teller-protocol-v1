@@ -8,7 +8,7 @@ module.exports = async function (
     const result = new Map();
 
     for (const logicContract of logicContracts) {
-        const { Contract, name } = logicContract;
+        const { Contract, name, address } = logicContract;
         const logicNameBytes32 = web3.utils.soliditySha3(name);
         await deployerApp.deploy(Contract, txConfig);
         console.log(`Deploying logic contract: ${name} - key: ${logicNameBytes32} - logic address: ${Contract.address}`);
