@@ -16,6 +16,7 @@ export interface AssetSetting {
   cToken: TokenSymbol
   maxLoanAmount: number
   maxTVLAmount: number
+  maxDebtRatio: number
 }
 
 export interface ATMs {

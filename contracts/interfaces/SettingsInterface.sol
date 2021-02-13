@@ -176,6 +176,18 @@ interface SettingsInterface {
   function restrictPlatform(bool restriction) external;
 
   /**
+        @notice Adds a wallet address to the list of authorized wallets
+        @param addressToAdd The wallet address of the user being authorized
+     */
+  function addAuthorizedAddress(address addressToAdd) external;
+
+  /**
+        @notice Adds a list of wallet addresses to the list of authorized wallets
+        @param addressesToAdd The list of wallet addresses being authorized
+     */
+  function addAuthorizedAddressList(address[] calldata addressesToAdd)external;
+
+  /**
         @notice Returns whether the platform is restricted or not
         @return bool True if the platform is restricted, false if not
      */
@@ -193,6 +205,12 @@ interface SettingsInterface {
         @param account account to test.
      */
   function requireAuthorization(address account) external view;
+
+  /**
+        @notice Removes a wallet address from the list of authorized wallets
+        @param addressToRemove The wallet address of the user being unauthorized
+     */
+  function removeAuthorizedAddress(address addressToRemove) external;
 
   /**
         @notice Get the current EscrowFactory contract.

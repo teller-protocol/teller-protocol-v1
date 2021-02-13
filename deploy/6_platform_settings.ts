@@ -38,17 +38,16 @@ const createPlatformSettings: DeployFunction = async (hre) => {
     const {
       cToken,
       maxLoanAmount,
-      maxTVLAmount
+      maxTVLAmount,
+      maxDebtRatio
     } = setting
 
     await assetSettings.createAssetSetting(
       tokens[assetSymbol],
       tokens[cToken],
-      maxLoanAmount
-    )
-    await assetSettings.updateMaxTVL(
-      tokens[assetSymbol],
-      maxTVLAmount
+      maxLoanAmount,
+      maxTVLAmount,
+      maxDebtRatio
     )
   }
 }

@@ -34,32 +34,43 @@ module.exports = async function (
       const tokenInstance = await ERC20.at(tokenAddress);
       decimals = await tokenInstance.decimals();
     }
-    const maxLoanAmountWithDecimals = toDecimals(tokenConfig.maxLoanAmount, decimals);
+    if (tokenAddress != "0x6B175474E89094C44Da98b954EedeAC495271d0F") {
+      const maxLoanAmountWithDecimals = toDecimals(tokenConfig.maxLoanAmount, decimals);
+      console.log(
+        `Configuring asset: ${tokenName} (${tokenAddress}) / ${
+          tokenConfig.cToken
+        } (${cTokenAddress}) / Max Loan Amount: ${
+          tokenConfig.maxLoanAmount
+        } (${decimals} decimals / ${maxLoanAmountWithDecimals.toFixed(0)})`
+      );
+      await assetSettingsInstance.createAssetSetting(
+        tokenAddress,
+        cTokenAddress,
+        maxLoanAmountWithDecimals,
+        txConfig
+      );
+
+      const maxTVLAmountWithDecimals = toDecimals(tokenConfig.maxTVLAmount, decimals);
+      console.log(
+        `Configuring asset: ${tokenName} (${tokenAddress}) / Max TVL Amount: ${
+          tokenConfig.maxTVLAmount
+        } (${decimals} decimals / ${maxTVLAmountWithDecimals.toFixed(0)})`
+      );
+      await assetSettingsInstance.updateMaxTVL(
+        tokenAddress,
+        maxTVLAmountWithDecimals,
+        txConfig
+      )
+    }
 
     console.log(
-      `Configuring asset: ${tokenName} (${tokenAddress}) / ${
-        tokenConfig.cToken
-      } (${cTokenAddress}) / Max Loan Amount: ${
-        tokenConfig.maxLoanAmount
-      } (${decimals} decimals / ${maxLoanAmountWithDecimals.toFixed(0)})`
+      `Configuring asset: ${tokenName} (${tokenAddress}) / Max Debt Ratio: ${
+        tokenConfig.maxDebtRatio
+      }`
     );
-    await assetSettingsInstance.createAssetSetting(
+    await assetSettingsInstance.updateMaxDebtRatio(
       tokenAddress,
-      cTokenAddress,
-      maxLoanAmountWithDecimals,
-      txConfig
-    );
-    const maxTVLAmountWithDecimals = toDecimals(tokenConfig.maxTVLAmount, decimals);
-    console.log(
-      `Configuring asset: ${tokenName} (${tokenAddress}) / ${
-        tokenConfig.cToken
-      } (${cTokenAddress}) / Max TVL Amount: ${
-        tokenConfig.maxTVLAmount
-      } (${decimals} decimals / ${maxTVLAmountWithDecimals.toFixed(0)})`
-    );
-    await assetSettingsInstance.updateMaxTVL(
-      tokenAddress,
-      maxTVLAmountWithDecimals,
+      tokenConfig.maxDebtRatio,
       txConfig
     )
   }
