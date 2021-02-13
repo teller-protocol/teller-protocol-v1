@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     env:
+      ALCHEMY_KEY: my-alchemy-key-here
       INFURA_KEY: my-infura-key-here
       GAS_PRICE_GWEI_KEY: 20
       GAS_WEI_KEY: 2500000
@@ -21,7 +22,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
-          node-version: '10.15.x'
+          node-version: '14.15.x'
       - id: files
         name: Get List of Changed Files
         uses: jitterbit/get-changed-files@v1
