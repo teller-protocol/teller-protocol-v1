@@ -25,6 +25,6 @@ jobs:
       - name: Compiling Smart Contracts
         run: |
           yarn hardhat compile && yarn types
-      - name: Executing Tests
+      - name: Executing Tests & Code Coverage
         run: |
-          yarn hardhat test
+          yarn hardhat coverage
