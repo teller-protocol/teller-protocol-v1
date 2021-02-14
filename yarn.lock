@@ -3973,7 +3973,7 @@ eth-ens-namehash@2.0.8, eth-ens-namehash@^2.0.0, eth-ens-namehash@^2.0.8:
     idna-uts46-hx "^2.3.1"
     js-sha3 "^0.5.7"
 
-eth-gas-reporter@^0.2.15, eth-gas-reporter@^0.2.20:
+eth-gas-reporter@^0.2.20:
   version "0.2.20"
   resolved "https://registry.yarnpkg.com/eth-gas-reporter/-/eth-gas-reporter-0.2.20.tgz#431c144f00cd01cc29ce211a10a4e5a539a84e25"
   integrity sha512-gp/PhKrr3hYEEFg5emIQxbhQkVH2mg+iHcM6GvqhzFx5IkZGeQx+5oNzYDEfBXQefcA90rwWHId6eCty6jbdDA==
