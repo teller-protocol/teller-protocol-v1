@@ -10,7 +10,7 @@ import './tasks'
 import './utils/hre-extensions'
 
 import 'hardhat-gas-reporter'
-import 'solidity-coverage'
+// import 'solidity-coverage'
 import 'hardhat-contract-sizer'
 
 config()
@@ -39,7 +39,7 @@ export default <HardhatUserConfig>{
           // Optimize representation of literal numbers and strings in code.
           constantOptimizer: true,
           // Sometimes re-orders literals in commutative operations.
-          orderLiterals: false,
+          orderLiterals: true,
           // The new Yul optimizer. Mostly operates on the code of ABIEncoderV2
           // and inline assembly. Had to be activated through this switch for
           // pre Solidity 0.6.0
