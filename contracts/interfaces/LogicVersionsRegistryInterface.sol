@@ -132,7 +132,6 @@ interface LogicVersionsRegistryInterface {
 
     /**
         @notice It initializes this logic versions registry contract instance.
-        @param settingsAddress the settings contract address.
      */
-    function initialize(address settingsAddress) external;
+    function initialize() external;
 }

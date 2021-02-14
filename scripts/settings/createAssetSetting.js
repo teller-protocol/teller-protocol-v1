@@ -6,8 +6,8 @@ const { teller, tokens, ctokens } = require("../utils/contracts");
 const { settings: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
 const { SENDER_INDEX, TOKEN_NAME, CTOKEN_NAME, MAX_LOAN_AMOUNT } = require('../utils/cli/names');
-const { toDecimals } = require('../../test/utils/consts');
-const { printAssetSettings } = require('../../test/utils/asset-settings-helper');
+const { toDecimals } = require('../../test-old/utils/consts');
+const { printAssetSettings } = require('../../test-old/utils/asset-settings-helper');
 const processArgs = new ProcessArgs(readParams.createAssetSetting().argv);
 
 module.exports = async (callback) => {

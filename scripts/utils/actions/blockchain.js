@@ -1,6 +1,6 @@
 const {
   minutesToSeconds,
-} = require("../../../test/utils/consts");
+} = require("../../../test-old/utils/consts");
 
 const advanceMinutes = async ({timer}, {testContext}, {minutes}) => {
   const {network} = testContext;

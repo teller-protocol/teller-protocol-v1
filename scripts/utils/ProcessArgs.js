@@ -1,8 +1,8 @@
 const _ = require('lodash');
 const assert = require('assert');
 const GetContracts = require('./GetContracts');
-const { minutesToSeconds } = require('../../test/utils/consts');
-const chains = require('../../test/utils/chains');
+const { minutesToSeconds } = require('../../test-old/utils/consts');
+const chains = require('../../test-old/utils/chains');
 
 class ProcessArgs {
     constructor(params = {}, defaultNetwork = 'test') {

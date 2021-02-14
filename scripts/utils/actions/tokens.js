@@ -1,4 +1,4 @@
-const { ETH_ADDRESS } = require('../../../test/utils/consts');
+const { ETH_ADDRESS } = require('../../../test-old/utils/consts');
 
 const getInfo = async ({token}) => {
   const name = await token.name();

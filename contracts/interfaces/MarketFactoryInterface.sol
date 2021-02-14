@@ -34,7 +34,7 @@ interface MarketFactoryInterface {
         view
         returns (bool);
 
-    function initialize(address settingsAddress) external;
+    function initialize() external;
 
     /** Events */
 

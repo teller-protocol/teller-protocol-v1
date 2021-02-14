@@ -75,11 +75,15 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     @param assetAddress asset address used to create the new setting.
     @param cTokenAddress cToken address used to configure the asset setting.
     @param maxLoanAmount the initial max loan amount.
+    @param maxTVLAmount the initial max total value locked amount.
+    @param maxDebtRatio the initial max debt ratio amount.
     */
   function createAssetSetting(
     address assetAddress,
     address cTokenAddress,
-    uint256 maxLoanAmount
+    uint256 maxLoanAmount,
+    uint256 maxTVLAmount,
+    uint256 maxDebtRatio
   ) external {
     assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
     cTokenAddress.requireNotEmpty("CTOKEN_ADDRESS_REQUIRED");
@@ -88,6 +92,12 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     assets[assetAddress].updateAddress(CTOKEN_ADDRESS_ASSET_SETTING, cTokenAddress);
     if (maxLoanAmount > 0) {
       assets[assetAddress].updateUint(MAX_LOAN_AMOUNT_ASSET_SETTING, maxLoanAmount);
+    }
+    if (maxTVLAmount > 0) {
+      assets[assetAddress].updateUint(MAX_TOTAL_VALUE_LOCKED_SETTING, maxTVLAmount);
+    }
+    if (maxDebtRatio > 0) {
+      assets[assetAddress].updateUint(MAX_DEBT_RATIO_SETTING, maxDebtRatio);
     }
 
     emit AssetSettingsCreated(msg.sender, assetAddress, cTokenAddress, maxLoanAmount);

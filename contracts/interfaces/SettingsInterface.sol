@@ -2,13 +2,13 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 import "../util/PlatformSettingsLib.sol";
-import "./InterestValidatorInterface.sol";
 import "./EscrowFactoryInterface.sol";
 import "./LogicVersionsRegistryInterface.sol";
 import "../settings/IATMSettings.sol";
 import "../util/SettingsConsts.sol";
 import "../providers/chainlink/IChainlinkAggregator.sol";
 import "../interfaces/AssetSettingsInterface.sol";
+import "./MarketFactoryInterface.sol";
 
 /**
     @notice This interface defines all function to manage the platform configuration.
@@ -220,12 +220,15 @@ interface SettingsInterface {
 
   function versionsRegistry() external view returns (LogicVersionsRegistryInterface);
 
-  function interestValidator() external view returns (InterestValidatorInterface);
-
   /**
         @notice It is the global instance of the ChainlinkAggregator contract.
      */
   function chainlinkAggregator() external view returns (IChainlinkAggregator);
+
+  /**
+        @notice It is the global instance of the MarketFactory contract.
+     */
+  function marketFactory() external view returns (MarketFactoryInterface);
 
   /**
         @notice Get the current ATMSetting contract.
@@ -242,18 +245,12 @@ interface SettingsInterface {
 
   /**
         @notice It initializes this settings contract instance.
-        @param escrowFactoryAddress the initial escrow factory address.
-        @param versionsRegistryAddress the initial versions registry address.
-        @param chainlinkAggregatorAddress the initial pair aggregator registry address.
-        @param interestValidatorAddress the initial interest validator address.
+        @param versionsRegistryLogicAddress LogicVersionsRegistry logic address.
         @param wethTokenAddress canonical WETH token address.
         @param cethTokenAddress compound CETH token address.
      */
   function initialize(
-    address escrowFactoryAddress,
-    address versionsRegistryAddress,
-    address chainlinkAggregatorAddress,
-    address interestValidatorAddress,
+    address versionsRegistryLogicAddress,
     address wethTokenAddress,
     address cethTokenAddress
   ) external;

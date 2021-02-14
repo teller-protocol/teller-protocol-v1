@@ -69,11 +69,15 @@ interface AssetSettingsInterface {
         @param assetAddress asset address used to create the new setting.
         @param cTokenAddress cToken address used to configure the asset setting.
         @param maxLoanAmount the initial max loan amount.
-     */
+        @param maxTVLAmount the initial max total value locked amount.
+        @param maxDebtRatio the initial max debt ratio amount.
+    */
   function createAssetSetting(
     address assetAddress,
     address cTokenAddress,
-    uint256 maxLoanAmount
+    uint256 maxLoanAmount,
+    uint256 maxTVLAmount,
+    uint256 maxDebtRatio
   ) external;
 
   /**

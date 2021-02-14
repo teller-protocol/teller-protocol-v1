@@ -7,7 +7,7 @@ const { teller, tokens } = require("../utils/contracts");
 const { loans: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
 const Accounts = require('../utils/Accounts');
-const { toDecimals, DEFAULT_DECIMALS } = require('../../test/utils/consts');
+const { toDecimals, DEFAULT_DECIMALS } = require('../../test-old/utils/consts');
 const { COLL_TOKEN_NAME, TOKEN_NAME, SENDER_INDEX, BORROWER_INDEX, AMOUNT } = require('../utils/cli/names');
 const processArgs = new ProcessArgs(readParams.depositCollateralLast().argv);
 

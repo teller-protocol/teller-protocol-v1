@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const assert = require('assert');
-const { toBytes32 } = require('../../../test/utils/consts');
-const settingsNames = require('../../../test/utils/platformSettingsNames');
+const { toBytes32 } = require('../../../test-old/utils/consts');
+const settingsNames = require('../../../test-old/utils/platformSettingsNames');
 const BigNumber = require('bignumber.js');
 
 const validatePlatformSetting = async (settingsInstance, web3, platformSettingName, { min, max, value, processOnDeployment }) => {

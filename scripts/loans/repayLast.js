@@ -5,8 +5,8 @@ const { teller, tokens } = require("../utils/contracts");
 const { loans: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
 const Accounts = require('../utils/Accounts');
-const { toDecimals } = require('../../test/utils/consts');
-const LoanInfoPrinter = require('../../test/utils/printers/LoanInfoPrinter');
+const { toDecimals } = require('../../test-old/utils/consts');
+const LoanInfoPrinter = require('../../test-old/utils/printers/LoanInfoPrinter');
 const { COLL_TOKEN_NAME, SENDER_INDEX, TOKEN_NAME, AMOUNT } = require("../utils/cli/names");
 const processArgs = new ProcessArgs(readParams.repayLast().argv);
 

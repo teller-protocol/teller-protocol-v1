@@ -2,7 +2,7 @@
 
 // Util classes
 const { teller, tokens } = require("../utils/contracts");
-const { printPairAggregator, printLoanDetails } = require('../../test/utils/printer')
+const { printPairAggregator, printLoanDetails } = require('../../test-old/utils/printer')
 const { loans: readParams } = require("../utils/cli-builder");
 const tokenActions = require('../utils/actions/tokens')
 const ProcessArgs = require('../utils/ProcessArgs');

@@ -10,7 +10,8 @@ build
 .coverage_contracts
 ignored
 types/truffle-contracts
-circuits
-artifacts
-cache
 typechain
+cache
+artifacts
+.vscode
+deployments/localhost

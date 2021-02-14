@@ -200,12 +200,10 @@ contract LogicVersionsRegistry is
 
     /**
         @notice It initializes this logic versions registry contract instance.
-        @param settingsAddress the settings contract address.
      */
-    function initialize(address settingsAddress) external isNotInitialized() {
+    function initialize() external isNotInitialized() {
         _initialize();
 
-        _setSettings(settingsAddress);
         consts = new LogicVersionsConsts();
     }
 

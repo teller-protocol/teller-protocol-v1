@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
-import "./LoansBase.sol";
+import "./Loans.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -20,7 +20,7 @@ import "./LoansBase.sol";
 
     @author develop@teller.finance
  */
-contract TokenCollateralLoans is LoansBase {
+contract TokenCollateralLoans is Loans {
     /** Constants */
 
     /** Properties */
@@ -28,7 +28,7 @@ contract TokenCollateralLoans is LoansBase {
     /** Modifiers */
 
     /**
-        @notice Checks the value in the current transactionn is zero.
+        @notice Checks the value in the current transaction is zero.
         @dev It throws a require error if value is not zero.
      */
     modifier noMsgValue() {

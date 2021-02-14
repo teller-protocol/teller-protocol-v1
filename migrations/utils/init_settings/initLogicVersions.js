@@ -1,5 +1,5 @@
 const assert = require("assert");
-const {toDecimals, toBytes32} = require("../../../test/utils/consts");
+const {toDecimals, toBytes32} = require("../../../test-old/utils/consts");
 
 module.exports = async function (logicContracts, instances, params) {
     console.log("\n");

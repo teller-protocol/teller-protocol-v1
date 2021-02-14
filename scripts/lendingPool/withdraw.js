@@ -2,7 +2,7 @@
 
 // Util classes
 const {teller, tokens, ctokens} = require("../utils/contracts");
-const { toTokenDecimals } = require("../../test/utils/consts");
+const { toTokenDecimals } = require("../../test-old/utils/consts");
 const { lendingPool: readParams } = require("../utils/cli-builder");
 const BigNumber = require('bignumber.js');
 const assert = require('assert');
