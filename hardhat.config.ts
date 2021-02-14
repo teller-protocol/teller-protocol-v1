@@ -9,25 +9,28 @@ import { HardhatNetworkHDAccountsUserConfig } from 'hardhat/types'
 import './tasks'
 import './utils/hre-extensions'
 
+import 'hardhat-gas-reporter'
+import 'solidity-coverage'
+
 config()
 
 const accounts: HardhatNetworkHDAccountsUserConfig = {
   mnemonic: process.env.MNEMONIC_KEY,
-  count: parseInt(process.env.ADDRESS_COUNT_KEY ?? '15')
+  count: parseInt(process.env.ADDRESS_COUNT_KEY ?? '15'),
 }
 
 export default <HardhatUserConfig>{
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY
+    apiKey: process.env.ETHERSCAN_API_KEY,
   },
   solidity: {
     version: '0.5.17',
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200
-      }
-    }
+        runs: 200,
+      },
+    },
   },
   namedAccounts: {
     deployer: {
@@ -35,20 +38,20 @@ export default <HardhatUserConfig>{
       ropsten: 1,
       hardhat: 1,
       localhost: 1,
-      mainnet: 1
-    }
+      mainnet: 1,
+    },
   },
   networks: {
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_KEY}`,
       chainId: 4,
-      accounts
+      accounts,
       // gas: gasKeyValue,
       // gasPrice: web3.utils.toWei(gasPriceKeyValue, 'gwei'),
     },
     ropsten: {
       url: `https://ropsten.infura.io/v3/${process.env.INFURA_KEY}`,
-      accounts
+      accounts,
       // gas: gasKeyValue,
       // gasPrice: web3.utils.toWei(gasPriceKeyValue, 'gwei'),
     },
@@ -56,23 +59,27 @@ export default <HardhatUserConfig>{
       forking: {
         url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
         blockNumber: 11806209,
-        enabled: true
+        enabled: true,
       },
       chainId: 1,
-      accounts
+      accounts,
     },
     // Uses the forked node from the hardhat network above
     localhost: {
       url: 'http://127.0.0.1:8545',
       chainId: 1,
-      accounts
+      accounts,
     },
     mainnet: {
       url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
       chainId: 1,
-      accounts
+      accounts,
       // gas: gasKeyValue,
       // gasPrice: web3.utils.toWei(gasPriceKeyValue, 'gwei'),
-    }
-  }
+    },
+  },
+  gasReporter: {
+    currency: 'USD',
+    gasPrice: 121,
+  },
 }
