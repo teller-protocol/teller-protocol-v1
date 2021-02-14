@@ -11,6 +11,7 @@ import './utils/hre-extensions'
 
 import 'hardhat-gas-reporter'
 import 'solidity-coverage'
+import 'hardhat-contract-sizer'
 
 config()
 
@@ -28,9 +29,14 @@ export default <HardhatUserConfig>{
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200,
+        runs: 1000000,
       },
     },
+  },
+  contractSizer: {
+    alphaSort: true,
+    runOnCompile: true,
+    disambiguatePaths: false,
   },
   namedAccounts: {
     deployer: {
