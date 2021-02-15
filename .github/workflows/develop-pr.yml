@@ -16,7 +16,7 @@ jobs:
       GAS_PRICE_GWEI_KEY: 20
       GAS_WEI_KEY: 2500000
       MNEMONIC_KEY: my-mnemonic-value-here
-      ADDRESS_COUNT_KEY: 5
+      ADDRESS_COUNT_KEY: 20
       DEFAULT_ADDRESS_INDEX_KEY: 0
     steps:
       - uses: actions/checkout@v2
