@@ -84,7 +84,10 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     uint256 maxLoanAmount,
     uint256 maxTVLAmount,
     uint256 maxDebtRatio
-  ) external {
+  ) 
+    external
+    onlyPauser()
+  {
     assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
     cTokenAddress.requireNotEmpty("CTOKEN_ADDRESS_REQUIRED");
 
