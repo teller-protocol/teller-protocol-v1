@@ -21,7 +21,7 @@
     "console:kovan": "yarn hardhat console --network kovan",
     "console:localhost": "yarn hardhat console --network localhost",
     "console:mainnet": "yarn hardhat console --network mainnet",
-    "compile": "yarn hardhat compile && yarn types",
+    "compile": "COMPILING=true yarn hardhat compile && yarn types",
     "types": "yarn typechain --target ethers-v5 --outDir types/typechain 'artifacts/!(build-info)/**/+([a-zA-Z0-9]).json'",
     "format:prettier": "prettier --write contracts/**/**/**/**/**/**.sol",
     "format:prettier:print": "prettier contracts/**/**/**/**/**/**.sol"

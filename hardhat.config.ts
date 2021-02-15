@@ -6,7 +6,7 @@ import { HardhatUserConfig } from 'hardhat/config'
 import { config } from 'dotenv'
 import { HardhatNetworkHDAccountsUserConfig } from 'hardhat/types'
 
-import './tasks'
+if (process.env.COMPILING != 'true') require('./tasks')
 import './utils/hre-extensions'
 
 import 'hardhat-gas-reporter'
