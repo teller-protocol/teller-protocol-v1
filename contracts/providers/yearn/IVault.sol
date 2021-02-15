@@ -13,7 +13,7 @@ interface IVault {
     function token() external view returns (address);
 
     /**
-        @notice Returns the native underlying token address in Delegated Vaults, example: yDAI in case of a DAI delegated vault
+        @notice Returns the native underlying token address in Vaults, ex: yDAI in case of a DAI delegated vault
         @return The address of the underlying token
      */
     function underlying() external view returns (address);
@@ -50,7 +50,7 @@ interface IVault {
 
     /**
         @notice Returns the price of the Vault's wrapped token, denominated in the unwrapped native token
-        @notice Calculation is: nativeTokenBalance/yTokenTotalSupply, 
+        @notice Calculation is: nativeTokenBalance/yTokenTotalSupply,
             - nativeTokenBalance is the current balance of the native token (example DAI) in the Vault
             - yTokenTotalSupply is the total supply of the Vault's wrapped token (example yDAI)
         @return The token price
@@ -59,23 +59,23 @@ interface IVault {
 
     /**
         @notice Deposits the specified amount of the native unwrapped token (same as token() returns) into the Vault
-        @param uint256 The amount of tokens to deposit
+        @param amountToDeposit The amount of tokens to deposit
      */
-    function deposit(uint256) external;
+    function deposit(uint256 amountToDeposit) external;
 
     /**
-        @notice Deposits the maximum available amount of the native wrapped token (same as token() returns) into the Vault
+        @notice Deposits the maximum available amount of the native wrapped token (same as token()) into the Vault
      */
     function depositAll() external;
 
     /**
         @notice Withdraws the specified amount of the native unwrapped token (same as token() returns) from the Vault
-        @param uint256 The amount to withdraw
+        @param amountToWithdraw The amount to withdraw
      */
-    function withdraw(uint256) external;
+    function withdraw(uint256 amountToWithdraw) external;
 
     /**
-        @notice Withdraws the maximum available amount of native unwrapped token (same as token() returns) from the Vault
+        @notice Withdraws the maximum available amount of native unwrapped token (same as token()) from the Vault
      */
     function withdrawAll() external;
 }

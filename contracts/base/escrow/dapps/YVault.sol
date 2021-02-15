@@ -31,7 +31,6 @@ import "../../../providers/yearn/IVault.sol";
 contract YVault is YVaultInterface, BaseEscrowDapp {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
-    
 
     /** External Functions */
     /**
@@ -39,19 +38,12 @@ contract YVault is YVaultInterface, BaseEscrowDapp {
         @param tokenAddress The address of the token being deposited
         @param amount The amount of tokens to be deposited into the vault
      */
-    function deposit(
-        address tokenAddress,
-        uint256 amount
-    )
-        public
-        onlyOwner()
-    {
+    function deposit(address tokenAddress, uint256 amount) public onlyOwner() {
         IVault iVault = _getYVault(tokenAddress);
         IERC20 underlyingToken = IERC20(iVault.underlying());
         uint256 tokenBalanceBeforeDeposit = underlyingToken.balanceOf(address(this));
         IERC20(tokenAddress).safeApprove(address(iVault), amount);
-        uint256 result = iVault.deposit(amount);
-        require(result == 0, "YEARN_DEPOSIT_ERROR");
+        iVault.deposit(amount);
         uint256 tokenBalanceAfterDeposit = underlyingToken.balanceOf(address(this));
         require(
             tokenBalanceAfterDeposit > tokenBalanceBeforeDeposit,
@@ -72,30 +64,20 @@ contract YVault is YVaultInterface, BaseEscrowDapp {
         @param tokenAddress The address of the token being deposited
         @param amount The amount of tokens to be deposited into the vault
      */
-    function withdraw(
-        address tokenAddress,
-        uint256 amount
-    ) 
-        public
-        onlyOwner()
-    {
+    function withdraw(address tokenAddress, uint256 amount) public onlyOwner() {
         IVault iVault = _getYVault(tokenAddress);
         _withdraw(iVault, amount);
     }
 
     /**
         @notice Returns the price of the Vault's wrapped token, denominated in the unwrapped native token
-        @notice Calculation is: nativeTokenBalance/yTokenTotalSupply, 
+        @notice Calculation is: nativeTokenBalance/yTokenTotalSupply,
             - nativeTokenBalance is the current balance of the native token (example DAI) in the Vault
             - yTokenTotalSupply is the total supply of the Vault's wrapped token (example yDAI)
         @param tokenAddress The address of the underlying token for the associated yVault
         @return The token price
      */
-    function getPricePerFullShare(address tokenAddress) 
-        public
-        view
-        returns (uint256)
-    {
+    function getPricePerFullShare(address tokenAddress) external view returns (uint256) {
         IVault iVault = _getYVault(tokenAddress);
         return iVault.getPricePerFullShare();
     }
@@ -106,25 +88,22 @@ contract YVault is YVaultInterface, BaseEscrowDapp {
         @param iVault The instance of the yVault
         @param amount The amount of funds to withdraw from the vault
      */
-    function _withdraw(
-        IVault iVault,
-        uint256 amount
-    )
-        internal
-    {   
+    function _withdraw(IVault iVault, uint256 amount) internal {
         IERC20 underlyingToken = IERC20(iVault.underlying());
         uint256 tokenBalanceBeforeWithdrawal = underlyingToken.balanceOf(address(this));
-        uint256 result = iVault.withdraw(amount);
-        require(result == 0, "YEARN_WITHDRAWAL_ERROR");
-        uint256 tokenBalanceAfterWithdrawl = underlyingToken.balanceOf(address(this));
-        require(tokenBalanceAfterWithdrawl > tokenBalanceBeforeWithdrawal, "WITHDRAWL_UNSUCCESSFUL");
+        iVault.withdraw(amount);
+        uint256 tokenBalanceAfterWithdrawal = underlyingToken.balanceOf(address(this));
+        require(
+            tokenBalanceAfterWithdrawal > tokenBalanceBeforeWithdrawal,
+            "WITHDRAWAL_UNSUCCESSFUL"
+        );
 
-        _tokenUpdated(underlyingToken);
+        _tokenUpdated(address(underlyingToken));
 
         emit YearnWithdrawn(
-            underlyingToken,
+            address(underlyingToken),
             amount,
-            tokenBalanceAfterWithdrawl
+            tokenBalanceAfterWithdrawal
         );
     }
 
@@ -133,12 +112,7 @@ contract YVault is YVaultInterface, BaseEscrowDapp {
         @param tokenAddress The underlying token address for the associated yVault
         @return yVault instance
      */
-    function _getYVault(address tokenAddress) 
-        internal
-        view
-        returns (IVault) 
-    {
-        return IVault(_getSettings().getYVaultAddress(tokenAddress));
+    function _getYVault(address tokenAddress) internal view returns (IVault) {
+        return IVault(_getSettings().assetSettings().getYVaultAddress(tokenAddress));
     }
-
 }
