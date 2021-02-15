@@ -15,44 +15,22 @@ const createPlatformSettings: DeployFunction = async (hre) => {
   const assetSettings = await contracts.get<AssetSettings>('AssetSettings', { from: deployer })
 
   const platformSettings = getPlatformSettings(<Network>network.name)
-  for (const [ settingName, setting ] of Object.entries(platformSettings)) {
-    const {
-      max,
-      min,
-      processOnDeployment,
-      value
-    } = setting
+  for (const [settingName, setting] of Object.entries(platformSettings)) {
+    const { max, min, processOnDeployment, value } = setting
 
-    if (processOnDeployment)
-      await settings.createPlatformSetting(
-        formatBytes32String(settingName),
-        value,
-        min,
-        max
-      )
+    if (processOnDeployment) await settings.createPlatformSetting(formatBytes32String(settingName), value, min, max)
   }
 
   const tokens = getTokens(<Network>network.name)
   const assetSettingsConfig = getAssetSettings(<Network>network.name)
-  for (const [ assetSymbol, setting ] of Object.entries(assetSettingsConfig)) {
-    const {
-      cToken,
-      maxLoanAmount,
-      maxTVLAmount,
-      maxDebtRatio
-    } = setting
+  for (const [assetSymbol, setting] of Object.entries(assetSettingsConfig)) {
+    const { cToken, maxLoanAmount, maxTVLAmount, maxDebtRatio } = setting
 
-    await assetSettings.createAssetSetting(
-      tokens[assetSymbol],
-      tokens[cToken],
-      maxLoanAmount,
-      maxTVLAmount,
-      maxDebtRatio
-    )
+    await assetSettings.createAssetSetting(tokens[assetSymbol], tokens[cToken], maxLoanAmount, maxTVLAmount, maxDebtRatio)
   }
 }
 
-createPlatformSettings.tags = [ 'platform-settings' ]
-createPlatformSettings.dependencies = [ 'register-logic' ]
+createPlatformSettings.tags = ['platform-settings']
+createPlatformSettings.dependencies = ['register-logic']
 
 export default createPlatformSettings

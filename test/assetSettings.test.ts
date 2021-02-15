@@ -1,12 +1,12 @@
-import { Signer } from '@ethersproject/abstract-signer';
+import { Signer } from '@ethersproject/abstract-signer'
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import hre from 'hardhat'
 import { AssetSettings, LendingPool } from '../types/typechain'
 import { getMarket } from '../tasks'
-import { Address } from '../types/custom/config-types';
+import { Address } from '../types/custom/config-types'
 
-chai.should();
+chai.should()
 chai.use(chaiAsPromised)
 
 const { deployments, ethers, contracts, getNamedSigner } = hre
@@ -16,7 +16,7 @@ describe('AssetSettings', async () => {
   let deployer: Signer
   let assetAddress: Address
   let cTokenAddress: Address
-  let emptyAddress = "0x0000000000000000000000000000000000000000"
+  let emptyAddress = '0x0000000000000000000000000000000000000000'
   let maxLoan = 1000
   let maxTVL = 100000
   let maxDebtRatio = 5000
@@ -30,48 +30,31 @@ describe('AssetSettings', async () => {
     assetSettings = await contracts.get('AssetSettings', { from: deployer })
 
     // Get asset addresses from lending pool
-    const { lendingPoolAddress } = await getMarket({
-      lendTokenSym: 'DAI',
-      collTokenSym: 'ETH'
-    }, hre)
+    const { lendingPoolAddress } = await getMarket(
+      {
+        lendTokenSym: 'DAI',
+        collTokenSym: 'ETH',
+      },
+      hre
+    )
 
     const lendingPool = await contracts.get('LendingPool', { at: lendingPoolAddress })
 
     assetAddress = await lendingPool.lendingToken()
     cTokenAddress = await lendingPool.cToken()
-
   })
 
   describe('Create asset setting', () => {
-
     it('Should not be able to create an asset setting that has been created on deployment as a pauser', async () => {
-
       // Create asset setting
-      const fn = () =>
-        assetSettings
-          .createAssetSetting(
-            assetAddress,
-            cTokenAddress,
-            maxLoan,
-            maxTVL,
-            maxDebtRatio
-          )
+      const fn = () => assetSettings.createAssetSetting(assetAddress, cTokenAddress, maxLoan, maxTVL, maxDebtRatio)
 
       await fn().should.be.rejectedWith('CACHE_ALREADY_EXISTS')
     })
 
     it('Should be able to create an asset setting that has not been created on deployment as a pauser', async () => {
-
       // Create asset setting
-      const fn = () =>
-        assetSettings
-          .createAssetSetting(
-            cTokenAddress,
-            assetAddress,
-            maxLoan,
-            maxTVL,
-            maxDebtRatio
-          )
+      const fn = () => assetSettings.createAssetSetting(cTokenAddress, assetAddress, maxLoan, maxTVL, maxDebtRatio)
 
       await fn().should.be.fulfilled
     })
@@ -82,15 +65,7 @@ describe('AssetSettings', async () => {
 
       // Try to create asset setting
       const fn = () =>
-        assetSettings
-          .connect(notPauser)
-          .createAssetSetting(
-            assetAddress,
-            cTokenAddress,
-            maxLoan,
-            maxTVL,
-            maxDebtRatio
-          )
+        assetSettings.connect(notPauser).createAssetSetting(assetAddress, cTokenAddress, maxLoan, maxTVL, maxDebtRatio)
 
       await fn().should.be.rejectedWith('NOT_PAUSER')
     })
@@ -100,15 +75,7 @@ describe('AssetSettings', async () => {
       const { 8: notPauser } = await ethers.getSigners()
 
       // Try to create asset setting
-      const fn = () =>
-        assetSettings
-          .createAssetSetting(
-            assetAddress,
-            emptyAddress,
-            maxLoan,
-            maxTVL,
-            maxDebtRatio
-          )
+      const fn = () => assetSettings.createAssetSetting(assetAddress, emptyAddress, maxLoan, maxTVL, maxDebtRatio)
 
       await fn().should.be.rejectedWith('CTOKEN_ADDRESS_REQUIRED')
     })
@@ -118,118 +85,70 @@ describe('AssetSettings', async () => {
       const { 8: notPauser } = await ethers.getSigners()
 
       // Try to create asset setting
-      const fn = () =>
-        assetSettings
-          .createAssetSetting(
-            emptyAddress,
-            cTokenAddress,
-            maxLoan,
-            maxTVL,
-            maxDebtRatio
-          )
+      const fn = () => assetSettings.createAssetSetting(emptyAddress, cTokenAddress, maxLoan, maxTVL, maxDebtRatio)
 
       await fn().should.be.rejectedWith('ASSET_ADDRESS_REQUIRED')
     })
-
   })
 
   describe('Update max loan amount', () => {
-
     it('Should be able to update the max loan amount for an asset as a pauser', async () => {
-
       // Create asset setting
-      const fn = () =>
-        assetSettings
-          .updateMaxLoanAmount(
-            assetAddress,
-            6520
-          )
+      const fn = () => assetSettings.updateMaxLoanAmount(assetAddress, 6520)
 
       await fn().should.be.fulfilled
     })
-
 
     it('Should not be able to update the max loan amount for an asset as not a pauser', async () => {
       // Sender address
       const { 8: notPauser } = await ethers.getSigners()
 
       // Try to create asset setting
-      const fn = () =>
-        assetSettings
-          .connect(notPauser)
-          .updateMaxLoanAmount(
-            assetAddress,
-            64000
-          )
+      const fn = () => assetSettings.connect(notPauser).updateMaxLoanAmount(assetAddress, 64000)
 
       await fn().should.be.rejectedWith('NOT_PAUSER')
     })
   })
 
   describe('Update cToken address', () => {
-    let newCTokenAddress = "0xf650c3d88d12db855b8bf7d11be6c55a4e07dcc9"
+    let newCTokenAddress = '0xf650c3d88d12db855b8bf7d11be6c55a4e07dcc9'
 
     it('Should be able to update the cToken address for an asset as a pauser', async () => {
-
       // Create asset setting
-      const fn = () =>
-        assetSettings
-          .updateCTokenAddress(
-            assetAddress,
-            newCTokenAddress
-          )
+      const fn = () => assetSettings.updateCTokenAddress(assetAddress, newCTokenAddress)
 
       await fn().should.be.fulfilled
     })
-
 
     it('Should not be able to update the cToken address for an asset as not a pauser', async () => {
       // Sender address
       const { 8: notPauser } = await ethers.getSigners()
 
       // Try to create asset setting
-      const fn = () =>
-        assetSettings
-          .connect(notPauser)
-          .updateCTokenAddress(
-            assetAddress,
-            newCTokenAddress
-          )
+      const fn = () => assetSettings.connect(notPauser).updateCTokenAddress(assetAddress, newCTokenAddress)
 
       await fn().should.be.rejectedWith('NOT_PAUSER')
     })
   })
 
   describe('Remove asset', () => {
-
     it.skip('Should be able to remove an asset as a pauser', async () => {
-
       // Create asset setting
-      const ting = await assetSettings
-              .removeAsset(
-                assetAddress
-              )
-      console.log({ting})
+      const ting = await assetSettings.removeAsset(assetAddress)
+      console.log({ ting })
       const result = await assetSettings.getCTokenAddress(assetAddress)
 
       result.should.equal(emptyAddress)
     })
-
 
     it('Should not be able to remove an asset as not a pauser', async () => {
       // Sender address
       const { 8: notPauser } = await ethers.getSigners()
 
       // Try to create asset setting
-      const fn = () =>
-        assetSettings
-          .connect(notPauser)
-          .removeAsset(
-            assetAddress
-          )
+      const fn = () => assetSettings.connect(notPauser).removeAsset(assetAddress)
 
       await fn().should.be.rejectedWith('NOT_PAUSER')
     })
   })
-
 })

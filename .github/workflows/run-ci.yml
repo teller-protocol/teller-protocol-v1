@@ -28,4 +28,4 @@ jobs:
           yarn compile
       - name: Executing Tests
         run: |
-          yarn hardhat test
+          yarn test
