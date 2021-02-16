@@ -3,9 +3,8 @@ import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import hre from 'hardhat'
 import { ChainlinkAggregator } from '../types/typechain'
-import { getMarket } from '../tasks'
-import { Address } from '../types/custom/config-types'
-import { ETH_ADDRESS } from '../consts'
+import { Address, Network } from '../types/custom/config-types'
+import { getTokens } from '../config/tokens'
 
 chai.should()
 chai.use(chaiAsPromised)
@@ -15,26 +14,22 @@ const { deployments, ethers, contracts, getNamedSigner } = hre
 describe('Chainlink Aggregator', async () => {
   let chainlinkAggregator: ChainlinkAggregator
   let deployer: Signer
-  let sourceTokenAddress: Address
-  let destinationTokenAddress: Address
-  let aggregatorAddressToAdd: Address
+  const tokens = getTokens(<Network>hre.network.name)
+  const sourceTokenAddress = '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9' // AAVE
+  const destinationTokenAddress = tokens.ETH // ETH
+  const aggregatorAddressToAdd = '0x6Df09E975c830ECae5bd4eD9d90f3A95a4f88012' // AAVE<>ETH
 
   // Setup for global tests
   beforeEach(async () => {
     deployer = await getNamedSigner('deployer')
   })
 
-  describe('Add an additional chainlink aggregator', () => {
+  describe('add', () => {
     // Setup for snapshot tests
     beforeEach(async () => {
       // Get snapshot
       await deployments.fixture('chainlink')
       chainlinkAggregator = await contracts.get('ChainlinkAggregator', { from: deployer })
-
-      // Set up addresses
-      sourceTokenAddress = '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9' // AAVE
-      destinationTokenAddress = ETH_ADDRESS // ETH
-      aggregatorAddressToAdd = '0x6Df09E975c830ECae5bd4eD9d90f3A95a4f88012' // AAVE<>ETH
     })
 
     it('Should be able add an aggregator address a pauser', async () => {
@@ -65,17 +60,12 @@ describe('Chainlink Aggregator', async () => {
     })
   })
 
-  describe('Remove a chainlink aggregator', () => {
+  describe('remove', () => {
     // Setup for snapshot tests
     beforeEach(async () => {
       // Get snapshot
       await deployments.fixture('chainlink')
       chainlinkAggregator = await contracts.get('ChainlinkAggregator', { from: deployer })
-
-      // Set up addresses
-      sourceTokenAddress = '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9' // AAVE
-      destinationTokenAddress = ETH_ADDRESS // ETH
-      aggregatorAddressToAdd = '0x6Df09E975c830ECae5bd4eD9d90f3A95a4f88012' // AAVE<>ETH
 
       // Add aggregator
       await chainlinkAggregator.add(sourceTokenAddress, destinationTokenAddress, aggregatorAddressToAdd)
@@ -102,17 +92,12 @@ describe('Chainlink Aggregator', async () => {
     })
   })
 
-  describe('Retrieve price for a token pair', () => {
+  describe('latestAnswerFor', () => {
     // Setup for snapshot tests
     beforeEach(async () => {
       // Get snapshot
       await deployments.fixture('chainlink')
       chainlinkAggregator = await contracts.get('ChainlinkAggregator', { from: deployer })
-
-      // Set up addresses
-      sourceTokenAddress = '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9' // AAVE
-      destinationTokenAddress = ETH_ADDRESS // ETH
-      aggregatorAddressToAdd = '0x6Df09E975c830ECae5bd4eD9d90f3A95a4f88012' // AAVE<>ETH
 
       // Add aggregator
       await chainlinkAggregator.add(sourceTokenAddress, destinationTokenAddress, aggregatorAddressToAdd)
