@@ -15,15 +15,11 @@ const addChainlinkPairs: DeployFunction = async (hre) => {
 
   for (const chainlinkPair of Object.values(chainlink)) {
     const { address, baseTokenName, quoteTokenName } = chainlinkPair
-    await chainlinkAggregator.add(
-      tokens[baseTokenName],
-      tokens[quoteTokenName],
-      address
-    )
+    await chainlinkAggregator.add(tokens[baseTokenName], tokens[quoteTokenName], address)
   }
 }
 
-addChainlinkPairs.tags = [ 'chainlink' ]
-addChainlinkPairs.dependencies = [ 'settings' ]
+addChainlinkPairs.tags = ['chainlink']
+addChainlinkPairs.dependencies = ['register-logic']
 
 export default addChainlinkPairs
