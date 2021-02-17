@@ -14,6 +14,7 @@
     "deploy:kovan": "yarn hardhat deploy --network kovan",
     "deploy:mainnet": "yarn hardhat deploy  --network mainnet",
     "test": "yarn hardhat test",
+    "contract:size": "yarn hardhat size-contracts",
     "coverage": "yarn hardhat coverage --solcoverjs ./solcover.js",
     "test:localhost": "yarn hardhat test --network localhost",
     "console:rinkeby": "yarn hardhat console --network rinkeby",

@@ -49,7 +49,7 @@ export default <HardhatUserConfig>{
     },
   },
   contractSizer: {
-    runOnCompile: true,
+    runOnCompile: false,
     alphaSort: true,
     disambiguatePaths: false,
   },
