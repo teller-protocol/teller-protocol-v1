@@ -61,6 +61,18 @@ export default <HardhatUserConfig>{
       localhost: 1,
       mainnet: 1,
     },
+    lender: {
+      rinkeby: 5,
+      ropsten: 5,
+      hardhat: 5,
+      localhost: 5,
+    },
+    borrower: {
+      rinkeby: 6,
+      ropsten: 6,
+      hardhat: 6,
+      localhost: 6,
+    },
   },
   networks: {
     rinkeby: {
