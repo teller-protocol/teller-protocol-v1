@@ -13,9 +13,9 @@ const addChainlinkPairs: DeployFunction = async (hre) => {
 
   const chainlinkAggregator = await contracts.get<ChainlinkAggregator>('ChainlinkAggregator', { from: deployer })
 
-  for (const chainlinkPair of Object.values(chainlink)) {
-    const { address, baseTokenName, quoteTokenName } = chainlinkPair
-    await chainlinkAggregator.add(tokens[baseTokenName], tokens[quoteTokenName], address)
+  for (const chainlinkPair of chainlink) {
+    const { address, baseTokenSym, quoteTokenSym } = chainlinkPair
+    await chainlinkAggregator.add(tokens[baseTokenSym], tokens[quoteTokenSym], address)
   }
 }
 
