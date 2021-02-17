@@ -1,5 +1,5 @@
 import { task, types } from 'hardhat/config'
-import { MarketRegistry } from '../types/typechain'
+import { LendingPool, Loans, MarketRegistry } from '../types/typechain'
 import { getTokens } from '../config/tokens'
 import { Network } from '../types/custom/config-types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
@@ -10,25 +10,25 @@ interface GetMarketArgs {
   log?: boolean
 }
 
-export const getMarket = async (args: GetMarketArgs, hre: HardhatRuntimeEnvironment) => {
-  const {
-    lendTokenSym,
-    collTokenSym,
-    log
-  } = args
+interface GetMarketReturn {
+  lendingPool: LendingPool
+  loans: Loans
+}
+
+export const getMarket = async (args: GetMarketArgs, hre: HardhatRuntimeEnvironment): Promise<GetMarketReturn> => {
+  const { lendTokenSym, collTokenSym, log } = args
 
   const { contracts, network } = hre
 
-  const {
-    [lendTokenSym]: lendingTokenAddress,
-    [collTokenSym]: collateralTokenAddress
-  } = getTokens(<Network>network.name)
+  const { [lendTokenSym]: lendingTokenAddress, [collTokenSym]: collateralTokenAddress } = getTokens(<Network>network.name)
 
   const marketRegistry = await contracts.get<MarketRegistry>('MarketRegistry')
 
   const lendingPoolAddress = await marketRegistry.lendingPools(lendingTokenAddress)
+  const lendingPool = await contracts.get<LendingPool>('LendingPool', { at: lendingPoolAddress })
 
   const loansAddress = await marketRegistry.loans(lendingTokenAddress, collateralTokenAddress)
+  const loans = await contracts.get<Loans>('Loans', { at: loansAddress })
 
   if (log) {
     console.log(`
@@ -41,13 +41,13 @@ export const getMarket = async (args: GetMarketArgs, hre: HardhatRuntimeEnvironm
   }
 
   return {
-    lendingPoolAddress,
-    loansAddress
+    lendingPool,
+    loans,
   }
 }
 
-task("get-market", "Gets a deployed market")
-  .addParam("lendTokenSym", "The lending token symbol")
-  .addParam("collTokenSym", "The collateral token symbol")
-  .addOptionalParam("log", "Enable logs", true, types.boolean)
+task('get-market', 'Gets a deployed market')
+  .addParam('lendTokenSym', 'The lending token symbol')
+  .addParam('collTokenSym', 'The collateral token symbol')
+  .addOptionalParam('log', 'Enable logs', true, types.boolean)
   .setAction(getMarket)

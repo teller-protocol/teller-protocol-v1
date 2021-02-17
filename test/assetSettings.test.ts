@@ -2,7 +2,7 @@ import { Signer } from '@ethersproject/abstract-signer'
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import hre from 'hardhat'
-import { AssetSettings, LendingPool } from '../types/typechain'
+import { AssetSettings } from '../types/typechain'
 import { getMarket } from '../tasks'
 import { Address } from '../types/custom/config-types'
 
@@ -11,9 +11,33 @@ chai.use(chaiAsPromised)
 
 const { deployments, ethers, contracts, getNamedSigner } = hre
 
+const setupTest = deployments.createFixture(async () => {
+  // Get snapshot
+  await deployments.fixture('markets')
+
+  const deployer = await getNamedSigner('deployer')
+  const assetSettings = await contracts.get<AssetSettings>('AssetSettings', { from: deployer })
+
+  // Get asset addresses from lending pool
+  const { lendingPool } = await getMarket(
+    {
+      lendTokenSym: 'DAI',
+      collTokenSym: 'ETH',
+    },
+    hre
+  )
+  const assetAddress = await lendingPool.lendingToken()
+  const cTokenAddress = await lendingPool.cToken()
+
+  return {
+    assetSettings,
+    assetAddress,
+    cTokenAddress,
+  }
+})
+
 describe('AssetSettings', async () => {
   let assetSettings: AssetSettings
-  let deployer: Signer
   let assetAddress: Address
   let cTokenAddress: Address
   let emptyAddress = '0x0000000000000000000000000000000000000000'
@@ -23,25 +47,12 @@ describe('AssetSettings', async () => {
 
   // Setup for global tests
   beforeEach(async () => {
-    deployer = await getNamedSigner('deployer')
+    // Execute snapshot and setup for tests
+    const setup = await setupTest()
 
-    // Get snapshot
-    await deployments.fixture('markets')
-    assetSettings = await contracts.get('AssetSettings', { from: deployer })
-
-    // Get asset addresses from lending pool
-    const { lendingPoolAddress } = await getMarket(
-      {
-        lendTokenSym: 'DAI',
-        collTokenSym: 'ETH',
-      },
-      hre
-    )
-
-    const lendingPool = await contracts.get('LendingPool', { at: lendingPoolAddress })
-
-    assetAddress = await lendingPool.lendingToken()
-    cTokenAddress = await lendingPool.cToken()
+    assetSettings = setup.assetSettings
+    assetAddress = setup.assetAddress
+    cTokenAddress = setup.cTokenAddress
   })
 
   describe('Create asset setting', () => {
