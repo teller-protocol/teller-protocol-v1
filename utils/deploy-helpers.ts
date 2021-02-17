@@ -16,7 +16,7 @@ export const deploy = async (args: DeployArgs): Promise<Contract> => {
     hre: {
       deployments: { deploy },
       getNamedAccounts,
-      ethers
+      ethers,
     },
   } = args
 
@@ -27,7 +27,7 @@ export const deploy = async (args: DeployArgs): Promise<Contract> => {
     contract: args.contract,
     libraries: args.libraries,
     from: deployer,
-    gasLimit: ethers.utils.hexlify(9500000)
+    gasLimit: ethers.utils.hexlify(9500000),
   })
 
   return ethers.getContractAt(args.contract, address)
@@ -38,28 +38,26 @@ export interface DeployLogicArgs extends Omit<DeployArgs, 'name'> {}
 export const deployLogic = async (args: DeployLogicArgs): Promise<void> => {
   await deploy({
     ...args,
-    name: `${args.contract}_Logic`
+    name: `${args.contract}_Logic`,
   })
 }
 
 export const deployUpgradeableProxy = async (args: DeployArgs): Promise<UpgradeableProxy> => {
   const {
-    hre: {
-      deployments
-    }
+    hre: { deployments },
   } = args
 
   const name = `${args.contract}_Proxy`
-  const proxy = await deploy({
+  const proxy = (await deploy({
     hre: args.hre,
     name,
-    contract: 'UpgradeableProxy'
-  }) as UpgradeableProxy
+    contract: 'UpgradeableProxy',
+  })) as UpgradeableProxy
 
   const { abi } = await deployments.getArtifact(args.contract)
   await deployments.save(args.contract, {
     abi,
-    address: proxy.address
+    address: proxy.address,
   })
   return proxy
 }

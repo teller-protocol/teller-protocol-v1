@@ -9,7 +9,7 @@ export interface SwapArgs {
   amount: number
 }
 
-export const swapETH = async (args: SwapArgs): Promise<void> => {
+export const getFunds = async (args: SwapArgs): Promise<void> => {
   const { getNamedSigner, ethers, contracts } = hre
 
   const deployer = await getNamedSigner('deployer')
