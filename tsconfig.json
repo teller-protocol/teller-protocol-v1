@@ -10,6 +10,20 @@
     "strict": true
   },
   "files": ["hardhat.config.ts"],
-  "include": ["./test", "./typechain", "./deploy", "./config", "./test-utils"],
-  "exclude": ["./contracts", "./build", "./artifacts", "./docs", "./cache", "./coverage"]
+  "include": [
+    "./test",
+    "./types",
+    "./deploy",
+    "./config",
+    "./test-utils",
+    "./utils"
+  ],
+  "exclude": [
+    "./contracts",
+    "./build",
+    "./artifacts",
+    "./docs",
+    "./cache",
+    "./coverage"
+  ]
 }
