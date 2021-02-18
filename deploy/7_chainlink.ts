@@ -11,7 +11,10 @@ const addChainlinkPairs: DeployFunction = async (hre) => {
   const tokens = getTokens(<Network>network.name)
   const chainlink = getChainlink(<Network>network.name)
 
-  const chainlinkAggregator = await contracts.get<ChainlinkAggregator>('ChainlinkAggregator', { from: deployer })
+  const chainlinkAggregator = await contracts.get<ChainlinkAggregator>(
+    'ChainlinkAggregator',
+    { from: deployer }
+  )
 
   for (const chainlinkPair of Object.values(chainlink)) {
     const { address, baseTokenName, quoteTokenName } = chainlinkPair
@@ -23,7 +26,7 @@ const addChainlinkPairs: DeployFunction = async (hre) => {
   }
 }
 
-addChainlinkPairs.tags = [ 'chainlink' ]
-addChainlinkPairs.dependencies = [ 'settings' ]
+addChainlinkPairs.tags = ['chainlink']
+addChainlinkPairs.dependencies = ['register-logic']
 
 export default addChainlinkPairs
