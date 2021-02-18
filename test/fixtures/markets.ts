@@ -3,6 +3,7 @@ import { getMarkets } from '../../config/markets'
 import { Network } from '../../types/custom/config-types'
 import { LendingPool, Loans } from '../../types/typechain'
 import { getMarket } from '../../tasks'
+import { getFunds } from '../../utils/get-funds'
 
 interface DeployedMarketArgs {
   lendTokenSym: string
@@ -21,7 +22,7 @@ interface FundedMarketReturn {
 
 export const fundedMarket = (args?: FundedMarketArgs): Promise<FundedMarketReturn> =>
   deployments.createFixture(async (hre) => {
-    const { deployments, network } = hre
+    const { deployments, network, getNamedSigner } = hre
     await deployments.fixture('markets')
 
     let lendTokenSym: string
@@ -43,7 +44,10 @@ export const fundedMarket = (args?: FundedMarketArgs): Promise<FundedMarketRetur
       hre
     )
 
-    // TODO: Fund the market
+    // Fund the market
+    const deployer = await getNamedSigner('deployer')
+    await getFunds({ tokenSym: lendTokenSym, amount: 100000 })
+    await market.lendingPool.connect(deployer).deposit(100000)
 
     return market
   })()
