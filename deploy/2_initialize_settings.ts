@@ -1,6 +1,6 @@
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { deployUpgradeableProxy } from '../utils/deployHelpers'
+import { deployUpgradeableProxy } from '../utils/deploy-helpers'
 import { Settings } from '../types/typechain'
 import { getTokens } from '../config/tokens'
 import { Network } from '../types/custom/config-types'
