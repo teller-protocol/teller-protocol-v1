@@ -75,7 +75,11 @@ export default <HardhatUserConfig>{
     },
     funder: {
       hardhat: 15,
-      localhost: 15
+      localhost: 15,
+    },
+    craSigner: {
+      hardhat: 10,
+      localhost: 10,
     },
   },
   networks: {
