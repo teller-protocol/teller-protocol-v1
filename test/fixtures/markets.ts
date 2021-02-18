@@ -1,9 +1,10 @@
 import { deployments } from 'hardhat'
 import { getMarkets } from '../../config/markets'
 import { Network } from '../../types/custom/config-types'
-import { LendingPool, Loans } from '../../types/typechain'
+import { AssetSettings } from '../../types/typechain'
 import { getMarket, GetMarketReturn } from '../../tasks'
 import { getFunds } from '../../utils/get-funds'
+import { BigNumberish } from 'ethers'
 
 interface DeployedMarketArgs {
   lendTokenSym: string
@@ -12,12 +13,13 @@ interface DeployedMarketArgs {
 
 interface FundedMarketArgs {
   market?: DeployedMarketArgs
+  // Amount should be denoted in decimal value for the token (i.e. 100 = 100 * (10^tokenDecimals)
   amount?: number
 }
 
-interface FundedMarketReturn {
-  loans: Loans
-  lendingPool: LendingPool
+export interface FundedMarketReturn extends GetMarketReturn {
+  lendTokenSym: string
+  collTokenSym: string
 }
 
 export const fundedMarket = (args?: FundedMarketArgs): Promise<FundedMarketReturn> =>
@@ -46,18 +48,28 @@ export const fundedMarket = (args?: FundedMarketArgs): Promise<FundedMarketRetur
     )
 
     // Fund the market
+    let amountToFundLP: BigNumberish
+    if (args?.amount) {
+      const decimals = await lendingToken.decimals()
+      const factor = ethers.BigNumber.from(10).pow(decimals)
+      amountToFundLP = ethers.BigNumber.from(args.amount).mul(factor)
+    } else {
+      const assetSettings = await contracts.get<AssetSettings>('AssetSettings')
+      amountToFundLP = await assetSettings.getMaxTVLAmount(lendingToken.address)
+    }
+
     const lender = await getNamedSigner('lender')
     await getFunds({
       to: lender,
       tokenSym: lendTokenSym,
-      amount: 10000
+      amount: amountToFundLP,
     })
-    await lendingToken
-      .connect(lender)
-      .approve(market.lendingPool.address, 10000)
-    await market.lendingPool
-      .connect(lender)
-      .deposit(10000)
+    await lendingToken.connect(lender).approve(market.lendingPool.address, amountToFundLP)
+    await market.lendingPool.connect(lender).deposit(amountToFundLP)
 
-    return market
+    return {
+      ...market,
+      lendTokenSym,
+      collTokenSym,
+    }
   })()
