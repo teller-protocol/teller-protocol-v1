@@ -15,7 +15,6 @@ import "./Base.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LoansInterface.sol";
-import "../atm/ATMGovernanceInterface.sol";
 import "../interfaces/EscrowInterface.sol";
 
 /*****************************************************************************************************/
@@ -43,8 +42,6 @@ contract Loans is LoansInterface, Base {
     using LoanLib for TellerCommon.Loan;
 
     /* State Variables */
-
-    bytes32 internal constant MAX_DEBT_RATIO_ATM_SETTING = "MaxDebtRatio";
 
     uint256 public totalCollateral;
 
@@ -92,7 +89,10 @@ contract Loans is LoansInterface, Base {
         @param loanID number of loan to check
      */
     modifier loanTermsSet(uint256 loanID) {
-        require(loans[loanID].status == TellerCommon.LoanStatus.TermsSet, "LOAN_NOT_SET");
+        require(
+            loans[loanID].status == TellerCommon.LoanStatus.TermsSet,
+            "LOAN_NOT_SET"
+        );
         _;
     }
 
@@ -117,7 +117,10 @@ contract Loans is LoansInterface, Base {
             _getSettings().getPlatformSettingValue(
                 _getSettings().consts().MAXIMUM_LOAN_DURATION_SETTING()
             );
-        require(maxLoanDuration >= loanRequest.duration, "DURATION_EXCEEDS_MAX_DURATION");
+        require(
+            maxLoanDuration >= loanRequest.duration,
+            "DURATION_EXCEEDS_MAX_DURATION"
+        );
 
         bool exceedsMaxLoanAmount =
             _getSettings().assetSettings().exceedsMaxLoanAmount(
@@ -126,7 +129,10 @@ contract Loans is LoansInterface, Base {
             );
         require(!exceedsMaxLoanAmount, "AMOUNT_EXCEEDS_MAX_AMOUNT");
 
-        require(_isDebtRatioValid(loanRequest.amount), "SUPPLY_TO_DEBT_EXCEEDS_MAX");
+        require(
+            _isDebtRatioValid(loanRequest.amount),
+            "SUPPLY_TO_DEBT_EXCEEDS_MAX"
+        );
         _;
     }
 
@@ -134,7 +140,11 @@ contract Loans is LoansInterface, Base {
         @notice Get a list of all loans for a borrower
         @param borrower The borrower's address
      */
-    function getBorrowerLoans(address borrower) external view returns (uint256[] memory) {
+    function getBorrowerLoans(address borrower)
+        external
+        view
+        returns (uint256[] memory)
+    {
         return borrowerLoans[borrower];
     }
 
@@ -263,9 +273,13 @@ contract Loans is LoansInterface, Base {
         whenNotPaused()
         whenLendingPoolNotPaused(address(lendingPool))
     {
-        require(msg.sender == loans[loanID].loanTerms.borrower, "CALLER_DOESNT_OWN_LOAN");
+        require(
+            msg.sender == loans[loanID].loanTerms.borrower,
+            "CALLER_DOESNT_OWN_LOAN"
+        );
         require(amount > 0, "CANNOT_WITHDRAW_ZERO");
-        (, int256 neededInCollateralTokens, ) = _getCollateralNeededInfo(loanID);
+        (, int256 neededInCollateralTokens, ) =
+            _getCollateralNeededInfo(loanID);
         _withdrawCollateral(amount, loanID, neededInCollateralTokens);
     }
 
@@ -280,7 +294,10 @@ contract Loans is LoansInterface, Base {
                 loans[loanID].collateral.sub(uint256(neededInCollateralTokens));
             require(withdrawalAmount >= amount, "COLLATERAL_AMOUNT_TOO_HIGH");
         } else {
-            require(loans[loanID].collateral == amount, "COLLATERAL_AMOUNT_NOT_MATCH");
+            require(
+                loans[loanID].collateral == amount,
+                "COLLATERAL_AMOUNT_NOT_MATCH"
+            );
         }
 
         // Update the contract total and the loan collateral total
@@ -352,13 +369,18 @@ contract Loans is LoansInterface, Base {
 
         loans[loanID].borrowedAmount = amountBorrow;
         loans[loanID].principalOwed = amountBorrow;
-        loans[loanID].interestOwed = loans[loanID].getInterestOwedFor(amountBorrow);
+        loans[loanID].interestOwed = loans[loanID].getInterestOwedFor(
+            amountBorrow
+        );
         loans[loanID].status = TellerCommon.LoanStatus.Active;
 
         // check that enough collateral has been provided for this loan
         TellerCommon.LoanCollateralInfo memory collateralInfo =
             _getCollateralInfo(loanID);
-        require(!collateralInfo.moreCollateralRequired, "MORE_COLLATERAL_REQUIRED");
+        require(
+            !collateralInfo.moreCollateralRequired,
+            "MORE_COLLATERAL_REQUIRED"
+        );
 
         loans[loanID].loanStartTime = now;
 
@@ -377,7 +399,10 @@ contract Loans is LoansInterface, Base {
 
         if (!eoaAllowed) {
             loans[loanID].escrow.requireNotEmpty("ESCROW_CONTRACT_NOT_DEFINED");
-            EscrowInterface(loans[loanID].escrow).initialize(address(this), loanID);
+            EscrowInterface(loans[loanID].escrow).initialize(
+                address(this),
+                loanID
+            );
         }
 
         emit LoanTakenOut(
@@ -411,14 +436,19 @@ contract Loans is LoansInterface, Base {
 
         // update the amount owed on the loan
         totalOwed = totalOwed.sub(toPay);
-        (uint256 principalAmount, uint256 interestAmount) = loans[loanID].payOff(toPay);
+        (uint256 principalAmount, uint256 interestAmount) =
+            loans[loanID].payOff(toPay);
 
         // if the loan is now fully paid, close it and return collateral
         if (totalOwed == 0) {
             loans[loanID].status = TellerCommon.LoanStatus.Closed;
 
             uint256 collateralAmount = loans[loanID].collateral;
-            _payOutCollateral(loanID, collateralAmount, loans[loanID].loanTerms.borrower);
+            _payOutCollateral(
+                loanID,
+                collateralAmount,
+                loans[loanID].loanTerms.borrower
+            );
 
             emit CollateralWithdrawn(
                 loanID,
@@ -530,10 +560,15 @@ contract Loans is LoansInterface, Base {
         if (reward < loans[loanID].collateral) {
             _payOutCollateral(loanID, reward, recipient);
         } else if (reward >= loans[loanID].collateral) {
-            uint256 remainingCollateralAmount = reward.sub(loans[loanID].collateral);
+            uint256 remainingCollateralAmount =
+                reward.sub(loans[loanID].collateral);
             _payOutCollateral(loanID, loans[loanID].collateral, recipient);
-            if (remainingCollateralAmount > 0 && loans[loanID].escrow != address(0x0)) {
-                EscrowInterface(loans[loanID].escrow).claimTokensByCollateralValue(
+            if (
+                remainingCollateralAmount > 0 &&
+                loans[loanID].escrow != address(0x0)
+            ) {
+                EscrowInterface(loans[loanID].escrow)
+                    .claimTokensByCollateralValue(
                     recipient,
                     remainingCollateralAmount
                 );
@@ -565,12 +600,16 @@ contract Loans is LoansInterface, Base {
         address settingsAddress
     ) internal isNotInitialized() {
         lendingPoolAddress.requireNotEmpty("PROVIDE_LENDING_POOL_ADDRESS");
-        loanTermsConsensusAddress.requireNotEmpty("PROVIDED_LOAN_TERMS_ADDRESS");
+        loanTermsConsensusAddress.requireNotEmpty(
+            "PROVIDED_LOAN_TERMS_ADDRESS"
+        );
 
         _initialize(settingsAddress);
 
         lendingPool = LendingPoolInterface(lendingPoolAddress);
-        loanTermsConsensus = LoanTermsConsensusInterface(loanTermsConsensusAddress);
+        loanTermsConsensus = LoanTermsConsensusInterface(
+            loanTermsConsensusAddress
+        );
     }
 
     /**
@@ -599,19 +638,17 @@ contract Loans is LoansInterface, Base {
         @param newLoanAmount the new loan amount to consider o the StD ratio.
         @return true if the ratio is valid. Otherwise it returns false.
      */
-    function _isDebtRatioValid(uint256 newLoanAmount) internal view returns (bool) {
-        address atmAddressForMarket =
-            _getSettings().atmSettings().getATMForMarket(
-                address(lendingPool.lendingToken()),
-                collateralToken
-            );
-        require(atmAddressForMarket != address(0x0), "ATM_NOT_FOUND_FOR_MARKET");
-        uint256 debtRatioLimit =
-            ATMGovernanceInterface(atmAddressForMarket).getGeneralSetting(
-                MAX_DEBT_RATIO_ATM_SETTING
+    function _isDebtRatioValid(uint256 newLoanAmount)
+        internal
+        view
+        returns (bool)
+    {
+        uint256 maxDebtRatio =
+            _getSettings().assetSettings().getMaxDebtRatio(
+                address(lendingPool.lendingToken())
             );
         uint256 currentDebtRatio = lendingPool.getDebtRatioFor(newLoanAmount);
-        return currentDebtRatio <= debtRatioLimit;
+        return currentDebtRatio <= maxDebtRatio;
     }
 
     /**
@@ -620,6 +657,7 @@ contract Loans is LoansInterface, Base {
         @return the new Escrow contract address.
      */
     function _createEscrow(uint256 loanID) internal returns (address) {
-        return _getSettings().escrowFactory().createEscrow(address(this), loanID);
+        return
+            _getSettings().escrowFactory().createEscrow(address(this), loanID);
     }
 }

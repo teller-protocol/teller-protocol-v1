@@ -4,7 +4,7 @@
   "license": "MIT",
   "main": "truffle-config.js",
   "scripts": {
-    "lint-sol": "yarn solhint -f table \"./contracts/**/*.sol\"",
+    "lint-sol": "yarn solhint -f table --fix --quiet",
     "lint-ts": "yarn eslint . -f table -ext ts,js --fix",
     "lint-json": "prettier",
     "fork:mainnet": "node scripts/utils/forkMainnet.js",
@@ -63,7 +63,7 @@
     "prettier": "^2.0.2",
     "prettier-plugin-solidity": "^1.0.0-alpha.46",
     "serialize-javascript": "^3.1.0",
-    "solhint": "^2.1.0",
+    "solhint": "^3.3.2",
     "solhint-plugin-prettier": "^0.0.4",
     "solidity-coverage": "^0.7.14",
     "truffle": "5.1.41",
@@ -97,7 +97,6 @@
   },
   "lint-staged": {
     "*.sol": [
-      "yarn solhint -f table",
       "prettier --write"
     ],
     "*.{js,ts}": [

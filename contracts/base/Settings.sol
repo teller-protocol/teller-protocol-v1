@@ -25,7 +25,6 @@ import "../interfaces/SettingsInterface.sol";
 import "../interfaces/EscrowFactoryInterface.sol";
 import "../providers/chainlink/IChainlinkAggregator.sol";
 import "../providers/compound/CErc20Interface.sol";
-import "../settings/IATMSettings.sol";
 import "../interfaces/AssetSettingsInterface.sol";
 import "../interfaces/MarketFactoryInterface.sol";
 
@@ -47,7 +46,12 @@ import "../interfaces/MarketFactoryInterface.sol";
 
     @author develop@teller.finance
  */
-contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeable {
+contract Settings is
+    SettingsInterface,
+    TInitializable,
+    Pausable,
+    BaseUpgradeable
+{
     using AddressLib for address;
     using Address for address;
     using AddressArrayLib for address[];
@@ -64,7 +68,8 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     /**
         @notice It defines the constant address to represent ETHER.
      */
-    address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address public constant ETH_ADDRESS =
+        0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /**
         @notice It defines the constant address to represent the canonical WETH token.
@@ -115,7 +120,8 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         - The key is the platform setting name.
         - The value is the platform setting. It includes the value, minimum and maximum values.
      */
-    mapping(bytes32 => PlatformSettingsLib.PlatformSetting) public platformSettings;
+    mapping(bytes32 => PlatformSettingsLib.PlatformSetting)
+        public platformSettings;
 
     /**
         @notice It is the global instance of the EscrowFactory contract.
@@ -136,11 +142,6 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @notice It is the global instance of the MarketFactory contract.
      */
     MarketFactoryInterface public marketFactory;
-
-    /**
-        @notice The current ATM settings.
-     */
-    IATMSettings public atmSettings;
 
     /**
         @notice This mapping represents the list of wallet addresses that are allowed to interact with the protocol
@@ -177,7 +178,13 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         require(settingName != "", "SETTING_NAME_MUST_BE_PROVIDED");
         platformSettings[settingName].initialize(value, minValue, maxValue);
 
-        emit PlatformSettingCreated(settingName, msg.sender, value, minValue, maxValue);
+        emit PlatformSettingCreated(
+            settingName,
+            msg.sender,
+            value,
+            minValue,
+            maxValue
+        );
     }
 
     /**
@@ -194,7 +201,12 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
     {
         uint256 oldValue = platformSettings[settingName].update(newValue);
 
-        emit PlatformSettingUpdated(settingName, msg.sender, oldValue, newValue);
+        emit PlatformSettingUpdated(
+            settingName,
+            msg.sender,
+            oldValue,
+            newValue
+        );
     }
 
     /**
@@ -243,7 +255,11 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @param settingName setting name to test.
         @return true if the setting is already configured. Otherwise it returns false.
      */
-    function hasPlatformSetting(bytes32 settingName) external view returns (bool) {
+    function hasPlatformSetting(bytes32 settingName)
+        external
+        view
+        returns (bool)
+    {
         return _getPlatformSetting(settingName).exists;
     }
 
@@ -258,7 +274,10 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         isInitialized()
     {
         lendingPoolAddress.requireNotEmpty("LENDING_POOL_IS_REQUIRED");
-        require(!lendingPoolPaused[lendingPoolAddress], "LENDING_POOL_ALREADY_PAUSED");
+        require(
+            !lendingPoolPaused[lendingPoolAddress],
+            "LENDING_POOL_ALREADY_PAUSED"
+        );
 
         lendingPoolPaused[lendingPoolAddress] = true;
 
@@ -276,7 +295,10 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         isInitialized()
     {
         lendingPoolAddress.requireNotEmpty("LENDING_POOL_IS_REQUIRED");
-        require(lendingPoolPaused[lendingPoolAddress], "LENDING_POOL_IS_NOT_PAUSED");
+        require(
+            lendingPoolPaused[lendingPoolAddress],
+            "LENDING_POOL_IS_NOT_PAUSED"
+        );
 
         lendingPoolPaused[lendingPoolAddress] = false;
 
@@ -310,7 +332,11 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @param assetAddress token address.
         @return the cToken address for a given asset address.
      */
-    function getCTokenAddress(address assetAddress) external view returns (address) {
+    function getCTokenAddress(address assetAddress)
+        external
+        view
+        returns (address)
+    {
         return assetSettings.getCTokenAddress(assetAddress);
     }
 
@@ -326,7 +352,11 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @notice Restricts the use of the Teller protocol to authorized wallet addresses only
         @param restriction Bool turning the resitriction on or off
      */
-    function restrictPlatform(bool restriction) external onlyPauser() isInitialized() {
+    function restrictPlatform(bool restriction)
+        external
+        onlyPauser()
+        isInitialized()
+    {
         platformRestricted = restriction;
     }
 
@@ -350,22 +380,22 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         authorizedAddresses[addressToAdd] = true;
     }
 
-  /**
+    /**
         @notice Adds a list of wallet addresses to the list of authorized wallets
         @param addressesToAdd The list of wallet addresses being authorized
      */
-  function addAuthorizedAddressList(address[] calldata addressesToAdd)
-    external
-    onlyPauser()
-    isInitialized()
-  {
-    for(uint256 i = 0; i < addressesToAdd.length; i++) {
-        addressesToAdd[i].requireNotEmpty("ADDRESS_ZERO");
-        authorizedAddresses[addressesToAdd[i]] = true;
+    function addAuthorizedAddressList(address[] calldata addressesToAdd)
+        external
+        onlyPauser()
+        isInitialized()
+    {
+        for (uint256 i = 0; i < addressesToAdd.length; i++) {
+            addressesToAdd[i].requireNotEmpty("ADDRESS_ZERO");
+            authorizedAddresses[addressesToAdd[i]] = true;
+        }
     }
-  }
 
-  /**
+    /**
         @notice Removes a wallet address from the list of authorized wallets
         @param addressToRemove The wallet address of the user being unauthorized
      */
@@ -395,7 +425,10 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         @param account account to test.
      */
     function requireAuthorization(address account) public view {
-        require(!platformRestricted || hasAuthorization(account), "NOT_AUTHORIZED");
+        require(
+            !platformRestricted || hasAuthorization(account),
+            "NOT_AUTHORIZED"
+        );
     }
 
     /**
@@ -431,7 +464,9 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
         );
         versionsRegistry.initialize();
         assetSettings = AssetSettingsInterface(
-            _deployDynamicProxy(versionsRegistry.consts().ASSET_SETTINGS_LOGIC_NAME())
+            _deployDynamicProxy(
+                versionsRegistry.consts().ASSET_SETTINGS_LOGIC_NAME()
+            )
         );
         chainlinkAggregator = IChainlinkAggregator(
             _deployDynamicProxy(
@@ -439,10 +474,14 @@ contract Settings is SettingsInterface, TInitializable, Pausable, BaseUpgradeabl
             )
         );
         escrowFactory = EscrowFactoryInterface(
-            _deployDynamicProxy(versionsRegistry.consts().ESCROW_FACTORY_LOGIC_NAME())
+            _deployDynamicProxy(
+                versionsRegistry.consts().ESCROW_FACTORY_LOGIC_NAME()
+            )
         );
         marketFactory = MarketFactoryInterface(
-            _deployDynamicProxy(versionsRegistry.consts().MARKET_FACTORY_LOGIC_NAME())
+            _deployDynamicProxy(
+                versionsRegistry.consts().MARKET_FACTORY_LOGIC_NAME()
+            )
         );
     }
 

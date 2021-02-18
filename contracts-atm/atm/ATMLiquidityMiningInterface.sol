@@ -64,7 +64,10 @@ interface ATMLiquidityMiningInterface {
         @param sender address of the transaction sender.
         @param addressAdded address newly added to the blacklist.
      */
-    event NotAllowedAddressAdded(address indexed sender, address indexed addressAdded);
+    event NotAllowedAddressAdded(
+        address indexed sender,
+        address indexed addressAdded
+    );
 
     /**
         @notice Event emitted when an address was removed from the blacklist.
@@ -116,7 +119,10 @@ interface ATMLiquidityMiningInterface {
             assigned on userStakeInfo[msg.sender].accruedTLRBalance until any of the following operations
             takes place (Stake(), UnStake(), Withdraw()). 
      */
-    function getTLRFloatingBalance(address tToken) external view returns (uint256);
+    function getTLRFloatingBalance(address tToken)
+        external
+        view
+        returns (uint256);
 
     /**
         @notice Returns TLR total balance ( assigned + floating ) until current block.
