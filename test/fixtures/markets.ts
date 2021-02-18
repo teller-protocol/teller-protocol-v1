@@ -2,7 +2,7 @@ import { deployments } from 'hardhat'
 import { getMarkets } from '../../config/markets'
 import { Network } from '../../types/custom/config-types'
 import { LendingPool, Loans } from '../../types/typechain'
-import { getMarket } from '../../tasks'
+import { getMarket, GetMarketReturn } from '../../tasks'
 import { getFunds } from '../../utils/get-funds'
 
 interface DeployedMarketArgs {
@@ -22,7 +22,7 @@ interface FundedMarketReturn {
 
 export const fundedMarket = (args?: FundedMarketArgs): Promise<FundedMarketReturn> =>
   deployments.createFixture(async (hre) => {
-    const { deployments, network, getNamedSigner } = hre
+    const { deployments, network, getNamedSigner, contracts, tokens, ethers } = hre
     await deployments.fixture('markets')
 
     let lendTokenSym: string
@@ -35,6 +35,7 @@ export const fundedMarket = (args?: FundedMarketArgs): Promise<FundedMarketRetur
       lendTokenSym = markets[0].borrowedToken
       collTokenSym = markets[0].collateralToken
     }
+    const lendingToken = await tokens.get(lendTokenSym)
 
     const market = await getMarket(
       {
@@ -45,9 +46,18 @@ export const fundedMarket = (args?: FundedMarketArgs): Promise<FundedMarketRetur
     )
 
     // Fund the market
-    const deployer = await getNamedSigner('deployer')
-    await getFunds({ tokenSym: lendTokenSym, amount: 100000 })
-    await market.lendingPool.connect(deployer).deposit(100000)
+    const lender = await getNamedSigner('lender')
+    await getFunds({
+      to: lender,
+      tokenSym: lendTokenSym,
+      amount: 10000
+    })
+    await lendingToken
+      .connect(lender)
+      .approve(market.lendingPool.address, 10000)
+    await market.lendingPool
+      .connect(lender)
+      .deposit(10000)
 
     return market
   })()

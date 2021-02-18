@@ -73,6 +73,10 @@ export default <HardhatUserConfig>{
       hardhat: 6,
       localhost: 6,
     },
+    funder: {
+      hardhat: 15,
+      localhost: 15
+    },
   },
   networks: {
     rinkeby: {
