@@ -1,7 +1,7 @@
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import hre from 'hardhat'
-import { Settings } from '../types/typechain'
+import { Settings } from '../../types/typechain'
 
 chai.should()
 chai.use(chaiAsPromised)
@@ -35,7 +35,10 @@ describe('Settings', async () => {
 
     it('Should be able to update a platform setting as a pauser', async () => {
       // Update setting
-      await settings.updatePlatformSetting(ethers.utils.formatBytes32String('CollateralBuffer'), newCollateralBufferValue)
+      await settings.updatePlatformSetting(
+        ethers.utils.formatBytes32String('CollateralBuffer'),
+        newCollateralBufferValue
+      )
 
       const { value: newCollateralBuffer } = await settings.getPlatformSetting(
         ethers.utils.formatBytes32String('CollateralBuffer')
@@ -53,7 +56,10 @@ describe('Settings', async () => {
       const fn = () =>
         settings
           .connect(notPauser)
-          .updatePlatformSetting(ethers.utils.formatBytes32String('CollateralBuffer'), newCollateralBufferValue)
+          .updatePlatformSetting(
+            ethers.utils.formatBytes32String('CollateralBuffer'),
+            newCollateralBufferValue
+          )
 
       await fn().should.be.rejectedWith('NOT_PAUSER')
     })
@@ -62,7 +68,9 @@ describe('Settings', async () => {
   describe('Remove platform setting', () => {
     it('Should be able to remove a platform setting as a pauser', async () => {
       // Remove setting
-      await settings.removePlatformSetting(ethers.utils.formatBytes32String('CollateralBuffer'))
+      await settings.removePlatformSetting(
+        ethers.utils.formatBytes32String('CollateralBuffer')
+      )
 
       const { value: newCollateralBuffer } = await settings.getPlatformSetting(
         ethers.utils.formatBytes32String('CollateralBuffer')
@@ -77,7 +85,12 @@ describe('Settings', async () => {
       const { 6: notPauser } = await ethers.getSigners()
 
       // Try to remove setting
-      const fn = () => settings.connect(notPauser).removePlatformSetting(ethers.utils.formatBytes32String('CollateralBuffer'))
+      const fn = () =>
+        settings
+          .connect(notPauser)
+          .removePlatformSetting(
+            ethers.utils.formatBytes32String('CollateralBuffer')
+          )
 
       await fn().should.be.rejectedWith('NOT_PAUSER')
     })
@@ -103,7 +116,8 @@ describe('Settings', async () => {
       const { 6: notPauser } = await ethers.getSigners()
 
       // Try to pause lending pool
-      const fn = () => settings.connect(notPauser).pauseLendingPool(lendingPoolAddress)
+      const fn = () =>
+        settings.connect(notPauser).pauseLendingPool(lendingPoolAddress)
 
       await fn().should.be.rejectedWith('NOT_PAUSER')
     })
@@ -135,7 +149,8 @@ describe('Settings', async () => {
       const { 6: notPauser } = await ethers.getSigners()
 
       // Try to unpause lending pool
-      const fn = () => settings.connect(notPauser).unpauseLendingPool(lendingPoolAddress)
+      const fn = () =>
+        settings.connect(notPauser).unpauseLendingPool(lendingPoolAddress)
 
       await fn().should.be.rejectedWith('NOT_PAUSER')
     })
