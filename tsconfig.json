@@ -16,7 +16,8 @@
     "./deploy",
     "./config",
     "./test-utils",
-    "./utils"
+    "./utils",
+    "./tasks"
   ],
   "exclude": [
     "./contracts",
