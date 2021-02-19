@@ -8,13 +8,15 @@ const addDapps: DeployFunction = async (hre) => {
   const uniswap = await deployments.get('Uniswap')
   const compound = await deployments.get('Compound')
 
-  const escrowFactory = await contracts.get<EscrowFactory>('EscrowFactory', { from: deployer })
+  const escrowFactory = await contracts.get<EscrowFactory>('EscrowFactory', {
+    from: deployer,
+  })
 
   await escrowFactory.addDapp(uniswap.address, false)
   await escrowFactory.addDapp(compound.address, true)
 }
 
-addDapps.tags = [ 'dapps' ]
-addDapps.dependencies = [ 'settings' ]
+addDapps.tags = ['dapps']
+addDapps.dependencies = ['register-logic']
 
 export default addDapps
