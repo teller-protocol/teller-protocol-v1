@@ -40,9 +40,13 @@ import "../interfaces/MarketFactoryInterface.sol";
 /*****************************************************************************************************/
 /**
     @notice This contract manages the configuration of the platform.
-    @dev The platform settings functions (create, update, and remove) don't include the whenNotPaused() modifier because we might need to use them in both cases (when the platform is paused and not paused).
+    @dev The platform settings functions (create, update, and remove) don't include the whenNotPaused()
+    modifier because we might need to use them in both cases (when the platform is paused and not paused).
         Example:
-            - There is a potential issue and before analyzing it, we pause the platform to avoid funds losses. Finally, as result of the analysis, we decided to update a platform setting (or create a new one for the cloud nodes). In this scenario, if the modifier is present, we couldn't update the setting (because the platform is paused).
+            - There is a potential issue and before analyzing it, we pause the platform to avoid funds losses.
+            Finally, as result of the analysis, we decided to update a platform setting (or create a new one for the
+            cloud nodes). In this scenario, if the modifier is present, we couldn't update the setting
+            (because the platform is paused).
 
     @author develop@teller.finance
  */
@@ -154,7 +158,7 @@ contract Settings is
     /**
         @notice Flag restricting the use of the Protocol to authorizedAddress
      */
-    bool platformRestricted;
+    bool public platformRestricted;
 
     /** Modifiers */
 
@@ -372,11 +376,11 @@ contract Settings is
         @notice Adds a wallet address to the list of authorized wallets
         @param addressToAdd The wallet address of the user being authorized
      */
-    function addAuthorizedAddress(address addressToAdd)
-        external
-        onlyPauser()
-        isInitialized()
-    {
+    function addAuthorizedAddress(address addressToAdd) public isInitialized() {
+        require(
+            isPauser(msg.sender) || msg.sender == address(escrowFactory),
+            "CALLER_NOT_PAUSER"
+        );
         authorizedAddresses[addressToAdd] = true;
     }
 
@@ -386,12 +390,10 @@ contract Settings is
      */
     function addAuthorizedAddressList(address[] calldata addressesToAdd)
         external
-        onlyPauser()
         isInitialized()
     {
         for (uint256 i = 0; i < addressesToAdd.length; i++) {
-            addressesToAdd[i].requireNotEmpty("ADDRESS_ZERO");
-            authorizedAddresses[addressesToAdd[i]] = true;
+            addAuthorizedAddress(addressesToAdd[i]);
         }
     }
 
