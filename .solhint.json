@@ -11,7 +11,7 @@
     "visibility-modifier-order": "error",
     "func-visibility": "error",
     "state-visibility": "error",
-    "ordering": "error",
+    "ordering": "warn",
     "quotes": "error",
     "max-line-length": ["warn", 120],
     "no-unused-vars": "error",

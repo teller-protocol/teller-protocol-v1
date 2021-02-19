@@ -49,7 +49,10 @@ contract TLRToken is
         @dev Throws an error is the Teller platform is paused
      */
     modifier whenNotPaused() {
-        require(!_getSettings().atmSettings().isATMPaused(atmAddress), "ATM_IS_PAUSED");
+        require(
+            !_getSettings().atmSettings().isATMPaused(atmAddress),
+            "ATM_IS_PAUSED"
+        );
         _;
     }
 
@@ -75,7 +78,8 @@ contract TLRToken is
     }
 
     /* Mappings */
-    mapping(address => mapping(uint256 => VestingTokens)) private _vestingBalances; // Mapping user address to vesting id, which in turn is mapped to the VestingTokens struct
+    mapping(address => mapping(uint256 => VestingTokens))
+        private _vestingBalances; // Mapping user address to vesting id, which in turn is mapped to the VestingTokens struct
     mapping(address => uint256) public vestingCount;
     mapping(address => uint256) public assignedTokens;
     mapping(address => Snapshots) private _accountBalanceSnapshots;
@@ -181,18 +185,22 @@ contract TLRToken is
         uint256 vestingTime
     ) public onlyPauser() whenNotPaused() isInitialized() {
         require(account != address(0x0), "MINT_TO_ZERO_ADDRESS_NOT_ALLOWED");
-        require(vestingCount[account] < _maxVestingPerWallet, "MAX_VESTINGS_REACHED");
+        require(
+            vestingCount[account] < _maxVestingPerWallet,
+            "MAX_VESTINGS_REACHED"
+        );
         require(vestingTime != 0, "VESTING_CANNOT_BE_ZERO");
         _beforeTokenTransfer(address(0x0), account, amount);
         vestingCount[account] = vestingCount[account].add(1);
         uint256 vestingId = vestingCount[account];
-        VestingTokens memory vestingTokens = VestingTokens(
-            account,
-            amount,
-            block.timestamp,
-            block.timestamp.add(cliff),
-            block.timestamp.add(vestingTime)
-        );
+        VestingTokens memory vestingTokens =
+            VestingTokens(
+                account,
+                amount,
+                block.timestamp,
+                block.timestamp.add(cliff),
+                block.timestamp.add(vestingTime)
+            );
         _mint(address(this), amount);
         _snapshot();
         _updateAccountSnapshot(address(this));
@@ -215,15 +223,17 @@ contract TLRToken is
         isInitialized()
     {
         require(assignedTokens[account] > 0, "ACCOUNT_DOESNT_HAVE_VESTING");
-        VestingTokens memory vestingTokens = _vestingBalances[account][vestingId];
+        VestingTokens memory vestingTokens =
+            _vestingBalances[account][vestingId];
 
-        uint256 unvestedTokens = _returnUnvestedTokens(
-            vestingTokens.amount,
-            block.timestamp,
-            vestingTokens.start,
-            vestingTokens.cliff,
-            vestingTokens.deadline
-        );
+        uint256 unvestedTokens =
+            _returnUnvestedTokens(
+                vestingTokens.amount,
+                block.timestamp,
+                vestingTokens.start,
+                vestingTokens.cliff,
+                vestingTokens.deadline
+            );
         assignedTokens[account] = assignedTokens[account].sub(unvestedTokens);
         _burn(address(this), unvestedTokens);
         _snapshot();
@@ -240,12 +250,15 @@ contract TLRToken is
     function withdrawVested() public whenNotPaused() isInitialized() {
         require(assignedTokens[msg.sender] > 0, "ACCOUNT_DOESNT_HAVE_VESTING");
 
-        uint256 transferableTokens = _transferableTokens(msg.sender, block.timestamp);
+        uint256 transferableTokens =
+            _transferableTokens(msg.sender, block.timestamp);
         _transfer(address(this), msg.sender, transferableTokens);
         _snapshot();
         _updateAccountSnapshot(msg.sender);
         _updateAccountSnapshot(address(this));
-        assignedTokens[msg.sender] = assignedTokens[msg.sender].sub(transferableTokens);
+        assignedTokens[msg.sender] = assignedTokens[msg.sender].sub(
+            transferableTokens
+        );
         emit VestingClaimed(msg.sender, transferableTokens);
     }
 
@@ -368,10 +381,8 @@ contract TLRToken is
         view
         returns (uint256)
     {
-        (bool snapshotted, uint256 value) = _valueAt(
-            snapshotId,
-            _accountBalanceSnapshots[account]
-        );
+        (bool snapshotted, uint256 value) =
+            _valueAt(snapshotId, _accountBalanceSnapshots[account]);
 
         return snapshotted ? value : balanceOf(account);
     }
@@ -381,7 +392,8 @@ contract TLRToken is
         @param snapshotId The id of the snapshot being queried
      */
     function totalSupplyAt(uint256 snapshotId) external view returns (uint256) {
-        (bool snapshotted, uint256 value) = _valueAt(snapshotId, _totalSupplySnapshots);
+        (bool snapshotted, uint256 value) =
+            _valueAt(snapshotId, _totalSupplySnapshots);
 
         return snapshotted ? value : totalSupply();
     }
@@ -425,7 +437,9 @@ contract TLRToken is
         @param snapshots The snapshot struct being updated
         @param currentValue The current value at the time of snapshot creation
      */
-    function _updateSnapshot(Snapshots storage snapshots, uint256 currentValue) private {
+    function _updateSnapshot(Snapshots storage snapshots, uint256 currentValue)
+        private
+    {
         uint256 currentId = _currentSnapshotId;
         snapshots.ids.push(currentId);
         snapshots.values.push(currentValue);

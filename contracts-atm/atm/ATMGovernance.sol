@@ -51,7 +51,7 @@ contract ATMGovernance is
     // Example: debtRatio => 1 = percentage 00.01
     mapping(bytes32 => uint256) public generalSettings;
 
-    // List of Market specific Asset settings on this ATM
+    // List of GetMarketReturn specific Asset settings on this ATM
     // Asset address => Asset setting name => Asset setting value
     // Example 1: USDC address => Risk Premium => 2500 (25%)
     // Example 2: DAI address => Risk Premium => 3500 (35%)
@@ -80,7 +80,10 @@ contract ATMGovernance is
     {
         require(settingValue > 0, "GENERAL_SETTING_MUST_BE_POSITIVE");
         require(settingName != "", "GENERAL_SETTING_MUST_BE_PROVIDED");
-        require(generalSettings[settingName] == 0, "GENERAL_SETTING_ALREADY_EXISTS");
+        require(
+            generalSettings[settingName] == 0,
+            "GENERAL_SETTING_ALREADY_EXISTS"
+        );
         generalSettings[settingName] = settingValue;
         emit GeneralSettingAdded(msg.sender, settingName, settingValue);
     }
@@ -88,7 +91,7 @@ contract ATMGovernance is
     /**
         @notice Updates an existing General Setting on this ATM.
         @param settingName name of the setting to be modified.
-        @param newValue new value to be set for this settingName. 
+        @param newValue new value to be set for this settingName.
      */
     function updateGeneralSetting(bytes32 settingName, uint256 newValue)
         external
@@ -120,7 +123,7 @@ contract ATMGovernance is
     }
 
     /**
-        @notice Adds a new Asset Setting from a specific Market on this ATM.
+        @notice Adds a new Asset Setting from a specific GetMarketReturn on this ATM.
         @param asset market specific asset address.
         @param settingName name of the setting to be added.
         @param settingValue value of the setting to be added.
@@ -139,11 +142,16 @@ contract ATMGovernance is
             "ASSET_SETTING_ALREADY_EXISTS"
         );
         assetMarketSettings[asset][settingName] = settingValue;
-        emit AssetMarketSettingAdded(msg.sender, asset, settingName, settingValue);
+        emit AssetMarketSettingAdded(
+            msg.sender,
+            asset,
+            settingName,
+            settingValue
+        );
     }
 
     /**
-        @notice Updates an existing Asset Setting from a specific Market on this ATM.
+        @notice Updates an existing Asset Setting from a specific GetMarketReturn on this ATM.
         @param asset market specific asset address.
         @param settingName name of the setting to be added.
         @param newValue value of the setting to be added.
@@ -154,7 +162,10 @@ contract ATMGovernance is
         uint256 newValue
     ) external onlySigner() isInitialized() {
         require(settingName != "", "ASSET_SETTING_MUST_BE_PROVIDED");
-        require(assetMarketSettings[asset][settingName] > 0, "ASSET_SETTING_NOT_FOUND");
+        require(
+            assetMarketSettings[asset][settingName] > 0,
+            "ASSET_SETTING_NOT_FOUND"
+        );
         require(
             newValue != assetMarketSettings[asset][settingName],
             "NEW_VALUE_SAME_AS_OLD"
@@ -171,7 +182,7 @@ contract ATMGovernance is
     }
 
     /**
-        @notice Removes an existing Asset Setting from a specific Market on this ATM.
+        @notice Removes an existing Asset Setting from a specific GetMarketReturn on this ATM.
         @param asset market specific asset address.
         @param settingName name of the setting to be added.
      */
@@ -181,10 +192,18 @@ contract ATMGovernance is
         isInitialized()
     {
         require(settingName != "", "ASSET_SETTING_MUST_BE_PROVIDED");
-        require(assetMarketSettings[asset][settingName] > 0, "ASSET_SETTING_NOT_FOUND");
+        require(
+            assetMarketSettings[asset][settingName] > 0,
+            "ASSET_SETTING_NOT_FOUND"
+        );
         uint256 oldValue = assetMarketSettings[asset][settingName];
         delete assetMarketSettings[asset][settingName];
-        emit AssetMarketSettingRemoved(msg.sender, asset, settingName, oldValue);
+        emit AssetMarketSettingRemoved(
+            msg.sender,
+            asset,
+            settingName,
+            oldValue
+        );
     }
 
     /**
@@ -251,7 +270,8 @@ contract ATMGovernance is
             dataProviders[dataTypeIndex].length > dataProviderIndex,
             "DATA_PROVIDER_OUT_RANGE"
         );
-        address oldDataProvider = dataProviders[dataTypeIndex][dataProviderIndex];
+        address oldDataProvider =
+            dataProviders[dataTypeIndex][dataProviderIndex];
         dataProviders[dataTypeIndex].removeAt(dataProviderIndex);
         emit DataProviderRemoved(
             msg.sender,
@@ -266,11 +286,16 @@ contract ATMGovernance is
                 CRA is represented by a Github commit hash of the newly proposed algorithm.
         @param _cra Credit Risk Algorithm github commit hash.
      */
-    function setCRA(string calldata _cra) external onlySigner() isInitialized() {
+    function setCRA(string calldata _cra)
+        external
+        onlySigner()
+        isInitialized()
+    {
         bytes memory tempEmptyStringTest = bytes(_cra);
         require(tempEmptyStringTest.length > 0, "CRA_CANT_BE_EMPTY");
         require(
-            keccak256(abi.encodePacked(cra)) != keccak256(abi.encodePacked(_cra)),
+            keccak256(abi.encodePacked(cra)) !=
+                keccak256(abi.encodePacked(_cra)),
             "CRA_SAME_AS_OLD"
         );
         cra = _cra;
@@ -280,8 +305,13 @@ contract ATMGovernance is
     /**
         @notice Adds a new TLR Reward value effective immediately since current block.
      */
-    function addTLRReward(uint256 rewardAmount) external onlySigner() isInitialized() {
-        ATMCommon.TLRReward memory latestReward = tlrRewards[tlrRewards.length - 1];
+    function addTLRReward(uint256 rewardAmount)
+        external
+        onlySigner()
+        isInitialized()
+    {
+        ATMCommon.TLRReward memory latestReward =
+            tlrRewards[tlrRewards.length - 1];
         require(
             latestReward.tlrPerBlockPertToken != rewardAmount,
             "PREVIOUS_AND_NEW_VALUE_ARE_EQUAL"
@@ -296,7 +326,12 @@ contract ATMGovernance is
                 tlrPerBlockPertToken: rewardAmount
             })
         );
-        emit TLRRewardAdded(msg.sender, tlrRewards.length, block.number, rewardAmount);
+        emit TLRRewardAdded(
+            msg.sender,
+            tlrRewards.length,
+            block.number,
+            rewardAmount
+        );
     }
 
     /**
@@ -314,10 +349,11 @@ contract ATMGovernance is
 
         SignerRole.initialize(ownerAddress);
         TInitializable._initialize();
-        ATMCommon.TLRReward memory setupReward = ATMCommon.TLRReward({
-            startBlockNumber: block.number,
-            tlrPerBlockPertToken: tlrInitialReward
-        });
+        ATMCommon.TLRReward memory setupReward =
+            ATMCommon.TLRReward({
+                startBlockNumber: block.number,
+                tlrPerBlockPertToken: tlrInitialReward
+            });
         tlrRewards.push(setupReward);
     }
 
@@ -327,12 +363,16 @@ contract ATMGovernance is
         @notice Returns a General Setting value from this ATM.
         @param settingName name of the setting to be returned.
      */
-    function getGeneralSetting(bytes32 settingName) external view returns (uint256) {
+    function getGeneralSetting(bytes32 settingName)
+        external
+        view
+        returns (uint256)
+    {
         return generalSettings[settingName];
     }
 
     /**
-        @notice Returns an existing Asset Setting value from a specific Market on this ATM.
+        @notice Returns an existing Asset Setting value from a specific GetMarketReturn on this ATM.
         @param asset market specific asset address.
         @param settingName name of the setting to be returned.
      */
@@ -371,7 +411,11 @@ contract ATMGovernance is
     /**
         @notice Returns the complete list of rewards used on this ATM instance.
      */
-    function getTLRRewards() external view returns (ATMCommon.TLRReward[] memory) {
+    function getTLRRewards()
+        external
+        view
+        returns (ATMCommon.TLRReward[] memory)
+    {
         return tlrRewards;
     }
 }

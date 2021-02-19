@@ -5,13 +5,14 @@ import 'hardhat-contract-sizer'
 import { HardhatUserConfig } from 'hardhat/config'
 import { config } from 'dotenv'
 import { HardhatNetworkHDAccountsUserConfig } from 'hardhat/types'
-
-if (process.env.COMPILING != 'true') require('./tasks')
-import './utils/hre-extensions'
-
 import 'hardhat-gas-reporter'
 // import 'solidity-coverage'
 import 'hardhat-contract-sizer'
+
+if (process.env.COMPILING != 'true') {
+  require('./tasks')
+  require('./utils/hre-extensions')
+}
 
 config()
 
@@ -72,6 +73,14 @@ export default <HardhatUserConfig>{
       ropsten: 6,
       hardhat: 6,
       localhost: 6,
+    },
+    funder: {
+      hardhat: 15,
+      localhost: 15,
+    },
+    craSigner: {
+      hardhat: 10,
+      localhost: 10,
     },
   },
   networks: {

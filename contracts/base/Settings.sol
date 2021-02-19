@@ -25,7 +25,6 @@ import "../interfaces/SettingsInterface.sol";
 import "../interfaces/EscrowFactoryInterface.sol";
 import "../providers/chainlink/IChainlinkAggregator.sol";
 import "../providers/compound/CErc20Interface.sol";
-import "../settings/IATMSettings.sol";
 import "../interfaces/AssetSettingsInterface.sol";
 import "../interfaces/MarketFactoryInterface.sol";
 
@@ -147,11 +146,6 @@ contract Settings is
         @notice It is the global instance of the MarketFactory contract.
      */
     MarketFactoryInterface public marketFactory;
-
-    /**
-        @notice The current ATM settings.
-     */
-    IATMSettings public atmSettings;
 
     /**
         @notice This mapping represents the list of wallet addresses that are allowed to interact with the protocol

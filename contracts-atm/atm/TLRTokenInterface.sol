@@ -45,7 +45,11 @@ interface TLRTokenInterface {
         @param unvestedTokens The amount of tokens being revoked
         @param deadline The previously set vesting deadline 
      */
-    event RevokeVesting(address account, uint256 unvestedTokens, uint256 deadline);
+    event RevokeVesting(
+        address account,
+        uint256 unvestedTokens,
+        uint256 deadline
+    );
 
     /**
     @notice Emitted when a snapshot is created

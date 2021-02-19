@@ -10,7 +10,7 @@ interface GetMarketArgs {
   log?: boolean
 }
 
-interface GetMarketReturn {
+export interface GetMarketReturn {
   lendingPool: LendingPool
   loans: Loans
 }

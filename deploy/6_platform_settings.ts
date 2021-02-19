@@ -9,6 +9,7 @@ import { Network } from '../types/custom/config-types'
 
 const createPlatformSettings: DeployFunction = async (hre) => {
   const { getNamedAccounts, contracts, ethers, network } = hre
+  const BN = ethers.BigNumber
   const { deployer } = await getNamedAccounts()
 
   const settings = await contracts.get<Settings>('Settings', { from: deployer })
@@ -26,7 +27,16 @@ const createPlatformSettings: DeployFunction = async (hre) => {
   for (const [assetSymbol, setting] of Object.entries(assetSettingsConfig)) {
     const { cToken, maxLoanAmount, maxTVLAmount, maxDebtRatio } = setting
 
-    await assetSettings.createAssetSetting(tokens[assetSymbol], tokens[cToken], maxLoanAmount, maxTVLAmount, maxDebtRatio)
+    let tokenDecimals = 18
+    if (assetSymbol !== 'ETH') {
+      const token = await hre.tokens.get(assetSymbol)
+      tokenDecimals = await token.decimals()
+    }
+    const factor = BN.from(10).pow(tokenDecimals)
+    const maxLoanAmountBN = BN.from(maxLoanAmount).mul(factor)
+    const maxTVLAmountBN = BN.from(maxTVLAmount).mul(factor)
+
+    await assetSettings.createAssetSetting(tokens[assetSymbol], tokens[cToken], maxLoanAmountBN, maxTVLAmountBN, maxDebtRatio)
   }
 }
 

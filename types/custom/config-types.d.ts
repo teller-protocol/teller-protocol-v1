@@ -78,9 +78,7 @@ export interface PlatformSetting {
   max: number | string
 }
 
-export interface Signers {
-  [index: string]: Address
-}
+export interface Signers extends Array<Address> {}
 
 export interface Tokens {
   [tokenSymbol: string]: Address
