@@ -1,7 +1,7 @@
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import hre from 'hardhat'
-import { fundedMarket, FundedMarketReturn } from '../fixtures'
+import { marketWithLoan, MarketWithLoanReturn } from '../fixtures'
 import { mockCRAResponse } from '../../utils/mock-cra-response'
 import { ONE_DAY } from '../../utils/consts'
 import { Signer } from 'ethers'
@@ -12,7 +12,13 @@ chai.use(chaiAsPromised)
 const { deployments, getNamedSigner, ethers } = hre
 
 const setupTest = deployments.createFixture(async () => {
-  const market = await fundedMarket()
+  const market = await marketWithLoan({
+    market: {
+      market: { lendTokenSym: 'DAI', collTokenSym: 'ETH' },
+    },
+    borrower: await getNamedSigner('borrower'),
+    loanType: 2,
+  })
 
   return {
     ...market,
@@ -20,15 +26,14 @@ const setupTest = deployments.createFixture(async () => {
 })
 
 describe('Loans', async () => {
-  let market: FundedMarketReturn
+  let market: MarketWithLoanReturn
   let borrower: Signer
 
   // Setup for global tests
   beforeEach(async () => {
     // Execute snapshot and setup for tests
-    market = await setupTest()
-
     borrower = await getNamedSigner('borrower')
+    market = await setupTest()
   })
 
   describe('createLoanWithTerms', () => {
