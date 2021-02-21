@@ -130,4 +130,7 @@ export default <HardhatUserConfig>{
     currency: 'USD',
     gasPrice: 121,
   },
+  mocha: {
+    timeout: 40000,
+  },
 }
