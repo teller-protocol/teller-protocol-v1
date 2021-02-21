@@ -1,5 +1,5 @@
 import { deployments } from 'hardhat'
-import { Signer } from 'ethers'
+import { Signer, BigNumber } from 'ethers'
 import { fundedMarket, FundedMarketArgs, FundedMarketReturn } from './markets'
 import { mockCRAResponse } from '../../utils/mock-cra-response'
 import { ONE_DAY } from '../../utils/consts'
@@ -24,7 +24,7 @@ export interface MarketWithLoanReturn
 
 export interface BorrowedLoanReturn {
   createdLoanId: string
-  totalOwed: number
+  totalOwed: string
 }
 
 export const createMarketWithLoan = (
@@ -56,16 +56,14 @@ export const createAndGetLoan = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<BorrowedLoanReturn> => {
   // Setup loan amount
-  const { ethers } = hre
-  const BN = ethers.BigNumber
-  const loanAmount = BN.from('1684').mul(BN.from('10').pow('18')).toString()
+  const loanAmount = '1684'
 
   // Create a loan and get the loan ID
   const createdLoanId = await createLoan(market, loanType, loanAmount, borrower)
   // Take out loan
   await getLoan(await market.loans, createdLoanId, loanAmount, borrower, hre)
   // Get total owed for loan
-  const totalOwed = Number(await market.loans.getTotalOwed(createdLoanId))
+  const totalOwed = (await market.loans.getTotalOwed(createdLoanId)).toString()
 
   return {
     createdLoanId,
@@ -79,6 +77,9 @@ export const createLoan = async (
   loanAmount: string,
   borrower: Signer
 ): Promise<string> => {
+  const amount = BigNumber.from(loanAmount)
+    .mul(BigNumber.from('10').pow('18'))
+    .toString()
   // Set up collateral
   let collateralRatio = 0
   switch (loanType) {
@@ -96,7 +97,7 @@ export const createLoan = async (
   const craReturn = await mockCRAResponse({
     lendingToken: market.lendTokenSym,
     collateralToken: market.collTokenSym,
-    loanAmount: loanAmount,
+    loanAmount: amount,
     loanTermLength: ONE_DAY.toString(),
     collateralRatio: collateralRatio.toString(),
     interestRate: '400',
@@ -121,7 +122,7 @@ export const getLoan = async (
   borrower: Signer,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
-  const { fastForward } = hre
+  const { fastForward, BN } = hre
 
   // Deposit collateral
   const collateral = (await loansContract.getCollateralInfo(createdLoanId))
@@ -137,5 +138,7 @@ export const getLoan = async (
   await fastForward(300)
 
   // Take out loan as borrower
-  await loansContract.connect(borrower).takeOutLoan(createdLoanId, loanAmount)
+  await loansContract
+    .connect(borrower)
+    .takeOutLoan(createdLoanId, BN(loanAmount, '18'))
 }
