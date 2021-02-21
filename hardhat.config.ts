@@ -74,6 +74,12 @@ export default <HardhatUserConfig>{
       hardhat: 6,
       localhost: 6,
     },
+    liquidator: {
+      rinkeby: 9,
+      ropsten: 9,
+      hardhat: 9,
+      localhost: 9,
+    },
     funder: {
       hardhat: 15,
       localhost: 15,
