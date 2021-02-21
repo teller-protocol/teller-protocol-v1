@@ -17,7 +17,7 @@ interface CRAArgs {
   recipient?: string
 }
 
-interface CRARequest {
+export interface CRARequest {
   borrower: string
   recipient: string
   consensusAddress: string
@@ -27,7 +27,7 @@ interface CRARequest {
   requestTime: BigNumberish
 }
 
-interface CRAResponse {
+export interface CRAResponse {
   signer: string
   consensusAddress: string
   responseTime: BigNumberish
@@ -42,7 +42,7 @@ interface CRAResponse {
   }
 }
 
-interface CRAReturn {
+export interface CRAReturn {
   request: CRARequest
   response: CRAResponse
 }
