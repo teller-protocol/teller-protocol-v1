@@ -1,5 +1,5 @@
 import chai from 'chai'
-import chaiAsPromised from 'chai-as-promised'
+import { solidity } from 'ethereum-waffle'
 import hre from 'hardhat'
 import {
   createAndGetLoan,
@@ -8,11 +8,10 @@ import {
   MarketWithLoanReturn,
 } from '../fixtures'
 import { Signer } from 'ethers'
-import { Address } from '../../types/custom/config-types'
-import { ERC20Detailed } from '../../types/typechain'
+import { ERC20Detailed, Loans } from '../../types/typechain'
 
 chai.should()
-chai.use(chaiAsPromised)
+chai.use(solidity)
 
 const { deployments, getNamedSigner, contracts, ethers, fastForward } = hre
 
@@ -75,7 +74,7 @@ describe('Loans', async () => {
           .connect(borrower)
           .takeOutLoan(createdLoanID, hre.BN(loanAmount, '18'))
 
-      await fn().should.be.rejectedWith('MORE_COLLATERAL_REQUIRED')
+      await fn().should.be.revertedWith('MORE_COLLATERAL_REQUIRED')
     })
     // - Taking out and repaying a loan successfully
     it('should be able to take out a loan and repay', async () => {
@@ -88,9 +87,20 @@ describe('Loans', async () => {
         .approve(market.lendingPool.address, createdLoan.totalOwed)
 
       // Repay loan
-      await market.loans
-        .connect(borrower)
-        .repay(createdLoan.totalOwed, createdLoan.createdLoanId)
+      const fn = () =>
+        market.loans
+          .connect(borrower)
+          .repay(createdLoan.totalOwed, createdLoan.createdLoanId)
+
+      await fn()
+        .should.emit(market.loans, 'LoanRepaid')
+        .withArgs(
+          createdLoan.createdLoanId,
+          await borrower.getAddress(),
+          createdLoan.totalOwed,
+          await borrower.getAddress(),
+          '0'
+        )
     })
     // - Taking out a loan unsuccessfully with invalid debt ratio
     it('should not be able to take out w/ invalid debt ratio', async () => {
@@ -106,7 +116,7 @@ describe('Loans', async () => {
 
       // Try to take out another loan which should fail
       const fn = () => createAndGetLoan(market, borrower, 2, hre)
-      await fn().should.be.rejectedWith('SUPPLY_TO_DEBT_EXCEEDS_MAX')
+      await fn().should.be.revertedWith('SUPPLY_TO_DEBT_EXCEEDS_MAX')
     })
   })
 })
