@@ -11,7 +11,7 @@ interface DeployedMarketArgs {
   collTokenSym: string
 }
 
-interface FundedMarketArgs {
+export interface FundedMarketArgs {
   market?: DeployedMarketArgs
   // Amount should be denoted in decimal value for the token (i.e. 100 = 100 * (10^tokenDecimals)
   amount?: number
@@ -22,9 +22,18 @@ export interface FundedMarketReturn extends GetMarketReturn {
   collTokenSym: string
 }
 
-export const fundedMarket = (args?: FundedMarketArgs): Promise<FundedMarketReturn> =>
+export const fundedMarket = (
+  args?: FundedMarketArgs
+): Promise<FundedMarketReturn> =>
   deployments.createFixture(async (hre) => {
-    const { deployments, network, getNamedSigner, contracts, tokens, ethers } = hre
+    const {
+      deployments,
+      network,
+      getNamedSigner,
+      contracts,
+      tokens,
+      ethers,
+    } = hre
     await deployments.fixture('markets')
 
     let lendTokenSym: string
@@ -64,7 +73,9 @@ export const fundedMarket = (args?: FundedMarketArgs): Promise<FundedMarketRetur
       tokenSym: lendTokenSym,
       amount: amountToFundLP,
     })
-    await lendingToken.connect(lender).approve(market.lendingPool.address, amountToFundLP)
+    await lendingToken
+      .connect(lender)
+      .approve(market.lendingPool.address, amountToFundLP)
     await market.lendingPool.connect(lender).deposit(amountToFundLP)
 
     return {

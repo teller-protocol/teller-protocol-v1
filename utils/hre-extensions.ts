@@ -6,11 +6,12 @@ import { ERC20Detailed } from '../types/typechain'
 import { getTokens } from '../config/tokens'
 import { Network } from '../types/custom/config-types'
 
-declare module "hardhat/types/runtime" {
+declare module 'hardhat/types/runtime' {
   interface HardhatRuntimeEnvironment {
     contracts: ContractsExtension
     tokens: TokensExtension
     getNamedSigner(name: string): Promise<Signer>
+    fastForward(seconds: number): Promise<void>
   }
 }
 
@@ -46,7 +47,7 @@ extendEnvironment((hre) => {
       }
 
       return contract as C
-    }
+    },
   }
 
   hre.tokens = {
@@ -54,11 +55,16 @@ extendEnvironment((hre) => {
       const tokens = getTokens(<Network>network.name)
       const token = await ethers.getContractAt('ERC20Detailed', tokens[name])
       return token as T
-    }
+    },
   }
 
   hre.getNamedSigner = async (name: string): Promise<Signer> => {
     const accounts = await getNamedAccounts()
     return ethers.provider.getSigner(accounts[name])
+  }
+
+  hre.fastForward = async (seconds: number) => {
+    await network.provider.send('evm_increaseTime', [seconds])
+    await network.provider.send('evm_mine')
   }
 })
