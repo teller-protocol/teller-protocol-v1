@@ -1,4 +1,4 @@
-import { deployments, contracts } from 'hardhat'
+import { deployments, contracts, BN } from 'hardhat'
 import { Signer, BigNumber } from 'ethers'
 import { fundedMarket, FundedMarketArgs, FundedMarketReturn } from './markets'
 import { mockCRAResponse } from '../../utils/mock-cra-response'
@@ -77,13 +77,11 @@ export const createLoan = async (
   loanAmount: string,
   borrower: Signer
 ): Promise<string> => {
-  // Get lending asset decimals
+  // Get lending asset decimals and convert amount to BN
   const lendingToken = await contracts.get('ERC20Detailed', {
     at: await market.lendingPool.lendingToken(),
   })
-  const amount = BigNumber.from(loanAmount)
-    .mul(BigNumber.from('10').pow(await lendingToken.decimals()))
-    .toString()
+  const amount = BN(loanAmount, await lendingToken.decimals()).toString()
   // Set up collateral
   let collateralRatio = 0
   switch (loanType) {
