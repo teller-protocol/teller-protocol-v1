@@ -88,9 +88,7 @@ describe('Settings', async () => {
 
     before(async () => {
       // Get asset setting contract from settings
-      assetSettings = await contracts.get('AssetSettings', {
-        at: await settings.assetSettings(),
-      })
+      assetSettings = await contracts.get('AssetSettings')
       // Get the current lending asset for the deployed market
       lendingTokenAddress = await market.lendingPool.lendingToken()
       // Get current max loan amount for the lending asset
