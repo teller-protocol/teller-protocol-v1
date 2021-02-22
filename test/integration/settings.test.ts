@@ -9,7 +9,7 @@ import {
 } from '../fixtures'
 import { BigNumberish, Signer } from 'ethers'
 import { AssetSettings, Settings } from '../../types/typechain'
-const ERC20Detailed = require('../../build/contracts/ERC20Detailed.json')
+import { ERC20 } from '@chainlink/contracts/ethers/v0.4/ERC20'
 
 chai.should()
 chai.use(solidity)
@@ -105,10 +105,9 @@ describe('Settings', async () => {
         lendingTokenAddress
       )
       // Get mock addresses
-      newAssetAddress = (await deployMockContract(deployer, ERC20Detailed.abi))
-        .address
-      newCtokenAddress = (await deployMockContract(deployer, ERC20Detailed.abi))
-        .address
+      const ERC20ABI = (await deployments.getArtifact('ERC20Detailed')).abi
+      newAssetAddress = (await deployMockContract(deployer, ERC20ABI)).address
+      newCtokenAddress = (await deployMockContract(deployer, ERC20ABI)).address
       // Set values
       newMaxLoan = 8000
       newMaxTVL = 250000
