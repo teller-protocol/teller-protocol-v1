@@ -8,7 +8,8 @@ import {
   FundedMarketReturn,
 } from '../fixtures'
 import { BigNumberish, Signer } from 'ethers'
-import { AssetSettings, Settings, ERC20Detailed } from '../../types/typechain'
+import { AssetSettings, Settings } from '../../types/typechain'
+const ERC20Detailed = require('../../build/contracts/ERC20Detailed.json')
 
 chai.should()
 chai.use(solidity)
