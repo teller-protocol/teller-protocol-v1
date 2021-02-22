@@ -14,14 +14,7 @@ import { ERC20 } from '@chainlink/contracts/ethers/v0.4/ERC20'
 chai.should()
 chai.use(solidity)
 
-const {
-  deployments,
-  getNamedSigner,
-  contracts,
-  ethers,
-  bytes,
-  fastForward,
-} = hre
+const { deployments, getNamedSigner, contracts, ethers, fastForward } = hre
 
 const setupTest = deployments.createFixture(async () => {
   await deployments.fixture('markets')
@@ -121,7 +114,7 @@ describe('Settings', async () => {
         .updateMaxLoanAmount(lendingTokenAddress, updateValue)
         .should.emit(assetSettings, 'AssetSettingsUintUpdated')
         .withArgs(
-          bytes('MaxLoanAmount'),
+          ethers.utils.id('MaxLoanAmount'),
           await deployer.getAddress(),
           lendingTokenAddress,
           currentMaxLoanSetting,
@@ -157,7 +150,7 @@ describe('Settings', async () => {
         .updateMaxLoanAmount(newAssetAddress, updateValue)
         .should.emit(assetSettings, 'AssetSettingsUintUpdated')
         .withArgs(
-          bytes('MaxLoanAmount'),
+          ethers.utils.id('MaxLoanAmount'),
           await deployer.getAddress(),
           newAssetAddress,
           newMaxLoan,
@@ -185,7 +178,7 @@ describe('Settings', async () => {
   })
 
   describe('createPlatformSetting', () => {
-    const newPlatformSettingName = bytes('LiquidateLinkPrice')
+    const newPlatformSettingName = ethers.utils.id('LiquidateLinkPrice')
     const newSettingValue = 8800
     const updateSettingValue = 8000
     const minValue = 0
