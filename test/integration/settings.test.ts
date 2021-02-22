@@ -8,7 +8,7 @@ import {
   FundedMarketReturn,
 } from '../fixtures'
 import { BigNumberish, Signer } from 'ethers'
-import { AssetSettings, Settings } from '../../types/typechain'
+import { AssetSettings, Settings, ERC20Detailed } from '../../types/typechain'
 
 chai.should()
 chai.use(solidity)
@@ -93,7 +93,6 @@ describe('Settings', async () => {
     let updateValue: number
 
     before(async () => {
-      const ERC20Detailed = require('../../build/contracts/ERC20Detailed')
       // Get asset setting contract from settings
       assetSettings = await contracts.get('AssetSettings', {
         at: await settings.assetSettings(),
