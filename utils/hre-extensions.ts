@@ -13,6 +13,7 @@ declare module 'hardhat/types/runtime' {
     getNamedSigner(name: string): Promise<Signer>
     fastForward(seconds: number): Promise<void>
     BN(amount: string, decimals: string): string
+    bytes(name: string): string
   }
 }
 
@@ -73,5 +74,9 @@ extendEnvironment((hre) => {
     return BigNumber.from(amount)
       .mul(BigNumber.from('10').pow(decimals))
       .toString()
+  }
+
+  hre.bytes = (name: string): string => {
+    return ethers.utils.keccak256(ethers.utils.toUtf8Bytes(name))
   }
 })
