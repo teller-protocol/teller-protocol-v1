@@ -1,5 +1,5 @@
 import { extendEnvironment } from 'hardhat/config'
-import { Contract, Signer } from 'ethers'
+import { BigNumber, Contract, Signer } from 'ethers'
 import '@nomiclabs/hardhat-ethers'
 import 'hardhat-deploy'
 import { ERC20Detailed } from '../types/typechain'
@@ -12,6 +12,7 @@ declare module 'hardhat/types/runtime' {
     tokens: TokensExtension
     getNamedSigner(name: string): Promise<Signer>
     fastForward(seconds: number): Promise<void>
+    BN(amount: string, decimals: string): string
   }
 }
 
@@ -66,5 +67,11 @@ extendEnvironment((hre) => {
   hre.fastForward = async (seconds: number) => {
     await network.provider.send('evm_increaseTime', [seconds])
     await network.provider.send('evm_mine')
+  }
+
+  hre.BN = (amount: string, decimals: string): string => {
+    return BigNumber.from(amount)
+      .mul(BigNumber.from('10').pow(decimals))
+      .toString()
   }
 })

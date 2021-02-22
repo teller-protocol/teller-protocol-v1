@@ -74,6 +74,12 @@ export default <HardhatUserConfig>{
       hardhat: 6,
       localhost: 6,
     },
+    liquidator: {
+      rinkeby: 9,
+      ropsten: 9,
+      hardhat: 9,
+      localhost: 9,
+    },
     funder: {
       hardhat: 15,
       localhost: 15,
@@ -123,5 +129,8 @@ export default <HardhatUserConfig>{
   gasReporter: {
     currency: 'USD',
     gasPrice: 121,
+  },
+  mocha: {
+    timeout: 40000,
   },
 }
