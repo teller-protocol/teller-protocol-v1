@@ -288,7 +288,10 @@ contract Loans is LoansInterface, Base {
         uint256 loanID,
         int256 neededInCollateralTokens
     ) private nonReentrant() {
-        if (neededInCollateralTokens > 0) {
+        if (
+            neededInCollateralTokens > 0 &&
+            loans[loanID].status == TellerCommon.LoanStatus.Active
+        ) {
             // Withdrawal amount holds the amount of excess collateral in the loan
             uint256 withdrawalAmount =
                 loans[loanID].collateral.sub(uint256(neededInCollateralTokens));
