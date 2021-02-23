@@ -12,7 +12,7 @@ declare module 'hardhat/types/runtime' {
     tokens: TokensExtension
     getNamedSigner(name: string): Promise<Signer>
     fastForward(seconds: number): Promise<void>
-    BN(amount: string, decimals: string): string
+    BN(amount: string, decimals: string): BigNumber
   }
 }
 
@@ -69,9 +69,7 @@ extendEnvironment((hre) => {
     await network.provider.send('evm_mine')
   }
 
-  hre.BN = (amount: string, decimals: string): string => {
-    return BigNumber.from(amount)
-      .mul(BigNumber.from('10').pow(decimals))
-      .toString()
+  hre.BN = (amount: string, decimals: string): BigNumber => {
+    return BigNumber.from(amount).mul(BigNumber.from('10').pow(decimals))
   }
 })
