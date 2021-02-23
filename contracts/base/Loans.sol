@@ -288,17 +288,21 @@ contract Loans is LoansInterface, Base {
         uint256 loanID,
         int256 neededInCollateralTokens
     ) private nonReentrant() {
-        if (
-            neededInCollateralTokens > 0 &&
-            loans[loanID].status == TellerCommon.LoanStatus.Active
-        ) {
-            // Withdrawal amount holds the amount of excess collateral in the loan
-            uint256 withdrawalAmount =
-                loans[loanID].collateral.sub(uint256(neededInCollateralTokens));
-            require(withdrawalAmount >= amount, "COLLATERAL_AMOUNT_TOO_HIGH");
+        if (loans[loanID].status == TellerCommon.LoanStatus.Active) {
+            if (neededInCollateralTokens > 0) {
+                // Withdrawal amount holds the amount of excess collateral in the loan
+                uint256 withdrawalAmount =
+                    loans[loanID].collateral.sub(
+                        uint256(neededInCollateralTokens)
+                    );
+                require(
+                    withdrawalAmount >= amount,
+                    "COLLATERAL_AMOUNT_TOO_HIGH"
+                );
+            }
         } else {
             require(
-                loans[loanID].collateral == amount,
+                loans[loanID].collateral <= amount,
                 "COLLATERAL_AMOUNT_NOT_MATCH"
             );
         }
