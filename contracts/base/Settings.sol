@@ -362,6 +362,7 @@ contract Settings is
         isInitialized()
     {
         platformRestricted = restriction;
+        emit PlatformRestriced(restriction, msg.sender);
     }
 
     /**
@@ -382,6 +383,7 @@ contract Settings is
             "CALLER_NOT_PAUSER"
         );
         authorizedAddresses[addressToAdd] = true;
+        emit AddressAuthorized(addressToAdd, msg.sender);
     }
 
     /**
@@ -395,6 +397,7 @@ contract Settings is
         for (uint256 i = 0; i < addressesToAdd.length; i++) {
             addAuthorizedAddress(addressesToAdd[i]);
         }
+        emit AddressesAuthorized(addressesToAdd.length, msg.sender);
     }
 
     /**
@@ -407,6 +410,7 @@ contract Settings is
         isInitialized()
     {
         authorizedAddresses[addressToRemove] = false;
+        emit AuthorizationRevoked(addressToRemove, msg.sender);
     }
 
     /**
