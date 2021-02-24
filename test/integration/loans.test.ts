@@ -175,5 +175,34 @@ describe('Loans', async () => {
         .should.emit(market.loans, 'CollateralWithdrawn')
         .withArgs(loanID, borrowerAddress, collateral.toString())
     })
+    // - Taking out partial collateral before taking out a loan
+    it('should be able to withdraw partial collateral before takeOutLoan', async () => {
+      // Create loan terms
+      const loanID = await createLoan(market, 2, '3131', borrower)
+
+      // Get collateral owed for loan
+      const collateral = (await market.loans.getCollateralInfo(loanID))
+        .neededInCollateralTokens
+
+      // Deposit collateral
+      await market.loans
+        .connect(borrower)
+        .depositCollateral(borrowerAddress, loanID, collateral, {
+          value: collateral,
+        })
+        .should.emit(market.loans, 'CollateralDeposited')
+        .withArgs(loanID, borrowerAddress, collateral.toString())
+
+      // Time travel
+      await fastForward(600)
+
+      // Withdraw only half the collateral without taking out the loan
+      const partialCollateral = collateral.div(2)
+      await market.loans
+        .connect(borrower)
+        .withdrawCollateral(partialCollateral, loanID)
+        .should.emit(market.loans, 'CollateralWithdrawn')
+        .withArgs(loanID, borrowerAddress, partialCollateral.toString())
+    })
   })
 })

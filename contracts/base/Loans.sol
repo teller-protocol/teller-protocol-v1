@@ -302,7 +302,7 @@ contract Loans is LoansInterface, Base {
             }
         } else {
             require(
-                loans[loanID].collateral <= amount,
+                loans[loanID].collateral >= amount,
                 "COLLATERAL_AMOUNT_NOT_MATCH"
             );
         }
