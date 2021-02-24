@@ -273,14 +273,16 @@ contract LoansBase is LoansInterface, Base {
         uint256 loanID,
         int256 neededInCollateralTokens
     ) private nonReentrant() {
-        if (neededInCollateralTokens > 0) {
-            // Withdrawal amount holds the amount of excess collateral in the loan
-            uint256 withdrawalAmount = loans[loanID].collateral.sub(
-                uint256(neededInCollateralTokens)
-            );
-            require(withdrawalAmount >= amount, "COLLATERAL_AMOUNT_TOO_HIGH");
+        if (loans[loanID].status == TellerCommon.LoanStatus.Active) {
+            if (neededInCollateralTokens > 0) {
+                // Withdrawal amount holds the amount of excess collateral in the loan
+                uint256 withdrawalAmount = loans[loanID].collateral.sub(
+                    uint256(neededInCollateralTokens)
+                );
+                require(withdrawalAmount >= amount, "COLLATERAL_AMOUNT_TOO_HIGH");
+            }
         } else {
-            require(loans[loanID].collateral == amount, "COLLATERAL_AMOUNT_NOT_MATCH");
+            require(loans[loanID].collateral >= amount, "COLLATERAL_AMOUNT_NOT_MATCH");
         }
 
         // Update the contract total and the loan collateral total
@@ -516,7 +518,8 @@ contract LoansBase is LoansInterface, Base {
         @notice Checks if the loan has an Escrow and claims any tokens then pays out the loan collateral.
         @dev See Escrow.claimTokens for more info.
         @param loanID The ID of the loan which is being liquidated
-        @param liquidationInfo The Teller common liquidation struct that holds all the relevant liquidation info, such as the liquidation info
+        @param liquidationInfo The Teller common liquidation struct that holds all the relevant liquidation
+            info, such as the liquidation info
         @param recipient The address of the liquidator where the liquidation reward will be sent to
     */
     function _payOutLiquidator(
