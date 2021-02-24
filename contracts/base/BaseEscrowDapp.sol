@@ -14,6 +14,20 @@ contract BaseEscrowDapp is Ownable, BaseUpgradeable {
     using AddressArrayLib for address[];
 
     /**
+        @notice This event is emitted when a new token is added to this Escrow.
+        @param tokenAddress address of the new token.
+        @param index Index of the added token.
+     */
+    event TokenAdded(address tokenAddress, uint256 index);
+
+    /**
+        @notice This event is emitted when a new token is removed from this Escrow.
+        @param tokenAddress address of the removed token.
+        @param index Index of the removed token.
+     */
+    event TokenRemoved(address tokenAddress, uint256 index);
+
+    /**
         @notice An array of tokens that are owned by this escrow.
      */
     address[] private tokens;
@@ -31,7 +45,11 @@ contract BaseEscrowDapp is Ownable, BaseUpgradeable {
         @param tokenAddress The contract address for which the index is required.
         @return The index number of the token contract address, stored in the Escrow's array.
      */
-    function findTokenIndex(address tokenAddress) external view returns (int256) {
+    function findTokenIndex(address tokenAddress)
+        external
+        view
+        returns (int256)
+    {
         (bool found, uint256 index) = tokens.getIndex(tokenAddress);
         return found ? int256(index) : -1;
     }
@@ -54,9 +72,11 @@ contract BaseEscrowDapp is Ownable, BaseUpgradeable {
         if (_balanceOf(tokenAddress) > 0) {
             if (!found) {
                 tokens.add(tokenAddress);
+                emit TokenAdded(tokenAddress, index);
             }
         } else if (found) {
             tokens.removeAt(index);
+            emit TokenRemoved(tokenAddress, index);
         }
     }
 
