@@ -30,7 +30,7 @@ library AddressArrayLib {
         returns (uint256)
     {
         newItem.requireNotEmpty("EMPTY_ADDRESS_NOT_ALLOWED");
-        (bool found, uint256 index) = getIndex(self, addr);
+        (bool found, uint256 index) = getIndex(self, newItem);
         require(!found, "ADDRESS_EXISTS");
         return self.push(newItem) - 1;
     }
