@@ -46,6 +46,8 @@ describe('AssetSettings', async () => {
   let maxLoan = 1000
   let maxTVL = 100000
   let maxDebtRatio = 5000
+  let newAssetAddress = '0xdAC17F958D2ee523a2206206994597C13D831ec7' // USDT
+  let newCtokenAddress = '0xf650c3d88d12db855b8bf7d11be6c55a4e07dcc9' // CUSDT
 
   // Setup for global tests
   beforeEach(async () => {
@@ -76,8 +78,8 @@ describe('AssetSettings', async () => {
       // Create asset setting
       const fn = () =>
         assetSettings.createAssetSetting(
-          cTokenAddress,
-          assetAddress,
+          newAssetAddress,
+          newCtokenAddress,
           maxLoan,
           maxTVL,
           maxDebtRatio
