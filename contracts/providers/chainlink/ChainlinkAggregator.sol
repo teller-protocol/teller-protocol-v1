@@ -2,8 +2,7 @@ pragma solidity 0.5.17;
 
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
-import "../../base/BaseUpgradeable.sol";
-import "../../base/TInitializable.sol";
+import "../../base/Base.sol";
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
@@ -30,7 +29,7 @@ import "./IChainlinkAggregator.sol";
 
     @author develop@teller.finance
  */
-contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgradeable {
+contract ChainlinkAggregator is IChainlinkAggregator, Base {
     using Address for address;
     using AddressLib for address;
     using AddressArrayLib for AddressArrayLib.AddressArray;
@@ -81,7 +80,11 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @param tokenAddress Token address to check support for.
         @return bool whether or not the token is supported.
      */
-    function isTokenSupported(address tokenAddress) external view returns (bool) {
+    function isTokenSupported(address tokenAddress)
+        external
+        view
+        returns (bool)
+    {
         tokenAddress = _normalizeTokenAddress(tokenAddress);
 
         return supportedTokens[tokenAddress].length() > 0;
@@ -112,7 +115,11 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @param dst Destination token address.
         @return uint256 The latest answer as given from Chainlink.
      */
-    function latestAnswerFor(address src, address dst) external view returns (int256) {
+    function latestAnswerFor(address src, address dst)
+        external
+        view
+        returns (int256)
+    {
         src = _normalizeTokenAddress(src);
         dst = _normalizeTokenAddress(dst);
 
@@ -136,11 +143,11 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         require(address(agg).isEmpty(), "CHAINLINK_PAIR_ALREADY_EXISTS");
 
         require(
-            src.isContract() || src == _getSettings().ETH_ADDRESS(),
+            src.isContract() || src == settings.ETH_ADDRESS(),
             "TOKEN_A_NOT_CONTRACT"
         );
         require(
-            dst.isContract() || dst == _getSettings().ETH_ADDRESS(),
+            dst.isContract() || dst == settings.ETH_ADDRESS(),
             "TOKEN_B_NOT_CONTRACT"
         );
         require(aggregator.isContract(), "AGGREGATOR_NOT_CONTRACT");
@@ -178,10 +185,8 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
 
         address[] storage arr = supportedTokens[tokenAddress].array;
         for (uint256 i; i < arr.length; i++) {
-            (AggregatorV2V3Interface agg, bool inverse) = _aggregatorFor(
-                tokenAddress,
-                arr[i]
-            );
+            (AggregatorV2V3Interface agg, bool inverse) =
+                _aggregatorFor(tokenAddress, arr[i]);
             if (inverse) {
                 aggregators[arr[i]][tokenAddress] = address(0);
             } else {
@@ -195,8 +200,8 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
     /**
         @notice It initializes this ChainlinkAggregator instance.
      */
-    function initialize() external isNotInitialized() {
-        _initialize();
+    function initialize() external isNotInitialized {
+        _initialize(msg.sender);
     }
 
     /* Internal Functions */
@@ -207,8 +212,8 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         returns (address)
     {
         return
-            tokenAddress == _getSettings().WETH_ADDRESS()
-                ? _getSettings().ETH_ADDRESS()
+            tokenAddress == settings.WETH_ADDRESS()
+                ? settings.ETH_ADDRESS()
                 : tokenAddress;
     }
 
@@ -218,7 +223,10 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @return uint8 Number of decimals the given token.
      */
     function _decimalsFor(address addr) internal view returns (uint8) {
-        return addr == _getSettings().ETH_ADDRESS() ? 18 : ERC20Detailed(addr).decimals();
+        return
+            addr == settings.ETH_ADDRESS()
+                ? 18
+                : ERC20Detailed(addr).decimals();
     }
 
     /**
@@ -252,7 +260,8 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         uint256 srcAmount
     ) internal view returns (uint256) {
         return
-            (srcAmount * uint256(_priceFor(src, dst))) / uint256(TEN**_decimalsFor(src));
+            (srcAmount * uint256(_priceFor(src, dst))) /
+            uint256(TEN**_decimalsFor(src));
     }
 
     /**
@@ -262,7 +271,11 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @param dst Destination token address.
         @return uint256 The latest answer as given from Chainlink.
      */
-    function _priceFor(address src, address dst) internal view returns (int256) {
+    function _priceFor(address src, address dst)
+        internal
+        view
+        returns (int256)
+    {
         (AggregatorV2V3Interface agg, bool inverse) = _aggregatorFor(src, dst);
         uint8 dstDecimals = _decimalsFor(dst);
         int256 dstFactor = int256(TEN**dstDecimals);

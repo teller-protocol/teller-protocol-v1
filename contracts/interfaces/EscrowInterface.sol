@@ -5,7 +5,7 @@ import "../util/TellerCommon.sol";
 
 /**
     @notice This interface defines all function to allow borrowers interact with their escrow contracts.
-    
+
     @author develop@teller.finance
  */
 interface EscrowInterface {
@@ -22,7 +22,7 @@ interface EscrowInterface {
     function getBorrower() external view returns (address);
 
     /**
-        @notice Returns this Escrow's loan instance. 
+        @notice Returns this Escrow's loan instance.
      */
     function getLoan() external view returns (TellerCommon.Loan memory);
 
@@ -53,14 +53,15 @@ interface EscrowInterface {
         @param recipient address to send the tokens to
         @param value The value of escrow held tokens, to be claimed based on collateral value
       */
-    function claimTokensByCollateralValue(address recipient, uint256 value) external;
+    function claimTokensByCollateralValue(address recipient, uint256 value)
+        external;
 
     /**
         @notice It initializes this escrow instance for a given loans address and loan id.
         @param loansAddress loans contract address.
-        @param aLoanID the loan ID associated to this escrow instance.
+        @param loanID the loan ID associated to this escrow instance.
      */
-    function initialize(address loansAddress, uint256 aLoanID) external;
+    function initialize(address loansAddress, uint256 loanID) external;
 
     /**
         @notice Notifies when the Escrow's tokens have been claimed.
