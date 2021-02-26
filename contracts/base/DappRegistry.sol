@@ -40,11 +40,6 @@ contract DappRegistry is IDappRegistry, Base {
     /* State Variables */
 
     /**
-        @notice It is the only address that is allowed to call functions.
-     */
-    address public owner;
-
-    /**
         @notice It holds the Dapp's configuration.
      */
     mapping(address => TellerCommon.Dapp) public dapps;

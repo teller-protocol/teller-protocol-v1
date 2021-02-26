@@ -77,13 +77,11 @@ interface LoansInterface {
     /**
         @notice This event is emitted when a new Escrow contract is created.
         @param borrower address associated to the new escrow.
-        @param loansAddress loans contract address.
         @param loanID loan id associated to the borrower and escrow contract.
         @param escrowAddress the new escrow contract address.
      */
     event EscrowCreated(
         address indexed borrower,
-        address indexed loansAddress,
         uint256 indexed loanID,
         address escrowAddress
     );

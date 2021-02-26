@@ -684,11 +684,6 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
         // TODO: Remove after non-guarded launch
         settings.addAuthorizedAddress(escrow);
 
-        emit EscrowCreated(
-            loan.loanTerms.borrower,
-            loansAddress,
-            loanID,
-            escrowAddress
-        );
+        emit EscrowCreated(loans[loanID].loanTerms.borrower, loanID, escrow);
     }
 }
