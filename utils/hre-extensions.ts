@@ -107,6 +107,9 @@ extendEnvironment((hre) => {
       await originalDeploymentsSave(name, deployment)
     }
 
+    // Don't save addresses on the hardhat network
+    if (hre.network.name === 'hardhat') return
+
     const filePath = `deployments/${hre.network.name}/_addresses.json`
     let data: AddressData
     try {
