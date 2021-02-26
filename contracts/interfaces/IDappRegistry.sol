@@ -47,8 +47,9 @@ interface IDappRegistry {
 
     /**
         @notice It initializes this escrow contract factory instance.
+        @param settingsAddress the address of the protocol settings contract
      */
-    function initialize() external;
+    function initialize(address settingsAddress) external;
 
     /**
         @notice This event is emitted when a new Escrow contract is created.
