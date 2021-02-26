@@ -30,22 +30,17 @@ library AddressArrayLib {
         returns (uint256)
     {
         newItem.requireNotEmpty("EMPTY_ADDRESS_NOT_ALLOWED");
-        (bool found, uint256 index) = getIndex(self, newItem);
+        (bool found, ) = getIndex(self, newItem);
         require(!found, "ADDRESS_EXISTS");
         return self.push(newItem) - 1;
     }
 
     function add(AddressArray storage self, address addr)
         internal
-        returns (uint256)
+        returns (uint256 index)
     {
-        (bool found, uint256 index) = getIndex(self, addr);
-        if (!found) {
-            index = add(self.array, addr);
-            self.indices[addr] = index;
-        }
-
-        return index;
+        index = add(self.array, addr);
+        self.indices[addr] = index;
     }
 
     /**
