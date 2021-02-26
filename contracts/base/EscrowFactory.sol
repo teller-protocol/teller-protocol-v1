@@ -32,8 +32,12 @@ import "../util/AddressArrayLib.sol";
 
     @author develop@teller.finance
  */
-contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeable {
-    using AddressArrayLib for address[];
+contract EscrowFactory is
+    EscrowFactoryInterface,
+    TInitializable,
+    BaseUpgradeable
+{
+    using AddressArrayLib for AddressArrayLib.AddressArray;
     using AddressLib for address;
     using Address for address;
 
@@ -47,7 +51,7 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
     /**
         @notice It contains all the dapps added in this factory.
      */
-    address[] public dappsList;
+    AddressArrayLib.AddressArray internal dappsList;
 
     /* Modifiers */
 
@@ -72,18 +76,22 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         isNotPaused()
         returns (address escrowAddress)
     {
-        TellerCommon.Loan memory loan = LoansInterface(loansAddress).loans(loanID);
+        TellerCommon.Loan memory loan =
+            LoansInterface(loansAddress).loans(loanID);
         require(loan.escrow == address(0x0), "LOAN_ESCROW_ALREADY_EXISTS");
 
-        bytes32 escrowLogicName = _getSettings()
-            .versionsRegistry()
-            .consts()
-            .ESCROW_LOGIC_NAME();
+        bytes32 escrowLogicName =
+            _getSettings().versionsRegistry().consts().ESCROW_LOGIC_NAME();
         escrowAddress = address(
             new DynamicProxy(address(_getSettings()), escrowLogicName)
         );
         _getSettings().addAuthorizedAddress(escrowAddress);
-        emit EscrowCreated(loan.loanTerms.borrower, loansAddress, loanID, escrowAddress);
+        emit EscrowCreated(
+            loan.loanTerms.borrower,
+            loansAddress,
+            loanID,
+            escrowAddress
+        );
     }
 
     /**
@@ -91,7 +99,11 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         @param dapp address to add in this factory.
         @param unsecured boolean to describe in the dapp is allowed to be used with unsecured loans.
      */
-    function addDapp(address dapp, bool unsecured) external onlyPauser() isInitialized() {
+    function addDapp(address dapp, bool unsecured)
+        external
+        onlyPauser()
+        isInitialized()
+    {
         require(dapp.isContract(), "DAPP_ISNT_A_CONTRACT");
         require(!_isDapp(dapp), "DAPP_ALREADY_EXIST");
 
@@ -137,7 +149,7 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         @return an array of dapps (addresses).
      */
     function getDapps() external view returns (address[] memory) {
-        return dappsList;
+        return dappsList.array;
     }
 
     /**

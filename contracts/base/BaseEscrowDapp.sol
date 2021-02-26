@@ -11,19 +11,19 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.so
 import "../util/AddressArrayLib.sol";
 
 contract BaseEscrowDapp is Ownable, BaseUpgradeable {
-    using AddressArrayLib for address[];
+    using AddressArrayLib for AddressArrayLib.AddressArray;
 
     /**
         @notice An array of tokens that are owned by this escrow.
      */
-    address[] private tokens;
+    AddressArrayLib.AddressArray private tokens;
 
     /**
         @notice Returns an array of token addresses, for which this Escrow contract has a balance.
         @return The list of all tokens held by this contract.
      */
     function getTokens() public view returns (address[] memory) {
-        return tokens;
+        return tokens.array;
     }
 
     /**
@@ -31,7 +31,11 @@ contract BaseEscrowDapp is Ownable, BaseUpgradeable {
         @param tokenAddress The contract address for which the index is required.
         @return The index number of the token contract address, stored in the Escrow's array.
      */
-    function findTokenIndex(address tokenAddress) external view returns (int256) {
+    function findTokenIndex(address tokenAddress)
+        external
+        view
+        returns (int256)
+    {
         (bool found, uint256 index) = tokens.getIndex(tokenAddress);
         return found ? int256(index) : -1;
     }
@@ -56,15 +60,7 @@ contract BaseEscrowDapp is Ownable, BaseUpgradeable {
                 tokens.add(tokenAddress);
             }
         } else if (found) {
-            tokens.removeAt(index);
+            tokens.remove(index);
         }
-    }
-
-    /**
-        @notice Sets an inital list of tokens that will be held by this Escrow contract.
-        @param tokenList An array of token address to be added to the the list of tokens held by the Escrow.
-     */
-    function _setTokens(address[] memory tokenList) internal {
-        tokens = tokenList;
     }
 }
