@@ -272,7 +272,7 @@ library LoanLib {
                 );
             neededInCollateralTokens = int256(value);
             if (neededInLendingTokens < 0) {
-                neededInCollateralTokens *= -1;
+                neededInCollateralTokens = neededInCollateralTokens.mul(-1);
             }
         }
     }
