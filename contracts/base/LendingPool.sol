@@ -94,17 +94,23 @@ contract LendingPool is Base, LendingPoolInterface {
         whenNotPaused()
         whenLendingPoolNotPaused(address(this))
     {
-        // Transferring tokens to the LendingPool
+        uint256 exchangeRate = _exchangeRate();
+
         lendingTokenAmount = tokenTransferFrom(msg.sender, lendingTokenAmount);
 
         require(
-            _getTotalSupplied().add(lendingTokenAmount) <=
+            _getTotalSupplied() <=
                 _getSettings().assetSettings().getMaxTVLAmount(
                     address(lendingToken)
                 ),
             "MAX_TVL_REACHED"
         );
-        uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
+
+        // Transferring tokens to the LendingPool
+        uint256 tTokenAmount =
+            lendingTokenAmount
+                .mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS))
+                .div(exchangeRate);
 
         _totalSuppliedUnderlyingLender[
             msg.sender
@@ -191,12 +197,10 @@ contract LendingPool is Base, LendingPoolInterface {
         require(totalAmount > 0, "REPAY_ZERO");
 
         // Transfers tokens to LendingPool.
-        totalAmount = tokenTransferFrom(borrower, totalAmount);
+        tokenTransferFrom(borrower, totalAmount);
 
         _totalRepaid = _totalRepaid.add(principalAmount);
-        totalInterestEarned = totalInterestEarned.add(
-            totalAmount.sub(principalAmount)
-        );
+        totalInterestEarned = totalInterestEarned.add(interestAmount);
 
         address cTokenAddress = cToken();
         if (cTokenAddress != address(0)) {
