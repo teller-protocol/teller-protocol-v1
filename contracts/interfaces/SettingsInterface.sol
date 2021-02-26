@@ -79,37 +79,21 @@ interface SettingsInterface {
         @param restriction Boolean representing the state of the restriction
         @param pauser address of the pauser flipping the switch
     */
-    event PlatformRestriced(bool restriction, address indexed pauser);
+    event PlatformRestricted(bool restriction, address indexed pauser);
 
     /**
         @notice This event is emitted when an address is given authorization
-        @param addressToAdd The address being authorized
+        @param user The address being authorized
         @param pauser address of the pauser adding the address
     */
-    event AddressAuthorized(
-        address indexed addressToAdd,
-        address indexed pauser
-    );
-
-    /**
-        @notice This event is emitted when an array of address is given authorization
-        @param numberOfAddressAdded The number of address authorized
-        @param pauser address of the pauser adding the addresses
-    */
-    event AddressesAuthorized(
-        uint256 numberOfAddressAdded,
-        address indexed pauser
-    );
+    event AuthorizationGranted(address indexed user, address indexed pauser);
 
     /**
         @notice This event is emitted when an address has authorization revoked
-        @param addressToRemove The address being revoked
+        @param user The address being revoked
         @param pauser address of the pauser removing the address
     */
-    event AuthorizationRevoked(
-        address indexed addressToRemove,
-        address indexed pauser
-    );
+    event AuthorizationRevoked(address indexed user, address indexed pauser);
 
     /**
         @notice It creates a new platform setting given a setting name, value, min and max values.
