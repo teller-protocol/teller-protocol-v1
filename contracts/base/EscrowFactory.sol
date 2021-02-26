@@ -33,7 +33,7 @@ import "../util/AddressArrayLib.sol";
     @author develop@teller.finance
  */
 contract EscrowFactory is EscrowFactoryInterface, Base {
-    using AddressArrayLib for address[];
+    using AddressArrayLib for AddressArrayLib.AddressArray;
     using AddressLib for address;
     using Address for address;
 
@@ -47,7 +47,7 @@ contract EscrowFactory is EscrowFactoryInterface, Base {
     /**
         @notice It contains all the dapps added in this factory.
      */
-    address[] public dappsList;
+    AddressArrayLib.AddressArray internal dappsList;
 
     /* Modifiers */
 
@@ -135,7 +135,7 @@ contract EscrowFactory is EscrowFactoryInterface, Base {
         @return an array of dapps (addresses).
      */
     function getDapps() external view returns (address[] memory) {
-        return dappsList;
+        return dappsList.array;
     }
 
     /**
