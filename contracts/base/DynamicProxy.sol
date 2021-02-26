@@ -13,6 +13,7 @@ contract DynamicProxy is BaseDynamicProxy {
     /**
         @notice It creates a new dynamic proxy given a settings contract and a logic name.
         @param settingsAddress the settings contract address.
+        @param aLogicName the logic name to set.
      */
     constructor(address settingsAddress, bytes32 aLogicName) public {
         _setSettings(settingsAddress);

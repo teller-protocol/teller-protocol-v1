@@ -30,7 +30,11 @@ import "./IChainlinkAggregator.sol";
 
     @author develop@teller.finance
  */
-contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgradeable {
+contract ChainlinkAggregator is
+    IChainlinkAggregator,
+    TInitializable,
+    BaseUpgradeable
+{
     using Address for address;
     using AddressLib for address;
     using AddressArrayLib for AddressArrayLib.AddressArray;
@@ -81,7 +85,11 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @param tokenAddress Token address to check support for.
         @return bool whether or not the token is supported.
      */
-    function isTokenSupported(address tokenAddress) external view returns (bool) {
+    function isTokenSupported(address tokenAddress)
+        external
+        view
+        returns (bool)
+    {
         tokenAddress = _normalizeTokenAddress(tokenAddress);
 
         return supportedTokens[tokenAddress].length() > 0;
@@ -110,9 +118,13 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @dev It tries to use ETH as a pass through asset if the direct pair is not supported.
         @param src Source token address.
         @param dst Destination token address.
-        @return uint256 The latest answer as given from Chainlink.
+        @return int256 The latest answer as given from Chainlink.
      */
-    function latestAnswerFor(address src, address dst) external view returns (int256) {
+    function latestAnswerFor(address src, address dst)
+        external
+        view
+        returns (int256)
+    {
         src = _normalizeTokenAddress(src);
         dst = _normalizeTokenAddress(dst);
 
@@ -123,6 +135,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @notice It allows for additional Chainlink Aggregators to be supported.
         @param src Source token address.
         @param dst Destination token address.
+        @param aggregator Price aggregator address.
      */
     function add(
         address src,
@@ -178,10 +191,8 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
 
         address[] storage arr = supportedTokens[tokenAddress].array;
         for (uint256 i; i < arr.length; i++) {
-            (AggregatorV2V3Interface agg, bool inverse) = _aggregatorFor(
-                tokenAddress,
-                arr[i]
-            );
+            (AggregatorV2V3Interface agg, bool inverse) =
+                _aggregatorFor(tokenAddress, arr[i]);
             if (inverse) {
                 aggregators[arr[i]][tokenAddress] = address(0);
             } else {
@@ -201,6 +212,10 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
 
     /* Internal Functions */
 
+    /**
+        @notice It normalizes the token address to ETH if WETH.
+        @param tokenAddress The address of the token to normalize.
+    */
     function _normalizeTokenAddress(address tokenAddress)
         internal
         view
@@ -218,7 +233,10 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @return uint8 Number of decimals the given token.
      */
     function _decimalsFor(address addr) internal view returns (uint8) {
-        return addr == _getSettings().ETH_ADDRESS() ? 18 : ERC20Detailed(addr).decimals();
+        return
+            addr == _getSettings().ETH_ADDRESS()
+                ? 18
+                : ERC20Detailed(addr).decimals();
     }
 
     /**
@@ -252,7 +270,8 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         uint256 srcAmount
     ) internal view returns (uint256) {
         return
-            (srcAmount * uint256(_priceFor(src, dst))) / uint256(TEN**_decimalsFor(src));
+            (srcAmount * uint256(_priceFor(src, dst))) /
+            uint256(TEN**_decimalsFor(src));
     }
 
     /**
@@ -260,9 +279,13 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @dev It tries to use ETH as a pass through asset if the direct pair is not supported.
         @param src Source token address.
         @param dst Destination token address.
-        @return uint256 The latest answer as given from Chainlink.
+        @return int256 The latest answer as given from Chainlink.
      */
-    function _priceFor(address src, address dst) internal view returns (int256) {
+    function _priceFor(address src, address dst)
+        internal
+        view
+        returns (int256)
+    {
         (AggregatorV2V3Interface agg, bool inverse) = _aggregatorFor(src, dst);
         uint8 dstDecimals = _decimalsFor(dst);
         int256 dstFactor = int256(TEN**dstDecimals);
