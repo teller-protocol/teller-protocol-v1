@@ -11,6 +11,7 @@ import "../util/LoanLib.sol";
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
 import "./Base.sol";
+import "./DynamicProxy.sol";
 
 // Interfaces
 import "../interfaces/LendingPoolInterface.sol";
@@ -411,10 +412,7 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
 
         if (!eoaAllowed) {
             loans[loanID].escrow.requireNotEmpty("ESCROW_CONTRACT_NOT_DEFINED");
-            EscrowInterface(loans[loanID].escrow).initialize(
-                address(this),
-                loanID
-            );
+            EscrowInterface(loans[loanID].escrow).initialize(loanID);
         }
 
         emit LoanTakenOut(
@@ -670,7 +668,27 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
         @param loanID loan id associated to the Escrow contract.
         @return the new Escrow contract address.
      */
-    function _createEscrow(uint256 loanID) internal returns (address) {
-        return settings.escrowFactory().createEscrow(address(this), loanID);
+    function _createEscrow(uint256 loanID) internal returns (address escrow) {
+        require(
+            loans[loanID].escrow == address(0x0),
+            "LOAN_ESCROW_ALREADY_EXISTS"
+        );
+
+        escrow = address(
+            new DynamicProxy(
+                address(logicRegistry),
+                logicRegistry.consts().ESCROW_LOGIC_NAME()
+            )
+        );
+        // The escrow must be added as an authorized address since it will be interacting with the protocol
+        // TODO: Remove after non-guarded launch
+        settings.addAuthorizedAddress(escrow);
+
+        emit EscrowCreated(
+            loan.loanTerms.borrower,
+            loansAddress,
+            loanID,
+            escrowAddress
+        );
     }
 }

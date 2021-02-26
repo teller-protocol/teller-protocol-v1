@@ -14,18 +14,16 @@ import "../util/SettingsConsts.sol";
 import "./DynamicProxy.sol";
 import "./AssetSettings.sol";
 import "./LogicVersionsRegistry.sol";
-import "./EscrowFactory.sol";
+import "./DappRegistry.sol";
 import "../providers/chainlink/ChainlinkAggregator.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
-import "../interfaces/EscrowFactoryInterface.sol";
+import "../interfaces/IDappRegistry.sol";
 import "../providers/chainlink/IChainlinkAggregator.sol";
 import "../providers/compound/CErc20Interface.sol";
 import "../interfaces/AssetSettingsInterface.sol";
 import "../interfaces/MarketFactoryInterface.sol";
-
-import "hardhat/console.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -123,9 +121,9 @@ contract Settings is SettingsInterface, Base {
         public platformSettings;
 
     /**
-        @notice It is the global instance of the EscrowFactory contract.
+        @notice It is the global instance of the dapp registry.
      */
-    EscrowFactoryInterface public escrowFactory;
+    IDappRegistry public dappRegistry;
 
     /**
         @notice It is the global instance of the ChainlinkAggregator contract.
@@ -438,7 +436,7 @@ contract Settings is SettingsInterface, Base {
      */
     function addAuthorizedAddress(address addressToAdd) public isInitialized {
         require(
-            isPauser(msg.sender) || msg.sender == address(escrowFactory),
+            isPauser(msg.sender) || msg.sender == address(dappRegistry),
             "CALLER_NOT_PAUSER"
         );
         authorizedAddresses[addressToAdd] = true;
@@ -519,9 +517,9 @@ contract Settings is SettingsInterface, Base {
                 logicRegistry.consts().CHAINLINK_PAIR_AGGREGATOR_LOGIC_NAME()
             )
         );
-        escrowFactory = EscrowFactoryInterface(
+        dappRegistry = IDappRegistry(
             _deployDynamicProxy(
-                logicRegistry.consts().ESCROW_FACTORY_LOGIC_NAME()
+                logicRegistry.consts().DAPP_REGISTRY_LOGIC_NAME()
             )
         );
         marketFactory = MarketFactoryInterface(
