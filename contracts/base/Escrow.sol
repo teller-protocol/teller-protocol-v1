@@ -200,6 +200,10 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         uint256 valueLeftToTransfer = value;
         // cycle through tokens
         for (uint256 i = 0; i < tokens.length; i++) {
+            if (valueLeftToTransfer == 0) {
+                break;
+            }
+
             uint256 balance = _balanceOf(tokens[i]);
             // get value of token balance in collateral value
             if (balance > 0) {
@@ -220,16 +224,14 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
                     valueLeftToTransfer = valueLeftToTransfer.sub(
                         valueInCollateralToken
                     );
-                    _tokenUpdated(tokens[i]);
-                }
-                if (valueInCollateralToken > valueLeftToTransfer) {
+                } else {
                     IERC20(tokens[i]).safeTransfer(
                         recipient,
                         valueLeftToTransfer
                     );
                     valueLeftToTransfer = 0;
-                    _tokenUpdated(tokens[i]);
                 }
+                _tokenUpdated(tokens[i]);
             }
         }
         emit TokensClaimed(recipient);
