@@ -17,6 +17,7 @@ import "../providers/compound/CErc20Interface.sol";
 import "../interfaces/IMarketRegistry.sol";
 
 // Contracts
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
 import "./Base.sol";
 import "./TToken.sol";
 
@@ -36,7 +37,7 @@ import "./TToken.sol";
 
     @author develop@teller.finance
  */
-contract LendingPool is Base, LendingPoolInterface {
+contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
     using CompoundRatesLib for CErc20Interface;
@@ -90,9 +91,10 @@ contract LendingPool is Base, LendingPoolInterface {
     */
     function deposit(uint256 lendingTokenAmount)
         external
-        isInitialized()
-        whenNotPaused()
+        isInitialized
+        whenNotPaused
         whenLendingPoolNotPaused(address(this))
+        onlyAuthorized
     {
         uint256 exchangeRate = _exchangeRate();
 
@@ -106,12 +108,9 @@ contract LendingPool is Base, LendingPoolInterface {
             "MAX_TVL_REACHED"
         );
 
-        // Transferring tokens to the LendingPool
-        uint256 tTokenAmount =
-            lendingTokenAmount
-                .mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS))
-                .div(exchangeRate);
+        uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
 
+        // Transferring tokens to the LendingPool
         _totalSuppliedUnderlyingLender[
             msg.sender
         ] = _totalSuppliedUnderlyingLender[msg.sender].add(lendingTokenAmount);
@@ -142,10 +141,11 @@ contract LendingPool is Base, LendingPoolInterface {
      */
     function withdraw(uint256 lendingTokenAmount)
         external
-        isInitialized()
-        whenNotPaused()
+        isInitialized
+        whenNotPaused
         whenLendingPoolNotPaused(address(this))
-        nonReentrant()
+        nonReentrant
+        onlyAuthorized
     {
         uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
 
@@ -160,10 +160,11 @@ contract LendingPool is Base, LendingPoolInterface {
 
     function withdrawAll()
         external
-        isInitialized()
-        whenNotPaused()
+        isInitialized
+        whenNotPaused
         whenLendingPoolNotPaused(address(this))
-        nonReentrant()
+        nonReentrant
+        onlyAuthorized
         returns (uint256)
     {
         uint256 tTokenAmount = tToken.balanceOf(msg.sender);
@@ -189,9 +190,10 @@ contract LendingPool is Base, LendingPoolInterface {
         address borrower
     )
         external
-        isInitialized()
-        isLoan()
+        isInitialized
+        isLoan
         whenLendingPoolNotPaused(address(this))
+        onlyAuthorized
     {
         uint256 totalAmount = principalAmount.add(interestAmount);
         require(totalAmount > 0, "REPAY_ZERO");
@@ -221,9 +223,10 @@ contract LendingPool is Base, LendingPoolInterface {
      */
     function createLoan(uint256 amount, address borrower)
         external
-        isInitialized()
+        isInitialized
         isLoan()
         whenLendingPoolNotPaused(address(this))
+        onlyAuthorized
     {
         uint256 lendingTokenBalance = lendingToken.balanceOf(address(this));
         if (lendingTokenBalance < amount) {
@@ -330,7 +333,7 @@ contract LendingPool is Base, LendingPoolInterface {
         @return Address of the cToken
      */
     function cToken() public view returns (address) {
-        return _getSettings().getCTokenAddress(address(lendingToken));
+        return settings.getCTokenAddress(address(lendingToken));
     }
 
     /**
@@ -352,10 +355,11 @@ contract LendingPool is Base, LendingPoolInterface {
         IMarketRegistry aMarketRegistry,
         TToken aTToken,
         address settingsAddress
-    ) external isNotInitialized() {
+    ) external isNotInitialized {
         address(aTToken).requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
 
         _initialize(settingsAddress);
+        ReentrancyGuard.initialize();
 
         marketRegistry = aMarketRegistry;
         tToken = aTToken;

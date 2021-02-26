@@ -1,47 +1,27 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 // Contracts
-import "@openzeppelin/upgrades/contracts/upgradeability/BaseUpgradeabilityProxy.sol";
-import "./BaseDynamicProxy.sol";
+import "./BaseProxy.sol";
+import "./DynamicUpgradeable.sol";
 
 /**
-    @notice This is used as a proxy contract in the deployment process, allowing to us to make upgreadable the contracts. 
-    @dev The platform uses two types of proxies:
-    - BaseDynamicProxy
-    - BaseUpgradeabilityProxy (from OpenZeppelin).
+    @notice It is a dynamic proxy contract for any contract. It uses the logic versions registry to get a logic contract address.
+    @notice It extends BaseUpgradeable to get access to the settings.
 
     @author develop@teller.finance
  */
-contract InitializeableDynamicProxy is BaseDynamicProxy, BaseUpgradeabilityProxy {
+contract InitializeableDynamicProxy is BaseProxy, DynamicUpgradeable {
     /**
-        @notice It initializes this proxy instance with a settings contract and a logic name.
-        @param settingsAddress the settings contract address to use.
-        @param aLogicName the logic name to use.
+        @notice It initializes a new dynamic proxy given a logic registry contract and a logic name.
+        @param aLogicRegistryAddress the settings contract address.
+        @param aLogicName the settings contract address.
      */
-    function initializeProxy(address settingsAddress, bytes32 aLogicName) public {
-        require(!__isInitialized(), "DYN_PROXY_ALREADY_INITIALIZED");
-
-        _setSettings(settingsAddress);
-        _setLogicName(aLogicName);
-    }
-
-    /**
-        @notice It returns if the proxy was initialized.
-        @notice Uses double underscore (__) to avoid any collision in implementation contracts.
-     */
-    function __isInitialized() public view returns (bool) {
-        return address(_getSettings()) != address(0x0);
-    }
-
-    /**
-        @dev Returns the current implementation.
-        @return Address of the current implementation
-     */
-    function _implementation() internal view returns (address) {
-        if (__isInitialized()) {
-            return BaseDynamicProxy._implementation();
-        } else {
-            return BaseUpgradeabilityProxy._implementation();
-        }
+    function _initialize(address aLogicRegistryAddress, bytes32 aLogicName)
+        internal
+    {
+        require(address(logicRegistry) == address(0), "PROXY_ALREADY_INIT");
+        logicRegistry = LogicVersionsRegistryInterface(aLogicRegistryAddress);
+        logicName = aLogicName;
     }
 }

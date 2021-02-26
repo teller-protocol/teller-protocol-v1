@@ -1,4 +1,5 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 // Utils
 import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
@@ -58,8 +59,14 @@ contract MarketRegistry is IMarketRegistry, Ownable {
         @param aLendingPool a lending pool contract used to borrow assets.
         @param aLoans a loans contract that stores all the relevant loans info and functionality.
      */
-    function registerMarket(LendingPoolInterface aLendingPool, LoansInterface aLoans) external onlyOwner {
-        require(!loansRegistry[address(aLendingPool)][address(aLoans)], "MARKET_ALREADY_REGISTERED");
+    function registerMarket(
+        LendingPoolInterface aLendingPool,
+        LoansInterface aLoans
+    ) external onlyOwner {
+        require(
+            !loansRegistry[address(aLendingPool)][address(aLoans)],
+            "MARKET_ALREADY_REGISTERED"
+        );
 
         address lendingToken = address(aLendingPool.lendingToken());
         address collateralToken = aLoans.collateralToken();
@@ -75,7 +82,11 @@ contract MarketRegistry is IMarketRegistry, Ownable {
         @param lendingTokenAddress a token that the protocol lends.
         @return an array of collateral tokens supported by the lending token market.
      */
-    function getMarkets(address lendingTokenAddress) external view returns (address[] memory) {
+    function getMarkets(address lendingTokenAddress)
+        external
+        view
+        returns (address[] memory)
+    {
         return markets[lendingTokenAddress].array;
     }
 }
