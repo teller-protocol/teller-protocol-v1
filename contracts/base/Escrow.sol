@@ -69,9 +69,8 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         isInitialized()
         onlyOwner()
     {
-        TellerCommon.Dapp memory dapp = _getSettings().escrowFactory().dapps(
-            dappData.location
-        );
+        TellerCommon.Dapp memory dapp =
+            _getSettings().escrowFactory().dapps(dappData.location);
         require(dapp.exists, "DAPP_NOT_WHITELISTED");
         require(
             dapp.unsecured || loans.isLoanSecured(loanID),
@@ -100,7 +99,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
     }
 
     /**
-        @notice Returns this Escrow's loan instance. 
+        @notice Returns this Escrow's loan instance.
      */
     function getLoan() public view returns (TellerCommon.Loan memory) {
         return loans.loans(loanID);
@@ -127,7 +126,12 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
             }
         }
 
-        return _valueOfIn(_getSettings().ETH_ADDRESS(), loans.lendingToken(), valueInEth);
+        return
+            _valueOfIn(
+                _getSettings().ETH_ADDRESS(),
+                loans.lendingToken(),
+                valueInEth
+            );
     }
 
     /**
@@ -140,9 +144,10 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         uint256 balance = _balanceOf(address(token));
         uint256 totalOwed = loans.getTotalOwed(loanID);
         if (balance < totalOwed && amount > balance) {
-            uint256 amountNeeded = amount > totalOwed
-                ? totalOwed.sub(balance)
-                : amount.sub(balance);
+            uint256 amountNeeded =
+                amount > totalOwed
+                    ? totalOwed.sub(balance)
+                    : amount.sub(balance);
 
             token.safeTransferFrom(msg.sender, address(this), amountNeeded);
         }
@@ -157,7 +162,10 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         @dev The recipient must be the loan borrower AND the loan must be already liquidated.
     */
     function claimTokens() external onlyOwner() {
-        require(getLoan().status == TellerCommon.LoanStatus.Closed, "LOAN_NOT_CLOSED");
+        require(
+            getLoan().status == TellerCommon.LoanStatus.Closed,
+            "LOAN_NOT_CLOSED"
+        );
 
         address[] memory tokens = getTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
@@ -178,8 +186,13 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         @param recipient address to send the tokens to
         @param value The value of escrow held tokens, to be claimed based on collateral value
       */
-    function claimTokensByCollateralValue(address recipient, uint256 value) external {
-        require(getLoan().status == TellerCommon.LoanStatus.Closed, "LOAN_NOT_CLOSED");
+    function claimTokensByCollateralValue(address recipient, uint256 value)
+        external
+    {
+        require(
+            getLoan().status == TellerCommon.LoanStatus.Closed,
+            "LOAN_NOT_CLOSED"
+        );
         require(getLoan().liquidated, "LOAN_NOT_LIQUIDATED");
         require(msg.sender == address(loans), "CALLER_MUST_BE_LOANS");
 
@@ -190,13 +203,23 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
             uint256 balance = _balanceOf(tokens[i]);
             // get value of token balance in collateral value
             if (balance > 0) {
-                uint256 valueInCollateralToken = (tokens[i] == loans.collateralToken())
-                    ? balance
-                    : _valueOfIn(tokens[i], loans.collateralToken(), balance);
+                uint256 valueInCollateralToken =
+                    (tokens[i] == loans.collateralToken())
+                        ? balance
+                        : _valueOfIn(
+                            tokens[i],
+                            loans.collateralToken(),
+                            balance
+                        );
                 // if <= value, transfer tokens
                 if (valueInCollateralToken <= valueLeftToTransfer) {
-                    IERC20(tokens[i]).safeTransfer(recipient, valueInCollateralToken);
-                    valueLeftToTransfer = valueLeftToTransfer.sub(valueInCollateralToken);
+                    IERC20(tokens[i]).safeTransfer(
+                        recipient,
+                        valueInCollateralToken
+                    );
+                    valueLeftToTransfer = valueLeftToTransfer.sub(
+                        valueInCollateralToken
+                    );
                     _tokenUpdated(tokens[i]);
                 }
             }
@@ -209,7 +232,10 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         @param loansAddress loans contract address.
         @param aLoanID the loan ID associated to this escrow instance.
      */
-    function initialize(address loansAddress, uint256 aLoanID) public isNotInitialized() {
+    function initialize(address loansAddress, uint256 aLoanID)
+        public
+        isNotInitialized()
+    {
         require(loansAddress.isContract(), "LOANS_MUST_BE_A_CONTRACT");
 
         loans = LoansInterface(loansAddress);
@@ -220,7 +246,7 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
 
         // Initialize tokens list with the borrowed token.
         require(
-            _balanceOf(loans.lendingToken()) == getLoan().borrowedAmount,
+            _balanceOf(loans.lendingToken()) >= getLoan().borrowedAmount,
             "ESCROW_BALANCE_NOT_MATCH_LOAN"
         );
         _tokenUpdated(loans.lendingToken());
@@ -249,7 +275,8 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
         if (returnData.length > 0) {
             uint8 cTokenDecimals = CErc20Interface(baseAddress).decimals();
             uint256 exchangeRate = abi.decode(returnData, (uint256));
-            uint256 diffFactor = uint256(10)**uint256(18).diff(uint256(cTokenDecimals));
+            uint256 diffFactor =
+                uint256(10)**uint256(18).diff(uint256(cTokenDecimals));
 
             if (cTokenDecimals > uint256(18)) {
                 exchangeRate = exchangeRate.mul(diffFactor);
@@ -266,7 +293,9 @@ contract Escrow is EscrowInterface, TInitializable, BaseEscrowDapp {
                 assetDecimals = ERC20Detailed(baseAddress).decimals();
             }
 
-            baseAmount = baseAmount.mul(exchangeRate).div(uint256(10)**assetDecimals);
+            baseAmount = baseAmount.mul(exchangeRate).div(
+                uint256(10)**assetDecimals
+            );
         }
         return
             _getSettings().chainlinkAggregator().valueFor(

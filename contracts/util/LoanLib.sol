@@ -10,11 +10,13 @@ import "../util/AddressLib.sol";
 import "../interfaces/SettingsInterface.sol";
 import "../interfaces/EscrowInterface.sol";
 import "../interfaces/LoansInterface.sol";
+import "../providers/openzeppelin/SignedSafeMath.sol";
 
 // Contracts
 
 library LoanLib {
     using SafeMath for uint256;
+    using SignedSafeMath for int256;
     using NumbersLib for uint256;
     using NumbersLib for int256;
     using AddressLib for address payable;
@@ -272,7 +274,7 @@ library LoanLib {
                 );
             neededInCollateralTokens = int256(value);
             if (neededInLendingTokens < 0) {
-                neededInCollateralTokens *= -1;
+                neededInCollateralTokens = neededInCollateralTokens.mul(-1);
             }
         }
     }
