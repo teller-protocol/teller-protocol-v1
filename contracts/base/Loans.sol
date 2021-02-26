@@ -223,6 +223,7 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
         whenNotPaused
         isBorrower(request.borrower)
         withValidLoanRequest(request)
+        onlyAuthorized()
     {
         uint256 loanID = _getAndIncrementLoanID();
         if (collateralAmount > 0) {
@@ -273,6 +274,7 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
         isInitialized
         whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
+        onlyAuthorized()
     {
         require(
             msg.sender == loans[loanID].loanTerms.borrower,
@@ -331,6 +333,7 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
         isInitialized
         whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
+        onlyAuthorized()
     {
         borrower.requireEqualTo(
             loans[loanID].loanTerms.borrower,
@@ -356,6 +359,7 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
         whenLendingPoolNotPaused(address(lendingPool))
         nonReentrant()
         isBorrower(loans[loanID].loanTerms.borrower)
+        onlyAuthorized()
     {
         require(_isDebtRatioValid(amountBorrow), "SUPPLY_TO_DEBT_EXCEEDS_MAX");
         require(
@@ -433,6 +437,7 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
         whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
         nonReentrant
+        onlyAuthorized()
     {
         require(amount > 0, "AMOUNT_VALUE_REQUIRED");
         // calculate the actual amount to repay
