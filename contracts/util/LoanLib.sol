@@ -312,9 +312,7 @@ library LoanLib {
                 loan.loanTerms.collateralRatio
             );
         } else {
-            neededInLendingTokens = int256(
-                loan.principalOwed.add(loan.interestOwed)
-            );
+            neededInLendingTokens = int256(loan.principalOwed);
             uint256 bufferPercent =
                 settings.getPlatformSettingValue(
                     settings.consts().COLLATERAL_BUFFER_SETTING()
@@ -326,13 +324,13 @@ library LoanLib {
             if (loan.escrow != address(0)) {
                 escrowLoanValue = EscrowInterface(loan.escrow)
                     .calculateTotalValue();
-                neededInLendingTokens = neededInLendingTokens.sub(
-                    int256(escrowLoanValue)
+                neededInLendingTokens = neededInLendingTokens.add(
+                    neededInLendingTokens.sub(int256(escrowLoanValue))
                 );
             }
-            neededInLendingTokens = neededInLendingTokens.percent(
-                requiredRatio
-            );
+            neededInLendingTokens = neededInLendingTokens
+                .add(int256(loan.interestOwed))
+                .percent(requiredRatio);
         }
     }
 
