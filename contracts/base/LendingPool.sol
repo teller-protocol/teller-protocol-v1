@@ -94,6 +94,7 @@ contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
         isInitialized
         whenNotPaused
         whenLendingPoolNotPaused(address(this))
+        onlyAuthorized()
     {
         require(
             _getTotalSupplied().add(lendingTokenAmount) <=
@@ -139,6 +140,7 @@ contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
         whenNotPaused
         whenLendingPoolNotPaused(address(this))
         nonReentrant
+        onlyAuthorized()
     {
         uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
 
@@ -157,6 +159,7 @@ contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
         whenNotPaused
         whenLendingPoolNotPaused(address(this))
         nonReentrant
+        onlyAuthorized()
         returns (uint256)
     {
         uint256 tTokenAmount = tToken.balanceOf(msg.sender);
@@ -180,7 +183,13 @@ contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
         uint256 principalAmount,
         uint256 interestAmount,
         address borrower
-    ) external isInitialized isLoan whenLendingPoolNotPaused(address(this)) {
+    )
+        external
+        isInitialized
+        isLoan
+        whenLendingPoolNotPaused(address(this))
+        onlyAuthorized()
+    {
         uint256 totalAmount = principalAmount.add(interestAmount);
         require(totalAmount > 0, "REPAY_ZERO");
 
@@ -212,6 +221,7 @@ contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
         isInitialized
         isLoan()
         whenLendingPoolNotPaused(address(this))
+        onlyAuthorized()
     {
         uint256 lendingTokenBalance = lendingToken.balanceOf(address(this));
         if (lendingTokenBalance < amount) {
