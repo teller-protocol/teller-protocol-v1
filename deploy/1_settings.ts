@@ -7,7 +7,7 @@ import {
 } from '../utils/deploy-helpers'
 import { getTokens } from '../config/tokens'
 import { Network } from '../types/custom/config-types'
-import { Settings } from '../types/typechain'
+import { MarketFactory, Settings } from '../types/typechain'
 
 const deployLogicContracts: DeployFunction = async (hre) => {
   const { getNamedAccounts, deployments, contracts, ethers, network } = hre
@@ -83,46 +83,37 @@ const deployLogicContracts: DeployFunction = async (hre) => {
   })
 
   const settings = await contracts.get<Settings>('Settings', { from: deployer })
-  const ln = await settings.logicName()
   await settings['initialize(address,address)'](tokens.WETH, tokens.CETH)
 
-  const logicVersionsRegistryProxyAddress = await settings.logicRegistry()
-  const logicVersionsRegistryLogic = await deployments.getExtendedArtifact(
-    'LogicVersionsRegistry'
-  )
   await deployments.save('LogicVersionsRegistry', {
-    address: logicVersionsRegistryProxyAddress,
-    abi: logicVersionsRegistryLogic.abi,
+    ...(await deployments.getExtendedArtifact('LogicVersionsRegistry')),
+    address: await settings.logicRegistry(),
   })
 
-  const chainlinkAggregatorProxyAddress = await settings.chainlinkAggregator()
-  const chainlinkAggregatorLogic = await deployments.get(
-    'ChainlinkAggregator_Logic'
-  )
   await deployments.save('ChainlinkAggregator', {
-    address: chainlinkAggregatorProxyAddress,
-    abi: chainlinkAggregatorLogic.abi,
+    ...(await deployments.getExtendedArtifact('ChainlinkAggregator')),
+    address: await settings.chainlinkAggregator(),
   })
 
-  const assetSettingsProxyAddress = await settings.assetSettings()
-  const assetSettingsLogic = await deployments.get('AssetSettings_Logic')
   await deployments.save('AssetSettings', {
-    address: assetSettingsProxyAddress,
-    abi: assetSettingsLogic.abi,
+    ...(await deployments.getExtendedArtifact('AssetSettings')),
+    address: await settings.assetSettings(),
   })
 
-  const escrowFactoryProxyAddress = await settings.escrowFactory()
-  const escrowFactoryLogic = await deployments.get('EscrowFactory_Logic')
   await deployments.save('EscrowFactory', {
-    address: escrowFactoryProxyAddress,
-    abi: escrowFactoryLogic.abi,
+    ...(await deployments.getExtendedArtifact('EscrowFactory')),
+    address: await settings.escrowFactory(),
   })
 
-  const marketFactoryProxyAddress = await settings.marketFactory()
-  const marketFactoryLogic = await deployments.get('MarketFactory_Logic')
   await deployments.save('MarketFactory', {
-    address: marketFactoryProxyAddress,
-    abi: marketFactoryLogic.abi,
+    ...(await deployments.getExtendedArtifact('MarketFactory')),
+    address: await settings.marketFactory(),
+  })
+  const marketFactory = await contracts.get<MarketFactory>('MarketFactory')
+
+  await deployments.save('MarketRegistry', {
+    ...(await deployments.getExtendedArtifact('MarketRegistry')),
+    address: await marketFactory.marketRegistry(),
   })
 }
 

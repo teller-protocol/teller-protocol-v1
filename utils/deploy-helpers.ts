@@ -50,7 +50,7 @@ export const deployDynamicProxy = async (
   args: DeployArgs
 ): Promise<DynamicProxy> => {
   const {
-    hre: { deployments, contracts, ethers },
+    hre: { contracts, ethers },
   } = args
 
   const { address: logicRegistryAddress } = await contracts.get(
@@ -58,19 +58,12 @@ export const deployDynamicProxy = async (
   )
   const logicName = ethers.utils.id(args.contract)
 
-  const proxy = (await deploy({
+  return deploy({
     hre: args.hre,
     name: args.contract,
     contract: 'DynamicProxy',
     args: [logicRegistryAddress, logicName],
-  })) as DynamicProxy
-
-  const { abi } = await deployments.getArtifact(args.contract)
-  await deployments.save(args.contract, {
-    abi,
-    address: proxy.address,
   })
-  return proxy
 }
 
 interface DeploySettingsProxyArgs {

@@ -1,15 +1,19 @@
-import { DeployFunction } from 'hardhat-deploy/dist/types'
+import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import { getTokens } from '../config/tokens'
 import { getMarkets } from '../config/markets'
 import { Market, Network } from '../types/custom/config-types'
-import { LoanTermsConsensus, MarketFactory } from '../types/typechain'
+import {
+  LoanTermsConsensus,
+  MarketFactory,
+  MarketRegistry,
+} from '../types/typechain'
 import { getMarket } from '../tasks'
 import { getSigners } from '../config/signers'
 
 const createMarkets: DeployFunction = async (hre) => {
-  const { getNamedAccounts, contracts, network, artifacts, deployments } = hre
+  const { getNamedAccounts, contracts, network, deployments } = hre
   const { deployer } = await getNamedAccounts()
 
   const tokens = getTokens(<Network>network.name)
@@ -18,20 +22,37 @@ const createMarkets: DeployFunction = async (hre) => {
   const marketFactory = await contracts.get<MarketFactory>('MarketFactory', {
     from: deployer,
   })
-
-  const marketRegistryAddress = await marketFactory.marketRegistry()
-  const marketRegistryArtifact = await artifacts.readArtifact('MarketRegistry')
-  await deployments.save('MarketRegistry', {
-    address: marketRegistryAddress,
-    abi: marketRegistryArtifact.abi,
-  })
+  const marketRegistry = await contracts.get<MarketRegistry>('MarketRegistry')
 
   for (const market of markets) {
     const { borrowedToken, collateralToken } = market
+    const lendingTokenAddress = tokens[borrowedToken]
+    const collateralTokenAddress = tokens[collateralToken]
     await marketFactory.createMarket(
-      tokens[borrowedToken],
-      tokens[collateralToken]
+      lendingTokenAddress,
+      collateralTokenAddress
     )
+
+    const lendingPoolAddress = await marketRegistry.lendingPools(
+      lendingTokenAddress
+    )
+    const lendingPoolArtifact = await deployments.getExtendedArtifact(
+      'LendingPool'
+    )
+    await deployments.save(`LP_${borrowedToken}`, {
+      ...lendingPoolArtifact,
+      address: lendingPoolAddress,
+    })
+
+    const loansAddress = await marketRegistry.loans(
+      lendingTokenAddress,
+      collateralTokenAddress
+    )
+    const loansArtifact = await deployments.getExtendedArtifact('Loans')
+    await deployments.save(`Market_${borrowedToken}_${collateralToken}`, {
+      ...loansArtifact,
+      address: loansAddress,
+    })
 
     await addSigners(market, hre)
   }
