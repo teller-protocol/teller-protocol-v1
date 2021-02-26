@@ -91,12 +91,14 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
         uint256 maxTVLAmount,
         uint256 maxDebtRatio
     ) external onlyPauser() {
-        require(
-            ERC20Detailed(assetAddress).decimals() != 0,
-            "DECIMALS_NOT_SUPPORTED"
-        );
         assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
         cTokenAddress.requireNotEmpty("CTOKEN_ADDRESS_REQUIRED");
+
+        require(
+            assetAddress == _getSettings().ETH_ADDRESS() ||
+                ERC20Detailed(assetAddress).decimals() != 0,
+            "DECIMALS_NOT_SUPPORTED"
+        );
 
         assets[assetAddress].initialize();
         assets[assetAddress].updateAddress(
