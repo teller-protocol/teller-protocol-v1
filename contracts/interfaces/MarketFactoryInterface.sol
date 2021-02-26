@@ -2,9 +2,10 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 import "../util/TellerCommon.sol";
+import "./IMarketRegistry.sol";
 
 /**
-    @notice 
+    @notice
 
     @author develop@teller.finance
  */
@@ -12,12 +13,13 @@ import "../util/TellerCommon.sol";
 interface MarketFactoryInterface {
     /** External Functions */
 
-    function createMarket(
-        address lendingToken,
-        address collateralToken
-    ) external;
+    function marketRegistry() external returns (IMarketRegistry);
 
-    function removeMarket(address lendingToken, address collateralToken) external;
+    function createMarket(address lendingToken, address collateralToken)
+        external;
+
+    function removeMarket(address lendingToken, address collateralToken)
+        external;
 
     function getMarket(address lendingToken, address collateralToken)
         external
