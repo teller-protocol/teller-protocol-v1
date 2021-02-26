@@ -74,7 +74,7 @@ contract BaseEscrowDapp is Ownable, BaseUpgradeable {
                 tokens.add(tokenAddress);
                 emit TokenAdded(tokenAddress, index);
             }
-        } else if (found) {            
+        } else if (found) {
             tokens.remove(index);
             emit TokenRemoved(tokenAddress, index);
         }
