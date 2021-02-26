@@ -31,6 +31,20 @@ contract BaseEscrowDapp is Base {
     address private _lendingToken;
 
     /**
+        @notice This event is emitted when a new token is added to this Escrow.
+        @param tokenAddress address of the new token.
+        @param index Index of the added token.
+     */
+    event TokenAdded(address tokenAddress, uint256 index);
+
+    /**
+        @notice This event is emitted when a new token is removed from this Escrow.
+        @param tokenAddress address of the removed token.
+        @param index Index of the removed token.
+     */
+    event TokenRemoved(address tokenAddress, uint256 index);
+
+    /**
         @notice An array of tokens that are owned by this escrow.
      */
     AddressArrayLib.AddressArray private tokens;
@@ -124,9 +138,11 @@ contract BaseEscrowDapp is Base {
         if (_balanceOf(tokenAddress) > 0) {
             if (!found) {
                 tokens.add(tokenAddress);
+                emit TokenAdded(tokenAddress, index);
             }
         } else if (found) {
             tokens.remove(index);
+            emit TokenRemoved(tokenAddress, index);
         }
     }
 
