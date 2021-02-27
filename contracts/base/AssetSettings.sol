@@ -94,6 +94,12 @@ contract AssetSettings is AssetSettingsInterface, Base {
         assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
         cTokenAddress.requireNotEmpty("CTOKEN_ADDRESS_REQUIRED");
 
+        if (assetAddress != settings.ETH_ADDRESS()) {
+            (bool success, bytes memory returnData) =
+                assetAddress.staticcall(abi.encodeWithSignature("decimals()"));
+            require(success && returnData.length > 0, "DECIMALS_NOT_SUPPORTED");
+        }
+
         assets[assetAddress].initialize();
         assets[assetAddress].updateAddress(
             CTOKEN_ADDRESS_ASSET_SETTING,
