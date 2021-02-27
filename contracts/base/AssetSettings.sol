@@ -96,7 +96,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
 
         (bool success, bytes memory returnData) =
             assetAddress.staticcall(abi.encodeWithSignature("decimals()"));
-        require(success, "DECIMALS_NOT_SUPPORTED");
+        require(success && returnData.length > 0, "DECIMALS_NOT_SUPPORTED");
 
         assets[assetAddress].initialize();
         assets[assetAddress].updateAddress(
