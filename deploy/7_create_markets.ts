@@ -64,6 +64,11 @@ const addSigners = async (market: Market, hre: HardhatRuntimeEnvironment) => {
 }
 
 createMarkets.tags = ['markets']
-createMarkets.dependencies = ['platform-settings', 'chainlink', 'dapps']
+createMarkets.dependencies = [
+  'platform-settings',
+  'asset-settings',
+  'chainlink',
+  'dapps',
+]
 
 export default createMarkets

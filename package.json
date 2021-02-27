@@ -49,7 +49,7 @@
     "ethereumjs-util": "^6.1.0",
     "ganache-cli": "^6.4.4",
     "ganache-time-traveler": "^1.0.5",
-    "hardhat": "^2.0.8",
+    "hardhat": "^2.0.11",
     "hardhat-contract-sizer": "^2.0.2",
     "hardhat-deploy": "^0.7.0-beta.44",
     "hardhat-typechain": "^0.3.4",

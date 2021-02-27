@@ -9,6 +9,7 @@ import "../util/NumbersLib.sol";
 import "../util/LoanLib.sol";
 
 // Contracts
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
 import "./Base.sol";
 
 // Interfaces
@@ -34,7 +35,7 @@ import "../interfaces/EscrowInterface.sol";
 
     @author develop@teller.finance
  */
-contract Loans is LoansInterface, Base {
+contract Loans is LoansInterface, ReentrancyGuard, Base {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
     using NumbersLib for uint256;
@@ -114,8 +115,8 @@ contract Loans is LoansInterface, Base {
      */
     modifier withValidLoanRequest(TellerCommon.LoanRequest memory loanRequest) {
         uint256 maxLoanDuration =
-            _getSettings().getPlatformSettingValue(
-                _getSettings().consts().MAXIMUM_LOAN_DURATION_SETTING()
+            settings.getPlatformSettingValue(
+                settings.consts().MAXIMUM_LOAN_DURATION_SETTING()
             );
         require(
             maxLoanDuration >= loanRequest.duration,
@@ -123,7 +124,7 @@ contract Loans is LoansInterface, Base {
         );
 
         bool exceedsMaxLoanAmount =
-            _getSettings().assetSettings().exceedsMaxLoanAmount(
+            settings.assetSettings().exceedsMaxLoanAmount(
                 address(lendingPool.lendingToken()),
                 loanRequest.amount
             );
@@ -174,12 +175,12 @@ contract Loans is LoansInterface, Base {
 
     // See more details LoanLib.isSecured
     function isLoanSecured(uint256 loanID) external view returns (bool) {
-        return loans[loanID].isSecured(_getSettings());
+        return loans[loanID].isSecured(settings);
     }
 
     // See more details in LoanLib.canGoToEOA
     function canLoanGoToEOA(uint256 loanID) external view returns (bool) {
-        return loans[loanID].canGoToEOA(_getSettings());
+        return loans[loanID].canGoToEOA(settings);
     }
 
     // See more details LoanLib.getTotalOwed
@@ -218,10 +219,11 @@ contract Loans is LoansInterface, Base {
     )
         external
         payable
-        isInitialized()
-        whenNotPaused()
+        isInitialized
+        whenNotPaused
         isBorrower(request.borrower)
         withValidLoanRequest(request)
+        onlyAuthorized
     {
         uint256 loanID = _getAndIncrementLoanID();
         if (collateralAmount > 0) {
@@ -233,7 +235,7 @@ contract Loans is LoansInterface, Base {
 
         loans[loanID].init(
             request,
-            _getSettings(),
+            settings,
             loanID,
             interestRate,
             collateralRatio,
@@ -242,7 +244,7 @@ contract Loans is LoansInterface, Base {
 
         if (request.recipient.isNotEmpty()) {
             require(
-                loans[loanID].canGoToEOA(_getSettings()),
+                loans[loanID].canGoToEOA(settings),
                 "UNDER_COLL_WITH_RECIPIENT"
             );
         }
@@ -269,9 +271,10 @@ contract Loans is LoansInterface, Base {
     function withdrawCollateral(uint256 amount, uint256 loanID)
         external
         loanActiveOrSet(loanID)
-        isInitialized()
-        whenNotPaused()
+        isInitialized
+        whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
+        onlyAuthorized
     {
         require(
             msg.sender == loans[loanID].loanTerms.borrower,
@@ -327,9 +330,10 @@ contract Loans is LoansInterface, Base {
         external
         payable
         loanActiveOrSet(loanID)
-        isInitialized()
-        whenNotPaused()
+        isInitialized
+        whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
+        onlyAuthorized
     {
         borrower.requireEqualTo(
             loans[loanID].loanTerms.borrower,
@@ -350,11 +354,12 @@ contract Loans is LoansInterface, Base {
     function takeOutLoan(uint256 loanID, uint256 amountBorrow)
         external
         loanTermsSet(loanID)
-        isInitialized()
-        whenNotPaused()
+        isInitialized
+        whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
         nonReentrant()
         isBorrower(loans[loanID].loanTerms.borrower)
+        onlyAuthorized
     {
         require(_isDebtRatioValid(amountBorrow), "SUPPLY_TO_DEBT_EXCEEDS_MAX");
         require(
@@ -367,8 +372,8 @@ contract Loans is LoansInterface, Base {
         require(
             loans[loanID].lastCollateralIn <=
                 now.sub(
-                    _getSettings().getPlatformSettingValue(
-                        _getSettings().consts().SAFETY_INTERVAL_SETTING()
+                    settings.getPlatformSettingValue(
+                        settings.consts().SAFETY_INTERVAL_SETTING()
                     )
                 ),
             "COLLATERAL_DEPOSITED_RECENTLY"
@@ -392,7 +397,7 @@ contract Loans is LoansInterface, Base {
         loans[loanID].loanStartTime = now;
 
         address loanRecipient;
-        bool eoaAllowed = loans[loanID].canGoToEOA(_getSettings());
+        bool eoaAllowed = loans[loanID].canGoToEOA(settings);
         if (eoaAllowed) {
             loanRecipient = loans[loanID].loanTerms.recipient.isEmpty()
                 ? loans[loanID].loanTerms.borrower
@@ -428,10 +433,11 @@ contract Loans is LoansInterface, Base {
     function repay(uint256 amount, uint256 loanID)
         external
         loanActive(loanID)
-        isInitialized()
-        whenNotPaused()
+        isInitialized
+        whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
-        nonReentrant()
+        nonReentrant
+        onlyAuthorized
     {
         require(amount > 0, "AMOUNT_VALUE_REQUIRED");
         // calculate the actual amount to repay
@@ -483,10 +489,10 @@ contract Loans is LoansInterface, Base {
     function liquidateLoan(uint256 loanID)
         external
         loanActive(loanID)
-        isInitialized()
-        whenNotPaused()
+        isInitialized
+        whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
-        nonReentrant()
+        nonReentrant
     {
         TellerCommon.LoanLiquidationInfo memory liquidationInfo =
             _getLiquidationInfo(loanID);
@@ -605,13 +611,14 @@ contract Loans is LoansInterface, Base {
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress
-    ) internal isNotInitialized() {
+    ) internal isNotInitialized {
         lendingPoolAddress.requireNotEmpty("PROVIDE_LENDING_POOL_ADDRESS");
         loanTermsConsensusAddress.requireNotEmpty(
             "PROVIDED_LOAN_TERMS_ADDRESS"
         );
 
         _initialize(settingsAddress);
+        ReentrancyGuard.initialize();
 
         lendingPool = LendingPoolInterface(lendingPoolAddress);
         loanTermsConsensus = LoanTermsConsensusInterface(
@@ -651,7 +658,7 @@ contract Loans is LoansInterface, Base {
         returns (bool)
     {
         uint256 maxDebtRatio =
-            _getSettings().assetSettings().getMaxDebtRatio(
+            settings.assetSettings().getMaxDebtRatio(
                 address(lendingPool.lendingToken())
             );
         uint256 currentDebtRatio = lendingPool.getDebtRatioFor(newLoanAmount);
@@ -664,7 +671,6 @@ contract Loans is LoansInterface, Base {
         @return the new Escrow contract address.
      */
     function _createEscrow(uint256 loanID) internal returns (address) {
-        return
-            _getSettings().escrowFactory().createEscrow(address(this), loanID);
+        return settings.escrowFactory().createEscrow(address(this), loanID);
     }
 }

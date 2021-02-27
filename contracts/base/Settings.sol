@@ -9,11 +9,8 @@ import "../util/AddressArrayLib.sol";
 import "../util/CacheLib.sol";
 
 // Contracts
-import "@openzeppelin/contracts-ethereum-package/contracts/lifecycle/Pausable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/access/Roles.sol";
 import "../util/SettingsConsts.sol";
-import "./BaseUpgradeable.sol";
-import "./TInitializable.sol";
-import "./UpgradeableProxy.sol";
 import "./DynamicProxy.sol";
 import "./AssetSettings.sol";
 import "./LogicVersionsRegistry.sol";
@@ -27,6 +24,8 @@ import "../providers/chainlink/IChainlinkAggregator.sol";
 import "../providers/compound/CErc20Interface.sol";
 import "../interfaces/AssetSettingsInterface.sol";
 import "../interfaces/MarketFactoryInterface.sol";
+
+import "hardhat/console.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -50,16 +49,12 @@ import "../interfaces/MarketFactoryInterface.sol";
 
     @author develop@teller.finance
  */
-contract Settings is
-    SettingsInterface,
-    TInitializable,
-    Pausable,
-    BaseUpgradeable
-{
+contract Settings is SettingsInterface, Base {
     using AddressLib for address;
     using Address for address;
     using AddressArrayLib for address[];
     using PlatformSettingsLib for PlatformSettingsLib.PlatformSetting;
+    using Roles for Roles.Role;
 
     /** Constants */
 
@@ -133,11 +128,6 @@ contract Settings is
     EscrowFactoryInterface public escrowFactory;
 
     /**
-        @notice It is the global instance of the logic versions registry contract.
-     */
-    LogicVersionsRegistryInterface public versionsRegistry;
-
-    /**
         @notice It is the global instance of the ChainlinkAggregator contract.
      */
     IChainlinkAggregator public chainlinkAggregator;
@@ -155,6 +145,13 @@ contract Settings is
      */
     mapping(address => bool) public authorizedAddresses;
 
+    Roles.Role private _pausers;
+
+    /**
+        @notice Flag pausing the use of the Protocol
+     */
+    bool public paused;
+
     /**
         @notice Flag restricting the use of the Protocol to authorizedAddress
      */
@@ -162,9 +159,72 @@ contract Settings is
 
     /** Modifiers */
 
+    /**
+     * @dev Modifier to make a function callable only when the contract is not paused.
+     */
+    modifier whenNotPaused() {
+        require(!paused, "PLATFORM_PAUSED");
+        _;
+    }
+
+    /**
+     * @dev Modifier to make a function callable only when the contract is paused.
+     */
+    modifier whenPaused() {
+        require(paused, "PLATFORM_NOT_PAUSED");
+        _;
+    }
+
+    modifier onlyPauser() {
+        require(isPauser(msg.sender), "NOT_PAUSER");
+        _;
+    }
+
     /* Constructor */
 
     /** External Functions */
+
+    /**
+     * @dev Called by a pauser to pause, triggers stopped state.
+     */
+    function pause() public onlyPauser whenNotPaused {
+        paused = true;
+        emit Paused(msg.sender);
+    }
+
+    /**
+     * @dev Called by a pauser to unpause, returns to normal state.
+     */
+    function unpause() public onlyPauser whenPaused {
+        paused = false;
+        emit Unpaused(msg.sender);
+    }
+
+    function isPauser(address account) public view returns (bool) {
+        return _pausers.has(account);
+    }
+
+    function addPauser(address account) public onlyPauser {
+        _addPauser(account);
+    }
+
+    function removePauser(address account) public onlyPauser {
+        _removePauser(account);
+    }
+
+    function renouncePauser() public {
+        _removePauser(msg.sender);
+    }
+
+    function _addPauser(address account) internal {
+        _pausers.add(account);
+        emit PauserAdded(account);
+    }
+
+    function _removePauser(address account) internal {
+        _pausers.remove(account);
+        emit PauserRemoved(account);
+    }
 
     /**
         @notice It creates a new platform setting given a setting name, value, min and max values.
@@ -178,7 +238,7 @@ contract Settings is
         uint256 value,
         uint256 minValue,
         uint256 maxValue
-    ) external onlyPauser() isInitialized() {
+    ) external onlyPauser isInitialized {
         require(settingName != "", "SETTING_NAME_MUST_BE_PROVIDED");
         platformSettings[settingName].initialize(value, minValue, maxValue);
 
@@ -200,8 +260,8 @@ contract Settings is
      */
     function updatePlatformSetting(bytes32 settingName, uint256 newValue)
         external
-        onlyPauser()
-        isInitialized()
+        onlyPauser
+        isInitialized
     {
         uint256 oldValue = platformSettings[settingName].update(newValue);
 
@@ -219,8 +279,8 @@ contract Settings is
      */
     function removePlatformSetting(bytes32 settingName)
         external
-        onlyPauser()
-        isInitialized()
+        onlyPauser
+        isInitialized
     {
         uint256 oldValue = platformSettings[settingName].value;
         platformSettings[settingName].remove();
@@ -273,9 +333,9 @@ contract Settings is
      */
     function pauseLendingPool(address lendingPoolAddress)
         external
-        onlyPauser()
-        whenNotPaused()
-        isInitialized()
+        onlyPauser
+        whenNotPaused
+        isInitialized
     {
         lendingPoolAddress.requireNotEmpty("LENDING_POOL_IS_REQUIRED");
         require(
@@ -294,9 +354,9 @@ contract Settings is
      */
     function unpauseLendingPool(address lendingPoolAddress)
         external
-        onlyPauser()
-        whenNotPaused()
-        isInitialized()
+        onlyPauser
+        whenNotPaused
+        isInitialized
     {
         lendingPoolAddress.requireNotEmpty("LENDING_POOL_IS_REQUIRED");
         require(
@@ -314,7 +374,7 @@ contract Settings is
         @return true if platform is paused. Otherwise it returns false.
      */
     function isPaused() external view returns (bool) {
-        return paused();
+        return paused;
     }
 
     /**
@@ -358,10 +418,11 @@ contract Settings is
      */
     function restrictPlatform(bool restriction)
         external
-        onlyPauser()
-        isInitialized()
+        onlyPauser
+        isInitialized
     {
         platformRestricted = restriction;
+        emit PlatformRestricted(restriction, msg.sender);
     }
 
     /**
@@ -376,12 +437,13 @@ contract Settings is
         @notice Adds a wallet address to the list of authorized wallets
         @param addressToAdd The wallet address of the user being authorized
      */
-    function addAuthorizedAddress(address addressToAdd) public isInitialized() {
+    function addAuthorizedAddress(address addressToAdd) public isInitialized {
         require(
             isPauser(msg.sender) || msg.sender == address(escrowFactory),
             "CALLER_NOT_PAUSER"
         );
         authorizedAddresses[addressToAdd] = true;
+        emit AuthorizationGranted(addressToAdd, msg.sender);
     }
 
     /**
@@ -390,7 +452,7 @@ contract Settings is
      */
     function addAuthorizedAddressList(address[] calldata addressesToAdd)
         external
-        isInitialized()
+        isInitialized
     {
         for (uint256 i = 0; i < addressesToAdd.length; i++) {
             addAuthorizedAddress(addressesToAdd[i]);
@@ -403,10 +465,11 @@ contract Settings is
      */
     function removeAuthorizedAddress(address addressToRemove)
         external
-        onlyPauser()
-        isInitialized()
+        onlyPauser
+        isInitialized
     {
         authorizedAddresses[addressToRemove] = false;
+        emit AuthorizationRevoked(addressToRemove, msg.sender);
     }
 
     /**
@@ -415,10 +478,7 @@ contract Settings is
         @return True if account has authorization, false if it does not
      */
     function hasAuthorization(address account) public view returns (bool) {
-        return
-            isPauser(account) ||
-            authorizedAddresses[account] ||
-            versionsRegistry.isProxyRegistered(account);
+        return isPauser(account) || authorizedAddresses[account];
     }
 
     /**
@@ -435,68 +495,64 @@ contract Settings is
 
     /**
         @notice It initializes this settings contract instance.
-        @param versionsRegistryLogicAddress LogicVersionsRegistry logic address.
         @param wethTokenAddress canonical WETH token address.
         @param cethTokenAddress compound CETH token address.
      */
-    function initialize(
-        address versionsRegistryLogicAddress,
-        address wethTokenAddress,
-        address cethTokenAddress
-    ) external isNotInitialized() {
+    function initialize(address wethTokenAddress, address cethTokenAddress)
+        external
+        isNotInitialized
+    {
         require(cethTokenAddress.isContract(), "CETH_ADDRESS_MUST_BE_CONTRACT");
 
-        Pausable.initialize(msg.sender);
-        TInitializable._initialize();
+        _addPauser(msg.sender);
+        _initialize(address(this));
 
         WETH_ADDRESS = wethTokenAddress;
         CETH_ADDRESS = cethTokenAddress;
 
         consts = new SettingsConsts();
 
-        _setSettings(address(this));
-
-        UpgradeableProxy logicVersionsRegistryProxy = new UpgradeableProxy();
-        logicVersionsRegistryProxy.initializeProxy(
-            address(this),
-            versionsRegistryLogicAddress
-        );
-        versionsRegistry = LogicVersionsRegistryInterface(
-            address(logicVersionsRegistryProxy)
-        );
-        versionsRegistry.initialize();
         assetSettings = AssetSettingsInterface(
             _deployDynamicProxy(
-                versionsRegistry.consts().ASSET_SETTINGS_LOGIC_NAME()
+                logicRegistry.consts().ASSET_SETTINGS_LOGIC_NAME()
             )
         );
         chainlinkAggregator = IChainlinkAggregator(
             _deployDynamicProxy(
-                versionsRegistry.consts().CHAINLINK_PAIR_AGGREGATOR_LOGIC_NAME()
+                logicRegistry.consts().CHAINLINK_PAIR_AGGREGATOR_LOGIC_NAME()
             )
         );
         escrowFactory = EscrowFactoryInterface(
             _deployDynamicProxy(
-                versionsRegistry.consts().ESCROW_FACTORY_LOGIC_NAME()
+                logicRegistry.consts().ESCROW_FACTORY_LOGIC_NAME()
             )
         );
         marketFactory = MarketFactoryInterface(
             _deployDynamicProxy(
-                versionsRegistry.consts().MARKET_FACTORY_LOGIC_NAME()
+                logicRegistry.consts().MARKET_FACTORY_LOGIC_NAME()
             )
         );
     }
 
-    function postLogicVersionsRegistered() external {
-        chainlinkAggregator.initialize();
-        escrowFactory.initialize();
-        marketFactory.initialize();
-    }
-
     /** Internal functions */
 
-    function _deployDynamicProxy(bytes32 logicName) internal returns (address) {
-        return address(new DynamicProxy(address(this), logicName));
+    function _deployDynamicProxy(bytes32 logicName)
+        internal
+        returns (address proxyAddress)
+    {
+        proxyAddress = address(
+            new DynamicProxy(address(logicRegistry), logicName)
+        );
+        (bool success, ) =
+            proxyAddress.call(abi.encodeWithSignature("initialize()"));
+        if (!success) {
+            assembly {
+                let ptr := mload(0x40)
+                let size := returndatasize
+                returndatacopy(ptr, 0, size)
+                revert(ptr, size)
+            }
+        }
     }
 
     /**
