@@ -102,9 +102,7 @@ contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
 
         require(
             _getTotalSupplied() <=
-                _getSettings().assetSettings().getMaxTVLAmount(
-                    address(lendingToken)
-                ),
+                settings.assetSettings().getMaxTVLAmount(address(lendingToken)),
             "MAX_TVL_REACHED"
         );
 
