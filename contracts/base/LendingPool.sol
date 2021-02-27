@@ -97,7 +97,6 @@ contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
         onlyAuthorized
     {
         uint256 exchangeRate = _exchangeRate();
-
         lendingTokenAmount = tokenTransferFrom(msg.sender, lendingTokenAmount);
 
         require(
@@ -105,8 +104,6 @@ contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
                 settings.assetSettings().getMaxTVLAmount(address(lendingToken)),
             "MAX_TVL_REACHED"
         );
-
-        uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
 
         // Transferring tokens to the LendingPool
         _totalSuppliedUnderlyingLender[
@@ -125,6 +122,8 @@ contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
         }
 
         // Mint tToken tokens
+        uint256 tTokenAmount =
+            _tTokensForLendingTokens(lendingTokenAmount, exchangeRate);
         tTokenMint(msg.sender, tTokenAmount);
 
         // Emit event
@@ -478,10 +477,17 @@ contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
         view
         returns (uint256)
     {
+        return _tTokensForLendingTokens(lendingTokenAmount, _exchangeRate());
+    }
+
+    function _tTokensForLendingTokens(
+        uint256 lendingTokenAmount,
+        uint256 exchangeRate
+    ) internal view returns (uint256) {
         return
             lendingTokenAmount
                 .mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS))
-                .div(_exchangeRate());
+                .div(exchangeRate);
     }
 
     function _lendingTokensForTTokens(uint256 tTokenAmount)
