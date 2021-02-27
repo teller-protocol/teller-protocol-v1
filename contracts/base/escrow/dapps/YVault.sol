@@ -4,6 +4,9 @@ pragma experimental ABIEncoderV2;
 // Contracts
 import "../../BaseEscrowDapp.sol";
 
+// Common
+import "../../../util/AddressLib.sol";
+
 // External Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
@@ -29,6 +32,8 @@ import "../../../providers/yearn/IVault.sol";
     @author develop@teller.finance
  */
 contract YVault is YVaultInterface, BaseEscrowDapp {
+    using AddressLib for address;
+    using Address for address;
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -38,13 +43,15 @@ contract YVault is YVaultInterface, BaseEscrowDapp {
         @param tokenAddress The address of the token being deposited
         @param amount The amount of tokens to be deposited into the vault
      */
-    function deposit(address tokenAddress, uint256 amount) public onlyOwner() {
+    function deposit(address tokenAddress, uint256 amount) public onlyBorrower {
         IVault iVault = _getYVault(tokenAddress);
         IERC20 underlyingToken = IERC20(iVault.underlying());
-        uint256 tokenBalanceBeforeDeposit = underlyingToken.balanceOf(address(this));
+        uint256 tokenBalanceBeforeDeposit =
+            underlyingToken.balanceOf(address(this));
         IERC20(tokenAddress).safeApprove(address(iVault), amount);
         iVault.deposit(amount);
-        uint256 tokenBalanceAfterDeposit = underlyingToken.balanceOf(address(this));
+        uint256 tokenBalanceAfterDeposit =
+            underlyingToken.balanceOf(address(this));
         require(
             tokenBalanceAfterDeposit > tokenBalanceBeforeDeposit,
             "YEARN_BALANCE_NOT_INCREASED"
@@ -64,7 +71,10 @@ contract YVault is YVaultInterface, BaseEscrowDapp {
         @param tokenAddress The address of the token being deposited
         @param amount The amount of tokens to be deposited into the vault
      */
-    function withdraw(address tokenAddress, uint256 amount) public onlyOwner() {
+    function withdraw(address tokenAddress, uint256 amount)
+        public
+        onlyBorrower
+    {
         IVault iVault = _getYVault(tokenAddress);
         _withdraw(iVault, amount);
     }
@@ -77,7 +87,11 @@ contract YVault is YVaultInterface, BaseEscrowDapp {
         @param tokenAddress The address of the underlying token for the associated yVault
         @return The token price
      */
-    function getPricePerFullShare(address tokenAddress) external view returns (uint256) {
+    function getPricePerFullShare(address tokenAddress)
+        external
+        view
+        returns (uint256)
+    {
         IVault iVault = _getYVault(tokenAddress);
         return iVault.getPricePerFullShare();
     }
@@ -90,9 +104,11 @@ contract YVault is YVaultInterface, BaseEscrowDapp {
      */
     function _withdraw(IVault iVault, uint256 amount) internal {
         IERC20 underlyingToken = IERC20(iVault.underlying());
-        uint256 tokenBalanceBeforeWithdrawal = underlyingToken.balanceOf(address(this));
+        uint256 tokenBalanceBeforeWithdrawal =
+            underlyingToken.balanceOf(address(this));
         iVault.withdraw(amount);
-        uint256 tokenBalanceAfterWithdrawal = underlyingToken.balanceOf(address(this));
+        uint256 tokenBalanceAfterWithdrawal =
+            underlyingToken.balanceOf(address(this));
         require(
             tokenBalanceAfterWithdrawal > tokenBalanceBeforeWithdrawal,
             "WITHDRAWAL_UNSUCCESSFUL"
@@ -113,6 +129,6 @@ contract YVault is YVaultInterface, BaseEscrowDapp {
         @return yVault instance
      */
     function _getYVault(address tokenAddress) internal view returns (IVault) {
-        return IVault(_getSettings().assetSettings().getYVaultAddress(tokenAddress));
+        return IVault(settings.assetSettings().getYVaultAddress(tokenAddress));
     }
 }
