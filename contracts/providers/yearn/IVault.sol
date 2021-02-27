@@ -1,4 +1,4 @@
-pragma solidity ^0.5.17;
+pragma solidity 0.5.17;
 
 /**
     @notice This interface defines the different functions available for a Yearn Vault

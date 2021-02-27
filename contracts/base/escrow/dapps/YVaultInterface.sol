@@ -28,7 +28,10 @@ interface YVaultInterface {
         @param tokenAddress The address of the underlying token for the associated yVault
         @return uint256 The token price
      */
-    function getPricePerFullShare(address tokenAddress) external view returns (uint256);
+    function getPricePerFullShare(address tokenAddress)
+        external
+        view
+        returns (uint256);
 
     /**
         @notice This event is emitted when a yVault deposit is invoked successfully
@@ -47,11 +50,11 @@ interface YVaultInterface {
         @notice This event is emitted when a yVault withdraw is invoked successfully
         @param underlyingToken The address of the underlying token of the vault
         @param amount The amount of funds to withdraw
-        @param tokenBalanceAfterWithdrawl The balance of tokens held after withdrawl
+        @param tokenBalanceAfterWithdrawal The balance of tokens held after withdrawl
      */
     event YearnWithdrawn(
         address underlyingToken,
         uint256 amount,
-        uint256 tokenBalanceAfterWithdrawl
+        uint256 tokenBalanceAfterWithdrawal
     );
 }
