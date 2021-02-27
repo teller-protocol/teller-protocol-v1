@@ -249,6 +249,7 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
         (success, returnData) = baseAddress.staticcall(
             abi.encodeWithSignature("exchangeRateStored()")
         );
+        require(success, "EXCHANGE_RATE_CALL_FAIL");
         if (returnData.length > 0) {
             uint8 cTokenDecimals = CErc20Interface(baseAddress).decimals();
             uint256 exchangeRate = abi.decode(returnData, (uint256));

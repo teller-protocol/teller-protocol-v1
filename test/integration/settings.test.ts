@@ -10,6 +10,7 @@ import {
 import { BigNumberish, Signer } from 'ethers'
 import { AssetSettings, Settings } from '../../types/typechain'
 import { ERC20 } from '@chainlink/contracts/ethers/v0.4/ERC20'
+import { Address } from 'hardhat-deploy/dist/types'
 
 chai.should()
 chai.use(solidity)
@@ -77,10 +78,10 @@ describe('Settings', async () => {
 
   describe('createAssetSetting', () => {
     let assetSettings: AssetSettings
-    let newAssetAddress: string
+    let newAssetAddress: Address
     let lendingTokenAddress: string
     let currentMaxLoanSetting: BigNumberish
-    let newCtokenAddress: string
+    let newCtokenAddress: Address
     let newMaxLoan: number
     let newMaxTVL: number
     let newMaxDebt: number
@@ -95,13 +96,15 @@ describe('Settings', async () => {
       currentMaxLoanSetting = await assetSettings.getMaxLoanAmount(
         lendingTokenAddress
       )
-      // Get mock addresses
+
       newAssetAddress = ethers.utils.getAddress(
         '0xdAC17F958D2ee523a2206206994597C13D831ec7'
       ) // USDT
       newCtokenAddress = ethers.utils.getAddress(
         '0xf650c3d88d12db855b8bf7d11be6c55a4e07dcc9'
-      ) // Set values
+      ) // CUSDT
+
+      // Set values
       newMaxLoan = 8000
       newMaxTVL = 250000
       newMaxDebt = 4000
