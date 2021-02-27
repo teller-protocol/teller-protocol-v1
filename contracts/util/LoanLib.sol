@@ -367,7 +367,9 @@ library LoanLib {
         if (availableValue < liquidationInfo.amountToLiquidate + maxReward) {
             liquidationInfo.rewardInCollateral = int256(availableValue);
         } else {
-            liquidationInfo.rewardInCollateral = int256(maxReward);
+            liquidationInfo.rewardInCollateral = int256(maxReward).add(
+                int256(liquidationInfo.amountToLiquidate)
+            );
         }
 
         liquidationInfo.liquidable =
