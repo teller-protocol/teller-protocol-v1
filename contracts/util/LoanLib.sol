@@ -32,7 +32,6 @@ library LoanLib {
         @param interestRate Interest rate set in the loan terms.
         @param collateralRatio Collateral ratio set in the loan terms.
         @param maxLoanAmount Maximum loan amount that can be taken out, set in the loan terms.
-        @return memory TellerCommon.Loan Loan struct as per the Teller platform.
      */
     function init(
         TellerCommon.Loan storage loan,
@@ -119,6 +118,7 @@ library LoanLib {
     /**
         @notice Returns the total amount owed for a specified loan.
         @param loan The loan to get the total amount owed.
+        @return uint256 The total owed amount.
      */
     function getTotalOwed(TellerCommon.Loan memory loan)
         public
@@ -138,6 +138,7 @@ library LoanLib {
     /**
         @notice Returns the total amount owed for a specified loan.
         @param loan The loan to get the total amount owed.
+        @return uint256 The amount owed.
      */
     function getLoanAmount(TellerCommon.Loan memory loan)
         public
@@ -156,6 +157,7 @@ library LoanLib {
         @notice Returns the amount of interest owed for a given loan and loan amount.
         @param loan The loan to get the owed interest.
         @param amountBorrow The principal of the loan to take out.
+        @return uint256 The interest owed.
      */
     function getInterestOwedFor(
         TellerCommon.Loan memory loan,
@@ -283,7 +285,8 @@ library LoanLib {
         @dev If the loan status is Active, then the value is the threshold at which the loan can be liquidated at.
         @param loan The loan to get needed collateral info for.
         @param settings The settings instance that holds the platform setting values.
-        @return uint256 The minimum collateral value threshold required.
+        @return int256 The minimum collateral value threshold required.
+        @return uint256 The value of the loan held in the escrow contract.
      */
     function getCollateralNeededInTokens(
         TellerCommon.Loan memory loan,

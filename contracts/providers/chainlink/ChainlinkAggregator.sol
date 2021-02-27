@@ -113,7 +113,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
         @dev It tries to use ETH as a pass through asset if the direct pair is not supported.
         @param src Source token address.
         @param dst Destination token address.
-        @return uint256 The latest answer as given from Chainlink.
+        @return int256 The latest answer as given from Chainlink.
      */
     function latestAnswerFor(address src, address dst)
         external
@@ -130,6 +130,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
         @notice It allows for additional Chainlink Aggregators to be supported.
         @param src Source token address.
         @param dst Destination token address.
+        @param aggregator Price aggregator address.
      */
     function add(
         address src,
@@ -206,6 +207,10 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
 
     /* Internal Functions */
 
+    /**
+        @notice It normalizes the token address to ETH if WETH.
+        @param tokenAddress The address of the token to normalize.
+    */
     function _normalizeTokenAddress(address tokenAddress)
         internal
         view
@@ -270,7 +275,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
         @dev It tries to use ETH as a pass through asset if the direct pair is not supported.
         @param src Source token address.
         @param dst Destination token address.
-        @return uint256 The latest answer as given from Chainlink.
+        @return int256 The latest answer as given from Chainlink.
      */
     function _priceFor(address src, address dst)
         internal
