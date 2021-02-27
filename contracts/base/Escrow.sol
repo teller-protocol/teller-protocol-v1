@@ -52,6 +52,7 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
         external
         isInitialized
         onlyBorrower
+        whenNotPaused
     {
         TellerCommon.Dapp memory dapp =
             settings.escrowFactory().dapps(dappData.location);
@@ -104,7 +105,7 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
         @dev If the Escrow's balance of the borrowed token is less than the amount to repay, transfer tokens from the sender's wallet.
         @dev Only the owner of the Escrow can call this. If someone else wants to make a payment, they should call the loans contract directly.
      */
-    function repay(uint256 amount) external onlyBorrower {
+    function repay(uint256 amount) external onlyBorrower whenNotPaused {
         IERC20 token = IERC20(getLendingToken());
         uint256 balance = _balanceOf(address(token));
         uint256 totalOwed = getLoansContract().getTotalOwed(getLoanID());
@@ -126,8 +127,7 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
         @dev The loan must not be active.
         @dev The recipient must be the loan borrower AND the loan must be already liquidated.
     */
-
-    function claimTokens() external onlyBorrower {
+    function claimTokens() external onlyBorrower whenNotPaused {
         require(
             getLoan().status == TellerCommon.LoanStatus.Closed,
             "LOAN_NOT_CLOSED"
@@ -154,6 +154,7 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
       */
     function claimTokensByCollateralValue(address recipient, uint256 value)
         external
+        whenNotPaused
     {
         require(
             getLoan().status == TellerCommon.LoanStatus.Closed,
