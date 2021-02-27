@@ -131,6 +131,6 @@ export default <HardhatUserConfig>{
     gasPrice: 121,
   },
   mocha: {
-    timeout: 40000,
+    timeout: 100000,
   },
 }

@@ -2,8 +2,7 @@ pragma solidity 0.5.17;
 
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
-import "../../base/BaseUpgradeable.sol";
-import "../../base/TInitializable.sol";
+import "../../base/Base.sol";
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
@@ -30,11 +29,7 @@ import "./IChainlinkAggregator.sol";
 
     @author develop@teller.finance
  */
-contract ChainlinkAggregator is
-    IChainlinkAggregator,
-    TInitializable,
-    BaseUpgradeable
-{
+contract ChainlinkAggregator is IChainlinkAggregator, Base {
     using Address for address;
     using AddressLib for address;
     using AddressArrayLib for AddressArrayLib.AddressArray;
@@ -149,11 +144,11 @@ contract ChainlinkAggregator is
         require(address(agg).isEmpty(), "CHAINLINK_PAIR_ALREADY_EXISTS");
 
         require(
-            src.isContract() || src == _getSettings().ETH_ADDRESS(),
+            src.isContract() || src == settings.ETH_ADDRESS(),
             "TOKEN_A_NOT_CONTRACT"
         );
         require(
-            dst.isContract() || dst == _getSettings().ETH_ADDRESS(),
+            dst.isContract() || dst == settings.ETH_ADDRESS(),
             "TOKEN_B_NOT_CONTRACT"
         );
         require(aggregator.isContract(), "AGGREGATOR_NOT_CONTRACT");
@@ -206,8 +201,8 @@ contract ChainlinkAggregator is
     /**
         @notice It initializes this ChainlinkAggregator instance.
      */
-    function initialize() external isNotInitialized() {
-        _initialize();
+    function initialize() external isNotInitialized {
+        _initialize(msg.sender);
     }
 
     /* Internal Functions */
@@ -222,8 +217,8 @@ contract ChainlinkAggregator is
         returns (address)
     {
         return
-            tokenAddress == _getSettings().WETH_ADDRESS()
-                ? _getSettings().ETH_ADDRESS()
+            tokenAddress == settings.WETH_ADDRESS()
+                ? settings.ETH_ADDRESS()
                 : tokenAddress;
     }
 
@@ -234,7 +229,7 @@ contract ChainlinkAggregator is
      */
     function _decimalsFor(address addr) internal view returns (uint8) {
         return
-            addr == _getSettings().ETH_ADDRESS()
+            addr == settings.ETH_ADDRESS()
                 ? 18
                 : ERC20Detailed(addr).decimals();
     }

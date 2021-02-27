@@ -17,6 +17,7 @@ import "../providers/compound/CErc20Interface.sol";
 import "../interfaces/IMarketRegistry.sol";
 
 // Contracts
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
 import "./Base.sol";
 import "./TToken.sol";
 
@@ -36,7 +37,7 @@ import "./TToken.sol";
 
     @author develop@teller.finance
  */
-contract LendingPool is Base, LendingPoolInterface {
+contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
     using CompoundRatesLib for CErc20Interface;
@@ -90,31 +91,39 @@ contract LendingPool is Base, LendingPoolInterface {
     */
     function deposit(uint256 lendingTokenAmount)
         external
-        isInitialized()
-        whenNotPaused()
+        isInitialized
+        whenNotPaused
         whenLendingPoolNotPaused(address(this))
+        onlyAuthorized
     {
+        uint256 exchangeRate = _exchangeRate();
+        lendingTokenAmount = tokenTransferFrom(msg.sender, lendingTokenAmount);
+
         require(
-            _getTotalSupplied().add(lendingTokenAmount) <=
-                _getSettings().assetSettings().getMaxTVLAmount(address(lendingToken)),
+            _getTotalSupplied() <=
+                settings.assetSettings().getMaxTVLAmount(address(lendingToken)),
             "MAX_TVL_REACHED"
         );
-        uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
-
-        _totalSuppliedUnderlyingLender[msg.sender] = _totalSuppliedUnderlyingLender[msg.sender].add(lendingTokenAmount);
 
         // Transferring tokens to the LendingPool
-        tokenTransferFrom(msg.sender, lendingTokenAmount);
+        _totalSuppliedUnderlyingLender[
+            msg.sender
+        ] = _totalSuppliedUnderlyingLender[msg.sender].add(lendingTokenAmount);
 
         address cTokenAddress = cToken();
         if (
             cTokenAddress != address(0) &&
-            CErc20Interface(cTokenAddress).valueOfUnderlying(lendingTokenAmount) > 0
+            CErc20Interface(cTokenAddress).valueOfUnderlying(
+                lendingTokenAmount
+            ) >
+            0
         ) {
             _depositToCompound(cTokenAddress, lendingTokenAmount);
         }
 
         // Mint tToken tokens
+        uint256 tTokenAmount =
+            _tTokensForLendingTokens(lendingTokenAmount, exchangeRate);
         tTokenMint(msg.sender, tTokenAmount);
 
         // Emit event
@@ -129,25 +138,30 @@ contract LendingPool is Base, LendingPoolInterface {
      */
     function withdraw(uint256 lendingTokenAmount)
         external
-        isInitialized()
-        whenNotPaused()
+        isInitialized
+        whenNotPaused
         whenLendingPoolNotPaused(address(this))
-        nonReentrant()
+        nonReentrant
+        onlyAuthorized
     {
         uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
 
         require(tTokenAmount > 0, "WITHDRAW_TTOKEN_DUST");
-        require(tToken.balanceOf(msg.sender) > tTokenAmount, "TTOKEN_NOT_ENOUGH_BALANCE");
+        require(
+            tToken.balanceOf(msg.sender) > tTokenAmount,
+            "TTOKEN_NOT_ENOUGH_BALANCE"
+        );
 
         _withdraw(lendingTokenAmount, tTokenAmount);
     }
 
     function withdrawAll()
         external
-        isInitialized()
-        whenNotPaused()
+        isInitialized
+        whenNotPaused
         whenLendingPoolNotPaused(address(this))
-        nonReentrant()
+        nonReentrant
+        onlyAuthorized
         returns (uint256)
     {
         uint256 tTokenAmount = tToken.balanceOf(msg.sender);
@@ -171,7 +185,13 @@ contract LendingPool is Base, LendingPoolInterface {
         uint256 principalAmount,
         uint256 interestAmount,
         address borrower
-    ) external isInitialized() isLoan() whenLendingPoolNotPaused(address(this)) {
+    )
+        external
+        isInitialized
+        isLoan
+        whenLendingPoolNotPaused(address(this))
+        onlyAuthorized
+    {
         uint256 totalAmount = principalAmount.add(interestAmount);
         require(totalAmount > 0, "REPAY_ZERO");
 
@@ -200,15 +220,19 @@ contract LendingPool is Base, LendingPoolInterface {
      */
     function createLoan(uint256 amount, address borrower)
         external
-        isInitialized()
+        isInitialized
         isLoan()
         whenLendingPoolNotPaused(address(this))
+        onlyAuthorized
     {
         uint256 lendingTokenBalance = lendingToken.balanceOf(address(this));
         if (lendingTokenBalance < amount) {
             address cTokenAddress = cToken();
             if (cTokenAddress != address(0)) {
-                _withdrawFromCompound(cTokenAddress, amount.sub(lendingTokenBalance));
+                _withdrawFromCompound(
+                    cTokenAddress,
+                    amount.sub(lendingTokenBalance)
+                );
             }
         }
 
@@ -240,7 +264,11 @@ contract LendingPool is Base, LendingPoolInterface {
         of TTokens owned and the current exchange rate.
         @return a lender's balance of the underlying token in the pool.
      */
-    function balanceOfUnderlying(address lender) external view returns (uint256) {
+    function balanceOfUnderlying(address lender)
+        external
+        view
+        returns (uint256)
+    {
         return _lendingTokensForTTokens(tToken.balanceOf(lender));
     }
 
@@ -249,8 +277,13 @@ contract LendingPool is Base, LendingPoolInterface {
         @dev This value includes already claimed + unclaimed interest earned.
         @return total interest earned by lender.
      */
-    function getLenderInterestEarned(address lender) external view returns (uint256) {
-        uint256 currentLenderInterest = _calculateCurrentLenderInterestEarned(lender);
+    function getLenderInterestEarned(address lender)
+        external
+        view
+        returns (uint256)
+    {
+        uint256 currentLenderInterest =
+            _calculateCurrentLenderInterestEarned(lender);
         return _totalInterestEarnedLender[lender].add(currentLenderInterest);
     }
 
@@ -258,7 +291,11 @@ contract LendingPool is Base, LendingPoolInterface {
         @notice Returns the amount of claimable interest a lender has earned.
         @return claimable interest value.
      */
-    function getClaimableInterestEarned(address lender) external view returns (uint256) {
+    function getClaimableInterestEarned(address lender)
+        external
+        view
+        returns (uint256)
+    {
         return _calculateCurrentLenderInterestEarned(lender);
     }
 
@@ -274,12 +311,18 @@ contract LendingPool is Base, LendingPoolInterface {
         @param loanAmount a new loan amount to consider in the ratio.
         @return the debt-to-supply ratio value.
      */
-    function getDebtRatioFor(uint256 loanAmount) external view returns (uint256) {
+    function getDebtRatioFor(uint256 loanAmount)
+        external
+        view
+        returns (uint256)
+    {
         uint256 totalSupplied = _getTotalSupplied();
         return
             totalSupplied == 0
                 ? 0
-                : _totalBorrowed.add(loanAmount).sub(_totalRepaid).ratioOf(totalSupplied);
+                : _totalBorrowed.add(loanAmount).sub(_totalRepaid).ratioOf(
+                    totalSupplied
+                );
     }
 
     /**
@@ -287,7 +330,7 @@ contract LendingPool is Base, LendingPoolInterface {
         @return Address of the cToken
      */
     function cToken() public view returns (address) {
-        return _getSettings().getCTokenAddress(address(lendingToken));
+        return settings.getCTokenAddress(address(lendingToken));
     }
 
     /**
@@ -309,10 +352,11 @@ contract LendingPool is Base, LendingPoolInterface {
         IMarketRegistry aMarketRegistry,
         TToken aTToken,
         address settingsAddress
-    ) external isNotInitialized() {
+    ) external isNotInitialized {
         address(aTToken).requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
 
         _initialize(settingsAddress);
+        ReentrancyGuard.initialize();
 
         marketRegistry = aMarketRegistry;
         tToken = aTToken;
@@ -321,9 +365,15 @@ contract LendingPool is Base, LendingPoolInterface {
 
     /** Internal functions */
 
-    function _calculateCurrentLenderInterestEarned(address lender) internal view returns (uint256) {
-        uint256 lenderUnderlyingBalance = _lendingTokensForTTokens(tToken.balanceOf(lender));
-        return lenderUnderlyingBalance.sub(_totalSuppliedUnderlyingLender[lender]);
+    function _calculateCurrentLenderInterestEarned(address lender)
+        internal
+        view
+        returns (uint256)
+    {
+        uint256 lenderUnderlyingBalance =
+            _lendingTokensForTTokens(tToken.balanceOf(lender));
+        return
+            lenderUnderlyingBalance.sub(_totalSuppliedUnderlyingLender[lender]);
     }
 
     /**
@@ -336,9 +386,9 @@ contract LendingPool is Base, LendingPoolInterface {
         }
 
         return
-            _getTotalSupplied().mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS)).div(
-                tToken.totalSupply()
-            );
+            _getTotalSupplied()
+                .mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS))
+                .div(tToken.totalSupply());
     }
 
     /**
@@ -380,7 +430,9 @@ contract LendingPool is Base, LendingPoolInterface {
         }
     }
 
-    function _withdraw(uint256 lendingTokenAmount, uint256 tTokenAmount) internal {
+    function _withdraw(uint256 lendingTokenAmount, uint256 tTokenAmount)
+        internal
+    {
         uint256 lendingTokenBalance = lendingToken.balanceOf(address(this));
 
         address cTokenAddress = cToken();
@@ -391,15 +443,24 @@ contract LendingPool is Base, LendingPoolInterface {
             );
         }
 
-        uint256 currentLenderInterest = _calculateCurrentLenderInterestEarned(msg.sender);
+        uint256 currentLenderInterest =
+            _calculateCurrentLenderInterestEarned(msg.sender);
         uint256 totalSuppliedDiff;
         if (lendingTokenAmount > currentLenderInterest) {
             totalSuppliedDiff = lendingTokenAmount.sub(currentLenderInterest);
-            _totalInterestEarnedLender[msg.sender] = _totalInterestEarnedLender[msg.sender].add(currentLenderInterest);
+            _totalInterestEarnedLender[msg.sender] = _totalInterestEarnedLender[
+                msg.sender
+            ]
+                .add(currentLenderInterest);
         } else {
-            _totalInterestEarnedLender[msg.sender] = _totalInterestEarnedLender[msg.sender].add(lendingTokenAmount);
+            _totalInterestEarnedLender[msg.sender] = _totalInterestEarnedLender[
+                msg.sender
+            ]
+                .add(lendingTokenAmount);
         }
-        _totalSuppliedUnderlyingLender[msg.sender] = _totalSuppliedUnderlyingLender[msg.sender].sub(totalSuppliedDiff);
+        _totalSuppliedUnderlyingLender[
+            msg.sender
+        ] = _totalSuppliedUnderlyingLender[msg.sender].sub(totalSuppliedDiff);
 
         // Burn tToken tokens.
         tToken.burn(msg.sender, tTokenAmount);
@@ -416,10 +477,17 @@ contract LendingPool is Base, LendingPoolInterface {
         view
         returns (uint256)
     {
+        return _tTokensForLendingTokens(lendingTokenAmount, _exchangeRate());
+    }
+
+    function _tTokensForLendingTokens(
+        uint256 lendingTokenAmount,
+        uint256 exchangeRate
+    ) internal view returns (uint256) {
         return
-            lendingTokenAmount.mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS)).div(
-                _exchangeRate()
-            );
+            lendingTokenAmount
+                .mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS))
+                .div(exchangeRate);
     }
 
     function _lendingTokensForTTokens(uint256 tTokenAmount)
@@ -445,13 +513,15 @@ contract LendingPool is Base, LendingPoolInterface {
         // approve the cToken contract to take lending tokens
         lendingToken.safeApprove(cTokenAddress, amount);
 
-        uint256 balanceBefore = CErc20Interface(cTokenAddress).balanceOf(address(this));
+        uint256 balanceBefore =
+            CErc20Interface(cTokenAddress).balanceOf(address(this));
 
         // Now mint cTokens, which will take lending tokens
         uint256 mintResult = CErc20Interface(cTokenAddress).mint(amount);
         require(mintResult == 0, "COMPOUND_DEPOSIT_ERROR");
 
-        uint256 balanceAfter = CErc20Interface(cTokenAddress).balanceOf(address(this));
+        uint256 balanceAfter =
+            CErc20Interface(cTokenAddress).balanceOf(address(this));
         uint256 difference = balanceAfter.sub(balanceBefore);
         require(difference > 0, "DEPOSIT_CTOKEN_DUST");
 
@@ -466,14 +536,17 @@ contract LendingPool is Base, LendingPoolInterface {
         internal
         returns (uint256)
     {
-        uint256 balanceBefore = CErc20Interface(cTokenAddress).balanceOf(address(this));
+        uint256 balanceBefore =
+            CErc20Interface(cTokenAddress).balanceOf(address(this));
 
         // this function withdraws 'amount' lending tokens from compound
         // another function exists to withdraw 'amount' cTokens of lending tokens
-        uint256 redeemResult = CErc20Interface(cTokenAddress).redeemUnderlying(amount);
+        uint256 redeemResult =
+            CErc20Interface(cTokenAddress).redeemUnderlying(amount);
         require(redeemResult == 0, "COMPOUND_REDEEM_UNDERLYING_ERROR");
 
-        uint256 balanceAfter = CErc20Interface(cTokenAddress).balanceOf(address(this));
+        uint256 balanceAfter =
+            CErc20Interface(cTokenAddress).balanceOf(address(this));
         return balanceBefore.sub(balanceAfter);
     }
 
@@ -508,10 +581,15 @@ contract LendingPool is Base, LendingPoolInterface {
         @param amount to be transferred.
         @dev It throws a require error if 'transferFrom' invocation fails.
      */
-    function tokenTransferFrom(address from, uint256 amount) private {
+    function tokenTransferFrom(address from, uint256 amount)
+        private
+        returns (uint256 balanceIncrease)
+    {
+        uint256 balanceBefore = lendingToken.balanceOf(address(this));
         uint256 allowance = lendingToken.allowance(from, address(this));
         require(allowance >= amount, "LEND_TOKEN_NOT_ENOUGH_ALLOWANCE");
         lendingToken.safeTransferFrom(from, address(this), amount);
+        return lendingToken.balanceOf(address(this)).sub(balanceBefore);
     }
 
     /**

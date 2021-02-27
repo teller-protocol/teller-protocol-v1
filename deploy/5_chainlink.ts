@@ -27,6 +27,6 @@ const addChainlinkPairs: DeployFunction = async (hre) => {
 }
 
 addChainlinkPairs.tags = ['chainlink']
-addChainlinkPairs.dependencies = ['register-logic']
+addChainlinkPairs.dependencies = ['settings']
 
 export default addChainlinkPairs

@@ -1,7 +1,7 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/access/Roles.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 
 /**
     @notice This contract manages the signer role for the consensus contracts.
@@ -10,7 +10,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol
 
     @author develop@teller.finance
  */
-contract OwnerSignersRole is Ownable {
+contract OwnerSignersRole {
     using Roles for Roles.Role;
 
     /**
@@ -28,6 +28,13 @@ contract OwnerSignersRole is Ownable {
     Roles.Role private _signers;
 
     uint256 public _signerCount;
+
+    address internal _owner;
+
+    modifier onlyOwner() {
+        require(msg.sender == _owner, "NOT_OWNER");
+        _;
+    }
 
     /**
         @notice Gets whether an account address is a signer or not.
@@ -62,6 +69,10 @@ contract OwnerSignersRole is Ownable {
                 _addSigner(account);
             }
         }
+    }
+
+    function _initialize(address owner) internal {
+        _owner = owner;
     }
 
     /**

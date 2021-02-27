@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
-import "./TInitializable.sol";
+import "./Base.sol";
 import "./DynamicProxy.sol";
 
 // Libraries
@@ -32,11 +32,7 @@ import "../util/AddressArrayLib.sol";
 
     @author develop@teller.finance
  */
-contract EscrowFactory is
-    EscrowFactoryInterface,
-    TInitializable,
-    BaseUpgradeable
-{
+contract EscrowFactory is EscrowFactoryInterface, Base {
     using AddressArrayLib for AddressArrayLib.AddressArray;
     using AddressLib for address;
     using Address for address;
@@ -56,15 +52,6 @@ contract EscrowFactory is
     /* Modifiers */
 
     /**
-        @notice It checks whether the platform is paused or not.
-        @dev It throws a require error if the platform is used.
-     */
-    modifier isNotPaused() {
-        require(!_getSettings().isPaused(), "PLATFORM_IS_PAUSED");
-        _;
-    }
-
-    /**
         @notice It creates an Escrow contract for a given loan id.
         @param loansAddress address of the loans contract that is creating an escrow.
         @param loanID loan id to associate to the new escrow instance.
@@ -72,20 +59,19 @@ contract EscrowFactory is
      */
     function createEscrow(address loansAddress, uint256 loanID)
         external
-        isInitialized()
-        isNotPaused()
+        isInitialized
+        whenNotPaused
         returns (address escrowAddress)
     {
         TellerCommon.Loan memory loan =
             LoansInterface(loansAddress).loans(loanID);
         require(loan.escrow == address(0x0), "LOAN_ESCROW_ALREADY_EXISTS");
 
-        bytes32 escrowLogicName =
-            _getSettings().versionsRegistry().consts().ESCROW_LOGIC_NAME();
+        bytes32 escrowLogicName = logicRegistry.consts().ESCROW_LOGIC_NAME();
         escrowAddress = address(
-            new DynamicProxy(address(_getSettings()), escrowLogicName)
+            new DynamicProxy(address(settings), escrowLogicName)
         );
-        _getSettings().addAuthorizedAddress(escrowAddress);
+        settings.addAuthorizedAddress(escrowAddress);
         emit EscrowCreated(
             loan.loanTerms.borrower,
             loansAddress,
@@ -101,8 +87,8 @@ contract EscrowFactory is
      */
     function addDapp(address dapp, bool unsecured)
         external
-        onlyPauser()
-        isInitialized()
+        onlyPauser
+        isInitialized
     {
         require(dapp.isContract(), "DAPP_ISNT_A_CONTRACT");
         require(!_isDapp(dapp), "DAPP_ALREADY_EXIST");
@@ -120,8 +106,8 @@ contract EscrowFactory is
      */
     function updateDapp(address dapp, bool unsecured)
         external
-        onlyPauser()
-        isInitialized()
+        onlyPauser
+        isInitialized
     {
         require(_isDapp(dapp), "DAPP_NOT_EXIST");
 
@@ -134,7 +120,7 @@ contract EscrowFactory is
         @notice It removes a current dapp from the factory.
         @param dapp address to remove.
      */
-    function removeDapp(address dapp) external onlyPauser() isInitialized() {
+    function removeDapp(address dapp) external onlyPauser isInitialized {
         require(dapp.isContract(), "DAPP_ISNT_A_CONTRACT");
         require(_isDapp(dapp), "DAPP_NOT_EXIST");
 
@@ -155,8 +141,8 @@ contract EscrowFactory is
     /**
         @notice It initializes this escrow contract factory instance.
      */
-    function initialize() external isNotInitialized() {
-        _initialize();
+    function initialize() external isNotInitialized {
+        _initialize(msg.sender);
     }
 
     /** Internal Functions */
