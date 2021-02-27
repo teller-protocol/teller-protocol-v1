@@ -94,21 +94,21 @@ contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
         isInitialized
         whenNotPaused
         whenLendingPoolNotPaused(address(this))
-        onlyAuthorized()
+        onlyAuthorized
     {
+        uint256 exchangeRate = _exchangeRate();
+        lendingTokenAmount = tokenTransferFrom(msg.sender, lendingTokenAmount);
+
         require(
-            _getTotalSupplied().add(lendingTokenAmount) <=
+            _getTotalSupplied() <=
                 settings.assetSettings().getMaxTVLAmount(address(lendingToken)),
             "MAX_TVL_REACHED"
         );
-        uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
 
+        // Transferring tokens to the LendingPool
         _totalSuppliedUnderlyingLender[
             msg.sender
         ] = _totalSuppliedUnderlyingLender[msg.sender].add(lendingTokenAmount);
-
-        // Transferring tokens to the LendingPool
-        tokenTransferFrom(msg.sender, lendingTokenAmount);
 
         address cTokenAddress = cToken();
         if (
@@ -122,6 +122,8 @@ contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
         }
 
         // Mint tToken tokens
+        uint256 tTokenAmount =
+            _tTokensForLendingTokens(lendingTokenAmount, exchangeRate);
         tTokenMint(msg.sender, tTokenAmount);
 
         // Emit event
@@ -140,7 +142,7 @@ contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
         whenNotPaused
         whenLendingPoolNotPaused(address(this))
         nonReentrant
-        onlyAuthorized()
+        onlyAuthorized
     {
         uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
 
@@ -159,7 +161,7 @@ contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
         whenNotPaused
         whenLendingPoolNotPaused(address(this))
         nonReentrant
-        onlyAuthorized()
+        onlyAuthorized
         returns (uint256)
     {
         uint256 tTokenAmount = tToken.balanceOf(msg.sender);
@@ -188,7 +190,7 @@ contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
         isInitialized
         isLoan
         whenLendingPoolNotPaused(address(this))
-        onlyAuthorized()
+        onlyAuthorized
     {
         uint256 totalAmount = principalAmount.add(interestAmount);
         require(totalAmount > 0, "REPAY_ZERO");
@@ -221,7 +223,7 @@ contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
         isInitialized
         isLoan()
         whenLendingPoolNotPaused(address(this))
-        onlyAuthorized()
+        onlyAuthorized
     {
         uint256 lendingTokenBalance = lendingToken.balanceOf(address(this));
         if (lendingTokenBalance < amount) {
@@ -475,10 +477,17 @@ contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
         view
         returns (uint256)
     {
+        return _tTokensForLendingTokens(lendingTokenAmount, _exchangeRate());
+    }
+
+    function _tTokensForLendingTokens(
+        uint256 lendingTokenAmount,
+        uint256 exchangeRate
+    ) internal view returns (uint256) {
         return
             lendingTokenAmount
                 .mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS))
-                .div(_exchangeRate());
+                .div(exchangeRate);
     }
 
     function _lendingTokensForTTokens(uint256 tTokenAmount)
@@ -572,10 +581,15 @@ contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
         @param amount to be transferred.
         @dev It throws a require error if 'transferFrom' invocation fails.
      */
-    function tokenTransferFrom(address from, uint256 amount) private {
+    function tokenTransferFrom(address from, uint256 amount)
+        private
+        returns (uint256 balanceIncrease)
+    {
+        uint256 balanceBefore = lendingToken.balanceOf(address(this));
         uint256 allowance = lendingToken.allowance(from, address(this));
         require(allowance >= amount, "LEND_TOKEN_NOT_ENOUGH_ALLOWANCE");
         lendingToken.safeTransferFrom(from, address(this), amount);
+        return lendingToken.balanceOf(address(this)).sub(balanceBefore);
     }
 
     /**

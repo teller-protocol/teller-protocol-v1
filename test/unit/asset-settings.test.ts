@@ -122,7 +122,7 @@ describe('AssetSettings', async () => {
       await fn().should.be.rejectedWith('CTOKEN_ADDRESS_REQUIRED')
     })
 
-    it('Should not be able to create an asset setting with an empty cToken address', async () => {
+    it('Should not be able to create an asset setting with an empty asset address', async () => {
       // Sender address
       const { 8: notPauser } = await ethers.getSigners()
 

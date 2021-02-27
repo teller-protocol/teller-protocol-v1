@@ -260,8 +260,9 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
         uint256 srcAmount
     ) internal view returns (uint256) {
         return
-            (srcAmount * uint256(_priceFor(src, dst))) /
-            uint256(TEN**_decimalsFor(src));
+            (srcAmount.mul(uint256(_priceFor(src, dst)))).div(
+                uint256(TEN**_decimalsFor(src))
+            );
     }
 
     /**
@@ -277,18 +278,18 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
         returns (int256)
     {
         (AggregatorV2V3Interface agg, bool inverse) = _aggregatorFor(src, dst);
-        uint8 dstDecimals = _decimalsFor(dst);
+        uint256 dstDecimals = _decimalsFor(dst);
         int256 dstFactor = int256(TEN**dstDecimals);
         if (address(agg) != address(0)) {
             int256 price = agg.latestAnswer();
-            uint8 resDecimals = agg.decimals();
+            uint256 resDecimals = agg.decimals();
             if (inverse) {
-                price = int256(TEN**(resDecimals + resDecimals)) / price;
+                price = int256(TEN**(resDecimals.add(resDecimals))).div(price);
             }
             if (dstDecimals > resDecimals) {
-                price = price * int256(TEN**(dstDecimals - resDecimals));
+                price = price.mul(int256(TEN**(dstDecimals.sub(resDecimals))));
             } else {
-                price = price / int256(TEN**(resDecimals - dstDecimals));
+                price = price.div(int256(TEN**(resDecimals.sub(dstDecimals))));
             }
             int256 srcFactor = int256(TEN**_decimalsFor(src));
             return price;
@@ -300,7 +301,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
                     int256 price1 = _priceFor(src, routeToken);
                     int256 price2 = _priceFor(dst, routeToken);
 
-                    return (price1 * dstFactor) / price2;
+                    return (price1.mul(dstFactor)).div(price2);
                 }
             }
             revert("CANNOT_CALCULATE_VALUE");
