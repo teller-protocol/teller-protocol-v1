@@ -1,4 +1,5 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
@@ -33,7 +34,8 @@ contract Consensus is Base, OwnerSignersRole {
     using NumbersLib for uint256;
 
     // Has signer address already submitted their answer for (user, identifier)?
-    mapping(address => mapping(address => mapping(uint256 => bool))) public hasSubmitted;
+    mapping(address => mapping(address => mapping(uint256 => bool)))
+        public hasSubmitted;
 
     // mapping from signer address, to signerNonce, to boolean.
     // Has the signer already used this nonce?
@@ -66,11 +68,12 @@ contract Consensus is Base, OwnerSignersRole {
         the number of signers.
      */
     modifier onlyEnoughSubmissions(uint256 responseCount) {
-        uint256 percentageRequired = _getSettings()
-            .platformSettings(
-            _getSettings().consts().REQUIRED_SUBMISSIONS_PERCENTAGE_SETTING()
-        )
-            .value;
+        uint256 percentageRequired =
+            settings
+                .platformSettings(
+                settings.consts().REQUIRED_SUBMISSIONS_PERCENTAGE_SETTING()
+            )
+                .value;
 
         require(
             responseCount.ratioOf(_signerCount) >= percentageRequired,
@@ -90,11 +93,11 @@ contract Consensus is Base, OwnerSignersRole {
         address owner,
         address aCallerAddress,
         address aSettingAddress
-    ) external isNotInitialized() {
+    ) external isNotInitialized {
         require(aCallerAddress.isContract(), "CALLER_MUST_BE_CONTRACT");
 
-        Ownable.initialize(owner);
-        _initialize(aSettingAddress);
+        OwnerSignersRole._initialize(owner);
+        Base._initialize(aSettingAddress);
 
         callerAddress = aCallerAddress;
     }
@@ -118,12 +121,18 @@ contract Consensus is Base, OwnerSignersRole {
             "SIGNER_NONCE_TAKEN"
         );
 
-        address signer = ECDSA.recover(
-            keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", dataHash)),
-            signature.v,
-            signature.r,
-            signature.s
-        );
+        address signer =
+            ECDSA.recover(
+                keccak256(
+                    abi.encodePacked(
+                        "\x19Ethereum Signed Message:\n32",
+                        dataHash
+                    )
+                ),
+                signature.v,
+                signature.r,
+                signature.s
+            );
         return (signer == expectedSigner);
     }
 
@@ -139,8 +148,8 @@ contract Consensus is Base, OwnerSignersRole {
     {
         require(
             values.isWithinTolerance(
-                _getSettings().getPlatformSettingValue(
-                    _getSettings().consts().MAXIMUM_TOLERANCE_SETTING()
+                settings.getPlatformSettingValue(
+                    settings.consts().MAXIMUM_TOLERANCE_SETTING()
                 )
             ),
             "RESPONSES_TOO_VARIED"
@@ -175,14 +184,17 @@ contract Consensus is Base, OwnerSignersRole {
         require(
             responseTime >=
                 now.sub(
-                    _getSettings().getPlatformSettingValue(
-                        _getSettings().consts().RESPONSE_EXPIRY_LENGTH_SETTING()
+                    settings.getPlatformSettingValue(
+                        settings.consts().RESPONSE_EXPIRY_LENGTH_SETTING()
                     )
                 ),
             "RESPONSE_EXPIRED"
         );
 
-        require(_signatureValid(signature, responseHash, signer), "SIGNATURE_INVALID");
+        require(
+            _signatureValid(signature, responseHash, signer),
+            "SIGNATURE_INVALID"
+        );
         signerNonceTaken[signer][signature.signerNonce] = true;
     }
 

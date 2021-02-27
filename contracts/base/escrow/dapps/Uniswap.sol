@@ -1,4 +1,5 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 // External Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
@@ -26,7 +27,7 @@ import "../../../providers/uniswap/IUniswapV2Router02.sol";
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
-    @notice This contract is used to define Uniswap dApp actions available. All dapp actions are invoked via 
+    @notice This contract is used to define Uniswap dApp actions available. All dapp actions are invoked via
         delegatecalls from Escrow contract, so this contract's state is really Escrow.
     @author develop@teller.finance
  */
@@ -39,9 +40,8 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
     /**
         @notice Based on the docs https://uniswap.org/docs/v2/smart-contracts/router02/ the Router V2 instance is deployed on the same address in the testnets and mainnet. So, we can hardcode the address here.
      */
-    IUniswapV2Router02 public constant router = IUniswapV2Router02(
-        0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D
-    );
+    IUniswapV2Router02 public constant router =
+        IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
 
     // State is shared with Escrow contract as it uses delegateCall() to interact with this contract.
 
@@ -55,7 +55,7 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
         address[] memory path,
         uint256 sourceAmount,
         uint256 minDestination
-    ) public onlyOwner() {
+    ) public onlyBorrower {
         _swap(router, path, sourceAmount, minDestination);
     }
 
@@ -79,11 +79,11 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
         address destination = path[path.length - 1];
 
         require(
-            _getSettings().chainlinkAggregator().isTokenSupported(source),
+            settings.chainlinkAggregator().isTokenSupported(source),
             "UNI_SRC_NOT_SUPPORTED"
         );
         require(
-            _getSettings().chainlinkAggregator().isTokenSupported(destination),
+            settings.chainlinkAggregator().isTokenSupported(destination),
             "UNI_DST_NOT_SUPPORTED"
         );
 
@@ -94,13 +94,14 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
         uint256 balanceBeforeSwap = _balanceOf(destination);
 
         IERC20(source).safeIncreaseAllowance(address(theRouter), sourceAmount);
-        uint256[] memory amounts = theRouter.swapExactTokensForTokens(
-            sourceAmount,
-            minDestination,
-            path,
-            address(this),
-            now
-        );
+        uint256[] memory amounts =
+            theRouter.swapExactTokensForTokens(
+                sourceAmount,
+                minDestination,
+                path,
+                address(this),
+                now
+            );
 
         uint256 balanceAfterSwap = _balanceOf(destination);
         require(
@@ -113,6 +114,11 @@ contract Uniswap is IUniswap, BaseEscrowDapp {
         _tokenUpdated(source);
         _tokenUpdated(destination);
 
-        emit UniswapSwapped(source, destination, sourceAmount, destinationAmount);
+        emit UniswapSwapped(
+            source,
+            destination,
+            sourceAmount,
+            destinationAmount
+        );
     }
 }

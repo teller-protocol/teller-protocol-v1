@@ -7,8 +7,8 @@ import "../util/AddressLib.sol";
 import "../util/CacheLib.sol";
 
 // Contracts
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
-import "./BaseUpgradeable.sol";
+import "./Base.sol";
+
 // Interfaces
 import "../interfaces/AssetSettingsInterface.sol";
 
@@ -27,63 +27,63 @@ import "../interfaces/AssetSettingsInterface.sol";
 
     @author develop@teller.finance
  */
-contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
+contract AssetSettings is AssetSettingsInterface, Base {
     using AddressLib for address;
     using CacheLib for CacheLib.Cache;
 
     /**
-        @notice This mapping represents the asset settings where:
+          @notice This mapping represents the asset settings where:
 
-        - The key is the asset address.
-        - The value is the Cache for all asset settings. It includes the settings addresses, uints, ints, bytes and boolean values.
-     */
+          - The key is the asset address.
+          - The value is the Cache for all asset settings. It includes the settings addresses, uints, ints, bytes and boolean values.
+       */
     mapping(address => CacheLib.Cache) internal assets;
 
     /** Constants */
     /**
-        @notice The asset setting name for cToken address settings.
-     */
+          @notice The asset setting name for cToken address settings.
+       */
     bytes32 internal constant CTOKEN_ADDRESS_ASSET_SETTING =
         keccak256("CTokenAddress");
 
     /**
-        @notice The asset setting name for yearn vault address settings.
-     */
+          @notice The asset setting name for yearn vault address settings.
+       */
     bytes32 internal constant YEARN_VAULT_ADDRESS_ASSET_SETTING =
         keccak256("YVaultAddress");
 
     /**
-        @notice The asset setting name for curve pool address settings.
-     */
+          @notice The asset setting name for curve pool address settings.
+       */
     bytes32 internal constant CRV_POOL_ADDRESS_ASSET_SETTING =
         keccak256("CRVPoolAddress");
 
     /**
-        @notice The asset setting name for the maximum loan amount settings.
-     */
+          @notice The asset setting name for the maximum loan amount settings.
+       */
     bytes32 internal constant MAX_LOAN_AMOUNT_ASSET_SETTING =
         keccak256("MaxLoanAmount");
 
     /**
-        @notice The asset setting name for the maximum total value locked settings.
-     */
+          @notice The asset setting name for the maximum total value locked settings.
+       */
     bytes32 internal constant MAX_TOTAL_VALUE_LOCKED_SETTING =
         keccak256("MaxTVLAmount");
 
     /**
-        @notice The asset setting name for the maximum debt ratio settings.
-     */
+          @notice The asset setting name for the maximum debt ratio settings.
+       */
     bytes32 internal constant MAX_DEBT_RATIO_SETTING =
         keccak256("MaxDebtRatio");
 
     /**
-    @notice It creates an asset with the given parameters.
-    @param assetAddress asset address used to create the new setting.
-    @param cTokenAddress cToken address used to configure the asset setting.
-    @param maxLoanAmount the initial max loan amount.
-    @param maxTVLAmount the initial max total value locked amount.
-    @param maxDebtRatio the initial max debt ratio amount.
-    */
+      @notice It creates an asset with the given parameters.
+      @param assetAddress asset address used to create the new setting.
+      @param cTokenAddress cToken address used to configure the asset setting.
+      @param maxLoanAmount the initial max loan amount.
+      @param maxTVLAmount the initial max total value locked amount.
+      @param maxDebtRatio the initial max debt ratio amount.
+      */
     function createAssetSetting(
         address assetAddress,
         address cTokenAddress,
@@ -94,11 +94,9 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
         assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
         cTokenAddress.requireNotEmpty("CTOKEN_ADDRESS_REQUIRED");
 
-        require(
-            assetAddress == _getSettings().ETH_ADDRESS() ||
-                ERC20Detailed(assetAddress).decimals() != 0,
-            "DECIMALS_NOT_SUPPORTED"
-        );
+        (bool success, bytes memory returnData) =
+            assetAddress.staticcall(abi.encodeWithSignature("decimals()"));
+        require(success, "DECIMALS_NOT_SUPPORTED");
 
         assets[assetAddress].initialize();
         assets[assetAddress].updateAddress(
@@ -133,10 +131,10 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     }
 
     /**
-    @notice It updates the cToken address associated with an asset.
-    @param assetAddress asset address to configure.
-    @param cTokenAddress the new cToken address to configure.
-    */
+      @notice It updates the cToken address associated with an asset.
+      @param assetAddress asset address to configure.
+      @param cTokenAddress the new cToken address to configure.
+      */
     function updateCTokenAddress(address assetAddress, address cTokenAddress)
         external
         onlyPauser()
@@ -160,10 +158,10 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     }
 
     /**
-    @notice It returns the cToken address associated with an asset.
-    @param assetAddress asset address to get the associated cToken for.
-    @return The associated cToken address
-    */
+      @notice It returns the cToken address associated with an asset.
+      @param assetAddress asset address to get the associated cToken for.
+      @return The associated cToken address
+      */
     function getCTokenAddress(address assetAddress)
         external
         view
@@ -175,10 +173,10 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     }
 
     /**
-    @notice It updates the yearn vault address associated with an asset.
-    @param assetAddress asset address to configure.
-    @param yVaultAddress the new yVault address to configure.
-    */
+      @notice It updates the yearn vault address associated with an asset.
+      @param assetAddress asset address to configure.
+      @param yVaultAddress the new yVault address to configure.
+      */
     function updateYVaultAddressSetting(
         address assetAddress,
         address yVaultAddress
@@ -190,10 +188,10 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     }
 
     /**
-    @notice It returns the yearn vault address associated with an asset.
-    @param assetAddress asset address to get the associated yearn vault address for.
-    @return The address of the yearn vault.
-    */
+      @notice It returns the yearn vault address associated with an asset.
+      @param assetAddress asset address to get the associated yearn vault address for.
+      @return The address of the yearn vault.
+      */
     function getYVaultAddress(address assetAddress)
         external
         view
@@ -205,10 +203,10 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     }
 
     /**
-    @notice It updates the curve pool address associated with an asset.
-    @param assetAddress asset address to configure.
-    @param crvPoolAddress the new Curve pool address to configure.
-    */
+      @notice It updates the curve pool address associated with an asset.
+      @param assetAddress asset address to configure.
+      @param crvPoolAddress the new Curve pool address to configure.
+      */
     function updateCRVPoolAddressSetting(
         address assetAddress,
         address crvPoolAddress
@@ -220,10 +218,10 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     }
 
     /**
-    @notice It returns the curve pool address associated with an asset.
-    @param assetAddress asset address to get the associated curve pool address for.
-    @return The address of the curve pool.
-    */
+      @notice It returns the curve pool address associated with an asset.
+      @param assetAddress asset address to get the associated curve pool address for.
+      @return The address of the curve pool.
+      */
     function getCRVPoolAddress(address assetAddress)
         external
         view
@@ -235,10 +233,10 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     }
 
     /**
-    @notice It updates the max loan amount for a given asset.
-    @param assetAddress asset address used to update the max loan amount.
-    @param newMaxLoanAmount the new max loan amount to set.
-    */
+      @notice It updates the max loan amount for a given asset.
+      @param assetAddress asset address used to update the max loan amount.
+      @param newMaxLoanAmount the new max loan amount to set.
+      */
     function updateMaxLoanAmount(address assetAddress, uint256 newMaxLoanAmount)
         external
         onlyPauser()
@@ -262,9 +260,9 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     }
 
     /**
-    @notice Returns the max loan amount for a given asset.
-    @param assetAddress asset address to retrieve the max loan amount.
-    */
+      @notice Returns the max loan amount for a given asset.
+      @param assetAddress asset address to retrieve the max loan amount.
+      */
     function getMaxLoanAmount(address assetAddress)
         external
         view
@@ -276,11 +274,11 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     }
 
     /**
-    @notice Tests whether a given amount is greater than the current max loan amount.
-    @param assetAddress asset address used to return the max loan amount setting.
-    @param amount the loan amount to check.
-    @return true if the given amount is greater than the current max loan amount. Otherwise it returns false.
-    */
+      @notice Tests whether a given amount is greater than the current max loan amount.
+      @param assetAddress asset address used to return the max loan amount setting.
+      @param amount the loan amount to check.
+      @return true if the given amount is greater than the current max loan amount. Otherwise it returns false.
+      */
     function exceedsMaxLoanAmount(address assetAddress, uint256 amount)
         external
         view
@@ -292,10 +290,10 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     }
 
     /**
-    @notice It updates the max total value locked amount for a given asset.
-    @param assetAddress asset address used to update the max loan amount.
-    @param newMaxTVLAmount the new max total vault locked amount to set.
-    */
+      @notice It updates the max total value locked amount for a given asset.
+      @param assetAddress asset address used to update the max loan amount.
+      @param newMaxTVLAmount the new max total vault locked amount to set.
+      */
     function updateMaxTVL(address assetAddress, uint256 newMaxTVLAmount)
         external
         onlyPauser()
@@ -313,9 +311,9 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     }
 
     /**
-    @notice Returns the max total value locked amount for a given asset.
-    @param assetAddress asset address to retrieve the max total value locked amount.
-    */
+      @notice Returns the max total value locked amount for a given asset.
+      @param assetAddress asset address to retrieve the max total value locked amount.
+      */
     function getMaxTVLAmount(address assetAddress)
         external
         view
@@ -327,11 +325,11 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     }
 
     /**
-    @notice It updates the max debt ratio for a given asset.
-    @dev The ratio value has 2 decimal places. I.e 100 = 1%
-    @param assetAddress asset address used to update the max debt ratio.
-    @param newMaxDebtRatio the new max debt ratio to set.
-    */
+      @notice It updates the max debt ratio for a given asset.
+      @dev The ratio value has 2 decimal places. I.e 100 = 1%
+      @param assetAddress asset address used to update the max debt ratio.
+      @param newMaxDebtRatio the new max debt ratio to set.
+      */
     function updateMaxDebtRatio(address assetAddress, uint256 newMaxDebtRatio)
         external
         onlyPauser()
@@ -349,10 +347,10 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     }
 
     /**
-    @notice Returns the max debt ratio for a given asset.
-    @dev The ratio value has 2 decimal places. I.e 100 = 1%
-    @param assetAddress asset address to retrieve the max debt ratio.
-    */
+      @notice Returns the max debt ratio for a given asset.
+      @dev The ratio value has 2 decimal places. I.e 100 = 1%
+      @param assetAddress asset address to retrieve the max debt ratio.
+      */
     function getMaxDebtRatio(address assetAddress)
         external
         view
@@ -363,9 +361,9 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
     }
 
     /**
-    @notice It removes a configuration for a given asset on the platform.
-    @param assetAddress asset address to remove.
-    */
+      @notice It removes a configuration for a given asset on the platform.
+      @param assetAddress asset address to remove.
+      */
     function removeAsset(address assetAddress) external onlyPauser() {
         assets[assetAddress].requireExists();
         assets[assetAddress].clearCache(
@@ -386,5 +384,9 @@ contract AssetSettings is AssetSettingsInterface, BaseUpgradeable {
         );
         delete assets[assetAddress];
         emit AssetSettingsRemoved(msg.sender, assetAddress);
+    }
+
+    function initialize() external isNotInitialized {
+        _initialize(msg.sender);
     }
 }

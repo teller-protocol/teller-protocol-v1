@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "../util/PlatformSettingsLib.sol";
 import "./EscrowFactoryInterface.sol";
-import "./LogicVersionsRegistryInterface.sol";
 import "../util/SettingsConsts.sol";
 import "../providers/chainlink/IChainlinkAggregator.sol";
 import "../interfaces/AssetSettingsInterface.sol";
@@ -15,6 +14,19 @@ import "./MarketFactoryInterface.sol";
     @author develop@teller.finance
  */
 interface SettingsInterface {
+    /**
+     * @dev Emitted when the pause is triggered by a pauser (`account`).
+     */
+    event Paused(address account);
+
+    /**
+     * @dev Emitted when the pause is lifted by a pauser (`account`).
+     */
+    event Unpaused(address account);
+
+    event PauserAdded(address indexed account);
+    event PauserRemoved(address indexed account);
+
     /**
         @notice This event is emitted when a new platform setting is created.
         @param settingName new setting name.
@@ -73,6 +85,27 @@ interface SettingsInterface {
         address indexed account,
         address indexed lendingPoolAddress
     );
+
+    /**
+        @notice This event is emitted when the platform restriction is switched
+        @param restriction Boolean representing the state of the restriction
+        @param pauser address of the pauser flipping the switch
+    */
+    event PlatformRestricted(bool restriction, address indexed pauser);
+
+    /**
+        @notice This event is emitted when an address is given authorization
+        @param user The address being authorized
+        @param pauser address of the pauser adding the address
+    */
+    event AuthorizationGranted(address indexed user, address indexed pauser);
+
+    /**
+        @notice This event is emitted when an address has authorization revoked
+        @param user The address being revoked
+        @param pauser address of the pauser removing the address
+    */
+    event AuthorizationRevoked(address indexed user, address indexed pauser);
 
     /**
         @notice It creates a new platform setting given a setting name, value, min and max values.
@@ -234,11 +267,6 @@ interface SettingsInterface {
      */
     function escrowFactory() external view returns (EscrowFactoryInterface);
 
-    function versionsRegistry()
-        external
-        view
-        returns (LogicVersionsRegistryInterface);
-
     /**
         @notice It is the global instance of the ChainlinkAggregator contract.
      */
@@ -261,15 +289,11 @@ interface SettingsInterface {
 
     /**
         @notice It initializes this settings contract instance.
-        @param versionsRegistryLogicAddress LogicVersionsRegistry logic address.
         @param wethTokenAddress canonical WETH token address.
         @param cethTokenAddress compound CETH token address.
      */
-    function initialize(
-        address versionsRegistryLogicAddress,
-        address wethTokenAddress,
-        address cethTokenAddress
-    ) external;
+    function initialize(address wethTokenAddress, address cethTokenAddress)
+        external;
 
     /**
         @notice It gets the ETH address used in the platform.
