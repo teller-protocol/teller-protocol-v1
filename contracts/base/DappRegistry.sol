@@ -11,7 +11,6 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 // Interfaces
 import "../interfaces/LoansInterface.sol";
 import "../interfaces/IDappRegistry.sol";
-import "../interfaces/EscrowInterface.sol";
 
 // Commons
 import "../util/AddressLib.sol";
@@ -33,7 +32,7 @@ import "../util/AddressArrayLib.sol";
     @author develop@teller.finance
  */
 contract DappRegistry is IDappRegistry, Base {
-    using AddressArrayLib for address[];
+    using AddressArrayLib for AddressArrayLib.AddressArray;
     using AddressLib for address;
     using Address for address;
 
@@ -47,7 +46,7 @@ contract DappRegistry is IDappRegistry, Base {
     /**
         @notice It contains all the dapps added in this factory.
      */
-    address[] public dappsList;
+    AddressArrayLib.AddressArray internal dappsList;
 
     /* Modifiers */
 
@@ -108,15 +107,14 @@ contract DappRegistry is IDappRegistry, Base {
         @return an array of dapps (addresses).
      */
     function getDapps() external view returns (address[] memory) {
-        return dappsList;
+        return dappsList.array;
     }
 
     /**
         @notice It initializes this escrow contract factory instance.
-        @param settingsAddress the address of the protocol settings contract
      */
-    function initialize(address settingsAddress) external isNotInitialized {
-        _initialize(settingsAddress);
+    function initialize() external isNotInitialized {
+        _initialize(msg.sender);
     }
 
     /** Internal Functions */
