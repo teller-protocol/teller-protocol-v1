@@ -2,16 +2,19 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Libraries } from 'hardhat-deploy/types'
 import { Contract } from 'ethers'
 
-import { UpgradeableProxy } from '../types/typechain'
+import { DynamicProxy, SettingsDynamicProxy } from '../types/typechain'
 
 export interface DeployArgs {
   hre: HardhatRuntimeEnvironment
   contract: string
   name?: string
   libraries?: Libraries
+  args?: any[]
 }
 
-export const deploy = async (args: DeployArgs): Promise<Contract> => {
+export const deploy = async <C extends Contract>(
+  args: DeployArgs
+): Promise<C> => {
   const {
     hre: {
       deployments: { deploy },
@@ -28,36 +31,67 @@ export const deploy = async (args: DeployArgs): Promise<Contract> => {
     libraries: args.libraries,
     from: deployer,
     gasLimit: ethers.utils.hexlify(9500000),
+    args: args.args,
+    log: true,
   })
 
-  return ethers.getContractAt(args.contract, address)
+  return (await ethers.getContractAt(args.contract, address)) as C
 }
 
 export interface DeployLogicArgs extends Omit<DeployArgs, 'name'> {}
 
-export const deployLogic = async (args: DeployLogicArgs): Promise<void> => {
+export const deployLogic = async (args: DeployLogicArgs): Promise<Contract> =>
   await deploy({
     ...args,
     name: `${args.contract}_Logic`,
   })
-}
 
-export const deployUpgradeableProxy = async (args: DeployArgs): Promise<UpgradeableProxy> => {
+export const deployDynamicProxy = async (
+  args: DeployArgs
+): Promise<DynamicProxy> => {
   const {
-    hre: { deployments },
+    hre: { deployments, contracts, ethers },
   } = args
 
-  const name = `${args.contract}_Proxy`
+  const { address: logicRegistryAddress } = await contracts.get(
+    'LogicVersionsRegistry'
+  )
+  const logicName = ethers.utils.id(args.contract)
+
   const proxy = (await deploy({
     hre: args.hre,
-    name,
-    contract: 'UpgradeableProxy',
-  })) as UpgradeableProxy
+    name: args.contract,
+    contract: 'DynamicProxy',
+    args: [logicRegistryAddress, logicName],
+  })) as DynamicProxy
 
   const { abi } = await deployments.getArtifact(args.contract)
   await deployments.save(args.contract, {
     abi,
     address: proxy.address,
   })
+  return proxy
+}
+
+interface DeploySettingsProxyArgs {
+  hre: HardhatRuntimeEnvironment
+  initialLogicVersions: Array<{
+    logic: string
+    logicName: string
+  }>
+}
+
+export const deploySettingsProxy = async (
+  args: DeploySettingsProxyArgs
+): Promise<SettingsDynamicProxy> => {
+  const proxy = await deploy<SettingsDynamicProxy>({
+    hre: args.hre,
+    name: 'Settings',
+    contract: 'SettingsDynamicProxy',
+  })
+
+  const tx = await proxy.initializeLogicVersions(args.initialLogicVersions)
+  await tx.wait(1)
+
   return proxy
 }

@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
-import "./TInitializable.sol";
+import "./Base.sol";
 import "./DynamicProxy.sol";
 
 // Libraries
@@ -32,8 +32,8 @@ import "../util/AddressArrayLib.sol";
 
     @author develop@teller.finance
  */
-contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeable {
-    using AddressArrayLib for address[];
+contract EscrowFactory is EscrowFactoryInterface, Base {
+    using AddressArrayLib for AddressArrayLib.AddressArray;
     using AddressLib for address;
     using Address for address;
 
@@ -47,18 +47,9 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
     /**
         @notice It contains all the dapps added in this factory.
      */
-    address[] public dappsList;
+    AddressArrayLib.AddressArray internal dappsList;
 
     /* Modifiers */
-
-    /**
-        @notice It checks whether the platform is paused or not.
-        @dev It throws a require error if the platform is used.
-     */
-    modifier isNotPaused() {
-        require(!_getSettings().isPaused(), "PLATFORM_IS_PAUSED");
-        _;
-    }
 
     /**
         @notice It creates an Escrow contract for a given loan id.
@@ -68,22 +59,25 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
      */
     function createEscrow(address loansAddress, uint256 loanID)
         external
-        isInitialized()
-        isNotPaused()
+        isInitialized
+        whenNotPaused
         returns (address escrowAddress)
     {
-        TellerCommon.Loan memory loan = LoansInterface(loansAddress).loans(loanID);
+        TellerCommon.Loan memory loan =
+            LoansInterface(loansAddress).loans(loanID);
         require(loan.escrow == address(0x0), "LOAN_ESCROW_ALREADY_EXISTS");
 
-        bytes32 escrowLogicName = _getSettings()
-            .versionsRegistry()
-            .consts()
-            .ESCROW_LOGIC_NAME();
+        bytes32 escrowLogicName = logicRegistry.consts().ESCROW_LOGIC_NAME();
         escrowAddress = address(
-            new DynamicProxy(address(_getSettings()), escrowLogicName)
+            new DynamicProxy(address(settings), escrowLogicName)
         );
-        _getSettings().addAuthorizedAddress(escrowAddress);
-        emit EscrowCreated(loan.loanTerms.borrower, loansAddress, loanID, escrowAddress);
+        settings.addAuthorizedAddress(escrowAddress);
+        emit EscrowCreated(
+            loan.loanTerms.borrower,
+            loansAddress,
+            loanID,
+            escrowAddress
+        );
     }
 
     /**
@@ -91,7 +85,11 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         @param dapp address to add in this factory.
         @param unsecured boolean to describe in the dapp is allowed to be used with unsecured loans.
      */
-    function addDapp(address dapp, bool unsecured) external onlyPauser() isInitialized() {
+    function addDapp(address dapp, bool unsecured)
+        external
+        onlyPauser
+        isInitialized
+    {
         require(dapp.isContract(), "DAPP_ISNT_A_CONTRACT");
         require(!_isDapp(dapp), "DAPP_ALREADY_EXIST");
 
@@ -108,8 +106,8 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
      */
     function updateDapp(address dapp, bool unsecured)
         external
-        onlyPauser()
-        isInitialized()
+        onlyPauser
+        isInitialized
     {
         require(_isDapp(dapp), "DAPP_NOT_EXIST");
 
@@ -122,7 +120,7 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         @notice It removes a current dapp from the factory.
         @param dapp address to remove.
      */
-    function removeDapp(address dapp) external onlyPauser() isInitialized() {
+    function removeDapp(address dapp) external onlyPauser isInitialized {
         require(dapp.isContract(), "DAPP_ISNT_A_CONTRACT");
         require(_isDapp(dapp), "DAPP_NOT_EXIST");
 
@@ -137,14 +135,14 @@ contract EscrowFactory is EscrowFactoryInterface, TInitializable, BaseUpgradeabl
         @return an array of dapps (addresses).
      */
     function getDapps() external view returns (address[] memory) {
-        return dappsList;
+        return dappsList.array;
     }
 
     /**
         @notice It initializes this escrow contract factory instance.
      */
-    function initialize() external isNotInitialized() {
-        _initialize();
+    function initialize() external isNotInitialized {
+        _initialize(msg.sender);
     }
 
     /** Internal Functions */

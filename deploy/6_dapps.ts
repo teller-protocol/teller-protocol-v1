@@ -17,6 +17,6 @@ const addDapps: DeployFunction = async (hre) => {
 }
 
 addDapps.tags = ['dapps']
-addDapps.dependencies = ['register-logic']
+addDapps.dependencies = ['dynamic-proxies']
 
 export default addDapps
