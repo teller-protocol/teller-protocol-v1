@@ -96,10 +96,12 @@ describe('Settings', async () => {
         lendingTokenAddress
       )
       // Get mock addresses
-      const ERC20ABI = (await deployments.getArtifact('ERC20Detailed')).abi
-      newAssetAddress = (await deployMockContract(deployer, ERC20ABI)).address
-      newCtokenAddress = (await deployMockContract(deployer, ERC20ABI)).address
-      // Set values
+      newAssetAddress = ethers.utils.getAddress(
+        '0xdAC17F958D2ee523a2206206994597C13D831ec7'
+      ) // USDT
+      newCtokenAddress = ethers.utils.getAddress(
+        '0xf650c3d88d12db855b8bf7d11be6c55a4e07dcc9'
+      ) // Set values
       newMaxLoan = 8000
       newMaxTVL = 250000
       newMaxDebt = 4000

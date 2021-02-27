@@ -74,7 +74,7 @@ library LoanLib {
         @return bool indicating whether the loan with specified parameters can be deposited to an EOA.
      */
     function canGoToEOA(
-        TellerCommon.Loan storage loan,
+        TellerCommon.Loan memory loan,
         SettingsInterface settings
     ) public view returns (bool) {
         uint256 overCollateralizedBuffer =
@@ -91,7 +91,7 @@ library LoanLib {
         @return bool value of it being secured or not.
     */
     function isSecured(
-        TellerCommon.Loan storage loan,
+        TellerCommon.Loan memory loan,
         SettingsInterface settings
     ) public view returns (bool) {
         return
@@ -106,7 +106,7 @@ library LoanLib {
         @param loan The loan for which to check the status
         @return bool value indicating if the loan is active or has terms set
      */
-    function isActiveOrSet(TellerCommon.Loan storage loan)
+    function isActiveOrSet(TellerCommon.Loan memory loan)
         public
         view
         returns (bool)
@@ -120,7 +120,7 @@ library LoanLib {
         @notice Returns the total amount owed for a specified loan.
         @param loan The loan to get the total amount owed.
      */
-    function getTotalOwed(TellerCommon.Loan storage loan)
+    function getTotalOwed(TellerCommon.Loan memory loan)
         public
         view
         returns (uint256)
@@ -139,7 +139,7 @@ library LoanLib {
         @notice Returns the total amount owed for a specified loan.
         @param loan The loan to get the total amount owed.
      */
-    function getLoanAmount(TellerCommon.Loan storage loan)
+    function getLoanAmount(TellerCommon.Loan memory loan)
         public
         view
         returns (uint256)
@@ -158,7 +158,7 @@ library LoanLib {
         @param amountBorrow The principal of the loan to take out.
      */
     function getInterestOwedFor(
-        TellerCommon.Loan storage loan,
+        TellerCommon.Loan memory loan,
         uint256 amountBorrow
     ) public view returns (uint256) {
         return amountBorrow.percent(getInterestRatio(loan));
@@ -187,7 +187,7 @@ library LoanLib {
         @return memory TellerCommon.LoanCollateralInfo Collateral information of the loan.
      */
     function getCollateralInfo(
-        TellerCommon.Loan storage loan,
+        TellerCommon.Loan memory loan,
         LoansInterface loansContract
     ) public view returns (TellerCommon.LoanCollateralInfo memory) {
         (
@@ -217,7 +217,7 @@ library LoanLib {
         @return uint256 Collateral needed in lending token value
      */
     function getCollateralInLendingTokens(
-        TellerCommon.Loan storage loan,
+        TellerCommon.Loan memory loan,
         LoansInterface loansContract
     ) public view returns (uint256) {
         if (!isActiveOrSet(loan)) {
@@ -240,7 +240,7 @@ library LoanLib {
         @return uint256 The value of the loan held in the escrow contract
      */
     function getCollateralNeededInfo(
-        TellerCommon.Loan storage loan,
+        TellerCommon.Loan memory loan,
         LoansInterface loansContract
     )
         public
@@ -272,7 +272,7 @@ library LoanLib {
                 );
             neededInCollateralTokens = int256(value);
             if (neededInLendingTokens < 0) {
-                neededInCollateralTokens *= -1;
+                neededInCollateralTokens = neededInCollateralTokens.mul(-1);
             }
         }
     }
@@ -286,7 +286,7 @@ library LoanLib {
         @return uint256 The minimum collateral value threshold required.
      */
     function getCollateralNeededInTokens(
-        TellerCommon.Loan storage loan,
+        TellerCommon.Loan memory loan,
         SettingsInterface settings
     )
         public
@@ -312,9 +312,7 @@ library LoanLib {
                 loan.loanTerms.collateralRatio
             );
         } else {
-            neededInLendingTokens = int256(
-                loan.principalOwed.add(loan.interestOwed)
-            );
+            neededInLendingTokens = int256(loan.principalOwed);
             uint256 bufferPercent =
                 settings.getPlatformSettingValue(
                     settings.consts().COLLATERAL_BUFFER_SETTING()
@@ -326,13 +324,13 @@ library LoanLib {
             if (loan.escrow != address(0)) {
                 escrowLoanValue = EscrowInterface(loan.escrow)
                     .calculateTotalValue();
-                neededInLendingTokens +=
-                    neededInLendingTokens -
-                    int256(escrowLoanValue);
+                neededInLendingTokens = neededInLendingTokens.add(
+                    neededInLendingTokens.sub(int256(escrowLoanValue))
+                );
             }
-            neededInLendingTokens = neededInLendingTokens.percent(
-                requiredRatio
-            );
+            neededInLendingTokens = neededInLendingTokens
+                .add(int256(loan.interestOwed))
+                .percent(requiredRatio);
         }
     }
 
@@ -343,7 +341,7 @@ library LoanLib {
         @return liquidationInfo get current liquidation info for the given loan id.
      */
     function getLiquidationInfo(
-        TellerCommon.Loan storage loan,
+        TellerCommon.Loan memory loan,
         LoansInterface loansContract
     )
         public
