@@ -8,6 +8,9 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 //Contracts
 import "../../BaseEscrowDapp.sol";
 
+// Common
+import "../../../util/AddressLib.sol";
+
 // Interfaces
 import "./IAave.sol";
 import "../../../providers/aave/IAToken.sol";
@@ -31,6 +34,7 @@ import "../../../providers/aave/IAaveLendingPool.sol";
     @author develop@teller.finance
  */
 contract Aave is IAave, BaseEscrowDapp {
+    using AddressLib for address;
     using Address for address;
     using SafeERC20 for IERC20;
 
@@ -39,7 +43,7 @@ contract Aave is IAave, BaseEscrowDapp {
         @param tokenAddress address of the token
         @param amount amount of tokens to deposit
      */
-    function deposit(address tokenAddress, uint256 amount) public onlyOwner() {
+    function deposit(address tokenAddress, uint256 amount) public onlyBorrower {
         IAToken aToken = _getAToken(tokenAddress);
         IAaveLendingPool aaveLendingPool = _getAavePoolAddress(tokenAddress);
         uint256 aTokenBalanceBeforeDeposit = aToken.balanceOf(address(this));
@@ -66,16 +70,20 @@ contract Aave is IAave, BaseEscrowDapp {
     }
 
     /**
-        @notice This function withdraws the user's aTokens for a specific amount 
+        @notice This function withdraws the user's aTokens for a specific amount
         @param tokenAddress address of the token
         @param amount amount of the underlying tokens to withdraw
      */
-    function withdraw(address tokenAddress, uint256 amount) public onlyOwner() {
+    function withdraw(address tokenAddress, uint256 amount)
+        public
+        onlyBorrower
+    {
         IAToken aToken = _getAToken(tokenAddress);
         IAaveLendingPool aaveLendingPool = _getAavePoolAddress(tokenAddress);
         uint256 aTokenBalanceBeforeWithdraw = aToken.balanceOf(address(this));
         require(aTokenBalanceBeforeWithdraw >= 0, "NO_BALANCE_TO_WITHDRAW");
-        uint256 result = aaveLendingPool.withdraw(tokenAddress, amount, address(this));
+        uint256 result =
+            aaveLendingPool.withdraw(tokenAddress, amount, address(this));
         uint256 aTokenBalanceAfterWithdraw = aToken.balanceOf(address(this));
         require(
             aTokenBalanceAfterWithdraw < aTokenBalanceBeforeWithdraw,
