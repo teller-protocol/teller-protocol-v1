@@ -6,8 +6,8 @@ const { teller } = require("../utils/contracts");
 const { settings: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
 const { SENDER_INDEX, SETTING_NAME, NEW_VALUE, MIN_VALUE, MAX_VALUE, } = require('../utils/cli/names');
-const { toBytes32 } = require('../../test/utils/consts');
-const { printPlatformSetting } = require('../../test/utils/settings-helper');
+const { toBytes32 } = require('../../test-old/utils/consts');
+const { printPlatformSetting } = require('../../test-old/utils/settings-helper');
 const processArgs = new ProcessArgs(readParams.createPlatformSetting().argv);
 
 module.exports = async (callback) => {

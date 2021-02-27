@@ -1,15 +1,30 @@
 {
   "compilerOptions": {
-    "sourceMap": true,
+    "sourceMap": false,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "module": "commonjs",
     "resolveJsonModule": true,
-    "target": "es2017",
+    "target": "ESNext",
     "allowJs": true,
-    "strict": true,
-    "typeRoots": ["./node_modules/@types", "./types"],
+    "strict": true
   },
-  "include": ["./test", "./scripts", "./migrations", "./test-integration", "./types", "./node_modules/@types"],
-  "exclude": ["./node_modules/**/*", "./contracts", "./build", "./docs"]
+  "files": ["hardhat.config.ts"],
+  "include": [
+    "./test",
+    "./types",
+    "./deploy",
+    "./config",
+    "./test-utils",
+    "./utils",
+    "./tasks"
+  ],
+  "exclude": [
+    "./contracts",
+    "./build",
+    "./artifacts",
+    "./docs",
+    "./cache",
+    "./coverage"
+  ]
 }

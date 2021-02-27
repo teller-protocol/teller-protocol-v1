@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const assert = require('assert');
-const { toBytes32 } = require('../../../test/utils/consts');
-const settingsNames = require('../../../test/utils/platformSettingsNames');
+const { toBytes32 } = require('../../../test-old/utils/consts');
+const settingsNames = require('../../../test-old/utils/platformSettingsNames');
 const BigNumber = require('bignumber.js');
 
 const validatePlatformSetting = async (settingsInstance, web3, platformSettingName, { min, max, value, processOnDeployment }) => {
@@ -71,16 +71,16 @@ module.exports = async function(
     }
 
     // Configuring StartingBlockNumber manually due to it is based on the current block number.
-    await configureStartingBlockNumber(
-        settingsNames.StartingBlockNumber,
-        settingsInstance,
-        {platformSettings, currentBlockNumber, web3, txConfig, verbose}
-    );
+    // await configureStartingBlockNumber(
+    //     settingsNames.StartingBlockNumber,
+    //     settingsInstance,
+    //     {platformSettings, currentBlockNumber, web3, txConfig, verbose}
+    // );
 
     // Validating all the platform settings are configured.
     for (const platformSettingName of Object.keys(platformSettings)) {
         const { value, min, max, processOnDeployment } = platformSettings[platformSettingName];
-        
+
         if(!processOnDeployment) {
             // Some setting are created manually.
             continue;
@@ -94,15 +94,15 @@ module.exports = async function(
         assert.equal(platformSettingResult.max.toString(), max.toString(), `Platform setting ${platformSettingName} max must equal to ${min.toString()} (Current: ${platformSettingResult.max.toString()}).`);
     }
 
-    await validatePlatformSetting(
-        settingsInstance,
-        web3,
-        settingsNames.StartingBlockNumber,
-        {
-            ...platformSettings[settingsNames.StartingBlockNumber],
-            // As the value for StartingBlockNumber value is calculated, we only validate it exists.
-            value: undefined,
-        },
-    );
-    
+    // await validatePlatformSetting(
+    //     settingsInstance,
+    //     web3,
+    //     settingsNames.StartingBlockNumber,
+    //     {
+    //         ...platformSettings[settingsNames.StartingBlockNumber],
+    //         // As the value for StartingBlockNumber value is calculated, we only validate it exists.
+    //         value: undefined,
+    //     },
+    // );
+
 }

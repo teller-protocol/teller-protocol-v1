@@ -27,17 +27,21 @@ interface LogicVersionsRegistryInterface {
     );
 
     /**
-        @notice This event is emitted when a current logic version is removed.
-        @param logicName new logic name.
-        @param sender address that removed it.
-        @param lastLogic last logic address where the logic was.
-        @param lastVersion last version for the logic address.
+        @notice This event is emitted when a logic version is rollbacked.
+        @param logicName the logic name.
+        @param sender address that rollbacked it.
+        @param oldLogic the old logic address.
+        @param newLogic the new (or previous) logic address.
+        @param oldVersion the old version.
+        @param newVersion the new (previous) version.
      */
-    event LogicVersionRemoved(
+    event LogicVersionRollbacked(
         bytes32 indexed logicName,
         address indexed sender,
-        address lastLogic,
-        uint256 lastVersion
+        address oldLogic,
+        address newLogic,
+        uint256 oldVersion,
+        uint256 newVersion
     );
 
     /**
@@ -63,13 +67,6 @@ interface LogicVersionsRegistryInterface {
     function consts() external returns (LogicVersionsConsts);
 
     /**
-        @notice It creates a new logic version given a logic name and address.
-        @param logicName logic name to create.
-        @param logic the logic address value for the given logic name.
-     */
-    function createLogicVersion(bytes32 logicName, address logic) external;
-
-    /**
         @notice It creates multiple logic versions.
         @param newLogicVersions lists of the new logic versions to create.
      */
@@ -78,17 +75,19 @@ interface LogicVersionsRegistryInterface {
     ) external;
 
     /**
-        @notice It update a current logic address given a logic name.
+        @notice It updates a current logic address given a logic name.
         @param logicName logic name to update.
         @param newLogic the new logic address to set.
      */
     function updateLogicAddress(bytes32 logicName, address newLogic) external;
 
     /**
-        @notice It removes a current logic version given a logic name.
-        @param logicName logic name to remove.
+        @notice It rollbacks a logic to a previous version.
+        @param logicName logic name to rollback.
+        @param previousVersion the previous version to be used.
      */
-    function removeLogicVersion(bytes32 logicName) external;
+    function rollbackLogicVersion(bytes32 logicName, uint256 previousVersion)
+        external;
 
     /**
         @notice It gets the current logic version for a given logic name.
@@ -98,14 +97,11 @@ interface LogicVersionsRegistryInterface {
     function getLogicVersion(bytes32 logicName)
         external
         view
-        returns (LogicVersionLib.LogicVersion memory);
-
-    /**
-        @notice It gets the current logic address for a given logic name.
-        @param logicName to get.
-        @return the current logic address.
-     */
-    function getLogicVersionAddress(bytes32 logicName) external view returns (address);
+        returns (
+            uint256 currentVersion,
+            uint256 latestVersion,
+            address logic
+        );
 
     /**
         @notice It tests whether a logic name is already configured.
@@ -115,15 +111,12 @@ interface LogicVersionsRegistryInterface {
     function hasLogicVersion(bytes32 logicName) external view returns (bool);
 
     /**
-        @notice Checks if an address is registered as a platform proxy.
-        @param proxy Address to check if is registered.
-        @return boolean if registered or not
-      */
-    function isProxyRegistered(address proxy) external view returns (bool);
-
-    /**
         @notice It initializes this logic versions registry contract instance.
-        @param settingsAddress the settings contract address.
+        @param aOwner address of the owner of the registry.
+        @param initialLogicVersions lists of the new logic versions to create.
      */
-    function initialize(address settingsAddress) external;
+    function initialize(
+        address aOwner,
+        TellerCommon.LogicVersionRequest[] calldata initialLogicVersions
+    ) external;
 }

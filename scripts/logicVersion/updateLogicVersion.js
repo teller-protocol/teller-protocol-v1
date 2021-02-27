@@ -7,7 +7,7 @@ const ProcessArgs = require('../utils/ProcessArgs');
 
 const { logicVersion: readParams } = require("../utils/cli-builder");
 const { SENDER_INDEX, LOGIC_NAME, CONTRACT_NAME } = require('../utils/cli/names');
-const { toBytes32 } = require('../../test/utils/consts');
+const { toBytes32 } = require('../../test-old/utils/consts');
 const { assert } = require("chai");
 const processArgs = new ProcessArgs(readParams.updateLogicVersion().argv);
 
@@ -33,7 +33,7 @@ module.exports = async (callback) => {
         const logicVersionsRegistry = await getContracts.getDeployed(teller.logicVersionsRegistry());
         console.log(`Using LogicVersionsRegistry:   ${logicVersionsRegistry.address}`);
 
-        const logicNameBytes32 = toBytes32(web3, logicName);
+        const logicNameBytes32 = web3.utils.soliditySha3(logicName);
         
         const hasLogicVersionResult = await logicVersionsRegistry.hasLogicVersion(logicNameBytes32, senderTxConfig);
         assert(hasLogicVersionResult, `Logic name ${logicName} / ${logicNameBytes32} is not registered.`);

@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
-import "./LoansBase.sol";
+import "./Loans.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -20,7 +20,7 @@ import "./LoansBase.sol";
 
     @author develop@teller.finance
  */
-contract EtherCollateralLoans is LoansBase {
+contract EtherCollateralLoans is Loans {
     /**
         @notice Initializes the current contract instance setting the required parameters
         @param lendingPoolAddress Contract address of the lending pool
@@ -32,10 +32,14 @@ contract EtherCollateralLoans is LoansBase {
         address loanTermsConsensusAddress,
         address settingsAddress,
         address
-    ) external isNotInitialized() {
-        _initialize(lendingPoolAddress, loanTermsConsensusAddress, settingsAddress);
+    ) external isNotInitialized {
+        _initialize(
+            lendingPoolAddress,
+            loanTermsConsensusAddress,
+            settingsAddress
+        );
 
-        collateralToken = _getSettings().ETH_ADDRESS();
+        collateralToken = settings.ETH_ADDRESS();
     }
 
     /** Internal Functions */

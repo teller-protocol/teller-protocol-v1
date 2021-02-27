@@ -1,6 +1,6 @@
 const BN = require('bignumber.js')
 
-const { NULL_ADDRESS } = require('../../../test/utils/consts')
+const { NULL_ADDRESS } = require('../../../test-old/utils/consts')
 
 async function setPrice(
   { chainlinkAggregator, token: baseToken, collateralToken: quoteToken },

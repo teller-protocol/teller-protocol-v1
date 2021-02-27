@@ -5,7 +5,7 @@ const { teller, tokens } = require("../../scripts/utils/contracts");
 const { loans: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
 const Accounts = require('../utils/Accounts');
-const { toDecimals } = require('../../test/utils/consts');
+const { toDecimals } = require('../../test-old/utils/consts');
 const { COLL_TOKEN_NAME, SENDER_INDEX, TOKEN_NAME, LOAN_ID, AMOUNT } = require("../utils/cli/names");
 const processArgs = new ProcessArgs(readParams.repay().argv);
 

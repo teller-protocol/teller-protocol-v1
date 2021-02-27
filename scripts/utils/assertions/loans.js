@@ -1,6 +1,6 @@
 const assert = require('assert');
 
-const { NULL_ADDRESS, } = require("../../../test/utils/consts");
+const { NULL_ADDRESS, } = require("../../../test-old/utils/consts");
 
 const assertLoanValues = async (
   {loans},

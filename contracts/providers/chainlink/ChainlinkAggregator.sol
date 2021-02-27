@@ -2,8 +2,7 @@ pragma solidity 0.5.17;
 
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
-import "../../base/BaseUpgradeable.sol";
-import "../../base/TInitializable.sol";
+import "../../base/Base.sol";
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
@@ -30,7 +29,7 @@ import "./IChainlinkAggregator.sol";
 
     @author develop@teller.finance
  */
-contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgradeable {
+contract ChainlinkAggregator is IChainlinkAggregator, Base {
     using Address for address;
     using AddressLib for address;
     using AddressArrayLib for AddressArrayLib.AddressArray;
@@ -49,6 +48,14 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
     mapping(address => AddressArrayLib.AddressArray) internal supportedTokens;
 
     /* External Functions */
+
+    function getTokensSupportedBy(address tokenAddress)
+        external
+        view
+        returns (address[] memory)
+    {
+        return supportedTokens[tokenAddress].array;
+    }
 
     /**
         @notice It grabs the Chainlink Aggregator contract address for the token pair if it is supported.
@@ -73,7 +80,11 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @param tokenAddress Token address to check support for.
         @return bool whether or not the token is supported.
      */
-    function isTokenSupported(address tokenAddress) external view returns (bool) {
+    function isTokenSupported(address tokenAddress)
+        external
+        view
+        returns (bool)
+    {
         tokenAddress = _normalizeTokenAddress(tokenAddress);
 
         return supportedTokens[tokenAddress].length() > 0;
@@ -102,9 +113,13 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @dev It tries to use ETH as a pass through asset if the direct pair is not supported.
         @param src Source token address.
         @param dst Destination token address.
-        @return uint256 The latest answer as given from Chainlink.
+        @return int256 The latest answer as given from Chainlink.
      */
-    function latestAnswerFor(address src, address dst) external view returns (int256) {
+    function latestAnswerFor(address src, address dst)
+        external
+        view
+        returns (int256)
+    {
         src = _normalizeTokenAddress(src);
         dst = _normalizeTokenAddress(dst);
 
@@ -115,6 +130,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @notice It allows for additional Chainlink Aggregators to be supported.
         @param src Source token address.
         @param dst Destination token address.
+        @param aggregator Price aggregator address.
      */
     function add(
         address src,
@@ -125,14 +141,14 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         dst = _normalizeTokenAddress(dst);
 
         (AggregatorV2V3Interface agg, ) = _aggregatorFor(src, dst);
-        address(agg).requireEmpty("CHAINLINK_PAIR_ALREADY_EXISTS");
+        require(address(agg).isEmpty(), "CHAINLINK_PAIR_ALREADY_EXISTS");
 
         require(
-            src.isContract() || src == _getSettings().ETH_ADDRESS(),
+            src.isContract() || src == settings.ETH_ADDRESS(),
             "TOKEN_A_NOT_CONTRACT"
         );
         require(
-            dst.isContract() || dst == _getSettings().ETH_ADDRESS(),
+            dst.isContract() || dst == settings.ETH_ADDRESS(),
             "TOKEN_B_NOT_CONTRACT"
         );
         require(aggregator.isContract(), "AGGREGATOR_NOT_CONTRACT");
@@ -170,10 +186,8 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
 
         address[] storage arr = supportedTokens[tokenAddress].array;
         for (uint256 i; i < arr.length; i++) {
-            (AggregatorV2V3Interface agg, bool inverse) = _aggregatorFor(
-                tokenAddress,
-                arr[i]
-            );
+            (AggregatorV2V3Interface agg, bool inverse) =
+                _aggregatorFor(tokenAddress, arr[i]);
             if (inverse) {
                 aggregators[arr[i]][tokenAddress] = address(0);
             } else {
@@ -186,26 +200,25 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
 
     /**
         @notice It initializes this ChainlinkAggregator instance.
-        @param settingsAddress the settings contract address.
      */
-    function initialize(address settingsAddress) external isNotInitialized() {
-        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
-
-        _initialize();
-
-        _setSettings(settingsAddress);
+    function initialize() external isNotInitialized {
+        _initialize(msg.sender);
     }
 
     /* Internal Functions */
 
+    /**
+        @notice It normalizes the token address to ETH if WETH.
+        @param tokenAddress The address of the token to normalize.
+    */
     function _normalizeTokenAddress(address tokenAddress)
         internal
         view
         returns (address)
     {
         return
-            tokenAddress == _getSettings().WETH_ADDRESS()
-                ? _getSettings().ETH_ADDRESS()
+            tokenAddress == settings.WETH_ADDRESS()
+                ? settings.ETH_ADDRESS()
                 : tokenAddress;
     }
 
@@ -215,7 +228,10 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @return uint8 Number of decimals the given token.
      */
     function _decimalsFor(address addr) internal view returns (uint8) {
-        return addr == _getSettings().ETH_ADDRESS() ? 18 : ERC20Detailed(addr).decimals();
+        return
+            addr == settings.ETH_ADDRESS()
+                ? 18
+                : ERC20Detailed(addr).decimals();
     }
 
     /**
@@ -249,7 +265,9 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         uint256 srcAmount
     ) internal view returns (uint256) {
         return
-            (srcAmount * uint256(_priceFor(src, dst))) / uint256(TEN**_decimalsFor(src));
+            (srcAmount.mul(uint256(_priceFor(src, dst)))).div(
+                uint256(TEN**_decimalsFor(src))
+            );
     }
 
     /**
@@ -257,33 +275,41 @@ contract ChainlinkAggregator is IChainlinkAggregator, TInitializable, BaseUpgrad
         @dev It tries to use ETH as a pass through asset if the direct pair is not supported.
         @param src Source token address.
         @param dst Destination token address.
-        @return uint256 The latest answer as given from Chainlink.
+        @return int256 The latest answer as given from Chainlink.
      */
-    function _priceFor(address src, address dst) internal view returns (int256) {
+    function _priceFor(address src, address dst)
+        internal
+        view
+        returns (int256)
+    {
         (AggregatorV2V3Interface agg, bool inverse) = _aggregatorFor(src, dst);
-        uint8 dstDecimals = _decimalsFor(dst);
+        uint256 dstDecimals = _decimalsFor(dst);
         int256 dstFactor = int256(TEN**dstDecimals);
         if (address(agg) != address(0)) {
             int256 price = agg.latestAnswer();
-            uint8 resDecimals = agg.decimals();
+            uint256 resDecimals = agg.decimals();
             if (inverse) {
-                price = int256(TEN**(resDecimals + resDecimals)) / price;
+                price = int256(TEN**(resDecimals.add(resDecimals))).div(price);
             }
             if (dstDecimals > resDecimals) {
-                price = price * int256(TEN**(dstDecimals - resDecimals));
+                price = price.mul(int256(TEN**(dstDecimals.sub(resDecimals))));
             } else {
-                price = price / int256(TEN**(resDecimals - dstDecimals));
+                price = price.div(int256(TEN**(resDecimals.sub(dstDecimals))));
             }
             int256 srcFactor = int256(TEN**_decimalsFor(src));
             return price;
         } else {
-            address eth = _getSettings().ETH_ADDRESS();
-            dst.requireNotEqualTo(eth, "CANNOT_CALCULATE_VALUE");
+            for (uint256 i; i < supportedTokens[src].array.length; i++) {
+                address routeToken = supportedTokens[src].array[i];
+                (bool found, ) = supportedTokens[routeToken].getIndex(dst);
+                if (found) {
+                    int256 price1 = _priceFor(src, routeToken);
+                    int256 price2 = _priceFor(dst, routeToken);
 
-            int256 price1 = _priceFor(src, eth);
-            int256 price2 = _priceFor(dst, eth);
-
-            return (price1 * dstFactor) / price2;
+                    return (price1.mul(dstFactor)).div(price2);
+                }
+            }
+            revert("CANNOT_CALCULATE_VALUE");
         }
     }
 }

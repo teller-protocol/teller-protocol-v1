@@ -6,7 +6,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Contracts
 import "../base/TInitializable.sol";
-import "../base/BaseUpgradeable.sol";
+import "../base/Base.sol";
 
 // Interfaces
 import "./IATMSettings.sol";
@@ -26,7 +26,7 @@ import "./IATMSettings.sol";
 
     @author develop@teller.finance
  */
-contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
+contract ATMSettings is IATMSettings, TInitializable, Base {
     using Address for address;
 
     /** Constants */
@@ -56,8 +56,12 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
         @notice It pauses a given ATM.
         @param atmAddress ATM address to pause.
      */
-    function pauseATM(address atmAddress) external onlyPauser() isInitialized() {
-        require(!_getSettings().isPaused(), "PLATFORM_IS_ALREADY_PAUSED");
+    function pauseATM(address atmAddress)
+        external
+        onlyPauser()
+        isInitialized()
+    {
+        require(!settings.isPaused(), "PLATFORM_IS_ALREADY_PAUSED");
         require(!atmPaused[atmAddress], "ATM_IS_ALREADY_PAUSED");
 
         atmPaused[atmAddress] = true;
@@ -69,8 +73,12 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
         @notice It unpauses a given ATM.
         @param atmAddress ATM address to unpause.
      */
-    function unpauseATM(address atmAddress) external onlyPauser() isInitialized() {
-        require(!_getSettings().isPaused(), "PLATFORM_IS_PAUSED");
+    function unpauseATM(address atmAddress)
+        external
+        onlyPauser()
+        isInitialized()
+    {
+        require(!settings.isPaused(), "PLATFORM_IS_PAUSED");
         require(atmPaused[atmAddress], "ATM_IS_NOT_PAUSED");
 
         atmPaused[atmAddress] = false;
@@ -84,69 +92,74 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
         @return true if ATM is paused. Otherwise it returns false.
      */
     function isATMPaused(address atmAddress) external view returns (bool) {
-        return _getSettings().isPaused() || atmPaused[atmAddress];
+        return settings.isPaused() || atmPaused[atmAddress];
     }
 
     /**
         @notice Sets an ATM for a given market (borrowed token and collateral token).
-        @param borrowedToken borrowed token address.
+        @param lendingToken borrowed token address.
         @param collateralToken collateral token address.
         @param atmAddress ATM address to set.
      */
     function setATMToMarket(
-        address borrowedToken,
+        address lendingToken,
         address collateralToken,
         address atmAddress
     ) external onlyPauser() isInitialized() {
         require(atmAddress.isContract(), "ATM_GOV_MUST_BE_CONTRACT");
-        require(borrowedToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
+        require(lendingToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
-            collateralToken == _getSettings().ETH_ADDRESS() ||
+            collateralToken == settings.ETH_ADDRESS() ||
                 collateralToken.isContract(),
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
         require(
-            marketToAtm[borrowedToken][collateralToken] == address(0x0),
+            marketToAtm[lendingToken][collateralToken] == address(0x0),
             "ATM_TO_MARKET_ALREADY_EXIST"
         );
 
-        marketToAtm[borrowedToken][collateralToken] = atmAddress;
+        marketToAtm[lendingToken][collateralToken] = atmAddress;
 
-        emit MarketToAtmSet(borrowedToken, collateralToken, atmAddress, msg.sender);
+        emit MarketToAtmSet(
+            lendingToken,
+            collateralToken,
+            atmAddress,
+            msg.sender
+        );
     }
 
     /**
         @notice Updates a new ATM for a given market (borrowed token and collateral token).
-        @param borrowedToken borrowed token address.
+        @param lendingToken borrowed token address.
         @param collateralToken collateral token address.
         @param newAtmAddress the new ATM address to update.
      */
     function updateATMToMarket(
-        address borrowedToken,
+        address lendingToken,
         address collateralToken,
         address newAtmAddress
     ) external onlyPauser() isInitialized() {
-        require(borrowedToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
+        require(lendingToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
-            collateralToken == _getSettings().ETH_ADDRESS() ||
+            collateralToken == settings.ETH_ADDRESS() ||
                 collateralToken.isContract(),
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
         require(
-            marketToAtm[borrowedToken][collateralToken] != address(0x0),
+            marketToAtm[lendingToken][collateralToken] != address(0x0),
             "ATM_TO_MARKET_NOT_EXIST"
         );
         require(
-            marketToAtm[borrowedToken][collateralToken] != newAtmAddress,
+            marketToAtm[lendingToken][collateralToken] != newAtmAddress,
             "PROVIDE_NEW_ATM_FOR_MARKET"
         );
 
-        address oldAtm = marketToAtm[borrowedToken][collateralToken];
+        address oldAtm = marketToAtm[lendingToken][collateralToken];
 
-        marketToAtm[borrowedToken][collateralToken] = newAtmAddress;
+        marketToAtm[lendingToken][collateralToken] = newAtmAddress;
 
         emit MarketToAtmUpdated(
-            borrowedToken,
+            lendingToken,
             collateralToken,
             oldAtm,
             newAtmAddress,
@@ -156,31 +169,31 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
 
     /**
         @notice Removes the ATM address for a given market (borrowed token and collateral token).
-        @param borrowedToken borrowed token address.
+        @param lendingToken borrowed token address.
         @param collateralToken collateral token address.
      */
-    function removeATMToMarket(address borrowedToken, address collateralToken)
+    function removeATMToMarket(address lendingToken, address collateralToken)
         external
         onlyPauser()
         isInitialized()
     {
-        require(borrowedToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
+        require(lendingToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
-            collateralToken == _getSettings().ETH_ADDRESS() ||
+            collateralToken == settings.ETH_ADDRESS() ||
                 collateralToken.isContract(),
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
         require(
-            marketToAtm[borrowedToken][collateralToken] != address(0x0),
+            marketToAtm[lendingToken][collateralToken] != address(0x0),
             "ATM_TO_MARKET_NOT_EXIST"
         );
 
-        address oldAtmAddress = marketToAtm[borrowedToken][collateralToken];
+        address oldAtmAddress = marketToAtm[lendingToken][collateralToken];
 
-        delete marketToAtm[borrowedToken][collateralToken];
+        delete marketToAtm[lendingToken][collateralToken];
 
         emit MarketToAtmRemoved(
-            borrowedToken,
+            lendingToken,
             collateralToken,
             oldAtmAddress,
             msg.sender
@@ -189,31 +202,31 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
 
     /**
         @notice Gets the ATM configured for a given market (borrowed token and collateral token).
-        @param borrowedToken borrowed token address.
+        @param lendingToken borrowed token address.
         @param collateralToken collateral token address.
         @return the ATM address configured for a given market.
      */
-    function getATMForMarket(address borrowedToken, address collateralToken)
+    function getATMForMarket(address lendingToken, address collateralToken)
         external
         view
         returns (address)
     {
-        return marketToAtm[borrowedToken][collateralToken];
+        return marketToAtm[lendingToken][collateralToken];
     }
 
     /**
         @notice Tests whether an ATM is configured for a given market (borrowed token and collateral token) or not.
-        @param borrowedToken borrowed token address.
+        @param lendingToken borrowed token address.
         @param collateralToken collateral token address.
         @param atmAddress ATM address to test.
         @return true if the ATM is configured for the market. Otherwise it returns false.
      */
     function isATMForMarket(
-        address borrowedToken,
+        address lendingToken,
         address collateralToken,
         address atmAddress
     ) external view returns (bool) {
-        return marketToAtm[borrowedToken][collateralToken] == atmAddress;
+        return marketToAtm[lendingToken][collateralToken] == atmAddress;
     }
 
     /**
@@ -221,7 +234,7 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
         @param settingsAddress settings address.
      */
     function initialize(address settingsAddress) external isNotInitialized() {
-        _setSettings(settingsAddress);
+        _initialize(settingsAddress);
 
         TInitializable._initialize();
     }

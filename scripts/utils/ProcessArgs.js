@@ -1,8 +1,8 @@
 const _ = require('lodash');
 const assert = require('assert');
 const GetContracts = require('./GetContracts');
-const { minutesToSeconds } = require('../../test/utils/consts');
-const chains = require('../../test/utils/chains');
+const { minutesToSeconds } = require('../../test-old/utils/consts');
+const chains = require('../../test-old/utils/chains');
 
 class ProcessArgs {
     constructor(params = {}, defaultNetwork = 'test') {
@@ -41,20 +41,6 @@ ProcessArgs.prototype.createGetContracts = function(artifacts) {
     const appConf = this.getCurrentConfig();
     const getContracts = new GetContracts(artifacts, appConf.networkConfig);
     return getContracts;
-}
-
-ProcessArgs.prototype.createInitializersConfig = function() {
-    return {
-        // Used to add signers in the LoanTermsConsensus contracts used for each token (or lending token).
-        tokenNames: this.getValue('tokenNames'),
-        // Used to set as min required (responses) submissions when a borrower asks to node validators to sign responses.
-        requiredSubmissions: this.getValue('requiredSubmissions'),
-        // Used to set as min time window (in seconds) between last time borrower deposited collateral and when the borrower takes out the loan.
-        safetyInterval: minutesToSeconds(
-            this.getValue('safetyInterval')
-        ),
-        signerAddresses: this.getValue('signerAddress'),
-    };
 }
 
 module.exports = ProcessArgs;

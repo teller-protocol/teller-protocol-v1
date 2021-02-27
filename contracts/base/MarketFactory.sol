@@ -6,17 +6,20 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Interfaces
 import "../interfaces/LoansInterface.sol";
-import "../interfaces/InterestConsensusInterface.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
-import "../interfaces/LendersInterface.sol";
 import "../interfaces/SettingsInterface.sol";
 import "../interfaces/MarketFactoryInterface.sol";
+import "../interfaces/IMarketRegistry.sol";
 
 // Commons
-import "./DynamicProxy.sol";
 import "../util/TellerCommon.sol";
-import "./TInitializable.sol";
+
+// Contracts
+import "./Base.sol";
+import "./DynamicProxy.sol";
+import "./MarketRegistry.sol";
+import "./TToken.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -33,7 +36,7 @@ import "./TInitializable.sol";
 
     @author develop@teller.finance
  */
-contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterface {
+contract MarketFactory is MarketFactoryInterface, Base {
     using Address for address;
 
     /** Constants */
@@ -52,6 +55,8 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
      */
     mapping(address => mapping(address => TellerCommon.Market)) markets;
 
+    IMarketRegistry public marketRegistry;
+
     /* Modifiers */
 
     /**
@@ -59,19 +64,19 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
         @dev It throws a require error if the platform is used.
      */
     modifier isNotPaused() {
-        require(!_getSettings().isPaused(), "PLATFORM_IS_PAUSED");
+        require(!settings.isPaused(), "PLATFORM_IS_PAUSED");
         _;
     }
 
     /**
         @notice It checks whether a market exists or not for a given borrowed/collateral tokens.
-        @param borrowedToken the borrowed token address.
+        @param lendingToken the borrowed token address.
         @param collateralToken the collateral token address.
         @dev It throws a require error if the market already exists.
      */
-    modifier marketNotExist(address borrowedToken, address collateralToken) {
+    modifier marketNotExist(address lendingToken, address collateralToken) {
         require(
-            !_getMarket(borrowedToken, collateralToken).exists,
+            !_getMarket(lendingToken, collateralToken).exists,
             "MARKET_ALREADY_EXIST"
         );
         _;
@@ -79,12 +84,15 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
 
     /**
         @notice It checks whether a market exists or not for a given borrowed/collateral tokens.
-        @param borrowedToken the borrowed token address.
+        @param lendingToken the borrowed token address.
         @param collateralToken the collateral token address.
         @dev It throws a require error if the market doesn't exist.
      */
-    modifier marketExist(address borrowedToken, address collateralToken) {
-        require(_getMarket(borrowedToken, collateralToken).exists, "MARKET_NOT_EXIST");
+    modifier marketExist(address lendingToken, address collateralToken) {
+        require(
+            _getMarket(lendingToken, collateralToken).exists,
+            "MARKET_NOT_EXIST"
+        );
         _;
     }
 
@@ -93,357 +101,243 @@ contract MarketFactory is TInitializable, BaseUpgradeable, MarketFactoryInterfac
     /**
         @notice It creates a new market for a given TToken and borrowed/collateral tokens.
         @dev It uses the Settings.ETH_ADDRESS to represent the ETHER.
-        @param tToken the TToken address.
-        @param borrowedToken the borrowed token address.
+        @param lendingToken the token address used to create the lending pool and TToken.
         @param collateralToken the collateral token address.
      */
-    function createMarket(
-        address tToken,
-        address borrowedToken,
-        address collateralToken
-    ) external onlyPauser() isNotPaused() isInitialized() {
-        _requireCreateMarket(tToken, borrowedToken, collateralToken);
-        address owner = msg.sender;
+    function createMarket(address lendingToken, address collateralToken)
+        external
+        isInitialized
+        isNotPaused
+        onlyPauser
+    {
+        require(lendingToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
+        require(
+            collateralToken == settings.ETH_ADDRESS() ||
+                collateralToken.isContract(),
+            "COLL_TOKEN_MUST_BE_CONTRACT"
+        );
 
-        (
-            LendingPoolInterface lendingPoolProxy,
-            InterestConsensusInterface interestConsensusProxy,
-            LendersInterface lendersProxy,
-            LoanTermsConsensusInterface loanTermsConsensusProxy,
-            LoansInterface loansProxy
-        ) = _createAndInitializeProxies(owner, tToken, borrowedToken, collateralToken);
+        address settingsAddress = address(settings);
+        LoanTermsConsensusInterface loanTermsConsensus =
+            _createLoanTermsConsensus();
+        LoansInterface loans = _createLoans(collateralToken);
+
+        LendingPoolInterface lendingPool =
+            marketRegistry.lendingPools(lendingToken);
+        if (address(lendingPool) == address(0)) {
+            lendingPool = _createLendingPool();
+            TToken tToken = _createTToken();
+
+            tToken.initialize(lendingToken, address(lendingPool));
+            lendingPool.initialize(
+                marketRegistry,
+                tToken,
+                address(settingsAddress)
+            );
+        }
+
+        // Initializing LoanTermsConsensus
+        loanTermsConsensus.initialize(
+            msg.sender,
+            address(loans),
+            address(settingsAddress)
+        );
+
+        // Initializing Loans
+        loans.initialize(
+            address(lendingPool),
+            address(loanTermsConsensus),
+            address(settingsAddress),
+            collateralToken
+        );
+
+        marketRegistry.registerMarket(lendingPool, loans);
 
         _addMarket(
-            borrowedToken,
+            lendingToken,
             collateralToken,
-            address(loansProxy),
-            address(lendersProxy),
-            address(lendingPoolProxy),
-            address(loanTermsConsensusProxy),
-            address(interestConsensusProxy)
+            address(loans),
+            address(lendingPool),
+            address(loanTermsConsensus)
         );
 
         emit NewMarketCreated(
-            owner,
-            borrowedToken,
+            msg.sender,
+            lendingToken,
             collateralToken,
-            address(loansProxy),
-            address(lendersProxy),
-            address(lendingPoolProxy),
-            address(loanTermsConsensusProxy),
-            address(interestConsensusProxy)
+            address(loans),
+            address(lendingPool),
+            address(loanTermsConsensus)
         );
     }
 
     /**
         @notice It removes a current market for a given borrowed/collateral tokens.
-        @param borrowedToken the borrowed token address.
+        @param lendingToken the borrowed token address.
         @param collateralToken the collateral token address.
      */
-    function removeMarket(address borrowedToken, address collateralToken)
+    function removeMarket(address lendingToken, address collateralToken)
         external
-        onlyPauser()
-        isNotPaused()
-        isInitialized()
-        marketExist(borrowedToken, collateralToken)
+        onlyPauser
+        isNotPaused
+        isInitialized
+        marketExist(lendingToken, collateralToken)
     {
-        delete markets[borrowedToken][collateralToken];
+        delete markets[lendingToken][collateralToken];
 
-        emit MarketRemoved(msg.sender, borrowedToken, collateralToken);
+        emit MarketRemoved(msg.sender, lendingToken, collateralToken);
     }
 
     /**
         @notice It gets the current addresses for a given borrowed/collateral token.
-        @param borrowedToken the borrowed token address.
+        @param lendingToken the borrowed token address.
         @param collateralToken the collateral token address.
         @return a struct with the contract addresses for the given market.
      */
-    function getMarket(address borrowedToken, address collateralToken)
+    function getMarket(address lendingToken, address collateralToken)
         external
         view
         returns (TellerCommon.Market memory)
     {
-        return _getMarket(borrowedToken, collateralToken);
+        return _getMarket(lendingToken, collateralToken);
     }
 
     /**
         @notice It tests whether a market exists or not for a given borrowed/collateral tokens.
-        @param borrowedToken the borrowed token address.
+        @param lendingToken the borrowed token address.
         @param collateralToken the collateral token address.
         @return true if the market exists for the given borrowed/collateral tokens. Otherwise it returns false.
      */
-    function existMarket(address borrowedToken, address collateralToken)
+    function existMarket(address lendingToken, address collateralToken)
         external
         view
         returns (bool)
     {
-        return _getMarket(borrowedToken, collateralToken).exists;
+        return _getMarket(lendingToken, collateralToken).exists;
     }
 
     /**
         @notice It tests whether a market exists or not for a given borrowed/collateral tokens.
-        @param borrowedToken the borrowed token address.
+        @param lendingToken the borrowed token address.
         @param collateralToken the collateral token address.
         @return true if the market doesn't exist for the given borrowed/collateral tokens. Otherwise it returns false.
      */
-    function notExistMarket(address borrowedToken, address collateralToken)
+    function notExistMarket(address lendingToken, address collateralToken)
         external
         view
         returns (bool)
     {
-        return !_getMarket(borrowedToken, collateralToken).exists;
+        return !_getMarket(lendingToken, collateralToken).exists;
     }
 
     /**
         @notice It initializes this market factory instance.
-        @param settingsAddress the settings contract address.
      */
-    function initialize(address settingsAddress) external isNotInitialized() {
-        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
+    function initialize() external isNotInitialized {
+        _initialize(msg.sender);
 
-        _initialize();
-
-        _setSettings(settingsAddress);
+        marketRegistry = new MarketRegistry();
     }
 
     /** Internal Functions */
 
     /**
         @notice It adds a market in the internal mapping.
-        @param borrowedToken the borrowed token address.
+        @param lendingToken the borrowed token address.
         @param collateralToken the collateral token address.
         @param loans the new loans contract address.
-        @param lenders the new lenders contracct address.
         @param lendingPool the new lending pool contract address.
         @param loanTermsConsensus the new loan terms consensus contract address.
-        @param interestConsensus the new interest consensus contract address.
      */
     function _addMarket(
-        address borrowedToken,
+        address lendingToken,
         address collateralToken,
         address loans,
-        address lenders,
         address lendingPool,
-        address loanTermsConsensus,
-        address interestConsensus
+        address loanTermsConsensus
     ) internal {
-        markets[borrowedToken][collateralToken] = TellerCommon.Market({
+        markets[lendingToken][collateralToken] = TellerCommon.Market({
             loans: loans,
-            lenders: lenders,
             lendingPool: lendingPool,
             loanTermsConsensus: loanTermsConsensus,
-            interestConsensus: interestConsensus,
             exists: true
         });
     }
 
     /**
         @notice It creates a dynamic proxy instance for a given logic name.
-        @dev It is used to create all the market contracts (Lenders, LendingPool, Loans, and others).
+        @dev It is used to create all the market contracts (LendingPool, Loans, and others).
      */
     function _createDynamicProxy(bytes32 logicName) internal returns (address) {
-        return address(new DynamicProxy(address(_getSettings()), logicName));
+        return address(new DynamicProxy(address(logicRegistry), logicName));
     }
 
     /**
         @notice It gets the current addresses for a given borrowed/collateral token.
-        @param borrowedToken the borrowed token address.
+        @param lendingToken the borrowed token address.
         @param collateralToken the collateral token address.
         @return a struct with the contract addresses for the given market.
      */
-    function _getMarket(address borrowedToken, address collateralToken)
+    function _getMarket(address lendingToken, address collateralToken)
         internal
         view
         returns (TellerCommon.Market memory)
     {
-        return markets[borrowedToken][collateralToken];
+        return markets[lendingToken][collateralToken];
     }
 
     /**
-        @notice It validates the TToken, borrowed and collateral token addresses.
-        @param tToken the TToken contract address.
-        @param borrowedToken the borrowed token address.
-        @param collateralToken the collateral token address.
-        @dev It throws a require error if any param is invalid.
+        @notice Creates a proxy contract for LendingPool.
+        @return a new LendingPool instance.
      */
-    function _requireCreateMarket(
-        address tToken,
-        address borrowedToken,
-        address collateralToken
-    ) internal view marketNotExist(borrowedToken, collateralToken) {
-        require(tToken.isContract(), "TTOKEN_MUST_BE_CONTRACT");
-        require(borrowedToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
-        require(
-            collateralToken == _getSettings().ETH_ADDRESS() ||
-                collateralToken.isContract(),
-            "COLL_TOKEN_MUST_BE_CONTRACT"
-        );
+    function _createTToken() internal returns (TToken) {
+        return
+            TToken(
+                _createDynamicProxy(logicRegistry.consts().TTOKEN_LOGIC_NAME())
+            );
     }
 
     /**
-        @notice It creates and initializes the proxies used for the given tToken, and borrowed/collateral tokens.
-        @param owner the owner address (or sender transaction).
-        @param tToken the tToken address.
-        @param borrowedToken the borrowed token address.
-        @param collateralToken the collateral token address.
+        @notice Creates a proxy contract for LendingPool.
+        @return a new LendingPool instance.
      */
-    function _createAndInitializeProxies(
-        address owner,
-        address tToken,
-        address borrowedToken,
-        address collateralToken
-    )
-        internal
-        returns (
-            LendingPoolInterface lendingPoolProxy,
-            InterestConsensusInterface interestConsensusProxy,
-            LendersInterface lendersProxy,
-            LoanTermsConsensusInterface loanTermsConsensusProxy,
-            LoansInterface loansProxy
-        )
-    {
-        // Creating proxies
-        (
-            lendingPoolProxy,
-            interestConsensusProxy,
-            lendersProxy,
-            loanTermsConsensusProxy,
-            loansProxy
-        ) = _createProxies(collateralToken);
-
-        // Initializing proxies.
-        _initializeProxies(
-            owner,
-            tToken,
-            borrowedToken,
-            collateralToken,
-            lendingPoolProxy,
-            interestConsensusProxy,
-            lendersProxy,
-            loanTermsConsensusProxy,
-            loansProxy
-        );
-    }
-
-    /**
-        @notice Creates the proxies for:
-            - LendingPool
-            - InterestConsensus
-            - Lenders
-            - LoanTermsConsensus
-        @return the proxy instances.
-     */
-    function _createProxies(address collateralToken)
-        internal
-        returns (
-            LendingPoolInterface lendingPoolProxy,
-            InterestConsensusInterface interestConsensusProxy,
-            LendersInterface lendersProxy,
-            LoanTermsConsensusInterface loanTermsConsensusProxy,
-            LoansInterface loansProxy
-        )
-    {
-        lendingPoolProxy = LendingPoolInterface(
-            _createDynamicProxy(
-                _getSettings().versionsRegistry().consts().LENDING_POOL_LOGIC_NAME()
-            )
-        );
-        interestConsensusProxy = InterestConsensusInterface(
-            _createDynamicProxy(
-                _getSettings().versionsRegistry().consts().INTEREST_CONSENSUS_LOGIC_NAME()
-            )
-        );
-        lendersProxy = LendersInterface(
-            _createDynamicProxy(
-                _getSettings().versionsRegistry().consts().LENDERS_LOGIC_NAME()
-            )
-        );
-        loanTermsConsensusProxy = LoanTermsConsensusInterface(
-            _createDynamicProxy(
-                _getSettings()
-                    .versionsRegistry()
-                    .consts()
-                    .LOAN_TERMS_CONSENSUS_LOGIC_NAME()
-            )
-        );
-        if (collateralToken == _getSettings().ETH_ADDRESS()) {
-            loansProxy = LoansInterface(
+    function _createLendingPool() internal returns (LendingPoolInterface) {
+        return
+            LendingPoolInterface(
                 _createDynamicProxy(
-                    _getSettings()
-                        .versionsRegistry()
-                        .consts()
-                        .ETHER_COLLATERAL_LOANS_LOGIC_NAME()
+                    logicRegistry.consts().LENDING_POOL_LOGIC_NAME()
                 )
             );
-        } else {
-            loansProxy = LoansInterface(
-                _createDynamicProxy(
-                    _getSettings()
-                        .versionsRegistry()
-                        .consts()
-                        .TOKEN_COLLATERAL_LOANS_LOGIC_NAME()
-                )
-            );
-        }
     }
 
     /**
-        @notice It initializes all the new proxies.
-        @param owner the owner address (or sender transaction).
-        @param tToken the tToken address.
-        @param borrowedToken the borrowed token address.
-        @param collateralToken the collateral token address.
-        @param lendingPoolProxy the new lending pool proxy instance.
-        @param interestConsensusProxy the new interest consensus proxy instance.
-        @param lendersProxy the new lenders proxy instance.
-        @param loanTermsConsensusProxy the new loan terms consensus proxy instance.
-        @param loansProxy the new loans proxy instance.
+        @notice Creates a proxy contract for LoanTermsConsensus.
+        @return a new LoanTermsConsensus instance.
      */
-    function _initializeProxies(
-        address owner,
-        address tToken,
-        address borrowedToken,
-        address collateralToken,
-        LendingPoolInterface lendingPoolProxy,
-        InterestConsensusInterface interestConsensusProxy,
-        LendersInterface lendersProxy,
-        LoanTermsConsensusInterface loanTermsConsensusProxy,
-        LoansInterface loansProxy
-    ) internal {
-        // Initializing LendingPool
-        lendingPoolProxy.initialize(
-            tToken,
-            borrowedToken,
-            address(lendersProxy),
-            address(loansProxy),
-            address(_getSettings())
-        );
-        // Initializing InterestConsensus
-        interestConsensusProxy.initialize(
-            owner,
-            address(lendersProxy),
-            address(_getSettings())
-        );
-        // Initializing Lenders
-        lendersProxy.initialize(
-            tToken,
-            address(lendingPoolProxy),
-            address(interestConsensusProxy),
-            address(_getSettings())
-        );
-        // Initializing LoanTermsConsensus
-        loanTermsConsensusProxy.initialize(
-            owner,
-            address(loansProxy),
-            address(_getSettings())
-        );
+    function _createLoanTermsConsensus()
+        internal
+        returns (LoanTermsConsensusInterface)
+    {
+        return
+            LoanTermsConsensusInterface(
+                _createDynamicProxy(
+                    logicRegistry.consts().LOAN_TERMS_CONSENSUS_LOGIC_NAME()
+                )
+            );
+    }
 
-        // Initializing Loans
-        loansProxy.initialize(
-            address(lendingPoolProxy),
-            address(loanTermsConsensusProxy),
-            address(_getSettings()),
-            collateralToken
-        );
+    /**
+        @notice Creates a proxy contract for Loans.
+        @return a new Loans instance.
+     */
+    function _createLoans(address collateralToken)
+        internal
+        returns (LoansInterface)
+    {
+        bytes32 logicName =
+            collateralToken == settings.ETH_ADDRESS()
+                ? logicRegistry.consts().ETHER_COLLATERAL_LOANS_LOGIC_NAME()
+                : logicRegistry.consts().TOKEN_COLLATERAL_LOANS_LOGIC_NAME();
+        return LoansInterface(_createDynamicProxy(logicName));
     }
 }

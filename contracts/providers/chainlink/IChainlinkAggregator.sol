@@ -79,4 +79,6 @@ interface IChainlinkAggregator {
         @param tokenAddress Token to remove all markets for.
      */
     function remove(address tokenAddress) external;
+
+    function initialize() external;
 }

@@ -4,7 +4,7 @@
 const { oracle: readParams } = require("../utils/cli-builder");
 const { tokens, teller } = require("../../scripts/utils/contracts");
 const ProcessArgs = require('../utils/ProcessArgs');
-const { toDecimals, toUnits, ETH_ADDRESS } = require("../../test/utils/consts");
+const { toDecimals, toUnits, ETH_ADDRESS } = require("../../test-old/utils/consts");
 const { BASE_TOKEN_NAME, QUOTE_TOKEN_NAME, AMOUNT } = require("../utils/cli/names");
 const processArgs = new ProcessArgs(readParams.getPrices().argv);
 

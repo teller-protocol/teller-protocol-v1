@@ -5,7 +5,7 @@ const {
 } = require("./index");
 
 const chainlinkActions = require("./chainlink");
-const platformSettingNames = require("../../../test/utils/platformSettingsNames");
+const platformSettingNames = require("../../../test-old/utils/platformSettingsNames");
 const BigNumber = require("bignumber.js");
 
 const takeOutNewLoan = async function (

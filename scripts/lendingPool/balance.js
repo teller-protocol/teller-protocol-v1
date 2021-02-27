@@ -3,7 +3,7 @@
 // Util classes
 const { teller, tokens } = require("../utils/contracts");
 const { lendingPool: readParams } = require("../utils/cli-builder");
-const { toUnits } = require("../../test/utils/consts");
+const { toUnits } = require("../../test-old/utils/consts");
 const ProcessArgs = require('../utils/ProcessArgs');
 const { TOKEN_NAME, COLL_TOKEN_NAME } = require("../utils/cli/names");
 const processArgs = new ProcessArgs(readParams.balance().argv);

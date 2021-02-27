@@ -53,7 +53,6 @@ module.exports = {
             escrowFactoryAddress,
             versionsRegistryAddress,
             chainlinkAggregatorAddress,
-            marketsStateAddress,
             interestValidatorAddress,
             atmSettingsAddress,
             ) => {
@@ -61,7 +60,6 @@ module.exports = {
                 escrowFactoryAddress,
                 versionsRegistryAddress,
                 chainlinkAggregatorAddress,
-                marketsStateAddress,
                 interestValidatorAddress,
                 atmSettingsAddress
             ];
@@ -78,21 +76,17 @@ module.exports = {
             web3,
             tTokenAddress,
             tokenAddress,
-            lendersAddress,
             loansAddress,
             cTokenAddress,
             settingsAddress,
-            marketsStateAddress,
             interestValidatorAddress,
         ) => {
             const params = [
                 tTokenAddress,
                 tokenAddress,
-                lendersAddress,
                 loansAddress,
                 cTokenAddress,
                 settingsAddress,
-                marketsStateAddress,
                 interestValidatorAddress
             ];
             return encodeData(

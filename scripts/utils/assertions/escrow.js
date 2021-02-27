@@ -4,7 +4,7 @@ const truffleAssert = require('truffle-assertions')
 const {
   escrow: escrowEvents,
   loans: loansEvents,
-} = require("../../../test/utils/events");
+} = require("../../../test-old/utils/events");
 
 async function loanRepaid(
   { escrow, loans },

@@ -16,24 +16,10 @@ const internalLendingPool = (collateralToken, tokenName, artifactName = 'Lending
         artifactName,
     };
 };
-const internalInterestConsensus = (collateralToken, tokenName, artifactName = 'InterestConsensus') => {
-    return {
-        keyName: TELLER_KEY,
-        contractName: `${collateralToken.toUpperCase()}_InterestConsensus_t${tokenName.toUpperCase()}_Proxy`,
-        artifactName,
-    };
-};
 const internalLoanTermsConsensus = (collateralToken, tokenName, artifactName = 'LoanTermsConsensus') => {
     return {
         keyName: TELLER_KEY,
         contractName: `${collateralToken.toUpperCase()}_LoanTermsConsensus_t${tokenName.toUpperCase()}_Proxy`,
-        artifactName,
-    };
-};
-const internalLenders = (collateralToken, tokenName, artifactName = 'Lenders') => {
-    return {
-        keyName: TELLER_KEY,
-        contractName: `${collateralToken.toUpperCase()}_Lenders_t${tokenName.toUpperCase()}_Proxy`,
         artifactName,
     };
 };
@@ -55,15 +41,9 @@ const customCollateralToken = (collateralToken) => {
         lendingPool: (tokenName, artifactName = 'LendingPool') => {
             return internalLendingPool(collToken, tokenName, artifactName);
         },
-        interestConsensus: (tokenName, artifactName = 'InterestConsensus') => {
-            return internalInterestConsensus(collToken, tokenName, artifactName);
-        },
         loanTermsConsensus: (tokenName, artifactName = 'LoanTermsConsensus') => {
             return internalLoanTermsConsensus(collToken, tokenName, artifactName);
         },
-        lenders: (tokenName, artifactName = 'Lenders') => {
-            return internalLenders(collToken, tokenName, artifactName);
-        }
     };
 }
 module.exports = {

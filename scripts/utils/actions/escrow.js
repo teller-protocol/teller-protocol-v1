@@ -11,9 +11,9 @@ const {
   escrow: escrowEvents,
   uniswap: uniswapEvents,
   compound: compoundEvents
-} = require("../../../test/utils/events");
+} = require("../../../test-old/utils/events");
 const { teller } = require("../contracts");
-const logicNames = require("../../../test/utils/logicNames");
+const logicNames = require("../../../test-old/utils/logicNames");
 
 /**
  * Repays the loan for an amount.

@@ -2,9 +2,10 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 import "../util/TellerCommon.sol";
+import "./IMarketRegistry.sol";
 
 /**
-    @notice 
+    @notice
 
     @author develop@teller.finance
  */
@@ -12,47 +13,45 @@ import "../util/TellerCommon.sol";
 interface MarketFactoryInterface {
     /** External Functions */
 
-    function createMarket(
-        address tToken,
-        address borrowedToken,
-        address collateralToken
-    ) external;
+    function marketRegistry() external returns (IMarketRegistry);
 
-    function removeMarket(address borrowedToken, address collateralToken) external;
+    function createMarket(address lendingToken, address collateralToken)
+        external;
 
-    function getMarket(address borrowedToken, address collateralToken)
+    function removeMarket(address lendingToken, address collateralToken)
+        external;
+
+    function getMarket(address lendingToken, address collateralToken)
         external
         view
         returns (TellerCommon.Market memory);
 
-    function existMarket(address borrowedToken, address collateralToken)
+    function existMarket(address lendingToken, address collateralToken)
         external
         view
         returns (bool);
 
-    function notExistMarket(address borrowedToken, address collateralToken)
+    function notExistMarket(address lendingToken, address collateralToken)
         external
         view
         returns (bool);
 
-    function initialize(address settingsAddress) external;
+    function initialize() external;
 
     /** Events */
 
     event NewMarketCreated(
         address indexed sender,
-        address indexed borrowedToken,
+        address indexed lendingToken,
         address indexed collateralToken,
         address loans,
-        address lenders,
         address lendingPool,
-        address loanTermsConsensus,
-        address interestConsensus
+        address loanTermsConsensus
     );
 
     event MarketRemoved(
         address indexed sender,
-        address indexed borrowedToken,
+        address indexed lendingToken,
         address indexed collateralToken
     );
 }

@@ -6,7 +6,7 @@ const { teller, tokens } = require("../utils/contracts");
 const { settings: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
 const { SENDER_INDEX, TOKEN_NAME } = require('../utils/cli/names');
-const { printAssetSettings } = require('../../test/utils/asset-settings-helper');
+const { printAssetSettings } = require('../../test-old/utils/asset-settings-helper');
 const processArgs = new ProcessArgs(readParams.removeAssetSetting().argv);
 
 module.exports = async (callback) => {

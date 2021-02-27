@@ -1,6 +1,10 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 // Libraries
+import "../util/CompoundRatesLib.sol";
+import "../util/NumbersLib.sol";
+import "../util/AddressArrayLib.sol";
 
 // Commons
 
@@ -8,13 +12,14 @@ pragma solidity 0.5.17;
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../interfaces/LendingPoolInterface.sol";
-import "../interfaces/LendersInterface.sol";
 import "../interfaces/LoansInterface.sol";
-import "../interfaces/TTokenInterface.sol";
 import "../providers/compound/CErc20Interface.sol";
+import "../interfaces/IMarketRegistry.sol";
 
 // Contracts
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
 import "./Base.sol";
+import "./TToken.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -27,23 +32,41 @@ import "./Base.sol";
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
-    @notice The LendingPool contract holds all of the tokens that lenders transfer into the protocol. It is the contract that lenders interact with to deposit and withdraw their tokens including interest. The LendingPool interacts with the Lenders contract to ensure token balances and interest owed is kept up to date.
+    @notice The LendingPool contract holds all of the tokens that lenders transfer into the protocol.
+    It is the contract that lenders interact with to deposit and withdraw their tokens including interest.
 
     @author develop@teller.finance
  */
-contract LendingPool is Base, LendingPoolInterface {
+contract LendingPool is LendingPoolInterface, ReentrancyGuard, Base {
     using SafeMath for uint256;
-    using SafeERC20 for IERC20;
+    using SafeERC20 for ERC20Detailed;
+    using CompoundRatesLib for CErc20Interface;
+    using NumbersLib for uint256;
 
     /* State Variables */
 
-    IERC20 public lendingToken;
+    TToken public tToken;
 
-    TTokenInterface public tToken;
+    ERC20Detailed public lendingToken;
 
-    LendersInterface public lenders;
+    uint8 public constant EXCHANGE_RATE_DECIMALS = 36;
 
-    address public loans;
+    IMarketRegistry public marketRegistry;
+
+    // The total amount of underlying asset that has been originally been supplied by each lender not including interest earned.
+    mapping(address => uint256) internal _totalSuppliedUnderlyingLender;
+
+    // The total amount of underlying asset that has been lent out for loans.
+    uint256 internal _totalBorrowed;
+
+    // The total amount of underlying asset that has been repaid from loans.
+    uint256 internal _totalRepaid;
+
+    // The total amount of underlying interest that has been claimed for each lender.
+    mapping(address => uint256) internal _totalInterestEarnedLender;
+
+    // The total amount of underlying interest the pool has earned from loans being repaid.
+    uint256 public totalInterestEarned;
 
     /** Modifiers */
 
@@ -64,62 +87,89 @@ contract LendingPool is Base, LendingPoolInterface {
         @notice It allows users to deposit tokens into the pool.
         @dev the user must call ERC20.approve function previously.
         @dev If the cToken is available (not 0x0), it deposits the lending token amount into Compound directly.
-        @param amount of tokens to deposit in the pool.
+        @param lendingTokenAmount of tokens to deposit in the pool.
     */
-    function deposit(uint256 amount)
+    function deposit(uint256 lendingTokenAmount)
         external
-        isInitialized()
-        whenNotPaused()
+        isInitialized
+        whenNotPaused
         whenLendingPoolNotPaused(address(this))
+        onlyAuthorized
     {
-        // Transfering tokens to the LendingPool
-        tokenTransferFrom(msg.sender, amount);
+        uint256 exchangeRate = _exchangeRate();
+        lendingTokenAmount = tokenTransferFrom(msg.sender, lendingTokenAmount);
 
-        // deposit them straight into compound
-        _depositToCompoundIfSupported(amount);
-
-        // Mint tToken tokens
-        tTokenMint(msg.sender, amount);
-
-        _markets().increaseSupply(
-            address(lendingToken),
-            LoansInterface(loans).collateralToken(),
-            amount
+        require(
+            _getTotalSupplied() <=
+                settings.assetSettings().getMaxTVLAmount(address(lendingToken)),
+            "MAX_TVL_REACHED"
         );
 
+        // Transferring tokens to the LendingPool
+        _totalSuppliedUnderlyingLender[
+            msg.sender
+        ] = _totalSuppliedUnderlyingLender[msg.sender].add(lendingTokenAmount);
+
+        address cTokenAddress = cToken();
+        if (
+            cTokenAddress != address(0) &&
+            CErc20Interface(cTokenAddress).valueOfUnderlying(
+                lendingTokenAmount
+            ) >
+            0
+        ) {
+            _depositToCompound(cTokenAddress, lendingTokenAmount);
+        }
+
+        // Mint tToken tokens
+        uint256 tTokenAmount =
+            _tTokensForLendingTokens(lendingTokenAmount, exchangeRate);
+        tTokenMint(msg.sender, tTokenAmount);
+
         // Emit event
-        emit TokenDeposited(msg.sender, amount);
+        emit TokenDeposited(msg.sender, lendingTokenAmount, tTokenAmount);
     }
 
     /**
         @notice It allows any tToken holder to burn their tToken tokens and withdraw their tokens.
-        @dev If the cToken is available (not 0x0), it withdraws the lending tokens from Compound before transferring the tokens to the holder.
-        @param amount of tokens to withdraw.
+        @dev If the cToken is available (not 0x0), it withdraws the lending tokens from Compound before
+        transferring the tokens to the holder.
+        @param lendingTokenAmount of tokens to withdraw.
      */
-    function withdraw(uint256 amount)
+    function withdraw(uint256 lendingTokenAmount)
         external
-        isInitialized()
-        whenNotPaused()
+        isInitialized
+        whenNotPaused
         whenLendingPoolNotPaused(address(this))
-        nonReentrant()
+        nonReentrant
+        onlyAuthorized
     {
-        // Burn tToken tokens.
-        tToken.burn(msg.sender, amount);
+        uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
 
-        // Withdraw the tokens from compound
-        _withdrawFromCompoundIfSupported(amount);
-
-        // Transfers tokens
-        tokenTransfer(msg.sender, amount);
-
-        _markets().decreaseSupply(
-            address(lendingToken),
-            LoansInterface(loans).collateralToken(),
-            amount
+        require(tTokenAmount > 0, "WITHDRAW_TTOKEN_DUST");
+        require(
+            tToken.balanceOf(msg.sender) > tTokenAmount,
+            "TTOKEN_NOT_ENOUGH_BALANCE"
         );
 
-        // Emit event.
-        emit TokenWithdrawn(msg.sender, amount);
+        _withdraw(lendingTokenAmount, tTokenAmount);
+    }
+
+    function withdrawAll()
+        external
+        isInitialized
+        whenNotPaused
+        whenLendingPoolNotPaused(address(this))
+        nonReentrant
+        onlyAuthorized
+        returns (uint256)
+    {
+        uint256 tTokenAmount = tToken.balanceOf(msg.sender);
+        uint256 lendingTokenAmount = _lendingTokensForTTokens(tTokenAmount);
+
+        _withdraw(lendingTokenAmount, tTokenAmount);
+
+        return lendingTokenAmount;
     }
 
     /**
@@ -127,56 +177,37 @@ contract LendingPool is Base, LendingPoolInterface {
         @dev This function can be called ONLY by the Loans contract.
         @dev It requires a ERC20.approve call before calling it.
         @dev It throws a require error if borrower called ERC20.approve function before calling it.
-        @param amount of tokens.
+        @param principalAmount amount of tokens towards the principal.
+        @param interestAmount amount of tokens towards the interest.
         @param borrower address that is repaying the loan.
      */
-    function repay(uint256 amount, address borrower)
+    function repay(
+        uint256 principalAmount,
+        uint256 interestAmount,
+        address borrower
+    )
         external
-        isInitialized()
-        isLoan()
+        isInitialized
+        isLoan
         whenLendingPoolNotPaused(address(this))
+        onlyAuthorized
     {
+        uint256 totalAmount = principalAmount.add(interestAmount);
+        require(totalAmount > 0, "REPAY_ZERO");
+
         // Transfers tokens to LendingPool.
-        tokenTransferFrom(borrower, amount);
+        tokenTransferFrom(borrower, totalAmount);
 
-        // deposit them straight into compound
-        _depositToCompoundIfSupported(amount);
+        _totalRepaid = _totalRepaid.add(principalAmount);
+        totalInterestEarned = totalInterestEarned.add(interestAmount);
 
-        _markets().increaseRepayment(
-            address(lendingToken),
-            LoansInterface(loans).collateralToken(),
-            amount
-        );
+        address cTokenAddress = cToken();
+        if (cTokenAddress != address(0)) {
+            _depositToCompound(cTokenAddress, totalAmount);
+        }
 
         // Emits event.
-        emit TokenRepaid(borrower, amount);
-    }
-
-    /**
-        @notice Once a loan is liquidated, it transfers tokens from the liquidator to the lending pool.
-        @param amount of tokens to liquidate.
-        @param liquidator address used to liquidate the loan.
-     */
-    function liquidationPayment(uint256 amount, address liquidator)
-        external
-        isInitialized()
-        isLoan()
-        whenLendingPoolNotPaused(address(this))
-    {
-        // Transfers tokens from liquidator to lending pool
-        tokenTransferFrom(liquidator, amount);
-
-        // deposit them straight into compound
-        _depositToCompoundIfSupported(amount);
-
-        _markets().increaseRepayment(
-            address(lendingToken),
-            LoansInterface(loans).collateralToken(),
-            amount
-        );
-
-        // Emits event
-        emit PaymentLiquidated(liquidator, amount);
+        emit TokenRepaid(borrower, totalAmount);
     }
 
     /**
@@ -189,57 +220,109 @@ contract LendingPool is Base, LendingPoolInterface {
      */
     function createLoan(uint256 amount, address borrower)
         external
-        isInitialized()
+        isInitialized
         isLoan()
         whenLendingPoolNotPaused(address(this))
+        onlyAuthorized
     {
-        // Withdraw the tokens from compound if it is supported
-        _withdrawFromCompoundIfSupported(amount);
+        uint256 lendingTokenBalance = lendingToken.balanceOf(address(this));
+        if (lendingTokenBalance < amount) {
+            address cTokenAddress = cToken();
+            if (cTokenAddress != address(0)) {
+                _withdrawFromCompound(
+                    cTokenAddress,
+                    amount.sub(lendingTokenBalance)
+                );
+            }
+        }
 
         // Transfer tokens to the borrower.
         tokenTransfer(borrower, amount);
 
-        _markets().increaseBorrow(
-            address(lendingToken),
-            LoansInterface(loans).collateralToken(),
-            amount
-        );
+        _totalBorrowed = _totalBorrowed.add(amount);
     }
 
     /**
-        @notice It allows the lenders to withdraw interest.
-        @param amount interest amount to withdraw.
-        @dev It withdraws lending tokens from Compound before transferring the tokens to the lender.
+        @notice It calculates the market state values across all markets.
+        @return values that represent the global state across all markets.
      */
-    function withdrawInterest(uint256 amount)
+    function getMarketState()
         external
-        isInitialized()
-        whenNotPaused()
-        whenLendingPoolNotPaused(address(this))
+        view
+        returns (
+            uint256 totalSupplied,
+            uint256 totalBorrowed,
+            uint256 totalRepaid,
+            uint256 totalOnLoan
+        )
     {
-        address lender = msg.sender;
-        InterestValidatorInterface interestValidator = _interestValidator();
-        require(
-            address(interestValidator) == address(0x0) ||
-                interestValidator.isInterestValid(
-                    address(lendingToken),
-                    LoansInterface(loans).collateralToken(),
-                    lender,
-                    amount
-                ),
-            "INTEREST_TO_WITHDRAW_IS_INVALID"
-        );
+        return _getMarketState();
+    }
 
-        // update the lenders record, returning the actual amount to withdraw
-        uint256 amountToWithdraw = lenders.withdrawInterest(lender, amount);
+    /**
+        @notice It returns the balance of underlying tokens a lender owns with the amount
+        of TTokens owned and the current exchange rate.
+        @return a lender's balance of the underlying token in the pool.
+     */
+    function balanceOfUnderlying(address lender)
+        external
+        view
+        returns (uint256)
+    {
+        return _lendingTokensForTTokens(tToken.balanceOf(lender));
+    }
 
-        // Withdraw the tokens from compound
-        _withdrawFromCompoundIfSupported(amountToWithdraw);
+    /**
+        @notice Returns the total amount of interest earned by a lender.
+        @dev This value includes already claimed + unclaimed interest earned.
+        @return total interest earned by lender.
+     */
+    function getLenderInterestEarned(address lender)
+        external
+        view
+        returns (uint256)
+    {
+        uint256 currentLenderInterest =
+            _calculateCurrentLenderInterestEarned(lender);
+        return _totalInterestEarnedLender[lender].add(currentLenderInterest);
+    }
 
-        // Transfer tokens to the lender.
-        tokenTransfer(lender, amountToWithdraw);
+    /**
+        @notice Returns the amount of claimable interest a lender has earned.
+        @return claimable interest value.
+     */
+    function getClaimableInterestEarned(address lender)
+        external
+        view
+        returns (uint256)
+    {
+        return _calculateCurrentLenderInterestEarned(lender);
+    }
 
-        emit InterestWithdrawn(lender, amountToWithdraw);
+    /**
+        @notice It gets the debt-to-supply (DtS) ratio for a given market, including a new loan amount.
+        @notice The formula to calculate DtS ratio (including a new loan amount) is:
+
+            DtS = (SUM(total borrowed) - SUM(total repaid) + NewLoanAmount) / SUM(total supplied)
+
+        @notice The value has 2 decimal places.
+            Example:
+                100 => 1%
+        @param loanAmount a new loan amount to consider in the ratio.
+        @return the debt-to-supply ratio value.
+     */
+    function getDebtRatioFor(uint256 loanAmount)
+        external
+        view
+        returns (uint256)
+    {
+        uint256 totalSupplied = _getTotalSupplied();
+        return
+            totalSupplied == 0
+                ? 0
+                : _totalBorrowed.add(loanAmount).sub(_totalRepaid).ratioOf(
+                    totalSupplied
+                );
     }
 
     /**
@@ -247,91 +330,235 @@ contract LendingPool is Base, LendingPoolInterface {
         @return Address of the cToken
      */
     function cToken() public view returns (address) {
-        return _getSettings().getCTokenAddress(address(lendingToken));
+        return settings.getCTokenAddress(address(lendingToken));
+    }
+
+    /**
+        @notice It calculates the current exchange rate for the TToken based on the total supply of the lending token.
+        @return the exchange rate for 1 TToken to the underlying token.
+     */
+    function exchangeRate() external view returns (uint256) {
+        return _exchangeRate();
     }
 
     /**
         @notice It initializes the contract state variables.
-        @param tTokenAddress tToken token address.
-        @param lendingTokenAddress ERC20 token address.
-        @param lendersAddress Lenders contract address.
-        @param loansAddress Loans contract address.
+        @param aMarketRegistry the MarketRegistry contract.
+        @param aTToken the Teller token to link to the lending pool.
         @param settingsAddress Settings contract address.
         @dev It throws a require error if the contract is already initialized.
      */
     function initialize(
-        address tTokenAddress,
-        address lendingTokenAddress,
-        address lendersAddress,
-        address loansAddress,
+        IMarketRegistry aMarketRegistry,
+        TToken aTToken,
         address settingsAddress
-    ) external isNotInitialized() {
-        tTokenAddress.requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
-        lendingTokenAddress.requireNotEmpty("TOKEN_ADDRESS_IS_REQUIRED");
-        lendersAddress.requireNotEmpty("LENDERS_ADDRESS_IS_REQUIRED");
-        loansAddress.requireNotEmpty("LOANS_ADDRESS_IS_REQUIRED");
+    ) external isNotInitialized {
+        address(aTToken).requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
 
         _initialize(settingsAddress);
+        ReentrancyGuard.initialize();
 
-        tToken = TTokenInterface(tTokenAddress);
-        lendingToken = IERC20(lendingTokenAddress);
-        lenders = LendersInterface(lendersAddress);
-        loans = loansAddress;
+        marketRegistry = aMarketRegistry;
+        tToken = aTToken;
+        lendingToken = tToken.underlying();
     }
 
     /** Internal functions */
+
+    function _calculateCurrentLenderInterestEarned(address lender)
+        internal
+        view
+        returns (uint256)
+    {
+        uint256 lenderUnderlyingBalance =
+            _lendingTokensForTTokens(tToken.balanceOf(lender));
+        return
+            lenderUnderlyingBalance.sub(_totalSuppliedUnderlyingLender[lender]);
+    }
+
+    /**
+        @notice It calculates the current exchange rate for the TToken based on the total supply of the lending token.
+        @return the exchange rate for 1 TToken to the underlying token.
+     */
+    function _exchangeRate() internal view returns (uint256) {
+        if (tToken.totalSupply() == 0) {
+            return uint256(10)**uint256(int8(EXCHANGE_RATE_DECIMALS));
+        }
+
+        return
+            _getTotalSupplied()
+                .mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS))
+                .div(tToken.totalSupply());
+    }
+
+    /**
+        @notice It calculates the market state values across all markets.
+        @return values that represent the global state across all markets.
+     */
+    function _getMarketState()
+        internal
+        view
+        returns (
+            uint256 totalSupplied,
+            uint256 totalBorrowed,
+            uint256 totalRepaid,
+            uint256 totalOnLoan
+        )
+    {
+        totalSupplied = _getTotalSupplied();
+        totalBorrowed = _totalBorrowed;
+        totalRepaid = _totalRepaid;
+        totalOnLoan = _totalBorrowed.sub(totalRepaid);
+    }
+
+    /**
+        @notice It calculates the total supply of the lending token across all markets.
+        @return the total supply denoted in the lending token.
+     */
+    function _getTotalSupplied() internal view returns (uint256 totalSupplied) {
+        totalSupplied = lendingToken.balanceOf(address(this)).add(
+            _totalBorrowed.sub(_totalRepaid)
+        );
+
+        address cTokenAddress = cToken();
+        if (cTokenAddress != address(0)) {
+            totalSupplied = totalSupplied.add(
+                CErc20Interface(cTokenAddress).valueInUnderlying(
+                    CErc20Interface(cTokenAddress).balanceOf(address(this))
+                )
+            );
+        }
+    }
+
+    function _withdraw(uint256 lendingTokenAmount, uint256 tTokenAmount)
+        internal
+    {
+        uint256 lendingTokenBalance = lendingToken.balanceOf(address(this));
+
+        address cTokenAddress = cToken();
+        if (cTokenAddress != address(0)) {
+            _withdrawFromCompound(
+                cTokenAddress,
+                lendingTokenAmount.sub(lendingTokenBalance)
+            );
+        }
+
+        uint256 currentLenderInterest =
+            _calculateCurrentLenderInterestEarned(msg.sender);
+        uint256 totalSuppliedDiff;
+        if (lendingTokenAmount > currentLenderInterest) {
+            totalSuppliedDiff = lendingTokenAmount.sub(currentLenderInterest);
+            _totalInterestEarnedLender[msg.sender] = _totalInterestEarnedLender[
+                msg.sender
+            ]
+                .add(currentLenderInterest);
+        } else {
+            _totalInterestEarnedLender[msg.sender] = _totalInterestEarnedLender[
+                msg.sender
+            ]
+                .add(lendingTokenAmount);
+        }
+        _totalSuppliedUnderlyingLender[
+            msg.sender
+        ] = _totalSuppliedUnderlyingLender[msg.sender].sub(totalSuppliedDiff);
+
+        // Burn tToken tokens.
+        tToken.burn(msg.sender, tTokenAmount);
+
+        // Transfers tokens
+        tokenTransfer(msg.sender, lendingTokenAmount);
+
+        // Emit event.
+        emit TokenWithdrawn(msg.sender, lendingTokenAmount, tTokenAmount);
+    }
+
+    function _tTokensForLendingTokens(uint256 lendingTokenAmount)
+        internal
+        view
+        returns (uint256)
+    {
+        return _tTokensForLendingTokens(lendingTokenAmount, _exchangeRate());
+    }
+
+    function _tTokensForLendingTokens(
+        uint256 lendingTokenAmount,
+        uint256 exchangeRate
+    ) internal view returns (uint256) {
+        return
+            lendingTokenAmount
+                .mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS))
+                .div(exchangeRate);
+    }
+
+    function _lendingTokensForTTokens(uint256 tTokenAmount)
+        internal
+        view
+        returns (uint256)
+    {
+        return
+            tTokenAmount.mul(_exchangeRate()).div(
+                uint256(10)**uint256(EXCHANGE_RATE_DECIMALS)
+            );
+    }
 
     /**
         @notice It deposits a given amount of tokens to Compound only if the cToken is not empty.
         @param amount amount to deposit.
         @return the amount of tokens deposited.
      */
-    function _depositToCompoundIfSupported(uint256 amount) internal {
-        address cTokenAddress = cToken();
-
-        if (_isCTokenNotSupported(cTokenAddress)) {
-            return;
-        }
-
+    function _depositToCompound(address cTokenAddress, uint256 amount)
+        internal
+        returns (uint256)
+    {
         // approve the cToken contract to take lending tokens
         lendingToken.safeApprove(cTokenAddress, amount);
+
+        uint256 balanceBefore =
+            CErc20Interface(cTokenAddress).balanceOf(address(this));
 
         // Now mint cTokens, which will take lending tokens
         uint256 mintResult = CErc20Interface(cTokenAddress).mint(amount);
         require(mintResult == 0, "COMPOUND_DEPOSIT_ERROR");
+
+        uint256 balanceAfter =
+            CErc20Interface(cTokenAddress).balanceOf(address(this));
+        uint256 difference = balanceAfter.sub(balanceBefore);
+        require(difference > 0, "DEPOSIT_CTOKEN_DUST");
+
+        return difference;
     }
 
     /**
         @notice It withdraws a given amount of tokens if the cToken is defined (not 0x0).
         @param amount amount of tokens to withdraw.
      */
-    function _withdrawFromCompoundIfSupported(uint256 amount) internal {
-        address cTokenAddress = cToken();
-
-        if (_isCTokenNotSupported(cTokenAddress)) {
-            return;
-        }
+    function _withdrawFromCompound(address cTokenAddress, uint256 amount)
+        internal
+        returns (uint256)
+    {
+        uint256 balanceBefore =
+            CErc20Interface(cTokenAddress).balanceOf(address(this));
 
         // this function withdraws 'amount' lending tokens from compound
         // another function exists to withdraw 'amount' cTokens of lending tokens
-        uint256 redeemResult = CErc20Interface(cTokenAddress).redeemUnderlying(amount);
+        uint256 redeemResult =
+            CErc20Interface(cTokenAddress).redeemUnderlying(amount);
         require(redeemResult == 0, "COMPOUND_REDEEM_UNDERLYING_ERROR");
+
+        uint256 balanceAfter =
+            CErc20Interface(cTokenAddress).balanceOf(address(this));
+        return balanceBefore.sub(balanceAfter);
     }
 
     /**
-        @notice It tests whether cToken address is defined (not 0x0) or not.
-        @return true if the cToken address is not 0x0. Otherwise it returns false.
-     */
-    function _isCTokenNotSupported(address cTokenAddress) internal pure returns (bool) {
-        return cTokenAddress == address(0x0);
-    }
-
-    /**
-        @notice It validates whether transaction sender is the loans contract address.@
+        @notice It validates whether transaction sender is the loans contract address.
         @dev This function is overriden in some mock contracts for testing purposes.
      */
     function _requireIsLoan() internal view {
-        loans.requireEqualTo(msg.sender, "ADDRESS_ISNT_LOANS_CONTRACT");
+        require(
+            marketRegistry.loansRegistry(address(this), msg.sender),
+            "ADDRESS_ISNT_LOANS_CONTRACT"
+        );
     }
 
     /** Private functions */
@@ -354,10 +581,15 @@ contract LendingPool is Base, LendingPoolInterface {
         @param amount to be transferred.
         @dev It throws a require error if 'transferFrom' invocation fails.
      */
-    function tokenTransferFrom(address from, uint256 amount) private {
+    function tokenTransferFrom(address from, uint256 amount)
+        private
+        returns (uint256 balanceIncrease)
+    {
+        uint256 balanceBefore = lendingToken.balanceOf(address(this));
         uint256 allowance = lendingToken.allowance(from, address(this));
         require(allowance >= amount, "LEND_TOKEN_NOT_ENOUGH_ALLOWANCE");
         lendingToken.safeTransferFrom(from, address(this), amount);
+        return lendingToken.balanceOf(address(this)).sub(balanceBefore);
     }
 
     /**

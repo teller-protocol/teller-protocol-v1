@@ -5,7 +5,7 @@ const LoanTermsSignatureValidator = artifacts.require("./mock/util/LoanTermsSign
 const ethUtil = require('ethereumjs-util')
 const axios = require('axios');
 
-const { hashLoanTermsRequest } = require('../../test/utils/hashes');
+const { hashLoanTermsRequest } = require('../../test-old/utils/hashes');
 const {
     tokens: tokensActions,
 } = require('../../test-integration/utils/actions');
@@ -15,7 +15,7 @@ const { loans: readParams } = require("../utils/cli-builder");
 const ProcessArgs = require('../utils/ProcessArgs');
 const Timer = require('../utils/Timer');
 const Accounts = require('../utils/Accounts');
-const { NULL_ADDRESS, toDecimals } = require('../../test/utils/consts');
+const { NULL_ADDRESS, toDecimals } = require('../../test-old/utils/consts');
 const { default: BigNumber } = require("bignumber.js");
 const { COLL_TOKEN_NAME, TOKEN_NAME, BORROWER_INDEX, DURATION_DAYS, AMOUNT, NONCE, COLL_AMOUNT } = require('../utils/cli/names');
 const processArgs = new ProcessArgs(readParams.setLoanTerms().argv);

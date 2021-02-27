@@ -1,20 +1,17 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 // Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
-import "../util/AddressLib.sol";
 
 // Commons
 import "./TInitializable.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
-import "../interfaces/MarketsStateInterface.sol";
-import "../interfaces/InterestValidatorInterface.sol";
 
 // Contracts
-import "./BaseUpgradeable.sol";
+import "./DynamicUpgradeable.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -34,18 +31,34 @@ import "./BaseUpgradeable.sol";
 
     @author develop@teller.finance.
  */
-contract Base is TInitializable, BaseUpgradeable, ReentrancyGuard {
+contract Base is DynamicUpgradeable, TInitializable {
     using AddressLib for address;
     using Address for address;
 
     /* State Variables */
 
+    SettingsInterface public settings;
+
     /** Modifiers */
 
     /**
-        @notice Checks whether the platform is paused or not.
-        @dev It throws a require error if platform is paused.
-     */
+          @notice Checks if sender has a pauser role
+          @dev Throws an error if the sender has not a pauser role.
+       */
+    modifier onlyPauser() {
+        settings.requirePauserRole(msg.sender);
+        _;
+    }
+
+    modifier onlyAuthorized() {
+        settings.requireAuthorization(msg.sender);
+        _;
+    }
+
+    /**
+    @notice Checks whether the platform is paused or not.
+    @dev It throws a require error if platform is paused.
+ */
     modifier whenNotPaused() {
         require(!_isPaused(), "PLATFORM_IS_PAUSED");
         _;
@@ -61,25 +74,6 @@ contract Base is TInitializable, BaseUpgradeable, ReentrancyGuard {
         _;
     }
 
-    /**
-        @notice Checks whether the platform is paused or not.
-        @dev It throws a require error if platform is not paused.
-     */
-    modifier whenPaused() {
-        require(_isPaused(), "PLATFORM_IS_NOT_PAUSED");
-        _;
-    }
-
-    /**
-        @notice Checks whether a specific lending pool address is paused or not.
-        @dev It throws a require error if the lending pool is not paused.
-        @param lendingPoolAddress lending pool address to check.
-     */
-    modifier whenLendingPoolPaused(address lendingPoolAddress) {
-        require(_isPoolPaused(lendingPoolAddress), "LENDING_POOL_IS_NOT_PAUSED");
-        _;
-    }
-
     /* Constructor */
 
     /** External Functions */
@@ -90,37 +84,29 @@ contract Base is TInitializable, BaseUpgradeable, ReentrancyGuard {
         @notice It initializes the current contract instance setting the required parameters.
         @param settingsAddress settings contract address.
      */
-    function _initialize(address settingsAddress) internal isNotInitialized() {
+    function _initialize(address settingsAddress) internal isNotInitialized {
         settingsAddress.requireNotEmpty("SETTINGS_MUST_BE_PROVIDED");
-        require(settingsAddress.isContract(), "SETTINGS_MUST_BE_A_CONTRACT");
 
-        _initialize();
-        _setSettings(settingsAddress);
+        settings = SettingsInterface(settingsAddress);
+
+        TInitializable._initialize();
     }
 
     /**
-        @notice Gets if a specific lending pool address is paused or not.
+        @notice Checks if a specific lending pool address is paused or not.
         @param poolAddress lending pool address to check.
         @return true if the lending pool address is  paused. Otherwise it returns false.
      */
     function _isPoolPaused(address poolAddress) internal view returns (bool) {
-        return _getSettings().lendingPoolPaused(poolAddress);
+        return settings.lendingPoolPaused(poolAddress);
     }
 
     /**
-        @notice Gets if the platform is paused or not.
+        @notice Checks if the platform is paused or not.
         @return true if platform is paused. Otherwise it returns false.
      */
     function _isPaused() internal view returns (bool) {
-        return _getSettings().isPaused();
-    }
-
-    function _markets() internal view returns (MarketsStateInterface) {
-        return _getSettings().marketsState();
-    }
-
-    function _interestValidator() internal view returns (InterestValidatorInterface) {
-        return _getSettings().interestValidator();
+        return settings.isPaused();
     }
 
     /** Private functions */

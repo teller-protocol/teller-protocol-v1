@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const assert = require('assert');
-const { toBytes32 } = require('../../../test/utils/consts');
-const atmGovernanceSettingsNames = require('../../../test/utils/atmGovernanceSettingsNames');
+const { toBytes32 } = require('../../../test-old/utils/consts');
+const atmGovernanceSettingsNames = require('../../../test-old/utils/atmGovernanceSettingsNames');
 
 
 module.exports = async function(
@@ -19,7 +19,7 @@ module.exports = async function(
             name,
             token,
             tlrInitialReward,
-            supplyToDebt,
+            maxDebtRatio,
             markets,
         } = atmInfo;
         console.log(`Creating ATM ${atmKey}: ${token.name}/${token.symbol}/${token.decimals} - Max. Cap.: ${token.maxCap} - Max. Vestings per Wallet: ${token.maxVestingPerWallet}`);
@@ -39,25 +39,25 @@ module.exports = async function(
         console.log(`New ATM created (for key: ${name}) at address ${lastATMGovernanceProxyAddress}.`);
 
         const atmGovernanceProxyInstance = await ATMGovernance.at(lastATMGovernanceProxyAddress);
-        
-        console.log(`Configuring ATM ${lastATMGovernanceProxyAddress}: SupplyToDebt = ${supplyToDebt}`);
+
+        console.log(`Configuring ATM ${lastATMGovernanceProxyAddress}: MaxDebtRatio = ${maxDebtRatio}`);
         await atmGovernanceProxyInstance.addGeneralSetting(
-            toBytes32(web3, atmGovernanceSettingsNames.SupplyToDebt),
-            supplyToDebt,
+            toBytes32(web3, atmGovernanceSettingsNames.MaxDebtRatio),
+            maxDebtRatio,
             txConfig,
         );
 
         for (const market of markets) {
             const {
-                borrowedToken, collateralToken,
+                lendingToken, collateralToken,
             } = market;
-            const borrowedTokenAddress = tokens[borrowedToken.toUpperCase()];
+            const lendingTokenAddress = tokens[lendingToken.toUpperCase()];
             const collateralTokenAddress = tokens[collateralToken.toUpperCase()];
-            assert(borrowedTokenAddress, `Token ${borrowedToken} is undefined.`);
+            assert(lendingTokenAddress, `Token ${lendingToken} is undefined.`);
             assert(collateralTokenAddress, `Token ${collateralToken} is undefined.`);
-            console.log(`Configuring market ${borrowedToken}/${collateralToken} for ATM ${name} / ${lastATMGovernanceProxyAddress}.`);
+            console.log(`Configuring market ${lendingToken}/${collateralToken} for ATM ${name} / ${lastATMGovernanceProxyAddress}.`);
             await atmSettings.setATMToMarket(
-                borrowedTokenAddress,
+                lendingTokenAddress,
                 collateralTokenAddress,
                 lastATMGovernanceProxyAddress,
                 txConfig,

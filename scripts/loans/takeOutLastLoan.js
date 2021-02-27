@@ -2,9 +2,9 @@
 
 // Util classes
 const { loans: readParams } = require("../utils/cli-builder");
-const { toDecimals } = require('../../test/utils/consts');
+const { toDecimals } = require('../../test-old/utils/consts');
 const { teller, tokens } = require("../utils/contracts");
-const LoanInfoPrinter = require('../../test/utils/printers/LoanInfoPrinter');
+const LoanInfoPrinter = require('../../test-old/utils/printers/LoanInfoPrinter');
 const ProcessArgs = require('../utils/ProcessArgs');
 const Accounts = require('../utils/Accounts');
 const { COLL_TOKEN_NAME, TOKEN_NAME, SENDER_INDEX, AMOUNT } = require('../utils/cli/names');

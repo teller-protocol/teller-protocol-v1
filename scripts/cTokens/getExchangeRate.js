@@ -4,7 +4,7 @@
 const { cTokens: readParams } = require("../utils/cli-builder");
 const { ctokens } = require("../utils/contracts");
 const ProcessArgs = require('../utils/ProcessArgs');
-const { toUnits, toDecimals } = require("../../test/utils/consts");
+const { toUnits, toDecimals } = require("../../test-old/utils/consts");
 const { default: BigNumber } = require("bignumber.js");
 const processArgs = new ProcessArgs(readParams().argv);
 
