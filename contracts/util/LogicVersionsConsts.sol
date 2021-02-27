@@ -21,8 +21,7 @@ contract LogicVersionsConsts {
         keccak256("LoanTermsConsensus");
     bytes32 public constant MARKET_FACTORY_LOGIC_NAME =
         keccak256("MarketFactory");
-    bytes32 public constant ESCROW_FACTORY_LOGIC_NAME =
-        keccak256("EscrowFactory");
+    bytes32 public constant DAPP_REGISTRY_LOGIC_NAME = keccak256("DppRegistry");
     bytes32 public constant ESCROW_LOGIC_NAME = keccak256("Escrow");
     bytes32 public constant CHAINLINK_PAIR_AGGREGATOR_LOGIC_NAME =
         keccak256("ChainlinkAggregator");

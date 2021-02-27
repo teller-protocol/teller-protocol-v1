@@ -75,6 +75,18 @@ interface LoansInterface {
     );
 
     /**
+        @notice This event is emitted when a new Escrow contract is created.
+        @param borrower address associated to the new escrow.
+        @param loanID loan id associated to the borrower and escrow contract.
+        @param escrowAddress the new escrow contract address.
+     */
+    event EscrowCreated(
+        address indexed borrower,
+        uint256 indexed loanID,
+        address escrowAddress
+    );
+
+    /**
         @notice This event is emitted when a loan has been successfully repaid
         @param loanID ID of loan from which collateral was withdrawn
         @param borrower Account address of the borrower
@@ -110,13 +122,19 @@ interface LoansInterface {
         @notice Returns a list of all loans for a borrower
         @param borrower Account address of the borrower
      */
-    function getBorrowerLoans(address borrower) external view returns (uint256[] memory);
+    function getBorrowerLoans(address borrower)
+        external
+        view
+        returns (uint256[] memory);
 
     /**
         @notice Returns the struct of a loan
         @param loanID ID of loan from which collateral was withdrawn
      */
-    function loans(uint256 loanID) external view returns (TellerCommon.Loan memory);
+    function loans(uint256 loanID)
+        external
+        view
+        returns (TellerCommon.Loan memory);
 
     /**
         @notice Deposit collateral for a loan, unless it isn't allowed

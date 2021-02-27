@@ -8,21 +8,16 @@ import "../util/TellerCommon.sol";
 
     @author develop@teller.finance
  */
-interface EscrowFactoryInterface {
+interface IDappRegistry {
     /**
         @notice It gets a dapp configuration based on its contract address.
         @param dapp dapp address.
         @return TellerCommon.Dapp dapp configuration.
      */
-    function dapps(address dapp) external view returns (TellerCommon.Dapp memory);
-
-    /**
-        @notice It creates an Escrow contract for a given loan id.
-        @param borrower borrower address associated to the loan.
-        @param loanID loan id to associate to the new escrow instance.
-        @return the new escrow instance.
-     */
-    function createEscrow(address borrower, uint256 loanID) external returns (address);
+    function dapps(address dapp)
+        external
+        view
+        returns (TellerCommon.Dapp memory);
 
     /**
         @notice It adds a new dapp to the factory.
@@ -75,7 +70,11 @@ interface EscrowFactoryInterface {
         @param dapp address added to the factory.
         @param unsecured boolean that describes if the dapp can be used by with an unsecured loan.
      */
-    event NewDappAdded(address indexed sender, address indexed dapp, bool unsecured);
+    event NewDappAdded(
+        address indexed sender,
+        address indexed dapp,
+        bool unsecured
+    );
 
     /**
         @notice This event is emitted when a dapp is updated.
@@ -83,7 +82,11 @@ interface EscrowFactoryInterface {
         @param dapp address of dapp contract.
         @param unsecured boolean that describes if the dapp can be used by with an unsecured loan.
      */
-    event DappUpdated(address indexed sender, address indexed dapp, bool unsecured);
+    event DappUpdated(
+        address indexed sender,
+        address indexed dapp,
+        bool unsecured
+    );
 
     /**
         @notice This event is emitted when a current dapp is removed from the factory.

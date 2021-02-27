@@ -10,8 +10,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Interfaces
 import "../interfaces/LoansInterface.sol";
-import "../interfaces/EscrowFactoryInterface.sol";
-import "../interfaces/EscrowInterface.sol";
+import "../interfaces/IDappRegistry.sol";
 
 // Commons
 import "../util/AddressLib.sol";
@@ -32,7 +31,7 @@ import "../util/AddressArrayLib.sol";
 
     @author develop@teller.finance
  */
-contract EscrowFactory is EscrowFactoryInterface, Base {
+contract DappRegistry is IDappRegistry, Base {
     using AddressArrayLib for AddressArrayLib.AddressArray;
     using AddressLib for address;
     using Address for address;
@@ -51,34 +50,7 @@ contract EscrowFactory is EscrowFactoryInterface, Base {
 
     /* Modifiers */
 
-    /**
-        @notice It creates an Escrow contract for a given loan id.
-        @param loansAddress address of the loans contract that is creating an escrow.
-        @param loanID loan id to associate to the new escrow instance.
-        @return the new escrow instance.
-     */
-    function createEscrow(address loansAddress, uint256 loanID)
-        external
-        isInitialized
-        whenNotPaused
-        returns (address escrowAddress)
-    {
-        TellerCommon.Loan memory loan =
-            LoansInterface(loansAddress).loans(loanID);
-        require(loan.escrow == address(0x0), "LOAN_ESCROW_ALREADY_EXISTS");
-
-        bytes32 escrowLogicName = logicRegistry.consts().ESCROW_LOGIC_NAME();
-        escrowAddress = address(
-            new DynamicProxy(address(settings), escrowLogicName)
-        );
-        settings.addAuthorizedAddress(escrowAddress);
-        emit EscrowCreated(
-            loan.loanTerms.borrower,
-            loansAddress,
-            loanID,
-            escrowAddress
-        );
-    }
+    /* External Functions */
 
     /**
         @notice It adds a new dapp to the factory.

@@ -49,7 +49,7 @@ const deployLogicContracts: DeployFunction = async (hre) => {
       contract: 'LoanTermsConsensus',
     },
     {
-      contract: 'EscrowFactory',
+      contract: 'DappRegistry',
     },
     {
       contract: 'MarketFactory',
@@ -100,9 +100,9 @@ const deployLogicContracts: DeployFunction = async (hre) => {
     address: await settings.assetSettings(),
   })
 
-  await deployments.save('EscrowFactory', {
-    ...(await deployments.getExtendedArtifact('EscrowFactory')),
-    address: await settings.escrowFactory(),
+  await deployments.save('DappRegistry', {
+    ...(await deployments.getExtendedArtifact('DappRegistry')),
+    address: await settings.dappRegistry(),
   })
 
   await deployments.save('MarketFactory', {

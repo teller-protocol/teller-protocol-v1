@@ -30,7 +30,7 @@ import "../util/NumbersLib.sol";
 /**
     @notice This contract is used by borrowers to call Dapp functions (using delegate calls).
     @notice This contract should only be constructed using it's upgradeable Proxy contract.
-    @notice In order to call a Dapp function, the Dapp must be added in the EscrowFactory instance.
+    @notice In order to call a Dapp function, the Dapp must be added in the DappRegistry instance.
     @dev The current Dapp implementations are: Uniswap and Compound.
 
     @author develop@teller.finance
@@ -55,7 +55,7 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
         whenNotPaused
     {
         TellerCommon.Dapp memory dapp =
-            settings.escrowFactory().dapps(dappData.location);
+            settings.dappRegistry().dapps(dappData.location);
         require(dapp.exists, "DAPP_NOT_WHITELISTED");
         require(
             dapp.unsecured || getLoansContract().isLoanSecured(getLoanID()),
@@ -209,16 +209,11 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
 
     /**
         @notice It initializes this escrow instance for a given loans address and loan id.
-        @param loansAddress loans contract address.
         @param loanID the loan ID associated to this escrow instance.
      */
-
-    function initialize(address loansAddress, uint256 loanID)
-        public
-        isNotInitialized
-    {
-        BaseEscrowDapp._initialize(loansAddress, loanID);
-        Base._initialize(address(getLoansContract().settings()));
+    function initialize(uint256 loanID) public isNotInitialized {
+        BaseEscrowDapp._initialize(msg.sender, loanID);
+        Base._initialize(address(settings));
 
         // Initialize tokens list with the borrowed token.
         address lendingToken = getLendingToken();

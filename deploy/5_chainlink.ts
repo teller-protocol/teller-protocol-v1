@@ -1,4 +1,5 @@
-import { DeployFunction } from 'hardhat-deploy/dist/types'
+import { DeployFunction } from 'hardhat-deploy/types'
+
 import { getTokens } from '../config/tokens'
 import { getChainlink } from '../config/chainlink'
 import { Network } from '../types/custom/config-types'

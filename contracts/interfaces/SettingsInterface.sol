@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 import "../util/PlatformSettingsLib.sol";
-import "./EscrowFactoryInterface.sol";
+import "./IDappRegistry.sol";
 import "../util/SettingsConsts.sol";
 import "../providers/chainlink/IChainlinkAggregator.sol";
 import "../interfaces/AssetSettingsInterface.sol";
@@ -262,10 +262,9 @@ interface SettingsInterface {
     function removeAuthorizedAddress(address addressToRemove) external;
 
     /**
-        @notice Get the current EscrowFactory contract.
-        @return the current EscrowFactory contract.
+        @notice It is the global instance of the DappRegistry contract.
      */
-    function escrowFactory() external view returns (EscrowFactoryInterface);
+    function dappRegistry() external view returns (IDappRegistry);
 
     /**
         @notice It is the global instance of the ChainlinkAggregator contract.

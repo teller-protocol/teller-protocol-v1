@@ -6,8 +6,6 @@ pragma experimental ABIEncoderV2;
 // Interfaces
 import "../interfaces/LogicVersionsRegistryInterface.sol";
 
-import "hardhat/console.sol";
-
 contract DynamicUpgradeable {
     /**
           @notice It returns the logic registry that is used to determine the implementation logic for this proxy.
