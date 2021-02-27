@@ -420,6 +420,7 @@ contract Settings is SettingsInterface, Base {
         isInitialized
     {
         platformRestricted = restriction;
+        emit PlatformRestricted(restriction, msg.sender);
     }
 
     /**
@@ -440,6 +441,7 @@ contract Settings is SettingsInterface, Base {
             "CALLER_NOT_PAUSER"
         );
         authorizedAddresses[addressToAdd] = true;
+        emit AuthorizationGranted(addressToAdd, msg.sender);
     }
 
     /**
@@ -465,6 +467,7 @@ contract Settings is SettingsInterface, Base {
         isInitialized
     {
         authorizedAddresses[addressToRemove] = false;
+        emit AuthorizationRevoked(addressToRemove, msg.sender);
     }
 
     /**

@@ -13,7 +13,7 @@ import "../util/AddressArrayLib.sol";
 
 contract BaseEscrowDapp is Base {
     using Address for address;
-    using AddressArrayLib for address[];
+    using AddressArrayLib for AddressArrayLib.AddressArray;
 
     /** State Variables **/
 
@@ -31,9 +31,23 @@ contract BaseEscrowDapp is Base {
     address private _lendingToken;
 
     /**
+        @notice This event is emitted when a new token is added to this Escrow.
+        @param tokenAddress address of the new token.
+        @param index Index of the added token.
+     */
+    event TokenAdded(address tokenAddress, uint256 index);
+
+    /**
+        @notice This event is emitted when a new token is removed from this Escrow.
+        @param tokenAddress address of the removed token.
+        @param index Index of the removed token.
+     */
+    event TokenRemoved(address tokenAddress, uint256 index);
+
+    /**
         @notice An array of tokens that are owned by this escrow.
      */
-    address[] private tokens;
+    AddressArrayLib.AddressArray private tokens;
 
     /* Modifiers */
 
@@ -85,7 +99,7 @@ contract BaseEscrowDapp is Base {
         @return The list of all tokens held by this contract.
      */
     function getTokens() public view returns (address[] memory) {
-        return tokens;
+        return tokens.array;
     }
 
     /* External Functions */
@@ -124,18 +138,12 @@ contract BaseEscrowDapp is Base {
         if (_balanceOf(tokenAddress) > 0) {
             if (!found) {
                 tokens.add(tokenAddress);
+                emit TokenAdded(tokenAddress, index);
             }
         } else if (found) {
-            tokens.removeAt(index);
+            tokens.remove(index);
+            emit TokenRemoved(tokenAddress, index);
         }
-    }
-
-    /**
-        @notice Sets an inital list of tokens that will be held by this Escrow contract.
-        @param tokenList An array of token address to be added to the the list of tokens held by the Escrow.
-     */
-    function _setTokens(address[] memory tokenList) internal {
-        tokens = tokenList;
     }
 
     function _initialize(address loansAddress, uint256 aLoanID)

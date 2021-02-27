@@ -10,11 +10,13 @@ import "../util/AddressLib.sol";
 import "../interfaces/SettingsInterface.sol";
 import "../interfaces/EscrowInterface.sol";
 import "../interfaces/LoansInterface.sol";
+import "../providers/openzeppelin/SignedSafeMath.sol";
 
 // Contracts
 
 library LoanLib {
     using SafeMath for uint256;
+    using SignedSafeMath for int256;
     using NumbersLib for uint256;
     using NumbersLib for int256;
     using AddressLib for address payable;
@@ -30,7 +32,6 @@ library LoanLib {
         @param interestRate Interest rate set in the loan terms.
         @param collateralRatio Collateral ratio set in the loan terms.
         @param maxLoanAmount Maximum loan amount that can be taken out, set in the loan terms.
-        @return memory TellerCommon.Loan Loan struct as per the Teller platform.
      */
     function init(
         TellerCommon.Loan storage loan,
@@ -117,6 +118,7 @@ library LoanLib {
     /**
         @notice Returns the total amount owed for a specified loan.
         @param loan The loan to get the total amount owed.
+        @return uint256 The total owed amount.
      */
     function getTotalOwed(TellerCommon.Loan memory loan)
         public
@@ -136,6 +138,7 @@ library LoanLib {
     /**
         @notice Returns the total amount owed for a specified loan.
         @param loan The loan to get the total amount owed.
+        @return uint256 The amount owed.
      */
     function getLoanAmount(TellerCommon.Loan memory loan)
         public
@@ -154,6 +157,7 @@ library LoanLib {
         @notice Returns the amount of interest owed for a given loan and loan amount.
         @param loan The loan to get the owed interest.
         @param amountBorrow The principal of the loan to take out.
+        @return uint256 The interest owed.
      */
     function getInterestOwedFor(
         TellerCommon.Loan memory loan,
@@ -270,7 +274,7 @@ library LoanLib {
                 );
             neededInCollateralTokens = int256(value);
             if (neededInLendingTokens < 0) {
-                neededInCollateralTokens *= -1;
+                neededInCollateralTokens = neededInCollateralTokens.mul(-1);
             }
         }
     }
@@ -281,7 +285,8 @@ library LoanLib {
         @dev If the loan status is Active, then the value is the threshold at which the loan can be liquidated at.
         @param loan The loan to get needed collateral info for.
         @param settings The settings instance that holds the platform setting values.
-        @return uint256 The minimum collateral value threshold required.
+        @return int256 The minimum collateral value threshold required.
+        @return uint256 The value of the loan held in the escrow contract.
      */
     function getCollateralNeededInTokens(
         TellerCommon.Loan memory loan,
@@ -310,9 +315,7 @@ library LoanLib {
                 loan.loanTerms.collateralRatio
             );
         } else {
-            neededInLendingTokens = int256(
-                loan.principalOwed.add(loan.interestOwed)
-            );
+            neededInLendingTokens = int256(loan.principalOwed);
             uint256 bufferPercent =
                 settings.getPlatformSettingValue(
                     settings.consts().COLLATERAL_BUFFER_SETTING()
@@ -324,13 +327,13 @@ library LoanLib {
             if (loan.escrow != address(0)) {
                 escrowLoanValue = EscrowInterface(loan.escrow)
                     .calculateTotalValue();
-                neededInLendingTokens +=
-                    neededInLendingTokens -
-                    int256(escrowLoanValue);
+                neededInLendingTokens = neededInLendingTokens.add(
+                    neededInLendingTokens.sub(int256(escrowLoanValue))
+                );
             }
-            neededInLendingTokens = neededInLendingTokens.percent(
-                requiredRatio
-            );
+            neededInLendingTokens = neededInLendingTokens
+                .add(int256(loan.interestOwed))
+                .percent(requiredRatio);
         }
     }
 
@@ -367,7 +370,9 @@ library LoanLib {
         if (availableValue < liquidationInfo.amountToLiquidate + maxReward) {
             liquidationInfo.rewardInCollateral = int256(availableValue);
         } else {
-            liquidationInfo.rewardInCollateral = int256(maxReward);
+            liquidationInfo.rewardInCollateral = int256(maxReward).add(
+                int256(liquidationInfo.amountToLiquidate)
+            );
         }
 
         liquidationInfo.liquidable =

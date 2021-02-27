@@ -113,7 +113,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
         @dev It tries to use ETH as a pass through asset if the direct pair is not supported.
         @param src Source token address.
         @param dst Destination token address.
-        @return uint256 The latest answer as given from Chainlink.
+        @return int256 The latest answer as given from Chainlink.
      */
     function latestAnswerFor(address src, address dst)
         external
@@ -130,6 +130,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
         @notice It allows for additional Chainlink Aggregators to be supported.
         @param src Source token address.
         @param dst Destination token address.
+        @param aggregator Price aggregator address.
      */
     function add(
         address src,
@@ -206,6 +207,10 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
 
     /* Internal Functions */
 
+    /**
+        @notice It normalizes the token address to ETH if WETH.
+        @param tokenAddress The address of the token to normalize.
+    */
     function _normalizeTokenAddress(address tokenAddress)
         internal
         view
@@ -260,8 +265,9 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
         uint256 srcAmount
     ) internal view returns (uint256) {
         return
-            (srcAmount * uint256(_priceFor(src, dst))) /
-            uint256(TEN**_decimalsFor(src));
+            (srcAmount.mul(uint256(_priceFor(src, dst)))).div(
+                uint256(TEN**_decimalsFor(src))
+            );
     }
 
     /**
@@ -269,7 +275,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
         @dev It tries to use ETH as a pass through asset if the direct pair is not supported.
         @param src Source token address.
         @param dst Destination token address.
-        @return uint256 The latest answer as given from Chainlink.
+        @return int256 The latest answer as given from Chainlink.
      */
     function _priceFor(address src, address dst)
         internal
@@ -277,18 +283,18 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
         returns (int256)
     {
         (AggregatorV2V3Interface agg, bool inverse) = _aggregatorFor(src, dst);
-        uint8 dstDecimals = _decimalsFor(dst);
+        uint256 dstDecimals = _decimalsFor(dst);
         int256 dstFactor = int256(TEN**dstDecimals);
         if (address(agg) != address(0)) {
             int256 price = agg.latestAnswer();
-            uint8 resDecimals = agg.decimals();
+            uint256 resDecimals = agg.decimals();
             if (inverse) {
-                price = int256(TEN**(resDecimals + resDecimals)) / price;
+                price = int256(TEN**(resDecimals.add(resDecimals))).div(price);
             }
             if (dstDecimals > resDecimals) {
-                price = price * int256(TEN**(dstDecimals - resDecimals));
+                price = price.mul(int256(TEN**(dstDecimals.sub(resDecimals))));
             } else {
-                price = price / int256(TEN**(resDecimals - dstDecimals));
+                price = price.div(int256(TEN**(resDecimals.sub(dstDecimals))));
             }
             int256 srcFactor = int256(TEN**_decimalsFor(src));
             return price;
@@ -300,7 +306,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
                     int256 price1 = _priceFor(src, routeToken);
                     int256 price2 = _priceFor(dst, routeToken);
 
-                    return (price1 * dstFactor) / price2;
+                    return (price1.mul(dstFactor)).div(price2);
                 }
             }
             revert("CANNOT_CALCULATE_VALUE");

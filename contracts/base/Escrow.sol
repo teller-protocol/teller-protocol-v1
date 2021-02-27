@@ -52,6 +52,7 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
         external
         isInitialized
         onlyBorrower
+        whenNotPaused
     {
         TellerCommon.Dapp memory dapp =
             settings.dappRegistry().dapps(dappData.location);
@@ -104,7 +105,7 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
         @dev If the Escrow's balance of the borrowed token is less than the amount to repay, transfer tokens from the sender's wallet.
         @dev Only the owner of the Escrow can call this. If someone else wants to make a payment, they should call the loans contract directly.
      */
-    function repay(uint256 amount) external onlyBorrower {
+    function repay(uint256 amount) external onlyBorrower whenNotPaused {
         IERC20 token = IERC20(getLendingToken());
         uint256 balance = _balanceOf(address(token));
         uint256 totalOwed = getLoansContract().getTotalOwed(getLoanID());
@@ -126,7 +127,7 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
         @dev The loan must not be active.
         @dev The recipient must be the loan borrower AND the loan must be already liquidated.
     */
-    function claimTokens() external onlyBorrower {
+    function claimTokens() external onlyBorrower whenNotPaused {
         require(
             getLoan().status == TellerCommon.LoanStatus.Closed,
             "LOAN_NOT_CLOSED"
@@ -153,6 +154,7 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
       */
     function claimTokensByCollateralValue(address recipient, uint256 value)
         external
+        whenNotPaused
     {
         require(
             getLoan().status == TellerCommon.LoanStatus.Closed,
@@ -168,6 +170,10 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
         uint256 valueLeftToTransfer = value;
         // cycle through tokens
         for (uint256 i = 0; i < tokens.length; i++) {
+            if (valueLeftToTransfer == 0) {
+                break;
+            }
+
             uint256 balance = _balanceOf(tokens[i]);
             // get value of token balance in collateral value
             if (balance > 0) {
@@ -188,8 +194,14 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
                     valueLeftToTransfer = valueLeftToTransfer.sub(
                         valueInCollateralToken
                     );
-                    _tokenUpdated(tokens[i]);
+                } else {
+                    IERC20(tokens[i]).safeTransfer(
+                        recipient,
+                        valueLeftToTransfer
+                    );
+                    valueLeftToTransfer = 0;
                 }
+                _tokenUpdated(tokens[i]);
             }
         }
         emit TokensClaimed(recipient);
@@ -232,6 +244,7 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
         (success, returnData) = baseAddress.staticcall(
             abi.encodeWithSignature("exchangeRateStored()")
         );
+        require(success, "EXCHANGE_RATE_CALL_FAIL");
         if (returnData.length > 0) {
             uint8 cTokenDecimals = CErc20Interface(baseAddress).decimals();
             uint256 exchangeRate = abi.decode(returnData, (uint256));

@@ -11,6 +11,7 @@ import "./Base.sol";
 
 // Interfaces
 import "../interfaces/AssetSettingsInterface.sol";
+import "../providers/compound/CErc20Interface.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -93,6 +94,19 @@ contract AssetSettings is AssetSettingsInterface, Base {
     ) external onlyPauser() {
         assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
         cTokenAddress.requireNotEmpty("CTOKEN_ADDRESS_REQUIRED");
+
+        if (assetAddress != settings.ETH_ADDRESS()) {
+            (bool success, bytes memory decimalsData) =
+                assetAddress.staticcall(abi.encodeWithSignature("decimals()"));
+            require(
+                success && decimalsData.length > 0,
+                "DECIMALS_NOT_SUPPORTED"
+            );
+            require(
+                CErc20Interface(cTokenAddress).underlying() == assetAddress,
+                "UNDERLYING_ASSET_MISMATCH"
+            );
+        }
 
         assets[assetAddress].initialize();
         assets[assetAddress].updateAddress(
