@@ -53,16 +53,16 @@ contract LendingPool is Base, LendingPoolInterface {
     IMarketRegistry public marketRegistry;
 
     // The total amount of underlying asset that has been originally been supplied by each lender not including interest earned.
-    mapping(address => uint256) internal _totalSuppliedUnderlyingLender;
+    mapping(address => uint256) public _totalSuppliedUnderlyingLender;
 
     // The total amount of underlying asset that has been lent out for loans.
-    uint256 internal _totalBorrowed;
+    uint256 public _totalBorrowed;
 
     // The total amount of underlying asset that has been repaid from loans.
-    uint256 internal _totalRepaid;
+    uint256 public _totalRepaid;
 
     // The total amount of underlying interest that has been claimed for each lender.
-    mapping(address => uint256) internal _totalInterestEarnedLender;
+    mapping(address => uint256) public _totalInterestEarnedLender;
 
     // The total amount of underlying interest the pool has earned from loans being repaid.
     uint256 public totalInterestEarned;
@@ -94,17 +94,21 @@ contract LendingPool is Base, LendingPoolInterface {
         whenNotPaused()
         whenLendingPoolNotPaused(address(this))
     {
+        uint256 exchangeRate = _exchangeRateCurrent();
+        tokenTransferFrom(msg.sender, lendingTokenAmount);
+
         require(
             _getTotalSupplied().add(lendingTokenAmount) <=
                 _getSettings().assetSettings().getMaxTVLAmount(address(lendingToken)),
             "MAX_TVL_REACHED"
         );
-        uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
+        uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount, exchangeRate);
 
-        _totalSuppliedUnderlyingLender[msg.sender] = _totalSuppliedUnderlyingLender[msg.sender].add(lendingTokenAmount);
-
-        // Transferring tokens to the LendingPool
-        tokenTransferFrom(msg.sender, lendingTokenAmount);
+        if (tToken.balanceOf(msg.sender) == 0 && _totalSuppliedUnderlyingLender[msg.sender] > 0) {
+            _totalSuppliedUnderlyingLender[msg.sender] = lendingTokenAmount;
+        } else {
+            _totalSuppliedUnderlyingLender[msg.sender] = _totalSuppliedUnderlyingLender[msg.sender].add(lendingTokenAmount);
+        }
 
         address cTokenAddress = cToken();
         if (
@@ -134,7 +138,7 @@ contract LendingPool is Base, LendingPoolInterface {
         whenLendingPoolNotPaused(address(this))
         nonReentrant()
     {
-        uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount);
+        uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount, _exchangeRateCurrent());
 
         require(tTokenAmount > 0, "WITHDRAW_TTOKEN_DUST");
         require(tToken.balanceOf(msg.sender) > tTokenAmount, "TTOKEN_NOT_ENOUGH_BALANCE");
@@ -151,7 +155,7 @@ contract LendingPool is Base, LendingPoolInterface {
         returns (uint256)
     {
         uint256 tTokenAmount = tToken.balanceOf(msg.sender);
-        uint256 lendingTokenAmount = _lendingTokensForTTokens(tTokenAmount);
+        uint256 lendingTokenAmount = _lendingTokensForTTokens(tTokenAmount, _exchangeRateCurrent());
 
         _withdraw(lendingTokenAmount, tTokenAmount);
 
@@ -218,6 +222,19 @@ contract LendingPool is Base, LendingPoolInterface {
         _totalBorrowed = _totalBorrowed.add(amount);
     }
 
+    function getMarketStateCurrent()
+        external
+        returns (
+            uint256 totalSupplied,
+            uint256 totalBorrowed,
+            uint256 totalRepaid,
+            uint256 totalOnLoan
+        )
+    {
+        _accrueInterest();
+        return _getMarketState();
+    }
+
     /**
         @notice It calculates the market state values across all markets.
         @return values that represent the global state across all markets.
@@ -240,8 +257,11 @@ contract LendingPool is Base, LendingPoolInterface {
         of TTokens owned and the current exchange rate.
         @return a lender's balance of the underlying token in the pool.
      */
-    function balanceOfUnderlying(address lender) external view returns (uint256) {
-        return _lendingTokensForTTokens(tToken.balanceOf(lender));
+    function balanceOfUnderlying(address lender)
+        external
+        returns (uint256)
+    {
+        return _lendingTokensForTTokens(tToken.balanceOf(lender), _exchangeRateCurrent());
     }
 
     /**
@@ -249,8 +269,11 @@ contract LendingPool is Base, LendingPoolInterface {
         @dev This value includes already claimed + unclaimed interest earned.
         @return total interest earned by lender.
      */
-    function getLenderInterestEarned(address lender) external view returns (uint256) {
-        uint256 currentLenderInterest = _calculateCurrentLenderInterestEarned(lender);
+    function getLenderInterestEarned(address lender)
+        external
+        returns (uint256)
+    {
+        uint256 currentLenderInterest = _calculateLenderInterestEarned(lender, _exchangeRateCurrent());
         return _totalInterestEarnedLender[lender].add(currentLenderInterest);
     }
 
@@ -258,8 +281,11 @@ contract LendingPool is Base, LendingPoolInterface {
         @notice Returns the amount of claimable interest a lender has earned.
         @return claimable interest value.
      */
-    function getClaimableInterestEarned(address lender) external view returns (uint256) {
-        return _calculateCurrentLenderInterestEarned(lender);
+    function getClaimableInterestEarned(address lender)
+        external
+        returns (uint256)
+    {
+        return _calculateLenderInterestEarned(lender, _exchangeRateCurrent());
     }
 
     /**
@@ -294,6 +320,14 @@ contract LendingPool is Base, LendingPoolInterface {
         @notice It calculates the current exchange rate for the TToken based on the total supply of the lending token.
         @return the exchange rate for 1 TToken to the underlying token.
      */
+    function exchangeRateCurrent() external returns (uint256) {
+        return _exchangeRateCurrent();
+    }
+
+    /**
+        @notice It calculates the stored exchange rate for the TToken based on the total supply of the lending token.
+        @return the exchange rate for 1 TToken to the underlying token.
+     */
     function exchangeRate() external view returns (uint256) {
         return _exchangeRate();
     }
@@ -321,13 +355,32 @@ contract LendingPool is Base, LendingPoolInterface {
 
     /** Internal functions */
 
-    function _calculateCurrentLenderInterestEarned(address lender) internal view returns (uint256) {
-        uint256 lenderUnderlyingBalance = _lendingTokensForTTokens(tToken.balanceOf(lender));
-        return lenderUnderlyingBalance.sub(_totalSuppliedUnderlyingLender[lender]);
+    function _calculateLenderInterestEarned(address lender, uint256 exchangeRate)
+        internal
+        returns (uint256)
+    {
+        uint256 lenderUnderlyingBalance = _lendingTokensForTTokens(tToken.balanceOf(lender), exchangeRate);
+        if (lenderUnderlyingBalance > _totalSuppliedUnderlyingLender[lender]) {
+            return lenderUnderlyingBalance.sub(_totalSuppliedUnderlyingLender[lender]);
+        } else {
+            return 0;
+        }
     }
 
     /**
         @notice It calculates the current exchange rate for the TToken based on the total supply of the lending token.
+        @dev This will accrue interest for us before we calculate anything.
+        @return the exchange rate for 1 TToken to the underlying token.
+     */
+    function _exchangeRateCurrent() internal returns (uint256) {
+        _accrueInterest();
+        return _exchangeRate();
+    }
+
+    /**
+        @notice It calculates the exchange rate for the TToken based on the total supply of the lending token.
+        @dev If the lending token is deposited into Compound the value calculated uses the exchangeRateStored value.
+        @dev If the intended use case is for the current exchange rate, call the _exchangeRateCurrent function above.
         @return the exchange rate for 1 TToken to the underlying token.
      */
     function _exchangeRate() internal view returns (uint256) {
@@ -380,7 +433,10 @@ contract LendingPool is Base, LendingPoolInterface {
         }
     }
 
-    function _withdraw(uint256 lendingTokenAmount, uint256 tTokenAmount) internal {
+    function _withdraw(uint256 lendingTokenAmount, uint256 tTokenAmount)
+        internal
+    {
+        _accrueInterest();
         uint256 lendingTokenBalance = lendingToken.balanceOf(address(this));
 
         address cTokenAddress = cToken();
@@ -391,7 +447,8 @@ contract LendingPool is Base, LendingPoolInterface {
             );
         }
 
-        uint256 currentLenderInterest = _calculateCurrentLenderInterestEarned(msg.sender);
+        uint256 currentLenderInterest =
+            _calculateLenderInterestEarned(msg.sender, _exchangeRate());
         uint256 totalSuppliedDiff;
         if (lendingTokenAmount > currentLenderInterest) {
             totalSuppliedDiff = lendingTokenAmount.sub(currentLenderInterest);
@@ -411,24 +468,22 @@ contract LendingPool is Base, LendingPoolInterface {
         emit TokenWithdrawn(msg.sender, lendingTokenAmount, tTokenAmount);
     }
 
-    function _tTokensForLendingTokens(uint256 lendingTokenAmount)
-        internal
-        view
-        returns (uint256)
-    {
+    function _tTokensForLendingTokens(
+        uint256 lendingTokenAmount,
+        uint256 exchangeRate
+    ) internal view returns (uint256) {
         return
             lendingTokenAmount.mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS)).div(
                 _exchangeRate()
             );
     }
 
-    function _lendingTokensForTTokens(uint256 tTokenAmount)
-        internal
-        view
-        returns (uint256)
-    {
+    function _lendingTokensForTTokens(
+        uint256 tTokenAmount,
+        uint256 exchangeRate
+    ) internal view returns (uint256) {
         return
-            tTokenAmount.mul(_exchangeRate()).div(
+            tTokenAmount.mul(exchangeRate).div(
                 uint256(10)**uint256(EXCHANGE_RATE_DECIMALS)
             );
     }
@@ -524,5 +579,9 @@ contract LendingPool is Base, LendingPoolInterface {
     function tTokenMint(address to, uint256 amount) private {
         bool mintResult = tToken.mint(to, amount);
         require(mintResult, "TTOKEN_MINT_FAILED");
+    }
+
+    function _accrueInterest() private {
+        cToken().call(abi.encodeWithSignature('accrueInterest()'));
     }
 }
