@@ -12,7 +12,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 
 // Interfaces
-import "./YVaultInterface.sol";
+import "./IYVault.sol";
 import "../../../providers/yearn/IVault.sol";
 
 /*****************************************************************************************************/
@@ -31,7 +31,7 @@ import "../../../providers/yearn/IVault.sol";
         delegatecalls from Escrow contract, so this contract's state is really Escrow.
     @author develop@teller.finance
  */
-contract YVault is YVaultInterface, BaseEscrowDapp {
+contract YVault is IYVault, BaseEscrowDapp {
     using AddressLib for address;
     using Address for address;
     using SafeMath for uint256;
@@ -45,13 +45,10 @@ contract YVault is YVaultInterface, BaseEscrowDapp {
      */
     function deposit(address tokenAddress, uint256 amount) public onlyBorrower {
         IVault iVault = _getYVault(tokenAddress);
-        IERC20 underlyingToken = IERC20(iVault.underlying());
-        uint256 tokenBalanceBeforeDeposit =
-            underlyingToken.balanceOf(address(this));
+        uint256 tokenBalanceBeforeDeposit = iVault.balanceOf(address(this));
         IERC20(tokenAddress).safeApprove(address(iVault), amount);
         iVault.deposit(amount);
-        uint256 tokenBalanceAfterDeposit =
-            underlyingToken.balanceOf(address(this));
+        uint256 tokenBalanceAfterDeposit = iVault.balanceOf(address(this));
         require(
             tokenBalanceAfterDeposit > tokenBalanceBeforeDeposit,
             "YEARN_BALANCE_NOT_INCREASED"
@@ -62,6 +59,7 @@ contract YVault is YVaultInterface, BaseEscrowDapp {
             tokenAddress,
             address(iVault),
             amount,
+            tokenBalanceBeforeDeposit,
             tokenBalanceAfterDeposit
         );
     }
@@ -77,6 +75,22 @@ contract YVault is YVaultInterface, BaseEscrowDapp {
     {
         IVault iVault = _getYVault(tokenAddress);
         _withdraw(iVault, amount);
+    }
+
+    /**
+        @notice Redeems all funds from a yVault from a previous deposit
+        @param tokenAddress The address of the token being deposited
+     */
+    function withdrawAll(address tokenAddress) public onlyBorrower {
+        IVault iVault = _getYVault(tokenAddress);
+        uint256 tokenBalanceBeforeWithdrawal = iVault.balanceOf(address(this));
+        require(tokenBalanceBeforeWithdrawal > 0, "INSUFFICIENT_DEPOSIT");
+        iVault.withdrawAll();
+        uint256 tokenBalanceAfterWithdrawal = iVault.balanceOf(address(this));
+        require(
+            tokenBalanceAfterWithdrawal > tokenBalanceBeforeWithdrawal,
+            "WITHDRAWAL_UNSUCCESSFUL"
+        );
     }
 
     /**
@@ -103,22 +117,22 @@ contract YVault is YVaultInterface, BaseEscrowDapp {
         @param amount The amount of funds to withdraw from the vault
      */
     function _withdraw(IVault iVault, uint256 amount) internal {
-        IERC20 underlyingToken = IERC20(iVault.underlying());
-        uint256 tokenBalanceBeforeWithdrawal =
-            underlyingToken.balanceOf(address(this));
+        uint256 tokenBalanceBeforeWithdrawal = iVault.balanceOf(address(this));
+        require(amount >= tokenBalanceBeforeWithdrawal, "INSUFFICIENT_DEPOSIT");
         iVault.withdraw(amount);
-        uint256 tokenBalanceAfterWithdrawal =
-            underlyingToken.balanceOf(address(this));
+        uint256 tokenBalanceAfterWithdrawal = iVault.balanceOf(address(this));
         require(
             tokenBalanceAfterWithdrawal > tokenBalanceBeforeWithdrawal,
             "WITHDRAWAL_UNSUCCESSFUL"
         );
 
-        _tokenUpdated(address(underlyingToken));
+        _tokenUpdated(address(iVault));
 
         emit YearnWithdrawn(
-            address(underlyingToken),
+            iVault.underlying(),
+            address(iVault),
             amount,
+            tokenBalanceBeforeWithdrawal,
             tokenBalanceAfterWithdrawal
         );
     }
