@@ -74,7 +74,24 @@ contract YVault is IYVault, BaseEscrowDapp {
         onlyBorrower
     {
         IVault iVault = _getYVault(tokenAddress);
-        _withdraw(iVault, amount);
+        uint256 tokenBalanceBeforeWithdrawal = iVault.balanceOf(address(this));
+        require(amount >= tokenBalanceBeforeWithdrawal, "INSUFFICIENT_DEPOSIT");
+        iVault.withdraw(amount);
+        uint256 tokenBalanceAfterWithdrawal = iVault.balanceOf(address(this));
+        require(
+            tokenBalanceAfterWithdrawal > tokenBalanceBeforeWithdrawal,
+            "WITHDRAWAL_UNSUCCESSFUL"
+        );
+
+        _tokenUpdated(address(iVault));
+
+        emit YearnWithdrawn(
+            iVault.underlying(),
+            address(iVault),
+            amount,
+            tokenBalanceBeforeWithdrawal,
+            tokenBalanceAfterWithdrawal
+        );
     }
 
     /**
@@ -90,6 +107,14 @@ contract YVault is IYVault, BaseEscrowDapp {
         require(
             tokenBalanceAfterWithdrawal > tokenBalanceBeforeWithdrawal,
             "WITHDRAWAL_UNSUCCESSFUL"
+        );
+
+        emit YearnWithdrawn(
+            iVault.underlying(),
+            address(iVault),
+            tokenBalanceBeforeWithdrawal,
+            tokenBalanceBeforeWithdrawal,
+            tokenBalanceAfterWithdrawal
         );
     }
 
@@ -111,31 +136,6 @@ contract YVault is IYVault, BaseEscrowDapp {
     }
 
     /** Internal Functions */
-    /**
-        @notice Redeems funds from a yVault from a previous deposit
-        @param iVault The instance of the yVault
-        @param amount The amount of funds to withdraw from the vault
-     */
-    function _withdraw(IVault iVault, uint256 amount) internal {
-        uint256 tokenBalanceBeforeWithdrawal = iVault.balanceOf(address(this));
-        require(amount >= tokenBalanceBeforeWithdrawal, "INSUFFICIENT_DEPOSIT");
-        iVault.withdraw(amount);
-        uint256 tokenBalanceAfterWithdrawal = iVault.balanceOf(address(this));
-        require(
-            tokenBalanceAfterWithdrawal > tokenBalanceBeforeWithdrawal,
-            "WITHDRAWAL_UNSUCCESSFUL"
-        );
-
-        _tokenUpdated(address(iVault));
-
-        emit YearnWithdrawn(
-            iVault.underlying(),
-            address(iVault),
-            amount,
-            tokenBalanceBeforeWithdrawal,
-            tokenBalanceAfterWithdrawal
-        );
-    }
 
     /**
         @notice Grabs the yVault address for a token from the asset settings
