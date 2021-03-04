@@ -21,6 +21,7 @@ export interface AssetSettings {
 export interface AssetSetting {
   cToken: TokenSymbol
   aToken?: TokenSymbol
+  yVault?: TokenSymbol
   maxLoanAmount: number
   maxTVLAmount: number
   maxDebtRatio: number

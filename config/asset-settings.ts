@@ -4,6 +4,7 @@ const mainnetAssetSettings: AssetSettings = {
   DAI: {
     cToken: 'CDAI',
     aToken: 'ADAI',
+    yVault: 'YDAI',
     maxLoanAmount: 10000,
     maxTVLAmount: 100000,
     maxDebtRatio: 5000,
