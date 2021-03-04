@@ -37,6 +37,11 @@ interface IVault {
     function decimals() external view returns (uint8);
 
     /**
+     * @dev Returns the amount of tokens owned by `account`.
+     */
+    function balanceOf(address account) external view returns (uint256);
+
+    /**
         @notice Returns the address of the Vault's controller
         @return The address of the controller contract
      */
