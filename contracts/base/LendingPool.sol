@@ -436,7 +436,7 @@ contract LendingPool is Base, LendingPoolInterface {
     function _withdraw(uint256 lendingTokenAmount, uint256 tTokenAmount)
         internal
     {
-        _accrueInterest();
+        uint256 exchangeRate = _exchangeRateCurrent();
         uint256 lendingTokenBalance = lendingToken.balanceOf(address(this));
 
         address cTokenAddress = cToken();
@@ -448,7 +448,7 @@ contract LendingPool is Base, LendingPoolInterface {
         }
 
         uint256 currentLenderInterest =
-            _calculateLenderInterestEarned(msg.sender, _exchangeRate());
+            _calculateLenderInterestEarned(msg.sender, exchangeRate);
         uint256 totalSuppliedDiff;
         if (lendingTokenAmount > currentLenderInterest) {
             totalSuppliedDiff = lendingTokenAmount.sub(currentLenderInterest);
@@ -471,17 +471,17 @@ contract LendingPool is Base, LendingPoolInterface {
     function _tTokensForLendingTokens(
         uint256 lendingTokenAmount,
         uint256 exchangeRate
-    ) internal view returns (uint256) {
+    ) internal pure returns (uint256) {
         return
             lendingTokenAmount.mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS)).div(
-                _exchangeRate()
+                exchangeRate
             );
     }
 
     function _lendingTokensForTTokens(
         uint256 tTokenAmount,
         uint256 exchangeRate
-    ) internal view returns (uint256) {
+    ) internal pure returns (uint256) {
         return
             tTokenAmount.mul(exchangeRate).div(
                 uint256(10)**uint256(EXCHANGE_RATE_DECIMALS)
