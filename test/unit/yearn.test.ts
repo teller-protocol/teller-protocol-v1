@@ -1,7 +1,7 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import hre from 'hardhat'
-import { Escrow, YVault } from '../../types/typechain'
+import { Escrow, Yearn } from '../../types/typechain'
 import { BigNumberish, Signer } from 'ethers'
 import { getTokens } from '../../config/tokens'
 import { Network } from '../../types/custom/config-types'
@@ -13,7 +13,7 @@ chai.use(solidity)
 interface TestSetupReturn {
   escrow: Escrow
   user: Signer
-  yVault: YVault
+  yearn: Yearn
   daiAddress: string
 }
 
@@ -34,37 +34,37 @@ const setUpTest = deployments.createFixture(
     const escrow = await contracts.get<Escrow>('Escrow', { at: loan.escrow })
 
     const daiAddress = getTokens(<Network>hre.network.name).DAI
-    const yVault = await contracts.get<YVault>('YVault')
+    const yearn = await contracts.get<Yearn>('Yearn')
 
     return {
       escrow,
       user,
-      yVault,
+      yearn,
       daiAddress,
     }
   }
 )
 
-describe.only('YVault', async () => {
+describe('Yearn', async () => {
   let escrow: Escrow
   let user: Signer
   let rando: Signer
-  let yVault: YVault
+  let yearn: Yearn
   let daiAddress: string
   let amount: BigNumberish
 
   beforeEach(async () => {
     // Set up
-    ;({ escrow, user, yVault, daiAddress } = await setUpTest())
+    ;({ escrow, user, yearn, daiAddress } = await setUpTest())
     amount = '500'
     rando = await getNamedSigner('liquidator')
   })
 
-  describe('deposit and withdraw from yVault', () => {
+  describe('deposit and withdraw from yearn', () => {
     it('Should be able to deposit and then withdraw successfully from a yearn vault', async () => {
       await escrow.connect(user).callDapp({
-        location: yVault.address,
-        data: yVault.interface.encodeFunctionData('deposit', [
+        location: yearn.address,
+        data: yearn.interface.encodeFunctionData('deposit', [
           daiAddress,
           amount,
         ]),
@@ -73,15 +73,15 @@ describe.only('YVault', async () => {
       await fastForward(10000)
 
       await escrow.connect(user).callDapp({
-        location: yVault.address,
-        data: yVault.interface.encodeFunctionData('withdrawAll', [daiAddress]),
+        location: yearn.address,
+        data: yearn.interface.encodeFunctionData('withdrawAll', [daiAddress]),
       })
     })
 
     it('Should not be able to deposit from a yearn vault', async () => {
       await escrow.connect(rando).callDapp({
-        location: yVault.address,
-        data: yVault.interface.encodeFunctionData('deposit', [
+        location: yearn.address,
+        data: yearn.interface.encodeFunctionData('deposit', [
           daiAddress,
           amount,
         ]),

@@ -70,7 +70,7 @@ const deployLogicContracts: DeployFunction = async (hre) => {
       contract: 'Aave',
     },
     {
-      contract: 'YVault',
+      contract: 'Yearn',
     },
     {
       contract: 'AssetSettings',

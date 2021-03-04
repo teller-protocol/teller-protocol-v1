@@ -26,7 +26,7 @@ const deployDapps: DeployFunction = async (hre) => {
       unsecured: true,
     },
     {
-      contract: 'YVault',
+      contract: 'Yearn',
       unsecured: true,
     },
   ]
