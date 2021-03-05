@@ -15,6 +15,7 @@ interface TestSetupReturn {
   user: Signer
   yearn: Yearn
   daiAddress: string
+  yDaiAddress: string
 }
 
 const { deployments, contracts, getNamedSigner, fastForward } = hre
@@ -27,35 +28,42 @@ const setUpTest = deployments.createFixture(
         market: { lendTokenSym: 'DAI', collTokenSym: 'ETH' },
       },
       borrower: user,
-      loanType: LoanType.OVER_COLLATERALIZED,
+      loanType: LoanType.UNDER_COLLATERALIZED,
     })
 
     const loan = await market.loans.loans(market.createdLoanId)
+
     const escrow = await contracts.get<Escrow>('Escrow', { at: loan.escrow })
+    const ting = await escrow.getTokens()
 
     const daiAddress = getTokens(<Network>hre.network.name).DAI
+    const yDaiAddress = getTokens(<Network>hre.network.name).YDAI
     const yearn = await contracts.get<Yearn>('Yearn')
+    console.log('Yearn proxy: ', yearn.address)
 
     return {
       escrow,
       user,
       yearn,
       daiAddress,
+      yDaiAddress,
     }
   }
 )
 
-describe('Yearn', async () => {
+describe.skip('Yearn', async () => {
   let escrow: Escrow
   let user: Signer
   let rando: Signer
   let yearn: Yearn
   let daiAddress: string
+  let yDaiAddress: string
   let amount: BigNumberish
+  let tokens: string[]
 
   beforeEach(async () => {
     // Set up
-    ;({ escrow, user, yearn, daiAddress } = await setUpTest())
+    ;({ escrow, user, yearn, daiAddress, yDaiAddress } = await setUpTest())
     amount = '500'
     rando = await getNamedSigner('liquidator')
   })
@@ -70,6 +78,8 @@ describe('Yearn', async () => {
         ]),
       })
 
+      tokens = await escrow.connect(user).getTokens()
+
       await fastForward(10000)
 
       await escrow.connect(user).callDapp({
@@ -78,14 +88,17 @@ describe('Yearn', async () => {
       })
     })
 
-    it('Should not be able to deposit from a yearn vault', async () => {
-      await escrow.connect(rando).callDapp({
-        location: yearn.address,
-        data: yearn.interface.encodeFunctionData('deposit', [
-          daiAddress,
-          amount,
-        ]),
-      })
+    it('Should not be able to deposit from a yearn vault as not the loan borrower', async () => {
+      await escrow
+        .connect(rando)
+        .callDapp({
+          location: yearn.address,
+          data: yearn.interface.encodeFunctionData('deposit', [
+            daiAddress,
+            amount,
+          ]),
+        })
+        .should.rejectedWith('NOT_BORROWER')
     })
   })
 })
