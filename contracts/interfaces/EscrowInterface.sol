@@ -2,6 +2,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 import "../util/TellerCommon.sol";
+import "./LoansInterface.sol";
 
 /**
     @notice This interface defines all function to allow borrowers interact with their escrow contracts.
@@ -25,6 +26,11 @@ interface EscrowInterface {
         @notice Returns this Escrow's loan instance.
      */
     function getLoan() external view returns (TellerCommon.Loan memory);
+
+    /**
+        @notice Returns the address of the associated loans contract.
+     */
+    function getLoansContract() external view returns (LoansInterface);
 
     /**
         @notice Calculate the value of the loan by getting the value of all tokens the Escrow owns.
@@ -58,9 +64,10 @@ interface EscrowInterface {
 
     /**
         @notice It initializes this escrow instance for a given loans address and loan id.
+        @param settingsAddress The address of the settings contract.
         @param loanID the loan ID associated to this escrow instance.
      */
-    function initialize(uint256 loanID) external;
+    function initialize(address settingsAddress, uint256 loanID) external;
 
     /**
         @notice Notifies when the Escrow's tokens have been claimed.

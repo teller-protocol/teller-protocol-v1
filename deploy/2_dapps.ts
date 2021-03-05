@@ -8,7 +8,7 @@ type DappDeploymentData = Array<{
   unsecured: boolean
 }>
 
-const deployDynamicProxies: DeployFunction = async (hre) => {
+const deployDapps: DeployFunction = async (hre) => {
   const { getNamedAccounts, contracts } = hre
   const { deployer } = await getNamedAccounts()
 
@@ -31,12 +31,11 @@ const deployDynamicProxies: DeployFunction = async (hre) => {
       hre,
       contract: data.contract,
     })
-
     await dappRegistry.addDapp(address, data.unsecured)
   }
 }
 
-export default deployDynamicProxies
+export default deployDapps
 
-deployDynamicProxies.tags = ['dapps']
-deployDynamicProxies.dependencies = ['settings']
+deployDapps.tags = ['dapps']
+deployDapps.dependencies = ['settings']
