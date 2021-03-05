@@ -55,6 +55,9 @@ const deployLogicContracts: DeployFunction = async (hre) => {
       contract: 'MarketFactory',
     },
     {
+      contract: 'Escrow',
+    },
+    {
       contract: 'Uniswap',
     },
     {

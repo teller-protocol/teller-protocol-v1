@@ -444,6 +444,21 @@ contract Settings is SettingsInterface, Base {
         emit AuthorizationGranted(addressToAdd, msg.sender);
     }
 
+    // The escrow must be added as an authorized address since it will be interacting with the protocol
+    // TODO: Remove after non-guarded launch
+    function addEscrowAuthorized(address escrowAddress) external isInitialized {
+        (bool success, bytes memory data) =
+            msg.sender.staticcall(abi.encodeWithSignature("lendingPool()"));
+        require(success, "FAILED_FETCHING_LP");
+        address lpAddress = abi.decode(data, (address));
+        require(
+            marketFactory.marketRegistry().loansRegistry(lpAddress, msg.sender),
+            "CALLER_NOT_LOANS"
+        );
+        authorizedAddresses[escrowAddress] = true;
+        emit AuthorizationGranted(escrowAddress, msg.sender);
+    }
+
     /**
         @notice Adds a list of wallet addresses to the list of authorized wallets
         @param addressesToAdd The list of wallet addresses being authorized

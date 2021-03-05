@@ -1,9 +1,6 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-// Contracts
-import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
-
 // Commons and Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "../util/AddressLib.sol";
@@ -18,15 +15,14 @@ import "../interfaces/SettingsInterface.sol";
 
 /**
     @notice It manages all the logic contract versions, mapping each one to a logic name (or key).
-
     @author develop@teller.finance
  */
-contract LogicVersionsRegistry is LogicVersionsRegistryInterface, Ownable {
+contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
     using LogicVersionLib for LogicVersionLib.LogicVersion;
     using Address for address;
 
     /* State Variables */
-
+    address public owner;
     LogicVersionsConsts public consts;
 
     /**
@@ -39,11 +35,12 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface, Ownable {
     mapping(bytes32 => LogicVersionLib.LogicVersion) internal logicVersions;
 
     /** Modifiers */
-
-    /* Constructor */
+    modifier onlyOwner() {
+        require(msg.sender == owner, "NOT_OWNER");
+        _;
+    }
 
     /** External Functions */
-
     /**
         @notice It creates multiple logic versions.
         @param newLogicVersions lists of the new logic versions to create.
@@ -138,15 +135,13 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface, Ownable {
         address aOwner,
         TellerCommon.LogicVersionRequest[] calldata initialLogicVersions
     ) external {
-        require(owner() == address(0), "ALREADY_INIT");
-        Ownable.initialize(aOwner);
-
+        require(owner == address(0), "ALREADY_INIT");
+        owner = aOwner;
         consts = new LogicVersionsConsts();
         _createLogicVersions(initialLogicVersions);
     }
 
     /** Internal functions */
-
     /**
         @notice It creates a new logic version given a logic name and address.
         @param logicName logic name to create.

@@ -117,7 +117,6 @@ contract MarketFactory is MarketFactoryInterface, Base {
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
 
-        address settingsAddress = address(settings);
         LoanTermsConsensusInterface loanTermsConsensus =
             _createLoanTermsConsensus();
         LoansInterface loans = _createLoans(collateralToken);
@@ -129,25 +128,21 @@ contract MarketFactory is MarketFactoryInterface, Base {
             TToken tToken = _createTToken();
 
             tToken.initialize(lendingToken, address(lendingPool));
-            lendingPool.initialize(
-                marketRegistry,
-                tToken,
-                address(settingsAddress)
-            );
+            lendingPool.initialize(marketRegistry, tToken, address(settings));
         }
 
         // Initializing LoanTermsConsensus
         loanTermsConsensus.initialize(
             msg.sender,
             address(loans),
-            address(settingsAddress)
+            address(settings)
         );
 
         // Initializing Loans
         loans.initialize(
             address(lendingPool),
             address(loanTermsConsensus),
-            address(settingsAddress),
+            address(settings),
             collateralToken
         );
 
