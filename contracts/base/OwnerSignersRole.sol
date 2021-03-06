@@ -2,7 +2,19 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/access/Roles.sol";
+import "./Base.sol";
 
+/*****************************************************************************************************/
+/**                                             WARNING                                             **/
+/**                              THIS CONTRACT IS AN UPGRADEABLE BASE!                              **/
+/**  ---------------------------------------------------------------------------------------------  **/
+/**  Do NOT change the order of, PREPEND, or APPEND any storage variables to this or new versions   **/
+/**  of this contract as this will cause a ripple affect to the storage slots of all child          **/
+/**  contracts that inherit from this contract to be overwritten on the deployed proxy contract!!   **/
+/**                                                                                                 **/
+/**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
+/**  more information.                                                                              **/
+/*****************************************************************************************************/
 /**
     @notice This contract manages the signer role for the consensus contracts.
     @notice It includes an owner role who has the ability to grant the signer role.
@@ -10,7 +22,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/access/Roles.sol";
 
     @author develop@teller.finance
  */
-contract OwnerSignersRole {
+contract OwnerSignersRole is Base {
     using Roles for Roles.Role;
 
     /**

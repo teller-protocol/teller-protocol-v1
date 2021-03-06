@@ -28,8 +28,6 @@ contract BaseEscrowDapp is Base {
      */
     uint256 private _loanID;
 
-    address private _lendingToken;
-
     /**
         @notice This event is emitted when a new token is added to this Escrow.
         @param tokenAddress address of the new token.
@@ -91,7 +89,7 @@ contract BaseEscrowDapp is Base {
         @notice Returns this Escrow's loan instance.
      */
     function getLendingToken() public view returns (address) {
-        return _lendingToken;
+        return _loans.lendingToken();
     }
 
     /**

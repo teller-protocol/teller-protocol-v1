@@ -209,11 +209,15 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
 
     /**
         @notice It initializes this escrow instance for a given loans address and loan id.
+        @param settingsAddress The address of the settings contract.
         @param loanID the loan ID associated to this escrow instance.
      */
-    function initialize(uint256 loanID) public isNotInitialized {
+    function initialize(address settingsAddress, uint256 loanID)
+        external
+        isNotInitialized
+    {
         BaseEscrowDapp._initialize(msg.sender, loanID);
-        Base._initialize(address(settings));
+        Base._initialize(address(settingsAddress));
 
         // Initialize tokens list with the borrowed token.
         address lendingToken = getLendingToken();

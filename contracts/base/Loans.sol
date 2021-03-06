@@ -36,7 +36,7 @@ import "../interfaces/EscrowInterface.sol";
 
     @author develop@teller.finance
  */
-contract Loans is LoansInterface, ReentrancyGuard, Base {
+contract Loans is LoansInterface, Base, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
     using NumbersLib for uint256;
@@ -412,7 +412,10 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
 
         if (!eoaAllowed) {
             loans[loanID].escrow.requireNotEmpty("ESCROW_CONTRACT_NOT_DEFINED");
-            EscrowInterface(loans[loanID].escrow).initialize(loanID);
+            EscrowInterface(loans[loanID].escrow).initialize(
+                address(settings),
+                loanID
+            );
         }
 
         emit LoanTakenOut(
@@ -682,7 +685,7 @@ contract Loans is LoansInterface, ReentrancyGuard, Base {
         );
         // The escrow must be added as an authorized address since it will be interacting with the protocol
         // TODO: Remove after non-guarded launch
-        settings.addAuthorizedAddress(escrow);
+        settings.addEscrowAuthorized(escrow);
 
         emit EscrowCreated(loans[loanID].loanTerms.borrower, loanID, escrow);
     }

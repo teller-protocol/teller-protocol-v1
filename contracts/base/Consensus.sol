@@ -9,7 +9,6 @@ import "../util/NumbersList.sol";
 
 // Contracts
 import "./OwnerSignersRole.sol";
-import "../base/Base.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -28,7 +27,7 @@ import "../base/Base.sol";
 
     @author develop@teller.finance
  */
-contract Consensus is Base, OwnerSignersRole {
+contract Consensus is OwnerSignersRole {
     using SafeMath for uint256;
     using NumbersList for NumbersList.Values;
     using NumbersLib for uint256;

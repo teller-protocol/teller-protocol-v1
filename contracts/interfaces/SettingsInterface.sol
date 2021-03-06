@@ -236,6 +236,8 @@ interface SettingsInterface {
     function addAuthorizedAddressList(address[] calldata addressesToAdd)
         external;
 
+    function addEscrowAuthorized(address escrowAddress) external;
+
     /**
         @notice Returns whether the platform is restricted or not
         @return bool True if the platform is restricted, false if not
