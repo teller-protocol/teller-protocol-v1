@@ -6,7 +6,7 @@ import { ONE_DAY } from '../../utils/consts'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Loans } from '../../types/typechain'
 
-enum LoanType {
+export enum LoanType {
   ZERO_COLLATERAL,
   UNDER_COLLATERALIZED,
   OVER_COLLATERALIZED,
