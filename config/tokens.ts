@@ -19,7 +19,7 @@ const mainnetTokens: Tokens = {
   MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2',
   YFI: '0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e',
   AAVE: '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9',
-  YDAI: '0xacd43e627e64355f1861cec6d3a6688b31a6f952',
+  YDAI: '0x19D3364A399d251E894aC732651be8B0E4e85001', // v2 - DAI yVault
 }
 
 export const tokensConfigsByNetwork: Config<Tokens> = {

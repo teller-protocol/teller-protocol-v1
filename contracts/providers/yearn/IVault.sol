@@ -13,12 +13,6 @@ interface IVault {
     function token() external view returns (address);
 
     /**
-        @notice Returns the native underlying token address in Vaults, ex: yDAI in case of a DAI delegated vault
-        @return The address of the underlying token
-     */
-    function underlying() external view returns (address);
-
-    /**
         @notice Returns the vault's wrapped token name as a string, example 'yearn Dai Stablecoin'
         @return The name of the wrapped token
      */
@@ -60,7 +54,16 @@ interface IVault {
             - yTokenTotalSupply is the total supply of the Vault's wrapped token (example yDAI)
         @return The token price
      */
-    function getPricePerFullShare() external view returns (uint256);
+    function getPricePerFullShare() external view returns (uint256); // v1 vaults
+
+    /**
+        @notice Returns the price of the Vault's wrapped token, denominated in the unwrapped native token
+        @notice Calculation is: nativeTokenBalance/yTokenTotalSupply,
+            - nativeTokenBalance is the current balance of the native token (example DAI) in the Vault
+            - yTokenTotalSupply is the total supply of the Vault's wrapped token (example yDAI)
+        @return The token price
+     */
+    function getPricePerShare() external view returns (uint256); // v2 vaults
 
     /**
         @notice Deposits the specified amount of the native unwrapped token (same as token() returns) into the Vault
