@@ -121,21 +121,19 @@ interface AssetSettingsInterface {
         returns (address);
 
     /**
-        @notice It updates the curve pool address associted with an asset.
-        @param assetAddress asset address to configure.
-        @param crvPoolAddress the new Curve pool address to configure.
+     @notice It updates the aToken address associated with an asset.
+     @param assetAddress asset address to configure.
+     @param aTokenAddress the new aToken address to configure.
      */
-    function updateCRVPoolAddressSetting(
-        address assetAddress,
-        address crvPoolAddress
-    ) external;
+    function updateATokenAddress(address assetAddress, address aTokenAddress)
+        external;
 
     /**
-        @notice It returns the curve pool address associted with an asset.
-        @param assetAddress asset address to get the associated curve pool address for.
-        @return The address of the curve pool.
-     */
-    function getCRVPoolAddress(address assetAddress)
+      @notice It returns the aToken address associated with an asset.
+      @param assetAddress asset address to get the associated aToken for.
+      @return The associated aToken address
+      */
+    function getATokenAddress(address assetAddress)
         external
         view
         returns (address);
