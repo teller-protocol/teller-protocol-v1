@@ -1,7 +1,7 @@
 pragma solidity 0.5.17;
 
 /**
-    @notice Aave dApp interface. 
+    @notice Aave dApp interface.
 
     @author develop@teller.finance
  */
@@ -11,14 +11,14 @@ interface IAave {
         @param tokenAddress address of the underlying token.
         @param aTokenAddress aave token address.
         @param amount amount of tokens to Deposit.
-        @param tokenBalanceAfterDeposit underlying token balance after Deposit.
-        @param aTokenBalanceAfterDeposit cTokens balance after Deposit.
+        @param aTokenBalanceBeforeDeposit aTokens balance after Deposit.
+        @param aTokenBalanceAfterDeposit aTokens balance after Deposit.
      */
     event AaveDeposited(
         address indexed tokenAddress,
         address indexed aTokenAddress,
         uint256 amount,
-        uint256 tokenBalanceAfterDeposit,
+        uint256 aTokenBalanceBeforeDeposit,
         uint256 aTokenBalanceAfterDeposit
     );
 
@@ -27,14 +27,14 @@ interface IAave {
         @param tokenAddress address of the underlying token.
         @param aTokenAddress aave token address.
         @param amount amount of tokens to Withdrawal.
-        @param tokenBalanceAfterWithdrawal underlying token balance after Withdrawal.
-        @param aTokenBalanceAfterWithdrawal cTokens balance after Withdrawal.
+        @param aTokenBalanceBeforeDeposit aTokens balance after Withdrawal.
+        @param aTokenBalanceAfterWithdrawal aTokens balance after Withdrawal.
      */
     event AaveWithdrawn(
         address indexed tokenAddress,
         address indexed aTokenAddress,
         uint256 amount,
-        uint256 tokenBalanceAfterWithdrawal,
+        uint256 aTokenBalanceBeforeDeposit,
         uint256 aTokenBalanceAfterWithdrawal
     );
 
@@ -46,9 +46,15 @@ interface IAave {
     function deposit(address tokenAddress, uint256 amount) external;
 
     /**
-        @notice This function withdraws the user's aTokens for a specific amount 
+        @notice This function withdraws the user's aTokens for a specific amount
         @param tokenAddress address of the token
         @param amount amount of the underlying tokens to withdraw
      */
     function withdraw(address tokenAddress, uint256 amount) external;
+
+    /**
+        @notice This function withdraws all the user's aTokens from previous deposits
+        @param tokenAddress address of the token
+     */
+    function withdrawAll(address tokenAddress) external;
 }

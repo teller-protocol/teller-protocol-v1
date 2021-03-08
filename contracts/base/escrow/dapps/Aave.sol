@@ -44,12 +44,11 @@ contract Aave is IAave, BaseEscrowDapp {
         @param amount amount of tokens to deposit
      */
     function deposit(address tokenAddress, uint256 amount) public onlyBorrower {
+        IAaveLendingPool aaveLendingPool = _getAaveLendingPool();
         IAToken aToken = _getAToken(tokenAddress);
-        IAaveLendingPool aaveLendingPool = _getAavePoolAddress(tokenAddress);
         uint256 aTokenBalanceBeforeDeposit = aToken.balanceOf(address(this));
         IERC20(tokenAddress).safeApprove(address(aaveLendingPool), amount);
         aaveLendingPool.deposit(tokenAddress, amount, address(this), 0);
-
         uint256 aTokenBalanceAfterDeposit = aToken.balanceOf(address(this));
         require(
             aTokenBalanceAfterDeposit > aTokenBalanceBeforeDeposit,
@@ -59,12 +58,11 @@ contract Aave is IAave, BaseEscrowDapp {
         _tokenUpdated(address(aToken));
         _tokenUpdated(tokenAddress);
 
-        uint256 tokenBalanceAfterDeposit = _balanceOf(tokenAddress);
         emit AaveDeposited(
             tokenAddress,
             address(aToken),
             amount,
-            tokenBalanceAfterDeposit,
+            aTokenBalanceBeforeDeposit,
             aTokenBalanceAfterDeposit
         );
     }
@@ -79,11 +77,13 @@ contract Aave is IAave, BaseEscrowDapp {
         onlyBorrower
     {
         IAToken aToken = _getAToken(tokenAddress);
-        IAaveLendingPool aaveLendingPool = _getAavePoolAddress(tokenAddress);
+        IAaveLendingPool aaveLendingPool = _getAaveLendingPool();
         uint256 aTokenBalanceBeforeWithdraw = aToken.balanceOf(address(this));
-        require(aTokenBalanceBeforeWithdraw >= 0, "NO_BALANCE_TO_WITHDRAW");
-        uint256 result =
-            aaveLendingPool.withdraw(tokenAddress, amount, address(this));
+        require(
+            aTokenBalanceBeforeWithdraw >= amount,
+            "NO_BALANCE_TO_WITHDRAW"
+        );
+        aaveLendingPool.withdraw(tokenAddress, amount, address(this));
         uint256 aTokenBalanceAfterWithdraw = aToken.balanceOf(address(this));
         require(
             aTokenBalanceAfterWithdraw < aTokenBalanceBeforeWithdraw,
@@ -93,30 +93,58 @@ contract Aave is IAave, BaseEscrowDapp {
         _tokenUpdated(address(aToken));
         _tokenUpdated(tokenAddress);
 
-        uint256 tokenBalanceAfterWithdrawal = _balanceOf(tokenAddress);
         emit AaveWithdrawn(
             tokenAddress,
             address(aToken),
             amount,
-            tokenBalanceAfterWithdrawal,
+            aTokenBalanceBeforeWithdraw,
+            aTokenBalanceAfterWithdraw
+        );
+    }
+
+    /**
+        @notice This function withdraws all the user's aTokens from previous deposits
+        @param tokenAddress address of the token
+     */
+    function withdrawAll(address tokenAddress) public onlyBorrower {
+        IAToken aToken = _getAToken(tokenAddress);
+
+        uint256 aTokenBalanceBeforeWithdraw = aToken.balanceOf(address(this));
+        require(aTokenBalanceBeforeWithdraw >= 0, "NO_BALANCE_TO_WITHDRAW");
+
+        IAaveLendingPool aaveLendingPool = _getAaveLendingPool();
+        aaveLendingPool.withdraw(
+            tokenAddress,
+            aTokenBalanceBeforeWithdraw,
+            address(this)
+        );
+        uint256 aTokenBalanceAfterWithdraw = aToken.balanceOf(address(this));
+        require(aTokenBalanceAfterWithdraw == 0, "AAVE_WITHDRAWAL_ERROR");
+
+        _tokenUpdated(address(aToken));
+        _tokenUpdated(tokenAddress);
+
+        emit AaveWithdrawn(
+            tokenAddress,
+            address(aToken),
+            aTokenBalanceBeforeWithdraw,
+            aTokenBalanceBeforeWithdraw,
             aTokenBalanceAfterWithdraw
         );
     }
 
     /**
         @notice Grabs the Aave lending pool instance from the Aave lending pool address provider
-        @param tokenAddress The token address to get the lending pool for
         @return IAaveLendingPool instance address
      */
-    function _getAavePoolAddress(address tokenAddress)
-        internal
-        view
-        returns (IAaveLendingPool)
-    {
+    function _getAaveLendingPool() internal view returns (IAaveLendingPool) {
         return
             IAaveLendingPool(
-                IAaveLendingPoolAddressesProvider(tokenAddress).getLendingPool()
-            );
+                IAaveLendingPoolAddressesProvider(
+                    0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5
+                )
+                    .getLendingPool()
+            ); // LP address provider contract is immutable and the address will never change
     }
 
     /**
@@ -127,9 +155,7 @@ contract Aave is IAave, BaseEscrowDapp {
     function _getAToken(address tokenAddress) internal view returns (IAToken) {
         return
             IAToken(
-                _getAavePoolAddress(tokenAddress)
-                    .getReserveData(tokenAddress)
-                    .aTokenAddress
+                _getAaveLendingPool().getReserveData(tokenAddress).aTokenAddress
             );
     }
 }
