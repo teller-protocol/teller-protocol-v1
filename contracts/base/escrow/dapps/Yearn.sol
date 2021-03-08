@@ -86,7 +86,7 @@ contract Yearn is IYearn, BaseEscrowDapp {
         _tokenUpdated(address(iVault));
 
         emit YearnWithdrawn(
-            iVault.underlying(),
+            iVault.token(),
             address(iVault),
             amount,
             tokenBalanceBeforeWithdrawal,
@@ -110,7 +110,7 @@ contract Yearn is IYearn, BaseEscrowDapp {
         );
 
         emit YearnWithdrawn(
-            iVault.underlying(),
+            iVault.token(),
             address(iVault),
             tokenBalanceBeforeWithdrawal,
             tokenBalanceBeforeWithdrawal,
