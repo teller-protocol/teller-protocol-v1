@@ -181,12 +181,13 @@ contract LendingPool is Base, LendingPoolInterface {
         whenLendingPoolNotPaused(address(this))
         nonReentrant()
     {
-        uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount, _exchangeRateCurrent());
+        uint256 exchangeRate = _exchangeRateCurrent();
+        uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount, exchangeRate);
 
         require(tTokenAmount > 0, "WITHDRAW_TTOKEN_DUST");
         require(tToken.balanceOf(msg.sender) > tTokenAmount, "TTOKEN_NOT_ENOUGH_BALANCE");
 
-        _withdraw(lendingTokenAmount, tTokenAmount);
+        _withdraw(lendingTokenAmount, tTokenAmount, exchangeRate);
     }
 
     function withdrawAll()
@@ -198,9 +199,10 @@ contract LendingPool is Base, LendingPoolInterface {
         returns (uint256)
     {
         uint256 tTokenAmount = tToken.balanceOf(msg.sender);
-        uint256 lendingTokenAmount = _lendingTokensForTTokens(tTokenAmount, _exchangeRateCurrent());
+        uint256 exchangeRate = _exchangeRateCurrent();
+        uint256 lendingTokenAmount = _lendingTokensForTTokens(tTokenAmount, exchangeRate);
 
-        _withdraw(lendingTokenAmount, tTokenAmount);
+        _withdraw(lendingTokenAmount, tTokenAmount, exchangeRate);
 
         return lendingTokenAmount;
     }
@@ -472,10 +474,9 @@ contract LendingPool is Base, LendingPoolInterface {
         }
     }
 
-    function _withdraw(uint256 lendingTokenAmount, uint256 tTokenAmount)
+    function _withdraw(uint256 lendingTokenAmount, uint256 tTokenAmount, uint256 exchangeRate)
         internal
     {
-        uint256 exchangeRate = _exchangeRateCurrent();
         uint256 lendingTokenBalance = lendingToken.balanceOf(address(this));
 
         address cTokenAddress = cToken();
