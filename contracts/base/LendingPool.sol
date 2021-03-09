@@ -67,6 +67,8 @@ contract LendingPool is Base, LendingPoolInterface {
     // The total amount of underlying interest the pool has earned from loans being repaid.
     uint256 public totalInterestEarned;
 
+    bool internal upgradeFixApplied;
+
     /** Modifiers */
 
     /**
@@ -104,11 +106,7 @@ contract LendingPool is Base, LendingPoolInterface {
         );
         uint256 tTokenAmount = _tTokensForLendingTokens(lendingTokenAmount, exchangeRate);
 
-        if (tToken.balanceOf(msg.sender) == 0 && _totalSuppliedUnderlyingLender[msg.sender] > 0) {
-            _totalSuppliedUnderlyingLender[msg.sender] = lendingTokenAmount;
-        } else {
-            _totalSuppliedUnderlyingLender[msg.sender] = _totalSuppliedUnderlyingLender[msg.sender].add(lendingTokenAmount);
-        }
+        _totalSuppliedUnderlyingLender[msg.sender] = _totalSuppliedUnderlyingLender[msg.sender].add(lendingTokenAmount);
 
         address cTokenAddress = cToken();
         if (
@@ -123,6 +121,51 @@ contract LendingPool is Base, LendingPoolInterface {
 
         // Emit event
         emit TokenDeposited(msg.sender, lendingTokenAmount, tTokenAmount);
+    }
+
+    function upgradeFix() external {
+        require(upgradeFixApplied == false, "FIX_ALREADY_APPLIED");
+
+        tToken.burn(
+            0xeA459a5aA7e52F0493eDa1fAaE0B862C51bf40B9,
+            tToken.balanceOf(0xeA459a5aA7e52F0493eDa1fAaE0B862C51bf40B9)
+        );
+        tToken.burn(
+            0x38148eCC2078dA7f65E6233DDA28eFaf4C51E96F,
+            tToken.balanceOf(0x38148eCC2078dA7f65E6233DDA28eFaf4C51E96F)
+        );
+        tToken.burn(
+            0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5,
+            tToken.balanceOf(0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5)
+        );
+
+        require(tToken.totalSupply() == 0, "FAILED TTOKEN SUPPLY");
+
+        _totalSuppliedUnderlyingLender[0xeA459a5aA7e52F0493eDa1fAaE0B862C51bf40B9] = 50000000000000000000;
+        _totalSuppliedUnderlyingLender[0x38148eCC2078dA7f65E6233DDA28eFaf4C51E96F] = 10000000000000000000000;
+        _totalSuppliedUnderlyingLender[0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5] = 90877000000000000000000;
+
+        _totalInterestEarnedLender[0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5] = 0;
+
+        tTokenMint(
+            0xeA459a5aA7e52F0493eDa1fAaE0B862C51bf40B9,
+            50000000000000000000
+        );
+        tTokenMint(
+            0x38148eCC2078dA7f65E6233DDA28eFaf4C51E96F,
+            10000000000000000000000
+        );
+
+        _accrueInterest();
+
+        uint256 supply = uint256(50000000000000000000).add(10000000000000000000000);
+        uint256 remainingSupply = _getTotalSupplied().sub(supply);
+        tTokenMint(
+            0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5,
+            remainingSupply
+        );
+
+        upgradeFixApplied = true;
     }
 
     /**
@@ -360,11 +403,7 @@ contract LendingPool is Base, LendingPoolInterface {
         returns (uint256)
     {
         uint256 lenderUnderlyingBalance = _lendingTokensForTTokens(tToken.balanceOf(lender), exchangeRate);
-        if (lenderUnderlyingBalance > _totalSuppliedUnderlyingLender[lender]) {
-            return lenderUnderlyingBalance.sub(_totalSuppliedUnderlyingLender[lender]);
-        } else {
-            return 0;
-        }
+        return lenderUnderlyingBalance.sub(_totalSuppliedUnderlyingLender[lender]);
     }
 
     /**
