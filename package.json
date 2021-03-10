@@ -82,7 +82,7 @@
     "bignumber.js": "^9.0.0",
     "chai-as-promised": "^7.1.1",
     "disklet": "^0.4.6",
-    "elliptic": "^6.5.3",
+    "elliptic": "^6.5.4",
     "ethers": "^5.0.26",
     "ganache-core": "^2.11.2",
     "hardhat-gas-reporter": "^1.0.4",
