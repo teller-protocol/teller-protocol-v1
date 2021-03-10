@@ -22,7 +22,15 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
     using Address for address;
 
     /* State Variables */
+
+    /**
+     * @notice It is the only address that may make changes in the contract.
+     */
     address public owner;
+
+    /**
+     * @notice It represents the logic names for the DynamicProxy contracts.
+     */
     LogicVersionsConsts public consts;
 
     /**
@@ -35,6 +43,10 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
     mapping(bytes32 => LogicVersionLib.LogicVersion) internal logicVersions;
 
     /** Modifiers */
+
+    /**
+     * @notice It checks that the sender is the owner address.
+     */
     modifier onlyOwner() {
         require(msg.sender == owner, "NOT_OWNER");
         _;
@@ -93,6 +105,15 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
             currentVersion,
             previousVersion
         );
+    }
+
+    /**
+        @notice Transfers ownership of the contract to a new account (`newOwner`).
+        @dev Can only be called by the current owner.
+        @param newOwner The address that should be the new owner.
+     */
+    function transferOwnership(address newOwner) public onlyOwner {
+        owner = newOwner;
     }
 
     /**
