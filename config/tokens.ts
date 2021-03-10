@@ -16,7 +16,7 @@ const mainnetTokens: Tokens = {
   SNX: '0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f',
   MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2',
   YFI: '0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e',
-  LEND: '0x80fB784B7eD66730e8b1DBd9820aFD29931aab03'
+  AAVE: '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9',
 }
 
 export const tokensConfigsByNetwork: Config<Tokens> = {
@@ -30,7 +30,7 @@ export const tokensConfigsByNetwork: Config<Tokens> = {
     WETH: '0xd0a1e359811322d97991e03f863a0c30c2cf029c',
     DAI: '0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa',
     USDC: '0xb7a4f3e9097c08da09517b5ab877f7a917224ede',
-    LINK: '0xa36085F69e2889c224210F603D836748e7dC0088'
+    LINK: '0xa36085F69e2889c224210F603D836748e7dC0088',
   },
   rinkeby: {
     ETH: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
@@ -42,7 +42,7 @@ export const tokensConfigsByNetwork: Config<Tokens> = {
     WETH: '0xc778417E063141139Fce010982780140Aa0cD5Ab',
     DAI: '0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa',
     USDC: '0x4DBCdF9B62e891a7cec5A2568C3F4FAF9E8Abe2b',
-    LINK: '0x01BE23585060835E02B77ef475b0Cc51aA1e0709'
+    LINK: '0x01BE23585060835E02B77ef475b0Cc51aA1e0709',
   },
   ropsten: {
     ETH: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
@@ -54,11 +54,11 @@ export const tokensConfigsByNetwork: Config<Tokens> = {
     WETH: '0xc778417e063141139fce010982780140aa0cd5ab',
     DAI: '0xc2118d4d90b274016cB7a54c03EF52E6c537D957',
     USDC: '0x0D9C8723B343A8368BebE0B5E89273fF8D712e3C',
-    LINK: '0x20fE562d797A42Dcb3399062AE9546cd06f63280'
+    LINK: '0x20fE562d797A42Dcb3399062AE9546cd06f63280',
   },
   hardhat: mainnetTokens,
   localhost: mainnetTokens,
-  mainnet: mainnetTokens
+  mainnet: mainnetTokens,
 }
 
 export const getTokens = (network: Network) => tokensConfigsByNetwork[network]
