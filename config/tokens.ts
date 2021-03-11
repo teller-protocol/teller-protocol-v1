@@ -18,7 +18,7 @@ const mainnetTokens: Tokens = {
   SNX: '0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f',
   MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2',
   YFI: '0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e',
-  LEND: '0x80fB784B7eD66730e8b1DBd9820aFD29931aab03',
+  AAVE: '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9',
 }
 
 export const tokensConfigsByNetwork: Config<Tokens> = {
