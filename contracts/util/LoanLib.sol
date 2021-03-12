@@ -107,7 +107,7 @@ library LoanLib {
      */
     function isActiveOrSet(TellerCommon.Loan memory loan)
         public
-        view
+        pure
         returns (bool)
     {
         return
@@ -142,7 +142,7 @@ library LoanLib {
      */
     function getLoanAmount(TellerCommon.Loan memory loan)
         public
-        view
+        pure
         returns (uint256)
     {
         if (loan.status == TellerCommon.LoanStatus.TermsSet) {
@@ -162,7 +162,7 @@ library LoanLib {
     function getInterestOwedFor(
         TellerCommon.Loan memory loan,
         uint256 amountBorrow
-    ) public view returns (uint256) {
+    ) public pure returns (uint256) {
         return amountBorrow.percent(getInterestRatio(loan));
     }
 

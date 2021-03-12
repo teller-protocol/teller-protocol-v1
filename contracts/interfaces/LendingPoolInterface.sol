@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Deta
 
 // Interfaces
 import "./IMarketRegistry.sol";
+import "../providers/compound/CErc20Interface.sol";
 
 // Contracts
 import "../base/TToken.sol";
@@ -79,7 +80,7 @@ interface LendingPoolInterface {
         @notice It gets the cToken address.
         @return the cToken address.
     */
-    function cToken() external view returns (address);
+    function cToken() external view returns (CErc20Interface);
 
     /**
         @notice It gets the tToken address.
@@ -92,20 +93,22 @@ interface LendingPoolInterface {
         of TTokens owned and the current exchange rate.
         @return a lender's balance of the underlying token in the pool.
      */
-    function balanceOfUnderlying(address lender) external view returns (uint256);
+    function balanceOfUnderlying(address lender) external returns (uint256);
 
     /**
         @notice Returns the total amount of interest earned by a lender.
         @dev This value includes already claimed + unclaimed interest earned.
         @return total interest earned by lender.
      */
-    function getLenderInterestEarned(address lender) external view returns (uint256);
+    function getLenderInterestEarned(address lender) external returns (uint256);
 
     /**
         @notice Returns the amount of claimable interest a lender has earned.
         @return claimable interest value.
      */
-    function getClaimableInterestEarned(address lender) external view returns (uint256);
+    function getClaimableInterestEarned(address lender)
+        external
+        returns (uint256);
 
     /**
         @notice Returns the total amount of interest the pool has earned from repaying loans.
@@ -139,21 +142,32 @@ interface LendingPoolInterface {
         @param loanAmount a new loan amount to consider in the ratio.
         @return the debt-to-supply ratio value.
      */
-    function getDebtRatioFor(uint256 loanAmount) external view returns (uint256);
+    function getDebtRatioFor(uint256 loanAmount)
+        external
+        view
+        returns (uint256);
 
     /**
         @notice This event is emitted when an user deposits tokens into the pool.
         @param sender address.
         @param amount of tokens.
      */
-    event TokenDeposited(address indexed sender, uint256 amount, uint256 tTokenAmount);
+    event TokenDeposited(
+        address indexed sender,
+        uint256 amount,
+        uint256 tTokenAmount
+    );
 
     /**
         @notice This event is emitted when an user withdraws tokens from the pool.
         @param sender address that withdrew the tokens.
         @param amount of tokens.
      */
-    event TokenWithdrawn(address indexed sender, uint256 amount, uint256 tTokenAmount);
+    event TokenWithdrawn(
+        address indexed sender,
+        uint256 amount,
+        uint256 tTokenAmount
+    );
 
     /**
         @notice This event is emitted when an borrower repaid a loan.

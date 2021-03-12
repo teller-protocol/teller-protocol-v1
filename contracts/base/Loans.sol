@@ -170,7 +170,7 @@ contract Loans is LoansInterface, Base, ReentrancyGuard {
         @notice Returns the cToken in the lending pool
         @return Address of the cToken
      */
-    function cToken() external view returns (address) {
+    function cToken() external view returns (CErc20Interface) {
         return lendingPool.cToken();
     }
 
