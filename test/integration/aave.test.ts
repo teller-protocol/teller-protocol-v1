@@ -34,7 +34,6 @@ const setUpTest = deployments.createFixture(
     const loan = await market.loans.loans(market.createdLoanId)
 
     const escrow = await contracts.get<Escrow>('Escrow', { at: loan.escrow })
-    const ting = await escrow.getTokens()
 
     const dai = await contracts.get<ERC20Detailed>('ERC20Detailed', {
       at: getTokens(<Network>hre.network.name).DAI,
