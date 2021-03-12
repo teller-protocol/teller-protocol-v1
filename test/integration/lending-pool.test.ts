@@ -70,24 +70,23 @@ describe('LendingPool', () => {
   it('should not be allowed to transfer funds unless the loans contract is calling', async () => {
     // Get a funded market
     const market = await fundedMarket()
-
-    const borrower = await getNamedSigner('borrower')
-    const loanAmount = toBN(100000, 18)
+    const { createLoan } = getLPHelpers(market)
 
     // Try to transfer funds from the LP
-    await market.lendingPool
-      .connect(borrower)
-      .createLoan(loanAmount, await borrower.getAddress())
-      .should.be.revertedWith('CALLER_NOT_LOANS_CONTRACT')
+    const borrower = await getNamedSigner('borrower')
+    const loanAmount = toBN(100000, 18)
+    await createLoan(borrower, loanAmount).should.be.revertedWith(
+      'CALLER_NOT_LOANS_CONTRACT'
+    )
   })
 
   it('should transfer funds to the borrower when the loans contract calls', async () => {
     // Get a funded market
     const market = await fundedMarket()
+    const { createLoan } = getLPHelpers(market)
 
     // Impersonate the Loans contract
     const stopImpersonating = await evm.impersonate(market.loans.address)
-    const loansSigner = ethers.provider.getSigner(market.loans.address)
 
     // Fund the Loans contract with ETH to send a tx
     await getFunds({
@@ -96,32 +95,13 @@ describe('LendingPool', () => {
       amount: toBN(1, 18),
     })
 
-    // Grab the market state before transferring funds
-    const marketStateBefore = await market.lendingPool.callStatic.getMarketStateCurrent()
-
-    const borrowerAddress = await getNamedSigner('borrower').then((a) =>
-      a.getAddress()
-    )
+    // Transfer funds to LP
+    const borrower = await getNamedSigner('borrower')
     const loanAmount = toBN(100000, 18)
-
-    // Transfer funds from the LP
-    await market.lendingPool
-      .connect(loansSigner)
-      .createLoan(loanAmount, borrowerAddress)
-
-    // Check that the market state has been updated and funds have been transferred
-    const marketStateAfter = await market.lendingPool.callStatic.getMarketStateCurrent()
-    const expectedTotalBorrowed = marketStateBefore.totalBorrowed.add(
-      loanAmount
-    )
-    expectedTotalBorrowed.should.eql(
-      marketStateAfter.totalBorrowed,
-      'LendingPool did not lend out funds'
-    )
+    const loansSigner = ethers.provider.getSigner(market.loans.address)
+    await createLoan(borrower, loanAmount, loansSigner)
 
     // Stop impersonating the LP
     await stopImpersonating()
   })
-
-  it('', async () => {})
 })
