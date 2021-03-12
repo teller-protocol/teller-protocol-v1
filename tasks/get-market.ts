@@ -1,5 +1,11 @@
 import { task, types } from 'hardhat/config'
-import { LendingPool, Loans, MarketRegistry } from '../types/typechain'
+import {
+  ERC20Detailed,
+  LendingPool,
+  Loans,
+  MarketRegistry,
+  TToken,
+} from '../types/typechain'
 import { getTokens } from '../config/tokens'
 import { Network } from '../types/custom/config-types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
@@ -13,22 +19,42 @@ interface GetMarketArgs {
 export interface GetMarketReturn {
   lendingPool: LendingPool
   loans: Loans
+  lendingToken: ERC20Detailed
+  tToken: TToken
 }
 
-export const getMarket = async (args: GetMarketArgs, hre: HardhatRuntimeEnvironment): Promise<GetMarketReturn> => {
+export const getMarket = async (
+  args: GetMarketArgs,
+  hre: HardhatRuntimeEnvironment
+): Promise<GetMarketReturn> => {
   const { lendTokenSym, collTokenSym, log } = args
 
-  const { contracts, network } = hre
+  const { contracts, tokens, network } = hre
 
-  const { [lendTokenSym]: lendingTokenAddress, [collTokenSym]: collateralTokenAddress } = getTokens(<Network>network.name)
+  const {
+    [lendTokenSym]: lendingTokenAddress,
+    [collTokenSym]: collateralTokenAddress,
+  } = getTokens(<Network>network.name)
 
   const marketRegistry = await contracts.get<MarketRegistry>('MarketRegistry')
 
-  const lendingPoolAddress = await marketRegistry.lendingPools(lendingTokenAddress)
-  const lendingPool = await contracts.get<LendingPool>('LendingPool', { at: lendingPoolAddress })
+  const lendingPoolAddress = await marketRegistry.lendingPools(
+    lendingTokenAddress
+  )
+  const lendingPool = await contracts.get<LendingPool>('LendingPool', {
+    at: lendingPoolAddress,
+  })
 
-  const loansAddress = await marketRegistry.loans(lendingTokenAddress, collateralTokenAddress)
+  const loansAddress = await marketRegistry.loans(
+    lendingTokenAddress,
+    collateralTokenAddress
+  )
   const loans = await contracts.get<Loans>('Loans', { at: loansAddress })
+
+  const lendingToken = await tokens.get(lendTokenSym)
+  const tToken = await contracts.get<TToken>('TToken', {
+    at: await lendingPool.tToken(),
+  })
 
   if (log) {
     console.log(`
@@ -43,6 +69,8 @@ export const getMarket = async (args: GetMarketArgs, hre: HardhatRuntimeEnvironm
   return {
     lendingPool,
     loans,
+    lendingToken,
+    tToken,
   }
 }
 

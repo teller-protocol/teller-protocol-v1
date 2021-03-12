@@ -1,113 +1,127 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
-import hre from 'hardhat'
-import { BigNumber, Signer } from 'ethers'
-import { ERC20Detailed, TToken } from '../../types/typechain'
-import { fundedMarket, FundedMarketReturn } from '../fixtures'
-import { getFunds } from '../../utils/get-funds'
+import { getNamedSigner, ethers, evm, toBN } from 'hardhat'
+import { BigNumber, BigNumberish } from 'ethers'
+
+import { freshMarket, fundedMarket, MarketReturn } from '../fixtures'
+import { getFunds } from '../helpers/get-funds'
+import { getLPHelpers } from '../helpers/lending-pool'
 
 chai.should()
 chai.use(solidity)
 
-const { deployments, getNamedSigner, contracts, fastForward, BN } = hre
+const getLenderFunds = async (
+  market: MarketReturn,
+  amount: BigNumberish
+): Promise<BigNumber> => {
+  amount = toBN(amount, await market.lendingToken.decimals())
+  // Get lender DAI to deposit
+  await getFunds({
+    to: await getNamedSigner('lender'),
+    tokenSym: await market.lendingToken.symbol(),
+    amount,
+  })
+  return amount
+}
 
-const setupTest = deployments.createFixture(async () => {
-  await deployments.fixture('markets')
+describe('LendingPool', () => {
+  it('should be able deposit and withdraw all with interest', async () => {
+    // Get a fresh market
+    const market = await freshMarket()
+    const { deposit, withdraw } = getLPHelpers(market)
 
-  const deployer = await getNamedSigner('deployer')
-  const lender = await getNamedSigner('lender')
+    const lender = await getNamedSigner('lender')
 
-  // Fund market
-  const market = await fundedMarket({ amount: 50000 })
+    // Fund the market
+    const depositAmount = await getLenderFunds(market, 1000)
+    await deposit(lender, depositAmount)
 
-  // Load lending token contract
-  const lendingTokenAddress = await market.lendingPool.lendingToken()
-  const lendingToken = await contracts.get<ERC20Detailed>('ERC20Detailed', {
-    at: lendingTokenAddress,
+    // Fast forward block timestamp by 10 weeks
+    await evm.advanceTime(6048000)
+
+    // Withdraw all funds
+    await withdraw(lender)
   })
 
-  // Load lending token contract
-  const tTokenAddress = await market.lendingPool.tToken()
-  const tToken = await contracts.get<TToken>('TToken', { at: tTokenAddress })
+  it('should be able to deposit several times and withdraw all', async () => {
+    // Get a fresh market
+    const market = await freshMarket()
+    const { deposit, withdraw } = getLPHelpers(market)
 
-  return {
-    market,
-    deployer,
-    lender,
-    lendingToken,
-    tToken,
-  }
-})
+    const lender = await getNamedSigner('lender')
 
-describe('LendingPool', async () => {
-  let market: FundedMarketReturn
-  let lender: Signer
-  let deployer: Signer
-  let lendingToken: ERC20Detailed
-  let tToken: TToken
-  let lendingTokenDecimals: string
-  let depositAmount: BigNumber
-  let tTokenAmount: BigNumber
-  let lenderAddress: string
-  let exchangeRate: BigNumber
-  let exchangeRateDecimals: number
+    // Fund the market
+    const depositAmount = await getLenderFunds(market, 1000)
+    await deposit(lender, depositAmount.div(2))
 
-  // Setup for global tests
-  beforeEach(async () => {
-    // Execute snapshot and setup for tests
-    ;({ market, deployer, lender, lendingToken, tToken } = await setupTest())
-    lenderAddress = await lender.getAddress()
-    // Set up values
-    lendingTokenDecimals = (await lendingToken.decimals()).toString()
-    exchangeRateDecimals = await market.lendingPool.EXCHANGE_RATE_DECIMALS()
-    exchangeRate = await market.lendingPool.exchangeRate()
-    const amount = '1000'
-    depositAmount = BN(amount, lendingTokenDecimals)
-    tTokenAmount = depositAmount
-      .mul(BN('1', exchangeRateDecimals.toString()))
-      .div(exchangeRate)
+    // Fast forward block timestamp by 10 weeks
+    await evm.advanceTime(6048000)
 
-    // Get lender DAI to deposit
+    // Fund the market
+    await deposit(lender, depositAmount.div(2))
+
+    // Fast forward block timestamp by 10 weeks
+    await evm.advanceTime(6048000)
+
+    // Withdraw all funds
+    await withdraw(lender)
+  })
+
+  it('should not be allowed to transfer funds unless the loans contract is calling', async () => {
+    // Get a funded market
+    const market = await fundedMarket()
+
+    const borrower = await getNamedSigner('borrower')
+    const loanAmount = toBN(100000, 18)
+
+    // Try to transfer funds from the LP
+    await market.lendingPool
+      .connect(borrower)
+      .createLoan(loanAmount, await borrower.getAddress())
+      .should.be.revertedWith('CALLER_NOT_LOANS_CONTRACT')
+  })
+
+  it('should transfer funds to the borrower when the loans contract calls', async () => {
+    // Get a funded market
+    const market = await fundedMarket()
+
+    // Impersonate the Loans contract
+    const stopImpersonating = await evm.impersonate(market.loans.address)
+    const loansSigner = ethers.provider.getSigner(market.loans.address)
+
+    // Fund the Loans contract with ETH to send a tx
     await getFunds({
-      to: lender,
-      tokenSym: market.lendTokenSym,
-      amount: BN('2000', lendingTokenDecimals),
+      to: market.loans.address,
+      tokenSym: 'ETH',
+      amount: toBN(1, 18),
     })
+
+    // Grab the market state before transferring funds
+    const marketStateBefore = await market.lendingPool.callStatic.getMarketStateCurrent()
+
+    const borrowerAddress = await getNamedSigner('borrower').then((a) =>
+      a.getAddress()
+    )
+    const loanAmount = toBN(100000, 18)
+
+    // Transfer funds from the LP
+    await market.lendingPool
+      .connect(loansSigner)
+      .createLoan(loanAmount, borrowerAddress)
+
+    // Check that the market state has been updated and funds have been transferred
+    const marketStateAfter = await market.lendingPool.callStatic.getMarketStateCurrent()
+    const expectedTotalBorrowed = marketStateBefore.totalBorrowed.add(
+      loanAmount
+    )
+    expectedTotalBorrowed.should.eql(
+      marketStateAfter.totalBorrowed,
+      'LendingPool did not lend out funds'
+    )
+
+    // Stop impersonating the LP
+    await stopImpersonating()
   })
 
-  describe('deposit', () => {
-    it('should be able deposit and withdraw with interest', async function () {
-      // Approve deposit
-      const lendingPoolAddress = market.lendingPool.address
-      await lendingToken
-        .connect(lender)
-        .approve(lendingPoolAddress, depositAmount)
-
-      // Deposit into lending pool
-      await market.lendingPool
-        .connect(lender)
-        .deposit(depositAmount)
-        .should.emit(market.lendingPool, 'TokenDeposited')
-        .withArgs(await lender.getAddress(), depositAmount, tTokenAmount)
-
-      // Fast forward block timestamp by 10 weeks
-      await fastForward(6048000)
-
-      // Get tToken balance
-      const tTokenBalance = await tToken.balanceOf(lenderAddress)
-      // Get updated exchange rate after deposit
-      const updatedExchangeRate = await market.lendingPool.exchangeRate()
-      // Get lending tokens for tToken
-      const lendingTtokens = tTokenBalance
-        .mul(updatedExchangeRate)
-        .div(BN('1', exchangeRateDecimals.toString()))
-
-      // Withdraw loan
-      await market.lendingPool
-        .connect(lender)
-        .withdrawAll()
-        .should.emit(market.lendingPool, 'TokenWithdrawn')
-        .withArgs(lenderAddress, lendingTtokens, tTokenBalance)
-    })
-  })
+  it('', async () => {})
 })

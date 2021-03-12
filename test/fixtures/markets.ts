@@ -1,52 +1,47 @@
-import { deployments } from 'hardhat'
+import chai from 'chai'
+import {
+  deployments,
+  contracts,
+  tokens,
+  network,
+  getNamedSigner,
+  toBN,
+} from 'hardhat'
+import { BigNumberish } from 'ethers'
+import { solidity } from 'ethereum-waffle'
+
 import { getMarkets } from '../../config/markets'
 import { Network } from '../../types/custom/config-types'
-import { AssetSettings } from '../../types/typechain'
+import { AssetSettings, ERC20Detailed, TToken } from '../../types/typechain'
 import { getMarket, GetMarketReturn } from '../../tasks'
-import { getFunds } from '../../utils/get-funds'
-import { BigNumberish } from 'ethers'
+import { getFunds } from '../helpers/get-funds'
 
-interface DeployedMarketArgs {
+chai.use(solidity)
+
+interface FreshMarketArgs {
   lendTokenSym: string
   collTokenSym: string
 }
 
-export interface FundedMarketArgs {
-  market?: DeployedMarketArgs
-  // Amount should be denoted in decimal value for the token (i.e. 100 = 100 * (10^tokenDecimals)
-  amount?: number
+export interface MarketReturn extends FreshMarketArgs, GetMarketReturn {
+  lendingToken: ERC20Detailed
+  tToken: TToken
 }
 
-export interface FundedMarketReturn extends GetMarketReturn {
-  lendTokenSym: string
-  collTokenSym: string
-}
-
-export const fundedMarket = (
-  args?: FundedMarketArgs
-): Promise<FundedMarketReturn> =>
+export const freshMarket = (args?: FreshMarketArgs): Promise<MarketReturn> =>
   deployments.createFixture(async (hre) => {
-    const {
-      deployments,
-      network,
-      getNamedSigner,
-      contracts,
-      tokens,
-      ethers,
-    } = hre
     await deployments.fixture('markets')
 
     let lendTokenSym: string
     let collTokenSym: string
-    if (args?.market) {
-      lendTokenSym = args.market.lendTokenSym
-      collTokenSym = args.market.collTokenSym
+    if (args) {
+      lendTokenSym = args.lendTokenSym
+      collTokenSym = args.collTokenSym
     } else {
       const markets = await getMarkets(<Network>network.name)
       lendTokenSym = markets[0].borrowedToken
       collTokenSym = markets[0].collateralToken
     }
-    const lendingToken = await tokens.get(lendTokenSym)
 
     const market = await getMarket(
       {
@@ -56,27 +51,46 @@ export const fundedMarket = (
       hre
     )
 
+    return {
+      ...market,
+      lendTokenSym,
+      collTokenSym,
+    }
+  })()
+
+export interface FundedMarketArgs {
+  market?: FreshMarketArgs
+  // Amount should be denoted in decimal value for the token (i.e. 100 = 100 * (10^tokenDecimals)
+  amount?: number
+}
+
+export const fundedMarket = (args?: FundedMarketArgs): Promise<MarketReturn> =>
+  deployments.createFixture(async (hre) => {
+    const market = await freshMarket(args?.market)
+    const { lendTokenSym, collTokenSym, lendingPool } = market
+
+    const lendingToken = await tokens.get(lendTokenSym)
+
     // Fund the market
     let amountToFundLP: BigNumberish
     if (args?.amount) {
       const decimals = await lendingToken.decimals()
-      const factor = ethers.BigNumber.from(10).pow(decimals)
-      amountToFundLP = ethers.BigNumber.from(args.amount).mul(factor)
+      amountToFundLP = toBN(args.amount, decimals)
     } else {
       const assetSettings = await contracts.get<AssetSettings>('AssetSettings')
       amountToFundLP = await assetSettings.getMaxTVLAmount(lendingToken.address)
     }
 
-    const lender = await getNamedSigner('lender')
+    const funder = await getNamedSigner('funder')
     await getFunds({
-      to: lender,
+      to: funder,
       tokenSym: lendTokenSym,
       amount: amountToFundLP,
     })
     await lendingToken
-      .connect(lender)
-      .approve(market.lendingPool.address, amountToFundLP)
-    await market.lendingPool.connect(lender).deposit(amountToFundLP)
+      .connect(funder)
+      .approve(lendingPool.address, amountToFundLP)
+    await lendingPool.connect(funder).deposit(amountToFundLP)
 
     return {
       ...market,
