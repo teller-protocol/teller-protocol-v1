@@ -6,7 +6,7 @@ import {
   DeployOptions,
   DeployResult,
 } from 'hardhat-deploy/types'
-import { BigNumber, Contract, Signer } from 'ethers'
+import { BigNumber, BigNumberish, Contract, Signer } from 'ethers'
 import '@nomiclabs/hardhat-ethers'
 import 'hardhat-deploy'
 
@@ -18,9 +18,11 @@ declare module 'hardhat/types/runtime' {
   interface HardhatRuntimeEnvironment {
     contracts: ContractsExtension
     tokens: TokensExtension
+    evm: EVM
     getNamedSigner(name: string): Promise<Signer>
-    fastForward(seconds: number): Promise<void>
-    BN(amount: string, decimals: string): BigNumber
+    fastForward(seconds: BigNumberish): Promise<void>
+    toBN(amount: BigNumberish, decimals?: BigNumberish): BigNumber
+    fromBN(amount: BigNumberish, decimals?: BigNumberish): BigNumber
   }
 }
 
@@ -30,6 +32,15 @@ interface ContractsExtension {
 
 interface TokensExtension {
   get<T extends ERC20Detailed>(name: string): Promise<T>
+}
+
+interface EVM {
+  advanceTime(seconds: BigNumberish): Promise<void>
+  advanceBlocks(blocks?: number): Promise<void>
+  snapshot(): Promise<() => Promise<void>>
+  withBlockScope<T>(blocks: number, fn: () => T): Promise<T>
+  impersonate(address: string): Promise<() => Promise<void>>
+  stopImpersonating(address: string): Promise<void>
 }
 
 interface Config {
@@ -86,13 +97,63 @@ extendEnvironment((hre) => {
     return ethers.provider.getSigner(accounts[name])
   }
 
-  hre.fastForward = async (seconds: number) => {
+  hre.fastForward = async (seconds: BigNumberish) => {
+    seconds = hre.toBN(seconds).toNumber()
     await network.provider.send('evm_increaseTime', [seconds])
     await network.provider.send('evm_mine')
   }
 
-  hre.BN = (amount: string, decimals: string): BigNumber => {
-    return BigNumber.from(amount).mul(BigNumber.from('10').pow(decimals))
+  hre.evm = {
+    async advanceTime(seconds: BigNumberish): Promise<void> {
+      await hre.fastForward(seconds)
+    },
+
+    async advanceBlocks(blocks = 1): Promise<void> {
+      for (let block = 0; block < blocks; block++) {
+        // 15 seconds per block
+        await this.advanceTime(15)
+      }
+    },
+
+    async snapshot(): Promise<() => Promise<void>> {
+      const id = await network.provider.send('evm_snapshot')
+      return async () => {
+        await network.provider.send('evm_revert', [id])
+      }
+    },
+
+    async withBlockScope(blocks: number, fn: () => any): Promise<any> {
+      const revert = await this.snapshot()
+      await this.advanceBlocks(blocks)
+      const result = await fn()
+      await revert()
+      return result
+    },
+
+    async impersonate(address: string): Promise<() => Promise<void>> {
+      await network.provider.send('hardhat_impersonateAccount', [address])
+      return () => this.stopImpersonating(address)
+    },
+
+    async stopImpersonating(address: string): Promise<void> {
+      await network.provider.send('hardhat_stopImpersonatingAccount', [address])
+    },
+  }
+
+  hre.toBN = (amount: BigNumberish, decimals?: BigNumberish): BigNumber => {
+    const num = BigNumber.from(amount)
+    if (decimals) {
+      return num.mul(BigNumber.from('10').pow(decimals))
+    }
+    return num
+  }
+
+  hre.fromBN = (amount: BigNumberish, decimals?: BigNumberish): BigNumber => {
+    const num = BigNumber.from(amount)
+    if (decimals) {
+      return num.div(BigNumber.from('10').pow(decimals))
+    }
+    return num
   }
 
   const originalDeploymentsSave = hre.deployments.save
