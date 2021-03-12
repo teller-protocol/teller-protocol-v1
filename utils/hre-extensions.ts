@@ -35,11 +35,58 @@ interface TokensExtension {
 }
 
 interface EVM {
+  /**
+   * This increases the next block's timestamp by the specified amount of seconds.
+   * @param seconds {BigNumberish} Amount of seconds to increase the next block's timestamp by.
+   */
   advanceTime(seconds: BigNumberish): Promise<void>
+
+  /**
+   * Will mine the specified number of blocks locally. This is helpful when functionality
+   * requires a certain number of blocks to be processed for values to change.
+   * @param blocks {number} Amount of blocks to mine.
+   */
   advanceBlocks(blocks?: number): Promise<void>
+
+  /**
+   * Creates a snapshot of the blockchain in its current state. It then returns a function
+   * that can be used to revert back to the state at which the snapshot was taken.
+   */
   snapshot(): Promise<() => Promise<void>>
+
+  /**
+   * This allows for functionality to executed within the scope of the specified number
+   * of additional blocks to be mined. Once the supplied function to be called within
+   * the scope is executed, the blockchain is reverted back to the state it started at.
+   * @param blocks {number} The number of blocks that should be mined.
+   * @param fn {function} A function that should be executed once blocks have been mined.
+   */
   withBlockScope<T>(blocks: number, fn: () => T): Promise<T>
+
+  /**
+   * Impersonates a supplied address. This allows for the execution of transactions
+   * with the `from` field to be the supplied address. This allows for the context
+   * of `msg.sender` in a transaction to also be the supplied address.
+   *
+   * Once you have completed the action of impersonating an address, you may wish to
+   * stop impersonating it. To do this, a `stop` function is also returned for
+   * convenience. This may also be achieved by calling `evm.stopImpersonating`.
+   *
+   * To do this:
+   *  1. Impersonate an address.
+   *  2. Execute a transaction on a contract by connecting the returned signer.
+   *    Ex:
+   *      const impersonation = await evm.impersonate(0x123)
+   *      await contract.connect(impersonation.signer).functionToCall()
+   * @param address {string} An address to start impersonating.
+   * @return {Promise<ImpersonateReturn>}
+   */
   impersonate(address: string): Promise<ImpersonateReturn>
+
+  /**
+   * It stops the ability to impersonate an address on the local blockchain.
+   * @param address {string} An address to stop impersonating.
+   */
   stopImpersonating(address: string): Promise<void>
 }
 
