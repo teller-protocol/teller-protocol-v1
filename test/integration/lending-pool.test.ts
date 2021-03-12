@@ -31,6 +31,7 @@ describe('LendingPool', () => {
     const { deposit, withdraw } = getLPHelpers(market)
 
     const lender = await getNamedSigner('lender')
+    const lenderAddress = await lender.getAddress()
 
     // Fund the market
     const depositAmount = await getLenderFunds(market, 1000)
@@ -39,32 +40,22 @@ describe('LendingPool', () => {
     // Fast forward block timestamp by 10 weeks
     await evm.advanceTime(6048000)
 
-    // Withdraw all funds
-    await withdraw(lender)
-  })
-
-  it('should be able to deposit several times and withdraw all', async () => {
-    // Get a fresh market
-    const market = await freshMarket()
-    const { deposit, withdraw } = getLPHelpers(market)
-
-    const lender = await getNamedSigner('lender')
-
-    // Fund the market
-    const depositAmount = await getLenderFunds(market, 1000)
-    await deposit(lender, depositAmount.div(2))
-
-    // Fast forward block timestamp by 10 weeks
-    await evm.advanceTime(6048000)
-
-    // Fund the market
-    await deposit(lender, depositAmount.div(2))
-
-    // Fast forward block timestamp by 10 weeks
-    await evm.advanceTime(6048000)
+    const claimableInterest = await market.lendingPool.callStatic.getClaimableInterestEarned(
+      lenderAddress
+    )
+    claimableInterest
+      .isNegative()
+      .should.equal(false, 'Lender did not earn interest')
 
     // Withdraw all funds
     await withdraw(lender)
+
+    const balanceWithInterest = await market.lendingToken.balanceOf(
+      await lender.getAddress()
+    )
+    balanceWithInterest
+      .gt(depositAmount)
+      .should.eql(true, 'Lender balance did not increase')
   })
 
   it('should not be allowed to transfer funds unless the loans contract is calling', async () => {

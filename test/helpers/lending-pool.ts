@@ -71,6 +71,7 @@ export const withdrawWithMarket = (market: GetMarketReturn) =>
           market.lendingPool.callStatic.balanceOfUnderlying(lenderAddress)
         )
 
+    // Get expected TToken amount to be burned
     const expectedTTokenAmount = await evm.withBlockScope(1, () =>
       market.lendingPool.callStatic.tTokensFromLendingTokens(
         expectedWithdrawalAmount
