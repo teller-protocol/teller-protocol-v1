@@ -54,7 +54,6 @@ contract Yearn is IYearn, BaseEscrowDapp {
             "YEARN_BALANCE_NOT_INCREASED"
         );
         _tokenUpdated(tokenAddress);
-
         emit YearnDeposited(
             tokenAddress,
             address(iVault),
@@ -74,10 +73,17 @@ contract Yearn is IYearn, BaseEscrowDapp {
         onlyBorrower
     {
         IVault iVault = _getYVault(tokenAddress);
-        uint256 tokenBalanceBeforeWithdrawal = iVault.balanceOf(address(this));
-        require(amount >= tokenBalanceBeforeWithdrawal, "INSUFFICIENT_DEPOSIT");
-        iVault.withdraw(amount);
-        uint256 tokenBalanceAfterWithdrawal = iVault.balanceOf(address(this));
+        uint256 price = iVault.getPricePerShare();
+        uint256 shares = amount / price;
+        uint256 tokenBalanceBeforeWithdrawal =
+            ERC20(tokenAddress).balanceOf(address(this));
+        require(
+            shares >= iVault.balanceOf(address(this)),
+            "INSUFFICIENT_DEPOSIT"
+        );
+        iVault.withdraw(shares);
+        uint256 tokenBalanceAfterWithdrawal =
+            ERC20(tokenAddress).balanceOf(address(this));
         require(
             tokenBalanceAfterWithdrawal > tokenBalanceBeforeWithdrawal,
             "WITHDRAWAL_UNSUCCESSFUL"
@@ -100,15 +106,15 @@ contract Yearn is IYearn, BaseEscrowDapp {
      */
     function withdrawAll(address tokenAddress) public onlyBorrower {
         IVault iVault = _getYVault(tokenAddress);
-        uint256 tokenBalanceBeforeWithdrawal = iVault.balanceOf(address(this));
-        require(tokenBalanceBeforeWithdrawal > 0, "INSUFFICIENT_DEPOSIT");
-        iVault.withdrawAll();
-        uint256 tokenBalanceAfterWithdrawal = iVault.balanceOf(address(this));
+        uint256 tokenBalanceBeforeWithdrawal =
+            ERC20(tokenAddress).balanceOf(address(this));
+        iVault.withdraw();
+        uint256 tokenBalanceAfterWithdrawal =
+            ERC20(tokenAddress).balanceOf(address(this));
         require(
             tokenBalanceAfterWithdrawal > tokenBalanceBeforeWithdrawal,
             "WITHDRAWAL_UNSUCCESSFUL"
         );
-
         emit YearnWithdrawn(
             iVault.token(),
             address(iVault),

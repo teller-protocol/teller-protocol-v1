@@ -34,12 +34,10 @@ const setUpTest = deployments.createFixture(
     const loan = await market.loans.loans(market.createdLoanId)
 
     const escrow = await contracts.get<Escrow>('Escrow', { at: loan.escrow })
-    const ting = await escrow.getTokens()
 
     const daiAddress = getTokens(<Network>hre.network.name).DAI
     const yDaiAddress = getTokens(<Network>hre.network.name).YDAI
     const yearn = await contracts.get<Yearn>('Yearn')
-    console.log('Yearn proxy: ', yearn.address)
 
     return {
       escrow,
@@ -51,7 +49,7 @@ const setUpTest = deployments.createFixture(
   }
 )
 
-describe.skip('Yearn', async () => {
+describe('Yearn', async () => {
   let escrow: Escrow
   let user: Signer
   let rando: Signer
@@ -98,7 +96,7 @@ describe.skip('Yearn', async () => {
             amount,
           ]),
         })
-        .should.rejectedWith('NOT_BORROWER')
+        .should.revertedWith('NOT_BORROWER')
     })
   })
 })
