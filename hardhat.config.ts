@@ -130,7 +130,7 @@ export default <HardhatUserConfig>{
   },
   gasReporter: {
     currency: 'USD',
-    gasPrice: 121,
+    coinmarketcap: process.env.CMC_KEY,
   },
   mocha: {
     timeout: 100000,
