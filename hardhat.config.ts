@@ -2,8 +2,9 @@ import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-ethers'
 import 'hardhat-deploy'
 import 'hardhat-contract-sizer'
-import { HardhatUserConfig } from 'hardhat/config'
 import { config } from 'dotenv'
+import { ethers } from 'ethers'
+import { HardhatUserConfig } from 'hardhat/config'
 import { HardhatNetworkHDAccountsUserConfig } from 'hardhat/types'
 import 'hardhat-gas-reporter'
 // import 'solidity-coverage'
@@ -19,6 +20,7 @@ config()
 const accounts: HardhatNetworkHDAccountsUserConfig = {
   mnemonic: process.env.MNEMONIC_KEY,
   count: parseInt(process.env.ADDRESS_COUNT_KEY ?? '15'),
+  accountsBalance: ethers.utils.parseEther('1000000').toString(),
 }
 
 export default <HardhatUserConfig>{
