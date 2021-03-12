@@ -10,6 +10,7 @@ export interface DeployArgs {
   name?: string
   libraries?: Libraries
   args?: any[]
+  mock?: boolean
 }
 
 export const deploy = async <C extends Contract>(
@@ -26,8 +27,10 @@ export const deploy = async <C extends Contract>(
   const { deployer } = await getNamedAccounts()
 
   const contractDeployName = args.name ?? args.contract
+  // If marked as mock, prepend "Mock" to the contract name
+  const contractName = `${args.contract}${args.mock ? 'Mock' : ''}`
   const { address } = await deploy(contractDeployName, {
-    contract: args.contract,
+    contract: contractName,
     libraries: args.libraries,
     from: deployer,
     gasLimit: ethers.utils.hexlify(9500000),

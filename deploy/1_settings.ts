@@ -2,6 +2,7 @@ import { DeployFunction } from 'hardhat-deploy/types'
 
 import {
   deploy,
+  DeployArgs,
   deployLogic,
   deploySettingsProxy,
 } from '../utils/deploy-helpers'
@@ -20,7 +21,8 @@ const deployLogicContracts: DeployFunction = async (hre) => {
     contract: 'LoanLib',
   })
 
-  const logicDeploymentData = [
+  const mock = network.name.includes('hardhat')
+  const logicDeploymentData: Omit<DeployArgs, 'hre'>[] = [
     {
       contract: 'Settings',
     },
@@ -35,6 +37,7 @@ const deployLogicContracts: DeployFunction = async (hre) => {
       libraries: {
         LoanLib: loanLibAddress,
       },
+      mock,
     },
     {
       contract: 'TokenCollateralLoans',
