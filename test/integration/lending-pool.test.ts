@@ -66,19 +66,24 @@ describe('LendingPool', () => {
     // Try to transfer funds from the LP
     const borrower = await getNamedSigner('borrower')
     const loanAmount = toBN(100000, 18)
-    await createLoan(borrower, loanAmount).should.be.revertedWith(
+    await createLoan(borrower, loanAmount, borrower).should.be.revertedWith(
       'CALLER_NOT_LOANS_CONTRACT'
     )
   })
 
-  it('should transfer funds to the borrower when the loans contract calls', async () => {
+  /**
+   * This is a test function for borrowing funds from the LP. Since some functionality
+   * requires funds to be borrowed, such as repayments, the test function has been
+   * extracted so it can be used in other test functions to help reduce amount of
+   * duplicated code.
+   */
+  const borrowFunds = async (): Promise<MarketReturn> => {
     // Get a funded market
     const market = await fundedMarket()
     const { createLoan } = getLPHelpers(market)
 
     // Impersonate the Loans contract
-    const stopImpersonating = await evm.impersonate(market.loans.address)
-
+    const loansImpersonation = await evm.impersonate(market.loans.address)
     // Fund the Loans contract with ETH to send a tx
     await getFunds({
       to: market.loans.address,
@@ -89,10 +94,74 @@ describe('LendingPool', () => {
     // Transfer funds to LP
     const borrower = await getNamedSigner('borrower')
     const loanAmount = toBN(100000, 18)
-    const loansSigner = ethers.provider.getSigner(market.loans.address)
-    await createLoan(borrower, loanAmount, loansSigner)
+    await createLoan(borrower, loanAmount, loansImpersonation.signer)
 
     // Stop impersonating the LP
-    await stopImpersonating()
+    await loansImpersonation.stop()
+
+    return market
+  }
+  it(
+    'should transfer funds to the borrower when the loans contract calls',
+    borrowFunds
+  )
+
+  it('should only accept repayments from the Loans contract', async () => {
+    const market = await borrowFunds()
+    const { repay } = getLPHelpers(market)
+
+    const borrower = await getNamedSigner('borrower')
+    const principalAmount = toBN(1000, 18)
+    const interestAmount = toBN(100, 18)
+
+    // Get funds to repay
+    await getFunds({
+      to: borrower,
+      tokenSym: await market.lendingToken.symbol(),
+      amount: principalAmount.add(interestAmount),
+    })
+
+    // Try to repay funds to the LP
+    await repay(
+      borrower,
+      principalAmount,
+      interestAmount,
+      borrower
+    ).should.be.revertedWith('CALLER_NOT_LOANS_CONTRACT')
+  })
+
+  it('should be able to accept payments to be deposited back into the LP', async () => {
+    const market = await borrowFunds()
+    const { repay } = getLPHelpers(market)
+
+    // Impersonate the Loans contract
+    const loansImpersonation = await evm.impersonate(market.loans.address)
+    // Fund the Loans contract with ETH to send a tx
+    await getFunds({
+      to: market.loans.address,
+      tokenSym: 'ETH',
+      amount: toBN(1, 18),
+    })
+
+    const borrower = await getNamedSigner('borrower')
+    const principalAmount = toBN(1000, 18)
+    const interestAmount = toBN(100, 18)
+
+    // Get funds to repay
+    await getFunds({
+      to: borrower,
+      tokenSym: await market.lendingToken.symbol(),
+      amount: principalAmount.add(interestAmount),
+    })
+
+    // Try to repay funds to the LP
+    await repay(
+      borrower,
+      principalAmount,
+      interestAmount,
+      loansImpersonation.signer
+    )
+
+    await loansImpersonation.stop()
   })
 })

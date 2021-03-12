@@ -1,5 +1,5 @@
+import { ethers } from 'hardhat'
 import { makeNodeDisklet } from 'disklet'
-import path from 'path'
 import { extendEnvironment } from 'hardhat/config'
 import {
   DeploymentSubmission,
@@ -39,8 +39,13 @@ interface EVM {
   advanceBlocks(blocks?: number): Promise<void>
   snapshot(): Promise<() => Promise<void>>
   withBlockScope<T>(blocks: number, fn: () => T): Promise<T>
-  impersonate(address: string): Promise<() => Promise<void>>
+  impersonate(address: string): Promise<ImpersonateReturn>
   stopImpersonating(address: string): Promise<void>
+}
+
+interface ImpersonateReturn {
+  signer: Signer
+  stop: () => Promise<void>
 }
 
 interface Config {
@@ -130,9 +135,12 @@ extendEnvironment((hre) => {
       return result
     },
 
-    async impersonate(address: string): Promise<() => Promise<void>> {
+    async impersonate(address: string): Promise<ImpersonateReturn> {
       await network.provider.send('hardhat_impersonateAccount', [address])
-      return () => this.stopImpersonating(address)
+      return {
+        signer: ethers.provider.getSigner(address),
+        stop: () => this.stopImpersonating(address),
+      }
     },
 
     async stopImpersonating(address: string): Promise<void> {

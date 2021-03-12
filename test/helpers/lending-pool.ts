@@ -11,6 +11,7 @@ export const getLPHelpers = (market: GetMarketReturn) => ({
   deposit: depositWithMarket(market),
   withdraw: withdrawWithMarket(market),
   createLoan: creatLoanWithMarket(market),
+  repay: repayWithMarket(market),
 })
 
 /**
@@ -97,13 +98,13 @@ export const withdrawWithMarket = (market: GetMarketReturn) =>
 export const creatLoanWithMarket = (market: GetMarketReturn) =>
   /**
    * Helper for sending funds from the LP to a borrower address.
-   *  - Checks that the market state variables have been appropriately updated.
+   *  - Verifies that the market state variables have been appropriately updated.
    *  - Calls the LP createLoan function as the caller parameter.
    * @param borrower {Signer} The Signer to send funds to.
    * @param amount {BigNumber} An amount of funds to transfer.
-   * @param caller {Signer} The Signer to call the function as. Defaults to the borrower.
+   * @param caller {Signer} The Signer to call the function as.
    */
-  async (borrower: Signer, amount: BigNumber, caller = borrower) => {
+  async (borrower: Signer, amount: BigNumber, caller: Signer) => {
     // Grab the market state before transferring funds
     const marketStateBefore = await market.lendingPool.callStatic.getMarketStateCurrent()
 
@@ -119,4 +120,56 @@ export const creatLoanWithMarket = (market: GetMarketReturn) =>
       marketStateAfter.totalBorrowed,
       'LendingPool did not lend out funds'
     )
+  }
+
+/**
+ * Factory function to create a test LP helper to easily repay funds.
+ * @param market {GetMarketReturn}
+ */
+export const repayWithMarket = (market: GetMarketReturn) =>
+  /**
+   * Helper for repaying funds to the LP for a borrower address.
+   *  - Approves the lending token amount to repay from the borrower.
+   *  - Calls the repay function from the caller.
+   *  - Verifies that the market state variables have been appropriately updated.
+   *  - Verifies the global interest earned variable has been appropriately updated.
+   * @param borrower {Signer} The Signer to transfer funds from.
+   * @param principal {BigNumber} The amount to repay that counts toward a loan's principal amount.
+   * @param interest {BigNumber} The amount to repay that counts toward a loan's interest amount.
+   * @param caller {Signer} The Signer to call the function as.
+   */
+  async (
+    borrower: Signer,
+    principal: BigNumber,
+    interest: BigNumber,
+    caller: Signer
+  ) => {
+    // Grab the market state before repaying funds
+    const marketStateBefore = await market.lendingPool.callStatic.getMarketStateCurrent()
+    // Grab the current interest earned before repaying funds
+    const interestEarnedBefore = await market.lendingPool.totalInterestEarned()
+
+    // Approve amount to repay
+    await market.lendingToken
+      .connect(borrower)
+      .approve(market.lendingPool.address, principal.add(interest))
+
+    // Repay funds to the LP
+    await market.lendingPool
+      .connect(caller)
+      .repay(principal, interest, await borrower.getAddress())
+
+    // Check that the market state has been updated and funds have been repaid
+    const marketStateAfter = await market.lendingPool.callStatic.getMarketStateCurrent()
+    const expectedRepaidAmount = marketStateBefore.totalRepaid.add(principal)
+    expectedRepaidAmount.should.eql(
+      marketStateAfter.totalRepaid,
+      'Incorrect principal amount of funds repaid'
+    )
+
+    // Check the correct amount of interest has been marked as earned
+    const interestEarnedAfter = await market.lendingPool.totalInterestEarned()
+    interestEarnedBefore
+      .add(interest)
+      .should.eql(interestEarnedAfter, 'Incorrect amount of interest earned')
   }
