@@ -19,6 +19,7 @@ const mainnetTokens: Tokens = {
   MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2',
   YFI: '0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e',
   AAVE: '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9',
+  YDAI: '0x19D3364A399d251E894aC732651be8B0E4e85001', // v2 - DAI yVault
 }
 
 export const tokensConfigsByNetwork: Config<Tokens> = {
@@ -35,6 +36,7 @@ export const tokensConfigsByNetwork: Config<Tokens> = {
     DAI: '0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa',
     USDC: '0xb7a4f3e9097c08da09517b5ab877f7a917224ede',
     LINK: '0xa36085F69e2889c224210F603D836748e7dC0088',
+    YDAI: '0x0000000000000000000000000000000000000000',
   },
   rinkeby: {
     ETH: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
@@ -49,6 +51,7 @@ export const tokensConfigsByNetwork: Config<Tokens> = {
     DAI: '0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa',
     USDC: '0x4DBCdF9B62e891a7cec5A2568C3F4FAF9E8Abe2b',
     LINK: '0x01BE23585060835E02B77ef475b0Cc51aA1e0709',
+    YDAI: '0x0000000000000000000000000000000000000000',
   },
   ropsten: {
     ETH: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
@@ -63,6 +66,7 @@ export const tokensConfigsByNetwork: Config<Tokens> = {
     DAI: '0xc2118d4d90b274016cB7a54c03EF52E6c537D957',
     USDC: '0x0D9C8723B343A8368BebE0B5E89273fF8D712e3C',
     LINK: '0x20fE562d797A42Dcb3399062AE9546cd06f63280',
+    YDAI: '0x0000000000000000000000000000000000000000',
   },
   hardhat: mainnetTokens,
   localhost: mainnetTokens,

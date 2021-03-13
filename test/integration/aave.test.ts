@@ -18,7 +18,14 @@ interface TestSetupReturn {
   aDai: IAToken
 }
 
-const { deployments, contracts, getNamedSigner, fastForward, BN, ethers } = hre
+const {
+  deployments,
+  contracts,
+  getNamedSigner,
+  fastForward,
+  toBN,
+  ethers,
+} = hre
 
 const setUpTest = deployments.createFixture(
   async (): Promise<TestSetupReturn> => {
@@ -66,7 +73,7 @@ describe('Aave', async () => {
   beforeEach(async () => {
     // Set up
     ;({ escrow, user, aave, dai, aDai } = await setUpTest())
-    amount = BN('500', '18')
+    amount = toBN('500', '18')
     rando = await getNamedSigner('liquidator')
   })
 

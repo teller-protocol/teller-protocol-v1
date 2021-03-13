@@ -215,7 +215,8 @@ contract AssetSettings is AssetSettingsInterface, Base {
     {
         assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
 
-        return assets[assetAddress].addresses[CTOKEN_ADDRESS_ASSET_SETTING];
+        return
+            assets[assetAddress].addresses[YEARN_VAULT_ADDRESS_ASSET_SETTING];
     }
 
     /**
