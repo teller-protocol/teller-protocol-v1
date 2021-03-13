@@ -48,6 +48,12 @@ contract AssetSettings is AssetSettingsInterface, Base {
         keccak256("CTokenAddress");
 
     /**
+          @notice The asset setting name for aToken address settings.
+       */
+    bytes32 internal constant ATOKEN_ADDRESS_ASSET_SETTING =
+        keccak256("ATokenAddress");
+
+    /**
           @notice The asset setting name for yearn vault address settings.
        */
     bytes32 internal constant YEARN_VAULT_ADDRESS_ASSET_SETTING =
@@ -213,33 +219,45 @@ contract AssetSettings is AssetSettingsInterface, Base {
     }
 
     /**
-      @notice It updates the curve pool address associated with an asset.
+      @notice It updates the aToken address associated with an asset.
       @param assetAddress asset address to configure.
-      @param crvPoolAddress the new Curve pool address to configure.
+      @param aTokenAddress the new aToken address to configure.
       */
-    function updateCRVPoolAddressSetting(
-        address assetAddress,
-        address crvPoolAddress
-    ) external onlyPauser() {
+    function updateATokenAddress(address assetAddress, address aTokenAddress)
+        external
+        onlyPauser()
+    {
+        aTokenAddress.requireNotEmpty("ATOKEN_ADDRESS_REQUIRED");
+        address oldATokenAddress =
+            assets[assetAddress].addresses[ATOKEN_ADDRESS_ASSET_SETTING];
+
         assets[assetAddress].updateAddress(
-            CRV_POOL_ADDRESS_ASSET_SETTING,
-            crvPoolAddress
+            ATOKEN_ADDRESS_ASSET_SETTING,
+            aTokenAddress
+        );
+
+        emit AssetSettingsAddressUpdated(
+            ATOKEN_ADDRESS_ASSET_SETTING,
+            msg.sender,
+            assetAddress,
+            oldATokenAddress,
+            aTokenAddress
         );
     }
 
     /**
-      @notice It returns the curve pool address associated with an asset.
-      @param assetAddress asset address to get the associated curve pool address for.
-      @return The address of the curve pool.
+      @notice It returns the aToken address associated with an asset.
+      @param assetAddress asset address to get the associated aToken for.
+      @return The associated aToken address
       */
-    function getCRVPoolAddress(address assetAddress)
+    function getATokenAddress(address assetAddress)
         external
         view
         returns (address)
     {
         assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
 
-        return assets[assetAddress].addresses[CRV_POOL_ADDRESS_ASSET_SETTING];
+        return assets[assetAddress].addresses[ATOKEN_ADDRESS_ASSET_SETTING];
     }
 
     /**

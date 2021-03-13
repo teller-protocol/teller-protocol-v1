@@ -67,6 +67,9 @@ const deployLogicContracts: DeployFunction = async (hre) => {
       contract: 'Compound',
     },
     {
+      contract: 'Aave',
+    },
+    {
       contract: 'AssetSettings',
     },
   ]

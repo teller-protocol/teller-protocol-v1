@@ -17,7 +17,13 @@ const createAssetSettings: DeployFunction = async (hre) => {
   const tokens = getTokens(<Network>network.name)
   const assetSettingsConfig = getAssetSettings(<Network>network.name)
   for (const [assetSymbol, setting] of Object.entries(assetSettingsConfig)) {
-    const { cToken, maxLoanAmount, maxTVLAmount, maxDebtRatio } = setting
+    const {
+      cToken,
+      aToken,
+      maxLoanAmount,
+      maxTVLAmount,
+      maxDebtRatio,
+    } = setting
 
     let tokenDecimals = 18
     if (assetSymbol !== 'ETH') {
@@ -35,6 +41,13 @@ const createAssetSettings: DeployFunction = async (hre) => {
       maxTVLAmountBN,
       maxDebtRatio
     )
+
+    if (aToken) {
+      await assetSettings.updateATokenAddress(
+        tokens[assetSymbol],
+        tokens[aToken]
+      )
+    }
   }
 }
 
