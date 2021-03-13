@@ -6,6 +6,7 @@ import "../util/TellerCommon.sol";
 
 // Interfaces
 import "./SettingsInterface.sol";
+import "../providers/compound/CErc20Interface.sol";
 
 // Contracts
 import "../base/TToken.sol";
@@ -227,7 +228,7 @@ interface LoansInterface {
         @notice Returns the cToken in the lending pool
         @return Address of the cToken
      */
-    function cToken() external view returns (address);
+    function cToken() external view returns (CErc20Interface);
 
     /**
         @notice Returns the total owed amount remaining for a specified loan

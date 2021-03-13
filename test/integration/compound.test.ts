@@ -1,6 +1,7 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import hre from 'hardhat'
+
 import {
   Escrow,
   Compound,
@@ -23,7 +24,7 @@ interface TestSetupReturn {
   cDai: CErc20Interface
 }
 
-const { deployments, contracts, getNamedSigner, fastForward, BN } = hre
+const { deployments, contracts, getNamedSigner, fastForward, toBN } = hre
 
 const setUpTest = deployments.createFixture(
   async (): Promise<TestSetupReturn> => {
@@ -72,7 +73,7 @@ describe('Compound', async () => {
   beforeEach(async () => {
     // Set up
     ;({ escrow, user, compound, dai, cDai } = await setUpTest())
-    amount = BN('500', '18')
+    amount = toBN(500, 18)
     rando = await getNamedSigner('liquidator')
   })
 

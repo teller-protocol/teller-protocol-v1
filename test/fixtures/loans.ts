@@ -1,9 +1,10 @@
-import { deployments, contracts, BN } from 'hardhat'
-import { Signer, BigNumber } from 'ethers'
-import { fundedMarket, FundedMarketArgs, FundedMarketReturn } from './markets'
-import { mockCRAResponse } from '../../utils/mock-cra-response'
-import { ONE_DAY } from '../../utils/consts'
+import { deployments, contracts, toBN } from 'hardhat'
+import { Signer } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
+
+import { fundedMarket, FundedMarketArgs, MarketReturn } from './markets'
+import { mockCRAResponse } from '../helpers/mock-cra-response'
+import { ONE_DAY } from '../../utils/consts'
 import { Loans } from '../../types/typechain'
 
 export enum LoanType {
@@ -19,7 +20,7 @@ export interface MarketWithLoanArgs {
 }
 
 export interface MarketWithLoanReturn
-  extends FundedMarketReturn,
+  extends MarketReturn,
     BorrowedLoanReturn {}
 
 export interface BorrowedLoanReturn {
@@ -50,7 +51,7 @@ export const createMarketWithLoan = (
   })()
 
 export const createAndGetLoan = async (
-  market: FundedMarketReturn,
+  market: MarketReturn,
   borrower: Signer,
   loanType: LoanType,
   hre: HardhatRuntimeEnvironment
@@ -72,7 +73,7 @@ export const createAndGetLoan = async (
 }
 
 export const createLoan = async (
-  market: FundedMarketReturn,
+  market: MarketReturn,
   loanType: LoanType,
   loanAmount: string,
   borrower: Signer
@@ -81,7 +82,7 @@ export const createLoan = async (
   const lendingToken = await contracts.get('ERC20Detailed', {
     at: await market.lendingPool.lendingToken(),
   })
-  const amount = BN(loanAmount, await lendingToken.decimals()).toString()
+  const amount = toBN(loanAmount, await lendingToken.decimals()).toString()
   // Set up collateral
   let collateralRatio = 0
   switch (loanType) {
@@ -124,7 +125,7 @@ export const getLoan = async (
   borrower: Signer,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
-  const { fastForward, BN } = hre
+  const { fastForward, toBN } = hre
 
   // Deposit collateral
   const collateral = (await loansContract.getCollateralInfo(createdLoanId))
@@ -142,5 +143,5 @@ export const getLoan = async (
   // Take out loan as borrower
   await loansContract
     .connect(borrower)
-    .takeOutLoan(createdLoanId, BN(loanAmount, '18'))
+    .takeOutLoan(createdLoanId, toBN(loanAmount, '18'))
 }

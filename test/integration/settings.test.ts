@@ -5,7 +5,7 @@ import {
   createAndGetLoan,
   createLoan,
   fundedMarket,
-  FundedMarketReturn,
+  MarketReturn,
 } from '../fixtures'
 import { BigNumberish, Signer } from 'ethers'
 import { AssetSettings, Settings } from '../../types/typechain'
@@ -35,7 +35,7 @@ const setupTest = deployments.createFixture(async () => {
 })
 
 describe('Settings', async () => {
-  let market: FundedMarketReturn
+  let market: MarketReturn
   let settings: Settings
   let borrower: Signer
   let borrowerAddress: string

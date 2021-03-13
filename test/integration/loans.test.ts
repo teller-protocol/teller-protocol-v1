@@ -13,7 +13,7 @@ import { ERC20Detailed, Loans } from '../../types/typechain'
 chai.should()
 chai.use(solidity)
 
-const { deployments, getNamedSigner, contracts, fastForward, BN } = hre
+const { deployments, getNamedSigner, contracts, fastForward, toBN } = hre
 
 const setupTest = deployments.createFixture(async () => {
   const market = await createMarketWithLoan({
@@ -79,13 +79,13 @@ describe('Loans', async () => {
       // Take out loan
       await market.loans
         .connect(borrower)
-        .takeOutLoan(loanID, BN(loanAmount, '18'))
+        .takeOutLoan(loanID, toBN(loanAmount, '18'))
         .should.emit(market.loans, 'LoanTakenOut')
         .withArgs(
           loanID,
           borrowerAddress,
           loanInfo.escrow,
-          BN(loanAmount, '18')
+          toBN(loanAmount, '18')
         )
     })
     // Creating a loan with terms and try to take out a loan without collateral unsuccessfully
@@ -100,7 +100,7 @@ describe('Loans', async () => {
       const fn = () =>
         market.loans
           .connect(borrower)
-          .takeOutLoan(createdLoanID, hre.BN(loanAmount, '18'))
+          .takeOutLoan(createdLoanID, hre.toBN(loanAmount, '18'))
 
       await fn().should.be.revertedWith('MORE_COLLATERAL_REQUIRED')
     })
