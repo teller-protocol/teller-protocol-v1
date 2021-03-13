@@ -1,4 +1,3 @@
-import chai from 'chai'
 import {
   deployments,
   contracts,
@@ -8,15 +7,12 @@ import {
   toBN,
 } from 'hardhat'
 import { BigNumberish } from 'ethers'
-import { solidity } from 'ethereum-waffle'
 
 import { getMarkets } from '../../config/markets'
 import { Network } from '../../types/custom/config-types'
 import { AssetSettings, ERC20Detailed, TToken } from '../../types/typechain'
 import { getMarket, GetMarketReturn } from '../../tasks'
 import { getFunds } from '../helpers/get-funds'
-
-chai.use(solidity)
 
 interface FreshMarketArgs {
   lendTokenSym: string

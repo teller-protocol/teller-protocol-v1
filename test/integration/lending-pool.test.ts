@@ -1,6 +1,6 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
-import { getNamedSigner, ethers, evm, toBN } from 'hardhat'
+import { getNamedSigner, evm, toBN } from 'hardhat'
 import { BigNumber, BigNumberish } from 'ethers'
 
 import { freshMarket, fundedMarket, MarketReturn } from '../fixtures'

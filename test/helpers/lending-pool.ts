@@ -1,7 +1,11 @@
 import { evm } from 'hardhat'
 import { BigNumber, Signer } from 'ethers'
+import chai from 'chai'
+import { solidity } from 'ethereum-waffle'
 
 import { GetMarketReturn } from '../../tasks'
+
+chai.use(solidity)
 
 /**
  * Creates all LP test helper functions.
