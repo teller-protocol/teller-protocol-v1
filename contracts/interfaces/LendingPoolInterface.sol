@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Deta
 // Interfaces
 import "./IMarketRegistry.sol";
 import "./ITToken.sol";
+import "../providers/uniswap/IUniswapV2Router02.sol";
 import "../providers/compound/CErc20Interface.sol";
 
 /**
@@ -76,11 +77,17 @@ interface LendingPoolInterface {
         address settingsAddress
     ) external;
 
+    function ROUTER() external view returns (IUniswapV2Router02);
+
     /**
         @notice It gets the cToken address.
         @return the cToken address.
     */
     function cToken() external view returns (CErc20Interface);
+
+    function compound() external view returns (ComptrollerInterface);
+
+    function comp() external view returns (ERC20Detailed);
 
     /**
         @notice It gets the tToken address.
