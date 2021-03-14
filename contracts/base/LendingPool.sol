@@ -10,6 +10,7 @@ import "../util/NumbersLib.sol";
 // Interfaces
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/loans/ILoanManager.sol";
 import "../providers/compound/CErc20Interface.sol";
@@ -18,6 +19,8 @@ import "../interfaces/ITToken.sol";
 
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
+import "compound-protocol/contracts/CToken.sol";
+import "compound-protocol/contracts/Comptroller.sol";
 import "./Base.sol";
 
 /*****************************************************************************************************/
@@ -39,8 +42,15 @@ import "./Base.sol";
 contract LendingPool is LendingPoolInterface, Base {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
-    using CompoundRatesLib for CErc20Interface;
+    using CompoundRatesLib for CToken;
     using NumbersLib for uint256;
+
+    /** Constants */
+
+    uint8 public constant EXCHANGE_RATE_DECIMALS = 36;
+
+    IUniswapV2Router02 public constant ROUTER =
+        IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
 
     /* State Variables */
 
@@ -48,11 +58,18 @@ contract LendingPool is LendingPoolInterface, Base {
 
     ERC20Detailed public lendingToken;
 
-    uint8 public constant EXCHANGE_RATE_DECIMALS = 36;
+    CToken public cToken;
+
+    Comptroller public compound;
+
+    Comp public comp;
 
     IMarketRegistry public marketRegistry;
 
-    // The total amount of underlying asset that has been originally been supplied by each lender not including interest earned.
+    /**
+        The total amount of underlying asset that has been originally been supplied by each
+        lender not including interest earned.
+    */
     mapping(address => uint256) internal _totalSuppliedUnderlyingLender;
 
     // The total amount of underlying asset that has been lent out for loans.
@@ -248,6 +265,10 @@ contract LendingPool is LendingPoolInterface, Base {
         _totalBorrowed = _totalBorrowed.add(amount);
     }
 
+    function swapAccumulatedComp() external isInitialized {
+        _swapAccumulatedComp();
+    }
+
     function getMarketStateCurrent()
         external
         returns (
@@ -343,15 +364,6 @@ contract LendingPool is LendingPoolInterface, Base {
     }
 
     /**
-        @notice Returns the cToken in the lending pool
-        @return Address of the cToken
-     */
-    function cToken() public view returns (CErc20Interface) {
-        return
-            CErc20Interface(settings.getCTokenAddress(address(lendingToken)));
-    }
-
-    /**
         @notice It calculates the current exchange rate for the TToken based on the total supply of the lending token.
         @return the exchange rate for 1 TToken to the underlying token.
      */
@@ -406,6 +418,9 @@ contract LendingPool is LendingPoolInterface, Base {
         marketRegistry = aMarketRegistry;
         tToken = ITToken(aTToken);
         lendingToken = ERC20Detailed(aLendingToken);
+        cToken = CToken(settings.getCTokenAddress(address(lendingToken)));
+        compound = Comptroller(cToken.comptroller());
+        comp = Comp(compound.getCompAddress());
         assetSettings = settings.assetSettings();
 
         _notEntered = true;
@@ -487,7 +502,7 @@ contract LendingPool is LendingPoolInterface, Base {
             _totalBorrowed.sub(_totalRepaid)
         );
 
-        CErc20Interface _cToken = cToken();
+        CToken _cToken = cToken();
         if (address(_cToken) != address(0)) {
             totalSupplied = totalSupplied.add(
                 _cToken.valueInUnderlying(_cToken.balanceOf(address(this)))
@@ -567,7 +582,7 @@ contract LendingPool is LendingPoolInterface, Base {
         internal
         returns (uint256 difference)
     {
-        CErc20Interface _cToken = cToken();
+        CToken _cToken = cToken();
         if (address(_cToken) == address(0)) {
             return 0;
         }
@@ -595,7 +610,7 @@ contract LendingPool is LendingPoolInterface, Base {
         internal
         returns (uint256)
     {
-        CErc20Interface _cToken = cToken();
+        CToken _cToken = cToken();
         if (address(_cToken) == address(0)) {
             return 0;
         }
@@ -607,6 +622,31 @@ contract LendingPool is LendingPoolInterface, Base {
 
         uint256 balanceAfter = lendingToken.balanceOf(address(this));
         return balanceAfter.sub(balanceBefore);
+    }
+
+    function _swapAccumulatedComp() internal {
+        address[] memory cTokens = new address[](1);
+        cTokens[0] = address(cToken);
+
+        compound.claimComp(address(this), cTokens);
+
+        // Amount which goes into the swap is COMP balance of the lending pool.
+        uint256 amountIn = comp.balanceOf(address(this));
+
+        // Path of the swap is always COMP -> WETH -> LendingToken.
+        address[] memory path = new address[](3);
+        path[0] = address(comp);
+        path[1] = settings.WETH_ADDRESS();
+        path[2] = address(lendingToken);
+
+        comp.safeIncreaseAllowance(ROUTER, amountIn);
+
+        ROUTER.swapExactTokensForToken(
+            amountIn,
+            ROUTER.getAmountsOut(amountIn, path)[path.length - 1],
+            path,
+            address(this)
+        );
     }
 
     /**
@@ -664,6 +704,6 @@ contract LendingPool is LendingPoolInterface, Base {
     }
 
     function _accrueInterest() private {
-        address(cToken()).call(abi.encodeWithSignature("accrueInterest()"));
+        address(cToken).call(abi.encodeWithSignature("accrueInterest()"));
     }
 }
