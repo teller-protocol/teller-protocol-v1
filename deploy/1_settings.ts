@@ -79,10 +79,13 @@ const deployLogicContracts: DeployFunction = async (hre) => {
 
   const initialLogicVersions: { logic: string; logicName: string }[] = []
   for (const logicData of logicDeploymentData) {
-    const { address: logic } = await deployLogic({
-      hre,
-      ...logicData,
-    })
+    const { address: logic } = await deployLogic(
+      {
+        hre,
+        ...logicData,
+      },
+      '0'
+    )
     initialLogicVersions.push({
       logic,
       logicName: ethers.utils.id(logicData.contract),

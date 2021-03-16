@@ -43,10 +43,13 @@ export const deploy = async <C extends Contract>(
 
 export interface DeployLogicArgs extends Omit<DeployArgs, 'name'> {}
 
-export const deployLogic = async (args: DeployLogicArgs): Promise<Contract> =>
+export const deployLogic = async (
+  args: DeployLogicArgs,
+  version: string
+): Promise<Contract> =>
   await deploy({
     ...args,
-    name: `${args.contract}_Logic`,
+    name: `${args.contract}_Logic_v${version}`,
   })
 
 interface DeployDynamicProxyArgs extends DeployArgs {
