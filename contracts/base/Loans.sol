@@ -115,10 +115,7 @@ contract Loans is LoansInterface, Base, ReentrancyGuard {
         @param loanRequest to validate.
      */
     modifier withValidLoanRequest(TellerCommon.LoanRequest memory loanRequest) {
-        uint256 maxLoanDuration =
-            settings.getPlatformSettingValue(
-                settings.consts().MAXIMUM_LOAN_DURATION_SETTING()
-            );
+        uint256 maxLoanDuration = settings.getMaximumLoanDurationValue();
         require(
             maxLoanDuration >= loanRequest.duration,
             "DURATION_EXCEEDS_MAX_DURATION"
@@ -372,11 +369,7 @@ contract Loans is LoansInterface, Base, ReentrancyGuard {
 
         require(
             loans[loanID].lastCollateralIn <=
-                now.sub(
-                    settings.getPlatformSettingValue(
-                        settings.consts().SAFETY_INTERVAL_SETTING()
-                    )
-                ),
+                now.sub(settings.getSafetyIntervalValue()),
             "COLLATERAL_DEPOSITED_RECENTLY"
         );
 

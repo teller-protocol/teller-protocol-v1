@@ -209,9 +209,7 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
             return;
         }
         uint256 requestLoanTermsRateLimit =
-            settings.getPlatformSettingValue(
-                settings.consts().REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING()
-            );
+            settings.getRequestLoanTermsRateLimitValue();
         require(
             borrowerToLastLoanTermRequest[request.borrower].add(
                 requestLoanTermsRateLimit

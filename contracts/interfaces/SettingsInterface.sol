@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "../util/PlatformSettingsLib.sol";
 import "./IDappRegistry.sol";
-import "../util/SettingsConsts.sol";
 import "../providers/chainlink/IChainlinkAggregator.sol";
 import "../interfaces/AssetSettingsInterface.sol";
 import "./MarketFactoryInterface.sol";
@@ -121,8 +120,6 @@ interface SettingsInterface {
         uint256 maxValue
     ) external;
 
-    function consts() external view returns (SettingsConsts);
-
     function assetSettings() external view returns (AssetSettingsInterface);
 
     /**
@@ -142,24 +139,79 @@ interface SettingsInterface {
     function removePlatformSetting(bytes32 settingName) external;
 
     /**
-        @notice It gets the current platform setting for a given setting name
-        @param settingName to get.
-        @return the current platform setting.
+        @notice It gets the current "RequiredSubmissionsPercentage" setting's value
+        @return the current value.
      */
-    function getPlatformSetting(bytes32 settingName)
+    function getRequiredSubmissionsPercentageValue()
         external
         view
-        returns (PlatformSettingsLib.PlatformSetting memory);
+        returns (uint256 value);
 
     /**
-        @notice It gets the current platform setting value for a given setting name
-        @param settingName to get.
-        @return the current platform setting value.
+        @notice It gets the current "MaximumTolerance" setting's value
+        @return the current value.
      */
-    function getPlatformSettingValue(bytes32 settingName)
+    function getMaximumToleranceValue() external view returns (uint256 value);
+
+    /**
+        @notice It gets the current "ResponseExpiryLength" setting's value
+        @return the current value.
+     */
+    function getResponseExpiryLengthValue()
         external
         view
-        returns (uint256);
+        returns (uint256 value);
+
+    /**
+        @notice It gets the current "SafetyInterval" setting's value
+        @return the current value.
+     */
+    function getSafetyIntervalValue() external view returns (uint256 value);
+
+    /**
+        @notice It gets the current "TermsExpiryTime" setting's value
+        @return the current value.
+     */
+    function getTermsExpiryTimeValue() external view returns (uint256 value);
+
+    /**
+        @notice It gets the current "LiquidateEthPrice" setting's value
+        @return the current value.
+     */
+    function getLiquidateEthPriceValue() external view returns (uint256 value);
+
+    /**
+        @notice It gets the current "MaximumLoanDuration" setting's value
+        @return the current value.
+     */
+    function getMaximumLoanDurationValue()
+        external
+        view
+        returns (uint256 value);
+
+    /**
+        @notice It gets the current "RequestLoanTermsRateLimit" setting's value
+        @return the current value.
+     */
+    function getRequestLoanTermsRateLimitValue()
+        external
+        view
+        returns (uint256 value);
+
+    /**
+        @notice It gets the current "CollateralBuffer" setting's value
+        @return the current value.
+     */
+    function getCollateralBufferValue() external view returns (uint256 value);
+
+    /**
+        @notice It gets the current "OverCollateralizedBuffer" setting's value
+        @return the current value.
+     */
+    function getOverCollateralizedBufferValue()
+        external
+        view
+        returns (uint256 value);
 
     /**
         @notice It tests whether a setting name is already configured.
