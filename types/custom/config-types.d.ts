@@ -51,9 +51,13 @@ interface Market {
   collateralToken: TokenSymbol
 }
 
-export interface ChainlinkPair {
-  baseTokenSym: TokenSymbol
-  quoteTokenSym: TokenSymbol
+export interface Chainlink {
+  [pairSymbols: string]: ChainlinkPair
+}
+
+interface ChainlinkPair {
+  baseTokenName: TokenSymbol
+  quoteTokenName: TokenSymbol
   address: Address
 }
 

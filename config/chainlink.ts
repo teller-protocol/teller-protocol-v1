@@ -1,4 +1,4 @@
-import { ChainlinkPair, Config, Network } from '../types/custom/config-types'
+import { Chainlink, Config, Network } from '../types/custom/config-types'
 
 const mainnetChainlink: Chainlink = {
   USDC_ETH: {
