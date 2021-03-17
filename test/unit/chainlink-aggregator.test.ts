@@ -14,7 +14,7 @@ const { deployments, ethers, contracts, getNamedSigner } = hre
 
 const setupTest = deployments.createFixture(async () => {
   // Get snapshot
-  await deployments.fixture('chainlink')
+  await deployments.fixture('asset-settings')
 
   const deployer = await getNamedSigner('deployer')
   const chainlinkAggregator = await contracts.get<ChainlinkAggregator>(
@@ -40,9 +40,9 @@ describe('Chainlink Aggregator', async () => {
   })
 
   describe('add', () => {
-    const srcTokenAddress = '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9' // AAVE
+    const srcTokenAddress = '0x111111111117dc0aa78b770fa6a738034120c302' // 1INCH
     const dstTokenAddress = tokens.ETH // ETH
-    const aggregatorAddressToAdd = '0x6Df09E975c830ECae5bd4eD9d90f3A95a4f88012' // AAVE<>ETH
+    const aggregatorAddressToAdd = '0x72AFAECF99C9d9C8215fF44C77B94B99C28741e8' // 1INCH<>ETH
 
     it('Should be able add an aggregator address as a pauser', async () => {
       // Add aggregator
@@ -131,10 +131,17 @@ describe('Chainlink Aggregator', async () => {
   })
 
   describe('latestAnswerFor', () => {
-    const { baseTokenName, quoteTokenName } = chainlink['USDC_ETH']
+    const { baseTokenName, quoteTokenName, address } = chainlink['USDC_ETH']
     const baseTokenAddress = tokens[baseTokenName]
     const quoteTokenAddress = tokens[quoteTokenName]
 
+    beforeEach(async () => {
+      await chainlinkAggregator.add(
+        baseTokenAddress,
+        quoteTokenAddress,
+        address
+      )
+    })
     it('Should be able get the latest price of a token pair', async () => {
       const answer = await chainlinkAggregator.latestAnswerFor(
         baseTokenAddress,
