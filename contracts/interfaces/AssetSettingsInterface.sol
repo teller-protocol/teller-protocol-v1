@@ -139,6 +139,26 @@ interface AssetSettingsInterface {
         returns (address);
 
     /**
+      @notice It updates the pool together prize pool address associated with an asset.
+      @param assetAddress asset address to configure.
+      @param prizePoolAddress the new aToken address to configure.
+      */
+    function updatePrizePoolAddress(
+        address assetAddress,
+        address prizePoolAddress
+    ) external;
+
+    /**
+      @notice It returns the pool together prize pool address associated with an asset.
+      @param assetAddress asset address to get the associated aToken for.
+      @return The associated prize pool address
+      */
+    function getPrizePoolAddress(address assetAddress)
+        external
+        view
+        returns (address);
+
+    /**
         @notice It updates the max loan amount for a given asset.
         @param assetAddress asset address used to update the max loan amount.
         @param newMaxLoanAmount the new max loan amount to set.

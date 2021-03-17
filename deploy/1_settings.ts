@@ -73,6 +73,9 @@ const deployLogicContracts: DeployFunction = async (hre) => {
       contract: 'Yearn',
     },
     {
+      contract: 'PoolTogether',
+    },
+    {
       contract: 'AssetSettings',
     },
   ]
