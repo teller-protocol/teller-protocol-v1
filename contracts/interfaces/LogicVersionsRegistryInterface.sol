@@ -67,13 +67,6 @@ interface LogicVersionsRegistryInterface {
     function consts() external returns (LogicVersionsConsts);
 
     /**
-        @notice It creates a new logic version given a logic name and address.
-        @param logicName logic name to create.
-        @param logic the logic address value for the given logic name.
-     */
-    function createLogicVersion(bytes32 logicName, address logic) external;
-
-    /**
         @notice It creates multiple logic versions.
         @param newLogicVersions lists of the new logic versions to create.
      */
@@ -93,7 +86,8 @@ interface LogicVersionsRegistryInterface {
         @param logicName logic name to rollback.
         @param previousVersion the previous version to be used.
      */
-    function rollbackLogicVersion(bytes32 logicName, uint256 previousVersion) external;
+    function rollbackLogicVersion(bytes32 logicName, uint256 previousVersion)
+        external;
 
     /**
         @notice It gets the current logic version for a given logic name.
@@ -110,13 +104,6 @@ interface LogicVersionsRegistryInterface {
         );
 
     /**
-        @notice It gets the current logic address for a given logic name.
-        @param logicName to get.
-        @return the current logic address.
-     */
-    function getLogicVersionAddress(bytes32 logicName) external view returns (address);
-
-    /**
         @notice It tests whether a logic name is already configured.
         @param logicName logic name to test.
         @return true if the logic version is already configured. Otherwise it returns false.
@@ -124,14 +111,12 @@ interface LogicVersionsRegistryInterface {
     function hasLogicVersion(bytes32 logicName) external view returns (bool);
 
     /**
-        @notice Checks if an address is registered as a platform proxy.
-        @param proxy Address to check if is registered.
-        @return boolean if registered or not
-      */
-    function isProxyRegistered(address proxy) external view returns (bool);
-
-    /**
         @notice It initializes this logic versions registry contract instance.
+        @param aOwner address of the owner of the registry.
+        @param initialLogicVersions lists of the new logic versions to create.
      */
-    function initialize() external;
+    function initialize(
+        address aOwner,
+        TellerCommon.LogicVersionRequest[] calldata initialLogicVersions
+    ) external;
 }

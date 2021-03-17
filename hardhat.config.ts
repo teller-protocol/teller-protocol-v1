@@ -2,22 +2,25 @@ import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-ethers'
 import 'hardhat-deploy'
 import 'hardhat-contract-sizer'
-import { HardhatUserConfig } from 'hardhat/config'
 import { config } from 'dotenv'
+import { ethers } from 'ethers'
+import { HardhatUserConfig } from 'hardhat/config'
 import { HardhatNetworkHDAccountsUserConfig } from 'hardhat/types'
-
-if (process.env.COMPILING != 'true') require('./tasks')
-import './utils/hre-extensions'
-
 import 'hardhat-gas-reporter'
 // import 'solidity-coverage'
 import 'hardhat-contract-sizer'
+
+if (process.env.COMPILING != 'true') {
+  require('./tasks')
+  require('./utils/hre-extensions')
+}
 
 config()
 
 const accounts: HardhatNetworkHDAccountsUserConfig = {
   mnemonic: process.env.MNEMONIC_KEY,
   count: parseInt(process.env.ADDRESS_COUNT_KEY ?? '15'),
+  accountsBalance: ethers.utils.parseEther('1000000').toString(),
 }
 
 export default <HardhatUserConfig>{
@@ -49,7 +52,7 @@ export default <HardhatUserConfig>{
     },
   },
   contractSizer: {
-    runOnCompile: true,
+    runOnCompile: false,
     alphaSort: true,
     disambiguatePaths: false,
   },
@@ -60,6 +63,32 @@ export default <HardhatUserConfig>{
       hardhat: 1,
       localhost: 1,
       mainnet: 1,
+    },
+    lender: {
+      rinkeby: 5,
+      ropsten: 5,
+      hardhat: 5,
+      localhost: 5,
+    },
+    borrower: {
+      rinkeby: 6,
+      ropsten: 6,
+      hardhat: 6,
+      localhost: 6,
+    },
+    liquidator: {
+      rinkeby: 9,
+      ropsten: 9,
+      hardhat: 9,
+      localhost: 9,
+    },
+    funder: {
+      hardhat: 15,
+      localhost: 15,
+    },
+    craSigner: {
+      hardhat: 10,
+      localhost: 10,
     },
   },
   networks: {
@@ -101,6 +130,9 @@ export default <HardhatUserConfig>{
   },
   gasReporter: {
     currency: 'USD',
-    gasPrice: 121,
+    coinmarketcap: process.env.CMC_KEY,
+  },
+  mocha: {
+    timeout: 100000,
   },
 }

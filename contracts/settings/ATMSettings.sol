@@ -6,7 +6,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Contracts
 import "../base/TInitializable.sol";
-import "../base/BaseUpgradeable.sol";
+import "../base/Base.sol";
 
 // Interfaces
 import "./IATMSettings.sol";
@@ -26,7 +26,7 @@ import "./IATMSettings.sol";
 
     @author develop@teller.finance
  */
-contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
+contract ATMSettings is IATMSettings, TInitializable, Base {
     using Address for address;
 
     /** Constants */
@@ -56,8 +56,12 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
         @notice It pauses a given ATM.
         @param atmAddress ATM address to pause.
      */
-    function pauseATM(address atmAddress) external onlyPauser() isInitialized() {
-        require(!_getSettings().isPaused(), "PLATFORM_IS_ALREADY_PAUSED");
+    function pauseATM(address atmAddress)
+        external
+        onlyPauser()
+        isInitialized()
+    {
+        require(!settings.isPaused(), "PLATFORM_IS_ALREADY_PAUSED");
         require(!atmPaused[atmAddress], "ATM_IS_ALREADY_PAUSED");
 
         atmPaused[atmAddress] = true;
@@ -69,8 +73,12 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
         @notice It unpauses a given ATM.
         @param atmAddress ATM address to unpause.
      */
-    function unpauseATM(address atmAddress) external onlyPauser() isInitialized() {
-        require(!_getSettings().isPaused(), "PLATFORM_IS_PAUSED");
+    function unpauseATM(address atmAddress)
+        external
+        onlyPauser()
+        isInitialized()
+    {
+        require(!settings.isPaused(), "PLATFORM_IS_PAUSED");
         require(atmPaused[atmAddress], "ATM_IS_NOT_PAUSED");
 
         atmPaused[atmAddress] = false;
@@ -84,7 +92,7 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
         @return true if ATM is paused. Otherwise it returns false.
      */
     function isATMPaused(address atmAddress) external view returns (bool) {
-        return _getSettings().isPaused() || atmPaused[atmAddress];
+        return settings.isPaused() || atmPaused[atmAddress];
     }
 
     /**
@@ -101,7 +109,7 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
         require(atmAddress.isContract(), "ATM_GOV_MUST_BE_CONTRACT");
         require(lendingToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
-            collateralToken == _getSettings().ETH_ADDRESS() ||
+            collateralToken == settings.ETH_ADDRESS() ||
                 collateralToken.isContract(),
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
@@ -112,7 +120,12 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
 
         marketToAtm[lendingToken][collateralToken] = atmAddress;
 
-        emit MarketToAtmSet(lendingToken, collateralToken, atmAddress, msg.sender);
+        emit MarketToAtmSet(
+            lendingToken,
+            collateralToken,
+            atmAddress,
+            msg.sender
+        );
     }
 
     /**
@@ -128,7 +141,7 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
     ) external onlyPauser() isInitialized() {
         require(lendingToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
-            collateralToken == _getSettings().ETH_ADDRESS() ||
+            collateralToken == settings.ETH_ADDRESS() ||
                 collateralToken.isContract(),
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
@@ -166,7 +179,7 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
     {
         require(lendingToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
-            collateralToken == _getSettings().ETH_ADDRESS() ||
+            collateralToken == settings.ETH_ADDRESS() ||
                 collateralToken.isContract(),
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
@@ -221,7 +234,7 @@ contract ATMSettings is IATMSettings, TInitializable, BaseUpgradeable {
         @param settingsAddress settings address.
      */
     function initialize(address settingsAddress) external isNotInitialized() {
-        _setSettings(settingsAddress);
+        _initialize(settingsAddress);
 
         TInitializable._initialize();
     }

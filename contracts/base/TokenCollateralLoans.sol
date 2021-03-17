@@ -38,7 +38,10 @@ contract TokenCollateralLoans is Loans {
 
     /** External Functions */
 
-    function _payInCollateral(uint256 loanID, uint256 amount) internal noMsgValue() {
+    function _payInCollateral(uint256 loanID, uint256 amount)
+        internal
+        noMsgValue()
+    {
         // Transfer collateral tokens to this contract.
         _collateralTokenTransferFrom(msg.sender, amount);
         super._payInCollateral(loanID, amount);
@@ -56,10 +59,14 @@ contract TokenCollateralLoans is Loans {
         address loanTermsConsensusAddress,
         address settingsAddress,
         address collateralTokenAddress
-    ) external isNotInitialized() {
+    ) external isNotInitialized {
         collateralTokenAddress.requireNotEmpty("PROVIDE_COLL_TOKEN_ADDRESS");
 
-        _initialize(lendingPoolAddress, loanTermsConsensusAddress, settingsAddress);
+        _initialize(
+            lendingPoolAddress,
+            loanTermsConsensusAddress,
+            settingsAddress
+        );
 
         collateralToken = collateralTokenAddress;
     }
@@ -86,7 +93,9 @@ contract TokenCollateralLoans is Loans {
         @param recipient The address which will receive the tokens.
         @param amount The amount of tokens to transfer.
      */
-    function _collateralTokenTransfer(address recipient, uint256 amount) internal {
+    function _collateralTokenTransfer(address recipient, uint256 amount)
+        internal
+    {
         ERC20Detailed(collateralToken).safeTransfer(recipient, amount);
     }
 
@@ -95,7 +104,13 @@ contract TokenCollateralLoans is Loans {
         @param from The address where the tokens will transfer from.
         @param amount The amount to be transferred.
      */
-    function _collateralTokenTransferFrom(address from, uint256 amount) internal {
-        ERC20Detailed(collateralToken).safeTransferFrom(from, address(this), amount);
+    function _collateralTokenTransferFrom(address from, uint256 amount)
+        internal
+    {
+        ERC20Detailed(collateralToken).safeTransferFrom(
+            from,
+            address(this),
+            amount
+        );
     }
 }

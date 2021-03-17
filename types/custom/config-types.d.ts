@@ -1,4 +1,10 @@
-export type Network = 'rinkeby' | 'kovan' | 'ropsten' | 'hardhat' | 'localhost' | 'mainnet'
+export type Network =
+  | 'rinkeby'
+  | 'kovan'
+  | 'ropsten'
+  | 'hardhat'
+  | 'localhost'
+  | 'mainnet'
 
 export type Config<T> = {
   [N in Network]: T
@@ -14,6 +20,8 @@ export interface AssetSettings {
 
 export interface AssetSetting {
   cToken: TokenSymbol
+  aToken?: TokenSymbol
+  yVault?: TokenSymbol
   maxLoanAmount: number
   maxTVLAmount: number
   maxDebtRatio: number
@@ -74,9 +82,7 @@ export interface PlatformSetting {
   max: number | string
 }
 
-export interface Signers {
-  [index: string]: Address
-}
+export interface Signers extends Array<Address> {}
 
 export interface Tokens {
   [tokenSymbol: string]: Address

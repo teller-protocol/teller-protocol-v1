@@ -4,7 +4,7 @@
   "license": "MIT",
   "main": "truffle-config.js",
   "scripts": {
-    "lint-sol": "yarn solhint -f table \"./contracts/**/*.sol\"",
+    "lint-sol": "yarn solhint -f table --fix --quiet",
     "lint-ts": "yarn eslint . -f table -ext ts,js --fix",
     "lint-json": "prettier",
     "fork:mainnet": "node scripts/utils/forkMainnet.js",
@@ -14,6 +14,7 @@
     "deploy:kovan": "yarn hardhat deploy --network kovan",
     "deploy:mainnet": "yarn hardhat deploy  --network mainnet",
     "test": "yarn hardhat test",
+    "contract:size": "yarn hardhat size-contracts",
     "coverage": "yarn hardhat coverage --solcoverjs ./solcover.js",
     "test:localhost": "yarn hardhat test --network localhost",
     "console:rinkeby": "yarn hardhat console --network rinkeby",
@@ -48,7 +49,7 @@
     "ethereumjs-util": "^6.1.0",
     "ganache-cli": "^6.4.4",
     "ganache-time-traveler": "^1.0.5",
-    "hardhat": "^2.0.8",
+    "hardhat": "^2.0.11",
     "hardhat-contract-sizer": "^2.0.2",
     "hardhat-deploy": "^0.7.0-beta.44",
     "hardhat-typechain": "^0.3.4",
@@ -62,7 +63,7 @@
     "prettier": "^2.0.2",
     "prettier-plugin-solidity": "^1.0.0-alpha.46",
     "serialize-javascript": "^3.1.0",
-    "solhint": "^2.1.0",
+    "solhint": "^3.3.2",
     "solhint-plugin-prettier": "^0.0.4",
     "solidity-coverage": "^0.7.14",
     "truffle": "5.1.41",
@@ -80,7 +81,8 @@
     "@openzeppelin/upgrades": "^2.8.0",
     "bignumber.js": "^9.0.0",
     "chai-as-promised": "^7.1.1",
-    "elliptic": "^6.5.3",
+    "disklet": "^0.4.6",
+    "elliptic": "^6.5.4",
     "ethers": "^5.0.26",
     "ganache-core": "^2.11.2",
     "hardhat-gas-reporter": "^1.0.4",
@@ -96,7 +98,6 @@
   },
   "lint-staged": {
     "*.sol": [
-      "yarn solhint -f table",
       "prettier --write"
     ],
     "*.{js,ts}": [

@@ -1,8 +1,20 @@
 pragma solidity 0.5.17;
+pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/access/Roles.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
+import "./Base.sol";
 
+/*****************************************************************************************************/
+/**                                             WARNING                                             **/
+/**                              THIS CONTRACT IS AN UPGRADEABLE BASE!                              **/
+/**  ---------------------------------------------------------------------------------------------  **/
+/**  Do NOT change the order of, PREPEND, or APPEND any storage variables to this or new versions   **/
+/**  of this contract as this will cause a ripple affect to the storage slots of all child          **/
+/**  contracts that inherit from this contract to be overwritten on the deployed proxy contract!!   **/
+/**                                                                                                 **/
+/**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
+/**  more information.                                                                              **/
+/*****************************************************************************************************/
 /**
     @notice This contract manages the signer role for the consensus contracts.
     @notice It includes an owner role who has the ability to grant the signer role.
@@ -10,7 +22,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol
 
     @author develop@teller.finance
  */
-contract OwnerSignersRole is Ownable {
+contract OwnerSignersRole is Base {
     using Roles for Roles.Role;
 
     /**
@@ -28,6 +40,13 @@ contract OwnerSignersRole is Ownable {
     Roles.Role private _signers;
 
     uint256 public _signerCount;
+
+    address internal _owner;
+
+    modifier onlyOwner() {
+        require(msg.sender == _owner, "NOT_OWNER");
+        _;
+    }
 
     /**
         @notice Gets whether an account address is a signer or not.
@@ -62,6 +81,10 @@ contract OwnerSignersRole is Ownable {
                 _addSigner(account);
             }
         }
+    }
+
+    function _initialize(address owner) internal {
+        _owner = owner;
     }
 
     /**

@@ -66,7 +66,7 @@ interface CErc20Interface {
     function underlying() external view returns (address);
 
     /**
-        @notice Each cToken is convertible into an ever increasing quantity of the underlying asset, as interest accrues in the market. The exchange rate between a cToken and the underlying asset is 
+        @notice Each cToken is convertible into an ever increasing quantity of the underlying asset, as interest accrues in the market. The exchange rate between a cToken and the underlying asset is
         equal to: exchangeRate = (getCash() + totalBorrows() - totalReserves()) / totalSupply()
         @return The current exchange rate as an unsigned integer, scaled by 1e18.
      */
@@ -83,5 +83,5 @@ interface CErc20Interface {
         @param account The account to get the underlying balance of.
         @return The amount of underlying currently owned by the account.
      */
-    function balanceOfUnderlying(address account) external view returns (uint256);
+    function balanceOfUnderlying(address account) external returns (uint256);
 }
