@@ -2,7 +2,7 @@ import { DeployFunction } from 'hardhat-deploy/types'
 
 import {
   deploy,
-  DeployArgs,
+  DeployLogicArgs,
   deployLogic,
   deploySettingsProxy,
 } from '../utils/deploy-helpers'
@@ -22,7 +22,7 @@ const deployLogicContracts: DeployFunction = async (hre) => {
   })
 
   const mock = network.name.includes('hardhat')
-  const logicDeploymentData: Omit<DeployArgs, 'hre'>[] = [
+  const logicDeploymentData: Omit<DeployLogicArgs, 'hre'>[] = [
     {
       contract: 'Settings',
     },

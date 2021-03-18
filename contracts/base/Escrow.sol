@@ -50,7 +50,6 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
      */
     function callDapp(TellerCommon.DappData calldata dappData)
         external
-        isInitialized
         onlyBorrower
         whenNotPaused
     {
@@ -58,7 +57,7 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
             settings.dappRegistry().dapps(dappData.location);
         require(dapp.exists, "DAPP_NOT_WHITELISTED");
         require(
-            dapp.unsecured || getLoansContract().isLoanSecured(getLoanID()),
+            dapp.unsecured || getLoansContract().isLoanSecured(_getLoanID()),
             "DAPP_UNSECURED_NOT_ALLOWED"
         );
 
@@ -96,8 +95,7 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
             }
         }
 
-        return
-            _valueOfIn(settings.ETH_ADDRESS(), getLendingToken(), valueInEth);
+        return _valueOfIn(settings.ETH_ADDRESS(), _lendingToken, valueInEth);
     }
 
     /**
@@ -106,9 +104,9 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
         @dev Only the owner of the Escrow can call this. If someone else wants to make a payment, they should call the loans contract directly.
      */
     function repay(uint256 amount) external onlyBorrower whenNotPaused {
-        IERC20 token = IERC20(getLendingToken());
+        IERC20 token = IERC20(_lendingToken);
         uint256 balance = _balanceOf(address(token));
-        uint256 totalOwed = getLoansContract().getTotalOwed(getLoanID());
+        uint256 totalOwed = getLoansContract().getTotalOwed(_getLoanID());
         if (balance < totalOwed && amount > balance) {
             uint256 amountNeeded =
                 amount > totalOwed
@@ -119,7 +117,7 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
         }
         token.safeApprove(getLoansContract().lendingPool(), amount);
 
-        getLoansContract().repay(amount, getLoanID());
+        getLoansContract().repay(amount, _getLoanID());
     }
 
     /**
@@ -129,7 +127,7 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
     */
     function claimTokens() external onlyBorrower whenNotPaused {
         require(
-            getLoan().status == TellerCommon.LoanStatus.Closed,
+            _getLoan().status == TellerCommon.LoanStatus.Closed,
             "LOAN_NOT_CLOSED"
         );
 
@@ -137,11 +135,11 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
         for (uint256 i = 0; i < tokens.length; i++) {
             uint256 balance = _balanceOf(tokens[i]);
             if (balance > 0) {
-                IERC20(tokens[i]).safeTransfer(getBorrower(), balance);
+                IERC20(tokens[i]).safeTransfer(msg.sender, balance);
             }
         }
 
-        emit TokensClaimed(getBorrower());
+        emit TokensClaimed(msg.sender);
     }
 
     /**
@@ -157,14 +155,11 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
         whenNotPaused
     {
         require(
-            getLoan().status == TellerCommon.LoanStatus.Closed,
+            _getLoan().status == TellerCommon.LoanStatus.Closed,
             "LOAN_NOT_CLOSED"
         );
-        require(getLoan().liquidated, "LOAN_NOT_LIQUIDATED");
-        require(
-            msg.sender == address(getLoansContract()),
-            "CALLER_MUST_BE_LOANS"
-        );
+        require(_getLoan().liquidated, "LOAN_NOT_LIQUIDATED");
+        require(msg.sender == address(_getLoans()), "CALLER_MUST_BE_LOANS");
 
         address[] memory tokens = getTokens();
         uint256 valueLeftToTransfer = value;
@@ -211,21 +206,22 @@ contract Escrow is EscrowInterface, BaseEscrowDapp {
         @notice It initializes this escrow instance for a given loans address and loan id.
         @param settingsAddress The address of the settings contract.
         @param loanID the loan ID associated to this escrow instance.
+        @param lendingToken The token that the Escrow loan will be for.
      */
-    function initialize(address settingsAddress, uint256 loanID)
-        external
-        isNotInitialized
-    {
-        BaseEscrowDapp._initialize(msg.sender, loanID);
+    function initialize(
+        address settingsAddress,
+        uint256 loanID,
+        address lendingToken
+    ) external {
+        BaseEscrowDapp._initialize(msg.sender, loanID, lendingToken);
         Base._initialize(address(settingsAddress));
 
         // Initialize tokens list with the borrowed token.
-        address lendingToken = getLendingToken();
         require(
-            _balanceOf(lendingToken) == getLoan().borrowedAmount,
+            _balanceOf(lendingToken) == _getLoan().borrowedAmount,
             "ESCROW_BALANCE_NOT_MATCH_LOAN"
         );
-        _tokenUpdated(lendingToken);
+        _tokenUpdated(_lendingToken);
     }
 
     /** Internal Functions */

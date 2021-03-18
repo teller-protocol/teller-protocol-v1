@@ -126,7 +126,8 @@ interface IATMSettings {
         @param lendingToken borrowed token address.
         @param collateralToken collateral token address.
      */
-    function removeATMToMarket(address lendingToken, address collateralToken) external;
+    function removeATMToMarket(address lendingToken, address collateralToken)
+        external;
 
     /**
         @notice Gets the ATM configured for a given market (borrowed token and collateral token).

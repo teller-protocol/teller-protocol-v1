@@ -3,27 +3,27 @@ pragma experimental ABIEncoderV2;
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
-import "../util/AddressLib.sol";
-import "../util/PlatformSettingsLib.sol";
-import "../util/AddressArrayLib.sol";
-import "../util/CacheLib.sol";
+import "../../util/AddressLib.sol";
+import "../../util/PlatformSettingsLib.sol";
+import "../../util/AddressArrayLib.sol";
+import "../../util/CacheLib.sol";
 
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/access/Roles.sol";
-import "../util/SettingsConsts.sol";
-import "./DynamicProxy.sol";
+import "../../util/SettingsConsts.sol";
+import "../proxies/DynamicProxy.sol";
 import "./AssetSettings.sol";
-import "./LogicVersionsRegistry.sol";
-import "./DappRegistry.sol";
-import "../providers/chainlink/ChainlinkAggregator.sol";
+import "../LogicVersionsRegistry.sol";
+import "../DappRegistry.sol";
+import "../../providers/chainlink/ChainlinkAggregator.sol";
 
 // Interfaces
-import "../interfaces/SettingsInterface.sol";
-import "../interfaces/IDappRegistry.sol";
-import "../providers/chainlink/IChainlinkAggregator.sol";
-import "../providers/compound/CErc20Interface.sol";
-import "../interfaces/AssetSettingsInterface.sol";
-import "../interfaces/MarketFactoryInterface.sol";
+import "../../interfaces/SettingsInterface.sol";
+import "../../interfaces/IDappRegistry.sol";
+import "../../providers/chainlink/IChainlinkAggregator.sol";
+import "../../providers/compound/CErc20Interface.sol";
+import "../../interfaces/AssetSettingsInterface.sol";
+import "../../interfaces/MarketFactoryInterface.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -306,7 +306,7 @@ contract Settings is SettingsInterface, Base {
         uint256 value,
         uint256 minValue,
         uint256 maxValue
-    ) external onlyPauser isInitialized {
+    ) external onlyPauser {
         require(settingName != "", "SETTING_NAME_MUST_BE_PROVIDED");
         platformSettings[settingName].initialize(value, minValue, maxValue);
 
@@ -329,7 +329,6 @@ contract Settings is SettingsInterface, Base {
     function updatePlatformSetting(bytes32 settingName, uint256 newValue)
         external
         onlyPauser
-        isInitialized
     {
         uint256 oldValue = platformSettings[settingName].update(newValue);
 
@@ -345,11 +344,7 @@ contract Settings is SettingsInterface, Base {
         @notice Removes a current platform setting given a setting name.
         @param settingName to remove.
      */
-    function removePlatformSetting(bytes32 settingName)
-        external
-        onlyPauser
-        isInitialized
-    {
+    function removePlatformSetting(bytes32 settingName) external onlyPauser {
         uint256 oldValue = platformSettings[settingName].value;
         platformSettings[settingName].remove();
 
@@ -477,7 +472,6 @@ contract Settings is SettingsInterface, Base {
         external
         onlyPauser
         whenNotPaused
-        isInitialized
     {
         lendingPoolAddress.requireNotEmpty("LENDING_POOL_IS_REQUIRED");
         require(
@@ -498,7 +492,6 @@ contract Settings is SettingsInterface, Base {
         external
         onlyPauser
         whenNotPaused
-        isInitialized
     {
         lendingPoolAddress.requireNotEmpty("LENDING_POOL_IS_REQUIRED");
         require(
@@ -558,11 +551,7 @@ contract Settings is SettingsInterface, Base {
         @notice Restricts the use of the Teller protocol to authorized wallet addresses only
         @param restriction Bool turning the resitriction on or off
      */
-    function restrictPlatform(bool restriction)
-        external
-        onlyPauser
-        isInitialized
-    {
+    function restrictPlatform(bool restriction) external onlyPauser {
         platformRestricted = restriction;
         emit PlatformRestricted(restriction, msg.sender);
     }
@@ -579,7 +568,7 @@ contract Settings is SettingsInterface, Base {
         @notice Adds a wallet address to the list of authorized wallets
         @param addressToAdd The wallet address of the user being authorized
      */
-    function addAuthorizedAddress(address addressToAdd) public isInitialized {
+    function addAuthorizedAddress(address addressToAdd) public {
         require(
             isPauser(msg.sender) || msg.sender == address(dappRegistry),
             "CALLER_NOT_PAUSER"
@@ -590,7 +579,7 @@ contract Settings is SettingsInterface, Base {
 
     // The escrow must be added as an authorized address since it will be interacting with the protocol
     // TODO: Remove after non-guarded launch
-    function addEscrowAuthorized(address escrowAddress) external isInitialized {
+    function addEscrowAuthorized(address escrowAddress) external {
         (bool success, bytes memory data) =
             msg.sender.staticcall(abi.encodeWithSignature("lendingPool()"));
         require(success, "FAILED_FETCHING_LP");
@@ -609,7 +598,6 @@ contract Settings is SettingsInterface, Base {
      */
     function addAuthorizedAddressList(address[] calldata addressesToAdd)
         external
-        isInitialized
     {
         for (uint256 i = 0; i < addressesToAdd.length; i++) {
             addAuthorizedAddress(addressesToAdd[i]);
@@ -623,7 +611,6 @@ contract Settings is SettingsInterface, Base {
     function removeAuthorizedAddress(address addressToRemove)
         external
         onlyPauser
-        isInitialized
     {
         authorizedAddresses[addressToRemove] = false;
         emit AuthorizationRevoked(addressToRemove, msg.sender);
@@ -657,7 +644,6 @@ contract Settings is SettingsInterface, Base {
      */
     function initialize(address wethTokenAddress, address cethTokenAddress)
         external
-        isNotInitialized
     {
         require(cethTokenAddress.isContract(), "CETH_ADDRESS_MUST_BE_CONTRACT");
 
@@ -691,12 +677,17 @@ contract Settings is SettingsInterface, Base {
 
     /** Internal functions */
 
+    /**
+        @notice Deploys a new DynamicProxy given a logic name.
+        @dev All proxies created through this function are create as non strict dynamic. See DynamicUpgradeable
+        @param logicName The name where the logic will be stored as.
+     */
     function _deployDynamicProxy(bytes32 logicName)
         internal
         returns (address proxyAddress)
     {
         proxyAddress = address(
-            new DynamicProxy(address(logicRegistry), logicName)
+            new DynamicProxy(address(logicRegistry), logicName, false)
         );
         (bool success, ) =
             proxyAddress.call(abi.encodeWithSignature("initialize()"));

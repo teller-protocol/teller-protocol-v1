@@ -59,7 +59,7 @@ contract TokenCollateralLoans is Loans {
         address loanTermsConsensusAddress,
         address settingsAddress,
         address collateralTokenAddress
-    ) external isNotInitialized {
+    ) external {
         collateralTokenAddress.requireNotEmpty("PROVIDE_COLL_TOKEN_ADDRESS");
 
         _initialize(

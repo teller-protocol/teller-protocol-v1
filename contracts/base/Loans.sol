@@ -11,7 +11,7 @@ import "../util/LoanLib.sol";
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
 import "./Base.sol";
-import "./DynamicProxy.sol";
+import "./proxies/DynamicProxy.sol";
 
 // Interfaces
 import "../interfaces/LendingPoolInterface.sol";
@@ -36,7 +36,7 @@ import "../interfaces/EscrowInterface.sol";
 
     @author develop@teller.finance
  */
-contract Loans is LoansInterface, Base, ReentrancyGuard {
+contract Loans is LoansInterface, Base {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
     using NumbersLib for uint256;
@@ -53,6 +53,8 @@ contract Loans is LoansInterface, Base, ReentrancyGuard {
     uint256 public loanIDCounter;
 
     LendingPoolInterface public lendingPool;
+
+    address public lendingToken;
 
     LoanTermsConsensusInterface public loanTermsConsensus;
 
@@ -123,7 +125,7 @@ contract Loans is LoansInterface, Base, ReentrancyGuard {
 
         bool exceedsMaxLoanAmount =
             settings.assetSettings().exceedsMaxLoanAmount(
-                address(lendingPool.lendingToken()),
+                lendingToken,
                 loanRequest.amount
             );
         require(!exceedsMaxLoanAmount, "AMOUNT_EXCEEDS_MAX_AMOUNT");
@@ -145,22 +147,6 @@ contract Loans is LoansInterface, Base, ReentrancyGuard {
         returns (uint256[] memory)
     {
         return borrowerLoans[borrower];
-    }
-
-    /**
-        @notice Returns the lending token in the lending pool
-        @return Address of the lending token
-     */
-    function lendingToken() external view returns (address) {
-        return address(lendingPool.lendingToken());
-    }
-
-    /**
-        @notice Returns the tToken in the lending pool
-        @return Address of the tToken
-     */
-    function tToken() external view returns (TToken) {
-        return lendingPool.tToken();
     }
 
     /**
@@ -217,7 +203,6 @@ contract Loans is LoansInterface, Base, ReentrancyGuard {
     )
         external
         payable
-        isInitialized
         whenNotPaused
         isBorrower(request.borrower)
         withValidLoanRequest(request)
@@ -269,7 +254,6 @@ contract Loans is LoansInterface, Base, ReentrancyGuard {
     function withdrawCollateral(uint256 amount, uint256 loanID)
         external
         loanActiveOrSet(loanID)
-        isInitialized
         whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
         onlyAuthorized
@@ -288,7 +272,7 @@ contract Loans is LoansInterface, Base, ReentrancyGuard {
         uint256 amount,
         uint256 loanID,
         int256 neededInCollateralTokens
-    ) private nonReentrant() {
+    ) private {
         if (loans[loanID].status == TellerCommon.LoanStatus.Active) {
             if (neededInCollateralTokens > 0) {
                 // Withdrawal amount holds the amount of excess collateral in the loan
@@ -328,7 +312,6 @@ contract Loans is LoansInterface, Base, ReentrancyGuard {
         external
         payable
         loanActiveOrSet(loanID)
-        isInitialized
         whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
         onlyAuthorized
@@ -352,10 +335,8 @@ contract Loans is LoansInterface, Base, ReentrancyGuard {
     function takeOutLoan(uint256 loanID, uint256 amountBorrow)
         external
         loanTermsSet(loanID)
-        isInitialized
         whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
-        nonReentrant()
         isBorrower(loans[loanID].loanTerms.borrower)
         onlyAuthorized
     {
@@ -407,7 +388,8 @@ contract Loans is LoansInterface, Base, ReentrancyGuard {
             loans[loanID].escrow.requireNotEmpty("ESCROW_CONTRACT_NOT_DEFINED");
             EscrowInterface(loans[loanID].escrow).initialize(
                 address(settings),
-                loanID
+                loanID,
+                lendingToken
             );
         }
 
@@ -427,10 +409,8 @@ contract Loans is LoansInterface, Base, ReentrancyGuard {
     function repay(uint256 amount, uint256 loanID)
         external
         loanActive(loanID)
-        isInitialized
         whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
-        nonReentrant
         onlyAuthorized
     {
         require(amount > 0, "AMOUNT_VALUE_REQUIRED");
@@ -483,10 +463,8 @@ contract Loans is LoansInterface, Base, ReentrancyGuard {
     function liquidateLoan(uint256 loanID)
         external
         loanActive(loanID)
-        isInitialized
         whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
-        nonReentrant
     {
         TellerCommon.LoanLiquidationInfo memory liquidationInfo =
             _getLiquidationInfo(loanID);
@@ -605,16 +583,16 @@ contract Loans is LoansInterface, Base, ReentrancyGuard {
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress
-    ) internal isNotInitialized {
+    ) internal {
         lendingPoolAddress.requireNotEmpty("PROVIDE_LENDING_POOL_ADDRESS");
         loanTermsConsensusAddress.requireNotEmpty(
             "PROVIDED_LOAN_TERMS_ADDRESS"
         );
 
         _initialize(settingsAddress);
-        ReentrancyGuard.initialize();
 
         lendingPool = LendingPoolInterface(lendingPoolAddress);
+        lendingToken = address(lendingPool.lendingToken());
         loanTermsConsensus = LoanTermsConsensusInterface(
             loanTermsConsensusAddress
         );
@@ -652,9 +630,7 @@ contract Loans is LoansInterface, Base, ReentrancyGuard {
         returns (bool)
     {
         uint256 maxDebtRatio =
-            settings.assetSettings().getMaxDebtRatio(
-                address(lendingPool.lendingToken())
-            );
+            settings.assetSettings().getMaxDebtRatio(lendingToken);
         uint256 currentDebtRatio = lendingPool.getDebtRatioFor(newLoanAmount);
         return currentDebtRatio <= maxDebtRatio;
     }
@@ -673,7 +649,8 @@ contract Loans is LoansInterface, Base, ReentrancyGuard {
         escrow = address(
             new DynamicProxy(
                 address(logicRegistry),
-                logicRegistry.consts().ESCROW_LOGIC_NAME()
+                logicRegistry.consts().ESCROW_LOGIC_NAME(),
+                true
             )
         );
         // The escrow must be added as an authorized address since it will be interacting with the protocol

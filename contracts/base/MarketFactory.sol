@@ -11,15 +11,16 @@ import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/SettingsInterface.sol";
 import "../interfaces/MarketFactoryInterface.sol";
 import "../interfaces/IMarketRegistry.sol";
+import "../interfaces/ITToken.sol";
 
 // Commons
 import "../util/TellerCommon.sol";
 
 // Contracts
 import "./Base.sol";
-import "./DynamicProxy.sol";
+import "./proxies/DynamicProxy.sol";
+import "./proxies/ERC20DynamicProxy.sol";
 import "./MarketRegistry.sol";
-import "./TToken.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -99,14 +100,13 @@ contract MarketFactory is MarketFactoryInterface, Base {
     /** External Functions */
 
     /**
-        @notice It creates a new market for a given TToken and borrowed/collateral tokens.
+        @notice It creates a new market for a given lending and collateral tokens.
         @dev It uses the Settings.ETH_ADDRESS to represent the ETHER.
         @param lendingToken the token address used to create the lending pool and TToken.
         @param collateralToken the collateral token address.
      */
     function createMarket(address lendingToken, address collateralToken)
         external
-        isInitialized
         isNotPaused
         onlyPauser
     {
@@ -124,11 +124,7 @@ contract MarketFactory is MarketFactoryInterface, Base {
         LendingPoolInterface lendingPool =
             marketRegistry.lendingPools(lendingToken);
         if (address(lendingPool) == address(0)) {
-            lendingPool = _createLendingPool();
-            TToken tToken = _createTToken();
-
-            tToken.initialize(lendingToken, address(lendingPool));
-            lendingPool.initialize(marketRegistry, tToken, address(settings));
+            lendingPool = _createLendingPool(lendingToken);
         }
 
         // Initializing LoanTermsConsensus
@@ -175,7 +171,6 @@ contract MarketFactory is MarketFactoryInterface, Base {
         external
         onlyPauser
         isNotPaused
-        isInitialized
         marketExist(lendingToken, collateralToken)
     {
         delete markets[lendingToken][collateralToken];
@@ -228,7 +223,7 @@ contract MarketFactory is MarketFactoryInterface, Base {
     /**
         @notice It initializes this market factory instance.
      */
-    function initialize() external isNotInitialized {
+    function initialize() external {
         _initialize(msg.sender);
 
         marketRegistry = new MarketRegistry();
@@ -261,10 +256,11 @@ contract MarketFactory is MarketFactoryInterface, Base {
 
     /**
         @notice It creates a dynamic proxy instance for a given logic name.
-        @dev It is used to create all the market contracts (LendingPool, Loans, and others).
+        @dev It is used to create all the market contracts as strict dynamic proxies.
      */
     function _createDynamicProxy(bytes32 logicName) internal returns (address) {
-        return address(new DynamicProxy(address(logicRegistry), logicName));
+        return
+            address(new DynamicProxy(address(logicRegistry), logicName, true));
     }
 
     /**
@@ -282,27 +278,36 @@ contract MarketFactory is MarketFactoryInterface, Base {
     }
 
     /**
-        @notice Creates a proxy contract for LendingPool.
+        @notice Creates a proxy contract for LendingPool and its TToken.
+        @param lendingToken the token address used to create the lending pool and TToken.
         @return a new LendingPool instance.
      */
-    function _createTToken() internal returns (TToken) {
-        return
-            TToken(
-                _createDynamicProxy(logicRegistry.consts().TTOKEN_LOGIC_NAME())
-            );
-    }
-
-    /**
-        @notice Creates a proxy contract for LendingPool.
-        @return a new LendingPool instance.
-     */
-    function _createLendingPool() internal returns (LendingPoolInterface) {
-        return
-            LendingPoolInterface(
-                _createDynamicProxy(
-                    logicRegistry.consts().LENDING_POOL_LOGIC_NAME()
+    function _createLendingPool(address lendingToken)
+        internal
+        returns (LendingPoolInterface lendingPool)
+    {
+        lendingPool = LendingPoolInterface(
+            _createDynamicProxy(
+                logicRegistry.consts().LENDING_POOL_LOGIC_NAME()
+            )
+        );
+        ITToken tToken =
+            ITToken(
+                address(
+                    new ERC20DynamicProxy(
+                        address(logicRegistry),
+                        logicRegistry.consts().TTOKEN_LOGIC_NAME()
+                    )
                 )
             );
+
+        lendingPool.initialize(
+            marketRegistry,
+            lendingToken,
+            address(tToken),
+            address(settings)
+        );
+        tToken.initialize(address(lendingPool));
     }
 
     /**

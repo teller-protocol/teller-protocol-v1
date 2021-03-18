@@ -201,7 +201,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
     /**
         @notice It initializes this ChainlinkAggregator instance.
      */
-    function initialize() external isNotInitialized {
+    function initialize() external {
         _initialize(msg.sender);
     }
 

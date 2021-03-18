@@ -29,6 +29,16 @@ contract BaseEscrowDapp is Base {
     uint256 private _loanID;
 
     /**
+        @notice The borrower's address that owns this Escrow loan.
+     */
+    address private _borrower;
+
+    /**
+        @notice The token that this Escrow loan was taken out with.
+     */
+    address internal _lendingToken;
+
+    /**
         @notice This event is emitted when a new token is added to this Escrow.
         @param tokenAddress address of the new token.
         @param index Index of the added token.
@@ -50,46 +60,17 @@ contract BaseEscrowDapp is Base {
     /* Modifiers */
 
     modifier onlyBorrower() {
-        require(msg.sender == getBorrower(), "NOT_BORROWER");
+        require(msg.sender == _borrower, "NOT_BORROWER");
         _;
     }
 
     /* Public Functions */
 
     /**
-        @notice Gets the borrower for this Escrow's loan.
-        @return address of this Escrow's loans
-     */
-    function getBorrower() public view returns (address) {
-        return _loans.loans(_loanID).loanTerms.borrower;
-    }
-
-    /**
         @notice Returns this Escrow's loan instance.
      */
     function getLoansContract() public view returns (LoansInterface) {
         return _loans;
-    }
-
-    /**
-        @notice Returns this Escrow's loan id.
-     */
-    function getLoanID() public view returns (uint256) {
-        return _loanID;
-    }
-
-    /**
-        @notice Returns this Escrow's loan instance.
-     */
-    function getLoan() public view returns (TellerCommon.Loan memory) {
-        return _loans.loans(_loanID);
-    }
-
-    /**
-        @notice Returns this Escrow's loan instance.
-     */
-    function getLendingToken() public view returns (address) {
-        return _loans.lendingToken();
     }
 
     /**
@@ -103,20 +84,48 @@ contract BaseEscrowDapp is Base {
     /* External Functions */
 
     /**
-        @notice Returns the index of a given token address from the stored address array.
-        @param tokenAddress The contract address for which the index is required.
-        @return The index number of the token contract address, stored in the Escrow's array.
+        @notice Gets the borrower address that owns this Escrow loan.
+        @return address of this Escrow's borrower.
      */
-    function findTokenIndex(address tokenAddress)
-        external
-        view
-        returns (int256)
-    {
-        (bool found, uint256 index) = tokens.getIndex(tokenAddress);
-        return found ? int256(index) : -1;
+    function getBorrower() external view returns (address) {
+        return _borrower;
+    }
+
+    /**
+        @notice Returns this Escrow's loan id.
+     */
+    function getLoanID() external view returns (uint256) {
+        return _loanID;
+    }
+
+    /**
+        @notice Returns this Escrow's loan instance.
+     */
+    function getLoan() external view returns (TellerCommon.Loan memory) {
+        return _getLoan();
+    }
+
+    /**
+       @notice Returns the token this Escrow loan was taken out with.
+       @return address of the Escrow lending token.
+     */
+    function lendingToken() external view returns (address) {
+        return _lendingToken;
     }
 
     /* Internal Functions */
+
+    function _getLoans() internal view returns (LoansInterface) {
+        return _loans;
+    }
+
+    function _getLoanID() internal view returns (uint256) {
+        return _loanID;
+    }
+
+    function _getLoan() internal view returns (TellerCommon.Loan memory) {
+        return _loans.loans(_loanID);
+    }
 
     /**
         @notice Returns this contract's balance for the specified token.
@@ -144,13 +153,16 @@ contract BaseEscrowDapp is Base {
         }
     }
 
-    function _initialize(address loansAddress, uint256 aLoanID)
-        internal
-        isNotInitialized
-    {
+    function _initialize(
+        address loansAddress,
+        uint256 aLoanID,
+        address lendingToken
+    ) internal {
         require(loansAddress.isContract(), "LOANS_MUST_BE_A_CONTRACT");
 
         _loans = LoansInterface(loansAddress);
         _loanID = aLoanID;
+        _borrower = _getLoan().loanTerms.borrower;
+        _lendingToken = lendingToken;
     }
 }

@@ -1,4 +1,6 @@
 import { task, types } from 'hardhat/config'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
+
 import {
   ERC20Detailed,
   LendingPool,
@@ -6,9 +8,8 @@ import {
   MarketRegistry,
   TToken,
 } from '../types/typechain'
-import { getTokens } from '../config/tokens'
 import { Network } from '../types/custom/config-types'
-import { HardhatRuntimeEnvironment } from 'hardhat/types'
+import { getTokens } from '../config/tokens'
 
 interface GetMarketArgs {
   lendTokenSym: string

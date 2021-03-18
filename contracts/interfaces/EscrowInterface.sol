@@ -66,8 +66,13 @@ interface EscrowInterface {
         @notice It initializes this escrow instance for a given loans address and loan id.
         @param settingsAddress The address of the settings contract.
         @param loanID the loan ID associated to this escrow instance.
+        @param lendingToken The token that the Escrow loan will be for.
      */
-    function initialize(address settingsAddress, uint256 loanID) external;
+    function initialize(
+        address settingsAddress,
+        uint256 loanID,
+        address lendingToken
+    ) external;
 
     /**
         @notice Notifies when the Escrow's tokens have been claimed.

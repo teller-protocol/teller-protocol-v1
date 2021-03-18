@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 // Contracts
 import "./Base.sol";
-import "./DynamicProxy.sol";
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
@@ -57,11 +56,7 @@ contract DappRegistry is IDappRegistry, Base {
         @param dapp address to add in this factory.
         @param unsecured boolean to describe in the dapp is allowed to be used with unsecured loans.
      */
-    function addDapp(address dapp, bool unsecured)
-        external
-        onlyPauser
-        isInitialized
-    {
+    function addDapp(address dapp, bool unsecured) external onlyPauser {
         require(dapp.isContract(), "DAPP_ISNT_A_CONTRACT");
         require(!_isDapp(dapp), "DAPP_ALREADY_EXIST");
 
@@ -76,11 +71,7 @@ contract DappRegistry is IDappRegistry, Base {
         @param dapp address to add in this factory.
         @param unsecured boolean that describes if the dapp can be used by with an unsecured loan.
      */
-    function updateDapp(address dapp, bool unsecured)
-        external
-        onlyPauser
-        isInitialized
-    {
+    function updateDapp(address dapp, bool unsecured) external onlyPauser {
         require(_isDapp(dapp), "DAPP_NOT_EXIST");
 
         dapps[dapp].unsecured = unsecured;
@@ -92,7 +83,7 @@ contract DappRegistry is IDappRegistry, Base {
         @notice It removes a current dapp from the factory.
         @param dapp address to remove.
      */
-    function removeDapp(address dapp) external onlyPauser isInitialized {
+    function removeDapp(address dapp) external onlyPauser {
         require(dapp.isContract(), "DAPP_ISNT_A_CONTRACT");
         require(_isDapp(dapp), "DAPP_NOT_EXIST");
 
@@ -113,7 +104,7 @@ contract DappRegistry is IDappRegistry, Base {
     /**
         @notice It initializes this escrow contract factory instance.
      */
-    function initialize() external isNotInitialized {
+    function initialize() external {
         _initialize(msg.sender);
     }
 

@@ -32,7 +32,7 @@ contract EtherCollateralLoans is Loans {
         address loanTermsConsensusAddress,
         address settingsAddress,
         address
-    ) external isNotInitialized {
+    ) external {
         _initialize(
             lendingPoolAddress,
             loanTermsConsensusAddress,

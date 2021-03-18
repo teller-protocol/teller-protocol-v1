@@ -58,31 +58,33 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
         @param newLogicVersions lists of the new logic versions to create.
      */
     function createLogicVersions(
-        TellerCommon.LogicVersionRequest[] calldata newLogicVersions
+        TellerCommon.CreateLogicVersionRequest[] calldata newLogicVersions
     ) external onlyOwner {
         _createLogicVersions(newLogicVersions);
     }
 
     /**
-        @notice It update a current logic address given a logic name.
-        @param logicName logic name to update.
-        @param newLogic the new logic address to set.
+        @notice It upgrades multiple logic addresses.
+        @param newLogicVersions lists of the new logic versions to create.
      */
-    function updateLogicAddress(bytes32 logicName, address newLogic)
-        external
-        onlyOwner
-    {
-        (address oldLogic, uint256 oldVersion, uint256 newVersion) =
-            logicVersions[logicName].update(newLogic);
+    function upgradeLogicVersions(
+        TellerCommon.UpgradeLogicVersionRequest[] calldata newLogicVersions
+    ) external onlyOwner {
+        _upgradeLogicVersions(newLogicVersions);
+    }
 
-        emit LogicVersionUpdated(
-            logicName,
-            msg.sender,
-            oldLogic,
-            newLogic,
-            oldVersion,
-            newVersion
-        );
+    /**
+        @notice It upgrades a logic version given a logic name.
+        @param logicName logic name to upgrade.
+        @param newLogic the new logic address to set.
+        @param proxy The (optional) DynamicUpgradeable proxy address to attempt to directly upgrade.
+     */
+    function upgradeLogicVersion(
+        bytes32 logicName,
+        address newLogic,
+        address proxy
+    ) external onlyOwner {
+        _upgradeLogicVersion(logicName, newLogic, proxy);
     }
 
     /**
@@ -99,7 +101,6 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
 
         emit LogicVersionRollbacked(
             logicName,
-            msg.sender,
             previousLogic,
             newLogic,
             currentVersion,
@@ -154,7 +155,7 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
      */
     function initialize(
         address aOwner,
-        TellerCommon.LogicVersionRequest[] calldata initialLogicVersions
+        TellerCommon.CreateLogicVersionRequest[] calldata initialLogicVersions
     ) external {
         require(owner == address(0), "ALREADY_INIT");
         owner = aOwner;
@@ -163,6 +164,7 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
     }
 
     /** Internal functions */
+
     /**
         @notice It creates a new logic version given a logic name and address.
         @param logicName logic name to create.
@@ -172,7 +174,7 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
         require(logicName != "", "LOGIC_NAME_MUST_BE_PROVIDED");
         logicVersions[logicName].initialize(logic);
 
-        emit LogicVersionCreated(logicName, msg.sender, logic, 0);
+        emit LogicVersionCreated(logicName, logic, 0);
     }
 
     /**
@@ -180,12 +182,74 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
         @param logicVersions lists of the logic versions to create.
      */
     function _createLogicVersions(
-        TellerCommon.LogicVersionRequest[] memory logicVersions
+        TellerCommon.CreateLogicVersionRequest[] memory logicVersions
     ) internal {
-        for (uint256 index; index < logicVersions.length; index++) {
+        for (uint256 i; i < logicVersions.length; i++) {
             _createLogicVersion(
-                logicVersions[index].logicName,
-                logicVersions[index].logic
+                logicVersions[i].logicName,
+                logicVersions[i].logic
+            );
+        }
+    }
+
+    /**
+        @notice It upgrades a new logic version given a logic name and address.
+        @param logicName logic name to create.
+        @param newLogic the logic address value for the given logic name.
+        @param proxy The (optional) DynamicUpgradeable proxy address to attempt to directly upgrade.
+     */
+    function _upgradeLogicVersion(
+        bytes32 logicName,
+        address newLogic,
+        address proxy
+    ) internal {
+        // If proxy given, make sure its not strict dynamic and logic names match before directly upgrading.
+        if (proxy != address(0)) {
+            (bool success, bytes memory data) =
+                proxy.staticcall(abi.encodeWithSignature("strictDynamic()"));
+            require(
+                success && abi.decode(data, (bool)),
+                "PROXY_STRICT_DYNAMIC"
+            );
+
+            (success, data) = proxy.staticcall(
+                abi.encodeWithSignature("logicName()")
+            );
+            require(
+                success && abi.decode(data, (bytes32)) == logicName,
+                "MISMATCH_LOGIC_NAME"
+            );
+
+            (success, ) = proxy.call(
+                abi.encodeWithSignature("upgradeProxyTo(address)", newLogic)
+            );
+            require(success, "FAILED_TO_DIRECTLY_UPGRADE");
+        }
+
+        (address oldLogic, uint256 oldVersion, uint256 newVersion) =
+            logicVersions[logicName].upgrade(newLogic);
+
+        emit LogicVersionUpgraded(
+            logicName,
+            oldLogic,
+            newLogic,
+            oldVersion,
+            newVersion
+        );
+    }
+
+    /**
+        @notice It upgrades multiple logic versions.
+        @param logicVersions Lists of the logic versions to upgrade.
+     */
+    function _upgradeLogicVersions(
+        TellerCommon.UpgradeLogicVersionRequest[] memory logicVersions
+    ) internal {
+        for (uint256 i; i < logicVersions.length; i++) {
+            _upgradeLogicVersion(
+                logicVersions[i].logicName,
+                logicVersions[i].logic,
+                logicVersions[i].proxy
             );
         }
     }

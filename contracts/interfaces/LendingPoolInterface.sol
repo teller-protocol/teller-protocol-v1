@@ -6,10 +6,8 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Deta
 
 // Interfaces
 import "./IMarketRegistry.sol";
+import "./ITToken.sol";
 import "../providers/compound/CErc20Interface.sol";
-
-// Contracts
-import "../base/TToken.sol";
 
 /**
     @notice This interface defines the functions for a lending pool that holds all of the tokens
@@ -66,13 +64,15 @@ interface LendingPoolInterface {
     /**
         @notice It initializes the contract state variables.
         @param aMarketRegistry the MarketRegistry contract.
+        @param aLendingToken The underlying token that is used for lending.
         @param aTToken the Teller token to link to the lending pool.
         @param settingsAddress Settings contract address.
         @dev It throws a require error if the contract is already initialized.
      */
     function initialize(
         IMarketRegistry aMarketRegistry,
-        TToken aTToken,
+        address aLendingToken,
+        address aTToken,
         address settingsAddress
     ) external;
 
@@ -86,7 +86,7 @@ interface LendingPoolInterface {
         @notice It gets the tToken address.
         @return the tToken address.
     */
-    function tToken() external view returns (TToken);
+    function tToken() external view returns (ITToken);
 
     /**
         @notice It returns the balance of underlying tokens a lender owns with the amount

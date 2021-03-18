@@ -76,14 +76,14 @@ contract Yearn is IYearn, BaseEscrowDapp {
         uint256 price = iVault.getPricePerShare();
         uint256 shares = amount / price;
         uint256 tokenBalanceBeforeWithdrawal =
-            ERC20(tokenAddress).balanceOf(address(this));
+            IERC20(tokenAddress).balanceOf(address(this));
         require(
             shares >= iVault.balanceOf(address(this)),
             "INSUFFICIENT_DEPOSIT"
         );
         iVault.withdraw(shares);
         uint256 tokenBalanceAfterWithdrawal =
-            ERC20(tokenAddress).balanceOf(address(this));
+            IERC20(tokenAddress).balanceOf(address(this));
         require(
             tokenBalanceAfterWithdrawal > tokenBalanceBeforeWithdrawal,
             "WITHDRAWAL_UNSUCCESSFUL"
@@ -107,10 +107,10 @@ contract Yearn is IYearn, BaseEscrowDapp {
     function withdrawAll(address tokenAddress) public onlyBorrower {
         IVault iVault = _getYVault(tokenAddress);
         uint256 tokenBalanceBeforeWithdrawal =
-            ERC20(tokenAddress).balanceOf(address(this));
+            IERC20(tokenAddress).balanceOf(address(this));
         iVault.withdraw();
         uint256 tokenBalanceAfterWithdrawal =
-            ERC20(tokenAddress).balanceOf(address(this));
+            IERC20(tokenAddress).balanceOf(address(this));
         require(
             tokenBalanceAfterWithdrawal > tokenBalanceBeforeWithdrawal,
             "WITHDRAWAL_UNSUCCESSFUL"

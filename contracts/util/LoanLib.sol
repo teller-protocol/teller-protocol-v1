@@ -41,7 +41,7 @@ library LoanLib {
         uint256 interestRate,
         uint256 collateralRatio,
         uint256 maxLoanAmount
-    ) internal {
+    ) public {
         require(
             loan.status == TellerCommon.LoanStatus.NonExistent,
             "LOAN_ALREADY_EXISTS"

@@ -5,13 +5,12 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Commons
-import "./TInitializable.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
 
 // Contracts
-import "./DynamicUpgradeable.sol";
+import "./upgradeable/DynamicUpgradeable.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -27,11 +26,10 @@ import "./DynamicUpgradeable.sol";
 /**
     @notice This contract is used as a base contract for most most of the contracts in the platform.
     @notice It allows contracts to have access to the platform settings, and common modifiers.
-    @notice It implements the reentrancy guard from Open Zeppelin and the TInitializable pattern.
 
     @author develop@teller.finance.
  */
-contract Base is DynamicUpgradeable, TInitializable {
+contract Base is DynamicUpgradeable {
     using AddressLib for address;
     using Address for address;
 
@@ -84,12 +82,10 @@ contract Base is DynamicUpgradeable, TInitializable {
         @notice It initializes the current contract instance setting the required parameters.
         @param settingsAddress settings contract address.
      */
-    function _initialize(address settingsAddress) internal isNotInitialized {
+    function _initialize(address settingsAddress) internal {
         settingsAddress.requireNotEmpty("SETTINGS_MUST_BE_PROVIDED");
 
         settings = SettingsInterface(settingsAddress);
-
-        TInitializable._initialize();
     }
 
     /**

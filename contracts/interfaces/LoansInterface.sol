@@ -8,9 +8,6 @@ import "../util/TellerCommon.sol";
 import "./SettingsInterface.sol";
 import "../providers/compound/CErc20Interface.sol";
 
-// Contracts
-import "../base/TToken.sol";
-
 /**
     @notice This interface defines the functions to work with the Teller loans protocol
 
@@ -217,12 +214,6 @@ interface LoansInterface {
         @return address Contract address of the token
      */
     function collateralToken() external view returns (address);
-
-    /**
-        @notice Returns the tToken in the lending pool
-        @return Address of the tToken
-     */
-    function tToken() external view returns (TToken);
 
     /**
         @notice Returns the cToken in the lending pool

@@ -9,6 +9,7 @@ import "../util/NumbersList.sol";
 
 // Contracts
 import "./OwnerSignersRole.sol";
+import "@openzeppelin/upgrades/contracts/Initializable.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -88,7 +89,7 @@ contract Consensus is OwnerSignersRole {
         address owner,
         address aCallerAddress,
         address aSettingAddress
-    ) external isNotInitialized {
+    ) external {
         require(aCallerAddress.isContract(), "CALLER_MUST_BE_CONTRACT");
 
         OwnerSignersRole._initialize(owner);

@@ -57,7 +57,6 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
         TellerCommon.LoanResponse[] calldata responses
     )
         external
-        isInitialized
         isCaller(msg.sender)
         onlyEnoughSubmissions(responses.length)
         returns (

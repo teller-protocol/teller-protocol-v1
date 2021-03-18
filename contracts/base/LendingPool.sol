@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 // Libraries
 import "../util/CompoundRatesLib.sol";
 import "../util/NumbersLib.sol";
-import "../util/AddressArrayLib.sol";
 
 // Commons
 
@@ -15,11 +14,11 @@ import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/LoansInterface.sol";
 import "../providers/compound/CErc20Interface.sol";
 import "../interfaces/IMarketRegistry.sol";
+import "../interfaces/ITToken.sol";
 
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
 import "./Base.sol";
-import "./TToken.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -37,7 +36,7 @@ import "./TToken.sol";
 
     @author develop@teller.finance
  */
-contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
+contract LendingPool is LendingPoolInterface, Base {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
     using CompoundRatesLib for CErc20Interface;
@@ -45,7 +44,7 @@ contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
 
     /* State Variables */
 
-    TToken public tToken;
+    ITToken public tToken;
 
     ERC20Detailed public lendingToken;
 
@@ -91,7 +90,6 @@ contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
     */
     function deposit(uint256 lendingTokenAmount)
         external
-        isInitialized
         whenNotPaused
         whenLendingPoolNotPaused(address(this))
         onlyAuthorized
@@ -135,10 +133,8 @@ contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
      */
     function withdraw(uint256 lendingTokenAmount)
         external
-        isInitialized
         whenNotPaused
         whenLendingPoolNotPaused(address(this))
-        nonReentrant
         onlyAuthorized
     {
         uint256 exchangeRate = _exchangeRateCurrent();
@@ -156,10 +152,8 @@ contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
 
     function withdrawAll()
         external
-        isInitialized
         whenNotPaused
         whenLendingPoolNotPaused(address(this))
-        nonReentrant
         onlyAuthorized
         returns (uint256)
     {
@@ -186,13 +180,7 @@ contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
         uint256 principalAmount,
         uint256 interestAmount,
         address borrower
-    )
-        external
-        isInitialized
-        isLoan
-        whenLendingPoolNotPaused(address(this))
-        onlyAuthorized
-    {
+    ) external isLoan whenLendingPoolNotPaused(address(this)) onlyAuthorized {
         uint256 totalAmount = principalAmount.add(interestAmount);
         require(totalAmount > 0, "REPAY_ZERO");
 
@@ -218,7 +206,6 @@ contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
      */
     function createLoan(uint256 amount, address borrower)
         external
-        isInitialized
         isLoan()
         whenLendingPoolNotPaused(address(this))
         onlyAuthorized
@@ -374,23 +361,24 @@ contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
     /**
         @notice It initializes the contract state variables.
         @param aMarketRegistry the MarketRegistry contract.
+        @param aLendingToken The underlying token that is used for lending.
         @param aTToken the Teller token to link to the lending pool.
         @param settingsAddress Settings contract address.
         @dev It throws a require error if the contract is already initialized.
      */
     function initialize(
         IMarketRegistry aMarketRegistry,
-        TToken aTToken,
+        address aLendingToken,
+        address aTToken,
         address settingsAddress
-    ) external isNotInitialized {
-        address(aTToken).requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
+    ) external {
+        aTToken.requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
 
-        _initialize(settingsAddress);
-        ReentrancyGuard.initialize();
+        Base._initialize(settingsAddress);
 
         marketRegistry = aMarketRegistry;
-        tToken = aTToken;
-        lendingToken = tToken.underlying();
+        tToken = ITToken(aTToken);
+        lendingToken = ERC20Detailed(aLendingToken);
     }
 
     /** Internal functions */

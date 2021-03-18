@@ -55,8 +55,14 @@ library LogicVersionLib {
         )
     {
         requireExists(self);
-        require(self.currentVersion != previousVersion, "CURRENT_VERSION_MUST_BE_DIFF");
-        require(self.latestVersion >= previousVersion, "VERSION_MUST_BE_LTE_LATEST");
+        require(
+            self.currentVersion != previousVersion,
+            "CURRENT_VERSION_MUST_BE_DIFF"
+        );
+        require(
+            self.latestVersion >= previousVersion,
+            "VERSION_MUST_BE_LTE_LATEST"
+        );
         currentVersion = self.currentVersion;
         previousLogic = self.logicVersions[self.currentVersion];
         newLogic = self.logicVersions[previousVersion];
@@ -83,7 +89,7 @@ library LogicVersionLib {
     }
 
     /**
-        @notice It updates a logic version.
+        @notice It upgrades a logic version.
         @dev It throws a require error if:
             - The new logic is equal to the current logic.
         @param self the current logic version.
@@ -92,7 +98,7 @@ library LogicVersionLib {
         @return oldVersion the old version.
         @return newVersion the new version.
      */
-    function update(LogicVersion storage self, address newLogic)
+    function upgrade(LogicVersion storage self, address newLogic)
         internal
         returns (
             address oldLogic,
