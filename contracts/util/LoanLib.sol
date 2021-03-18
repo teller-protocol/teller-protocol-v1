@@ -59,10 +59,7 @@ library LoanLib {
             duration: request.duration
         });
 
-        uint256 termsExpiryTime =
-            settings.getPlatformSettingValue(
-                settings.consts().TERMS_EXPIRY_TIME_SETTING()
-            );
+        uint256 termsExpiryTime = settings.getTermsExpiryTimeValue();
         loan.termsExpiry = now.add(termsExpiryTime);
     }
 
@@ -77,9 +74,7 @@ library LoanLib {
         SettingsInterface settings
     ) public view returns (bool) {
         uint256 overCollateralizedBuffer =
-            settings.getPlatformSettingValue(
-                settings.consts().OVER_COLLATERALIZED_BUFFER_SETTING()
-            );
+            settings.getOverCollateralizedBufferValue();
         return loan.loanTerms.collateralRatio >= overCollateralizedBuffer;
     }
 
@@ -95,9 +90,7 @@ library LoanLib {
     ) public view returns (bool) {
         return
             loan.loanTerms.collateralRatio >=
-            settings.getPlatformSettingValue(
-                settings.consts().COLLATERAL_BUFFER_SETTING()
-            );
+            settings.getCollateralBufferValue();
     }
 
     /**
@@ -316,10 +309,7 @@ library LoanLib {
             );
         } else {
             neededInLendingTokens = int256(loan.principalOwed);
-            uint256 bufferPercent =
-                settings.getPlatformSettingValue(
-                    settings.consts().COLLATERAL_BUFFER_SETTING()
-                );
+            uint256 bufferPercent = settings.getCollateralBufferValue();
             uint256 requiredRatio =
                 loan.loanTerms.collateralRatio.sub(getInterestRatio(loan)).sub(
                     bufferPercent
@@ -360,9 +350,7 @@ library LoanLib {
                 liquidationInfo.collateralInfo.escrowLoanValue
             );
         uint256 liquidationSetting =
-            loansContract.settings().getPlatformSettingValue(
-                loansContract.settings().consts().LIQUIDATE_ETH_PRICE_SETTING()
-            );
+            loansContract.settings().getLiquidateEthPriceValue();
         uint256 maxReward =
             liquidationInfo.amountToLiquidate.percent(
                 liquidationSetting.diffOneHundredPercent()

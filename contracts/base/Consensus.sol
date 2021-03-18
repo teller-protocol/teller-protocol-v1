@@ -68,11 +68,7 @@ contract Consensus is OwnerSignersRole {
      */
     modifier onlyEnoughSubmissions(uint256 responseCount) {
         uint256 percentageRequired =
-            settings
-                .platformSettings(
-                settings.consts().REQUIRED_SUBMISSIONS_PERCENTAGE_SETTING()
-            )
-                .value;
+            settings.getRequiredSubmissionsPercentageValue();
 
         require(
             responseCount.ratioOf(_signerCount) >= percentageRequired,
@@ -146,11 +142,7 @@ contract Consensus is OwnerSignersRole {
         returns (uint256)
     {
         require(
-            values.isWithinTolerance(
-                settings.getPlatformSettingValue(
-                    settings.consts().MAXIMUM_TOLERANCE_SETTING()
-                )
-            ),
+            values.isWithinTolerance(settings.getMaximumToleranceValue()),
             "RESPONSES_TOO_VARIED"
         );
 
@@ -181,12 +173,7 @@ contract Consensus is OwnerSignersRole {
         hasSubmitted[signer][user][requestIdentifier] = true;
 
         require(
-            responseTime >=
-                now.sub(
-                    settings.getPlatformSettingValue(
-                        settings.consts().RESPONSE_EXPIRY_LENGTH_SETTING()
-                    )
-                ),
+            responseTime >= now.sub(settings.getResponseExpiryLengthValue()),
             "RESPONSE_EXPIRED"
         );
 

@@ -40,9 +40,7 @@ describe('Settings', async () => {
         newCollateralBufferValue
       )
 
-      const { value: newCollateralBuffer } = await settings.getPlatformSetting(
-        ethers.utils.formatBytes32String('CollateralBuffer')
-      )
+      const newCollateralBuffer = await settings.getCollateralBufferValue()
 
       // Assert setting
       newCollateralBuffer.should.equal(newCollateralBufferValue)
@@ -72,9 +70,7 @@ describe('Settings', async () => {
         ethers.utils.formatBytes32String('CollateralBuffer')
       )
 
-      const { value: newCollateralBuffer } = await settings.getPlatformSetting(
-        ethers.utils.formatBytes32String('CollateralBuffer')
-      )
+      const newCollateralBuffer = await settings.getCollateralBufferValue()
 
       // Assert setting
       newCollateralBuffer.should.equal(0)
