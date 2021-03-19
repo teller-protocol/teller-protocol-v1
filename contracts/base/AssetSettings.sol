@@ -298,7 +298,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
         view
         returns (address)
     {
-        assetAddress.requireNotEmpty("PRIZE_POOL_ADDRESS_REQUIRED");
+        assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
 
         return assets[assetAddress].addresses[PRIZE_POOL_ADDRESS_ASSET_SETTING];
     }
