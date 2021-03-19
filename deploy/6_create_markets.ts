@@ -45,7 +45,7 @@ const createMarkets: DeployFunction = async (hre) => {
     Market Created
       * Pair:           ${borrowedToken}/${collateralToken}
       * Lending Pool:   ${market.lendingPool.address}
-      * Loans:          ${market.loans.address}
+      * Loans:          ${market.loanManager.address}
       * TToken:         ${market.tToken.address} (t${borrowedToken})
       `)
     }
@@ -56,7 +56,7 @@ const createMarkets: DeployFunction = async (hre) => {
     })
 
     await deployments.save(`Market_${borrowedToken}_${collateralToken}`, {
-      ...(await deployments.getExtendedArtifact('Loans')),
+      ...(await deployments.getExtendedArtifact('LoanManager')),
       address: await marketRegistry.loans(
         lendingTokenAddress,
         collateralTokenAddress
@@ -78,7 +78,7 @@ const addSigners = async (
   const { deployer, craSigner } = await getNamedAccounts()
   if (craSigner) signers.push(craSigner)
 
-  const termsConsensusAddress = await market.loans.loanTermsConsensus()
+  const termsConsensusAddress = await market.loanManager.loanTermsConsensus()
   const termsConsensus = await contracts.get<LoanTermsConsensus>(
     'LoanTermsConsensus',
     {

@@ -8,7 +8,7 @@ import "./Base.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Interfaces
-import "../interfaces/LoansInterface.sol";
+import "../interfaces/loans/ILoanManager.sol";
 import "../interfaces/IDappRegistry.sol";
 
 // Commons

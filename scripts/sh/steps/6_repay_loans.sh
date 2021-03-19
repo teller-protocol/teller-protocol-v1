@@ -17,7 +17,7 @@ echo "\n------------------------------------------------------------------------
 echo "#6: Repaying loans for ETH and LINK markets..."
 echo "------------------------------------------------------------------------\n"
 
-truffle exec ./scripts/loans/repayLast.js \
+truffle exec ./scripts/loanManager/repayLast.js \
     --network $network \
     --senderIndex $sender_index \
     --collTokenName ETH \
@@ -29,7 +29,7 @@ then
   exit -1
 fi
 
-truffle exec ./scripts/loans/repayLast.js \
+truffle exec ./scripts/loanManager/repayLast.js \
     --network $network \
     --senderIndex $sender_index \
     --collTokenName LINK \

@@ -11,7 +11,7 @@ import "../util/NumbersLib.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../interfaces/LendingPoolInterface.sol";
-import "../interfaces/LoansInterface.sol";
+import "../interfaces/loans/ILoanManager.sol";
 import "../providers/compound/CErc20Interface.sol";
 import "../interfaces/IMarketRegistry.sol";
 import "../interfaces/ITToken.sol";
@@ -70,8 +70,8 @@ contract LendingPool is LendingPoolInterface, Base {
     /** Modifiers */
 
     /**
-        @notice It checks the address is the Loans contract address.
-        @dev It throws a require error if parameter is not equal to loans contract address.
+        @notice It checks the address is the LoanManager contract address.
+        @dev It throws a require error if parameter is not equal to loan manager contract address.
      */
     modifier isLoan() {
         _requireIsLoan();
@@ -169,7 +169,7 @@ contract LendingPool is LendingPoolInterface, Base {
 
     /**
         @notice It allows a borrower repaying their loan.
-        @dev This function can be called ONLY by the Loans contract.
+        @dev This function can be called ONLY by the LoanManager contract.
         @dev It requires a ERC20.approve call before calling it.
         @dev It throws a require error if borrower called ERC20.approve function before calling it.
         @param principalAmount amount of tokens towards the principal.
@@ -201,7 +201,7 @@ contract LendingPool is LendingPoolInterface, Base {
 
         @param amount of tokens to transfer.
         @param borrower address which will receive the tokens.
-        @dev This function only can be invoked by the LoansInterface implementation.
+        @dev This function only can be invoked by the ILoanManager implementation.
         @dev It withdraws the lending tokens from Compound before transferring tokens to the borrower.
      */
     function createLoan(uint256 amount, address borrower)
@@ -580,12 +580,12 @@ contract LendingPool is LendingPoolInterface, Base {
     }
 
     /**
-        @notice It validates whether transaction sender is the loans contract address.
+        @notice It validates whether transaction sender is the loan manager contract address.
         @dev This function is overriden in some mock contracts for testing purposes.
      */
     function _requireIsLoan() internal view {
         require(
-            marketRegistry.loansRegistry(address(this), msg.sender),
+            marketRegistry.loanManagerRegistry(address(this), msg.sender),
             "CALLER_NOT_LOANS_CONTRACT"
         );
     }

@@ -183,7 +183,7 @@ library TellerCommon {
     /**
         @notice This struct defines a market in the platform.
         @dev It is used by the MarketFactory contract.
-        @param loans The address for the Teller Loans contract that is being used for a market
+        @param loans The address for the Teller LoanManager contract that is being used for a market
         @param lendingPool The address for the Teller Lending Pool contract that is being used for a market
         @param loanTermsConsensus The address for the Teller Loan Terms Consensus contract that is being used for a market
         @param exists Flag marking if the market is defined on the platform or not

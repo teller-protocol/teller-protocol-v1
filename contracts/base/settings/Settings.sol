@@ -585,7 +585,10 @@ contract Settings is SettingsInterface, Base {
         require(success, "FAILED_FETCHING_LP");
         address lpAddress = abi.decode(data, (address));
         require(
-            marketFactory.marketRegistry().loansRegistry(lpAddress, msg.sender),
+            marketFactory.marketRegistry().loanManagerRegistry(
+                lpAddress,
+                msg.sender
+            ),
             "CALLER_NOT_LOANS"
         );
         authorizedAddresses[escrowAddress] = true;

@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
-import "./Loans.sol";
+import "./LoanManager.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -15,67 +15,50 @@ import "./Loans.sol";
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
-    @notice This contract is used as a basis for the creation of loans (not wei) across the platform
+    @notice This contract is used as a basis for the creation of Ether based loans across the platform
     @notice It implements the LoansBase contract from Teller
 
     @author develop@teller.finance
  */
-contract TokenCollateralLoans is Loans {
-    /** Constants */
-
-    /** Properties */
-
-    /** Modifiers */
-
+contract EtherCollateralLoans is LoanManager {
     /**
-        @notice Checks the value in the current transaction is zero.
-        @dev It throws a require error if value is not zero.
-     */
-    modifier noMsgValue() {
-        require(msg.value == 0, "TOKEN_LOANS_VALUE_MUST_BE_ZERO");
-        _;
-    }
-
-    /** External Functions */
-
-    function _payInCollateral(uint256 loanID, uint256 amount)
-        internal
-        noMsgValue()
-    {
-        // Transfer collateral tokens to this contract.
-        _collateralTokenTransferFrom(msg.sender, amount);
-        super._payInCollateral(loanID, amount);
-    }
-
-    /**
-        @notice Initializes the current contract instance setting the required parameters, if allowed
+        @notice Initializes the current contract instance setting the required parameters
         @param lendingPoolAddress Contract address of the lending pool
         @param loanTermsConsensusAddress Contract address for loan term consensus
         @param settingsAddress Contract address for the configuration of the platform
-        @param collateralTokenAddress Contract address for the collateral token.
      */
     function initialize(
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
-        address collateralTokenAddress
+        address
     ) external {
-        collateralTokenAddress.requireNotEmpty("PROVIDE_COLL_TOKEN_ADDRESS");
-
         _initialize(
             lendingPoolAddress,
             loanTermsConsensusAddress,
             settingsAddress
         );
 
-        collateralToken = collateralTokenAddress;
+        collateralToken = settings.ETH_ADDRESS();
     }
 
-    /** Internal Function */
+    /** Internal Functions */
+
+    /**
+     * @notice Deposit collateral tokens into a loan.
+     * @param loanID The ID of the loan the collateral is for
+     * @param amount The amount to deposit as collateral.
+     */
+    function _payInCollateral(uint256 loanID, uint256 amount) internal {
+        require(msg.value == amount, "INCORRECT_ETH_AMOUNT");
+        super._payInCollateral(loanID, amount);
+    }
+
     /**
         @notice Pays out collateral for the associated loan
         @param loanID The ID of the loan the collateral is for
         @param amount The amount of collateral to be paid
+        @param recipient address that will receive the given amount.
      */
     function _payOutCollateral(
         uint256 loanID,
@@ -84,33 +67,6 @@ contract TokenCollateralLoans is Loans {
     ) internal {
         totalCollateral = totalCollateral.sub(amount);
         loans[loanID].collateral = loans[loanID].collateral.sub(amount);
-
-        _collateralTokenTransfer(recipient, amount);
-    }
-
-    /**
-        @notice It transfers an amount of collateral tokens to a specific address.
-        @param recipient The address which will receive the tokens.
-        @param amount The amount of tokens to transfer.
-     */
-    function _collateralTokenTransfer(address recipient, uint256 amount)
-        internal
-    {
-        ERC20Detailed(collateralToken).safeTransfer(recipient, amount);
-    }
-
-    /**
-        @notice It transfers an amount of collateral tokens from an address to this contract.
-        @param from The address where the tokens will transfer from.
-        @param amount The amount to be transferred.
-     */
-    function _collateralTokenTransferFrom(address from, uint256 amount)
-        internal
-    {
-        ERC20Detailed(collateralToken).safeTransferFrom(
-            from,
-            address(this),
-            amount
-        );
+        recipient.transfer(amount);
     }
 }

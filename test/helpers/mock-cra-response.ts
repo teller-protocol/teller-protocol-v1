@@ -53,14 +53,14 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
 
   const nonce = (Math.random() * 20000).toFixed(0)
 
-  const { loans } = await getMarket(
+  const { loanManager } = await getMarket(
     {
       lendTokenSym: args.lendingToken,
       collTokenSym: args.collateralToken,
     },
     hre
   )
-  const termsConsensusAddress = await loans.loanTermsConsensus()
+  const termsConsensusAddress = await loanManager.loanTermsConsensus()
 
   const requestTime = Date.now().toString()
   const request: CRARequest = {
@@ -86,7 +86,7 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
         'uint256', // chain ID
       ],
       [
-        loans.address,
+        loanManager.address,
         request.borrower,
         request.recipient,
         termsConsensusAddress,

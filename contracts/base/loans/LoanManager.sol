@@ -4,63 +4,46 @@ pragma experimental ABIEncoderV2;
 // Libraries and common
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
-import "../util/TellerCommon.sol";
-import "../util/NumbersLib.sol";
-import "../util/LoanLib.sol";
+import "../../util/TellerCommon.sol";
+import "../../util/NumbersLib.sol";
 
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
-import "./Base.sol";
-import "./proxies/DynamicProxy.sol";
+import "../Base.sol";
+import "./LoanStorage.sol";
+import "./../proxies/DynamicProxy.sol";
 
 // Interfaces
-import "../interfaces/LendingPoolInterface.sol";
-import "../interfaces/LoanTermsConsensusInterface.sol";
-import "../interfaces/LoansInterface.sol";
-import "../interfaces/EscrowInterface.sol";
+import "../../interfaces/loans/ILoanManager.sol";
+import "../../interfaces/loans/ILoanData.sol";
+import "../../interfaces/LendingPoolInterface.sol";
+import "../../interfaces/LoanTermsConsensusInterface.sol";
+import "../../interfaces/EscrowInterface.sol";
+
+import "hardhat/console.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
-/**                              THIS CONTRACT IS AN UPGRADEABLE BASE!                              **/
+/**                              THIS CONTRACT IS AN UPGRADEABLE FACET!                             **/
 /**  ---------------------------------------------------------------------------------------------  **/
-/**  Do NOT change the order of, PREPEND, or APPEND any storage variables to this or new versions   **/
-/**  of this contract as this will cause a ripple affect to the storage slots of all child          **/
-/**  contracts that inherit from this contract to be overwritten on the deployed proxy contract!!   **/
+/**  Do NOT place ANY storage/state variables directly in this contract! If you wish to make        **/
+/**  make changes to the state variables used by this contract, do so in its defined Storage        **/
+/**  contract that this contract inherits from                                                      **/
 /**                                                                                                 **/
 /**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
     @notice This contract is used as a basis for the creation of the different types of loans across the platform
-    @notice It implements the Base contract from Teller and the LoansInterface
+    @notice It implements the Base contract from Teller and the ILoanManager
 
     @author develop@teller.finance
  */
-contract Loans is LoansInterface, Base {
+contract LoanManager is ILoanManager, Base, LoanStorage {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
     using NumbersLib for uint256;
     using NumbersLib for int256;
-    using LoanLib for TellerCommon.Loan;
-
-    /* State Variables */
-
-    uint256 public totalCollateral;
-
-    address public collateralToken;
-
-    // At any time, this variable stores the next available loan ID
-    uint256 public loanIDCounter;
-
-    LendingPoolInterface public lendingPool;
-
-    address public lendingToken;
-
-    LoanTermsConsensusInterface public loanTermsConsensus;
-
-    mapping(address => uint256[]) public borrowerLoans;
-
-    mapping(uint256 => TellerCommon.Loan) public loans;
 
     /* Modifiers */
 
@@ -106,7 +89,11 @@ contract Loans is LoansInterface, Base {
         @param loanID number of loan to check
      */
     modifier loanActiveOrSet(uint256 loanID) {
-        require(loans[loanID].isActiveOrSet(), "LOAN_NOT_ACTIVE_OR_SET");
+        (bool success, bytes memory data) =
+            loanData.delegatecall(
+                abi.encodeWithSignature("isActiveOrSet(uint256)", loanID)
+            );
+        require(success && abi.decode(data, (bool)), "LOAN_NOT_ACTIVE_OR_SET");
         _;
     }
 
@@ -138,56 +125,11 @@ contract Loans is LoansInterface, Base {
     }
 
     /**
-        @notice Get a list of all loans for a borrower
-        @param borrower The borrower's address
-     */
-    function getBorrowerLoans(address borrower)
-        external
-        view
-        returns (uint256[] memory)
-    {
-        return borrowerLoans[borrower];
-    }
-
-    /**
         @notice Returns the cToken in the lending pool
         @return Address of the cToken
      */
     function cToken() external view returns (CErc20Interface) {
         return lendingPool.cToken();
-    }
-
-    // See more details LoanLib.isSecured
-    function isLoanSecured(uint256 loanID) external view returns (bool) {
-        return loans[loanID].isSecured(settings);
-    }
-
-    // See more details in LoanLib.canGoToEOA
-    function canLoanGoToEOA(uint256 loanID) external view returns (bool) {
-        return loans[loanID].canGoToEOA(settings);
-    }
-
-    // See more details LoanLib.getTotalOwed
-    function getTotalOwed(uint256 loanID) external view returns (uint256) {
-        return loans[loanID].getTotalOwed();
-    }
-
-    // See more details LoanLib.getCollateralInfo
-    function getCollateralInfo(uint256 loanID)
-        external
-        view
-        returns (TellerCommon.LoanCollateralInfo memory)
-    {
-        return _getCollateralInfo(loanID);
-    }
-
-    // See more details LoanLib.getLiquidationInfo
-    function getLiquidationInfo(uint256 loanID)
-        external
-        view
-        returns (TellerCommon.LoanLiquidationInfo memory)
-    {
-        return _getLiquidationInfo(loanID);
     }
 
     /**
@@ -208,26 +150,28 @@ contract Loans is LoansInterface, Base {
         withValidLoanRequest(request)
         onlyAuthorized
     {
-        uint256 loanID = _getAndIncrementLoanID();
+        (uint256 interestRate, uint256 collateralRatio, uint256 maxLoanAmount) =
+            loanTermsConsensus.processRequest(request, responses);
+
+        (bool success, bytes memory data) =
+            loanData.delegatecall(
+                abi.encodeWithSignature(
+                    "createNewLoan((address,address,address,uint256,uint256,uint256,uint256),uint256,uint256,uint256)",
+                    request,
+                    interestRate,
+                    collateralRatio,
+                    maxLoanAmount
+                )
+            );
+        uint256 loanID = abi.decode(data, (uint256));
+
         if (collateralAmount > 0) {
             _payInCollateral(loanID, collateralAmount);
         }
 
-        (uint256 interestRate, uint256 collateralRatio, uint256 maxLoanAmount) =
-            loanTermsConsensus.processRequest(request, responses);
-
-        loans[loanID].init(
-            request,
-            settings,
-            loanID,
-            interestRate,
-            collateralRatio,
-            maxLoanAmount
-        );
-
         if (request.recipient.isNotEmpty()) {
             require(
-                loans[loanID].canGoToEOA(settings),
+                ILoanData(address(this)).canLoanGoToEOA(loanID),
                 "UNDER_COLL_WITH_RECIPIENT"
             );
         }
@@ -264,7 +208,7 @@ contract Loans is LoansInterface, Base {
         );
         require(amount > 0, "CANNOT_WITHDRAW_ZERO");
         (, int256 neededInCollateralTokens, ) =
-            _getCollateralNeededInfo(loanID);
+            ILoanData(address(this)).getCollateralNeededInfo(loanID);
         _withdrawCollateral(amount, loanID, neededInCollateralTokens);
     }
 
@@ -356,14 +300,13 @@ contract Loans is LoansInterface, Base {
 
         loans[loanID].borrowedAmount = amountBorrow;
         loans[loanID].principalOwed = amountBorrow;
-        loans[loanID].interestOwed = loans[loanID].getInterestOwedFor(
-            amountBorrow
-        );
+        loans[loanID].interestOwed = ILoanData(address(this))
+            .getInterestOwedFor(loanID, amountBorrow);
         loans[loanID].status = TellerCommon.LoanStatus.Active;
 
         // check that enough collateral has been provided for this loan
         TellerCommon.LoanCollateralInfo memory collateralInfo =
-            _getCollateralInfo(loanID);
+            ILoanData(address(this)).getCollateralInfo(loanID);
         require(
             !collateralInfo.moreCollateralRequired,
             "MORE_COLLATERAL_REQUIRED"
@@ -372,7 +315,7 @@ contract Loans is LoansInterface, Base {
         loans[loanID].loanStartTime = now;
 
         address loanRecipient;
-        bool eoaAllowed = loans[loanID].canGoToEOA(settings);
+        bool eoaAllowed = ILoanData(address(this)).canLoanGoToEOA(loanID);
         if (eoaAllowed) {
             loanRecipient = loans[loanID].loanTerms.recipient.isEmpty()
                 ? loans[loanID].loanTerms.borrower
@@ -416,15 +359,34 @@ contract Loans is LoansInterface, Base {
         require(amount > 0, "AMOUNT_VALUE_REQUIRED");
         // calculate the actual amount to repay
         uint256 toPay = amount;
-        uint256 totalOwed = loans[loanID].getTotalOwed();
+        uint256 totalOwed = ILoanData(address(this)).getTotalOwed(loanID);
         if (totalOwed < toPay) {
             toPay = totalOwed;
         }
 
         // update the amount owed on the loan
         totalOwed = totalOwed.sub(toPay);
-        (uint256 principalAmount, uint256 interestAmount) =
-            loans[loanID].payOff(toPay);
+
+        // Deduct the interest and principal owed
+        uint256 principalPaid;
+        uint256 interestPaid;
+        if (toPay < loans[loanID].interestOwed) {
+            interestPaid = toPay;
+            loans[loanID].interestOwed = loans[loanID].interestOwed.sub(toPay);
+        } else {
+            if (loans[loanID].interestOwed > 0) {
+                interestPaid = loans[loanID].interestOwed;
+                toPay = toPay.sub(interestPaid);
+                loans[loanID].interestOwed = 0;
+            }
+
+            if (toPay > 0) {
+                principalPaid = toPay;
+                loans[loanID].principalOwed = loans[loanID].principalOwed.sub(
+                    toPay
+                );
+            }
+        }
 
         // if the loan is now fully paid, close it and return collateral
         if (totalOwed == 0) {
@@ -445,7 +407,7 @@ contract Loans is LoansInterface, Base {
         }
 
         // collect the money from the payer
-        lendingPool.repay(principalAmount, interestAmount, msg.sender);
+        lendingPool.repay(principalPaid, interestPaid, msg.sender);
 
         emit LoanRepaid(
             loanID,
@@ -467,7 +429,7 @@ contract Loans is LoansInterface, Base {
         whenLendingPoolNotPaused(address(lendingPool))
     {
         TellerCommon.LoanLiquidationInfo memory liquidationInfo =
-            _getLiquidationInfo(loanID);
+            ILoanData(address(this)).getLiquidationInfo(loanID);
         require(liquidationInfo.liquidable, "DOESNT_NEED_LIQUIDATION");
 
         // the liquidator pays the amount still owed on the loan
@@ -492,38 +454,14 @@ contract Loans is LoansInterface, Base {
         );
     }
 
+    /**
+     *  @notice It calls the LogicVersionRegistry to update the stored logic address for LoanData.
+     */
+    function updateLoanDataLogic() public {
+        (, , loanData) = logicRegistry.getLogicVersion(LOAN_DATA_LOGIC_NAME);
+    }
+
     /** Internal Functions */
-
-    // See LoanLib.getCollateralInfo
-    function _getCollateralInfo(uint256 loanID)
-        internal
-        view
-        returns (TellerCommon.LoanCollateralInfo memory)
-    {
-        return loans[loanID].getCollateralInfo(this);
-    }
-
-    // See LoanLib.getCollateralNeededInfo
-    function _getCollateralNeededInfo(uint256 loanID)
-        internal
-        view
-        returns (
-            int256 neededInLendingTokens,
-            int256 neededInCollateralTokens,
-            uint256 escrowLoanValue
-        )
-    {
-        return loans[loanID].getCollateralNeededInfo(this);
-    }
-
-    // See LoanLib.getLiquidationInfo
-    function _getLiquidationInfo(uint256 loanID)
-        internal
-        view
-        returns (TellerCommon.LoanLiquidationInfo memory liquidationInfo)
-    {
-        return loans[loanID].getLiquidationInfo(this);
-    }
 
     /**
         @notice Checks if the loan has an Escrow and claims any tokens then pays out the loan collateral.
@@ -596,6 +534,8 @@ contract Loans is LoansInterface, Base {
         loanTermsConsensus = LoanTermsConsensusInterface(
             loanTermsConsensusAddress
         );
+
+        updateLoanDataLogic();
     }
 
     /**

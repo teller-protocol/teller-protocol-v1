@@ -33,7 +33,7 @@ interface LendingPoolInterface {
 
     /**
         @notice It allows a borrower repaying their loan.
-        @dev This function can be called ONLY by the Loans contract.
+        @dev This function can be called ONLY by the LoanManager contract.
         @dev It requires a ERC20.approve call before calling it.
         @dev It throws a require error if borrower called ERC20.approve function before calling it.
         @param principalAmount amount of tokens towards the principal.
@@ -50,7 +50,7 @@ interface LendingPoolInterface {
         @notice Once the loan is created, it transfers the amount of tokens to the borrower.
         @param amount of tokens to transfer.
         @param borrower address which will receive the tokens.
-        @dev This function only can be invoked by the LoansInterface implementation.
+        @dev This function only can be invoked by the LoanManager implementation.
         @dev It throws a require error if current ERC20 balance isn't enough to transfer the tokens.
      */
     function createLoan(uint256 amount, address borrower) external;

@@ -4,7 +4,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import {
   ERC20Detailed,
   LendingPool,
-  Loans,
+  LoanManager,
   MarketRegistry,
   TToken,
 } from '../types/typechain'
@@ -19,7 +19,7 @@ interface GetMarketArgs {
 
 export interface GetMarketReturn {
   lendingPool: LendingPool
-  loans: Loans
+  loanManager: LoanManager
   lendingToken: ERC20Detailed
   tToken: TToken
 }
@@ -46,11 +46,13 @@ export const getMarket = async (
     at: lendingPoolAddress,
   })
 
-  const loansAddress = await marketRegistry.loans(
+  const loansManagerAddress = await marketRegistry.loans(
     lendingTokenAddress,
     collateralTokenAddress
   )
-  const loans = await contracts.get<Loans>('Loans', { at: loansAddress })
+  const loans = await contracts.get<LoanManager>('LoanManager', {
+    at: loansManagerAddress,
+  })
 
   const lendingToken = await tokens.get(lendTokenSym)
   const tToken = await contracts.get<TToken>('TToken', {
@@ -63,13 +65,13 @@ export const getMarket = async (
 
   Lending Pool Address:     ${lendingPoolAddress}
 
-  Loans Address:            ${loansAddress}
+  Loan Manager Address:     ${loansManagerAddress}
     `)
   }
 
   return {
     lendingPool,
-    loans,
+    loanManager: loans,
     lendingToken,
     tToken,
   }

@@ -8,7 +8,7 @@ import "../util/AddressArrayLib.sol";
 // Interfaces
 import "../interfaces/IMarketRegistry.sol";
 import "../interfaces/LendingPoolInterface.sol";
-import "../interfaces/LoansInterface.sol";
+import "../interfaces/loans/ILoanData.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 
 /**
@@ -29,22 +29,17 @@ contract MarketRegistry is IMarketRegistry, Ownable {
     /**
         @notice It maps a lending token to the associated LendingPool contract.
      */
-    mapping(address => LendingPoolInterface) public lendingPools;
+    mapping(address => address) public lendingPools;
 
     /**
-        @notice It maps a lending token and collateral token to the associated Loans contract.
+        @notice It maps a lending token and collateral token to the associated LoanManager contract.
      */
-    mapping(address => mapping(address => LoansInterface)) public loans;
+    mapping(address => mapping(address => address)) public loanManagers;
 
     /**
-        @notice It represents a mapping to identify a LendingPool's Loan contract address.
+        @notice It represents a mapping to identify a LendingPool's LoanManager contract address.
      */
-    mapping(address => mapping(address => bool)) public loansRegistry;
-
-    /**
-        @notice It represents a mapping to identify the address of a given TToken.
-     */
-    mapping(address => bool) public tTokenRegistry;
+    mapping(address => mapping(address => bool)) public loanManagerRegistry;
 
     // Constructor
 
@@ -56,25 +51,26 @@ contract MarketRegistry is IMarketRegistry, Ownable {
 
     /**
         @notice It registers a new market with a LendingPool and Loans contract pair.
-        @param aLendingPool a lending pool contract used to borrow assets.
-        @param aLoans a loans contract that stores all the relevant loans info and functionality.
+        @param lendingPoolAddress a lending pool contract used to borrow assets.
+        @param loanManagerAddress a loan manager contract that stores all the relevant loans info and functionality.
      */
     function registerMarket(
-        LendingPoolInterface aLendingPool,
-        LoansInterface aLoans
+        address lendingPoolAddress,
+        address loanManagerAddress
     ) external onlyOwner {
         require(
-            !loansRegistry[address(aLendingPool)][address(aLoans)],
+            !loanManagerRegistry[lendingPoolAddress][loanManagerAddress],
             "MARKET_ALREADY_REGISTERED"
         );
 
-        address lendingToken = address(aLendingPool.lendingToken());
-        address collateralToken = aLoans.collateralToken();
+        address lendingToken =
+            address(LendingPoolInterface(lendingPoolAddress).lendingToken());
+        address collateralToken =
+            ILoanData(loanManagerAddress).collateralToken();
         markets[lendingToken].add(collateralToken);
-        lendingPools[lendingToken] = aLendingPool;
-        loans[lendingToken][collateralToken] = aLoans;
-        loansRegistry[address(aLendingPool)][address(aLoans)] = true;
-        tTokenRegistry[address(aLendingPool.tToken())] = true;
+        lendingPools[lendingToken] = lendingPoolAddress;
+        loanManagers[lendingToken][collateralToken] = loanManagerAddress;
+        loanManagerRegistry[lendingPoolAddress][loanManagerAddress] = true;
     }
 
     /**

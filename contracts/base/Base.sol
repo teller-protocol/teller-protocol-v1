@@ -11,14 +11,15 @@ import "../interfaces/SettingsInterface.sol";
 
 // Contracts
 import "./upgradeable/DynamicUpgradeable.sol";
+import "./BaseStorage.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
-/**                              THIS CONTRACT IS AN UPGRADEABLE BASE!                              **/
+/**                              THIS CONTRACT IS AN UPGRADEABLE FACET!                             **/
 /**  ---------------------------------------------------------------------------------------------  **/
-/**  Do NOT change the order of, PREPEND, or APPEND any storage variables to this or new versions   **/
-/**  of this contract as this will cause a ripple affect to the storage slots of all child          **/
-/**  contracts that inherit from this contract to be overwritten on the deployed proxy contract!!   **/
+/**  Do NOT place ANY storage/state variables directly in this contract! If you wish to make        **/
+/**  make changes to the state variables used by this contract, do so in its defined Storage        **/
+/**  contract that this contract inherits from                                                      **/
 /**                                                                                                 **/
 /**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
 /**  more information.                                                                              **/
@@ -29,13 +30,9 @@ import "./upgradeable/DynamicUpgradeable.sol";
 
     @author develop@teller.finance.
  */
-contract Base is DynamicUpgradeable {
+contract Base is DynamicUpgradeable, BaseStorage {
     using AddressLib for address;
     using Address for address;
-
-    /* State Variables */
-
-    SettingsInterface public settings;
 
     /** Modifiers */
 

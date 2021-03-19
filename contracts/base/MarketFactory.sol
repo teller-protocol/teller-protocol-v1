@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Interfaces
-import "../interfaces/LoansInterface.sol";
+import "../interfaces/loans/ILoanManager.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/SettingsInterface.sol";
@@ -119,10 +119,10 @@ contract MarketFactory is MarketFactoryInterface, Base {
 
         LoanTermsConsensusInterface loanTermsConsensus =
             _createLoanTermsConsensus();
-        LoansInterface loans = _createLoans(collateralToken);
+        ILoanManager loanManager = _createLoans(collateralToken);
 
         LendingPoolInterface lendingPool =
-            marketRegistry.lendingPools(lendingToken);
+            LendingPoolInterface(marketRegistry.lendingPools(lendingToken));
         if (address(lendingPool) == address(0)) {
             lendingPool = _createLendingPool(lendingToken);
         }
@@ -130,24 +130,27 @@ contract MarketFactory is MarketFactoryInterface, Base {
         // Initializing LoanTermsConsensus
         loanTermsConsensus.initialize(
             msg.sender,
-            address(loans),
+            address(loanManager),
             address(settings)
         );
 
         // Initializing Loans
-        loans.initialize(
+        loanManager.initialize(
             address(lendingPool),
             address(loanTermsConsensus),
             address(settings),
             collateralToken
         );
 
-        marketRegistry.registerMarket(lendingPool, loans);
+        marketRegistry.registerMarket(
+            address(lendingPool),
+            address(loanManager)
+        );
 
         _addMarket(
             lendingToken,
             collateralToken,
-            address(loans),
+            address(loanManager),
             address(lendingPool),
             address(loanTermsConsensus)
         );
@@ -156,7 +159,7 @@ contract MarketFactory is MarketFactoryInterface, Base {
             msg.sender,
             lendingToken,
             collateralToken,
-            address(loans),
+            address(loanManager),
             address(lendingPool),
             address(loanTermsConsensus)
         );
@@ -235,19 +238,19 @@ contract MarketFactory is MarketFactoryInterface, Base {
         @notice It adds a market in the internal mapping.
         @param lendingToken the borrowed token address.
         @param collateralToken the collateral token address.
-        @param loans the new loans contract address.
+        @param loanManager the new loan manager contract address.
         @param lendingPool the new lending pool contract address.
         @param loanTermsConsensus the new loan terms consensus contract address.
      */
     function _addMarket(
         address lendingToken,
         address collateralToken,
-        address loans,
+        address loanManager,
         address lendingPool,
         address loanTermsConsensus
     ) internal {
         markets[lendingToken][collateralToken] = TellerCommon.Market({
-            loans: loans,
+            loans: loanManager,
             lendingPool: lendingPool,
             loanTermsConsensus: loanTermsConsensus,
             exists: true
@@ -332,12 +335,12 @@ contract MarketFactory is MarketFactoryInterface, Base {
      */
     function _createLoans(address collateralToken)
         internal
-        returns (LoansInterface)
+        returns (ILoanManager)
     {
         bytes32 logicName =
             collateralToken == settings.ETH_ADDRESS()
                 ? logicRegistry.consts().ETHER_COLLATERAL_LOANS_LOGIC_NAME()
                 : logicRegistry.consts().TOKEN_COLLATERAL_LOANS_LOGIC_NAME();
-        return LoansInterface(_createDynamicProxy(logicName));
+        return ILoanManager(_createDynamicProxy(logicName));
     }
 }

@@ -80,7 +80,7 @@ contract Consensus is OwnerSignersRole {
 
     /**
         @notice It initializes this consensus contract.
-        @dev The caller address must be the loans contract for LoanTermsConsensus.
+        @dev The caller address must be the loan marager for LoanTermsConsensus.
         @param owner the owner address.
         @param aCallerAddress the contract that will call it.
         @param aSettingAddress the settings contract address.
