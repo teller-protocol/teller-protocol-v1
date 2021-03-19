@@ -59,8 +59,7 @@ contract PoolTogether is IPoolTogether, BaseEscrowDapp {
         PrizePoolInterface prizePool = _getPrizePool(tokenAddress);
 
         address ticketAddress = _getTicketAddress(tokenAddress);
-        uint256 creditBalanceBefore =
-            prizePool.balanceOfCredit(address(this), ticketAddress);
+        uint256 balanceBefore = _balanceOf(ticketAddress);
         IERC20(tokenAddress).safeApprove(address(prizePool), amount);
 
         prizePool.depositTo(
@@ -70,9 +69,8 @@ contract PoolTogether is IPoolTogether, BaseEscrowDapp {
             address(this)
         );
 
-        uint256 creditBalanceAfter =
-            prizePool.balanceOfCredit(address(this), ticketAddress);
-        require(creditBalanceAfter > creditBalanceBefore, "DEPOSIT_ERROR");
+        uint256 balanceAfter = _balanceOf(ticketAddress);
+        require(balanceAfter > balanceBefore, "DEPOSIT_ERROR");
 
         _tokenUpdated(address(ticketAddress));
         _tokenUpdated(tokenAddress);
@@ -82,7 +80,7 @@ contract PoolTogether is IPoolTogether, BaseEscrowDapp {
             ticketAddress,
             amount,
             _balanceOf(tokenAddress),
-            creditBalanceAfter
+            balanceAfter
         );
     }
 
@@ -98,8 +96,7 @@ contract PoolTogether is IPoolTogether, BaseEscrowDapp {
         PrizePoolInterface prizePool = _getPrizePool(tokenAddress);
 
         address ticketAddress = _getTicketAddress(tokenAddress);
-        uint256 creditBalanceBefore =
-            prizePool.balanceOfCredit(address(this), ticketAddress);
+        uint256 balanceBefore = _balanceOf(ticketAddress);
 
         (uint256 maxExitFee, uint256 burnedCredit) =
             prizePool.calculateEarlyExitFee(
@@ -114,9 +111,8 @@ contract PoolTogether is IPoolTogether, BaseEscrowDapp {
             maxExitFee
         );
 
-        uint256 creditBalanceAfter =
-            prizePool.balanceOfCredit(address(this), ticketAddress);
-        require(creditBalanceAfter < creditBalanceBefore, "WITHDRAW_ERROR");
+        uint256 balanceAfter = _balanceOf(ticketAddress);
+        require(balanceAfter < balanceBefore, "WITHDRAW_ERROR");
 
         _tokenUpdated(address(ticketAddress));
         _tokenUpdated(tokenAddress);
@@ -126,7 +122,7 @@ contract PoolTogether is IPoolTogether, BaseEscrowDapp {
             ticketAddress,
             amount,
             _balanceOf(tokenAddress),
-            creditBalanceAfter
+            balanceAfter
         );
     }
 
@@ -138,27 +134,24 @@ contract PoolTogether is IPoolTogether, BaseEscrowDapp {
         PrizePoolInterface prizePool = _getPrizePool(tokenAddress);
 
         address ticketAddress = _getTicketAddress(tokenAddress);
-        uint256 creditBalanceBefore =
-            prizePool.balanceOfCredit(address(this), ticketAddress);
 
-        uint256 balance = _balanceOf(ticketAddress);
+        uint256 balanceBefore = _balanceOf(ticketAddress);
 
         (uint256 maxExitFee, ) =
             prizePool.calculateEarlyExitFee(
                 address(this),
                 ticketAddress,
-                balance
+                balanceBefore
             );
         prizePool.withdrawInstantlyFrom(
             address(this),
-            balance,
+            balanceBefore,
             ticketAddress,
             maxExitFee
         );
 
-        uint256 creditBalanceAfter =
-            prizePool.balanceOfCredit(address(this), ticketAddress);
-        require(creditBalanceAfter < creditBalanceBefore, "WITHDRAW_ERROR");
+        uint256 balanceAfter = _balanceOf(ticketAddress);
+        require(balanceAfter < balanceBefore, "WITHDRAW_ERROR");
 
         _tokenUpdated(address(ticketAddress));
         _tokenUpdated(tokenAddress);
@@ -166,9 +159,9 @@ contract PoolTogether is IPoolTogether, BaseEscrowDapp {
         emit PoolTogetherWithdrawal(
             tokenAddress,
             ticketAddress,
-            balance,
+            balanceBefore,
             _balanceOf(tokenAddress),
-            creditBalanceAfter
+            balanceAfter
         );
     }
 
