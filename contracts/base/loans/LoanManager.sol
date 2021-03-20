@@ -15,10 +15,10 @@ import "./../proxies/DynamicProxy.sol";
 
 // Interfaces
 import "../../interfaces/loans/ILoanManager.sol";
-import "../../interfaces/loans/ILoanData.sol";
+import "../../interfaces/loans/ILoanStorage.sol";
 import "../../interfaces/LendingPoolInterface.sol";
 import "../../interfaces/LoanTermsConsensusInterface.sol";
-import "../../interfaces/EscrowInterface.sol";
+import "../../interfaces/escrow/IEscrow.sol";
 
 import "hardhat/console.sol";
 
@@ -34,10 +34,10 @@ import "hardhat/console.sol";
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
-    @notice This contract is used as a basis for the creation of the different types of loans across the platform
-    @notice It implements the Base contract from Teller and the ILoanManager
-
-    @author develop@teller.finance
+ * @notice This contract is used as a basis for the creation of the different types of loans across the platform
+ * @notice It implements the Base contract from Teller and the ILoanManager
+ *
+ * @author develop@teller.finance
  */
 contract LoanManager is ILoanManager, Base, LoanStorage {
     using SafeMath for uint256;
@@ -48,19 +48,9 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
     /* Modifiers */
 
     /**
-        @notice Checks if the sender is a borrower or not
-        @dev It throws a require error if the sender is not a borrower
-        @param borrower Account address to check
-     */
-    modifier isBorrower(address borrower) {
-        require(msg.sender == borrower, "BORROWER_MUST_BE_SENDER");
-        _;
-    }
-
-    /**
-        @notice Checks whether the loan is active or not
-        @dev Throws a require error if the loan is not active
-        @param loanID number of loan to check
+     * @notice Checks whether the loan is active or not
+     * @dev Throws a require error if the loan is not active
+     * @param loanID number of loan to check
      */
     modifier loanActive(uint256 loanID) {
         require(
@@ -71,37 +61,21 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
     }
 
     /**
-        @notice Checks if the loan has been set or not
-        @dev Throws a require error if the loan terms have not been set
-        @param loanID number of loan to check
-     */
-    modifier loanTermsSet(uint256 loanID) {
-        require(
-            loans[loanID].status == TellerCommon.LoanStatus.TermsSet,
-            "LOAN_NOT_SET"
-        );
-        _;
-    }
-
-    /**
-        @notice Checks whether the loan is active and has been set or not
-        @dev Throws a require error if the loan is not active or has not been set
-        @param loanID number of loan to check
+     * @notice Checks whether the loan is active and has been set or not
+     * @dev Throws a require error if the loan is not active or has not been set
+     * @param loanID number of loan to check
      */
     modifier loanActiveOrSet(uint256 loanID) {
-        (bool success, bytes memory data) =
-            loanData.delegatecall(
-                abi.encodeWithSignature("isActiveOrSet(uint256)", loanID)
-            );
-        require(success && abi.decode(data, (bool)), "LOAN_NOT_ACTIVE_OR_SET");
+        console.log("loan status", uint256(loans[loanID].status));
+        require(isActiveOrSet(loanID), "LOAN_NOT_ACTIVE_OR_SET");
         _;
     }
 
     /**
-        @notice Checks the given loan request is valid.
-        @dev It throws an require error if the duration exceeds the maximum loan duration.
-        @dev It throws an require error if the loan amount exceeds the maximum loan amount for the given asset.
-        @param loanRequest to validate.
+     * @notice Checks the given loan request is valid.
+     * @dev It throws an require error if the duration exceeds the maximum loan duration.
+     * @dev It throws an require error if the loan amount exceeds the maximum loan amount for the given asset.
+     * @param loanRequest to validate.
      */
     modifier withValidLoanRequest(TellerCommon.LoanRequest memory loanRequest) {
         uint256 maxLoanDuration = settings.getMaximumLoanDurationValue();
@@ -124,20 +98,192 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
         _;
     }
 
+    /* Public Functions */
+
     /**
-        @notice Returns the cToken in the lending pool
-        @return Address of the cToken
+     * @notice See LoanData.getBorrowerLoans
      */
-    function cToken() external view returns (CErc20Interface) {
-        return lendingPool.cToken();
+    function getBorrowerLoans(address borrower)
+        public
+        view
+        returns (uint256[] memory)
+    {
+        return borrowerLoans[borrower];
     }
 
     /**
-        @notice Creates a loan with the loan request and terms
-        @param request Struct of the protocol loan request
-        @param responses List of structs of the protocol loan responses
-        @param collateralAmount Amount of collateral required for the loan
-    */
+     * @notice See LoanData.isActiveOrSet
+     */
+    function isActiveOrSet(uint256 loanID) public view returns (bool) {
+        bytes memory data =
+            _delegateViewLoanData(
+                abi.encodeWithSignature("isActiveOrSet(uint256)", loanID)
+            );
+        return abi.decode(data, (bool));
+    }
+
+    /**
+     * @notice See LoanData.getTotalOwed
+     */
+    function getTotalOwed(uint256 loanID) public view returns (uint256) {
+        bytes memory data =
+            _delegateViewLoanData(
+                abi.encodeWithSignature("getTotalOwed(uint256)", loanID)
+            );
+        return abi.decode(data, (uint256));
+    }
+
+    /**
+     * @notice See LoanData.getLoanAmount
+     */
+    function getLoanAmount(uint256 loanID) public view returns (uint256) {
+        bytes memory data =
+            _delegateViewLoanData(
+                abi.encodeWithSignature("getLoanAmount(uint256)", loanID)
+            );
+        return abi.decode(data, (uint256));
+    }
+
+    /**
+     * @notice See LoanData.isLoanSecured
+     */
+    function isLoanSecured(uint256 loanID) public view returns (bool) {
+        bytes memory data =
+            _delegateViewLoanData(
+                abi.encodeWithSignature("isLoanSecured(uint256)", loanID)
+            );
+        return abi.decode(data, (bool));
+    }
+
+    /**
+     * @notice See LoanData.canGoToEOA
+     */
+    function canGoToEOA(uint256 loanID) public view returns (bool) {
+        bytes memory data =
+            _delegateViewLoanData(
+                abi.encodeWithSignature("canGoToEOA(uint256)", loanID)
+            );
+        return abi.decode(data, (bool));
+    }
+
+    /**
+     * @notice See LoanData.getInterestOwedFor
+     */
+    function getInterestOwedFor(uint256 loanID, uint256 amountBorrow)
+        public
+        view
+        returns (uint256)
+    {
+        bytes memory data =
+            _delegateViewLoanData(
+                abi.encodeWithSignature(
+                    "getInterestOwedFor(uint256,uint256)",
+                    loanID,
+                    amountBorrow
+                )
+            );
+        return abi.decode(data, (uint256));
+    }
+
+    /**
+     * @notice See LoanData.getInterestRatio
+     */
+    function getInterestRatio(uint256 loanID) public view returns (uint256) {
+        bytes memory data =
+            _delegateViewLoanData(
+                abi.encodeWithSignature("getInterestRatio(uint256)", loanID)
+            );
+        return abi.decode(data, (uint256));
+    }
+
+    /**
+     * @notice See LoanData.getCollateralInLendingTokens
+     */
+    function getCollateralInLendingTokens(uint256 loanID)
+        public
+        view
+        returns (uint256)
+    {
+        bytes memory data =
+            _delegateViewLoanData(
+                abi.encodeWithSignature(
+                    "getCollateralInLendingTokens(uint256)",
+                    loanID
+                )
+            );
+        return abi.decode(data, (uint256));
+    }
+
+    /**
+     * @notice See LoanData.getCollateralNeededInfo
+     */
+    function getCollateralNeededInfo(uint256 loanID)
+        public
+        view
+        returns (
+            int256,
+            int256,
+            uint256
+        )
+    {
+        bytes memory data =
+            _delegateViewLoanData(
+                abi.encodeWithSignature(
+                    "getCollateralNeededInfo(uint256)",
+                    loanID
+                )
+            );
+        return abi.decode(data, (int256, int256, uint256));
+    }
+
+    /**
+     * @notice See LoanData.getCollateralNeededInTokens
+     */
+    function getCollateralNeededInTokens(uint256 loanID)
+        public
+        view
+        returns (int256, uint256)
+    {
+        bytes memory data =
+            _delegateViewLoanData(
+                abi.encodeWithSignature(
+                    "getCollateralNeededInTokens(uint256)",
+                    loanID
+                )
+            );
+        return abi.decode(data, (int256, uint256));
+    }
+
+    /**
+     * @notice See LoanData.isLiquidable
+     */
+    function isLiquidable(uint256 loanID) public view returns (bool) {
+        bytes memory data =
+            _delegateViewLoanData(
+                abi.encodeWithSignature("isLiquidable(uint256)", loanID)
+            );
+        return abi.decode(data, (bool));
+    }
+
+    /**
+     * @notice See LoanData.getLiquidationReward
+     */
+    function getLiquidationReward(uint256 loanID) public view returns (int256) {
+        bytes memory data =
+            _delegateViewLoanData(
+                abi.encodeWithSignature("getLiquidationReward(uint256)", loanID)
+            );
+        return abi.decode(data, (int256));
+    }
+
+    /* External Functions */
+
+    /**
+     * @notice Creates a loan with the loan request and terms
+     * @param request Struct of the protocol loan request
+     * @param responses List of structs of the protocol loan responses
+     * @param collateralAmount Amount of collateral required for the loan
+     */
     function createLoanWithTerms(
         TellerCommon.LoanRequest calldata request,
         TellerCommon.LoanResponse[] calldata responses,
@@ -146,34 +292,28 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
         external
         payable
         whenNotPaused
-        isBorrower(request.borrower)
         withValidLoanRequest(request)
         onlyAuthorized
     {
+        require(msg.sender == request.borrower, "NOT_LOAN_REQUESTER");
+
         (uint256 interestRate, uint256 collateralRatio, uint256 maxLoanAmount) =
             loanTermsConsensus.processRequest(request, responses);
 
-        (bool success, bytes memory data) =
-            loanData.delegatecall(
-                abi.encodeWithSignature(
-                    "createNewLoan((address,address,address,uint256,uint256,uint256,uint256),uint256,uint256,uint256)",
-                    request,
-                    interestRate,
-                    collateralRatio,
-                    maxLoanAmount
-                )
+        uint256 loanID =
+            _createNewLoan(
+                request,
+                interestRate,
+                collateralRatio,
+                maxLoanAmount
             );
-        uint256 loanID = abi.decode(data, (uint256));
 
         if (collateralAmount > 0) {
             _payInCollateral(loanID, collateralAmount);
         }
 
         if (request.recipient.isNotEmpty()) {
-            require(
-                ILoanData(address(this)).canLoanGoToEOA(loanID),
-                "UNDER_COLL_WITH_RECIPIENT"
-            );
+            require(canGoToEOA(loanID), "UNDER_COLL_WITH_RECIPIENT");
         }
 
         borrowerLoans[request.borrower].push(loanID);
@@ -207,8 +347,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
             "CALLER_DOESNT_OWN_LOAN"
         );
         require(amount > 0, "CANNOT_WITHDRAW_ZERO");
-        (, int256 neededInCollateralTokens, ) =
-            ILoanData(address(this)).getCollateralNeededInfo(loanID);
+        (, int256 neededInCollateralTokens, ) = getCollateralNeededInfo(loanID);
         _withdrawCollateral(amount, loanID, neededInCollateralTokens);
     }
 
@@ -278,20 +417,27 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
      */
     function takeOutLoan(uint256 loanID, uint256 amountBorrow)
         external
-        loanTermsSet(loanID)
         whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
-        isBorrower(loans[loanID].loanTerms.borrower)
         onlyAuthorized
     {
+        require(msg.sender == loans[loanID].loanTerms.borrower, "NOT_BORROWER");
+        require(
+            loans[loanID].status == TellerCommon.LoanStatus.TermsSet,
+            "LOAN_NOT_SET"
+        );
+        require(loans[loanID].termsExpiry >= now, "LOAN_TERMS_EXPIRED");
         require(_isDebtRatioValid(amountBorrow), "SUPPLY_TO_DEBT_EXCEEDS_MAX");
         require(
             loans[loanID].loanTerms.maxLoanAmount >= amountBorrow,
             "MAX_LOAN_EXCEEDED"
         );
-
-        require(loans[loanID].termsExpiry >= now, "LOAN_TERMS_EXPIRED");
-
+        // check that enough collateral has been provided for this loan
+        (, int256 neededInCollateral, ) = getCollateralNeededInfo(loanID);
+        require(
+            neededInCollateral <= int256(loans[loanID].collateral),
+            "MORE_COLLATERAL_REQUIRED"
+        );
         require(
             loans[loanID].lastCollateralIn <=
                 now.sub(settings.getSafetyIntervalValue()),
@@ -300,22 +446,12 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
 
         loans[loanID].borrowedAmount = amountBorrow;
         loans[loanID].principalOwed = amountBorrow;
-        loans[loanID].interestOwed = ILoanData(address(this))
-            .getInterestOwedFor(loanID, amountBorrow);
+        loans[loanID].interestOwed = getInterestOwedFor(loanID, amountBorrow);
         loans[loanID].status = TellerCommon.LoanStatus.Active;
-
-        // check that enough collateral has been provided for this loan
-        TellerCommon.LoanCollateralInfo memory collateralInfo =
-            ILoanData(address(this)).getCollateralInfo(loanID);
-        require(
-            !collateralInfo.moreCollateralRequired,
-            "MORE_COLLATERAL_REQUIRED"
-        );
-
         loans[loanID].loanStartTime = now;
 
         address loanRecipient;
-        bool eoaAllowed = ILoanData(address(this)).canLoanGoToEOA(loanID);
+        bool eoaAllowed = canGoToEOA(loanID);
         if (eoaAllowed) {
             loanRecipient = loans[loanID].loanTerms.recipient.isEmpty()
                 ? loans[loanID].loanTerms.borrower
@@ -329,7 +465,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
 
         if (!eoaAllowed) {
             loans[loanID].escrow.requireNotEmpty("ESCROW_CONTRACT_NOT_DEFINED");
-            EscrowInterface(loans[loanID].escrow).initialize(
+            IEscrow(loans[loanID].escrow).initialize(
                 address(settings),
                 loanID,
                 lendingToken
@@ -359,7 +495,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
         require(amount > 0, "AMOUNT_VALUE_REQUIRED");
         // calculate the actual amount to repay
         uint256 toPay = amount;
-        uint256 totalOwed = ILoanData(address(this)).getTotalOwed(loanID);
+        uint256 totalOwed = getTotalOwed(loanID);
         if (totalOwed < toPay) {
             toPay = totalOwed;
         }
@@ -412,7 +548,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
         emit LoanRepaid(
             loanID,
             loans[loanID].loanTerms.borrower,
-            toPay,
+            principalPaid.add(interestPaid),
             msg.sender,
             totalOwed
         );
@@ -428,11 +564,13 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
         whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
     {
-        TellerCommon.LoanLiquidationInfo memory liquidationInfo =
-            ILoanData(address(this)).getLiquidationInfo(loanID);
-        require(liquidationInfo.liquidable, "DOESNT_NEED_LIQUIDATION");
+        require(isLiquidable(loanID), "DOESNT_NEED_LIQUIDATION");
+
+        int256 rewardInCollateral = getLiquidationReward(loanID);
 
         // the liquidator pays the amount still owed on the loan
+        uint256 amountToLiquidate =
+            loans[loanID].principalOwed.add(loans[loanID].interestOwed);
         lendingPool.repay(
             loans[loanID].principalOwed,
             loans[loanID].interestOwed,
@@ -443,14 +581,14 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
         loans[loanID].liquidated = true;
 
         // the caller gets the collateral from the loan
-        _payOutLiquidator(loanID, liquidationInfo, msg.sender);
+        _payOutLiquidator(loanID, rewardInCollateral, msg.sender);
 
         emit LoanLiquidated(
             loanID,
             loans[loanID].loanTerms.borrower,
             msg.sender,
-            liquidationInfo.collateralInfo.collateral,
-            liquidationInfo.amountToLiquidate
+            rewardInCollateral,
+            amountToLiquidate
         );
     }
 
@@ -461,25 +599,101 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
         (, , loanData) = logicRegistry.getLogicVersion(LOAN_DATA_LOGIC_NAME);
     }
 
+    /**
+     * @notice Initializes the current contract instance setting the required parameters.
+     * @param lendingPoolAddress Address of the LendingPool.
+     * @param loanTermsConsensusAddress Address for LoanTermConsensus contract.
+     * @param settingsAddress Address for the platform Settings contract.
+     * @param collateralTokenAddress Address of the collateral token for loans in this contract.
+     */
+    function initialize(
+        address lendingPoolAddress,
+        address loanTermsConsensusAddress,
+        address settingsAddress,
+        address collateralTokenAddress
+    ) external {
+        lendingPoolAddress.requireNotEmpty("PROVIDE_LENDING_POOL_ADDRESS");
+        loanTermsConsensusAddress.requireNotEmpty(
+            "PROVIDED_LOAN_TERMS_ADDRESS"
+        );
+
+        _initialize(settingsAddress);
+
+        lendingPool = LendingPoolInterface(lendingPoolAddress);
+        lendingToken = address(lendingPool.lendingToken());
+        cToken = CErc20Interface(lendingPool.cToken());
+        loanTermsConsensus = LoanTermsConsensusInterface(
+            loanTermsConsensusAddress
+        );
+
+        // ETH is the only collateral token allowed currently
+        collateralToken = settings.ETH_ADDRESS();
+
+        updateLoanDataLogic();
+    }
+
     /** Internal Functions */
 
+    function _delegateTo(address imp, bytes memory sigWithData)
+        internal
+        returns (bytes memory returnData)
+    {
+        bool success;
+        (success, returnData) = imp.delegatecall(sigWithData);
+        assembly {
+            if eq(success, 0) {
+                revert(add(returnData, 0x20), returndatasize)
+            }
+        }
+    }
+
+    function delegateTo(address imp, bytes memory sigWithData)
+        public
+        returns (bytes memory returnData)
+    {
+        console.log(address(this), msg.sender);
+        console.log(loanData, imp);
+        require(msg.sender == address(this), "INVALID_CALLER");
+        return _delegateTo(imp, sigWithData);
+    }
+
+    function _delegateViewLoanData(bytes memory sigWithData)
+        internal
+        view
+        returns (bytes memory)
+    {
+        (bool success, bytes memory returnData) =
+            address(this).staticcall(
+                abi.encodeWithSignature(
+                    "delegateTo(address,bytes)",
+                    loanData,
+                    sigWithData
+                )
+            );
+        assembly {
+            if eq(success, 0) {
+                revert(add(returnData, 0x20), returndatasize)
+            }
+        }
+        return abi.decode(returnData, (bytes));
+    }
+
     /**
-        @notice Checks if the loan has an Escrow and claims any tokens then pays out the loan collateral.
-        @dev See Escrow.claimTokens for more info.
-        @param loanID The ID of the loan which is being liquidated
-        @param liquidationInfo The Teller common liquidation struct that holds all the relevant liquidation info,
-        such as the liquidation info
-        @param recipient The address of the liquidator where the liquidation reward will be sent to
-    */
+     * @notice Checks if the loan has an Escrow and claims any tokens then pays out the loan collateral.
+     * @dev See Escrow.claimTokens for more info.
+     * @param loanID The ID of the loan which is being liquidated
+     * @param rewardInCollateral The total amount of reward based in the collateral token to pay the liquidator
+     * @param recipient The address of the liquidator where the liquidation reward will be sent to
+     */
     function _payOutLiquidator(
         uint256 loanID,
-        TellerCommon.LoanLiquidationInfo memory liquidationInfo,
+        int256 rewardInCollateral,
         address payable recipient
     ) internal {
-        if (liquidationInfo.rewardInCollateral <= 0) {
+        if (rewardInCollateral <= 0) {
             return;
         }
-        uint256 reward = uint256(liquidationInfo.rewardInCollateral);
+        uint256 reward = uint256(rewardInCollateral);
         if (reward < loans[loanID].collateral) {
             _payOutCollateral(loanID, reward, recipient);
         } else if (reward >= loans[loanID].collateral) {
@@ -490,8 +704,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
                 remainingCollateralAmount > 0 &&
                 loans[loanID].escrow != address(0x0)
             ) {
-                EscrowInterface(loans[loanID].escrow)
-                    .claimTokensByCollateralValue(
+                IEscrow(loans[loanID].escrow).claimTokensByCollateralValue(
                     recipient,
                     remainingCollateralAmount
                 );
@@ -500,50 +713,29 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
     }
 
     /**
-        @notice Pays out the collateral for a loan
-        @param loanID ID of loan from which collateral is to be paid out
-        @param amount Amount of collateral paid out
-        @param recipient Account address of the recipient of the collateral
+     * @notice Pays out an amount of collateral for a loan.
+     * @param loanID ID of loan from which collateral is to be paid out.
+     * @param amount Amount of collateral paid out.
+     * @param recipient Address of the recipient of the collateral.
      */
     function _payOutCollateral(
         uint256 loanID,
         uint256 amount,
         address payable recipient
-    ) internal;
-
-    /**
-        @notice Initializes the current contract instance setting the required parameters.
-        @param lendingPoolAddress Contract address of the lending pool
-        @param loanTermsConsensusAddress Contract address for loan term consensus
-        @param settingsAddress Contract address for the configuration of the platform
-     */
-    function _initialize(
-        address lendingPoolAddress,
-        address loanTermsConsensusAddress,
-        address settingsAddress
     ) internal {
-        lendingPoolAddress.requireNotEmpty("PROVIDE_LENDING_POOL_ADDRESS");
-        loanTermsConsensusAddress.requireNotEmpty(
-            "PROVIDED_LOAN_TERMS_ADDRESS"
-        );
-
-        _initialize(settingsAddress);
-
-        lendingPool = LendingPoolInterface(lendingPoolAddress);
-        lendingToken = address(lendingPool.lendingToken());
-        loanTermsConsensus = LoanTermsConsensusInterface(
-            loanTermsConsensusAddress
-        );
-
-        updateLoanDataLogic();
+        totalCollateral = totalCollateral.sub(amount);
+        loans[loanID].collateral = loans[loanID].collateral.sub(amount);
+        recipient.transfer(amount);
     }
 
     /**
-        @notice Pays collateral in for the associated loan
-        @param loanID The ID of the loan the collateral is for
-        @param amount The amount of collateral to be paid
+     * @notice Pays collateral in for the associated loan
+     * @param loanID The ID of the loan the collateral is for
+     * @param amount The amount of collateral to be paid
      */
     function _payInCollateral(uint256 loanID, uint256 amount) internal {
+        require(msg.value == amount, "INCORRECT_ETH_AMOUNT");
+
         totalCollateral = totalCollateral.add(amount);
         loans[loanID].collateral = loans[loanID].collateral.add(amount);
         loans[loanID].lastCollateralIn = now;
@@ -551,18 +743,9 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
     }
 
     /**
-        @notice Returns the current loan ID and increments it by 1
-        @return uint256 The current loan ID before incrementing
-     */
-    function _getAndIncrementLoanID() internal returns (uint256 newLoanID) {
-        newLoanID = loanIDCounter;
-        loanIDCounter = loanIDCounter.add(1);
-    }
-
-    /**
-        @notice It validates whether supply to debt (StD) ratio is valid including the loan amount.
-        @param newLoanAmount the new loan amount to consider o the StD ratio.
-        @return true if the ratio is valid. Otherwise it returns false.
+     * @notice It validates whether supply to debt (StD) ratio is valid including the loan amount.
+     * @param newLoanAmount the new loan amount to consider o the StD ratio.
+     * @return true if the ratio is valid. Otherwise it returns false.
      */
     function _isDebtRatioValid(uint256 newLoanAmount)
         internal
@@ -576,9 +759,49 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
     }
 
     /**
-        @notice It creates an Escrow contract instance for a given loan id.
-        @param loanID loan id associated to the Escrow contract.
-        @return the new Escrow contract address.
+     * @notice Creates a loan with the loan request.
+     * @param request Loan request as per the struct of the Teller platform.
+     * @param interestRate Interest rate set in the loan terms.
+     * @param collateralRatio Collateral ratio set in the loan terms.
+     * @param maxLoanAmount Maximum loan amount that can be taken out, set in the loan terms.
+     */
+    function _createNewLoan(
+        TellerCommon.LoanRequest memory request,
+        uint256 interestRate,
+        uint256 collateralRatio,
+        uint256 maxLoanAmount
+    ) internal returns (uint256) {
+        // Get and increment new loan ID
+        uint256 loanID = loanIDCounter;
+        loanIDCounter = loanIDCounter.add(1);
+
+        require(
+            loans[loanID].status == TellerCommon.LoanStatus.NonExistent,
+            "LOAN_ALREADY_EXISTS"
+        );
+        require(request.borrower != address(0), "BORROWER_EMPTY");
+
+        loans[loanID].id = loanID;
+        loans[loanID].status = TellerCommon.LoanStatus.TermsSet;
+        loans[loanID].loanTerms = TellerCommon.LoanTerms({
+            borrower: request.borrower,
+            recipient: request.recipient,
+            interestRate: interestRate,
+            collateralRatio: collateralRatio,
+            maxLoanAmount: maxLoanAmount,
+            duration: request.duration
+        });
+
+        uint256 termsExpiryTime = settings.getTermsExpiryTimeValue();
+        loans[loanID].termsExpiry = now.add(termsExpiryTime);
+
+        return loanID;
+    }
+
+    /**
+     * @notice It creates an Escrow contract instance for a given loan id.
+     * @param loanID loan id associated to the Escrow contract.
+     * @return the new Escrow contract address.
      */
     function _createEscrow(uint256 loanID) internal returns (address escrow) {
         require(

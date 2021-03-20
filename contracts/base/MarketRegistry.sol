@@ -8,7 +8,7 @@ import "../util/AddressArrayLib.sol";
 // Interfaces
 import "../interfaces/IMarketRegistry.sol";
 import "../interfaces/LendingPoolInterface.sol";
-import "../interfaces/loans/ILoanData.sol";
+import "../interfaces/loans/ILoanManager.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 
 /**
@@ -66,7 +66,7 @@ contract MarketRegistry is IMarketRegistry, Ownable {
         address lendingToken =
             address(LendingPoolInterface(lendingPoolAddress).lendingToken());
         address collateralToken =
-            ILoanData(loanManagerAddress).collateralToken();
+            ILoanManager(loanManagerAddress).collateralToken();
         markets[lendingToken].add(collateralToken);
         lendingPools[lendingToken] = lendingPoolAddress;
         loanManagers[lendingToken][collateralToken] = loanManagerAddress;

@@ -3,17 +3,19 @@ pragma experimental ABIEncoderV2;
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "../../util/AddressLib.sol";
 
 // Interfaces
 import "../../interfaces/loans/ILoanData.sol";
 import "../../interfaces/SettingsInterface.sol";
-import "../../interfaces/EscrowInterface.sol";
+import "../../interfaces/escrow/IEscrow.sol";
 import "../../interfaces/loans/ILoanManager.sol";
 import "../../providers/openzeppelin/SignedSafeMath.sol";
 
 // Contracts
+import "../BaseStorage.sol";
 import "./LoanStorage.sol";
+
+import "hardhat/console.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -27,71 +29,21 @@ import "./LoanStorage.sol";
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
-    @notice This contract stores the logic for calculating loan information.
-    @dev It is used by the LoanManager contract to delegatecall from.
-
-    @author develop@teller.finance.
+ * @notice This contract stores the logic for calculating loan information.
+ * @dev It is used by the LoanManager contract to delegatecall from.
+ *
+ * @author develop@teller.finance.
  */
 contract LoanData is ILoanData, LoanStorage {
     using SafeMath for uint256;
     using SignedSafeMath for int256;
     using NumbersLib for uint256;
     using NumbersLib for int256;
-    using AddressLib for address payable;
 
     /**
-        @notice Creates a loan with the loan request.
-        @param request Loan request as per the struct of the Teller platform.
-        @param interestRate Interest rate set in the loan terms.
-        @param collateralRatio Collateral ratio set in the loan terms.
-        @param maxLoanAmount Maximum loan amount that can be taken out, set in the loan terms.
-     */
-    function createNewLoan(
-        TellerCommon.LoanRequest memory request,
-        uint256 interestRate,
-        uint256 collateralRatio,
-        uint256 maxLoanAmount
-    ) public returns (uint256) {
-        uint256 loanID = _getAndIncrementLoanID();
-        require(
-            loans[loanID].status == TellerCommon.LoanStatus.NonExistent,
-            "LOAN_ALREADY_EXISTS"
-        );
-        request.borrower.requireNotEmpty("BORROWER_EMPTY");
-
-        loans[loanID].id = loanID;
-        loans[loanID].status = TellerCommon.LoanStatus.TermsSet;
-        loans[loanID].loanTerms = TellerCommon.LoanTerms({
-            borrower: request.borrower,
-            recipient: request.recipient,
-            interestRate: interestRate,
-            collateralRatio: collateralRatio,
-            maxLoanAmount: maxLoanAmount,
-            duration: request.duration
-        });
-
-        uint256 termsExpiryTime = settings.getTermsExpiryTimeValue();
-        loans[loanID].termsExpiry = now.add(termsExpiryTime);
-
-        return loanID;
-    }
-
-    /**
-        @notice Get a list of all loans for a borrower
-        @param borrower The borrower's address
-     */
-    function getBorrowerLoans(address borrower)
-        external
-        view
-        returns (uint256[] memory)
-    {
-        return borrowerLoans[borrower];
-    }
-
-    /**
-        @notice Checks whether the status of a loan is Active or has Terms Set
-        @param loanID The loan ID for which to check the status
-        @return bool value indicating if the loan is active or has terms set
+     * @notice Checks whether the status of a loan is Active or has Terms Set
+     * @param loanID The loan ID for which to check the status
+     * @return bool value indicating if the loan is active or has terms set
      */
     function isActiveOrSet(uint256 loanID) public view returns (bool) {
         return
@@ -100,11 +52,11 @@ contract LoanData is ILoanData, LoanStorage {
     }
 
     /**
-        @notice Checks whether a loan is allowed to be deposited to an Externally Owned Account.
-        @param loanID The loan ID to check the collateral ratio for.
-        @return bool indicating whether the loan with specified parameters can be deposited to an EOA.
+     * @notice Checks whether a loan is allowed to be deposited to an Externally Owned Account.
+     * @param loanID The loan ID to check the collateral ratio for.
+     * @return bool indicating whether the loan with specified parameters can be deposited to an EOA.
      */
-    function canLoanGoToEOA(uint256 loanID) public view returns (bool) {
+    function canGoToEOA(uint256 loanID) public view returns (bool) {
         uint256 overCollateralizedBuffer =
             settings.getOverCollateralizedBufferValue();
         return
@@ -112,20 +64,23 @@ contract LoanData is ILoanData, LoanStorage {
     }
 
     /**
-        @notice Checks whether the loan's collateral ratio is considered to be secured based on the settings collateral buffer value.
-        @param loanID The loan ID to check.
-        @return bool value of it being secured or not.
-    */
+     * @notice Checks whether the loan's collateral ratio is considered to be secured based on the settings collateral buffer value.
+     * @param loanID The loan ID to check.
+     * @return bool value of it being secured or not.
+     */
     function isLoanSecured(uint256 loanID) public view returns (bool) {
+        console.log("here");
+        console.log("settings", address(settings));
+        console.log("buffer", settings.getCollateralBufferValue());
         return
             loans[loanID].loanTerms.collateralRatio >=
             settings.getCollateralBufferValue();
     }
 
     /**
-        @notice Returns the total amount owed for a specified loan.
-        @param loanID The loan ID to get the total amount owed.
-        @return uint256 The total owed amount.
+     * @notice Returns the total amount owed for a specified loan.
+     * @param loanID The loan ID to get the total amount owed.
+     * @return uint256 The total owed amount.
      */
     function getTotalOwed(uint256 loanID) public view returns (uint256) {
         if (loans[loanID].status == TellerCommon.LoanStatus.TermsSet) {
@@ -142,9 +97,9 @@ contract LoanData is ILoanData, LoanStorage {
     }
 
     /**
-        @notice Returns the total amount owed for a specified loan.
-        @param loanID The loan ID to get the total amount owed.
-        @return uint256 The amount owed.
+     * @notice Returns the total amount owed for a specified loan.
+     * @param loanID The loan ID to get the total amount owed.
+     * @return uint256 The amount owed.
      */
     function getLoanAmount(uint256 loanID) public view returns (uint256) {
         if (loans[loanID].status == TellerCommon.LoanStatus.TermsSet) {
@@ -156,10 +111,10 @@ contract LoanData is ILoanData, LoanStorage {
     }
 
     /**
-        @notice Returns the amount of interest owed for a given loan and loan amount.
-        @param loanID The loan ID to get the owed interest.
-        @param amountBorrow The principal of the loan to take out.
-        @return uint256 The interest owed.
+     * @notice Returns the amount of interest owed for a given loan and loan amount.
+     * @param loanID The loan ID to get the owed interest.
+     * @param amountBorrow The principal of the loan to take out.
+     * @return uint256 The interest owed.
      */
     function getInterestOwedFor(uint256 loanID, uint256 amountBorrow)
         public
@@ -170,9 +125,9 @@ contract LoanData is ILoanData, LoanStorage {
     }
 
     /**
-        @notice Returns the interest ratio based on the loan interest rate for the loan duration.
-        @dev The interest rate on the loan terms is APY.
-        @param loanID The loan ID to get the interest rate for.
+     * @notice Returns the interest ratio based on the loan interest rate for the loan duration.
+     * @dev The interest rate on the loan terms is APY.
+     * @param loanID The loan ID to get the interest rate for.
      */
     function getInterestRatio(uint256 loanID) public view returns (uint256) {
         return
@@ -184,36 +139,9 @@ contract LoanData is ILoanData, LoanStorage {
     }
 
     /**
-        @notice Get collateral information of a specific loan.
-        @param loanID The loan ID to get collateral info for.
-        @return memory TellerCommon.LoanCollateralInfo Collateral information of the loan.
-     */
-    function getCollateralInfo(uint256 loanID)
-        public
-        view
-        returns (TellerCommon.LoanCollateralInfo memory)
-    {
-        (
-            int256 neededInLending,
-            int256 neededInCollateral,
-            uint256 escrowLoanValue
-        ) = getCollateralNeededInfo(loanID);
-        return
-            TellerCommon.LoanCollateralInfo({
-                collateral: loans[loanID].collateral,
-                valueInLendingTokens: getCollateralInLendingTokens(loanID),
-                escrowLoanValue: escrowLoanValue,
-                neededInLendingTokens: neededInLending,
-                neededInCollateralTokens: neededInCollateral,
-                moreCollateralRequired: neededInCollateral >
-                    int256(loans[loanID].collateral)
-            });
-    }
-
-    /**
-        @notice Returns the collateral needed for a loan, in the lending token, needed to take out the loan or for it be liquidated.
-        @param loanID The loan ID for which to get collateral information for
-        @return uint256 Collateral needed in lending token value
+     * @notice Returns the collateral needed for a loan, in the lending token, needed to take out the loan or for it be liquidated.
+     * @param loanID The loan ID for which to get collateral information for
+     * @return uint256 Collateral needed in lending token value
      */
     function getCollateralInLendingTokens(uint256 loanID)
         public
@@ -232,11 +160,11 @@ contract LoanData is ILoanData, LoanStorage {
     }
 
     /**
-        @notice Get information on the collateral needed for the loan.
-        @param loanID The loan ID to get collateral info for.
-        @return int256 Collateral needed in Lending tokens.
-        @return int256 Collateral needed in Collateral tokens (wei)
-        @return uint256 The value of the loan held in the escrow contract
+     * @notice Get information on the collateral needed for the loan.
+     * @param loanID The loan ID to get collateral info for.
+     * @return int256 Collateral needed in Lending tokens.
+     * @return int256 Collateral needed in Collateral tokens (wei)
+     * @return uint256 The value of the loan held in the escrow contract
      */
     function getCollateralNeededInfo(uint256 loanID)
         public
@@ -273,12 +201,12 @@ contract LoanData is ILoanData, LoanStorage {
     }
 
     /**
-        @notice Returns the minimum collateral value threshold, in the lending token, needed to take out the loan or for it be liquidated.
-        @dev If the loan status is TermsSet, then the value is whats needed to take out the loan.
-        @dev If the loan status is Active, then the value is the threshold at which the loan can be liquidated at.
-        @param loanID The loan ID to get needed collateral info for.
-        @return int256 The minimum collateral value threshold required.
-        @return uint256 The value of the loan held in the escrow contract.
+     * @notice Returns the minimum collateral value threshold, in the lending token, needed to take out the loan or for it be liquidated.
+     * @dev If the loan status is TermsSet, then the value is whats needed to take out the loan.
+     * @dev If the loan status is Active, then the value is the threshold at which the loan can be liquidated at.
+     * @param loanID The loan ID to get needed collateral info for.
+     * @return int256 The minimum collateral value threshold required.
+     * @return uint256 The value of the loan held in the escrow contract.
      */
     function getCollateralNeededInTokens(uint256 loanID)
         public
@@ -316,7 +244,7 @@ contract LoanData is ILoanData, LoanStorage {
                     .sub(getInterestRatio(loanID))
                     .sub(bufferPercent);
             if (loans[loanID].escrow != address(0)) {
-                escrowLoanValue = EscrowInterface(loans[loanID].escrow)
+                escrowLoanValue = IEscrow(loans[loanID].escrow)
                     .calculateTotalValue();
                 neededInLendingTokens = neededInLendingTokens.add(
                     neededInLendingTokens.sub(int256(escrowLoanValue))
@@ -329,52 +257,49 @@ contract LoanData is ILoanData, LoanStorage {
     }
 
     /**
-        @notice It gets the current liquidation info for a given loan.
-        @param loanID The loan ID to get the info.
-        @return liquidationInfo get current liquidation info for the given loan id.
+     * @notice It checks if a loan can be liquidated.
+     * @param loanID The loan ID to check.
+     * @return true if the loan is liquidable.
      */
-    function getLiquidationInfo(uint256 loanID)
-        public
-        view
-        returns (TellerCommon.LoanLiquidationInfo memory liquidationInfo)
-    {
-        liquidationInfo.collateralInfo = getCollateralInfo(loanID);
-        liquidationInfo.amountToLiquidate = getTotalOwed(loanID);
-
-        // Maximum reward is the calculated value of required collateral minus the principal owed (see getCollateralNeededInTokens).+
-        uint256 availableValue =
-            liquidationInfo.collateralInfo.valueInLendingTokens.add(
-                liquidationInfo.collateralInfo.escrowLoanValue
-            );
-        uint256 liquidationSetting = settings.getLiquidateEthPriceValue();
-        uint256 maxReward =
-            liquidationInfo.amountToLiquidate.percent(
-                liquidationSetting.diffOneHundredPercent()
-            );
-        if (availableValue < liquidationInfo.amountToLiquidate + maxReward) {
-            liquidationInfo.rewardInCollateral = int256(availableValue);
-        } else {
-            liquidationInfo.rewardInCollateral = int256(maxReward).add(
-                int256(liquidationInfo.amountToLiquidate)
-            );
+    function isLiquidable(uint256 loanID) public view returns (bool) {
+        // Check if loan can be liquidated
+        if (loans[loanID].status != TellerCommon.LoanStatus.Active) {
+            return false;
         }
 
-        liquidationInfo.liquidable =
-            loans[loanID].status == TellerCommon.LoanStatus.Active &&
-            (loans[loanID].loanStartTime.add(
-                loans[loanID].loanTerms.duration
-            ) <=
-                now ||
-                (loans[loanID].loanTerms.collateralRatio > 0 &&
-                    liquidationInfo.collateralInfo.moreCollateralRequired));
+        if (loans[loanID].loanTerms.collateralRatio > 0) {
+            // If loan has a collateral ratio, check how much is needed
+            (, int256 neededInCollateral, ) = getCollateralNeededInfo(loanID);
+            return neededInCollateral > int256(loans[loanID].collateral);
+        } else {
+            // Otherwise, check if the loan has expired
+            return
+                now >=
+                loans[loanID].loanStartTime.add(
+                    loans[loanID].loanTerms.duration
+                );
+        }
     }
 
     /**
-        @notice Returns the current loan ID and increments it by 1
-        @return uint256 The current loan ID before incrementing
+     * @notice It gets the current liquidation reward for a given loan.
+     * @param loanID The loan ID to get the info.
+     * @return The value the liquidator will receive denoted in collateral tokens.
      */
-    function _getAndIncrementLoanID() internal returns (uint256 newLoanID) {
-        newLoanID = loanIDCounter;
-        loanIDCounter = loanIDCounter.add(1);
+    function getLiquidationReward(uint256 loanID) public view returns (int256) {
+        uint256 amountToLiquidate = getTotalOwed(loanID);
+        uint256 availableValue =
+            getCollateralInLendingTokens(loanID).add(
+                IEscrow(loans[loanID].escrow).calculateTotalValue()
+            );
+        uint256 maxReward =
+            amountToLiquidate.percent(
+                settings.getLiquidateEthPriceValue().diffOneHundredPercent()
+            );
+        if (availableValue < amountToLiquidate + maxReward) {
+            return int256(availableValue);
+        } else {
+            return int256(maxReward).add(int256(amountToLiquidate));
+        }
     }
 }

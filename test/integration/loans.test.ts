@@ -55,15 +55,16 @@ describe('LoanManager', async () => {
     loanAmount = '1000'
   })
 
-  describe.only('createLoanWithTerms, takeOutLoan', () => {
+  describe('createLoanWithTerms, takeOutLoan', () => {
     // Creating a loan with terms, depositing collateral and taking out a loan successfully
     it('should be able to take out a loan with collateral', async function () {
       // Create loan
       const loanID = await createLoan(market, 2, '2000', borrower)
       // Get collateral required
-      const collateralNeeded = (
-        await market.loanManager.getCollateralInfo(loanID)
-      ).neededInCollateralTokens
+      const [
+        _,
+        collateralNeeded,
+      ] = await market.loanManager.getCollateralNeededInfo(loanID)
       // Deposit collateral
       await market.loanManager
         .connect(borrower)
@@ -71,7 +72,7 @@ describe('LoanManager', async () => {
           value: collateralNeeded,
         })
         .should.emit(market.loanManager, 'CollateralDeposited')
-        .withArgs(loanID, borrowerAddress, collateralNeeded.toString())
+        .withArgs(loanID, borrowerAddress, collateralNeeded)
 
       await fastForward(300)
       // Get info for created loan
@@ -154,8 +155,9 @@ describe('LoanManager', async () => {
       const loanID = await createLoan(market, 2, '3131', borrower)
 
       // Get collateral owed for loan
-      const collateral = (await market.loanManager.getCollateralInfo(loanID))
-        .neededInCollateralTokens
+      const [_, collateral] = await market.loanManager.getCollateralNeededInfo(
+        loanID
+      )
 
       // Deposit collateral
       await market.loanManager
@@ -182,8 +184,9 @@ describe('LoanManager', async () => {
       const loanID = await createLoan(market, 2, '3131', borrower)
 
       // Get collateral owed for loan
-      const collateral = (await market.loanManager.getCollateralInfo(loanID))
-        .neededInCollateralTokens
+      const [_, collateral] = await market.loanManager.getCollateralNeededInfo(
+        loanID
+      )
 
       // Deposit collateral
       await market.loanManager

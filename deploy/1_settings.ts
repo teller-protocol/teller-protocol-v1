@@ -31,12 +31,9 @@ const deployLogicContracts: DeployFunction = async (hre) => {
       contract: 'LoanData',
     },
     {
-      contract: 'EtherCollateralLoans',
+      contract: 'LoanManager',
       mock,
     },
-    // {
-    //   contract: 'TokenCollateralLoans',
-    // },
     {
       contract: 'LendingPool',
     },

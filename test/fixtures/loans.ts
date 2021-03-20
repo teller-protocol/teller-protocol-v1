@@ -1,5 +1,5 @@
 import { deployments, contracts, toBN } from 'hardhat'
-import { Signer } from 'ethers'
+import { BigNumber, Signer } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import { fundedMarket, FundedMarketArgs, MarketReturn } from './markets'
@@ -25,7 +25,7 @@ export interface MarketWithLoanReturn
 
 export interface BorrowedLoanReturn {
   createdLoanId: string
-  totalOwed: string
+  totalOwed: BigNumber
 }
 
 export const createMarketWithLoan = (
@@ -62,17 +62,10 @@ export const createAndGetLoan = async (
   // Create a loan and get the loan ID
   const createdLoanId = await createLoan(market, loanType, loanAmount, borrower)
   // Take out loan
-  await getLoan(
-    await market.loanManager,
-    createdLoanId,
-    loanAmount,
-    borrower,
-    hre
-  )
+  await getLoan(market.loanManager, createdLoanId, loanAmount, borrower, hre)
   // Get total owed for loan
-  const totalOwed = (
-    await market.loanManager.getTotalOwed(createdLoanId)
-  ).toString()
+  const totalOwed = await market.loanManager.getTotalOwed(createdLoanId)
+  console.log('total owed js', totalOwed.toString())
 
   return {
     createdLoanId,
@@ -129,7 +122,7 @@ export const createLoan = async (
 }
 
 export const getLoan = async (
-  loanContract: LoanManager,
+  loanManager: LoanManager,
   createdLoanId: string,
   loanAmount: string,
   borrower: Signer,
@@ -137,11 +130,14 @@ export const getLoan = async (
 ): Promise<void> => {
   const { fastForward, toBN } = hre
 
+  console.log(await loanManager.loans(createdLoanId))
+
   // Deposit collateral
-  const collateral = (await loanContract.getCollateralInfo(createdLoanId))
-    .neededInCollateralTokens
+  const [_, collateral] = await loanManager.getCollateralNeededInfo(
+    createdLoanId
+  )
   const borrowerAddress = await borrower.getAddress()
-  await loanContract
+  await loanManager
     .connect(borrower)
     .depositCollateral(borrowerAddress, createdLoanId, collateral, {
       value: collateral,
@@ -151,7 +147,7 @@ export const getLoan = async (
   await fastForward(300)
 
   // Take out loan as borrower
-  await loanContract
+  await loanManager
     .connect(borrower)
     .takeOutLoan(createdLoanId, toBN(loanAmount, '18'))
 }

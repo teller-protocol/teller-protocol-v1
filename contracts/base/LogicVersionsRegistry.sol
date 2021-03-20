@@ -136,7 +136,7 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
 
         currentVersion = logicVersion.currentVersion;
         latestVersion = logicVersion.latestVersion;
-        logic = logicVersion.logicVersions[currentVersion];
+        logic = logicVersion.versions[currentVersion];
     }
 
     /**
@@ -179,15 +179,15 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
 
     /**
         @notice It creates multiple logic versions.
-        @param logicVersions lists of the logic versions to create.
+        @param newLogicVersions lists of the logic versions to create.
      */
     function _createLogicVersions(
-        TellerCommon.CreateLogicVersionRequest[] memory logicVersions
+        TellerCommon.CreateLogicVersionRequest[] memory newLogicVersions
     ) internal {
-        for (uint256 i; i < logicVersions.length; i++) {
+        for (uint256 i; i < newLogicVersions.length; i++) {
             _createLogicVersion(
-                logicVersions[i].logicName,
-                logicVersions[i].logic
+                newLogicVersions[i].logicName,
+                newLogicVersions[i].logic
             );
         }
     }
@@ -240,16 +240,16 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
 
     /**
         @notice It upgrades multiple logic versions.
-        @param logicVersions Lists of the logic versions to upgrade.
+        @param newLogicVersions Lists of the logic versions to upgrade.
      */
     function _upgradeLogicVersions(
-        TellerCommon.UpgradeLogicVersionRequest[] memory logicVersions
+        TellerCommon.UpgradeLogicVersionRequest[] memory newLogicVersions
     ) internal {
-        for (uint256 i; i < logicVersions.length; i++) {
+        for (uint256 i; i < newLogicVersions.length; i++) {
             _upgradeLogicVersion(
-                logicVersions[i].logicName,
-                logicVersions[i].logic,
-                logicVersions[i].proxy
+                newLogicVersions[i].logicName,
+                newLogicVersions[i].logic,
+                newLogicVersions[i].proxy
             );
         }
     }

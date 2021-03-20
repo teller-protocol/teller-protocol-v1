@@ -6,7 +6,7 @@ import "../../interfaces/LogicVersionsRegistryInterface.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
-/**                        THIS CONTRACT IS AN UPGRADEABLE STORAGE CONTRACT!                        **/
+/**                        THIS CONTRACT IS A NON UPGRADEABLE STORAGE CONTRACT!                     **/
 /**  ---------------------------------------------------------------------------------------------  **/
 /**  Do NOT change the order of, PREPEND, or APPEND any storage variables to this or new versions   **/
 /**  of this contract as this will cause a ripple affect to the storage slots of all child          **/

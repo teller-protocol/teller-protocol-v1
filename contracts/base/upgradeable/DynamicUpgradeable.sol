@@ -16,9 +16,9 @@ import "./DynamicUpgradeableStorage.sol";
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
-    @notice This contract is used define the DynamicUpgradeable contracts logic.
-
-    @author develop@teller.finance
+ * @notice This contract is used define the DynamicUpgradeable contracts logic.
+ *
+ * @author develop@teller.finance
  */
 contract DynamicUpgradeable is DynamicUpgradeableStorage {
     /* External Functions */

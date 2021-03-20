@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
-import "../../BaseEscrowDapp.sol";
+import "../../escrow/BaseEscrowDapp.sol";
 
 // Common
 import "../../../util/AddressLib.sol";

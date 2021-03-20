@@ -13,10 +13,7 @@ contract LogicVersionsConsts {
     /** Constants */
     bytes32 public constant TTOKEN_LOGIC_NAME = keccak256("TToken");
     bytes32 public constant LENDING_POOL_LOGIC_NAME = keccak256("LendingPool");
-    bytes32 public constant TOKEN_COLLATERAL_LOANS_LOGIC_NAME =
-        keccak256("TokenCollateralLoans");
-    bytes32 public constant ETHER_COLLATERAL_LOANS_LOGIC_NAME =
-        keccak256("EtherCollateralLoans");
+    bytes32 public constant LOAN_MANAGER_LOGIC_NAME = keccak256("LoanManager");
     bytes32 public constant LOAN_TERMS_CONSENSUS_LOGIC_NAME =
         keccak256("LoanTermsConsensus");
     bytes32 public constant MARKET_FACTORY_LOGIC_NAME =

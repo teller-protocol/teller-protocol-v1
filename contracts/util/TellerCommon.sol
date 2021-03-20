@@ -125,40 +125,6 @@ library TellerCommon {
     }
 
     /**
-        @notice This struct represents the collateral information for a given loan.
-        @param collateral the current collateral amount.
-        @param valueInLendingTokens the current collateral value expressed in lending tokens.
-        @param neededInLendingTokens the collateral needed expressed in lending tokens.
-        @param neededInCollateralTokens the collateral needed expressed in collateral tokens.
-        @param moreCollateralRequired true if the given loan requires more collateral. Otherwise it is false.
-     */
-    struct LoanCollateralInfo {
-        uint256 collateral;
-        uint256 valueInLendingTokens;
-        uint256 escrowLoanValue;
-        int256 neededInLendingTokens;
-        int256 neededInCollateralTokens;
-        bool moreCollateralRequired;
-    }
-
-    /**
-        @notice This struct is used to get the current liquidation info for a given loan id.
-        @param collateralInfo information for the the given loan.
-        @param amountToLiquidate the needed amount to liquidate the loan (if the liquidable parameter is true).
-        @param rewardInCollateral the value the liquidator will receive denoted in collateral tokens.
-        @param liquidable true if the loan is liquidable. Otherwise it is false.
-        @dev If the loan does not need to be liquidated, amountToLiquidate is the maximum payment amount of lending tokens that will be required to liquidate the loan.
-        @dev If the loan can be liquidated, amountToLiquidate is the current payment amount of lending tokens that is needed to liquidate the loan.
-        @dev Liquidation reward is the value the liquidator will receive denoted in the collateral token. It will be, at maximum, the amount of collateral required. For under collateralized loans, the remaining value will be collected from tokens held by the loan's Escrow contract.
-     */
-    struct LoanLiquidationInfo {
-        LoanCollateralInfo collateralInfo;
-        uint256 amountToLiquidate;
-        int256 rewardInCollateral;
-        bool liquidable;
-    }
-
-    /**
         @notice This struct defines the dapp address and data to execute in the callDapp function.
         @dev It is executed using a delegatecall in the Escrow contract.
         @param exists Flag marking whether the dapp is a Teller registered address

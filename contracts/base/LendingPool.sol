@@ -336,7 +336,7 @@ contract LendingPool is LendingPoolInterface, Base {
         @notice It calculates the stored exchange rate for the TToken based on the total supply of the lending token.
         @return the exchange rate for 1 TToken to the underlying token.
      */
-    function exchangeRate() external view returns (uint256) {
+    function exchangeRateStored() external view returns (uint256) {
         return _exchangeRateStored();
     }
 

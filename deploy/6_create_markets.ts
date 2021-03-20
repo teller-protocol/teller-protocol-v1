@@ -57,7 +57,7 @@ const createMarkets: DeployFunction = async (hre) => {
 
     await deployments.save(`Market_${borrowedToken}_${collateralToken}`, {
       ...(await deployments.getExtendedArtifact('LoanManager')),
-      address: await marketRegistry.loans(
+      address: await marketRegistry.loanManagers(
         lendingTokenAddress,
         collateralTokenAddress
       ),

@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Interfaces
 import "../interfaces/loans/ILoanManager.sol";
+import "../interfaces/loans/ILoanStorage.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/SettingsInterface.sol";
@@ -21,6 +22,8 @@ import "./Base.sol";
 import "./proxies/DynamicProxy.sol";
 import "./proxies/ERC20DynamicProxy.sol";
 import "./MarketRegistry.sol";
+
+import "hardhat/console.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -119,7 +122,7 @@ contract MarketFactory is MarketFactoryInterface, Base {
 
         LoanTermsConsensusInterface loanTermsConsensus =
             _createLoanTermsConsensus();
-        ILoanManager loanManager = _createLoans(collateralToken);
+        address loanManagerAddress = _createLoans(collateralToken);
 
         LendingPoolInterface lendingPool =
             LendingPoolInterface(marketRegistry.lendingPools(lendingToken));
@@ -127,30 +130,29 @@ contract MarketFactory is MarketFactoryInterface, Base {
             lendingPool = _createLendingPool(lendingToken);
         }
 
+        console.log("loan manager", loanManagerAddress);
+
         // Initializing LoanTermsConsensus
         loanTermsConsensus.initialize(
             msg.sender,
-            address(loanManager),
+            loanManagerAddress,
             address(settings)
         );
 
         // Initializing Loans
-        loanManager.initialize(
+        ILoanManager(loanManagerAddress).initialize(
             address(lendingPool),
             address(loanTermsConsensus),
             address(settings),
             collateralToken
         );
 
-        marketRegistry.registerMarket(
-            address(lendingPool),
-            address(loanManager)
-        );
+        marketRegistry.registerMarket(address(lendingPool), loanManagerAddress);
 
         _addMarket(
             lendingToken,
             collateralToken,
-            address(loanManager),
+            loanManagerAddress,
             address(lendingPool),
             address(loanTermsConsensus)
         );
@@ -159,7 +161,7 @@ contract MarketFactory is MarketFactoryInterface, Base {
             msg.sender,
             lendingToken,
             collateralToken,
-            address(loanManager),
+            loanManagerAddress,
             address(lendingPool),
             address(loanTermsConsensus)
         );
@@ -333,14 +335,14 @@ contract MarketFactory is MarketFactoryInterface, Base {
         @notice Creates a proxy contract for Loans.
         @return a new Loans instance.
      */
-    function _createLoans(address collateralToken)
-        internal
-        returns (ILoanManager)
-    {
-        bytes32 logicName =
-            collateralToken == settings.ETH_ADDRESS()
-                ? logicRegistry.consts().ETHER_COLLATERAL_LOANS_LOGIC_NAME()
-                : logicRegistry.consts().TOKEN_COLLATERAL_LOANS_LOGIC_NAME();
-        return ILoanManager(_createDynamicProxy(logicName));
+    function _createLoans(address collateralToken) internal returns (address) {
+        //        bytes32 logicName =
+        //            collateralToken == settings.ETH_ADDRESS()
+        //                ? logicRegistry.consts().ETHER_COLLATERAL_LOANS_LOGIC_NAME()
+        //                : logicRegistry.consts().TOKEN_COLLATERAL_LOANS_LOGIC_NAME();
+        return
+            _createDynamicProxy(
+                logicRegistry.consts().LOAN_MANAGER_LOGIC_NAME()
+            );
     }
 }
