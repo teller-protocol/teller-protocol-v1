@@ -3,6 +3,7 @@ import hre from 'hardhat'
 import { LendingPool, Loans } from '../types/typechain'
 import { freshMarket, fundedMarket } from './fixtures'
 import { mockCRAResponse } from './helpers/mock-cra-response'
+import { getFunds } from './helpers/get-funds'
 
 const { deployments, fastForward, toBN, getNamedSigner } = hre
 
@@ -17,14 +18,31 @@ describe('LendingPool', async () => {
     let market = await setup()
     // Get Lending Pool contract
     let lendingPool = market.lendingPool
+    // Get lender
+    let lender = await getNamedSigner('lender')
+    // Fund lender
+    let lendingAmount = await toBN('2000', '18')
+    await getFunds({
+      to: lender,
+      tokenSym: 'DAI',
+      amount: lendingAmount,
+    })
     // Approve tokens
-    await market.lendingToken.approve(lendingPool.address, 1000)
+    await market.lendingToken
+      .connect(lender)
+      .approve(lendingPool.address, lendingAmount)
     // Estimate gas for depositing
-    let depositEstimate = await lendingPool.estimateGas.deposit(1000)
+    let depositEstimate = await lendingPool
+      .connect(lender)
+      .estimateGas.deposit(lendingAmount)
+    // Deposit collateral
+    await lendingPool.connect(lender).deposit(lendingAmount)
     // Move ahead in time
     await fastForward(1000)
     // Estimate gas for withdrawing
-    let withdrawEstimate = await lendingPool.estimateGas.withdrawAll()
+    let withdrawEstimate = await lendingPool
+      .connect(lender)
+      .estimateGas.withdrawAll()
     let lpTableData = [
       { Method: 'LP Deposit', GasCost: depositEstimate.toString() },
       { Method: 'LP Withdraw', GasCost: withdrawEstimate.toString() },
