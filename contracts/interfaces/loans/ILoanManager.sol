@@ -115,19 +115,11 @@ contract ILoanManager is ILoanStorage, ILoanData {
      * @param loanID ID of loan from which collateral was withdrawn
      * @param borrower Account address of the borrower
      * @param recipient Account address of the recipient
-     * @param interestRate Interest rate set in the loan terms
-     * @param collateralRatio Collateral ratio set in the loan terms
-     * @param maxLoanAmount Maximum loan amount that can be taken out, set in the loan terms
      */
     event LoanTermsSet(
         uint256 indexed loanID,
         address indexed borrower,
-        address indexed recipient,
-        uint256 interestRate,
-        uint256 collateralRatio,
-        uint256 maxLoanAmount,
-        uint256 duration,
-        uint256 termsExpiry
+        address indexed recipient
     );
 
     /**
@@ -142,18 +134,6 @@ contract ILoanManager is ILoanStorage, ILoanData {
         address indexed borrower,
         address indexed escrow,
         uint256 amountBorrowed
-    );
-
-    /**
-     * @notice This event is emitted when a new Escrow contract is created.
-     * @param borrower address associated to the new escrow.
-     * @param loanID loan id associated to the borrower and escrow contract.
-     * @param escrowAddress the new escrow contract address.
-     */
-    event EscrowCreated(
-        address indexed borrower,
-        uint256 indexed loanID,
-        address escrowAddress
     );
 
     /**

@@ -137,15 +137,12 @@ contract Consensus is OwnerSignersRole {
         @notice The values must be in a maximum tolerance range.
         @return the consensus value.
      */
-    function _getConsensus(NumbersList.Values storage values)
+    function _getConsensus(NumbersList.Values memory values, uint256 tolerance)
         internal
         view
         returns (uint256)
     {
-        require(
-            values.isWithinTolerance(settings.getMaximumToleranceValue()),
-            "RESPONSES_TOO_VARIED"
-        );
+        require(values.isWithinTolerance(tolerance), "RESPONSES_TOO_VARIED");
 
         return values.getAverage();
     }

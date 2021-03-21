@@ -319,12 +319,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
         emit LoanTermsSet(
             loanID,
             msg.sender,
-            loans[loanID].loanTerms.recipient,
-            interestRate,
-            collateralRatio,
-            maxLoanAmount,
-            loans[loanID].loanTerms.duration,
-            loans[loanID].termsExpiry
+            loans[loanID].loanTerms.recipient
         );
     }
 
@@ -815,8 +810,6 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
         // The escrow must be added as an authorized address since it will be interacting with the protocol
         // TODO: Remove after non-guarded launch
         settings.addEscrowAuthorized(escrow);
-
-        emit EscrowCreated(loans[loanID].loanTerms.borrower, loanID, escrow);
     }
 
     function clone(address target) internal returns (address result) {
