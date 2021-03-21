@@ -11,11 +11,12 @@ import "../../util/CacheLib.sol";
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/access/Roles.sol";
 import "../../util/SettingsConsts.sol";
-import "../proxies/DynamicProxy.sol";
+import "../proxies/InitializeableDynamicProxy.sol";
 import "./AssetSettings.sol";
 import "../LogicVersionsRegistry.sol";
 import "../DappRegistry.sol";
 import "../../providers/chainlink/ChainlinkAggregator.sol";
+import "../Factory.sol";
 
 // Interfaces
 import "../../interfaces/SettingsInterface.sol";
@@ -47,7 +48,7 @@ import "../../interfaces/MarketFactoryInterface.sol";
 
     @author develop@teller.finance
  */
-contract Settings is SettingsInterface, Base {
+contract Settings is SettingsInterface, Base, Factory {
     using AddressLib for address;
     using Address for address;
     using AddressArrayLib for address[];
@@ -656,24 +657,30 @@ contract Settings is SettingsInterface, Base {
         WETH_ADDRESS = wethTokenAddress;
         CETH_ADDRESS = cethTokenAddress;
 
+        address initializeableDynamicProxyAddress =
+            address(new InitializeableDynamicProxy());
         assetSettings = AssetSettingsInterface(
             _deployDynamicProxy(
-                logicRegistry.consts().ASSET_SETTINGS_LOGIC_NAME()
+                initializeableDynamicProxyAddress,
+                keccak256("AssetSettings")
             )
         );
         chainlinkAggregator = IChainlinkAggregator(
             _deployDynamicProxy(
-                logicRegistry.consts().CHAINLINK_PAIR_AGGREGATOR_LOGIC_NAME()
+                initializeableDynamicProxyAddress,
+                keccak256("ChainlinkAggregator")
             )
         );
         dappRegistry = IDappRegistry(
             _deployDynamicProxy(
-                logicRegistry.consts().DAPP_REGISTRY_LOGIC_NAME()
+                initializeableDynamicProxyAddress,
+                keccak256("DappRegistry")
             )
         );
         marketFactory = MarketFactoryInterface(
             _deployDynamicProxy(
-                logicRegistry.consts().MARKET_FACTORY_LOGIC_NAME()
+                initializeableDynamicProxyAddress,
+                keccak256("MarketFactory")
             )
         );
     }
@@ -683,15 +690,22 @@ contract Settings is SettingsInterface, Base {
     /**
         @notice Deploys a new DynamicProxy given a logic name.
         @dev All proxies created through this function are create as non strict dynamic. See DynamicUpgradeable
+        @dev Each one deployed here should have an empty parameter initialize function.
+        @param initializeableDynamicProxyAddress The address of a deploy InitializeableDynamicProxy contract to clone.
         @param logicName The name where the logic will be stored as.
      */
-    function _deployDynamicProxy(bytes32 logicName)
-        internal
-        returns (address proxyAddress)
-    {
-        proxyAddress = address(
-            new DynamicProxy(address(logicRegistry), logicName, false)
+    function _deployDynamicProxy(
+        address initializeableDynamicProxyAddress,
+        bytes32 logicName
+    ) internal returns (address proxyAddress) {
+        proxyAddress = _clone(initializeableDynamicProxyAddress);
+        IInitializeableDynamicProxy(proxyAddress).initialize(
+            address(logicRegistry),
+            logicName,
+            false
         );
+
+        // Try to initialize the actual contract implementation.
         (bool success, ) =
             proxyAddress.call(abi.encodeWithSignature("initialize()"));
         if (!success) {

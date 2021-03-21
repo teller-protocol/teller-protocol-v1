@@ -39,14 +39,7 @@ contract Escrow is IEscrow, Base, EscrowStorage, BaseEscrowDapp {
     using NumbersLib for uint256;
     using SafeERC20 for IERC20;
 
-    /** Public Functions **/
-
-    /**
-        @notice Returns this Escrow's loan struct.
-     */
-    function getLoan() public view returns (TellerCommon.Loan memory) {
-        return loanManager.loans(loanID);
-    }
+    /** External Functions **/
 
     /**
      * @notice It calls a given dapp using a delegatecall function by a borrower owned the current loan id associated to this escrow contract.
@@ -131,7 +124,7 @@ contract Escrow is IEscrow, Base, EscrowStorage, BaseEscrowDapp {
      */
     function claimTokens() external onlyBorrower whenNotPaused {
         require(
-            getLoan().status == TellerCommon.LoanStatus.Closed,
+            loanManager.loans(loanID).status == TellerCommon.LoanStatus.Closed,
             "LOAN_NOT_CLOSED"
         );
 
@@ -159,10 +152,10 @@ contract Escrow is IEscrow, Base, EscrowStorage, BaseEscrowDapp {
         whenNotPaused
     {
         require(
-            getLoan().status == TellerCommon.LoanStatus.Closed,
+            loanManager.loans(loanID).status == TellerCommon.LoanStatus.Closed,
             "LOAN_NOT_CLOSED"
         );
-        require(getLoan().liquidated, "LOAN_NOT_LIQUIDATED");
+        require(loanManager.loans(loanID).liquidated, "LOAN_NOT_LIQUIDATED");
         require(msg.sender == address(loanManager), "CALLER_MUST_BE_LOANS");
 
         address[] memory tokens = getTokens();
@@ -231,11 +224,6 @@ contract Escrow is IEscrow, Base, EscrowStorage, BaseEscrowDapp {
 
         // Initialize tokens list with the borrowed token.
         tokens.add(lendingTokenAddress);
-        //        require(
-        //            _balanceOf(lendingToken) == getLoan().borrowedAmount,
-        //            "ESCROW_BALANCE_NOT_MATCH_LOAN"
-        //        );
-        //        _tokenUpdated(lendingToken);
     }
 
     /** Internal Functions */

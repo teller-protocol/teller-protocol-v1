@@ -12,6 +12,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard
 import "../Base.sol";
 import "./LoanStorage.sol";
 import "./../proxies/DynamicProxy.sol";
+import "../Factory.sol";
 
 // Interfaces
 import "../../interfaces/loans/ILoanManager.sol";
@@ -19,7 +20,7 @@ import "../../interfaces/loans/ILoanStorage.sol";
 import "../../interfaces/LendingPoolInterface.sol";
 import "../../interfaces/LoanTermsConsensusInterface.sol";
 import "../../interfaces/escrow/IEscrow.sol";
-import "../../interfaces/IEscrowDynamicProxy.sol";
+import "../../interfaces/IInitializeableDynamicProxy.sol";
 
 import "hardhat/console.sol";
 
@@ -40,7 +41,7 @@ import "hardhat/console.sol";
  *
  * @author develop@teller.finance
  */
-contract LoanManager is ILoanManager, Base, LoanStorage {
+contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
     using NumbersLib for uint256;
@@ -599,14 +600,14 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
      * @param loanTermsConsensusAddress Address for LoanTermConsensus contract.
      * @param settingsAddress Address for the platform Settings contract.
      * @param collateralTokenAddress Address of the collateral token for loans in this contract.
-     * @param escrowProxyLogicAddress e
+     * @param initializeableDynamicProxyLogicAddress e
      */
     function initialize(
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
         address collateralTokenAddress,
-        address escrowProxyLogicAddress
+        address initializeableDynamicProxyLogicAddress
     ) external {
         lendingPoolAddress.requireNotEmpty("PROVIDE_LENDING_POOL_ADDRESS");
         loanTermsConsensusAddress.requireNotEmpty(
@@ -621,7 +622,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
         loanTermsConsensus = LoanTermsConsensusInterface(
             loanTermsConsensusAddress
         );
-        escrowProxyLogic = escrowProxyLogicAddress;
+        initializeableDynamicProxyLogic = initializeableDynamicProxyLogicAddress;
 
         // ETH is the only collateral token allowed currently
         collateralToken = settings.ETH_ADDRESS();
@@ -828,74 +829,14 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
             "LOAN_ESCROW_ALREADY_EXISTS"
         );
 
-        escrow = clone(escrowProxyLogic);
-        IEscrowDynamicProxy(escrow).initialize(address(logicRegistry));
+        escrow = _clone(initializeableDynamicProxyLogic);
+        IInitializeableDynamicProxy(escrow).initialize(
+            address(logicRegistry),
+            keccak256("Escrow"),
+            true
+        );
         // The escrow must be added as an authorized address since it will be interacting with the protocol
         // TODO: Remove after non-guarded launch
         settings.addEscrowAuthorized(escrow);
-    }
-
-    function clone(address target) internal returns (address result) {
-        // convert address to 20 bytes
-        bytes20 targetBytes = bytes20(target);
-
-        // actual code //
-        // 3d602d80600a3d3981f3363d3d373d3d3d363d73bebebebebebebebebebebebebebebebebebebebe5af43d82803e903d91602b57fd5bf3
-
-        // creation code //
-        // copy runtime code into memory and return it
-        // 3d602d80600a3d3981f3
-
-        // runtime code //
-        // code to delegatecall to address
-        // 363d3d373d3d3d363d73 address 5af43d82803e903d91602b57fd5bf3
-
-        assembly {
-            /*
-        reads the 32 bytes of memory starting at pointer stored in 0x40
-
-        In solidity, the 0x40 slot in memory is special: it contains the "free memory pointer"
-        which points to the end of the currently allocated memory.
-        */
-            let clone := mload(0x40)
-            // store 32 bytes to memory starting at "clone"
-            mstore(
-                clone,
-                0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000000000000000000000
-            )
-
-            /*
-          |              20 bytes                |
-        0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000000000000000000000
-                                                  ^
-                                                  pointer
-        */
-            // store 32 bytes to memory starting at "clone" + 20 bytes
-            // 0x14 = 20
-            mstore(add(clone, 0x14), targetBytes)
-
-            /*
-          |               20 bytes               |                 20 bytes              |
-        0x3d602d80600a3d3981f3363d3d373d3d3d363d73bebebebebebebebebebebebebebebebebebebebe
-                                                                                          ^
-                                                                                          pointer
-        */
-            // store 32 bytes to memory starting at "clone" + 40 bytes
-            // 0x28 = 40
-            mstore(
-                add(clone, 0x28),
-                0x5af43d82803e903d91602b57fd5bf30000000000000000000000000000000000
-            )
-
-            /*
-          |               20 bytes               |                 20 bytes              |           15 bytes          |
-        0x3d602d80600a3d3981f3363d3d373d3d3d363d73bebebebebebebebebebebebebebebebebebebebe5af43d82803e903d91602b57fd5bf3
-        */
-            // create new contract
-            // send 0 Ether
-            // code starts at pointer stored in "clone"
-            // code size 0x37 (55 bytes)
-            result := create(0, clone, 0x37)
-        }
     }
 }

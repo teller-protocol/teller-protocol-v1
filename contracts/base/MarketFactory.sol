@@ -19,10 +19,10 @@ import "../util/TellerCommon.sol";
 
 // Contracts
 import "./Base.sol";
-import "./proxies/DynamicProxy.sol";
-import "./proxies/EscrowDynamicProxy.sol";
+import "./proxies/InitializeableDynamicProxy.sol";
 import "./proxies/ERC20DynamicProxy.sol";
 import "./MarketRegistry.sol";
+import "./Factory.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -39,7 +39,7 @@ import "./MarketRegistry.sol";
 
     @author develop@teller.finance
  */
-contract MarketFactory is MarketFactoryInterface, Base {
+contract MarketFactory is MarketFactoryInterface, Base, Factory {
     using Address for address;
 
     /** Constants */
@@ -60,7 +60,7 @@ contract MarketFactory is MarketFactoryInterface, Base {
 
     IMarketRegistry public marketRegistry;
 
-    address public escrowProxyLogic;
+    address public initializeableDynamicProxyLogic;
 
     /* Modifiers */
 
@@ -144,7 +144,7 @@ contract MarketFactory is MarketFactoryInterface, Base {
             address(loanTermsConsensus),
             address(settings),
             collateralToken,
-            escrowProxyLogic
+            initializeableDynamicProxyLogic
         );
 
         marketRegistry.registerMarket(address(lendingPool), loanManagerAddress);
@@ -232,7 +232,9 @@ contract MarketFactory is MarketFactoryInterface, Base {
         _initialize(msg.sender);
 
         marketRegistry = new MarketRegistry();
-        escrowProxyLogic = address(new EscrowDynamicProxy());
+        initializeableDynamicProxyLogic = address(
+            new InitializeableDynamicProxy()
+        );
     }
 
     /** Internal Functions */
@@ -264,9 +266,16 @@ contract MarketFactory is MarketFactoryInterface, Base {
         @notice It creates a dynamic proxy instance for a given logic name.
         @dev It is used to create all the market contracts as strict dynamic proxies.
      */
-    function _createDynamicProxy(bytes32 logicName) internal returns (address) {
-        return
-            address(new DynamicProxy(address(logicRegistry), logicName, true));
+    function _createDynamicProxy(bytes32 logicName)
+        internal
+        returns (address proxyAddress)
+    {
+        proxyAddress = _clone(initializeableDynamicProxyLogic);
+        IInitializeableDynamicProxy(proxyAddress).initialize(
+            address(logicRegistry),
+            logicName,
+            true
+        );
     }
 
     /**

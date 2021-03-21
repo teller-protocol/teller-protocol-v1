@@ -41,13 +41,6 @@ interface IEscrow {
      */
     function borrower() external view returns (address);
 
-    /* Public Functions */
-
-    /**
-     * @notice Returns this Escrow's loan struct.
-     */
-    function getLoan() external view returns (TellerCommon.Loan memory);
-
     /* External Functions */
 
     /**
