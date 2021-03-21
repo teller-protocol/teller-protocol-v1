@@ -89,13 +89,17 @@ interface IEscrow {
     /**
      * @notice It initializes this escrow instance for a given loans address and loan id.
      * @param settingsAddress The address of the settings contract.
+     * @param lendingPoolAddress e
      * @param aLoanID the loan ID associated to this escrow instance.
      * @param lendingTokenAddress The token that the Escrow loan will be for.
+     * @param borrowerAddress e
      */
     function initialize(
         address settingsAddress,
+        address lendingPoolAddress,
         uint256 aLoanID,
-        address lendingTokenAddress
+        address lendingTokenAddress,
+        address borrowerAddress
     ) external;
 
     /**

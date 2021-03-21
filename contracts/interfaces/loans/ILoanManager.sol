@@ -77,12 +77,14 @@ contract ILoanManager is ILoanStorage, ILoanData {
      * @param loanTermsConsensusAddress Contract address for loan term consensus
      * @param settingsAddress Contract address for the configuration of the platform
      * @param collateralTokenAddress Contract address for the collateral token
+     * @param escrowProxyLogicAddress e
      */
     function initialize(
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
-        address collateralTokenAddress
+        address collateralTokenAddress,
+        address escrowProxyLogicAddress
     ) external;
 
     /**

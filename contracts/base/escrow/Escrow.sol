@@ -209,28 +209,33 @@ contract Escrow is IEscrow, Base, EscrowStorage, BaseEscrowDapp {
     /**
      * @notice It initializes this escrow instance for a given loan manager address and loan id.
      * @param settingsAddress The address of the settings contract.
+     * @param lendingPoolAddress e
      * @param aLoanID the loan ID associated to this escrow instance.
      * @param lendingTokenAddress The token that the Escrow loan will be for.
+     * @param borrowerAddress e
      */
     function initialize(
         address settingsAddress,
+        address lendingPoolAddress,
         uint256 aLoanID,
-        address lendingTokenAddress
+        address lendingTokenAddress,
+        address borrowerAddress
     ) external {
         Base._initialize(settingsAddress);
 
         loanManager = ILoanManager(msg.sender);
-        lendingPool = address(loanManager.lendingPool());
+        lendingPool = lendingPoolAddress;
         loanID = aLoanID;
         lendingToken = lendingTokenAddress;
-        borrower = getLoan().loanTerms.borrower;
+        borrower = borrowerAddress;
 
         // Initialize tokens list with the borrowed token.
-        require(
-            _balanceOf(lendingToken) == getLoan().borrowedAmount,
-            "ESCROW_BALANCE_NOT_MATCH_LOAN"
-        );
-        _tokenUpdated(lendingToken);
+        tokens.add(lendingTokenAddress);
+        //        require(
+        //            _balanceOf(lendingToken) == getLoan().borrowedAmount,
+        //            "ESCROW_BALANCE_NOT_MATCH_LOAN"
+        //        );
+        //        _tokenUpdated(lendingToken);
     }
 
     /** Internal Functions */

@@ -65,7 +65,6 @@ export const createAndGetLoan = async (
   await getLoan(market.loanManager, createdLoanId, loanAmount, borrower, hre)
   // Get total owed for loan
   const totalOwed = await market.loanManager.getTotalOwed(createdLoanId)
-  console.log('total owed js', totalOwed.toString())
 
   return {
     createdLoanId,
@@ -129,8 +128,6 @@ export const getLoan = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
   const { fastForward, toBN } = hre
-
-  console.log(await loanManager.loans(createdLoanId))
 
   // Deposit collateral
   const [_, collateral] = await loanManager.getCollateralNeededInfo(

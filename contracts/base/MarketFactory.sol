@@ -20,10 +20,9 @@ import "../util/TellerCommon.sol";
 // Contracts
 import "./Base.sol";
 import "./proxies/DynamicProxy.sol";
+import "./proxies/EscrowDynamicProxy.sol";
 import "./proxies/ERC20DynamicProxy.sol";
 import "./MarketRegistry.sol";
-
-import "hardhat/console.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -60,6 +59,8 @@ contract MarketFactory is MarketFactoryInterface, Base {
     mapping(address => mapping(address => TellerCommon.Market)) markets;
 
     IMarketRegistry public marketRegistry;
+
+    address public escrowProxyLogic;
 
     /* Modifiers */
 
@@ -130,8 +131,6 @@ contract MarketFactory is MarketFactoryInterface, Base {
             lendingPool = _createLendingPool(lendingToken);
         }
 
-        console.log("loan manager", loanManagerAddress);
-
         // Initializing LoanTermsConsensus
         loanTermsConsensus.initialize(
             msg.sender,
@@ -144,7 +143,8 @@ contract MarketFactory is MarketFactoryInterface, Base {
             address(lendingPool),
             address(loanTermsConsensus),
             address(settings),
-            collateralToken
+            collateralToken,
+            escrowProxyLogic
         );
 
         marketRegistry.registerMarket(address(lendingPool), loanManagerAddress);
@@ -232,6 +232,7 @@ contract MarketFactory is MarketFactoryInterface, Base {
         _initialize(msg.sender);
 
         marketRegistry = new MarketRegistry();
+        escrowProxyLogic = address(new EscrowDynamicProxy());
     }
 
     /** Internal Functions */

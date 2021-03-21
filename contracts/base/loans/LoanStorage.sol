@@ -80,6 +80,10 @@ contract LoanStorage is ILoanStorage, BaseStorage {
      */
     mapping(uint256 => TellerCommon.Loan) public loans;
 
+    mapping(uint256 => TellerCommon.LoanTerms) public loanTerms;
+
+    address internal escrowProxyLogic;
+
     /**
      * @notice Holds the address of the LoanData implementation.
      */

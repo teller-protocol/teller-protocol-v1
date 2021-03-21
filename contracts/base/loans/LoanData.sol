@@ -15,8 +15,6 @@ import "../../providers/openzeppelin/SignedSafeMath.sol";
 import "../BaseStorage.sol";
 import "./LoanStorage.sol";
 
-import "hardhat/console.sol";
-
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
 /**                              THIS CONTRACT IS AN UPGRADEABLE FACET!                             **/
@@ -69,9 +67,6 @@ contract LoanData is ILoanData, LoanStorage {
      * @return bool value of it being secured or not.
      */
     function isLoanSecured(uint256 loanID) public view returns (bool) {
-        console.log("here");
-        console.log("settings", address(settings));
-        console.log("buffer", settings.getCollateralBufferValue());
         return
             loans[loanID].loanTerms.collateralRatio >=
             settings.getCollateralBufferValue();
