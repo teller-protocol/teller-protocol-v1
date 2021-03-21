@@ -103,11 +103,14 @@ contract ILoanManager is ILoanStorage, ILoanData {
      * @notice This event is emitted when collateral has been withdrawn
      * @param loanID ID of loan from which collateral was withdrawn
      * @param borrower Account address of the borrower
+     * @param recipient Account address of the recipient
+     * @param amount Value of collateral withdrawn
      */
     event CollateralWithdrawn(
         uint256 indexed loanID,
         address indexed borrower,
-        uint256 withdrawalAmount
+        address indexed recipient,
+        uint256 amount
     );
 
     /**
@@ -142,14 +145,12 @@ contract ILoanManager is ILoanStorage, ILoanData {
      * @param borrower Account address of the borrower
      * @param amountPaid Amount of the loan paid back
      * @param payer Account address of the payer
-     * @param totalOwed Total amount of the loan to be repaid
      */
     event LoanRepaid(
         uint256 indexed loanID,
         address indexed borrower,
         uint256 amountPaid,
-        address payer,
-        uint256 totalOwed
+        address payer
     );
 
     /**

@@ -128,8 +128,7 @@ describe('LoanManager', async () => {
           createdLoan.createdLoanId,
           await borrower.getAddress(),
           createdLoan.totalOwed,
-          await borrower.getAddress(),
-          '0'
+          await borrower.getAddress()
         )
     })
     // - Taking out a loan unsuccessfully with invalid debt ratio
@@ -176,7 +175,12 @@ describe('LoanManager', async () => {
         .connect(borrower)
         .withdrawCollateral(collateral, loanID)
         .should.emit(market.loanManager, 'CollateralWithdrawn')
-        .withArgs(loanID, borrowerAddress, collateral.toString())
+        .withArgs(
+          loanID,
+          borrowerAddress,
+          borrowerAddress,
+          collateral.toString()
+        )
     })
     // - Taking out partial collateral before taking out a loan
     it('should be able to withdraw partial collateral before takeOutLoan', async () => {
@@ -206,7 +210,12 @@ describe('LoanManager', async () => {
         .connect(borrower)
         .withdrawCollateral(partialCollateral, loanID)
         .should.emit(market.loanManager, 'CollateralWithdrawn')
-        .withArgs(loanID, borrowerAddress, partialCollateral.toString())
+        .withArgs(
+          loanID,
+          borrowerAddress,
+          borrowerAddress,
+          partialCollateral.toString()
+        )
     })
   })
 })

@@ -21,6 +21,8 @@ import "../../interfaces/LoanTermsConsensusInterface.sol";
 import "../../interfaces/escrow/IEscrow.sol";
 import "../../interfaces/IEscrowDynamicProxy.sol";
 
+import "hardhat/console.sol";
+
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
 /**                              THIS CONTRACT IS AN UPGRADEABLE FACET!                             **/
@@ -94,6 +96,17 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
             "SUPPLY_TO_DEBT_EXCEEDS_MAX"
         );
         _;
+    }
+
+    /**
+     * @notice Prevents a contract from calling itself, directly or indirectly.
+     */
+    modifier nonReentrant() {
+        console.log("block", block.number);
+        require(_notEntered, "re-entered");
+        _notEntered = false;
+        _;
+        _notEntered = true; // get a gas-refund post-Istanbul
     }
 
     /* Public Functions */
@@ -289,6 +302,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
     )
         external
         payable
+        nonReentrant
         whenNotPaused
         withValidLoanRequest(request)
         onlyAuthorized
@@ -330,6 +344,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
      */
     function withdrawCollateral(uint256 amount, uint256 loanID)
         external
+        nonReentrant
         loanActiveOrSet(loanID)
         whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
@@ -340,16 +355,10 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
             "CALLER_DOESNT_OWN_LOAN"
         );
         require(amount > 0, "CANNOT_WITHDRAW_ZERO");
-        (, int256 neededInCollateralTokens, ) = getCollateralNeededInfo(loanID);
-        _withdrawCollateral(amount, loanID, neededInCollateralTokens);
-    }
 
-    function _withdrawCollateral(
-        uint256 amount,
-        uint256 loanID,
-        int256 neededInCollateralTokens
-    ) private {
         if (loans[loanID].status == TellerCommon.LoanStatus.Active) {
+            (, int256 neededInCollateralTokens, ) =
+                getCollateralNeededInfo(loanID);
             if (neededInCollateralTokens > 0) {
                 // Withdrawal amount holds the amount of excess collateral in the loan
                 uint256 withdrawalAmount =
@@ -368,10 +377,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
             );
         }
 
-        // Update the contract total and the loan collateral total
-        _payOutCollateral(loanID, amount, msg.sender);
-
-        emit CollateralWithdrawn(loanID, msg.sender, amount);
+        _withdrawCollateral(loanID, amount, msg.sender);
     }
 
     /**
@@ -397,6 +403,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
             "BORROWER_LOAN_ID_MISMATCH"
         );
         require(amount > 0, "CANNOT_DEPOSIT_ZERO");
+
         // Update the loan collateral and total. Transfer tokens to this contract.
         _payInCollateral(loanID, amount);
     }
@@ -410,6 +417,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
      */
     function takeOutLoan(uint256 loanID, uint256 amountBorrow)
         external
+        nonReentrant
         whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
         onlyAuthorized
@@ -482,6 +490,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
      */
     function repay(uint256 amount, uint256 loanID)
         external
+        nonReentrant
         loanActive(loanID)
         whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
@@ -489,63 +498,52 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
     {
         require(amount > 0, "AMOUNT_VALUE_REQUIRED");
         // calculate the actual amount to repay
-        uint256 toPay = amount;
         uint256 totalOwed = getTotalOwed(loanID);
-        if (totalOwed < toPay) {
-            toPay = totalOwed;
+        if (totalOwed < amount) {
+            amount = totalOwed;
         }
-
         // update the amount owed on the loan
-        totalOwed = totalOwed.sub(toPay);
+        totalOwed = totalOwed.sub(amount);
 
         // Deduct the interest and principal owed
         uint256 principalPaid;
         uint256 interestPaid;
-        if (toPay < loans[loanID].interestOwed) {
-            interestPaid = toPay;
-            loans[loanID].interestOwed = loans[loanID].interestOwed.sub(toPay);
+        if (amount < loans[loanID].interestOwed) {
+            interestPaid = amount;
+            loans[loanID].interestOwed = loans[loanID].interestOwed.sub(amount);
         } else {
             if (loans[loanID].interestOwed > 0) {
                 interestPaid = loans[loanID].interestOwed;
-                toPay = toPay.sub(interestPaid);
+                amount = amount.sub(interestPaid);
                 loans[loanID].interestOwed = 0;
             }
 
-            if (toPay > 0) {
-                principalPaid = toPay;
+            if (amount > 0) {
+                principalPaid = amount;
                 loans[loanID].principalOwed = loans[loanID].principalOwed.sub(
-                    toPay
+                    amount
                 );
             }
-        }
-
-        // if the loan is now fully paid, close it and return collateral
-        if (totalOwed == 0) {
-            loans[loanID].status = TellerCommon.LoanStatus.Closed;
-
-            uint256 collateralAmount = loans[loanID].collateral;
-            _payOutCollateral(
-                loanID,
-                collateralAmount,
-                loans[loanID].loanTerms.borrower
-            );
-
-            emit CollateralWithdrawn(
-                loanID,
-                loans[loanID].loanTerms.borrower,
-                collateralAmount
-            );
         }
 
         // collect the money from the payer
         lendingPool.repay(principalPaid, interestPaid, msg.sender);
 
+        // if the loan is now fully paid, close it and return collateral
+        if (totalOwed == 0) {
+            loans[loanID].status = TellerCommon.LoanStatus.Closed;
+            _withdrawCollateral(
+                loanID,
+                loans[loanID].collateral,
+                loans[loanID].loanTerms.borrower
+            );
+        }
+
         emit LoanRepaid(
             loanID,
             loans[loanID].loanTerms.borrower,
             principalPaid.add(interestPaid),
-            msg.sender,
-            totalOwed
+            msg.sender
         );
     }
 
@@ -555,6 +553,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
      */
     function liquidateLoan(uint256 loanID)
         external
+        nonReentrant
         loanActive(loanID)
         whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
@@ -628,6 +627,8 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
         collateralToken = settings.ETH_ADDRESS();
 
         updateLoanDataLogic();
+
+        _notEntered = true;
     }
 
     /** Internal Functions */
@@ -706,6 +707,28 @@ contract LoanManager is ILoanManager, Base, LoanStorage {
                 );
             }
         }
+    }
+
+    /**
+     * @notice Withdraws the collateral from a loan to an address.
+     * @param loanID ID of loan from which collateral is to be paid out.
+     * @param amount Amount of collateral paid out.
+     * @param recipient Address of the recipient of the collateral.
+     */
+    function _withdrawCollateral(
+        uint256 loanID,
+        uint256 amount,
+        address payable recipient
+    ) internal {
+        // Update the contract total and the loan collateral total
+        _payOutCollateral(loanID, amount, recipient);
+
+        emit CollateralWithdrawn(
+            loanID,
+            loans[loanID].loanTerms.borrower,
+            recipient,
+            amount
+        );
     }
 
     /**

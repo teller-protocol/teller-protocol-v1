@@ -94,4 +94,6 @@ contract LoanStorage is ILoanStorage, BaseStorage {
      * @div Is used to check the LogicVersionsRegistry for a new LoanData implementation.
      */
     bytes32 public constant LOAN_DATA_LOGIC_NAME = keccak256("LoanData");
+
+    bool internal _notEntered;
 }

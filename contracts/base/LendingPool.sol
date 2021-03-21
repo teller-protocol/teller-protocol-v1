@@ -67,6 +67,8 @@ contract LendingPool is LendingPoolInterface, Base {
     // The total amount of underlying interest the pool has earned from loans being repaid.
     uint256 public totalInterestEarned;
 
+    bool internal _notEntered;
+
     /** Modifiers */
 
     /**
@@ -76,6 +78,16 @@ contract LendingPool is LendingPoolInterface, Base {
     modifier isLoan() {
         _requireIsLoan();
         _;
+    }
+
+    /**
+     * @notice Prevents a contract from calling itself, directly or indirectly.
+     */
+    modifier nonReentrant() {
+        require(_notEntered, "re-entered");
+        _notEntered = false;
+        _;
+        _notEntered = true; // get a gas-refund post-Istanbul
     }
 
     /* Constructor */
@@ -90,6 +102,7 @@ contract LendingPool is LendingPoolInterface, Base {
     */
     function deposit(uint256 lendingTokenAmount)
         external
+        nonReentrant
         whenNotPaused
         whenLendingPoolNotPaused(address(this))
         onlyAuthorized
@@ -133,6 +146,7 @@ contract LendingPool is LendingPoolInterface, Base {
      */
     function withdraw(uint256 lendingTokenAmount)
         external
+        nonReentrant
         whenNotPaused
         whenLendingPoolNotPaused(address(this))
         onlyAuthorized
@@ -152,6 +166,7 @@ contract LendingPool is LendingPoolInterface, Base {
 
     function withdrawAll()
         external
+        nonReentrant
         whenNotPaused
         whenLendingPoolNotPaused(address(this))
         onlyAuthorized
@@ -180,7 +195,13 @@ contract LendingPool is LendingPoolInterface, Base {
         uint256 principalAmount,
         uint256 interestAmount,
         address borrower
-    ) external isLoan whenLendingPoolNotPaused(address(this)) onlyAuthorized {
+    )
+        external
+        nonReentrant
+        isLoan
+        whenLendingPoolNotPaused(address(this))
+        onlyAuthorized
+    {
         uint256 totalAmount = principalAmount.add(interestAmount);
         require(totalAmount > 0, "REPAY_ZERO");
 
@@ -206,7 +227,8 @@ contract LendingPool is LendingPoolInterface, Base {
      */
     function createLoan(uint256 amount, address borrower)
         external
-        isLoan()
+        nonReentrant
+        isLoan
         whenLendingPoolNotPaused(address(this))
         onlyAuthorized
     {
@@ -379,6 +401,8 @@ contract LendingPool is LendingPoolInterface, Base {
         marketRegistry = aMarketRegistry;
         tToken = ITToken(aTToken);
         lendingToken = ERC20Detailed(aLendingToken);
+
+        _notEntered = true;
     }
 
     /** Internal functions */
