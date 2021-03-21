@@ -1,0 +1,26 @@
+name: Save gas estimates
+on:
+  push:
+    branches:
+      - test-ci-spreadsheet
+
+jobs:
+  save-gas-estimates:
+    name: Save gas estimates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - id: gas-estimation
+        run: |
+          yarn test test/gas-estimator.ts
+          echo "::set-output name=json_table::$(cat gas-estimation.json)"
+      - uses: jroehl/gsheet.action@v1.0.0
+        with:
+          spreadsheetId: '${{ secrets.SPREADSHEET_ID }}'
+          commands: >
+            [
+              { "command": "appendData", "args": { "data": ${{ steps.gas-estimation.outputs.json_table }}, "valueInputOption": "USER_ENTERED" } }
+            ]
+        env:
+          GSHEET_CLIENT_EMAIL: '${{ secrets.GSHEET_CLIENT_EMAIL }}'
+          GSHEET_CLIENT_SECRET: '${{ secrets.GSHEET_CLIENT_SECRET }}'
