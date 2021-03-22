@@ -2,10 +2,15 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Contracts
-import "./Consensus.sol";
+import "./OwnerSignersRole.sol";
 
 // Interfaces
 import "../interfaces/LoanTermsConsensusInterface.sol";
+
+// Libraries
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "../util/ECDSALib.sol";
+import "../util/NumbersList.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -22,9 +27,13 @@ import "../interfaces/LoanTermsConsensusInterface.sol";
 
     @author develop@teller.finance
  */
-contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
+contract LoanTermsConsensus is LoanTermsConsensusInterface, OwnerSignersRole {
+    using SafeMath for uint256;
+    using NumbersList for NumbersList.Values;
+    using NumbersLib for uint256;
+
     /** Address of the loanManager */
-    address public loanManager;
+    address public loanManagerAddress;
 
     /* Mappings */
     /**
@@ -111,7 +120,10 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
     {
         address borrower = request.borrower;
 
-        require(borrowerNonces[borrower] == nonce, "WRONG_BORROWER_NONCE");
+        require(
+            borrowerNonces[borrower] == request.requestNonce,
+            "WRONG_BORROWER_NONCE"
+        );
         require(
             borrowerRequestTimes[borrower] == 0 ||
                 borrowerRequestTimes[borrower].add(
@@ -130,7 +142,7 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
             settings.getResponseExpiryLengthValue();
 
         for (uint256 i = 0; i < responses.length; i++) {
-            TellerCommon.LoanResponse response = responses[i];
+            TellerCommon.LoanResponse memory response = responses[i];
             bytes32 responseHash = _hashResponse(response, requestHash);
 
             for (uint8 j = 0; j < i; j++) {
@@ -186,7 +198,6 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
                     response.interestRate,
                     response.collateralRatio,
                     response.maxLoanAmount,
-                    response.signature.signerNonce,
                     _getChainId(),
                     requestHash
                 )
@@ -206,7 +217,7 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
         return
             keccak256(
                 abi.encode(
-                    callerAddress,
+                    loanManagerAddress,
                     request.borrower,
                     request.recipient,
                     request.consensusAddress,
