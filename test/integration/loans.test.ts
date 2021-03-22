@@ -59,7 +59,7 @@ describe('LoanManager', async () => {
     // Creating a loan with terms, depositing collateral and taking out a loan successfully
     it('should be able to take out a loan with collateral', async function () {
       // Create loan
-      const loanID = await createLoan(market, 2, '2000', borrower)
+      const loanID = await createLoan(market, 2, '2000', borrower, '1')
       // Get collateral required
       const [
         _,
@@ -93,7 +93,13 @@ describe('LoanManager', async () => {
     // Creating a loan with terms and try to take out a loan without collateral unsuccessfully
     it('should not be able to take out a loan without collateral', async () => {
       // Create loan with terms without depositing collateral
-      const createdLoanID = await createLoan(market, 2, loanAmount, borrower)
+      const createdLoanID = await createLoan(
+        market,
+        2,
+        loanAmount,
+        borrower,
+        '1'
+      )
 
       // Forward block timestamp
       await fastForward(300)
@@ -109,7 +115,7 @@ describe('LoanManager', async () => {
     // - Taking out and repaying a loan successfully
     it('should be able to take out a loan and repay', async () => {
       // Create and take out loan
-      const createdLoan = await createAndGetLoan(market, borrower, 2, hre)
+      const createdLoan = await createAndGetLoan(market, borrower, 2, hre, '1')
 
       // Approve loan repayment
       await lendingToken
@@ -144,14 +150,18 @@ describe('LoanManager', async () => {
         .updateMaxDebtRatio(lendingToken.address, 0)
 
       // Try to take out another loan which should fail
-      await createAndGetLoan(market, borrower, 2, hre).should.be.revertedWith(
-        'SUPPLY_TO_DEBT_EXCEEDS_MAX'
-      )
+      await createAndGetLoan(
+        market,
+        borrower,
+        2,
+        hre,
+        '1'
+      ).should.be.revertedWith('SUPPLY_TO_DEBT_EXCEEDS_MAX')
     })
     // - Taking out collateral before taking out a loan
     it('should be able to withdraw collateral before takeOutLoan', async () => {
       // Create loan terms
-      const loanID = await createLoan(market, 2, '3131', borrower)
+      const loanID = await createLoan(market, 2, '3131', borrower, '1')
 
       // Get collateral owed for loan
       const [_, collateral] = await market.loanManager.getCollateralNeededInfo(
@@ -185,7 +195,7 @@ describe('LoanManager', async () => {
     // - Taking out partial collateral before taking out a loan
     it('should be able to withdraw partial collateral before takeOutLoan', async () => {
       // Create loan terms
-      const loanID = await createLoan(market, 2, '3131', borrower)
+      const loanID = await createLoan(market, 2, '3131', borrower, '1')
 
       // Get collateral owed for loan
       const [_, collateral] = await market.loanManager.getCollateralNeededInfo(
