@@ -127,9 +127,13 @@ contract MarketFactory is IMarketFactory, Base, Factory {
     function initialize() external {
         _initialize(msg.sender);
 
-        marketRegistry = new MarketRegistry();
         initDynamicProxyLogic = settings.initDynamicProxyLogic();
         erc20DynamicProxyLogic = address(new ERC20DynamicProxy());
+
+        marketRegistry = IMarketRegistry(
+            _createDynamicProxy(keccak256("MarketRegistry"))
+        );
+        marketRegistry.initialize();
     }
 
     /** Internal Functions */

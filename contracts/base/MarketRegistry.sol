@@ -1,8 +1,10 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
+// Contracts
+import "./Base.sol";
+
 // Utils
-import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 import "../util/AddressArrayLib.sol";
 
 // Interfaces
@@ -16,10 +18,12 @@ import "../interfaces/LoanTermsConsensusInterface.sol";
 
     @author develop@teller.finance
  */
-contract MarketRegistry is IMarketRegistry, Ownable {
+contract MarketRegistry is IMarketRegistry, Base {
     using AddressArrayLib for AddressArrayLib.AddressArray;
 
     /* State Variables */
+
+    address public owner;
 
     /**
         @notice It maps a lending token to an array of collateral tokens that represent a market.
@@ -41,10 +45,11 @@ contract MarketRegistry is IMarketRegistry, Ownable {
      */
     mapping(address => mapping(address => bool)) public loanManagerRegistry;
 
-    // Constructor
+    /* Modifiers */
 
-    constructor() public {
-        Ownable.initialize(_msgSender());
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
     }
 
     // External Functions
@@ -84,5 +89,14 @@ contract MarketRegistry is IMarketRegistry, Ownable {
         returns (address[] memory)
     {
         return markets[lendingTokenAddress].array;
+    }
+
+    /**
+     * @notice It initializes the MarketRegistry contract by setting the owner of the caller.
+     * @dev This contract is constructed and initialized by the MarketFactory.
+     */
+    function initialize() external {
+        require(owner == address(0), "ALREADY_INIT");
+        owner = msg.sender;
     }
 }

@@ -25,6 +25,9 @@ const deployLogicContracts: DeployFunction = async (hre) => {
       contract: 'AssetSettings',
     },
     {
+      contract: 'MarketRegistry',
+    },
+    {
       contract: 'ChainlinkAggregator',
     },
     {

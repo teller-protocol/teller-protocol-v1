@@ -65,4 +65,10 @@ interface IMarketRegistry {
         address lendingPoolAddress,
         address loanManagerAddress
     ) external;
+
+    /**
+     * @notice It initializes the MarketRegistry contract by setting the owner of the caller.
+     * @dev This contract is constructed and initialized by the MarketFactory.
+     */
+    function initialize() external;
 }
