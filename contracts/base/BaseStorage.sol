@@ -26,7 +26,17 @@ import "./upgradeable/DynamicUpgradeableStorage.sol";
  */
 contract BaseStorage is DynamicUpgradeableStorage {
     /**
-     * @notice It holds the platform settings instance.
+     * @notice It holds the platform Settings instance.
      */
     SettingsInterface public settings;
+
+    /**
+     * @notice It holds the platform AssetSettings instance.
+     */
+    AssetSettingsInterface public assetSettings;
+
+    /**
+     * @notice This allocates additional storage slots in the event that additional state variables are added.
+     */
+    uint256[10] internal __gap;
 }

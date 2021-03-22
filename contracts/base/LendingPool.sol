@@ -115,7 +115,7 @@ contract LendingPool is LendingPoolInterface, Base {
 
         require(
             previousSupply.add(lendingTokenAmount) <=
-                settings.assetSettings().getMaxTVLAmount(address(lendingToken)),
+                assetSettings.getMaxTVLAmount(address(lendingToken)),
             "MAX_TVL_REACHED"
         );
 

@@ -86,7 +86,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
         );
 
         bool exceedsMaxLoanAmount =
-            settings.assetSettings().exceedsMaxLoanAmount(
+            assetSettings.exceedsMaxLoanAmount(
                 lendingToken,
                 loanRequest.amount
             );
@@ -772,10 +772,9 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
         view
         returns (bool)
     {
-        uint256 maxDebtRatio =
-            settings.assetSettings().getMaxDebtRatio(lendingToken);
-        uint256 currentDebtRatio = lendingPool.getDebtRatioFor(newLoanAmount);
-        return currentDebtRatio <= maxDebtRatio;
+        return
+            lendingPool.getDebtRatioFor(newLoanAmount) <=
+            assetSettings.getMaxDebtRatio(lendingToken);
     }
 
     /**
