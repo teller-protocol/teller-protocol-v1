@@ -23,8 +23,10 @@ import "../interfaces/LoanTermsConsensusInterface.sol";
     @author develop@teller.finance
  */
 contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
-    /* Mappings */
+    /** Address of the loanManager */
+    address public loanManager;
 
+    /* Mappings */
     /**
         This mapping identify the last request timestamp for a given borrower address.
 
@@ -32,7 +34,59 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
 
         It is used as rate limit per borrower address.
      */
-    mapping(address => uint256) public borrowerToLastLoanTermRequest;
+    mapping(address => uint256) public borrowerRequestTimes;
+
+    /**
+        @notice It tracks each request nonce value used by the borrower.
+     */
+    mapping(address => uint256) public borrowerNonces;
+
+    /**
+        @notice Checks whether sender is equal to the loanManager address.
+        @dev It throws a require error if sender is not equal to the loanManager address.
+        @param sender the transaction sender.
+     */
+    modifier isLoanManager(address sender) {
+        require(_isLoanManager(sender), "SENDER_HASNT_PERMISSIONS");
+        _;
+    }
+
+    /**
+        @notice Checks if the number of responses is greater or equal to a percentage of
+        the number of signers.
+     */
+    modifier onlyEnoughSubmissions(uint256 responseCount) {
+        uint256 percentageRequired =
+            settings.getRequiredSubmissionsPercentageValue();
+
+        require(
+            responseCount.ratioOf(_signerCount) >= percentageRequired,
+            "INSUFFICIENT_NUMBER_OF_RESPONSES"
+        );
+        _;
+    }
+
+    /**
+        @notice It initializes this consensus contract.
+        @param owner the owner address.
+        @param aLoanManagerAddress the contract that will call it.
+        @param aSettingAddress the settings contract address.
+     */
+    function initialize(
+        address owner,
+        address aLoanManagerAddress,
+        address aSettingAddress
+    ) external {
+        require(
+            aLoanManagerAddress.isContract(),
+            "LOAN_MANAGER_MUST_BE_CONTRACT"
+        );
+
+        OwnerSignersRole._initialize(owner);
+        Base._initialize(aSettingAddress);
+
+        loanManagerAddress = aLoanManagerAddress;
+    }
 
     /**
         @notice Processes the loan request
@@ -47,7 +101,7 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
         TellerCommon.LoanResponse[] calldata responses
     )
         external
-        isCaller(msg.sender)
+        isLoanManager(msg.sender)
         onlyEnoughSubmissions(responses.length)
         returns (
             uint256 interestRate,
@@ -55,23 +109,54 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
             uint256 maxLoanAmount
         )
     {
-        _requireRequestLoanTermsRateLimit(request);
-        require(
-            !requestNonceTaken[request.borrower][request.requestNonce],
-            "LOAN_TERMS_REQUEST_NONCE_TAKEN"
-        );
-        requestNonceTaken[request.borrower][request.requestNonce] = true;
+        address borrower = request.borrower;
 
-        bytes32 requestHash = _hashRequest(request);
+        require(borrowerNonces[borrower] == nonce, "WRONG_BORROWER_NONCE");
+        require(
+            borrowerRequestTimes[borrower] == 0 ||
+                borrowerRequestTimes[borrower].add(
+                    settings.getRequestLoanTermsRateLimitValue()
+                ) <=
+                now,
+            "REQS_LOAN_TERMS_LMT_EXCEEDS_MAX"
+        );
+
+        borrowerRequestTimes[borrower] = now;
+        borrowerNonces[borrower]++;
 
         TellerCommon.AccruedLoanTerms memory termSubmissions;
+        bytes32 requestHash = _hashRequest(request);
+        uint256 responseExpiryLengthValue =
+            settings.getResponseExpiryLengthValue();
+
         for (uint256 i = 0; i < responses.length; i++) {
-            _processResponse(
-                request,
-                responses[i],
-                termSubmissions,
-                requestHash
+            TellerCommon.LoanResponse response = responses[i];
+            bytes32 responseHash = _hashResponse(response, requestHash);
+
+            for (uint8 j = 0; j < i; j++) {
+                require(
+                    response.signer != responses[j].signer,
+                    "SIGNER_ALREADY_SUBMITTED"
+                );
+            }
+
+            require(
+                response.responseTime >= now.sub(responseExpiryLengthValue),
+                "RESPONSE_EXPIRED"
             );
+
+            require(
+                _signatureValid(
+                    response.signature,
+                    responseHash,
+                    response.signer
+                ),
+                "SIGNATURE_INVALID"
+            );
+
+            termSubmissions.interestRate.addValue(response.interestRate);
+            termSubmissions.collateralRatio.addValue(response.collateralRatio);
+            termSubmissions.maxLoanAmount.addValue(response.maxLoanAmount);
         }
 
         uint256 tolerance = settings.getMaximumToleranceValue();
@@ -81,35 +166,6 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
             tolerance
         );
         maxLoanAmount = _getConsensus(termSubmissions.maxLoanAmount, tolerance);
-        borrowerToLastLoanTermRequest[request.borrower] = now;
-    }
-
-    /**
-        @notice Processes the loan response
-        @param request Struct of the protocol loan request
-        @param response List of structs of the protocol loan responses
-        @param requestHash bytes32 Hash of the loan request
-     */
-    function _processResponse(
-        TellerCommon.LoanRequest memory request,
-        TellerCommon.LoanResponse memory response,
-        TellerCommon.AccruedLoanTerms memory termSubmissions,
-        bytes32 requestHash
-    ) internal {
-        bytes32 responseHash = _hashResponse(response, requestHash);
-
-        _validateResponse(
-            response.signer,
-            request.borrower,
-            request.requestNonce,
-            response.responseTime,
-            responseHash,
-            response.signature
-        );
-
-        termSubmissions.interestRate.addValue(response.interestRate);
-        termSubmissions.collateralRatio.addValue(response.collateralRatio);
-        termSubmissions.maxLoanAmount.addValue(response.maxLoanAmount);
     }
 
     /**
@@ -164,24 +220,69 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
     }
 
     /**
-        @notice It validates whether the time window between the last loan terms request and current one exceeds the maximum rate limit.
-        @param request the new request.
-        @dev It throws a require error if the request rate limit exceeds the maximum.
+        @notice It validates whether a signature is valid or not.
+        @param signature signature to validate.
+        @param dataHash used to recover the signer.
+        @param expectedSigner the expected signer address.
+        @return true if the expected signer is equal to the signer. Otherwise it returns false.
      */
-    function _requireRequestLoanTermsRateLimit(
-        TellerCommon.LoanRequest memory request
-    ) internal view {
-        // In case it is the first time that borrower requests loan terms, we don't validate the rate limit.
-        if (borrowerToLastLoanTermRequest[request.borrower] == 0) {
-            return;
+    function _signatureValid(
+        TellerCommon.Signature memory signature,
+        bytes32 dataHash,
+        address expectedSigner
+    ) internal view returns (bool) {
+        if (!isSigner(expectedSigner)) return false;
+
+        address signer =
+            ECDSA.recover(
+                keccak256(
+                    abi.encodePacked(
+                        "\x19Ethereum Signed Message:\n32",
+                        dataHash
+                    )
+                ),
+                signature.v,
+                signature.r,
+                signature.s
+            );
+        return (signer == expectedSigner);
+    }
+
+    /**
+        @notice Gets the consensus value for a list of values (uint values).
+        @notice The values must be in a maximum tolerance range.
+        @return the consensus value.
+     */
+    function _getConsensus(NumbersList.Values memory values, uint256 tolerance)
+        internal
+        view
+        returns (uint256)
+    {
+        require(values.isWithinTolerance(tolerance), "RESPONSES_TOO_VARIED");
+
+        return values.getAverage();
+    }
+
+    /**
+        @notice Gets the current chain id using the opcode 'chainid()'.
+        @return the current chain id.
+     */
+    function _getChainId() internal view returns (uint256) {
+        // silence state mutability warning without generating bytecode.
+        // see https://github.com/ethereum/solidity/issues/2691
+        this;
+        uint256 id;
+        assembly {
+            id := chainid()
         }
-        uint256 requestLoanTermsRateLimit =
-            settings.getRequestLoanTermsRateLimitValue();
-        require(
-            borrowerToLastLoanTermRequest[request.borrower].add(
-                requestLoanTermsRateLimit
-            ) <= now,
-            "REQS_LOAN_TERMS_LMT_EXCEEDS_MAX"
-        );
+        return id;
+    }
+
+    /**
+        @notice It tests whether a given address is the initialized loanManager address.
+        @dev This function is overriden by mock instances.
+     */
+    function _isLoanManager(address sender) internal view returns (bool) {
+        return loanManagerAddress == sender;
     }
 }
