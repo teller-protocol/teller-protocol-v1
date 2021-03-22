@@ -12,13 +12,11 @@ library TellerCommon {
 
     /**
         @notice Represents a user signature
-        @param signerNonce Nonce of the signer address used for authentication
         @param v The recovery identifier represented by the last byte of a ECDSA signature as an int
         @param r The random point x-coordinate of the signature respresented by the first 32 bytes of the generated ECDSA signature
         @param s The signature proof represented by the second 32 bytes of the generated ECDSA signature
      */
     struct Signature {
-        uint256 signerNonce;
         uint8 v;
         bytes32 r;
         bytes32 s;
