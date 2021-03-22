@@ -31,11 +31,6 @@ contract BaseStorage is DynamicUpgradeableStorage {
     SettingsInterface public settings;
 
     /**
-     * @notice It holds the platform AssetSettings instance.
-     */
-    AssetSettingsInterface public assetSettings;
-
-    /**
      * @notice This allocates additional storage slots in the event that additional state variables are added.
      */
     uint256[10] internal __gap;

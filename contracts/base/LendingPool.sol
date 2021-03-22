@@ -67,6 +67,11 @@ contract LendingPool is LendingPoolInterface, Base {
     // The total amount of underlying interest the pool has earned from loans being repaid.
     uint256 public totalInterestEarned;
 
+    /**
+     * @notice It holds the platform AssetSettings instance.
+     */
+    AssetSettingsInterface public assetSettings;
+
     bool internal _notEntered;
 
     /** Modifiers */
@@ -401,6 +406,7 @@ contract LendingPool is LendingPoolInterface, Base {
         marketRegistry = aMarketRegistry;
         tToken = ITToken(aTToken);
         lendingToken = ERC20Detailed(aLendingToken);
+        assetSettings = settings.assetSettings();
 
         _notEntered = true;
     }

@@ -22,8 +22,6 @@ import "../../interfaces/LoanTermsConsensusInterface.sol";
 import "../../interfaces/escrow/IEscrow.sol";
 import "../../interfaces/IInitializeableDynamicProxy.sol";
 
-import "hardhat/console.sol";
-
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
 /**                              THIS CONTRACT IS AN UPGRADEABLE FACET!                             **/
@@ -103,7 +101,6 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
      * @notice Prevents a contract from calling itself, directly or indirectly.
      */
     modifier nonReentrant() {
-        console.log("block", block.number);
         require(_notEntered, "re-entered");
         _notEntered = false;
         _;
@@ -600,14 +597,14 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
      * @param loanTermsConsensusAddress Address for LoanTermConsensus contract.
      * @param settingsAddress Address for the platform Settings contract.
      * @param collateralTokenAddress Address of the collateral token for loans in this contract.
-     * @param initializeableDynamicProxyLogicAddress e
+     * @param initDynamicProxyLogicAddress Address of a deployed InitializeableDynamicProxy contract.
      */
     function initialize(
         address lendingPoolAddress,
         address loanTermsConsensusAddress,
         address settingsAddress,
         address collateralTokenAddress,
-        address initializeableDynamicProxyLogicAddress
+        address initDynamicProxyLogicAddress
     ) external {
         lendingPoolAddress.requireNotEmpty("PROVIDE_LENDING_POOL_ADDRESS");
         loanTermsConsensusAddress.requireNotEmpty(
@@ -622,7 +619,8 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
         loanTermsConsensus = LoanTermsConsensusInterface(
             loanTermsConsensusAddress
         );
-        initializeableDynamicProxyLogic = initializeableDynamicProxyLogicAddress;
+        initDynamicProxyLogic = initDynamicProxyLogicAddress;
+        assetSettings = settings.assetSettings();
 
         // ETH is the only collateral token allowed currently
         collateralToken = settings.ETH_ADDRESS();
@@ -828,7 +826,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
             "LOAN_ESCROW_ALREADY_EXISTS"
         );
 
-        escrow = _clone(initializeableDynamicProxyLogic);
+        escrow = _clone(initDynamicProxyLogic);
         IInitializeableDynamicProxy(escrow).initialize(
             address(logicRegistry),
             keccak256("Escrow"),

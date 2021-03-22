@@ -149,6 +149,6 @@ contract Yearn is IYearn, BaseEscrowDapp {
         @return yVault instance
      */
     function _getYVault(address tokenAddress) internal view returns (IVault) {
-        return IVault(assetSettings.getYVaultAddress(tokenAddress));
+        return IVault(settings.assetSettings().getYVaultAddress(tokenAddress));
     }
 }

@@ -80,9 +80,11 @@ contract LoanStorage is ILoanStorage, BaseStorage {
      */
     mapping(uint256 => TellerCommon.Loan) public loans;
 
-    mapping(uint256 => TellerCommon.LoanTerms) public loanTerms;
-
-    address internal initializeableDynamicProxyLogic;
+    /**
+     * @notice It holds the address of a deployed InitializeableDynamicProxy contract.
+     * @dev It is used to deploy a new proxy contract with minimal gas cost using the logic in the Factory contract.
+     */
+    address internal initDynamicProxyLogic;
 
     /**
      * @notice Holds the address of the LoanData implementation.
@@ -96,4 +98,9 @@ contract LoanStorage is ILoanStorage, BaseStorage {
     bytes32 public constant LOAN_DATA_LOGIC_NAME = keccak256("LoanData");
 
     bool internal _notEntered;
+
+    /**
+     * @notice It holds the platform AssetSettings instance.
+     */
+    AssetSettingsInterface public assetSettings;
 }

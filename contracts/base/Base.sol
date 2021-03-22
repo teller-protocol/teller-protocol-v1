@@ -83,7 +83,6 @@ contract Base is DynamicUpgradeable, BaseStorage {
         settingsAddress.requireNotEmpty("SETTINGS_MUST_BE_PROVIDED");
 
         settings = SettingsInterface(settingsAddress);
-        assetSettings = AssetSettingsInterface(settings.assetSettings());
     }
 
     /**

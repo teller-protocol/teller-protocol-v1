@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 // Commons
 import "../util/LogicVersionLib.sol";
-import "../util/LogicVersionsConsts.sol";
 import "../util/TellerCommon.sol";
 
 /**
@@ -57,8 +56,6 @@ interface LogicVersionsRegistryInterface {
     );
 
     /** External Functions */
-
-    function consts() external returns (LogicVersionsConsts);
 
     /**
         @notice It creates multiple logic versions.

@@ -22,7 +22,7 @@ contract SettingsDynamicProxy is BaseDynamicProxy {
         logicRegistry = new LogicVersionsRegistry();
         logicRegistry.initialize(msg.sender, initialLogicVersions);
 
-        logicName = logicRegistry.consts().SETTINGS_LOGIC_NAME();
+        logicName = keccak256("Settings");
         strictDynamic = false;
         _updateImplementationStored();
     }

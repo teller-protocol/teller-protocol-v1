@@ -10,12 +10,9 @@ import "../interfaces/loans/ILoanStorage.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/SettingsInterface.sol";
-import "../interfaces/MarketFactoryInterface.sol";
+import "../interfaces/IMarketFactory.sol";
 import "../interfaces/IMarketRegistry.sol";
 import "../interfaces/ITToken.sol";
-
-// Commons
-import "../util/TellerCommon.sol";
 
 // Contracts
 import "./Base.sol";
@@ -39,67 +36,24 @@ import "./Factory.sol";
 
     @author develop@teller.finance
  */
-contract MarketFactory is MarketFactoryInterface, Base, Factory {
+contract MarketFactory is IMarketFactory, Base, Factory {
     using Address for address;
-
-    /** Constants */
-
-    /** Structs */
 
     /* State Variables */
 
-    /**
-        @notice It defines a market for a given borrowed and collateral tokens.
-        @dev It uses the Settings.ETH_ADDRESS constant to represent ETHER.
-        @dev Examples:
-
-        address(DAI) => address(ETH) => Market {...}
-        address(DAI) => address(LINK) => Market {...}
-     */
-    mapping(address => mapping(address => TellerCommon.Market)) markets;
-
     IMarketRegistry public marketRegistry;
 
-    address public initializeableDynamicProxyLogic;
-
-    /* Modifiers */
+    /**
+     * @notice It holds the address of a deployed InitializeableDynamicProxy contract.
+     * @dev It is used to deploy a new proxy contract with minimal gas cost using the logic in the Factory contract.
+     */
+    address public initDynamicProxyLogic;
 
     /**
-        @notice It checks whether the platform is paused or not.
-        @dev It throws a require error if the platform is used.
+     * @notice It holds the address of a deployed ERC20DynamicProxy contract.
+     * @dev It is used to deploy a new proxy contract with minimal gas cost using the logic in the Factory contract.
      */
-    modifier isNotPaused() {
-        require(!settings.isPaused(), "PLATFORM_IS_PAUSED");
-        _;
-    }
-
-    /**
-        @notice It checks whether a market exists or not for a given borrowed/collateral tokens.
-        @param lendingToken the borrowed token address.
-        @param collateralToken the collateral token address.
-        @dev It throws a require error if the market already exists.
-     */
-    modifier marketNotExist(address lendingToken, address collateralToken) {
-        require(
-            !_getMarket(lendingToken, collateralToken).exists,
-            "MARKET_ALREADY_EXIST"
-        );
-        _;
-    }
-
-    /**
-        @notice It checks whether a market exists or not for a given borrowed/collateral tokens.
-        @param lendingToken the borrowed token address.
-        @param collateralToken the collateral token address.
-        @dev It throws a require error if the market doesn't exist.
-     */
-    modifier marketExist(address lendingToken, address collateralToken) {
-        require(
-            _getMarket(lendingToken, collateralToken).exists,
-            "MARKET_NOT_EXIST"
-        );
-        _;
-    }
+    address public erc20DynamicProxyLogic;
 
     /** External Functions */
 
@@ -111,9 +65,14 @@ contract MarketFactory is MarketFactoryInterface, Base, Factory {
      */
     function createMarket(address lendingToken, address collateralToken)
         external
-        isNotPaused
+        whenNotPaused
         onlyPauser
     {
+        require(
+            marketRegistry.loanManagers(lendingToken, collateralToken) ==
+                address(0),
+            "MARKET_ALREADY_EXISTS"
+        );
         require(lendingToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");
         require(
             collateralToken == settings.ETH_ADDRESS() ||
@@ -122,8 +81,11 @@ contract MarketFactory is MarketFactoryInterface, Base, Factory {
         );
 
         LoanTermsConsensusInterface loanTermsConsensus =
-            _createLoanTermsConsensus();
-        address loanManagerAddress = _createLoans(collateralToken);
+            LoanTermsConsensusInterface(
+                _createDynamicProxy(keccak256("LoanTermsConsensus"))
+            );
+        address loanManagerAddress =
+            _createDynamicProxy(keccak256("LoanManager"));
 
         LendingPoolInterface lendingPool =
             LendingPoolInterface(marketRegistry.lendingPools(lendingToken));
@@ -144,18 +106,10 @@ contract MarketFactory is MarketFactoryInterface, Base, Factory {
             address(loanTermsConsensus),
             address(settings),
             collateralToken,
-            initializeableDynamicProxyLogic
+            initDynamicProxyLogic
         );
 
         marketRegistry.registerMarket(address(lendingPool), loanManagerAddress);
-
-        _addMarket(
-            lendingToken,
-            collateralToken,
-            loanManagerAddress,
-            address(lendingPool),
-            address(loanTermsConsensus)
-        );
 
         emit NewMarketCreated(
             msg.sender,
@@ -168,109 +122,27 @@ contract MarketFactory is MarketFactoryInterface, Base, Factory {
     }
 
     /**
-        @notice It removes a current market for a given borrowed/collateral tokens.
-        @param lendingToken the borrowed token address.
-        @param collateralToken the collateral token address.
-     */
-    function removeMarket(address lendingToken, address collateralToken)
-        external
-        onlyPauser
-        isNotPaused
-        marketExist(lendingToken, collateralToken)
-    {
-        delete markets[lendingToken][collateralToken];
-
-        emit MarketRemoved(msg.sender, lendingToken, collateralToken);
-    }
-
-    /**
-        @notice It gets the current addresses for a given borrowed/collateral token.
-        @param lendingToken the borrowed token address.
-        @param collateralToken the collateral token address.
-        @return a struct with the contract addresses for the given market.
-     */
-    function getMarket(address lendingToken, address collateralToken)
-        external
-        view
-        returns (TellerCommon.Market memory)
-    {
-        return _getMarket(lendingToken, collateralToken);
-    }
-
-    /**
-        @notice It tests whether a market exists or not for a given borrowed/collateral tokens.
-        @param lendingToken the borrowed token address.
-        @param collateralToken the collateral token address.
-        @return true if the market exists for the given borrowed/collateral tokens. Otherwise it returns false.
-     */
-    function existMarket(address lendingToken, address collateralToken)
-        external
-        view
-        returns (bool)
-    {
-        return _getMarket(lendingToken, collateralToken).exists;
-    }
-
-    /**
-        @notice It tests whether a market exists or not for a given borrowed/collateral tokens.
-        @param lendingToken the borrowed token address.
-        @param collateralToken the collateral token address.
-        @return true if the market doesn't exist for the given borrowed/collateral tokens. Otherwise it returns false.
-     */
-    function notExistMarket(address lendingToken, address collateralToken)
-        external
-        view
-        returns (bool)
-    {
-        return !_getMarket(lendingToken, collateralToken).exists;
-    }
-
-    /**
         @notice It initializes this market factory instance.
      */
     function initialize() external {
         _initialize(msg.sender);
 
         marketRegistry = new MarketRegistry();
-        initializeableDynamicProxyLogic = address(
-            new InitializeableDynamicProxy()
-        );
+        initDynamicProxyLogic = settings.initDynamicProxyLogic();
+        erc20DynamicProxyLogic = address(new ERC20DynamicProxy());
     }
 
     /** Internal Functions */
 
     /**
-        @notice It adds a market in the internal mapping.
-        @param lendingToken the borrowed token address.
-        @param collateralToken the collateral token address.
-        @param loanManager the new loan manager contract address.
-        @param lendingPool the new lending pool contract address.
-        @param loanTermsConsensus the new loan terms consensus contract address.
-     */
-    function _addMarket(
-        address lendingToken,
-        address collateralToken,
-        address loanManager,
-        address lendingPool,
-        address loanTermsConsensus
-    ) internal {
-        markets[lendingToken][collateralToken] = TellerCommon.Market({
-            loans: loanManager,
-            lendingPool: lendingPool,
-            loanTermsConsensus: loanTermsConsensus,
-            exists: true
-        });
-    }
-
-    /**
-        @notice It creates a dynamic proxy instance for a given logic name.
+        @notice It creates a InitializeableDynamicProxy instance for a given logic name.
         @dev It is used to create all the market contracts as strict dynamic proxies.
      */
     function _createDynamicProxy(bytes32 logicName)
         internal
         returns (address proxyAddress)
     {
-        proxyAddress = _clone(initializeableDynamicProxyLogic);
+        proxyAddress = _clone(initDynamicProxyLogic);
         IInitializeableDynamicProxy(proxyAddress).initialize(
             address(logicRegistry),
             logicName,
@@ -279,17 +151,14 @@ contract MarketFactory is MarketFactoryInterface, Base, Factory {
     }
 
     /**
-        @notice It gets the current addresses for a given borrowed/collateral token.
-        @param lendingToken the borrowed token address.
-        @param collateralToken the collateral token address.
-        @return a struct with the contract addresses for the given market.
+        @notice It creates an ERC20DynamicProxy instance used for a new TToken.
      */
-    function _getMarket(address lendingToken, address collateralToken)
-        internal
-        view
-        returns (TellerCommon.Market memory)
-    {
-        return markets[lendingToken][collateralToken];
+    function _createTTokenProxy() internal returns (address proxyAddress) {
+        proxyAddress = _clone(erc20DynamicProxyLogic);
+        IERC20DynamicProxy(proxyAddress).initialize(
+            address(logicRegistry),
+            keccak256("TToken")
+        );
     }
 
     /**
@@ -302,19 +171,10 @@ contract MarketFactory is MarketFactoryInterface, Base, Factory {
         returns (LendingPoolInterface lendingPool)
     {
         lendingPool = LendingPoolInterface(
-            _createDynamicProxy(
-                logicRegistry.consts().LENDING_POOL_LOGIC_NAME()
-            )
+            _createDynamicProxy(keccak256("LendingPool"))
         );
-        ITToken tToken =
-            ITToken(
-                address(
-                    new ERC20DynamicProxy(
-                        address(logicRegistry),
-                        logicRegistry.consts().TTOKEN_LOGIC_NAME()
-                    )
-                )
-            );
+
+        ITToken tToken = ITToken(_createTTokenProxy());
 
         lendingPool.initialize(
             marketRegistry,
@@ -323,36 +183,5 @@ contract MarketFactory is MarketFactoryInterface, Base, Factory {
             address(settings)
         );
         tToken.initialize(address(lendingPool));
-    }
-
-    /**
-        @notice Creates a proxy contract for LoanTermsConsensus.
-        @return a new LoanTermsConsensus instance.
-     */
-    function _createLoanTermsConsensus()
-        internal
-        returns (LoanTermsConsensusInterface)
-    {
-        return
-            LoanTermsConsensusInterface(
-                _createDynamicProxy(
-                    logicRegistry.consts().LOAN_TERMS_CONSENSUS_LOGIC_NAME()
-                )
-            );
-    }
-
-    /**
-        @notice Creates a proxy contract for Loans.
-        @return a new Loans instance.
-     */
-    function _createLoans(address collateralToken) internal returns (address) {
-        //        bytes32 logicName =
-        //            collateralToken == settings.ETH_ADDRESS()
-        //                ? logicRegistry.consts().ETHER_COLLATERAL_LOANS_LOGIC_NAME()
-        //                : logicRegistry.consts().TOKEN_COLLATERAL_LOANS_LOGIC_NAME();
-        return
-            _createDynamicProxy(
-                logicRegistry.consts().LOAN_MANAGER_LOGIC_NAME()
-            );
     }
 }

@@ -22,6 +22,9 @@ const deployLogicContracts: DeployFunction = async (hre) => {
       contract: 'Settings',
     },
     {
+      contract: 'AssetSettings',
+    },
+    {
       contract: 'ChainlinkAggregator',
     },
     {
@@ -61,9 +64,6 @@ const deployLogicContracts: DeployFunction = async (hre) => {
     {
       contract: 'Yearn',
     },
-    {
-      contract: 'AssetSettings',
-    },
   ]
 
   const initialLogicVersions: { logic: string; logicName: string }[] = []
@@ -78,13 +78,22 @@ const deployLogicContracts: DeployFunction = async (hre) => {
     })
   }
 
+  const initDynamicProxyLogic = await deployLogic({
+    hre,
+    contract: 'InitializeableDynamicProxy',
+  })
+
   await deploySettingsProxy({
     hre,
     initialLogicVersions,
   })
 
   const settings = await contracts.get<Settings>('Settings', { from: deployer })
-  await settings['initialize(address,address)'](tokens.WETH, tokens.CETH)
+  await settings['initialize(address,address,address)'](
+    tokens.WETH,
+    tokens.CETH,
+    initDynamicProxyLogic.address
+  )
 
   await deployments.save('LogicVersionsRegistry', {
     ...(await deployments.getExtendedArtifact('LogicVersionsRegistry')),

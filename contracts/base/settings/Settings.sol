@@ -24,7 +24,7 @@ import "../../interfaces/IDappRegistry.sol";
 import "../../providers/chainlink/IChainlinkAggregator.sol";
 import "../../providers/compound/CErc20Interface.sol";
 import "../../interfaces/AssetSettingsInterface.sol";
-import "../../interfaces/MarketFactoryInterface.sol";
+import "../../interfaces/IMarketFactory.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -204,7 +204,7 @@ contract Settings is SettingsInterface, Base, Factory {
     /**
         @notice It is the global instance of the MarketFactory contract.
      */
-    MarketFactoryInterface public marketFactory;
+    IMarketFactory public marketFactory;
 
     /**
         @notice This mapping represents the list of wallet addresses that are allowed to interact with the protocol
@@ -225,6 +225,12 @@ contract Settings is SettingsInterface, Base, Factory {
         @notice Flag restricting the use of the Protocol to authorizedAddress
      */
     bool public platformRestricted;
+
+    /**
+     * @notice It holds the address of a deployed InitializeableDynamicProxy contract.
+     * @dev It is used to deploy a new proxy contract with minimal gas cost using the logic in the Factory contract.
+     */
+    address public initDynamicProxyLogic;
 
     /** Modifiers */
 
@@ -645,10 +651,13 @@ contract Settings is SettingsInterface, Base, Factory {
         @notice It initializes this settings contract instance.
         @param wethTokenAddress canonical WETH token address.
         @param cethTokenAddress compound CETH token address.
+        @param initDynamicProxyAddress Address of a deployed InitializeableDynamicProxy contract.
      */
-    function initialize(address wethTokenAddress, address cethTokenAddress)
-        external
-    {
+    function initialize(
+        address wethTokenAddress,
+        address cethTokenAddress,
+        address initDynamicProxyAddress
+    ) external {
         require(cethTokenAddress.isContract(), "CETH_ADDRESS_MUST_BE_CONTRACT");
 
         _addPauser(msg.sender);
@@ -656,32 +665,19 @@ contract Settings is SettingsInterface, Base, Factory {
 
         WETH_ADDRESS = wethTokenAddress;
         CETH_ADDRESS = cethTokenAddress;
+        initDynamicProxyLogic = initDynamicProxyAddress;
 
-        address initializeableDynamicProxyAddress =
-            address(new InitializeableDynamicProxy());
         assetSettings = AssetSettingsInterface(
-            _deployDynamicProxy(
-                initializeableDynamicProxyAddress,
-                keccak256("AssetSettings")
-            )
+            _deployInitDynamicProxy(keccak256("AssetSettings"))
         );
         chainlinkAggregator = IChainlinkAggregator(
-            _deployDynamicProxy(
-                initializeableDynamicProxyAddress,
-                keccak256("ChainlinkAggregator")
-            )
+            _deployInitDynamicProxy(keccak256("ChainlinkAggregator"))
         );
         dappRegistry = IDappRegistry(
-            _deployDynamicProxy(
-                initializeableDynamicProxyAddress,
-                keccak256("DappRegistry")
-            )
+            _deployInitDynamicProxy(keccak256("DappRegistry"))
         );
-        marketFactory = MarketFactoryInterface(
-            _deployDynamicProxy(
-                initializeableDynamicProxyAddress,
-                keccak256("MarketFactory")
-            )
+        marketFactory = IMarketFactory(
+            _deployInitDynamicProxy(keccak256("MarketFactory"))
         );
     }
 
@@ -691,14 +687,13 @@ contract Settings is SettingsInterface, Base, Factory {
         @notice Deploys a new DynamicProxy given a logic name.
         @dev All proxies created through this function are create as non strict dynamic. See DynamicUpgradeable
         @dev Each one deployed here should have an empty parameter initialize function.
-        @param initializeableDynamicProxyAddress The address of a deploy InitializeableDynamicProxy contract to clone.
         @param logicName The name where the logic will be stored as.
      */
-    function _deployDynamicProxy(
-        address initializeableDynamicProxyAddress,
-        bytes32 logicName
-    ) internal returns (address proxyAddress) {
-        proxyAddress = _clone(initializeableDynamicProxyAddress);
+    function _deployInitDynamicProxy(bytes32 logicName)
+        internal
+        returns (address proxyAddress)
+    {
+        proxyAddress = _clone(initDynamicProxyLogic);
         IInitializeableDynamicProxy(proxyAddress).initialize(
             address(logicRegistry),
             logicName,

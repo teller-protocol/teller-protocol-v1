@@ -5,7 +5,7 @@ import "../util/PlatformSettingsLib.sol";
 import "./IDappRegistry.sol";
 import "../providers/chainlink/IChainlinkAggregator.sol";
 import "../interfaces/AssetSettingsInterface.sol";
-import "./MarketFactoryInterface.sol";
+import "./IMarketFactory.sol";
 
 /**
     @notice This interface defines all function to manage the platform configuration.
@@ -121,6 +121,12 @@ interface SettingsInterface {
     ) external;
 
     function assetSettings() external view returns (AssetSettingsInterface);
+
+    /**
+     * @notice It holds the address of a deployed InitializeableDynamicProxy contract.
+     * @dev It is used to deploy a new proxy contract with minimal gas cost using the logic in the Factory contract.
+     */
+    function initDynamicProxyLogic() external view returns (address);
 
     /**
         @notice It updates an existent platform setting given a setting name.
@@ -328,7 +334,7 @@ interface SettingsInterface {
     /**
         @notice It is the global instance of the MarketFactory contract.
      */
-    function marketFactory() external view returns (MarketFactoryInterface);
+    function marketFactory() external view returns (IMarketFactory);
 
     /**
         @notice Gets the cToken address for a given asset address.
@@ -344,9 +350,13 @@ interface SettingsInterface {
         @notice It initializes this settings contract instance.
         @param wethTokenAddress canonical WETH token address.
         @param cethTokenAddress compound CETH token address.
+        @param initDynamicProxyAddress Address of a deployed InitializeableDynamicProxy contract.
      */
-    function initialize(address wethTokenAddress, address cethTokenAddress)
-        external;
+    function initialize(
+        address wethTokenAddress,
+        address cethTokenAddress,
+        address initDynamicProxyAddress
+    ) external;
 
     /**
         @notice It gets the ETH address used in the platform.

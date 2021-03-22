@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "../util/AddressLib.sol";
 import "../util/LogicVersionLib.sol";
-import "../util/LogicVersionsConsts.sol";
 import "../util/TellerCommon.sol";
 
 // Interfaces
@@ -27,11 +26,6 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
      * @notice It is the only address that may make changes in the contract.
      */
     address public owner;
-
-    /**
-     * @notice It represents the logic names for the DynamicProxy contracts.
-     */
-    LogicVersionsConsts public consts;
 
     /**
         @notice It represents a mapping to identify a logic name (key) and the current logic address and version.
@@ -159,7 +153,6 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
     ) external {
         require(owner == address(0), "ALREADY_INIT");
         owner = aOwner;
-        consts = new LogicVersionsConsts();
         _createLogicVersions(initialLogicVersions);
     }
 
