@@ -14,6 +14,7 @@ interface CRAArgs {
   collateralRatio: string
   interestRate: string
   borrower: string
+  requestNonce?: string
   recipient?: string
 }
 
@@ -35,7 +36,6 @@ export interface CRAResponse {
   collateralRatio: BigNumberish
   maxLoanAmount: BigNumberish
   signature: {
-    signerNonce: BigNumberish
     v: BigNumberish
     r: BytesLike
     s: BytesLike
@@ -51,7 +51,7 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
   const network = await ethers.provider.getNetwork()
   const chainId = network.chainId.toString()
 
-  const nonce = (Math.random() * 20000).toFixed(0)
+  const nonce = args.requestNonce ?? '0'
 
   const { loanManager } = await getMarket(
     {
@@ -108,7 +108,6 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
         'uint256', // interestRate
         'uint256', // collateralRatio
         'uint256', // maxLoanAmount
-        'uint256', // incremented nonce
         'uint256', // chain ID
         'bytes32', // request hash
       ],
@@ -118,7 +117,6 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
         args.interestRate,
         args.collateralRatio,
         args.loanAmount,
-        nonce,
         chainId,
         requestHash,
       ]
@@ -137,7 +135,6 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
     collateralRatio: args.collateralRatio,
     maxLoanAmount: args.loanAmount,
     signature: {
-      signerNonce: nonce,
       v: sig.v,
       r: sig.r,
       s: sig.s,
