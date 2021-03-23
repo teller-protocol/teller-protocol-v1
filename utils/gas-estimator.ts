@@ -1,25 +1,28 @@
 import hre from 'hardhat'
 
-import { fundedMarket } from './fixtures'
-import { mockCRAResponse } from './helpers/mock-cra-response'
-import { getFunds } from './helpers/get-funds'
+import { fundedMarket, MarketReturn } from '../test/fixtures'
+import { mockCRAResponse } from '../test/helpers/mock-cra-response'
+import { getFunds } from '../test/helpers/get-funds'
 import { writeFileSync } from 'fs'
 import { join } from 'path'
+import { parse } from 'json2csv'
 
 const { deployments, fastForward, toBN, getNamedSigner } = hre
 
 const setup = deployments.createFixture(
-  async (): Promise<any> => {
+  async (): Promise<MarketReturn> => {
     return await fundedMarket({ amount: 50000 })
   }
 )
 const gasEstimation: [string, string, string, string][] = []
 
 after(() => {
-  if (process.env.CI)
+  if (process.env.SAVE_GAS_REPORT)
     writeFileSync(
-      join(__dirname, '../gas-estimation.json'),
-      JSON.stringify(gasEstimation)
+      join(__dirname, '../gas-estimation.csv'),
+      parse([['Date', 'Contract', 'Method', 'Gas cost'], ...gasEstimation], {
+        header: false,
+      })
     )
 })
 
@@ -58,17 +61,18 @@ describe('LendingPool', async () => {
       { Method: 'LP Withdraw', GasCost: withdrawEstimate.toString() },
     ]
     console.table(lpTableData)
-    lpTableData
-      .map(
-        (obj) =>
-          [
-            new Date().toUTCString(),
-            'LendingPool',
-            obj.Method,
-            obj.GasCost,
-          ] as [string, string, string, string]
-      )
-      .forEach((row) => gasEstimation.push(row))
+    if (process.env.SAVE_GAS_REPORT)
+      lpTableData
+        .map(
+          (obj) =>
+            [
+              new Date().toISOString().match(/^\d{4}-\d{2}-\d{2}T\d{2}/)?.[0],
+              'LendingPool',
+              obj.Method,
+              obj.GasCost,
+            ] as [string, string, string, string]
+        )
+        .forEach((row) => gasEstimation.push(row))
   })
 })
 
@@ -76,7 +80,7 @@ describe('Loans', async () => {
   it('estimate gas for the lifecycle of a loan', async () => {
     let market = await setup()
     // Get Loans contract
-    let loans = market.loans
+    let loans = market.loanManager
     // Get borrower
     let borrower = await getNamedSigner('borrower')
     // Get lending token
@@ -103,15 +107,17 @@ describe('Loans', async () => {
     // Move ahead in time
     await fastForward(100)
     // Get loan id
-    let allBorrowerLoans = await loans.getBorrowerLoans(borrower.getAddress())
+    let allBorrowerLoans = await loans.getBorrowerLoans(
+      await borrower.getAddress()
+    )
     let loanId = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
     // Get collateral owed
-    let collateral = (await loans.getCollateralInfo(0)).neededInCollateralTokens
+    let [collateral] = await loans.getCollateralNeededInTokens(loanId)
     // Estimate gas for depositing collateral
     let depositCollateralEstimate = await loans
       .connect(borrower)
       .estimateGas.depositCollateral(
-        borrower.getAddress(),
+        await borrower.getAddress(),
         loanId,
         collateral,
         { value: collateral }
@@ -119,7 +125,7 @@ describe('Loans', async () => {
     // Deposit the collateral
     await loans
       .connect(borrower)
-      .depositCollateral(borrower.getAddress(), loanId, collateral, {
+      .depositCollateral(await borrower.getAddress(), loanId, collateral, {
         value: collateral,
       })
     // Move ahead in time
@@ -167,12 +173,12 @@ describe('Loans', async () => {
     loansTableData
       .map(
         ({ GasCost, Method }) =>
-          [new Date().toUTCString(), 'Loans', Method, GasCost] as [
-            string,
-            string,
-            string,
-            string
-          ]
+          [
+            new Date().toISOString().match(/^\d{4}-\d{2}-\d{2}T\d{2}/)?.[0],
+            'Loans',
+            Method,
+            GasCost,
+          ] as [string, string, string, string]
       )
       .forEach((row) => gasEstimation.push(row))
   })
