@@ -2,7 +2,7 @@ name: push to gas-estimates
 on:
   push:
     branches:
-      - test-ci-spreadsheet
+      - develop
 
 jobs:
   push-to-gas-estimates:
