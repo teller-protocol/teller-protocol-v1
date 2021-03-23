@@ -2,7 +2,7 @@ name: push to gas-estimates
 on:
   push:
     branches:
-      - develop
+      - test-ci-spreadsheet
 
 jobs:
   push-to-gas-estimates:
@@ -22,6 +22,7 @@ jobs:
           INFURA_KEY: '${{ secrets.INFURA_KEY }}'
           ALCHEMY_KEY: '${{ secrets.ALCHEMY_KEY }}'
           CMC_KEY: '${{ secrets.CMC_KEY }}'
+          ORIGIN: 'https://github.com/${{ github.repository }}'
         run: |
           yarn
           yarn compile
@@ -33,6 +34,8 @@ jobs:
           cp gas/$GITHUB_SHA/* gas/HEAD/
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch $ORIGIN gas-estimates
+          git checkout gas-estimates
           git add gas
           git commit -m "Gas estimations for commit $GITHUB_SHA"
-          git push https://github.com/$GITHUB_REPOSITORY $GITHUB_REF:gas-estimates
+          git push $ORIGIN gas-estimates
