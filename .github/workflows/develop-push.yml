@@ -8,7 +8,7 @@ jobs:
   push-to-gas-estimates:
     name: Save gas estimates
     runs-on: ubuntu-latest
-    environment: gas-estimation
+    environment: testing-keys
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
