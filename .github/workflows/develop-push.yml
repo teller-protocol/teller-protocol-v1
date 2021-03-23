@@ -10,17 +10,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - id: gas-estimation
+      - name: estimate gas
         env:
           SAVE_GAS_REPORT: 1
         run: |
           yarn
           yarn test
           yarn test utils/gas-estimator.ts
-      - run: |
-          mkdir -p gas/$GITHUB_REF gas/HEAD
-          mv gas-reporter.txt gas/$GITHUB_REF/
-          mv gas-estimation.csv gas/$GITHUB_REF/
-          cp gas/$GITHUB_REF/* gas/HEAD/
+      - name: commit and push
+        run: |
+          mkdir -p gas/$GITHUB_SHA gas/HEAD
+          mv gas-reporter.txt gas/$GITHUB_SHA/
+          mv gas-estimation.csv gas/$GITHUB_SHA/
+          cp gas/$GITHUB_SHA/* gas/HEAD/
           git add gas
-          git commit -m "Gas estimations for commit $GITHUB_REF"
+          git commit -m "Gas estimations for commit $GITHUB_SHA"
+          git push $GITHUB.REPOSITORY $GITHUB_REF:gas-estimates
