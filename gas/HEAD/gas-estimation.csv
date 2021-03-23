@@ -1,0 +1,8 @@
+"Date","Contract","Method","Gas cost"
+"2021-03-23T22","LendingPool","LP Deposit","484632"
+"2021-03-23T22","LendingPool","LP Withdraw","429222"
+"2021-03-23T22","Loans","Creating a loan","484456"
+"2021-03-23T22","Loans","Depositing collateral","128769"
+"2021-03-23T22","Loans","Taking out a loan","645469"
+"2021-03-23T22","Loans","Repaying a loan","447216"
+"2021-03-23T22","Loans","Withdrawing collateral","191942"
