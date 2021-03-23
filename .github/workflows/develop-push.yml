@@ -29,13 +29,13 @@ jobs:
           yarn test
           yarn test utils/gas-estimator.ts
           mkdir -p gas/$GITHUB_SHA gas/HEAD
-          mv gas-reporter.txt gas/$GITHUB_SHA/
-          mv gas-estimation.csv gas/$GITHUB_SHA/
-          cp gas/$GITHUB_SHA/* gas/HEAD/
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch $ORIGIN gas-estimates:gas-estimates
           git checkout gas-estimates
+          mv gas-reporter.txt gas/$GITHUB_SHA/
+          mv gas-estimation.csv gas/$GITHUB_SHA/
+          cp gas/$GITHUB_SHA/* gas/HEAD/
           git add gas
           git commit -m "Gas estimations for commit $GITHUB_SHA"
           git push $ORIGIN gas-estimates
