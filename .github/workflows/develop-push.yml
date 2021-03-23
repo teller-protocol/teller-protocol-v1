@@ -18,6 +18,7 @@ jobs:
           SAVE_GAS_REPORT: 1
         run: |
           yarn
+          yarn compile
           yarn test
           yarn test utils/gas-estimator.ts
       - name: commit and push
