@@ -34,7 +34,7 @@ jobs:
           cp gas/$GITHUB_SHA/* gas/HEAD/
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git fetch $ORIGIN gas-estimates
+          git fetch $ORIGIN gas-estimates:gas-estimates
           git checkout gas-estimates
           git add gas
           git commit -m "Gas estimations for commit $GITHUB_SHA"
