@@ -5,21 +5,21 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Commons
-import "./TInitializable.sol";
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
 
 // Contracts
-import "./DynamicUpgradeable.sol";
+import "./upgradeable/DynamicUpgradeable.sol";
+import "./BaseStorage.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
-/**                              THIS CONTRACT IS AN UPGRADEABLE BASE!                              **/
+/**                              THIS CONTRACT IS AN UPGRADEABLE FACET!                             **/
 /**  ---------------------------------------------------------------------------------------------  **/
-/**  Do NOT change the order of, PREPEND, or APPEND any storage variables to this or new versions   **/
-/**  of this contract as this will cause a ripple affect to the storage slots of all child          **/
-/**  contracts that inherit from this contract to be overwritten on the deployed proxy contract!!   **/
+/**  Do NOT place ANY storage/state variables directly in this contract! If you wish to make        **/
+/**  make changes to the state variables used by this contract, do so in its defined Storage        **/
+/**  contract that this contract inherits from                                                      **/
 /**                                                                                                 **/
 /**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
 /**  more information.                                                                              **/
@@ -27,17 +27,12 @@ import "./DynamicUpgradeable.sol";
 /**
     @notice This contract is used as a base contract for most most of the contracts in the platform.
     @notice It allows contracts to have access to the platform settings, and common modifiers.
-    @notice It implements the reentrancy guard from Open Zeppelin and the TInitializable pattern.
 
     @author develop@teller.finance.
  */
-contract Base is DynamicUpgradeable, TInitializable {
+contract Base is DynamicUpgradeable, BaseStorage {
     using AddressLib for address;
     using Address for address;
-
-    /* State Variables */
-
-    SettingsInterface public settings;
 
     /** Modifiers */
 
@@ -84,12 +79,10 @@ contract Base is DynamicUpgradeable, TInitializable {
         @notice It initializes the current contract instance setting the required parameters.
         @param settingsAddress settings contract address.
      */
-    function _initialize(address settingsAddress) internal isNotInitialized {
+    function _initialize(address settingsAddress) internal {
         settingsAddress.requireNotEmpty("SETTINGS_MUST_BE_PROVIDED");
 
         settings = SettingsInterface(settingsAddress);
-
-        TInitializable._initialize();
     }
 
     /**

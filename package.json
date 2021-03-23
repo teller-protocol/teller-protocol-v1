@@ -14,7 +14,8 @@
     "deploy:kovan": "yarn hardhat deploy --network kovan",
     "deploy:mainnet": "yarn hardhat deploy  --network mainnet",
     "test": "yarn hardhat test",
-    "contract:size": "yarn hardhat size-contracts",
+    "contract:compile": "COMPILING=true yarn hardhat compile",
+    "contract:size": "yarn contract:compile && yarn hardhat size-contracts",
     "coverage": "yarn hardhat coverage --solcoverjs ./solcover.js",
     "test:localhost": "yarn hardhat test --network localhost",
     "console:rinkeby": "yarn hardhat console --network rinkeby",
@@ -22,7 +23,7 @@
     "console:kovan": "yarn hardhat console --network kovan",
     "console:localhost": "yarn hardhat console --network localhost",
     "console:mainnet": "yarn hardhat console --network mainnet",
-    "compile": "COMPILING=true yarn hardhat compile && yarn types",
+    "compile": "yarn contract:compile && yarn types",
     "types": "yarn typechain --target ethers-v5 --outDir types/typechain 'artifacts/!(build-info)/**/+([a-zA-Z0-9]).json'",
     "format:prettier": "prettier --write contracts/**/**/**/**/**/**.sol",
     "format:prettier:print": "prettier contracts/**/**/**/**/**/**.sol"

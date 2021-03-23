@@ -1,14 +1,16 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
+// Contracts
+import "./Base.sol";
+
 // Utils
-import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 import "../util/AddressArrayLib.sol";
 
 // Interfaces
 import "../interfaces/IMarketRegistry.sol";
 import "../interfaces/LendingPoolInterface.sol";
-import "../interfaces/LoansInterface.sol";
+import "../interfaces/loans/ILoanManager.sol";
 import "../interfaces/LoanTermsConsensusInterface.sol";
 
 /**
@@ -16,10 +18,12 @@ import "../interfaces/LoanTermsConsensusInterface.sol";
 
     @author develop@teller.finance
  */
-contract MarketRegistry is IMarketRegistry, Ownable {
+contract MarketRegistry is IMarketRegistry, Base {
     using AddressArrayLib for AddressArrayLib.AddressArray;
 
     /* State Variables */
+
+    address public owner;
 
     /**
         @notice It maps a lending token to an array of collateral tokens that represent a market.
@@ -29,52 +33,49 @@ contract MarketRegistry is IMarketRegistry, Ownable {
     /**
         @notice It maps a lending token to the associated LendingPool contract.
      */
-    mapping(address => LendingPoolInterface) public lendingPools;
+    mapping(address => address) public lendingPools;
 
     /**
-        @notice It maps a lending token and collateral token to the associated Loans contract.
+        @notice It maps a lending token and collateral token to the associated LoanManager contract.
      */
-    mapping(address => mapping(address => LoansInterface)) public loans;
+    mapping(address => mapping(address => address)) public loanManagers;
 
     /**
-        @notice It represents a mapping to identify a LendingPool's Loan contract address.
+        @notice It represents a mapping to identify a LendingPool's LoanManager contract address.
      */
-    mapping(address => mapping(address => bool)) public loansRegistry;
+    mapping(address => mapping(address => bool)) public loanManagerRegistry;
 
-    /**
-        @notice It represents a mapping to identify the address of a given TToken.
-     */
-    mapping(address => bool) public tTokenRegistry;
+    /* Modifiers */
 
-    // Constructor
-
-    constructor() public {
-        Ownable.initialize(_msgSender());
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
     }
 
     // External Functions
 
     /**
         @notice It registers a new market with a LendingPool and Loans contract pair.
-        @param aLendingPool a lending pool contract used to borrow assets.
-        @param aLoans a loans contract that stores all the relevant loans info and functionality.
+        @param lendingPoolAddress a lending pool contract used to borrow assets.
+        @param loanManagerAddress a loan manager contract that stores all the relevant loans info and functionality.
      */
     function registerMarket(
-        LendingPoolInterface aLendingPool,
-        LoansInterface aLoans
+        address lendingPoolAddress,
+        address loanManagerAddress
     ) external onlyOwner {
         require(
-            !loansRegistry[address(aLendingPool)][address(aLoans)],
+            !loanManagerRegistry[lendingPoolAddress][loanManagerAddress],
             "MARKET_ALREADY_REGISTERED"
         );
 
-        address lendingToken = address(aLendingPool.lendingToken());
-        address collateralToken = aLoans.collateralToken();
+        address lendingToken =
+            address(LendingPoolInterface(lendingPoolAddress).lendingToken());
+        address collateralToken =
+            ILoanManager(loanManagerAddress).collateralToken();
         markets[lendingToken].add(collateralToken);
-        lendingPools[lendingToken] = aLendingPool;
-        loans[lendingToken][collateralToken] = aLoans;
-        loansRegistry[address(aLendingPool)][address(aLoans)] = true;
-        tTokenRegistry[address(aLendingPool.tToken())] = true;
+        lendingPools[lendingToken] = lendingPoolAddress;
+        loanManagers[lendingToken][collateralToken] = loanManagerAddress;
+        loanManagerRegistry[lendingPoolAddress][loanManagerAddress] = true;
     }
 
     /**
@@ -88,5 +89,14 @@ contract MarketRegistry is IMarketRegistry, Ownable {
         returns (address[] memory)
     {
         return markets[lendingTokenAddress].array;
+    }
+
+    /**
+     * @notice It initializes the MarketRegistry contract by setting the owner of the caller.
+     * @dev This contract is constructed and initialized by the MarketFactory.
+     */
+    function initialize() external {
+        require(owner == address(0), "ALREADY_INIT");
+        owner = msg.sender;
     }
 }

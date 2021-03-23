@@ -23,6 +23,7 @@ declare module 'hardhat/types/runtime' {
     fastForward(seconds: BigNumberish): Promise<void>
     toBN(amount: BigNumberish, decimals?: BigNumberish): BigNumber
     fromBN(amount: BigNumberish, decimals?: BigNumberish): BigNumber
+    log(message: string): void
   }
 }
 

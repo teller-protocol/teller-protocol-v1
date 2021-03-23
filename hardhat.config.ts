@@ -108,7 +108,7 @@ export default <HardhatUserConfig>{
     hardhat: {
       forking: {
         url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
-        blockNumber: 11806209,
+        blockNumber: 12064000,
         enabled: true,
       },
       chainId: 1,

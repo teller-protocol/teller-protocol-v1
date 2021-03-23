@@ -53,7 +53,7 @@ interface IDappRegistry {
     /**
         @notice This event is emitted when a new Escrow contract is created.
         @param borrower address associated to the new escrow.
-        @param loansAddress loans contract address.
+        @param loansAddress loan manager contract address.
         @param loanID loan id associated to the borrower and escrow contract.
         @param escrowAddress the new escrow contract address.
      */

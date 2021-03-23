@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 // Contracts
-import "../base/TInitializable.sol";
 import "../base/Base.sol";
 
 // Interfaces
@@ -26,7 +25,7 @@ import "./IATMSettings.sol";
 
     @author develop@teller.finance
  */
-contract ATMSettings is IATMSettings, TInitializable, Base {
+contract ATMSettings is IATMSettings, Base {
     using Address for address;
 
     /** Constants */

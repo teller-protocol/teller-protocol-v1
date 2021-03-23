@@ -58,7 +58,7 @@ describe('LendingPool', () => {
       .should.eql(true, 'Lender balance did not increase')
   })
 
-  it('should not be allowed to transfer funds unless the loans contract is calling', async () => {
+  it('should not be allowed to transfer funds unless the loan manager contract is calling', async () => {
     // Get a funded market
     const market = await fundedMarket()
     const { createLoan } = getLPHelpers(market)
@@ -82,11 +82,11 @@ describe('LendingPool', () => {
     const market = await fundedMarket()
     const { createLoan } = getLPHelpers(market)
 
-    // Impersonate the Loans contract
-    const loansImpersonation = await evm.impersonate(market.loans.address)
-    // Fund the Loans contract with ETH to send a tx
+    // Impersonate the LoanManager contract
+    const loansImpersonation = await evm.impersonate(market.loanManager.address)
+    // Fund the LoanManager contract with ETH to send a tx
     await getFunds({
-      to: market.loans.address,
+      to: market.loanManager.address,
       tokenSym: 'ETH',
       amount: toBN(1, 18),
     })
@@ -102,11 +102,11 @@ describe('LendingPool', () => {
     return market
   }
   it(
-    'should transfer funds to the borrower when the loans contract calls',
+    'should transfer funds to the borrower when the loan manager contract calls',
     borrowFunds
   )
 
-  it('should only accept repayments from the Loans contract', async () => {
+  it('should only accept repayments from the LoanManager contract', async () => {
     const market = await borrowFunds()
     const { repay } = getLPHelpers(market)
 
@@ -134,11 +134,11 @@ describe('LendingPool', () => {
     const market = await borrowFunds()
     const { repay } = getLPHelpers(market)
 
-    // Impersonate the Loans contract
-    const loansImpersonation = await evm.impersonate(market.loans.address)
-    // Fund the Loans contract with ETH to send a tx
+    // Impersonate the LoanManager contract
+    const loansImpersonation = await evm.impersonate(market.loanManager.address)
+    // Fund the LoanManager contract with ETH to send a tx
     await getFunds({
-      to: market.loans.address,
+      to: market.loanManager.address,
       tokenSym: 'ETH',
       amount: toBN(1, 18),
     })

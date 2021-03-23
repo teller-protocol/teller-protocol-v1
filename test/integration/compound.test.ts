@@ -37,7 +37,7 @@ const setUpTest = deployments.createFixture(
       loanType: LoanType.UNDER_COLLATERALIZED,
     })
 
-    const loan = await market.loans.loans(market.createdLoanId)
+    const loan = await market.loanManager.loans(market.createdLoanId)
 
     const escrow = await contracts.get<Escrow>('Escrow', { at: loan.escrow })
     const ting = await escrow.getTokens()

@@ -17,13 +17,13 @@ library LogicVersionLib {
         @notice It stores all the versions for a given logic.
         @param currentVersion the current version.
         @param latestVersion the latest version.
-        @param logicVersions mapping version to logic address.
+        @param versions mapping version to logic address.
         @param exists boolean to test whether this logic version exists or not.
      */
     struct LogicVersion {
         uint256 currentVersion;
         uint256 latestVersion;
-        mapping(uint256 => address) logicVersions;
+        mapping(uint256 => address) versions;
         bool exists;
     }
 
@@ -37,7 +37,7 @@ library LogicVersionLib {
         require(logic.isContract(), "LOGIC_MUST_BE_CONTRACT");
         self.currentVersion = 0;
         self.latestVersion = 0;
-        self.logicVersions[self.currentVersion] = logic;
+        self.versions[self.currentVersion] = logic;
         self.exists = true;
     }
 
@@ -55,11 +55,17 @@ library LogicVersionLib {
         )
     {
         requireExists(self);
-        require(self.currentVersion != previousVersion, "CURRENT_VERSION_MUST_BE_DIFF");
-        require(self.latestVersion >= previousVersion, "VERSION_MUST_BE_LTE_LATEST");
+        require(
+            self.currentVersion != previousVersion,
+            "CURRENT_VERSION_MUST_BE_DIFF"
+        );
+        require(
+            self.latestVersion >= previousVersion,
+            "VERSION_MUST_BE_LTE_LATEST"
+        );
         currentVersion = self.currentVersion;
-        previousLogic = self.logicVersions[self.currentVersion];
-        newLogic = self.logicVersions[previousVersion];
+        previousLogic = self.versions[self.currentVersion];
+        newLogic = self.versions[previousVersion];
 
         self.currentVersion = previousVersion;
     }
@@ -83,7 +89,7 @@ library LogicVersionLib {
     }
 
     /**
-        @notice It updates a logic version.
+        @notice It upgrades a logic version.
         @dev It throws a require error if:
             - The new logic is equal to the current logic.
         @param self the current logic version.
@@ -92,7 +98,7 @@ library LogicVersionLib {
         @return oldVersion the old version.
         @return newVersion the new version.
      */
-    function update(LogicVersion storage self, address newLogic)
+    function upgrade(LogicVersion storage self, address newLogic)
         internal
         returns (
             address oldLogic,
@@ -102,16 +108,16 @@ library LogicVersionLib {
     {
         requireExists(self);
         require(
-            self.logicVersions[self.currentVersion] != newLogic,
+            self.versions[self.currentVersion] != newLogic,
             "NEW_LOGIC_REQUIRED"
         );
         require(newLogic.isContract(), "LOGIC_MUST_BE_CONTRACT");
-        oldLogic = self.logicVersions[self.currentVersion];
+        oldLogic = self.versions[self.currentVersion];
         oldVersion = self.currentVersion;
         newVersion = self.latestVersion.add(1);
 
         self.currentVersion = newVersion;
         self.latestVersion = newVersion;
-        self.logicVersions[newVersion] = newLogic;
+        self.versions[newVersion] = newLogic;
     }
 }
