@@ -8,25 +8,25 @@ jobs:
   push-to-gas-estimates:
     name: Save gas estimates
     runs-on: ubuntu-latest
+    environment: gas-estimation
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
           node-version: '10.x'
       - name: Estimate gas
+        env:
+          SAVE_GAS_REPORT: '1'
+          MNEMONIC_KEY: '${{ secrets.MNEMONIC_KEY }}'
+          ETHERSCAN_API_KEY: '${{ secrets.ETHERSCAN_API_KEY }}'
+          INFURA_KEY: '${{ secrets.INFURA_KEY }}'
+          ALCHEMY_KEY: '${{ secrets.ALCHEMY_KEY }}'
+          CMC_KEY: '${{ secrets.CMC_KEY }}'
         run: |
-          echo 'SAVE_GAS_REPORT="1"'
-          echo 'MNEMONIC_KEY="${{ secrets.MNEMONIC_KEY }}"' >> .env
-          echo 'ETHERSCAN_API_KEY="${{ secrets.ETHERSCAN_API_KEY }}"' >> .env
-          echo 'INFURA_KEY="${{ secrets.INFURA_KEY }}"' >> .env
-          echo 'ALCHEMY_KEY="${{ secrets.ALCHEMY_KEY }}"' >> .env
-          echo 'CMC_KEY="${{ secrets.CMC_KEY }}"' >> .env
           yarn
           yarn compile
           yarn test
           yarn test utils/gas-estimator.ts
-      - name: Commit and push
-        run: |
           mkdir -p gas/$GITHUB_SHA gas/HEAD
           mv gas-reporter.txt gas/$GITHUB_SHA/
           mv gas-estimation.csv gas/$GITHUB_SHA/
