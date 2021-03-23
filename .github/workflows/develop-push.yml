@@ -16,6 +16,9 @@ jobs:
       - name: estimate gas
         env:
           SAVE_GAS_REPORT: 1
+          ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}
+          INFURA_KEY: ${{ secrets.INFURA_KEY }}
+          CMC_KEY: ${{ secrets.CMC_KEY }}
         run: |
           yarn
           yarn compile
