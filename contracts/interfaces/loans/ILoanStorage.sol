@@ -7,7 +7,7 @@ import "../../util/TellerCommon.sol";
 // Interfaces
 import "../SettingsInterface.sol";
 import "../LendingPoolInterface.sol";
-import "../LoanTermsConsensusInterface.sol";
+import "./ILoanTermsConsensus.sol";
 import "../../providers/compound/CErc20Interface.sol";
 
 /**
@@ -50,10 +50,7 @@ interface ILoanStorage {
     /**
      * @notice Holds the consensus contract that verifies loan terms.
      */
-    function loanTermsConsensus()
-        external
-        view
-        returns (LoanTermsConsensusInterface);
+    function loanTermsConsensus() external view returns (address);
 
     /**
      * @notice Holds the ID of loans taken out

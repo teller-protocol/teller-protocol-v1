@@ -27,7 +27,6 @@ interface IMarketFactory {
         address indexed lendingToken,
         address indexed collateralToken,
         address loans,
-        address lendingPool,
-        address loanTermsConsensus
+        address lendingPool
     );
 }

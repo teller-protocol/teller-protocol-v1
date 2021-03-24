@@ -6,9 +6,9 @@ import "../../util/TellerCommon.sol";
 
 // Interfaces
 import "./ILoanStorage.sol";
+import "./ILoanTermsConsensus.sol";
 import "../SettingsInterface.sol";
 import "../LendingPoolInterface.sol";
-import "../LoanTermsConsensusInterface.sol";
 import "../../providers/compound/CErc20Interface.sol";
 
 /**

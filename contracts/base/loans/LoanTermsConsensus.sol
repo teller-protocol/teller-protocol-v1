@@ -1,64 +1,45 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-// Contracts
-import "./OwnerSignersRole.sol";
-
-// Interfaces
-import "../interfaces/LoanTermsConsensusInterface.sol";
-
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "../util/ECDSALib.sol";
-import "../util/NumbersList.sol";
+import "../../util/ECDSALib.sol";
+
+// Interfaces
+import "../../interfaces/loans/ILoanData.sol";
+import "../../interfaces/loans/ILoanTermsConsensus.sol";
+import "../../interfaces/SettingsInterface.sol";
+import "../../interfaces/escrow/IEscrow.sol";
+import "../../interfaces/loans/ILoanManager.sol";
+import "../../providers/openzeppelin/SignedSafeMath.sol";
+// Contracts
+import "../Base.sol";
+import "../BaseStorage.sol";
+import "./LoanStorage.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
-/**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
+/**                              THIS CONTRACT IS AN UPGRADEABLE FACET!                             **/
 /**  ---------------------------------------------------------------------------------------------  **/
-/**  Do NOT change the order of or PREPEND any storage variables to this or new versions of this    **/
-/**  contract as this will cause the the storage slots to be overwritten on the proxy contract!!    **/
+/**  Do NOT place ANY storage/state variables directly in this contract! If you wish to make        **/
+/**  make changes to the state variables used by this contract, do so in its defined Storage        **/
+/**  contract that this contract inherits from                                                      **/
 /**                                                                                                 **/
 /**  Visit https://docs.openzeppelin.com/upgrades/2.6/proxies#upgrading-via-the-proxy-pattern for   **/
 /**  more information.                                                                              **/
 /*****************************************************************************************************/
 /**
-    @notice This contract is used to process the loan requests through the Teller protocol
-
-    @author develop@teller.finance
+ * @notice This contract stores the logic for validating consensus on loan terms.
+ * @dev The LoanManager delegatecall's to this, like a Diamond.
+ *
+ * @author develop@teller.finance.
  */
-contract LoanTermsConsensus is LoanTermsConsensusInterface, OwnerSignersRole {
+contract LoanTermsConsensus is ILoanTermsConsensus, LoanStorage, Base {
     using SafeMath for uint256;
     using NumbersList for NumbersList.Values;
     using NumbersLib for uint256;
-
-    /** Address of the loanManager */
-    address public loanManagerAddress;
-
-    /* Mappings */
-    /**
-        This mapping identify the last request timestamp for a given borrower address.
-
-            Example:    address(0x123...789) = timestamp(now)
-
-        It is used as rate limit per borrower address.
-     */
-    mapping(address => uint256) public borrowerRequestTimes;
-
-    /**
-        @notice It tracks each request nonce value used by the borrower.
-     */
-    mapping(address => uint256) public borrowerNonces;
-
-    /**
-        @notice Checks whether sender is equal to the loanManager address.
-        @dev It throws a require error if sender is not equal to the loanManager address.
-        @param sender the transaction sender.
-     */
-    modifier isLoanManager(address sender) {
-        require(_isLoanManager(sender), "SENDER_HASNT_PERMISSIONS");
-        _;
-    }
+    using Address for address;
+    using AddressArrayLib for AddressArrayLib.AddressArray;
 
     /**
         @notice Checks if the number of responses is greater or equal to a percentage of
@@ -69,32 +50,10 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, OwnerSignersRole {
             settings.getRequiredSubmissionsPercentageValue();
 
         require(
-            responseCount.ratioOf(_signerCount) >= percentageRequired,
+            responseCount.ratioOf(signers.array.length) >= percentageRequired,
             "INSUFFICIENT_NUMBER_OF_RESPONSES"
         );
         _;
-    }
-
-    /**
-        @notice It initializes this consensus contract.
-        @param owner the owner address.
-        @param aLoanManagerAddress the contract that will call it.
-        @param aSettingAddress the settings contract address.
-     */
-    function initialize(
-        address owner,
-        address aLoanManagerAddress,
-        address aSettingAddress
-    ) external {
-        require(
-            aLoanManagerAddress.isContract(),
-            "LOAN_MANAGER_MUST_BE_CONTRACT"
-        );
-
-        OwnerSignersRole._initialize(owner);
-        Base._initialize(aSettingAddress);
-
-        loanManagerAddress = aLoanManagerAddress;
     }
 
     /**
@@ -105,12 +64,12 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, OwnerSignersRole {
         @return uint256 Collateral ratio
         @return uint256 Maximum loan amount
      */
-    function processRequest(
+    function processLoanTerms(
         TellerCommon.LoanRequest calldata request,
         TellerCommon.LoanResponse[] calldata responses
     )
         external
-        isLoanManager(msg.sender)
+        view
         onlyEnoughSubmissions(responses.length)
         returns (
             uint256 interestRate,
@@ -118,33 +77,43 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, OwnerSignersRole {
             uint256 maxLoanAmount
         )
     {
+        // NOTE: nonReentrant doesn't work across facets unless we use
+        // diamond storage.
+        // WE CANNOT MAKE NON-STATIC EXTERNAL CALLS OR THE BORROWER
+        // COULD MANIPULATE THE NONCE
         address borrower = request.borrower;
 
+        _validateLoanRequest(borrower, request.requestNonce);
+
         require(
-            borrowerNonces[borrower] == request.requestNonce,
-            "WRONG_BORROWER_NONCE"
-        );
-        require(
-            borrowerRequestTimes[borrower] == 0 ||
-                borrowerRequestTimes[borrower].add(
-                    settings.getRequestLoanTermsRateLimitValue()
-                ) <=
-                now,
-            "REQS_LOAN_TERMS_LMT_EXCEEDS_MAX"
+            request.consensusAddress == address(this),
+            "BAD_CONSENSUS_ADDRESS"
         );
 
-        borrowerRequestTimes[borrower] = now;
-        borrowerNonces[borrower]++;
-
-        TellerCommon.AccruedLoanTerms memory termSubmissions;
         bytes32 requestHash = _hashRequest(request);
+
         uint256 responseExpiryLengthValue =
             settings.getResponseExpiryLengthValue();
 
+        TellerCommon.AccruedLoanTerms memory termSubmissions;
+
         for (uint256 i = 0; i < responses.length; i++) {
             TellerCommon.LoanResponse memory response = responses[i];
-            bytes32 responseHash = _hashResponse(response, requestHash);
 
+            require(_isSigner(response.signer), "NOT_SIGNER");
+
+            require(
+                response.consensusAddress == request.consensusAddress,
+                "CONSENSUS_ADDRESS_MISMATCH"
+            );
+
+            /**
+                Check if we've encountered this signer for this request already.
+                Not the cleanest solution to a dictionary lookup problem, but
+                that doesn't exist in EVM memory and this is relatively cheap
+                for a rather large number of signers.
+                Rough gas cost: (n/2) * (1 + n) * MLOAD + n * MSTORE.
+             */
             for (uint8 j = 0; j < i; j++) {
                 require(
                     response.signer != responses[j].signer,
@@ -156,6 +125,8 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, OwnerSignersRole {
                 response.responseTime >= now.sub(responseExpiryLengthValue),
                 "RESPONSE_EXPIRED"
             );
+
+            bytes32 responseHash = _hashResponse(response, requestHash);
 
             require(
                 _signatureValid(
@@ -181,6 +152,37 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, OwnerSignersRole {
     }
 
     /**
+        @notice It adds a new account as a signer.
+        @param account address to add.
+        @dev The sender must be the owner.
+        @dev It throws a require error if the sender is not the owner.
+     */
+    function addSigner(address account) external onlyPauser {
+        _addSigner(account);
+    }
+
+    /**
+        @notice It adds a list of account as signers.
+        @param accounts addresses to add.
+        @dev The sender must be the owner.
+        @dev It throws a require error if the sender is not the owner.
+     */
+    function addSigners(address[] calldata accounts) external onlyPauser {
+        for (uint256 index = 0; index < accounts.length; index++) {
+            address account = accounts[index];
+            _addSigner(account);
+        }
+    }
+
+    /**
+        @notice It initializes this consensus contract.
+        @param aSettingsAddress the settings contract address.
+     */
+    function initialize(address aSettingsAddress) external {
+        Base._initialize(aSettingsAddress);
+    }
+
+    /**
         @notice Generates a hash for the loan response
         @param response Structs of the protocol loan responses
         @param requestHash Hash of the loan request
@@ -189,7 +191,7 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, OwnerSignersRole {
     function _hashResponse(
         TellerCommon.LoanResponse memory response,
         bytes32 requestHash
-    ) internal view returns (bytes32) {
+    ) internal pure returns (bytes32) {
         return
             keccak256(
                 abi.encode(
@@ -211,13 +213,12 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, OwnerSignersRole {
      */
     function _hashRequest(TellerCommon.LoanRequest memory request)
         internal
-        view
+        pure
         returns (bytes32)
     {
         return
             keccak256(
                 abi.encode(
-                    loanManagerAddress,
                     request.borrower,
                     request.recipient,
                     request.consensusAddress,
@@ -241,10 +242,9 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, OwnerSignersRole {
         TellerCommon.Signature memory signature,
         bytes32 dataHash,
         address expectedSigner
-    ) internal view returns (bool) {
-        if (!isSigner(expectedSigner)) return false;
-
-        address signer =
+    ) internal pure returns (bool) {
+        return
+            expectedSigner ==
             ECDSA.recover(
                 keccak256(
                     abi.encodePacked(
@@ -256,7 +256,39 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, OwnerSignersRole {
                 signature.r,
                 signature.s
             );
-        return (signer == expectedSigner);
+    }
+
+    /**
+        Checks if the nonce provided in the request is equal to the borrower's number of loans.
+        Also verifies if the borrower has taken out a loan recently (rate limit).
+        @param borrower the borrower's address.
+        @param nonce the nonce included in the loan request.
+     */
+    function _validateLoanRequest(address borrower, uint256 nonce)
+        internal
+        view
+    {
+        uint256[] storage _borrowerLoans = borrowerLoans[borrower];
+        uint256 numberOfLoans = _borrowerLoans.length;
+
+        require(nonce == numberOfLoans, "BAD_NONCE");
+
+        // In case it is the first time that borrower requests loan terms, we don't
+        // validate the rate limit.
+        if (numberOfLoans == 0) {
+            return;
+        }
+
+        require(
+            loans[_borrowerLoans[numberOfLoans - 1]].loanStartTime.add(
+                settings.getRequestLoanTermsRateLimitValue()
+            ) <= now,
+            "REQS_LOAN_TERMS_LMT_EXCEEDS_MAX"
+        );
+    }
+
+    function _isSigner(address account) internal view returns (bool isSigner_) {
+        (isSigner_, ) = signers.getIndex(account);
     }
 
     /**
@@ -266,7 +298,7 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, OwnerSignersRole {
      */
     function _getConsensus(NumbersList.Values memory values, uint256 tolerance)
         internal
-        view
+        pure
         returns (uint256)
     {
         require(values.isWithinTolerance(tolerance), "RESPONSES_TOO_VARIED");
@@ -278,10 +310,9 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, OwnerSignersRole {
         @notice Gets the current chain id using the opcode 'chainid()'.
         @return the current chain id.
      */
-    function _getChainId() internal view returns (uint256) {
+    function _getChainId() internal pure returns (uint256) {
         // silence state mutability warning without generating bytecode.
         // see https://github.com/ethereum/solidity/issues/2691
-        this;
         uint256 id;
         assembly {
             id := chainid()
@@ -289,11 +320,9 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, OwnerSignersRole {
         return id;
     }
 
-    /**
-        @notice It tests whether a given address is the initialized loanManager address.
-        @dev This function is overriden by mock instances.
-     */
-    function _isLoanManager(address sender) internal view returns (bool) {
-        return loanManagerAddress == sender;
+    function _addSigner(address account) internal {
+        if (!_isSigner(account)) {
+            signers.add(account);
+        }
     }
 }
