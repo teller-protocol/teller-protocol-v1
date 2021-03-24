@@ -1,47 +1,44 @@
-const BigNumber = require("bignumber.js");
-const platformSettingsNames = require("../../../test-old/utils/platformSettingsNames");
+const BigNumber = require('bignumber.js')
+const platformSettingsNames = require('../../../test-old/utils/platformSettingsNames')
 const {
   NULL_ADDRESS,
   ONE_DAY,
   toBytes32,
-} = require("../../../test-old/utils/consts");
+} = require('../../../test-old/utils/consts')
 const {
   createMultipleSignedLoanTermsResponses,
   createLoanTermsRequest,
-} = require("../../../test-old/utils/loan-terms-helper");
-const { printLoanDetails, printPairAggregator } = require("../../../test-old/utils/printer");
+} = require('../../../test-old/utils/loan-terms-helper')
+const {
+  printLoanDetails,
+  printPairAggregator,
+} = require('../../../test-old/utils/printer')
 const {
   lendingPool: lendingPoolEvents,
   loans: loansEvents,
-} = require("../../../test-old/utils/events");
-const {
-  tokens: tokensAssertions
-} = require('../assertions')
-const errorActions = require("./errors");
-const { assert } = require("chai");
-const settingsActions = require('./settings');
+} = require('../../../test-old/utils/events')
+const { tokens: tokensAssertions } = require('../assertions')
+const errorActions = require('./errors')
+const { assert } = require('chai')
+const settingsActions = require('./settings')
 
 /**
  * Gets an amount of tokens requested based on the current network.
  */
-const getFunds = async (
-  {token},
-  {testContext},
-  {amount, to}
-) => {
+const getFunds = async ({ token }, { testContext }, { amount, to }) => {
   const balanceBefore = (await token.balanceOf.call(to)).toString()
-  const symbol = await token.symbol();
-  console.log(`Getting funds ${amount} ${symbol} for account ${to}`);
-  
+  const symbol = await token.symbol()
+  console.log(`Getting funds ${amount} ${symbol} for account ${to}`)
+
   switch (testContext.network) {
     case 'ganache':
-      await token.mint(to, amount);
+      await token.mint(to, amount)
       break
     case 'ganache-mainnet':
-      const { swapper } = testContext;
-      assert(amount, 'Amount is undefined.');
-      assert(amount.toString() !== '0', 'Amount must not be zero.');
-      await swapper.swapForExact(to, token.address, amount);
+      const { swapper } = testContext
+      assert(amount, 'Amount is undefined.')
+      assert(amount.toString() !== '0', 'Amount must not be zero.')
+      await swapper.swapForExact(to, token.address, amount)
       break
   }
 
@@ -53,54 +50,56 @@ const getFunds = async (
 }
 
 const withdrawFunds = async (
-  {lendingPool},
-  {txConfig, testContext},
-  {amount}
+  { lendingPool },
+  { txConfig, testContext },
+  { amount }
 ) => {
-  console.log("Withdrawing funds from pool...");
-  const withdrawResult = await lendingPool.withdraw(amount, txConfig);
+  console.log('Withdrawing funds from pool...')
+  const withdrawResult = await lendingPool.withdraw(amount, txConfig)
   lendingPoolEvents
     .tokenWithdrawn(withdrawResult)
-    .emitted(txConfig.from, amount);
-  return withdrawResult;
-};
+    .emitted(txConfig.from, amount)
+  return withdrawResult
+}
 
 const depositFunds = async (
-  {token, lendingPool},
-  {txConfig, testContext},
-  {amount}
+  { token, lendingPool },
+  { txConfig, testContext },
+  { amount }
 ) => {
-  console.log("Depositing funds on pool...");
+  console.log('Depositing funds on pool...')
   await getFunds({ token }, { testContext }, { amount, to: txConfig.from })
-  await token.approve(lendingPool.address, amount, txConfig);
-  const depositResult = await lendingPool.deposit(amount, txConfig);
-  lendingPoolEvents
-    .tokenDeposited(depositResult)
-    .emitted(txConfig.from, amount);
-  return depositResult;
-};
+  await token.approve(lendingPool.address, amount, txConfig)
+  const depositResult = await lendingPool.deposit(amount, txConfig)
+  lendingPoolEvents.tokenDeposited(depositResult).emitted(txConfig.from, amount)
+  return depositResult
+}
 
 const requestLoanTerms = async (
-  {loans, loanTermsConsensus, settings},
-  {txConfig, testContext},
-  {loanTermsRequestTemplate, loanResponseTemplate, expectedErrorMessage = undefined}
+  { loans, loanTermsConsensus, settings },
+  { txConfig, testContext },
+  {
+    loanTermsRequestTemplate,
+    loanResponseTemplate,
+    expectedErrorMessage = undefined,
+  }
 ) => {
-  console.log("Requesting loan terms...");
-  const {web3, timer, nonces, chainId} = testContext;
-  const currentTimestamp = parseInt(await timer.getCurrentTimestamp());
+  console.log('Requesting loan terms...')
+  const { web3, timer, nonces, chainId } = testContext
+  const currentTimestamp = parseInt(await timer.getCurrentTimestamp())
   const {
     amount,
     durationInDays,
     borrower,
     recipient = NULL_ADDRESS,
-  } = loanTermsRequestTemplate;
+  } = loanTermsRequestTemplate
   const {
     interestRate,
     collateralRatio,
     maxLoanAmount,
     signers,
     responseTime,
-  } = loanResponseTemplate;
+  } = loanResponseTemplate
 
   const loanTermsRequestInfo = {
     borrower,
@@ -111,7 +110,7 @@ const requestLoanTerms = async (
     requestTime: currentTimestamp,
     caller: loans.address,
     consensusAddress: loanTermsConsensus.address,
-  };
+  }
   const loanResponseInfoTemplate = {
     //        responseTime: currentTimestamp - 10,
     responseTime: currentTimestamp - 10,
@@ -119,11 +118,8 @@ const requestLoanTerms = async (
     collateralRatio,
     maxLoanAmount: maxLoanAmount.toFixed(0),
     consensusAddress: loanTermsConsensus.address,
-  };
-  const loanTermsRequest = createLoanTermsRequest(
-    loanTermsRequestInfo,
-    chainId
-  );
+  }
+  const loanTermsRequest = createLoanTermsRequest(loanTermsRequestInfo, chainId)
   const signedResponses = await createMultipleSignedLoanTermsResponses(
     web3,
     loanTermsRequest,
@@ -131,14 +127,15 @@ const requestLoanTerms = async (
     loanResponseInfoTemplate,
     nonces,
     chainId
-  );
+  )
 
-  const createLoanWithTermsPromise = async () => await loans.createLoanWithTerms(
-    loanTermsRequest.loanTermsRequest,
-    signedResponses,
-    txConfig.value,
-    txConfig
-  );
+  const createLoanWithTermsPromise = async () =>
+    await loans.createLoanWithTerms(
+      loanTermsRequest.loanTermsRequest,
+      signedResponses,
+      txConfig.value,
+      txConfig
+    )
 
   const {
     failed,
@@ -150,16 +147,16 @@ const requestLoanTerms = async (
       fnPromise: createLoanWithTermsPromise,
       expectedErrorMessage,
     }
-  );
-  if(!failed) {
+  )
+  if (!failed) {
     const termsExpiryTime = await settings.getPlatformSettingValue(
       toBytes32(web3, platformSettingsNames.TermsExpiryTime)
-    );
+    )
     const expiryTermsExpected = await timer.getCurrentTimestampInSecondsAndSum(
       termsExpiryTime
-    );
-    const loanIDs = await loans.getBorrowerLoans(borrower);
-    const lastLoanID = loanIDs[loanIDs.length - 1];
+    )
+    const loanIDs = await loans.getBorrowerLoans(borrower)
+    const lastLoanID = loanIDs[loanIDs.length - 1]
     loansEvents
       .loanTermsSet(createLoanWithTermsResult)
       .emitted(
@@ -171,63 +168,72 @@ const requestLoanTerms = async (
         loanResponseInfoTemplate.maxLoanAmount,
         loanTermsRequestInfo.duration,
         expiryTermsExpected
-      );
-    console.log(`Loan id requested: ${lastLoanID}`);
-    const loansInfo = await loans.loans(lastLoanID);
-    return loansInfo;
+      )
+    console.log(`Loan id requested: ${lastLoanID}`)
+    const loansInfo = await loans.loans(lastLoanID)
+    return loansInfo
   }
-};
+}
 
 /**
- * Deposits collateral into the Loans contract for a specific loan.
+ * Deposits collateral into the LoanManager contract for a specific loan.
  * If the token parameter is not defined, use ETH as collateral.
  */
 const depositCollateral = async (
-  {collateralToken, loans},
-  {txConfig, testContext},
-  {loanId, amount}
+  { collateralToken, loans },
+  { txConfig, testContext },
+  { loanId, amount }
 ) => {
-  const collateralTokenSymbol = await collateralToken.symbol();
-  console.log(`Depositing collateral ${amount} ${collateralTokenSymbol} in loan id ${loanId}.`);
+  const collateralTokenSymbol = await collateralToken.symbol()
+  console.log(
+    `Depositing collateral ${amount} ${collateralTokenSymbol} in loan id ${loanId}.`
+  )
   if (collateralTokenSymbol.toUpperCase() !== 'ETH') {
-    await getFunds({ token: collateralToken }, { txConfig, testContext }, { amount, to: txConfig.from })
-    await collateralToken.approve(loans.address, amount, txConfig);
+    await getFunds(
+      { token: collateralToken },
+      { txConfig, testContext },
+      { amount, to: txConfig.from }
+    )
+    await collateralToken.approve(loans.address, amount, txConfig)
   } else {
     // Don't overwrite the config object
-    txConfig = Object.assign({}, txConfig);
-    txConfig.value = amount;
+    txConfig = Object.assign({}, txConfig)
+    txConfig.value = amount
   }
-  const initialTotalCollateral = BigNumber(await loans.totalCollateral());
+  const initialTotalCollateral = BigNumber(await loans.totalCollateral())
   const depositResult = await loans.depositCollateral(
     txConfig.from,
     loanId,
     amount,
     txConfig
-  );
+  )
   loansEvents
     .collateralDeposited(depositResult)
-    .emitted(loanId, txConfig.from, amount);
-  
-  const finalTotalCollateral = BigNumber(await loans.totalCollateral());
+    .emitted(loanId, txConfig.from, amount)
+
+  const finalTotalCollateral = BigNumber(await loans.totalCollateral())
   assert.equal(
-    BigNumber(finalTotalCollateral).minus(BigNumber(initialTotalCollateral)).toFixed(0),
-    amount.toString(),
-  );
-  return depositResult;
-};
+    BigNumber(finalTotalCollateral)
+      .minus(BigNumber(initialTotalCollateral))
+      .toFixed(0),
+    amount.toString()
+  )
+  return depositResult
+}
 
 /**
  * Withdraws collateral from the loans contract for a specific loan.
  */
 const withdrawCollateral = async (
-  {loans},
-  {txConfig, testContext},
-  {loanId, amount, expectedErrorMessage = undefined}
+  { loans },
+  { txConfig, testContext },
+  { loanId, amount, expectedErrorMessage = undefined }
 ) => {
-  console.log(`Withdrawing collateral ${amount} in loan id ${loanId}.`);
+  console.log(`Withdrawing collateral ${amount} in loan id ${loanId}.`)
 
-  const withdrawCollateralPromise = async () => await loans.withdrawCollateral(amount, loanId, txConfig);
-  const initialTotalCollateral = await loans.totalCollateral();
+  const withdrawCollateralPromise = async () =>
+    await loans.withdrawCollateral(amount, loanId, txConfig)
+  const initialTotalCollateral = await loans.totalCollateral()
   const {
     failed,
     tx: withdrawCollateralResult,
@@ -238,27 +244,30 @@ const withdrawCollateral = async (
       fnPromise: withdrawCollateralPromise,
       expectedErrorMessage,
     }
-  );
-  if(!failed) {
-    const finalTotalCollateral = await loans.totalCollateral();
+  )
+  if (!failed) {
+    const finalTotalCollateral = await loans.totalCollateral()
     assert.equal(
-      BigNumber(initialTotalCollateral).minus(BigNumber(finalTotalCollateral)).toFixed(0),
-      amount.toString(),
-    );
+      BigNumber(initialTotalCollateral)
+        .minus(BigNumber(finalTotalCollateral))
+        .toFixed(0),
+      amount.toString()
+    )
     loansEvents
       .collateralWithdrawn(withdrawCollateralResult)
-      .emitted(loanId, txConfig.from, amount);
-    return withdrawCollateralResult;
+      .emitted(loanId, txConfig.from, amount)
+    return withdrawCollateralResult
   }
 }
 
 const takeOutLoan = async (
-  {loans},
-  {txConfig, testContext},
-  {loanId, amount, expectedErrorMessage = undefined}
+  { loans },
+  { txConfig, testContext },
+  { loanId, amount, expectedErrorMessage = undefined }
 ) => {
-  console.log(`Taking out loan id ${loanId}...`);
-  const takeOutLoanResultPromise = async () => await loans.takeOutLoan(loanId, amount, txConfig);
+  console.log(`Taking out loan id ${loanId}...`)
+  const takeOutLoanResultPromise = async () =>
+    await loans.takeOutLoan(loanId, amount, txConfig)
 
   const {
     failed,
@@ -270,72 +279,87 @@ const takeOutLoan = async (
       fnPromise: takeOutLoanResultPromise,
       expectedErrorMessage,
     }
-  );
-  if(!failed) {
-    const loanInfo = await loans.loans(loanId);
-    const { escrow } = loanInfo;
+  )
+  if (!failed) {
+    const loanInfo = await loans.loans(loanId)
+    const { escrow } = loanInfo
     loansEvents
       .loanTakenOut(takeOutLoanResult)
-      .emitted(loanId, txConfig.from, escrow, amount);
-    return loanInfo;
+      .emitted(loanId, txConfig.from, escrow, amount)
+    return loanInfo
   }
-};
+}
 
 /**
  * Repays an amount of the borrowed token for a loan.
  */
-const repay = async ({loans, lendingPool, token}, {txConfig}, {loanId, amount}) => {
-  console.log(`Repaying ${amount} for loan id ${loanId}`);
-  const loan = await loans.loans(loanId);
-  const totalOwed = await loans.getTotalOwed(loanId);
-  const totalOwedBigNumber = new BigNumber(totalOwed.toString());
-  
-  await token.approve(lendingPool.address, amount, txConfig);
-  const repayResult = await loans.repay(amount, loanId, txConfig);
+const repay = async (
+  { loans, lendingPool, token },
+  { txConfig },
+  { loanId, amount }
+) => {
+  console.log(`Repaying ${amount} for loan id ${loanId}`)
+  const loan = await loans.loans(loanId)
+  const totalOwed = await loans.getTotalOwed(loanId)
+  const totalOwedBigNumber = new BigNumber(totalOwed.toString())
 
-  const totalPaid = totalOwedBigNumber.gt(amount) ? amount : totalOwedBigNumber;
-  const totalOwedAfterRepayment = totalOwedBigNumber.gt(amount) ? totalOwedBigNumber.minus(amount) : '0';
+  await token.approve(lendingPool.address, amount, txConfig)
+  const repayResult = await loans.repay(amount, loanId, txConfig)
+
+  const totalPaid = totalOwedBigNumber.gt(amount) ? amount : totalOwedBigNumber
+  const totalOwedAfterRepayment = totalOwedBigNumber.gt(amount)
+    ? totalOwedBigNumber.minus(amount)
+    : '0'
   loansEvents
     .loanRepaid(repayResult)
-    .emitted(loanId, loan.loanTerms.borrower, totalPaid, txConfig.from, totalOwedAfterRepayment);
-  return repayResult;
-};
+    .emitted(
+      loanId,
+      loan.loanTerms.borrower,
+      totalPaid,
+      txConfig.from,
+      totalOwedAfterRepayment
+    )
+  return repayResult
+}
 
 const liquidateLoan = async (
   allContracts,
-  {txConfig, testContext},
-  {loanId, expectedErrorMessage = undefined}
+  { txConfig, testContext },
+  { loanId, expectedErrorMessage = undefined }
 ) => {
-  console.log(`Liquidating loan id ${loanId}...`);
-  const {token, collateralToken, loans, lendingPool} = allContracts;
-  const initialTotalCollateral = BigNumber((await loans.totalCollateral()).toString());
+  console.log(`Liquidating loan id ${loanId}...`)
+  const { token, collateralToken, loans, lendingPool } = allContracts
+  const initialTotalCollateral = BigNumber(
+    (await loans.totalCollateral()).toString()
+  )
 
   const {
     amountToLiquidate,
     rewardInCollateral,
-    collateralInfo: {
-      collateral
-    },
-  } = await loans.getLiquidationInfo(loanId);
+    collateralInfo: { collateral },
+  } = await loans.getLiquidationInfo(loanId)
 
-  const loansInfo = await loans.loans(loanId);
+  const loansInfo = await loans.loans(loanId)
   await getFunds(
     allContracts,
     { testContext },
     {
       amount: amountToLiquidate.toString(),
-      to: txConfig.from
+      to: txConfig.from,
     }
-  );
+  )
   await token.approve(
     lendingPool.address,
     amountToLiquidate.toString(),
     txConfig
-  );
-  
-  const liquidatorCollTokenBalanceBefore = await collateralToken.balanceOf(txConfig.from);
+  )
 
-  const liquidateLoanPromise = async () => await loans.liquidateLoan(loanId, txConfig);
+  const liquidatorCollTokenBalanceBefore = await collateralToken.balanceOf(
+    txConfig.from
+  )
+
+  const liquidateLoanPromise = async () =>
+    await loans.liquidateLoan(loanId, txConfig)
 
   const {
     failed,
@@ -347,9 +371,9 @@ const liquidateLoan = async (
       fnPromise: liquidateLoanPromise,
       expectedErrorMessage,
     }
-  );
+  )
 
-  if(!failed) {
+  if (!failed) {
     loansEvents
       .loanLiquidated(liquidateLoanResult)
       .emitted(
@@ -358,75 +382,81 @@ const liquidateLoan = async (
         txConfig.from,
         collateral,
         amountToLiquidate
-      );
-    const collateralInfo = await loans.getCollateralInfo(loanId);
-    const finalTotalCollateral = BigNumber((await loans.totalCollateral()).toString());
-    const liquidatorCollTokenBalanceAfter = await collateralToken.balanceOf(txConfig.from);
-    const expectedCollateralValueIncrease = initialTotalCollateral.minus(finalTotalCollateral);
-    
+      )
+    const collateralInfo = await loans.getCollateralInfo(loanId)
+    const finalTotalCollateral = BigNumber(
+      (await loans.totalCollateral()).toString()
+    )
+    const liquidatorCollTokenBalanceAfter = await collateralToken.balanceOf(
+      txConfig.from
+    )
+    const expectedCollateralValueIncrease = initialTotalCollateral.minus(
+      finalTotalCollateral
+    )
 
     if (parseInt(rewardInCollateral) > parseInt(collateral)) {
-      const remainingReward = new BigNumber(rewardInCollateral).minus(collateral);
+      const remainingReward = new BigNumber(rewardInCollateral).minus(
+        collateral
+      )
       assert.equal(
         collateralInfo.collateral.toString(),
         '0',
         'Reward not sent to liquidator'
-      );
-      assert.equal(expectedCollateralValueIncrease, collateral, 'Collateral value not increased');
-      assert(remainingReward.gt(0));
+      )
+      assert.equal(
+        expectedCollateralValueIncrease,
+        collateral,
+        'Collateral value not increased'
+      )
+      assert(remainingReward.gt(0))
     } else {
-      assert.equal(expectedCollateralValueIncrease.toString(), rewardInCollateral.toString(), 'Reward not received');
+      assert.equal(
+        expectedCollateralValueIncrease.toString(),
+        rewardInCollateral.toString(),
+        'Reward not received'
+      )
     }
   }
-};
+}
 
 const printLoanInfo = async (
   allContracts,
-  {testContext},
-  {
-    tokenInfo,
-    collateralTokenInfo,
-    loanId,
-  }
+  { testContext },
+  { tokenInfo, collateralTokenInfo, loanId }
 ) => {
-  const { verbose } = testContext;
+  const { verbose } = testContext
   if (!verbose) {
-    return;
+    return
   }
-  await printLoanDetails(allContracts, {testContext}, {tokenInfo, collateralTokenInfo, loanId});
-};
+  await printLoanDetails(
+    allContracts,
+    { testContext },
+    { tokenInfo, collateralTokenInfo, loanId }
+  )
+}
 
 const printPairAggregatorInfo = async (
   allContracts,
   { testContext },
-  {
-    tokenInfo,
-    collateralTokenInfo,
-  }
+  { tokenInfo, collateralTokenInfo }
 ) => {
-  const { verbose } = testContext;
+  const { verbose } = testContext
   if (!verbose) {
-    return;
+    return
   }
-  await printPairAggregator(allContracts, {tokenInfo, collateralTokenInfo});
-};
+  await printPairAggregator(allContracts, { tokenInfo, collateralTokenInfo })
+}
 
-const getEscrow = async (
-  {loans},
-  {testContext},
-  {
-    loanId,
+const getEscrow = async ({ loans }, { testContext }, { loanId }) => {
+  const { artifacts } = testContext
+  const Escrow = artifacts.require('./base/Escrow.sol')
+  const loanInfo = await loans.loans(loanId)
+  if (loanInfo.escrow === NULL_ADDRESS) {
+    return undefined
   }
-) => {
-  const { artifacts } = testContext;
-  const Escrow = artifacts.require("./base/Escrow.sol");
-  const loanInfo = await loans.loans(loanId);
-  if(loanInfo.escrow ===  NULL_ADDRESS) {
-    return undefined;
-  }
-  const escrow = await Escrow.at(loanInfo.escrow);
-  return escrow;
-};
+  const escrow = await Escrow.at(loanInfo.escrow)
+  return escrow
+}
 
 module.exports = {
   getFunds,

@@ -1,11 +1,11 @@
 import { deployments, contracts, toBN } from 'hardhat'
-import { Signer } from 'ethers'
+import { BigNumber, Signer } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import { fundedMarket, FundedMarketArgs, MarketReturn } from './markets'
 import { mockCRAResponse } from '../helpers/mock-cra-response'
 import { ONE_DAY } from '../../utils/consts'
-import { Loans } from '../../types/typechain'
+import { LoanManager } from '../../types/typechain'
 
 export enum LoanType {
   ZERO_COLLATERAL,
@@ -25,7 +25,7 @@ export interface MarketWithLoanReturn
 
 export interface BorrowedLoanReturn {
   createdLoanId: string
-  totalOwed: string
+  totalOwed: BigNumber
 }
 
 export const createMarketWithLoan = (
@@ -62,9 +62,9 @@ export const createAndGetLoan = async (
   // Create a loan and get the loan ID
   const createdLoanId = await createLoan(market, loanType, loanAmount, borrower)
   // Take out loan
-  await getLoan(await market.loans, createdLoanId, loanAmount, borrower, hre)
+  await getLoan(market.loanManager, createdLoanId, loanAmount, borrower, hre)
   // Get total owed for loan
-  const totalOwed = (await market.loans.getTotalOwed(createdLoanId)).toString()
+  const totalOwed = await market.loanManager.getTotalOwed(createdLoanId)
 
   return {
     createdLoanId,
@@ -108,18 +108,20 @@ export const createLoan = async (
   })
 
   // Create loan with terms
-  await market.loans
+  await market.loanManager
     .connect(borrower)
     .createLoanWithTerms(craReturn.request, [craReturn.response], '0')
   const borrowerAddress = await borrower.getAddress()
 
   // Return ID for created loan
-  const allBorrowerLoans = await market.loans.getBorrowerLoans(borrowerAddress)
+  const allBorrowerLoans = await market.loanManager.getBorrowerLoans(
+    borrowerAddress
+  )
   return allBorrowerLoans[allBorrowerLoans.length - 1].toString()
 }
 
 export const getLoan = async (
-  loansContract: Loans,
+  loanManager: LoanManager,
   createdLoanId: string,
   loanAmount: string,
   borrower: Signer,
@@ -128,10 +130,11 @@ export const getLoan = async (
   const { fastForward, toBN } = hre
 
   // Deposit collateral
-  const collateral = (await loansContract.getCollateralInfo(createdLoanId))
-    .neededInCollateralTokens
+  const [_, collateral] = await loanManager.getCollateralNeededInfo(
+    createdLoanId
+  )
   const borrowerAddress = await borrower.getAddress()
-  await loansContract
+  await loanManager
     .connect(borrower)
     .depositCollateral(borrowerAddress, createdLoanId, collateral, {
       value: collateral,
@@ -141,7 +144,7 @@ export const getLoan = async (
   await fastForward(300)
 
   // Take out loan as borrower
-  await loansContract
+  await loanManager
     .connect(borrower)
     .takeOutLoan(createdLoanId, toBN(loanAmount, '18'))
 }

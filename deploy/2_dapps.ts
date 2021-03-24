@@ -42,6 +42,7 @@ const deployDapps: DeployFunction = async (hre) => {
     const { address } = await deployDynamicProxy({
       hre,
       contract: data.contract,
+      strictDynamic: false,
     })
     await dappRegistry.addDapp(address, data.unsecured)
   }

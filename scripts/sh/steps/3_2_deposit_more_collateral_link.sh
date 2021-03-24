@@ -16,7 +16,7 @@ echo "\n------------------------------------------------------------------------
 echo "#3: Depositing more collateral (for LINK loans)..."
 echo "------------------------------------------------------------------------\n"
 
-truffle exec ./scripts/loans/depositCollateralLast.js \
+truffle exec ./scripts/loanManager/depositCollateralLast.js \
     --network $network \
     --borrowerIndex $borrower_index \
     --senderIndex $sender_index \
@@ -29,7 +29,7 @@ then
   exit -1
 fi
 
-truffle exec ./scripts/loans/depositCollateralLast.js \
+truffle exec ./scripts/loanManager/depositCollateralLast.js \
     --network $network \
     --borrowerIndex $borrower_index \
     --senderIndex $sender_index \

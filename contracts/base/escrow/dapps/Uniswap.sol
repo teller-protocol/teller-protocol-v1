@@ -9,7 +9,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20
 import "../../../util/AddressLib.sol";
 
 // Contracts
-import "../../BaseEscrowDapp.sol";
+import "../../escrow/BaseEscrowDapp.sol";
 
 // Interfaces
 import "./IUniswap.sol";

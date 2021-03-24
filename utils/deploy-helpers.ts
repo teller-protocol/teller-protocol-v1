@@ -49,8 +49,12 @@ export const deployLogic = async (args: DeployLogicArgs): Promise<Contract> =>
     name: `${args.contract}_Logic`,
   })
 
+interface DeployDynamicProxyArgs extends DeployArgs {
+  strictDynamic: boolean
+}
+
 export const deployDynamicProxy = async (
-  args: DeployArgs
+  args: DeployDynamicProxyArgs
 ): Promise<DynamicProxy> => {
   const {
     hre: { contracts, ethers },
@@ -65,7 +69,7 @@ export const deployDynamicProxy = async (
     hre: args.hre,
     name: args.contract,
     contract: 'DynamicProxy',
-    args: [logicRegistryAddress, logicName],
+    args: [logicRegistryAddress, logicName, args.strictDynamic],
   })
 }
 
@@ -79,15 +83,10 @@ interface DeploySettingsProxyArgs {
 
 export const deploySettingsProxy = async (
   args: DeploySettingsProxyArgs
-): Promise<SettingsDynamicProxy> => {
-  const proxy = await deploy<SettingsDynamicProxy>({
+): Promise<SettingsDynamicProxy> =>
+  deploy<SettingsDynamicProxy>({
     hre: args.hre,
     name: 'Settings',
     contract: 'SettingsDynamicProxy',
+    args: [args.initialLogicVersions],
   })
-
-  const tx = await proxy.initializeLogicVersions(args.initialLogicVersions)
-  await tx.wait(1)
-
-  return proxy
-}

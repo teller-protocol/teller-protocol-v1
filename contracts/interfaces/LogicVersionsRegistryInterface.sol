@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 // Commons
 import "../util/LogicVersionLib.sol";
-import "../util/LogicVersionsConsts.sol";
 import "../util/TellerCommon.sol";
 
 /**
@@ -15,13 +14,11 @@ interface LogicVersionsRegistryInterface {
     /**
         @notice This event is emitted when a new logic version is created.
         @param logicName new logic name.
-        @param sender address that created it.
         @param logic address where the logic is.
         @param version initial version for the logic address.
      */
     event LogicVersionCreated(
         bytes32 indexed logicName,
-        address indexed sender,
         address indexed logic,
         uint256 version
     );
@@ -29,7 +26,6 @@ interface LogicVersionsRegistryInterface {
     /**
         @notice This event is emitted when a logic version is rollbacked.
         @param logicName the logic name.
-        @param sender address that rollbacked it.
         @param oldLogic the old logic address.
         @param newLogic the new (or previous) logic address.
         @param oldVersion the old version.
@@ -37,7 +33,6 @@ interface LogicVersionsRegistryInterface {
      */
     event LogicVersionRollbacked(
         bytes32 indexed logicName,
-        address indexed sender,
         address oldLogic,
         address newLogic,
         uint256 oldVersion,
@@ -45,17 +40,15 @@ interface LogicVersionsRegistryInterface {
     );
 
     /**
-        @notice This event is emitted when a new logic version is updated.
+        @notice This event is emitted when a new logic version is upgraded.
         @param logicName new logic name.
-        @param sender address that updated it.
         @param oldLogic the old logic address.
         @param newLogic the new logic address.
         @param oldVersion the old version.
         @param newVersion the new version.
      */
-    event LogicVersionUpdated(
+    event LogicVersionUpgraded(
         bytes32 indexed logicName,
-        address indexed sender,
         address oldLogic,
         address newLogic,
         uint256 oldVersion,
@@ -64,22 +57,33 @@ interface LogicVersionsRegistryInterface {
 
     /** External Functions */
 
-    function consts() external returns (LogicVersionsConsts);
-
     /**
         @notice It creates multiple logic versions.
         @param newLogicVersions lists of the new logic versions to create.
      */
     function createLogicVersions(
-        TellerCommon.LogicVersionRequest[] calldata newLogicVersions
+        TellerCommon.CreateLogicVersionRequest[] calldata newLogicVersions
     ) external;
 
     /**
-        @notice It updates a current logic address given a logic name.
-        @param logicName logic name to update.
-        @param newLogic the new logic address to set.
+        @notice It upgrades multiple logic addresses.
+        @param newLogicVersions lists of the new logic versions to create.
      */
-    function updateLogicAddress(bytes32 logicName, address newLogic) external;
+    function upgradeLogicVersions(
+        TellerCommon.UpgradeLogicVersionRequest[] calldata newLogicVersions
+    ) external;
+
+    /**
+        @notice It upgrades a logic version given a logic name.
+        @param logicName logic name to upgrade.
+        @param newLogic the new logic address to set.
+        @param proxy The (optional) DynamicUpgradeable proxy address to attempt to directly upgrade.
+     */
+    function upgradeLogicVersion(
+        bytes32 logicName,
+        address newLogic,
+        address proxy
+    ) external;
 
     /**
         @notice It rollbacks a logic to a previous version.
@@ -117,6 +121,6 @@ interface LogicVersionsRegistryInterface {
      */
     function initialize(
         address aOwner,
-        TellerCommon.LogicVersionRequest[] calldata initialLogicVersions
+        TellerCommon.CreateLogicVersionRequest[] calldata initialLogicVersions
     ) external;
 }

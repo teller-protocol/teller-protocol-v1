@@ -1,9 +1,10 @@
 import { task, types } from 'hardhat/config'
-import { ChainlinkAggregator } from '../types/typechain'
-import { getTokens } from '../config/tokens'
-import { Network } from '../types/custom/config-types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { BigNumberish } from 'ethers'
+
+import { ChainlinkAggregator } from '../types/typechain'
+import { Network } from '../types/custom/config-types'
+import { getTokens } from '../config/tokens'
 
 interface GetPricesArgs {
   src: string

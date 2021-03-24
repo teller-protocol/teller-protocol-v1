@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 // Libraries
 import "../util/CompoundRatesLib.sol";
 import "../util/NumbersLib.sol";
-import "../util/AddressArrayLib.sol";
 
 // Commons
 
@@ -12,14 +11,14 @@ import "../util/AddressArrayLib.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../interfaces/LendingPoolInterface.sol";
-import "../interfaces/LoansInterface.sol";
+import "../interfaces/loans/ILoanManager.sol";
 import "../providers/compound/CErc20Interface.sol";
 import "../interfaces/IMarketRegistry.sol";
+import "../interfaces/ITToken.sol";
 
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
 import "./Base.sol";
-import "./TToken.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -37,7 +36,7 @@ import "./TToken.sol";
 
     @author develop@teller.finance
  */
-contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
+contract LendingPool is LendingPoolInterface, Base {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
     using CompoundRatesLib for CErc20Interface;
@@ -45,7 +44,7 @@ contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
 
     /* State Variables */
 
-    TToken public tToken;
+    ITToken public tToken;
 
     ERC20Detailed public lendingToken;
 
@@ -68,15 +67,32 @@ contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
     // The total amount of underlying interest the pool has earned from loans being repaid.
     uint256 public totalInterestEarned;
 
+    /**
+     * @notice It holds the platform AssetSettings instance.
+     */
+    AssetSettingsInterface public assetSettings;
+
+    bool internal _notEntered;
+
     /** Modifiers */
 
     /**
-        @notice It checks the address is the Loans contract address.
-        @dev It throws a require error if parameter is not equal to loans contract address.
+        @notice It checks the address is the LoanManager contract address.
+        @dev It throws a require error if parameter is not equal to loan manager contract address.
      */
     modifier isLoan() {
         _requireIsLoan();
         _;
+    }
+
+    /**
+     * @notice Prevents a contract from calling itself, directly or indirectly.
+     */
+    modifier nonReentrant() {
+        require(_notEntered, "re-entered");
+        _notEntered = false;
+        _;
+        _notEntered = true; // get a gas-refund post-Istanbul
     }
 
     /* Constructor */
@@ -91,7 +107,7 @@ contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
     */
     function deposit(uint256 lendingTokenAmount)
         external
-        isInitialized
+        nonReentrant
         whenNotPaused
         whenLendingPoolNotPaused(address(this))
         onlyAuthorized
@@ -104,7 +120,7 @@ contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
 
         require(
             previousSupply.add(lendingTokenAmount) <=
-                settings.assetSettings().getMaxTVLAmount(address(lendingToken)),
+                assetSettings.getMaxTVLAmount(address(lendingToken)),
             "MAX_TVL_REACHED"
         );
 
@@ -135,10 +151,9 @@ contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
      */
     function withdraw(uint256 lendingTokenAmount)
         external
-        isInitialized
+        nonReentrant
         whenNotPaused
         whenLendingPoolNotPaused(address(this))
-        nonReentrant
         onlyAuthorized
     {
         uint256 exchangeRate = _exchangeRateCurrent();
@@ -156,10 +171,9 @@ contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
 
     function withdrawAll()
         external
-        isInitialized
+        nonReentrant
         whenNotPaused
         whenLendingPoolNotPaused(address(this))
-        nonReentrant
         onlyAuthorized
         returns (uint256)
     {
@@ -175,7 +189,7 @@ contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
 
     /**
         @notice It allows a borrower repaying their loan.
-        @dev This function can be called ONLY by the Loans contract.
+        @dev This function can be called ONLY by the LoanManager contract.
         @dev It requires a ERC20.approve call before calling it.
         @dev It throws a require error if borrower called ERC20.approve function before calling it.
         @param principalAmount amount of tokens towards the principal.
@@ -188,7 +202,7 @@ contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
         address borrower
     )
         external
-        isInitialized
+        nonReentrant
         isLoan
         whenLendingPoolNotPaused(address(this))
         onlyAuthorized
@@ -213,13 +227,13 @@ contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
 
         @param amount of tokens to transfer.
         @param borrower address which will receive the tokens.
-        @dev This function only can be invoked by the LoansInterface implementation.
+        @dev This function only can be invoked by the ILoanManager implementation.
         @dev It withdraws the lending tokens from Compound before transferring tokens to the borrower.
      */
     function createLoan(uint256 amount, address borrower)
         external
-        isInitialized
-        isLoan()
+        nonReentrant
+        isLoan
         whenLendingPoolNotPaused(address(this))
         onlyAuthorized
     {
@@ -349,7 +363,7 @@ contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
         @notice It calculates the stored exchange rate for the TToken based on the total supply of the lending token.
         @return the exchange rate for 1 TToken to the underlying token.
      */
-    function exchangeRate() external view returns (uint256) {
+    function exchangeRateStored() external view returns (uint256) {
         return _exchangeRateStored();
     }
 
@@ -374,23 +388,27 @@ contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
     /**
         @notice It initializes the contract state variables.
         @param aMarketRegistry the MarketRegistry contract.
+        @param aLendingToken The underlying token that is used for lending.
         @param aTToken the Teller token to link to the lending pool.
         @param settingsAddress Settings contract address.
         @dev It throws a require error if the contract is already initialized.
      */
     function initialize(
         IMarketRegistry aMarketRegistry,
-        TToken aTToken,
+        address aLendingToken,
+        address aTToken,
         address settingsAddress
-    ) external isNotInitialized {
-        address(aTToken).requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
+    ) external {
+        aTToken.requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
 
-        _initialize(settingsAddress);
-        ReentrancyGuard.initialize();
+        Base._initialize(settingsAddress);
 
         marketRegistry = aMarketRegistry;
-        tToken = aTToken;
-        lendingToken = tToken.underlying();
+        tToken = ITToken(aTToken);
+        lendingToken = ERC20Detailed(aLendingToken);
+        assetSettings = settings.assetSettings();
+
+        _notEntered = true;
     }
 
     /** Internal functions */
@@ -592,12 +610,12 @@ contract LendingPool is LendingPoolInterface, Base, ReentrancyGuard {
     }
 
     /**
-        @notice It validates whether transaction sender is the loans contract address.
+        @notice It validates whether transaction sender is the loan manager contract address.
         @dev This function is overriden in some mock contracts for testing purposes.
      */
     function _requireIsLoan() internal view {
         require(
-            marketRegistry.loansRegistry(address(this), msg.sender),
+            marketRegistry.loanManagerRegistry(address(this), msg.sender),
             "CALLER_NOT_LOANS_CONTRACT"
         );
     }

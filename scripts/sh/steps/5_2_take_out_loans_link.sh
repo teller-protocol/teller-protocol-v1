@@ -16,7 +16,7 @@ echo "\n------------------------------------------------------------------------
 echo "#5: Taking out the loans (DAI and USDC / LINK)..."
 echo "------------------------------------------------------------------------\n"
 
-truffle exec ./scripts/loans/takeOutLastLoan.js \
+truffle exec ./scripts/loanManager/takeOutLastLoan.js \
     --network $network \
     --collTokenName LINK \
     --tokenName DAI \
@@ -28,7 +28,7 @@ then
   exit -1
 fi
 
-truffle exec ./scripts/loans/takeOutLastLoan.js \
+truffle exec ./scripts/loanManager/takeOutLastLoan.js \
     --network $network \
     --collTokenName LINK \
     --tokenName USDC \

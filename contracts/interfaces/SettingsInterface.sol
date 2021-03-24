@@ -3,10 +3,9 @@ pragma experimental ABIEncoderV2;
 
 import "../util/PlatformSettingsLib.sol";
 import "./IDappRegistry.sol";
-import "../util/SettingsConsts.sol";
 import "../providers/chainlink/IChainlinkAggregator.sol";
 import "../interfaces/AssetSettingsInterface.sol";
-import "./MarketFactoryInterface.sol";
+import "./IMarketFactory.sol";
 
 /**
     @notice This interface defines all function to manage the platform configuration.
@@ -121,9 +120,13 @@ interface SettingsInterface {
         uint256 maxValue
     ) external;
 
-    function consts() external view returns (SettingsConsts);
-
     function assetSettings() external view returns (AssetSettingsInterface);
+
+    /**
+     * @notice It holds the address of a deployed InitializeableDynamicProxy contract.
+     * @dev It is used to deploy a new proxy contract with minimal gas cost using the logic in the Factory contract.
+     */
+    function initDynamicProxyLogic() external view returns (address);
 
     /**
         @notice It updates an existent platform setting given a setting name.
@@ -142,24 +145,79 @@ interface SettingsInterface {
     function removePlatformSetting(bytes32 settingName) external;
 
     /**
-        @notice It gets the current platform setting for a given setting name
-        @param settingName to get.
-        @return the current platform setting.
+        @notice It gets the current "RequiredSubmissionsPercentage" setting's value
+        @return the current value.
      */
-    function getPlatformSetting(bytes32 settingName)
+    function getRequiredSubmissionsPercentageValue()
         external
         view
-        returns (PlatformSettingsLib.PlatformSetting memory);
+        returns (uint256 value);
 
     /**
-        @notice It gets the current platform setting value for a given setting name
-        @param settingName to get.
-        @return the current platform setting value.
+        @notice It gets the current "MaximumTolerance" setting's value
+        @return the current value.
      */
-    function getPlatformSettingValue(bytes32 settingName)
+    function getMaximumToleranceValue() external view returns (uint256 value);
+
+    /**
+        @notice It gets the current "ResponseExpiryLength" setting's value
+        @return the current value.
+     */
+    function getResponseExpiryLengthValue()
         external
         view
-        returns (uint256);
+        returns (uint256 value);
+
+    /**
+        @notice It gets the current "SafetyInterval" setting's value
+        @return the current value.
+     */
+    function getSafetyIntervalValue() external view returns (uint256 value);
+
+    /**
+        @notice It gets the current "TermsExpiryTime" setting's value
+        @return the current value.
+     */
+    function getTermsExpiryTimeValue() external view returns (uint256 value);
+
+    /**
+        @notice It gets the current "LiquidateEthPrice" setting's value
+        @return the current value.
+     */
+    function getLiquidateEthPriceValue() external view returns (uint256 value);
+
+    /**
+        @notice It gets the current "MaximumLoanDuration" setting's value
+        @return the current value.
+     */
+    function getMaximumLoanDurationValue()
+        external
+        view
+        returns (uint256 value);
+
+    /**
+        @notice It gets the current "RequestLoanTermsRateLimit" setting's value
+        @return the current value.
+     */
+    function getRequestLoanTermsRateLimitValue()
+        external
+        view
+        returns (uint256 value);
+
+    /**
+        @notice It gets the current "CollateralBuffer" setting's value
+        @return the current value.
+     */
+    function getCollateralBufferValue() external view returns (uint256 value);
+
+    /**
+        @notice It gets the current "OverCollateralizedBuffer" setting's value
+        @return the current value.
+     */
+    function getOverCollateralizedBufferValue()
+        external
+        view
+        returns (uint256 value);
 
     /**
         @notice It tests whether a setting name is already configured.
@@ -276,7 +334,7 @@ interface SettingsInterface {
     /**
         @notice It is the global instance of the MarketFactory contract.
      */
-    function marketFactory() external view returns (MarketFactoryInterface);
+    function marketFactory() external view returns (IMarketFactory);
 
     /**
         @notice Gets the cToken address for a given asset address.
@@ -292,9 +350,13 @@ interface SettingsInterface {
         @notice It initializes this settings contract instance.
         @param wethTokenAddress canonical WETH token address.
         @param cethTokenAddress compound CETH token address.
+        @param initDynamicProxyAddress Address of a deployed InitializeableDynamicProxy contract.
      */
-    function initialize(address wethTokenAddress, address cethTokenAddress)
-        external;
+    function initialize(
+        address wethTokenAddress,
+        address cethTokenAddress,
+        address initDynamicProxyAddress
+    ) external;
 
     /**
         @notice It gets the ETH address used in the platform.

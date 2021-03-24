@@ -24,16 +24,6 @@ import "../interfaces/LoanTermsConsensusInterface.sol";
  */
 contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
     /* Mappings */
-    /**
-        @notice It identifies the loan terms submissions for a given borrower address and a request nonce.
-
-        @dev Examples:
-            @address(0x123...567) => 1 => AccruedLoanTerms({...})
-            @address(0x123...567) => 2 => AccruedLoanTerms({...})
-            @address(0x234...678) => 1 => AccruedLoanTerms({...})
-     */
-    mapping(address => mapping(uint256 => TellerCommon.AccruedLoanTerms))
-        public termSubmissions;
 
     /**
         This mapping identify the last request timestamp for a given borrower address.
@@ -57,7 +47,6 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
         TellerCommon.LoanResponse[] calldata responses
     )
         external
-        isInitialized
         isCaller(msg.sender)
         onlyEnoughSubmissions(responses.length)
         returns (
@@ -75,31 +64,24 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
 
         bytes32 requestHash = _hashRequest(request);
 
+        TellerCommon.AccruedLoanTerms memory termSubmissions;
         for (uint256 i = 0; i < responses.length; i++) {
-            _processResponse(request, responses[i], requestHash);
+            _processResponse(
+                request,
+                responses[i],
+                termSubmissions,
+                requestHash
+            );
         }
 
-        interestRate = _getConsensus(
-            termSubmissions[request.borrower][request.requestNonce].interestRate
-        );
+        uint256 tolerance = settings.getMaximumToleranceValue();
+        interestRate = _getConsensus(termSubmissions.interestRate, tolerance);
         collateralRatio = _getConsensus(
-            termSubmissions[request.borrower][request.requestNonce]
-                .collateralRatio
+            termSubmissions.collateralRatio,
+            tolerance
         );
-        maxLoanAmount = _getConsensus(
-            termSubmissions[request.borrower][request.requestNonce]
-                .maxLoanAmount
-        );
+        maxLoanAmount = _getConsensus(termSubmissions.maxLoanAmount, tolerance);
         borrowerToLastLoanTermRequest[request.borrower] = now;
-
-        // TODO: Remove redundant event
-        emit TermsAccepted(
-            request.borrower,
-            request.requestNonce,
-            interestRate,
-            collateralRatio,
-            maxLoanAmount
-        );
     }
 
     /**
@@ -111,6 +93,7 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
     function _processResponse(
         TellerCommon.LoanRequest memory request,
         TellerCommon.LoanResponse memory response,
+        TellerCommon.AccruedLoanTerms memory termSubmissions,
         bytes32 requestHash
     ) internal {
         bytes32 responseHash = _hashResponse(response, requestHash);
@@ -124,25 +107,9 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
             response.signature
         );
 
-        termSubmissions[request.borrower][request.requestNonce]
-            .interestRate
-            .addValue(response.interestRate);
-        termSubmissions[request.borrower][request.requestNonce]
-            .collateralRatio
-            .addValue(response.collateralRatio);
-        termSubmissions[request.borrower][request.requestNonce]
-            .maxLoanAmount
-            .addValue(response.maxLoanAmount);
-
-        emit TermsSubmitted(
-            response.signer,
-            request.borrower,
-            request.requestNonce,
-            response.signature.signerNonce,
-            response.interestRate,
-            response.collateralRatio,
-            response.maxLoanAmount
-        );
+        termSubmissions.interestRate.addValue(response.interestRate);
+        termSubmissions.collateralRatio.addValue(response.collateralRatio);
+        termSubmissions.maxLoanAmount.addValue(response.maxLoanAmount);
     }
 
     /**
@@ -209,9 +176,7 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
             return;
         }
         uint256 requestLoanTermsRateLimit =
-            settings.getPlatformSettingValue(
-                settings.consts().REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING()
-            );
+            settings.getRequestLoanTermsRateLimitValue();
         require(
             borrowerToLastLoanTermRequest[request.borrower].add(
                 requestLoanTermsRateLimit

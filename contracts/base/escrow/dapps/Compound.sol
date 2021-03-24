@@ -10,7 +10,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "../../../util/AddressLib.sol";
 
 //Contracts
-import "../../BaseEscrowDapp.sol";
+import "../../escrow/BaseEscrowDapp.sol";
 
 // Interfaces
 import "./ICompound.sol";

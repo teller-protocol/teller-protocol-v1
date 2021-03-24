@@ -8,7 +8,7 @@ import {
   MarketWithLoanReturn,
 } from '../fixtures'
 import { Signer } from 'ethers'
-import { ERC20Detailed, Loans } from '../../types/typechain'
+import { ERC20Detailed } from '../../types/typechain'
 
 chai.should()
 chai.use(solidity)
@@ -31,7 +31,7 @@ const setupTest = deployments.createFixture(async () => {
   }
 })
 
-describe('Loans', async () => {
+describe('LoanManager', async () => {
   let market: MarketWithLoanReturn
   let borrower: Signer
   let borrowerAddress: string
@@ -61,26 +61,28 @@ describe('Loans', async () => {
       // Create loan
       const loanID = await createLoan(market, 2, '2000', borrower)
       // Get collateral required
-      const collateralNeeded = (await market.loans.getCollateralInfo(loanID))
-        .neededInCollateralTokens
+      const [
+        _,
+        collateralNeeded,
+      ] = await market.loanManager.getCollateralNeededInfo(loanID)
       // Deposit collateral
-      await market.loans
+      await market.loanManager
         .connect(borrower)
         .depositCollateral(borrowerAddress, loanID, collateralNeeded, {
           value: collateralNeeded,
         })
-        .should.emit(market.loans, 'CollateralDeposited')
-        .withArgs(loanID, borrowerAddress, collateralNeeded.toString())
+        .should.emit(market.loanManager, 'CollateralDeposited')
+        .withArgs(loanID, borrowerAddress, collateralNeeded)
 
       await fastForward(300)
       // Get info for created loan
-      const loanInfo = await market.loans.loans(loanID)
+      const loanInfo = await market.loanManager.loans(loanID)
 
       // Take out loan
-      await market.loans
+      await market.loanManager
         .connect(borrower)
         .takeOutLoan(loanID, toBN(loanAmount, '18'))
-        .should.emit(market.loans, 'LoanTakenOut')
+        .should.emit(market.loanManager, 'LoanTakenOut')
         .withArgs(
           loanID,
           borrowerAddress,
@@ -98,7 +100,7 @@ describe('Loans', async () => {
 
       // Try to take out loan which should fail
       const fn = () =>
-        market.loans
+        market.loanManager
           .connect(borrower)
           .takeOutLoan(createdLoanID, hre.toBN(loanAmount, '18'))
 
@@ -116,18 +118,17 @@ describe('Loans', async () => {
 
       // Repay loan
       const fn = () =>
-        market.loans
+        market.loanManager
           .connect(borrower)
           .repay(createdLoan.totalOwed, createdLoan.createdLoanId)
 
       await fn()
-        .should.emit(market.loans, 'LoanRepaid')
+        .should.emit(market.loanManager, 'LoanRepaid')
         .withArgs(
           createdLoan.createdLoanId,
           await borrower.getAddress(),
           createdLoan.totalOwed,
-          await borrower.getAddress(),
-          '0'
+          await borrower.getAddress()
         )
     })
     // - Taking out a loan unsuccessfully with invalid debt ratio
@@ -153,27 +154,33 @@ describe('Loans', async () => {
       const loanID = await createLoan(market, 2, '3131', borrower)
 
       // Get collateral owed for loan
-      const collateral = (await market.loans.getCollateralInfo(loanID))
-        .neededInCollateralTokens
+      const [_, collateral] = await market.loanManager.getCollateralNeededInfo(
+        loanID
+      )
 
       // Deposit collateral
-      await market.loans
+      await market.loanManager
         .connect(borrower)
         .depositCollateral(borrowerAddress, loanID, collateral, {
           value: collateral,
         })
-        .should.emit(market.loans, 'CollateralDeposited')
+        .should.emit(market.loanManager, 'CollateralDeposited')
         .withArgs(loanID, borrowerAddress, collateral.toString())
 
       // Time travel
       await fastForward(600)
 
       // Withdraw collateral without taking out the loan
-      await market.loans
+      await market.loanManager
         .connect(borrower)
         .withdrawCollateral(collateral, loanID)
-        .should.emit(market.loans, 'CollateralWithdrawn')
-        .withArgs(loanID, borrowerAddress, collateral.toString())
+        .should.emit(market.loanManager, 'CollateralWithdrawn')
+        .withArgs(
+          loanID,
+          borrowerAddress,
+          borrowerAddress,
+          collateral.toString()
+        )
     })
     // - Taking out partial collateral before taking out a loan
     it('should be able to withdraw partial collateral before takeOutLoan', async () => {
@@ -181,16 +188,17 @@ describe('Loans', async () => {
       const loanID = await createLoan(market, 2, '3131', borrower)
 
       // Get collateral owed for loan
-      const collateral = (await market.loans.getCollateralInfo(loanID))
-        .neededInCollateralTokens
+      const [_, collateral] = await market.loanManager.getCollateralNeededInfo(
+        loanID
+      )
 
       // Deposit collateral
-      await market.loans
+      await market.loanManager
         .connect(borrower)
         .depositCollateral(borrowerAddress, loanID, collateral, {
           value: collateral,
         })
-        .should.emit(market.loans, 'CollateralDeposited')
+        .should.emit(market.loanManager, 'CollateralDeposited')
         .withArgs(loanID, borrowerAddress, collateral.toString())
 
       // Time travel
@@ -198,11 +206,16 @@ describe('Loans', async () => {
 
       // Withdraw only half the collateral without taking out the loan
       const partialCollateral = collateral.div(2)
-      await market.loans
+      await market.loanManager
         .connect(borrower)
         .withdrawCollateral(partialCollateral, loanID)
-        .should.emit(market.loans, 'CollateralWithdrawn')
-        .withArgs(loanID, borrowerAddress, partialCollateral.toString())
+        .should.emit(market.loanManager, 'CollateralWithdrawn')
+        .withArgs(
+          loanID,
+          borrowerAddress,
+          borrowerAddress,
+          partialCollateral.toString()
+        )
     })
   })
 })

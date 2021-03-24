@@ -2,7 +2,7 @@ import { DeployFunction } from 'hardhat-deploy/types'
 
 import {
   deploy,
-  DeployArgs,
+  DeployLogicArgs,
   deployLogic,
   deploySettingsProxy,
 } from '../utils/deploy-helpers'
@@ -16,15 +16,16 @@ const deployLogicContracts: DeployFunction = async (hre) => {
 
   const tokens = getTokens(<Network>network.name)
 
-  const { address: loanLibAddress } = await deploy({
-    hre,
-    contract: 'LoanLib',
-  })
-
   const mock = network.name.includes('hardhat')
-  const logicDeploymentData: Omit<DeployArgs, 'hre'>[] = [
+  const logicDeploymentData: Omit<DeployLogicArgs, 'hre'>[] = [
     {
       contract: 'Settings',
+    },
+    {
+      contract: 'AssetSettings',
+    },
+    {
+      contract: 'MarketRegistry',
     },
     {
       contract: 'ChainlinkAggregator',
@@ -33,17 +34,11 @@ const deployLogicContracts: DeployFunction = async (hre) => {
       contract: 'TToken',
     },
     {
-      contract: 'EtherCollateralLoans',
-      libraries: {
-        LoanLib: loanLibAddress,
-      },
-      mock,
+      contract: 'LoanData',
     },
     {
-      contract: 'TokenCollateralLoans',
-      libraries: {
-        LoanLib: loanLibAddress,
-      },
+      contract: 'LoanManager',
+      mock,
     },
     {
       contract: 'LendingPool',
@@ -92,13 +87,22 @@ const deployLogicContracts: DeployFunction = async (hre) => {
     })
   }
 
+  const initDynamicProxyLogic = await deployLogic({
+    hre,
+    contract: 'InitializeableDynamicProxy',
+  })
+
   await deploySettingsProxy({
     hre,
     initialLogicVersions,
   })
 
   const settings = await contracts.get<Settings>('Settings', { from: deployer })
-  await settings['initialize(address,address)'](tokens.WETH, tokens.CETH)
+  await settings['initialize(address,address,address)'](
+    tokens.WETH,
+    tokens.CETH,
+    initDynamicProxyLogic.address
+  )
 
   await deployments.save('LogicVersionsRegistry', {
     ...(await deployments.getExtendedArtifact('LogicVersionsRegistry')),

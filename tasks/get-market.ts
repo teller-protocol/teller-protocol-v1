@@ -1,14 +1,16 @@
 import { task, types } from 'hardhat/config'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
+
 import {
   ERC20Detailed,
   LendingPool,
-  Loans,
+  LoanData,
+  LoanManager,
   MarketRegistry,
   TToken,
 } from '../types/typechain'
-import { getTokens } from '../config/tokens'
 import { Network } from '../types/custom/config-types'
-import { HardhatRuntimeEnvironment } from 'hardhat/types'
+import { getTokens } from '../config/tokens'
 
 interface GetMarketArgs {
   lendTokenSym: string
@@ -18,7 +20,7 @@ interface GetMarketArgs {
 
 export interface GetMarketReturn {
   lendingPool: LendingPool
-  loans: Loans
+  loanManager: LoanManager
   lendingToken: ERC20Detailed
   tToken: TToken
 }
@@ -45,11 +47,13 @@ export const getMarket = async (
     at: lendingPoolAddress,
   })
 
-  const loansAddress = await marketRegistry.loans(
+  const loanManagerAddress = await marketRegistry.loanManagers(
     lendingTokenAddress,
     collateralTokenAddress
   )
-  const loans = await contracts.get<Loans>('Loans', { at: loansAddress })
+  const loanManager = await contracts.get<LoanManager>('LoanManager', {
+    at: loanManagerAddress,
+  })
 
   const lendingToken = await tokens.get(lendTokenSym)
   const tToken = await contracts.get<TToken>('TToken', {
@@ -62,13 +66,13 @@ export const getMarket = async (
 
   Lending Pool Address:     ${lendingPoolAddress}
 
-  Loans Address:            ${loansAddress}
+  Loan Manager Address:     ${loanManagerAddress}
     `)
   }
 
   return {
     lendingPool,
-    loans,
+    loanManager,
     lendingToken,
     tToken,
   }

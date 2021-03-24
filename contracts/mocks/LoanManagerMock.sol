@@ -1,8 +1,8 @@
 pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
-import "../base/Loans.sol";
+import "../base/loans/LoanManager.sol";
 
-contract LoansMock is Loans {
+contract LoanManagerMock is LoanManager {
     function() external payable {}
 }

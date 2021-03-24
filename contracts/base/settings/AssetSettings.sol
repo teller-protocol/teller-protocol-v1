@@ -3,15 +3,15 @@ pragma experimental ABIEncoderV2;
 
 // Libraries
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
-import "../util/AddressLib.sol";
-import "../util/CacheLib.sol";
+import "../../util/AddressLib.sol";
+import "../../util/CacheLib.sol";
 
 // Contracts
-import "./Base.sol";
+import "../Base.sol";
 
 // Interfaces
-import "../interfaces/AssetSettingsInterface.sol";
-import "../providers/compound/CErc20Interface.sol";
+import "../../interfaces/AssetSettingsInterface.sol";
+import "../../providers/compound/CErc20Interface.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -457,7 +457,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
         emit AssetSettingsRemoved(msg.sender, assetAddress);
     }
 
-    function initialize() external isNotInitialized {
+    function initialize() external {
         _initialize(msg.sender);
     }
 }

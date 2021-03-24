@@ -9,6 +9,7 @@ import "../util/NumbersList.sol";
 
 // Contracts
 import "./OwnerSignersRole.sol";
+import "@openzeppelin/upgrades/contracts/Initializable.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -68,11 +69,7 @@ contract Consensus is OwnerSignersRole {
      */
     modifier onlyEnoughSubmissions(uint256 responseCount) {
         uint256 percentageRequired =
-            settings
-                .platformSettings(
-                settings.consts().REQUIRED_SUBMISSIONS_PERCENTAGE_SETTING()
-            )
-                .value;
+            settings.getRequiredSubmissionsPercentageValue();
 
         require(
             responseCount.ratioOf(_signerCount) >= percentageRequired,
@@ -83,7 +80,7 @@ contract Consensus is OwnerSignersRole {
 
     /**
         @notice It initializes this consensus contract.
-        @dev The caller address must be the loans contract for LoanTermsConsensus.
+        @dev The caller address must be the loan marager for LoanTermsConsensus.
         @param owner the owner address.
         @param aCallerAddress the contract that will call it.
         @param aSettingAddress the settings contract address.
@@ -92,7 +89,7 @@ contract Consensus is OwnerSignersRole {
         address owner,
         address aCallerAddress,
         address aSettingAddress
-    ) external isNotInitialized {
+    ) external {
         require(aCallerAddress.isContract(), "CALLER_MUST_BE_CONTRACT");
 
         OwnerSignersRole._initialize(owner);
@@ -140,19 +137,12 @@ contract Consensus is OwnerSignersRole {
         @notice The values must be in a maximum tolerance range.
         @return the consensus value.
      */
-    function _getConsensus(NumbersList.Values storage values)
+    function _getConsensus(NumbersList.Values memory values, uint256 tolerance)
         internal
         view
         returns (uint256)
     {
-        require(
-            values.isWithinTolerance(
-                settings.getPlatformSettingValue(
-                    settings.consts().MAXIMUM_TOLERANCE_SETTING()
-                )
-            ),
-            "RESPONSES_TOO_VARIED"
-        );
+        require(values.isWithinTolerance(tolerance), "RESPONSES_TOO_VARIED");
 
         return values.getAverage();
     }
@@ -181,12 +171,7 @@ contract Consensus is OwnerSignersRole {
         hasSubmitted[signer][user][requestIdentifier] = true;
 
         require(
-            responseTime >=
-                now.sub(
-                    settings.getPlatformSettingValue(
-                        settings.consts().RESPONSE_EXPIRY_LENGTH_SETTING()
-                    )
-                ),
+            responseTime >= now.sub(settings.getResponseExpiryLengthValue()),
             "RESPONSE_EXPIRED"
         );
 

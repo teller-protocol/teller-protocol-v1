@@ -105,7 +105,7 @@ echo "\n------------------------------------------------------------------------
 echo "#2: Requesting loan terms..."
 echo "------------------------------------------------------------------------\n"
 
-truffle exec ./scripts/loans/createLoanWithTerms.js \
+truffle exec ./scripts/loanManager/createLoanWithTerms.js \
     --network $network \
     --borrowerIndex $loan_1_dai_eth_borrower_index \
     --tokenName DAI \
@@ -115,7 +115,7 @@ truffle exec ./scripts/loans/createLoanWithTerms.js \
     --collAmount $loan_1_dai_eth_coll_amount \
     --nonce $loan_1_dai_eth_borrower_nonce
 
-truffle exec ./scripts/loans/createLoanWithTerms.js \
+truffle exec ./scripts/loanManager/createLoanWithTerms.js \
     --network $network \
     --borrowerIndex $loan_2_usdc_eth_borrower_index \
     --tokenName USDC \
@@ -129,7 +129,7 @@ echo "\n------------------------------------------------------------------------
 echo "#3: Depositing more collateral (for some loans)..."
 echo "------------------------------------------------------------------------\n"
 
-truffle exec ./scripts/loans/depositCollateralLast.js \
+truffle exec ./scripts/loanManager/depositCollateralLast.js \
     --network $network \
     --borrowerIndex $loan_2_usdc_eth_borrower_index \
     --senderIndex $loan_2_usdc_eth_sender_index \
@@ -151,7 +151,7 @@ echo "\n------------------------------------------------------------------------
 echo "#5: Taking out the loans..."
 echo "------------------------------------------------------------------------\n"
 
-truffle exec ./scripts/loans/takeOutLastLoan.js \
+truffle exec ./scripts/loanManager/takeOutLastLoan.js \
     --network $network \
     --collTokenName ETH \
     --tokenName DAI \
@@ -162,7 +162,7 @@ echo "\n------------------------------------------------------------------------
 echo "#6: Repaying some loans (#1 repay)..."
 echo "------------------------------------------------------------------------\n"
 
-truffle exec ./scripts/loans/repayLast.js \
+truffle exec ./scripts/loanManager/repayLast.js \
     --network $network \
     --senderIndex $loan_1_dai_eth_borrower_index \
     --collTokenName ETH \
