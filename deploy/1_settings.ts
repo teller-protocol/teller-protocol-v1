@@ -70,9 +70,6 @@ const deployLogicContracts: DeployFunction = async (hre) => {
     {
       contract: 'PoolTogether',
     },
-    {
-      contract: 'AssetSettings',
-    },
   ]
 
   const initialLogicVersions: { logic: string; logicName: string }[] = []
