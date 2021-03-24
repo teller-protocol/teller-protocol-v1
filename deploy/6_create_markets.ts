@@ -76,17 +76,10 @@ const addSigners = async (
   const signers = getSigners(<Network>network.name)
 
   const { deployer, craSigner } = await getNamedAccounts()
+
   if (craSigner) signers.push(craSigner)
 
-  const termsConsensusAddress = await market.loanManager.loanTermsConsensus()
-  const termsConsensus = await contracts.get<LoanTermsConsensus>(
-    'LoanTermsConsensus',
-    {
-      at: termsConsensusAddress,
-      from: deployer,
-    }
-  )
-  await termsConsensus.addSigners(signers)
+  await market.loanManager.addSigners(signers)
 }
 
 createMarkets.tags = ['markets']
