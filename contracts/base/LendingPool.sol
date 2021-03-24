@@ -262,7 +262,7 @@ contract LendingPool is LendingPoolInterface, Base {
         _totalBorrowed = _totalBorrowed.add(amount);
     }
 
-    function swapAccumulatedComp() external isInitialized {
+    function swapAccumulatedComp() external {
         _swapAccumulatedComp();
     }
 
