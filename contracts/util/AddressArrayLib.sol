@@ -13,7 +13,7 @@ library AddressArrayLib {
     /**
         @notice This struct manages an array of addresses of the library instance.
         @param array An array of address values.
-        @param indices A mapping of unit256 values mapped to addresses.
+        @param indices A mapping of each address to its unit256 array index.
      */
     struct AddressArray {
         address[] array;
@@ -99,8 +99,8 @@ library AddressArrayLib {
       @notice It gets the index for a given item.
       @param self the current array.
       @param item to get the index.
-      @return indexAt the current index for a given item.
       @return found true if the item was found. Otherwise it returns false.
+      @return indexAt the current index for a given item.
     */
     function getIndex(address[] storage self, address item)
         internal
