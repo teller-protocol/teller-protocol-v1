@@ -34,7 +34,7 @@ import "./LoanStorage.sol";
  *
  * @author develop@teller.finance.
  */
-contract LoanTermsConsensus is ILoanTermsConsensus, LoanStorage, Base {
+contract LoanTermsConsensus is ILoanTermsConsensus, LoanStorage {
     using SafeMath for uint256;
     using NumbersList for NumbersList.Values;
     using NumbersLib for uint256;
@@ -157,7 +157,7 @@ contract LoanTermsConsensus is ILoanTermsConsensus, LoanStorage, Base {
         @dev The sender must be the owner.
         @dev It throws a require error if the sender is not the owner.
      */
-    function addSigner(address account) external onlyPauser {
+    function addSigner(address account) external {
         _addSigner(account);
     }
 
@@ -167,19 +167,11 @@ contract LoanTermsConsensus is ILoanTermsConsensus, LoanStorage, Base {
         @dev The sender must be the owner.
         @dev It throws a require error if the sender is not the owner.
      */
-    function addSigners(address[] calldata accounts) external onlyPauser {
+    function addSigners(address[] calldata accounts) external {
         for (uint256 index = 0; index < accounts.length; index++) {
             address account = accounts[index];
             _addSigner(account);
         }
-    }
-
-    /**
-        @notice It initializes this consensus contract.
-        @param aSettingsAddress the settings contract address.
-     */
-    function initialize(address aSettingsAddress) external {
-        Base._initialize(aSettingsAddress);
     }
 
     /**
