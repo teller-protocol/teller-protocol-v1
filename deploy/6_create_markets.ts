@@ -11,6 +11,7 @@ import {
 } from '../types/typechain'
 import { getMarket, GetMarketReturn } from '../tasks'
 import { getSigners } from '../config/signers'
+import { getNamedSigner } from 'hardhat'
 
 const createMarkets: DeployFunction = async (hre) => {
   const { getNamedAccounts, contracts, network, deployments } = hre
@@ -72,14 +73,13 @@ const addSigners = async (
   hre: HardhatRuntimeEnvironment
 ) => {
   const { contracts, getNamedAccounts, network } = hre
+  const deployer = await getNamedSigner('deployer')
 
   const signers = getSigners(<Network>network.name)
-
-  const { deployer, craSigner } = await getNamedAccounts()
-
+  const { craSigner } = await getNamedAccounts()
   if (craSigner) signers.push(craSigner)
 
-  await market.loanManager.addSigners(signers)
+  await market.loanManager.connect(deployer).addSigners(signers)
 }
 
 createMarkets.tags = ['markets']
