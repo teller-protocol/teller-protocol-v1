@@ -106,7 +106,8 @@ interface IAaveLendingPool {
      * @param asset The address of the underlying asset deposited
      * @param useAsCollateral `true` if the user wants to use the deposit as collateral, `false` otherwise
      **/
-    function setUserUseReserveAsCollateral(address asset, bool useAsCollateral) external;
+    function setUserUseReserveAsCollateral(address asset, bool useAsCollateral)
+        external;
 
     /**
      * @dev Function to liquidate a non-healthy position collateral-wise, with Health Factor below 1
@@ -201,7 +202,10 @@ interface IAaveLendingPool {
      * @param asset The address of the underlying asset of the reserve
      * @return The reserve's normalized income
      */
-    function getReserveNormalizedIncome(address asset) external view returns (uint256);
+    function getReserveNormalizedIncome(address asset)
+        external
+        view
+        returns (uint256);
 
     /**
      * @dev Returns the normalized variable debt per unit of asset
