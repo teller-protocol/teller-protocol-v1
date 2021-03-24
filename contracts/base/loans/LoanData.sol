@@ -12,7 +12,6 @@ import "../../interfaces/loans/ILoanManager.sol";
 import "../../providers/openzeppelin/SignedSafeMath.sol";
 
 // Contracts
-import "../BaseStorage.sol";
 import "./LoanStorage.sol";
 
 /*****************************************************************************************************/
