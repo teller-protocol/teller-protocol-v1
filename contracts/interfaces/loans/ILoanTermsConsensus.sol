@@ -28,10 +28,4 @@ interface ILoanTermsConsensus {
             uint256,
             uint256
         );
-
-    /**
-        @notice It initializes this loan terms consensus contract.
-        @param aSettingsAddress the settings contract address.
-     */
-    function initialize(address aSettingsAddress) external;
 }

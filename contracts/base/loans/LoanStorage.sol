@@ -3,6 +3,7 @@ pragma experimental ABIEncoderV2;
 
 // Libraries
 import "../../util/TellerCommon.sol";
+import "../../util/AddressArrayLib.sol";
 
 // Interfaces
 import "../../interfaces/loans/ILoanStorage.sol";

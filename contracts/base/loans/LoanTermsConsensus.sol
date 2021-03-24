@@ -12,6 +12,7 @@ import "../../interfaces/SettingsInterface.sol";
 import "../../interfaces/escrow/IEscrow.sol";
 import "../../interfaces/loans/ILoanManager.sol";
 import "../../providers/openzeppelin/SignedSafeMath.sol";
+
 // Contracts
 import "../Base.sol";
 import "../BaseStorage.sol";

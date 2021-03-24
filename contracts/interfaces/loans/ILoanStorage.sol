@@ -48,11 +48,6 @@ interface ILoanStorage {
     function cToken() external view returns (CErc20Interface);
 
     /**
-     * @notice Holds the consensus contract that verifies loan terms.
-     */
-    function loanTermsConsensus() external view returns (address);
-
-    /**
      * @notice Holds the ID of loans taken out
      * @dev Also the next available loan ID
      */
