@@ -30,7 +30,7 @@ interface IPoolTogether {
         @notice This event is emitted every time Pool Together depositTo is invoked successfully.
         @param tokenAddress address of the underlying token.
         @param ticketAddress pool ticket token address.
-        @param amount amount of tokens to deposit.
+        @param amount amount of tokens deposited.
         @param tokenBalance underlying token balance after depositing.
         @param creditBalanceAfter pool together credit after depositing.
      */

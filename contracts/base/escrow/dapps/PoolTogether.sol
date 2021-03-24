@@ -194,6 +194,6 @@ contract PoolTogether is IPoolTogether, BaseEscrowDapp {
         view
         returns (address)
     {
-        return _getPrizePool(tokenAddress).tokens()[0];
+        return _getPrizePool(tokenAddress).tokens()[1];
     }
 }
