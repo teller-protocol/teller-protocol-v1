@@ -621,6 +621,32 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     }
 
     /**
+        @notice It adds a new account as a signer.
+        @param account address to add.
+        @dev The sender must be the owner.
+        @dev It throws a require error if the sender is not the owner.
+     */
+    function addSigner(address account) external onlyPauser {
+        _delegateTo(
+            loanTermsConsensus,
+            abi.encodeWithSignature("addSigner(address)", account)
+        );
+    }
+
+    /**
+        @notice It adds a list of account as signers.
+        @param accounts addresses to add.
+        @dev The sender must be the owner.
+        @dev It throws a require error if the sender is not the owner.
+     */
+    function addSigners(address[] calldata accounts) external onlyPauser {
+        _delegateTo(
+            loanTermsConsensus,
+            abi.encodeWithSignature("addSigners(address[])", accounts)
+        );
+    }
+
+    /**
      *  @notice It calls the LogicVersionRegistry to update the stored logic address for LoanData.
      */
     function updateLoanDataLogic() public {
