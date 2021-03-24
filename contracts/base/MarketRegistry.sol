@@ -11,7 +11,7 @@ import "../util/AddressArrayLib.sol";
 import "../interfaces/IMarketRegistry.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/loans/ILoanManager.sol";
-import "../interfaces/LoanTermsConsensusInterface.sol";
+import "../interfaces/loans/ILoanTermsConsensus.sol";
 
 /**
     @notice It manages all the registered TToken contract address, mapping each one to a boolean.

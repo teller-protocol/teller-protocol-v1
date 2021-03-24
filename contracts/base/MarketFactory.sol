@@ -7,7 +7,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 // Interfaces
 import "../interfaces/loans/ILoanManager.sol";
 import "../interfaces/loans/ILoanStorage.sol";
-import "../interfaces/LoanTermsConsensusInterface.sol";
+import "../interfaces/loans/ILoanTermsConsensus.sol";
 import "../interfaces/LendingPoolInterface.sol";
 import "../interfaces/SettingsInterface.sol";
 import "../interfaces/IMarketFactory.sol";
@@ -80,10 +80,6 @@ contract MarketFactory is IMarketFactory, Base, Factory {
             "COLL_TOKEN_MUST_BE_CONTRACT"
         );
 
-        LoanTermsConsensusInterface loanTermsConsensus =
-            LoanTermsConsensusInterface(
-                _createDynamicProxy(keccak256("LoanTermsConsensus"))
-            );
         address loanManagerAddress =
             _createDynamicProxy(keccak256("LoanManager"));
 
@@ -93,17 +89,9 @@ contract MarketFactory is IMarketFactory, Base, Factory {
             lendingPool = _createLendingPool(lendingToken);
         }
 
-        // Initializing LoanTermsConsensus
-        loanTermsConsensus.initialize(
-            msg.sender,
-            loanManagerAddress,
-            address(settings)
-        );
-
         // Initializing Loans
         ILoanManager(loanManagerAddress).initialize(
             address(lendingPool),
-            address(loanTermsConsensus),
             address(settings),
             collateralToken,
             initDynamicProxyLogic
@@ -116,8 +104,7 @@ contract MarketFactory is IMarketFactory, Base, Factory {
             lendingToken,
             collateralToken,
             loanManagerAddress,
-            address(lendingPool),
-            address(loanTermsConsensus)
+            address(lendingPool)
         );
     }
 
