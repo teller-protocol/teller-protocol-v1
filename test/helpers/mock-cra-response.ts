@@ -35,7 +35,6 @@ export interface CRAResponse {
   collateralRatio: BigNumberish
   maxLoanAmount: BigNumberish
   signature: {
-    signerNonce: BigNumberish
     v: BigNumberish
     r: BytesLike
     s: BytesLike
@@ -51,8 +50,6 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
   const network = await ethers.provider.getNetwork()
   const chainId = network.chainId.toString()
 
-  const nonce = (Math.random() * 20000).toFixed(0)
-
   const { loanManager } = await getMarket(
     {
       lendTokenSym: args.lendingToken,
@@ -60,13 +57,14 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
     },
     hre
   )
-  const termsConsensusAddress = await loanManager.loanTermsConsensus()
+
+  const { length: nonce } = await loanManager.getBorrowerLoans(args.borrower)
 
   const requestTime = Date.now().toString()
   const request: CRARequest = {
     borrower: args.borrower,
     recipient: args.recipient ?? NULL_ADDRESS,
-    consensusAddress: termsConsensusAddress,
+    consensusAddress: loanManager.address,
     requestNonce: nonce,
     amount: args.loanAmount,
     duration: args.loanTermLength,
@@ -75,7 +73,6 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
   const requestHash = ethers.utils.keccak256(
     ethers.utils.defaultAbiCoder.encode(
       [
-        'address', // caller
         'address', // borrower
         'address', // recipient
         'address', // consensusAddress
@@ -86,10 +83,9 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
         'uint256', // chain ID
       ],
       [
-        loanManager.address,
         request.borrower,
         request.recipient,
-        termsConsensusAddress,
+        loanManager.address,
         nonce,
         request.amount,
         request.duration,
@@ -108,17 +104,15 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
         'uint256', // interestRate
         'uint256', // collateralRatio
         'uint256', // maxLoanAmount
-        'uint256', // incremented nonce
         'uint256', // chain ID
         'bytes32', // request hash
       ],
       [
-        termsConsensusAddress,
+        loanManager.address,
         responseTime,
         args.interestRate,
         args.collateralRatio,
         args.loanAmount,
-        nonce,
         chainId,
         requestHash,
       ]
@@ -131,13 +125,12 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
   const sig = ethers.utils.splitSignature(signedMessage)
   const response: CRAResponse = {
     signer: await signer.getAddress(),
-    consensusAddress: termsConsensusAddress,
+    consensusAddress: loanManager.address,
     responseTime,
     interestRate: args.interestRate,
     collateralRatio: args.collateralRatio,
     maxLoanAmount: args.loanAmount,
     signature: {
-      signerNonce: nonce,
       v: sig.v,
       r: sig.r,
       s: sig.s,

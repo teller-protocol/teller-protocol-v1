@@ -37,14 +37,14 @@ const deployLogicContracts: DeployFunction = async (hre) => {
       contract: 'LoanData',
     },
     {
+      contract: 'LoanTermsConsensus',
+    },
+    {
       contract: 'LoanManager',
       mock,
     },
     {
       contract: 'LendingPool',
-    },
-    {
-      contract: 'LoanTermsConsensus',
     },
     {
       contract: 'DappRegistry',

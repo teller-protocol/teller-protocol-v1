@@ -25,7 +25,7 @@ library NumbersList {
      * @param self The Value this function was called on
      * @param newValue Number to increment sum by
      */
-    function addValue(Values memory self, uint256 newValue) internal {
+    function addValue(Values memory self, uint256 newValue) internal pure {
         if (self.max < newValue) {
             self.max = newValue;
         }
@@ -40,7 +40,7 @@ library NumbersList {
      * @param self The Value this function was called on
      * @return the number of times the sum has updated
      */
-    function valuesCount(Values memory self) internal view returns (uint256) {
+    function valuesCount(Values memory self) internal pure returns (uint256) {
         return self.count;
     }
 
@@ -49,7 +49,7 @@ library NumbersList {
      * @param self The Value this function was called on
      * @return boolean
      */
-    function isEmpty(Values memory self) internal view returns (bool) {
+    function isEmpty(Values memory self) internal pure returns (bool) {
         return valuesCount(self) == 0;
     }
 
@@ -57,7 +57,7 @@ library NumbersList {
      * @param self The Value this function was called on
      * @return the average number that was used to calculate the sum
      */
-    function getAverage(Values memory self) internal view returns (uint256) {
+    function getAverage(Values memory self) internal pure returns (uint256) {
         return isEmpty(self) ? 0 : self.sum.div(valuesCount(self));
     }
 
@@ -70,7 +70,7 @@ library NumbersList {
      */
     function isWithinTolerance(Values memory self, uint256 tolerancePercentage)
         internal
-        view
+        pure
         returns (bool)
     {
         if (isEmpty(self)) {

@@ -6,8 +6,9 @@
     "module": "commonjs",
     "resolveJsonModule": true,
     "target": "ESNext",
-    "allowJs": true,
-    "strict": true
+    "allowJs": false,
+    "strict": true,
+    "noEmit": true
   },
   "files": ["hardhat.config.ts"],
   "include": [

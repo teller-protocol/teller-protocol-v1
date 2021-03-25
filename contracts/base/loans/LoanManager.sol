@@ -17,8 +17,8 @@ import "../Factory.sol";
 // Interfaces
 import "../../interfaces/loans/ILoanManager.sol";
 import "../../interfaces/loans/ILoanStorage.sol";
+import "../../interfaces/loans/ILoanTermsConsensus.sol";
 import "../../interfaces/LendingPoolInterface.sol";
-import "../../interfaces/LoanTermsConsensusInterface.sol";
 import "../../interfaces/escrow/IEscrow.sol";
 import "../../interfaces/IInitializeableDynamicProxy.sol";
 
@@ -125,7 +125,8 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
      */
     function isActiveOrSet(uint256 loanID) public view returns (bool) {
         bytes memory data =
-            _delegateViewLoanData(
+            _delegateView(
+                loanData,
                 abi.encodeWithSignature("isActiveOrSet(uint256)", loanID)
             );
         return abi.decode(data, (bool));
@@ -136,7 +137,8 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
      */
     function getTotalOwed(uint256 loanID) public view returns (uint256) {
         bytes memory data =
-            _delegateViewLoanData(
+            _delegateView(
+                loanData,
                 abi.encodeWithSignature("getTotalOwed(uint256)", loanID)
             );
         return abi.decode(data, (uint256));
@@ -147,7 +149,8 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
      */
     function getLoanAmount(uint256 loanID) public view returns (uint256) {
         bytes memory data =
-            _delegateViewLoanData(
+            _delegateView(
+                loanData,
                 abi.encodeWithSignature("getLoanAmount(uint256)", loanID)
             );
         return abi.decode(data, (uint256));
@@ -158,7 +161,8 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
      */
     function isLoanSecured(uint256 loanID) public view returns (bool) {
         bytes memory data =
-            _delegateViewLoanData(
+            _delegateView(
+                loanData,
                 abi.encodeWithSignature("isLoanSecured(uint256)", loanID)
             );
         return abi.decode(data, (bool));
@@ -169,7 +173,8 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
      */
     function canGoToEOA(uint256 loanID) public view returns (bool) {
         bytes memory data =
-            _delegateViewLoanData(
+            _delegateView(
+                loanData,
                 abi.encodeWithSignature("canGoToEOA(uint256)", loanID)
             );
         return abi.decode(data, (bool));
@@ -184,7 +189,8 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
         returns (uint256)
     {
         bytes memory data =
-            _delegateViewLoanData(
+            _delegateView(
+                loanData,
                 abi.encodeWithSignature(
                     "getInterestOwedFor(uint256,uint256)",
                     loanID,
@@ -199,7 +205,8 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
      */
     function getInterestRatio(uint256 loanID) public view returns (uint256) {
         bytes memory data =
-            _delegateViewLoanData(
+            _delegateView(
+                loanData,
                 abi.encodeWithSignature("getInterestRatio(uint256)", loanID)
             );
         return abi.decode(data, (uint256));
@@ -214,7 +221,8 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
         returns (uint256)
     {
         bytes memory data =
-            _delegateViewLoanData(
+            _delegateView(
+                loanData,
                 abi.encodeWithSignature(
                     "getCollateralInLendingTokens(uint256)",
                     loanID
@@ -236,7 +244,8 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
         )
     {
         bytes memory data =
-            _delegateViewLoanData(
+            _delegateView(
+                loanData,
                 abi.encodeWithSignature(
                     "getCollateralNeededInfo(uint256)",
                     loanID
@@ -254,7 +263,8 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
         returns (int256, uint256)
     {
         bytes memory data =
-            _delegateViewLoanData(
+            _delegateView(
+                loanData,
                 abi.encodeWithSignature(
                     "getCollateralNeededInTokens(uint256)",
                     loanID
@@ -268,7 +278,8 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
      */
     function isLiquidable(uint256 loanID) public view returns (bool) {
         bytes memory data =
-            _delegateViewLoanData(
+            _delegateView(
+                loanData,
                 abi.encodeWithSignature("isLiquidable(uint256)", loanID)
             );
         return abi.decode(data, (bool));
@@ -279,10 +290,35 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
      */
     function getLiquidationReward(uint256 loanID) public view returns (int256) {
         bytes memory data =
-            _delegateViewLoanData(
+            _delegateView(
+                loanData,
                 abi.encodeWithSignature("getLiquidationReward(uint256)", loanID)
             );
         return abi.decode(data, (int256));
+    }
+
+    function processLoanTerms(
+        TellerCommon.LoanRequest memory request,
+        TellerCommon.LoanResponse[] memory responses
+    )
+        public
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256
+        )
+    {
+        bytes memory data =
+            _delegateView(
+                loanTermsConsensus,
+                abi.encodeWithSignature(
+                    "processLoanTerms((address,address,address,uint256,uint256,uint256,uint256),(address,address,uint256,uint256,uint256,uint256,(uint8,bytes32,bytes32))[])",
+                    request,
+                    responses
+                )
+            );
+        return abi.decode(data, (uint256, uint256, uint256));
     }
 
     /* External Functions */
@@ -308,7 +344,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
         require(msg.sender == request.borrower, "NOT_LOAN_REQUESTER");
 
         (uint256 interestRate, uint256 collateralRatio, uint256 maxLoanAmount) =
-            loanTermsConsensus.processRequest(request, responses);
+            processLoanTerms(request, responses);
 
         uint256 loanID =
             _createNewLoan(
@@ -585,6 +621,32 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     }
 
     /**
+        @notice It adds a new account as a signer.
+        @param account address to add.
+        @dev The sender must be the owner.
+        @dev It throws a require error if the sender is not the owner.
+     */
+    function addSigner(address account) external onlyPauser {
+        _delegateTo(
+            loanTermsConsensus,
+            abi.encodeWithSignature("addSigner(address)", account)
+        );
+    }
+
+    /**
+        @notice It adds a list of account as signers.
+        @param accounts addresses to add.
+        @dev The sender must be the owner.
+        @dev It throws a require error if the sender is not the owner.
+     */
+    function addSigners(address[] calldata accounts) external onlyPauser {
+        _delegateTo(
+            loanTermsConsensus,
+            abi.encodeWithSignature("addSigners(address[])", accounts)
+        );
+    }
+
+    /**
      *  @notice It calls the LogicVersionRegistry to update the stored logic address for LoanData.
      */
     function updateLoanDataLogic() public {
@@ -592,33 +654,34 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     }
 
     /**
+     *  @notice It calls the LogicVersionRegistry to update the stored logic address for LoanTermsConsensus.
+     */
+    function updateLoanTermsConsensusLogic() public {
+        (, , loanTermsConsensus) = logicRegistry.getLogicVersion(
+            LOAN_TERMS_CONSENSUS_LOGIC_NAME
+        );
+    }
+
+    /**
      * @notice Initializes the current contract instance setting the required parameters.
      * @param lendingPoolAddress Address of the LendingPool.
-     * @param loanTermsConsensusAddress Address for LoanTermConsensus contract.
      * @param settingsAddress Address for the platform Settings contract.
      * @param collateralTokenAddress Address of the collateral token for loans in this contract.
      * @param initDynamicProxyLogicAddress Address of a deployed InitializeableDynamicProxy contract.
      */
     function initialize(
         address lendingPoolAddress,
-        address loanTermsConsensusAddress,
         address settingsAddress,
         address collateralTokenAddress,
         address initDynamicProxyLogicAddress
     ) external {
         lendingPoolAddress.requireNotEmpty("PROVIDE_LENDING_POOL_ADDRESS");
-        loanTermsConsensusAddress.requireNotEmpty(
-            "PROVIDED_LOAN_TERMS_ADDRESS"
-        );
 
         _initialize(settingsAddress);
 
         lendingPool = LendingPoolInterface(lendingPoolAddress);
         lendingToken = address(lendingPool.lendingToken());
         cToken = CErc20Interface(lendingPool.cToken());
-        loanTermsConsensus = LoanTermsConsensusInterface(
-            loanTermsConsensusAddress
-        );
         initDynamicProxyLogic = initDynamicProxyLogicAddress;
         assetSettings = settings.assetSettings();
 
@@ -626,6 +689,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
         collateralToken = settings.ETH_ADDRESS();
 
         updateLoanDataLogic();
+        updateLoanTermsConsensusLogic();
 
         _notEntered = true;
     }
@@ -653,7 +717,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
         return _delegateTo(imp, sigWithData);
     }
 
-    function _delegateViewLoanData(bytes memory sigWithData)
+    function _delegateView(address target, bytes memory sigWithData)
         internal
         view
         returns (bytes memory)
@@ -662,7 +726,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
             address(this).staticcall(
                 abi.encodeWithSignature(
                     "delegateTo(address,bytes)",
-                    loanData,
+                    target,
                     sigWithData
                 )
             );

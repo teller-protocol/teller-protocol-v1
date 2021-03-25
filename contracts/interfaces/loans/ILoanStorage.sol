@@ -7,7 +7,7 @@ import "../../util/TellerCommon.sol";
 // Interfaces
 import "../SettingsInterface.sol";
 import "../LendingPoolInterface.sol";
-import "../LoanTermsConsensusInterface.sol";
+import "./ILoanTermsConsensus.sol";
 import "../../providers/compound/CErc20Interface.sol";
 
 /**
@@ -46,14 +46,6 @@ interface ILoanStorage {
      * @notice Holds the Compound cToken where the underlying token matches the lending token.
      */
     function cToken() external view returns (CErc20Interface);
-
-    /**
-     * @notice Holds the consensus contract that verifies loan terms.
-     */
-    function loanTermsConsensus()
-        external
-        view
-        returns (LoanTermsConsensusInterface);
 
     /**
      * @notice Holds the ID of loans taken out

@@ -3,11 +3,12 @@ pragma experimental ABIEncoderV2;
 
 // Libraries
 import "../../util/TellerCommon.sol";
+import "../../util/AddressArrayLib.sol";
 
 // Interfaces
 import "../../interfaces/loans/ILoanStorage.sol";
+import "../../interfaces/loans/ILoanTermsConsensus.sol";
 import "../../interfaces/LendingPoolInterface.sol";
-import "../../interfaces/LoanTermsConsensusInterface.sol";
 
 // Contracts
 import "../BaseStorage.sol";
@@ -60,11 +61,6 @@ contract LoanStorage is ILoanStorage, BaseStorage {
     CErc20Interface public cToken;
 
     /**
-     * @notice Holds the consensus contract that verifies loan terms.
-     */
-    LoanTermsConsensusInterface public loanTermsConsensus;
-
-    /**
      * @notice Holds a list of all loans for a borrower address.
      */
     mapping(address => uint256[]) internal borrowerLoans;
@@ -81,6 +77,11 @@ contract LoanStorage is ILoanStorage, BaseStorage {
     mapping(uint256 => TellerCommon.Loan) public loans;
 
     /**
+     * @notice Holds the list of authorizer signers for loans.
+     */
+    AddressArrayLib.AddressArray internal signers;
+
+    /**
      * @notice It holds the address of a deployed InitializeableDynamicProxy contract.
      * @dev It is used to deploy a new proxy contract with minimal gas cost using the logic in the Factory contract.
      */
@@ -92,10 +93,22 @@ contract LoanStorage is ILoanStorage, BaseStorage {
     address internal loanData;
 
     /**
+     * @notice Holds the address of the LoanTermsConsensus implementation.
+     */
+    address internal loanTermsConsensus;
+
+    /**
      * @notice Holds the logic name used for the LoanData contract.
      * @div Is used to check the LogicVersionsRegistry for a new LoanData implementation.
      */
     bytes32 public constant LOAN_DATA_LOGIC_NAME = keccak256("LoanData");
+
+    /**
+     * @notice Holds the logic name used for the LoanTermsConsensus contract.
+     * @div Is used to check the LogicVersionsRegistry for a new LoanTermsConsensus implementation.
+     */
+    bytes32 public constant LOAN_TERMS_CONSENSUS_LOGIC_NAME =
+        keccak256("LoanTermsConsensus");
 
     bool internal _notEntered;
 
