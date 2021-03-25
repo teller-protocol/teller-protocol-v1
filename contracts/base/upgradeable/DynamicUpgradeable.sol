@@ -44,7 +44,7 @@ contract DynamicUpgradeable is DynamicUpgradeableStorage {
      * @dev It uses the LogicVersionsRegistry contract to get the logic address or the cached address if valid.
      * @dev It caches the current logic address for the proxy to reduce gas on subsequent calls within the same block.
      */
-    function _updateImplementationStored() internal {
+    function _updateImplementationStored() public {
         (, , address currentLogic) = logicRegistry.getLogicVersion(logicName);
 
         if (implementationStored != currentLogic) {
@@ -58,7 +58,9 @@ contract DynamicUpgradeable is DynamicUpgradeableStorage {
      */
     function _willFallback() internal {
         if (strictDynamic && _implementationBlockUpdated + 50 <= block.number) {
-            _updateImplementationStored();
+            address(this).delegatecall(
+                abi.encodeWithSignature("_updateImplementationStored()")
+            );
         }
     }
 }

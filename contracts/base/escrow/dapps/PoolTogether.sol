@@ -10,7 +10,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "../../../util/AddressLib.sol";
 
 //Contracts
-import "../../BaseEscrowDapp.sol";
+import "../BaseEscrowDapp.sol";
 
 // Interfaces
 import "./IPoolTogether.sol";
@@ -98,7 +98,10 @@ contract PoolTogether is IPoolTogether, BaseEscrowDapp {
         address ticketAddress = _getTicketAddress(tokenAddress);
         uint256 balanceBefore = _balanceOf(ticketAddress);
 
-        (uint256 maxExitFee, uint256 burnedCredit) =
+        (
+            uint256 maxExitFee, /* uint256 burnedCredit */
+
+        ) =
             prizePool.calculateEarlyExitFee(
                 address(this),
                 ticketAddress,
