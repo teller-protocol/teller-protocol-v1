@@ -4,10 +4,14 @@ import { getTokens } from '../config/tokens'
 import { getChainlink } from '../config/chainlink'
 import { Network } from '../types/custom/config-types'
 import { ChainlinkAggregator } from '../types/typechain'
+import { NULL_ADDRESS } from '../utils/consts'
 
 const addChainlinkPairs: DeployFunction = async (hre) => {
   const { getNamedAccounts, contracts, network } = hre
   const { deployer } = await getNamedAccounts()
+
+  console.log('********** Chainlink **********')
+  console.log()
 
   const tokens = getTokens(<Network>network.name)
   const chainlink = getChainlink(<Network>network.name)
@@ -19,12 +23,29 @@ const addChainlinkPairs: DeployFunction = async (hre) => {
 
   for (const chainlinkPair of Object.values(chainlink)) {
     const { address, baseTokenName, quoteTokenName } = chainlinkPair
-    await chainlinkAggregator.add(
-      tokens[baseTokenName],
-      tokens[quoteTokenName],
-      address
+
+    process.stdout.write(
+      ` * Registering aggregator for ${baseTokenName}/${quoteTokenName} pair: `
     )
+
+    // Check that the aggregator is already registered
+    const [aggregatorAddress] = await chainlinkAggregator.aggregatorFor(
+      tokens[baseTokenName],
+      tokens[quoteTokenName]
+    )
+    if (aggregatorAddress === address) {
+      process.stdout.write(`reusing ${address} \n`)
+    } else {
+      // Try to register the Chainlink aggregator address
+      const receipt = await chainlinkAggregator
+        .add(tokens[baseTokenName], tokens[quoteTokenName], address)
+        .then(({ wait }) => wait())
+
+      process.stdout.write(`${address} with ${receipt.gasUsed} gas \n`)
+    }
   }
+
+  console.log()
 }
 
 addChainlinkPairs.tags = ['chainlink']

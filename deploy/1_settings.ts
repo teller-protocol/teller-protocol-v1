@@ -1,14 +1,14 @@
 import { DeployFunction } from 'hardhat-deploy/types'
 
 import {
-  deploy,
-  DeployLogicArgs,
   deployLogic,
+  DeployLogicArgs,
   deploySettingsProxy,
 } from '../utils/deploy-helpers'
 import { getTokens } from '../config/tokens'
 import { Network } from '../types/custom/config-types'
 import { MarketFactory, Settings } from '../types/typechain'
+import { ContractTransaction } from 'ethers'
 
 const deployLogicContracts: DeployFunction = async (hre) => {
   const { getNamedAccounts, deployments, contracts, ethers, network } = hre
@@ -69,6 +69,9 @@ const deployLogicContracts: DeployFunction = async (hre) => {
     },
   ]
 
+  console.log('********** Logic Contracts **********')
+  console.log()
+
   const initialLogicVersions: { logic: string; logicName: string }[] = []
   for (const logicData of logicDeploymentData) {
     const { address: logic } = await deployLogic({
@@ -86,17 +89,31 @@ const deployLogicContracts: DeployFunction = async (hre) => {
     contract: 'InitializeableDynamicProxy',
   })
 
+  console.log()
+  console.log('********** Settings **********')
+  console.log()
+
   await deploySettingsProxy({
     hre,
     initialLogicVersions,
   })
 
+  process.stdout.write('   * Initializing Settings...: ')
   const settings = await contracts.get<Settings>('Settings', { from: deployer })
-  await settings['initialize(address,address,address)'](
-    tokens.WETH,
-    tokens.CETH,
-    initDynamicProxyLogic.address
-  )
+  const isInitialized = (await settings.settings()) === settings.address
+  if (!isInitialized) {
+    const receipt = await settings['initialize(address,address,address)'](
+      tokens.WETH,
+      tokens.CETH,
+      initDynamicProxyLogic.address
+    )
+      // Wait for tx to be mined
+      .then(({ wait }) => wait())
+
+    process.stdout.write(`with ${receipt.gasUsed} gas \n`)
+  } else {
+    console.log('Settings already initialized... \n')
+  }
 
   await deployments.save('LogicVersionsRegistry', {
     ...(await deployments.getExtendedArtifact('LogicVersionsRegistry')),
@@ -128,6 +145,8 @@ const deployLogicContracts: DeployFunction = async (hre) => {
     ...(await deployments.getExtendedArtifact('MarketRegistry')),
     address: await marketFactory.marketRegistry(),
   })
+
+  console.log()
 }
 
 deployLogicContracts.tags = ['settings']

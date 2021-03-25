@@ -2,6 +2,8 @@ pragma solidity 0.5.17;
 
 import "./AddressLib.sol";
 
+import "hardhat/console.sol";
+
 /**
     @notice Utility library of inline functions on the address arrays.
 
@@ -54,7 +56,10 @@ library AddressArrayLib {
         internal
         returns (uint256 index)
     {
-        index = add(self.array, addr);
+        addr.requireNotEmpty("EMPTY_ADDRESS_NOT_ALLOWED");
+        (bool found, uint256 i) = getIndex(self, addr);
+        require(!found, "ADDRESS_EXISTS");
+        index = self.array.push(addr) - 1;
         self.indices[addr] = index;
     }
 
