@@ -54,20 +54,13 @@ export const createAndGetLoan = async (
   market: MarketReturn,
   borrower: Signer,
   loanType: LoanType,
-  hre: HardhatRuntimeEnvironment,
-  requestNonce?: string
+  hre: HardhatRuntimeEnvironment
 ): Promise<BorrowedLoanReturn> => {
   // Setup loan amount
   const loanAmount = '1684'
 
   // Create a loan and get the loan ID
-  const createdLoanId = await createLoan(
-    market,
-    loanType,
-    loanAmount,
-    borrower,
-    requestNonce
-  )
+  const createdLoanId = await createLoan(market, loanType, loanAmount, borrower)
   // Take out loan
   await getLoan(market.loanManager, createdLoanId, loanAmount, borrower, hre)
   // Get total owed for loan
@@ -83,8 +76,7 @@ export const createLoan = async (
   market: MarketReturn,
   loanType: LoanType,
   loanAmount: string,
-  borrower: Signer,
-  requestNonce?: string
+  borrower: Signer
 ): Promise<string> => {
   // Get lending asset decimals and convert amount to BN
   const lendingToken = await contracts.get('ERC20Detailed', {
@@ -113,7 +105,6 @@ export const createLoan = async (
     collateralRatio: collateralRatio.toString(),
     interestRate: '400',
     borrower: await borrower.getAddress(),
-    requestNonce,
   })
 
   // Create loan with terms

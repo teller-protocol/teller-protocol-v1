@@ -14,7 +14,6 @@ interface CRAArgs {
   collateralRatio: string
   interestRate: string
   borrower: string
-  requestNonce?: string
   recipient?: string
 }
 
@@ -51,8 +50,6 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
   const network = await ethers.provider.getNetwork()
   const chainId = network.chainId.toString()
 
-  const nonce = args.requestNonce ?? '0'
-
   const { loanManager } = await getMarket(
     {
       lendTokenSym: args.lendingToken,
@@ -60,6 +57,8 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
     },
     hre
   )
+
+  const { length: nonce } = await loanManager.getBorrowerLoans(args.borrower)
 
   const requestTime = Date.now().toString()
   const request: CRARequest = {
