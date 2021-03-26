@@ -24,6 +24,7 @@ const createAssetSettings: DeployFunction = async (hre) => {
       maxTVLAmount,
       maxDebtRatio,
       yVault,
+      pPool,
     } = setting
 
     let tokenDecimals = 18
@@ -54,6 +55,13 @@ const createAssetSettings: DeployFunction = async (hre) => {
       await assetSettings.updateYVaultAddressSetting(
         tokens[assetSymbol],
         tokens[yVault]
+      )
+    }
+
+    if (pPool) {
+      await assetSettings.updatePrizePoolAddress(
+        tokens[assetSymbol],
+        tokens[pPool]
       )
     }
   }

@@ -5,6 +5,7 @@ const mainnetAssetSettings: AssetSettings = {
     cToken: 'CDAI',
     aToken: 'ADAI',
     yVault: 'YDAI',
+    pPool: 'PCDAI',
     maxLoanAmount: 10000,
     maxTVLAmount: 100000,
     maxDebtRatio: 5000,
@@ -47,6 +48,7 @@ const assetSettingsConfigsByNetwork: Config<AssetSettings> = {
   rinkeby: {
     DAI: {
       cToken: 'CDAI',
+      pPool: 'PCDAI',
       maxLoanAmount: 1000,
       maxTVLAmount: 100000,
       maxDebtRatio: 5000,

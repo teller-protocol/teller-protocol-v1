@@ -29,6 +29,10 @@ const deployDapps: DeployFunction = async (hre) => {
       contract: 'Yearn',
       unsecured: true,
     },
+    {
+      contract: 'PoolTogether',
+      unsecured: true,
+    },
   ]
   const dappRegistry = await contracts.get<DappRegistry>('DappRegistry', {
     from: deployer,

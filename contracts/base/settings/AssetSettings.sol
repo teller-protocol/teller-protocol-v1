@@ -60,10 +60,10 @@ contract AssetSettings is AssetSettingsInterface, Base {
         keccak256("YVaultAddress");
 
     /**
-          @notice The asset setting name for curve pool address settings.
+          @notice The asset setting name for pool together's prize pool address settings.
        */
-    bytes32 internal constant CRV_POOL_ADDRESS_ASSET_SETTING =
-        keccak256("CRVPoolAddress");
+    bytes32 internal constant PRIZE_POOL_ADDRESS_ASSET_SETTING =
+        keccak256("PrizePoolAddress");
 
     /**
           @notice The asset setting name for the maximum loan amount settings.
@@ -262,6 +262,48 @@ contract AssetSettings is AssetSettingsInterface, Base {
     }
 
     /**
+      @notice It updates the pool together prize pool address associated with an asset.
+      @param assetAddress asset address to configure.
+      @param prizePoolAddress the new aToken address to configure.
+      */
+    function updatePrizePoolAddress(
+        address assetAddress,
+        address prizePoolAddress
+    ) external onlyPauser() {
+        prizePoolAddress.requireNotEmpty("PRIZE_POOL_ADDRESS_REQUIRED");
+        address oldPrizePoolAddress =
+            assets[assetAddress].addresses[PRIZE_POOL_ADDRESS_ASSET_SETTING];
+
+        assets[assetAddress].updateAddress(
+            PRIZE_POOL_ADDRESS_ASSET_SETTING,
+            prizePoolAddress
+        );
+
+        emit AssetSettingsAddressUpdated(
+            PRIZE_POOL_ADDRESS_ASSET_SETTING,
+            msg.sender,
+            assetAddress,
+            oldPrizePoolAddress,
+            prizePoolAddress
+        );
+    }
+
+    /**
+      @notice It returns the pool together prize pool address associated with an asset.
+      @param assetAddress asset address to get the associated aToken for.
+      @return The associated prize pool address
+      */
+    function getPrizePoolAddress(address assetAddress)
+        external
+        view
+        returns (address)
+    {
+        assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
+
+        return assets[assetAddress].addresses[PRIZE_POOL_ADDRESS_ASSET_SETTING];
+    }
+
+    /**
       @notice It updates the max loan amount for a given asset.
       @param assetAddress asset address used to update the max loan amount.
       @param newMaxLoanAmount the new max loan amount to set.
@@ -401,7 +443,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
                 MAX_TOTAL_VALUE_LOCKED_SETTING,
                 CTOKEN_ADDRESS_ASSET_SETTING,
                 YEARN_VAULT_ADDRESS_ASSET_SETTING,
-                CRV_POOL_ADDRESS_ASSET_SETTING
+                PRIZE_POOL_ADDRESS_ASSET_SETTING
             ],
             [
                 CacheLib.CacheType.Uint,
