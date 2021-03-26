@@ -6,6 +6,7 @@ jobs:
   test:
     name: Build Project
     runs-on: ubuntu-latest
+    environment: testing-keys
     env:
       ALCHEMY_MANINET_KEY: ${{ secrets.ALCHEMY_MAINNET_KEY }}
       ALCHEMY_RINKEBY_KEY: ${{ secrets.ALCHEMY_RINKEBY_KEY }}
