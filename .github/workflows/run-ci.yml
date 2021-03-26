@@ -7,7 +7,9 @@ jobs:
     name: Build Project
     runs-on: ubuntu-latest
     env:
-      ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}
+      ALCHEMY_MANINET_KEY: ${{ secrets.ALCHEMY_MAINNET_KEY }}
+      ALCHEMY_RINKEBY_KEY: ${{ secrets.ALCHEMY_RINKEBY_KEY }}
+      ALCHEMY_ROPSTEN_KEY: ${{ secrets.ALCHEMY_ROPSTEN_KEY }}
       INFURA_KEY: ${{ secrets.INFURA_KEY }}
       ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
       GAS_PRICE_GWEI_KEY: 20
