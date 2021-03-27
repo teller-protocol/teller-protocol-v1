@@ -65,7 +65,6 @@ interface AssetSettingsInterface {
         uint256 newValue
     );
 
-    //   function initialize(address settingsAddress) external;
     /**
         @notice It creates an asset with the given parameters.
         @param assetAddress asset address used to create the new setting.

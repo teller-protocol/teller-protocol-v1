@@ -9,12 +9,14 @@ import {
 import { getTokens } from '../config/tokens'
 import { Network } from '../types/custom/config-types'
 import { MarketFactory, Settings } from '../types/typechain'
+import { getUniswap } from '../config/uniswap'
 
 const deployLogicContracts: DeployFunction = async (hre) => {
   const { getNamedAccounts, deployments, contracts, ethers, network } = hre
   const { deployer } = await getNamedAccounts()
 
   const tokens = getTokens(<Network>network.name)
+  const uniswap = getUniswap(<Network>network.name)
 
   const mock = network.name.includes('hardhat')
   const logicDeploymentData: Omit<DeployLogicArgs, 'hre'>[] = [
@@ -47,6 +49,9 @@ const deployLogicContracts: DeployFunction = async (hre) => {
       contract: 'LendingPool',
     },
     {
+      contract: 'Uniswap',
+    },
+    {
       contract: 'DappRegistry',
     },
     {
@@ -56,19 +61,19 @@ const deployLogicContracts: DeployFunction = async (hre) => {
       contract: 'Escrow',
     },
     {
-      contract: 'Uniswap',
+      contract: 'UniswapDapp',
     },
     {
-      contract: 'Compound',
+      contract: 'CompoundDapp',
     },
     {
-      contract: 'Aave',
+      contract: 'AaveDapp',
     },
     {
-      contract: 'Yearn',
+      contract: 'YearnDapp',
     },
     {
-      contract: 'PoolTogether',
+      contract: 'PoolTogetherDapp',
     },
   ]
 
@@ -95,10 +100,11 @@ const deployLogicContracts: DeployFunction = async (hre) => {
   })
 
   const settings = await contracts.get<Settings>('Settings', { from: deployer })
-  await settings['initialize(address,address,address)'](
+  await settings['initialize(address,address,address,address)'](
     tokens.WETH,
     tokens.CETH,
-    initDynamicProxyLogic.address
+    initDynamicProxyLogic.address,
+    uniswap.v2Router
   )
 
   await deployments.save('LogicVersionsRegistry', {

@@ -1,5 +1,7 @@
 pragma solidity 0.5.17;
 
+import "./IComptroller.sol";
+
 interface CErc20Interface {
     /*** User Interface ***/
 
@@ -84,4 +86,6 @@ interface CErc20Interface {
         @return The amount of underlying currently owned by the account.
      */
     function balanceOfUnderlying(address account) external returns (uint256);
+
+    function comptroller() external view returns (IComptroller);
 }

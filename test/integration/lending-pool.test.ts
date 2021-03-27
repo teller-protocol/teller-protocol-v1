@@ -1,8 +1,7 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
-import { getNamedSigner, evm, toBN } from 'hardhat'
 import { BigNumber, BigNumberish } from 'ethers'
-
+import { evm, fastForward, getNamedSigner, toBN } from 'hardhat'
 import { freshMarket, fundedMarket, MarketReturn } from '../fixtures'
 import { getFunds } from '../helpers/get-funds'
 import { getLPHelpers } from '../helpers/lending-pool'
@@ -163,5 +162,21 @@ describe('LendingPool', () => {
     )
 
     await loansImpersonation.stop()
+  })
+
+  it('should be able to swap accumulated comp for underlying token', async () => {
+    const market = await fundedMarket()
+    const { lendingPool, lendingToken } = market
+    const { withdraw } = getLPHelpers(market)
+    const funder = await getNamedSigner('funder')
+    const balanceBefore = await lendingToken.balanceOf(lendingPool.address)
+
+    await fastForward(86400 * 10)
+    await withdraw(funder, toBN(10, 18))
+    await lendingPool.swapAccumulatedComp()
+
+    const balanceAfter = await lendingToken.balanceOf(lendingPool.address)
+
+    balanceAfter.sub(balanceBefore).gt(0).should.be.true
   })
 })

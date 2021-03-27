@@ -12,7 +12,7 @@ import "../../escrow/BaseEscrowDapp.sol";
 import "../../../util/AddressLib.sol";
 
 // Interfaces
-import "./IAave.sol";
+import "./IAaveDapp.sol";
 import "../../../providers/aave/IAToken.sol";
 import "../../../providers/aave/IAaveLendingPoolAddressesProvider.sol";
 import "../../../providers/aave/IAaveLendingPool.sol";
@@ -33,7 +33,7 @@ import "../../../providers/aave/IAaveLendingPool.sol";
         delegatecalls from Escrow contract, so this contract's state is really Escrow.
     @author develop@teller.finance
  */
-contract Aave is IAave, BaseEscrowDapp {
+contract AaveDapp is IAaveDapp, BaseEscrowDapp {
     using AddressLib for address;
     using Address for address;
     using SafeERC20 for IERC20;

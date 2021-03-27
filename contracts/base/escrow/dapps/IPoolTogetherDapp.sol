@@ -5,7 +5,7 @@ pragma solidity 0.5.17;
 
     @author develop@teller.finance
  */
-interface IPoolTogether {
+interface IPoolTogetherDapp {
     /**
         @notice This function deposits the users funds into a Pool Together Prize Pool for a ticket.
         @param tokenAddress address of the token.

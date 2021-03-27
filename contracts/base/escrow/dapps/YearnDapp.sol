@@ -12,7 +12,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 
 // Interfaces
-import "./IYearn.sol";
+import "./IYearnDapp.sol";
 import "../../../providers/yearn/IVault.sol";
 
 /*****************************************************************************************************/
@@ -31,7 +31,7 @@ import "../../../providers/yearn/IVault.sol";
         delegatecalls from Escrow contract, so this contract's state is really Escrow.
     @author develop@teller.finance
  */
-contract Yearn is IYearn, BaseEscrowDapp {
+contract YearnDapp is IYearnDapp, BaseEscrowDapp {
     using AddressLib for address;
     using Address for address;
     using SafeMath for uint256;

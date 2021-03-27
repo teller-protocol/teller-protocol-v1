@@ -220,6 +220,11 @@ interface SettingsInterface {
         returns (uint256 value);
 
     /**
+     * @notice It returns the address of the UniswapV2Router.
+     */
+    function getUniswapV2RouterAddress() external view returns (address);
+
+    /**
         @notice It tests whether a setting name is already configured.
         @param settingName setting name to test.
         @return true if the setting is already configured. Otherwise it returns false.
@@ -351,11 +356,13 @@ interface SettingsInterface {
         @param wethTokenAddress canonical WETH token address.
         @param cethTokenAddress compound CETH token address.
         @param initDynamicProxyAddress Address of a deployed InitializeableDynamicProxy contract.
+        @param uniswapRouterV2Address Address of the UniswapV2Router instance to use for the platform.
      */
     function initialize(
         address wethTokenAddress,
         address cethTokenAddress,
-        address initDynamicProxyAddress
+        address initDynamicProxyAddress,
+        address uniswapRouterV2Address
     ) external;
 
     /**
