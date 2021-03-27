@@ -93,21 +93,21 @@ export default <HardhatUserConfig>{
   },
   networks: {
     rinkeby: {
-      url: `https://rinkeby.infura.io/v3/${process.env.INFURA_KEY}`,
+      url: `https://eth-rinkeby.alchemyapi.io/v2/${process.env.ALCHEMY_RINKEBY_KEY}`,
       chainId: 4,
       accounts,
       // gas: gasKeyValue,
       // gasPrice: web3.utils.toWei(gasPriceKeyValue, 'gwei'),
     },
     ropsten: {
-      url: `https://ropsten.infura.io/v3/${process.env.INFURA_KEY}`,
+      url: `https://eth-ropsten.alchemyapi.io/v2/${process.env.ALCHEMY_ROPSTEN_KEY}`,
       accounts,
       // gas: gasKeyValue,
       // gasPrice: web3.utils.toWei(gasPriceKeyValue, 'gwei'),
     },
     hardhat: {
       forking: {
-        url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
+        url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_MAINNET_KEY}`,
         blockNumber: 12064000,
         enabled: true,
       },
@@ -121,7 +121,7 @@ export default <HardhatUserConfig>{
       accounts,
     },
     mainnet: {
-      url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
+      url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_MAINNET_KEY}`,
       chainId: 1,
       accounts,
       // gas: gasKeyValue,
