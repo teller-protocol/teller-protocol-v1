@@ -54,26 +54,9 @@ contract Settings is SettingsInterface, Base, Factory {
     using AddressArrayLib for address[];
     using PlatformSettingsLib for PlatformSettingsLib.PlatformSetting;
     using Roles for Roles.Role;
+    using CacheLib for CacheLib.Cache;
 
     /** Constants */
-
-    /**
-        @notice It defines the constant address to represent ETHER.
-     */
-    address public constant ETH_ADDRESS =
-        0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
-    /**
-        @notice It defines the constant address to represent the canonical WETH token.
-        @dev It is set via the initialize function.
-     */
-    address public WETH_ADDRESS;
-
-    /**
-        @notice It defines Compound Ether token address on current network.
-        @dev It is set by the initialize function.
-     */
-    address public CETH_ADDRESS;
 
     /**
         @notice The setting name for the required subsmission settings.
@@ -192,6 +175,11 @@ contract Settings is SettingsInterface, Base, Factory {
         public platformSettings;
 
     /**
+     * @notice It holds storage values that can be set in a storage slot.
+     */
+    CacheLib.Cache internal cacheStorage;
+
+    /**
         @notice It is the global instance of the dapp registry.
      */
     IDappRegistry public dappRegistry;
@@ -225,12 +213,6 @@ contract Settings is SettingsInterface, Base, Factory {
         @notice Flag restricting the use of the Protocol to authorizedAddress
      */
     bool public platformRestricted;
-
-    /**
-     * @notice It holds the address of a deployed InitializeableDynamicProxy contract.
-     * @dev It is used to deploy a new proxy contract with minimal gas cost using the logic in the Factory contract.
-     */
-    address public initDynamicProxyLogic;
 
     /** Modifiers */
 
@@ -459,6 +441,41 @@ contract Settings is SettingsInterface, Base, Factory {
     }
 
     /**
+     * @notice It returns the the platform ETH address.
+     */
+    function ETH_ADDRESS() external view returns (address) {
+        return cacheStorage.addresses["ETH_ADDRESS"];
+    }
+
+    /**
+     * @notice It returns the address of the WETH token.
+     */
+    function WETH_ADDRESS() external view returns (address) {
+        return cacheStorage.addresses["WETH_ADDRESS"];
+    }
+
+    /**
+     * @notice It returns the address of the Compound CETH token.
+     */
+    function CETH_ADDRESS() external view returns (address) {
+        return cacheStorage.addresses["CETH_ADDRESS"];
+    }
+
+    /**
+     * @notice It returns the address of the UniswapV2Router.
+     */
+    function getUniswapV2RouterAddress() external view returns (address) {
+        return cacheStorage.addresses["UniswapV2Router"];
+    }
+
+    /**
+     * @notice It returns the address of the InitializeableDynamicProxy contract.
+     */
+    function initDynamicProxyLogic() external view returns (address) {
+        return cacheStorage.addresses["InitializeableDynamicProxy"];
+    }
+
+    /**
         @notice It tests whether a setting name is already configured.
         @param settingName setting name to test.
         @return true if the setting is already configured. Otherwise it returns false.
@@ -656,16 +673,26 @@ contract Settings is SettingsInterface, Base, Factory {
     function initialize(
         address wethTokenAddress,
         address cethTokenAddress,
-        address initDynamicProxyAddress
+        address initDynamicProxyAddress,
+        address uniswapV2RouterAddress
     ) external {
         require(cethTokenAddress.isContract(), "CETH_ADDRESS_MUST_BE_CONTRACT");
 
         _addPauser(msg.sender);
         _initialize(address(this));
 
-        WETH_ADDRESS = wethTokenAddress;
-        CETH_ADDRESS = cethTokenAddress;
-        initDynamicProxyLogic = initDynamicProxyAddress;
+        cacheStorage.initialize();
+        cacheStorage.updateAddress("UniswapV2Router", uniswapV2RouterAddress);
+        cacheStorage.updateAddress(
+            "InitializeableDynamicProxy",
+            initDynamicProxyAddress
+        );
+        cacheStorage.updateAddress(
+            "ETH_ADDRESS",
+            0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
+        );
+        cacheStorage.updateAddress("WETH_ADDRESS", wethTokenAddress);
+        cacheStorage.updateAddress("CETH_ADDRESS", cethTokenAddress);
 
         assetSettings = AssetSettingsInterface(
             _deployInitDynamicProxy(keccak256("AssetSettings"))
@@ -693,7 +720,9 @@ contract Settings is SettingsInterface, Base, Factory {
         internal
         returns (address proxyAddress)
     {
-        proxyAddress = _clone(initDynamicProxyLogic);
+        proxyAddress = _clone(
+            cacheStorage.addresses["InitializeableDynamicProxy"]
+        );
         IInitializeableDynamicProxy(proxyAddress).initialize(
             address(logicRegistry),
             logicName,

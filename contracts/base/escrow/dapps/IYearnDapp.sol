@@ -5,7 +5,7 @@ pragma solidity 0.5.17;
 
     @author develop@teller.finance
  */
-interface IYearn {
+interface IYearnDapp {
     /**
         @notice Deposits the specified amount of the native unwrapped token (same as token() returns) into the Vault
         @param tokenAddress The address of the token being deposited

@@ -1,7 +1,7 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import hre from 'hardhat'
-import { Escrow, Aave, ERC20Detailed, IAToken } from '../../types/typechain'
+import { Escrow, AaveDapp, ERC20Detailed, IAToken } from '../../types/typechain'
 import { BigNumberish, Signer } from 'ethers'
 import { getTokens } from '../../config/tokens'
 import { Network } from '../../types/custom/config-types'
@@ -13,7 +13,7 @@ chai.use(solidity)
 interface TestSetupReturn {
   escrow: Escrow
   user: Signer
-  aave: Aave
+  aave: AaveDapp
   dai: ERC20Detailed
   aDai: IAToken
 }
@@ -48,7 +48,7 @@ const setUpTest = deployments.createFixture(
     const aDai = await contracts.get<IAToken>('IAToken', {
       at: getTokens(<Network>hre.network.name).ADAI,
     })
-    const aave = await contracts.get<Aave>('Aave')
+    const aave = await contracts.get<AaveDapp>('AaveDapp')
 
     return {
       escrow,
@@ -60,11 +60,11 @@ const setUpTest = deployments.createFixture(
   }
 )
 
-describe('Aave', async () => {
+describe('AaveDapp', async () => {
   let escrow: Escrow
   let user: Signer
   let rando: Signer
-  let aave: Aave
+  let aave: AaveDapp
   let dai: ERC20Detailed
   let aDai: IAToken
   let amount: BigNumberish

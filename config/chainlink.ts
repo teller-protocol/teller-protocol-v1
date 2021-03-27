@@ -47,6 +47,11 @@ const mainnetChainlink: Chainlink = {
     quoteTokenName: 'ETH',
     address: '0xDC530D9457755926550b59e8ECcdaE7624181557',
   },
+  COMP_ETH: {
+    baseTokenName: 'COMP',
+    quoteTokenName: 'ETH',
+    address: '0x1B39Ee86Ec5979ba5C322b826B3ECb8C79991699',
+  },
 }
 
 const chainlinkConfigsByNetwork: Config<Chainlink> = {

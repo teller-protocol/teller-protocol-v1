@@ -14,23 +14,23 @@ const deployDapps: DeployFunction = async (hre) => {
 
   const dappData: DappDeploymentData = [
     {
-      contract: 'Uniswap',
+      contract: 'UniswapDapp',
       unsecured: false,
     },
     {
-      contract: 'Compound',
+      contract: 'CompoundDapp',
       unsecured: true,
     },
     {
-      contract: 'Aave',
+      contract: 'AaveDapp',
       unsecured: true,
     },
     {
-      contract: 'Yearn',
+      contract: 'YearnDapp',
       unsecured: true,
     },
     {
-      contract: 'PoolTogether',
+      contract: 'PoolTogetherDapp',
       unsecured: true,
     },
   ]

@@ -2,23 +2,24 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Libraries
-import "../util/CompoundRatesLib.sol";
-import "../util/NumbersLib.sol";
-
-// Commons
+import "../../util/CompoundRatesLib.sol";
+import "../../util/NumbersLib.sol";
 
 // Interfaces
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "../interfaces/LendingPoolInterface.sol";
-import "../interfaces/loans/ILoanManager.sol";
-import "../providers/compound/CErc20Interface.sol";
-import "../interfaces/IMarketRegistry.sol";
-import "../interfaces/ITToken.sol";
+import "../../interfaces/LendingPoolInterface.sol";
+import "../../interfaces/loans/ILoanManager.sol";
+import "../../providers/compound/CErc20Interface.sol";
+import "../../providers/compound/IComptroller.sol";
+import "../../interfaces/IMarketRegistry.sol";
+import "../../interfaces/ITToken.sol";
 
 // Contracts
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
-import "./Base.sol";
+import "../Base.sol";
+import "./LendingPoolStorage.sol";
+import "../../providers/uniswap/UniSwapper.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -36,57 +37,16 @@ import "./Base.sol";
 
     @author develop@teller.finance
  */
-contract LendingPool is LendingPoolInterface, Base {
+contract LendingPool is
+    LendingPoolInterface,
+    Base,
+    LendingPoolStorage,
+    UniSwapper
+{
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
     using CompoundRatesLib for CErc20Interface;
     using NumbersLib for uint256;
-
-    /** Constants */
-
-    uint8 public constant EXCHANGE_RATE_DECIMALS = 36;
-
-    IUniswapV2Router02 public constant ROUTER =
-        IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
-
-    /* State Variables */
-
-    ITToken public tToken;
-
-    ERC20Detailed public lendingToken;
-
-    CErc20Interface public cToken;
-
-    ComptrollerInterface public compound;
-
-    ERC20Detailed public comp;
-
-    IMarketRegistry public marketRegistry;
-
-    /**
-        The total amount of underlying asset that has been originally been supplied by each
-        lender not including interest earned.
-    */
-    mapping(address => uint256) internal _totalSuppliedUnderlyingLender;
-
-    // The total amount of underlying asset that has been lent out for loans.
-    uint256 internal _totalBorrowed;
-
-    // The total amount of underlying asset that has been repaid from loans.
-    uint256 internal _totalRepaid;
-
-    // The total amount of underlying interest that has been claimed for each lender.
-    mapping(address => uint256) internal _totalInterestEarnedLender;
-
-    // The total amount of underlying interest the pool has earned from loans being repaid.
-    uint256 public totalInterestEarned;
-
-    /**
-     * @notice It holds the platform AssetSettings instance.
-     */
-    AssetSettingsInterface public assetSettings;
-
-    bool internal _notEntered;
 
     /** Modifiers */
 
@@ -418,8 +378,8 @@ contract LendingPool is LendingPoolInterface, Base {
         cToken = CErc20Interface(
             settings.getCTokenAddress(address(lendingToken))
         );
-        compound = Comptroller(cToken.comptroller());
-        comp = Comp(compound.getCompAddress());
+        compound = IComptroller(cToken.comptroller());
+        comp = ERC20Detailed(compound.getCompAddress());
         assetSettings = settings.assetSettings();
 
         _notEntered = true;
@@ -501,10 +461,9 @@ contract LendingPool is LendingPoolInterface, Base {
             _totalBorrowed.sub(_totalRepaid)
         );
 
-        CErc20Interface _cToken = cToken;
-        if (address(_cToken) != address(0)) {
+        if (address(cToken) != address(0)) {
             totalSupplied = totalSupplied.add(
-                _cToken.valueInUnderlying(_cToken.balanceOf(address(this)))
+                cToken.valueInUnderlying(cToken.balanceOf(address(this)))
             );
         }
     }
@@ -581,18 +540,17 @@ contract LendingPool is LendingPoolInterface, Base {
         internal
         returns (uint256 difference)
     {
-        CErc20Interface _cToken = cToken;
-        if (address(_cToken) == address(0)) {
+        if (address(cToken) == address(0)) {
             return 0;
         }
 
         // approve the cToken contract to take lending tokens
-        lendingToken.safeApprove(address(_cToken), amount);
+        lendingToken.safeApprove(address(cToken), amount);
 
         uint256 balanceBefore = lendingToken.balanceOf(address(this));
 
         // Now mint cTokens, which will take lending tokens
-        uint256 mintResult = _cToken.mint(amount);
+        uint256 mintResult = cToken.mint(amount);
         require(mintResult == 0, "COMPOUND_DEPOSIT_ERROR");
 
         uint256 balanceAfter = lendingToken.balanceOf(address(this));
@@ -609,14 +567,13 @@ contract LendingPool is LendingPoolInterface, Base {
         internal
         returns (uint256)
     {
-        CErc20Interface _cToken = cToken;
-        if (address(_cToken) == address(0)) {
+        if (address(cToken) == address(0)) {
             return 0;
         }
 
         uint256 balanceBefore = lendingToken.balanceOf(address(this));
 
-        uint256 redeemResult = _cToken.redeemUnderlying(amount);
+        uint256 redeemResult = cToken.redeemUnderlying(amount);
         require(redeemResult == 0, "COMPOUND_REDEEM_UNDERLYING_ERROR");
 
         uint256 balanceAfter = lendingToken.balanceOf(address(this));
@@ -638,15 +595,7 @@ contract LendingPool is LendingPoolInterface, Base {
         path[1] = settings.WETH_ADDRESS();
         path[2] = address(lendingToken);
 
-        comp.safeIncreaseAllowance(address(ROUTER), amountIn);
-
-        ROUTER.swapExactTokensForTokens(
-            amountIn,
-            ROUTER.getAmountsOut(amountIn, path)[path.length - 1],
-            path,
-            address(this),
-            now
-        );
+        _uniswap(path, amountIn);
     }
 
     /**

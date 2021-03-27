@@ -4,7 +4,7 @@ pragma solidity 0.5.17;
     @notice This defines the functions available to use in the Uniswap Dapp.
     @author develop@teller.finance
  */
-interface IUniswap {
+interface IUniswapDapp {
     /**
         @notice Swaps tokens using the Uniswap protocol.
         @param path An array of token addresses. path.length must be >= 2. Pools for each consecutive pair of addresses must exist and have liquidity.
@@ -22,7 +22,7 @@ interface IUniswap {
     ) external;
 
     /**
-        @notice Event emmitted every time a successful swap has taken place. 
+        @notice Event emmitted every time a successful swap has taken place.
         @param sourceToken source token address.
         @param destinationToken destination address.
         @param sourceAmount source amount sent.

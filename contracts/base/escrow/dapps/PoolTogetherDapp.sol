@@ -13,7 +13,7 @@ import "../../../util/AddressLib.sol";
 import "../BaseEscrowDapp.sol";
 
 // Interfaces
-import "./IPoolTogether.sol";
+import "./IPoolTogetherDapp.sol";
 import "../../../providers/pooltogether/PrizePoolInterface.sol";
 
 /*****************************************************************************************************/
@@ -33,7 +33,7 @@ import "../../../providers/pooltogether/PrizePoolInterface.sol";
         delegatecalls from Escrow contract, so this contract's state is really Escrow.
     @author develop@teller.finance
  */
-contract PoolTogether is IPoolTogether, BaseEscrowDapp {
+contract PoolTogetherDapp is IPoolTogetherDapp, BaseEscrowDapp {
     using AddressLib for address;
     using Address for address;
     using SafeERC20 for IERC20;

@@ -77,15 +77,13 @@ interface LendingPoolInterface {
         address settingsAddress
     ) external;
 
-    function ROUTER() external view returns (IUniswapV2Router02);
-
     /**
         @notice It gets the cToken address.
         @return the cToken address.
     */
     function cToken() external view returns (CErc20Interface);
 
-    function compound() external view returns (ComptrollerInterface);
+    function compound() external view returns (IComptroller);
 
     function comp() external view returns (ERC20Detailed);
 
