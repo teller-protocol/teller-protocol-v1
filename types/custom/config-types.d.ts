@@ -66,6 +66,10 @@ export interface Compound {
   [tokenSymbol: string]: string
 }
 
+export interface Uniswap {
+  v2Router: Address
+}
+
 export interface PlatformSettings {
   RequiredSubmissionsPercentage: PlatformSetting
   MaximumTolerance: PlatformSetting

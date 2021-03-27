@@ -1,6 +1,6 @@
 pragma solidity 0.5.17;
 
-contract ComptrollerInterface {
+contract IComptroller {
     /// @notice Indicator that this is a Comptroller contract (for inspection)
     bool public constant isComptroller = true;
 

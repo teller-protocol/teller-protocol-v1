@@ -5,7 +5,7 @@ pragma solidity 0.5.17;
 
     @author develop@teller.finance
  */
-interface IAave {
+interface IAaveDapp {
     /**
         @notice This event is emitted every time Aave deposit is invoked successfully.
         @param tokenAddress address of the underlying token.

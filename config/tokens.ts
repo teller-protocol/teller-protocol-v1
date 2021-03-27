@@ -3,6 +3,7 @@ import { Config, Network, Tokens } from '../types/custom/config-types'
 const mainnetTokens: Tokens = {
   ETH: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
   // Compound
+  COMP: '0xc00e94cb662c3520282e6f5717214004a7f26888',
   CDAI: '0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643',
   CUSDC: '0x39aa39c021dfbae8fac545936693ac917d5e7563',
   CETH: '0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5',
@@ -28,6 +29,7 @@ export const tokensConfigsByNetwork: Config<Tokens> = {
   kovan: {
     ETH: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     // Compound
+    COMP: '',
     CDAI: '0xf0d0eb522cfa50b716b3b1604c4f0fa6f04376ad',
     CUSDC: '0x4a92e71227d294f041bd82dd8f78591b75140d63',
     CETH: '0x41b5844f4680a8c38fbb695b7f9cfd1f64474a72',
@@ -45,6 +47,7 @@ export const tokensConfigsByNetwork: Config<Tokens> = {
   rinkeby: {
     ETH: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     // Compound
+    COMP: '',
     CDAI: '0x6D7F0754FFeb405d23C51CE938289d4835bE3b14',
     CUSDC: '0x5B281A6DdA0B271e91ae35DE655Ad301C976edb1',
     CETH: '0xd6801a1dffcd0a410336ef88def4320d6df1883e',
@@ -62,6 +65,7 @@ export const tokensConfigsByNetwork: Config<Tokens> = {
   ropsten: {
     ETH: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     // Compound
+    COMP: '',
     CDAI: '0xdb5Ed4605C11822811a39F94314fDb8F0fb59A2C',
     CUSDC: '0x8aF93cae804cC220D1A608d4FA54D1b6ca5EB361',
     CETH: '0xbe839b6d93e3ea47effcca1f27841c917a8794f3',

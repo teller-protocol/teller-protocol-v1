@@ -4,7 +4,7 @@ import hre from 'hardhat'
 
 import {
   Escrow,
-  Compound,
+  CompoundDapp,
   ERC20Detailed,
   CErc20Interface,
 } from '../../types/typechain'
@@ -19,7 +19,7 @@ chai.use(solidity)
 interface TestSetupReturn {
   escrow: Escrow
   user: Signer
-  compound: Compound
+  compound: CompoundDapp
   dai: ERC20Detailed
   cDai: CErc20Interface
 }
@@ -48,7 +48,7 @@ const setUpTest = deployments.createFixture(
     const cDai = await contracts.get<CErc20Interface>('CErc20Interface', {
       at: getTokens(<Network>hre.network.name).CDAI,
     })
-    const compound = await contracts.get<Compound>('Compound')
+    const compound = await contracts.get<CompoundDapp>('CompoundDapp')
 
     return {
       escrow,
@@ -60,11 +60,11 @@ const setUpTest = deployments.createFixture(
   }
 )
 
-describe('Compound', async () => {
+describe('CompoundDapp', async () => {
   let escrow: Escrow
   let user: Signer
   let rando: Signer
-  let compound: Compound
+  let compound: CompoundDapp
   let dai: ERC20Detailed
   let cDai: CErc20Interface
   let amount: BigNumberish

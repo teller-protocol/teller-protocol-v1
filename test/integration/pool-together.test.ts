@@ -1,19 +1,16 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
-import hre, { ethers } from 'hardhat'
+import hre from 'hardhat'
 import {
   Escrow,
-  PoolTogether,
+  PoolTogetherDapp,
   ERC20Detailed,
-  IPoolTogether,
   PrizePoolInterface,
 } from '../../types/typechain'
 import { BigNumberish, Signer, ContractReceipt } from 'ethers'
 import { getTokens } from '../../config/tokens'
 import { Network } from '../../types/custom/config-types'
 import { createMarketWithLoan, LoanType } from '../fixtures'
-import { PoolTogetherInterface } from '../../types/typechain/PoolTogether'
-import { NULL_ADDRESS } from '../../utils/consts'
 
 chai.should()
 chai.use(solidity)
@@ -21,7 +18,7 @@ chai.use(solidity)
 interface TestSetupReturn {
   escrow: Escrow
   user: Signer
-  poolTogether: PoolTogether
+  poolTogether: PoolTogetherDapp
   dai: ERC20Detailed
   pCDai: ERC20Detailed
   prizePool: PrizePoolInterface
@@ -45,7 +42,9 @@ const setUpTest = deployments.createFixture(
     const dai = await contracts.get<ERC20Detailed>('ERC20Detailed', {
       at: getTokens(<Network>hre.network.name).DAI,
     })
-    const poolTogether = await contracts.get<PoolTogether>('PoolTogether')
+    const poolTogether = await contracts.get<PoolTogetherDapp>(
+      'PoolTogetherDapp'
+    )
 
     const prizePool = (await hre.ethers.getContractAt(
       'PrizePoolInterface',
@@ -69,11 +68,11 @@ const setUpTest = deployments.createFixture(
   }
 )
 
-describe('PoolTogether', async () => {
+describe('PoolTogetherDapp', async () => {
   let escrow: Escrow
   let user: Signer
   let rando: Signer
-  let poolTogether: PoolTogether
+  let poolTogether: PoolTogetherDapp
   let dai: ERC20Detailed
   let pCDai: ERC20Detailed
   let amount: BigNumberish

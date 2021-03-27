@@ -1,7 +1,7 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import hre from 'hardhat'
-import { Escrow, Yearn } from '../../types/typechain'
+import { Escrow, YearnDapp } from '../../types/typechain'
 import { BigNumberish, Signer } from 'ethers'
 import { getTokens } from '../../config/tokens'
 import { Network } from '../../types/custom/config-types'
@@ -13,7 +13,7 @@ chai.use(solidity)
 interface TestSetupReturn {
   escrow: Escrow
   user: Signer
-  yearn: Yearn
+  yearn: YearnDapp
   daiAddress: string
   yDaiAddress: string
 }
@@ -37,7 +37,7 @@ const setUpTest = deployments.createFixture(
 
     const daiAddress = getTokens(<Network>hre.network.name).DAI
     const yDaiAddress = getTokens(<Network>hre.network.name).YDAI
-    const yearn = await contracts.get<Yearn>('Yearn')
+    const yearn = await contracts.get<YearnDapp>('YearnDapp')
 
     return {
       escrow,
@@ -49,11 +49,11 @@ const setUpTest = deployments.createFixture(
   }
 )
 
-describe('Yearn', async () => {
+describe('YearnDapp', async () => {
   let escrow: Escrow
   let user: Signer
   let rando: Signer
-  let yearn: Yearn
+  let yearn: YearnDapp
   let daiAddress: string
   let yDaiAddress: string
   let amount: BigNumberish

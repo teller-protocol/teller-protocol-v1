@@ -1,15 +1,15 @@
 pragma solidity 0.5.17;
 
 /**
-    @notice Compound dApp interface. 
+    @notice Compound dApp interface.
 
     @author develop@teller.finance
  */
-interface ICompound {
+interface ICompoundDapp {
     /**
-        @notice To lend we first have to approve the cToken to access the token balance then mint. 
+        @notice To lend we first have to approve the cToken to access the token balance then mint.
         @param tokenAddress address of the token.
-        @param amount amount of tokens to mint. 
+        @param amount amount of tokens to mint.
     */
     function lend(address tokenAddress, uint256 amount) external;
 
