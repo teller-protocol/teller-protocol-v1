@@ -1,9 +1,8 @@
 import { DeployFunction } from 'hardhat-deploy/types'
 
 import {
-  deploy,
-  DeployLogicArgs,
   deployLogic,
+  DeployLogicArgs,
   deploySettingsProxy,
 } from '../utils/deploy-helpers'
 import { getTokens } from '../config/tokens'
@@ -77,6 +76,9 @@ const deployLogicContracts: DeployFunction = async (hre) => {
     },
   ]
 
+  console.log('********** Logic Contracts **********')
+  console.log()
+
   const initialLogicVersions: { logic: string; logicName: string }[] = []
   for (const logicData of logicDeploymentData) {
     const { address: logic } = await deployLogic({
@@ -94,18 +96,29 @@ const deployLogicContracts: DeployFunction = async (hre) => {
     contract: 'InitializeableDynamicProxy',
   })
 
+  console.log()
+  console.log('********** Settings **********')
+  console.log()
+
   await deploySettingsProxy({
     hre,
     initialLogicVersions,
   })
 
+  process.stdout.write('   * Initializing Settings...: ')
   const settings = await contracts.get<Settings>('Settings', { from: deployer })
-  await settings['initialize(address,address,address,address)'](
-    tokens.WETH,
-    tokens.CETH,
-    initDynamicProxyLogic.address,
-    uniswap.v2Router
-  )
+  const isInitialized = (await settings.settings()) === settings.address
+  if (!isInitialized) {
+    const receipt = await settings[
+      'initialize(address,address,address,address)'
+    ](tokens.WETH, tokens.CETH, initDynamicProxyLogic.address, uniswap.v2Router)
+      // Wait for tx to be mined
+      .then(({ wait }) => wait())
+
+    process.stdout.write(`with ${receipt.gasUsed} gas \n`)
+  } else {
+    console.log('Settings already initialized... \n')
+  }
 
   await deployments.save('LogicVersionsRegistry', {
     ...(await deployments.getExtendedArtifact('LogicVersionsRegistry')),
@@ -137,6 +150,8 @@ const deployLogicContracts: DeployFunction = async (hre) => {
     ...(await deployments.getExtendedArtifact('MarketRegistry')),
     address: await marketFactory.marketRegistry(),
   })
+
+  console.log()
 }
 
 deployLogicContracts.tags = ['settings']

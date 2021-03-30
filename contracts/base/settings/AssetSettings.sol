@@ -147,6 +147,13 @@ contract AssetSettings is AssetSettingsInterface, Base {
     }
 
     /**
+     * @notice It checks if the settings have been initialized for an asset address.
+     */
+    function isInitialized(address assetAddress) external view returns (bool) {
+        return assets[assetAddress].exists();
+    }
+
+    /**
       @notice It updates the cToken address associated with an asset.
       @param assetAddress asset address to configure.
       @param cTokenAddress the new cToken address to configure.
