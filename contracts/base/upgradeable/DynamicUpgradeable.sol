@@ -23,6 +23,11 @@ import "./DynamicUpgradeableStorage.sol";
 contract DynamicUpgradeable is DynamicUpgradeableStorage {
     /* Modifiers */
 
+    /**
+     * @notice It checks if the proxy's implementation cache is invalidated and should be updated.
+     * @dev Any external, non-view function should use this modifier.
+     * @dev This modifier should be the very FIRST modifier for functions.
+     */
     modifier updateImpIfNeeded() {
         if (_cacheInvalidated()) {
             _updateImplementationStored();
@@ -32,6 +37,10 @@ contract DynamicUpgradeable is DynamicUpgradeableStorage {
 
     /* External Functions */
 
+    /**
+     * @notice It updates a proxy's cached implementation address.
+     * @notice It must only be called by the LogicVersionsRegistry for non strict DynamicProxy
+     */
     function upgradeProxyTo(address newImplementation) public {
         require(msg.sender == address(logicRegistry), "MUST_BE_LOGIC_REGISTRY");
         implementationStored = newImplementation;
@@ -67,9 +76,13 @@ contract DynamicUpgradeable is DynamicUpgradeableStorage {
         _implementationBlockUpdated = block.number;
     }
 
+    /**
+     * @notice It checks if the current cached address implementation is marked as invalidated.
+     * @notice It is marked invalidated if the proxy is strict dynamic and last update was >= 50 blocks ago.
+     * @return bool True if the cached implementation address is invalid.
+     */
     function _cacheInvalidated() internal view returns (bool) {
-        return
-            strictDynamic && _implementationBlockUpdated + 50 <= block.number;
+        return strictDynamic && _implementationBlockUpdated + 1 <= block.number;
     }
 
     /**

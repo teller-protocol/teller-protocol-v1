@@ -128,7 +128,8 @@ describe('LoanManager', async () => {
           createdLoan.createdLoanId,
           await borrower.getAddress(),
           createdLoan.totalOwed,
-          await borrower.getAddress()
+          await borrower.getAddress(),
+          '0'
         )
     })
     // - Taking out a loan unsuccessfully with invalid debt ratio
