@@ -22,8 +22,6 @@ import "../../interfaces/LendingPoolInterface.sol";
 import "../../interfaces/escrow/IEscrow.sol";
 import "../../interfaces/IInitializeableDynamicProxy.sol";
 
-import "hardhat/console.sol";
-
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
 /**                              THIS CONTRACT IS AN UPGRADEABLE FACET!                             **/

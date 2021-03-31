@@ -11,8 +11,6 @@ import "../interfaces/LendingPoolInterface.sol";
 // Contracts
 import "./upgradeable/DynamicUpgradeableERC20.sol";
 
-import "hardhat/console.sol";
-
 /**
  * @notice This contract represents a wrapped token within the Teller protocol
  *
@@ -57,11 +55,7 @@ contract TToken is ITToken, DynamicUpgradeableERC20 {
         override
         onlyLendingPool
     {
-        console.log("Minting");
-        console.log(account);
-        console.log(amount);
         _mint(account, amount);
-        console.log(ERC20(address(this)).balanceOf(account));
     }
 
     /**

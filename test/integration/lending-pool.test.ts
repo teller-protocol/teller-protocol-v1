@@ -31,10 +31,8 @@ describe('LendingPool', () => {
 
     const lender = await getNamedSigner('lender')
     const lenderAddress = await lender.getAddress()
-    console.log(lenderAddress)
     // Fund the market
     const depositAmount = await getLenderFunds(market, 1000)
-    console.log((await lender.getBalance()).toString())
     await deposit(lender, depositAmount)
 
     // Fast forward block timestamp by 10 weeks
@@ -66,7 +64,6 @@ describe('LendingPool', () => {
     // Get a funded market
     const market = await fundedMarket()
     const { createLoan } = getLPHelpers(market)
-    console.log(await market.lendingPool.getMarketState())
 
     // Try to transfer funds from the LP
     const borrower = await getNamedSigner('borrower')
