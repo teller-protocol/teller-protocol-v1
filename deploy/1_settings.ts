@@ -79,17 +79,20 @@ const deployLogicContracts: DeployFunction = async (hre) => {
 
   const initialLogicVersions: { logic: string; logicName: string }[] = []
   for (const logicData of logicDeploymentData) {
-    const { address: logic } = await deployLogic({
-      hre,
-      ...logicData,
-    })
+    const { address: logic } = await deployLogic(
+      {
+        hre,
+        ...logicData,
+      },
+      '0'
+    )
     initialLogicVersions.push({
       logic,
       logicName: ethers.utils.id(logicData.contract),
     })
   }
 
-  const initDynamicProxyLogic = await deployLogic({
+  const { address: initDynamicProxyLogicAddress } = await deployLogic({
     hre,
     contract: 'InitializeableDynamicProxy',
   })
@@ -103,7 +106,7 @@ const deployLogicContracts: DeployFunction = async (hre) => {
   await settings['initialize(address,address,address,address)'](
     tokens.WETH,
     tokens.CETH,
-    initDynamicProxyLogic.address,
+    initDynamicProxyLogicAddress,
     uniswap.v2Router
   )
 

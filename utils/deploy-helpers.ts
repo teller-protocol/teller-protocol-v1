@@ -1,6 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Libraries } from 'hardhat-deploy/types'
-import { Contract } from 'ethers'
+import { BigNumberish, Contract } from 'ethers'
 
 import { DynamicProxy, SettingsDynamicProxy } from '../types/typechain'
 
@@ -43,10 +43,13 @@ export const deploy = async <C extends Contract>(
 
 export interface DeployLogicArgs extends Omit<DeployArgs, 'name'> {}
 
-export const deployLogic = async (args: DeployLogicArgs): Promise<Contract> =>
+export const deployLogic = async (
+  args: DeployLogicArgs,
+  version: BigNumberish = 0
+): Promise<Contract> =>
   await deploy({
     ...args,
-    name: `${args.contract}_Logic`,
+    name: `${args.contract}_Logic_v${version.toString()}`,
   })
 
 interface DeployDynamicProxyArgs extends DeployArgs {

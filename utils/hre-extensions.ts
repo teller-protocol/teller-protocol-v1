@@ -247,9 +247,9 @@ extendEnvironment((hre) => {
     } else if (lpRegex.test(name)) {
       const [_, sym] = name.match(/^LP_(.+)/)!
       data.lendingPools![sym] = deployment.address
-    } else if (/_Logic$/.test(name)) {
-      const [_, contractName] = name.match(/(.+)_Logic$/)!
-      data.logics[contractName] = deployment.address
+    } else if (/_Logic_v(.+)/.test(name)) {
+      const [_, contractName, version] = name.match(/(.+)_Logic_v(.+)$/)!
+      data.logics[`${contractName}_v${version}`] = deployment.address
     } else if (/Lib$/.test(name)) {
       data.libraries[name] = deployment.address
     } else {
