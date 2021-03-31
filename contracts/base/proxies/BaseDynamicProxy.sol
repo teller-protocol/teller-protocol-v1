@@ -20,4 +20,15 @@ abstract contract BaseDynamicProxy is BaseProxy, DynamicUpgradeable {
     {
         return DynamicUpgradeable._implementation();
     }
+
+    /**
+     * @notice It is called by the OZ proxy contract before calling the internal _implementation() function.
+     */
+    function _beforeFallback() internal override {
+        if (strictDynamic && _implementationBlockUpdated + 50 <= block.number) {
+            address(this).delegatecall(
+                abi.encodeWithSignature("_updateImplementationStored()")
+            );
+        }
+    }
 }

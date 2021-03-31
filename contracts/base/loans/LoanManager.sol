@@ -707,7 +707,6 @@ contract LoanManager is
      *  @notice It calls the LogicVersionRegistry to update the stored logic address for LoanData.
      */
     function updateLoanDataLogic() public override {
-        console.log(address(logicRegistry));
         (, , loanData) = logicRegistry.getLogicVersion(LOAN_DATA_LOGIC_NAME);
     }
 
@@ -733,26 +732,18 @@ contract LoanManager is
         address collateralTokenAddress,
         address initDynamicProxyLogicAddress
     ) external override {
-        console.log("In herre");
         lendingPoolAddress.requireNotEmpty("PROVIDE_LENDING_POOL_ADDRESS");
 
         _initialize(settingsAddress);
-        console.log("In herre 2");
 
         lendingPool = LendingPoolInterface(lendingPoolAddress);
-        console.log("In herre 3");
         lendingToken = address(lendingPool.lendingToken());
-        console.log("In herre 4");
         cToken = CErc20Interface(lendingPool.cToken());
-        console.log("In herre 5");
         initDynamicProxyLogic = initDynamicProxyLogicAddress;
-        console.log("In herre 6");
         assetSettings = settings.assetSettings();
-        console.log("In herre7");
 
         // ETH is the only collateral token allowed currently
         collateralToken = settings.ETH_ADDRESS();
-        console.log("In herre 8");
 
         updateLoanDataLogic();
         updateLoanTermsConsensusLogic();

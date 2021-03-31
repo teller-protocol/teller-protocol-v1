@@ -176,7 +176,6 @@ contract MarketFactory is IMarketFactory, Base, Factory {
             address(tToken),
             address(settings)
         );
-        console.log(address(lendingPool.lendingToken()));
         tToken.initialize(address(lendingPool));
     }
 }

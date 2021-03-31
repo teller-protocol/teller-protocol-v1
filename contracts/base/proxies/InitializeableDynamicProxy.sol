@@ -30,8 +30,6 @@ contract InitializeableDynamicProxy is
         bytes32 aLogicName,
         bool isStrictDynamic
     ) public override {
-        console.log(aLogicRegistryAddress);
-        console.logBytes32(aLogicName);
         require(address(logicRegistry) == address(0), "PROXY_ALREADY_INIT");
         logicRegistry = LogicVersionsRegistryInterface(aLogicRegistryAddress);
         logicName = aLogicName;

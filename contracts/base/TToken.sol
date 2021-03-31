@@ -77,7 +77,6 @@ contract TToken is ITToken, DynamicUpgradeableERC20 {
     function initialize(address lendingPoolAddress) public override {
         require(lendingPoolAddress.isContract(), "LP_MUST_BE_CONTRACT");
         lendingPool = LendingPoolInterface(lendingPoolAddress);
-        console.log(address(lendingPool.compound()));
         ERC20 lendingToken = ERC20(lendingPool.lendingToken());
         __ERC20_init(
             string(abi.encodePacked("Teller ", lendingToken.name())),

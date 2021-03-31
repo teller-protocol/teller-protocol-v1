@@ -84,9 +84,4 @@ contract DynamicUpgradeable is DynamicUpgradeableStorage {
     function _cacheInvalidated() internal view returns (bool) {
         return strictDynamic && _implementationBlockUpdated + 1 <= block.number;
     }
-
-    /**
-     * @notice It is called by the OZ proxy contract before calling the internal _implementation() function.
-     */
-    function _willFallback() internal {}
 }
