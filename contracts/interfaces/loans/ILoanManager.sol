@@ -141,7 +141,8 @@ contract ILoanManager is ILoanStorage, ILoanData {
     event LoanTermsSet(
         uint256 indexed loanID,
         address indexed borrower,
-        address indexed recipient
+        address indexed recipient,
+        uint256 nonce
     );
 
     /**
