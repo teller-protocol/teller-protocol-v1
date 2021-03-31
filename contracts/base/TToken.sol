@@ -24,6 +24,8 @@ contract TToken is ITToken, DynamicUpgradeableERC20 {
     /* State Variables */
 
     uint8 private _decimals;
+    string private _name;
+    string private _symbol;
 
     /**
      * @notice The LendingPool linked to this Teller Token.
@@ -55,7 +57,11 @@ contract TToken is ITToken, DynamicUpgradeableERC20 {
         override
         onlyLendingPool
     {
+        console.log("Minting");
+        console.log(account);
+        console.log(amount);
         _mint(account, amount);
+        console.log(ERC20(address(this)).balanceOf(account));
     }
 
     /**
@@ -78,10 +84,11 @@ contract TToken is ITToken, DynamicUpgradeableERC20 {
         require(lendingPoolAddress.isContract(), "LP_MUST_BE_CONTRACT");
         lendingPool = LendingPoolInterface(lendingPoolAddress);
         ERC20 lendingToken = ERC20(lendingPool.lendingToken());
-        __ERC20_init(
-            string(abi.encodePacked("Teller ", lendingToken.name())),
-            string(abi.encodePacked("t", lendingToken.symbol()))
-        );
-        _decimals = lendingToken.decimals();
+        string memory name_ =
+            string(abi.encodePacked("Teller ", lendingToken.name()));
+        string memory symbol_ =
+            string(abi.encodePacked("t", lendingToken.symbol()));
+        uint8 decimals_ = lendingToken.decimals();
+        _initialize(name_, symbol_, decimals_);
     }
 }

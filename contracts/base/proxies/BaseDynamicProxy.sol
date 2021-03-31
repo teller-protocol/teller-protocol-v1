@@ -15,6 +15,7 @@ abstract contract BaseDynamicProxy is BaseProxy, DynamicUpgradeable {
     function _implementation()
         internal
         view
+        virtual
         override(DynamicUpgradeable, Proxy)
         returns (address)
     {

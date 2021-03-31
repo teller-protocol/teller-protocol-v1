@@ -22,6 +22,8 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../Base.sol";
 import "../../providers/uniswap/UniSwapper.sol";
 
+import "hardhat/console.sol";
+
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
 /**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
@@ -149,8 +151,11 @@ contract LendingPool is LendingPoolInterface, Base, UniSwapper {
                 lendingTokenAmount,
                 _exchangeRateForSupply(previousSupply)
             );
+        console.log("supposed to be");
+        console.log(tTokenAmount);
         tTokenMint(msg.sender, tTokenAmount);
-
+        console.log("balance after mint");
+        console.log(IERC20(address(tToken)).balanceOf(msg.sender));
         // Emit event
         emit TokenDeposited(msg.sender, lendingTokenAmount, tTokenAmount);
     }
@@ -458,11 +463,15 @@ contract LendingPool is LendingPoolInterface, Base, UniSwapper {
         address lender,
         uint256 exchangeRate
     ) internal view returns (uint256) {
+        console.log(lender.balance);
+        console.log("APE", lender);
+        console.log(IERC20(address(tToken)).balanceOf(lender));
         uint256 lenderUnderlyingBalance =
             _lendingTokensFromTTokens(
                 IERC20(address(tToken)).balanceOf(lender),
                 exchangeRate
             );
+        console.log(lenderUnderlyingBalance);
         return
             lenderUnderlyingBalance.sub(_totalSuppliedUnderlyingLender[lender]);
     }
