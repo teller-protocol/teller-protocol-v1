@@ -10,7 +10,7 @@ import { BigNumberish } from 'ethers'
 
 import { getMarkets } from '../../config/markets'
 import { Network } from '../../types/custom/config-types'
-import { AssetSettings, ERC20Detailed, TToken } from '../../types/typechain'
+import { AssetSettings, ERC20, TToken } from '../../types/typechain'
 import { getMarket, GetMarketReturn } from '../../tasks'
 import { getFunds } from '../helpers/get-funds'
 
@@ -20,7 +20,7 @@ interface FreshMarketArgs {
 }
 
 export interface MarketReturn extends FreshMarketArgs, GetMarketReturn {
-  lendingToken: ERC20Detailed
+  lendingToken: ERC20
   tToken: TToken
 }
 

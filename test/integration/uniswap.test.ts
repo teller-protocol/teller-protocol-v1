@@ -2,7 +2,7 @@ import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import hre from 'hardhat'
 
-import { Escrow, ERC20Detailed, UniswapDapp } from '../../types/typechain'
+import { Escrow, ERC20, UniswapDapp } from '../../types/typechain'
 import { BigNumberish, Signer } from 'ethers'
 import { getTokens } from '../../config/tokens'
 import { Network } from '../../types/custom/config-types'
@@ -15,7 +15,7 @@ interface TestSetupReturn {
   escrow: Escrow
   user: Signer
   uniswap: UniswapDapp
-  dai: ERC20Detailed
+  dai: ERC20
 }
 
 const { deployments, contracts, getNamedSigner, ethers, toBN } = hre
@@ -36,7 +36,7 @@ const setUpTest = deployments.createFixture(
     const escrow = await contracts.get<Escrow>('Escrow', { at: loan.escrow })
     const ting = await escrow.getTokens()
 
-    const dai = await contracts.get<ERC20Detailed>('ERC20Detailed', {
+    const dai = await contracts.get<ERC20>('ERC20', {
       at: getTokens(<Network>hre.network.name).DAI,
     })
     const uniswap = await contracts.get<UniswapDapp>('UniswapDapp')
@@ -55,8 +55,8 @@ describe('UniswapDapp', async () => {
   let user: Signer
   let rando: Signer
   let uniswap: UniswapDapp
-  let dai: ERC20Detailed
-  let comp: ERC20Detailed
+  let dai: ERC20
+  let comp: ERC20
   let tokens: string[]
 
   beforeEach(async () => {
@@ -64,7 +64,7 @@ describe('UniswapDapp', async () => {
     ;({ escrow, user, uniswap, dai } = await setUpTest())
     rando = await getNamedSigner('liquidator')
 
-    comp = await contracts.get<ERC20Detailed>('ERC20Detailed', {
+    comp = await contracts.get<ERC20>('ERC20', {
       at: getTokens(<Network>hre.network.name).COMP,
     })
   })

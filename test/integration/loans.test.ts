@@ -8,7 +8,7 @@ import {
   MarketWithLoanReturn,
 } from '../fixtures'
 import { Signer } from 'ethers'
-import { ERC20Detailed } from '../../types/typechain'
+import { ERC20 } from '../../types/typechain'
 
 chai.should()
 chai.use(solidity)
@@ -37,7 +37,7 @@ describe('LoanManager', async () => {
   let borrowerAddress: string
   let deployer: Signer
   let liquidator: Signer
-  let lendingToken: ERC20Detailed
+  let lendingToken: ERC20
   let loanAmount: string
 
   // Setup for global tests
@@ -49,7 +49,7 @@ describe('LoanManager', async () => {
     liquidator = await getNamedSigner('liquidator')
     market = await setupTest()
     const lendingTokenAddress = await market.lendingPool.lendingToken()
-    lendingToken = await contracts.get('ERC20Detailed', {
+    lendingToken = await contracts.get('ERC20', {
       at: lendingTokenAddress,
     })
     loanAmount = '1000'
