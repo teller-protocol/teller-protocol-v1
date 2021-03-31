@@ -336,6 +336,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     )
         external
         payable
+        updateImpIfNeeded
         nonReentrant
         whenNotPaused
         withValidLoanRequest(request)
@@ -379,6 +380,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
      */
     function withdrawCollateral(uint256 amount, uint256 loanID)
         external
+        updateImpIfNeeded
         nonReentrant
         loanActiveOrSet(loanID)
         whenNotPaused
@@ -428,6 +430,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     )
         external
         payable
+        updateImpIfNeeded
         loanActiveOrSet(loanID)
         whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
@@ -452,6 +455,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
      */
     function takeOutLoan(uint256 loanID, uint256 amountBorrow)
         external
+        updateImpIfNeeded
         nonReentrant
         whenNotPaused
         whenLendingPoolNotPaused(address(lendingPool))
@@ -525,6 +529,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
      */
     function repay(uint256 amount, uint256 loanID)
         external
+        updateImpIfNeeded
         nonReentrant
         loanActive(loanID)
         whenNotPaused
@@ -589,6 +594,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
      */
     function liquidateLoan(uint256 loanID)
         external
+        updateImpIfNeeded
         nonReentrant
         loanActive(loanID)
         whenNotPaused
@@ -628,7 +634,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
         @dev The sender must be the owner.
         @dev It throws a require error if the sender is not the owner.
      */
-    function addSigner(address account) external onlyPauser {
+    function addSigner(address account) external updateImpIfNeeded onlyPauser {
         _delegateTo(
             loanTermsConsensus,
             abi.encodeWithSignature("addSigner(address)", account)
@@ -641,7 +647,11 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
         @dev The sender must be the owner.
         @dev It throws a require error if the sender is not the owner.
      */
-    function addSigners(address[] calldata accounts) external onlyPauser {
+    function addSigners(address[] calldata accounts)
+        external
+        updateImpIfNeeded
+        onlyPauser
+    {
         _delegateTo(
             loanTermsConsensus,
             abi.encodeWithSignature("addSigners(address[])", accounts)

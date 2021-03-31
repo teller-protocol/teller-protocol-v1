@@ -21,6 +21,15 @@ import "./DynamicUpgradeableStorage.sol";
  * @author develop@teller.finance
  */
 contract DynamicUpgradeable is DynamicUpgradeableStorage {
+    /* Modifiers */
+
+    modifier updateImpIfNeeded() {
+        if (_cacheInvalidated()) {
+            _updateImplementationStored();
+        }
+        _;
+    }
+
     /* External Functions */
 
     function upgradeProxyTo(address newImplementation) public {
@@ -36,6 +45,11 @@ contract DynamicUpgradeable is DynamicUpgradeableStorage {
      * @return address of the current implementation
      */
     function _implementation() internal view returns (address) {
+        if (_cacheInvalidated()) {
+            (, , address currentLogic) =
+                logicRegistry.getLogicVersion(logicName);
+            return currentLogic;
+        }
         return implementationStored;
     }
 
@@ -53,14 +67,13 @@ contract DynamicUpgradeable is DynamicUpgradeableStorage {
         _implementationBlockUpdated = block.number;
     }
 
+    function _cacheInvalidated() internal view returns (bool) {
+        return
+            strictDynamic && _implementationBlockUpdated + 50 <= block.number;
+    }
+
     /**
      * @notice It is called by the OZ proxy contract before calling the internal _implementation() function.
      */
-    function _willFallback() internal {
-        if (strictDynamic && _implementationBlockUpdated + 50 <= block.number) {
-            address(this).delegatecall(
-                abi.encodeWithSignature("_updateImplementationStored()")
-            );
-        }
-    }
+    function _willFallback() internal {}
 }
