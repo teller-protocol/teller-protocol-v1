@@ -367,7 +367,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
         emit LoanTermsSet(
             loanID,
             msg.sender,
-            loans[loanID].loanTerms,
+            loans[loanID].loanTerms.recipient,
             request.requestNonce
         );
     }
