@@ -1,4 +1,5 @@
-pragma solidity 0.5.17;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 import "./AddressLib.sol";
 
@@ -10,20 +11,11 @@ import "./AddressLib.sol";
 library AddressArrayLib {
     using AddressLib for address;
 
-    /**
-        @notice This struct manages an array of addresses of the library instance.
-        @param array An array of address values.
-        @param indices A mapping of each address to its unit256 array index.
-     */
     struct AddressArray {
         address[] array;
         mapping(address => uint256) indices;
     }
 
-    /**
-        @notice It returns the length of an array
-        @param self The current array
-    */
     function length(AddressArray storage self) internal view returns (uint256) {
         return self.array.length;
     }
@@ -39,23 +31,21 @@ library AddressArrayLib {
         returns (uint256)
     {
         newItem.requireNotEmpty("EMPTY_ADDRESS_NOT_ALLOWED");
-        (bool found, ) = getIndex(self, newItem);
-        require(!found, "ADDRESS_EXISTS");
-        return self.push(newItem) - 1;
+        self.push(newItem);
+        return self.length - 1;
     }
 
-    /**
-      @notice It adds an address value to the array.
-      @param self current array.
-      @param addr new address to add.
-      @return index the item was added to.
-    */
     function add(AddressArray storage self, address addr)
         internal
-        returns (uint256 index)
+        returns (uint256)
     {
-        index = add(self.array, addr);
-        self.indices[addr] = index;
+        (bool found, uint256 index) = getIndex(self, addr);
+        if (!found) {
+            index = add(self.array, addr);
+            self.indices[addr] = index;
+        }
+
+        return index;
     }
 
     /**
@@ -70,23 +60,13 @@ library AddressArrayLib {
             self[index] = self[self.length - 1];
         }
 
-        self.length--;
+        self.pop();
     }
 
-    /**
-      @notice It removes an address value from the array.
-      @param self the current array.
-      @param index the index of the address to remove.
-    */
     function remove(AddressArray storage self, uint256 index) internal {
         removeAt(self.array, index);
     }
 
-    /**
-      @notice It removes an address value from the array.
-      @param self the current array.
-      @param addr the address to remove.
-    */
     function remove(AddressArray storage self, address addr) internal {
         (bool found, uint256 index) = getIndex(self, addr);
 
@@ -116,13 +96,6 @@ library AddressArrayLib {
         return (found, indexAt);
     }
 
-    /**
-      @notice It gets the index for a given item.
-      @param self the current array.
-      @param addr to get the index for.
-      @return found true if the item was found. Otherwise it returns false.
-      @return index the current index for a given address.
-    */
     function getIndex(AddressArray storage self, address addr)
         internal
         view
@@ -138,7 +111,6 @@ library AddressArrayLib {
       @notice It removes an address value from the array.
       @param self the current array.
       @param item the item to remove.
-      @return the current array without the removed item.
     */
     function remove(address[] storage self, address item) internal {
         (bool found, uint256 indexAt) = getIndex(self, item);

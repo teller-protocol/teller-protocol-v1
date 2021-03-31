@@ -1,8 +1,8 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Interfaces
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./LendingPoolInterface.sol";
 
 /**
@@ -10,35 +10,33 @@ import "./LendingPoolInterface.sol";
 
     @author develop@teller.finance
  */
-contract ITToken is IERC20 {
+abstract contract ITToken {
     /**
      * @notice The LendingPool linked to this Teller Token.
      */
-    function lendingPool() external view returns (LendingPoolInterface);
+    function lendingPool() external view virtual returns (LendingPoolInterface);
 
     /**
      * @notice The token that is the underlying assets for this Teller token.
      */
-    function underlying() external view returns (address);
+    function underlying() external view virtual returns (address);
 
     /**
      * @notice Increase account supply of specified token amount.
      * @param account The account to mint tokens to.
      * @param amount The amount of tokens to mint.
-     * @return true if successful.
      */
-    function mint(address account, uint256 amount) external returns (bool);
+    function mint(address account, uint256 amount) external virtual;
 
     /**
      * @notice Reduce account supply of specified token amount.
      * @param account The account to burn tokens from.
      * @param amount The amount of tokens to burn.
-     * @return true if successful.
      */
-    function burn(address account, uint256 amount) external returns (bool);
+    function burn(address account, uint256 amount) external virtual;
 
     /**
      * @param lendingPoolAddress the address of the lending pool this token is linked to. It is only used to add it as a minter.
      */
-    function initialize(address lendingPoolAddress) external;
+    function initialize(address lendingPoolAddress) external virtual;
 }

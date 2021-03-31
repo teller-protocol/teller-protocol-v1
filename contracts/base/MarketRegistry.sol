@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Contracts
 import "./Base.sol";
@@ -10,8 +10,7 @@ import "../util/AddressArrayLib.sol";
 // Interfaces
 import "../interfaces/IMarketRegistry.sol";
 import "../interfaces/LendingPoolInterface.sol";
-import "../interfaces/loans/ILoanManager.sol";
-import "../interfaces/loans/ILoanTermsConsensus.sol";
+import "../interfaces/loans/ILoans.sol";
 
 /**
     @notice It manages all the registered TToken contract address, mapping each one to a boolean.
@@ -26,24 +25,28 @@ contract MarketRegistry is IMarketRegistry, Base {
     address public owner;
 
     /**
-        @notice It maps a lending token to an array of collateral tokens that represent a market.
+        @dev It maps a lending token to an array of collateral tokens that represent a market.
      */
     mapping(address => AddressArrayLib.AddressArray) internal markets;
 
     /**
         @notice It maps a lending token to the associated LendingPool contract.
      */
-    mapping(address => address) public lendingPools;
+    mapping(address => address) public override lendingPools;
 
     /**
         @notice It maps a lending token and collateral token to the associated LoanManager contract.
      */
-    mapping(address => mapping(address => address)) public loanManagers;
+    mapping(address => mapping(address => address))
+        public
+        override loanManagers;
 
     /**
         @notice It represents a mapping to identify a LendingPool's LoanManager contract address.
      */
-    mapping(address => mapping(address => bool)) public loanManagerRegistry;
+    mapping(address => mapping(address => bool))
+        public
+        override loanManagerRegistry;
 
     /* Modifiers */
 
@@ -52,7 +55,7 @@ contract MarketRegistry is IMarketRegistry, Base {
         _;
     }
 
-    // External Functions
+    // external override Functions
 
     /**
         @notice It registers a new market with a LendingPool and Loans contract pair.
@@ -62,7 +65,7 @@ contract MarketRegistry is IMarketRegistry, Base {
     function registerMarket(
         address lendingPoolAddress,
         address loanManagerAddress
-    ) external onlyOwner {
+    ) external override onlyOwner {
         require(
             !loanManagerRegistry[lendingPoolAddress][loanManagerAddress],
             "MARKET_ALREADY_REGISTERED"
@@ -70,8 +73,7 @@ contract MarketRegistry is IMarketRegistry, Base {
 
         address lendingToken =
             address(LendingPoolInterface(lendingPoolAddress).lendingToken());
-        address collateralToken =
-            ILoanManager(loanManagerAddress).collateralToken();
+        address collateralToken = ILoans(loanManagerAddress).collateralToken();
         markets[lendingToken].add(collateralToken);
         lendingPools[lendingToken] = lendingPoolAddress;
         loanManagers[lendingToken][collateralToken] = loanManagerAddress;
@@ -86,6 +88,7 @@ contract MarketRegistry is IMarketRegistry, Base {
     function getMarkets(address lendingTokenAddress)
         external
         view
+        override
         returns (address[] memory)
     {
         return markets[lendingTokenAddress].array;
@@ -95,7 +98,7 @@ contract MarketRegistry is IMarketRegistry, Base {
      * @notice It initializes the MarketRegistry contract by setting the owner of the caller.
      * @dev This contract is constructed and initialized by the MarketFactory.
      */
-    function initialize() external {
+    function initialize() external override {
         require(owner == address(0), "ALREADY_INIT");
         owner = msg.sender;
     }

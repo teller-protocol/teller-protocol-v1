@@ -1,11 +1,11 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Libraries
 import "../../util/AddressArrayLib.sol";
 
 // Interfaces
-import "../../interfaces/loans/ILoanManager.sol";
+import "../../interfaces/loans/ILoans.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -31,7 +31,7 @@ contract EscrowStorage {
     /**
         @notice Holds the instance of the associated LoanManager contract for this Escrow loan.
      */
-    ILoanManager public loanManager;
+    ILoans public loanManager;
 
     /**
      * @notice Holds the address of the LendingPool used for this Escrow loan.
@@ -53,8 +53,6 @@ contract EscrowStorage {
      */
     address public borrower;
 
-    /**
-     * @notice An array of tokens that are owned by this escrow.
-     */
+    // An array of tokens that are owned by this escrow.
     AddressArrayLib.AddressArray internal tokens;
 }

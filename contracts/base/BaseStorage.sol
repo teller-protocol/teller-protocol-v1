@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Interfaces
 import "../interfaces/SettingsInterface.sol";
@@ -24,14 +24,14 @@ import "./upgradeable/DynamicUpgradeableStorage.sol";
  *
  * @author develop@teller.finance.
  */
-contract BaseStorage is DynamicUpgradeableStorage {
+abstract contract BaseStorage is DynamicUpgradeableStorage {
     /**
      * @notice It holds the platform Settings instance.
      */
     SettingsInterface public settings;
 
     /**
-     * @notice This allocates additional storage slots in the event that additional state variables are added.
+     * @dev This allocates additional storage slots in the event that additional state variables are added.
      */
     uint256[10] internal __gap;
 }

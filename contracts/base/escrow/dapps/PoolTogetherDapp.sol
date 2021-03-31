@@ -1,10 +1,10 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // External Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 // Common
 import "../../../util/AddressLib.sol";
@@ -49,6 +49,7 @@ contract PoolTogetherDapp is IPoolTogetherDapp, BaseEscrowDapp {
     */
     function depositTicket(address tokenAddress, uint256 amount)
         public
+        override
         onlyBorrower
     {
         require(
@@ -91,6 +92,7 @@ contract PoolTogetherDapp is IPoolTogetherDapp, BaseEscrowDapp {
     */
     function withdraw(address tokenAddress, uint256 amount)
         public
+        override
         onlyBorrower
     {
         PrizePoolInterface prizePool = _getPrizePool(tokenAddress);
@@ -133,7 +135,7 @@ contract PoolTogetherDapp is IPoolTogetherDapp, BaseEscrowDapp {
         @notice This function withdraws the users funds from a Pool Together Prize Pool.
         @param tokenAddress address of the token.
     */
-    function withdrawAll(address tokenAddress) public onlyBorrower {
+    function withdrawAll(address tokenAddress) public override onlyBorrower {
         PrizePoolInterface prizePool = _getPrizePool(tokenAddress);
 
         address ticketAddress = _getTicketAddress(tokenAddress);

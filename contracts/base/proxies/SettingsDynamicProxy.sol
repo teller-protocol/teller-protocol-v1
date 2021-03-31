@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Contracts
 import "./BaseDynamicProxy.sol";
@@ -18,7 +18,7 @@ contract SettingsDynamicProxy is BaseDynamicProxy {
      */
     constructor(
         TellerCommon.CreateLogicVersionRequest[] memory initialLogicVersions
-    ) public {
+    ) {
         logicRegistry = new LogicVersionsRegistry();
         logicRegistry.initialize(msg.sender, initialLogicVersions);
 

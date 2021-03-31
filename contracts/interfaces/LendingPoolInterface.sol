@@ -1,8 +1,8 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Utils
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // Interfaces
 import "./IMarketRegistry.sol";
@@ -60,7 +60,7 @@ interface LendingPoolInterface {
         @notice It gets the lending token address.
         @return the ERC20 lending token address.
     */
-    function lendingToken() external view returns (ERC20Detailed);
+    function lendingToken() external view returns (ERC20);
 
     /**
         @notice It initializes the contract state variables.
@@ -85,7 +85,7 @@ interface LendingPoolInterface {
 
     function compound() external view returns (IComptroller);
 
-    function comp() external view returns (ERC20Detailed);
+    function comp() external view returns (ERC20);
 
     /**
         @notice It gets the tToken address.
@@ -123,7 +123,11 @@ interface LendingPoolInterface {
 
     /**
         @notice It calculates the market state values across all markets.
-        @return values that represent the global state across all markets.
+        @notice It returns values that represent the global state across all markets.
+        @return totalSupplied
+        @return totalBorrowed
+        @return totalRepaid
+        @return totalOnLoan
      */
     function getMarketState()
         external

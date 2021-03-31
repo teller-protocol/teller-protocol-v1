@@ -1,9 +1,9 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 // Interfaces
 import "../../interfaces/loans/ILoanManager.sol";
@@ -29,22 +29,22 @@ import "../../interfaces/AssetSettingsInterface.sol";
 
     @author develop@teller.finance
  */
-contract LendingPoolStorage {
+abstract contract LendingPoolStorage is LendingPoolInterface {
     uint8 public constant EXCHANGE_RATE_DECIMALS = 36;
 
-    ITToken public tToken;
+    ITToken public override tToken;
 
-    ERC20Detailed public lendingToken;
+    ERC20 public override lendingToken;
 
-    CErc20Interface public cToken;
+    CErc20Interface public override cToken;
 
-    IComptroller public compound;
+    IComptroller public override compound;
 
-    ERC20Detailed public comp;
+    ERC20 public override comp;
 
     IMarketRegistry public marketRegistry;
 
-    /**
+    /*
         The total amount of underlying asset that has been originally been supplied by each
         lender not including interest earned.
     */
@@ -60,7 +60,7 @@ contract LendingPoolStorage {
     mapping(address => uint256) internal _totalInterestEarnedLender;
 
     // The total amount of underlying interest the pool has earned from loans being repaid.
-    uint256 public totalInterestEarned;
+    uint256 public override totalInterestEarned;
 
     /**
      * @notice It holds the platform AssetSettings instance.

@@ -1,8 +1,8 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 // Interfaces
 import "../interfaces/loans/ILoanManager.sol";
@@ -41,7 +41,7 @@ contract MarketFactory is IMarketFactory, Base, Factory {
 
     /* State Variables */
 
-    IMarketRegistry public marketRegistry;
+    IMarketRegistry public override marketRegistry;
 
     /**
      * @notice It holds the address of a deployed InitializeableDynamicProxy contract.
@@ -55,7 +55,7 @@ contract MarketFactory is IMarketFactory, Base, Factory {
      */
     address public erc20DynamicProxyLogic;
 
-    /** External Functions */
+    /** external override Functions */
 
     /**
         @notice It creates a new market for a given lending and collateral tokens.
@@ -65,6 +65,7 @@ contract MarketFactory is IMarketFactory, Base, Factory {
      */
     function createMarket(address lendingToken, address collateralToken)
         external
+        override
         whenNotPaused
         onlyPauser
     {
@@ -111,7 +112,7 @@ contract MarketFactory is IMarketFactory, Base, Factory {
     /**
         @notice It initializes this market factory instance.
      */
-    function initialize() external {
+    function initialize() external override {
         _initialize(msg.sender);
 
         initDynamicProxyLogic = settings.initDynamicProxyLogic();
@@ -155,7 +156,7 @@ contract MarketFactory is IMarketFactory, Base, Factory {
     /**
         @notice Creates a proxy contract for LendingPool and its TToken.
         @param lendingToken the token address used to create the lending pool and TToken.
-        @return a new LendingPool instance.
+        @return lendingPool a new LendingPool instance.
      */
     function _createLendingPool(address lendingToken)
         internal

@@ -1,10 +1,10 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // External Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 // Common
 import "../../../util/AddressLib.sol";
@@ -53,7 +53,11 @@ contract CompoundDapp is ICompoundDapp, BaseEscrowDapp {
         @param tokenAddress address of the token.
         @param amount amount of tokens to mint.
     */
-    function lend(address tokenAddress, uint256 amount) public onlyBorrower {
+    function lend(address tokenAddress, uint256 amount)
+        public
+        override
+        onlyBorrower
+    {
         require(
             _balanceOf(tokenAddress) >= amount,
             "COMPOUND_INSUFFICIENT_UNDERLYING"
@@ -81,7 +85,11 @@ contract CompoundDapp is ICompoundDapp, BaseEscrowDapp {
         @param tokenAddress address of the token.
         @param amount amount of underlying tokens to redeem.
     */
-    function redeem(address tokenAddress, uint256 amount) public onlyBorrower {
+    function redeem(address tokenAddress, uint256 amount)
+        public
+        override
+        onlyBorrower
+    {
         CErc20Interface cToken = _getCToken(tokenAddress);
         _redeem(cToken, amount, true);
     }
@@ -90,7 +98,7 @@ contract CompoundDapp is ICompoundDapp, BaseEscrowDapp {
         @notice This function redeems the complete cToken balance.
         @param tokenAddress address of the token.
     */
-    function redeemAll(address tokenAddress) public onlyBorrower {
+    function redeemAll(address tokenAddress) public override onlyBorrower {
         CErc20Interface cToken = _getCToken(tokenAddress);
         _redeem(cToken, cToken.balanceOf(address(this)), false);
     }

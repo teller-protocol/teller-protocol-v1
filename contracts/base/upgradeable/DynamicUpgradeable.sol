@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Contracts
 import "./DynamicUpgradeableStorage.sol";
@@ -53,7 +53,7 @@ contract DynamicUpgradeable is DynamicUpgradeableStorage {
      * @notice Returns the current implementation used by the proxy to delegate a call to.
      * @return address of the current implementation
      */
-    function _implementation() internal view returns (address) {
+    function _implementation() internal view virtual returns (address) {
         if (_cacheInvalidated()) {
             (, , address currentLogic) =
                 logicRegistry.getLogicVersion(logicName);

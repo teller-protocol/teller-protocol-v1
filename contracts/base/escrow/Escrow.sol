@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Contracts
 import "./BaseEscrowDapp.sol";
@@ -8,14 +8,14 @@ import "./BaseEscrowDapp.sol";
 import "../../interfaces/escrow/IEscrow.sol";
 import "../../interfaces/IBaseProxy.sol";
 import "../../providers/compound/CErc20Interface.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
-import "../../util/SettingsConsts.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../util/TellerCommon.sol";
 import "../../util/NumbersLib.sol";
+import "../../interfaces/loans/ILoans.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -34,10 +34,11 @@ import "../../util/NumbersLib.sol";
  *
  * @author develop@teller.finance
  */
-contract Escrow is IEscrow, Base, EscrowStorage, BaseEscrowDapp {
+contract Escrow is IEscrow, Base, BaseEscrowDapp {
     using SafeMath for uint256;
     using NumbersLib for uint256;
     using SafeERC20 for IERC20;
+    using AddressArrayLib for AddressArrayLib.AddressArray;
 
     /** External Functions **/
 
@@ -47,6 +48,7 @@ contract Escrow is IEscrow, Base, EscrowStorage, BaseEscrowDapp {
      */
     function callDapp(TellerCommon.DappData calldata dappData)
         external
+        override
         updateImpIfNeeded
         onlyBorrower
         whenNotPaused
@@ -65,7 +67,7 @@ contract Escrow is IEscrow, Base, EscrowStorage, BaseEscrowDapp {
         if (!success) {
             assembly {
                 let ptr := mload(0x40)
-                let size := returndatasize
+                let size := returndatasize()
                 returndatacopy(ptr, 0, size)
                 revert(ptr, size)
             }
@@ -76,7 +78,7 @@ contract Escrow is IEscrow, Base, EscrowStorage, BaseEscrowDapp {
      * @notice Calculate the value of the loan by getting the value of all tokens the Escrow owns.
      * @return Escrow total value denoted in the lending token.
      */
-    function calculateTotalValue() public view returns (uint256) {
+    function calculateTotalValue() public view override returns (uint256) {
         uint256 valueInEth;
         address[] memory tokens = getTokens();
         for (uint256 i = 0; i < tokens.length; i++) {
@@ -103,6 +105,7 @@ contract Escrow is IEscrow, Base, EscrowStorage, BaseEscrowDapp {
      */
     function repay(uint256 amount)
         external
+        override
         updateImpIfNeeded
         onlyBorrower
         whenNotPaused
@@ -130,12 +133,13 @@ contract Escrow is IEscrow, Base, EscrowStorage, BaseEscrowDapp {
      */
     function claimTokens()
         external
+        override
         updateImpIfNeeded
         onlyBorrower
         whenNotPaused
     {
         require(
-            loanManager.loans(loanID).status == TellerCommon.LoanStatus.Closed,
+            loanManager.status(loanID) == TellerCommon.LoanStatus.Closed,
             "LOAN_NOT_CLOSED"
         );
 
@@ -160,14 +164,15 @@ contract Escrow is IEscrow, Base, EscrowStorage, BaseEscrowDapp {
      */
     function claimTokensByCollateralValue(address recipient, uint256 value)
         external
+        override
         updateImpIfNeeded
         whenNotPaused
     {
         require(
-            loanManager.loans(loanID).status == TellerCommon.LoanStatus.Closed,
+            loanManager.status(loanID) == TellerCommon.LoanStatus.Closed,
             "LOAN_NOT_CLOSED"
         );
-        require(loanManager.loans(loanID).liquidated, "LOAN_NOT_LIQUIDATED");
+        require(loanManager.liquidated(loanID), "LOAN_NOT_LIQUIDATED");
         require(msg.sender == address(loanManager), "CALLER_MUST_BE_LOANS");
 
         address[] memory tokens = getTokens();
@@ -225,10 +230,10 @@ contract Escrow is IEscrow, Base, EscrowStorage, BaseEscrowDapp {
         uint256 aLoanID,
         address lendingTokenAddress,
         address borrowerAddress
-    ) external {
+    ) external override {
         Base._initialize(settingsAddress);
 
-        loanManager = ILoanManager(msg.sender);
+        loanManager = ILoans(msg.sender);
         lendingPool = lendingPoolAddress;
         loanID = aLoanID;
         lendingToken = lendingTokenAddress;
@@ -277,7 +282,7 @@ contract Escrow is IEscrow, Base, EscrowStorage, BaseEscrowDapp {
                 assetDecimals = uint8(18);
             } else {
                 baseAddress = CErc20Interface(baseAddress).underlying();
-                assetDecimals = ERC20Detailed(baseAddress).decimals();
+                assetDecimals = ERC20(baseAddress).decimals();
             }
 
             baseAmount = baseAmount.mul(exchangeRate).div(

@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Contracts
 import "./BaseProxy.sol";
@@ -11,6 +11,13 @@ import "../upgradeable/DynamicUpgradeable.sol";
 
     @author develop@teller.finance
  */
-contract BaseDynamicProxy is BaseProxy, DynamicUpgradeable {
-
+abstract contract BaseDynamicProxy is BaseProxy, DynamicUpgradeable {
+    function _implementation()
+        internal
+        view
+        override(DynamicUpgradeable, Proxy)
+        returns (address)
+    {
+        return DynamicUpgradeable._implementation();
+    }
 }

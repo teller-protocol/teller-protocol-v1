@@ -1,15 +1,15 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SignedSafeMath.sol";
 
 // Interfaces
 import "../../interfaces/loans/ILoanData.sol";
 import "../../interfaces/SettingsInterface.sol";
 import "../../interfaces/escrow/IEscrow.sol";
 import "../../interfaces/loans/ILoanManager.sol";
-import "../../providers/openzeppelin/SignedSafeMath.sol";
 
 // Contracts
 import "../BaseStorage.sol";
@@ -43,7 +43,7 @@ contract LoanData is ILoanData, LoanStorage {
      * @param loanID The loan ID for which to check the status
      * @return bool value indicating if the loan is active or has terms set
      */
-    function isActiveOrSet(uint256 loanID) public view returns (bool) {
+    function isActiveOrSet(uint256 loanID) public view override returns (bool) {
         return
             loans[loanID].status == TellerCommon.LoanStatus.Active ||
             loans[loanID].status == TellerCommon.LoanStatus.TermsSet;
@@ -54,7 +54,7 @@ contract LoanData is ILoanData, LoanStorage {
      * @param loanID The loan ID to check the collateral ratio for.
      * @return bool indicating whether the loan with specified parameters can be deposited to an EOA.
      */
-    function canGoToEOA(uint256 loanID) public view returns (bool) {
+    function canGoToEOA(uint256 loanID) public view override returns (bool) {
         uint256 overCollateralizedBuffer =
             settings.getOverCollateralizedBufferValue();
         return
@@ -66,7 +66,7 @@ contract LoanData is ILoanData, LoanStorage {
      * @param loanID The loan ID to check.
      * @return bool value of it being secured or not.
      */
-    function isLoanSecured(uint256 loanID) public view returns (bool) {
+    function isLoanSecured(uint256 loanID) public view override returns (bool) {
         return
             loans[loanID].loanTerms.collateralRatio >=
             settings.getCollateralBufferValue();
@@ -77,7 +77,12 @@ contract LoanData is ILoanData, LoanStorage {
      * @param loanID The loan ID to get the total amount owed.
      * @return uint256 The total owed amount.
      */
-    function getTotalOwed(uint256 loanID) public view returns (uint256) {
+    function getTotalOwed(uint256 loanID)
+        public
+        view
+        override
+        returns (uint256)
+    {
         if (loans[loanID].status == TellerCommon.LoanStatus.TermsSet) {
             uint256 interestOwed =
                 getInterestOwedFor(
@@ -96,7 +101,12 @@ contract LoanData is ILoanData, LoanStorage {
      * @param loanID The loan ID to get the total amount owed.
      * @return uint256 The amount owed.
      */
-    function getLoanAmount(uint256 loanID) public view returns (uint256) {
+    function getLoanAmount(uint256 loanID)
+        public
+        view
+        override
+        returns (uint256)
+    {
         if (loans[loanID].status == TellerCommon.LoanStatus.TermsSet) {
             return loans[loanID].loanTerms.maxLoanAmount;
         } else if (loans[loanID].status == TellerCommon.LoanStatus.Active) {
@@ -114,6 +124,7 @@ contract LoanData is ILoanData, LoanStorage {
     function getInterestOwedFor(uint256 loanID, uint256 amountBorrow)
         public
         view
+        override
         returns (uint256)
     {
         return amountBorrow.percent(getInterestRatio(loanID));
@@ -124,7 +135,12 @@ contract LoanData is ILoanData, LoanStorage {
      * @dev The interest rate on the loan terms is APY.
      * @param loanID The loan ID to get the interest rate for.
      */
-    function getInterestRatio(uint256 loanID) public view returns (uint256) {
+    function getInterestRatio(uint256 loanID)
+        public
+        view
+        override
+        returns (uint256)
+    {
         return
             loans[loanID]
                 .loanTerms
@@ -141,6 +157,7 @@ contract LoanData is ILoanData, LoanStorage {
     function getCollateralInLendingTokens(uint256 loanID)
         public
         view
+        override
         returns (uint256)
     {
         if (!isActiveOrSet(loanID)) {
@@ -157,13 +174,14 @@ contract LoanData is ILoanData, LoanStorage {
     /**
      * @notice Get information on the collateral needed for the loan.
      * @param loanID The loan ID to get collateral info for.
-     * @return int256 Collateral needed in Lending tokens.
-     * @return int256 Collateral needed in Collateral tokens (wei)
-     * @return uint256 The value of the loan held in the escrow contract
+     * @return neededInLendingTokens int256 Collateral needed in Lending tokens.
+     * @return neededInCollateralTokens int256 Collateral needed in Collateral tokens (wei)
+     * @return escrowLoanValue uint256 The value of the loan held in the escrow contract
      */
     function getCollateralNeededInfo(uint256 loanID)
         public
         view
+        override
         returns (
             int256 neededInLendingTokens,
             int256 neededInCollateralTokens,
@@ -200,12 +218,13 @@ contract LoanData is ILoanData, LoanStorage {
      * @dev If the loan status is TermsSet, then the value is whats needed to take out the loan.
      * @dev If the loan status is Active, then the value is the threshold at which the loan can be liquidated at.
      * @param loanID The loan ID to get needed collateral info for.
-     * @return int256 The minimum collateral value threshold required.
-     * @return uint256 The value of the loan held in the escrow contract.
+     * @return neededInLendingTokens int256 The minimum collateral value threshold required.
+     * @return escrowLoanValue uint256 The value of the loan held in the escrow contract.
      */
     function getCollateralNeededInTokens(uint256 loanID)
         public
         view
+        override
         returns (int256 neededInLendingTokens, uint256 escrowLoanValue)
     {
         if (
@@ -256,7 +275,7 @@ contract LoanData is ILoanData, LoanStorage {
      * @param loanID The loan ID to check.
      * @return true if the loan is liquidable.
      */
-    function isLiquidable(uint256 loanID) public view returns (bool) {
+    function isLiquidable(uint256 loanID) public view override returns (bool) {
         // Check if loan can be liquidated
         if (loans[loanID].status != TellerCommon.LoanStatus.Active) {
             return false;
@@ -269,7 +288,7 @@ contract LoanData is ILoanData, LoanStorage {
         } else {
             // Otherwise, check if the loan has expired
             return
-                now >=
+                block.timestamp >=
                 loans[loanID].loanStartTime.add(
                     loans[loanID].loanTerms.duration
                 );
@@ -281,7 +300,12 @@ contract LoanData is ILoanData, LoanStorage {
      * @param loanID The loan ID to get the info.
      * @return The value the liquidator will receive denoted in collateral tokens.
      */
-    function getLiquidationReward(uint256 loanID) public view returns (int256) {
+    function getLiquidationReward(uint256 loanID)
+        public
+        view
+        override
+        returns (int256)
+    {
         uint256 amountToLiquidate = getTotalOwed(loanID);
         uint256 availableValue =
             getCollateralInLendingTokens(loanID).add(

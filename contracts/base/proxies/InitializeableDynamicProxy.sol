@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Contracts
 import "./BaseDynamicProxy.sol";
@@ -27,7 +27,7 @@ contract InitializeableDynamicProxy is
         address aLogicRegistryAddress,
         bytes32 aLogicName,
         bool isStrictDynamic
-    ) public {
+    ) public override {
         require(address(logicRegistry) == address(0), "PROXY_ALREADY_INIT");
         logicRegistry = LogicVersionsRegistryInterface(aLogicRegistryAddress);
         logicName = aLogicName;

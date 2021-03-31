@@ -1,4 +1,5 @@
-pragma solidity 0.5.17;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Interfaces
 import "@chainlink/contracts/src/v0.5/interfaces/AggregatorV2V3Interface.sol";
@@ -32,7 +33,10 @@ interface IChainlinkAggregator {
         view
         returns (AggregatorV2V3Interface, bool);
 
-    function isTokenSupported(address tokenAddress) external view returns (bool);
+    function isTokenSupported(address tokenAddress)
+        external
+        view
+        returns (bool);
 
     /**
         @notice It calculates the value of a token amount into another.
@@ -54,7 +58,10 @@ interface IChainlinkAggregator {
         @param dst Destination token address.
         @return uint256 The latest answer as given from Chainlink.
      */
-    function latestAnswerFor(address src, address dst) external view returns (int256);
+    function latestAnswerFor(address src, address dst)
+        external
+        view
+        returns (int256);
 
     /**
         @notice It allows for additional Chainlink Aggregators to be supported.

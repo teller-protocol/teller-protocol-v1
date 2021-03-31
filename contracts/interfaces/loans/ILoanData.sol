@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Commons
 import "../../util/TellerCommon.sol";
@@ -16,13 +16,13 @@ import "../../providers/compound/CErc20Interface.sol";
  *
  * @author develop@teller.finance
  */
-contract ILoanData is ILoanStorage {
+interface ILoanData {
     /**
      * @notice Checks whether the status of a loan is Active or has Terms Set
      * @param loanID The loan ID for which to check the status
      * @return bool value indicating if the loan is active or has terms set
      */
-    function isActiveOrSet(uint256 loanID) public view returns (bool);
+    function isActiveOrSet(uint256 loanID) external view returns (bool);
 
     /**
      * @notice Returns the total owed amount remaining for a specified loan
@@ -83,9 +83,9 @@ contract ILoanData is ILoanStorage {
     /**
      * @notice Get information on the collateral needed for the loan.
      * @param loanID The loan ID to get collateral info for.
-     * @return int256 Collateral needed in Lending tokens.
-     * @return int256 Collateral needed in Collateral tokens (wei)
-     * @return uint256 The value of the loan held in the escrow contract
+     * @return neededInLendingTokens int256 Collateral needed in Lending tokens.
+     * @return neededInCollateralTokens int256 Collateral needed in Collateral tokens (wei)
+     * @return escrowLoanValue uint256 The value of the loan held in the escrow contract
      */
     function getCollateralNeededInfo(uint256 loanID)
         external
@@ -101,8 +101,8 @@ contract ILoanData is ILoanStorage {
      * @dev If the loan status is TermsSet, then the value is whats needed to take out the loan.
      * @dev If the loan status is Active, then the value is the threshold at which the loan can be liquidated at.
      * @param loanID The loan ID to get needed collateral info for.
-     * @return int256 The minimum collateral value threshold required.
-     * @return uint256 The value of the loan held in the escrow contract.
+     * @return neededInLendingTokens int256 The minimum collateral value threshold required.
+     * @return escrowLoanValue uint256 The value of the loan held in the escrow contract.
      */
     function getCollateralNeededInTokens(uint256 loanID)
         external
@@ -114,12 +114,15 @@ contract ILoanData is ILoanStorage {
      * @param loanID The loan ID to check.
      * @return true if the loan is liquidable.
      */
-    function isLiquidable(uint256 loanID) public view returns (bool);
+    function isLiquidable(uint256 loanID) external view returns (bool);
 
     /**
      * @notice It gets the current liquidation reward for a given loan.
      * @param loanID The loan ID to get the info.
      * @return The value the liquidator will receive denoted in collateral tokens.
      */
-    function getLiquidationReward(uint256 loanID) public view returns (int256);
+    function getLiquidationReward(uint256 loanID)
+        external
+        view
+        returns (int256);
 }

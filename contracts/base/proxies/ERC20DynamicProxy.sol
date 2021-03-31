@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Contracts
 import "./InitializeableDynamicProxy.sol";
@@ -16,7 +16,8 @@ import "../../interfaces/IERC20DynamicProxy.sol";
 contract ERC20DynamicProxy is
     IERC20DynamicProxy,
     InitializeableDynamicProxy,
-    DynamicUpgradeableERC20
+    // REVIEW
+    ERC20Upgradeable
 {
     /**
      * @notice It creates a new dynamic proxy specific for the TToken given a logic registry contract and a logic name.
@@ -25,6 +26,7 @@ contract ERC20DynamicProxy is
      */
     function initialize(address logicRegistryAddress, bytes32 aLogicName)
         public
+        override
     {
         initialize(logicRegistryAddress, aLogicName, true);
         _updateImplementationStored();

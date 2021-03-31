@@ -1,9 +1,9 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // External Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // Interfaces
 import "./IUniswapV2Router02.sol";
@@ -54,7 +54,7 @@ contract Uniswap {
                 minDestination,
                 path,
                 address(this),
-                now
+                block.timestamp
             );
 
         require(amounts.length == path.length, "UNI_ERROR_SWAPPING");

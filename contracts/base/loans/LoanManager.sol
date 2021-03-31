@@ -1,14 +1,14 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Libraries and common
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../util/TellerCommon.sol";
 import "../../util/NumbersLib.sol";
 
 // Contracts
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../Base.sol";
 import "./LoanStorage.sol";
 import "./../proxies/DynamicProxy.sol";
@@ -39,11 +39,19 @@ import "../../interfaces/IInitializeableDynamicProxy.sol";
  *
  * @author develop@teller.finance
  */
-contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
+contract LoanManager is
+    ILoanManager,
+    ILoanData,
+    ILoanTermsConsensus,
+    LoanStorage,
+    Base,
+    Factory
+{
     using SafeMath for uint256;
-    using SafeERC20 for ERC20Detailed;
+    using SafeERC20 for ERC20;
     using NumbersLib for uint256;
     using NumbersLib for int256;
+    using AddressLib for address;
 
     /* Modifiers */
 
@@ -123,7 +131,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     /**
      * @notice See LoanData.isActiveOrSet
      */
-    function isActiveOrSet(uint256 loanID) public view returns (bool) {
+    function isActiveOrSet(uint256 loanID) public view override returns (bool) {
         bytes memory data =
             _delegateView(
                 loanData,
@@ -135,7 +143,12 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     /**
      * @notice See LoanData.getTotalOwed
      */
-    function getTotalOwed(uint256 loanID) public view returns (uint256) {
+    function getTotalOwed(uint256 loanID)
+        public
+        view
+        override
+        returns (uint256)
+    {
         bytes memory data =
             _delegateView(
                 loanData,
@@ -147,7 +160,12 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     /**
      * @notice See LoanData.getLoanAmount
      */
-    function getLoanAmount(uint256 loanID) public view returns (uint256) {
+    function getLoanAmount(uint256 loanID)
+        public
+        view
+        override
+        returns (uint256)
+    {
         bytes memory data =
             _delegateView(
                 loanData,
@@ -159,7 +177,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     /**
      * @notice See LoanData.isLoanSecured
      */
-    function isLoanSecured(uint256 loanID) public view returns (bool) {
+    function isLoanSecured(uint256 loanID) public view override returns (bool) {
         bytes memory data =
             _delegateView(
                 loanData,
@@ -171,7 +189,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     /**
      * @notice See LoanData.canGoToEOA
      */
-    function canGoToEOA(uint256 loanID) public view returns (bool) {
+    function canGoToEOA(uint256 loanID) public view override returns (bool) {
         bytes memory data =
             _delegateView(
                 loanData,
@@ -186,6 +204,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     function getInterestOwedFor(uint256 loanID, uint256 amountBorrow)
         public
         view
+        override
         returns (uint256)
     {
         bytes memory data =
@@ -203,7 +222,12 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     /**
      * @notice See LoanData.getInterestRatio
      */
-    function getInterestRatio(uint256 loanID) public view returns (uint256) {
+    function getInterestRatio(uint256 loanID)
+        public
+        view
+        override
+        returns (uint256)
+    {
         bytes memory data =
             _delegateView(
                 loanData,
@@ -218,6 +242,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     function getCollateralInLendingTokens(uint256 loanID)
         public
         view
+        override
         returns (uint256)
     {
         bytes memory data =
@@ -237,6 +262,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     function getCollateralNeededInfo(uint256 loanID)
         public
         view
+        override
         returns (
             int256,
             int256,
@@ -260,6 +286,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     function getCollateralNeededInTokens(uint256 loanID)
         public
         view
+        override
         returns (int256, uint256)
     {
         bytes memory data =
@@ -276,7 +303,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     /**
      * @notice See LoanData.isLiquidable
      */
-    function isLiquidable(uint256 loanID) public view returns (bool) {
+    function isLiquidable(uint256 loanID) public view override returns (bool) {
         bytes memory data =
             _delegateView(
                 loanData,
@@ -288,7 +315,12 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     /**
      * @notice See LoanData.getLiquidationReward
      */
-    function getLiquidationReward(uint256 loanID) public view returns (int256) {
+    function getLiquidationReward(uint256 loanID)
+        public
+        view
+        override
+        returns (int256)
+    {
         bytes memory data =
             _delegateView(
                 loanData,
@@ -303,6 +335,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     )
         public
         view
+        override
         returns (
             uint256,
             uint256,
@@ -336,6 +369,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     )
         external
         payable
+        override
         updateImpIfNeeded
         nonReentrant
         whenNotPaused
@@ -380,6 +414,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
      */
     function withdrawCollateral(uint256 amount, uint256 loanID)
         external
+        override
         updateImpIfNeeded
         nonReentrant
         loanActiveOrSet(loanID)
@@ -414,7 +449,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
             );
         }
 
-        _withdrawCollateral(loanID, amount, msg.sender);
+        _withdrawCollateral(loanID, amount, payable(msg.sender));
     }
 
     /**
@@ -430,6 +465,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     )
         external
         payable
+        override
         updateImpIfNeeded
         loanActiveOrSet(loanID)
         whenNotPaused
@@ -455,6 +491,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
      */
     function takeOutLoan(uint256 loanID, uint256 amountBorrow)
         external
+        override
         updateImpIfNeeded
         nonReentrant
         whenNotPaused
@@ -466,7 +503,10 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
             loans[loanID].status == TellerCommon.LoanStatus.TermsSet,
             "LOAN_NOT_SET"
         );
-        require(loans[loanID].termsExpiry >= now, "LOAN_TERMS_EXPIRED");
+        require(
+            loans[loanID].termsExpiry >= block.timestamp,
+            "LOAN_TERMS_EXPIRED"
+        );
         require(_isDebtRatioValid(amountBorrow), "SUPPLY_TO_DEBT_EXCEEDS_MAX");
         require(
             loans[loanID].loanTerms.maxLoanAmount >= amountBorrow,
@@ -480,7 +520,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
         );
         require(
             loans[loanID].lastCollateralIn <=
-                now.sub(settings.getSafetyIntervalValue()),
+                block.timestamp.sub(settings.getSafetyIntervalValue()),
             "COLLATERAL_DEPOSITED_RECENTLY"
         );
 
@@ -488,7 +528,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
         loans[loanID].principalOwed = amountBorrow;
         loans[loanID].interestOwed = getInterestOwedFor(loanID, amountBorrow);
         loans[loanID].status = TellerCommon.LoanStatus.Active;
-        loans[loanID].loanStartTime = now;
+        loans[loanID].loanStartTime = block.timestamp;
 
         address loanRecipient;
         bool eoaAllowed = canGoToEOA(loanID);
@@ -529,6 +569,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
      */
     function repay(uint256 amount, uint256 loanID)
         external
+        override
         updateImpIfNeeded
         nonReentrant
         loanActive(loanID)
@@ -594,6 +635,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
      */
     function liquidateLoan(uint256 loanID)
         external
+        override
         updateImpIfNeeded
         nonReentrant
         loanActive(loanID)
@@ -617,7 +659,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
         loans[loanID].liquidated = true;
 
         // the caller gets the collateral from the loan
-        _payOutLiquidator(loanID, rewardInCollateral, msg.sender);
+        _payOutLiquidator(loanID, rewardInCollateral, payable(msg.sender));
 
         emit LoanLiquidated(
             loanID,
@@ -634,7 +676,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
         @dev The sender must be the owner.
         @dev It throws a require error if the sender is not the owner.
      */
-    function addSigner(address account) external updateImpIfNeeded onlyPauser {
+    function addSigner(address account) external override updateImpIfNeeded onlyPauser {
         _delegateTo(
             loanTermsConsensus,
             abi.encodeWithSignature("addSigner(address)", account)
@@ -649,6 +691,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
      */
     function addSigners(address[] calldata accounts)
         external
+        override
         updateImpIfNeeded
         onlyPauser
     {
@@ -661,14 +704,14 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     /**
      *  @notice It calls the LogicVersionRegistry to update the stored logic address for LoanData.
      */
-    function updateLoanDataLogic() public {
+    function updateLoanDataLogic() public override {
         (, , loanData) = logicRegistry.getLogicVersion(LOAN_DATA_LOGIC_NAME);
     }
 
     /**
      *  @notice It calls the LogicVersionRegistry to update the stored logic address for LoanTermsConsensus.
      */
-    function updateLoanTermsConsensusLogic() public {
+    function updateLoanTermsConsensusLogic() public override {
         (, , loanTermsConsensus) = logicRegistry.getLogicVersion(
             LOAN_TERMS_CONSENSUS_LOGIC_NAME
         );
@@ -686,7 +729,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
         address settingsAddress,
         address collateralTokenAddress,
         address initDynamicProxyLogicAddress
-    ) external {
+    ) external override {
         lendingPoolAddress.requireNotEmpty("PROVIDE_LENDING_POOL_ADDRESS");
 
         _initialize(settingsAddress);
@@ -716,7 +759,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
         (success, returnData) = imp.delegatecall(sigWithData);
         assembly {
             if eq(success, 0) {
-                revert(add(returnData, 0x20), returndatasize)
+                revert(add(returnData, 0x20), returndatasize())
             }
         }
     }
@@ -744,7 +787,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
             );
         assembly {
             if eq(success, 0) {
-                revert(add(returnData, 0x20), returndatasize)
+                revert(add(returnData, 0x20), returndatasize())
             }
         }
         return abi.decode(returnData, (bytes));
@@ -832,7 +875,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
 
         totalCollateral = totalCollateral.add(amount);
         loans[loanID].collateral = loans[loanID].collateral.add(amount);
-        loans[loanID].lastCollateralIn = now;
+        loans[loanID].lastCollateralIn = block.timestamp;
         emit CollateralDeposited(loanID, msg.sender, amount);
     }
 
@@ -886,7 +929,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
         });
 
         uint256 termsExpiryTime = settings.getTermsExpiryTimeValue();
-        loans[loanID].termsExpiry = now.add(termsExpiryTime);
+        loans[loanID].termsExpiry = block.timestamp.add(termsExpiryTime);
 
         return loanID;
     }
@@ -894,7 +937,7 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
     /**
      * @notice It creates an Escrow contract instance for a given loan id.
      * @param loanID loan id associated to the Escrow contract.
-     * @return the new Escrow contract address.
+     * @return escrow the new Escrow contract address.
      */
     function _createEscrow(uint256 loanID) internal returns (address escrow) {
         require(

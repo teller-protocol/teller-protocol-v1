@@ -1,9 +1,10 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Contracts
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol";
+
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+
 import "./DynamicUpgradeable.sol";
 
 /*****************************************************************************************************/
@@ -22,9 +23,8 @@ import "./DynamicUpgradeable.sol";
 
     @author develop@teller.finance.
  */
-contract DynamicUpgradeableERC20 is
-    ERC20Detailed,
-    ERC20Mintable,
+abstract contract DynamicUpgradeableERC20 is
+    ERC20Upgradeable,
     DynamicUpgradeable
 {
 
