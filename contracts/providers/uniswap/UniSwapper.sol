@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 // Interfaces
 import "./IUniswapV2Router02.sol";
-import "../../base/BaseStorage.sol";
+import "../../base/Base.sol";
 import "../../providers/chainlink/IChainlinkAggregator.sol";
 
 /*****************************************************************************************************/
@@ -22,7 +22,7 @@ import "../../providers/chainlink/IChainlinkAggregator.sol";
  *
  * @author develop@teller.finance
  */
-contract UniSwapper is BaseStorage {
+contract UniSwapper is Base {
     /**
      * @notice Swaps tokens using UniswapV2Router via the platform defined Uniswap contract.
      * @notice Allows for a custom minimum destination amount to be required.

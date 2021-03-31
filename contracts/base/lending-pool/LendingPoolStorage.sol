@@ -29,18 +29,18 @@ import "../../interfaces/AssetSettingsInterface.sol";
 
     @author develop@teller.finance
  */
-abstract contract LendingPoolStorage is LendingPoolInterface {
+abstract contract LendingPoolStorage {
     uint8 public constant EXCHANGE_RATE_DECIMALS = 36;
 
-    ITToken public override tToken;
+    ITToken public tToken;
 
-    ERC20 public override lendingToken;
+    ERC20 public lendingToken;
 
-    CErc20Interface public override cToken;
+    CErc20Interface public cToken;
 
-    IComptroller public override compound;
+    IComptroller public compound;
 
-    ERC20 public override comp;
+    ERC20 public comp;
 
     IMarketRegistry public marketRegistry;
 
@@ -60,7 +60,7 @@ abstract contract LendingPoolStorage is LendingPoolInterface {
     mapping(address => uint256) internal _totalInterestEarnedLender;
 
     // The total amount of underlying interest the pool has earned from loans being repaid.
-    uint256 public override totalInterestEarned;
+    uint256 public totalInterestEarned;
 
     /**
      * @notice It holds the platform AssetSettings instance.

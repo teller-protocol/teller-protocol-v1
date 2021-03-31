@@ -35,7 +35,7 @@ import "./LoanStorage.sol";
  *
  * @author develop@teller.finance.
  */
-contract LoanTermsConsensus is ILoanTermsConsensus, LoanStorage {
+contract LoanTermsConsensus is ILoanTermsConsensus, Base, LoanStorage {
     using SafeMath for uint256;
     using NumbersList for NumbersList.Values;
     using NumbersLib for uint256;

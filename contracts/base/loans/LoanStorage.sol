@@ -12,7 +12,6 @@ import "../../interfaces/LendingPoolInterface.sol";
 import "../../interfaces/AssetSettingsInterface.sol";
 
 // Contracts
-import "../BaseStorage.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -30,7 +29,7 @@ import "../BaseStorage.sol";
  *
  * @author develop@teller.finance.
  */
-abstract contract LoanStorage is ILoanStorage, ALoanStorage, BaseStorage {
+abstract contract LoanStorage is ILoanStorage, ALoanStorage {
     /* State Variables */
 
     // Loan length will be inputted in seconds.

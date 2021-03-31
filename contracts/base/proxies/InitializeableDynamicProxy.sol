@@ -7,6 +7,8 @@ import "./BaseDynamicProxy.sol";
 // Interfaces
 import "../../interfaces/IInitializeableDynamicProxy.sol";
 
+import "hardhat/console.sol";
+
 /**
     @notice It is a dynamic proxy contract for any contract. It uses the logic versions registry to get a logic contract address.
     @notice It extends BaseUpgradeable to get access to the settings.
@@ -28,6 +30,8 @@ contract InitializeableDynamicProxy is
         bytes32 aLogicName,
         bool isStrictDynamic
     ) public override {
+        console.log(aLogicRegistryAddress);
+        console.logBytes32(aLogicName);
         require(address(logicRegistry) == address(0), "PROXY_ALREADY_INIT");
         logicRegistry = LogicVersionsRegistryInterface(aLogicRegistryAddress);
         logicName = aLogicName;

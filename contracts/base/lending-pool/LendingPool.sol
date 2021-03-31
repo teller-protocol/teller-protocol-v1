@@ -13,6 +13,7 @@ import "../../providers/compound/CErc20Interface.sol";
 import "../../providers/compound/IComptroller.sol";
 import "../../interfaces/IMarketRegistry.sol";
 import "../../interfaces/ITToken.sol";
+import "../../interfaces/LendingPoolInterface.sol";
 
 import "./LendingPoolStorage.sol";
 
@@ -37,12 +38,51 @@ import "../../providers/uniswap/UniSwapper.sol";
 
     @author develop@teller.finance
  */
-contract LendingPool is LendingPoolStorage, Base, UniSwapper {
+contract LendingPool is LendingPoolInterface, Base, UniSwapper {
     using SafeMath for uint256;
     using SafeERC20 for ERC20;
     using CompoundRatesLib for CErc20Interface;
     using NumbersLib for uint256;
     using AddressLib for address;
+
+    uint8 public constant EXCHANGE_RATE_DECIMALS = 36;
+
+    ITToken public override tToken;
+
+    ERC20 public override lendingToken;
+
+    CErc20Interface public override cToken;
+
+    IComptroller public override compound;
+
+    ERC20 public override comp;
+
+    IMarketRegistry public marketRegistry;
+
+    /*
+        The total amount of underlying asset that has been originally been supplied by each
+        lender not including interest earned.
+    */
+    mapping(address => uint256) internal _totalSuppliedUnderlyingLender;
+
+    // The total amount of underlying asset that has been lent out for loans.
+    uint256 internal _totalBorrowed;
+
+    // The total amount of underlying asset that has been repaid from loans.
+    uint256 internal _totalRepaid;
+
+    // The total amount of underlying interest that has been claimed for each lender.
+    mapping(address => uint256) internal _totalInterestEarnedLender;
+
+    // The total amount of underlying interest the pool has earned from loans being repaid.
+    uint256 public override totalInterestEarned;
+
+    /**
+     * @notice It holds the platform AssetSettings instance.
+     */
+    AssetSettingsInterface public assetSettings;
+
+    bool internal _notEntered;
 
     /** Modifiers */
 

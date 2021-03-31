@@ -24,7 +24,7 @@ import "./upgradeable/DynamicUpgradeableStorage.sol";
  *
  * @author develop@teller.finance.
  */
-abstract contract BaseStorage is DynamicUpgradeableStorage {
+abstract contract BaseStorage {
     /**
      * @notice It holds the platform Settings instance.
      */

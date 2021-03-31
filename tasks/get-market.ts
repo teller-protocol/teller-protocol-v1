@@ -2,7 +2,7 @@ import { task, types } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import {
-  ERC20Detailed,
+  ERC20,
   LendingPool,
   LoanData,
   LoanManager,
@@ -21,7 +21,7 @@ interface GetMarketArgs {
 export interface GetMarketReturn {
   lendingPool: LendingPool
   loanManager: LoanManager
-  lendingToken: ERC20Detailed
+  lendingToken: ERC20
   tToken: TToken
 }
 

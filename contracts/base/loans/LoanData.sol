@@ -12,7 +12,7 @@ import "../../interfaces/escrow/IEscrow.sol";
 import "../../interfaces/loans/ILoanManager.sol";
 
 // Contracts
-import "../BaseStorage.sol";
+import "../Base.sol";
 import "./LoanStorage.sol";
 
 /*****************************************************************************************************/
@@ -32,7 +32,7 @@ import "./LoanStorage.sol";
  *
  * @author develop@teller.finance.
  */
-contract LoanData is ILoanData, LoanStorage {
+contract LoanData is ILoanData, Base, LoanStorage {
     using SafeMath for uint256;
     using SignedSafeMath for int256;
     using NumbersLib for uint256;

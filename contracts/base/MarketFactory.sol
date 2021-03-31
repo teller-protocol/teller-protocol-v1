@@ -21,6 +21,8 @@ import "./proxies/ERC20DynamicProxy.sol";
 import "./MarketRegistry.sol";
 import "./Factory.sol";
 
+import "hardhat/console.sol";
+
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
 /**                                  THIS CONTRACT IS UPGRADEABLE!                                  **/
@@ -174,6 +176,7 @@ contract MarketFactory is IMarketFactory, Base, Factory {
             address(tToken),
             address(settings)
         );
+        console.log(address(lendingPool.lendingToken()));
         tToken.initialize(address(lendingPool));
     }
 }
