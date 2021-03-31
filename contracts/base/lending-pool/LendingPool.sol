@@ -81,6 +81,7 @@ contract LendingPool is
     */
     function deposit(uint256 lendingTokenAmount)
         external
+        updateImpIfNeeded
         nonReentrant
         whenNotPaused
         whenLendingPoolNotPaused(address(this))
@@ -125,6 +126,7 @@ contract LendingPool is
      */
     function withdraw(uint256 lendingTokenAmount)
         external
+        updateImpIfNeeded
         nonReentrant
         whenNotPaused
         whenLendingPoolNotPaused(address(this))
@@ -145,6 +147,7 @@ contract LendingPool is
 
     function withdrawAll()
         external
+        updateImpIfNeeded
         nonReentrant
         whenNotPaused
         whenLendingPoolNotPaused(address(this))
@@ -176,6 +179,7 @@ contract LendingPool is
         address borrower
     )
         external
+        updateImpIfNeeded
         nonReentrant
         isLoan
         whenLendingPoolNotPaused(address(this))
@@ -206,6 +210,7 @@ contract LendingPool is
      */
     function createLoan(uint256 amount, address borrower)
         external
+        updateImpIfNeeded
         nonReentrant
         isLoan
         whenLendingPoolNotPaused(address(this))
@@ -222,12 +227,13 @@ contract LendingPool is
         _totalBorrowed = _totalBorrowed.add(amount);
     }
 
-    function swapAccumulatedComp() external {
+    function swapAccumulatedComp() external updateImpIfNeeded {
         _swapAccumulatedComp();
     }
 
     function getMarketStateCurrent()
         external
+        updateImpIfNeeded
         returns (
             uint256 totalSupplied,
             uint256 totalBorrowed,
@@ -261,7 +267,11 @@ contract LendingPool is
         of TTokens owned and the current exchange rate.
         @return a lender's balance of the underlying token in the pool.
      */
-    function balanceOfUnderlying(address lender) external returns (uint256) {
+    function balanceOfUnderlying(address lender)
+        external
+        updateImpIfNeeded
+        returns (uint256)
+    {
         return
             _lendingTokensFromTTokens(
                 tToken.balanceOf(lender),
@@ -276,6 +286,7 @@ contract LendingPool is
      */
     function getLenderInterestEarned(address lender)
         external
+        updateImpIfNeeded
         returns (uint256)
     {
         uint256 currentLenderInterest =
@@ -289,6 +300,7 @@ contract LendingPool is
      */
     function getClaimableInterestEarned(address lender)
         external
+        updateImpIfNeeded
         returns (uint256)
     {
         return _calculateLenderInterestEarned(lender, _exchangeRateCurrent());
@@ -324,7 +336,11 @@ contract LendingPool is
         @notice It calculates the current exchange rate for the TToken based on the total supply of the lending token.
         @return the exchange rate for 1 TToken to the underlying token.
      */
-    function exchangeRateCurrent() external returns (uint256) {
+    function exchangeRateCurrent()
+        external
+        updateImpIfNeeded
+        returns (uint256)
+    {
         return _exchangeRateCurrent();
     }
 
@@ -338,6 +354,7 @@ contract LendingPool is
 
     function tTokensFromLendingTokens(uint256 lendingTokenAmount)
         external
+        updateImpIfNeeded
         returns (uint256)
     {
         return
@@ -349,6 +366,7 @@ contract LendingPool is
 
     function lendingTokensFromTTokens(uint256 tTokenAmount)
         external
+        updateImpIfNeeded
         returns (uint256)
     {
         return _lendingTokensFromTTokens(tTokenAmount, _exchangeRateCurrent());

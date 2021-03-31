@@ -81,7 +81,7 @@ contract MarketFactory is IMarketFactory, Base, Factory {
         );
 
         address loanManagerAddress =
-            _createDynamicProxy(keccak256("LoanManager"));
+            _createDynamicProxy(keccak256("LoanManager"), true);
 
         LendingPoolInterface lendingPool =
             LendingPoolInterface(marketRegistry.lendingPools(lendingToken));
@@ -118,7 +118,7 @@ contract MarketFactory is IMarketFactory, Base, Factory {
         erc20DynamicProxyLogic = address(new ERC20DynamicProxy());
 
         marketRegistry = IMarketRegistry(
-            _createDynamicProxy(keccak256("MarketRegistry"))
+            _createDynamicProxy(keccak256("MarketRegistry"), false)
         );
         marketRegistry.initialize();
     }
@@ -129,7 +129,7 @@ contract MarketFactory is IMarketFactory, Base, Factory {
         @notice It creates a InitializeableDynamicProxy instance for a given logic name.
         @dev It is used to create all the market contracts as strict dynamic proxies.
      */
-    function _createDynamicProxy(bytes32 logicName)
+    function _createDynamicProxy(bytes32 logicName, bool strict)
         internal
         returns (address proxyAddress)
     {
@@ -137,7 +137,7 @@ contract MarketFactory is IMarketFactory, Base, Factory {
         IInitializeableDynamicProxy(proxyAddress).initialize(
             address(logicRegistry),
             logicName,
-            true
+            strict
         );
     }
 
@@ -162,7 +162,7 @@ contract MarketFactory is IMarketFactory, Base, Factory {
         returns (LendingPoolInterface lendingPool)
     {
         lendingPool = LendingPoolInterface(
-            _createDynamicProxy(keccak256("LendingPool"))
+            _createDynamicProxy(keccak256("LendingPool"), true)
         );
 
         ITToken tToken = ITToken(_createTTokenProxy());
