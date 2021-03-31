@@ -165,12 +165,14 @@ contract ILoanManager is ILoanStorage, ILoanData {
      * @param borrower Account address of the borrower
      * @param amountPaid Amount of the loan paid back
      * @param payer Account address of the payer
+     * @param totalOwed Total amount of the loan to be repaid
      */
     event LoanRepaid(
         uint256 indexed loanID,
         address indexed borrower,
         uint256 amountPaid,
-        address payer
+        address payer,
+        uint256 totalOwed
     );
 
     /**

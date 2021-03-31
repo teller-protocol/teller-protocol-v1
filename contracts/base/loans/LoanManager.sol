@@ -578,7 +578,8 @@ contract LoanManager is ILoanManager, Base, LoanStorage, Factory {
             loanID,
             loans[loanID].loanTerms.borrower,
             principalPaid.add(interestPaid),
-            msg.sender
+            msg.sender,
+            totalOwed
         );
     }
 
