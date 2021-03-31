@@ -92,7 +92,7 @@ const deployLogicContracts: DeployFunction = async (hre) => {
     })
   }
 
-  const initDynamicProxyLogic = await deployLogic({
+  const { address: initDynamicProxyLogicAddress } = await deployLogic({
     hre,
     contract: 'InitializeableDynamicProxy',
   })
@@ -106,7 +106,7 @@ const deployLogicContracts: DeployFunction = async (hre) => {
   await settings['initialize(address,address,address,address)'](
     tokens.WETH,
     tokens.CETH,
-    initDynamicProxyLogic.address,
+    initDynamicProxyLogicAddress,
     uniswap.v2Router
   )
 
