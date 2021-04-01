@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // Interfaces
 import "./IUniswapV2Router02.sol";
 import "../../base/Base.sol";
-import "../../providers/chainlink/IChainlinkAggregator.sol";
+import "../../interfaces/IPriceAggregator.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -59,7 +59,7 @@ contract UniSwapper is Base {
 
     /**
      * @notice Swaps tokens using UniswapV2Router via the platform defined Uniswap contract.
-     * @dev The source and destination tokens must be supported by the supplied ChainlinkAggregator.
+     * @dev The source and destination tokens must be supported by the supplied PriceAggregator.
      * @param path An array of token addresses. path.length must be >= 2. Pools for each consecutive pair of addresses must exist and have liquidity.
      * @param sourceAmount amount of source token to swap.
      * @param minDestination The minimum amount of output tokens that must be received for the transaction not to revert.
@@ -72,14 +72,13 @@ contract UniSwapper is Base {
         uint256 minDestination,
         address uniswapV2RouterAddress
     ) private returns (uint256) {
-        IChainlinkAggregator chainlinkAggregator =
-            settings.chainlinkAggregator();
+        IPriceAggregator priceAggregator = settings.priceAggregator();
         require(
-            chainlinkAggregator.isTokenSupported(path[0]),
+            priceAggregator.isTokenSupported(path[0]),
             "UNI_SRC_NOT_SUPPORTED"
         );
         require(
-            chainlinkAggregator.isTokenSupported(path[path.length - 1]),
+            priceAggregator.isTokenSupported(path[path.length - 1]),
             "UNI_DST_NOT_SUPPORTED"
         );
 
