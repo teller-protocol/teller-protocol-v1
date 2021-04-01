@@ -5,7 +5,7 @@ import { LogicVersionsRegistry } from '../types/typechain'
 import { deployLogic } from '../utils/deploy-helpers'
 import { NULL_ADDRESS } from '../utils/consts'
 
-export interface UpgradeLogicArgs {
+interface UpgradeLogicArgs {
   contract: string
 }
 
@@ -13,7 +13,10 @@ export async function upgradeLogic(
   { contract }: UpgradeLogicArgs,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> {
-  const { ethers, contracts, getNamedSigner } = hre
+  const { ethers, contracts, getNamedSigner, run } = hre
+
+  // Make sure contracts are compiled
+  await run('compile')
 
   const deployer = await getNamedSigner('deployer')
   const logicName = ethers.utils.id(contract)
