@@ -1,11 +1,10 @@
-import { formatBytes32String } from 'ethers/lib/utils'
 import { DeployFunction } from 'hardhat-deploy/types'
 
 import { Settings } from '../types/typechain'
 import { getPlatformSettings } from '../config'
 
 const createPlatformSettings: DeployFunction = async (hre) => {
-  const { getNamedAccounts, contracts, network } = hre
+  const { getNamedAccounts, contracts, ethers, network } = hre
   const { deployer } = await getNamedAccounts()
 
   console.log('********** Platform Settings **********')
@@ -17,20 +16,18 @@ const createPlatformSettings: DeployFunction = async (hre) => {
     const { max, min, processOnDeployment, value } = setting
 
     if (processOnDeployment) {
-      const settingNameBytes32 = formatBytes32String(settingName)
+      const keccak = ethers.utils.id(settingName)
       process.stdout.write(`  * ${settingName}: `)
 
       // Check if the platform setting has already been created
-      const platformSetting = await settings.getPlatformSetting(
-        settingNameBytes32
-      )
+      const platformSetting = await settings.getPlatformSetting(keccak)
       if (platformSetting.exists) {
         process.stdout.write(
           `already created (value: ${platformSetting.value} / min: ${platformSetting.min} / max: ${platformSetting.max}) \n`
         )
       } else {
         await settings
-          .createPlatformSetting(settingNameBytes32, value, min, max)
+          .createPlatformSetting(keccak, value, min, max)
           .then(({ wait }) => wait())
 
         process.stdout.write(

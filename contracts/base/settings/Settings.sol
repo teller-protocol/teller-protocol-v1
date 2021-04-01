@@ -62,7 +62,7 @@ contract Settings is SettingsInterface, Base, Factory {
         @dev This is the minimum percentage of node responses that will be required by the platform to either take out a loan, and to claim accrued interest. If the number of node responses are less than the ones specified here, the loan or accrued interest claim request will be rejected by the platform
      */
     bytes32 internal constant REQUIRED_SUBMISSIONS_PERCENTAGE_SETTING =
-        "RequiredSubmissionsPercentage";
+        keccak256("RequiredSubmissionsPercentage");
 
     /**
         @dev The setting name for the maximum tolerance settings.
@@ -72,49 +72,53 @@ contract Settings is SettingsInterface, Base, Factory {
             i.e. maximumTolerance of 0 => It means all the values submitted must be equals.
         @dev The max value is 100% => 10000
      */
-    bytes32 internal constant MAXIMUM_TOLERANCE_SETTING = "MaximumTolerance";
+    bytes32 internal constant MAXIMUM_TOLERANCE_SETTING =
+        keccak256("MaximumTolerance");
     /**
         @dev The setting name for the response expiry length settings.
         @dev This is the maximum time (in seconds) a node has to submit a response. After that time, the response is considered expired and will not be accepted by the protocol.
      */
 
     bytes32 internal constant RESPONSE_EXPIRY_LENGTH_SETTING =
-        "ResponseExpiryLength";
+        keccak256("ResponseExpiryLength");
 
     /**
         @dev The setting name for the safety interval settings.
         @dev This is the minimum time you need to wait (in seconds) between the last time you deposit collateral and you take out the loan.
         @dev It is used to avoid potential attacks using Flash Loans (AAVE) or Flash Swaps (Uniswap V2).
      */
-    bytes32 internal constant SAFETY_INTERVAL_SETTING = "SafetyInterval";
+    bytes32 internal constant SAFETY_INTERVAL_SETTING =
+        keccak256("SafetyInterval");
 
     /**
         @dev The setting name for the term expiry time settings.
         @dev This represents the time (in seconds) that loan terms will be available after requesting them.
         @dev After this time, the loan terms will expire and the borrower will need to request it again.
      */
-    bytes32 internal constant TERMS_EXPIRY_TIME_SETTING = "TermsExpiryTime";
+    bytes32 internal constant TERMS_EXPIRY_TIME_SETTING =
+        keccak256("TermsExpiryTime");
 
     /**
         @dev The setting name for the liquidate ETH price settings.
         @dev It represents the percentage value (with 2 decimal places) to liquidate loans.
             i.e. an ETH liquidation price at 95% is stored as 9500
      */
-    bytes32 internal constant LIQUIDATE_ETH_PRICE_SETTING = "LiquidateEthPrice";
+    bytes32 internal constant LIQUIDATE_ETH_PRICE_SETTING =
+        keccak256("LiquidateEthPrice");
 
     /**
         @dev The setting name for the maximum loan duration settings.
         @dev The maximum loan duration setting is defined in seconds. Loans will not be given for timespans larger than the one specified here.
      */
     bytes32 internal constant MAXIMUM_LOAN_DURATION_SETTING =
-        "MaximumLoanDuration";
+        keccak256("MaximumLoanDuration");
 
     /**
         @dev The setting name for the request loan terms rate limit settings.
         @dev The request loan terms rate limit setting is defined in seconds.
      */
     bytes32 internal constant REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING =
-        "RequestLoanTermsRateLimit";
+        keccak256("RequestLoanTermsRateLimit");
 
     /**
         @dev The setting name for the collateral buffer.
@@ -122,7 +126,8 @@ contract Settings is SettingsInterface, Base, Factory {
         @dev It represents the percentage value (with 2 decimal places) of a collateral buffer.
             e.g.: collateral buffer at 100% is stored as 10000.
      */
-    bytes32 internal constant COLLATERAL_BUFFER_SETTING = "CollateralBuffer";
+    bytes32 internal constant COLLATERAL_BUFFER_SETTING =
+        keccak256("CollateralBuffer");
 
     /**
         @dev The setting name for the over collateralized buffer.
@@ -131,7 +136,7 @@ contract Settings is SettingsInterface, Base, Factory {
             e.g.: over collateralized buffer at 130% is stored as 13000.
      */
     bytes32 internal constant OVER_COLLATERALIZED_BUFFER_SETTING =
-        "OverCollateralizedBuffer";
+        keccak256("OverCollateralizedBuffer");
 
     /* State Variables */
 
