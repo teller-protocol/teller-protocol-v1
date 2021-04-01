@@ -1,4 +1,4 @@
-import { Config, Network, Tokens } from '../types/custom/config-types'
+import { Tokens } from '../types/custom/config-types'
 
 const mainnetTokens: Tokens = {
   ETH: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
@@ -8,9 +8,12 @@ const mainnetTokens: Tokens = {
   CUSDC: '0x39aa39c021dfbae8fac545936693ac917d5e7563',
   CETH: '0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5',
   // Aave
+  AAVE: '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9',
   ADAI: '0x028171bCA77440897B824Ca71D1c56caC55b68A3',
   // Pool Together
   PCDAI: '0xEBfb47A7ad0FD6e57323C8A42B2E5A6a4F68fc1a',
+  // Yearn
+  YDAI: '0x19D3364A399d251E894aC732651be8B0E4e85001', // v2 - DAI yVault
   // ERC20
   WETH: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
   DAI: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
@@ -21,15 +24,13 @@ const mainnetTokens: Tokens = {
   SNX: '0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f',
   MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2',
   YFI: '0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e',
-  AAVE: '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9',
-  YDAI: '0x19D3364A399d251E894aC732651be8B0E4e85001', // v2 - DAI yVault
 }
 
-export const tokensConfigsByNetwork: Config<Tokens> = {
+export const tokens: Record<string, Tokens> = {
   kovan: {
     ETH: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     // Compound
-    COMP: '',
+    COMP: '0x61460874a7196d6a22d1ee4922473664b3e95270',
     CDAI: '0xf0d0eb522cfa50b716b3b1604c4f0fa6f04376ad',
     CUSDC: '0x4a92e71227d294f041bd82dd8f78591b75140d63',
     CETH: '0x41b5844f4680a8c38fbb695b7f9cfd1f64474a72',
@@ -37,17 +38,18 @@ export const tokensConfigsByNetwork: Config<Tokens> = {
     ADAI: '0x0000000000000000000000000000000000000000',
     // Pool Together
     PCDAI: '0x0000000000000000000000000000000000000000',
+    // Yearn
+    YDAI: '0x0000000000000000000000000000000000000000',
     // ERC20
     WETH: '0xd0a1e359811322d97991e03f863a0c30c2cf029c',
     DAI: '0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa',
     USDC: '0xb7a4f3e9097c08da09517b5ab877f7a917224ede',
     LINK: '0xa36085F69e2889c224210F603D836748e7dC0088',
-    YDAI: '0x0000000000000000000000000000000000000000',
   },
   rinkeby: {
     ETH: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     // Compound
-    COMP: '',
+    COMP: '0x0000000000000000000000000000000000000000',
     CDAI: '0x6D7F0754FFeb405d23C51CE938289d4835bE3b14',
     CUSDC: '0x5B281A6DdA0B271e91ae35DE655Ad301C976edb1',
     CETH: '0xd6801a1dffcd0a410336ef88def4320d6df1883e',
@@ -55,17 +57,18 @@ export const tokensConfigsByNetwork: Config<Tokens> = {
     ADAI: '0x0000000000000000000000000000000000000000',
     // Pool Together
     PCDAI: '0x4706856FA8Bb747D50b4EF8547FE51Ab5Edc4Ac2',
+    // Yearn
+    YDAI: '0x0000000000000000000000000000000000000000',
     // ERC20
     WETH: '0xc778417E063141139Fce010982780140Aa0cD5Ab',
     DAI: '0x5592EC0cfb4dbc12D3aB100b257153436a1f0FEa',
     USDC: '0x4DBCdF9B62e891a7cec5A2568C3F4FAF9E8Abe2b',
     LINK: '0x01BE23585060835E02B77ef475b0Cc51aA1e0709',
-    YDAI: '0x0000000000000000000000000000000000000000',
   },
   ropsten: {
     ETH: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     // Compound
-    COMP: '',
+    COMP: '0xf76d4a441e4ba86a923ce32b89aff89dbccaa075',
     CDAI: '0xdb5Ed4605C11822811a39F94314fDb8F0fb59A2C',
     CUSDC: '0x8aF93cae804cC220D1A608d4FA54D1b6ca5EB361',
     CETH: '0xbe839b6d93e3ea47effcca1f27841c917a8794f3',
@@ -73,16 +76,15 @@ export const tokensConfigsByNetwork: Config<Tokens> = {
     ADAI: '0x0000000000000000000000000000000000000000',
     // Pool Together
     PCDAI: '0x0000000000000000000000000000000000000000',
+    // Yearn
+    YDAI: '0x0000000000000000000000000000000000000000',
     // ERC20
     WETH: '0xc778417e063141139fce010982780140aa0cd5ab',
     DAI: '0xc2118d4d90b274016cB7a54c03EF52E6c537D957',
     USDC: '0x0D9C8723B343A8368BebE0B5E89273fF8D712e3C',
     LINK: '0x20fE562d797A42Dcb3399062AE9546cd06f63280',
-    YDAI: '0x0000000000000000000000000000000000000000',
   },
   hardhat: mainnetTokens,
   localhost: mainnetTokens,
   mainnet: mainnetTokens,
 }
-
-export const getTokens = (network: Network) => tokensConfigsByNetwork[network]

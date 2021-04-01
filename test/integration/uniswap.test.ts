@@ -4,9 +4,8 @@ import hre from 'hardhat'
 
 import { Escrow, ERC20, UniswapDapp } from '../../types/typechain'
 import { BigNumberish, Signer } from 'ethers'
-import { getTokens } from '../../config/tokens'
-import { Network } from '../../types/custom/config-types'
 import { createMarketWithLoan, LoanType } from '../fixtures'
+import { getTokens } from '../../config'
 
 chai.should()
 chai.use(solidity)
@@ -37,7 +36,7 @@ const setUpTest = deployments.createFixture(
     const ting = await escrow.getTokens()
 
     const dai = await contracts.get<ERC20>('ERC20', {
-      at: getTokens(<Network>hre.network.name).DAI,
+      at: getTokens(hre.network).DAI,
     })
     const uniswap = await contracts.get<UniswapDapp>('UniswapDapp')
 
@@ -65,7 +64,7 @@ describe('UniswapDapp', async () => {
     rando = await getNamedSigner('liquidator')
 
     comp = await contracts.get<ERC20>('ERC20', {
-      at: getTokens(<Network>hre.network.name).COMP,
+      at: getTokens(hre.network).COMP,
     })
   })
 
@@ -81,7 +80,7 @@ describe('UniswapDapp', async () => {
       await escrow.connect(user).callDapp({
         location: uniswap.address,
         data: uniswap.interface.encodeFunctionData('swap', [
-          [dai.address, getTokens(<Network>hre.network.name).COMP],
+          [dai.address, getTokens(hre.network).COMP],
           daiBalanceBefore,
           '0',
         ]),
@@ -100,7 +99,7 @@ describe('UniswapDapp', async () => {
         .callDapp({
           location: uniswap.address,
           data: uniswap.interface.encodeFunctionData('swap', [
-            [dai.address, getTokens(<Network>hre.network.name).COMP],
+            [dai.address, getTokens(hre.network).COMP],
             '10000000',
             '0',
           ]),

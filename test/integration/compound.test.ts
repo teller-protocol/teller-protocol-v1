@@ -9,9 +9,8 @@ import {
   CErc20Interface,
 } from '../../types/typechain'
 import { BigNumberish, Signer } from 'ethers'
-import { getTokens } from '../../config/tokens'
-import { Network } from '../../types/custom/config-types'
 import { createMarketWithLoan, LoanType } from '../fixtures'
+import { getTokens } from '../../config'
 
 chai.should()
 chai.use(solidity)
@@ -43,10 +42,10 @@ const setUpTest = deployments.createFixture(
     const ting = await escrow.getTokens()
 
     const dai = await contracts.get<ERC20>('ERC20', {
-      at: getTokens(<Network>hre.network.name).DAI,
+      at: getTokens(hre.network).DAI,
     })
     const cDai = await contracts.get<CErc20Interface>('CErc20Interface', {
-      at: getTokens(<Network>hre.network.name).CDAI,
+      at: getTokens(hre.network).CDAI,
     })
     const compound = await contracts.get<CompoundDapp>('CompoundDapp')
 

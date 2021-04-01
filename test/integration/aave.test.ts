@@ -3,9 +3,8 @@ import { solidity } from 'ethereum-waffle'
 import hre from 'hardhat'
 import { Escrow, AaveDapp, ERC20, IAToken } from '../../types/typechain'
 import { BigNumberish, Signer } from 'ethers'
-import { getTokens } from '../../config/tokens'
-import { Network } from '../../types/custom/config-types'
 import { createMarketWithLoan, LoanType } from '../fixtures'
+import { getTokens } from '../../config'
 
 chai.should()
 chai.use(solidity)
@@ -43,10 +42,10 @@ const setUpTest = deployments.createFixture(
     const escrow = await contracts.get<Escrow>('Escrow', { at: loan.escrow })
 
     const dai = await contracts.get<ERC20>('ERC20', {
-      at: getTokens(<Network>hre.network.name).DAI,
+      at: getTokens(hre.network).DAI,
     })
     const aDai = await contracts.get<IAToken>('IAToken', {
-      at: getTokens(<Network>hre.network.name).ADAI,
+      at: getTokens(hre.network).ADAI,
     })
     const aave = await contracts.get<AaveDapp>('AaveDapp')
 

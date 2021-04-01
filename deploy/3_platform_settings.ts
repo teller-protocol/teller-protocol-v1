@@ -2,8 +2,7 @@ import { formatBytes32String } from 'ethers/lib/utils'
 import { DeployFunction } from 'hardhat-deploy/types'
 
 import { Settings } from '../types/typechain'
-import { getPlatformSettings } from '../config/platform-settings'
-import { Network } from '../types/custom/config-types'
+import { getPlatformSettings } from '../config'
 
 const createPlatformSettings: DeployFunction = async (hre) => {
   const { getNamedAccounts, contracts, network } = hre
@@ -13,7 +12,7 @@ const createPlatformSettings: DeployFunction = async (hre) => {
   console.log()
 
   const settings = await contracts.get<Settings>('Settings', { from: deployer })
-  const platformSettings = getPlatformSettings(<Network>network.name)
+  const platformSettings = getPlatformSettings(network)
   for (const [settingName, setting] of Object.entries(platformSettings)) {
     const { max, min, processOnDeployment, value } = setting
 

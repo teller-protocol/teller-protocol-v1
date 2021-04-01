@@ -8,11 +8,10 @@ import {
 } from 'hardhat'
 import { BigNumberish } from 'ethers'
 
-import { getMarkets } from '../../config/markets'
-import { Network } from '../../types/custom/config-types'
 import { AssetSettings, ERC20, TToken } from '../../types/typechain'
 import { getMarket, GetMarketReturn } from '../../tasks'
 import { getFunds } from '../helpers/get-funds'
+import { getMarkets } from '../../config'
 
 interface FreshMarketArgs {
   lendTokenSym: string
@@ -34,7 +33,7 @@ export const freshMarket = (args?: FreshMarketArgs): Promise<MarketReturn> =>
       lendTokenSym = args.lendTokenSym
       collTokenSym = args.collTokenSym
     } else {
-      const markets = await getMarkets(<Network>network.name)
+      const markets = await getMarkets(network)
       lendTokenSym = markets[0].borrowedToken
       collTokenSym = markets[0].collateralToken
     }

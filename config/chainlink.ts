@@ -1,4 +1,4 @@
-import { Chainlink, Config, Network } from '../types/custom/config-types'
+import { Chainlink } from '../types/custom/config-types'
 
 const mainnetChainlink: Chainlink = {
   USDC_ETH: {
@@ -54,7 +54,7 @@ const mainnetChainlink: Chainlink = {
   },
 }
 
-const chainlinkConfigsByNetwork: Config<Chainlink> = {
+export const chainlink: Record<string, Chainlink> = {
   kovan: {
     ETH_USDC: {
       baseTokenName: 'ETH',
@@ -125,6 +125,3 @@ const chainlinkConfigsByNetwork: Config<Chainlink> = {
   localhost: mainnetChainlink,
   mainnet: mainnetChainlink,
 }
-
-export const getChainlink = (network: Network) =>
-  chainlinkConfigsByNetwork[network]

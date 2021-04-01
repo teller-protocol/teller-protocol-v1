@@ -3,9 +3,8 @@ import { solidity } from 'ethereum-waffle'
 import hre from 'hardhat'
 import { Escrow, YearnDapp } from '../../types/typechain'
 import { BigNumberish, Signer } from 'ethers'
-import { getTokens } from '../../config/tokens'
-import { Network } from '../../types/custom/config-types'
 import { createMarketWithLoan, LoanType } from '../fixtures'
+import { getTokens } from '../../config'
 
 chai.should()
 chai.use(solidity)
@@ -35,8 +34,8 @@ const setUpTest = deployments.createFixture(
 
     const escrow = await contracts.get<Escrow>('Escrow', { at: loan.escrow })
 
-    const daiAddress = getTokens(<Network>hre.network.name).DAI
-    const yDaiAddress = getTokens(<Network>hre.network.name).YDAI
+    const daiAddress = getTokens(hre.network).DAI
+    const yDaiAddress = getTokens(hre.network).YDAI
     const yearn = await contracts.get<YearnDapp>('YearnDapp')
 
     return {

@@ -2,10 +2,8 @@ import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import hre from 'hardhat'
 import { ChainlinkAggregator } from '../../types/typechain'
-import { Network } from '../../types/custom/config-types'
-import { getTokens } from '../../config/tokens'
-import { getChainlink } from '../../config/chainlink'
 import { NULL_ADDRESS } from '../../utils/consts'
+import { getChainlink, getTokens } from '../../config'
 
 chai.should()
 chai.use(chaiAsPromised)
@@ -29,8 +27,8 @@ const setupTest = deployments.createFixture(async () => {
 
 describe('Chainlink Aggregator', async () => {
   let chainlinkAggregator: ChainlinkAggregator
-  const chainlink = getChainlink(<Network>hre.network.name)
-  const tokens = getTokens(<Network>hre.network.name)
+  const chainlink = getChainlink(hre.network)
+  const tokens = getTokens(hre.network)
 
   // Setup for global tests
   beforeEach(async () => {

@@ -9,8 +9,7 @@ import {
   MarketRegistry,
   TToken,
 } from '../types/typechain'
-import { Network } from '../types/custom/config-types'
-import { getTokens } from '../config/tokens'
+import { getTokens } from '../config'
 
 interface GetMarketArgs {
   lendTokenSym: string
@@ -36,7 +35,7 @@ export const getMarket = async (
   const {
     [lendTokenSym]: lendingTokenAddress,
     [collTokenSym]: collateralTokenAddress,
-  } = getTokens(<Network>network.name)
+  } = getTokens(network)
 
   const marketRegistry = await contracts.get<MarketRegistry>('MarketRegistry')
 

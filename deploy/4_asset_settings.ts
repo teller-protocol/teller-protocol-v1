@@ -1,9 +1,7 @@
 import { DeployFunction } from 'hardhat-deploy/types'
 
 import { AssetSettings } from '../types/typechain'
-import { getAssetSettings } from '../config/asset-settings'
-import { getTokens } from '../config/tokens'
-import { Network } from '../types/custom/config-types'
+import { getAssetSettings, getTokens } from '../config'
 
 const createAssetSettings: DeployFunction = async (hre) => {
   const { getNamedAccounts, contracts, ethers, network } = hre
@@ -17,8 +15,8 @@ const createAssetSettings: DeployFunction = async (hre) => {
     from: deployer,
   })
 
-  const tokens = getTokens(<Network>network.name)
-  const assetSettingsConfig = getAssetSettings(<Network>network.name)
+  const tokens = getTokens(network)
+  const assetSettingsConfig = getAssetSettings(network)
   for (const [assetSymbol, setting] of Object.entries(assetSettingsConfig)) {
     process.stdout.write(`  * ${assetSymbol}: `)
 

@@ -8,9 +8,8 @@ import {
   PrizePoolInterface,
 } from '../../types/typechain'
 import { BigNumberish, Signer, ContractReceipt } from 'ethers'
-import { getTokens } from '../../config/tokens'
-import { Network } from '../../types/custom/config-types'
 import { createMarketWithLoan, LoanType } from '../fixtures'
+import { getTokens } from '../../config'
 
 chai.should()
 chai.use(solidity)
@@ -40,7 +39,7 @@ const setUpTest = deployments.createFixture(
     const loan = await market.loanManager.loans(market.createdLoanId)
     const escrow = await contracts.get<Escrow>('Escrow', { at: loan.escrow })
     const dai = await contracts.get<ERC20>('ERC20', {
-      at: getTokens(<Network>hre.network.name).DAI,
+      at: getTokens(hre.network).DAI,
     })
     const poolTogether = await contracts.get<PoolTogetherDapp>(
       'PoolTogetherDapp'
@@ -48,7 +47,7 @@ const setUpTest = deployments.createFixture(
 
     const prizePool = (await hre.ethers.getContractAt(
       'PrizePoolInterface',
-      getTokens(<Network>hre.network.name).PCDAI
+      getTokens(hre.network).PCDAI
     )) as PrizePoolInterface
 
     const ticketAddress = (await prizePool.tokens())[1]
