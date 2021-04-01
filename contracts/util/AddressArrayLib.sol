@@ -54,7 +54,11 @@ library AddressArrayLib {
         internal
         returns (uint256 index)
     {
-        index = add(self.array, addr);
+        addr.requireNotEmpty("EMPTY_ADDRESS_NOT_ALLOWED");
+        (bool found, ) = getIndex(self, addr);
+        require(!found, "ADDRESS_EXISTS");
+        self.array.push(addr);
+        index = length(self) - 1;
         self.indices[addr] = index;
     }
 

@@ -69,8 +69,7 @@ contract MarketFactory is IMarketFactory, Base, Factory {
         onlyPauser
     {
         require(
-            marketRegistry.loanManagers(lendingToken, collateralToken) ==
-                address(0),
+            !marketRegistry.marketExists(lendingToken, collateralToken),
             "MARKET_ALREADY_EXISTS"
         );
         require(lendingToken.isContract(), "BORROWED_TOKEN_MUST_BE_CONTRACT");

@@ -4,17 +4,16 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { getTokens } from '../config/tokens'
 import { getMarkets } from '../config/markets'
 import { Network } from '../types/custom/config-types'
-import {
-  LoanTermsConsensus,
-  MarketFactory,
-  MarketRegistry,
-} from '../types/typechain'
+import { MarketFactory, MarketRegistry } from '../types/typechain'
 import { getMarket, GetMarketReturn } from '../tasks'
 import { getSigners } from '../config/signers'
 
 const createMarkets: DeployFunction = async (hre) => {
   const { getNamedAccounts, contracts, network, deployments } = hre
   const { deployer } = await getNamedAccounts()
+
+  console.log('********** Markets **********')
+  console.log()
 
   const tokens = getTokens(<Network>network.name)
   const markets = getMarkets(<Network>network.name)
@@ -27,10 +26,34 @@ const createMarkets: DeployFunction = async (hre) => {
   for (const { borrowedToken, collateralToken } of markets) {
     const lendingTokenAddress = tokens[borrowedToken]
     const collateralTokenAddress = tokens[collateralToken]
-    await marketFactory.createMarket(
-      lendingTokenAddress,
-      collateralTokenAddress
-    )
+
+    process.stdout.write(`  * ${borrowedToken}/${collateralToken}: `)
+
+    // Check if the market is registered
+    const markets = await marketRegistry.getMarkets(lendingTokenAddress)
+    const isRegistered = markets.includes(collateralTokenAddress)
+    if (!isRegistered) {
+      const receipt = await marketFactory
+        .createMarket(lendingTokenAddress, collateralTokenAddress)
+        .then(({ wait }) => wait())
+
+      process.stdout.write(`market created with ${receipt.gasUsed} gas \n`)
+
+      await deployments.save(`LP_${borrowedToken}`, {
+        ...(await deployments.getExtendedArtifact('LendingPool')),
+        address: await marketRegistry.lendingPools(lendingTokenAddress),
+      })
+
+      await deployments.save(`Market_${borrowedToken}_${collateralToken}`, {
+        ...(await deployments.getExtendedArtifact('LoanManager')),
+        address: await marketRegistry.loanManagers(
+          lendingTokenAddress,
+          collateralTokenAddress
+        ),
+      })
+    } else {
+      process.stdout.write(`market already deploy \n`)
+    }
 
     const market = await getMarket(
       {
@@ -40,30 +63,17 @@ const createMarkets: DeployFunction = async (hre) => {
       hre
     )
 
-    if (network.name !== 'hardhat') {
-      console.log(`
-    Market Created
-      * Pair:           ${borrowedToken}/${collateralToken}
-      * Lending Pool:   ${market.lendingPool.address}
-      * Loans:          ${market.loanManager.address}
-      * TToken:         ${market.tToken.address} (t${borrowedToken})
-      `)
+    // If it was not previously registered, add signers
+    if (!isRegistered) {
+      await addSigners(market, hre)
     }
 
-    await deployments.save(`LP_${borrowedToken}`, {
-      ...(await deployments.getExtendedArtifact('LendingPool')),
-      address: await marketRegistry.lendingPools(lendingTokenAddress),
-    })
-
-    await deployments.save(`Market_${borrowedToken}_${collateralToken}`, {
-      ...(await deployments.getExtendedArtifact('LoanManager')),
-      address: await marketRegistry.loanManagers(
-        lendingTokenAddress,
-        collateralTokenAddress
-      ),
-    })
-
-    await addSigners(market, hre)
+    console.log(`
+    * Pair:           ${borrowedToken}/${collateralToken}
+    * Lending Pool:   ${market.lendingPool.address}
+    * Loans:          ${market.loanManager.address}
+    * TToken:         ${market.tToken.address} (t${borrowedToken})
+    `)
   }
 }
 
@@ -71,14 +81,26 @@ const addSigners = async (
   market: GetMarketReturn,
   hre: HardhatRuntimeEnvironment
 ) => {
-  const { contracts, getNamedAccounts, network, getNamedSigner } = hre
+  const { getNamedAccounts, network, getNamedSigner } = hre
   const deployer = await getNamedSigner('deployer')
+
+  process.stdout.write(`    adding signers...: `)
 
   const signers = getSigners(<Network>network.name)
   const { craSigner } = await getNamedAccounts()
   if (craSigner) signers.push(craSigner)
 
-  await market.loanManager.connect(deployer).addSigners(signers)
+  try {
+    await market.loanManager
+      .connect(deployer)
+      .addSigners(signers)
+      .then(({ wait }) => wait())
+
+    process.stdout.write(`finished (${signers.length})`)
+  } catch (err) {
+    process.stdout.write(`FAILED \n`)
+    throw err
+  }
 }
 
 createMarkets.tags = ['markets']

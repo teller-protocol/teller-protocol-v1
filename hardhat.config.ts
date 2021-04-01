@@ -3,9 +3,12 @@ import '@nomiclabs/hardhat-ethers'
 import 'hardhat-deploy'
 import 'hardhat-contract-sizer'
 import { config } from 'dotenv'
-import { ethers } from 'ethers'
+import { ethers, BigNumber as BN } from 'ethers'
 import { HardhatUserConfig } from 'hardhat/config'
-import { HardhatNetworkHDAccountsUserConfig } from 'hardhat/types'
+import {
+  HardhatNetworkHDAccountsUserConfig,
+  HardhatNetworkUserConfig,
+} from 'hardhat/types'
 import 'hardhat-gas-reporter'
 // import 'solidity-coverage'
 import 'hardhat-contract-sizer'
@@ -22,6 +25,15 @@ const accounts: HardhatNetworkHDAccountsUserConfig = {
   count: parseInt(process.env.ADDRESS_COUNT_KEY ?? '15'),
   accountsBalance: ethers.utils.parseEther('1000000').toString(),
 }
+
+const GAS: HardhatNetworkUserConfig['gas'] = 'auto'
+
+const GAS_PRICE: HardhatNetworkUserConfig['gasPrice'] = process.env
+  .GAS_PRICE_GWEI_KEY
+  ? BN.from(
+      ethers.utils.parseUnits(process.env.GAS_PRICE_GWEI_KEY, 'gwei')
+    ).toNumber()
+  : 'auto'
 
 export default <HardhatUserConfig>{
   etherscan: {
@@ -58,11 +70,11 @@ export default <HardhatUserConfig>{
   },
   namedAccounts: {
     deployer: {
-      rinkeby: 1,
-      ropsten: 1,
-      hardhat: 1,
-      localhost: 1,
-      mainnet: 1,
+      rinkeby: 0,
+      ropsten: 0,
+      hardhat: 0,
+      localhost: 0,
+      mainnet: 0,
     },
     lender: {
       rinkeby: 5,
@@ -96,14 +108,16 @@ export default <HardhatUserConfig>{
       url: `https://eth-rinkeby.alchemyapi.io/v2/${process.env.ALCHEMY_RINKEBY_KEY}`,
       chainId: 4,
       accounts,
-      // gas: gasKeyValue,
-      // gasPrice: web3.utils.toWei(gasPriceKeyValue, 'gwei'),
+      gas: GAS,
+      gasPrice:
+        GAS_PRICE === 'auto' ? GAS_PRICE : BN.from(GAS_PRICE).div(4).toNumber(),
     },
     ropsten: {
       url: `https://eth-ropsten.alchemyapi.io/v2/${process.env.ALCHEMY_ROPSTEN_KEY}`,
       accounts,
-      // gas: gasKeyValue,
-      // gasPrice: web3.utils.toWei(gasPriceKeyValue, 'gwei'),
+      gas: GAS,
+      gasPrice:
+        GAS_PRICE === 'auto' ? GAS_PRICE : BN.from(GAS_PRICE).div(4).toNumber(),
     },
     hardhat: {
       forking: {
@@ -124,8 +138,8 @@ export default <HardhatUserConfig>{
       url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_MAINNET_KEY}`,
       chainId: 1,
       accounts,
-      // gas: gasKeyValue,
-      // gasPrice: web3.utils.toWei(gasPriceKeyValue, 'gwei'),
+      gas: GAS,
+      gasPrice: GAS_PRICE,
     },
   },
   gasReporter: {
