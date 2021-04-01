@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Interfaces
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./LendingPoolInterface.sol";
 
 /**
@@ -19,7 +19,7 @@ abstract contract ITToken {
     /**
      * @notice The token that is the underlying assets for this Teller token.
      */
-    function underlying() external view virtual returns (address);
+    function underlying() external view virtual returns (ERC20);
 
     /**
      * @notice Increase account supply of specified token amount.

@@ -17,7 +17,6 @@ import "../interfaces/ITToken.sol";
 // Contracts
 import "./Base.sol";
 import "./proxies/InitializeableDynamicProxy.sol";
-import "./proxies/ERC20DynamicProxy.sol";
 import "./MarketRegistry.sol";
 import "./Factory.sol";
 
@@ -49,13 +48,7 @@ contract MarketFactory is IMarketFactory, Base, Factory {
      */
     address public initDynamicProxyLogic;
 
-    /**
-     * @notice It holds the address of a deployed ERC20DynamicProxy contract.
-     * @dev It is used to deploy a new proxy contract with minimal gas cost using the logic in the Factory contract.
-     */
-    address public erc20DynamicProxyLogic;
-
-    /** external override Functions */
+    /** External Functions */
 
     /**
         @notice It creates a new market for a given lending and collateral tokens.
@@ -115,7 +108,6 @@ contract MarketFactory is IMarketFactory, Base, Factory {
         _initialize(msg.sender);
 
         initDynamicProxyLogic = settings.initDynamicProxyLogic();
-        erc20DynamicProxyLogic = address(new ERC20DynamicProxy());
 
         marketRegistry = IMarketRegistry(
             _createDynamicProxy(keccak256("MarketRegistry"), false)
@@ -142,17 +134,6 @@ contract MarketFactory is IMarketFactory, Base, Factory {
     }
 
     /**
-        @notice It creates an ERC20DynamicProxy instance used for a new TToken.
-     */
-    function _createTTokenProxy() internal returns (address proxyAddress) {
-        proxyAddress = _clone(erc20DynamicProxyLogic);
-        IERC20DynamicProxy(proxyAddress).initialize(
-            address(logicRegistry),
-            keccak256("TToken")
-        );
-    }
-
-    /**
         @notice Creates a proxy contract for LendingPool and its TToken.
         @param lendingToken the token address used to create the lending pool and TToken.
         @return lendingPool a new LendingPool instance.
@@ -165,7 +146,8 @@ contract MarketFactory is IMarketFactory, Base, Factory {
             _createDynamicProxy(keccak256("LendingPool"), true)
         );
 
-        ITToken tToken = ITToken(_createTTokenProxy());
+        ITToken tToken =
+            ITToken(_createDynamicProxy(keccak256("TToken"), true));
 
         lendingPool.initialize(
             marketRegistry,
