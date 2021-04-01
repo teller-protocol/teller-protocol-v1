@@ -1,12 +1,9 @@
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
-import { getTokens } from '../config/tokens'
-import { getMarkets } from '../config/markets'
-import { Network } from '../types/custom/config-types'
 import { MarketFactory, MarketRegistry } from '../types/typechain'
 import { getMarket, GetMarketReturn } from '../tasks'
-import { getSigners } from '../config/signers'
+import { getMarkets, getSigners, getTokens } from '../config'
 
 const createMarkets: DeployFunction = async (hre) => {
   const { getNamedAccounts, contracts, network, deployments } = hre
@@ -15,8 +12,8 @@ const createMarkets: DeployFunction = async (hre) => {
   console.log('********** Markets **********')
   console.log()
 
-  const tokens = getTokens(<Network>network.name)
-  const markets = getMarkets(<Network>network.name)
+  const tokens = getTokens(network)
+  const markets = getMarkets(network)
 
   const marketFactory = await contracts.get<MarketFactory>('MarketFactory', {
     from: deployer,
@@ -86,7 +83,7 @@ const addSigners = async (
 
   process.stdout.write(`    adding signers...: `)
 
-  const signers = getSigners(<Network>network.name)
+  const signers = getSigners(network)
   const { craSigner } = await getNamedAccounts()
   if (craSigner) signers.push(craSigner)
 

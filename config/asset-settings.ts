@@ -1,4 +1,4 @@
-import { AssetSettings, Config, Network } from '../types/custom/config-types'
+import { AssetSettings } from '../types/custom/config-types'
 
 const mainnetAssetSettings: AssetSettings = {
   DAI: {
@@ -24,7 +24,7 @@ const mainnetAssetSettings: AssetSettings = {
   },
 }
 
-const assetSettingsConfigsByNetwork: Config<AssetSettings> = {
+export const assetSettings: Record<string, AssetSettings> = {
   kovan: {
     DAI: {
       cToken: 'CDAI',
@@ -90,6 +90,3 @@ const assetSettingsConfigsByNetwork: Config<AssetSettings> = {
   localhost: mainnetAssetSettings,
   mainnet: mainnetAssetSettings,
 }
-
-export const getAssetSettings = (network: Network) =>
-  assetSettingsConfigsByNetwork[network]

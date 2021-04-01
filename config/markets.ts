@@ -1,4 +1,4 @@
-import { Config, Market, Network } from '../types/custom/config-types'
+import { Market } from '../types/custom/config-types'
 
 const mainnetMarkets: Market[] = [
   {
@@ -7,7 +7,7 @@ const mainnetMarkets: Market[] = [
   },
 ]
 
-const marketsConfigsByNetwork: Config<Market[]> = {
+export const markets: Record<string, Market[]> = {
   kovan: [
     {
       borrowedToken: 'DAI',
@@ -30,5 +30,3 @@ const marketsConfigsByNetwork: Config<Market[]> = {
   localhost: mainnetMarkets,
   mainnet: mainnetMarkets,
 }
-
-export const getMarkets = (network: Network) => marketsConfigsByNetwork[network]

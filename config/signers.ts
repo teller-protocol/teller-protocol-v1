@@ -1,6 +1,6 @@
-import { Config, Network, Signers } from '../types/custom/config-types'
+import { Signers } from '../types/custom/config-types'
 
-export const signersConfigsByNetwork: Config<Signers> = {
+export const signers: Record<string, Signers> = {
   kovan: [],
   rinkeby: [
     '0x0cA59Bd2255Ae40D4E1e3b939C3a97b5C9dE839b',
@@ -20,5 +20,3 @@ export const signersConfigsByNetwork: Config<Signers> = {
     '0x312a5217c12aD9b206A0380B4B134ef2b02d09A5',
   ],
 }
-
-export const getSigners = (network: Network) => signersConfigsByNetwork[network]

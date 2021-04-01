@@ -79,7 +79,7 @@ export const createLoan = async (
   borrower: Signer
 ): Promise<string> => {
   // Get lending asset decimals and convert amount to BN
-  const lendingToken = await contracts.get('ERC20Detailed', {
+  const lendingToken = await contracts.get('ERC20', {
     at: await market.lendingPool.lendingToken(),
   })
   const amount = toBN(loanAmount, await lendingToken.decimals()).toString()

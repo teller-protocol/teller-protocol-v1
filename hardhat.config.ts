@@ -125,13 +125,13 @@ export default <HardhatUserConfig>{
         blockNumber: 12064000,
         enabled: true,
       },
-      chainId: 1,
+      forkName: 'mainnet', // Custom for getting config values for network
       accounts,
     },
     // Uses the forked node from the hardhat network above
     localhost: {
       url: 'http://127.0.0.1:8545',
-      chainId: 1,
+      forkName: 'mainnet', // Custom for getting config values for network
       accounts,
     },
     mainnet: {

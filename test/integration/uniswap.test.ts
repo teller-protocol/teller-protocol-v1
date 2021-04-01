@@ -2,11 +2,10 @@ import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import hre from 'hardhat'
 
-import { Escrow, ERC20Detailed, UniswapDapp } from '../../types/typechain'
-import { BigNumberish, Signer } from 'ethers'
-import { getTokens } from '../../config/tokens'
-import { Network } from '../../types/custom/config-types'
+import { Escrow, ERC20, UniswapDapp } from '../../types/typechain'
+import { Signer } from 'ethers'
 import { createMarketWithLoan, LoanType } from '../fixtures'
+import { getTokens } from '../../config'
 
 chai.should()
 chai.use(solidity)
@@ -15,7 +14,7 @@ interface TestSetupReturn {
   escrow: Escrow
   user: Signer
   uniswap: UniswapDapp
-  dai: ERC20Detailed
+  dai: ERC20
 }
 
 const { deployments, contracts, getNamedSigner, ethers, toBN } = hre
@@ -36,8 +35,8 @@ const setUpTest = deployments.createFixture(
     const escrow = await contracts.get<Escrow>('Escrow', { at: loan.escrow })
     const ting = await escrow.getTokens()
 
-    const dai = await contracts.get<ERC20Detailed>('ERC20Detailed', {
-      at: getTokens(<Network>hre.network.name).DAI,
+    const dai = await contracts.get<ERC20>('ERC20', {
+      at: getTokens(hre.network).DAI,
     })
     const uniswap = await contracts.get<UniswapDapp>('UniswapDapp')
 
@@ -55,8 +54,8 @@ describe('UniswapDapp', async () => {
   let user: Signer
   let rando: Signer
   let uniswap: UniswapDapp
-  let dai: ERC20Detailed
-  let comp: ERC20Detailed
+  let dai: ERC20
+  let comp: ERC20
   let tokens: string[]
 
   beforeEach(async () => {
@@ -64,8 +63,8 @@ describe('UniswapDapp', async () => {
     ;({ escrow, user, uniswap, dai } = await setUpTest())
     rando = await getNamedSigner('liquidator')
 
-    comp = await contracts.get<ERC20Detailed>('ERC20Detailed', {
-      at: getTokens(<Network>hre.network.name).COMP,
+    comp = await contracts.get<ERC20>('ERC20', {
+      at: getTokens(hre.network).COMP,
     })
   })
 
@@ -81,7 +80,7 @@ describe('UniswapDapp', async () => {
       await escrow.connect(user).callDapp({
         location: uniswap.address,
         data: uniswap.interface.encodeFunctionData('swap', [
-          [dai.address, getTokens(<Network>hre.network.name).COMP],
+          [dai.address, getTokens(hre.network).COMP],
           daiBalanceBefore,
           '0',
         ]),
@@ -100,7 +99,7 @@ describe('UniswapDapp', async () => {
         .callDapp({
           location: uniswap.address,
           data: uniswap.interface.encodeFunctionData('swap', [
-            [dai.address, getTokens(<Network>hre.network.name).COMP],
+            [dai.address, getTokens(hre.network).COMP],
             '10000000',
             '0',
           ]),

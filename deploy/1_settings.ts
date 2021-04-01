@@ -5,17 +5,15 @@ import {
   DeployLogicArgs,
   deploySettingsProxy,
 } from '../utils/deploy-helpers'
-import { getTokens } from '../config/tokens'
-import { Network } from '../types/custom/config-types'
 import { MarketFactory, Settings } from '../types/typechain'
-import { getUniswap } from '../config/uniswap'
+import { getTokens, getUniswap } from '../config'
 
 const deployLogicContracts: DeployFunction = async (hre) => {
   const { getNamedAccounts, deployments, contracts, ethers, network } = hre
   const { deployer } = await getNamedAccounts()
 
-  const tokens = getTokens(<Network>network.name)
-  const uniswap = getUniswap(<Network>network.name)
+  const tokens = getTokens(network)
+  const uniswap = getUniswap(network)
 
   const mock = network.name.includes('hardhat')
   const logicDeploymentData: Omit<DeployLogicArgs, 'hre'>[] = [

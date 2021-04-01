@@ -1,14 +1,4 @@
-export type Network =
-  | 'rinkeby'
-  | 'kovan'
-  | 'ropsten'
-  | 'hardhat'
-  | 'localhost'
-  | 'mainnet'
-
-export type Config<T> = {
-  [N in Network]: T
-}
+import { BigNumberish } from 'ethers'
 
 type Address = string
 type TokenSymbol = string

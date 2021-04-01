@@ -5,13 +5,12 @@ import hre from 'hardhat'
 import {
   Escrow,
   CompoundDapp,
-  ERC20Detailed,
+  ERC20,
   CErc20Interface,
 } from '../../types/typechain'
 import { BigNumberish, Signer } from 'ethers'
-import { getTokens } from '../../config/tokens'
-import { Network } from '../../types/custom/config-types'
 import { createMarketWithLoan, LoanType } from '../fixtures'
+import { getTokens } from '../../config'
 
 chai.should()
 chai.use(solidity)
@@ -20,7 +19,7 @@ interface TestSetupReturn {
   escrow: Escrow
   user: Signer
   compound: CompoundDapp
-  dai: ERC20Detailed
+  dai: ERC20
   cDai: CErc20Interface
 }
 
@@ -42,11 +41,11 @@ const setUpTest = deployments.createFixture(
     const escrow = await contracts.get<Escrow>('Escrow', { at: loan.escrow })
     const ting = await escrow.getTokens()
 
-    const dai = await contracts.get<ERC20Detailed>('ERC20Detailed', {
-      at: getTokens(<Network>hre.network.name).DAI,
+    const dai = await contracts.get<ERC20>('ERC20', {
+      at: getTokens(hre.network).DAI,
     })
     const cDai = await contracts.get<CErc20Interface>('CErc20Interface', {
-      at: getTokens(<Network>hre.network.name).CDAI,
+      at: getTokens(hre.network).CDAI,
     })
     const compound = await contracts.get<CompoundDapp>('CompoundDapp')
 
@@ -65,7 +64,7 @@ describe('CompoundDapp', async () => {
   let user: Signer
   let rando: Signer
   let compound: CompoundDapp
-  let dai: ERC20Detailed
+  let dai: ERC20
   let cDai: CErc20Interface
   let amount: BigNumberish
   let tokens: string[]

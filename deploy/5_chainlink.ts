@@ -1,8 +1,6 @@
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { getTokens } from '../config/tokens'
-import { getChainlink } from '../config/chainlink'
-import { Network } from '../types/custom/config-types'
+import { getChainlink, getTokens } from '../config'
 import { ChainlinkAggregator } from '../types/typechain'
 import { NULL_ADDRESS } from '../utils/consts'
 
@@ -13,8 +11,8 @@ const addChainlinkPairs: DeployFunction = async (hre) => {
   console.log('********** Chainlink **********')
   console.log()
 
-  const tokens = getTokens(<Network>network.name)
-  const chainlink = getChainlink(<Network>network.name)
+  const tokens = getTokens(network)
+  const chainlink = getChainlink(network)
 
   const chainlinkAggregator = await contracts.get<ChainlinkAggregator>(
     'ChainlinkAggregator',

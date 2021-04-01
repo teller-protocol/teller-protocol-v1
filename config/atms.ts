@@ -1,4 +1,4 @@
-import { ATM, ATMs, Config, Network } from '../types/custom/config-types'
+import { ATM, ATMs } from '../types/custom/config-types'
 
 const teller: ATM = {
   name: 'Teller',
@@ -7,29 +7,27 @@ const teller: ATM = {
     symbol: 'TLR',
     decimals: 18,
     maxCap: 100000000000,
-    maxVestingPerWallet: 50
+    maxVestingPerWallet: 50,
   },
   tlrInitialReward: 0,
-  maxDebtRatio: 5000
+  maxDebtRatio: 5000,
 }
 
 const mainnetATMs: ATMs = {
-  teller
+  teller,
 }
 
-export const atmsConfigsByNetwork: Config<ATMs> = {
+export const atms: Record<string, ATMs> = {
   kovan: {
-    teller
+    teller,
   },
   rinkeby: {
-    teller
+    teller,
   },
   ropsten: {
-    teller
+    teller,
   },
   hardhat: mainnetATMs,
   localhost: mainnetATMs,
-  mainnet: mainnetATMs
+  mainnet: mainnetATMs,
 }
-
-export const getATMs = (network: Network) => atmsConfigsByNetwork[network]

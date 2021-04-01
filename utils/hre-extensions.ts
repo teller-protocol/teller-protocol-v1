@@ -11,8 +11,8 @@ import '@nomiclabs/hardhat-ethers'
 import 'hardhat-deploy'
 
 import { ERC20Detailed } from '../types/typechain'
-import { getTokens } from '../config/tokens'
-import { Address, Network } from '../types/custom/config-types'
+import { Address } from '../types/custom/config-types'
+import { getTokens } from '../config'
 
 declare module 'hardhat/types/runtime' {
   interface HardhatRuntimeEnvironment {
@@ -139,7 +139,7 @@ extendEnvironment((hre) => {
 
   hre.tokens = {
     async get<T extends ERC20Detailed>(name: string): Promise<T> {
-      const tokens = getTokens(<Network>network.name)
+      const tokens = getTokens(network)
       const token = await ethers.getContractAt('ERC20Detailed', tokens[name])
       return token as T
     },

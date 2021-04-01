@@ -4,13 +4,12 @@ import hre from 'hardhat'
 import {
   Escrow,
   PoolTogetherDapp,
-  ERC20Detailed,
+  ERC20,
   PrizePoolInterface,
 } from '../../types/typechain'
 import { BigNumberish, Signer, ContractReceipt } from 'ethers'
-import { getTokens } from '../../config/tokens'
-import { Network } from '../../types/custom/config-types'
 import { createMarketWithLoan, LoanType } from '../fixtures'
+import { getTokens } from '../../config'
 
 chai.should()
 chai.use(solidity)
@@ -19,8 +18,8 @@ interface TestSetupReturn {
   escrow: Escrow
   user: Signer
   poolTogether: PoolTogetherDapp
-  dai: ERC20Detailed
-  pCDai: ERC20Detailed
+  dai: ERC20
+  pCDai: ERC20
   prizePool: PrizePoolInterface
 }
 
@@ -39,8 +38,8 @@ const setUpTest = deployments.createFixture(
 
     const loan = await market.loanManager.loans(market.createdLoanId)
     const escrow = await contracts.get<Escrow>('Escrow', { at: loan.escrow })
-    const dai = await contracts.get<ERC20Detailed>('ERC20Detailed', {
-      at: getTokens(<Network>hre.network.name).DAI,
+    const dai = await contracts.get<ERC20>('ERC20', {
+      at: getTokens(hre.network).DAI,
     })
     const poolTogether = await contracts.get<PoolTogetherDapp>(
       'PoolTogetherDapp'
@@ -48,12 +47,12 @@ const setUpTest = deployments.createFixture(
 
     const prizePool = (await hre.ethers.getContractAt(
       'PrizePoolInterface',
-      getTokens(<Network>hre.network.name).PCDAI
+      getTokens(hre.network).PCDAI
     )) as PrizePoolInterface
 
     const ticketAddress = (await prizePool.tokens())[1]
 
-    const pCDai = await contracts.get<ERC20Detailed>('ERC20Detailed', {
+    const pCDai = await contracts.get<ERC20>('ERC20', {
       at: ticketAddress,
     })
 
@@ -73,8 +72,8 @@ describe('PoolTogetherDapp', async () => {
   let user: Signer
   let rando: Signer
   let poolTogether: PoolTogetherDapp
-  let dai: ERC20Detailed
-  let pCDai: ERC20Detailed
+  let dai: ERC20
+  let pCDai: ERC20
   let amount: BigNumberish
   let tokens: string[]
   let prizePool: PrizePoolInterface
