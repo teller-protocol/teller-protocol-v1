@@ -76,10 +76,10 @@ export const chainlink: Record<string, Chainlink> = {
       quoteTokenName: 'USDC',
       address: '0x396c5E36DD0a0F5a5D33dae44368D4193f69a1F0',
     },
-    COMP_ETH: {
+    COMP_USDC: {
       baseTokenName: 'COMP',
-      quoteTokenName: 'DAI',
-      price: '500',
+      quoteTokenName: 'USDC',
+      address: '0xECF93D14d25E02bA2C13698eeDca9aA98348EFb6',
     },
   },
   rinkeby: {

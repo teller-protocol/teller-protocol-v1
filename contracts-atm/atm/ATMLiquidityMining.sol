@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // External Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 // Common
 import "../util/AddressLib.sol";

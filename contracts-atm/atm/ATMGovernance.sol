@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // External Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 // Common
 import "../util/AddressArrayLib.sol";
@@ -11,7 +11,7 @@ import "../base/TInitializable.sol";
 import "./ATMCommon.sol";
 
 // Contracts
-import "@openzeppelin/contracts-ethereum-package/contracts/access/roles/SignerRole.sol";
+import "@openzeppelin/contracts/access/roles/SignerRole.sol";
 import "../base/BaseUpgradeable.sol";
 
 // Interfaces

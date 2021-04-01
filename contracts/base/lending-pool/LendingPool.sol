@@ -6,8 +6,8 @@ import "../../util/CompoundRatesLib.sol";
 import "../../util/NumbersLib.sol";
 
 // Interfaces
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../../interfaces/LendingPoolInterface.sol";
 import "../../interfaces/loans/ILoanManager.sol";
 import "../../providers/compound/CErc20Interface.sol";
@@ -16,7 +16,7 @@ import "../../interfaces/IMarketRegistry.sol";
 import "../../interfaces/ITToken.sol";
 
 // Contracts
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "../Base.sol";
 import "./LendingPoolStorage.sol";
 import "../../providers/uniswap/UniSwapper.sol";

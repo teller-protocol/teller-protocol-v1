@@ -2,9 +2,9 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // External Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 // Common
 import "../../../util/AddressLib.sol";

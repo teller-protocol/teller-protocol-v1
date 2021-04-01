@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "../../util/AddressLib.sol";
 import "../../util/CacheLib.sol";
 

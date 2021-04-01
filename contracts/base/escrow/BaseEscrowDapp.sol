@@ -6,7 +6,7 @@ import "../Base.sol";
 import "../escrow/EscrowStorage.sol";
 
 // Interfaces
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../interfaces/escrow/IBaseEscrowDapp.sol";
 import "../../interfaces/loans/ILoanManager.sol";
 

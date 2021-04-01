@@ -2,14 +2,14 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "../../util/AddressLib.sol";
 import "../../util/PlatformSettingsLib.sol";
 import "../../util/AddressArrayLib.sol";
 import "../../util/CacheLib.sol";
 
 // Contracts
-import "@openzeppelin/contracts-ethereum-package/contracts/access/Roles.sol";
+import "@openzeppelin/contracts/access/Roles.sol";
 import "../../util/SettingsConsts.sol";
 import "../proxies/InitializeableDynamicProxy.sol";
 import "./AssetSettings.sol";

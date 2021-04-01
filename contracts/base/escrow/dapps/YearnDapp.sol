@@ -8,8 +8,8 @@ import "../../escrow/BaseEscrowDapp.sol";
 import "../../../util/AddressLib.sol";
 
 // External Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 // Interfaces
 import "./IYearnDapp.sol";

@@ -2,10 +2,10 @@ pragma solidity 0.5.17;
 
 /* Import */
 
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Burnable.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Arrays.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20Mintable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
+import "@openzeppelin/contracts/utils/Arrays.sol";
 import "./TLRTokenInterface.sol";
 
 import "../base/TInitializable.sol";

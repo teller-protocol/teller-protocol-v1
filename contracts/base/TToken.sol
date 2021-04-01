@@ -1,14 +1,14 @@
 pragma solidity 0.5.17;
 
 // Utils
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 // Interfaces
 import "../interfaces/ITToken.sol";
 import "../interfaces/LendingPoolInterface.sol";
 
 // Contracts
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20Mintable.sol";
 import "./upgradeable/DynamicUpgradeable.sol";
 
 /**

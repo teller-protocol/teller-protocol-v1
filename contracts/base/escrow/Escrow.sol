@@ -8,11 +8,11 @@ import "./BaseEscrowDapp.sol";
 import "../../interfaces/escrow/IEscrow.sol";
 import "../../interfaces/IBaseProxy.sol";
 import "../../providers/compound/CErc20Interface.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
 
 // Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "../../util/SettingsConsts.sol";
 import "../../util/TellerCommon.sol";
 import "../../util/NumbersLib.sol";

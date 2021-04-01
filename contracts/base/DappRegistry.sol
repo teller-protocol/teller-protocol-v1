@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import "./Base.sol";
 
 // Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 // Interfaces
 import "../interfaces/loans/ILoanManager.sol";

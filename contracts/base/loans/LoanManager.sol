@@ -2,13 +2,13 @@ pragma solidity 0.5.17;
 pragma experimental ABIEncoderV2;
 
 // Libraries and common
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "../../util/TellerCommon.sol";
 import "../../util/NumbersLib.sol";
 
 // Contracts
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "../Base.sol";
 import "./LoanStorage.sol";
 import "./../proxies/DynamicProxy.sol";
