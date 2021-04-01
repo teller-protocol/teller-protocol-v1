@@ -20,7 +20,7 @@ import "@chainlink/contracts/src/v0.5/interfaces/AggregatorV2V3Interface.sol";
 
     @author develop@teller.finance
  */
-interface IChainlinkAggregator {
+interface IPriceAggregator {
     /**
         @notice It grabs the Chainlink Aggregator contract address for the token pair if it is supported.
         @param src Source token address.

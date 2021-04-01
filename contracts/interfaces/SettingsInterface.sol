@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+// Libraries
 import "../util/PlatformSettingsLib.sol";
+
+// Interfaces
 import "./IDappRegistry.sol";
-import "../providers/chainlink/IChainlinkAggregator.sol";
-import "../interfaces/AssetSettingsInterface.sol";
+import "./IPriceAggregator.sol";
+import "./AssetSettingsInterface.sol";
 import "./IMarketFactory.sol";
 
 /**
@@ -332,9 +335,9 @@ interface SettingsInterface {
     function dappRegistry() external view returns (IDappRegistry);
 
     /**
-        @notice It is the global instance of the ChainlinkAggregator contract.
+        @notice It is the global instance of the PriceAggregator contract.
      */
-    function chainlinkAggregator() external view returns (IChainlinkAggregator);
+    function priceAggregator() external view returns (IPriceAggregator);
 
     /**
         @notice It is the global instance of the MarketFactory contract.
@@ -356,13 +359,13 @@ interface SettingsInterface {
         @param wethTokenAddress canonical WETH token address.
         @param cethTokenAddress compound CETH token address.
         @param initDynamicProxyAddress Address of a deployed InitializeableDynamicProxy contract.
-        @param uniswapRouterV2Address Address of the UniswapV2Router instance to use for the platform.
+        @param uniswapV2RouterAddress Address of the UniswapV2Router instance to use for the platform.
      */
     function initialize(
         address wethTokenAddress,
         address cethTokenAddress,
         address initDynamicProxyAddress,
-        address uniswapRouterV2Address
+        address uniswapV2RouterAddress
     ) external;
 
     /**

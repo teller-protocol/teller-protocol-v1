@@ -3,16 +3,16 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "../../base/Base.sol";
+import "./Base.sol";
 
 // Libraries
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/math/SignedSafeMath.sol";
-import "../../util/AddressArrayLib.sol";
+import "../util/AddressArrayLib.sol";
 
 // Interfaces
-import "./IChainlinkAggregator.sol";
+import "../interfaces/IPriceAggregator.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -30,7 +30,7 @@ import "./IChainlinkAggregator.sol";
 
     @author develop@teller.finance
  */
-contract ChainlinkAggregator is IChainlinkAggregator, Base {
+contract PriceAggregator is IPriceAggregator, Base {
     using Address for address;
     using AddressLib for address;
     using AddressArrayLib for AddressArrayLib.AddressArray;
@@ -187,23 +187,23 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
      */
     function remove(address tokenAddress) external override onlyPauser {
         tokenAddress = _normalizeTokenAddress(tokenAddress);
+
         address[] storage arr = supportedTokens[tokenAddress].array;
         for (uint256 i; i < arr.length; i++) {
             (AggregatorV2V3Interface agg, bool inverse) =
-                _aggregatorFor(tokenAddress, arr[0]);
+                _aggregatorFor(tokenAddress, arr[i]);
             if (inverse) {
-                aggregators[arr[0]][tokenAddress] = address(0);
+                aggregators[arr[i]][tokenAddress] = address(0);
             } else {
-                aggregators[tokenAddress][arr[0]] = address(0);
+                aggregators[tokenAddress][arr[i]] = address(0);
             }
-            // REVIEW
-            arr[0] = arr[arr.length - 1];
+
             arr.pop();
         }
     }
 
     /**
-        @notice It initializes this ChainlinkAggregator instance.
+        @notice It initializes this PriceAggregator instance.
      */
     function initialize() external override {
         _initialize(msg.sender);

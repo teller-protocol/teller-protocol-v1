@@ -164,7 +164,7 @@ contract LoanData is ILoanData, Base, LoanStorage {
             return 0;
         }
         return
-            settings.chainlinkAggregator().valueFor(
+            settings.priceAggregator().valueFor(
                 collateralToken,
                 lendingToken,
                 loans[loanID].collateral
@@ -197,7 +197,7 @@ contract LoanData is ILoanData, Base, LoanStorage {
             neededInCollateralTokens = 0;
         } else {
             uint256 value =
-                settings.chainlinkAggregator().valueFor(
+                settings.priceAggregator().valueFor(
                     lendingToken,
                     collateralToken,
                     uint256(
