@@ -2,9 +2,8 @@ import { task, types } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { BigNumberish } from 'ethers'
 
-import { ChainlinkAggregator } from '../types/typechain'
-import { Network } from '../types/custom/config-types'
-import { getTokens } from '../config/tokens'
+import { PriceAggregator } from '../types/typechain'
+import { getTokens } from '../config'
 
 interface GetPricesArgs {
   src: string
@@ -27,8 +26,8 @@ export const getPrice = async (
     <Network>network.name
   )
 
-  const chainLinkAggregator = await contracts.get<ChainlinkAggregator>(
-    'ChainlinkAggregator'
+  const chainLinkAggregator = await contracts.get<PriceAggregator>(
+    'PriceAggregator'
   )
   let decimals = 18
   if (dst !== 'ETH') {

@@ -30,7 +30,7 @@ const deployLogicContracts: DeployFunction = async (hre) => {
       contract: 'MarketRegistry',
     },
     {
-      contract: 'ChainlinkAggregator',
+      contract: 'PriceAggregator',
     },
     {
       contract: 'TToken',
@@ -115,9 +115,9 @@ const deployLogicContracts: DeployFunction = async (hre) => {
     address: await settings.logicRegistry(),
   })
 
-  await deployments.save('ChainlinkAggregator', {
-    ...(await deployments.getExtendedArtifact('ChainlinkAggregator')),
-    address: await settings.chainlinkAggregator(),
+  await deployments.save('PriceAggregator', {
+    ...(await deployments.getExtendedArtifact('PriceAggregator')),
+    address: await settings.priceAggregator(),
   })
 
   await deployments.save('AssetSettings', {

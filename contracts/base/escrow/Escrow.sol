@@ -290,7 +290,7 @@ contract Escrow is IEscrow, Base, BaseEscrowDapp {
             );
         }
         return
-            settings.chainlinkAggregator().valueFor(
+            settings.priceAggregator().valueFor(
                 baseAddress,
                 quoteAddress,
                 baseAmount

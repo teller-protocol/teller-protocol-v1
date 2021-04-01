@@ -2,8 +2,8 @@ import hre from 'hardhat'
 import { BigNumberish, Signer } from 'ethers'
 
 import { IUniswapV2Router02 } from '../../types/typechain'
-import { getTokens } from '../../config/tokens'
-import { Address, Network, TokenSymbol } from '../../types/custom/config-types'
+import { Address, TokenSymbol } from '../../types/custom/config-types'
+import { getTokens, getUniswap } from '../../config'
 
 export interface SwapArgs {
   to: Address | Signer
@@ -20,7 +20,7 @@ export const getFunds = async (args: SwapArgs): Promise<void> => {
   const swapper = await contracts.get<IUniswapV2Router02>(
     'IUniswapV2Router02',
     {
-      at: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+      at: getUniswap(hre.network).v2Router,
       from: funder,
     }
   )

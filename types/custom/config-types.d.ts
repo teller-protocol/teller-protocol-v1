@@ -56,7 +56,7 @@ export interface Chainlink {
   [pairSymbols: string]: ChainlinkPair
 }
 
-interface ChainlinkPair {
+export interface ChainlinkPair {
   baseTokenName: TokenSymbol
   quoteTokenName: TokenSymbol
   address: Address

@@ -1,11 +1,12 @@
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import hre from 'hardhat'
-import { ChainlinkAggregator } from '../../types/typechain'
+import { PriceAggregator } from '../../types/typechain'
 import { Network } from '../../types/custom/config-types'
 import { getTokens } from '../../config/tokens'
 import { getChainlink } from '../../config/chainlink'
 import { NULL_ADDRESS } from '../../utils/consts'
+import { ChainlinkPair } from '../../types/custom/config-types'
 
 chai.should()
 chai.use(chaiAsPromised)
@@ -17,18 +18,18 @@ const setupTest = deployments.createFixture(async () => {
   await deployments.fixture('asset-settings')
 
   const deployer = await getNamedSigner('deployer')
-  const chainlinkAggregator = await contracts.get<ChainlinkAggregator>(
-    'ChainlinkAggregator',
+  const priceAggregator = await contracts.get<PriceAggregator>(
+    'PriceAggregator',
     { from: deployer }
   )
 
   return {
-    chainlinkAggregator,
+    priceAggregator,
   }
 })
 
-describe('Chainlink Aggregator', async () => {
-  let chainlinkAggregator: ChainlinkAggregator
+describe('PriceAggregator', async () => {
+  let priceAggregator: PriceAggregator
   const chainlink = getChainlink(<Network>hre.network.name)
   const tokens = getTokens(<Network>hre.network.name)
 
@@ -36,17 +37,24 @@ describe('Chainlink Aggregator', async () => {
   beforeEach(async () => {
     const setup = await setupTest()
 
-    chainlinkAggregator = setup.chainlinkAggregator
+    priceAggregator = setup.priceAggregator
   })
 
   describe('add', () => {
-    const srcTokenAddress = '0x111111111117dc0aa78b770fa6a738034120c302' // 1INCH
-    const dstTokenAddress = tokens.ETH // ETH
-    const aggregatorAddressToAdd = '0x72AFAECF99C9d9C8215fF44C77B94B99C28741e8' // 1INCH<>ETH
+    let pair: ChainlinkPair
+    for (const p of Object.values(chainlink)) {
+      if ('address' in p) {
+        pair = p
+        break
+      }
+    }
+    const srcTokenAddress = tokens[pair!.baseTokenName]
+    const dstTokenAddress = tokens[pair!.quoteTokenName]
+    const aggregatorAddressToAdd = pair!.address
 
     it('Should be able add an aggregator address as a pauser', async () => {
       // Add aggregator
-      await chainlinkAggregator.add(
+      await priceAggregator.add(
         srcTokenAddress,
         dstTokenAddress,
         aggregatorAddressToAdd
@@ -56,12 +64,9 @@ describe('Chainlink Aggregator', async () => {
       const aggregatorResponse: [
         string,
         boolean
-      ] = await chainlinkAggregator.aggregatorFor(
-        srcTokenAddress,
-        dstTokenAddress
-      )
+      ] = await priceAggregator.aggregatorFor(srcTokenAddress, dstTokenAddress)
 
-      const tokenSupportResponse = await chainlinkAggregator.isTokenSupported(
+      const tokenSupportResponse = await priceAggregator.isTokenSupported(
         srcTokenAddress
       )
 
@@ -75,7 +80,7 @@ describe('Chainlink Aggregator', async () => {
 
       // Try to update setting
       const fn = () =>
-        chainlinkAggregator
+        priceAggregator
           .connect(notPauser)
           .add(srcTokenAddress, dstTokenAddress, aggregatorAddressToAdd)
 
@@ -84,19 +89,19 @@ describe('Chainlink Aggregator', async () => {
   })
 
   describe('remove', () => {
-    const { baseTokenName, quoteTokenName } = chainlink['USDC_ETH']
+    const { baseTokenName, quoteTokenName } = Object.values(chainlink)[0]
     const baseTokenAddress = tokens[baseTokenName]
     const quoteTokenAddress = tokens[quoteTokenName]
 
     it('Should be able remove an aggregator given a token pair as a pauser', async () => {
       // Add aggregator
-      await chainlinkAggregator['remove(address,address)'](
+      await priceAggregator['remove(address,address)'](
         baseTokenAddress,
         quoteTokenAddress
       )
 
       // Check if aggregator was successfully removed
-      const [aggregatorAddress] = await chainlinkAggregator.aggregatorFor(
+      const [aggregatorAddress] = await priceAggregator.aggregatorFor(
         baseTokenAddress,
         quoteTokenAddress
       )
@@ -106,10 +111,10 @@ describe('Chainlink Aggregator', async () => {
 
     it('Should be able remove an aggregator address as a pauser', async () => {
       // Add aggregator
-      await chainlinkAggregator['remove(address)'](quoteTokenAddress)
+      await priceAggregator['remove(address)'](quoteTokenAddress)
 
       // Check if aggregator was successfully removed
-      const tokenSupportResponse = await chainlinkAggregator.isTokenSupported(
+      const tokenSupportResponse = await priceAggregator.isTokenSupported(
         quoteTokenAddress
       )
 
@@ -122,28 +127,26 @@ describe('Chainlink Aggregator', async () => {
 
       // Try to update setting
       const fn = () =>
-        chainlinkAggregator
-          .connect(notPauser)
-          ['remove(address)'](quoteTokenAddress)
+        priceAggregator.connect(notPauser)['remove(address)'](quoteTokenAddress)
 
       await fn().should.be.rejectedWith('NOT_PAUSER')
     })
   })
 
   describe('latestAnswerFor', () => {
-    const { baseTokenName, quoteTokenName, address } = chainlink['USDC_ETH']
-    const baseTokenAddress = tokens[baseTokenName]
-    const quoteTokenAddress = tokens[quoteTokenName]
+    const pair = Object.values(chainlink)[0]
+    const baseTokenAddress = tokens[pair.baseTokenName]
+    const quoteTokenAddress = tokens[pair.quoteTokenName]
 
     beforeEach(async () => {
-      await chainlinkAggregator.add(
+      await priceAggregator.add(
         baseTokenAddress,
         quoteTokenAddress,
-        address
+        pair.address
       )
     })
     it('Should be able get the latest price of a token pair', async () => {
-      const answer = await chainlinkAggregator.latestAnswerFor(
+      const answer = await priceAggregator.latestAnswerFor(
         baseTokenAddress,
         quoteTokenAddress
       )

@@ -14,13 +14,13 @@ import "../proxies/InitializeableDynamicProxy.sol";
 import "./AssetSettings.sol";
 import "../LogicVersionsRegistry.sol";
 import "../DappRegistry.sol";
-import "../../providers/chainlink/ChainlinkAggregator.sol";
+import "../PriceAggregator.sol";
 import "../Factory.sol";
 
 // Interfaces
 import "../../interfaces/SettingsInterface.sol";
 import "../../interfaces/IDappRegistry.sol";
-import "../../providers/chainlink/IChainlinkAggregator.sol";
+import "../../interfaces/IPriceAggregator.sol";
 import "../../providers/compound/CErc20Interface.sol";
 import "../../interfaces/AssetSettingsInterface.sol";
 import "../../interfaces/IMarketFactory.sol";
@@ -184,9 +184,9 @@ contract Settings is SettingsInterface, Base, Factory {
     IDappRegistry public override dappRegistry;
 
     /**
-        @notice It is the global instance of the ChainlinkAggregator contract.
+        @notice It is the global instance of the PriceAggregator contract.
      */
-    IChainlinkAggregator public override chainlinkAggregator;
+    IPriceAggregator public override priceAggregator;
 
     /**
         @notice It is the global instance of the MarketFactory contract.
@@ -729,6 +729,7 @@ contract Settings is SettingsInterface, Base, Factory {
         @param wethTokenAddress canonical WETH token address.
         @param cethTokenAddress compound CETH token address.
         @param initDynamicProxyAddress Address of a deployed InitializeableDynamicProxy contract.
+        @param uniswapV2RouterAddress Address of the UniswapV2Router instance to use for the platform.
      */
     function initialize(
         address wethTokenAddress,
@@ -736,7 +737,7 @@ contract Settings is SettingsInterface, Base, Factory {
         address initDynamicProxyAddress,
         address uniswapV2RouterAddress
     ) external override {
-        require(cethTokenAddress.isContract(), "CETH_ADDRESS_MUST_BE_CONTRACT");
+        require(wethTokenAddress.isContract(), "WETH_ADDRESS_MUST_BE_CONTRACT");
 
         _addPauser(msg.sender);
         _initialize(address(this));
@@ -757,8 +758,8 @@ contract Settings is SettingsInterface, Base, Factory {
         assetSettings = AssetSettingsInterface(
             _deployInitDynamicProxy(keccak256("AssetSettings"))
         );
-        chainlinkAggregator = IChainlinkAggregator(
-            _deployInitDynamicProxy(keccak256("ChainlinkAggregator"))
+        priceAggregator = IPriceAggregator(
+            _deployInitDynamicProxy(keccak256("PriceAggregator"))
         );
         dappRegistry = IDappRegistry(
             _deployInitDynamicProxy(keccak256("DappRegistry"))
