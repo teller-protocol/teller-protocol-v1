@@ -8,17 +8,22 @@ import "../interfaces/ITToken.sol";
 import "../interfaces/LendingPoolInterface.sol";
 
 // Contracts
-import "./upgradeable/DynamicUpgradeableERC20.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol";
+import "./upgradeable/DynamicUpgradeable.sol";
 
 /**
  * @notice This contract represents a wrapped token within the Teller protocol
  *
  * @author develop@teller.finance
  */
-contract TToken is ITToken, DynamicUpgradeableERC20 {
+contract TToken is ITToken, ERC20Mintable, DynamicUpgradeable {
     using Address for address;
 
     /** State Variables */
+
+    string public name;
+    string public symbol;
+    uint8 public decimals;
 
     /**
      * @notice The LendingPool linked to this Teller Token.
@@ -56,12 +61,11 @@ contract TToken is ITToken, DynamicUpgradeableERC20 {
         require(lendingPoolAddress.isContract(), "LP_MUST_BE_CONTRACT");
         lendingPool = LendingPoolInterface(lendingPoolAddress);
 
+        _addMinter(lendingPoolAddress);
+
         ERC20Detailed lendingToken = ERC20Detailed(lendingPool.lendingToken());
-        ERC20Detailed.initialize(
-            string(abi.encodePacked("Teller ", lendingToken.name())),
-            string(abi.encodePacked("t", lendingToken.symbol())),
-            lendingToken.decimals()
-        );
-        ERC20Mintable.initialize(lendingPoolAddress);
+        name = string(abi.encodePacked("Teller ", lendingToken.name()));
+        symbol = string(abi.encodePacked("t", lendingToken.symbol()));
+        decimals = lendingToken.decimals();
     }
 }
