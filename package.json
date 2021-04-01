@@ -9,6 +9,7 @@
     "lint-json": "prettier",
     "fork:mainnet": "node scripts/utils/forkMainnet.js",
     "node:localhost": "yarn hardhat node",
+    "deploy:localhost": "yarn hardhat deploy --network localhost",
     "deploy:rinkeby": "yarn hardhat deploy --network rinkeby",
     "deploy:ropsten": "yarn hardhat deploy --network ropsten",
     "deploy:kovan": "yarn hardhat deploy --network kovan",

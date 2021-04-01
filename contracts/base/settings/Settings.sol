@@ -538,6 +538,14 @@ contract Settings is SettingsInterface, Base, Factory {
         return _getPlatformSetting(settingName).exists;
     }
 
+    function getPlatformSetting(bytes32 settingName)
+        external
+        view
+        returns (PlatformSettingsLib.PlatformSetting memory)
+    {
+        return _getPlatformSetting(settingName);
+    }
+
     /**
         @notice It pauses a specific lending pool.
         @param lendingPoolAddress lending pool address to pause.

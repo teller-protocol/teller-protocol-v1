@@ -42,9 +42,19 @@ contract LoanTermsConsensus is ILoanTermsConsensus, Base, LoanStorage {
     using Address for address;
     using AddressArrayLib for AddressArrayLib.AddressArray;
 
+    /* Modifiers */
+
     /**
-        @notice Checks if the number of responses is greater or equal to a percentage of
-        the number of signers.
+     * @notice Checks if sender has a pauser role
+     * @dev Throws an error if the sender has not a pauser role.
+     */
+    modifier onlyPauser() override {
+        settings.requirePauserRole(msg.sender);
+        _;
+    }
+
+    /**
+     * @notice Checks if the number of responses is greater or equal to a percentage of the number of signers.
      */
     modifier onlyEnoughSubmissions(uint256 responseCount) {
         uint256 percentageRequired =
@@ -58,12 +68,12 @@ contract LoanTermsConsensus is ILoanTermsConsensus, Base, LoanStorage {
     }
 
     /**
-        @notice Processes the loan request
-        @param request Struct of the protocol loan request
-        @param responses List of structs of the protocol loan responses
-        @return interestRate uint256 Interest rate
-        @return collateralRatio uint256 Collateral ratio
-        @return maxLoanAmount uint256 Maximum loan amount
+     * @notice Processes the loan request
+     * @param request Struct of the protocol loan request
+     * @param responses List of structs of the protocol loan responses
+     * @return interestRate Interest rate
+     * @return collateralRatio Collateral ratio
+     * @return maxLoanAmount Maximum loan amount
      */
     function processLoanTerms(
         TellerCommon.LoanRequest calldata request,
@@ -158,22 +168,22 @@ contract LoanTermsConsensus is ILoanTermsConsensus, Base, LoanStorage {
     }
 
     /**
-        @notice It adds a new account as a signer.
-        @param account address to add.
-        @dev The sender must be the owner.
-        @dev It throws a require error if the sender is not the owner.
+     * @notice It adds a new account as a signer.
+     * @param account address to add.
+     * @dev The sender must be the owner.
+     * @dev It throws a require error if the sender is not the owner.
      */
-    function addSigner(address account) external {
+    function addSigner(address account) external onlyPauser {
         _addSigner(account);
     }
 
     /**
-        @notice It adds a list of account as signers.
-        @param accounts addresses to add.
-        @dev The sender must be the owner.
-        @dev It throws a require error if the sender is not the owner.
+     * @notice It adds a list of account as signers.
+     * @param accounts addresses to add.
+     * @dev The sender must be the owner.
+     * @dev It throws a require error if the sender is not the owner.
      */
-    function addSigners(address[] calldata accounts) external {
+    function addSigners(address[] calldata accounts) external onlyPauser {
         for (uint256 index = 0; index < accounts.length; index++) {
             address account = accounts[index];
             _addSigner(account);
@@ -181,10 +191,19 @@ contract LoanTermsConsensus is ILoanTermsConsensus, Base, LoanStorage {
     }
 
     /**
-        @notice Generates a hash for the loan response
-        @param response Structs of the protocol loan responses
-        @param requestHash Hash of the loan request
-        @return bytes32 Hash of the loan response
+     * @notice It removes an account as a signer.
+     * @param account address to remove.
+     * @dev The sender must be the owner.
+     */
+    function removeSigner(address account) external onlyPauser {
+        _removeSigner(account);
+    }
+
+    /**
+     * @notice Generates a hash for the loan response
+     * @param response Structs of the protocol loan responses
+     * @param requestHash Hash of the loan request
+     * @return bytes32 Hash of the loan response
      */
     function _hashResponse(
         TellerCommon.LoanResponse memory response,
@@ -206,9 +225,9 @@ contract LoanTermsConsensus is ILoanTermsConsensus, Base, LoanStorage {
     }
 
     /**
-        @notice Generates a hash for the loan request
-        @param request Struct of the protocol loan request
-        @return bytes32 Hash of the loan request
+     * @notice Generates a hash for the loan request
+     * @param request Struct of the protocol loan request
+     * @return bytes32 Hash of the loan request
      */
     function _hashRequest(
         TellerCommon.LoanRequest memory request,
@@ -230,11 +249,11 @@ contract LoanTermsConsensus is ILoanTermsConsensus, Base, LoanStorage {
     }
 
     /**
-        @notice It validates whether a signature is valid or not.
-        @param signature signature to validate.
-        @param dataHash used to recover the signer.
-        @param expectedSigner the expected signer address.
-        @return true if the expected signer is equal to the signer. Otherwise it returns false.
+     * @notice It validates whether a signature is valid or not.
+     * @param signature signature to validate.
+     * @param dataHash used to recover the signer.
+     * @param expectedSigner the expected signer address.
+     * @return true if the expected signer is equal to the signer. Otherwise it returns false.
      */
     function _signatureValid(
         TellerCommon.Signature memory signature,
@@ -259,8 +278,8 @@ contract LoanTermsConsensus is ILoanTermsConsensus, Base, LoanStorage {
     /**
         Checks if the nonce provided in the request is equal to the borrower's number of loans.
         Also verifies if the borrower has taken out a loan recently (rate limit).
-        @param borrower the borrower's address.
-        @param nonce the nonce included in the loan request.
+     * @param borrower the borrower's address.
+     * @param nonce the nonce included in the loan request.
      */
     function _validateLoanRequest(address borrower, uint256 nonce)
         internal
@@ -290,9 +309,9 @@ contract LoanTermsConsensus is ILoanTermsConsensus, Base, LoanStorage {
     }
 
     /**
-        @notice Gets the consensus value for a list of values (uint values).
-        @notice The values must be in a maximum tolerance range.
-        @return the consensus value.
+     * @notice Gets the consensus value for a list of values (uint values).
+     * @notice The values must be in a maximum tolerance range.
+     * @return the consensus value.
      */
     function _getConsensus(NumbersList.Values memory values, uint256 tolerance)
         internal
@@ -305,8 +324,8 @@ contract LoanTermsConsensus is ILoanTermsConsensus, Base, LoanStorage {
     }
 
     /**
-        @notice Gets the current chain id using the opcode 'chainid()'.
-        @return the current chain id.
+     * @notice Gets the current chain id using the opcode 'chainid()'.
+     * @return the current chain id.
      */
     function _getChainId() internal view returns (uint256) {
         // silence state mutability warning without generating bytecode.
@@ -322,5 +341,9 @@ contract LoanTermsConsensus is ILoanTermsConsensus, Base, LoanStorage {
         if (!_isSigner(account)) {
             signers.add(account);
         }
+    }
+
+    function _removeSigner(address account) internal {
+        signers.remove(account);
     }
 }

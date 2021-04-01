@@ -68,6 +68,16 @@ interface IMarketRegistry {
     ) external;
 
     /**
+        @notice It checks if a market already exists.
+        @param lendingTokenAddress The lending token address.
+        @param collateralTokenAddress The collateral token address.
+     */
+    function marketExists(
+        address lendingTokenAddress,
+        address collateralTokenAddress
+    ) external view virtual returns (bool);
+
+    /**
      * @notice It initializes the MarketRegistry contract by setting the owner of the caller.
      * @dev This contract is constructed and initialized by the MarketFactory.
      */

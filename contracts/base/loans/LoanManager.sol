@@ -740,8 +740,7 @@ contract LoanManager is
         initDynamicProxyLogic = initDynamicProxyLogicAddress;
         assetSettings = settings.assetSettings();
 
-        // ETH is the only collateral token allowed currently
-        collateralToken = settings.ETH_ADDRESS();
+        collateralToken = collateralTokenAddress;
 
         updateLoanDataLogic();
         updateLoanTermsConsensusLogic();

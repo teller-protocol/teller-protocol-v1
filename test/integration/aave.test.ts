@@ -60,7 +60,7 @@ const setUpTest = deployments.createFixture(
   }
 )
 
-describe('AaveDapp', async () => {
+describe.only('AaveDapp', async () => {
   let escrow: Escrow
   let user: Signer
   let rando: Signer

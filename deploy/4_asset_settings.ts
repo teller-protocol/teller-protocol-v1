@@ -10,6 +10,9 @@ const createAssetSettings: DeployFunction = async (hre) => {
   const BN = ethers.BigNumber
   const { deployer } = await getNamedAccounts()
 
+  console.log('********** Asset Settings **********')
+  console.log()
+
   const assetSettings = await contracts.get<AssetSettings>('AssetSettings', {
     from: deployer,
   })
@@ -17,54 +20,67 @@ const createAssetSettings: DeployFunction = async (hre) => {
   const tokens = getTokens(<Network>network.name)
   const assetSettingsConfig = getAssetSettings(<Network>network.name)
   for (const [assetSymbol, setting] of Object.entries(assetSettingsConfig)) {
-    const {
-      cToken,
-      aToken,
-      maxLoanAmount,
-      maxTVLAmount,
-      maxDebtRatio,
-      yVault,
-      pPool,
-    } = setting
+    process.stdout.write(`  * ${assetSymbol}: `)
 
-    let tokenDecimals = 18
-    if (assetSymbol !== 'ETH') {
-      const token = await hre.tokens.get(assetSymbol)
-      tokenDecimals = await token.decimals()
-    }
-    const factor = BN.from(10).pow(tokenDecimals)
-    const maxLoanAmountBN = BN.from(maxLoanAmount).mul(factor)
-    const maxTVLAmountBN = BN.from(maxTVLAmount).mul(factor)
+    const assetAddress = tokens[assetSymbol]
 
-    await assetSettings.createAssetSetting(
-      tokens[assetSymbol],
-      tokens[cToken],
-      maxLoanAmountBN,
-      maxTVLAmountBN,
-      maxDebtRatio
-    )
+    // Check if the asset setting is already initialized
+    const isInitialized = await assetSettings.isInitialized(assetAddress)
+    if (!isInitialized) {
+      const {
+        cToken,
+        aToken,
+        maxLoanAmount,
+        maxTVLAmount,
+        maxDebtRatio,
+        yVault,
+        pPool,
+      } = setting
 
-    if (aToken) {
-      await assetSettings.updateATokenAddress(
-        tokens[assetSymbol],
-        tokens[aToken]
-      )
-    }
+      let tokenDecimals = 18
+      if (assetSymbol !== 'ETH') {
+        const token = await hre.tokens.get(assetSymbol)
+        tokenDecimals = await token.decimals()
+      }
+      const factor = BN.from(10).pow(tokenDecimals)
+      const maxLoanAmountBN = BN.from(maxLoanAmount).mul(factor)
+      const maxTVLAmountBN = BN.from(maxTVLAmount).mul(factor)
 
-    if (yVault) {
-      await assetSettings.updateYVaultAddressSetting(
-        tokens[assetSymbol],
-        tokens[yVault]
-      )
-    }
+      await assetSettings
+        .createAssetSetting(
+          assetAddress,
+          tokens[cToken],
+          maxLoanAmountBN,
+          maxTVLAmountBN,
+          maxDebtRatio
+        )
+        .then(({ wait }) => wait())
 
-    if (pPool) {
-      await assetSettings.updatePrizePoolAddress(
-        tokens[assetSymbol],
-        tokens[pPool]
-      )
+      if (aToken) {
+        await assetSettings
+          .updateATokenAddress(assetAddress, tokens[aToken])
+          .then(({ wait }) => wait())
+      }
+
+      if (yVault) {
+        await assetSettings
+          .updateYVaultAddressSetting(assetAddress, tokens[yVault])
+          .then(({ wait }) => wait())
+      }
+
+      if (pPool) {
+        await assetSettings
+          .updatePrizePoolAddress(tokens[assetSymbol], tokens[pPool])
+          .then(({ wait }) => wait())
+      }
+
+      process.stdout.write(`created \n`)
+    } else {
+      process.stdout.write(`already created \n`)
     }
   }
+
+  console.log()
 }
 
 createAssetSettings.tags = ['asset-settings']
