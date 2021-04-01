@@ -80,10 +80,8 @@
   },
   "dependencies": {
     "@chainlink/contracts": "^0.0.10",
-    "@openzeppelin/contracts": "^4",
-    "@openzeppelin/contracts-ethereum-package": "2.5.0",
-    "@openzeppelin/contracts-upgradeable": "^4",
-    "@openzeppelin/upgrades": "^2.8.0",
+    "@openzeppelin/contracts": "^4.0.0",
+    "@openzeppelin/contracts-upgradeable": "^4.0.0",
     "bignumber.js": "^9.0.0",
     "chai-as-promised": "^7.1.1",
     "disklet": "^0.4.6",
