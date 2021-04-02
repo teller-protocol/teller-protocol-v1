@@ -18,6 +18,5 @@
     "no-complex-fallback": "warn",
     "check-send-result": "warn",
     "reentrancy": "warn"
-  },
-  "plugins": ["prettier"]
+  }
 }
