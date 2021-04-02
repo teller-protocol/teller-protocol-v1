@@ -49,12 +49,12 @@
     "eslint": "^5.16.0",
     "ethereum-waffle": "^3.2.1",
     "ethereumjs-abi": "^0.6.8",
-    "ethereumjs-util": "^6.1.0",
+    "ethereumjs-util": "^7.0.9",
     "ganache-cli": "^6.4.4",
     "ganache-time-traveler": "^1.0.5",
     "hardhat": "^2.0.11",
     "hardhat-contract-sizer": "^2.0.2",
-    "hardhat-deploy": "^0.7.0-beta.44",
+    "hardhat-deploy": "^0.7.0-beta.57",
     "hardhat-typechain": "^0.3.4",
     "husky": "^4.2.3",
     "json2csv": "^5.0.6",
@@ -79,7 +79,7 @@
     "yargs": "^15.3.1"
   },
   "dependencies": {
-    "@chainlink/contracts": "^0.0.10",
+    "@chainlink/contracts": "^0.1.6",
     "@openzeppelin/contracts": "^4.0.0",
     "@openzeppelin/contracts-upgradeable": "^4.0.0",
     "bignumber.js": "^9.0.0",

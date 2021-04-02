@@ -210,7 +210,7 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
             (bool success, bytes memory data) =
                 proxy.staticcall(abi.encodeWithSignature("strictDynamic()"));
             require(
-                success && abi.decode(data, (bool)),
+                success && !abi.decode(data, (bool)),
                 "PROXY_STRICT_DYNAMIC"
             );
 

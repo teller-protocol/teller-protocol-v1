@@ -42,7 +42,9 @@ const deployDapps: DeployFunction = async (hre) => {
   })
 
   for (const data of dappData) {
-    const { address } = await deployDynamicProxy({
+    const {
+      proxy: { address },
+    } = await deployDynamicProxy({
       hre,
       contract: data.contract,
       strictDynamic: false,

@@ -504,10 +504,10 @@ contract LendingPool is LendingPoolInterface, Base, UniSwapper {
     /**
         @notice It calculates the market state values across all markets.
         @notice Returns values that represent the global state across all markets.
-        @return totalSupplied 
-        @return totalBorrowed 
-        @return totalRepaid 
-        @return totalOnLoan 
+        @return totalSupplied
+        @return totalBorrowed
+        @return totalRepaid
+        @return totalOnLoan
      */
     function _getMarketState()
         internal

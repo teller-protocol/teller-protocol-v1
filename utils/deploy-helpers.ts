@@ -69,28 +69,50 @@ export const deployLogic = async (
     name: `${args.contract}_Logic_v${version.toString()}`,
   })
 
-interface DeployDynamicProxyArgs extends DeployArgs {
+interface DeployDynamicProxyArgs extends Omit<DeployArgs, 'args'> {
   strictDynamic: boolean
 }
 
-export const deployDynamicProxy = async (
+interface DeployDynamicProxyReturn<C> {
+  proxy: DynamicProxy
+  contract: C
+}
+
+export const deployDynamicProxy = async <C extends Contract>(
   args: DeployDynamicProxyArgs
-): Promise<DynamicProxy> => {
+): Promise<DeployDynamicProxyReturn<C>> => {
   const {
-    hre: { contracts, ethers },
+    hre: { deployments, contracts, ethers },
   } = args
 
+  // Get the LogicVersionsRegistry and logic name
   const { address: logicRegistryAddress } = await contracts.get(
     'LogicVersionsRegistry'
   )
   const logicName = ethers.utils.id(args.contract)
 
-  return deploy({
+  // Deploy DynamicProxy
+  const proxy = await deploy<DynamicProxy>({
     hre: args.hre,
-    name: args.contract,
+    name: `${args.contract}_DP`,
     contract: 'DynamicProxy',
     args: [logicRegistryAddress, logicName, args.strictDynamic],
   })
+
+  // Save deployment for the underlying contract logic
+  const name = args.name ?? args.contract
+  await deployments.save(name, {
+    ...(await deployments.getExtendedArtifact(args.contract)),
+    address: proxy.address,
+  })
+
+  // Fetch the logic contract instance with the proxy address
+  const contract = (await ethers.getContractAt(
+    args.contract,
+    proxy.address
+  )) as C
+
+  return { proxy, contract }
 }
 
 interface DeploySettingsProxyArgs {

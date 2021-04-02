@@ -1,18 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/utils/Address.sol";
-import "./AddressLib.sol";
-
 /**
     @notice Utility library of inline functions on the Cache struct.
 
     @author develop@teller.finance
  */
 library CacheLib {
-    using AddressLib for address;
-    using Address for address;
-
     enum CacheType { Address, Uint, Int, Byte, Bool }
 
     /**

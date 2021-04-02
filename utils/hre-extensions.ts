@@ -102,14 +102,15 @@ interface Config {
 }
 
 interface AddressData {
-  lendingPools: AddressObj
-  markets: AddressObj
   libraries: AddressObj
-  proxies: AddressObj
+  proxies: AddressObj & {
+    lendingPools: AddressObj
+    loanManagers: AddressObj
+  }
   logics: AddressObj
 }
 interface AddressObj {
-  [name: string]: Address
+  [name: string]: Address | AddressObj
 }
 
 extendEnvironment((hre) => {
@@ -217,10 +218,14 @@ extendEnvironment((hre) => {
     name: string,
     deployment: DeploymentSubmission
   ): Promise<void> => {
-    // Don't save deployment files for specific name (i.e. market and lending pool contracts)
-    const marketsRegex = /^Market_/
-    const lpRegex = /^LP_/
-    if (![marketsRegex, lpRegex].some((regex) => regex.test(name))) {
+    const loanManagerRegex = /^LM_(.+_.+)/
+    const lpRegex = /^LP_(.+)/
+    const logicsRegex = /(.+)_Logic$/
+    const libRegex = /Lib$/
+    const dynamicProxyRegex = /(.+)_DP$/
+
+    // Don't save deployment files for specific name (i.e. LoanManager and LendingPool contracts)
+    if (![loanManagerRegex, lpRegex].some((regex) => regex.test(name))) {
       await originalDeploymentsSave(name, deployment)
     }
 
@@ -233,27 +238,34 @@ extendEnvironment((hre) => {
       data = JSON.parse(await disklet.getText(filePath))
     } catch {
       data = {
-        lendingPools: {},
-        markets: {},
         libraries: {},
-        proxies: {},
+        proxies: {
+          lendingPools: {},
+          loanManagers: {},
+        },
         logics: {},
       }
     }
 
-    if (marketsRegex.test(name)) {
-      const [_, market] = name.match(/^Market_(.+_.+)/)!
-      data.markets![market] = deployment.address
+    if (loanManagerRegex.test(name)) {
+      // Is LoanManager
+      const [_, market] = name.match(loanManagerRegex)!
+      data.proxies.loanManagers[market] = deployment.address
     } else if (lpRegex.test(name)) {
-      const [_, sym] = name.match(/^LP_(.+)/)!
-      data.lendingPools![sym] = deployment.address
-    } else if (/_Logic_v(.+)/.test(name)) {
-      const [_, contractName, version] = name.match(/(.+)_Logic_v(.+)$/)!
-      data.logics[`${contractName}_v${version}`] = deployment.address
-    } else if (/Lib$/.test(name)) {
+      // Is LendingPool
+      const [_, sym] = name.match(lpRegex)!
+      data.proxies.lendingPools[sym] = deployment.address
+    } else if (logicsRegex.test(name)) {
+      // Is logic contract
+      const [_, contractName] = name.match(logicsRegex)!
+      data.logics[contractName] = deployment.address
+    } else if (libRegex.test(name)) {
+      // Is Library
       data.libraries[name] = deployment.address
-    } else {
-      data.proxies[name] = deployment.address
+    } else if (dynamicProxyRegex.test(name)) {
+      // Is DynamicProxy
+      const [_, contractName] = name.match(dynamicProxyRegex)!
+      data.proxies[contractName] = deployment.address
     }
 
     const sortedData: AddressData = sortObject(data)

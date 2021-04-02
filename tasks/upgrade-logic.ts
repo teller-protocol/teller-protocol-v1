@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
-import { LogicVersionsRegistry } from '../types/typechain'
+import { DynamicUpgradeable, LogicVersionsRegistry } from '../types/typechain'
 import { deployLogic } from '../utils/deploy-helpers'
 import { NULL_ADDRESS } from '../utils/consts'
 
@@ -10,13 +10,16 @@ export interface UpgradeLogicArgs {
 }
 
 export async function upgradeLogic(
-  { contract }: UpgradeLogicArgs,
+  args: UpgradeLogicArgs,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> {
-  const { ethers, contracts, getNamedSigner } = hre
+  const { contract: contractName } = args
+  const { ethers, contracts, getNamedSigner, run } = hre
+
+  await run('compile')
 
   const deployer = await getNamedSigner('deployer')
-  const logicName = ethers.utils.id(contract)
+  const logicName = ethers.utils.id(contractName)
 
   const versionRegistry = await contracts.get<LogicVersionsRegistry>(
     'LogicVersionsRegistry',
@@ -30,7 +33,7 @@ export async function upgradeLogic(
     logic: currentLogicAddress,
   } = await versionRegistry.getLogicVersion(logicName)
 
-  process.stdout.write(` * Upgrading ${contract} \n`)
+  process.stdout.write(` * Upgrading ${contractName} \n`)
   process.stdout.write(`   * Latest version: ${latestVersion} \n`)
   process.stdout.write(
     `   * Current version: ${currentVersion} at ${currentLogicAddress} \n`
@@ -40,18 +43,30 @@ export async function upgradeLogic(
   const { address: newLogicAddress } = await deployLogic(
     {
       hre,
-      contract,
+      contract: contractName,
     },
     newVersion
   )
 
+  // Try to get the proxy address if there is one
+  let proxyAddress = NULL_ADDRESS
+  await contracts
+    .get<DynamicUpgradeable>(contractName)
+    .then(async (contract) => {
+      const isStrict = await contract.strictDynamic()
+      if (!isStrict) {
+        proxyAddress = contract.address
+      }
+    })
+    .catch(() => {})
+
   if (newLogicAddress === currentLogicAddress) {
-    console.error(`${contract} hasn't changed, aborting`)
+    console.error(`${contractName} hasn't changed, aborting`)
   } else {
     await versionRegistry.upgradeLogicVersion(
       logicName,
       newLogicAddress,
-      NULL_ADDRESS
+      proxyAddress
     )
 
     process.stdout.write(

@@ -72,6 +72,12 @@ const deployLogicContracts: DeployFunction = async (hre) => {
     {
       contract: 'PoolTogetherDapp',
     },
+    {
+      contract: 'NFTFactory',
+    },
+    {
+      contract: 'TellerNFT',
+    },
   ]
 
   console.log('********** Logic Contracts **********')

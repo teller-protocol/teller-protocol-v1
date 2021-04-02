@@ -41,7 +41,7 @@ const createMarkets: DeployFunction = async (hre) => {
         address: await marketRegistry.lendingPools(lendingTokenAddress),
       })
 
-      await deployments.save(`Market_${borrowedToken}_${collateralToken}`, {
+      await deployments.save(`LM_${borrowedToken}_${collateralToken}`, {
         ...(await deployments.getExtendedArtifact('LoanManager')),
         address: await marketRegistry.loanManagers(
           lendingTokenAddress,
@@ -64,13 +64,6 @@ const createMarkets: DeployFunction = async (hre) => {
     if (!isRegistered) {
       await addSigners(market, hre)
     }
-
-    console.log(`
-    * Pair:           ${borrowedToken}/${collateralToken}
-    * Lending Pool:   ${market.lendingPool.address}
-    * Loans:          ${market.loanManager.address}
-    * TToken:         ${market.tToken.address} (t${borrowedToken})
-    `)
   }
 }
 

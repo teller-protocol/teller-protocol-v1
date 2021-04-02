@@ -42,30 +42,6 @@ export default <HardhatUserConfig>{
   solidity: {
     compilers: [
       {
-        version: '0.5.17',
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-            details: {
-              // Removes duplicate code blocks
-              deduplicate: true,
-              // Common subexpression elimination, this is the most complicated step but
-              // can also provide the largest gain.
-              cse: true,
-              // Optimize representation of literal numbers and strings in code.
-              constantOptimizer: true,
-              // Sometimes re-orders literals in commutative operations.
-              orderLiterals: true,
-              // The new Yul optimizer. Mostly operates on the code of ABIEncoderV2
-              // and inline assembly. Had to be activated through this switch for
-              // pre Solidity 0.6.0
-              yul: true,
-            },
-          },
-        },
-      },
-      {
         version: '0.8.3',
         settings: {
           optimizer: {
@@ -81,10 +57,6 @@ export default <HardhatUserConfig>{
               constantOptimizer: true,
               // Sometimes re-orders literals in commutative operations.
               orderLiterals: true,
-              // The new Yul optimizer. Mostly operates on the code of ABIEncoderV2
-              // and inline assembly. Had to be activated through this switch for
-              // pre Solidity 0.6.0
-              yul: true,
             },
           },
         },
