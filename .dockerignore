@@ -1,8 +1,0 @@
-.idea
-.git
-node_modules
-coverage
-build
-.env
-*/**/.env
-test-integration/resources/data/*
