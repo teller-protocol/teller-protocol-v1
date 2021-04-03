@@ -4,11 +4,12 @@ pragma experimental ABIEncoderV2;
 
 library s_Domain {
     struct Layout {
-        ;
+        bool notEntered;
+        bool paused;
     }
 
     bytes32 internal constant POSITION =
-        keccak256("teller_protocol.storage.domain.standard");
+        keccak256("teller_protocol.storage.domain");
 
     function get() internal pure returns (Layout storage l_) {
         bytes32 position = POSITION;

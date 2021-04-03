@@ -6,7 +6,7 @@ import "../structs/Cache.sol";
 
 library s_AccessControl {
     struct Layout {
-        mapping(address => mapping(uint8 => uint256)) userRoleDomain;
+        mapping(address => mapping(uint8 => mapping(uint256 => bool))) userRoleDomain;
     }
 
     bytes32 internal constant POSITION =

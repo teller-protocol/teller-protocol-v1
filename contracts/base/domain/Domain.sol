@@ -1,40 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { Diamond } from "../diamond/Diamond.sol";
+import { LibDiamond } from "../diamond/libraries/LibDiamond.sol";
+import { BaseDomain } from "./BaseDomain.sol";
 import { Roles } from "../../enums/Roles.sol";
+import { Errors } from "../../enums/Errors.sol";
 import { s_Domain } from "../../storage/Domain.sol";
 
 contract Domain is BaseDomain {
+    /** Keep ref to main protocol contract address */
     address public immutable PROTOCOL;
 
     constructor(address protocol) BaseDomain(msg.sender) {
         PROTOCOL = protocol;
-        diamondCut
+        LibDiamond.diamondCut();
     }
-}
-
-/**
-  Protocol, LendingPool, etc. all inherit from this base set of functions
- */
-abstract contract BaseDomain is Diamond {
-    address public constant OWNERSHIP_FACET = 0x0;
-    address public constant DIAMONDLOUPE_FACET = 0x0;
-    address public constant DIAMONDCUT_FACET = 0x0;
-
-    constructor(address owner)
-        Diamond(
-            [IDiamondCut.FacetCut(
-                OWNERSHIP_FACET,
-                action,
-                [
-                    OwnershipFacet.transferOwnership.selector,
-                    OwnershipFacet.owner.selector
-                ]
-            )],
-            IDiamondCut.Args(owner)
-        )
-    {}
 
     /**
     TODO: maybe better  place to store this? Pretty sure this is only available to
@@ -51,7 +31,8 @@ abstract contract BaseDomain is Diamond {
     }
 
     modifier whenNotPaused {
-        require(!_isPaused(), "PLATFORM_IS_PAUSED");
+        s_Domain.Layout storage layout = s_Domain.get();
+        require(!layout.paused, Errors.PAUSED);
         _;
     }
 

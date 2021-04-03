@@ -7,9 +7,9 @@ abstract contract HasRoleV1 {
     function hasRole(
         uint8 role,
         address account,
-        address domain
+        uint8 domain
     ) external view returns (bool hasRole_) {
         s_AccessControl.Layout storage layout = s_AccessControl.get();
-        return layout.attributed[role][domain][account];
+        return layout.userRoleDomain[account][role][domain];
     }
 }
