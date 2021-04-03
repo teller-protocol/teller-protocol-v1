@@ -20,11 +20,9 @@
     "console:localhost": "yarn hardhat console --network localhost",
     "console:mainnet": "yarn hardhat console --network mainnet",
     "compile": "yarn contract:compile && yarn types && yarn tsc",
-    "types": "yarn typechain --target ethers-v5 --outDir types/typechain 'artifacts/!(build-info)/**/+([a-zA-Z0-9]).json'",
-    "format:prettier": "prettier --write contracts/**/**/**/**/**/**.sol",
-    "format:prettier:print": "prettier contracts/**/**/**/**/**/**.sol"
+    "types": "yarn typechain --target ethers-v5 --outDir types/typechain 'artifacts/!(build-info)/**/+([a-zA-Z0-9]).json'"
   },
-  "devDependencies": {
+  "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.1",
     "@nomiclabs/hardhat-etherscan": "^2.1.0",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
@@ -55,16 +53,15 @@
     "solidity-coverage": "^0.7.14",
     "ts-node": "^9.1.1",
     "typechain": "^4.0.1",
-    "typescript": "^4.1.3"
-  },
-  "dependencies": {
-    "@chainlink/contracts": "^0.1.6",
-    "@openzeppelin/contracts": "^4.0.0",
-    "@openzeppelin/contracts-upgradeable": "^4.0.0",
+    "typescript": "^4.1.3",
     "chai-as-promised": "^7.1.1",
     "disklet": "^0.4.6",
     "ethers": "^5.0.26",
-    "hardhat-gas-reporter": "^1.0.4"
+    "hardhat-gas-reporter": "^1.0.4",
+    "ts-generator": "^0.1.1",
+    "@chainlink/contracts": "^0.1.6",
+    "@openzeppelin/contracts": "^4.0.0",
+    "@openzeppelin/contracts-upgradeable": "^4.0.0"
   },
   "husky": {
     "hooks": {
@@ -72,13 +69,7 @@
     }
   },
   "lint-staged": {
-    "*.sol": [
-      "prettier --write"
-    ],
-    "*.{js,ts}": [
-      "prettier --write"
-    ],
-    "*.{json,md}": [
+    "*.{sol,js,ts,json,md}": [
       "prettier --write"
     ]
   }
