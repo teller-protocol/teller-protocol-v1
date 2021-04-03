@@ -12,7 +12,8 @@
       "options": {
         "tabWidth": 4,
         "singleQuote": false,
-        "explicitTypes": "always"
+        "explicitTypes": "always",
+        "semi": true
       }
     },
     {

@@ -6,7 +6,6 @@
     "event-name-camelcase": "error",
     "var-name-mixedcase": "warn",
     "modifier-name-mixedcase": "error",
-    "contract-name-camelcase": "error",
     "const-name-snakecase": "error",
     "visibility-modifier-order": "error",
     "func-visibility": ["error", { "ignoreConstructors": true }],
@@ -18,6 +17,5 @@
     "no-complex-fallback": "warn",
     "check-send-result": "warn",
     "reentrancy": "warn"
-  },
-  "plugins": ["prettier"]
+  }
 }

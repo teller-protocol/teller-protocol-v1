@@ -1,7 +1,7 @@
-import { HardhatRuntimeEnvironment } from 'hardhat/types'
-import { Libraries } from 'hardhat-deploy/types'
 import { BigNumberish, Contract } from 'ethers'
-
+import { contracts, deployments } from 'hardhat'
+import { Libraries } from 'hardhat-deploy/types'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DynamicProxy, SettingsDynamicProxy } from '../types/typechain'
 
 export interface DeployArgs {
@@ -11,6 +11,42 @@ export interface DeployArgs {
   libraries?: Libraries
   args?: any[]
   mock?: boolean
+}
+
+type DeployDeterministicFacetArgs = {
+  version: string
+  salt?: string
+  libraries: Libraries
+}
+export const deployDeterministic = async <C extends Contract>(
+  args: DeployDeterministicFacetArgs
+) => {
+  const {
+    deployments: { deploy, getOrNull },
+    getNamedAccounts,
+    ethers,
+  } = await import('hardhat')
+
+  const { deployer } = await getNamedAccounts()
+
+  const id = `${args.contract}_${args.version}`
+
+  // Base contract identifier (root of inheritance) + version of the impl.
+  // Every contract should be in its dedicated folder.
+  const existing = await deployments.get(id)
+
+  if (existing) return await contracts.get(id)
+
+  const deployment = await deployments.deterministic(args.contract, {
+    // What makes the address is the bytecode + deployer address + salt.
+    // We should use the same salt.
+    from: deployer,
+    contract: args.contract,
+    salt: args.salt,
+    libraries: args.libraries,
+  })
+
+  return await contracts.get()
 }
 
 export const deploy = async <C extends Contract>(
