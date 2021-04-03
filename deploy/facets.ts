@@ -1,23 +1,24 @@
-import { artifacts } from 'hardhat'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-const facets: DeployFunction = async (hre) => {
+const phillip: DeployFunction = async (hre) => {
   const { getNamedAccounts, deployments, contracts, ethers, network } = hre
   const { deployer } = await getNamedAccounts()
 
-  await deployments.deterministic('OwnershipFacet_v1', {
+  const tellerProtocol = await deployments.diamond.deploy('Phillip', {
     from: deployer,
-    salt: process.env.SALT,
-    contract: artifacts.
+    deterministicSalt: '111',
+    facets: ['ctx_AccessControl_v2'],
+    execute: {
+      methodName: 'initialize',
+      args: ['message'],
+    },
   })
 
-  const tellerProtocol = await deployments.deploy('TellerProtocol_v1', {
-    from: deployer,
-  })
+  console.log(tellerProtocol.address)
 
   // const chainlinkAggregator = await deployments.save('PriceAggregator_v1', {
   // })
 }
 
-export default facets
-facets.tags = ['facets']
+export default phillip
+phillip.tags = ['phillip']

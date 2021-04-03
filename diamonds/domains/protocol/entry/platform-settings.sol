@@ -3,22 +3,34 @@ pragma solidity ^0.8.0;
 
 import "../internal/asset-setting-names.sol";
 import "../internal/roles.sol";
+import "../internal/platform-settings.sol";
 import "../../../contexts/#access-control/modifiers/authorized.sol";
 import "../../../contexts/#access-control/storage.sol";
-import "../storage.sol";
-import "../../../../contracts/providers/compound/CErc20Interface.sol";
+import "../storage/platform-settings.sol";
+import "../storage/asset-settings.sol";
+import "../storage/asset-registry.sol";
+import "../data.sol";
+import "../libraries/PlatformSettingsLib.sol";
+import "../interfaces/IPlatformSettings.sol";
+import "../internal/setting-names.sol";
+import "../../../providers/compound/CErc20Interface.sol";
+import "../libraries/AddressArrayLib.sol";
 import "../libraries/CacheLib.sol";
-import "../interfaces/AssetSettingsInterface.sol";
 
-abstract contract ent_AssetSettings_v1 is
-    AssetSettingNames,
+abstract contract ent_PlatformSettings_v1 is
     Roles,
     sto_AccessControl_v1,
     mod_authorized_AccessControl_v1,
+    sto_PlatformSettings_v1,
     sto_AssetSettings_v1,
-    sto_AssetRegistry_v1,
-    AssetSettingsInterface
+    SettingNames_v1,
+    IPlatformSettings,
+    AssetSettingNames,
+    IAssetSettings,
+    sto_AssetRegistry_v1
 {
+    using AddressArrayLib for AddressArrayLib.AddressArray;
+    using AddressLib for address;
     using CacheLib for CacheLib.Cache;
 
     /**
@@ -36,13 +48,10 @@ abstract contract ent_AssetSettings_v1 is
         uint256 maxTVLAmount,
         uint256 maxDebtRatio
     ) external override authorized(PAUSER, msg.sender) {
-        require(assetAddress != address(0x0), "ASSET_ADDRESS_REQUIRED");
-        require(cTokenAddress != address(0x0), "CTOKEN_ADDRESS_REQUIRED");
+        assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
+        cTokenAddress.requireNotEmpty("CTOKEN_ADDRESS_REQUIRED");
 
-        if (
-            assetAddress !=
-            sto_AssetRegistry_v1.getAssetRegistry().addresses["ETH"]
-        ) {
+        if (assetAddress != getAssetRegistry().addresses["ETH"]) {
             (bool success, bytes memory decimalsData) =
                 assetAddress.staticcall(abi.encodeWithSignature("decimals()"));
             require(
@@ -55,7 +64,9 @@ abstract contract ent_AssetSettings_v1 is
             );
         }
 
-        s().assets[assetAddress].initialize();
+        CacheLib.Cache storage cache = s().assets[assetAddress];
+
+        cache.initialize();
         s().assets[assetAddress].updateAddress(
             CTOKEN_ADDRESS_ASSET_SETTING,
             cTokenAddress
@@ -97,7 +108,7 @@ abstract contract ent_AssetSettings_v1 is
         override
         authorized(PAUSER, msg.sender)
     {
-        require(cTokenAddress != address(0x0), "CTOKEN_ADDRESS_REQUIRED");
+        cTokenAddress.requireNotEmpty("CTOKEN_ADDRESS_REQUIRED");
         address oldCTokenAddress =
             s().assets[assetAddress].addresses[CTOKEN_ADDRESS_ASSET_SETTING];
 
@@ -141,7 +152,7 @@ abstract contract ent_AssetSettings_v1 is
         override
         returns (address)
     {
-        require(assetAddress != address(0x0), "ASSET_ADDRESS_REQUIRED");
+        assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
 
         return
             s().assets[assetAddress].addresses[
@@ -159,7 +170,7 @@ abstract contract ent_AssetSettings_v1 is
         override
         authorized(PAUSER, msg.sender)
     {
-        require(aTokenAddress != address(0x0), "ATOKEN_ADDRESS_REQUIRED");
+        aTokenAddress.requireNotEmpty("ATOKEN_ADDRESS_REQUIRED");
         address oldATokenAddress =
             s().assets[assetAddress].addresses[ATOKEN_ADDRESS_ASSET_SETTING];
 
@@ -188,7 +199,7 @@ abstract contract ent_AssetSettings_v1 is
         override
         returns (address)
     {
-        require(assetAddress != address(0x0), "ASSET_ADDRESS_REQUIRED");
+        assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
 
         return s().assets[assetAddress].addresses[ATOKEN_ADDRESS_ASSET_SETTING];
     }
@@ -202,11 +213,7 @@ abstract contract ent_AssetSettings_v1 is
         address assetAddress,
         address prizePoolAddress
     ) external override authorized(PAUSER, msg.sender) {
-        require(
-            prizePoolAddress != address(0x0),
-            "PRIZE_POOL_ADDRESS_REQUIRED"
-        );
-
+        prizePoolAddress.requireNotEmpty("PRIZE_POOL_ADDRESS_REQUIRED");
         address oldPrizePoolAddress =
             s().assets[assetAddress].addresses[
                 PRIZE_POOL_ADDRESS_ASSET_SETTING
@@ -224,6 +231,25 @@ abstract contract ent_AssetSettings_v1 is
             oldPrizePoolAddress,
             prizePoolAddress
         );
+    }
+
+    /**
+      @notice It returns the pool together prize pool address associated with an asset.
+      @param assetAddress asset address to get the associated aToken for.
+      @return The associated prize pool address
+      */
+    function getPrizePoolAddress(address assetAddress)
+        external
+        view
+        override
+        returns (address)
+    {
+        assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
+
+        return
+            s().assets[assetAddress].addresses[
+                PRIZE_POOL_ADDRESS_ASSET_SETTING
+            ];
     }
 
     /**
@@ -252,6 +278,21 @@ abstract contract ent_AssetSettings_v1 is
             oldMaxLoanAmount,
             newMaxLoanAmount
         );
+    }
+
+    /**
+      @notice Returns the max loan amount for a given asset.
+      @param assetAddress asset address to retrieve the max loan amount.
+      */
+    function getMaxLoanAmount(address assetAddress)
+        external
+        view
+        override
+        returns (uint256)
+    {
+        s().assets[assetAddress].requireExists();
+
+        return s().assets[assetAddress].uints[MAX_LOAN_AMOUNT_ASSET_SETTING];
     }
 
     /**
@@ -380,7 +421,7 @@ abstract contract ent_AssetSettings_v1 is
     function s()
         internal
         pure
-        returns (sto_AssetSettings_v1.Layout storage l_)
+        returns (sto_AssetSettings_v1.AssetSettingsLayout storage l_)
     {
         l_ = sto_AssetSettings_v1.getAssetSettings();
     }
