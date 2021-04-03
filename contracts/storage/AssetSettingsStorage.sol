@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 
 library AssetSettingsStorage {
     struct AssetSettingsStorage {
-        mapping(address => CacheLib.Cache) assets;
+        mapping(address => Cache) assets;
     }
 
     struct Cache {
