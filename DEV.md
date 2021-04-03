@@ -15,3 +15,5 @@ The BEST medium article is this one:
 https://medium.com/1milliondevs/solidity-storage-layout-for-proxy-contracts-and-diamonds-c4f009b6903
 
 https://medium.com/1milliondevs/new-storage-layout-for-proxy-contracts-and-diamonds-98d01d0eadb
+
+TODO: NO COLISIONS TESTS I MAKE ERRORS

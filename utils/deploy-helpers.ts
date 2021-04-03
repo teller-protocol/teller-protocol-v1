@@ -14,6 +14,7 @@ export interface DeployArgs {
 }
 
 type DeployDeterministicFacetArgs = {
+  contract: string
   version: string
   salt?: string
   libraries: Libraries
