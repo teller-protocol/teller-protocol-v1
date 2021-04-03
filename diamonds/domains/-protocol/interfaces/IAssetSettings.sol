@@ -8,7 +8,7 @@ import "../libraries/CacheLib.sol";
 
     @author develop@teller.finance
  */
-interface AssetSettingsInterface {
+interface IAssetSettings {
     /**
         @notice This event is emitted when a new asset settings is created.
         @param sender the transaction sender address.

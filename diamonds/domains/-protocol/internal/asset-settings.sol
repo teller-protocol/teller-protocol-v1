@@ -8,7 +8,7 @@ import "../storage/asset-settings.sol";
 import "../storage/asset-registry.sol";
 import "../../../../contracts/providers/compound/CErc20Interface.sol";
 import "../libraries/CacheLib.sol";
-import "../interfaces/AssetSettingsInterface.sol";
+import "../interfaces/IAssetSettings.sol";
 
 abstract contract AssetSettingsManagement is
     Roles,

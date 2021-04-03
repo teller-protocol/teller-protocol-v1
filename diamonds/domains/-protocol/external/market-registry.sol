@@ -22,9 +22,10 @@ abstract contract ext_MarketRegistry_v1 is sto_MarketRegistry_v1 {
     function lendingPools(address lendingTokenAddress)
         external
         view
-        returns (address); {
-          return getMarketRegistryStorage().lendingPools[lendingTokenAddress];
-        }
+        returns (address)
+    {
+        return getMarketRegistryStorage().lendingPools[lendingTokenAddress];
+    }
 
     /**
         @notice It maps a lending token and collateral token to the associated LoanManager contract.
@@ -36,7 +37,10 @@ abstract contract ext_MarketRegistry_v1 is sto_MarketRegistry_v1 {
         address lendingTokenAddress,
         address collateralTokenAddress
     ) external view returns (address) {
-      return getMarketRegistryStorage().loanManagers[lendingTokenAddress][collateralTokenAddress];
+        return
+            getMarketRegistryStorage().loanManagers[lendingTokenAddress][
+                collateralTokenAddress
+            ];
     }
 
     /**
@@ -59,8 +63,7 @@ abstract contract ext_MarketRegistry_v1 is sto_MarketRegistry_v1 {
         address lendingTokenAddress,
         address collateralTokenAddress
     ) external view virtual returns (bool exists) {
-        (exists, ) = getMarketRegistryStorage().markets[lendingTokenAddress].getIndex(
-            collateralTokenAddress
-        );
+        (exists, ) = getMarketRegistryStorage().markets[lendingTokenAddress]
+            .getIndex(collateralTokenAddress);
     }
 }
