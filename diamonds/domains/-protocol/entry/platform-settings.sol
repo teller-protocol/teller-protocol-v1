@@ -7,18 +7,15 @@ import "../../../contexts/#access-control/modifiers/authorized.sol";
 import "../../../contexts/#access-control/storage.sol";
 import "../storage.sol";
 import "../data.sol";
-import "../../../../contracts/providers/compound/CErc20Interface.sol";
-import "../libraries/CacheLib.sol";
-import "../interfaces/IAssetSettings.sol";
+import "../libraries/PlatformSettingsLib.sol";
+import "../interfaces/IPlatformSettings.sol";
 
-abstract contract ent_AssetSettings_v1 is
-    AssetSettingNames,
+abstract contract ent_PlatformSettings_v1 is
     Roles,
     sto_AccessControl_v1,
     mod_authorized_AccessControl_v1,
-    sto_AssetSettings_v1,
-    dat_AssetSettings_v1,
-    sto_AssetRegistry_v1
+    sto_PlatformSettings_v1,
+    dat_PlatformSettings_v1
 {
     /**
       @notice It returns the cToken address associated with an asset.
