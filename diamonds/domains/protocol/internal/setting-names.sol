@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
 abstract contract SettingNames_v1 {
     /**
         @dev The setting name for the required subsmission settings.

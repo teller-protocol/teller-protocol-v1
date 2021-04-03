@@ -18,7 +18,7 @@ abstract contract ent_AssetSettings_v1 is
     mod_authorized_AccessControl_v1,
     sto_AssetSettings_v1,
     sto_AssetRegistry_v1,
-    AssetSettingsInterface
+    IAssetSettings
 {
     using CacheLib for CacheLib.Cache;
 
@@ -381,7 +381,7 @@ abstract contract ent_AssetSettings_v1 is
     function s()
         internal
         pure
-        returns (sto_AssetSettings_v1.Layout storage l_)
+        returns (sto_AssetSettings_v1.AssetSettingsLayout storage l_)
     {
         l_ = sto_AssetSettings_v1.getAssetSettings();
     }

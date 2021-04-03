@@ -7,7 +7,7 @@ import "../libraries/PlatformSettingsLib.sol";
 // Interfaces
 import "./IDappRegistry.sol";
 import "./IPriceAggregator.sol";
-import "./AssetSettingsInterface.sol";
+import "./IAssetSettings.sol";
 import "./IMarketFactory.sol";
 
 /**
@@ -15,7 +15,7 @@ import "./IMarketFactory.sol";
 
     @author develop@teller.finance
  */
-interface SettingsInterface {
+interface ISettings {
     /**
      * @dev Emitted when the pause is triggered by a pauser (`account`).
      */
@@ -123,7 +123,7 @@ interface SettingsInterface {
         uint256 maxValue
     ) external;
 
-    function assetSettings() external view returns (AssetSettingsInterface);
+    function assetSettings() external view returns (IAssetSettings);
 
     /**
      * @notice It holds the address of a deployed InitializeableDynamicProxy contract.
@@ -343,46 +343,4 @@ interface SettingsInterface {
         @notice It is the global instance of the MarketFactory contract.
      */
     function marketFactory() external view returns (IMarketFactory);
-
-    /**
-        @notice Gets the cToken address for a given asset address.
-        @param assetAddress token address.
-        @return the cToken address for a given asset address.
-     */
-    function getCTokenAddress(address assetAddress)
-        external
-        view
-        returns (address);
-
-    /**
-        @notice It initializes this settings contract instance.
-        @param wethTokenAddress canonical WETH token address.
-        @param cethTokenAddress compound CETH token address.
-        @param initDynamicProxyAddress Address of a deployed InitializeableDynamicProxy contract.
-        @param uniswapV2RouterAddress Address of the UniswapV2Router instance to use for the platform.
-     */
-    function initialize(
-        address wethTokenAddress,
-        address cethTokenAddress,
-        address initDynamicProxyAddress,
-        address uniswapV2RouterAddress
-    ) external;
-
-    /**
-        @notice It gets the ETH address used in the platform.
-        @return the ETH address used in the platform.
-     */
-    function ETH_ADDRESS() external view returns (address);
-
-    /**
-        @notice It gets the canonical WETH address used in the platform.
-        @return the canonical WETH address used in the platform.
-     */
-    function WETH_ADDRESS() external view returns (address);
-
-    /**
-        @notice It gets the canonical CETH address used in the platform.
-        @return the canonical CETH address used in the platform.
-     */
-    function CETH_ADDRESS() external view returns (address);
 }

@@ -1,6 +1,15 @@
-import "../storage/market-registry.sol";
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
-abstract contract ext_MarketRegistry_v1 is sto_MarketRegistry_v1 {
+import "../storage/market-registry.sol";
+import "../internal/market-registry.sol";
+
+abstract contract ext_MarketRegistry_v1 is
+    sto_MarketRegistry_v1,
+    int_MarketRegistry_v1
+{
+    using AddressArrayLib for AddressArrayLib.AddressArray;
+
     /**
         @notice It fetches an array of collateral tokens that a given lending token supports.
         @param lendingTokenAddress a token that the protocol lends.
@@ -52,7 +61,12 @@ abstract contract ext_MarketRegistry_v1 is sto_MarketRegistry_v1 {
     function loanManagerRegistry(
         address lendingPoolAddress,
         address loanManagerAddress
-    ) external view returns (bool);
+    ) external view returns (bool) {
+        return
+            getMarketRegistryStorage().loanManagerRegistry[lendingPoolAddress][
+                loanManagerAddress
+            ];
+    }
 
     /**
         @notice It checks if a market already exists.
@@ -63,7 +77,6 @@ abstract contract ext_MarketRegistry_v1 is sto_MarketRegistry_v1 {
         address lendingTokenAddress,
         address collateralTokenAddress
     ) external view virtual returns (bool exists) {
-        (exists, ) = getMarketRegistryStorage().markets[lendingTokenAddress]
-            .getIndex(collateralTokenAddress);
+        return _marketExists(lendingTokenAddress, collateralTokenAddress);
     }
 }

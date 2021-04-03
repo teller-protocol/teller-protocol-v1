@@ -3,35 +3,35 @@ pragma solidity ^0.8.0;
 
 import "../internal/asset-setting-names.sol";
 import "../internal/roles.sol";
+import "../internal/platform-settings.sol";
 import "../../../contexts/#access-control/modifiers/authorized.sol";
 import "../../../contexts/#access-control/storage.sol";
-import "../storage.sol";
+import "../storage/platform-settings.sol";
+import "../storage/asset-settings.sol";
+import "../storage/asset-registry.sol";
 import "../data.sol";
 import "../libraries/PlatformSettingsLib.sol";
 import "../interfaces/IPlatformSettings.sol";
+import "../internal/setting-names.sol";
+import "../../../providers/compound/CErc20Interface.sol";
+import "../libraries/AddressArrayLib.sol";
+import "../libraries/CacheLib.sol";
 
 abstract contract ent_PlatformSettings_v1 is
     Roles,
     sto_AccessControl_v1,
     mod_authorized_AccessControl_v1,
     sto_PlatformSettings_v1,
-    dat_PlatformSettings_v1
+    sto_AssetSettings_v1,
+    SettingNames_v1,
+    IPlatformSettings,
+    AssetSettingNames,
+    IAssetSettings,
+    sto_AssetRegistry_v1
 {
-    /**
-      @notice It returns the cToken address associated with an asset.
-      @param assetAddress asset address to get the associated cToken for.
-      @return The associated cToken address
-      */
-    function getCTokenAddress(address assetAddress)
-        external
-        view
-        override
-        returns (address)
-    {
-        assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
-
-        return s().assets[assetAddress].addresses[CTOKEN_ADDRESS_ASSET_SETTING];
-    }
+    using AddressArrayLib for AddressArrayLib.AddressArray;
+    using AddressLib for address;
+    using CacheLib for CacheLib.Cache;
 
     /**
       @notice It creates an asset with the given parameters.
@@ -47,14 +47,11 @@ abstract contract ent_PlatformSettings_v1 is
         uint256 maxLoanAmount,
         uint256 maxTVLAmount,
         uint256 maxDebtRatio
-    ) external override authorized(PAUSER) {
+    ) external override authorized(PAUSER, msg.sender) {
         assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
         cTokenAddress.requireNotEmpty("CTOKEN_ADDRESS_REQUIRED");
 
-        if (
-            assetAddress !=
-            sto_AssetRegistry_v1.getAssetRegistry().addresses["ETH"]
-        ) {
+        if (assetAddress != getAssetRegistry().addresses["ETH"]) {
             (bool success, bytes memory decimalsData) =
                 assetAddress.staticcall(abi.encodeWithSignature("decimals()"));
             require(
@@ -67,7 +64,9 @@ abstract contract ent_PlatformSettings_v1 is
             );
         }
 
-        s().assets[assetAddress].initialize();
+        CacheLib.Cache storage cache = s().assets[assetAddress];
+
+        cache.initialize();
         s().assets[assetAddress].updateAddress(
             CTOKEN_ADDRESS_ASSET_SETTING,
             cTokenAddress
@@ -107,7 +106,7 @@ abstract contract ent_PlatformSettings_v1 is
     function updateCTokenAddress(address assetAddress, address cTokenAddress)
         external
         override
-        authorized(PAUSER)
+        authorized(PAUSER, msg.sender)
     {
         cTokenAddress.requireNotEmpty("CTOKEN_ADDRESS_REQUIRED");
         address oldCTokenAddress =
@@ -135,7 +134,7 @@ abstract contract ent_PlatformSettings_v1 is
     function updateYVaultAddressSetting(
         address assetAddress,
         address yVaultAddress
-    ) external override authorized(PAUSER) {
+    ) external override authorized(PAUSER, msg.sender) {
         s().assets[assetAddress].updateAddress(
             YEARN_VAULT_ADDRESS_ASSET_SETTING,
             yVaultAddress
@@ -169,7 +168,7 @@ abstract contract ent_PlatformSettings_v1 is
     function updateATokenAddress(address assetAddress, address aTokenAddress)
         external
         override
-        authorized(PAUSER)
+        authorized(PAUSER, msg.sender)
     {
         aTokenAddress.requireNotEmpty("ATOKEN_ADDRESS_REQUIRED");
         address oldATokenAddress =
@@ -213,7 +212,7 @@ abstract contract ent_PlatformSettings_v1 is
     function updatePrizePoolAddress(
         address assetAddress,
         address prizePoolAddress
-    ) external override authorized(PAUSER) {
+    ) external override authorized(PAUSER, msg.sender) {
         prizePoolAddress.requireNotEmpty("PRIZE_POOL_ADDRESS_REQUIRED");
         address oldPrizePoolAddress =
             s().assets[assetAddress].addresses[
@@ -261,7 +260,7 @@ abstract contract ent_PlatformSettings_v1 is
     function updateMaxLoanAmount(address assetAddress, uint256 newMaxLoanAmount)
         external
         override
-        authorized(PAUSER)
+        authorized(PAUSER, msg.sender)
     {
         s().assets[assetAddress].requireExists();
         uint256 oldMaxLoanAmount =
@@ -322,7 +321,7 @@ abstract contract ent_PlatformSettings_v1 is
     function updateMaxTVL(address assetAddress, uint256 newMaxTVLAmount)
         external
         override
-        authorized(PAUSER)
+        authorized(PAUSER, msg.sender)
     {
         s().assets[assetAddress].requireExists();
         if (
@@ -360,7 +359,7 @@ abstract contract ent_PlatformSettings_v1 is
     function updateMaxDebtRatio(address assetAddress, uint256 newMaxDebtRatio)
         external
         override
-        authorized(PAUSER)
+        authorized(PAUSER, msg.sender)
     {
         s().assets[assetAddress].requireExists();
         if (
@@ -396,7 +395,7 @@ abstract contract ent_PlatformSettings_v1 is
     function removeAsset(address assetAddress)
         external
         override
-        authorized(PAUSER)
+        authorized(PAUSER, msg.sender)
     {
         s().assets[assetAddress].requireExists();
         s().assets[assetAddress].clearCache(
@@ -422,7 +421,7 @@ abstract contract ent_PlatformSettings_v1 is
     function s()
         internal
         pure
-        returns (sto_AssetSettings_v1.Layout storage l_)
+        returns (sto_AssetSettings_v1.AssetSettingsLayout storage l_)
     {
         l_ = sto_AssetSettings_v1.getAssetSettings();
     }

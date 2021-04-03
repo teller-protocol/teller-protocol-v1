@@ -82,31 +82,12 @@ interface IAssetSettings {
     ) external;
 
     /**
-     * @notice It checks if the settings have been initialized for an asset address.
-     */
-    function isInitialized(address assetAddress)
-        external
-        view
-        virtual
-        returns (bool);
-
-    /**
         @notice It updates the cToken address associted with an asset.
         @param assetAddress asset address to configure.
         @param cTokenAddress the new cToken address to configure.
      */
     function updateCTokenAddress(address assetAddress, address cTokenAddress)
         external;
-
-    /**
-        @notice It returns the cToken address associted with an asset.
-        @param assetAddress asset address to get the associated cToken for.
-        @return The associated cToken address
-     */
-    function getCTokenAddress(address assetAddress)
-        external
-        view
-        returns (address);
 
     /**
         @notice It updates the yearn vault address associted with an asset.
@@ -235,6 +216,4 @@ interface IAssetSettings {
         @param assetAddress asset address to remove.
      */
     function removeAsset(address assetAddress) external;
-
-    function initialize() external;
 }
