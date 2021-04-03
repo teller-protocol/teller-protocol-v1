@@ -1,5 +1,5 @@
 abstract contract AssetSettingNames {
-      /** Constants */
+    /** Constants */
     /**
           @dev The asset setting name for cToken address settings.
        */

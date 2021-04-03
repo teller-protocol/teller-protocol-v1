@@ -1,21 +1,16 @@
 {
-  "extends": "solhint:default",
+  "extends": "solhint:recommended",
   "rules": {
-    "func-param-name-mixedcase": "error",
-    "func-name-mixedcase": "error",
-    "event-name-camelcase": "error",
-    "var-name-mixedcase": "warn",
-    "modifier-name-mixedcase": "error",
-    "const-name-snakecase": "error",
-    "visibility-modifier-order": "error",
-    "func-visibility": ["error", { "ignoreConstructors": true }],
-    "state-visibility": "error",
-    "ordering": "warn",
-    "quotes": "error",
-    "max-line-length": ["warn", 120],
-    "no-unused-vars": "error",
-    "no-complex-fallback": "warn",
+    "func-visibility": ["warn", { "ignoreConstructors": true }],
     "check-send-result": "warn",
-    "reentrancy": "warn"
-  }
+    "reentrancy": "warn",
+    "quotes": "error",
+    "compiler-version": "off",
+    "contract-name-camelcase": "off",
+    "no-empty-blocks": "off",
+    "func-name-mixedcase": "off",
+    "no-inline-assembly": "off",
+    "var-name-mixedcase": "off"
+  },
+  "plugins": ["prettier"]
 }

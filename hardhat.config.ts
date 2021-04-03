@@ -1,17 +1,15 @@
-import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-ethers'
-import 'hardhat-deploy'
-import 'hardhat-contract-sizer'
+import '@nomiclabs/hardhat-waffle'
 import { config } from 'dotenv'
-import { ethers, BigNumber as BN } from 'ethers'
+import { BigNumber as BN, ethers } from 'ethers'
+import 'hardhat-contract-sizer'
+import 'hardhat-deploy'
+import 'hardhat-gas-reporter'
 import { HardhatUserConfig } from 'hardhat/config'
 import {
   HardhatNetworkHDAccountsUserConfig,
   HardhatNetworkUserConfig,
 } from 'hardhat/types'
-import 'hardhat-gas-reporter'
-// import 'solidity-coverage'
-import 'hardhat-contract-sizer'
 
 if (process.env.COMPILING != 'true') {
   require('./tasks')
@@ -38,6 +36,9 @@ const GAS_PRICE: HardhatNetworkUserConfig['gasPrice'] = process.env
 export default <HardhatUserConfig>{
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
+  },
+  paths: {
+    sources: 'diamonds',
   },
   solidity: {
     compilers: [
