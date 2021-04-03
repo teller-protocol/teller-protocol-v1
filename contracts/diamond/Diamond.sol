@@ -40,10 +40,12 @@ abstract contract Diamond {
 
     // TODO: implement this as the default receive function?
     // OR leave as interface and force implementation.
-    receive() external payable;
+    // prettier-ignore
+    receive() external payable virtual;
 
     // Find facet for function that is called and execute the
     // function if a facet is found and return any value.
+    // solhint-disable-next-line no-complex-fallback
     fallback() external payable {
         LibDiamond.DiamondStorage storage ds;
         bytes32 position = LibDiamond.DIAMOND_STORAGE_POSITION;

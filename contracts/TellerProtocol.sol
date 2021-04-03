@@ -6,6 +6,8 @@ import "./diamond/facets/OwnershipFacet.sol";
 import "./diamond/facets/DiamondCutFacet.sol";
 import "./diamond/facets/DiamondLoupeFacet.sol";
 
+import "./storage/Main.sol";
+
 contract TellerProtocol_v1 is
     Diamond,
     OwnershipFacet,
@@ -16,4 +18,20 @@ contract TellerProtocol_v1 is
         IDiamondCut.FacetCut[] memory _diamondCut,
         DiamondArgs memory _args
     ) payable Diamond(_diamondCut, _args) {}
+
+    receive() external payable override {}
+
+    /**
+        External function with state read.
+     */
+    function whitelisted() external view returns (bool whitelisted_) {
+        whitelisted_ = s().whitelisted[msg.sender];
+    }
+
+    /**
+        Helper function so this contract can access "MainStorage" easily.
+     */
+    function s() internal pure returns (MainStorage.S storage s_) {
+        s_ = MainStorage.s();
+    }
 }
