@@ -13,6 +13,20 @@ export interface DeployArgs {
   mock?: boolean
 }
 
+const decodeContractName = (contract: string) => {
+  const splits = contract.split('_')
+  const version = splits[splits.length - 1]
+  const group = splits[splits.length - 2]
+  const typ = splits[0]
+  const middle = splits[(1, splits.length - 2)]
+  console.log({
+    typ,
+    middle,
+    group,
+    version,
+  })
+}
+
 type DeployDeterministicFacetArgs = {
   contract: string
   version: string
@@ -30,13 +44,13 @@ export const deployDeterministic = async <C extends Contract>(
 
   const { deployer } = await getNamedAccounts()
 
-  const id = `${args.contract}_${args.version}`
+  const {} = decodeContractName(contract)
 
   // Base contract identifier (root of inheritance) + version of the impl.
   // Every contract should be in its dedicated folder.
-  const existing = await deployments.get(id)
+  const existing = await deployments.get(contract)
 
-  if (existing) return await contracts.get(id)
+  if (existing) return await contracts.get(contract)
 
   const deployment = await deployments.deterministic(args.contract, {
     // What makes the address is the bytecode + deployer address + salt.

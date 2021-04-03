@@ -8,7 +8,7 @@ abstract contract sto_AccessControl_v1 {
         keccak256("teller_protocol.storage.asset_settings.v1");
 
     struct Layout_v1 {
-        mapping (bytes32 => dat_AccessControl_v1.RoleData)  roles;
+        mapping(bytes32 => dat_AccessControl_v1.RoleData) roles;
     }
 
     function getv1() internal pure returns (Layout_v1 storage l_) {
@@ -35,7 +35,7 @@ abstract contract sto_AccessControl_v2 is sto_AccessControl_v1 {
     }
 
     function getv2() internal pure returns (Layout_v2 storage l_) {
-        bytes32  position = POSITION_V2;
+        bytes32 position = POSITION_V2;
 
         assembly {
             l_.slot := position

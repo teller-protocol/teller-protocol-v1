@@ -6,7 +6,6 @@ import "../internal/roles.sol";
 import "../../../contexts/#access-control/modifiers/authorized.sol";
 import "../../../contexts/#access-control/storage.sol";
 import "../storage.sol";
-import "../data.sol";
 import "../../../../contracts/providers/compound/CErc20Interface.sol";
 import "../libraries/CacheLib.sol";
 import "../interfaces/IAssetSettings.sol";
@@ -17,24 +16,10 @@ abstract contract ent_AssetSettings_v1 is
     sto_AccessControl_v1,
     mod_authorized_AccessControl_v1,
     sto_AssetSettings_v1,
-    dat_AssetSettings_v1,
-    sto_AssetRegistry_v1
+    sto_AssetRegistry_v1,
+    AssetSettingsInterface
 {
-    /**
-      @notice It returns the cToken address associated with an asset.
-      @param assetAddress asset address to get the associated cToken for.
-      @return The associated cToken address
-      */
-    function getCTokenAddress(address assetAddress)
-        external
-        view
-        override
-        returns (address)
-    {
-        assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
-
-        return s().assets[assetAddress].addresses[CTOKEN_ADDRESS_ASSET_SETTING];
-    }
+    using CacheLib for CacheLib.Cache;
 
     /**
       @notice It creates an asset with the given parameters.
@@ -50,9 +35,9 @@ abstract contract ent_AssetSettings_v1 is
         uint256 maxLoanAmount,
         uint256 maxTVLAmount,
         uint256 maxDebtRatio
-    ) external override authorized(PAUSER) {
-        assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
-        cTokenAddress.requireNotEmpty("CTOKEN_ADDRESS_REQUIRED");
+    ) external override authorized(PAUSER, msg.sender) {
+        require(assetAddress != address(0x0), "ASSET_ADDRESS_REQUIRED");
+        require(cTokenAddress != address(0x0), "CTOKEN_ADDRESS_REQUIRED");
 
         if (
             assetAddress !=
@@ -110,9 +95,9 @@ abstract contract ent_AssetSettings_v1 is
     function updateCTokenAddress(address assetAddress, address cTokenAddress)
         external
         override
-        authorized(PAUSER)
+        authorized(PAUSER, msg.sender)
     {
-        cTokenAddress.requireNotEmpty("CTOKEN_ADDRESS_REQUIRED");
+        require(cTokenAddress != address(0x0), "CTOKEN_ADDRESS_REQUIRED");
         address oldCTokenAddress =
             s().assets[assetAddress].addresses[CTOKEN_ADDRESS_ASSET_SETTING];
 
@@ -138,7 +123,7 @@ abstract contract ent_AssetSettings_v1 is
     function updateYVaultAddressSetting(
         address assetAddress,
         address yVaultAddress
-    ) external override authorized(PAUSER) {
+    ) external override authorized(PAUSER, msg.sender) {
         s().assets[assetAddress].updateAddress(
             YEARN_VAULT_ADDRESS_ASSET_SETTING,
             yVaultAddress
@@ -156,7 +141,7 @@ abstract contract ent_AssetSettings_v1 is
         override
         returns (address)
     {
-        assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
+        require(assetAddress != address(0x0), "ASSET_ADDRESS_REQUIRED");
 
         return
             s().assets[assetAddress].addresses[
@@ -172,9 +157,9 @@ abstract contract ent_AssetSettings_v1 is
     function updateATokenAddress(address assetAddress, address aTokenAddress)
         external
         override
-        authorized(PAUSER)
+        authorized(PAUSER, msg.sender)
     {
-        aTokenAddress.requireNotEmpty("ATOKEN_ADDRESS_REQUIRED");
+        require(aTokenAddress != address(0x0), "ATOKEN_ADDRESS_REQUIRED");
         address oldATokenAddress =
             s().assets[assetAddress].addresses[ATOKEN_ADDRESS_ASSET_SETTING];
 
@@ -203,7 +188,7 @@ abstract contract ent_AssetSettings_v1 is
         override
         returns (address)
     {
-        assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
+        require(assetAddress != address(0x0), "ASSET_ADDRESS_REQUIRED");
 
         return s().assets[assetAddress].addresses[ATOKEN_ADDRESS_ASSET_SETTING];
     }
@@ -216,8 +201,12 @@ abstract contract ent_AssetSettings_v1 is
     function updatePrizePoolAddress(
         address assetAddress,
         address prizePoolAddress
-    ) external override authorized(PAUSER) {
-        prizePoolAddress.requireNotEmpty("PRIZE_POOL_ADDRESS_REQUIRED");
+    ) external override authorized(PAUSER, msg.sender) {
+        require(
+            prizePoolAddress != address(0x0),
+            "PRIZE_POOL_ADDRESS_REQUIRED"
+        );
+
         address oldPrizePoolAddress =
             s().assets[assetAddress].addresses[
                 PRIZE_POOL_ADDRESS_ASSET_SETTING
@@ -238,25 +227,6 @@ abstract contract ent_AssetSettings_v1 is
     }
 
     /**
-      @notice It returns the pool together prize pool address associated with an asset.
-      @param assetAddress asset address to get the associated aToken for.
-      @return The associated prize pool address
-      */
-    function getPrizePoolAddress(address assetAddress)
-        external
-        view
-        override
-        returns (address)
-    {
-        assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
-
-        return
-            s().assets[assetAddress].addresses[
-                PRIZE_POOL_ADDRESS_ASSET_SETTING
-            ];
-    }
-
-    /**
       @notice It updates the max loan amount for a given asset.
       @param assetAddress asset address used to update the max loan amount.
       @param newMaxLoanAmount the new max loan amount to set.
@@ -264,7 +234,7 @@ abstract contract ent_AssetSettings_v1 is
     function updateMaxLoanAmount(address assetAddress, uint256 newMaxLoanAmount)
         external
         override
-        authorized(PAUSER)
+        authorized(PAUSER, msg.sender)
     {
         s().assets[assetAddress].requireExists();
         uint256 oldMaxLoanAmount =
@@ -282,21 +252,6 @@ abstract contract ent_AssetSettings_v1 is
             oldMaxLoanAmount,
             newMaxLoanAmount
         );
-    }
-
-    /**
-      @notice Returns the max loan amount for a given asset.
-      @param assetAddress asset address to retrieve the max loan amount.
-      */
-    function getMaxLoanAmount(address assetAddress)
-        external
-        view
-        override
-        returns (uint256)
-    {
-        s().assets[assetAddress].requireExists();
-
-        return s().assets[assetAddress].uints[MAX_LOAN_AMOUNT_ASSET_SETTING];
     }
 
     /**
@@ -325,7 +280,7 @@ abstract contract ent_AssetSettings_v1 is
     function updateMaxTVL(address assetAddress, uint256 newMaxTVLAmount)
         external
         override
-        authorized(PAUSER)
+        authorized(PAUSER, msg.sender)
     {
         s().assets[assetAddress].requireExists();
         if (
@@ -363,7 +318,7 @@ abstract contract ent_AssetSettings_v1 is
     function updateMaxDebtRatio(address assetAddress, uint256 newMaxDebtRatio)
         external
         override
-        authorized(PAUSER)
+        authorized(PAUSER, msg.sender)
     {
         s().assets[assetAddress].requireExists();
         if (
@@ -399,7 +354,7 @@ abstract contract ent_AssetSettings_v1 is
     function removeAsset(address assetAddress)
         external
         override
-        authorized(PAUSER)
+        authorized(PAUSER, msg.sender)
     {
         s().assets[assetAddress].requireExists();
         s().assets[assetAddress].clearCache(
