@@ -1,3 +1,3 @@
-import { HasRoleV1 } from "./external/has-role/v1.sol";
+import { ext_HasRoleV1 } from "./external/has-role.sol";
 
-contract AccessControl is Domain, HasRoleV1 {}
+contract dom_AccessControl_V1 is bse_DomainV1, ext_HasRoleV1 {}
