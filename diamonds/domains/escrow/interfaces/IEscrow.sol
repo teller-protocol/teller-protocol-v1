@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 // Libraries
 
 // Interfaces
-import { DappData } from "../../protocol/data/dapp.sol";
-import "../loans/ILoanManager.sol";
-import "../loans/ILoanManager.sol";
+import { DappData } from "../data/dapp.sol";
+import "../../market/interfaces/ILoanManager.sol";
+import "../../market/interfaces/ILoanManager.sol";
 
 /**
  * @notice This interface defines all function to allow borrowers interact with their escrow contracts.
