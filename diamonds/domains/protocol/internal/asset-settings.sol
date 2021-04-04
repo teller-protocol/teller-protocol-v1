@@ -14,6 +14,6 @@ abstract contract AssetSettingsManagement is
     Roles,
     AssetSettingNames,
     sto_AccessControl_Roles,
-    sto_AssetSettings_v1,
-    sto_AssetRegistry_v1
+    sto_AssetSettings,
+    sto_AssetRegistry
 {}

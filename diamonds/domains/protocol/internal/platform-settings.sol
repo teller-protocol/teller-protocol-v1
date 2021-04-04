@@ -12,5 +12,5 @@ abstract contract PlatformSettingsManagement is
     Roles,
     sto_AccessControl,
     mod_authorized_AccessControl_v1,
-    sto_PlatformSettings_v1
+    sto_PlatformSettings
 {}

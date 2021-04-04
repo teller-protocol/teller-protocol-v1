@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // Contracts
 import "../storage/dapp-registry.sol";
 
-abstract contract int_DappRegistry_v1 is sto_DappRegistry_v1 {
+abstract contract int_DappRegistry_v1 is sto_DappRegistry {
     /**
      * @notice It tests whether an address is a dapp or not.
      * @param dapp address to test.

@@ -11,15 +11,13 @@ abstract contract sto_PriceAggregator {
         mapping(address => AddressArrayLib.AddressArray) supportedTokens;
     }
 
-    bytes32 internal constant POSITION =
-        keccak256("teller_protocol.storage.price_aggregator");
-
     function priceAggStore()
         internal
         pure
         returns (PriceAggregatorStorage storage s)
     {
-        bytes32 position = POSITION;
+        bytes32 position =
+            keccak256("teller_protocol.storage.price_aggregator");
 
         assembly {
             s.slot := position
