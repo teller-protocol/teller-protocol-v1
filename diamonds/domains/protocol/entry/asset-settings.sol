@@ -8,7 +8,7 @@ import "../../../contexts/#access-control/storage.sol";
 import "../storage/asset-settings.sol";
 import "../storage/asset-registry.sol";
 import "../../../../contracts/providers/compound/CErc20Interface.sol";
-import "../libraries/CacheLib.sol";
+import "../../../libraries/CacheLib.sol";
 import "../interfaces/IAssetSettings.sol";
 
 abstract contract ent_AssetSettings_v1 is

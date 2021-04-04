@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Libraries
-import "../libraries/PlatformSettingsLib.sol";
+import "../../../libraries/PlatformSettingsLib.sol";
 
 // Interfaces
 import "./IDappRegistry.sol";
@@ -342,16 +342,6 @@ interface IPlatformSettings {
         @notice It is the global instance of the MarketFactory contract.
      */
     function marketFactory() external view returns (IMarketFactory);
-
-    /**
-        @notice Gets the cToken address for a given asset address.
-        @param assetAddress token address.
-        @return the cToken address for a given asset address.
-     */
-    function getCTokenAddress(address assetAddress)
-        external
-        view
-        returns (address);
 
     /**
         @notice It initializes this settings contract instance.

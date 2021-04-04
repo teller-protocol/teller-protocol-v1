@@ -10,12 +10,12 @@ import "../storage/platform-settings.sol";
 import "../storage/asset-settings.sol";
 import "../storage/asset-registry.sol";
 import "../data.sol";
-import "../libraries/PlatformSettingsLib.sol";
+import "../../../libraries/PlatformSettingsLib.sol";
 import "../interfaces/IPlatformSettings.sol";
 import "../internal/setting-names.sol";
 import "../../../providers/compound/CErc20Interface.sol";
-import "../libraries/AddressArrayLib.sol";
-import "../libraries/CacheLib.sol";
+import "../../../libraries/AddressArrayLib.sol";
+import "../../../libraries/CacheLib.sol";
 
 abstract contract ent_PlatformSettings_v1 is
     Roles,

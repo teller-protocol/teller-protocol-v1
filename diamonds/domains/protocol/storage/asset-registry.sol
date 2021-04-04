@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../libraries/AddressArrayLib.sol";
+import "../../../libraries/AddressArrayLib.sol";
 
 abstract contract sto_AssetRegistry_v1 {
     using AddressArrayLib for AddressArrayLib.AddressArray;

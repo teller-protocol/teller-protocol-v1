@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Libraries
-import "../libraries/PlatformSettingsLib.sol";
+import "../../../libraries/PlatformSettingsLib.sol";
 
 // Interfaces
 import "./IDappRegistry.sol";

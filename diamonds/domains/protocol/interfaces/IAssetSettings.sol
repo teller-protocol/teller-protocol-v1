@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../libraries/CacheLib.sol";
+import "../../../libraries/CacheLib.sol";
 
 /**
     @notice This interface defines all function to manage the asset settings on the platform.

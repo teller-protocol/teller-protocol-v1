@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../internal/asset-setting-names.sol";
 import "../storage/asset-settings.sol";
-import "../libraries/CacheLib.sol";
+import "../../../libraries/CacheLib.sol";
 
 abstract contract ext_AssetSettings_v1 is
     AssetSettingNames,
