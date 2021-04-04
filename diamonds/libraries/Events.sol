@@ -465,4 +465,8 @@ library Events {
         address loans,
         address lendingPool
     );
+
+    event Claimed(uint256 index, address account, uint256 amount);
+
+    event TierAdded(uint256 index);
 }

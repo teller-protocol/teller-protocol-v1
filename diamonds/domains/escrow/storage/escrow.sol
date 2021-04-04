@@ -8,8 +8,6 @@ import "../../market/interfaces/IMarket.sol";
 import "../../../libraries/AddressArrayLib.sol";
 
 abstract contract sto_Escrow {
-    bytes32 internal constant POSITION = keccak256("escrow.storage");
-
     struct EscrowStorage {
         /**
          * @dev Holds the instance of the associated LoanManager contract for this Escrow loan.
@@ -26,7 +24,7 @@ abstract contract sto_Escrow {
     }
 
     function escrowStore() internal pure returns (EscrowStorage storage s) {
-        bytes32 position = POSITION;
+        bytes32 position = keccak256("escrow.storage");
         assembly {
             s.slot := position
         }
