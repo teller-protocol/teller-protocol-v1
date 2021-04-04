@@ -7,11 +7,11 @@ import "../data/signer.sol";
 import "../storage/loans.sol";
 import "../../protocol/interfaces/IPlatformSettings.sol";
 import "../../protocol/address.sol";
-import "../../../contexts/access-control/internal/authorize.sol";
+import "../../../contexts/access-control/internal/require-authorization.sol";
 
 abstract contract int_processLoanTerms_Market_v1 is
-    int_authorize_AccessControl_v1,
-    sto_Loans
+    sto_Loans,
+    int_requireAuthorization_AccessControl_v1
 {
     using NumbersList for NumbersList.Values;
     using NumbersLib for uint256;
@@ -57,7 +57,8 @@ abstract contract int_processLoanTerms_Market_v1 is
 
         for (uint256 i = 0; i < responses.length; i++) {
             TellerCommon.LoanResponse memory response = responses[i];
-            authorize(SIGNER, response.signer);
+            _requireAuthorization(SIGNER, response.signer);
+
             require(
                 response.consensusAddress == request.consensusAddress,
                 "CONSENSUS_ADDRESS_MISMATCH"

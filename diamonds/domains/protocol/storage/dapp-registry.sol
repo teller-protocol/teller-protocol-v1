@@ -7,7 +7,7 @@ import { Dapp } from "../interfaces/IDappRegistry.sol";
 // Libraries
 import "../../../libraries/AddressArrayLib.sol";
 
-abstract contract sto_DappRegistry_v1 {
+abstract contract sto_DappRegistry {
     struct DappRegistryStorage {
         mapping(address => Dapp) dapps;
         AddressArrayLib.AddressArray list;

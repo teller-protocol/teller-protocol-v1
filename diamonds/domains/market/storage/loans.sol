@@ -6,7 +6,7 @@ import "../../../libraries/TellerCommon.sol";
 import "../../../providers/compound/CErc20Interface.sol";
 
 abstract contract sto_Loans {
-    struct LoansLayout {
+    struct Layout {
         uint256 totalCollateral;
         address lendingToken;
         address collateralToken;
@@ -17,7 +17,7 @@ abstract contract sto_Loans {
         mapping(uint256 => TellerCommon.Loan) loans;
     }
 
-    function getLoansStorage() internal pure returns (LoansLayout storage l_) {
+    function getLoansStorage() internal pure returns (Layout storage l_) {
         bytes32 position = keccak256("teller_protocol.storage.loans");
 
         assembly {

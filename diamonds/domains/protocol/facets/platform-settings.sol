@@ -5,7 +5,7 @@ import "../internal/asset-setting-names.sol";
 import "../internal/roles.sol";
 import "../internal/platform-settings.sol";
 import "../../../contexts/access-control/modifiers/authorized.sol";
-import "../../../contexts/access-control/storage.sol";
+import "../../../contexts/access-control/storage/roles.sol";
 import "../storage/platform-settings.sol";
 import "../storage/asset-settings.sol";
 import "../storage/asset-registry.sol";

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../interfaces/ITToken.sol";
 
-abstract contract sto_lendingPool {
+abstract contract sto_LendingPool {
     struct LendingPoolLayout {
         mapping(string => address) addresses;
         mapping(address => uint256) totalSuppliedUnderlyingLender;
@@ -19,15 +19,12 @@ abstract contract sto_lendingPool {
         uint256 totalInterestEarned;
     }
 
-    bytes32 internal constant LENDING_POOL_POSITION =
-        keccak256("teller_protocol.storage.lending_pool");
-
     function getLendingPool()
         internal
         pure
         returns (LendingPoolLayout storage l_)
     {
-        bytes32 position = LENDING_POOL_POSITION;
+        bytes32 position = keccak256("teller_protocol.storage.lending_pool");
 
         assembly {
             l_.slot := position

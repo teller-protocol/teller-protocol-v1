@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../storage/lending-pool.sol";
 import "../../../providers/compound/CErc20Interface.sol";
 
-abstract contract int_compound_LendingPool_v1 is sto_lendingPool {
+abstract contract int_compound_LendingPool_v1 is sto_LendingPool {
     using SafeERC20 for ERC20;
 
     /**

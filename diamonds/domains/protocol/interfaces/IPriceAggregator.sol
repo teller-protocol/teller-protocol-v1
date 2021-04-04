@@ -68,7 +68,7 @@ interface IPriceAggregator {
         @param src Source token address.
         @param dst Destination token address.
      */
-    function addAggregator(
+    function chainlinkAddAggregator(
         address src,
         address dst,
         address aggregator
@@ -79,7 +79,7 @@ interface IPriceAggregator {
         @param src Source token address.
         @param dst Destination token address.
      */
-    function removeAggregator(address src, address dst) external;
+    function chainlinkRemoveAggregator(address src, address dst) external;
 
     /**
         @notice It removes support for a Chainlink Aggregator.

@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-struct AssetRegistryLayout {
+struct AssetRegistryStorage {
     mapping(string => address) addresses;
+    mapping(address => bool) ctokens;
 }
 
-function getAssetRegistry() pure returns (AssetRegistryLayout storage l_) {
-    bytes32 position = keccak256("teller_protocol.storage.asset_settings.v1");
+function assetRegistryStore() pure returns (AssetRegistryStorage storage s) {
+    bytes32 position = keccak256("teller_protocol.storage.asset_registry");
 
     assembly {
-        l_.slot := position
+        s.slot := position
     }
 }
