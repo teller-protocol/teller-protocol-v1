@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-import { int_get_sto_Loans } from "../internal/get-loans-storage.sol";
-import "../../../libraries/NumbersLib.sol";
 
-abstract contract int_processLoanTerms_Market_v1 is int_get_sto_Loans {
+import { int_get_sto_Loans } from "../internal/get-loans-storage.sol";
+
+import "../../../libraries/NumbersLib.sol";
+import "../../../contexts/access-control/internal/require-authorization.sol";
+
+abstract contract int_processLoanTerms_Market_v1 is
+    int_get_sto_Loans,
+    int_requireAuthorization_AccessControl_v1
+{
     using NumbersLib for uint256;
 
     function processLoanTerms(
@@ -46,7 +52,7 @@ abstract contract int_processLoanTerms_Market_v1 is int_get_sto_Loans {
 
         for (uint256 i = 0; i < responses.length; i++) {
             TellerCommon.LoanResponse memory response = responses[i];
-            authorize(SIGNER, response.signer);
+            _requireAuthorization(SIGNER, response.signer);
 
             require(
                 response.consensusAddress == request.consensusAddress,

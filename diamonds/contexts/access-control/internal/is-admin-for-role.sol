@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { int_get_sto_AccessControl_v1 } from "./get-storage.sol";
+import "../storage/roles.sol";
 
 abstract contract int_isAdminForRole_AccessControl_v1 is
-    int_get_sto_AccessControl_v1
+    sto_AccessControl_Roles
 {
     function _isAdminForRole(bytes32 role, address account)
         internal
         view
         returns (bool isAdminForRole_)
     {
-        isAdminForRole_ = getStorage().roles[getStorage().roles[role].adminRole]
+        isAdminForRole_ = accessControlRolesStore().roles[
+            accessControlRolesStore().roles[role].adminRole
+        ]
             .members[account];
     }
 }

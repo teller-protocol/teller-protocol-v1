@@ -5,7 +5,7 @@ import "../internal/asset-setting-names.sol";
 import "../internal/roles.sol";
 import "../internal/platform-settings.sol";
 import "../../../contexts/access-control/modifiers/authorized.sol";
-import "../../../contexts/access-control/storage.sol";
+import "../../../contexts/access-control/storage/roles.sol";
 import "../storage/platform-settings.sol";
 import "../storage/asset-settings.sol";
 import "../storage/asset-registry.sol";
@@ -18,7 +18,7 @@ import "../../../libraries/CacheLib.sol";
 
 abstract contract ent_PlatformSettings_v1 is
     Roles,
-    sto_AccessControl_v1,
+    sto_AccessControl,
     mod_authorized_AccessControl_v1,
     sto_PlatformSettings_v1,
     SettingNames_v1,

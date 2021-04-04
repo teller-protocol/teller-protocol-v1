@@ -2,12 +2,10 @@
 pragma solidity ^0.8.0;
 
 import "../data.sol";
-import "./get-storage.sol";
 import "./has-role.sol";
 import "./is-admin-for-role.sol";
 
 abstract contract int_grantRole_AccessControl_v1 is
-    int_get_sto_AccessControl_v1,
     int_hasRole_AccessControl_v1,
     int_isAdminForRole_AccessControl_v1,
     dat_AccessControl_v1
@@ -15,7 +13,7 @@ abstract contract int_grantRole_AccessControl_v1 is
     function _grantRole(bytes32 role, address account) internal {
         require(_isAdminForRole(role, msg.sender), "NOT_ADMIN");
         if (_hasRole(role, account)) return;
-        getStorage().roles[role].members[account] = true;
+        accessControlRolesStore().roles[role].members[account] = true;
         emit RoleGranted(role, account, msg.sender);
     }
 }

@@ -1,22 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+// Contracts
 import "../internal/loans-consts.sol";
-import "../../../../contracts/providers/openzeppelin/Roles.sol";
 import "../storage/loans.sol";
-import "../../../contexts/access-control/storage.sol";
+import "../../../contexts/access-control/storage/roles.sol";
 import "../../../contexts/access-control/modifiers/authorized.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../internal/loans.sol";
 
+// Libraries
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
 abstract contract ent_Loans_v1 is
-    LoansConsts,
     Roles,
-    sto_AccessControl_v1,
-    mod_authorized_AccessControl_v1,
-    sto_Loans_v1,
     ILoanManager,
+    LoansConsts,
+    sto_AccessControl_Roles,
+    sto_Loans_v1,
+    mod_authorized_AccessControl_v1,
     int_Loans_v1
 {
     using SafeMath for uint256;

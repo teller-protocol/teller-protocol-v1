@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "../internal/asset-setting-names.sol";
 import "../internal/roles.sol";
 import "../../../contexts/access-control/modifiers/authorized.sol";
-import "../../../contexts/access-control/storage.sol";
+import "../../../contexts/access-control/storage/roles.sol";
 import "../storage/asset-settings.sol";
 import "../storage/asset-registry.sol";
 import "../../../../contracts/providers/compound/CErc20Interface.sol";
@@ -14,7 +14,7 @@ import "../interfaces/IAssetSettings.sol";
 abstract contract ent_AssetSettings_v1 is
     AssetSettingNames,
     Roles,
-    sto_AccessControl_v1,
+    sto_AccessControl_Roles,
     mod_authorized_AccessControl_v1,
     sto_AssetSettings_v1,
     sto_AssetRegistry_v1,

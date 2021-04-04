@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../../../../contracts/providers/openzeppelin/Roles.sol";
 import "./loans-consts.sol";
 import "../storage/loans.sol";
 import "../../protocol/interfaces/ISettings.sol";
+import "../../protocol/internal/roles.sol";
 
 abstract contract int_Loans_v1 is
     Roles,
