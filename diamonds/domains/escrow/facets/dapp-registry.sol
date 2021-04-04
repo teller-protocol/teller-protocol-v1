@@ -2,19 +2,19 @@
 pragma solidity ^0.8.0;
 
 // Contracts
+import "../../protocol/internal/roles.sol";
 import "../../../contexts/access-control/modifiers/authorized.sol";
-import "../internal/roles.sol";
 import "../storage/dapp-registry.sol";
-import "../internal/dapp-registry.sol";
+import { int_DappRegistry } from "../internal/dapp-registry.sol";
 
 // Libraries
 import "@openzeppelin/contracts/utils/Address.sol";
 
 abstract contract fct_DappRegistry_v1 is
-    mod_authorized_AccessControl_v1,
     Roles,
-    sto_DappRegistry_v1,
-    int_DappRegistry_v1
+    mod_authorized_AccessControl_v1,
+    sto_DappRegistry,
+    int_DappRegistry
 {
     using Address for address;
     using AddressArrayLib for AddressArrayLib.AddressArray;

@@ -2,7 +2,9 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import "../storage/dapp-registry.sol";
+import { sto_DappRegistry } from "../storage/dapp-registry.sol";
+
+abstract contract int_DappRegistry is int_DappRegistry_v1 {}
 
 abstract contract int_DappRegistry_v1 is sto_DappRegistry {
     /**

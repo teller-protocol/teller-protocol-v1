@@ -9,6 +9,10 @@ struct RoleData {
 abstract contract dat_AccessControl_v1 {
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
 
+    event OwnerSet(address indexed owner);
+
+    event OwnerTransferred(address indexed owner, address indexed prevOwner);
+
     /**
      * @dev Emitted when `newAdminRole` is set as ``role``'s admin role, replacing `previousAdminRole`
      *

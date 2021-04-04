@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import "../../../contexts/ERC721/storage/ERC721.sol";
 import "../../../contexts/initializable/modifiers/initializer.sol";
-import "../../../contexts/access-control/modifiers/authorized.sol";
 import "../../../contexts/access-control/internal/grant-role.sol";
 import "../internal/roles.sol";
 
