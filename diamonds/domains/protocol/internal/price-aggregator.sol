@@ -32,8 +32,8 @@ abstract contract int_PriceAggregator_v1 is
         returns (address)
     {
         return
-            tokenAddress == assetRegistryStorage().addresses["WETH"]
-                ? assetRegistryStorage().addresses["ETH"]
+            tokenAddress == assetRegistryStore().addresses["WETH"]
+                ? assetRegistryStore().addresses["ETH"]
                 : tokenAddress;
     }
 
