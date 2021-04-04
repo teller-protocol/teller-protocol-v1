@@ -7,14 +7,16 @@ import {
 import {
     mod_whenNotPaused_Market_v1
 } from "../modifiers/when-nothing-paused.sol";
-import { int_withdraw_collateral } from "../internal/withdraw-collateral.sol";
+import { mod_loan_active_or_set } from "../modifiers/loan-active-or-set.sol";
 import {
     ext_get_collateral_needed_info
 } from "../external/get-collateral-needed-info.sol";
+import { int_withdraw_collateral } from "../internal/withdraw-collateral.sol";
 
 abstract contract ent_Loans_withdraw_collateral_v1 is
     mod_protocolAuthorized_Protocol_v1,
     mod_whenNotPaused_Market_v1,
+    mod_loan_active_or_set,
     ext_get_collateral_needed_info,
     int_withdraw_collateral
 {
