@@ -215,6 +215,19 @@ library Events {
     );
 
     /**
+        @notice This event is emitted when an lender withdraws interests.
+        @param lender address.
+        @param amount of tokens.
+     */
+    event InterestWithdrawn(address indexed lender, uint256 amount);
+
+    /**
+     * @notice Notifies when the Escrow's tokens have been claimed.
+     * @param recipient address where the tokens where sent to.
+     */
+    event TokensClaimed(address recipient);
+
+    /**
         @notice This event is emitted when an user deposits tokens into the pool.
         @param sender address.
         @param amount of tokens.
@@ -237,15 +250,219 @@ library Events {
     );
 
     /**
-        @notice This event is emitted when an lender withdraws interests.
-        @param lender address.
+        @notice This event is emitted when an borrower repaid a loan.
+        @param borrower address.
         @param amount of tokens.
      */
-    event InterestWithdrawn(address indexed lender, uint256 amount);
+    event TokenRepaid(address indexed borrower, uint256 amount);
 
     /**
-     * @notice Notifies when the Escrow's tokens have been claimed.
-     * @param recipient address where the tokens where sent to.
+     * @notice This event is emitted when a new token is added to this Escrow.
+     * @param tokenAddress address of the new token.
+     * @param index Index of the added token.
      */
-    event TokensClaimed(address recipient);
+    event TokenAdded(address tokenAddress, uint256 index);
+
+    /**
+     * @notice This event is emitted when a new token is removed from this Escrow.
+     * @param tokenAddress address of the removed token.
+     * @param index Index of the removed token.
+     */
+    event TokenRemoved(address tokenAddress, uint256 index);
+
+    /**
+        @notice This event is emitted when a new Escrow contract is created.
+        @param borrower address associated to the new escrow.
+        @param loansAddress loan manager contract address.
+        @param loanID loan id associated to the borrower and escrow contract.
+        @param escrowAddress the new escrow contract address.
+     */
+    event EscrowCreated(
+        address indexed borrower,
+        address indexed loansAddress,
+        uint256 indexed loanID,
+        address escrowAddress
+    );
+
+    /**
+        @notice This event is emitted when a new dapp is added to the factory.
+        @param sender address.
+        @param dapp address added to the factory.
+        @param unsecured boolean that describes if the dapp can be used by with an unsecured loan.
+     */
+    event NewDappAdded(
+        address indexed sender,
+        address indexed dapp,
+        bool unsecured
+    );
+
+    /**
+        @notice This event is emitted when a dapp is updated.
+        @param sender address.
+        @param dapp address of dapp contract.
+        @param unsecured boolean that describes if the dapp can be used by with an unsecured loan.
+     */
+    event DappUpdated(
+        address indexed sender,
+        address indexed dapp,
+        bool unsecured
+    );
+
+    /**
+        @notice This event is emitted when a current dapp is removed from the factory.
+        @param sender address.
+        @param dapp address removed from the factory.
+     */
+    event DappRemoved(address indexed sender, address indexed dapp);
+
+    /**
+        @notice This event is emitted every time Aave deposit is invoked successfully.
+        @param tokenAddress address of the underlying token.
+        @param aTokenAddress aave token address.
+        @param amount amount of tokens to Deposit.
+        @param aTokenBalanceBeforeDeposit aTokens balance after Deposit.
+        @param aTokenBalanceAfterDeposit aTokens balance after Deposit.
+     */
+    event AaveDeposited(
+        address indexed tokenAddress,
+        address indexed aTokenAddress,
+        uint256 amount,
+        uint256 aTokenBalanceBeforeDeposit,
+        uint256 aTokenBalanceAfterDeposit
+    );
+
+    /**
+        @notice This event is emitted every time Aave redeem is invoked successfully.
+        @param tokenAddress address of the underlying token.
+        @param aTokenAddress aave token address.
+        @param amount amount of tokens to Withdrawal.
+        @param aTokenBalanceBeforeDeposit aTokens balance after Withdrawal.
+        @param aTokenBalanceAfterWithdrawal aTokens balance after Withdrawal.
+     */
+    event AaveWithdrawn(
+        address indexed tokenAddress,
+        address indexed aTokenAddress,
+        uint256 amount,
+        uint256 aTokenBalanceBeforeDeposit,
+        uint256 aTokenBalanceAfterWithdrawal
+    );
+
+    /**
+        @notice This event is emitted every time Compound lend is invoked successfully.
+        @param tokenAddress address of the underlying token.
+        @param cTokenAddress compound token address.
+        @param amount amount of tokens to Lend.
+        @param tokenBalance underlying token balance after Lend.
+        @param cTokenBalance cTokens balance after Lend.
+     */
+    event CompoundLended(
+        address indexed tokenAddress,
+        address indexed cTokenAddress,
+        uint256 amount,
+        uint256 tokenBalance,
+        uint256 cTokenBalance
+    );
+
+    /**
+        @notice This event is emitted every time Compound redeem is invoked successfully.
+        @param tokenAddress address of the underlying token.
+        @param cTokenAddress compound token address.
+        @param amount amount of tokens to Redeem.
+        @param isUnderlyingAmount boolean indicating if the amount was in the underlying token.
+        @param tokenBalance underlying token balance after Redeem.
+        @param cTokenBalance cTokens balance after Redeem.
+     */
+    event CompoundRedeemed(
+        address indexed tokenAddress,
+        address indexed cTokenAddress,
+        uint256 amount,
+        bool isUnderlyingAmount,
+        uint256 tokenBalance,
+        uint256 cTokenBalance
+    );
+
+    /**
+        @notice This event is emitted every time Pool Together depositTo is invoked successfully.
+        @param tokenAddress address of the underlying token.
+        @param ticketAddress pool ticket token address.
+        @param amount amount of tokens deposited.
+        @param tokenBalance underlying token balance after depositing.
+        @param creditBalanceAfter pool together credit after depositing.
+     */
+    event PoolTogetherDeposited(
+        address indexed tokenAddress,
+        address indexed ticketAddress,
+        uint256 amount,
+        uint256 tokenBalance,
+        uint256 creditBalanceAfter
+    );
+
+    /**
+        @notice This event is emitted every time Pool Together withdrawInstantlyFrom is invoked successfully.
+        @param tokenAddress address of the underlying token.
+        @param ticketAddress pool ticket token address.
+        @param amount amount of tokens to Redeem.
+        @param tokenBalance underlying token balance after Redeem.
+        @param creditBalanceAfter pool together credit after depositing.
+     */
+    event PoolTogetherWithdrawal(
+        address indexed tokenAddress,
+        address indexed ticketAddress,
+        uint256 amount,
+        uint256 tokenBalance,
+        uint256 creditBalanceAfter
+    );
+
+    /**
+        @notice Event emmitted every time a successful swap has taken place.
+        @param sourceToken source token address.
+        @param destinationToken destination address.
+        @param sourceAmount source amount sent.
+        @param destinationAmount destination amount received.
+     */
+    event UniswapSwapped(
+        address indexed sourceToken,
+        address indexed destinationToken,
+        uint256 sourceAmount,
+        uint256 destinationAmount
+    );
+
+    /**
+        @notice This event is emitted when a yVault deposit is invoked successfully
+        @param iVault The address of the yVault
+        @param amount The amount of funds to deposit
+        @param tokenBalanceBeforeDeposit The balance of tokens held after depositing
+        @param tokenBalanceAfterDeposit The balance of tokens held after depositing
+     */
+    event YearnDeposited(
+        address tokenAddress,
+        address iVault,
+        uint256 amount,
+        uint256 tokenBalanceBeforeDeposit,
+        uint256 tokenBalanceAfterDeposit
+    );
+
+    /**
+        @notice This event is emitted when a yVault withdraw is invoked successfully
+        @param underlyingToken The address of the underlying token of the vault
+        @param iVault The address of the yVault
+        @param amount The amount of funds to withdraw
+        @param tokenBalanceBeforeWithdrawal The balance of tokens held before withdrawal
+        @param tokenBalanceAfterWithdrawal The balance of tokens held after withdrawal
+     */
+    event YearnWithdrawn(
+        address underlyingToken,
+        address iVault,
+        uint256 amount,
+        uint256 tokenBalanceBeforeWithdrawal,
+        uint256 tokenBalanceAfterWithdrawal
+    );
+
+    event NewMarketCreated(
+        address indexed sender,
+        address indexed lendingToken,
+        address indexed collateralToken,
+        address loans,
+        address lendingPool
+    );
 }
