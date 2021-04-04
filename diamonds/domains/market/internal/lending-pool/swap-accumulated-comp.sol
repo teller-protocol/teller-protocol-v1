@@ -2,11 +2,11 @@
 pragma solidity ^0.8.0;
 
 import "../../storage/lending-pool.sol";
-import "../../../../providers/compound/IComptroller.sol";
+import "diamonds/providers/compound/IComptroller.sol";
+import "diamonds/providers/uniswap/Uniswap.sol";
+import "diamonds/providers/uniswap/UniSwapper.sol";
 import "../../../protocol/address.sol";
 import "../../../protocol/interfaces/IAssetRegistry.sol";
-import "../../../../providers/uniswap/Uniswap.sol";
-import "../../../../providers/uniswap/UniSwapper.sol";
 
 abstract contract int_swapComp_LendingPool_v1 is sto_LendingPool, UniSwapper {
     function _swapAccumulatedComp() internal {

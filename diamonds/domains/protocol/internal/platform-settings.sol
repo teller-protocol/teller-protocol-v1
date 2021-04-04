@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./roles.sol";
+import "diamonds/Roles.sol";
 import "../../../contexts/access-control/modifiers/authorized.sol";
-import "../../../contexts/access-control/storage/roles.sol";
+import "diamonds/Roles.sol";
 import "../storage/platform-settings.sol";
 import "../../../libraries/PlatformSettingsLib.sol";
 import "../interfaces/IPlatformSettings.sol";

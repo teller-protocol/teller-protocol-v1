@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import "../../protocol/internal/roles.sol";
+import "diamonds/Roles.sol";
 import "../../../contexts/access-control/modifiers/authorized.sol";
 import "../storage/dapp-registry.sol";
 import { int_DappRegistry } from "../internal/dapp-registry.sol";
@@ -11,7 +11,6 @@ import { int_DappRegistry } from "../internal/dapp-registry.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
 abstract contract fct_DappRegistry_v1 is
-    Roles,
     mod_authorized_AccessControl_v1,
     sto_DappRegistry,
     int_DappRegistry

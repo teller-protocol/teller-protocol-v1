@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import "../../../../contexts/access-control/modifiers/authorized.sol";
-import "../../internal/roles.sol";
+import "diamonds/Roles.sol";
 import "../../storage/price-aggregator.sol";
 
 // Interfaces
@@ -14,7 +14,6 @@ import "@openzeppelin/contracts/utils/Address.sol";
 
 abstract contract fct_PriceAggregator_ChainlinkAggregator_v1 is
     IPriceAggregator,
-    Roles,
     mod_authorized_AccessControl_v1
 {
     using Address for address;

@@ -7,6 +7,8 @@ import "../../diamond/Diamond.sol";
 // Interfaces
 import "./interfaces/ITellerNFT.sol";
 
+import "diamonds/Constants.sol";
+
 contract TellerNFT_v1 is Diamond {
     constructor(
         IDiamondCut.FacetCut[] memory _diamondCut,
@@ -14,5 +16,6 @@ contract TellerNFT_v1 is Diamond {
     ) Diamond(_diamondCut, _args) {
         // Add interface for TellerNFT
         ds.supportedInterfaces[type(ITellerNFT).interfaceId] = true;
+        Protocol_.Thing;
     }
 }

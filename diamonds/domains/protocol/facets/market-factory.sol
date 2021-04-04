@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "diamonds/Roles.sol";
+
 import "../interfaces/IMarketFactory.sol";
 import "../../../contexts/access-control/modifiers/authorized.sol";
-import "../internal/roles.sol";
 import "../internal/market-registry.sol";
 import "../storage/asset-registry.sol";
 
 abstract contract ent_MarketFactory_v1 is
     IMarketFactory,
-    mod_authorized_AccessControl_v1,
-    Roles
+    mod_authorized_AccessControl_v1
 {
     /**
         @notice It creates a new market for a given lending and collateral tokens.

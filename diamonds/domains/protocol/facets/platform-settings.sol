@@ -2,17 +2,17 @@
 pragma solidity ^0.8.0;
 
 import "../internal/asset-setting-names.sol";
-import "../internal/roles.sol";
+import "diamonds/Roles.sol";
 import "../internal/platform-settings.sol";
 import "../../../contexts/access-control/modifiers/authorized.sol";
-import "../../../contexts/access-control/storage/roles.sol";
+import "diamonds/Roles.sol";
 import "../storage/platform-settings.sol";
 import "../storage/asset-settings.sol";
 import "../storage/asset-registry.sol";
 import "../../../libraries/PlatformSettingsLib.sol";
 import "../interfaces/IPlatformSettings.sol";
 import "../internal/setting-names.sol";
-import "../../../providers/compound/CErc20Interface.sol";
+import "diamonds/providers/compound/CErc20Interface.sol";
 import "../../../libraries/AddressArrayLib.sol";
 import "../../../libraries/CacheLib.sol";
 

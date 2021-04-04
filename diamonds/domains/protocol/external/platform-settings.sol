@@ -8,7 +8,7 @@ import "../../../contexts/access-control/context.sol";
 import "../../../contexts/access-control/modifiers/authorized.sol";
 import "../../../contexts/pausable/modifiers/when-paused.sol";
 import "../../../contexts/pausable/modifiers/when-not-paused.sol";
-import "../internal/roles.sol";
+import "diamonds/Roles.sol";
 
 abstract contract ext_PlatformSettings_v1 is
     sto_PlatformSettings_v1,
