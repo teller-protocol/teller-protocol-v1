@@ -3,34 +3,23 @@ pragma solidity ^0.8.0;
 
 import "../internal/asset-setting-names.sol";
 import "../internal/roles.sol";
-import "../internal/platform-settings.sol";
-import "../../../contexts/#access-control/modifiers/authorized.sol";
-import "../../../contexts/#access-control/storage.sol";
-import "../storage/platform-settings.sol";
+import "../../../contexts/access-control/modifiers/authorized.sol";
+import "../../../contexts/access-control/storage.sol";
 import "../storage/asset-settings.sol";
 import "../storage/asset-registry.sol";
-import "../data.sol";
-import "../../../libraries/PlatformSettingsLib.sol";
-import "../interfaces/IPlatformSettings.sol";
-import "../internal/setting-names.sol";
-import "../../../providers/compound/CErc20Interface.sol";
-import "../../../libraries/AddressArrayLib.sol";
+import "../../../../contracts/providers/compound/CErc20Interface.sol";
 import "../../../libraries/CacheLib.sol";
+import "../interfaces/IAssetSettings.sol";
 
-abstract contract ent_PlatformSettings_v1 is
+abstract contract ent_AssetSettings_v1 is
+    AssetSettingNames,
     Roles,
     sto_AccessControl_v1,
     mod_authorized_AccessControl_v1,
-    sto_PlatformSettings_v1,
     sto_AssetSettings_v1,
-    SettingNames_v1,
-    IPlatformSettings,
-    AssetSettingNames,
-    IAssetSettings,
-    sto_AssetRegistry_v1
+    sto_AssetRegistry_v1,
+    IAssetSettings
 {
-    using AddressArrayLib for AddressArrayLib.AddressArray;
-    using AddressLib for address;
     using CacheLib for CacheLib.Cache;
 
     /**
@@ -48,10 +37,13 @@ abstract contract ent_PlatformSettings_v1 is
         uint256 maxTVLAmount,
         uint256 maxDebtRatio
     ) external override authorized(PAUSER, msg.sender) {
-        assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
-        cTokenAddress.requireNotEmpty("CTOKEN_ADDRESS_REQUIRED");
+        require(assetAddress != address(0x0), "ASSET_ADDRESS_REQUIRED");
+        require(cTokenAddress != address(0x0), "CTOKEN_ADDRESS_REQUIRED");
 
-        if (assetAddress != getAssetRegistry().addresses["ETH"]) {
+        if (
+            assetAddress !=
+            sto_AssetRegistry_v1.getAssetRegistry().addresses["ETH"]
+        ) {
             (bool success, bytes memory decimalsData) =
                 assetAddress.staticcall(abi.encodeWithSignature("decimals()"));
             require(
@@ -64,9 +56,7 @@ abstract contract ent_PlatformSettings_v1 is
             );
         }
 
-        CacheLib.Cache storage cache = s().assets[assetAddress];
-
-        cache.initialize();
+        s().assets[assetAddress].initialize();
         s().assets[assetAddress].updateAddress(
             CTOKEN_ADDRESS_ASSET_SETTING,
             cTokenAddress
@@ -108,7 +98,7 @@ abstract contract ent_PlatformSettings_v1 is
         override
         authorized(PAUSER, msg.sender)
     {
-        cTokenAddress.requireNotEmpty("CTOKEN_ADDRESS_REQUIRED");
+        require(cTokenAddress != address(0x0), "CTOKEN_ADDRESS_REQUIRED");
         address oldCTokenAddress =
             s().assets[assetAddress].addresses[CTOKEN_ADDRESS_ASSET_SETTING];
 
@@ -142,25 +132,6 @@ abstract contract ent_PlatformSettings_v1 is
     }
 
     /**
-      @notice It returns the yearn vault address associated with an asset.
-      @param assetAddress asset address to get the associated yearn vault address for.
-      @return The address of the yearn vault.
-      */
-    function getYVaultAddress(address assetAddress)
-        external
-        view
-        override
-        returns (address)
-    {
-        assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
-
-        return
-            s().assets[assetAddress].addresses[
-                YEARN_VAULT_ADDRESS_ASSET_SETTING
-            ];
-    }
-
-    /**
       @notice It updates the aToken address associated with an asset.
       @param assetAddress asset address to configure.
       @param aTokenAddress the new aToken address to configure.
@@ -170,7 +141,7 @@ abstract contract ent_PlatformSettings_v1 is
         override
         authorized(PAUSER, msg.sender)
     {
-        aTokenAddress.requireNotEmpty("ATOKEN_ADDRESS_REQUIRED");
+        require(aTokenAddress != address(0x0), "ATOKEN_ADDRESS_REQUIRED");
         address oldATokenAddress =
             s().assets[assetAddress].addresses[ATOKEN_ADDRESS_ASSET_SETTING];
 
@@ -189,22 +160,6 @@ abstract contract ent_PlatformSettings_v1 is
     }
 
     /**
-      @notice It returns the aToken address associated with an asset.
-      @param assetAddress asset address to get the associated aToken for.
-      @return The associated aToken address
-      */
-    function getATokenAddress(address assetAddress)
-        external
-        view
-        override
-        returns (address)
-    {
-        assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
-
-        return s().assets[assetAddress].addresses[ATOKEN_ADDRESS_ASSET_SETTING];
-    }
-
-    /**
       @notice It updates the pool together prize pool address associated with an asset.
       @param assetAddress asset address to configure.
       @param prizePoolAddress the new aToken address to configure.
@@ -213,7 +168,11 @@ abstract contract ent_PlatformSettings_v1 is
         address assetAddress,
         address prizePoolAddress
     ) external override authorized(PAUSER, msg.sender) {
-        prizePoolAddress.requireNotEmpty("PRIZE_POOL_ADDRESS_REQUIRED");
+        require(
+            prizePoolAddress != address(0x0),
+            "PRIZE_POOL_ADDRESS_REQUIRED"
+        );
+
         address oldPrizePoolAddress =
             s().assets[assetAddress].addresses[
                 PRIZE_POOL_ADDRESS_ASSET_SETTING
@@ -231,25 +190,6 @@ abstract contract ent_PlatformSettings_v1 is
             oldPrizePoolAddress,
             prizePoolAddress
         );
-    }
-
-    /**
-      @notice It returns the pool together prize pool address associated with an asset.
-      @param assetAddress asset address to get the associated aToken for.
-      @return The associated prize pool address
-      */
-    function getPrizePoolAddress(address assetAddress)
-        external
-        view
-        override
-        returns (address)
-    {
-        assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
-
-        return
-            s().assets[assetAddress].addresses[
-                PRIZE_POOL_ADDRESS_ASSET_SETTING
-            ];
     }
 
     /**
@@ -281,39 +221,6 @@ abstract contract ent_PlatformSettings_v1 is
     }
 
     /**
-      @notice Returns the max loan amount for a given asset.
-      @param assetAddress asset address to retrieve the max loan amount.
-      */
-    function getMaxLoanAmount(address assetAddress)
-        external
-        view
-        override
-        returns (uint256)
-    {
-        s().assets[assetAddress].requireExists();
-
-        return s().assets[assetAddress].uints[MAX_LOAN_AMOUNT_ASSET_SETTING];
-    }
-
-    /**
-      @notice Tests whether a given amount is greater than the current max loan amount.
-      @param assetAddress asset address used to return the max loan amount setting.
-      @param amount the loan amount to check.
-      @return true if the given amount is greater than the current max loan amount. Otherwise it returns false.
-      */
-    function exceedsMaxLoanAmount(address assetAddress, uint256 amount)
-        external
-        view
-        override
-        returns (bool)
-    {
-        s().assets[assetAddress].requireExists();
-        return
-            amount >
-            s().assets[assetAddress].uints[MAX_LOAN_AMOUNT_ASSET_SETTING];
-    }
-
-    /**
       @notice It updates the max total value locked amount for a given asset.
       @param assetAddress asset address used to update the max loan amount.
       @param newMaxTVLAmount the new max total vault locked amount to set.
@@ -333,21 +240,6 @@ abstract contract ent_PlatformSettings_v1 is
                 newMaxTVLAmount
             );
         }
-    }
-
-    /**
-      @notice Returns the max total value locked amount for a given asset.
-      @param assetAddress asset address to retrieve the max total value locked amount.
-      */
-    function getMaxTVLAmount(address assetAddress)
-        external
-        view
-        override
-        returns (uint256)
-    {
-        s().assets[assetAddress].requireExists();
-
-        return s().assets[assetAddress].uints[MAX_TOTAL_VALUE_LOCKED_SETTING];
     }
 
     /**
@@ -371,21 +263,6 @@ abstract contract ent_PlatformSettings_v1 is
                 newMaxDebtRatio
             );
         }
-    }
-
-    /**
-      @notice Returns the max debt ratio for a given asset.
-      @dev The ratio value has 2 decimal places. I.e 100 = 1%
-      @param assetAddress asset address to retrieve the max debt ratio.
-      */
-    function getMaxDebtRatio(address assetAddress)
-        external
-        view
-        override
-        returns (uint256)
-    {
-        s().assets[assetAddress].requireExists();
-        return s().assets[assetAddress].uints[MAX_DEBT_RATIO_SETTING];
     }
 
     /**

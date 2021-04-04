@@ -17,26 +17,6 @@ import "./IMarketFactory.sol";
  */
 interface IPlatformSettings {
     /**
-     * @dev Emitted when the pause is triggered by a pauser (`account`).
-     */
-    event Paused(address account);
-
-    /**
-     * @dev Emitted when the pause is lifted by a pauser (`account`).
-     */
-    event Unpaused(address account);
-
-    /**
-     * @dev Emitted when an address is added as a pauser by a pauser (`account`).
-     */
-    event PauserAdded(address indexed account);
-
-    /**
-     * @dev Emitted when an address is removed as a pauser by a pauser (`account`).
-     */
-    event PauserRemoved(address indexed account);
-
-    /**
         @notice This event is emitted when a new platform setting is created.
         @param settingName new setting name.
         @param sender address that created it.
@@ -80,7 +60,7 @@ interface IPlatformSettings {
         @param account address that paused the lending pool.
         @param lendingPoolAddress lending pool address which was paused.
      */
-    event LendingPoolPaused(
+    event MarketPaused(
         address indexed account,
         address indexed lendingPoolAddress
     );
@@ -90,7 +70,7 @@ interface IPlatformSettings {
         @param account address that paused the lending pool.
         @param lendingPoolAddress lending pool address which was unpaused.
      */
-    event LendingPoolUnpaused(
+    event MarketUnpaused(
         address indexed account,
         address indexed lendingPoolAddress
     );
@@ -247,22 +227,22 @@ interface IPlatformSettings {
         @param lendingPoolAddress lending pool address to test.
         @return true if the lending pool is paused. Otherwise it returns false.
      */
-    function lendingPoolPaused(address lendingPoolAddress)
+    function marketPaused(address lendingPoolAddress)
         external
         view
         returns (bool);
 
     /**
         @notice It pauses a specific lending pool.
-        @param lendingPoolAddress lending pool address to pause.
+        @param marketAddress market address to pause.
      */
-    function pauseLendingPool(address lendingPoolAddress) external;
+    function pauseMarket(address marketAddress) external;
 
     /**
         @notice It unpauses a specific lending pool.
-        @param lendingPoolAddress lending pool address to unpause.
+        @param marketAddress market address to unpause.
      */
-    function unpauseLendingPool(address lendingPoolAddress) external;
+    function unpauseMarket(address marketAddress) external;
 
     function platformSettings(bytes32)
         external
@@ -327,53 +307,4 @@ interface IPlatformSettings {
         @param addressToRemove The wallet address of the user being unauthorized
      */
     function removeAuthorizedAddress(address addressToRemove) external;
-
-    /**
-        @notice It is the global instance of the DappRegistry contract.
-     */
-    function dappRegistry() external view returns (IDappRegistry);
-
-    /**
-        @notice It is the global instance of the PriceAggregator contract.
-     */
-    function priceAggregator() external view returns (IPriceAggregator);
-
-    /**
-        @notice It is the global instance of the MarketFactory contract.
-     */
-    function marketFactory() external view returns (IMarketFactory);
-
-    /**
-        @notice It initializes this settings contract instance.
-        @param wethTokenAddress canonical WETH token address.
-        @param cethTokenAddress compound CETH token address.
-        @param initDynamicProxyAddress Address of a deployed InitializeableDynamicProxy contract.
-        @param uniswapV2RouterAddress Address of the UniswapV2Router instance to use for the platform.
-     */
-    function initialize(
-        address wethTokenAddress,
-        address cethTokenAddress,
-        address initDynamicProxyAddress,
-        address uniswapV2RouterAddress
-    ) external;
-
-    /**
-        @notice It gets the ETH address used in the platform.
-        @return the ETH address used in the platform.
-     */
-    function ETH_ADDRESS() external view returns (address);
-
-    /**
-        @notice It gets the canonical WETH address used in the platform.
-        @return the canonical WETH address used in the platform.
-     */
-    function WETH_ADDRESS() external view returns (address);
-
-    /**
-        @notice It gets the canonical CETH address used in the platform.
-        @return the canonical CETH address used in the platform.
-     */
-    function CETH_ADDRESS() external view returns (address);
-
-    function initialize() external;
 }

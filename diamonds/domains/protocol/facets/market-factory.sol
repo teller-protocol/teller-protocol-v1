@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "../interfaces/IMarketFactory.sol";
-import "../../../contexts/#access-control/modifiers/authorized.sol";
+import "../../../contexts/access-control/modifiers/authorized.sol";
 import "../internal/roles.sol";
 import "../internal/market-registry.sol";
 import "../storage/asset-registry.sol";

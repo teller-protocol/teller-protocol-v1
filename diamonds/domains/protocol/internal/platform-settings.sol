@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "./roles.sol";
-import "../../../contexts/#access-control/modifiers/authorized.sol";
-import "../../../contexts/#access-control/storage.sol";
+import "../../../contexts/access-control/modifiers/authorized.sol";
+import "../../../contexts/access-control/storage.sol";
 import "../storage/platform-settings.sol";
 import "../data.sol";
 import "../../../libraries/PlatformSettingsLib.sol";

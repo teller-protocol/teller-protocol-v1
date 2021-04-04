@@ -17,8 +17,6 @@ interface IMarketFactory {
     function createMarket(address lendingToken, address collateralToken)
         external;
 
-    function initialize() external;
-
     /** Events */
 
     event NewMarketCreated(

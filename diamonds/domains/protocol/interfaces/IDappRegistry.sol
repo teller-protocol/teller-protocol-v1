@@ -62,11 +62,6 @@ interface IDappRegistry {
     function getDapps() external view returns (address[] memory);
 
     /**
-        @notice It initializes this escrow contract factory instance.
-     */
-    function initialize() external;
-
-    /**
         @notice This event is emitted when a new Escrow contract is created.
         @param borrower address associated to the new escrow.
         @param loansAddress loan manager contract address.

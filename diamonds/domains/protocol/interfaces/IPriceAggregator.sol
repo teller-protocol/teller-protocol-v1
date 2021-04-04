@@ -68,7 +68,7 @@ interface IPriceAggregator {
         @param src Source token address.
         @param dst Destination token address.
      */
-    function add(
+    function addAggregator(
         address src,
         address dst,
         address aggregator
@@ -79,13 +79,11 @@ interface IPriceAggregator {
         @param src Source token address.
         @param dst Destination token address.
      */
-    function remove(address src, address dst) external;
+    function removeAggregator(address src, address dst) external;
 
     /**
         @notice It removes support for a Chainlink Aggregator.
         @param tokenAddress Token to remove all markets for.
      */
-    function remove(address tokenAddress) external;
-
-    function initialize() external;
+    function removeAsset(address tokenAddress) external;
 }
