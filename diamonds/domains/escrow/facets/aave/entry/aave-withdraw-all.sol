@@ -10,9 +10,9 @@ import {
 import "../../../internal/token-updated.sol";
 import "../internal/a-token.sol";
 
-abstract contract ent_withdrawAll is ent_withdrawAll_v1 {}
+abstract contract ent_withdraw_all is ent_withdraw_all_v1 {}
 
-abstract contract ent_withdrawAll_v1 is
+abstract contract ent_withdraw_all_v1 is
     int_tokenUpdated_Escrow,
     mod_onlyOwner_AccessControl
 {
