@@ -12,12 +12,14 @@ import { int_withdraw_collateral } from "../internal/withdraw-collateral.sol";
 import {
     mod_entry_AccessControl_v1
 } from "../../../contexts/access-control/modifiers/entry.sol";
+import "../external/get-total-owed.sol";
 
 abstract contract ent_Loans_repay_v1 is
     mod_protocolAuthorized_Protocol_v1,
     mod_whenNotPaused_Market_v1,
     mod_loan_active_or_set,
     mod_entry_AccessControl_v1,
+    ext_get_total_owed,
     int_withdraw_collateral
 {
     /**

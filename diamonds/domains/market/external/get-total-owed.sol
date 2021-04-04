@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../storage/loans.sol";
+import "./get-interest-owed-for.sol";
 
-abstract contract ext_get_total_owed_v1 is sto_Loans_v1 {
+abstract contract ext_get_total_owed_v1 is ext_get_interest_owed_for {
     /**
      * @notice Returns the total amount owed for a specified loan.
      * @param loanID The loan ID to get the total amount owed.
