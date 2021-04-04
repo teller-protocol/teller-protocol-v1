@@ -19,7 +19,7 @@ abstract contract sto_Loans_v1 {
     bytes32 internal constant LOANS_POSITION =
         keccak256("teller_protocol.storage.loans.v1");
 
-    function getLoansStorage() internal pure returns (LoansLayout storage l_) {
+    function getLoansStorage() internal pure returns (Layout storage l_) {
         bytes32 position = LOANS_POSITION;
 
         assembly {

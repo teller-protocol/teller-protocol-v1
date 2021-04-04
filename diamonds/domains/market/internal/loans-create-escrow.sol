@@ -2,15 +2,14 @@
 pragma solidity ^0.8.0;
 
 import { int_get_sto_Loans } from "./get-loans-storage.sol";
-import {
-    ext_PlatformSettings_v1
-} from "../../protocol/external/platform-settings.sol";
 import "../../../../contracts/interfaces/IInitializeableDynamicProxy.sol";
+import "../../../../contracts/interfaces/IPlatformSettings.sol";
+import { dat_Loans } from "../data/loans.sol";
 
 abstract contract int_create_escrow_v1 is
     int_get_sto_Loans,
-    ext_PlatformSettings_v1,
-    IInitializeableDynamicProxy
+    IInitializeableDynamicProxy,
+    dat_Loans
 {
     function _createEscrow(uint256 loanID) internal returns (address escrow) {
         require(
@@ -24,7 +23,7 @@ abstract contract int_create_escrow_v1 is
             keccak256("Escrow"),
             true
         );
-        ext_PlatformSettings_v1.addEscrowAuthorized(escrow);
+        IPlatformSettings(PROTOCOL).addEscrowAuthorized(escrow);
     }
 }
 

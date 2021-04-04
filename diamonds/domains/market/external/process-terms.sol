@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+
 import { int_get_sto_Loans } from "../internal/get-loans-storage.sol";
+import "../../protocol/interfaces/IPlatformSettings.sol";
 
 abstract contract ext_process_terms_v1 is int_get_sto_Loans {
     function processLoanTerms(
@@ -31,7 +33,7 @@ abstract contract ext_process_terms_v1 is int_get_sto_Loans {
         bytes32 requestHash = _hashRequest(request, chainId);
 
         uint256 responseExpiryLengthValue =
-            settings.getResponseExpiryLengthValue();
+            IPlatformSettings(PROTOCOL).getResponseExpiryLengthValue();
 
         TellerCommon.AccruedLoanTerms memory termSubmissions;
 
@@ -75,7 +77,8 @@ abstract contract ext_process_terms_v1 is int_get_sto_Loans {
             termSubmissions.maxLoanAmount.addValue(response.maxLoanAmount);
         }
 
-        uint256 tolerance = settings.getMaximumToleranceValue();
+        uint256 tolerance =
+            IPlatformSettings(PROTOCOL).getMaximumToleranceValue();
         interestRate = _getConsensus(termSubmissions.interestRate, tolerance);
         collateralRatio = _getConsensus(
             termSubmissions.collateralRatio,

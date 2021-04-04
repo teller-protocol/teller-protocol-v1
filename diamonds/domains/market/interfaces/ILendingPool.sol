@@ -15,7 +15,7 @@ import "../../../providers/compound/CErc20Interface.sol";
 
     @author develop@teller.finance
  */
-interface LendingPoolInterface {
+interface ILendingPool {
     /**
         @notice It allows users to deposit tokens into the pool.
         @dev the user must call ERC20.approve function previously.

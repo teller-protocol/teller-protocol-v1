@@ -3,10 +3,11 @@ pragma solidity ^0.8.0;
 import { dat_Loans } from "../data/loans.sol";
 import { int_create_loan } from "../internal/loans-create-loan.sol";
 import { ext_can_go_to_eoa } from "../external/loans-can-eoa.sol";
+import { ext_process_terms } from "../external/process-terms.sol";
 
 abstract contract ent_Loans_create_loan_v1 is
     dat_Loans,
-    //    ext_process_terms,
+    ext_process_terms,
     int_create_loan,
     //    int_pay_in_collateral,
     ext_can_go_to_eoa,
