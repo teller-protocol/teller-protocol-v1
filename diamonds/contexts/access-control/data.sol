@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-abstract contract dat_AccessControl_v1 {
-    struct RoleData {
-        mapping(address => bool) members;
-        bytes32 adminRole;
-    }
+struct RoleData {
+    mapping(address => bool) members;
+    bytes32 adminRole;
+}
 
+abstract contract dat_AccessControl_v1 {
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
 
     /**
