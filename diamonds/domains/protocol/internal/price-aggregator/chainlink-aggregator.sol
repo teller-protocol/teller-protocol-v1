@@ -5,15 +5,21 @@ import "../../storage/price-aggregator.sol";
 
 // Interfaces
 import "@chainlink/contracts/src/v0.5/interfaces/AggregatorV2V3Interface.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SignedSafeMath.sol";
 
 // Libraries
-import "../../../libraries/AddressArrayLib.sol";
-import "../../../../../contracts/util/AddressArrayLib.sol";
+import "../../../../libraries/AddressArrayLib.sol";
+import "./decimals-for.sol";
+import "../../../../libraries/AddressArrayLib.sol";
 
 abstract contract int_PriceAggregator_ChainlinkAggregator_v1 is
-    sto_PriceAggregator
+    sto_PriceAggregator,
+    int_decimalsFor_v1
 {
     using AddressArrayLib for AddressArrayLib.AddressArray;
+    using SafeMath for uint256;
+    using SignedSafeMath for int256;
 
     /**
      * @notice It removes support for a Chainlink Aggregator.
@@ -99,8 +105,8 @@ abstract contract int_PriceAggregator_ChainlinkAggregator_v1 is
                 (bool found, ) =
                     priceAggStore().supportedTokens[routeToken].getIndex(dst);
                 if (found) {
-                    int256 price1 = _priceForChainlink(src, routeToken);
-                    int256 price2 = _priceForChainlink(dst, routeToken);
+                    int256 price1 = _chainlinkPriceFor(src, routeToken);
+                    int256 price2 = _chainlinkPriceFor(dst, routeToken);
 
                     return (price1.mul(dstFactor)).div(price2);
                 }

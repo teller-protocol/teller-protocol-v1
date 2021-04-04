@@ -7,7 +7,7 @@ abstract contract int_PriceAggregator_CompoundValue_v1 {
     /**
      * @dev Compounds exchange rate is scaled by 18 decimals (10^18)
      */
-    uint256 constant EXCHANGE_RATE_SCALE = 1000000000000000000;
+    uint256 internal constant EXCHANGE_RATE_SCALE = 1000000000000000000;
 
     function _compoundValueInUnderlying(address cToken, uint256 cTokenAmount)
         internal

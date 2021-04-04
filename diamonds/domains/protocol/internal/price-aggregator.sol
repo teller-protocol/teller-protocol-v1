@@ -38,18 +38,6 @@ abstract contract int_PriceAggregator_v1 is
     }
 
     /**
-        @notice It gets the number of decimals for a given token.
-        @param addr Token address to get decimals for.
-        @return uint8 Number of decimals the given token.
-     */
-    function _decimalsFor(address addr) internal view returns (uint8) {
-        return
-            addr == assetRegistryStorage().addresses["ETH"]
-                ? 18
-                : ERC20(addr).decimals();
-    }
-
-    /**
         @notice It calculates the value of a token amount into another.
         @param src Source token address.
         @param dst Destination token address.
