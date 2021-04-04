@@ -6,6 +6,8 @@ import "../../protocol/interfaces/IProtocol.sol";
 
 abstract contract dat_Escrow {
     IProtocol constant PROTOCOL = IProtocol(0);
+    uint256 public constant NO_ERROR = 0;
+    uint256 public constant TOKEN_INSUFFICIENT_BALANCE = 13;
 
     /**
      * @notice Notifies when the Escrow's tokens have been claimed.

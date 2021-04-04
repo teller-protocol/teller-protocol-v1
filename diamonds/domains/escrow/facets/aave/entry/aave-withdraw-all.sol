@@ -8,8 +8,7 @@ import {
 
 // Interfaces
 import "../../../internal/token-updated.sol";
-import "../../../interfaces/IAaveLendingPool.sol";
-import "../../../interfaces/IAToken.sol";
+import "../internal/a-token.sol";
 
 abstract contract ent_withdrawAll is ent_withdrawAll_v1 {}
 
