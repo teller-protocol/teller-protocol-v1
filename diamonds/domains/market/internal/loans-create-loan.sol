@@ -15,12 +15,6 @@ abstract contract int_create_loan_v1 is int_get_sto_Loans_v1, dat_Loans {
         uint256 loanID = s().loanIDCounter;
         s().loanIDCounter = s().loanIDCounter.add(1);
 
-        require(
-            s().loans[loanID].status == TellerCommon.LoanStatus.NonExistent,
-            "LOAN_ALREADY_EXISTS"
-        );
-        require(request.borrower != address(0), "BORROWER_EMPTY");
-
         s().loans[loanID].id = loanID;
         s().loans[loanID].status = TellerCommon.LoanStatus.TermsSet;
         s().loans[loanID].loanTerms = TellerCommon.LoanTerms({
@@ -34,6 +28,7 @@ abstract contract int_create_loan_v1 is int_get_sto_Loans_v1, dat_Loans {
 
         uint256 termsExpiryTime =
             IPlatformSettings(PROTOCOL).getTermsExpiryTimeValue();
+
         s().loans[loanID].termsExpiry = block.timestamp.add(termsExpiryTime);
 
         return loanID;
