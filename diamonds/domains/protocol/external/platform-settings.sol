@@ -4,11 +4,21 @@ pragma solidity ^0.8.0;
 import "../storage/platform-settings.sol";
 import "../internal/setting-names.sol";
 import "../interfaces/IPlatformSettings.sol";
+import "../../../contexts/access-control/context.sol";
+import "../../../contexts/access-control/modifiers/authorized.sol";
+import "../../../contexts/pausable/modifiers/when-paused.sol";
+import "../../../contexts/pausable/modifiers/when-not-paused.sol";
+import "../internal/roles.sol";
 
 abstract contract ext_PlatformSettings_v1 is
     sto_PlatformSettings_v1,
     SettingNames_v1,
-    IPlatformSettings
+    IPlatformSettings,
+    mod_authorized_AccessControl_v1,
+    mod_whenPaused_Pausable_v1,
+    mod_whenNotPaused_Pausable_v1,
+    ctx_AccessControl_v1,
+    Roles
 {
     /**
         @notice It gets the current "RequiredSubmissionsPercentage" setting's value
@@ -180,49 +190,39 @@ abstract contract ext_PlatformSettings_v1 is
         view
         returns (PlatformSettingsLib.PlatformSetting memory)
     {
-        return _getPlatformSetting(settingName);
+        return s().platformSettings[settingName];
     }
 
     /**
         @notice It pauses a specific lending pool.
-        @param lendingPoolAddress lending pool address to pause.
+        @param marketAddress lending pool address to pause.
      */
-    function pauseLendingPool(address lendingPoolAddress)
+    function pauseMarket(address marketAddress)
         external
         override
-        onlyPauser
-        whenNotPaused
+        authorized(PAUSER, msg.sender)
+        whenNotPaused(address(this))
     {
-        lendingPoolAddress.requireNotEmpty("LENDING_POOL_IS_REQUIRED");
-        require(
-            !lendingPoolPaused[lendingPoolAddress],
-            "LENDING_POOL_ALREADY_PAUSED"
-        );
-
-        lendingPoolPaused[lendingPoolAddress] = true;
-
-        emit LendingPoolPaused(msg.sender, lendingPoolAddress);
+        if (!pausableStorage().paused[marketAddress]) {
+            _pause(marketAddress);
+            emit MarketPaused(msg.sender, marketAddress);
+        }
     }
 
     /**
         @notice It unpauses a specific lending pool.
-        @param lendingPoolAddress lending pool address to unpause.
+        @param marketAddress market address to unpause.
      */
-    function unpauseLendingPool(address lendingPoolAddress)
+    function unpauseMarket(address marketAddress)
         external
         override
-        onlyPauser
-        whenNotPaused
+        authorized(PAUSER, msg.sender)
+        whenNotPaused(address(this))
     {
-        lendingPoolAddress.requireNotEmpty("LENDING_POOL_IS_REQUIRED");
-        require(
-            lendingPoolPaused[lendingPoolAddress],
-            "LENDING_POOL_IS_NOT_PAUSED"
-        );
-
-        lendingPoolPaused[lendingPoolAddress] = false;
-
-        emit LendingPoolUnpaused(msg.sender, lendingPoolAddress);
+        if (pausableStorage().paused[marketAddress]) {
+            _unpause(marketAddress);
+            emit MarketUnpaused(msg.sender, marketAddress);
+        }
     }
 
     /**
@@ -230,51 +230,19 @@ abstract contract ext_PlatformSettings_v1 is
         @return true if platform is paused. Otherwise it returns false.
      */
     function isPaused() external view override returns (bool) {
-        return paused;
-    }
-
-    /**
-        @notice Tests whether amount exceeds the current maximum loan amount for a specific asset settings.
-        @param assetAddress asset address to test the setting.
-        @param amount amount to test.
-        @return true if amount exceeds current max loan amout. Otherwise it returns false.
-     */
-    function exceedsMaxLoanAmount(address assetAddress, uint256 amount)
-        external
-        view
-        returns (bool)
-    {
-        return assetSettings.exceedsMaxLoanAmount(assetAddress, amount);
-    }
-
-    /**
-        @notice Gets the cToken address for a given asset address.
-        @param assetAddress token address.
-        @return the cToken address for a given asset address.
-     */
-    function getCTokenAddress(address assetAddress)
-        external
-        view
-        override
-        returns (address)
-    {
-        return assetSettings.getCTokenAddress(assetAddress);
-    }
-
-    /**
-        @notice Requires an account to have the pauser role.
-        @param account account to test.
-     */
-    function requirePauserRole(address account) public view override {
-        require(isPauser(account) || account == address(this), "NOT_PAUSER");
+        return pausableStorage().paused[address(this)];
     }
 
     /**
         @notice Restricts the use of the Teller protocol to authorized wallet addresses only
         @param restriction Bool turning the resitriction on or off
      */
-    function restrictPlatform(bool restriction) external override onlyPauser {
-        platformRestricted = restriction;
+    function restrictPlatform(bool restriction)
+        external
+        override
+        authorized(PAUSER, msg.sender)
+    {
+        s().platformRestricted = restriction;
         emit PlatformRestricted(restriction, msg.sender);
     }
 
@@ -283,20 +251,19 @@ abstract contract ext_PlatformSettings_v1 is
         @return bool True if the platform is restricted, false if not
      */
     function isPlatformRestricted() external view override returns (bool) {
-        return platformRestricted;
+        return s().platformRestricted;
     }
 
     /**
         @notice Adds a wallet address to the list of authorized wallets
         @param addressToAdd The wallet address of the user being authorized
      */
-    function addAuthorizedAddress(address addressToAdd) public override {
-        require(
-            isPauser(msg.sender) || msg.sender == address(dappRegistry),
-            "CALLER_NOT_PAUSER"
-        );
-        authorizedAddresses[addressToAdd] = true;
-        emit AuthorizationGranted(addressToAdd, msg.sender);
+    function addAuthorizedAddress(address account)
+        public
+        override
+        authorized(PAUSER, msg.sender)
+    {
+        _grantRole(USER, account);
     }
 
     /**

@@ -7,9 +7,9 @@ abstract contract int_get_sto_AccessControl_v1 is sto_AccessControl_v1 {
     function getStorage()
         internal
         pure
-        returns (sto_AccessControl_v1.Layout_v1 storage l_)
+        returns (sto_AccessControl_v1.AccessControlLayout_v1 storage l_)
     {
-        l_ = getv1();
+        l_ = getAccessControl_v1();
     }
 }
 
