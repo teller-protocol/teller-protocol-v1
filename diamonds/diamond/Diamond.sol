@@ -38,8 +38,6 @@ abstract contract Diamond {
         ds.supportedInterfaces[type(IERC173).interfaceId] = true;
     }
 
-    receive() external payable {}
-
     // Find facet for function that is called and execute the
     // function if a facet is found and return any value.
     // solhint-disable-next-line no-complex-fallback
