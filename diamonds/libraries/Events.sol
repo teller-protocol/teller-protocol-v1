@@ -130,20 +130,6 @@ library Events {
     event PlatformRestricted(bool restriction, address indexed pauser);
 
     /**
-        @notice This event is emitted when an address is given authorization
-        @param user The address being authorized
-        @param pauser address of the pauser adding the address
-    */
-    event AuthorizationGranted(address indexed user, address indexed pauser);
-
-    /**
-        @notice This event is emitted when an address has authorization revoked
-        @param user The address being revoked
-        @param pauser address of the pauser removing the address
-    */
-    event AuthorizationRevoked(address indexed user, address indexed pauser);
-
-    /**
      * @notice This event is emitted when collateral has been deposited for the loan
      * @param loanID ID of the loan for which collateral was deposited
      * @param borrower Account address of the borrower
@@ -251,30 +237,11 @@ library Events {
     );
 
     /**
-        @notice This event is emitted when an borrower repaid a loan.
-        @param borrower address.
-        @param amount of tokens.
-     */
-    event TokenRepaid(address indexed borrower, uint256 amount);
-
-    /**
         @notice This event is emitted when an lender withdraws interests.
         @param lender address.
         @param amount of tokens.
      */
     event InterestWithdrawn(address indexed lender, uint256 amount);
-
-    /**
-        @notice This event is emitted when the interest validator is updated.
-        @param sender account that sends the transaction.
-        @param oldInterestValidator the old validator address.
-        @param newInterestValidator the new validator address.
-     */
-    event InterestValidatorUpdated(
-        address indexed sender,
-        address indexed oldInterestValidator,
-        address indexed newInterestValidator
-    );
 
     /**
      * @notice Notifies when the Escrow's tokens have been claimed.
