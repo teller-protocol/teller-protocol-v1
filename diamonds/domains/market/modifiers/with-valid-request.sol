@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import "../../../../contracts/interfaces/IPlatformSettings.sol";
 import "../../../../contracts/interfaces/IAssetSettings.sol";
-import { dat_Loans } from "../data/loans.sol";
 import { TellerCommon } from "../../../../contracts/util/TellerCommon.sol";
 import { int_is_debt_ratio_valid } from "../internal/is-debt-ratio-valid.sol";
 

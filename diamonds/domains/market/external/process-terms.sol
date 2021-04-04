@@ -1,10 +1,28 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { int_get_sto_Loans } from "../internal/get-loans-storage.sol";
 import "../../protocol/interfaces/IPlatformSettings.sol";
+import {
+    mod_only_enough_submissions
+} from "../modifiers/only-enough-submissions.sol";
+import {
+    int_validate_loan_request
+} from "../internal/validate-loan-request.sol";
+import { int_signature_valid } from "../internal/signature-valid.sol";
+import { int_get_chain_id } from "../internal/get-chain-id.sol";
+import { int_hash_request } from "../internal/hash-request.sol";
+import { int_hash_response } from "../internal/hash-response.sol";
+import { int_get_consensus } from "../internal/get-consensus.sol";
 
-abstract contract ext_process_terms_v1 is int_get_sto_Loans {
+abstract contract ext_process_terms_v1 is
+    mod_only_enough_submissions,
+    int_validate_loan_request,
+    int_signature_valid,
+    int_get_chain_id,
+    int_hash_request,
+    int_hash_response,
+    int_get_consensus
+{
     function processLoanTerms(
         TellerCommon.LoanRequest calldata request,
         TellerCommon.LoanResponse[] calldata responses

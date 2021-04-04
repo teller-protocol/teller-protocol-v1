@@ -6,8 +6,8 @@ import { dat_Loans } from "../data/loans.sol";
 import "../../protocol/interfaces/IAssetSettings.sol";
 
 abstract contract int_is_debt_ratio_valid_v1 is
-    int_get_sto_Loans_v1,
-    dat_Loans
+    dat_Loans,
+    int_get_sto_Loans_v1
 {
     function _isDebtRatioValid(uint256 newLoanAmount)
         internal

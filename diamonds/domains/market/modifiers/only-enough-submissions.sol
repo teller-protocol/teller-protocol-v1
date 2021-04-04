@@ -6,8 +6,8 @@ import { int_get_sto_Loans } from "../internal/get-loans-storage.sol";
 import { dat_Loans } from "../data/loans.sol";
 
 abstract contract mod_only_enough_submissions_v1 is
-    dat_Loans,
-    int_get_sto_Loans
+    int_get_sto_Loans,
+    dat_Loans
 {
     modifier onlyEnoughSubmissions(uint256 responseCount) {
         uint256 percentageRequired =

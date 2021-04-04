@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-import { dat_Loans } from "../data/loans.sol";
 import { int_create_loan } from "../internal/loans-create-loan.sol";
 import { ext_can_go_to_eoa } from "../external/loans-can-eoa.sol";
 import { ext_process_terms } from "../external/process-terms.sol";
+import { mod_with_valid_request } from "../modifiers/with-valid-request.sol";
 
 abstract contract ent_Loans_create_loan_v1 is
-    dat_Loans,
+    mod_with_valid_request,
     ext_process_terms,
     int_create_loan,
     //    int_pay_in_collateral,
-    ext_can_go_to_eoa,
-    sto_Loans_v1
+    ext_can_go_to_eoa
 {
     function createLoanWithTerms(
         TellerCommon.LoanRequest calldata request,
