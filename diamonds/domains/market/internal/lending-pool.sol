@@ -4,14 +4,14 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import { sto_LendingPool_v1 } from "../storage/lending-pool.sol";
+import { sto_lendingPool } from "../storage/lending-pool.sol";
 import "../../../providers/compound/IComptroller.sol";
 import "../../../providers/uniswap/UniSwapper.sol";
 import "../../protocol/interfaces/IAssetRegistry.sol";
 
 import "../../protocol/address.sol";
 
-abstract contract int_LendingPool_v1 is sto_LendingPool_v1, UniSwapper {
+abstract contract int_LendingPool_v1 is sto_lendingPool, UniSwapper {
     using SafeERC20 for ERC20;
 
     function _swapAccumulatedComp() internal {

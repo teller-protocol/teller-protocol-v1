@@ -3,8 +3,15 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import "../storage/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "./ERC721BeforeTokenTransfer.sol";
+import "./ERC721Approve.sol";
 
-abstract contract int_ERC721Transfer_v1 is sto_ERC721_v1 {
+abstract contract int_ERC721Transfer_v1 is
+    sto_ERC721,
+    int_beforeTokenTransfer_ERC721_v1,
+    int_approve_ERC721_v1
+{
     /**
      * @dev Transfers `tokenId` from `from` to `to`.
      *  As opposed to {transferFrom}, this imposes no restrictions on msg.sender.

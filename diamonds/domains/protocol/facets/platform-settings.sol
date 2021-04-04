@@ -18,7 +18,7 @@ import "../../../libraries/CacheLib.sol";
 
 abstract contract ent_PlatformSettings_v1 is
     Roles,
-    sto_AccessControl_v1,
+    sto_AccessControl,
     mod_authorized_AccessControl_v1,
     sto_PlatformSettings_v1,
     SettingNames_v1,

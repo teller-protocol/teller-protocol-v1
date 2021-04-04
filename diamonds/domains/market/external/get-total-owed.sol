@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./get-interest-owed-for.sol";
+import "../../../libraries/TellerCommon.sol";
 
 abstract contract ext_get_total_owed_v1 is ext_get_interest_owed_for {
     /**
@@ -9,12 +10,7 @@ abstract contract ext_get_total_owed_v1 is ext_get_interest_owed_for {
      * @param loanID The loan ID to get the total amount owed.
      * @return uint256 The total owed amount.
      */
-    function getTotalOwed(uint256 loanID)
-        public
-        view
-        override
-        returns (uint256)
-    {
+    function getTotalOwed(uint256 loanID) external view returns (uint256) {
         if (s().loans[loanID].status == TellerCommon.LoanStatus.TermsSet) {
             uint256 interestOwed =
                 getInterestOwedFor(

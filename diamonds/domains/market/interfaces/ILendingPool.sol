@@ -62,21 +62,6 @@ interface ILendingPool {
     function lendingToken() external view returns (ERC20);
 
     /**
-        @notice It initializes the contract state variables.
-        @param aMarketRegistry the MarketRegistry contract.
-        @param aLendingToken The underlying token that is used for lending.
-        @param aTToken the Teller token to link to the lending pool.
-        @param settingsAddress Settings contract address.
-        @dev It throws a require error if the contract is already initialized.
-     */
-    function initialize(
-        IMarketRegistry aMarketRegistry,
-        address aLendingToken,
-        address aTToken,
-        address settingsAddress
-    ) external;
-
-    /**
         @notice It gets the cToken address.
         @return the cToken address.
     */

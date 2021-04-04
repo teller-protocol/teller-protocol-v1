@@ -11,11 +11,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  */
 abstract contract ITToken {
     /**
-     * @notice The LendingPool linked to this Teller Token.
-     */
-    function lendingPool() external view virtual returns (address);
-
-    /**
      * @notice The token that is the underlying assets for this Teller token.
      */
     function underlying() external view virtual returns (ERC20);
@@ -35,7 +30,7 @@ abstract contract ITToken {
     function burn(address account, uint256 amount) external virtual;
 
     /**
-     * @param lendingPoolAddress the address of the lending pool this token is linked to. It is only used to add it as a minter.
+     * @param underlyingAsset the address of the lending pool this token is linked to. It is only used to add it as a minter.
      */
-    function initialize(address lendingPoolAddress) external virtual;
+    function initialize(address underlyingAsset) external virtual;
 }

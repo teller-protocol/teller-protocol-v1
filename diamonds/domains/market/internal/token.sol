@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../../storage/lending-pool.sol";
+import "../storage/lending-pool.sol";
 
-abstract contract int_TokenTx_LendingPool_v1 is sto_LendingPool_v1 {
+abstract contract int_TokenTx_Market_v1 is sto_lendingPool {
     using SafeERC20 for ERC20;
 
     /**
@@ -13,7 +13,7 @@ abstract contract int_TokenTx_LendingPool_v1 is sto_LendingPool_v1 {
         @param amount of tokens to transfer.
         @dev It throws a require error if 'transfer' invocation fails.
      */
-    function tokenTransfer(address recipient, uint256 amount) private {
+    function tokenTransfer(address recipient, uint256 amount) internal {
         ERC20 lendingToken = ERC20(getLendingPool().lendingToken);
         uint256 currentBalance = lendingToken.balanceOf(address(this));
         require(currentBalance >= amount, "LENDING_TOKEN_NOT_ENOUGH_BALANCE");
@@ -27,7 +27,7 @@ abstract contract int_TokenTx_LendingPool_v1 is sto_LendingPool_v1 {
         @dev It throws a require error if 'transferFrom' invocation fails.
      */
     function tokenTransferFrom(address from, uint256 amount)
-        private
+        internal
         returns (uint256 balanceIncrease)
     {
         ERC20 lendingToken = ERC20(getLendingPool().lendingToken);

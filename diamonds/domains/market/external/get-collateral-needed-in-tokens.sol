@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { ext_get_loan_amount } from "../external/get-loan-amount.sol";
 import "../interfaces/IEscrow.sol";
 import "../../protocol/interfaces/IPlatformSettings.sol";
+import "../internal/is-active-or-set.sol";
+import "../internal/get-loan-amount.sol";
+import "../../protocol/address.sol";
 
-abstract contract ext_get_collateral_needed_in_tokens_v1 is
-    ext_get_loan_amount
+abstract contract ext_getCollateralNeededInTokens_v1 is
+    int_getLoanAmount_v1,
+    int_isActiveOrSet_v1
 {
     /**
      * @notice Returns the minimum collateral value threshold, in the lending token, needed to take out the loan or for it be liquidated.
@@ -23,8 +26,8 @@ abstract contract ext_get_collateral_needed_in_tokens_v1 is
         returns (int256 neededInLendingTokens, uint256 escrowLoanValue)
     {
         if (
-            !isActiveOrSet(loanID) ||
-            s().loans[loanID].loanTerms.collateralRatio == 0
+            (!_isActiveOrSet(loanID)) ||
+            getLoansStorage().loans[loanID].loanTerms.collateralRatio == 0
         ) {
             return (0, 0);
         }
@@ -39,29 +42,37 @@ abstract contract ext_get_collateral_needed_in_tokens_v1 is
         // * To take out a loan (if status == TermsSet), the required collateral is (max loan amount * the collateral ratio).
         // * For the loan to not be liquidated (when status == Active), the minimum collateral is (principal owed * (X collateral factor + liquidation reward)).
         // * If the loan has an escrow account, the minimum collateral is ((principal owed - escrow value) * (X collateral factor + liquidation reward)).
-        if (s().loans[loanID].status == TellerCommon.LoanStatus.TermsSet) {
-            neededInLendingTokens = int256(getLoanAmount(loanID)).percent(
-                s().loans[loanID].loanTerms.collateralRatio
+        if (
+            getLoansStorage().loans[loanID].status ==
+            TellerCommon.LoanStatus.TermsSet
+        ) {
+            neededInLendingTokens = int256(_getLoanAmount(loanID)).percent(
+                getLoansStorage().loans[loanID].loanTerms.collateralRatio
             );
         } else {
-            neededInLendingTokens = int256(s().loans[loanID].principalOwed);
+            neededInLendingTokens = int256(
+                getLoansStorage().loans[loanID].principalOwed
+            );
             uint256 bufferPercent =
                 IPlatformSettings(PROTOCOL).getCollateralBufferValue();
             uint256 requiredRatio =
-                s().loans[loanID]
+                getLoansStorage().loans[loanID]
                     .loanTerms
                     .collateralRatio
                     .sub(getInterestRatio(loanID))
                     .sub(bufferPercent);
-            if (s().loans[loanID].escrow != address(0)) {
-                escrowLoanValue = IEscrow(s().loans[loanID].escrow)
+            if (getLoansStorage().loans[loanID].escrow != address(0)) {
+                escrowLoanValue = IEscrow(
+                    getLoansStorage().loans[loanID]
+                        .escrow
+                )
                     .calculateTotalValue();
                 neededInLendingTokens = neededInLendingTokens.add(
                     neededInLendingTokens.sub(int256(escrowLoanValue))
                 );
             }
             neededInLendingTokens = neededInLendingTokens
-                .add(int256(s().loans[loanID].interestOwed))
+                .add(int256(getLoansStorage().loans[loanID].interestOwed))
                 .percent(requiredRatio);
         }
     }

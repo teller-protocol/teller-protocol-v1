@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../storage/lending-pool.sol";
 
-abstract contract int_tokenTransferFrom_Market_v1 is sto_LendingPool_v1 {
+abstract contract int_tokenTransferFrom_Market_v1 is sto_lendingPool {
     using SafeERC20 for ERC20;
 
     function tokenTransferFrom(address from, uint256 amount)

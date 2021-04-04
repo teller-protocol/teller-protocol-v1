@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../../storage/lending-pool.sol";
-import "../../../../providers/compound/CErc20Interface.sol";
+import "../storage/lending-pool.sol";
+import "../../../providers/compound/CErc20Interface.sol";
 
-abstract contract int_compound_LendinPool_v1 is sto_LendingPool_v1 {
+abstract contract int_compound_LendingPool_v1 is sto_lendingPool {
     using SafeERC20 for ERC20;
 
     /**
@@ -52,19 +51,18 @@ abstract contract int_compound_LendinPool_v1 is sto_LendingPool_v1 {
         returns (uint256)
     {
         CErc20Interface cToken = CErc20Interface(getLendingPool().cToken);
+        ERC20 lendingToken = getLendingPool().lendingToken;
 
         if (address(cToken) == address(0)) {
             return 0;
         }
 
-        uint256 balanceBefore =
-            getLendingPool().lendingToken.balanceOf(address(this));
+        uint256 balanceBefore = lendingToken.balanceOf(address(this));
 
         uint256 redeemResult = cToken.redeemUnderlying(amount);
         require(redeemResult == 0, "COMPOUND_REDEEM_UNDERLYING_ERROR");
 
-        uint256 balanceAfter =
-            getLendingPool().lendingToken.balanceOf(address(this));
+        uint256 balanceAfter = lendingToken.balanceOf(address(this));
         return balanceAfter - (balanceBefore);
     }
 }

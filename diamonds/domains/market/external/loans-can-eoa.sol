@@ -3,12 +3,10 @@ pragma solidity ^0.8.0;
 
 import { int_get_sto_Loans } from "../internal/get-loans-storage.sol";
 import "../../protocol/interfaces/IPlatformSettings.sol";
+import "../data/loans.sol";
 
-abstract contract ext_can_go_to_eoa_v1 is
-    int_get_sto_Loans,
-    ext_PlatformSettings_v1
-{
-    function canGoToEOA(uint256 loanID) external view override returns (bool) {
+abstract contract ext_can_go_to_eoa_v1 is int_get_sto_Loans, dat_Loans_v1 {
+    function canGoToEOA(uint256 loanID) external view returns (bool) {
         uint256 overCollateralizedBuffer =
             IPlatformSettings(PROTOCOL).getOverCollateralizedBufferValue();
         return

@@ -1,23 +1,29 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { int_get_sto_Loans } from "./get-loans-storage.sol";
-import { dat_Loans } from "../data/loans.sol";
+import "./get-loans-storage.sol";
 import "../../protocol/interfaces/IPlatformSettings.sol";
+import "../../../libraries/TellerCommon.sol";
+import "../storage/loans.sol";
+import "../../protocol/address.sol";
 
-abstract contract int_create_loan_v1 is int_get_sto_Loans_v1, dat_Loans {
+abstract contract int_create_loan_v1 is sto_Loans {
+    using NumbersLib for uint256;
+
     function _createNewLoan(
         TellerCommon.LoanRequest memory request,
         uint256 interestRate,
         uint256 collateralRatio,
         uint256 maxLoanAmount
     ) internal returns (uint256) {
-        uint256 loanID = s().loanIDCounter;
-        s().loanIDCounter = s().loanIDCounter.add(1);
+        uint256 loanID = getLoansStorage().loanIDCounter;
+        getLoansStorage().loanIDCounter += 1;
 
-        s().loans[loanID].id = loanID;
-        s().loans[loanID].status = TellerCommon.LoanStatus.TermsSet;
-        s().loans[loanID].loanTerms = TellerCommon.LoanTerms({
+        getLoansStorage().loans[loanID].id = loanID;
+        getLoansStorage().loans[loanID].status = TellerCommon
+            .LoanStatus
+            .TermsSet;
+        getLoansStorage().loans[loanID].loanTerms = TellerCommon.LoanTerms({
             borrower: request.borrower,
             recipient: request.recipient,
             interestRate: interestRate,
@@ -29,7 +35,9 @@ abstract contract int_create_loan_v1 is int_get_sto_Loans_v1, dat_Loans {
         uint256 termsExpiryTime =
             IPlatformSettings(PROTOCOL).getTermsExpiryTimeValue();
 
-        s().loans[loanID].termsExpiry = block.timestamp.add(termsExpiryTime);
+        getLoansStorage().loans[loanID].termsExpiry =
+            block.timestamp +
+            (termsExpiryTime);
 
         return loanID;
     }

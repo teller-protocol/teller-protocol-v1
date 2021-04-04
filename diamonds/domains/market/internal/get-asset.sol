@@ -1,1 +1,1 @@
-function getAsset(address protocol) view returns (address) {}
+function getAsset() view returns (address) {}

@@ -14,7 +14,7 @@ import "../interfaces/IAssetSettings.sol";
 abstract contract ent_AssetSettings_v1 is
     AssetSettingNames,
     Roles,
-    sto_AccessControl_v1,
+    sto_AccessControl,
     mod_authorized_AccessControl_v1,
     sto_AssetSettings_v1,
     sto_AssetRegistry_v1,

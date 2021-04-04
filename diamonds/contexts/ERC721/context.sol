@@ -11,7 +11,7 @@ abstract contract ctx_ERC721_v1 is
     IERC165,
     IERC721,
     IERC721Metadata,
-    sto_ERC721_v1,
+    sto_ERC721,
     int_ERC721_v1,
     int_ERC721Metadata_v1
 {

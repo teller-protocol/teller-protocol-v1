@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../../../../contracts/interfaces/IPlatformSettings.sol";
+import "../../protocol/interfaces/IPlatformSettings.sol";
 import { int_get_sto_Loans } from "../internal/get-loans-storage.sol";
 import { dat_Loans } from "../data/loans.sol";
 

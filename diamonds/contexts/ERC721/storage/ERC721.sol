@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-abstract contract sto_ERC721_v1 {
-    bytes32 internal constant POSITION = keccak256("ERC721.token.v1");
+abstract contract sto_ERC721 {
+    bytes32 internal constant POSITION =
+        keccak256("teller_protocol.ERC721_token");
 
     struct ERC721Storage {
         // Token name

@@ -81,30 +81,6 @@ interface ILoanManager {
     function addSigners(address[] calldata accounts) external;
 
     /**
-     *  @notice It calls the LogicVersionRegistry to update the stored logic address for LoanData.
-     */
-    function updateLoanDataLogic() external;
-
-    /**
-     *  @notice It calls the LogicVersionRegistry to update the stored logic address for LoanTermsConsensus.
-     */
-    function updateLoanTermsConsensusLogic() external;
-
-    /**
-     * @notice Initializes the current contract instance setting the required parameters, if allowed
-     * @param lendingPoolAddress Contract address of the lending pool
-     * @param settingsAddress Contract address for the configuration of the platform
-     * @param collateralTokenAddress Contract address for the collateral token
-     * @param initDynamicProxyLogicAddress Address of a deployed InitializableDynamicProxy contract.
-     */
-    function initialize(
-        address lendingPoolAddress,
-        address settingsAddress,
-        address collateralTokenAddress,
-        address initDynamicProxyLogicAddress
-    ) external;
-
-    /**
      * @notice This event is emitted when collateral has been deposited for the loan
      * @param loanID ID of the loan for which collateral was deposited
      * @param borrower Account address of the borrower

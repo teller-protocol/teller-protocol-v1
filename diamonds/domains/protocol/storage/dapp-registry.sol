@@ -13,7 +13,7 @@ abstract contract sto_DappRegistry_v1 {
         AddressArrayLib.AddressArray list;
     }
 
-    function dappStore() pure returns (DappRegistryStorage storage s) {
+    function dappStore() internal pure returns (DappRegistryStorage storage s) {
         bytes32 position = keccak256("teller_protocol.storage.dapp_registry");
 
         assembly {

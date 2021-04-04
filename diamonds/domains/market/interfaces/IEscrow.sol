@@ -2,11 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Libraries
-import "../../util/TellerCommon.sol";
-
-// Interfaces
-import "../loans/ILoanManager.sol";
-import "../loans/ILoanManager.sol";
+import "../../../libraries/TellerCommon.sol";
 
 /**
  * @notice This interface defines all function to allow borrowers interact with their escrow contracts.

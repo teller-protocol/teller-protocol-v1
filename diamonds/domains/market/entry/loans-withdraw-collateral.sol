@@ -4,9 +4,7 @@ pragma solidity ^0.8.0;
 import {
     mod_protocolAuthorized_Protocol_v1
 } from "../../protocol/modifiers/protocol-authorized.sol";
-import {
-    mod_whenNotPaused_Market_v1
-} from "../modifiers/when-nothing-paused.sol";
+import { mod_whenNotPaused_Market_v1 } from "../modifiers/when-not-paused.sol";
 import { mod_loan_active_or_set } from "../modifiers/loan-active-or-set.sol";
 import {
     ext_get_collateral_needed_info

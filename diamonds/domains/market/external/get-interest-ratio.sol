@@ -10,12 +10,7 @@ abstract contract ext_get_interest_ratio_v1 is dat_Loans, int_get_sto_Loans {
      * @dev The interest rate on the loan terms is APY.
      * @param loanID The loan ID to get the interest rate for.
      */
-    function getInterestRatio(uint256 loanID)
-        public
-        view
-        override
-        returns (uint256)
-    {
+    function getInterestRatio(uint256 loanID) external view returns (uint256) {
         return
             s().loans[loanID]
                 .loanTerms

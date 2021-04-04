@@ -3,14 +3,11 @@ pragma solidity ^0.8.0;
 
 import "../../protocol/interfaces/IPlatformSettings.sol";
 import "../../protocol/interfaces/IAssetSettings.sol";
-import { TellerCommon } from "../../../../contracts/util/TellerCommon.sol";
+import "../../../libraries/TellerCommon.sol";
 import { int_is_debt_ratio_valid } from "../internal/is-debt-ratio-valid.sol";
 
-abstract contract mod_with_valid_request_v1 is
-    TellerCommon,
-    int_is_debt_ratio_valid
-{
-    modifier withValidLoanRequest(LoanRequest memory loanRequest) {
+abstract contract mod_with_valid_request_v1 is int_is_debt_ratio_valid {
+    modifier withValidLoanRequest(TellerCommon.LoanRequest memory loanRequest) {
         uint256 maxLoanDuration =
             IPlatformSettings(PROTOCOL).getMaximumLoanDurationValue();
         require(

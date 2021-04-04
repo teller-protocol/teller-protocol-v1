@@ -1,6 +1,11 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/utils/Strings.sol";
+
 abstract contract int_ERC721Metadata_v1 {
+    using Strings for uint256;
+
     /**
      * @dev Base URI for computing {tokenURI}. Empty by default, can be overriden
      * in child contracts.

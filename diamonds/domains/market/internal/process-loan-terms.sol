@@ -1,12 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-import { int_get_sto_Loans } from "../internal/get-loans-storage.sol";
 import "../../../libraries/NumbersLib.sol";
+import "../../../libraries/TellerCommon.sol";
+import "../../../libraries/ECDSALib.sol";
+import "../data/signer.sol";
+import "../storage/loans.sol";
+import "../../protocol/interfaces/IPlatformSettings.sol";
+import "../../protocol/address.sol";
+import "../../../contexts/access-control/internal/authorize.sol";
 
-abstract contract int_processLoanTerms_Market_v1 is int_get_sto_Loans {
+abstract contract int_processLoanTerms_Market_v1 is
+    int_authorize_AccessControl_v1,
+    sto_Loans
+{
+    using NumbersList for NumbersList.Values;
     using NumbersLib for uint256;
 
-    function processLoanTerms(
+    function _processLoanTerms(
         TellerCommon.LoanRequest calldata request,
         TellerCommon.LoanResponse[] calldata responses
     )
@@ -22,7 +32,8 @@ abstract contract int_processLoanTerms_Market_v1 is int_get_sto_Loans {
             IPlatformSettings(PROTOCOL).getRequiredSubmissionsPercentageValue();
 
         require(
-            responseCount.ratioOf(signers.array.length) >= percentageRequired,
+            responses.length.ratioOf(getLoansStorage().signers.array.length) >=
+                percentageRequired,
             "INSUFFICIENT_NUMBER_OF_RESPONSES"
         );
 
@@ -47,7 +58,6 @@ abstract contract int_processLoanTerms_Market_v1 is int_get_sto_Loans {
         for (uint256 i = 0; i < responses.length; i++) {
             TellerCommon.LoanResponse memory response = responses[i];
             authorize(SIGNER, response.signer);
-
             require(
                 response.consensusAddress == request.consensusAddress,
                 "CONSENSUS_ADDRESS_MISMATCH"

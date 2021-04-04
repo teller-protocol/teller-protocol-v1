@@ -19,8 +19,7 @@ abstract contract itn_tTokens_LendingPool_v1 is dat_LendingPool_v1 {
         uint256 exchangeRate
     ) internal pure returns (uint256) {
         return
-            tTokenAmount.mul(exchangeRate).div(
-                uint256(10)**uint256(EXCHANGE_RATE_DECIMALS)
-            );
+            (tTokenAmount * (exchangeRate)) /
+            (uint256(10)**uint256(EXCHANGE_RATE_DECIMALS));
     }
 }

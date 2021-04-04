@@ -5,12 +5,16 @@ pragma solidity ^0.8.0;
 import "../storage/ERC721.sol";
 import "./exists.sol";
 import "./ERC721Transfer.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 abstract contract int_ERC721_v1 is
-    sto_ERC721_v1,
+    sto_ERC721,
     int_Exists_v1,
     int_ERC721Transfer_v1
 {
+    using Address for address;
+
     /**
      * @dev Safely transfers `tokenId` token from `from` to `to`, checking first that contract recipients
      * are aware of the ERC721 protocol to prevent tokens from being forever locked.
@@ -164,7 +168,7 @@ abstract contract int_ERC721_v1 is
      *
      * Emits a {Approval} event.
      */
-    function _approve(address to, uint256 tokenId) internal {
+    function _approve(address to, uint256 tokenId) internal override {
         erc721Store().tokenApprovals[tokenId] = to;
         emit Approval(erc721Store().owners[tokenId], to, tokenId);
     }
@@ -213,25 +217,4 @@ abstract contract int_ERC721_v1 is
             return true;
         }
     }
-
-    /**
-     * @dev Hook that is called before any token transfer. This includes minting
-     * and burning.
-     *
-     * Calling conditions:
-     *
-     * - When `from` and `to` are both non-zero, ``from``'s `tokenId` will be
-     * transferred to `to`.
-     * - When `from` is zero, `tokenId` will be minted for `to`.
-     * - When `to` is zero, ``from``'s `tokenId` will be burned.
-     * - `from` cannot be the zero address.
-     * - `to` cannot be the zero address.
-     *
-     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
-     */
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) internal {}
 }

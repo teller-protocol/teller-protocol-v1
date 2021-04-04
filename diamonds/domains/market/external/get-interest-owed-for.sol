@@ -11,9 +11,8 @@ abstract contract ext_get_interest_owed_for_v1 is ext_get_interest_ratio {
      * @return uint256 The interest owed.
      */
     function getInterestOwedFor(uint256 loanID, uint256 amountBorrow)
-        public
+        external
         view
-        override
         returns (uint256)
     {
         return amountBorrow.percent(getInterestRatio(loanID));

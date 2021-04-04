@@ -5,10 +5,7 @@ import { int_get_sto_Loans } from "./get-loans-storage.sol";
 import { dat_Loans } from "../data/loans.sol";
 import "../../protocol/interfaces/IPlatformSettings.sol";
 
-abstract contract int_validate_loan_request_v1 is
-    int_get_sto_Loans_v1,
-    dat_Loans
-{
+abstract contract int_validate_loan_request_v1 is int_get_sto_Loans, dat_Loans {
     function _validateLoanRequest(address borrower, uint256 nonce)
         internal
         view
@@ -23,9 +20,10 @@ abstract contract int_validate_loan_request_v1 is
         }
 
         require(
-            s().loans[_borrowerLoans[numberOfLoans - 1]].loanStartTime.add(
-                IPlatformSettings(PROTOCOL).getRequestLoanTermsRateLimitValue()
-            ) <= block.timestamp,
+            s().loans[_borrowerLoans[numberOfLoans - 1]].loanStartTime +
+                IPlatformSettings(PROTOCOL)
+                    .getRequestLoanTermsRateLimitValue() <=
+                block.timestamp,
             "REQS_LOAN_TERMS_LMT_EXCEEDS_MAX"
         );
     }
