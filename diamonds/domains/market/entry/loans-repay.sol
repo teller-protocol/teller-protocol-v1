@@ -4,9 +4,10 @@ pragma solidity ^0.8.0;
 import {
     mod_protocolAuthorized_Protocol_v1
 } from "../../protocol/modifiers/protocol-authorized.sol";
+import { mod_whenNotPaused_Market_v1 } from "../modifiers/when-not-paused.sol";
 import {
-    mod_whenNotPaused_Market_v1
-} from "../modifiers/when-nothing-paused.sol";
+    int_tokenTransferFrom_Market_v1
+} from "../internal/token-transfer-from.sol";
 import { mod_loan_active_or_set } from "../modifiers/loan-active-or-set.sol";
 import { int_withdraw_collateral } from "../internal/withdraw-collateral.sol";
 import {
@@ -20,7 +21,8 @@ abstract contract ent_Loans_repay_v1 is
     mod_loan_active_or_set,
     mod_entry_AccessControl_v1,
     ext_get_total_owed,
-    int_withdraw_collateral
+    int_withdraw_collateral,
+    int_tokenTransferFrom_Market_v1
 {
     /**
      * @notice Make a payment to a loan
@@ -66,8 +68,14 @@ abstract contract ent_Loans_repay_v1 is
             }
         }
 
-        // collect the money from the payer
-        ILendingPool(PROTOCOL).repay(principalPaid, interestPaid, msg.sender);
+        uint256 totalAmount = principalAmount.add(interestAmount);
+        require(totalAmount > 0, "REPAY_ZERO");
+
+        // Transfers tokens to LendingPool.
+        tokenTransferFrom(msg.sender, totalAmount);
+
+        _totalRepaid = _totalRepaid.add(principalAmount);
+        totalInterestEarned = totalInterestEarned.add(interestAmount);
 
         // if the loan is now fully paid, close it and return collateral
         if (totalOwed == 0) {

@@ -6,15 +6,19 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import { sto_LendingPool_v1 } from "../storage/lending-pool.sol";
 import "../../../providers/compound/IComptroller.sol";
+import "../../../providers/uniswap/UniSwapper.sol";
+import "../../protocol/interfaces/IAssetRegistry.sol";
 
-abstract contract int_LendingPool_v1 is sto_LendingPool_v1 {
+import "../../protocol/address.sol";
+
+abstract contract int_LendingPool_v1 is sto_LendingPool_v1, UniSwapper {
     using SafeERC20 for ERC20;
 
     function _swapAccumulatedComp() internal {
         address cToken = getLendingPool().cToken;
         IComptroller compound = IComptroller(getLendingPool().compound);
         ERC20 comp = getLendingPool().comp;
-
+        address lendingToken = getLendingPool().lendingToken;
         address[] memory cTokens = new address[](1);
         cTokens[0] = address(cToken);
 
@@ -26,7 +30,7 @@ abstract contract int_LendingPool_v1 is sto_LendingPool_v1 {
         // Path of the swap is always COMP -> WETH -> LendingToken.
         address[] memory path = new address[](3);
         path[0] = address(comp);
-        path[1] = settings.WETH_ADDRESS();
+        path[1] = IAssetRegistry(PROTOCOL).getAsset("WETH");
         path[2] = address(lendingToken);
 
         _uniswap(path, amountIn);
