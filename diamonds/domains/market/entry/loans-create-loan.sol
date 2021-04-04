@@ -1,16 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-import { int_create_loan } from "../internal/loans-create-loan.sol";
+import { mod_with_valid_request } from "../modifiers/with-valid-request.sol";
+import {
+    mod_protocolAuthorized_Protocol_v1
+} from "../../protocol/modifiers/protocol-authorized.sol";
 import { ext_can_go_to_eoa } from "../external/loans-can-eoa.sol";
 import { ext_process_terms } from "../external/process-terms.sol";
-import { mod_with_valid_request } from "../modifiers/with-valid-request.sol";
+import { int_create_loan } from "../internal/loans-create-loan.sol";
+import { int_pay_in_collateral } from "../internal/loans-pay-in-collateral.sol";
 
 abstract contract ent_Loans_create_loan_v1 is
+    mod_protocolAuthorized_Protocol_v1,
     mod_with_valid_request,
+    ext_can_go_to_eoa,
     ext_process_terms,
     int_create_loan,
-    //    int_pay_in_collateral,
-    ext_can_go_to_eoa
+    int_pay_in_collateral
 {
     function createLoanWithTerms(
         TellerCommon.LoanRequest calldata request,
@@ -22,7 +27,7 @@ abstract contract ent_Loans_create_loan_v1 is
         override
         whenNotPaused
         withValidLoanRequest(request)
-        onlyAuthorized
+        protocolAuthorized(msg.sender)
     {
         require(msg.sender == request.borrower, "NOT_LOAN_REQUESTER");
 
