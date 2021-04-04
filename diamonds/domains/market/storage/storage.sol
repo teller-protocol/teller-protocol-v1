@@ -1,5 +1,7 @@
 import { ITToken } from "diamonds/Interfaces.sol";
 
+import "diamonds/providers/compound/CErc20Interface.sol";
+
 struct MarketLayout {
     ITToken tToken;
     CErc20Interface cToken;
@@ -15,4 +17,12 @@ struct MarketLayout {
     mapping(address => uint256[]) borrowerLoans;
     mapping(uint256 => TellerCommon.Loan) loans;
     AddressArrayLib.AddressArray signers;
+}
+
+function marketStore() pure returns (MarketLayout storage l_) {
+    bytes32 position = keccak256("teller_protocol.storage.market");
+
+    assembly {
+        l_.slot := position
+    }
 }
