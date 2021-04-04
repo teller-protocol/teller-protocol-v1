@@ -8,55 +8,42 @@ import {
 
 // Interfaces
 import "../../../internal/token-updated.sol";
-import "../internal/pool-ticket.sol";
+import "../internal/y_vault.sol";
 
-abstract contract ent_deposit_ticket is ent_deposit_ticket_v1 {}
+abstract contract ent_deposit is ent_deposit_v1 {}
 
-abstract contract ent_deposit_ticket_v1 is
+abstract contract ent_deposit_v1 is
     mod_onlyOwner_AccessControl,
     int_tokenUpdated_Escrow,
-    int_pool_ticket
+    int_y_vault
 {
     /**
-        @notice This function deposits the users funds into a Pool Together Prize Pool for a ticket.
-        @param tokenAddress address of the token.
-        @param amount of tokens to deposit.
-    */
-    function depositTicket(address tokenAddress, uint256 amount)
+        @notice Deposits the specified amount of the native unwrapped token (same as token() returns) into the Vault
+        @param tokenAddress The address of the token being deposited
+        @param amount The amount of tokens to be deposited into the vault
+     */
+    function deposit(address tokenAddress, uint256 amount)
         public
         override
         onlyOwner
     {
+        IVault iVault = _getYVault(tokenAddress);
+        uint256 tokenBalanceBeforeDeposit = iVault.balanceOf(address(this));
+        IERC20(tokenAddress).safeApprove(address(iVault), amount);
+        iVault.deposit(amount);
+        uint256 tokenBalanceAfterDeposit = iVault.balanceOf(address(this));
         require(
-            _balanceOf(tokenAddress) >= amount,
-            "POOL_INSUFFICIENT_UNDERLYING"
+            tokenBalanceAfterDeposit > tokenBalanceBeforeDeposit,
+            "YEARN_BALANCE_NOT_INCREASED"
         );
-
-        PrizePoolInterface prizePool = _getPrizePool(tokenAddress);
-
-        address ticketAddress = _getTicketAddress(tokenAddress);
-        uint256 balanceBefore = _balanceOf(ticketAddress);
-        IERC20(tokenAddress).safeApprove(address(prizePool), amount);
-
-        prizePool.depositTo(
-            address(this),
-            amount,
-            ticketAddress,
-            address(this)
-        );
-
-        uint256 balanceAfter = _balanceOf(ticketAddress);
-        require(balanceAfter > balanceBefore, "DEPOSIT_ERROR");
-
-        _tokenUpdated(address(ticketAddress));
         _tokenUpdated(tokenAddress);
 
-        emit PoolTogetherDeposited(
+        emit YearnDeposited(
             tokenAddress,
-            ticketAddress,
+            address(iVault),
             amount,
-            _balanceOf(tokenAddress),
-            balanceAfter
+            tokenBalanceBeforeDeposit,
+            tokenBalanceAfterDeposit
         );
     }
 }

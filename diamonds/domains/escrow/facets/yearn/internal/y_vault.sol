@@ -2,27 +2,21 @@
 pragma solidity ^0.8.0;
 
 // Interfaces
-import "../../../interfaces/PrizePoolInterface.sol";
+import "../../../interfaces/IVault.sol";
 import "../../../data/escrow.sol";
 
-abstract contract int_p_pool is int_p_pool_v1 {}
+abstract contract int_y_vault is int_y_vault_v1 {}
 
-abstract contract int_p_pool_v1 is dat_Escrow {
-    /** Internal Functions */
+abstract contract int_y_vault_v1 is dat_Escrow {
     /**
-        @notice Grabs the Pool Together Prize Pool address for an token from the asset settings.
-        @notice The pool underlying address must match the supplied token address.
-        @param tokenAddress The token address to get the cToken for.
-        @return PrizePool instance.
+        @notice Grabs the yVault address for a token from the asset settings
+        @param tokenAddress The underlying token address for the associated yVault
+        @return yVault instance
      */
-    function _getPrizePool(address tokenAddress)
-        internal
-        view
-        returns (PrizePoolInterface)
-    {
+    function _getYVault(address tokenAddress) internal view returns (IVault) {
         return
-            PrizePoolInterface(
-                IProtocol(PROTOCOL).assetSettings().getPrizePoolAddress(
+            IVault(
+                IProtocol(PROTOCOL).assetSettings().getYVaultAddress(
                     tokenAddress
                 )
             );

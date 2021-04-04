@@ -8,51 +8,36 @@ import {
 
 // Interfaces
 import "../../../internal/token-updated.sol";
-import "../internal/pool-ticket.sol";
+import "../internal/y_vault.sol";
 
 abstract contract ent_withdraw_all is ent_withdraw_all_v1 {}
 
 abstract contract ent_withdraw_all_v1 is
     mod_onlyOwner_AccessControl,
     int_tokenUpdated_Escrow,
-    int_pool_ticket
+    int_y_vault
 {
     /**
-        @notice This function withdraws the users funds from a Pool Together Prize Pool.
-        @param tokenAddress address of the token.
-    */
+        @notice Redeems all funds from a yVault from a previous deposit
+        @param tokenAddress The address of the token being deposited
+     */
     function withdrawAll(address tokenAddress) public override onlyOwner {
-        PrizePoolInterface prizePool = _getPrizePool(tokenAddress);
-
-        address ticketAddress = _getTicketAddress(tokenAddress);
-
-        uint256 balanceBefore = _balanceOf(ticketAddress);
-
-        (uint256 maxExitFee, ) =
-            prizePool.calculateEarlyExitFee(
-                address(this),
-                ticketAddress,
-                balanceBefore
-            );
-        prizePool.withdrawInstantlyFrom(
-            address(this),
-            balanceBefore,
-            ticketAddress,
-            maxExitFee
+        IVault iVault = _getYVault(tokenAddress);
+        uint256 tokenBalanceBeforeWithdrawal =
+            IERC20(tokenAddress).balanceOf(address(this));
+        iVault.withdraw();
+        uint256 tokenBalanceAfterWithdrawal =
+            IERC20(tokenAddress).balanceOf(address(this));
+        require(
+            tokenBalanceAfterWithdrawal > tokenBalanceBeforeWithdrawal,
+            "WITHDRAWAL_UNSUCCESSFUL"
         );
-
-        uint256 balanceAfter = _balanceOf(ticketAddress);
-        require(balanceAfter < balanceBefore, "WITHDRAW_ERROR");
-
-        _tokenUpdated(address(ticketAddress));
-        _tokenUpdated(tokenAddress);
-
-        emit PoolTogetherWithdrawal(
-            tokenAddress,
-            ticketAddress,
-            balanceBefore,
-            _balanceOf(tokenAddress),
-            balanceAfter
+        emit YearnWithdrawn(
+            iVault.token(),
+            address(iVault),
+            tokenBalanceBeforeWithdrawal,
+            tokenBalanceBeforeWithdrawal,
+            tokenBalanceAfterWithdrawal
         );
     }
 }
