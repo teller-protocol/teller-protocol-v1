@@ -223,14 +223,11 @@ interface IPlatformSettings {
     function isPaused() external view returns (bool);
 
     /**
-        @notice It gets whether a lending pool is paused or not.
-        @param lendingPoolAddress lending pool address to test.
-        @return true if the lending pool is paused. Otherwise it returns false.
+        @notice It gets whether a market is paused or not.
+        @param market to test.
+        @return true if the market is paused. Otherwise it returns false.
      */
-    function marketPaused(address lendingPoolAddress)
-        external
-        view
-        returns (bool);
+    function isMarketPaused(address market) external view returns (bool);
 
     /**
         @notice It pauses a specific lending pool.

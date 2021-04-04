@@ -7,9 +7,7 @@ abstract contract sto_PlatformSettings_v1 {
     using PlatformSettingsLib for PlatformSettingsLib.PlatformSetting;
     struct PlatformSettingsLayout {
         bool platformRestricted;
-        bool paused;
         mapping(bytes32 => PlatformSettingsLib.PlatformSetting) platformSettings;
-        mapping(address => bool) marketPoolPaused;
     }
 
     bytes32 internal constant POSITION =

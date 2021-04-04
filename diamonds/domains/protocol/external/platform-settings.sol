@@ -17,7 +17,7 @@ abstract contract ext_PlatformSettings_v1 is
     mod_authorized_AccessControl_v1,
     mod_whenPaused_Pausable_v1,
     mod_whenNotPaused_Pausable_v1,
-    ctx_AccessControl_v1,
+    int_grantRole_AccessControl_v1,
     Roles
 {
     /**
@@ -153,25 +153,6 @@ abstract contract ext_PlatformSettings_v1 is
     }
 
     /**
-     * @notice It returns the address of the UniswapV2Router.
-     */
-    function getUniswapV2RouterAddress()
-        external
-        view
-        override
-        returns (address)
-    {
-        return cacheStorage.addresses["UniswapV2Router"];
-    }
-
-    /**
-     * @notice It returns the address of the InitializeableDynamicProxy contract.
-     */
-    function initDynamicProxyLogic() external view override returns (address) {
-        return cacheStorage.addresses["InitializeableDynamicProxy"];
-    }
-
-    /**
         @notice It tests whether a setting name is already configured.
         @param settingName setting name to test.
         @return true if the setting is already configured. Otherwise it returns false.
@@ -182,7 +163,7 @@ abstract contract ext_PlatformSettings_v1 is
         override
         returns (bool)
     {
-        return _getPlatformSetting(settingName).exists;
+        return s().platformSettings[settingName].exists;
     }
 
     function getPlatformSetting(bytes32 settingName)
@@ -194,43 +175,20 @@ abstract contract ext_PlatformSettings_v1 is
     }
 
     /**
-        @notice It pauses a specific lending pool.
-        @param marketAddress lending pool address to pause.
-     */
-    function pauseMarket(address marketAddress)
-        external
-        override
-        authorized(PAUSER, msg.sender)
-        whenNotPaused(address(this))
-    {
-        if (!pausableStorage().paused[marketAddress]) {
-            _pause(marketAddress);
-            emit MarketPaused(msg.sender, marketAddress);
-        }
-    }
-
-    /**
-        @notice It unpauses a specific lending pool.
-        @param marketAddress market address to unpause.
-     */
-    function unpauseMarket(address marketAddress)
-        external
-        override
-        authorized(PAUSER, msg.sender)
-        whenNotPaused(address(this))
-    {
-        if (pausableStorage().paused[marketAddress]) {
-            _unpause(marketAddress);
-            emit MarketUnpaused(msg.sender, marketAddress);
-        }
-    }
-
-    /**
         @notice It gets whether the platform is paused or not.
         @return true if platform is paused. Otherwise it returns false.
      */
     function isPaused() external view override returns (bool) {
         return pausableStorage().paused[address(this)];
+    }
+
+    function isMarketPaused(address market)
+        external
+        view
+        override
+        returns (bool)
+    {
+        return pausableStorage().paused[market];
     }
 
     /**
@@ -256,7 +214,7 @@ abstract contract ext_PlatformSettings_v1 is
 
     /**
         @notice Adds a wallet address to the list of authorized wallets
-        @param addressToAdd The wallet address of the user being authorized
+        @param account The wallet address of the user being authorized
      */
     function addAuthorizedAddress(address account)
         public
@@ -276,21 +234,20 @@ abstract contract ext_PlatformSettings_v1 is
         authorized(PAUSER, msg.sender)
     {
         for (uint256 i = 0; i < addressesToAdd.length; i++) {
-            _addAuthorizedAddress(addressesToAdd[i]);
+            _grantRole(USER < addressesToAdd[i]);
         }
     }
 
     /**
         @notice Removes a wallet address from the list of authorized wallets
-        @param addressToRemove The wallet address of the user being unauthorized
+        @param account The wallet address of the user being unauthorized
      */
-    function removeAuthorizedAddress(address addressToRemove)
+    function removeAuthorizedAddress(address account)
         external
         override
         authorized(PAUSER, msg.sender)
     {
-        s().authorizedAddresses[addressToRemove] = false;
-        emit AuthorizationRevoked(addressToRemove, msg.sender);
+        _revokeRole(USER, account);
     }
 
     /**
@@ -304,21 +261,7 @@ abstract contract ext_PlatformSettings_v1 is
         override
         returns (bool)
     {
-        return _isPauser(account) || s().authorizedAddresses[account];
-    }
-
-    /**
-        @notice Requires an account to have platform authorization.
-        @dev Checks if an account address has authorization or proxy contract is registered.
-        @param account account to test.
-     */
-    function requireAuthorization(address account) external view override {
-        require(
-            !s().platformRestricted ||
-                _isPauser(account) ||
-                s().authorizedAddresses[account],
-            "NOT_AUTHORIZED"
-        );
+        return _hasRole(USER, account) || _hasRole(PAUSER, account);
     }
 
     function s()

@@ -9,7 +9,6 @@ import "../../../contexts/access-control/storage.sol";
 import "../storage/platform-settings.sol";
 import "../storage/asset-settings.sol";
 import "../storage/asset-registry.sol";
-import "../data.sol";
 import "../../../libraries/PlatformSettingsLib.sol";
 import "../interfaces/IPlatformSettings.sol";
 import "../internal/setting-names.sol";
@@ -93,6 +92,40 @@ abstract contract ent_PlatformSettings_v1 is
         s().platformSettings[settingName].remove();
 
         emit PlatformSettingRemoved(settingName, oldValue, msg.sender);
+    }
+
+    function pause() external override authorized(PAUSER, msg.sender) {
+        _pause(address(this));
+    }
+
+    function unpause() external ovreride authorized(PAUSER, msg.sender) {
+        _unpause(address(this));
+    }
+
+    /**
+        @notice It pauses a specific lending pool.
+        @param marketAddress lending pool address to pause.
+     */
+    function pauseMarket(address marketAddress)
+        external
+        override
+        authorized(PAUSER, msg.sender)
+        whenNotPaused(address(this))
+    {
+        _pause(marketAddress);
+    }
+
+    /**
+        @notice It unpauses a specific lending pool.
+        @param marketAddress market address to unpause.
+     */
+    function unpauseMarket(address marketAddress)
+        external
+        override
+        authorized(PAUSER, msg.sender)
+        whenNotPaused(address(this))
+    {
+        _unpause(marketAddress);
     }
 
     function s()
