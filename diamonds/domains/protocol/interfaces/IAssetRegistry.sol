@@ -2,5 +2,5 @@
 pragma solidity ^0.8.0;
 
 interface IAssetRegistry {
-    function addresses(string memory asset) external view returns (address);
+    function getAsset(string memory asset) external view returns (address);
 }
