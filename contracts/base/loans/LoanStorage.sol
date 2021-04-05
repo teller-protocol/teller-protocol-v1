@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Libraries
 import "../../util/TellerCommon.sol";
@@ -9,9 +9,9 @@ import "../../util/AddressArrayLib.sol";
 import "../../interfaces/loans/ILoanStorage.sol";
 import "../../interfaces/loans/ILoanTermsConsensus.sol";
 import "../../interfaces/LendingPoolInterface.sol";
+import "../../interfaces/AssetSettingsInterface.sol";
 
 // Contracts
-import "../BaseStorage.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -29,7 +29,7 @@ import "../BaseStorage.sol";
  *
  * @author develop@teller.finance.
  */
-contract LoanStorage is ILoanStorage, BaseStorage {
+abstract contract LoanStorage is ILoanStorage, ALoanStorage {
     /* State Variables */
 
     // Loan length will be inputted in seconds.
@@ -38,30 +38,30 @@ contract LoanStorage is ILoanStorage, BaseStorage {
     /**
      * @notice Holds the total amount of collateral held by the contract.
      */
-    uint256 public totalCollateral;
+    uint256 public override totalCollateral;
 
     /**
      * @notice Holds the instance of the LendingPool used by the LoanManager.
      */
-    LendingPoolInterface public lendingPool;
+    LendingPoolInterface public override lendingPool;
 
     /**
      * @notice Holds the lending token used for creating loans by the LoanManager and LendingPool.
      */
-    address public lendingToken;
+    address public override lendingToken;
 
     /**
      * @notice Holds the collateral token.
      */
-    address public collateralToken;
+    address public override collateralToken;
 
     /**
      * @notice Holds the Compound cToken where the underlying token matches the lending token.
      */
-    CErc20Interface public cToken;
+    CErc20Interface public override cToken;
 
     /**
-     * @notice Holds a list of all loans for a borrower address.
+     * @dev Holds a list of all loans for a borrower address.
      */
     mapping(address => uint256[]) internal borrowerLoans;
 
@@ -69,43 +69,38 @@ contract LoanStorage is ILoanStorage, BaseStorage {
      * @notice Holds the ID of loans taken out
      * @dev Also the next available loan ID
      */
-    uint256 public loanIDCounter;
+    uint256 public override loanIDCounter;
 
     /**
-     * @notice Holds the data of all loans for the lending token.
-     */
-    mapping(uint256 => TellerCommon.Loan) public loans;
-
-    /**
-     * @notice Holds the list of authorizer signers for loans.
+     * @dev Holds the list of authorizer signers for loans.
      */
     AddressArrayLib.AddressArray internal signers;
 
     /**
-     * @notice It holds the address of a deployed InitializeableDynamicProxy contract.
+     * @dev It holds the address of a deployed InitializeableDynamicProxy contract.
      * @dev It is used to deploy a new proxy contract with minimal gas cost using the logic in the Factory contract.
      */
     address internal initDynamicProxyLogic;
 
     /**
-     * @notice Holds the address of the LoanData implementation.
+     * @dev Holds the address of the LoanData implementation.
      */
     address internal loanData;
 
     /**
-     * @notice Holds the address of the LoanTermsConsensus implementation.
+     * @dev Holds the address of the LoanTermsConsensus implementation.
      */
     address internal loanTermsConsensus;
 
     /**
      * @notice Holds the logic name used for the LoanData contract.
-     * @div Is used to check the LogicVersionsRegistry for a new LoanData implementation.
+     * @dev Is used to check the LogicVersionsRegistry for a new LoanData implementation.
      */
     bytes32 public constant LOAN_DATA_LOGIC_NAME = keccak256("LoanData");
 
     /**
      * @notice Holds the logic name used for the LoanTermsConsensus contract.
-     * @div Is used to check the LogicVersionsRegistry for a new LoanTermsConsensus implementation.
+     * @dev Is used to check the LogicVersionsRegistry for a new LoanTermsConsensus implementation.
      */
     bytes32 public constant LOAN_TERMS_CONSENSUS_LOGIC_NAME =
         keccak256("LoanTermsConsensus");

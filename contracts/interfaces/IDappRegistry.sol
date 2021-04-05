@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 import "../util/TellerCommon.sol";
 
@@ -12,7 +12,7 @@ interface IDappRegistry {
     /**
         @notice It gets a dapp configuration based on its contract address.
         @param dapp dapp address.
-        @return TellerCommon.Dapp dapp configuration.
+        @return the dapp details.
      */
     function dapps(address dapp)
         external

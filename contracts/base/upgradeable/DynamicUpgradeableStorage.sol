@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Interfaces
 import "../../interfaces/LogicVersionsRegistryInterface.sol";
@@ -20,7 +20,7 @@ import "../../interfaces/LogicVersionsRegistryInterface.sol";
 
     @author develop@teller.finance
  */
-contract DynamicUpgradeableStorage {
+abstract contract DynamicUpgradeableStorage {
     /**
      * @notice It returns the logic registry that is used to determine the implementation logic for this proxy.
      * @dev See LogicVersionsRegistry contract.
@@ -37,7 +37,7 @@ contract DynamicUpgradeableStorage {
     bytes32 public logicName;
 
     /**
-     * @param strictDynamic Boolean indicating if the proxy must check the registry for a new implementation.
+     * @notice Boolean indicating if the proxy must check the registry for a new implementation.
      */
     bool public strictDynamic;
 
@@ -47,7 +47,7 @@ contract DynamicUpgradeableStorage {
     address public implementationStored;
 
     /**
-     * @notice It is the block number which the last time the proxy implementation was checked.
+     * @dev It is the block number which the last time the proxy implementation was checked.
      */
     uint256 internal _implementationBlockUpdated;
 }

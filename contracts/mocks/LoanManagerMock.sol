@@ -1,8 +1,8 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 import "../base/loans/LoanManager.sol";
 
 contract LoanManagerMock is LoanManager {
-    function() external payable {}
+    fallback() external payable {}
 }

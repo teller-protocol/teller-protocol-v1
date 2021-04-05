@@ -1,12 +1,12 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Contracts
 import "../Base.sol";
 import "../escrow/EscrowStorage.sol";
 
 // Interfaces
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../interfaces/escrow/IBaseEscrowDapp.sol";
 import "../../interfaces/loans/ILoanManager.sol";
 
@@ -36,7 +36,7 @@ contract BaseEscrowDapp is IBaseEscrowDapp, Base, EscrowStorage {
      * @notice Returns an array of token addresses, for which this Escrow contract has a balance.
      * @return The list of all tokens held by this contract.
      */
-    function getTokens() public view returns (address[] memory) {
+    function getTokens() public view override returns (address[] memory) {
         return tokens.array;
     }
 

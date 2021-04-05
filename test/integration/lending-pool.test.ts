@@ -31,7 +31,6 @@ describe('LendingPool', () => {
 
     const lender = await getNamedSigner('lender')
     const lenderAddress = await lender.getAddress()
-
     // Fund the market
     const depositAmount = await getLenderFunds(market, 1000)
     await deposit(lender, depositAmount)
@@ -45,6 +44,10 @@ describe('LendingPool', () => {
     claimableInterest
       .isNegative()
       .should.equal(false, 'Lender did not earn interest')
+
+    claimableInterest
+      .isZero()
+      .should.equal(false, "Lender didn't earn interest")
 
     // Withdraw all funds
     await withdraw(lender)

@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 import "../util/PlatformSettingsLib.sol";
 import "./IDappRegistry.sol";
@@ -146,7 +146,7 @@ interface SettingsInterface {
 
     /**
         @notice It gets the current "RequiredSubmissionsPercentage" setting's value
-        @return the current value.
+        @return value the current value.
      */
     function getRequiredSubmissionsPercentageValue()
         external
@@ -155,13 +155,13 @@ interface SettingsInterface {
 
     /**
         @notice It gets the current "MaximumTolerance" setting's value
-        @return the current value.
+        @return value the current value.
      */
     function getMaximumToleranceValue() external view returns (uint256 value);
 
     /**
         @notice It gets the current "ResponseExpiryLength" setting's value
-        @return the current value.
+        @return value the current value.
      */
     function getResponseExpiryLengthValue()
         external
@@ -170,25 +170,25 @@ interface SettingsInterface {
 
     /**
         @notice It gets the current "SafetyInterval" setting's value
-        @return the current value.
+        @return value the current value.
      */
     function getSafetyIntervalValue() external view returns (uint256 value);
 
     /**
         @notice It gets the current "TermsExpiryTime" setting's value
-        @return the current value.
+        @return value the current value.
      */
     function getTermsExpiryTimeValue() external view returns (uint256 value);
 
     /**
         @notice It gets the current "LiquidateEthPrice" setting's value
-        @return the current value.
+        @return value the current value.
      */
     function getLiquidateEthPriceValue() external view returns (uint256 value);
 
     /**
         @notice It gets the current "MaximumLoanDuration" setting's value
-        @return the current value.
+        @return value the current value.
      */
     function getMaximumLoanDurationValue()
         external
@@ -197,7 +197,7 @@ interface SettingsInterface {
 
     /**
         @notice It gets the current "RequestLoanTermsRateLimit" setting's value
-        @return the current value.
+        @return value the current value.
      */
     function getRequestLoanTermsRateLimitValue()
         external
@@ -206,13 +206,13 @@ interface SettingsInterface {
 
     /**
         @notice It gets the current "CollateralBuffer" setting's value
-        @return the current value.
+        @return value the current value.
      */
     function getCollateralBufferValue() external view returns (uint256 value);
 
     /**
         @notice It gets the current "OverCollateralizedBuffer" setting's value
-        @return the current value.
+        @return value the current value.
      */
     function getOverCollateralizedBufferValue()
         external

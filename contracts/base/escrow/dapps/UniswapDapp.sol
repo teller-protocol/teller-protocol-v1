@@ -1,9 +1,9 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // External Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // Common
 import "../../../util/AddressLib.sol";
@@ -43,7 +43,7 @@ contract UniswapDapp is IUniswapDapp, UniSwapper, BaseEscrowDapp {
         address[] memory path,
         uint256 sourceAmount,
         uint256 minDestination
-    ) public onlyBorrower {
+    ) public override onlyBorrower {
         uint256 destinationAmount =
             _uniswap(path, sourceAmount, minDestination);
 

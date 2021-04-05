@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Contracts
 import "../../escrow/BaseEscrowDapp.sol";
@@ -8,8 +8,8 @@ import "../../escrow/BaseEscrowDapp.sol";
 import "../../../util/AddressLib.sol";
 
 // External Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // Interfaces
 import "./IYearnDapp.sol";
@@ -43,7 +43,11 @@ contract YearnDapp is IYearnDapp, BaseEscrowDapp {
         @param tokenAddress The address of the token being deposited
         @param amount The amount of tokens to be deposited into the vault
      */
-    function deposit(address tokenAddress, uint256 amount) public onlyBorrower {
+    function deposit(address tokenAddress, uint256 amount)
+        public
+        override
+        onlyBorrower
+    {
         IVault iVault = _getYVault(tokenAddress);
         uint256 tokenBalanceBeforeDeposit = iVault.balanceOf(address(this));
         IERC20(tokenAddress).safeApprove(address(iVault), amount);
@@ -70,6 +74,7 @@ contract YearnDapp is IYearnDapp, BaseEscrowDapp {
      */
     function withdraw(address tokenAddress, uint256 amount)
         public
+        override
         onlyBorrower
     {
         IVault iVault = _getYVault(tokenAddress);
@@ -104,7 +109,7 @@ contract YearnDapp is IYearnDapp, BaseEscrowDapp {
         @notice Redeems all funds from a yVault from a previous deposit
         @param tokenAddress The address of the token being deposited
      */
-    function withdrawAll(address tokenAddress) public onlyBorrower {
+    function withdrawAll(address tokenAddress) public override onlyBorrower {
         IVault iVault = _getYVault(tokenAddress);
         uint256 tokenBalanceBeforeWithdrawal =
             IERC20(tokenAddress).balanceOf(address(this));
@@ -135,6 +140,7 @@ contract YearnDapp is IYearnDapp, BaseEscrowDapp {
     function getPricePerFullShare(address tokenAddress)
         external
         view
+        override
         returns (uint256)
     {
         IVault iVault = _getYVault(tokenAddress);

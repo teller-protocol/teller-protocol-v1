@@ -1,4 +1,5 @@
-pragma solidity 0.5.17;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 /**
  * @dev Utility library of inline functions on addresses
@@ -23,7 +24,11 @@ library AddressLib {
      * @param other Address to check against itself
      * @return boolean
      */
-    function isEqualTo(address self, address other) internal pure returns (bool) {
+    function isEqualTo(address self, address other)
+        internal
+        pure
+        returns (bool)
+    {
         return self == other;
     }
 
@@ -33,7 +38,11 @@ library AddressLib {
      * @param other Address to check against itself
      * @return boolean
      */
-    function isNotEqualTo(address self, address other) internal pure returns (bool) {
+    function isNotEqualTo(address self, address other)
+        internal
+        pure
+        returns (bool)
+    {
         return self != other;
     }
 
@@ -51,7 +60,10 @@ library AddressLib {
      * @param self The address this function was called on
      * @param message Error message if address is all 0s
      */
-    function requireNotEmpty(address self, string memory message) internal pure {
+    function requireNotEmpty(address self, string memory message)
+        internal
+        pure
+    {
         require(isNotEmpty(self), message);
     }
 

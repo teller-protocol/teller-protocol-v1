@@ -1,9 +1,9 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 // Interfaces
 import "../../interfaces/loans/ILoanManager.sol";
@@ -29,22 +29,22 @@ import "../../interfaces/AssetSettingsInterface.sol";
 
     @author develop@teller.finance
  */
-contract LendingPoolStorage {
+abstract contract LendingPoolStorage {
     uint8 public constant EXCHANGE_RATE_DECIMALS = 36;
 
     ITToken public tToken;
 
-    ERC20Detailed public lendingToken;
+    ERC20 public lendingToken;
 
     CErc20Interface public cToken;
 
     IComptroller public compound;
 
-    ERC20Detailed public comp;
+    ERC20 public comp;
 
     IMarketRegistry public marketRegistry;
 
-    /**
+    /*
         The total amount of underlying asset that has been originally been supplied by each
         lender not including interest earned.
     */

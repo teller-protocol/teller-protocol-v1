@@ -1,9 +1,9 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // External Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 //Contracts
 import "../../escrow/BaseEscrowDapp.sol";
@@ -43,7 +43,11 @@ contract AaveDapp is IAaveDapp, BaseEscrowDapp {
         @param tokenAddress address of the token
         @param amount amount of tokens to deposit
      */
-    function deposit(address tokenAddress, uint256 amount) public onlyBorrower {
+    function deposit(address tokenAddress, uint256 amount)
+        public
+        override
+        onlyBorrower
+    {
         IAaveLendingPool aaveLendingPool = _getAaveLendingPool();
         IAToken aToken = _getAToken(tokenAddress);
         uint256 aTokenBalanceBeforeDeposit = aToken.balanceOf(address(this));
@@ -74,6 +78,7 @@ contract AaveDapp is IAaveDapp, BaseEscrowDapp {
      */
     function withdraw(address tokenAddress, uint256 amount)
         public
+        override
         onlyBorrower
     {
         IAToken aToken = _getAToken(tokenAddress);
@@ -106,7 +111,7 @@ contract AaveDapp is IAaveDapp, BaseEscrowDapp {
         @notice This function withdraws all the user's aTokens from previous deposits
         @param tokenAddress address of the token
      */
-    function withdrawAll(address tokenAddress) public onlyBorrower {
+    function withdrawAll(address tokenAddress) public override onlyBorrower {
         IAToken aToken = _getAToken(tokenAddress);
 
         uint256 aTokenBalanceBeforeWithdraw = aToken.balanceOf(address(this));

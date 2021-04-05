@@ -1,20 +1,19 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Commons
 import "../../util/TellerCommon.sol";
 
 // Interfaces
-import "./ILoanStorage.sol";
-import "./ILoanData.sol";
 import "../SettingsInterface.sol";
+import "./ILoanData.sol";
 
 /**
  * @notice This interface defines the functions to work with the Teller loans protocol
  *
  * @author develop@teller.finance
  */
-contract ILoanManager is ILoanStorage, ILoanData {
+interface ILoanManager {
     /**
      * @notice Deposit collateral for a loan, unless it isn't allowed
      * @param borrower Account address of the borrower

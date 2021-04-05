@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Libraries
 import "../../util/TellerCommon.sol";
@@ -14,33 +14,6 @@ import "../loans/ILoanManager.sol";
  * @author develop@teller.finance
  */
 interface IEscrow {
-    /* State Variables */
-
-    /**
-     * @notice Holds the instance of the associated LoanManager contract for this Escrow loan.
-     */
-    function loanManager() external view returns (ILoanManager);
-
-    /**
-     * @notice Holds the address of the LendingPool used for this Escrow loan.
-     */
-    function lendingPool() external view returns (address);
-
-    /**
-     * @notice Holds the loan ID of the loan for this Escrow in the LoansManager contract.
-     */
-    function loanID() external view returns (uint256);
-
-    /**
-     * @notice Holds the token that this Escrow loan was taken out with.
-     */
-    function lendingToken() external view returns (address);
-
-    /**
-     * @notice Holds the borrower's address that owns this Escrow loan.
-     */
-    function borrower() external view returns (address);
-
     /* External Functions */
 
     /**

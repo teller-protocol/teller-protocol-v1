@@ -1,6 +1,7 @@
-pragma solidity 0.5.17;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 /**
  * @dev Utility library for uint256 numbers
@@ -10,7 +11,9 @@ import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 library NumbersLib {
     using SafeMath for uint256;
 
-    // It represents 100% with 2 decimal places.
+    /**
+        @dev It represents 100% with 2 decimal places.
+     */
     function ONE_HUNDRED_PERCENT() internal pure returns (uint256) {
         return 10000;
     }
@@ -30,7 +33,11 @@ library NumbersLib {
         @param self The number to return the percentage difference for
         @return uint256 The percentage difference value
      */
-    function diffOneHundredPercent(uint256 self) internal pure returns (uint256) {
+    function diffOneHundredPercent(uint256 self)
+        internal
+        pure
+        returns (uint256)
+    {
         return diff(self, ONE_HUNDRED_PERCENT());
     }
 
@@ -39,11 +46,19 @@ library NumbersLib {
      * @param self The number to get a percentage of.
      * @param percentage The percentage value to calculate with 2 decimal places (10000 = 100%).
      */
-    function percent(uint256 self, uint256 percentage) internal pure returns (uint256) {
+    function percent(uint256 self, uint256 percentage)
+        internal
+        pure
+        returns (uint256)
+    {
         return self.mul(percentage).div(ONE_HUNDRED_PERCENT());
     }
 
-    function percent(int256 self, uint256 percentage) internal pure returns (int256) {
+    function percent(int256 self, uint256 percentage)
+        internal
+        pure
+        returns (int256)
+    {
         return (self * int256(percentage)) / int256(ONE_HUNDRED_PERCENT());
     }
 
@@ -57,7 +72,11 @@ library NumbersLib {
      * @param num The number to calculate the ratio for.
      * @return Ratio of 2 numbers with 2 decimal places (10000 = 100%).
      */
-    function ratioOf(uint256 self, uint256 num) internal pure returns (uint256) {
+    function ratioOf(uint256 self, uint256 num)
+        internal
+        pure
+        returns (uint256)
+    {
         return self.mul(ONE_HUNDRED_PERCENT()).div(num);
     }
 }

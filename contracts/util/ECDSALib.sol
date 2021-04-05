@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.17;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 /**
- * Copied from @openzeppelin/contracts-ethereum-package/contracts/cryptography/ECDSA.sol
+ * Copied from @openzeppelin/contracts/cryptography/ECDSA.sol
  * Due to the fact that the 0.5.x versions of the OZ contract do not accept v, r, and s separately
  *
  */

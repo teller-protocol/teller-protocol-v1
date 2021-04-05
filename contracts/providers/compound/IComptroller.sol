@@ -1,9 +1,7 @@
-pragma solidity 0.5.17;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
-contract IComptroller {
-    /// @notice Indicator that this is a Comptroller contract (for inspection)
-    bool public constant isComptroller = true;
-
+interface IComptroller {
     /*** Assets You Are In ***/
 
     function enterMarkets(address[] calldata cTokens)

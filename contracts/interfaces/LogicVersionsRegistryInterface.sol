@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Commons
 import "../util/LogicVersionLib.sol";
@@ -96,7 +96,9 @@ interface LogicVersionsRegistryInterface {
     /**
         @notice It gets the current logic version for a given logic name.
         @param logicName to get.
-        @return the current logic version.
+        @return currentVersion the current logic version number.
+        @return latestVersion the latest version number (higher than current if rolled back).
+        @return logic the address of the current logic version
      */
     function getLogicVersion(bytes32 logicName)
         external

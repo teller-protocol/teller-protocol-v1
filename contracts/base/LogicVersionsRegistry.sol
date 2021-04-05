@@ -1,8 +1,8 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Commons and Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "../util/AddressLib.sol";
 import "../util/LogicVersionLib.sol";
 import "../util/TellerCommon.sol";
@@ -28,7 +28,7 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
     address public owner;
 
     /**
-        @notice It represents a mapping to identify a logic name (key) and the current logic address and version.
+        @dev It represents a mapping to identify a logic name (key) and the current logic address and version.
 
         i.e.:
             bytes32("EtherCollateralLoans") => { logic: "0x123...789", version: 1 }.
@@ -53,7 +53,7 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
      */
     function createLogicVersions(
         TellerCommon.CreateLogicVersionRequest[] calldata newLogicVersions
-    ) external onlyOwner {
+    ) external override onlyOwner {
         _createLogicVersions(newLogicVersions);
     }
 
@@ -63,7 +63,7 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
      */
     function upgradeLogicVersions(
         TellerCommon.UpgradeLogicVersionRequest[] calldata newLogicVersions
-    ) external onlyOwner {
+    ) external override onlyOwner {
         _upgradeLogicVersions(newLogicVersions);
     }
 
@@ -77,7 +77,7 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
         bytes32 logicName,
         address newLogic,
         address proxy
-    ) external onlyOwner {
+    ) external override onlyOwner {
         _upgradeLogicVersion(logicName, newLogic, proxy);
     }
 
@@ -88,6 +88,7 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
      */
     function rollbackLogicVersion(bytes32 logicName, uint256 previousVersion)
         external
+        override
         onlyOwner
     {
         (uint256 currentVersion, address previousLogic, address newLogic) =
@@ -114,11 +115,14 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
     /**
         @notice It gets the current logic version for a given logic name.
         @param logicName to get.
-        @return the current logic version.
+        @return currentVersion the current logic version number.
+        @return latestVersion the latest version number (higher than current if rolled back).
+        @return logic the address of the current logic version
      */
     function getLogicVersion(bytes32 logicName)
         external
         view
+        override
         returns (
             uint256 currentVersion,
             uint256 latestVersion,
@@ -138,7 +142,12 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
         @param logicName logic name to test.
         @return true if the logic version is already configured. Otherwise it returns false.
      */
-    function hasLogicVersion(bytes32 logicName) external view returns (bool) {
+    function hasLogicVersion(bytes32 logicName)
+        external
+        view
+        override
+        returns (bool)
+    {
         return logicVersions[logicName].exists;
     }
 
@@ -150,7 +159,7 @@ contract LogicVersionsRegistry is LogicVersionsRegistryInterface {
     function initialize(
         address aOwner,
         TellerCommon.CreateLogicVersionRequest[] calldata initialLogicVersions
-    ) external {
+    ) external override {
         require(owner == address(0), "ALREADY_INIT");
         owner = aOwner;
         _createLogicVersions(initialLogicVersions);

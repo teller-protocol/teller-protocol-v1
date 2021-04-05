@@ -1,9 +1,10 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Interfaces
 import "./IUniswapV2Router02.sol";
-import "../../base/BaseStorage.sol";
+import "../../base/Base.sol";
+import "../../providers/chainlink/IChainlinkAggregator.sol";
 
 /*****************************************************************************************************/
 /**                                             WARNING                                             **/
@@ -21,7 +22,7 @@ import "../../base/BaseStorage.sol";
  *
  * @author develop@teller.finance
  */
-contract UniSwapper is BaseStorage {
+contract UniSwapper is Base {
     /**
      * @notice Swaps tokens using UniswapV2Router via the platform defined Uniswap contract.
      * @notice Allows for a custom minimum destination amount to be required.
@@ -97,7 +98,7 @@ contract UniSwapper is BaseStorage {
 
         assembly {
             if eq(success, 0) {
-                revert(add(data, 0x20), returndatasize)
+                revert(add(data, 0x20), returndatasize())
             }
         }
 

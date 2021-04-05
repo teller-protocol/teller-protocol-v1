@@ -1,8 +1,8 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "../../util/AddressLib.sol";
 import "../../util/CacheLib.sol";
 
@@ -33,7 +33,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
     using CacheLib for CacheLib.Cache;
 
     /**
-          @notice This mapping represents the asset settings where:
+          @dev This mapping represents the asset settings where:
 
           - The key is the asset address.
           - The value is the Cache for all asset settings. It includes the settings addresses, uints, ints, bytes and boolean values.
@@ -42,43 +42,43 @@ contract AssetSettings is AssetSettingsInterface, Base {
 
     /** Constants */
     /**
-          @notice The asset setting name for cToken address settings.
+          @dev The asset setting name for cToken address settings.
        */
     bytes32 internal constant CTOKEN_ADDRESS_ASSET_SETTING =
         keccak256("CTokenAddress");
 
     /**
-          @notice The asset setting name for aToken address settings.
+          @dev The asset setting name for aToken address settings.
        */
     bytes32 internal constant ATOKEN_ADDRESS_ASSET_SETTING =
         keccak256("ATokenAddress");
 
     /**
-          @notice The asset setting name for yearn vault address settings.
+          @dev The asset setting name for yearn vault address settings.
        */
     bytes32 internal constant YEARN_VAULT_ADDRESS_ASSET_SETTING =
         keccak256("YVaultAddress");
 
     /**
-          @notice The asset setting name for pool together's prize pool address settings.
+          @dev The asset setting name for pool together's prize pool address settings.
        */
     bytes32 internal constant PRIZE_POOL_ADDRESS_ASSET_SETTING =
         keccak256("PrizePoolAddress");
 
     /**
-          @notice The asset setting name for the maximum loan amount settings.
+          @dev The asset setting name for the maximum loan amount settings.
        */
     bytes32 internal constant MAX_LOAN_AMOUNT_ASSET_SETTING =
         keccak256("MaxLoanAmount");
 
     /**
-          @notice The asset setting name for the maximum total value locked settings.
+          @dev The asset setting name for the maximum total value locked settings.
        */
     bytes32 internal constant MAX_TOTAL_VALUE_LOCKED_SETTING =
         keccak256("MaxTVLAmount");
 
     /**
-          @notice The asset setting name for the maximum debt ratio settings.
+          @dev The asset setting name for the maximum debt ratio settings.
        */
     bytes32 internal constant MAX_DEBT_RATIO_SETTING =
         keccak256("MaxDebtRatio");
@@ -97,7 +97,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
         uint256 maxLoanAmount,
         uint256 maxTVLAmount,
         uint256 maxDebtRatio
-    ) external onlyPauser() {
+    ) external override onlyPauser() {
         assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
         cTokenAddress.requireNotEmpty("CTOKEN_ADDRESS_REQUIRED");
 
@@ -153,6 +153,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
       */
     function updateCTokenAddress(address assetAddress, address cTokenAddress)
         external
+        override
         onlyPauser()
     {
         cTokenAddress.requireNotEmpty("CTOKEN_ADDRESS_REQUIRED");
@@ -181,6 +182,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
     function getCTokenAddress(address assetAddress)
         external
         view
+        override
         returns (address)
     {
         assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
@@ -196,7 +198,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
     function updateYVaultAddressSetting(
         address assetAddress,
         address yVaultAddress
-    ) external onlyPauser() {
+    ) external override onlyPauser() {
         assets[assetAddress].updateAddress(
             YEARN_VAULT_ADDRESS_ASSET_SETTING,
             yVaultAddress
@@ -211,6 +213,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
     function getYVaultAddress(address assetAddress)
         external
         view
+        override
         returns (address)
     {
         assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
@@ -226,6 +229,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
       */
     function updateATokenAddress(address assetAddress, address aTokenAddress)
         external
+        override
         onlyPauser()
     {
         aTokenAddress.requireNotEmpty("ATOKEN_ADDRESS_REQUIRED");
@@ -254,6 +258,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
     function getATokenAddress(address assetAddress)
         external
         view
+        override
         returns (address)
     {
         assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
@@ -269,7 +274,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
     function updatePrizePoolAddress(
         address assetAddress,
         address prizePoolAddress
-    ) external onlyPauser() {
+    ) external override onlyPauser() {
         prizePoolAddress.requireNotEmpty("PRIZE_POOL_ADDRESS_REQUIRED");
         address oldPrizePoolAddress =
             assets[assetAddress].addresses[PRIZE_POOL_ADDRESS_ASSET_SETTING];
@@ -296,6 +301,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
     function getPrizePoolAddress(address assetAddress)
         external
         view
+        override
         returns (address)
     {
         assetAddress.requireNotEmpty("ASSET_ADDRESS_REQUIRED");
@@ -310,6 +316,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
       */
     function updateMaxLoanAmount(address assetAddress, uint256 newMaxLoanAmount)
         external
+        override
         onlyPauser()
     {
         assets[assetAddress].requireExists();
@@ -337,6 +344,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
     function getMaxLoanAmount(address assetAddress)
         external
         view
+        override
         returns (uint256)
     {
         assets[assetAddress].requireExists();
@@ -353,6 +361,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
     function exceedsMaxLoanAmount(address assetAddress, uint256 amount)
         external
         view
+        override
         returns (bool)
     {
         assets[assetAddress].requireExists();
@@ -367,6 +376,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
       */
     function updateMaxTVL(address assetAddress, uint256 newMaxTVLAmount)
         external
+        override
         onlyPauser()
     {
         assets[assetAddress].requireExists();
@@ -388,6 +398,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
     function getMaxTVLAmount(address assetAddress)
         external
         view
+        override
         returns (uint256)
     {
         assets[assetAddress].requireExists();
@@ -403,6 +414,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
       */
     function updateMaxDebtRatio(address assetAddress, uint256 newMaxDebtRatio)
         external
+        override
         onlyPauser()
     {
         assets[assetAddress].requireExists();
@@ -425,6 +437,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
     function getMaxDebtRatio(address assetAddress)
         external
         view
+        override
         returns (uint256)
     {
         assets[assetAddress].requireExists();
@@ -435,7 +448,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
       @notice It removes a configuration for a given asset on the platform.
       @param assetAddress asset address to remove.
       */
-    function removeAsset(address assetAddress) external onlyPauser() {
+    function removeAsset(address assetAddress) external override onlyPauser() {
         assets[assetAddress].requireExists();
         assets[assetAddress].clearCache(
             [
@@ -457,7 +470,7 @@ contract AssetSettings is AssetSettingsInterface, Base {
         emit AssetSettingsRemoved(msg.sender, assetAddress);
     }
 
-    function initialize() external {
+    function initialize() external override {
         _initialize(msg.sender);
     }
 }

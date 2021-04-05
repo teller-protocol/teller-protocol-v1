@@ -1,24 +1,25 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Libraries
 import "../../util/CompoundRatesLib.sol";
 import "../../util/NumbersLib.sol";
 
 // Interfaces
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "../../interfaces/LendingPoolInterface.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "../../interfaces/loans/ILoanManager.sol";
 import "../../providers/compound/CErc20Interface.sol";
 import "../../providers/compound/IComptroller.sol";
 import "../../interfaces/IMarketRegistry.sol";
 import "../../interfaces/ITToken.sol";
+import "../../interfaces/LendingPoolInterface.sol";
+
+import "./LendingPoolStorage.sol";
 
 // Contracts
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../Base.sol";
-import "./LendingPoolStorage.sol";
 import "../../providers/uniswap/UniSwapper.sol";
 
 /*****************************************************************************************************/
@@ -37,16 +38,51 @@ import "../../providers/uniswap/UniSwapper.sol";
 
     @author develop@teller.finance
  */
-contract LendingPool is
-    LendingPoolInterface,
-    Base,
-    LendingPoolStorage,
-    UniSwapper
-{
+contract LendingPool is LendingPoolInterface, Base, UniSwapper {
     using SafeMath for uint256;
-    using SafeERC20 for ERC20Detailed;
+    using SafeERC20 for ERC20;
     using CompoundRatesLib for CErc20Interface;
     using NumbersLib for uint256;
+    using AddressLib for address;
+
+    uint8 public constant EXCHANGE_RATE_DECIMALS = 36;
+
+    ITToken public override tToken;
+
+    ERC20 public override lendingToken;
+
+    CErc20Interface public override cToken;
+
+    IComptroller public override compound;
+
+    ERC20 public override comp;
+
+    IMarketRegistry public marketRegistry;
+
+    /*
+        The total amount of underlying asset that has been originally been supplied by each
+        lender not including interest earned.
+    */
+    mapping(address => uint256) internal _totalSuppliedUnderlyingLender;
+
+    // The total amount of underlying asset that has been lent out for loans.
+    uint256 internal _totalBorrowed;
+
+    // The total amount of underlying asset that has been repaid from loans.
+    uint256 internal _totalRepaid;
+
+    // The total amount of underlying interest that has been claimed for each lender.
+    mapping(address => uint256) internal _totalInterestEarnedLender;
+
+    // The total amount of underlying interest the pool has earned from loans being repaid.
+    uint256 public override totalInterestEarned;
+
+    /**
+     * @notice It holds the platform AssetSettings instance.
+     */
+    AssetSettingsInterface public assetSettings;
+
+    bool internal _notEntered;
 
     /** Modifiers */
 
@@ -81,6 +117,7 @@ contract LendingPool is
     */
     function deposit(uint256 lendingTokenAmount)
         external
+        override
         updateImpIfNeeded
         nonReentrant
         whenNotPaused
@@ -113,7 +150,6 @@ contract LendingPool is
                 _exchangeRateForSupply(previousSupply)
             );
         tTokenMint(msg.sender, tTokenAmount);
-
         // Emit event
         emit TokenDeposited(msg.sender, lendingTokenAmount, tTokenAmount);
     }
@@ -126,6 +162,7 @@ contract LendingPool is
      */
     function withdraw(uint256 lendingTokenAmount)
         external
+        override
         updateImpIfNeeded
         nonReentrant
         whenNotPaused
@@ -138,7 +175,7 @@ contract LendingPool is
 
         require(tTokenAmount > 0, "WITHDRAW_TTOKEN_DUST");
         require(
-            tToken.balanceOf(msg.sender) > tTokenAmount,
+            IERC20(address(tToken)).balanceOf(msg.sender) > tTokenAmount,
             "TTOKEN_NOT_ENOUGH_BALANCE"
         );
 
@@ -154,7 +191,7 @@ contract LendingPool is
         onlyAuthorized
         returns (uint256)
     {
-        uint256 tTokenAmount = tToken.balanceOf(msg.sender);
+        uint256 tTokenAmount = IERC20(address(tToken)).balanceOf(msg.sender);
         uint256 exchangeRate = _exchangeRateCurrent();
         uint256 lendingTokenAmount =
             _lendingTokensFromTTokens(tTokenAmount, exchangeRate);
@@ -179,6 +216,7 @@ contract LendingPool is
         address borrower
     )
         external
+        override
         updateImpIfNeeded
         nonReentrant
         isLoan
@@ -210,6 +248,7 @@ contract LendingPool is
      */
     function createLoan(uint256 amount, address borrower)
         external
+        override
         updateImpIfNeeded
         nonReentrant
         isLoan
@@ -247,11 +286,16 @@ contract LendingPool is
 
     /**
         @notice It calculates the market state values across all markets.
-        @return values that represent the global state across all markets.
+        @notice It returns values that represent the global state across all markets.
+        @return totalSupplied
+        @return totalBorrowed
+        @return totalRepaid
+        @return totalOnLoan
      */
     function getMarketState()
         external
         view
+        override
         returns (
             uint256 totalSupplied,
             uint256 totalBorrowed,
@@ -269,12 +313,13 @@ contract LendingPool is
      */
     function balanceOfUnderlying(address lender)
         external
+        override
         updateImpIfNeeded
         returns (uint256)
     {
         return
             _lendingTokensFromTTokens(
-                tToken.balanceOf(lender),
+                IERC20(address(tToken)).balanceOf(lender),
                 _exchangeRateCurrent()
             );
     }
@@ -286,6 +331,7 @@ contract LendingPool is
      */
     function getLenderInterestEarned(address lender)
         external
+        override
         updateImpIfNeeded
         returns (uint256)
     {
@@ -300,6 +346,7 @@ contract LendingPool is
      */
     function getClaimableInterestEarned(address lender)
         external
+        override
         updateImpIfNeeded
         returns (uint256)
     {
@@ -321,6 +368,7 @@ contract LendingPool is
     function getDebtRatioFor(uint256 loanAmount)
         external
         view
+        override
         returns (uint256)
     {
         uint256 totalSupplied = _getTotalSupplied();
@@ -385,19 +433,19 @@ contract LendingPool is
         address aLendingToken,
         address aTToken,
         address settingsAddress
-    ) external {
+    ) external override {
         aTToken.requireNotEmpty("TTOKEN_ADDRESS_IS_REQUIRED");
 
         Base._initialize(settingsAddress);
 
         marketRegistry = aMarketRegistry;
         tToken = ITToken(aTToken);
-        lendingToken = ERC20Detailed(aLendingToken);
+        lendingToken = ERC20(aLendingToken);
         cToken = CErc20Interface(
             settings.getCTokenAddress(address(lendingToken))
         );
         compound = IComptroller(cToken.comptroller());
-        comp = ERC20Detailed(compound.getCompAddress());
+        comp = ERC20(compound.getCompAddress());
         assetSettings = settings.assetSettings();
 
         _notEntered = true;
@@ -410,7 +458,10 @@ contract LendingPool is
         uint256 exchangeRate
     ) internal view returns (uint256) {
         uint256 lenderUnderlyingBalance =
-            _lendingTokensFromTTokens(tToken.balanceOf(lender), exchangeRate);
+            _lendingTokensFromTTokens(
+                IERC20(address(tToken)).balanceOf(lender),
+                exchangeRate
+            );
         return
             lenderUnderlyingBalance.sub(_totalSuppliedUnderlyingLender[lender]);
     }
@@ -440,19 +491,23 @@ contract LendingPool is
         view
         returns (uint256)
     {
-        if (tToken.totalSupply() == 0) {
-            return uint256(10)**uint256(int8(EXCHANGE_RATE_DECIMALS));
+        if (IERC20(address(tToken)).totalSupply() == 0) {
+            return uint256(10)**uint256(EXCHANGE_RATE_DECIMALS);
         }
 
         return
             supply.mul(uint256(10)**uint256(EXCHANGE_RATE_DECIMALS)).div(
-                tToken.totalSupply()
+                IERC20(address(tToken)).totalSupply()
             );
     }
 
     /**
         @notice It calculates the market state values across all markets.
-        @return values that represent the global state across all markets.
+        @notice Returns values that represent the global state across all markets.
+        @return totalSupplied 
+        @return totalBorrowed 
+        @return totalRepaid 
+        @return totalOnLoan 
      */
     function _getMarketState()
         internal
@@ -472,7 +527,7 @@ contract LendingPool is
 
     /**
         @notice It calculates the total supply of the lending token across all markets.
-        @return the total supply denoted in the lending token.
+        @return totalSupplied the total supply denoted in the lending token.
      */
     function _getTotalSupplied() internal view returns (uint256 totalSupplied) {
         totalSupplied = lendingToken.balanceOf(address(this)).add(
@@ -552,7 +607,7 @@ contract LendingPool is
         @dev The underlying token value of the tokens to be deposited must be positive. Because the decimals of
             cTokens and the underlying asset can differ, the deposit of dust tokens may result in no cTokens minted.
         @param amount The amount of underlying tokens to deposit.
-        @return The amount of underlying tokens deposited.
+        @return difference The amount of underlying tokens deposited.
      */
     function _depositToCompoundIfSupported(uint256 amount)
         internal
@@ -666,8 +721,7 @@ contract LendingPool is
         @dev It throws a require error if mint invocation fails.
      */
     function tTokenMint(address to, uint256 amount) private {
-        bool mintResult = tToken.mint(to, amount);
-        require(mintResult, "TTOKEN_MINT_FAILED");
+        tToken.mint(to, amount);
     }
 
     function _accrueInterest() private {

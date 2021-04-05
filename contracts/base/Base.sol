@@ -1,8 +1,8 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 // Commons
 
@@ -40,7 +40,7 @@ contract Base is DynamicUpgradeable, BaseStorage {
           @notice Checks if sender has a pauser role
           @dev Throws an error if the sender has not a pauser role.
        */
-    modifier onlyPauser() {
+    modifier onlyPauser() virtual {
         settings.requirePauserRole(msg.sender);
         _;
     }
@@ -54,7 +54,7 @@ contract Base is DynamicUpgradeable, BaseStorage {
     @notice Checks whether the platform is paused or not.
     @dev It throws a require error if platform is paused.
  */
-    modifier whenNotPaused() {
+    modifier whenNotPaused() virtual {
         require(!_isPaused(), "PLATFORM_IS_PAUSED");
         _;
     }

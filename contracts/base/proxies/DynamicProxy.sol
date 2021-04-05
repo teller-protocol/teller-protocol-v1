@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Contracts
 import "./BaseDynamicProxy.sol";
@@ -21,7 +21,7 @@ contract DynamicProxy is BaseDynamicProxy {
         address logicRegistryAddress,
         bytes32 aLogicName,
         bool isStrictDynamic
-    ) public {
+    ) {
         logicRegistry = LogicVersionsRegistryInterface(logicRegistryAddress);
         logicName = aLogicName;
         strictDynamic = isStrictDynamic;

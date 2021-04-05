@@ -1,13 +1,14 @@
-pragma solidity 0.5.17;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Contracts
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../../base/Base.sol";
 
 // Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "../openzeppelin/SignedSafeMath.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SignedSafeMath.sol";
 import "../../util/AddressArrayLib.sol";
 
 // Interfaces
@@ -67,6 +68,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
     function aggregatorFor(address src, address dst)
         external
         view
+        override
         returns (AggregatorV2V3Interface, bool)
     {
         src = _normalizeTokenAddress(src);
@@ -83,6 +85,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
     function isTokenSupported(address tokenAddress)
         external
         view
+        override
         returns (bool)
     {
         tokenAddress = _normalizeTokenAddress(tokenAddress);
@@ -101,7 +104,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
         address src,
         address dst,
         uint256 srcAmount
-    ) external view returns (uint256) {
+    ) external view override returns (uint256) {
         src = _normalizeTokenAddress(src);
         dst = _normalizeTokenAddress(dst);
 
@@ -118,6 +121,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
     function latestAnswerFor(address src, address dst)
         external
         view
+        override
         returns (int256)
     {
         src = _normalizeTokenAddress(src);
@@ -136,7 +140,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
         address src,
         address dst,
         address aggregator
-    ) external onlyPauser {
+    ) external override onlyPauser {
         src = _normalizeTokenAddress(src);
         dst = _normalizeTokenAddress(dst);
 
@@ -163,7 +167,7 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
         @param src Source token address.
         @param dst Destination token address.
      */
-    function remove(address src, address dst) external onlyPauser {
+    function remove(address src, address dst) external override onlyPauser {
         src = _normalizeTokenAddress(src);
         dst = _normalizeTokenAddress(dst);
 
@@ -181,27 +185,27 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
         @notice It removes support for a Chainlink Aggregator.
         @param tokenAddress Token to remove all markets for.
      */
-    function remove(address tokenAddress) external onlyPauser {
+    function remove(address tokenAddress) external override onlyPauser {
         tokenAddress = _normalizeTokenAddress(tokenAddress);
-
         address[] storage arr = supportedTokens[tokenAddress].array;
         for (uint256 i; i < arr.length; i++) {
             (AggregatorV2V3Interface agg, bool inverse) =
-                _aggregatorFor(tokenAddress, arr[i]);
+                _aggregatorFor(tokenAddress, arr[0]);
             if (inverse) {
-                aggregators[arr[i]][tokenAddress] = address(0);
+                aggregators[arr[0]][tokenAddress] = address(0);
             } else {
-                aggregators[tokenAddress][arr[i]] = address(0);
+                aggregators[tokenAddress][arr[0]] = address(0);
             }
+            // REVIEW
+            arr[0] = arr[arr.length - 1];
+            arr.pop();
         }
-
-        arr.length = 0;
     }
 
     /**
         @notice It initializes this ChainlinkAggregator instance.
      */
-    function initialize() external {
+    function initialize() external override {
         _initialize(msg.sender);
     }
 
@@ -228,18 +232,15 @@ contract ChainlinkAggregator is IChainlinkAggregator, Base {
         @return uint8 Number of decimals the given token.
      */
     function _decimalsFor(address addr) internal view returns (uint8) {
-        return
-            addr == settings.ETH_ADDRESS()
-                ? 18
-                : ERC20Detailed(addr).decimals();
+        return addr == settings.ETH_ADDRESS() ? 18 : ERC20(addr).decimals();
     }
 
     /**
         @notice It grabs the Chainlink Aggregator contract address for the token pair if it is supported.
         @param src Source token address.
         @param dst Destination token address.
-        @return AggregatorV2V3Interface The Chainlink Aggregator address.
-        @return bool whether or not the values from the Aggregator should be considered inverted.
+        @return aggregator The Chainlink Aggregator address.
+        @return inverse whether or not the values from the Aggregator should be considered inverted.
      */
     function _aggregatorFor(address src, address dst)
         internal

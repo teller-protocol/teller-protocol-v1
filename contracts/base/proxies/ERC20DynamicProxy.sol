@@ -1,7 +1,8 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Contracts
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./InitializeableDynamicProxy.sol";
 import "../upgradeable/DynamicUpgradeableERC20.sol";
 
@@ -25,8 +26,18 @@ contract ERC20DynamicProxy is
      */
     function initialize(address logicRegistryAddress, bytes32 aLogicName)
         public
+        override
     {
         initialize(logicRegistryAddress, aLogicName, true);
         _updateImplementationStored();
+    }
+
+    function _implementation()
+        internal
+        view
+        override(BaseDynamicProxy, DynamicUpgradeable)
+        returns (address)
+    {
+        return BaseDynamicProxy._implementation();
     }
 }

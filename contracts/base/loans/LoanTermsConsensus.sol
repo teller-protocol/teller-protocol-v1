@@ -1,8 +1,9 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Libraries
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SignedSafeMath.sol";
 import "../../util/ECDSALib.sol";
 
 // Interfaces
@@ -11,7 +12,6 @@ import "../../interfaces/loans/ILoanTermsConsensus.sol";
 import "../../interfaces/SettingsInterface.sol";
 import "../../interfaces/escrow/IEscrow.sol";
 import "../../interfaces/loans/ILoanManager.sol";
-import "../../providers/openzeppelin/SignedSafeMath.sol";
 
 // Contracts
 import "../Base.sol";
@@ -35,7 +35,7 @@ import "./LoanStorage.sol";
  *
  * @author develop@teller.finance.
  */
-contract LoanTermsConsensus is ILoanTermsConsensus, LoanStorage {
+contract LoanTermsConsensus is ILoanTermsConsensus, Base, LoanStorage {
     using SafeMath for uint256;
     using NumbersList for NumbersList.Values;
     using NumbersLib for uint256;
@@ -61,9 +61,9 @@ contract LoanTermsConsensus is ILoanTermsConsensus, LoanStorage {
         @notice Processes the loan request
         @param request Struct of the protocol loan request
         @param responses List of structs of the protocol loan responses
-        @return uint256 Interest rate
-        @return uint256 Collateral ratio
-        @return uint256 Maximum loan amount
+        @return interestRate uint256 Interest rate
+        @return collateralRatio uint256 Collateral ratio
+        @return maxLoanAmount uint256 Maximum loan amount
      */
     function processLoanTerms(
         TellerCommon.LoanRequest calldata request,
@@ -71,6 +71,7 @@ contract LoanTermsConsensus is ILoanTermsConsensus, LoanStorage {
     )
         external
         view
+        override
         onlyEnoughSubmissions(responses.length)
         returns (
             uint256 interestRate,
@@ -91,7 +92,9 @@ contract LoanTermsConsensus is ILoanTermsConsensus, LoanStorage {
             "BAD_CONSENSUS_ADDRESS"
         );
 
-        bytes32 requestHash = _hashRequest(request);
+        uint256 chainId = _getChainId();
+
+        bytes32 requestHash = _hashRequest(request, chainId);
 
         uint256 responseExpiryLengthValue =
             settings.getResponseExpiryLengthValue();
@@ -123,11 +126,13 @@ contract LoanTermsConsensus is ILoanTermsConsensus, LoanStorage {
             }
 
             require(
-                response.responseTime >= now.sub(responseExpiryLengthValue),
+                response.responseTime >=
+                    block.timestamp.sub(responseExpiryLengthValue),
                 "RESPONSE_EXPIRED"
             );
 
-            bytes32 responseHash = _hashResponse(response, requestHash);
+            bytes32 responseHash =
+                _hashResponse(response, requestHash, chainId);
 
             require(
                 _signatureValid(
@@ -183,7 +188,8 @@ contract LoanTermsConsensus is ILoanTermsConsensus, LoanStorage {
      */
     function _hashResponse(
         TellerCommon.LoanResponse memory response,
-        bytes32 requestHash
+        bytes32 requestHash,
+        uint256 chainId
     ) internal pure returns (bytes32) {
         return
             keccak256(
@@ -193,7 +199,7 @@ contract LoanTermsConsensus is ILoanTermsConsensus, LoanStorage {
                     response.interestRate,
                     response.collateralRatio,
                     response.maxLoanAmount,
-                    _getChainId(),
+                    chainId,
                     requestHash
                 )
             );
@@ -204,11 +210,10 @@ contract LoanTermsConsensus is ILoanTermsConsensus, LoanStorage {
         @param request Struct of the protocol loan request
         @return bytes32 Hash of the loan request
      */
-    function _hashRequest(TellerCommon.LoanRequest memory request)
-        internal
-        pure
-        returns (bytes32)
-    {
+    function _hashRequest(
+        TellerCommon.LoanRequest memory request,
+        uint256 chainId
+    ) internal pure returns (bytes32) {
         return
             keccak256(
                 abi.encode(
@@ -219,7 +224,7 @@ contract LoanTermsConsensus is ILoanTermsConsensus, LoanStorage {
                     request.amount,
                     request.duration,
                     request.requestTime,
-                    _getChainId()
+                    chainId
                 )
             );
     }
@@ -275,7 +280,7 @@ contract LoanTermsConsensus is ILoanTermsConsensus, LoanStorage {
         require(
             loans[_borrowerLoans[numberOfLoans - 1]].loanStartTime.add(
                 settings.getRequestLoanTermsRateLimitValue()
-            ) <= now,
+            ) <= block.timestamp,
             "REQS_LOAN_TERMS_LMT_EXCEEDS_MAX"
         );
     }
@@ -303,7 +308,7 @@ contract LoanTermsConsensus is ILoanTermsConsensus, LoanStorage {
         @notice Gets the current chain id using the opcode 'chainid()'.
         @return the current chain id.
      */
-    function _getChainId() internal pure returns (uint256) {
+    function _getChainId() internal view returns (uint256) {
         // silence state mutability warning without generating bytecode.
         // see https://github.com/ethereum/solidity/issues/2691
         uint256 id;

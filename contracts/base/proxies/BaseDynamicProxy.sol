@@ -1,5 +1,5 @@
-pragma solidity 0.5.17;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 // Contracts
 import "./BaseProxy.sol";
@@ -11,6 +11,25 @@ import "../upgradeable/DynamicUpgradeable.sol";
 
     @author develop@teller.finance
  */
-contract BaseDynamicProxy is BaseProxy, DynamicUpgradeable {
+abstract contract BaseDynamicProxy is BaseProxy, DynamicUpgradeable {
+    function _implementation()
+        internal
+        view
+        virtual
+        override(DynamicUpgradeable, Proxy)
+        returns (address)
+    {
+        return DynamicUpgradeable._implementation();
+    }
 
+    /**
+     * @notice It is called by the OZ proxy contract before calling the internal _implementation() function.
+     */
+    function _beforeFallback() internal override {
+        if (strictDynamic && _implementationBlockUpdated + 50 <= block.number) {
+            address(this).delegatecall(
+                abi.encodeWithSignature("_updateImplementationStored()")
+            );
+        }
+    }
 }
