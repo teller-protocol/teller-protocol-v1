@@ -35,7 +35,6 @@ import "../../interfaces/nft/ITellerNFT.sol";
  */
 contract TellerNFT is
     ITellerNFT,
-    DynamicUpgradeable,
     ERC721Upgradeable,
     AccessControlUpgradeable,
     NFTStorage
@@ -71,6 +70,19 @@ contract TellerNFT is
      * @dev It uses a EnumerableSet to store values and loops over each element to add to the array.
      * @dev Can be costly if calling within a contract for address with many tokens.
      */
+    function getTierHashes(uint256 tierIndex)
+        external
+        view
+        returns (string[] memory)
+    {
+        return tiers[tierIndex].hashes;
+    }
+
+    /**
+     * @notice It returns an array of token IDs owned by an address.
+     * @dev It uses a EnumerableSet to store values and loops over each element to add to the array.
+     * @dev Can be costly if calling within a contract for address with many tokens.
+     */
     function ownedTokens(address owner)
         external
         view
@@ -79,11 +91,15 @@ contract TellerNFT is
         EnumerableSet.UintSet storage set = ownerTokenIDs[owner];
         owned = new uint256[](set.length());
         for (uint256 i; i < owned.length; i++) {
-            owned[set.at(i)];
+            owned[i] = set.at(i);
         }
     }
 
-    function mint(uint256 tierIndex, address owner) external onlyMinter {
+    function mint(uint256 tierIndex, address owner)
+        external
+        override
+        onlyMinter
+    {
         // Get the new token ID
         Counters.Counter storage counter = tierTokenCounter[tierIndex];
         uint256 tokenId = counter.current();
@@ -97,7 +113,7 @@ contract TellerNFT is
         _setOwner(owner, tokenId);
     }
 
-    function addTier(Tier memory newTier) external onlyMinter {
+    function addTier(Tier memory newTier) external override onlyMinter {
         Tier storage tier = tiers[tierCounter.current()];
         require(
             tier.contributionAsset == address(0),
@@ -168,7 +184,7 @@ contract TellerNFT is
         returns (string memory)
     {
         string[] storage tierImageHashes = tiers[tokenTierMap[tokenId]].hashes;
-        return tierImageHashes[uint256(tierImageHashes.length).mod(tokenId)];
+        return tierImageHashes[tokenId.mod(tierImageHashes.length)];
     }
 
     /**

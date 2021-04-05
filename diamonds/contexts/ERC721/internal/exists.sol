@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // Contracts
 import "../storage/ERC721.sol";
 
-abstract contract int_Exists_v1 is sto_ERC721 {
+abstract contract int_exists_ERC721_v1 is sto_ERC721 {
     /**
      * @dev Returns whether `tokenId` exists.
      *
