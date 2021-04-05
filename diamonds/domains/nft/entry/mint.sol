@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import "../storage/tier.sol";
-import "../internal/set-owner.sol";
 import "../../../contexts/access-control/modifiers/authorized.sol";
-import "../../../contexts/ERC721/internal/ERC721Mint.sol";
+import { int_setOwner_NFT } from "../internal/set-owner.sol";
+import { int_mint_ERC721 } from "../../../contexts/ERC721/internal/mint.sol";
 import { MINTER } from "../roles.sol";
 
 // Libraries
@@ -14,8 +14,8 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 contract ent_mint_NFT_v1 is
     mod_authorized_AccessControl_v1,
     sto_Tier,
-    int_SetOwner_v1,
-    int_ERC721Mint_v1
+    int_setOwner_NFT,
+    int_mint_ERC721
 {
     using Counters for Counters.Counter;
 

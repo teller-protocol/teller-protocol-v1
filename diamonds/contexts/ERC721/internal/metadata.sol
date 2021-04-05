@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-abstract contract int_ERC721Metadata_v1 {
+abstract contract int_metadata_ERC721_v1 {
     using Strings for uint256;
 
     /**

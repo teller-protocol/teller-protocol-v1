@@ -4,10 +4,12 @@ pragma solidity ^0.8.0;
 // Contracts
 import "../data.sol";
 import "../storage/ERC721.sol";
-import "./ERC721Transfer.sol";
-import "./ERC721CheckReceived.sol";
-import "./ERC721Metadata.sol";
-import "./exists.sol";
+import { int_exists_ERC721_v1 } from "./exists.sol";
+import { int_checkOnReceived_ERC721_v1 } from "./check-received.sol";
+import { int_beforeTokenTransfer_ERC721_v1 } from "./before-token-transfer.sol";
+import { int_metadata_ERC721_v1 } from "./metadata.sol";
+import { int_approve_ERC721_v1 } from "./approve.sol";
+import { int_transfer_ERC721_v1 } from "./transfer.sol";
 
 // Libraries
 import "@openzeppelin/contracts/utils/Address.sol";
@@ -15,12 +17,12 @@ import "@openzeppelin/contracts/utils/Address.sol";
 abstract contract int_ERC721_v1 is
     dat_ERC721,
     sto_ERC721,
-    int_Exists_v1,
-    int_ERC721CheckReceived_v1,
+    int_exists_ERC721_v1,
+    int_checkOnReceived_ERC721_v1,
     int_beforeTokenTransfer_ERC721_v1,
-    int_ERC721Metadata_v1,
+    int_metadata_ERC721_v1,
     int_approve_ERC721_v1,
-    int_ERC721Transfer_v1
+    int_transfer_ERC721_v1
 {
     using Address for address;
 

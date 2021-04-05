@@ -4,10 +4,10 @@ pragma solidity ^0.8.0;
 // Contracts
 import "../storage/ERC721.sol";
 import "../data.sol";
-import "./ERC721BeforeTokenTransfer.sol";
-import "./ERC721Approve.sol";
+import { int_beforeTokenTransfer_ERC721_v1 } from "./before-token-transfer.sol";
+import { int_approve_ERC721_v1 } from "./approve.sol";
 
-abstract contract int_ERC721Transfer_v1 is
+abstract contract int_transfer_ERC721_v1 is
     sto_ERC721,
     int_beforeTokenTransfer_ERC721_v1,
     int_approve_ERC721_v1
@@ -46,3 +46,5 @@ abstract contract int_ERC721Transfer_v1 is
         emit Transfer(from, to, tokenId);
     }
 }
+
+abstract contract int_transfer_ERC721 is int_transfer_ERC721_v1 {}
