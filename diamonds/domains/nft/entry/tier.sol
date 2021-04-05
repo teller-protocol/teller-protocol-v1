@@ -6,7 +6,7 @@ import "../../../contexts/access-control/modifiers/authorized.sol";
 import "../storage/tier.sol";
 import { MINTER, Tier } from "../data.sol";
 
-abstract contract ent_Mint_v1 is sto_Tier, mod_authorized_AccessControl_v1 {
+abstract contract ent_tier_NFT_v1 is sto_Tier, mod_authorized_AccessControl_v1 {
     using Counters for Counters.Counter;
 
     function addTier(Tier memory newTier)

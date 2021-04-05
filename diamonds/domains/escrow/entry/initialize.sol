@@ -7,7 +7,7 @@ import {
     int_setOwner_AccessControl
 } from "../../../contexts/access-control/internal/set-owner.sol";
 
-abstract contract ent_Initialize_v1 is
+abstract contract ent_initialize_Escrow_v1 is
     sto_Escrow,
     mod_initializer_Initializable_v1,
     int_setOwner_AccessControl

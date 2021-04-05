@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import "./storage/ERC721.sol";
 import "./internal/ERC721.sol";
 import "./internal/ERC721Metadata.sol";
 
 abstract contract ctx_ERC721_v1 is
+    IERC721,
+    IERC721Metadata,
     sto_ERC721,
     int_ERC721_v1,
     int_ERC721Metadata_v1

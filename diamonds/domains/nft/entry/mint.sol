@@ -11,7 +11,7 @@ import { MINTER } from "../data.sol";
 // Libraries
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-abstract contract ent_Mint_v1 is
+abstract contract ent_mint_NFT_v1 is
     mod_authorized_AccessControl_v1,
     sto_Tier,
     int_SetOwner_v1,
