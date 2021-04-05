@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../internal/asset-setting-names.sol";
+import "../internal/asset-setting-names.sol" as ASSET_SETTING_NAMES;
 import "../storage/asset-settings.sol";
 import "../../../libraries/CacheLib.sol";
 import "../../../libraries/AddressLib.sol";
 
-abstract contract ext_AssetSettings_v1 is
-    AssetSettingNames,
-    sto_AssetSettings_v1
-{
+abstract contract ext_AssetSettings_v1 is sto_AssetSettings {
     using CacheLib for CacheLib.Cache;
     using AddressLib for address;
 
@@ -26,7 +23,7 @@ abstract contract ext_AssetSettings_v1 is
         getAssetSettings().assets[assetAddress].requireExists();
         return
             getAssetSettings().assets[assetAddress].uints[
-                MAX_DEBT_RATIO_SETTING
+                ASSET_SETTING_NAMES.MAX_DEBT_RATIO_SETTING
             ];
     }
 
@@ -44,7 +41,7 @@ abstract contract ext_AssetSettings_v1 is
 
         return
             getAssetSettings().assets[assetAddress].addresses[
-                CTOKEN_ADDRESS_ASSET_SETTING
+                ASSET_SETTING_NAMES.CTOKEN_ADDRESS_ASSET_SETTING
             ];
     }
 
@@ -61,7 +58,7 @@ abstract contract ext_AssetSettings_v1 is
 
         return
             getAssetSettings().assets[assetAddress].uints[
-                MAX_LOAN_AMOUNT_ASSET_SETTING
+                ASSET_SETTING_NAMES.MAX_LOAN_AMOUNT_ASSET_SETTING
             ];
     }
 
@@ -78,7 +75,7 @@ abstract contract ext_AssetSettings_v1 is
 
         return
             getAssetSettings().assets[assetAddress].uints[
-                MAX_TOTAL_VALUE_LOCKED_SETTING
+                ASSET_SETTING_NAMES.MAX_TOTAL_VALUE_LOCKED_SETTING
             ];
     }
 
@@ -96,7 +93,7 @@ abstract contract ext_AssetSettings_v1 is
 
         return
             getAssetSettings().assets[assetAddress].addresses[
-                ATOKEN_ADDRESS_ASSET_SETTING
+                ASSET_SETTING_NAMES.ATOKEN_ADDRESS_ASSET_SETTING
             ];
     }
 
@@ -114,7 +111,7 @@ abstract contract ext_AssetSettings_v1 is
 
         return
             getAssetSettings().assets[assetAddress].addresses[
-                PRIZE_POOL_ADDRESS_ASSET_SETTING
+                ASSET_SETTING_NAMES.PRIZE_POOL_ADDRESS_ASSET_SETTING
             ];
     }
 
@@ -133,7 +130,7 @@ abstract contract ext_AssetSettings_v1 is
         return
             amount >
             getAssetSettings().assets[assetAddress].uints[
-                MAX_LOAN_AMOUNT_ASSET_SETTING
+                ASSET_SETTING_NAMES.MAX_LOAN_AMOUNT_ASSET_SETTING
             ];
     }
 }

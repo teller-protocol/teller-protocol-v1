@@ -1,20 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+// Contracts
+import { Tier } from "../data.sol";
+
 // Libraries
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-abstract contract sto_Tier_v1 {
-    bytes32 internal constant POSITION = keccak256("teller_nft.tier");
-
-    struct Tier {
-        uint256 baseLoanSize;
-        string[] hashes;
-        address contributionAsset;
-        uint256 contributionSize;
-        uint8 contributionMultiplier;
-    }
-
+abstract contract sto_Tier {
     struct TierStorage {
         // It holds the total number of tiers.
         Counters.Counter tierCounter;
@@ -27,9 +20,10 @@ abstract contract sto_Tier_v1 {
     }
 
     function tierStore() internal pure returns (TierStorage storage s) {
-        bytes32 position = POSITION;
+        bytes32 POSITION = keccak256("teller_nft.tier");
+
         assembly {
-            s.slot := position
+            s.slot := POSITION
         }
     }
 }

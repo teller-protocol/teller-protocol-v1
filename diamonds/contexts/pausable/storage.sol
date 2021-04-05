@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-abstract contract sto_Pausable_v1 {
+abstract contract sto_Pausable {
     struct PausableLayout {
         mapping(address => bool) paused;
     }
 
     bytes32 internal constant PAUSABLE_STORAGE_POSITION =
-        keccak256(abi.encode("teller_protocol.context.pausable.v1"));
+        keccak256(abi.encode("teller_protocol.context.pausable"));
 
     function pausableStorage()
         internal
@@ -21,5 +21,3 @@ abstract contract sto_Pausable_v1 {
         }
     }
 }
-
-abstract contract sto_Pausable is sto_Pausable_v1 {}

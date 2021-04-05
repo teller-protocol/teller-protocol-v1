@@ -56,8 +56,8 @@ abstract contract int_exchangeRates_LendingPool_v1 is
         ERC20 lendingToken = getLendingPool().lendingToken;
         totalSupplied =
             lendingToken.balanceOf(address(this)) +
-            getLendingPool().totalBorrowed -
-            getLendingPool().totalRepaid;
+            getLendingPool(lendingToken).totalBorrowed -
+            getLendingPool(lendingToken).totalRepaid;
 
         CErc20Interface cToken = CErc20Interface(getLendingPool().cToken);
 

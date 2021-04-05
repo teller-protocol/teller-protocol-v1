@@ -20,5 +20,5 @@ abstract contract int_beforeTokenTransfer_ERC721_v1 {
         address from,
         address to,
         uint256 tokenId
-    ) internal {}
+    ) internal virtual {}
 }

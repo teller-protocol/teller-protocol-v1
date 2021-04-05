@@ -1,31 +1,33 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../internal/asset-setting-names.sol";
-import "diamonds/Roles.sol";
-import "../internal/platform-settings.sol";
+// Contracts
+import "../../../contexts/access-control/storage.sol";
 import "../../../contexts/access-control/modifiers/authorized.sol";
-import "diamonds/Roles.sol";
 import "../storage/platform-settings.sol";
 import "../storage/asset-settings.sol";
 import "../storage/asset-registry.sol";
-import "../../../libraries/PlatformSettingsLib.sol";
-import "../interfaces/IPlatformSettings.sol";
+import "../internal/asset-setting-names.sol";
 import "../internal/setting-names.sol";
+import "../internal/platform-settings.sol";
+import { ADMIN, PAUSER } from "../internal/roles.sol";
+
+// Interfaces
 import "diamonds/providers/compound/CErc20Interface.sol";
+import "../interfaces/IPlatformSettings.sol";
+
+// Libraries
 import "../../../libraries/AddressArrayLib.sol";
 import "../../../libraries/CacheLib.sol";
+import "../../../libraries/PlatformSettingsLib.sol";
 
 abstract contract ent_PlatformSettings_v1 is
-    Roles,
     sto_AccessControl,
     mod_authorized_AccessControl_v1,
-    sto_PlatformSettings_v1,
-    SettingNames_v1,
+    sto_PlatformSettings,
     IPlatformSettings,
-    AssetSettingNames,
     IAssetSettings,
-    sto_AssetRegistry_v1
+    sto_AssetRegistry
 {
     using AddressArrayLib for AddressArrayLib.AddressArray;
     using AddressLib for address;
@@ -44,7 +46,7 @@ abstract contract ent_PlatformSettings_v1 is
         uint256 value,
         uint256 minValue,
         uint256 maxValue
-    ) external override authorized(PAUSER, msg.sender) {
+    ) external override authorized(ADMIN, msg.sender) {
         require(settingName != "", "SETTING_NAME_MUST_BE_PROVIDED");
         s().platformSettings[settingName].initialize(value, minValue, maxValue);
 
@@ -67,7 +69,7 @@ abstract contract ent_PlatformSettings_v1 is
     function updatePlatformSetting(bytes32 settingName, uint256 newValue)
         external
         override
-        authorized(PAUSER, msg.sender)
+        authorized(ADMIN, msg.sender)
     {
         uint256 oldValue = s().platformSettings[settingName].update(newValue);
 
@@ -86,7 +88,7 @@ abstract contract ent_PlatformSettings_v1 is
     function removePlatformSetting(bytes32 settingName)
         external
         override
-        authorized(PAUSER, msg.sender)
+        authorized(ADMIN, msg.sender)
     {
         uint256 oldValue = s().platformSettings[settingName].value;
         s().platformSettings[settingName].remove();
@@ -131,7 +133,7 @@ abstract contract ent_PlatformSettings_v1 is
     function s()
         private
         pure
-        returns (sto_PlatformSettings_v1.PlatformSettingsLayout storage l_)
+        returns (sto_PlatformSettings.PlatformSettingsLayout storage l_)
     {
         l_ = getPlatformSettings();
     }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "diamonds/Roles.sol";
+import { ADMIN } from "../internal/roles.sol";
 
 import "../interfaces/IMarketFactory.sol";
 import "../../../contexts/access-control/modifiers/authorized.sol";
@@ -21,7 +21,7 @@ abstract contract ent_MarketFactory_v1 is
     function createMarket(address lendingToken, address collateralToken)
         external
         override
-        authorized(PAUSER, msg.sender)
+        authorized(ADMIN, msg.sender)
     {
         // address loanManagerAddress =
         //     _createDynamicProxy(keccak256("LoanManager"), true);

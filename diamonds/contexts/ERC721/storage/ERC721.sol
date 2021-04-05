@@ -2,9 +2,6 @@
 pragma solidity ^0.8.0;
 
 abstract contract sto_ERC721 {
-    bytes32 internal constant POSITION =
-        keccak256("teller_protocol.ERC721_token");
-
     struct ERC721Storage {
         // Token name
         string name;
@@ -21,7 +18,7 @@ abstract contract sto_ERC721 {
     }
 
     function erc721Store() internal pure returns (ERC721Storage storage s) {
-        bytes32 position = POSITION;
+        bytes32 position = keccak256("teller_protocol.ERC721_token");
         assembly {
             s.slot := position
         }

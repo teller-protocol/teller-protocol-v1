@@ -3,10 +3,10 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import "../../../contexts/access-control/modifiers/authorized.sol";
-import "diamonds/Roles.sol";
 import "../internal/price-aggregator.sol";
 import "../storage/price-aggregator.sol";
 import "./price-aggregator/chainlink-aggregator.sol";
+import { ADMIN } from "../internal/roles.sol";
 
 // Interfaces
 import "../interfaces/IPriceAggregator.sol";
@@ -16,7 +16,6 @@ import "@openzeppelin/contracts/utils/Address.sol";
 
 abstract contract fct_PriceAggregator_v1 is
     IPriceAggregator,
-    Roles,
     mod_authorized_AccessControl_v1,
     fct_PriceAggregator_ChainlinkAggregator_v1,
     int_PriceAggregator_v1

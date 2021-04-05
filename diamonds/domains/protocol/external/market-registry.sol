@@ -5,7 +5,7 @@ import "../storage/market-registry.sol";
 import "../internal/market-registry.sol";
 
 abstract contract ext_MarketRegistry_v1 is
-    sto_MarketRegistry_v1,
+    sto_MarketRegistry,
     int_MarketRegistry_v1
 {
     using AddressArrayLib for AddressArrayLib.AddressArray;

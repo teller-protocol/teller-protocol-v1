@@ -14,8 +14,8 @@ contract TellerNFT_v1 is Diamond {
         IDiamondCut.FacetCut[] memory _diamondCut,
         DiamondArgs memory _args
     ) Diamond(_diamondCut, _args) {
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         // Add interface for TellerNFT
         ds.supportedInterfaces[type(ITellerNFT).interfaceId] = true;
-        Protocol_.Thing;
     }
 }

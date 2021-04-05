@@ -2,24 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "../storage/platform-settings.sol";
-import "../internal/setting-names.sol";
-import "../interfaces/IPlatformSettings.sol";
-import "../../../contexts/access-control/context.sol";
-import "../../../contexts/access-control/modifiers/authorized.sol";
-import "../../../contexts/pausable/modifiers/when-paused.sol";
-import "../../../contexts/pausable/modifiers/when-not-paused.sol";
-import "diamonds/Roles.sol";
+import "../internal/setting-names.sol" as SETTING_NAMES;
 
-abstract contract ext_PlatformSettings_v1 is
-    sto_PlatformSettings_v1,
-    SettingNames_v1,
-    IPlatformSettings,
-    mod_authorized_AccessControl_v1,
-    mod_whenPaused_Pausable_v1,
-    mod_whenNotPaused_Pausable_v1,
-    int_grantRole_AccessControl_v1,
-    Roles
-{
+abstract contract ext_PlatformSettings_v1 is sto_PlatformSettings {
     /**
         @notice It gets the current "RequiredSubmissionsPercentage" setting's value
         @return value the current value.
@@ -30,7 +15,9 @@ abstract contract ext_PlatformSettings_v1 is
         override
         returns (uint256 value)
     {
-        value = s().platformSettings[REQUIRED_SUBMISSIONS_PERCENTAGE_SETTING]
+        value = s().platformSettings[
+            SETTING_NAMES.REQUIRED_SUBMISSIONS_PERCENTAGE_SETTING
+        ]
             .value;
     }
 
@@ -44,7 +31,8 @@ abstract contract ext_PlatformSettings_v1 is
         override
         returns (uint256 value)
     {
-        value = s().platformSettings[MAXIMUM_TOLERANCE_SETTING].value;
+        value = s().platformSettings[SETTING_NAMES.MAXIMUM_TOLERANCE_SETTING]
+            .value;
     }
 
     /**
@@ -57,7 +45,10 @@ abstract contract ext_PlatformSettings_v1 is
         override
         returns (uint256 value)
     {
-        value = s().platformSettings[RESPONSE_EXPIRY_LENGTH_SETTING].value;
+        value = s().platformSettings[
+            SETTING_NAMES.RESPONSE_EXPIRY_LENGTH_SETTING
+        ]
+            .value;
     }
 
     /**
@@ -70,7 +61,8 @@ abstract contract ext_PlatformSettings_v1 is
         override
         returns (uint256 value)
     {
-        value = s().platformSettings[SAFETY_INTERVAL_SETTING].value;
+        value = s().platformSettings[SETTING_NAMES.SAFETY_INTERVAL_SETTING]
+            .value;
     }
 
     /**
@@ -83,7 +75,8 @@ abstract contract ext_PlatformSettings_v1 is
         override
         returns (uint256 value)
     {
-        value = s().platformSettings[TERMS_EXPIRY_TIME_SETTING].value;
+        value = s().platformSettings[SETTING_NAMES.TERMS_EXPIRY_TIME_SETTING]
+            .value;
     }
 
     /**
@@ -96,7 +89,8 @@ abstract contract ext_PlatformSettings_v1 is
         override
         returns (uint256 value)
     {
-        value = s().platformSettings[LIQUIDATE_ETH_PRICE_SETTING].value;
+        value = s().platformSettings[SETTING_NAMES.LIQUIDATE_ETH_PRICE_SETTING]
+            .value;
     }
 
     /**
@@ -109,7 +103,10 @@ abstract contract ext_PlatformSettings_v1 is
         override
         returns (uint256 value)
     {
-        value = s().platformSettings[MAXIMUM_LOAN_DURATION_SETTING].value;
+        value = s().platformSettings[
+            SETTING_NAMES.MAXIMUM_LOAN_DURATION_SETTING
+        ]
+            .value;
     }
 
     /**
@@ -122,7 +119,9 @@ abstract contract ext_PlatformSettings_v1 is
         override
         returns (uint256 value)
     {
-        value = s().platformSettings[REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING]
+        value = s().platformSettings[
+            SETTING_NAMES.REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING
+        ]
             .value;
     }
 
@@ -136,7 +135,8 @@ abstract contract ext_PlatformSettings_v1 is
         override
         returns (uint256 value)
     {
-        value = s().platformSettings[COLLATERAL_BUFFER_SETTING].value;
+        value = s().platformSettings[SETTING_NAMES.COLLATERAL_BUFFER_SETTING]
+            .value;
     }
 
     /**
@@ -149,7 +149,10 @@ abstract contract ext_PlatformSettings_v1 is
         override
         returns (uint256 value)
     {
-        value = s().platformSettings[OVER_COLLATERALIZED_BUFFER_SETTING].value;
+        value = s().platformSettings[
+            SETTING_NAMES.OVER_COLLATERALIZED_BUFFER_SETTING
+        ]
+            .value;
     }
 
     /**
@@ -267,7 +270,7 @@ abstract contract ext_PlatformSettings_v1 is
     function s()
         private
         pure
-        returns (sto_PlatformSettings_v1.PlatformSettingsLayout storage l_)
+        returns (sto_PlatformSettings.PlatformSettingsLayout storage l_)
     {
         l_ = getPlatformSettings();
     }

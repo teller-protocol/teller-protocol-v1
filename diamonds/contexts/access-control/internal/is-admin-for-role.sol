@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "diamonds/Roles.sol";
+import "../storage/roles.sol";
 
 abstract contract int_isAdminForRole_AccessControl_v1 is
     sto_AccessControl_Roles

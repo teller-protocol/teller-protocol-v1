@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import "../../../../contexts/access-control/modifiers/authorized.sol";
-import "diamonds/Roles.sol";
+import { ADMIN } from "../internal/roles.sol";
 import "../../storage/price-aggregator.sol";
 
 // Interfaces

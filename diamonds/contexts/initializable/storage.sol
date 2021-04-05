@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-abstract contract sto_Initializable_v1 {
+abstract contract sto_Initializable {
     struct InitializableLayout {
         bool initialized;
     }
@@ -21,5 +21,3 @@ abstract contract sto_Initializable_v1 {
         }
     }
 }
-
-abstract contract sto_Initializable is sto_Initializable_v1 {}

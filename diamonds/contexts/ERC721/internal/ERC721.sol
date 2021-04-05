@@ -3,14 +3,22 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import "../storage/ERC721.sol";
-import "./exists.sol";
 import "./ERC721Transfer.sol";
+import "./ERC721CheckRecieved.sol";
+import "./exists.sol";
+
+// Interfaces
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
+
+// Libraries
 import "@openzeppelin/contracts/utils/Address.sol";
 
 abstract contract int_ERC721_v1 is
     sto_ERC721,
+    dat_ERC721,
     int_Exists_v1,
+    int_ERC721CheckRecieved_v1,
+    int_beforeTokenTransfer_ERC721_v1,
     int_ERC721Transfer_v1
 {
     using Address for address;
@@ -39,7 +47,7 @@ abstract contract int_ERC721_v1 is
         address to,
         uint256 tokenId,
         bytes memory _data
-    ) internal {
+    ) internal virtual {
         require(
             _isApprovedOrOwner(msg.sender, tokenId),
             "ERC721: transfer caller is not owner nor approved"
@@ -61,6 +69,7 @@ abstract contract int_ERC721_v1 is
     function _isApprovedOrOwner(address spender, uint256 tokenId)
         internal
         view
+        virtual
         returns (bool)
     {
         require(
@@ -86,60 +95,6 @@ abstract contract int_ERC721_v1 is
     }
 
     /**
-     * @dev Safely mints `tokenId` and transfers it to `to`.
-     *
-     * Requirements:
-     *
-     * - `tokenId` must not exist.
-     * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
-     *
-     * Emits a {Transfer} event.
-     */
-    function _safeMint(address to, uint256 tokenId) internal {
-        _safeMint(to, tokenId, "");
-    }
-
-    /**
-     * @dev Same as {xref-ERC721-_safeMint-address-uint256-}[`_safeMint`], with an additional `data` parameter which is
-     * forwarded in {IERC721Receiver-onERC721Received} to contract recipients.
-     */
-    function _safeMint(
-        address to,
-        uint256 tokenId,
-        bytes memory _data
-    ) internal {
-        _mint(to, tokenId);
-        require(
-            _checkOnERC721Received(address(0), to, tokenId, _data),
-            "ERC721: transfer to non ERC721Receiver implementer"
-        );
-    }
-
-    /**
-     * @dev Mints `tokenId` and transfers it to `to`.
-     *
-     * WARNING: Usage of this method is discouraged, use {_safeMint} whenever possible
-     *
-     * Requirements:
-     *
-     * - `tokenId` must not exist.
-     * - `to` cannot be the zero address.
-     *
-     * Emits a {Transfer} event.
-     */
-    function _mint(address to, uint256 tokenId) internal {
-        require(to != address(0), "ERC721: mint to the zero address");
-        require(!_exists(tokenId), "ERC721: token already minted");
-
-        _beforeTokenTransfer(address(0), to, tokenId);
-
-        erc721Store().balances[to] += 1;
-        erc721Store().owners[tokenId] = to;
-
-        emit Transfer(address(0), to, tokenId);
-    }
-
-    /**
      * @dev Destroys `tokenId`.
      * The approval is cleared when the token is burned.
      *
@@ -149,7 +104,7 @@ abstract contract int_ERC721_v1 is
      *
      * Emits a {Transfer} event.
      */
-    function _burn(uint256 tokenId) internal {
+    function _burn(uint256 tokenId) internal virtual {
         address owner = erc721Store().owners[tokenId];
 
         _beforeTokenTransfer(owner, address(0), tokenId);
@@ -171,50 +126,5 @@ abstract contract int_ERC721_v1 is
     function _approve(address to, uint256 tokenId) internal override {
         erc721Store().tokenApprovals[tokenId] = to;
         emit Approval(erc721Store().owners[tokenId], to, tokenId);
-    }
-
-    /**
-     * @dev Internal function to invoke {IERC721Receiver-onERC721Received} on a target address.
-     * The call is not executed if the target address is not a contract.
-     *
-     * @param from address representing the previous owner of the given token ID
-     * @param to target address that will receive the tokens
-     * @param tokenId uint256 ID of the token to be transferred
-     * @param _data bytes optional data to send along with the call
-     * @return bool whether the call correctly returned the expected magic value
-     */
-    function _checkOnERC721Received(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory _data
-    ) private returns (bool) {
-        if (to.isContract()) {
-            try
-                IERC721ReceiverUpgradeable(to).onERC721Received(
-                    msg.sender,
-                    from,
-                    tokenId,
-                    _data
-                )
-            returns (bytes4 retval) {
-                return
-                    retval ==
-                    IERC721ReceiverUpgradeable(to).onERC721Received.selector;
-            } catch (bytes memory reason) {
-                if (reason.length == 0) {
-                    revert(
-                        "ERC721: transfer to non ERC721Receiver implementer"
-                    );
-                } else {
-                    // solhint-disable-next-line no-inline-assembly
-                    assembly {
-                        revert(add(32, reason), mload(reason))
-                    }
-                }
-            }
-        } else {
-            return true;
-        }
     }
 }

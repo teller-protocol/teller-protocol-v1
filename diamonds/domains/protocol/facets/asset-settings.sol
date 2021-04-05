@@ -1,23 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../internal/asset-setting-names.sol";
-import "diamonds/Roles.sol";
+import "../internal/asset-setting-names.sol" as ASSET_SETTING_NAMES;
+import { ADIMN } from "../internal/roles.sol";
 import "../../../contexts/access-control/modifiers/authorized.sol";
-import "diamonds/Roles.sol";
 import "../storage/asset-settings.sol";
-import "../storage/asset-registry.sol";
 import "diamonds/providers/compound/CErc20Interface.sol";
 import "../../../libraries/CacheLib.sol";
 import "../interfaces/IAssetSettings.sol";
 
 abstract contract ent_AssetSettings_v1 is
-    AssetSettingNames,
-    Roles,
     sto_AccessControl_Roles,
     mod_authorized_AccessControl_v1,
-    sto_AssetSettings_v1,
-    sto_AssetRegistry_v1,
+    sto_AssetSettings,
     IAssetSettings
 {
     using CacheLib for CacheLib.Cache;
@@ -36,14 +31,11 @@ abstract contract ent_AssetSettings_v1 is
         uint256 maxLoanAmount,
         uint256 maxTVLAmount,
         uint256 maxDebtRatio
-    ) external override authorized(PAUSER, msg.sender) {
+    ) external override authorized(ADMIN, msg.sender) {
         require(assetAddress != address(0x0), "ASSET_ADDRESS_REQUIRED");
         require(cTokenAddress != address(0x0), "CTOKEN_ADDRESS_REQUIRED");
 
-        if (
-            assetAddress !=
-            sto_AssetRegistry_v1.getAssetRegistry().addresses["ETH"]
-        ) {
+        if (assetAddress != getAssetRegistry().addresses["ETH"]) {
             (bool success, bytes memory decimalsData) =
                 assetAddress.staticcall(abi.encodeWithSignature("decimals()"));
             require(
@@ -58,24 +50,24 @@ abstract contract ent_AssetSettings_v1 is
 
         s().assets[assetAddress].initialize();
         s().assets[assetAddress].updateAddress(
-            CTOKEN_ADDRESS_ASSET_SETTING,
+            ASSET_SETTING_NAMES.CTOKEN_ADDRESS_ASSET_SETTING,
             cTokenAddress
         );
         if (maxLoanAmount > 0) {
             s().assets[assetAddress].updateUint(
-                MAX_LOAN_AMOUNT_ASSET_SETTING,
+                ASSET_SETTINGS_NAMES.MAX_LOAN_AMOUNT_ASSET_SETTING,
                 maxLoanAmount
             );
         }
         if (maxTVLAmount > 0) {
             s().assets[assetAddress].updateUint(
-                MAX_TOTAL_VALUE_LOCKED_SETTING,
+                ASSET_SETTINGS_NAMES.MAX_TOTAL_VALUE_LOCKED_SETTING,
                 maxTVLAmount
             );
         }
         if (maxDebtRatio > 0) {
             s().assets[assetAddress].updateUint(
-                MAX_DEBT_RATIO_SETTING,
+                ASSET_SETTINGS_NAMES.MAX_DEBT_RATIO_SETTING,
                 maxDebtRatio
             );
         }
@@ -96,19 +88,21 @@ abstract contract ent_AssetSettings_v1 is
     function updateCTokenAddress(address assetAddress, address cTokenAddress)
         external
         override
-        authorized(PAUSER, msg.sender)
+        authorized(ADMIN, msg.sender)
     {
         require(cTokenAddress != address(0x0), "CTOKEN_ADDRESS_REQUIRED");
         address oldCTokenAddress =
-            s().assets[assetAddress].addresses[CTOKEN_ADDRESS_ASSET_SETTING];
+            s().assets[assetAddress].addresses[
+                ASSET_SETTING_NAMES.CTOKEN_ADDRESS_ASSET_SETTING
+            ];
 
         s().assets[assetAddress].updateAddress(
-            CTOKEN_ADDRESS_ASSET_SETTING,
+            ASSET_SETTINGS_NAMES.CTOKEN_ADDRESS_ASSET_SETTING,
             cTokenAddress
         );
 
         emit AssetSettingsAddressUpdated(
-            CTOKEN_ADDRESS_ASSET_SETTING,
+            ASSET_SETTING_NAMES.CTOKEN_ADDRESS_ASSET_SETTING,
             msg.sender,
             assetAddress,
             oldCTokenAddress,
@@ -124,9 +118,9 @@ abstract contract ent_AssetSettings_v1 is
     function updateYVaultAddressSetting(
         address assetAddress,
         address yVaultAddress
-    ) external override authorized(PAUSER, msg.sender) {
+    ) external override authorized(ADMIN, msg.sender) {
         s().assets[assetAddress].updateAddress(
-            YEARN_VAULT_ADDRESS_ASSET_SETTING,
+            ASSET_SETTINGS_NAMES.YEARN_VAULT_ADDRESS_ASSET_SETTING,
             yVaultAddress
         );
     }
@@ -139,19 +133,21 @@ abstract contract ent_AssetSettings_v1 is
     function updateATokenAddress(address assetAddress, address aTokenAddress)
         external
         override
-        authorized(PAUSER, msg.sender)
+        authorized(ADMIN, msg.sender)
     {
         require(aTokenAddress != address(0x0), "ATOKEN_ADDRESS_REQUIRED");
         address oldATokenAddress =
-            s().assets[assetAddress].addresses[ATOKEN_ADDRESS_ASSET_SETTING];
+            s().assets[assetAddress].addresses[
+                ASSET_SETTING_NAMES.ATOKEN_ADDRESS_ASSET_SETTING
+            ];
 
         s().assets[assetAddress].updateAddress(
-            ATOKEN_ADDRESS_ASSET_SETTING,
+            ASSET_SETTINGS_NAMES.ATOKEN_ADDRESS_ASSET_SETTING,
             aTokenAddress
         );
 
         emit AssetSettingsAddressUpdated(
-            ATOKEN_ADDRESS_ASSET_SETTING,
+            ASSET_SETTING_NAMES.ATOKEN_ADDRESS_ASSET_SETTING,
             msg.sender,
             assetAddress,
             oldATokenAddress,
@@ -167,7 +163,7 @@ abstract contract ent_AssetSettings_v1 is
     function updatePrizePoolAddress(
         address assetAddress,
         address prizePoolAddress
-    ) external override authorized(PAUSER, msg.sender) {
+    ) external override authorized(ADMIN, msg.sender) {
         require(
             prizePoolAddress != address(0x0),
             "PRIZE_POOL_ADDRESS_REQUIRED"
@@ -175,16 +171,16 @@ abstract contract ent_AssetSettings_v1 is
 
         address oldPrizePoolAddress =
             s().assets[assetAddress].addresses[
-                PRIZE_POOL_ADDRESS_ASSET_SETTING
+                ASSET_SETTING_NAMES.PRIZE_POOL_ADDRESS_ASSET_SETTING
             ];
 
         s().assets[assetAddress].updateAddress(
-            PRIZE_POOL_ADDRESS_ASSET_SETTING,
+            ASSET_SETTINGS_NAMES.PRIZE_POOL_ADDRESS_ASSET_SETTING,
             prizePoolAddress
         );
 
         emit AssetSettingsAddressUpdated(
-            PRIZE_POOL_ADDRESS_ASSET_SETTING,
+            ASSET_SETTING_NAMES.PRIZE_POOL_ADDRESS_ASSET_SETTING,
             msg.sender,
             assetAddress,
             oldPrizePoolAddress,
@@ -200,19 +196,21 @@ abstract contract ent_AssetSettings_v1 is
     function updateMaxLoanAmount(address assetAddress, uint256 newMaxLoanAmount)
         external
         override
-        authorized(PAUSER, msg.sender)
+        authorized(ADMIN, msg.sender)
     {
         s().assets[assetAddress].requireExists();
         uint256 oldMaxLoanAmount =
-            s().assets[assetAddress].uints[MAX_LOAN_AMOUNT_ASSET_SETTING];
+            s().assets[assetAddress].uints[
+                ASSET_SETTING_NAMES.MAX_LOAN_AMOUNT_ASSET_SETTING
+            ];
 
         s().assets[assetAddress].updateUint(
-            MAX_LOAN_AMOUNT_ASSET_SETTING,
+            ASSET_SETTINGS_NAMES.MAX_LOAN_AMOUNT_ASSET_SETTING,
             newMaxLoanAmount
         );
 
         emit AssetSettingsUintUpdated(
-            MAX_LOAN_AMOUNT_ASSET_SETTING,
+            ASSET_SETTING_NAMES.MAX_LOAN_AMOUNT_ASSET_SETTING,
             msg.sender,
             assetAddress,
             oldMaxLoanAmount,
@@ -228,15 +226,17 @@ abstract contract ent_AssetSettings_v1 is
     function updateMaxTVL(address assetAddress, uint256 newMaxTVLAmount)
         external
         override
-        authorized(PAUSER, msg.sender)
+        authorized(ADMIN, msg.sender)
     {
         s().assets[assetAddress].requireExists();
         if (
             newMaxTVLAmount !=
-            s().assets[assetAddress].uints[MAX_TOTAL_VALUE_LOCKED_SETTING]
+            s().assets[assetAddress].uints[
+                ASSET_SETTING_NAMES.MAX_TOTAL_VALUE_LOCKED_SETTING
+            ]
         ) {
             s().assets[assetAddress].updateUint(
-                MAX_TOTAL_VALUE_LOCKED_SETTING,
+                ASSET_SETTINGS_NAMES.MAX_TOTAL_VALUE_LOCKED_SETTING,
                 newMaxTVLAmount
             );
         }
@@ -251,15 +251,17 @@ abstract contract ent_AssetSettings_v1 is
     function updateMaxDebtRatio(address assetAddress, uint256 newMaxDebtRatio)
         external
         override
-        authorized(PAUSER, msg.sender)
+        authorized(ADMIN, msg.sender)
     {
         s().assets[assetAddress].requireExists();
         if (
             newMaxDebtRatio !=
-            s().assets[assetAddress].uints[MAX_DEBT_RATIO_SETTING]
+            s().assets[assetAddress].uints[
+                ASSET_SETTING_NAMES.MAX_DEBT_RATIO_SETTING
+            ]
         ) {
             s().assets[assetAddress].updateUint(
-                MAX_DEBT_RATIO_SETTING,
+                ASSET_SETTINGS_NAMES.MAX_DEBT_RATIO_SETTING,
                 newMaxDebtRatio
             );
         }
@@ -272,16 +274,16 @@ abstract contract ent_AssetSettings_v1 is
     function removeAsset(address assetAddress)
         external
         override
-        authorized(PAUSER, msg.sender)
+        authorized(ADMIN, msg.sender)
     {
         s().assets[assetAddress].requireExists();
         s().assets[assetAddress].clearCache(
             [
-                MAX_LOAN_AMOUNT_ASSET_SETTING,
-                MAX_TOTAL_VALUE_LOCKED_SETTING,
-                CTOKEN_ADDRESS_ASSET_SETTING,
-                YEARN_VAULT_ADDRESS_ASSET_SETTING,
-                PRIZE_POOL_ADDRESS_ASSET_SETTING
+                ASSET_SETTING_NAMES.MAX_LOAN_AMOUNT_ASSET_SETTING,
+                ASSET_SETTING_NAMES.MAX_TOTAL_VALUE_LOCKED_SETTING,
+                ASSET_SETTING_NAMES.CTOKEN_ADDRESS_ASSET_SETTING,
+                ASSET_SETTING_NAMES.YEARN_VAULT_ADDRESS_ASSET_SETTING,
+                ASSET_SETTING_NAMES.PRIZE_POOL_ADDRESS_ASSET_SETTING
             ],
             [
                 CacheLib.CacheType.Uint,
@@ -298,8 +300,8 @@ abstract contract ent_AssetSettings_v1 is
     function s()
         internal
         pure
-        returns (sto_AssetSettings_v1.AssetSettingsLayout storage l_)
+        returns (sto_AssetSettings.AssetSettingsLayout storage l_)
     {
-        l_ = sto_AssetSettings_v1.getAssetSettings();
+        l_ = sto_AssetSettings.getAssetSettings();
     }
 }

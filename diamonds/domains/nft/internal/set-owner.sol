@@ -9,7 +9,7 @@ import "../storage/token.sol";
 // Libraries
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-abstract contract int_SetOwner_v1 is sto_ERC721_v1, sto_Token_v1 {
+abstract contract int_SetOwner_v1 is sto_ERC721, sto_Token {
     using EnumerableSet for EnumerableSet.UintSet;
 
     /**

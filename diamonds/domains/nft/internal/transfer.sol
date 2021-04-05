@@ -7,7 +7,7 @@ import "../../../contexts/ERC721/internal/ERC721Transfer.sol";
 import "./set-owner.sol";
 
 abstract contract int_Transfer_v1 is
-    sto_ERC721_v1,
+    sto_ERC721,
     int_ERC721Transfer_v1,
     int_SetOwner_v1
 {
@@ -19,7 +19,7 @@ abstract contract int_Transfer_v1 is
         address from,
         address to,
         uint256 tokenId
-    ) internal {
+    ) internal override {
         super._transfer(from, to, tokenId);
         _setOwner(to, tokenId);
     }

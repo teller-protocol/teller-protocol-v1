@@ -6,7 +6,7 @@ import "../../protocol/interfaces/IPlatformSettings.sol";
 import "../data/loans.sol";
 import "../../protocol/address.sol";
 
-abstract contract mod_whenNotPaused_Market_v1 is sto_Pausable_v1 {
+abstract contract mod_whenNotPaused_Market_v1 is sto_Pausable {
     modifier whenNotPaused {
         require(!IPlatformSettings(PROTOCOL).isPaused(), "PTCPAUSED");
         require(

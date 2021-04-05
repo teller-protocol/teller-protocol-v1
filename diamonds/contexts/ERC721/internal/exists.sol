@@ -13,7 +13,7 @@ abstract contract int_Exists_v1 is sto_ERC721 {
      * Tokens start existing when they are minted (`_mint`),
      * and stop existing when they are burned (`_burn`).
      */
-    function _exists(uint256 tokenId) internal view returns (bool) {
+    function _exists(uint256 tokenId) internal view virtual returns (bool) {
         return erc721Store().owners[tokenId] != address(0);
     }
 }

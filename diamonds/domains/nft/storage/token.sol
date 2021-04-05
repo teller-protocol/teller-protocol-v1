@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // Libraries
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-abstract contract sto_Token_v1 {
+abstract contract sto_Token {
     bytes32 internal constant POSITION = keccak256("teller_nft.token");
 
     struct TokenStorage {

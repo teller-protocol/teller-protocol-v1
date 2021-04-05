@@ -15,6 +15,7 @@ import "../../../libraries/AddressArrayLib.sol";
 
 abstract contract int_PriceAggregator_v1 is
     sto_PriceAggregator,
+    sto_AssetRegistry,
     int_PriceAggregator_CompoundValue_v1,
     int_PriceAggregator_ChainlinkAggregator_v1
 {
