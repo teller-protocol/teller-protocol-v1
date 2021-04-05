@@ -1,11 +1,10 @@
 import { DeployFunction } from 'hardhat-deploy/types'
+import { deployDiamond } from '../utils/deploy-diamond'
 
 const protocol: DeployFunction = async (hre) => {
-  const { getNamedAccounts, deployments, contracts, ethers, network } = hre
-  const { deployer } = await getNamedAccounts()
-
-  const tellerProtocol = await deployments.diamond.deploy('Diamond', {
-    from: deployer,
+  const tellerProtocol = await deployDiamond({
+    hre,
+    name: 'TellerNFT', // NOT A CONTRACT NOT FOR DIAMONDS I THINK
     facets: [
       'ctx_ERC721_v1',
       'ent_initialize_NFT_v1',
@@ -14,13 +13,9 @@ const protocol: DeployFunction = async (hre) => {
       'ext_tier_NFT_v1',
       'ext_token_NFT_v1',
     ],
-    owner: deployer,
   })
 
-  console.log(tellerProtocol.address)
-
-  // const chainlinkAggregator = await deployments.save('PriceAggregator_v1', {
-  // })
+  console.log(tellerProtocol.address, JSON.stringify(tellerProtocol, null, 2))
 }
 
 export default protocol

@@ -7,7 +7,7 @@ import "../../../contexts/initializable/modifiers/initializer.sol";
 import "../../../contexts/access-control/internal/grant-role.sol";
 import { MINTER } from "../data.sol";
 
-abstract contract ent_initialize_NFT_v1 is
+contract ent_initialize_NFT_v1 is
     sto_ERC721,
     mod_initializer_Initializable_v1,
     int_grantRole_AccessControl_v1

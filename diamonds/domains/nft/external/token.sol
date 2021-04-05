@@ -7,7 +7,7 @@ import "../storage/token.sol";
 // Libraries
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-abstract contract ext_token_NFT_v1 is sto_Token {
+contract ext_token_NFT_v1 is sto_Token {
     using EnumerableSet for EnumerableSet.UintSet;
 
     /**

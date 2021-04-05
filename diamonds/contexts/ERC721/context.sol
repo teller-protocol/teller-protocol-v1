@@ -5,7 +5,7 @@ import "./storage/ERC721.sol";
 import "./internal/ERC721.sol";
 import "./data.sol";
 
-abstract contract ctx_ERC721_v1 is dat_ERC721, sto_ERC721, int_ERC721_v1 {
+contract ctx_ERC721_v1 is dat_ERC721, sto_ERC721, int_ERC721_v1 {
     /**
      * @dev See {IERC721-balanceOf}.
      */

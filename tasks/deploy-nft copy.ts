@@ -5,10 +5,9 @@ import {
   generateMerkleDistribution,
   MerkleDistributorInfo,
 } from '../scripts/merkle/root'
-import { ITellerNFT, NFTDistributor } from '../types/typechain'
+import { ITellerNFT } from '../types/typechain'
 import { NULL_ADDRESS } from '../utils/consts'
 import { deployDiamond } from '../utils/deploy-diamond'
-import { deploy, deployLogic } from '../utils/deploy-helpers'
 
 interface DeployNFTArgs {
   input: string
@@ -49,10 +48,6 @@ export const deployNft = async (
     tiers.push(tierData)
   }
 
-  console.log()
-  console.log('  ** Deploying Teller NFT **')
-  console.log()
-
   const {} = await deployDiamond<ITellerNFT>({
     name: 'TellerNFT',
     facets: [
@@ -67,46 +62,24 @@ export const deployNft = async (
   })
 
   console.log()
-  console.log('  ** Deploying Teller NFT Distributor **')
-  console.log()
-
-  const nftDistributorLogic = await deployLogic<NFTDistributor>({
-    hre,
-    contract: 'NFTDistributor',
-  })
-  const nftDistributor = await deploy<NFTDistributor>({
-    hre,
-    contract: 'NFTDistributor',
-  })
-
-  console.log()
-  console.log('  ** Initializing NFT Distributor **')
-  console.log()
-
-  const factoryNFTAddress = await nftDistributor.nft()
-  if (factoryNFTAddress !== nft.address) {
-    await nftDistributor.initialize(nft.address).then(({ wait }) => wait())
-
-    console.log(' * Initialized NFT Distributor')
-  } else {
-    console.log(' * NFT Distributor already initialized')
-  }
-
-  console.log()
   console.log('  ** Initializing Teller NFT **')
   console.log()
 
   try {
-    const minters = [nftDistributor.address, deployer]
+    const minters = [nftFactory.address, deployer]
 
     console.log(' * Adding Minters')
     for (const minter of minters) {
       console.log(`     * ${minter}`)
     }
 
-    await nft.initialize(minters).then(({ wait }) => wait())
+    await nft.initialize(minters)
   } catch (err) {
-    console.log(' * Teller NFT already initialized')
+    if (err.message.includes('already initialized')) {
+      console.log(' * Teller NFT already initialized')
+    } else {
+      throw err
+    }
   }
 
   console.log()
@@ -116,7 +89,9 @@ export const deployNft = async (
   for (let index = 0; index < tiers.length; index++) {
     const tier = await nft.tiers(index)
     if (tier.contributionAsset === NULL_ADDRESS) {
-      await nft.addTier(tiers[index])
+      await nft
+        .connect(await hre.getNamedSigner('deployer'))
+        .addTier(tiers[index])
 
       console.log(` * Tier ${index} added`)
     } else {
@@ -125,18 +100,24 @@ export const deployNft = async (
   }
 
   console.log()
-  console.log('  ** Adding Merkle Roots to NFT Distributor **')
+  console.log('  ** Initializing NFT Factory **')
   console.log()
 
+  // Initialize NFT Factory
+  const factoryNFTAddress = await nftFactory.nft()
+  if (factoryNFTAddress !== nft.address) {
+    await nftFactory.initialize(nft.address).then(({ wait }) => wait())
+
+    console.log(' * Initialized NFT Factory')
+  }
+
   for (let index = 0; index < distributions.length; index++) {
-    const merkleRoots = await nftDistributor.getTierMerkleRoots()
+    const merkleRoots = await nftFactory.getTierMerkleRoots()
     if (merkleRoots.length === 0) {
-      await nftDistributor.addTier(distributions[index].merkleRoot)
-      console.log(` * Merkle root for tier ${index} added to distributor`)
+      await nftFactory.addTier(distributions[index].merkleRoot)
+      console.log(` * Tier ${index} added to factory`)
     } else {
-      console.log(
-        ` * Merkle root for tier ${index} already added to distributor`
-      )
+      console.log(` * Tier ${index} already added to factory`)
     }
   }
 
@@ -147,7 +128,7 @@ export const deployNft = async (
 
 task(
   'deploy-nft',
-  'Deploys the Teller NFT Token and Distributor with a given merkle tree as input'
+  'Deploys the Teller NFT Token and Factory with a given merkle tree as input'
 )
   .addParam(
     'input',

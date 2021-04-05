@@ -1,12 +1,11 @@
 import { DeployFunction } from 'hardhat-deploy/types'
-
+import { getTokens, getUniswap } from '../config'
+import { MarketFactory, Settings } from '../types/typechain'
 import {
   deployLogic,
   DeployLogicArgs,
   deploySettingsProxy,
 } from '../utils/deploy-helpers'
-import { MarketFactory, Settings } from '../types/typechain'
-import { getTokens, getUniswap } from '../config'
 
 const deployLogicContracts: DeployFunction = async (hre) => {
   const { getNamedAccounts, deployments, contracts, ethers, network } = hre
@@ -74,9 +73,6 @@ const deployLogicContracts: DeployFunction = async (hre) => {
     },
     {
       contract: 'NFTFactory',
-    },
-    {
-      contract: 'TellerNFT',
     },
   ]
 

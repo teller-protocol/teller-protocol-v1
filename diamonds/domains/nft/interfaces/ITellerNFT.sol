@@ -4,8 +4,9 @@ pragma experimental ABIEncoderV2;
 
 // Contracts
 import { Tier } from "../data.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-interface ITellerNFT {
+interface ITellerNFT is IERC721 {
     /**
      * @notice It returns an array of token IDs owned by an address.
      * @dev It uses a EnumerableSet to store values and loops over each element to add to the array.
