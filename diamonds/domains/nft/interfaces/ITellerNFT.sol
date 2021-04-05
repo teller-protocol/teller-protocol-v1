@@ -5,10 +5,7 @@ pragma experimental ABIEncoderV2;
 // Contracts
 import { Tier } from "../data.sol";
 
-// Interfaces
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
-
-interface ITellerNFT is IERC721Upgradeable {
+interface ITellerNFT {
     /**
      * @notice It returns an array of token IDs owned by an address.
      * @dev It uses a EnumerableSet to store values and loops over each element to add to the array.
@@ -28,9 +25,5 @@ interface ITellerNFT is IERC721Upgradeable {
     /**
      * @notice The token URI is based on the token ID.
      */
-    function tokenURI(uint256 tokenId)
-        external
-        view
-        virtual
-        returns (string memory);
+    function tokenURI(uint256 tokenId) external view returns (string memory);
 }

@@ -2,12 +2,14 @@
 pragma solidity ^0.8.0;
 
 // Interfaces
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 // Libraries
 import "@openzeppelin/contracts/utils/Address.sol";
 
 abstract contract int_ERC721CheckRecieved_v1 {
+    using Address for address;
+
     /**
      * @dev Internal function to invoke {IERC721Receiver-onERC721Received} on a target address.
      * The call is not executed if the target address is not a contract.
@@ -26,16 +28,14 @@ abstract contract int_ERC721CheckRecieved_v1 {
     ) internal virtual returns (bool) {
         if (to.isContract()) {
             try
-                IERC721ReceiverUpgradeable(to).onERC721Received(
+                IERC721Receiver(to).onERC721Received(
                     msg.sender,
                     from,
                     tokenId,
                     _data
                 )
             returns (bytes4 retval) {
-                return
-                    retval ==
-                    IERC721ReceiverUpgradeable(to).onERC721Received.selector;
+                return retval == IERC721Receiver(to).onERC721Received.selector;
             } catch (bytes memory reason) {
                 if (reason.length == 0) {
                     revert(

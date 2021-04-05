@@ -4,7 +4,12 @@ pragma solidity ^0.8.0;
 // Contracts
 import "../storage/token.sol";
 
+// Libraries
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+
 abstract contract ext_Token_v1 is sto_Token {
+    using EnumerableSet for EnumerableSet.UintSet;
+
     /**
      * @notice It returns an array of token IDs owned by an address.
      * @dev It uses a EnumerableSet to store values and loops over each element to add to the array.

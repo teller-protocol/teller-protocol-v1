@@ -8,7 +8,6 @@ import "./internal/ERC721.sol";
 import "./internal/ERC721Metadata.sol";
 
 abstract contract ctx_ERC721_v1 is
-    IERC165,
     IERC721,
     IERC721Metadata,
     sto_ERC721,

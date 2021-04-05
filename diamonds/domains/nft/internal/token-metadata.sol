@@ -14,7 +14,7 @@ abstract contract int_TokenMetadata_v1 is sto_Tier {
      * @notice The base URI path where the token media is hosted.
      * @dev Base URI for computing {tokenURI}.
      */
-    function _baseURI() internal view override returns (string memory) {
+    function _baseURI() internal view virtual returns (string memory) {
         return "https://gateway.pinata.cloud/ipfs/";
     }
 
@@ -24,7 +24,7 @@ abstract contract int_TokenMetadata_v1 is sto_Tier {
     function _tokenURI(uint256 tokenId)
         internal
         view
-        override
+        virtual
         returns (string memory)
     {
         string[] storage tierImageHashes =

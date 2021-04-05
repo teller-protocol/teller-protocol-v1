@@ -7,15 +7,11 @@ import "./ERC721Transfer.sol";
 import "./ERC721CheckRecieved.sol";
 import "./exists.sol";
 
-// Interfaces
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
-
 // Libraries
 import "@openzeppelin/contracts/utils/Address.sol";
 
 abstract contract int_ERC721_v1 is
     sto_ERC721,
-    dat_ERC721,
     int_Exists_v1,
     int_ERC721CheckRecieved_v1,
     int_beforeTokenTransfer_ERC721_v1,

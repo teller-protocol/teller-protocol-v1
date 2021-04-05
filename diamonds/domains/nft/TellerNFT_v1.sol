@@ -7,8 +7,6 @@ import "../../diamond/Diamond.sol";
 // Interfaces
 import "./interfaces/ITellerNFT.sol";
 
-import "diamonds/Constants.sol";
-
 contract TellerNFT_v1 is Diamond {
     constructor(
         IDiamondCut.FacetCut[] memory _diamondCut,

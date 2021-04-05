@@ -8,9 +8,12 @@ import "./ERC721CheckRecieved.sol";
 import "./ERC721BeforeTokenTransfer.sol";
 import "../data.sol";
 
+// Interfaces
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+
 abstract contract int_ERC721Mint_v1 is
+    IERC721,
     sto_ERC721,
-    dat_ERC721,
     int_Exists_v1,
     int_ERC721CheckRecieved_v1,
     int_beforeTokenTransfer_ERC721_v1
