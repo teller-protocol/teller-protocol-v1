@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import "../../../libraries/PlatformSettingsLib.sol";
 
 // Interfaces
-import "./IDappRegistry.sol";
 import "./IPriceAggregator.sol";
 import "./IAssetSettings.sol";
 import "./IMarketFactory.sol";

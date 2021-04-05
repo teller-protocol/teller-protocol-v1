@@ -48,17 +48,6 @@ export default <HardhatUserConfig>{
           optimizer: {
             enabled: true,
             runs: 200,
-            details: {
-              // Removes duplicate code blocks
-              deduplicate: true,
-              // Common subexpression elimination, this is the most complicated step but
-              // can also provide the largest gain.
-              cse: true,
-              // Optimize representation of literal numbers and strings in code.
-              constantOptimizer: true,
-              // Sometimes re-orders literals in commutative operations.
-              orderLiterals: true,
-            },
           },
         },
       },
