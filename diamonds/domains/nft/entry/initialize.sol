@@ -14,13 +14,15 @@ contract ent_initialize_NFT_v1 is
 {
     /**
      * @notice Initializes the TellerNFT.
-     * @param minter The account that should allowed to mint tokens.
+     * @param minters The addresses that should allowed to mint tokens.
      */
-    function initialize(address minter) external initializer {
+    function initialize(address[] calldata minters) external initializer {
         erc721Store().name = "Teller NFT";
         erc721Store().symbol = "TNFT";
 
-        _grantRole(MINTER, minter);
+        for (uint256 i; i < minters.length; i++) {
+            _grantRole(MINTER, minters[i]);
+        }
     }
 }
 

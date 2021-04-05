@@ -11,8 +11,8 @@ abstract contract sto_Tier {
     struct TierStorage {
         // It holds the total number of tiers.
         Counters.Counter tierCounter;
-        // It holds the total number of tokens minted for a tier.
-        mapping(uint256 => Counters.Counter) tierTokenCounter;
+        // It holds the total number of tokens minted.
+        Counters.Counter tokenCounter;
         // It holds the information about a tier.
         mapping(uint256 => Tier) tiers;
         // It holds which tier a token ID is in.

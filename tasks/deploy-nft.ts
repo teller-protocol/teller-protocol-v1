@@ -20,7 +20,7 @@ export const deployNft = async (
 ): Promise<void> => {
   const { input, output } = args
 
-  const { getNamedSigner, run } = hre
+  const { getNamedSigner, ethers, run } = hre
   const deployer = await getNamedSigner('deployer')
 
   // Make sure contracts are compiled
@@ -74,7 +74,7 @@ export const deployNft = async (
     facets: ['ent_distributor_NFT', 'ext_distributor_NFT'],
     execute: {
       methodName: 'initialize',
-      args: [nft.address],
+      args: [nft.address, await deployer.getAddress()],
     },
     hre,
   }).then((c) => c.connect(deployer))
@@ -84,7 +84,12 @@ export const deployNft = async (
   console.log()
 
   try {
-    await nft.initialize(nftDistributor.address).then(({ wait }) => wait())
+    const minters: string[] = [
+      nftDistributor.address,
+      await deployer.getAddress(),
+    ]
+    await nft.initialize(minters).then(({ wait }) => wait())
+    console.log(' * Teller NFT initialized')
   } catch (err) {
     if (err?.error?.message?.includes('already initialized')) {
       console.log(' * Teller NFT already initialized')

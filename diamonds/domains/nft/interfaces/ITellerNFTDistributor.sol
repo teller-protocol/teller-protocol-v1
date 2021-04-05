@@ -4,6 +4,9 @@ pragma solidity ^0.8.0;
 // Interfaces
 import "./ITellerNFT.sol";
 
+// Utils
+import { ClaimNFTTierRequest } from "../data/distributor.sol";
+
 interface ITellerNFTDistributor {
     /**
      * @notice It gets the TellerNFT diamond instance used to mint.
@@ -29,24 +32,16 @@ interface ITellerNFTDistributor {
         returns (bool _claimed);
 
     /**
-     * @notice Claims TellerNFTs for a given tier index and node index in the merkle root.
-     * @param tierIndex Index of the tier.
-     * @param nodeIndex Index of the node in the merkle root.
-     * @param account The address to claim their NFT.
-     * @param amount The amount of NFTs that {account} is allowed to claim.
-     * @param merkleProof The proof of the merkle for the given parameters above.
+     * @notice Claims TellerNFTs for a given verifiable merkle proofs for each tier.
+     * @param account The address to claim NFTs on behalf.
+     * @param requests An array requests data generated from the merkle tree.
      *
      * Requirements:
      *  - Node in the merkle root must not be claimed already
      *  - Proof of the node must match the merkle tree
      */
-    function claim(
-        uint256 tierIndex,
-        uint256 nodeIndex,
-        address account,
-        uint256 amount,
-        bytes32[] calldata merkleProof
-    ) external;
+    function claim(address account, ClaimNFTTierRequest[] calldata requests)
+        external;
 
     /**
      * @notice Adds a new tier to be able to claim NFTs.
@@ -67,6 +62,7 @@ interface ITellerNFTDistributor {
     /**
      * @notice Initializes the Distributor contract with the TellerNFT
      * @param _nft The address of the TellerNFT.
+     * @param admin The address of an admin.
      */
-    function initialize(address _nft) external;
+    function initialize(address _nft, address admin) external;
 }

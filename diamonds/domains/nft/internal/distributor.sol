@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+// Contracts
 import "../storage/distributor.sol";
+
+// Libraries
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+
+// Utils
+import { ClaimNFTTierRequest } from "../data/distributor.sol";
 
 contract int_distributor_NFT_v1 is sto_Distributor {
     /**
@@ -33,5 +40,19 @@ contract int_distributor_NFT_v1 is sto_Distributor {
             distributorStore().claimedBitMap[tierIndex][claimedWordIndex];
         uint256 mask = (1 << claimedBitIndex);
         return claimedWord & mask == mask;
+    }
+
+    function _verifyProof(address account, ClaimNFTTierRequest memory request)
+        internal
+        view
+        returns (bool verified)
+    {
+        verified = MerkleProof.verify(
+            request.merkleProof,
+            distributorStore().tierMerkleRoots[request.tierIndex],
+            keccak256(
+                abi.encodePacked(request.nodeIndex, account, request.amount)
+            )
+        );
     }
 }

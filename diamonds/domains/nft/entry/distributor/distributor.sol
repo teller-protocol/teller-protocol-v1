@@ -12,13 +12,15 @@ import "../../internal/distributor.sol";
 
 // Utils
 import { ADMIN } from "../../roles.sol";
-import { DistributorEvents } from "../../data/distributor.sol";
+import {
+    ClaimNFTTierRequest,
+    DistributorEvents
+} from "../../data/distributor.sol";
 
 // Interfaces
 import "../../interfaces/ITellerNFT.sol";
 
-// Libraries
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "hardhat/console.sol";
 
 contract ent_distributor_NFT_v1 is
     sto_Distributor,
@@ -30,47 +32,39 @@ contract ent_distributor_NFT_v1 is
     int_distributor_NFT_v1
 {
     /**
-     * @notice Claims TellerNFTs for a given tier index and node index in the merkle root.
-     * @param tierIndex Index of the tier.
-     * @param nodeIndex Index of the node in the merkle root.
-     * @param account The address to claim their NFT.
-     * @param amount The amount of NFTs that {account} is allowed to claim.
-     * @param merkleProof The proof of the merkle for the given parameters above.
+     * @notice Claims TellerNFTs for a given verifiable merkle proofs for each tier.
+     * @param account The address to claim NFTs on behalf.
+     * @param requests An array requests data generated from the merkle tree.
      *
      * Requirements:
      *  - Node in the merkle root must not be claimed already
      *  - Proof of the node must match the merkle tree
      */
-    function claim(
-        uint256 tierIndex,
-        uint256 nodeIndex,
-        address account,
-        uint256 amount,
-        bytes32[] calldata merkleProof
-    ) external {
-        require(
-            !_isClaimed(tierIndex, nodeIndex),
-            "Distributor: already claimed"
-        );
+    function claim(address account, ClaimNFTTierRequest[] calldata requests)
+        external
+    {
+        for (uint256 i; i < requests.length; i++) {
+            console.log(i, requests[i].tierIndex, requests[i].nodeIndex);
+            console.log(
+                _isClaimed(requests[i].tierIndex, requests[i].nodeIndex)
+            );
+            require(
+                !_isClaimed(requests[i].tierIndex, requests[i].nodeIndex),
+                "Distributor: already claimed"
+            );
+            require(
+                _verifyProof(account, requests[i]),
+                "Distributor: invalid proof"
+            );
 
-        // Verify the merkle proof.
-        bytes32 node = keccak256(abi.encodePacked(nodeIndex, account, amount));
-        require(
-            MerkleProof.verify(
-                merkleProof,
-                distributorStore().tierMerkleRoots[tierIndex],
-                node
-            ),
-            "Distributor: invalid proof"
-        );
-
-        // Mark it claimed and send the token.
-        _setClaimed(tierIndex, nodeIndex);
-        for (uint256 i; i < amount; i++) {
-            distributorStore().nft.mint(tierIndex, account);
+            // Mark it claimed and send the token.
+            _setClaimed(requests[i].tierIndex, requests[i].nodeIndex);
+            for (uint256 j; j < requests[i].amount; j++) {
+                distributorStore().nft.mint(requests[i].tierIndex, account);
+            }
         }
 
-        emit DistributorEvents.Claimed(nodeIndex, account, amount);
+        emit DistributorEvents.Claimed(account);
     }
 
     /**
@@ -103,11 +97,12 @@ contract ent_distributor_NFT_v1 is
     /**
      * @notice Initializes the Distributor contract with the TellerNFT
      * @param _nft The address of the TellerNFT.
+     * @param admin The address of an admin.
      */
-    function initialize(address _nft) external initializer {
+    function initialize(address _nft, address admin) external initializer {
         distributorStore().nft = ITellerNFT(_nft);
 
-        _grantRole(ADMIN, msg.sender);
+        _grantRole(ADMIN, admin);
     }
 }
 

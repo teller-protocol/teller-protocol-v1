@@ -30,10 +30,8 @@ contract ent_mint_NFT_v1 is
         authorized(MINTER, msg.sender)
     {
         // Get the new token ID
-        Counters.Counter storage counter =
-            tierStore().tierTokenCounter[tierIndex];
-        uint256 tokenId = counter.current();
-        counter.increment();
+        uint256 tokenId = tierStore().tokenCounter.current();
+        tierStore().tokenCounter.increment();
 
         // Mint and set the token to the tier index
         _safeMint(owner, tokenId);

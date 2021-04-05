@@ -70,7 +70,7 @@ interface ITellerNFT is IERC721 {
 
     /**
      * @notice Initializes the TellerNFT.
-     * @param minter The account that should allowed to mint tokens.
+     * @param minters The addresses that should allowed to mint tokens.
      */
-    function initialize(address minter) external;
+    function initialize(address[] calldata minters) external;
 }
