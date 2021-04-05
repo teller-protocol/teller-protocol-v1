@@ -1,0 +1,183 @@
+{
+  "address": "0xBf7E488835DB111d516544C415d37F173Fc00c96",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnerSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "prevOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnerTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "role",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "previousAdminRole",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "newAdminRole",
+          "type": "bytes32"
+        }
+      ],
+      "name": "RoleAdminChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "role",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        }
+      ],
+      "name": "RoleGranted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "role",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        }
+      ],
+      "name": "RoleRevoked",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "DEFAULT_ADMIN_ROLE",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address[]",
+          "name": "minters",
+          "type": "address[]"
+        }
+      ],
+      "name": "initialize",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x5677d0e82bec45f48919d2a52174de4750c5561fdf29bf05793e2e43c4fa095b",
+  "receipt": {
+    "to": null,
+    "from": "0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5",
+    "contractAddress": "0xBf7E488835DB111d516544C415d37F173Fc00c96",
+    "transactionIndex": 0,
+    "gasUsed": "326314",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x0a6d93b99bdd4145827a5db6b5ab28f4f936027fd78c3c00eca52aeff4978cb7",
+    "transactionHash": "0x5677d0e82bec45f48919d2a52174de4750c5561fdf29bf05793e2e43c4fa095b",
+    "logs": [],
+    "blockNumber": 8361869,
+    "cumulativeGasUsed": "326314",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "solcInputHash": "7e129727dcb3b47e20291ca868c9b416",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.3+commit.8d00100c\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"OwnerSet\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"prevOwner\",\"type\":\"address\"}],\"name\":\"OwnerTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"previousAdminRole\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"newAdminRole\",\"type\":\"bytes32\"}],\"name\":\"RoleAdminChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleGranted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleRevoked\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"DEFAULT_ADMIN_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"minters\",\"type\":\"address[]\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"initialize(address[])\":{\"params\":{\"minters\":\"The addresses that should allowed to mint tokens.\"}}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"initialize(address[])\":{\"notice\":\"Initializes the TellerNFT.\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"diamonds/domains/nft/entry/initialize.sol\":\"ent_initialize_NFT\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"diamonds/contexts/ERC721/storage/ERC721.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\nabstract contract sto_ERC721 {\\n    struct ERC721Storage {\\n        // Token name\\n        string name;\\n        // Token symbol\\n        string symbol;\\n        // Mapping from token ID to owner address\\n        mapping(uint256 => address) owners;\\n        // Mapping owner address to token count\\n        mapping(address => uint256) balances;\\n        // Mapping from token ID to approved address\\n        mapping(uint256 => address) tokenApprovals;\\n        // Mapping from owner to operator approvals\\n        mapping(address => mapping(address => bool)) operatorApprovals;\\n    }\\n\\n    function erc721Store() internal pure returns (ERC721Storage storage s) {\\n        bytes32 position = keccak256(\\\"teller_protocol.ERC721_token\\\");\\n        assembly {\\n            s.slot := position\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x0d241ffafab867a1d0de6b7f2fbbf2c4cef4bd9e4c6f245748b63840502dd5e2\",\"license\":\"MIT\"},\"diamonds/contexts/access-control/data.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\nstruct RoleData {\\n    mapping(address => bool) members;\\n    bytes32 adminRole;\\n}\\n\\nabstract contract dat_AccessControl_v1 {\\n    bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;\\n\\n    event OwnerSet(address indexed owner);\\n\\n    event OwnerTransferred(address indexed owner, address indexed prevOwner);\\n\\n    /**\\n     * @dev Emitted when `newAdminRole` is set as ``role``'s admin role, replacing `previousAdminRole`\\n     *\\n     * `DEFAULT_ADMIN_ROLE` is the starting admin for all roles, despite\\n     * {RoleAdminChanged} not being emitted signaling this.\\n     *\\n     * _Available since v3.1._\\n     */\\n    event RoleAdminChanged(\\n        bytes32 indexed role,\\n        bytes32 indexed previousAdminRole,\\n        bytes32 indexed newAdminRole\\n    );\\n\\n    /**\\n     * @dev Emitted when `account` is granted `role`.\\n     *\\n     * `sender` is the account that originated the contract call, an admin role\\n     * bearer except when using {_setupRole}.\\n     */\\n    event RoleGranted(\\n        bytes32 indexed role,\\n        address indexed account,\\n        address indexed sender\\n    );\\n\\n    /**\\n     * @dev Emitted when `account` is revoked `role`.\\n     *\\n     * `sender` is the account that originated the contract call:\\n     *   - if using `revokeRole`, it is the admin role bearer\\n     *   - if using `renounceRole`, it is the role bearer (i.e. `account`)\\n     */\\n    event RoleRevoked(\\n        bytes32 indexed role,\\n        address indexed account,\\n        address indexed sender\\n    );\\n}\\n\\nabstract contract dat_AccessControl is dat_AccessControl_v1 {}\\n\",\"keccak256\":\"0x9709b886deef806c2e7b13219f12a7a2b5a83d68023291b0d1191872e0c9b6f2\",\"license\":\"MIT\"},\"diamonds/contexts/access-control/internal/grant-role.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\n// Contracts\\nimport \\\"../data.sol\\\";\\nimport \\\"./has-role.sol\\\";\\n\\nabstract contract int_grantRole_AccessControl_v1 is\\n    dat_AccessControl_v1,\\n    int_hasRole_AccessControl_v1\\n{\\n    /**\\n     * @dev Should only use when circumventing admin checking. See {../entry/grant-role.sol}\\n     */\\n    function _grantRole(bytes32 role, address account) internal {\\n        if (_hasRole(role, account)) return;\\n        accessControlRolesStore().roles[role].members[account] = true;\\n        emit RoleGranted(role, account, msg.sender);\\n    }\\n}\\n\\nabstract contract int_grantRole_AccessControl is\\n    int_grantRole_AccessControl_v1\\n{}\\n\",\"keccak256\":\"0x425452b3d1bea0e3775cbc6b9d36bd0132d357dfcf556b6c1f2ee71b0fbdbf7d\",\"license\":\"MIT\"},\"diamonds/contexts/access-control/internal/has-role.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\nimport \\\"../storage/roles.sol\\\";\\n\\nabstract contract int_hasRole_AccessControl_v1 is sto_AccessControl_Roles {\\n    function _hasRole(bytes32 role, address account)\\n        internal\\n        view\\n        returns (bool hasRole_)\\n    {\\n        hasRole_ = accessControlRolesStore().roles[role].members[account];\\n    }\\n}\\n\",\"keccak256\":\"0x631c0c260f7de64c32a205405e3ec424a6b34aec27987ced91a0254fdabfb1a7\",\"license\":\"MIT\"},\"diamonds/contexts/access-control/storage/roles.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\nimport { RoleData } from \\\"../data.sol\\\";\\n\\nabstract contract sto_AccessControl_Roles {\\n    bytes32 internal constant POS =\\n        keccak256(\\\"teller_protocol.storage.access_control.roles\\\");\\n\\n    struct AccessControlRolesStorage {\\n        mapping(bytes32 => RoleData) roles;\\n    }\\n\\n    function accessControlRolesStore()\\n        internal\\n        pure\\n        returns (AccessControlRolesStorage storage s)\\n    {\\n        bytes32 position = POS;\\n\\n        assembly {\\n            s.slot := position\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0xf6ed7f621fbdc1dbfafd54e35097030415310a38798397f61b5b230a2e128768\",\"license\":\"MIT\"},\"diamonds/contexts/initializable/modifiers/initializer.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\nimport \\\"../storage.sol\\\";\\n\\nabstract contract mod_initializer_Initializable_v1 is sto_Initializable {\\n    modifier initializer {\\n        require(\\n            !initializableStorage().initialized,\\n            \\\"Teller: already initialized\\\"\\n        );\\n        _;\\n    }\\n}\\n\",\"keccak256\":\"0x2f7b6a9d7b4b7a93bd8bf857eed576fcb5f8a4bbc068870e92548e02b34f3f2d\",\"license\":\"MIT\"},\"diamonds/contexts/initializable/storage.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\nabstract contract sto_Initializable {\\n    struct InitializableLayout {\\n        bool initialized;\\n    }\\n\\n    bytes32 internal constant INITIALIZABLE_STORAGE_POSITION =\\n        keccak256(abi.encode(\\\"teller_protocol.context.initializable.v1\\\"));\\n\\n    function initializableStorage()\\n        internal\\n        pure\\n        returns (InitializableLayout storage l_)\\n    {\\n        bytes32 position = INITIALIZABLE_STORAGE_POSITION;\\n\\n        assembly {\\n            l_.slot := position\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x7f86202d6ba773f1e2cc389b3d2565a1afa514b2239a2f94dd85525ecda9f71d\",\"license\":\"MIT\"},\"diamonds/domains/nft/entry/initialize.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\n// Contracts\\nimport \\\"../../../contexts/ERC721/storage/ERC721.sol\\\";\\nimport \\\"../../../contexts/initializable/modifiers/initializer.sol\\\";\\nimport \\\"../../../contexts/access-control/internal/grant-role.sol\\\";\\nimport { MINTER } from \\\"../roles.sol\\\";\\n\\ncontract ent_initialize_NFT_v1 is\\n    sto_ERC721,\\n    mod_initializer_Initializable_v1,\\n    int_grantRole_AccessControl_v1\\n{\\n    /**\\n     * @notice Initializes the TellerNFT.\\n     * @param minters The addresses that should allowed to mint tokens.\\n     */\\n    function initialize(address[] calldata minters) external initializer {\\n        erc721Store().name = \\\"Teller NFT\\\";\\n        erc721Store().symbol = \\\"TNFT\\\";\\n\\n        for (uint256 i; i < minters.length; i++) {\\n            _grantRole(MINTER, minters[i]);\\n        }\\n    }\\n}\\n\\ncontract ent_initialize_NFT is ent_initialize_NFT_v1 {}\\n\",\"keccak256\":\"0x7af81d6d6a0c7dc9cc4d34915b1f3e1bb7730650c65067aae5057614f2330678\",\"license\":\"MIT\"},\"diamonds/domains/nft/roles.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\nbytes32 constant ADMIN = keccak256(\\\"ADMIN\\\");\\nbytes32 constant MINTER = keccak256(\\\"MINTER\\\");\\n\",\"keccak256\":\"0xa5fecccb2dd77a6b8af8615bc5ef2bfdd19492c67ad72dcc38bec4ceff07905c\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b506104f0806100206000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c8063a217fddf1461003b578063a224cee714610055575b600080fd5b610043600081565b60405190815260200160405180910390f35b6100686100633660046103e8565b61006a565b005b6100726101e4565b5460ff16156100c75760405162461bcd60e51b815260206004820152601b60248201527f54656c6c65723a20616c726561647920696e697469616c697a65640000000000604482015260640160405180910390fd5b60408051808201909152600a81526915195b1b195c8813919560b21b60208201527f1e91dbccf5488299bd4adcb044f4c3df902739c02f1f78276dd4194ac6a8d99d81516101189260200190610321565b50604080518082019091526004808252631513919560e21b6020909201918252610163917f1e91dbccf5488299bd4adcb044f4c3df902739c02f1f78276dd4194ac6a8d99e91610321565b5060005b818110156101df576101cd7ff0887ba65ee2024ea881d91b74c2450ef19e1557f03bed3ea9f16b037cbe2dc98484848181106101b357634e487b7160e01b600052603260045260246000fd5b90506020020160208101906101c891906103ba565b610257565b806101d781610493565b915050610167565b505050565b6000806040516020016102399060208082526028908201527f74656c6c65725f70726f746f636f6c2e636f6e746578742e696e697469616c696040820152677a61626c652e763160c01b606082015260800190565b60408051601f19818403018152919052805160209091012092915050565b60008281527f337c29a31b05a860fb532911919dbe85ab303a7465176333f1deb496e9fdd19e602090815260408083206001600160a01b038516845290915290205460ff16156102a65761031d565b60008281527f337c29a31b05a860fb532911919dbe85ab303a7465176333f1deb496e9fdd19e602090815260408083206001600160a01b0385168085529252808320805460ff1916600117905551339285917f2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d9190a45b5050565b82805461032d90610458565b90600052602060002090601f01602090048101928261034f5760008555610395565b82601f1061036857805160ff1916838001178555610395565b82800160010185558215610395579182015b8281111561039557825182559160200191906001019061037a565b506103a19291506103a5565b5090565b5b808211156103a157600081556001016103a6565b6000602082840312156103cb578081fd5b81356001600160a01b03811681146103e1578182fd5b9392505050565b600080602083850312156103fa578081fd5b823567ffffffffffffffff80821115610411578283fd5b818501915085601f830112610424578283fd5b813581811115610432578384fd5b8660208260051b8501011115610446578384fd5b60209290920196919550909350505050565b600181811c9082168061046c57607f821691505b6020821081141561048d57634e487b7160e01b600052602260045260246000fd5b50919050565b60006000198214156104b357634e487b7160e01b81526011600452602481fd5b506001019056fea264697066735822122027013e56fc3165b7eac72c42cdc08be2403264fb8ae4317e39a9442fc7745ecf64736f6c63430008030033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100365760003560e01c8063a217fddf1461003b578063a224cee714610055575b600080fd5b610043600081565b60405190815260200160405180910390f35b6100686100633660046103e8565b61006a565b005b6100726101e4565b5460ff16156100c75760405162461bcd60e51b815260206004820152601b60248201527f54656c6c65723a20616c726561647920696e697469616c697a65640000000000604482015260640160405180910390fd5b60408051808201909152600a81526915195b1b195c8813919560b21b60208201527f1e91dbccf5488299bd4adcb044f4c3df902739c02f1f78276dd4194ac6a8d99d81516101189260200190610321565b50604080518082019091526004808252631513919560e21b6020909201918252610163917f1e91dbccf5488299bd4adcb044f4c3df902739c02f1f78276dd4194ac6a8d99e91610321565b5060005b818110156101df576101cd7ff0887ba65ee2024ea881d91b74c2450ef19e1557f03bed3ea9f16b037cbe2dc98484848181106101b357634e487b7160e01b600052603260045260246000fd5b90506020020160208101906101c891906103ba565b610257565b806101d781610493565b915050610167565b505050565b6000806040516020016102399060208082526028908201527f74656c6c65725f70726f746f636f6c2e636f6e746578742e696e697469616c696040820152677a61626c652e763160c01b606082015260800190565b60408051601f19818403018152919052805160209091012092915050565b60008281527f337c29a31b05a860fb532911919dbe85ab303a7465176333f1deb496e9fdd19e602090815260408083206001600160a01b038516845290915290205460ff16156102a65761031d565b60008281527f337c29a31b05a860fb532911919dbe85ab303a7465176333f1deb496e9fdd19e602090815260408083206001600160a01b0385168085529252808320805460ff1916600117905551339285917f2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d9190a45b5050565b82805461032d90610458565b90600052602060002090601f01602090048101928261034f5760008555610395565b82601f1061036857805160ff1916838001178555610395565b82800160010185558215610395579182015b8281111561039557825182559160200191906001019061037a565b506103a19291506103a5565b5090565b5b808211156103a157600081556001016103a6565b6000602082840312156103cb578081fd5b81356001600160a01b03811681146103e1578182fd5b9392505050565b600080602083850312156103fa578081fd5b823567ffffffffffffffff80821115610411578283fd5b818501915085601f830112610424578283fd5b813581811115610432578384fd5b8660208260051b8501011115610446578384fd5b60209290920196919550909350505050565b600181811c9082168061046c57607f821691505b6020821081141561048d57634e487b7160e01b600052602260045260246000fd5b50919050565b60006000198214156104b357634e487b7160e01b81526011600452602481fd5b506001019056fea264697066735822122027013e56fc3165b7eac72c42cdc08be2403264fb8ae4317e39a9442fc7745ecf64736f6c63430008030033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "initialize(address[])": {
+        "params": {
+          "minters": "The addresses that should allowed to mint tokens."
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "initialize(address[])": {
+        "notice": "Initializes the TellerNFT."
+      }
+    },
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  }
+}
