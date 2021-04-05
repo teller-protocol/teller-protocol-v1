@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import { Tier } from "../data.sol";
+import { Tier } from "../data/tier.sol";
 
 // Libraries
 import "@openzeppelin/contracts/utils/Counters.sol";

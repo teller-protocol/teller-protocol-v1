@@ -78,20 +78,14 @@ export default <HardhatUserConfig>{
       mainnet: 0,
     },
     lender: {
-      rinkeby: 5,
-      ropsten: 5,
       hardhat: 5,
       localhost: 5,
     },
     borrower: {
-      rinkeby: 6,
-      ropsten: 6,
       hardhat: 6,
       localhost: 6,
     },
     liquidator: {
-      rinkeby: 9,
-      ropsten: 9,
       hardhat: 9,
       localhost: 9,
     },

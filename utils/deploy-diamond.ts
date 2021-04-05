@@ -1,4 +1,3 @@
-import { randomBytes } from 'crypto'
 import { Contract } from 'ethers'
 import { Libraries } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
@@ -11,6 +10,10 @@ export interface DeployArgs {
   args?: any[]
   mock?: boolean
   owner?: string
+  execute?: {
+    methodName: string
+    args: any[]
+  }
 }
 
 export const deployDiamond = async <C extends Contract>(
@@ -20,7 +23,6 @@ export const deployDiamond = async <C extends Contract>(
     hre: {
       deployments: {
         diamond: { deploy },
-        getOrNull,
       },
       getNamedAccounts,
       ethers,
@@ -29,34 +31,22 @@ export const deployDiamond = async <C extends Contract>(
 
   const { deployer } = await getNamedAccounts()
 
-  const existingContract = await getOrNull(args.name)
-  let contractAddress: string
+  process.stdout.write(` * Deploying ${args.name}...: `)
 
-  if (!existingContract) {
-    // If marked as mock, prepend "Mock" to the contract name
-    const contractName = `${args.name}${args.mock ? 'Mock' : ''}`
-
-    process.stdout.write(` * Deploying ${args.name}...: `)
-
-    const { address, receipt } = await deploy(args.name, {
-      deterministicSalt: randomBytes(32).toString('hex'),
-      facets: args.facets,
-      libraries: args.libraries,
-      from: deployer,
-      gasLimit: ethers.utils.hexlify(9500000),
-      owner: args.owner ?? deployer,
-    })
-
-    contractAddress = address
+  const { abi, address, receipt, newlyDeployed } = await deploy(args.name, {
+    owner: args.owner ?? deployer,
+    libraries: args.libraries,
+    facets: args.facets,
+    execute: args.execute,
+    from: deployer,
+  })
+  if (newlyDeployed) {
     process.stdout.write(
       `${address} ${receipt ? `with ${receipt.gasUsed} gas` : ''} \n`
     )
   } else {
-    contractAddress = existingContract.address
-    process.stdout.write(
-      ` * Reusing ${args.name} deployment at ${existingContract.address} \n`
-    )
+    process.stdout.write(` already deployed ${address} \n`)
   }
 
-  return (await ethers.getContractAt(args.name, contractAddress)) as C
+  return (await ethers.getContractAt(abi, address)) as C
 }

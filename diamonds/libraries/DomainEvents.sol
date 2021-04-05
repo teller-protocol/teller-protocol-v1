@@ -6,7 +6,7 @@ pragma solidity ^0.8.0;
  *
  * @author develop@teller.finance
  */
-library Events {
+library DomainEvents {
     /**
         @notice This event is emitted when a new platform setting is created.
         @param settingName new setting name.

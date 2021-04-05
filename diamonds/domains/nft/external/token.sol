@@ -27,3 +27,5 @@ contract ext_token_NFT_v1 is sto_Token {
         }
     }
 }
+
+contract ext_token_NFT is ext_token_NFT_v1 {}

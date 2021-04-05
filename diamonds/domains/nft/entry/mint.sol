@@ -6,7 +6,7 @@ import "../storage/tier.sol";
 import "../internal/set-owner.sol";
 import "../../../contexts/access-control/modifiers/authorized.sol";
 import "../../../contexts/ERC721/internal/ERC721Mint.sol";
-import { MINTER } from "../data.sol";
+import { MINTER } from "../roles.sol";
 
 // Libraries
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -19,6 +19,12 @@ contract ent_mint_NFT_v1 is
 {
     using Counters for Counters.Counter;
 
+    /**
+     * @notice It mints a new token for a Tier index.
+     *
+     * Requirements:
+     *  - Caller must be an authorized minter
+     */
     function mint(uint256 tierIndex, address owner)
         external
         authorized(MINTER, msg.sender)
@@ -37,3 +43,5 @@ contract ent_mint_NFT_v1 is
         _setOwner(owner, tokenId);
     }
 }
+
+contract ent_mint_NFT is ent_mint_NFT_v1 {}
