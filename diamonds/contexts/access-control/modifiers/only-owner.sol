@@ -3,10 +3,11 @@ pragma solidity ^0.8.0;
 
 import "../storage/owner.sol";
 
-abstract contract mod_onlyOwner_AccessControl_v1 is sto_AccessControl_Owner {
+abstract contract mod_onlyOwner_AccessControl_v1 {
     modifier onlyOwner() {
         require(
-            accessControlOwnerStore().owner == msg.sender,
+            sto_AccessControl_Owner.accessControlOwnerStore().owner ==
+                msg.sender,
             "AccessControl: not owner"
         );
         _;

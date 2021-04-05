@@ -7,7 +7,7 @@ import "../storage/tier.sol";
 // Libraries
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-abstract contract int_TokenMetadata_v1 is sto_Tier {
+abstract contract int_TokenMetadata_v1 {
     using SafeMath for uint256;
 
     /**
@@ -28,7 +28,10 @@ abstract contract int_TokenMetadata_v1 is sto_Tier {
         returns (string memory)
     {
         string[] storage tierImageHashes =
-            tierStore().tiers[tierStore().tokenTierMap[tokenId]].hashes;
+            sto_Tier.tierStore().tiers[
+                sto_Tier.tierStore().tokenTierMap[tokenId]
+            ]
+                .hashes;
         return tierImageHashes[tokenId.mod(tierImageHashes.length)];
     }
 }

@@ -7,7 +7,7 @@ import "../storage/token.sol";
 // Libraries
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-abstract contract ext_token_NFT_v1 is sto_Token {
+contract ext_token_NFT_v1 {
     using EnumerableSet for EnumerableSet.UintSet;
 
     /**
@@ -20,7 +20,8 @@ abstract contract ext_token_NFT_v1 is sto_Token {
         view
         returns (uint256[] memory owned)
     {
-        EnumerableSet.UintSet storage set = tokenStore().ownerTokenIDs[owner];
+        EnumerableSet.UintSet storage set =
+            sto_Token.tokenStore().ownerTokenIDs[owner];
         owned = new uint256[](set.length());
         for (uint256 i; i < owned.length; i++) {
             owned[i] = set.at(i);

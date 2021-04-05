@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // Contracts
 import "../storage/tier.sol";
 
-abstract contract ext_tier_NFT_v1 is sto_Tier {
+contract ext_tier_NFT_v1 {
     /**
      * @notice It returns an array of token IDs owned by an address.
      * @dev It uses a EnumerableSet to store values and loops over each element to add to the array.
@@ -15,6 +15,6 @@ abstract contract ext_tier_NFT_v1 is sto_Tier {
         view
         returns (string[] memory)
     {
-        return tierStore().tiers[tierIndex].hashes;
+        return sto_Tier.tierStore().tiers[tierIndex].hashes;
     }
 }

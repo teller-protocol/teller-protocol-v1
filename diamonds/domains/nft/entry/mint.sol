@@ -11,9 +11,8 @@ import { MINTER } from "../data.sol";
 // Libraries
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-abstract contract ent_mint_NFT_v1 is
+contract ent_mint_NFT_v1 is
     mod_authorized_AccessControl_v1,
-    sto_Tier,
     int_SetOwner_v1,
     int_ERC721Mint_v1
 {
@@ -25,13 +24,13 @@ abstract contract ent_mint_NFT_v1 is
     {
         // Get the new token ID
         Counters.Counter storage counter =
-            tierStore().tierTokenCounter[tierIndex];
+            sto_Tier.tierStore().tierTokenCounter[tierIndex];
         uint256 tokenId = counter.current();
         counter.increment();
 
         // Mint and set the token to the tier index
         _safeMint(owner, tokenId);
-        tierStore().tokenTierMap[tokenId] = tierIndex;
+        sto_Tier.tierStore().tokenTierMap[tokenId] = tierIndex;
 
         // Set owner
         _setOwner(owner, tokenId);

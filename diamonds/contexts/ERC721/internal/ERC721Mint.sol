@@ -10,7 +10,6 @@ import "./ERC721BeforeTokenTransfer.sol";
 
 abstract contract int_ERC721Mint_v1 is
     dat_ERC721,
-    sto_ERC721,
     int_Exists_v1,
     int_ERC721CheckReceived_v1,
     int_beforeTokenTransfer_ERC721_v1
@@ -63,8 +62,8 @@ abstract contract int_ERC721Mint_v1 is
 
         _beforeTokenTransfer(address(0), to, tokenId);
 
-        erc721Store().balances[to] += 1;
-        erc721Store().owners[tokenId] = to;
+        sto_ERC721.erc721Store().balances[to] += 1;
+        sto_ERC721.erc721Store().owners[tokenId] = to;
 
         emit Transfer(address(0), to, tokenId);
     }

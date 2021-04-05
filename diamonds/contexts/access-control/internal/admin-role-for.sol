@@ -4,13 +4,16 @@ pragma solidity ^0.8.0;
 // Contracts
 import "../storage/roles.sol";
 
-abstract contract int_adminRoleFor_AccessControl_v1 is sto_AccessControl_Roles {
+abstract contract int_adminRoleFor_AccessControl_v1 {
     function _adminRoleFor(bytes32 role)
         internal
         view
         returns (bytes32 adminRoleFor_)
     {
-        adminRoleFor_ = accessControlRolesStore().roles[role].adminRole;
+        adminRoleFor_ = sto_AccessControl_Roles.accessControlRolesStore().roles[
+            role
+        ]
+            .adminRole;
     }
 }
 

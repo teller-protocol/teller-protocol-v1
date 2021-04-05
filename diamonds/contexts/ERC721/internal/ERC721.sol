@@ -13,14 +13,12 @@ import "./exists.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
 abstract contract int_ERC721_v1 is
-    dat_ERC721,
-    sto_ERC721,
-    int_Exists_v1,
-    int_ERC721CheckReceived_v1,
-    int_beforeTokenTransfer_ERC721_v1,
     int_ERC721Metadata_v1,
+    int_beforeTokenTransfer_ERC721_v1,
     int_approve_ERC721_v1,
-    int_ERC721Transfer_v1
+    int_ERC721CheckReceived_v1,
+    int_ERC721Transfer_v1,
+    int_Exists_v1
 {
     using Address for address;
 
@@ -77,10 +75,10 @@ abstract contract int_ERC721_v1 is
             _exists(tokenId),
             "ERC721: operator query for nonexistent token"
         );
-        address owner = erc721Store().owners[tokenId];
+        address owner = sto_ERC721.erc721Store().owners[tokenId];
         return (spender == owner ||
-            erc721Store().tokenApprovals[tokenId] == spender ||
-            erc721Store().operatorApprovals[owner][spender]);
+            sto_ERC721.erc721Store().tokenApprovals[tokenId] == spender ||
+            sto_ERC721.erc721Store().operatorApprovals[owner][spender]);
     }
 
     /**
@@ -92,7 +90,7 @@ abstract contract int_ERC721_v1 is
         virtual
         returns (bool)
     {
-        return erc721Store().operatorApprovals[owner][operator];
+        return sto_ERC721.erc721Store().operatorApprovals[owner][operator];
     }
 
     /**
@@ -106,15 +104,15 @@ abstract contract int_ERC721_v1 is
      * Emits a {Transfer} event.
      */
     function _burn(uint256 tokenId) internal virtual {
-        address owner = erc721Store().owners[tokenId];
+        address owner = sto_ERC721.erc721Store().owners[tokenId];
 
         _beforeTokenTransfer(owner, address(0), tokenId);
 
         // Clear approvals
         _approve(address(0), tokenId);
 
-        erc721Store().balances[owner] -= 1;
-        delete erc721Store().owners[tokenId];
+        sto_ERC721.erc721Store().balances[owner] -= 1;
+        delete sto_ERC721.erc721Store().owners[tokenId];
 
         emit Transfer(owner, address(0), tokenId);
     }
@@ -125,7 +123,7 @@ abstract contract int_ERC721_v1 is
      * Emits a {Approval} event.
      */
     function _approve(address to, uint256 tokenId) internal virtual override {
-        erc721Store().tokenApprovals[tokenId] = to;
-        emit Approval(erc721Store().owners[tokenId], to, tokenId);
+        sto_ERC721.erc721Store().tokenApprovals[tokenId] = to;
+        emit Approval(sto_ERC721.erc721Store().owners[tokenId], to, tokenId);
     }
 }

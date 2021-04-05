@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 import "../storage.sol";
 
-abstract contract mod_whenPaused_Pausable_v1 is sto_Pausable {
+abstract contract mod_whenPaused_Pausable_v1 {
     modifier whenPaused(address context) {
-        require(pausableStorage().paused[context], "NOT_PAUSED");
+        require(sto_Pausable.pausableStorage().paused[context], "NOT_PAUSED");
         _;
     }
 }

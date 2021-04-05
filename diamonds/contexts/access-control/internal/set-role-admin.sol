@@ -10,7 +10,8 @@ abstract contract int_setRoleAdmin_AccessControl_v1 is
 {
     function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal {
         emit RoleAdminChanged(role, _adminRoleFor(role), adminRole);
-        accessControlRolesStore().roles[role].adminRole = adminRole;
+        sto_AccessControl_Roles.accessControlRolesStore().roles[role]
+            .adminRole = adminRole;
     }
 }
 

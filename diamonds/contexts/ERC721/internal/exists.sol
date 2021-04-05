@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // Contracts
 import "../storage/ERC721.sol";
 
-abstract contract int_Exists_v1 is sto_ERC721 {
+abstract contract int_Exists_v1 {
     /**
      * @dev Returns whether `tokenId` exists.
      *
@@ -14,6 +14,6 @@ abstract contract int_Exists_v1 is sto_ERC721 {
      * and stop existing when they are burned (`_burn`).
      */
     function _exists(uint256 tokenId) internal view virtual returns (bool) {
-        return erc721Store().owners[tokenId] != address(0);
+        return sto_ERC721.erc721Store().owners[tokenId] != address(0);
     }
 }

@@ -6,7 +6,7 @@ import "../../../contexts/access-control/modifiers/authorized.sol";
 import "../storage/tier.sol";
 import { MINTER, Tier } from "../data.sol";
 
-abstract contract ent_tier_NFT_v1 is sto_Tier, mod_authorized_AccessControl_v1 {
+contract ent_tier_NFT_v1 is mod_authorized_AccessControl_v1 {
     using Counters for Counters.Counter;
 
     function addTier(Tier memory newTier)
@@ -14,7 +14,9 @@ abstract contract ent_tier_NFT_v1 is sto_Tier, mod_authorized_AccessControl_v1 {
         authorized(MINTER, msg.sender)
     {
         Tier storage tier =
-            tierStore().tiers[tierStore().tierCounter.current()];
+            sto_Tier.tierStore().tiers[
+                sto_Tier.tierStore().tierCounter.current()
+            ];
         require(
             tier.contributionAsset == address(0),
             "Teller: tier already exists"
@@ -26,6 +28,6 @@ abstract contract ent_tier_NFT_v1 is sto_Tier, mod_authorized_AccessControl_v1 {
         tier.contributionSize = newTier.contributionSize;
         tier.contributionMultiplier = newTier.contributionMultiplier;
 
-        tierStore().tierCounter.increment();
+        sto_Tier.tierStore().tierCounter.increment();
     }
 }

@@ -4,10 +4,10 @@ const protocol: DeployFunction = async (hre) => {
   const { getNamedAccounts, deployments, contracts, ethers, network } = hre
   const { deployer } = await getNamedAccounts()
 
-  const tellerProtocol = await deployments.diamond.deploy('Diamond', {
+  const tellerProtocol = await deployments.diamond.deploy('Main', {
     from: deployer,
     facets: [
-      'ctx_ERC721_v1',
+      // 'ctx_ERC721_v1',
       'ent_initialize_NFT_v1',
       'ent_mint_NFT_v1',
       'ent_tier_NFT_v1',

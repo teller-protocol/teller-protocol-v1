@@ -13,7 +13,9 @@ abstract contract int_grantRole_AccessControl_v1 is
     function _grantRole(bytes32 role, address account) internal {
         require(_isAdminForRole(role, msg.sender), "NOT_ADMIN");
         if (_hasRole(role, account)) return;
-        accessControlRolesStore().roles[role].members[account] = true;
+        sto_AccessControl_Roles.accessControlRolesStore().roles[role].members[
+            account
+        ] = true;
         emit RoleGranted(role, account, msg.sender);
     }
 }

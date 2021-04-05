@@ -8,7 +8,6 @@ import "./ERC721BeforeTokenTransfer.sol";
 import "./ERC721Approve.sol";
 
 abstract contract int_ERC721Transfer_v1 is
-    sto_ERC721,
     int_beforeTokenTransfer_ERC721_v1,
     int_approve_ERC721_v1
 {
@@ -29,7 +28,7 @@ abstract contract int_ERC721Transfer_v1 is
         uint256 tokenId
     ) internal virtual {
         require(
-            erc721Store().owners[tokenId] == from,
+            sto_ERC721.erc721Store().owners[tokenId] == from,
             "ERC721: transfer of token that is not own"
         );
         require(to != address(0), "ERC721: transfer to the zero address");
@@ -39,9 +38,9 @@ abstract contract int_ERC721Transfer_v1 is
         // Clear approvals from the previous owner
         _approve(address(0), tokenId);
 
-        erc721Store().balances[from] -= 1;
-        erc721Store().balances[to] += 1;
-        erc721Store().owners[tokenId] = to;
+        sto_ERC721.erc721Store().balances[from] -= 1;
+        sto_ERC721.erc721Store().balances[to] += 1;
+        sto_ERC721.erc721Store().owners[tokenId] = to;
 
         emit Transfer(from, to, tokenId);
     }

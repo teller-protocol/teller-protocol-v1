@@ -10,7 +10,9 @@ abstract contract int_renounceRole_AccessControl_v1 is
 {
     function _renounceRole(bytes32 role, address account) internal {
         require(_hasRole(role, msg.sender), "CAN'T RENOUNCE");
-        accessControlRolesStore().roles[role].members[account] = false;
+        sto_AccessControl_Roles.accessControlRolesStore().roles[role].members[
+            account
+        ] = false;
         emit RoleRevoked(role, account, msg.sender);
     }
 }

@@ -10,7 +10,9 @@ abstract contract int_revokeRole_AccessControl_v1 is
 {
     function _revokeRole(bytes32 role, address account) internal {
         require(_isAdminForRole(role, msg.sender), "AccessControl: not admin");
-        accessControlRolesStore().roles[role].members[account] = false;
+        sto_AccessControl_Roles.accessControlRolesStore().roles[role].members[
+            account
+        ] = false;
         emit RoleRevoked(role, account, msg.sender);
     }
 }

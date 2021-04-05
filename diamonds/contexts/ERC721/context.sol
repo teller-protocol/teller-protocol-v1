@@ -5,7 +5,7 @@ import "./storage/ERC721.sol";
 import "./internal/ERC721.sol";
 import "./data.sol";
 
-abstract contract ctx_ERC721_v1 is dat_ERC721, sto_ERC721, int_ERC721_v1 {
+abstract contract ctx_ERC721_v1 is dat_ERC721, int_ERC721_v1 {
     /**
      * @dev See {IERC721-balanceOf}.
      */
@@ -14,14 +14,14 @@ abstract contract ctx_ERC721_v1 is dat_ERC721, sto_ERC721, int_ERC721_v1 {
             owner != address(0),
             "ERC721: balance query for the zero address"
         );
-        return erc721Store().balances[owner];
+        return sto_ERC721.erc721Store().balances[owner];
     }
 
     /**
      * @dev See {IERC721-ownerOf}.
      */
     function ownerOf(uint256 tokenId) external view virtual returns (address) {
-        address owner = erc721Store().owners[tokenId];
+        address owner = sto_ERC721.erc721Store().owners[tokenId];
         require(
             owner != address(0),
             "ERC721: owner query for nonexistent token"
@@ -33,14 +33,14 @@ abstract contract ctx_ERC721_v1 is dat_ERC721, sto_ERC721, int_ERC721_v1 {
      * @dev See {IERC721Metadata-name}.
      */
     function name() external view virtual returns (string memory) {
-        return erc721Store().name;
+        return sto_ERC721.erc721Store().name;
     }
 
     /**
      * @dev See {IERC721Metadata-symbol}.
      */
     function symbol() external view virtual returns (string memory) {
-        return erc721Store().symbol;
+        return sto_ERC721.erc721Store().symbol;
     }
 
     /**
@@ -68,7 +68,7 @@ abstract contract ctx_ERC721_v1 is dat_ERC721, sto_ERC721, int_ERC721_v1 {
      * @dev See {IERC721-approve}.
      */
     function approve(address to, uint256 tokenId) external virtual {
-        address owner = erc721Store().owners[tokenId];
+        address owner = sto_ERC721.erc721Store().owners[tokenId];
         require(to != owner, "ERC721: approval to current owner");
 
         require(
@@ -93,7 +93,7 @@ abstract contract ctx_ERC721_v1 is dat_ERC721, sto_ERC721, int_ERC721_v1 {
             "ERC721: approved query for nonexistent token"
         );
 
-        return erc721Store().tokenApprovals[tokenId];
+        return sto_ERC721.erc721Store().tokenApprovals[tokenId];
     }
 
     /**
@@ -105,7 +105,9 @@ abstract contract ctx_ERC721_v1 is dat_ERC721, sto_ERC721, int_ERC721_v1 {
     {
         require(operator != msg.sender, "ERC721: approve to caller");
 
-        erc721Store().operatorApprovals[msg.sender][operator] = approved;
+        sto_ERC721.erc721Store().operatorApprovals[msg.sender][
+            operator
+        ] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
     }
 
