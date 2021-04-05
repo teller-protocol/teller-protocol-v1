@@ -2,19 +2,24 @@
 pragma solidity ^0.8.0;
 
 // Contracts
+import "../data.sol";
 import "../storage/ERC721.sol";
 import "./ERC721Transfer.sol";
-import "./ERC721CheckRecieved.sol";
+import "./ERC721CheckReceived.sol";
+import "./ERC721Metadata.sol";
 import "./exists.sol";
 
 // Libraries
 import "@openzeppelin/contracts/utils/Address.sol";
 
 abstract contract int_ERC721_v1 is
+    dat_ERC721,
     sto_ERC721,
     int_Exists_v1,
-    int_ERC721CheckRecieved_v1,
+    int_ERC721CheckReceived_v1,
     int_beforeTokenTransfer_ERC721_v1,
+    int_ERC721Metadata_v1,
+    int_approve_ERC721_v1,
     int_ERC721Transfer_v1
 {
     using Address for address;
@@ -119,7 +124,7 @@ abstract contract int_ERC721_v1 is
      *
      * Emits a {Approval} event.
      */
-    function _approve(address to, uint256 tokenId) internal override {
+    function _approve(address to, uint256 tokenId) internal virtual override {
         erc721Store().tokenApprovals[tokenId] = to;
         emit Approval(erc721Store().owners[tokenId], to, tokenId);
     }

@@ -3,39 +3,13 @@ pragma solidity ^0.8.0;
 
 import "./storage/ERC721.sol";
 import "./internal/ERC721.sol";
-import "./internal/ERC721Metadata.sol";
+import "./data.sol";
 
-abstract contract ctx_ERC721_v1 is
-    sto_ERC721,
-    int_ERC721_v1,
-    int_ERC721Metadata_v1
-{
-    /**
-     * @dev See {IERC165-supportsInterface}.
-     */
-    function supportsInterface(bytes4 interfaceId)
-        external
-        view
-        virtual
-        override
-        returns (bool)
-    {
-        return
-            interfaceId == type(IERC721).interfaceId ||
-            interfaceId == type(IERC721Metadata).interfaceId ||
-            interfaceId == type(IERC165).interfaceId;
-    }
-
+abstract contract ctx_ERC721_v1 is dat_ERC721, sto_ERC721, int_ERC721_v1 {
     /**
      * @dev See {IERC721-balanceOf}.
      */
-    function balanceOf(address owner)
-        external
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function balanceOf(address owner) external view virtual returns (uint256) {
         require(
             owner != address(0),
             "ERC721: balance query for the zero address"
@@ -46,13 +20,7 @@ abstract contract ctx_ERC721_v1 is
     /**
      * @dev See {IERC721-ownerOf}.
      */
-    function ownerOf(uint256 tokenId)
-        external
-        view
-        virtual
-        override
-        returns (address)
-    {
+    function ownerOf(uint256 tokenId) external view virtual returns (address) {
         address owner = erc721Store().owners[tokenId];
         require(
             owner != address(0),
@@ -64,14 +32,14 @@ abstract contract ctx_ERC721_v1 is
     /**
      * @dev See {IERC721Metadata-name}.
      */
-    function name() external view virtual override returns (string memory) {
+    function name() external view virtual returns (string memory) {
         return erc721Store().name;
     }
 
     /**
      * @dev See {IERC721Metadata-symbol}.
      */
-    function symbol() external view virtual override returns (string memory) {
+    function symbol() external view virtual returns (string memory) {
         return erc721Store().symbol;
     }
 
@@ -82,7 +50,6 @@ abstract contract ctx_ERC721_v1 is
         external
         view
         virtual
-        override
         returns (string memory)
     {
         require(
@@ -100,7 +67,7 @@ abstract contract ctx_ERC721_v1 is
     /**
      * @dev See {IERC721-approve}.
      */
-    function approve(address to, uint256 tokenId) external virtual override {
+    function approve(address to, uint256 tokenId) external virtual {
         address owner = erc721Store().owners[tokenId];
         require(to != owner, "ERC721: approval to current owner");
 
@@ -119,7 +86,6 @@ abstract contract ctx_ERC721_v1 is
         external
         view
         virtual
-        override
         returns (address)
     {
         require(
@@ -136,7 +102,6 @@ abstract contract ctx_ERC721_v1 is
     function setApprovalForAll(address operator, bool approved)
         external
         virtual
-        override
     {
         require(operator != msg.sender, "ERC721: approve to caller");
 
@@ -151,7 +116,6 @@ abstract contract ctx_ERC721_v1 is
         external
         view
         virtual
-        override
         returns (bool)
     {
         return _isApprovedForAll(owner, operator);
@@ -164,7 +128,7 @@ abstract contract ctx_ERC721_v1 is
         address from,
         address to,
         uint256 tokenId
-    ) external virtual override {
+    ) external virtual {
         require(
             _isApprovedOrOwner(msg.sender, tokenId),
             "ERC721: transfer caller is not owner nor approved"
@@ -179,7 +143,7 @@ abstract contract ctx_ERC721_v1 is
         address from,
         address to,
         uint256 tokenId
-    ) external virtual override {
+    ) external virtual {
         _safeTransfer(from, to, tokenId, "");
     }
 
@@ -191,7 +155,7 @@ abstract contract ctx_ERC721_v1 is
         address to,
         uint256 tokenId,
         bytes memory _data
-    ) external virtual override {
+    ) external virtual {
         _safeTransfer(from, to, tokenId, _data);
     }
 }

@@ -5,8 +5,8 @@ import "../data.sol";
 import "./is-admin-for-role.sol";
 
 abstract contract int_revokeRole_AccessControl_v1 is
-    int_isAdminForRole_AccessControl_v1,
-    dat_AccessControl_v1
+    dat_AccessControl_v1,
+    int_isAdminForRole_AccessControl_v1
 {
     function _revokeRole(bytes32 role, address account) internal {
         require(_isAdminForRole(role, msg.sender), "AccessControl: not admin");

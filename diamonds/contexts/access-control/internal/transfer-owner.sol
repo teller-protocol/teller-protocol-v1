@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { OwnerSet } from "../data.sol";
+import "../data.sol";
 import "../storage/owner.sol";
 
-abstract contract int_transferOwner_AccessControl is
-    int_transferOwner_AccessControl_v1
-{}
-
 abstract contract int_transferOwner_AccessControl_v1 is
+    dat_AccessControl,
     sto_AccessControl_Owner
 {
     function _transferOwner(address owner) internal {
@@ -20,3 +17,7 @@ abstract contract int_transferOwner_AccessControl_v1 is
         emit OwnerTransferred(owner, msg.sender);
     }
 }
+
+abstract contract int_transferOwner_AccessControl is
+    int_transferOwner_AccessControl_v1
+{}

@@ -1,1 +1,0 @@
-function getRegistry(string memory name) returns (bytes32)}]

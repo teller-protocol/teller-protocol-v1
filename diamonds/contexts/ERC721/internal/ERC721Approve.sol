@@ -2,13 +2,10 @@
 pragma solidity ^0.8.0;
 
 // Contrcats
-import "../storage/ERC721.sol";
 import "../data.sol";
+import "../storage/ERC721.sol";
 
-// Interfaces
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-
-abstract contract int_approve_ERC721_v1 is IERC721, sto_ERC721 {
+abstract contract int_approve_ERC721_v1 is dat_ERC721, sto_ERC721 {
     /**
      * @dev Approve `to` to operate on `tokenId`
      *

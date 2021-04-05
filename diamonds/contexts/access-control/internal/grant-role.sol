@@ -6,9 +6,9 @@ import "./has-role.sol";
 import "./is-admin-for-role.sol";
 
 abstract contract int_grantRole_AccessControl_v1 is
+    dat_AccessControl_v1,
     int_hasRole_AccessControl_v1,
-    int_isAdminForRole_AccessControl_v1,
-    dat_AccessControl_v1
+    int_isAdminForRole_AccessControl_v1
 {
     function _grantRole(bytes32 role, address account) internal {
         require(_isAdminForRole(role, msg.sender), "NOT_ADMIN");

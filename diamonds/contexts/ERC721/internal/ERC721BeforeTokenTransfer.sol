@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 abstract contract int_beforeTokenTransfer_ERC721_v1 {

@@ -14,7 +14,7 @@ import "./interfaces/IDiamondCut.sol";
 import "./interfaces/IERC173.sol";
 import "./interfaces/IERC165.sol";
 
-abstract contract Diamond {
+contract Diamond {
     // more arguments are added to this struct
     // this avoids stack too deep errors
     struct DiamondArgs {

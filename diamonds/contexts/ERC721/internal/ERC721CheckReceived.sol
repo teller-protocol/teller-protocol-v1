@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 // Libraries
 import "@openzeppelin/contracts/utils/Address.sol";
 
-abstract contract int_ERC721CheckRecieved_v1 {
+abstract contract int_ERC721CheckReceived_v1 {
     using Address for address;
 
     /**

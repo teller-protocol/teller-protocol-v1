@@ -38,7 +38,7 @@ export default <HardhatUserConfig>{
     apiKey: process.env.ETHERSCAN_API_KEY,
   },
   paths: {
-    sources: 'diamonds/domains/nft',
+    sources: 'diamonds',
   },
   solidity: {
     compilers: [
