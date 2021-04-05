@@ -111,11 +111,11 @@ export const deploy = async <C extends Contract>(
 
 export interface DeployLogicArgs extends Omit<DeployArgs, 'name'> {}
 
-export const deployLogic = async (
+export const deployLogic = async <T extends Contract>(
   args: DeployLogicArgs,
   version: BigNumberish = 0
-): Promise<Contract> =>
-  await deploy({
+): Promise<T> =>
+  await deploy<T>({
     ...args,
     name: `${args.contract}_Logic_v${version.toString()}`,
   })

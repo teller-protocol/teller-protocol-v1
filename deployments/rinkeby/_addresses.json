@@ -1,0 +1,8 @@
+{
+  "libraries": {},
+  "logics": {},
+  "proxies": {
+    "lendingPools": {},
+    "loanManagers": {}
+  }
+}

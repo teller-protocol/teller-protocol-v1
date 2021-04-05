@@ -65,6 +65,10 @@ export const deployNft = async (
     ],
     hre,
   })
+  const nft = await deploy<TellerNFT>({
+    hre,
+    contract: 'TellerNFT',
+  })
 
   console.log()
   console.log('  ** Deploying Teller NFT Distributor **')

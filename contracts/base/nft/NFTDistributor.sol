@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 // Contracts
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "../Factory.sol";
-import "./TellerNFT.sol";
+import "../../interfaces/nft/ITellerNFT.sol";
 
 // Interfaces
 
@@ -25,8 +25,8 @@ import "./TellerNFT.sol";
  *
  * @author develop@teller.finance
  */
-contract NFTFactory is DynamicUpgradeable {
-    TellerNFT public nft;
+contract NFTDistributor {
+    ITellerNFT public nft;
 
     bytes32[] public tierMerkleRoots;
 
@@ -93,6 +93,6 @@ contract NFTFactory is DynamicUpgradeable {
 
     function initialize(address nftAddress) external {
         require(address(nft) == address(0), "Teller: Already initialized");
-        nft = TellerNFT(nftAddress);
+        nft = ITellerNFT(nftAddress);
     }
 }

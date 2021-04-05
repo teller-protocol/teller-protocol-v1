@@ -35,7 +35,6 @@ import "../../interfaces/nft/ITellerNFT.sol";
  */
 contract TellerNFT is
     ITellerNFT,
-    DynamicUpgradeable,
     ERC721Upgradeable,
     AccessControlUpgradeable,
     NFTStorage
@@ -96,7 +95,11 @@ contract TellerNFT is
         }
     }
 
-    function mint(uint256 tierIndex, address owner) external onlyMinter {
+    function mint(uint256 tierIndex, address owner)
+        external
+        override
+        onlyMinter
+    {
         // Get the new token ID
         Counters.Counter storage counter = tierTokenCounter[tierIndex];
         uint256 tokenId = counter.current();
@@ -110,7 +113,7 @@ contract TellerNFT is
         _setOwner(owner, tokenId);
     }
 
-    function addTier(Tier memory newTier) external onlyMinter {
+    function addTier(Tier memory newTier) external override onlyMinter {
         Tier storage tier = tiers[tierCounter.current()];
         require(
             tier.contributionAsset == address(0),

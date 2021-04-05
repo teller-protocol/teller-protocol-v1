@@ -53,6 +53,17 @@ export default <HardhatUserConfig>{
       },
     ],
   },
+  external: {
+    contracts: [
+      {
+        artifacts: 'node_modules/@openzeppelin/contracts/build/contracts',
+      },
+      {
+        artifacts:
+          'node_modules/@openzeppelin/contracts-upgradeable/build/contracts',
+      },
+    ],
+  },
   contractSizer: {
     runOnCompile: false,
     alphaSort: true,
