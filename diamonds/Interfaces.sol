@@ -1,1 +1,1 @@
-import "diamonds/domains/market/interfaces/ITToken.sol";
+import "./domains/market/interfaces/ITToken.sol";

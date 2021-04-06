@@ -5,8 +5,8 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../storage/lending-pool.sol";
-import "diamonds/providers/compound/IComptroller.sol";
-import "diamonds/providers/uniswap/UniSwapper.sol";
+import "../../../providers/compound/IComptroller.sol";
+import "../../../providers/uniswap/UniSwapper.sol";
 import "../../protocol/interfaces/IAssetRegistry.sol";
 
 import "../../protocol/address.sol";

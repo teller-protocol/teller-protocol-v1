@@ -5,8 +5,8 @@ import "./accrue-interest.sol";
 import "../interfaces/ITToken.sol";
 import "../storage/lending-pool.sol";
 import "../data/lending-pool.sol";
-import "diamonds/providers/compound/CErc20Interface.sol";
-import "diamonds/providers/compound/CompoundRatesLib.sol";
+import "../../../providers/compound/CErc20Interface.sol";
+import "../../../providers/compound/CompoundRatesLib.sol";
 
 abstract contract int_exchangeRates_LendingPool_v1 is
     int_accrueInterest_LendingPool_v1,

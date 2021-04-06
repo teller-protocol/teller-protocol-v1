@@ -5,7 +5,7 @@ import "../internal/asset-setting-names.sol" as ASSET_SETTING_NAMES;
 import "../internal/roles.sol";
 import "../../../contexts/access-control/modifiers/authorized.sol";
 import "../storage/asset-settings.sol";
-import "diamonds/providers/compound/CErc20Interface.sol";
+import "../../../providers/compound/CErc20Interface.sol";
 import "../../../libraries/CacheLib.sol";
 import "../interfaces/IAssetSettings.sol";
 

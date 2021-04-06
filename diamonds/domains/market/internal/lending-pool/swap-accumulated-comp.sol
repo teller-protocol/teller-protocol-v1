@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "../../storage/lending-pool.sol";
-import "diamonds/providers/compound/IComptroller.sol";
-import "diamonds/providers/uniswap/Uniswap.sol";
-import "diamonds/providers/uniswap/UniSwapper.sol";
+import "../../../../providers/compound/IComptroller.sol";
+import "../../../../providers/uniswap/Uniswap.sol";
+import "../../../../providers/uniswap/UniSwapper.sol";
 import "../../../protocol/address.sol";
 import "../../../protocol/interfaces/IAssetRegistry.sol";
 

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "../../../libraries/ECDSALib.sol";
-import "diamonds/libraries/TellerCommon.sol";
+import "../../../libraries/TellerCommon.sol";
 
 abstract contract int_signature_valid_v1 is TellerCommon, ECDSA {
     function _signatureValid(

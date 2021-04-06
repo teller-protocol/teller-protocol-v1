@@ -13,7 +13,7 @@ import "../internal/platform-settings.sol";
 import { ADMIN, PAUSER } from "../internal/roles.sol";
 
 // Interfaces
-import "diamonds/providers/compound/CErc20Interface.sol";
+import "../../../providers/compound/CErc20Interface.sol";
 import "../interfaces/IPlatformSettings.sol";
 
 // Libraries

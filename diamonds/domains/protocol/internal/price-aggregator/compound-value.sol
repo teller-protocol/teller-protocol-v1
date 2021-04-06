@@ -1,7 +1,7 @@
 pragma solidity ^0.8.0;
 
 // Interfaces
-import "diamonds/providers/compound/CErc20Interface.sol";
+import "../../../../providers/compound/CErc20Interface.sol";
 
 abstract contract int_PriceAggregator_CompoundValue_v1 {
     /**

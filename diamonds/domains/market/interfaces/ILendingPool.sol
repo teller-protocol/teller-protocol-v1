@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // Interfaces
 import "./ITToken.sol";
-import "diamonds/providers/uniswap/IUniswapV2Router02.sol";
+import "../../../providers/uniswap/IUniswapV2Router02.sol";
 
 /**
     @notice This interface defines the functions for a lending pool that holds all of the tokens

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import "diamonds/Roles.sol";
+import "../../../Roles.sol";
 import "../../../contexts/access-control/modifiers/authorized.sol";
 import "../storage/dapp-registry.sol";
 import { int_DappRegistry } from "../internal/dapp-registry.sol";

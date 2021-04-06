@@ -2,7 +2,8 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import "diamonds/Roles.sol";
+import "../../../Roles.sol";
+import "../storage/roles.sol";
 
 abstract contract int_adminRoleFor_AccessControl_v1 is sto_AccessControl_Roles {
     function _adminRoleFor(bytes32 role)

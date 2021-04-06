@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "../../../data/escrow.sol";
-import "../../../interfaces/IUniswapV2Router02.sol";
+import "../../../../../providers/uniswap/IUniswapV2Router02.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 abstract contract int_swap_v1 is dat_Escrow {

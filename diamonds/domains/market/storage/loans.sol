@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../../../libraries/AddressArrayLib.sol";
 import "../../../libraries/TellerCommon.sol";
-import "diamonds/providers/compound/CErc20Interface.sol";
+import "../../../providers/compound/CErc20Interface.sol";
 
 abstract contract sto_Loans {
     struct Layout {
