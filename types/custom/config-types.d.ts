@@ -90,3 +90,15 @@ export interface Tokens {
 export interface Nodes {
   [name: string]: URI
 }
+
+export type NFTTierMerkelTree = Array<{
+  baseLoanSize: string
+  contributionAsset: Address
+  contributionSize: string
+  contributionMultiplier: string
+  hashes: string[]
+  balances: Array<{
+    address: string
+    count: string
+  }>
+}>
