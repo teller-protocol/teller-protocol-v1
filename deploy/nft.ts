@@ -1,37 +1,22 @@
+import { DeployFunction } from 'hardhat-deploy/types'
 import fs from 'fs'
-import { task } from 'hardhat/config'
-import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import {
   generateMerkleDistribution,
   MerkleDistributorInfo,
 } from '../scripts/merkle/root'
-import { ITellerNFT, ITellerNFTDistributor } from '../types/typechain'
-import { NULL_ADDRESS } from '../utils/consts'
 import { deployDiamond } from '../utils/deploy-diamond'
-import { deploy } from '../utils/deploy-helpers'
+import { NULL_ADDRESS } from '../utils/consts'
+import { getNFT } from '../config'
+import { ITellerNFT, ITellerNFTDistributor } from '../types/typechain'
 
-interface DeployNFTArgs {
-  input: string
-  output: string
-}
+const deployNFT: DeployFunction = async (hre) => {
+  const { getNamedSigner, network, run } = hre
 
-export const deployNft = async (
-  args: DeployNFTArgs,
-  hre: HardhatRuntimeEnvironment
-): Promise<void> => {
-  const { input, output } = args
-
-  const { getNamedSigner, ethers, run } = hre
+  const nftConfig = getNFT(network)
   const deployer = await getNamedSigner('deployer')
 
   // Make sure contracts are compiled
   await run('compile')
-
-  const inputData = JSON.parse(fs.readFileSync(input).toString())
-  if (!Array.isArray(inputData))
-    throw new Error(
-      'Input file must be an array of tiers. run `hardhat deploy-nft-example` to see an example JSON format.'
-    )
 
   const distributions: MerkleDistributorInfo[] = []
   const tiers: Array<{
@@ -41,7 +26,7 @@ export const deployNft = async (
     contributionMultiplier: string
     hashes: string[]
   }> = []
-  for (const input of inputData) {
+  for (const input of nftConfig) {
     const { balances, ...tierData } = input
 
     const distribution = generateMerkleDistribution(balances)
@@ -56,6 +41,10 @@ export const deployNft = async (
   const nft = await deployDiamond<ITellerNFT>({
     name: 'TellerNFT',
     facets: [
+      'sto_ERC721',
+      'sto_Token',
+      'sto_Tier',
+
       'ent_approve_ERC721_v1',
       'ent_transfer_ERC721_v1',
 
@@ -82,7 +71,7 @@ export const deployNft = async (
 
   const nftDistributor = await deployDiamond<ITellerNFTDistributor>({
     name: 'TellerNFTDistributor',
-    facets: ['ent_distributor_NFT', 'ext_distributor_NFT'],
+    facets: ['sto_Distributor', 'ent_distributor_NFT', 'ext_distributor_NFT'],
     execute: {
       methodName: 'initialize',
       args: [nft.address, await deployer.getAddress()],
@@ -118,7 +107,7 @@ export const deployNft = async (
   for (let i = 0; i < tiers.length; i++) {
     const tier = await nft.getTier(i)
     if (tier.contributionAsset === NULL_ADDRESS) {
-      await nft.addTier(tiers[i])
+      await nft.addTier(tiers[i]).then(({ wait }) => wait())
 
       console.log(` * Tier ${i} added`)
     } else {
@@ -132,6 +121,7 @@ export const deployNft = async (
 
   for (let i = 0; i < distributions.length; i++) {
     const merkleRoots = await nftDistributor.getTierMerkleRoots()
+
     if (merkleRoots[i] == null) {
       await nftDistributor.addTier(distributions[i].merkleRoot)
       console.log(` * Merkle root for tier ${i} added to distributor \n`)
@@ -142,58 +132,16 @@ export const deployNft = async (
     }
   }
 
-  fs.writeFileSync(output, JSON.stringify(distributions, null, 2))
+  const distributionOutputPath = `deployments/${network.name}/_nftDistribution.json`
+  fs.writeFileSync(
+    distributionOutputPath,
+    JSON.stringify(distributions, null, 2)
+  )
 
-  console.log(` ** Output written to ${output}`)
+  console.log(` ** Output written to ${distributionOutputPath}`)
   console.log()
 }
 
-task(
-  'deploy-nft',
-  'Deploys the Teller NFT Token and Distributor with a given merkle tree as input'
-)
-  .addParam(
-    'input',
-    'The JSON input file location to generate the merkle tree for Teller NFT tiers'
-  )
-  .addParam(
-    'output',
-    'The destination file to put the generated distribution info'
-  )
-  .setAction(deployNft)
+deployNFT.tags = ['nft']
 
-export const deployNftExample = async (
-  _args: any,
-  _hre: HardhatRuntimeEnvironment
-): Promise<void> => {
-  console.log(`
-  ** Example JSON file format for generating merkle roots for Teller NFT tiers **
-  [
-    { // Tier 1
-      "hashes": [
-        "0x1234...",
-        "0x2345...",
-        "0x3456..."
-      ],
-      "balances": [
-        { "address": "0x...", "count": 7 },
-        { "address": "0x...", "count": 20 }
-        ...
-      ]
-    },
-    { // Tier 2
-      "hashes": [
-        ...
-      ],
-      "balances": [
-        ...
-      ]
-    }
-  ]
-  `)
-}
-
-task(
-  'deploy-nft-example',
-  'Generates an example JSON format the input file should follow'
-).setAction(deployNftExample)
+export default deployNFT

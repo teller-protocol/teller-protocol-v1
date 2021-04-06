@@ -9,6 +9,7 @@ import { platformSettings } from './platform-settings'
 import { signers } from './signers'
 import { tokens } from './tokens'
 import { uniswap } from './uniswap'
+import { nft } from './nft'
 
 const getNetworkName = (network: Network): string =>
   network.config.forkName ?? network.name
@@ -33,3 +34,5 @@ export const getSigners = (network: Network) => signers[getNetworkName(network)]
 export const getTokens = (network: Network) => tokens[getNetworkName(network)]
 
 export const getUniswap = (network: Network) => uniswap[getNetworkName(network)]
+
+export const getNFT = (network: Network) => nft[getNetworkName(network)]

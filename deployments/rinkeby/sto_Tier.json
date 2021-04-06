@@ -1,0 +1,39 @@
+{
+  "address": "0xc42F12Cc914e19A28cC1e7b749e73D804Bd4C33c",
+  "abi": [],
+  "transactionHash": "0xd1180cd5a0813e97e69fb123a02c6bfc8d45e306902d43638c753cea0d0f8e9d",
+  "receipt": {
+    "to": null,
+    "from": "0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5",
+    "contractAddress": "0xc42F12Cc914e19A28cC1e7b749e73D804Bd4C33c",
+    "transactionIndex": 0,
+    "gasUsed": "53000",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x1856e53a297d5c87d49c57cb0aeb73e2914785aded5b7276066aedf70bf146ac",
+    "transactionHash": "0xd1180cd5a0813e97e69fb123a02c6bfc8d45e306902d43638c753cea0d0f8e9d",
+    "logs": [],
+    "blockNumber": 8362904,
+    "cumulativeGasUsed": "53000",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "solcInputHash": "7dfea193bf8d74dddd4fadb38960c81e",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.3+commit.8d00100c\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"diamonds/domains/nft/storage/tier.sol\":\"sto_Tier\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/utils/Counters.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.0;\\n\\n/**\\n * @title Counters\\n * @author Matt Condon (@shrugs)\\n * @dev Provides counters that can only be incremented or decremented by one. This can be used e.g. to track the number\\n * of elements in a mapping, issuing ERC721 ids, or counting request ids.\\n *\\n * Include with `using Counters for Counters.Counter;`\\n */\\nlibrary Counters {\\n    struct Counter {\\n        // This variable should never be directly accessed by users of the library: interactions must be restricted to\\n        // the library's function. As of Solidity v0.5.2, this cannot be enforced, though there is a proposal to add\\n        // this feature: see https://github.com/ethereum/solidity/issues/4637\\n        uint256 _value; // default: 0\\n    }\\n\\n    function current(Counter storage counter) internal view returns (uint256) {\\n        return counter._value;\\n    }\\n\\n    function increment(Counter storage counter) internal {\\n        unchecked {\\n            counter._value += 1;\\n        }\\n    }\\n\\n    function decrement(Counter storage counter) internal {\\n        uint256 value = counter._value;\\n        require(value > 0, \\\"Counter: decrement overflow\\\");\\n        unchecked {\\n            counter._value = value - 1;\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x62d306ff0499a11913bc60b5939eec619509b5c67b30e86ebf8b8bda0b7a7fee\",\"license\":\"MIT\"},\"diamonds/domains/nft/data/tier.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\nstruct Tier {\\n    uint256 baseLoanSize;\\n    string[] hashes;\\n    address contributionAsset;\\n    uint256 contributionSize;\\n    uint8 contributionMultiplier;\\n}\\n\",\"keccak256\":\"0x20ae7b004b8ab4b7b31b62265c4cee1e8851223c333c2e603d8d3f90a43c1f70\",\"license\":\"MIT\"},\"diamonds/domains/nft/storage/tier.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\n// Contracts\\nimport { Tier } from \\\"../data/tier.sol\\\";\\n\\n// Libraries\\nimport \\\"@openzeppelin/contracts/utils/Counters.sol\\\";\\n\\nabstract contract sto_Tier {\\n    struct TierStorage {\\n        // It holds the total number of tiers.\\n        Counters.Counter tierCounter;\\n        // It holds the total number of tokens minted.\\n        Counters.Counter tokenCounter;\\n        // It holds the information about a tier.\\n        mapping(uint256 => Tier) tiers;\\n        // It holds which tier a token ID is in.\\n        mapping(uint256 => uint256) tokenTierMap;\\n    }\\n\\n    function tierStore() internal pure returns (TierStorage storage s) {\\n        bytes32 POSITION = keccak256(\\\"teller_nft.tier\\\");\\n\\n        assembly {\\n            s.slot := POSITION\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x7a07327e0debd277688204fcfc16c3abf9608b5d538fcaa6095e684f6acc8a71\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  }
+}

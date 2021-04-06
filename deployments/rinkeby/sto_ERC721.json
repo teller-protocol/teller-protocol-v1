@@ -1,0 +1,39 @@
+{
+  "address": "0xC52B4D2738b7BA46c53C2Bf647D72798933f1D19",
+  "abi": [],
+  "transactionHash": "0x6f6d9beebb9f82dad7acbda9b98ee5b1192883142979dd18132becbfbdded6ae",
+  "receipt": {
+    "to": null,
+    "from": "0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5",
+    "contractAddress": "0xC52B4D2738b7BA46c53C2Bf647D72798933f1D19",
+    "transactionIndex": 2,
+    "gasUsed": "53000",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0xb20f2b28fadd1ed32e0bc4d2001200ada2734f5254d9eb45abf58752e7b061c5",
+    "transactionHash": "0x6f6d9beebb9f82dad7acbda9b98ee5b1192883142979dd18132becbfbdded6ae",
+    "logs": [],
+    "blockNumber": 8362902,
+    "cumulativeGasUsed": "190145",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "solcInputHash": "7dfea193bf8d74dddd4fadb38960c81e",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.3+commit.8d00100c\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"diamonds/contexts/ERC721/storage/ERC721.sol\":\"sto_ERC721\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"diamonds/contexts/ERC721/storage/ERC721.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\nabstract contract sto_ERC721 {\\n    struct ERC721Storage {\\n        // Token name\\n        string name;\\n        // Token symbol\\n        string symbol;\\n        // Mapping from token ID to owner address\\n        mapping(uint256 => address) owners;\\n        // Mapping owner address to token count\\n        mapping(address => uint256) balances;\\n        // Mapping from token ID to approved address\\n        mapping(uint256 => address) tokenApprovals;\\n        // Mapping from owner to operator approvals\\n        mapping(address => mapping(address => bool)) operatorApprovals;\\n    }\\n\\n    function erc721Store() internal pure returns (ERC721Storage storage s) {\\n        bytes32 position = keccak256(\\\"teller_protocol.ERC721_token\\\");\\n        assembly {\\n            s.slot := position\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x0d241ffafab867a1d0de6b7f2fbbf2c4cef4bd9e4c6f245748b63840502dd5e2\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  }
+}

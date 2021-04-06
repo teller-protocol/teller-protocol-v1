@@ -1,0 +1,90 @@
+{
+  "address": "0x1d4061bE5CA837a361010F08E67C837A52149cda",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getApproved",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "operator",
+          "type": "address"
+        }
+      ],
+      "name": "isApprovedForAll",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x94736757cf824d72bbe61a55fc9fb2b0a4ae3b77ac51eeff64169941040b49f9",
+  "receipt": {
+    "to": null,
+    "from": "0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5",
+    "contractAddress": "0x1d4061bE5CA837a361010F08E67C837A52149cda",
+    "transactionIndex": 0,
+    "gasUsed": "179293",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0xe8c58e041e30c8b83ad225aa875be6315359bffb737c9d18c19fee04fddbb890",
+    "transactionHash": "0x94736757cf824d72bbe61a55fc9fb2b0a4ae3b77ac51eeff64169941040b49f9",
+    "logs": [],
+    "blockNumber": 8362834,
+    "cumulativeGasUsed": "179293",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "solcInputHash": "7dfea193bf8d74dddd4fadb38960c81e",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.3+commit.8d00100c\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"getApproved\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"operator\",\"type\":\"address\"}],\"name\":\"isApprovedForAll\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"getApproved(uint256)\":{\"details\":\"See {IERC721-getApproved}.\"},\"isApprovedForAll(address,address)\":{\"details\":\"See {IERC721-isApprovedForAll}.\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"diamonds/contexts/ERC721/external/approve.sol\":\"ext_approve_ERC721_v1\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"diamonds/contexts/ERC721/data.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\nlibrary ERC721EventsLib {\\n    /**\\n     * @dev Emitted when `tokenId` token is transferred from `from` to `to`.\\n     */\\n    event Transfer(\\n        address indexed from,\\n        address indexed to,\\n        uint256 indexed tokenId\\n    );\\n\\n    /**\\n     * @dev Emitted when `owner` enables `approved` to manage the `tokenId` token.\\n     */\\n    event Approval(\\n        address indexed owner,\\n        address indexed approved,\\n        uint256 indexed tokenId\\n    );\\n\\n    /**\\n     * @dev Emitted when `owner` enables or disables (`approved`) `operator` to manage all of its assets.\\n     */\\n    event ApprovalForAll(\\n        address indexed owner,\\n        address indexed operator,\\n        bool approved\\n    );\\n}\\n\",\"keccak256\":\"0x1ae796554e3f406d85e3e1b6e7c3a1b7ef495ee13df4af9c42b6138638627c85\",\"license\":\"MIT\"},\"diamonds/contexts/ERC721/external/approve.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\n// Contracts\\nimport \\\"../storage/ERC721.sol\\\";\\nimport { int_approve_ERC721_v1 } from \\\"../internal/approve.sol\\\";\\nimport { int_exists_ERC721_v1 } from \\\"../internal/exists.sol\\\";\\n\\ncontract ext_approve_ERC721_v1 is\\n    sto_ERC721,\\n    int_exists_ERC721_v1,\\n    int_approve_ERC721_v1\\n{\\n    /**\\n     * @dev See {IERC721-getApproved}.\\n     */\\n    function getApproved(uint256 tokenId)\\n        external\\n        view\\n        virtual\\n        returns (address)\\n    {\\n        require(\\n            _exists(tokenId),\\n            \\\"ERC721: approved query for nonexistent token\\\"\\n        );\\n\\n        return erc721Store().tokenApprovals[tokenId];\\n    }\\n\\n    /**\\n     * @dev See {IERC721-isApprovedForAll}.\\n     */\\n    function isApprovedForAll(address owner, address operator)\\n        external\\n        view\\n        virtual\\n        returns (bool)\\n    {\\n        return _isApprovedForAll(owner, operator);\\n    }\\n}\\n\",\"keccak256\":\"0x8b4b83bcfa2da202f99937d579771f90f487da2d5a19cb3fe08283d9e5ea6ce7\",\"license\":\"MIT\"},\"diamonds/contexts/ERC721/internal/approve.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\n// Contracts\\nimport \\\"../storage/ERC721.sol\\\";\\nimport { int_exists_ERC721_v1 } from \\\"./exists.sol\\\";\\n\\n// Utils\\nimport { ERC721EventsLib } from \\\"../data.sol\\\";\\n\\nabstract contract int_approve_ERC721_v1 is sto_ERC721, int_exists_ERC721_v1 {\\n    /**\\n     * @dev Approve `to` to operate on `tokenId`\\n     *\\n     * Emits a {Approval} event.\\n     */\\n    function _approve(address to, uint256 tokenId) internal virtual {\\n        erc721Store().tokenApprovals[tokenId] = to;\\n        emit ERC721EventsLib.Approval(\\n            erc721Store().owners[tokenId],\\n            to,\\n            tokenId\\n        );\\n    }\\n\\n    /**\\n     * @dev Approve `to` to operate on `tokenId`\\n     *\\n     * Emits a {ApprovalForAll} event.\\n     */\\n    function _setApprovalForAll(address operator, bool approved)\\n        internal\\n        virtual\\n    {\\n        erc721Store().operatorApprovals[msg.sender][operator] = approved;\\n        emit ERC721EventsLib.ApprovalForAll(msg.sender, operator, approved);\\n    }\\n\\n    /**\\n     * @dev Returns whether `spender` is allowed to manage `tokenId`.\\n     *\\n     * Requirements:\\n     * - `tokenId` must exist.\\n     */\\n    function _isApprovedOrOwner(address spender, uint256 tokenId)\\n        internal\\n        view\\n        virtual\\n        returns (bool)\\n    {\\n        require(\\n            _exists(tokenId),\\n            \\\"ERC721: operator query for nonexistent token\\\"\\n        );\\n        address owner = erc721Store().owners[tokenId];\\n        return (spender == owner ||\\n            erc721Store().tokenApprovals[tokenId] == spender ||\\n            erc721Store().operatorApprovals[owner][spender]);\\n    }\\n\\n    /**\\n     * @dev Returns whether `operator` is allowed to manage all of `owner` tokens.\\n     */\\n    function _isApprovedForAll(address owner, address operator)\\n        internal\\n        view\\n        virtual\\n        returns (bool)\\n    {\\n        return erc721Store().operatorApprovals[owner][operator];\\n    }\\n}\\n\",\"keccak256\":\"0xf01b4b5b9ff68c0ed739f2d802e38b10fd13eab1792accb6cf92410c7c357379\",\"license\":\"MIT\"},\"diamonds/contexts/ERC721/internal/exists.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\n// Contracts\\nimport \\\"../storage/ERC721.sol\\\";\\n\\nabstract contract int_exists_ERC721_v1 is sto_ERC721 {\\n    /**\\n     * @dev Returns whether `tokenId` exists.\\n     *\\n     * Tokens can be managed by their owner or approved accounts via {approve} or {setApprovalForAll}.\\n     *\\n     * Tokens start existing when they are minted (`_mint`),\\n     * and stop existing when they are burned (`_burn`).\\n     */\\n    function _exists(uint256 tokenId) internal view virtual returns (bool) {\\n        return erc721Store().owners[tokenId] != address(0);\\n    }\\n}\\n\",\"keccak256\":\"0x5290c03ebf2f1acdc8416f3bdcc640537d636020a5960e11375f6ace8051653d\",\"license\":\"MIT\"},\"diamonds/contexts/ERC721/storage/ERC721.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\nabstract contract sto_ERC721 {\\n    struct ERC721Storage {\\n        // Token name\\n        string name;\\n        // Token symbol\\n        string symbol;\\n        // Mapping from token ID to owner address\\n        mapping(uint256 => address) owners;\\n        // Mapping owner address to token count\\n        mapping(address => uint256) balances;\\n        // Mapping from token ID to approved address\\n        mapping(uint256 => address) tokenApprovals;\\n        // Mapping from owner to operator approvals\\n        mapping(address => mapping(address => bool)) operatorApprovals;\\n    }\\n\\n    function erc721Store() internal pure returns (ERC721Storage storage s) {\\n        bytes32 position = keccak256(\\\"teller_protocol.ERC721_token\\\");\\n        assembly {\\n            s.slot := position\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x0d241ffafab867a1d0de6b7f2fbbf2c4cef4bd9e4c6f245748b63840502dd5e2\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b50610247806100206000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c8063081812fc1461003b578063e985e9c51461006b575b600080fd5b61004e6100493660046101f9565b6100d6565b6040516001600160a01b0390911681526020015b60405180910390f35b6100c66100793660046101c7565b6001600160a01b0391821660009081527f1e91dbccf5488299bd4adcb044f4c3df902739c02f1f78276dd4194ac6a8d9a26020908152604080832093909416825291909152205460ff1690565b6040519015158152602001610062565b60008181527f1e91dbccf5488299bd4adcb044f4c3df902739c02f1f78276dd4194ac6a8d99f60205260408120546001600160a01b03166101725760405162461bcd60e51b815260206004820152602c60248201527f4552433732313a20617070726f76656420717565727920666f72206e6f6e657860448201526b34b9ba32b73a103a37b5b2b760a11b606482015260840160405180910390fd5b5060008181527f1e91dbccf5488299bd4adcb044f4c3df902739c02f1f78276dd4194ac6a8d9a160205260409020546001600160a01b03165b919050565b80356001600160a01b03811681146101ab57600080fd5b600080604083850312156101d9578182fd5b6101e2836101b0565b91506101f0602084016101b0565b90509250929050565b60006020828403121561020a578081fd5b503591905056fea264697066735822122012574c0aa3d6fb82d2085758091ea6bcd114d2f95da97e58cd2ec9b5f74d6baa64736f6c63430008030033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100365760003560e01c8063081812fc1461003b578063e985e9c51461006b575b600080fd5b61004e6100493660046101f9565b6100d6565b6040516001600160a01b0390911681526020015b60405180910390f35b6100c66100793660046101c7565b6001600160a01b0391821660009081527f1e91dbccf5488299bd4adcb044f4c3df902739c02f1f78276dd4194ac6a8d9a26020908152604080832093909416825291909152205460ff1690565b6040519015158152602001610062565b60008181527f1e91dbccf5488299bd4adcb044f4c3df902739c02f1f78276dd4194ac6a8d99f60205260408120546001600160a01b03166101725760405162461bcd60e51b815260206004820152602c60248201527f4552433732313a20617070726f76656420717565727920666f72206e6f6e657860448201526b34b9ba32b73a103a37b5b2b760a11b606482015260840160405180910390fd5b5060008181527f1e91dbccf5488299bd4adcb044f4c3df902739c02f1f78276dd4194ac6a8d9a160205260409020546001600160a01b03165b919050565b80356001600160a01b03811681146101ab57600080fd5b600080604083850312156101d9578182fd5b6101e2836101b0565b91506101f0602084016101b0565b90509250929050565b60006020828403121561020a578081fd5b503591905056fea264697066735822122012574c0aa3d6fb82d2085758091ea6bcd114d2f95da97e58cd2ec9b5f74d6baa64736f6c63430008030033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "getApproved(uint256)": {
+        "details": "See {IERC721-getApproved}."
+      },
+      "isApprovedForAll(address,address)": {
+        "details": "See {IERC721-isApprovedForAll}."
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  }
+}

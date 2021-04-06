@@ -1,0 +1,73 @@
+{
+  "address": "0x496887992Dd0667B7911dbd792AB7f8b81B23f31",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "_symbol",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "name",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x4924e9d2648a4ade0db2d02a64e2faee658f85f288427395984022a3e96aeb9f",
+  "receipt": {
+    "to": null,
+    "from": "0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5",
+    "contractAddress": "0x496887992Dd0667B7911dbd792AB7f8b81B23f31",
+    "transactionIndex": 0,
+    "gasUsed": "165421",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x0d4c7270be39ac102b1acf5d8d098984615668f455603ef9d13ae3721887f396",
+    "transactionHash": "0x4924e9d2648a4ade0db2d02a64e2faee658f85f288427395984022a3e96aeb9f",
+    "logs": [],
+    "blockNumber": 8362836,
+    "cumulativeGasUsed": "165421",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "solcInputHash": "7dfea193bf8d74dddd4fadb38960c81e",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.3+commit.8d00100c\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"_symbol\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"_symbol()\":{\"details\":\"See {IERC721Metadata-symbol}.\"},\"name()\":{\"details\":\"See {IERC721Metadata-name}.\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"diamonds/contexts/ERC721/external/details.sol\":\"ext_details_ERC721_v1\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"diamonds/contexts/ERC721/external/details.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\n// Contracts\\nimport \\\"../storage/ERC721.sol\\\";\\n\\ncontract ext_details_ERC721_v1 is sto_ERC721 {\\n    /**\\n     * @dev See {IERC721Metadata-name}.\\n     */\\n    function name() external view returns (string memory) {\\n        return erc721Store().name;\\n    }\\n\\n    /**\\n     * @dev See {IERC721Metadata-symbol}.\\n     */\\n    function _symbol() external view returns (string memory) {\\n        return erc721Store().symbol;\\n    }\\n}\\n\",\"keccak256\":\"0x48f9b585828215ff1ce68b01fc552ca42b7d24bac5657953dfbd6f0398369122\",\"license\":\"MIT\"},\"diamonds/contexts/ERC721/storage/ERC721.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\nabstract contract sto_ERC721 {\\n    struct ERC721Storage {\\n        // Token name\\n        string name;\\n        // Token symbol\\n        string symbol;\\n        // Mapping from token ID to owner address\\n        mapping(uint256 => address) owners;\\n        // Mapping owner address to token count\\n        mapping(address => uint256) balances;\\n        // Mapping from token ID to approved address\\n        mapping(uint256 => address) tokenApprovals;\\n        // Mapping from owner to operator approvals\\n        mapping(address => mapping(address => bool)) operatorApprovals;\\n    }\\n\\n    function erc721Store() internal pure returns (ERC721Storage storage s) {\\n        bytes32 position = keccak256(\\\"teller_protocol.ERC721_token\\\");\\n        assembly {\\n            s.slot := position\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x0d241ffafab867a1d0de6b7f2fbbf2c4cef4bd9e4c6f245748b63840502dd5e2\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b50610207806100206000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c806306fdde031461003b578063b09f126614610059575b600080fd5b610043610061565b6040516100509190610143565b60405180910390f35b610043610112565b60607f1e91dbccf5488299bd4adcb044f4c3df902739c02f1f78276dd4194ac6a8d99d805461008f90610196565b80601f01602080910402602001604051908101604052809291908181526020018280546100bb90610196565b80156101085780601f106100dd57610100808354040283529160200191610108565b820191906000526020600020905b8154815290600101906020018083116100eb57829003601f168201915b5050505050905090565b60607f1e91dbccf5488299bd4adcb044f4c3df902739c02f1f78276dd4194ac6a8d99d600101805461008f90610196565b6000602080835283518082850152825b8181101561016f57858101830151858201604001528201610153565b818111156101805783604083870101525b50601f01601f1916929092016040019392505050565b600181811c908216806101aa57607f821691505b602082108114156101cb57634e487b7160e01b600052602260045260246000fd5b5091905056fea2646970667358221220ae833809d92889f35fb6ef8482737062a16faf8f81bbfe336757778539e3881164736f6c63430008030033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100365760003560e01c806306fdde031461003b578063b09f126614610059575b600080fd5b610043610061565b6040516100509190610143565b60405180910390f35b610043610112565b60607f1e91dbccf5488299bd4adcb044f4c3df902739c02f1f78276dd4194ac6a8d99d805461008f90610196565b80601f01602080910402602001604051908101604052809291908181526020018280546100bb90610196565b80156101085780601f106100dd57610100808354040283529160200191610108565b820191906000526020600020905b8154815290600101906020018083116100eb57829003601f168201915b5050505050905090565b60607f1e91dbccf5488299bd4adcb044f4c3df902739c02f1f78276dd4194ac6a8d99d600101805461008f90610196565b6000602080835283518082850152825b8181101561016f57858101830151858201604001528201610153565b818111156101805783604083870101525b50601f01601f1916929092016040019392505050565b600181811c908216806101aa57607f821691505b602082108114156101cb57634e487b7160e01b600052602260045260246000fd5b5091905056fea2646970667358221220ae833809d92889f35fb6ef8482737062a16faf8f81bbfe336757778539e3881164736f6c63430008030033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "_symbol()": {
+        "details": "See {IERC721Metadata-symbol}."
+      },
+      "name()": {
+        "details": "See {IERC721Metadata-name}."
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  }
+}
