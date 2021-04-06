@@ -38,7 +38,7 @@ export default <HardhatUserConfig>{
     apiKey: process.env.ETHERSCAN_API_KEY,
   },
   paths: {
-    sources: 'diamonds',
+    sources: 'diamonds/domains/',
   },
   solidity: {
     compilers: [

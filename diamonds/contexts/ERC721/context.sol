@@ -3,13 +3,35 @@ pragma solidity ^0.8.0;
 
 import "./storage/ERC721.sol";
 import "./internal/ERC721.sol";
-import "./data.sol";
+import "./internal/ERC721Metadata.sol";
 
 contract ctx_ERC721_v1 is dat_ERC721, sto_ERC721, int_ERC721_v1 {
     /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId)
+        external
+        view
+        virtual
+        override
+        returns (bool)
+    {
+        return
+            interfaceId == type(IERC721).interfaceId ||
+            interfaceId == type(IERC721Metadata).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
+    }
+
+    /**
      * @dev See {IERC721-balanceOf}.
      */
-    function balanceOf(address owner) external view virtual returns (uint256) {
+    function balanceOf(address owner)
+        external
+        view
+        virtual
+        override
+        returns (uint256)
+    {
         require(
             owner != address(0),
             "ERC721: balance query for the zero address"
@@ -20,7 +42,13 @@ contract ctx_ERC721_v1 is dat_ERC721, sto_ERC721, int_ERC721_v1 {
     /**
      * @dev See {IERC721-ownerOf}.
      */
-    function ownerOf(uint256 tokenId) external view virtual returns (address) {
+    function ownerOf(uint256 tokenId)
+        external
+        view
+        virtual
+        override
+        returns (address)
+    {
         address owner = erc721Store().owners[tokenId];
         require(
             owner != address(0),
@@ -32,14 +60,14 @@ contract ctx_ERC721_v1 is dat_ERC721, sto_ERC721, int_ERC721_v1 {
     /**
      * @dev See {IERC721Metadata-name}.
      */
-    function name() external view virtual returns (string memory) {
+    function name() external view virtual override returns (string memory) {
         return erc721Store().name;
     }
 
     /**
      * @dev See {IERC721Metadata-symbol}.
      */
-    function symbol() external view virtual returns (string memory) {
+    function symbol() external view virtual override returns (string memory) {
         return erc721Store().symbol;
     }
 
@@ -50,6 +78,7 @@ contract ctx_ERC721_v1 is dat_ERC721, sto_ERC721, int_ERC721_v1 {
         external
         view
         virtual
+        override
         returns (string memory)
     {
         require(
@@ -67,7 +96,7 @@ contract ctx_ERC721_v1 is dat_ERC721, sto_ERC721, int_ERC721_v1 {
     /**
      * @dev See {IERC721-approve}.
      */
-    function approve(address to, uint256 tokenId) external virtual {
+    function approve(address to, uint256 tokenId) external virtual override {
         address owner = erc721Store().owners[tokenId];
         require(to != owner, "ERC721: approval to current owner");
 
@@ -86,6 +115,7 @@ contract ctx_ERC721_v1 is dat_ERC721, sto_ERC721, int_ERC721_v1 {
         external
         view
         virtual
+        override
         returns (address)
     {
         require(
@@ -102,6 +132,7 @@ contract ctx_ERC721_v1 is dat_ERC721, sto_ERC721, int_ERC721_v1 {
     function setApprovalForAll(address operator, bool approved)
         external
         virtual
+        override
     {
         require(operator != msg.sender, "ERC721: approve to caller");
 
@@ -116,6 +147,7 @@ contract ctx_ERC721_v1 is dat_ERC721, sto_ERC721, int_ERC721_v1 {
         external
         view
         virtual
+        override
         returns (bool)
     {
         return _isApprovedForAll(owner, operator);
@@ -128,7 +160,7 @@ contract ctx_ERC721_v1 is dat_ERC721, sto_ERC721, int_ERC721_v1 {
         address from,
         address to,
         uint256 tokenId
-    ) external virtual {
+    ) external virtual override {
         require(
             _isApprovedOrOwner(msg.sender, tokenId),
             "ERC721: transfer caller is not owner nor approved"
@@ -143,7 +175,7 @@ contract ctx_ERC721_v1 is dat_ERC721, sto_ERC721, int_ERC721_v1 {
         address from,
         address to,
         uint256 tokenId
-    ) external virtual {
+    ) external virtual override {
         _safeTransfer(from, to, tokenId, "");
     }
 
@@ -155,7 +187,7 @@ contract ctx_ERC721_v1 is dat_ERC721, sto_ERC721, int_ERC721_v1 {
         address to,
         uint256 tokenId,
         bytes memory _data
-    ) external virtual {
+    ) external virtual override {
         _safeTransfer(from, to, tokenId, _data);
     }
 }

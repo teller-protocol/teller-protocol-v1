@@ -14,7 +14,7 @@ abstract contract int_setOwner_AccessControl_v1 is
             "AccessControl: owner already set"
         );
         accessControlOwnerStore().owner = owner;
-        emit OwnerSet(owner);
+        emit OwnerSet(owner, address(0));
     }
 }
 
