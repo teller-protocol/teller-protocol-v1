@@ -8,6 +8,7 @@ import { deployDiamond } from '../utils/deploy-diamond'
 import { NULL_ADDRESS } from '../utils/consts'
 import { getNFT } from '../config'
 import { ITellerNFT, ITellerNFTDistributor } from '../types/typechain'
+import { deploy } from '../utils/deploy-helpers'
 
 const deployNFT: DeployFunction = async (hre) => {
   const { getNamedSigner, network, run } = hre
@@ -38,32 +39,8 @@ const deployNFT: DeployFunction = async (hre) => {
   console.log('  ** Deploying Teller NFT **')
   console.log()
 
-  const nft = await deployDiamond<ITellerNFT>({
-    name: 'TellerNFT',
-    facets: [
-      'sto_Initializable',
-      'sto_ERC721',
-      'sto_Token',
-      'sto_Tier',
-
-      'ent_approve_ERC721_v1',
-      'ent_transfer_ERC721_v1',
-
-      'ent_initialize_NFT',
-      'ent_mint_NFT',
-      'ent_setContractURI_NFT',
-      'ent_tier_NFT',
-
-      // 'ext_supportsInterface_NFT',
-      'ext_approve_ERC721_v1',
-      'ext_balanceOf_ERC721_v1',
-      'ext_details_ERC721_v1',
-      'ext_ownerOf_ERC721_v1',
-
-      'ext_tier_NFT',
-      'ext_token_NFT',
-      'ext_metadata_NFT',
-    ],
+  const nft = await deploy<ITellerNFT>({
+    contract: 'TellerNFT',
     hre,
   }).then((c) => c.connect(deployer))
 
@@ -74,10 +51,10 @@ const deployNFT: DeployFunction = async (hre) => {
   const nftDistributor = await deployDiamond<ITellerNFTDistributor>({
     name: 'TellerNFTDistributor',
     facets: [
-      'sto_Initializable',
-      'sto_Distributor',
-      'ent_distributor_NFT',
-      'ext_distributor_NFT',
+      'ent_initialize_NFTDistributor_v1',
+      'ent_addMerkle_NFTDistributor_v1',
+      'ent_claim_NFTDistributor_v1',
+      'ext_distributor_NFT_v1',
     ],
     execute: {
       methodName: 'initialize',
@@ -95,9 +72,7 @@ const deployNFT: DeployFunction = async (hre) => {
       nftDistributor.address,
       await deployer.getAddress(),
     ]
-    const contractURI =
-      'https://gateway.pinata.cloud/ipfs/QmWAfQFFwptzRUCdF2cBFJhcB2gfHJMd7TQt64dZUysk3R'
-    await nft.initialize(minters, contractURI).then(({ wait }) => wait())
+    await nft.initialize(minters).then(({ wait }) => wait())
     console.log(' * Teller NFT initialized')
   } catch (err) {
     if (err?.error?.message?.includes('already initialized')) {
@@ -127,7 +102,7 @@ const deployNFT: DeployFunction = async (hre) => {
   console.log()
 
   for (let i = 0; i < distributions.length; i++) {
-    const merkleRoots = await nftDistributor.getTierMerkleRoots()
+    const merkleRoots = await nftDistributor.getMerkleRoots()
 
     if (merkleRoots[i] == null) {
       await nftDistributor.addTier(distributions[i].merkleRoot)

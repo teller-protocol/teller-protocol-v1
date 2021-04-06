@@ -38,7 +38,7 @@ export default <HardhatUserConfig>{
     apiKey: process.env.ETHERSCAN_API_KEY,
   },
   paths: {
-    sources: 'diamonds',
+    sources: 'contracts',
   },
   solidity: {
     compilers: [
@@ -50,17 +50,6 @@ export default <HardhatUserConfig>{
             runs: 200,
           },
         },
-      },
-    ],
-  },
-  external: {
-    contracts: [
-      {
-        artifacts: 'node_modules/@openzeppelin/contracts/build/contracts',
-      },
-      {
-        artifacts:
-          'node_modules/@openzeppelin/contracts-upgradeable/build/contracts',
       },
     ],
   },
