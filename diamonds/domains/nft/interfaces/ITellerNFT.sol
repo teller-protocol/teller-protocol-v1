@@ -6,18 +6,13 @@ pragma experimental ABIEncoderV2;
 import { Tier } from "../data/tier.sol";
 
 // Interfaces
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 
-interface ITellerNFT is IERC721 {
+interface ITellerNFT is IERC721Metadata {
     /**
      * @notice The contract metadata URI.
      */
     function contractURI() external view returns (string memory);
-
-    /**
-     * @notice The token metadata URI.
-     */
-    function tokenURI(uint256 tokenId) external view returns (string memory);
 
     /**
      * @notice It returns information about a Tier for an index.
