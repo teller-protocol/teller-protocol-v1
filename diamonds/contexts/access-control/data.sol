@@ -6,7 +6,7 @@ struct RoleData {
     bytes32 adminRole;
 }
 
-abstract contract dat_AccessControl_v1 {
+abstract contract dat_AccessControl {
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
 
     event OwnerSet(address indexed owner);
@@ -52,5 +52,3 @@ abstract contract dat_AccessControl_v1 {
         address indexed sender
     );
 }
-
-contract dat_AccessControl is dat_AccessControl_v1 {}
