@@ -26,11 +26,4 @@ abstract contract int_metadata_ERC721_v1 is sto_ERC721 {
     {
         return tokenId.toString();
     }
-
-    /**
-     * @dev Sets the URI for the contract metadata.
-     */
-    function _setContractURI(string memory uri) internal {
-        erc721Store().contractURI = uri;
-    }
 }

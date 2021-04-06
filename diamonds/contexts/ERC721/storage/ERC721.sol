@@ -7,8 +7,6 @@ abstract contract sto_ERC721 {
         string name;
         // Token symbol
         string symbol;
-        // Link to the contract metadata
-        string contractURI;
         // Mapping from token ID to owner address
         mapping(uint256 => address) owners;
         // Mapping owner address to token count

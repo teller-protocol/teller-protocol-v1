@@ -10,7 +10,12 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 interface ITellerNFT is IERC721 {
     /**
-     * @notice The token URI is based on the token ID.
+     * @notice The contract metadata URI.
+     */
+    function contractURI() external view returns (string memory);
+
+    /**
+     * @notice The token metadata URI.
      */
     function tokenURI(uint256 tokenId) external view returns (string memory);
 
@@ -71,8 +76,8 @@ interface ITellerNFT is IERC721 {
     /**
      * @notice Initializes the TellerNFT.
      * @param minters The addresses that should allowed to mint tokens.
-     * @param contractURI The link to the initial contract level metadata.
+     * @param _contractURI The link to the initial contract level metadata.
      */
-    function initialize(address[] calldata minters, string memory contractURI)
+    function initialize(address[] calldata minters, string memory _contractURI)
         external;
 }

@@ -10,6 +10,8 @@ abstract contract sto_Token {
     struct TokenStorage {
         // It holds a set of token IDs for an owner address.
         mapping(address => EnumerableSet.UintSet) ownerTokenIDs;
+        // Link to the contract metadata
+        string contractURI;
     }
 
     function tokenStore() internal pure returns (TokenStorage storage s) {

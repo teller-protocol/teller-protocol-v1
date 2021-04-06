@@ -38,11 +38,4 @@ contract ext_metadata_ERC721_v1 is
                 ? string(abi.encodePacked(base, _tokenURI(tokenId)))
                 : "";
     }
-
-    /**
-     * @notice Get the URI for the contract metadata.
-     */
-    function contractURI() external view virtual returns (string memory) {
-        return erc721Store().contractURI;
-    }
 }

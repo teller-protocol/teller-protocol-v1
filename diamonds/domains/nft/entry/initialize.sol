@@ -21,9 +21,9 @@ contract ent_initialize_NFT_v1 is
     /**
      * @notice Initializes the TellerNFT.
      * @param minters The addresses that should allowed to mint tokens.
-     * @param contractURI The link to the initial contract level metadata.
+     * @param _contractURI The link to the initial contract level metadata.
      */
-    function initialize(address[] calldata minters, string memory contractURI)
+    function initialize(address[] calldata minters, string memory _contractURI)
         external
         initializer
     {
@@ -34,7 +34,7 @@ contract ent_initialize_NFT_v1 is
             _grantRole(MINTER, minters[i]);
         }
 
-        _setContractURI(contractURI);
+        _setContractURI(_contractURI);
     }
 }
 

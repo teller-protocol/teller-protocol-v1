@@ -68,10 +68,10 @@ export const deployNft = async (
       'ext_balanceOf_ERC721_v1',
       'ext_details_ERC721_v1',
       'ext_ownerOf_ERC721_v1',
-      'ext_metadata_ERC721_v1',
 
       'ext_tier_NFT',
       'ext_token_NFT',
+      'ext_metadata_NFT',
     ],
     hre,
   }).then((c) => c.connect(deployer))
