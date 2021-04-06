@@ -6,7 +6,7 @@ import "../data.sol";
 import "../internal/revoke-role.sol";
 import "../internal/is-admin-for-role.sol";
 
-abstract contract ent_renounceRole_AccessControl_v1 is
+contract ent_renounceRole_AccessControl_v1 is
     int_revokeRole_AccessControl,
     int_isAdminForRole_AccessControl_v1
 {
@@ -25,6 +25,4 @@ abstract contract ent_renounceRole_AccessControl_v1 is
     }
 }
 
-abstract contract ent_renounceRole_AccessControl is
-    ent_renounceRole_AccessControl_v1
-{}
+contract ent_renounceRole_AccessControl is ent_renounceRole_AccessControl_v1 {}

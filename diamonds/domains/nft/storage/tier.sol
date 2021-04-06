@@ -7,7 +7,7 @@ import { Tier } from "../data/tier.sol";
 // Libraries
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-abstract contract sto_Tier {
+contract sto_Tier {
     struct TierStorage {
         // It holds the total number of tiers.
         Counters.Counter tierCounter;

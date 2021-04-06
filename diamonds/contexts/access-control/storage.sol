@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./data.sol";
 
-abstract contract sto_AccessControl {
+contract sto_AccessControl {
     struct AccessControlLayout {
         mapping(bytes32 => RoleData) roles;
         bool notEntered;

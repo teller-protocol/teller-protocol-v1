@@ -5,7 +5,7 @@ import {
     int_adminRoleFor_AccessControl_v1
 } from "../internal/admin-role-for.sol";
 
-abstract contract ext_adminRoleFor_AccessControl_V1 is
+contract ext_adminRoleFor_AccessControl_V1 is
     int_adminRoleFor_AccessControl_v1
 {
     function adminRoleFor(bytes32 role)
@@ -17,6 +17,4 @@ abstract contract ext_adminRoleFor_AccessControl_V1 is
     }
 }
 
-abstract contract ext_adminRoleFor_AccessControl is
-    int_adminRoleFor_AccessControl_v1
-{}
+contract ext_adminRoleFor_AccessControl is int_adminRoleFor_AccessControl_v1 {}

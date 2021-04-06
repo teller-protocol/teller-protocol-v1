@@ -53,4 +53,4 @@ abstract contract dat_AccessControl_v1 {
     );
 }
 
-abstract contract dat_AccessControl is dat_AccessControl_v1 {}
+contract dat_AccessControl is dat_AccessControl_v1 {}

@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import { RoleData } from "../data.sol";
 
-abstract contract sto_AccessControl_Roles {
+contract sto_AccessControl_Roles {
     bytes32 internal constant POS =
         keccak256("teller_protocol.storage.access_control.roles");
 

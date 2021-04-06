@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // Interfaces
 import "../interfaces/ITellerNFT.sol";
 
-abstract contract sto_Distributor {
+contract sto_Distributor {
     struct DistributorStorage {
         ITellerNFT nft;
         bytes32[] tierMerkleRoots;

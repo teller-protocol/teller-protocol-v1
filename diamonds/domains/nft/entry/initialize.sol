@@ -12,6 +12,11 @@ import {
 import { int_setContractURI_NFT } from "../internal/set-contract-uri.sol";
 import { MINTER } from "../roles.sol";
 
+import "../../../../contracts/base/diamond/libraries/LibDiamond.sol";
+
+// Interfaces
+import "../interfaces/ITellerNFT.sol";
+
 contract ent_initialize_NFT_v1 is
     sto_ERC721,
     mod_initializer_Initializable,
@@ -29,6 +34,9 @@ contract ent_initialize_NFT_v1 is
     {
         erc721Store().name = "Teller NFT";
         erc721Store().symbol = "TNFT";
+
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+        ds.supportedInterfaces[type(ITellerNFT).interfaceId] = true;
 
         for (uint256 i; i < minters.length; i++) {
             _grantRole(MINTER, minters[i]);

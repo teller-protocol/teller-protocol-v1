@@ -41,6 +41,7 @@ const deployNFT: DeployFunction = async (hre) => {
   const nft = await deployDiamond<ITellerNFT>({
     name: 'TellerNFT',
     facets: [
+      'sto_Initializable',
       'sto_ERC721',
       'sto_Token',
       'sto_Tier',
@@ -53,6 +54,7 @@ const deployNFT: DeployFunction = async (hre) => {
       'ent_setContractURI_NFT',
       'ent_tier_NFT',
 
+      // 'ext_supportsInterface_NFT',
       'ext_approve_ERC721_v1',
       'ext_balanceOf_ERC721_v1',
       'ext_details_ERC721_v1',
@@ -71,7 +73,12 @@ const deployNFT: DeployFunction = async (hre) => {
 
   const nftDistributor = await deployDiamond<ITellerNFTDistributor>({
     name: 'TellerNFTDistributor',
-    facets: ['sto_Distributor', 'ent_distributor_NFT', 'ext_distributor_NFT'],
+    facets: [
+      'sto_Initializable',
+      'sto_Distributor',
+      'ent_distributor_NFT',
+      'ext_distributor_NFT',
+    ],
     execute: {
       methodName: 'initialize',
       args: [nft.address, await deployer.getAddress()],
