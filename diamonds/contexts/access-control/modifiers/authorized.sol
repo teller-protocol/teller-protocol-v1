@@ -13,3 +13,7 @@ abstract contract mod_authorized_AccessControl_v1 is
         _;
     }
 }
+
+abstract contract mod_authorized_AccessControl is
+    mod_authorized_AccessControl_v1
+{}

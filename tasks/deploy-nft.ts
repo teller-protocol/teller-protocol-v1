@@ -8,6 +8,7 @@ import {
 import { ITellerNFT, ITellerNFTDistributor } from '../types/typechain'
 import { NULL_ADDRESS } from '../utils/consts'
 import { deployDiamond } from '../utils/deploy-diamond'
+import { deploy } from '../utils/deploy-helpers'
 
 interface DeployNFTArgs {
   input: string
@@ -55,10 +56,20 @@ export const deployNft = async (
   const nft = await deployDiamond<ITellerNFT>({
     name: 'TellerNFT',
     facets: [
-      'ctx_ERC721_v1',
+      'ent_approve_ERC721_v1',
+      'ent_transfer_ERC721_v1',
+
       'ent_initialize_NFT',
       'ent_mint_NFT',
+      'ent_setContractURI_NFT',
       'ent_tier_NFT',
+
+      'ext_approve_ERC721_v1',
+      'ext_balanceOf_ERC721_v1',
+      'ext_details_ERC721_v1',
+      'ext_ownerOf_ERC721_v1',
+      'ext_metadata_ERC721_v1',
+
       'ext_tier_NFT',
       'ext_token_NFT',
     ],
@@ -88,7 +99,9 @@ export const deployNft = async (
       nftDistributor.address,
       await deployer.getAddress(),
     ]
-    await nft.initialize(minters).then(({ wait }) => wait())
+    const contractURI =
+      'https://gateway.pinata.cloud/ipfs/QmWAfQFFwptzRUCdF2cBFJhcB2gfHJMd7TQt64dZUysk3R'
+    await nft.initialize(minters, contractURI).then(({ wait }) => wait())
     console.log(' * Teller NFT initialized')
   } catch (err) {
     if (err?.error?.message?.includes('already initialized')) {

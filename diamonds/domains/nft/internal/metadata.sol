@@ -3,18 +3,21 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import "../storage/tier.sol";
+import {
+    int_metadata_ERC721_v1
+} from "../../../contexts/ERC721/internal/metadata.sol";
 
 // Libraries
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-abstract contract int_TokenMetadata_v1 is sto_Tier {
+abstract contract int_metadata_NFT_v1 is sto_Tier, int_metadata_ERC721_v1 {
     using SafeMath for uint256;
 
     /**
      * @notice The base URI path where the token media is hosted.
      * @dev Base URI for computing {tokenURI}.
      */
-    function _baseURI() internal view virtual returns (string memory) {
+    function _baseURI() internal view virtual override returns (string memory) {
         return "https://gateway.pinata.cloud/ipfs/";
     }
 
@@ -25,6 +28,7 @@ abstract contract int_TokenMetadata_v1 is sto_Tier {
         internal
         view
         virtual
+        override
         returns (string memory)
     {
         string[] storage tierImageHashes =
@@ -32,3 +36,5 @@ abstract contract int_TokenMetadata_v1 is sto_Tier {
         return tierImageHashes[tokenId.mod(tierImageHashes.length)];
     }
 }
+
+abstract contract int_metadata_NFT is int_metadata_NFT_v1 {}

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-abstract contract dat_ERC721 {
+library ERC721EventsLib {
     /**
      * @dev Emitted when `tokenId` token is transferred from `from` to `to`.
      */
