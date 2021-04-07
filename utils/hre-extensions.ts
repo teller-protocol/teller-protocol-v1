@@ -10,7 +10,7 @@ import { BigNumber, BigNumberish, Contract, Signer } from 'ethers'
 import '@nomiclabs/hardhat-ethers'
 import 'hardhat-deploy'
 
-import { ERC20 } from '../types/typechain'
+import { ERC721Upgradeable as ERC20 } from '../types/typechain'
 import { Address } from '../types/custom/config-types'
 import { getTokens } from '../config'
 
