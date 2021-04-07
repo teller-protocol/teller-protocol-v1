@@ -16,7 +16,11 @@ contract ext_distributor_NFT_v1 is sto_NFTDistributor, int_distributor_NFT_v1 {
     /**
      * @notice It gets the merkle roots for NFTs it can distribute.
      */
-    function getMerkleRoots() external view returns (bytes32[] memory roots_) {
+    function getMerkleRoots()
+        external
+        view
+        returns (MerkleRoot[] memory roots_)
+    {
         roots_ = distributorStore().merkleRoots;
     }
 

@@ -105,8 +105,8 @@ export default <HardhatUserConfig>{
     },
     hardhat: {
       forking: {
-        url: process.env.ALCHEMY_MAINNET_KEY,
-        blockNumber: 12064000,
+        url: process.env.ALCHEMY_RINKEBY_KEY,
+        // blockNumber: 12064000,
         enabled: true,
       },
       accounts,

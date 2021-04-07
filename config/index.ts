@@ -9,7 +9,7 @@ import { platformSettings } from './platform-settings'
 import { signers } from './signers'
 import { tokens } from './tokens'
 import { uniswap } from './uniswap'
-import { nft } from './nft'
+import { nftMerkleTree, tiers as nftTiers } from './nft'
 
 const getNetworkName = (network: Network): string =>
   network.config.forkName ?? network.name
@@ -35,4 +35,7 @@ export const getTokens = (network: Network) => tokens[getNetworkName(network)]
 
 export const getUniswap = (network: Network) => uniswap[getNetworkName(network)]
 
-export const getNFT = (network: Network) => nft[getNetworkName(network)]
+export const getNFT = (network: Network) => ({
+  tiers: nftTiers,
+  merkleTrees: nftMerkleTree[getNetworkName(network)],
+})

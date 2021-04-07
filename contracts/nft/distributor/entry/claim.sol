@@ -36,8 +36,11 @@ contract ent_claim_NFTDistributor_v1 is
 
             // Mark it claimed and send the token.
             _setClaimed(requests[i].merkleIndex, requests[i].nodeIndex);
+            uint256 tierIndex =
+                distributorStore().merkleRoots[requests[i].merkleIndex]
+                    .tierIndex;
             for (uint256 j; j < requests[i].amount; j++) {
-                distributorStore().nft.mint(requests[i].merkleIndex, account);
+                distributorStore().nft.mint(tierIndex, account);
             }
         }
 

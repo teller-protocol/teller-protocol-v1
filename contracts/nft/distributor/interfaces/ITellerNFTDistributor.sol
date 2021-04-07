@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import "../../ITellerNFT.sol";
 
 // Utils
-import { ClaimNFTRequest } from "../data.sol";
+import { ClaimNFTRequest, MerkleRoot } from "../data.sol";
 
 interface ITellerNFTDistributor {
     /**
@@ -16,7 +16,10 @@ interface ITellerNFTDistributor {
     /**
      * @notice It gets the merkle roots for NFTs it can distribute.
      */
-    function getMerkleRoots() external view returns (bytes32[] memory _roots);
+    function getMerkleRoots()
+        external
+        view
+        returns (MerkleRoot[] memory roots_);
 
     /**
      * @notice It checks the merkle root for a tier if it has already been claimed.
@@ -41,14 +44,14 @@ interface ITellerNFTDistributor {
         external;
 
     /**
-     * @notice Adds a new tier to be able to claim NFTs.
-     * @param newMerkleRoot The merkle root to assign to the new tier.
+     * @notice Adds a new merkle to be able to claim NFTs.
+     * @param tierIndex Index of NFT tier to assign merkle for.
+     * @param merkleRoot The merkle root to assign to the new tier.
      *
      * Requirements:
      *  - Caller must be an admin
-     *  - Tier must already be added to TellerNFT
      */
-    function addTier(bytes32 newMerkleRoot) external;
+    function addMerkle(uint256 tierIndex, bytes32 merkleRoot) external;
 
     function grantRole(bytes32 role, address account) external;
 

@@ -49,7 +49,7 @@ contract int_distributor_NFT_v1 is sto_NFTDistributor {
     {
         verified = MerkleProof.verify(
             request.merkleProof,
-            distributorStore().merkleRoots[request.merkleIndex],
+            distributorStore().merkleRoots[request.merkleIndex].merkleRoot,
             keccak256(
                 abi.encodePacked(request.nodeIndex, account, request.amount)
             )

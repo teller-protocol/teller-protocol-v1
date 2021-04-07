@@ -91,14 +91,18 @@ export interface Nodes {
   [name: string]: URI
 }
 
-export type NFTTierMerkelTree = Array<{
+export interface TierInfo {
   baseLoanSize: string
-  contributionAsset: Address
+  hashes: string[]
+  contributionAsset: string
   contributionSize: string
   contributionMultiplier: string
-  hashes: string[]
+}
+
+export type NFTMerkelTree = Array<{
+  tierIndex: number
   balances: Array<{
     address: string
-    count: string
+    count: BigNumberish
   }>
 }>

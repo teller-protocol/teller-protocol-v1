@@ -9,30 +9,26 @@ import { NULL_ADDRESS } from '../utils/consts'
 import { getNFT } from '../config'
 import { ITellerNFT, ITellerNFTDistributor } from '../types/typechain'
 import { deploy } from '../utils/deploy-helpers'
+import { TierInfo } from '../types/custom/config-types'
 
 const deployNFT: DeployFunction = async (hre) => {
   const { getNamedSigner, network, run } = hre
 
-  const nftConfig = getNFT(network)
+  const { tiers, merkleTrees } = getNFT(network)
   const deployer = await getNamedSigner('deployer')
 
   // Make sure contracts are compiled
   await run('compile')
 
-  const distributions: MerkleDistributorInfo[] = []
-  const tiers: Array<{
-    baseLoanSize: string
-    contributionAsset: string
-    contributionSize: string
-    contributionMultiplier: string
-    hashes: string[]
+  const distributions: Array<{
+    tierIndex: number
+    info: MerkleDistributorInfo
   }> = []
-  for (const input of nftConfig) {
-    const { balances, ...tierData } = input
+  for (const tree of merkleTrees) {
+    const { tierIndex, balances } = tree
 
-    const distribution = generateMerkleDistribution(balances)
-    distributions.push(distribution)
-    tiers.push(tierData)
+    const info = generateMerkleDistribution(balances)
+    distributions.push({ tierIndex, info })
   }
 
   console.log()
@@ -75,7 +71,8 @@ const deployNFT: DeployFunction = async (hre) => {
     await nft.initialize(minters).then(({ wait }) => wait())
     console.log(' * Teller NFT initialized')
   } catch (err) {
-    if (err?.error?.message?.includes('already initialized')) {
+    const message = err?.error?.message ?? err?.message ?? ''
+    if (message.includes('already initialized')) {
       console.log(' * Teller NFT already initialized')
     } else {
       throw err
@@ -101,15 +98,22 @@ const deployNFT: DeployFunction = async (hre) => {
   console.log('  ** Adding Merkle Roots to NFT Distributor **')
   console.log()
 
+  const distributionsInfo: MerkleDistributorInfo[] = []
   for (let i = 0; i < distributions.length; i++) {
+    const { tierIndex, info } = distributions[i]
+    distributionsInfo.push(info)
     const merkleRoots = await nftDistributor.getMerkleRoots()
 
     if (merkleRoots[i] == null) {
-      await nftDistributor.addTier(distributions[i].merkleRoot)
-      console.log(` * Merkle root for tier ${i} added to distributor \n`)
+      await nftDistributor
+        .addMerkle(tierIndex, info.merkleRoot)
+        .then(({ wait }) => wait())
+      console.log(
+        ` * Merkle root for tier ${tierIndex} added: ${info.merkleRoot} \n`
+      )
     } else {
       console.log(
-        ` * Merkle root for tier ${i} already added to distributor \n`
+        ` * Merkle root for tier ${tierIndex} ALREADY added: ${info.merkleRoot} \n`
       )
     }
   }
@@ -117,7 +121,7 @@ const deployNFT: DeployFunction = async (hre) => {
   const distributionOutputPath = `deployments/${network.name}/_nftDistribution.json`
   fs.writeFileSync(
     distributionOutputPath,
-    JSON.stringify(distributions, null, 2)
+    JSON.stringify(distributionsInfo, null, 2)
   )
 
   console.log(` ** Output written to ${distributionOutputPath}`)
