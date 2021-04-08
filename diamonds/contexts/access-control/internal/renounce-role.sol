@@ -14,7 +14,3 @@ abstract contract int_renounceRole_AccessControl_v1 is
         emit RoleRevoked(role, account, msg.sender);
     }
 }
-
-abstract contract int_renounceRole_AccessControl is
-    int_renounceRole_AccessControl_v1
-{}

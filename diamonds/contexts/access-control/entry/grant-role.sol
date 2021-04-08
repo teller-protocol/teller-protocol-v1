@@ -6,7 +6,7 @@ import "../data.sol";
 import "../internal/grant-role.sol";
 import "../internal/is-admin-for-role.sol";
 
-abstract contract ent_grantRole_AccessControl_v1 is
+contract ent_grantRole_AccessControl_v1 is
     int_grantRole_AccessControl,
     int_isAdminForRole_AccessControl_v1
 {
@@ -22,6 +22,4 @@ abstract contract ent_grantRole_AccessControl_v1 is
     }
 }
 
-abstract contract ent_grantRole_AccessControl is
-    ent_grantRole_AccessControl_v1
-{}
+contract ent_grantRole_AccessControl is ent_grantRole_AccessControl_v1 {}

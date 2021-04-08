@@ -38,7 +38,7 @@ export default <HardhatUserConfig>{
     apiKey: process.env.ETHERSCAN_API_KEY,
   },
   paths: {
-    sources: 'diamonds/domains/',
+    sources: 'contracts',
   },
   solidity: {
     compilers: [
@@ -50,17 +50,6 @@ export default <HardhatUserConfig>{
             runs: 200,
           },
         },
-      },
-    ],
-  },
-  external: {
-    contracts: [
-      {
-        artifacts: 'node_modules/@openzeppelin/contracts/build/contracts',
-      },
-      {
-        artifacts:
-          'node_modules/@openzeppelin/contracts-upgradeable/build/contracts',
       },
     ],
   },
@@ -117,7 +106,7 @@ export default <HardhatUserConfig>{
     hardhat: {
       forking: {
         url: process.env.ALCHEMY_MAINNET_KEY,
-        blockNumber: 12064000,
+        // blockNumber: 12064000,
         enabled: true,
       },
       accounts,

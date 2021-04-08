@@ -12,3 +12,7 @@ abstract contract mod_initializer_Initializable_v1 is sto_Initializable {
         _;
     }
 }
+
+abstract contract mod_initializer_Initializable is
+    mod_initializer_Initializable_v1
+{}

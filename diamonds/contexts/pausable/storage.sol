@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-abstract contract sto_Pausable {
+contract sto_Pausable {
     struct PausableLayout {
         mapping(address => bool) paused;
     }

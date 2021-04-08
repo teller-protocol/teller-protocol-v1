@@ -90,3 +90,19 @@ export interface Tokens {
 export interface Nodes {
   [name: string]: URI
 }
+
+export interface TierInfo {
+  baseLoanSize: string
+  hashes: string[]
+  contributionAsset: string
+  contributionSize: string
+  contributionMultiplier: string
+}
+
+export type NFTMerkelTree = Array<{
+  tierIndex: number
+  balances: Array<{
+    address: string
+    count: BigNumberish
+  }>
+}>

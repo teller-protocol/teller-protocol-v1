@@ -1,4 +1,4 @@
-import { BigNumber, utils } from 'ethers'
+import { BigNumber, BigNumberish, utils } from 'ethers'
 
 import BalanceTree from './balance-tree'
 
@@ -23,7 +23,7 @@ export interface MerkleDistributorInfo {
   }
 }
 
-type Balances = Array<{ address: string; count: string }>
+type Balances = Array<{ address: string; count: BigNumberish }>
 
 export function generateMerkleDistribution(
   balances: Balances
