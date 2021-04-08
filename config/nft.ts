@@ -192,6 +192,13 @@ export const tiers: TierInfo[] = [
       'QmNR4t3quXH5Tf9g9rLJELFhdWozTPqmrGpxkiBLgrxGMC',
     ],
   },
+  {
+    baseLoanSize: '2500',
+    contributionAsset: '0x514910771af9ca656af840dff83e8264ecf986ca',
+    contributionSize: '1000000000000000000',
+    contributionMultiplier: '150',
+    hashes: ['QmbJAXr1b3QxXraEeAnVifP3mvnXoDpSqHyuCVrtUBRu95'],
+  },
 ]
 
 const testnetNFTMerkel: NFTMerkelTree = [
@@ -281,7 +288,7 @@ const testnetNFTMerkel: NFTMerkelTree = [
   },
 ]
 
-const mainnetNFTMerkel: NFTMerkelTree = [
+export const mainnetNFTMerkel: NFTMerkelTree = [
   {
     tierIndex: 0,
     balances: [
@@ -1691,6 +1698,47 @@ const mainnetNFTMerkel: NFTMerkelTree = [
       { address: '0x97944e369a1af4040816f157134edca8e9f82ecd', count: 1 },
       { address: '0x1ce2304369d957fc1f0dd32c983f445e449f4c7a', count: 1 },
       { address: '0xd7ddf70125342f44e65ccbafae5135f2bb6526bb', count: 1 },
+    ],
+  },
+  {
+    tierIndex: 3,
+    balances: [
+      { address: '0x38148ecc2078da7f65e6233dda28efaf4c51e96f', count: 1 },
+      { address: '0x91724b63dc4e723609f3e0faca1b0e7b78579c47', count: 1 },
+      { address: '0x5acb790c82b19166b248e516a4f5e505306d4268', count: 1 },
+      { address: '0x1f92dabe3cfa2db47666c57a3ae44d820cdeb225', count: 1 },
+      { address: '0xb9dc2fbbeeeaef6ae0082ffe0aff3fb798c5e735', count: 1 },
+      { address: '0x646469ee06fd4974edb05c84e290612658cfbbbc', count: 2 },
+      { address: '0x032ade653b7d6abe56de3d12e2a474b40fa31d89', count: 1 },
+      { address: '0x7864fae9c4b0adf486245664617123d692f6c440', count: 2 },
+      { address: '0x2eecba66581512087181895b0de8d5faa3db21e5', count: 1 },
+      { address: '0x5477729b43a0a9bea8c41367c62e7864123b57d8', count: 1 },
+      { address: '0x5bbb65fe6e990f2dcdf95fe7e71f07264c5993ac', count: 7 },
+      { address: '0xa6885b504a881a7aaff51fbe497abb1cd7af684f', count: 1 },
+      { address: '0xe51e75de078483be2112442f36e920360227a46d', count: 1 },
+      { address: '0xf0f225e01cf084d3c246ad595ab60d0d4f5b4c78', count: 1 },
+      { address: '0xa38d3ef13046c3c3124f1eb1b0b96f04f2d2f8f9', count: 2 },
+      { address: '0xd836da33a6629548271eb9ef4f62d083376eb4a6', count: 4 },
+      { address: '0x397eadff98b18a0e8c1c1866b9e83ae887bac1f1', count: 1 },
+      { address: '0x99f7ee5fdce389ea6de36334d1d3471a28b7e77d', count: 1 },
+      { address: '0x391891af67e29d97e61e30c3036a0874f5da411e', count: 15 },
+      { address: '0xedbc7d68195a411d5c6a32d3bd93703880ad7692', count: 3 },
+      { address: '0xb16b0f76e5328076923423fe8c985f69ec12ef84', count: 2 },
+      { address: '0x736cb793b7bd1921fd7809eeef1393fda06fae04', count: 1 },
+      { address: '0xd7dc9b1bc54ddb735a3823951c037a6b324c4d2d', count: 1 },
+      { address: '0xb3e9c2b96b2cc9defa63634dd748f45523205250', count: 1 },
+      { address: '0x42ea21d77813533667f7f0e40af037183faf8814', count: 1 },
+      { address: '0xe1d9298fbec55da67e97f344dfaf9a30f5eb4331', count: 1 },
+      { address: '0xf9107317b0ff77ed5b7adea15e50514a3564002b', count: 1 },
+      { address: '0x50f27cdb650879a41fb07038bf2b818845c20e17', count: 8 },
+      { address: '0x57fcf904efc785e098676922d406e64a4e0e7ea2', count: 22 },
+      { address: '0xda258189e6731b95c4667c5c62146c18f5249e51', count: 1 },
+      { address: '0x9a5cdc551713f81849367f65446a054c7c02079b', count: 1 },
+      { address: '0xa7d7ac8fe7e8693b5599c69cc7d4f6226677845b', count: 7 },
+      { address: '0x9d137567c35d6704b9155a88c8480237c7b24705', count: 1 },
+      { address: '0x5444c3377842568e5ccd77df6f8b26c2c2ef3878', count: 1 },
+      { address: '0xcf50fb42926b255747fb8b0ea8e26d4e66952ca4', count: 2 },
+      { address: '0xa4fb55600853c9d01faa2a03ccd09f91d7e6defe', count: 1 },
     ],
   },
 ]
