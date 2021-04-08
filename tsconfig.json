@@ -13,10 +13,10 @@
   "files": ["hardhat.config.ts"],
   "include": [
     "./config",
-    //    "./deploy",
+    "./deploy",
     //    "./scripts",
     //    "./tasks",
-    "./test",
+    //    "./test",
     "./types",
     "./utils"
   ],

@@ -12,7 +12,7 @@ import {
 } from 'hardhat/types'
 
 if (process.env.COMPILING != 'true') {
-  require('./tasks')
+  // require('./tasks')
   require('./utils/hre-extensions')
 }
 
