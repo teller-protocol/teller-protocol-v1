@@ -2,12 +2,11 @@
 pragma solidity ^0.8.0;
 
 import { AccessControlStorageLib } from "../storage.sol";
-import { OwnershipLib } from "./OwnershipLib.sol";
-
+import { OwnerLib } from "./OwnerLib.sol";
 import { RolesMods } from "../roles/RolesMods.sol";
-import { ADMIN } from "../roles/roles.sol";
+import { ADMIN } from "../../../shared/roles.sol";
 
-contract OwnershipFacet is RolesMods {
+contract OwnerFacet is RolesMods {
     /**
      * @notice Sets an owner for an address.
      * @param account Address to set ownership of.
@@ -21,10 +20,10 @@ contract OwnershipFacet is RolesMods {
         authorized(ADMIN, msg.sender)
     {
         require(
-            OwnershipLib.ownerOf(account) == address(0),
+            OwnerLib.ownerOf(account) == address(0),
             "AccessControl: owner already set"
         );
-        OwnershipLib.setOwner(account, owner);
+        OwnerLib.setOwner(account, owner);
     }
 
     /**
@@ -40,9 +39,9 @@ contract OwnershipFacet is RolesMods {
         authorized(ADMIN, msg.sender)
     {
         require(
-            OwnershipLib.ownerOf(account) == msg.sender,
+            OwnerLib.ownerOf(account) == msg.sender,
             "AccessControl: not owner"
         );
-        OwnershipLib.transferOwner(account, owner);
+        OwnerLib.transferOwner(account, owner);
     }
 }

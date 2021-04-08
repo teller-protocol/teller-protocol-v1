@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { OwnershipLib } from "./OwnershipLib.sol";
+import { OwnerLib } from "./OwnerLib.sol";
 
-abstract contract OwnershipMods {
+abstract contract OwnerMods {
     modifier onlyOwner(address addr) {
         require(
-            OwnershipLib.ownerOf(addr) == msg.sender,
+            OwnerLib.ownerOf(addr) == msg.sender,
             "AccessControl: not owner"
         );
         _;

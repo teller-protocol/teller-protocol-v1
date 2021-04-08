@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import { AccessControlStorageLib, AccessControlStorage } from "../storage.sol";
 
 library RolesLib {
-    function s() private view returns (AccessControlStorage storage) {
+    function s() private pure returns (AccessControlStorage storage) {
         return AccessControlStorageLib.store();
     }
 

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { RolesLib } from "./RolesLib.sol";
-import { ADMIN } from "./roles.sol";
+import { ADMIN } from "../../../shared/roles.sol";
 
 contract RolesFacet {
     /**
@@ -49,6 +49,6 @@ contract RolesFacet {
      * @param role Encoding of the role to remove.
      */
     function renounceRole(bytes32 role) external {
-        RolesLib.revokeRole(role, account);
+        RolesLib.revokeRole(role, msg.sender);
     }
 }

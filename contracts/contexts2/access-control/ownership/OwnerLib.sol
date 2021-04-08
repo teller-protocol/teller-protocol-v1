@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 import { AccessControlStorageLib, AccessControlStorage } from "../storage.sol";
 
-library OwnershipLib {
-    function s() private returns (AccessControlStorage storage) {
+library OwnerLib {
+    function s() private pure returns (AccessControlStorage storage) {
         return AccessControlStorageLib.store();
     }
 
@@ -26,7 +26,7 @@ library OwnershipLib {
      * @notice Gets the owner for an address.
      * @param account Address to check ownership of.
      */
-    function ownerOf(address account) internal returns (address) {
+    function ownerOf(address account) internal view returns (address) {
         return AccessControlStorageLib.store().owners[account];
     }
 
@@ -45,7 +45,7 @@ library OwnershipLib {
      * @notice Transfers ownership of an address.
      * @dev Should only use when circumventing admin checking.
      * @param account Address to transfer ownership of.
-     * @param owner Address to transfer ownership of {account} to.
+     * @param newOwner Address to transfer ownership of {account} to.
      */
     function transferOwner(address account, address newOwner) internal {
         s().owners[account] = newOwner;
