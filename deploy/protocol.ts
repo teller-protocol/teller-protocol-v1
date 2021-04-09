@@ -1,13 +1,17 @@
 import { DeployFunction } from 'hardhat-deploy/types'
+
 import { deployDiamond } from '../utils/deploy-diamond'
+import { ITellerDiamond } from '../types/typechain'
 
 const deployProtocol: DeployFunction = async (hre) => {
   const {} = hre
 
-  await deployDiamond({
+  // Deploy platform diamond
+  const diamond = await deployDiamond<ITellerDiamond>({
     hre,
     name: 'TellerDiamond',
     facets: [
+      'SettingsFacet',
       'LendingFacet',
       'CreateLoanFacet',
       'LoanDataFacet',
@@ -18,6 +22,10 @@ const deployProtocol: DeployFunction = async (hre) => {
       'StakingFacet',
       'EscrowFacet',
     ],
+    execute: {
+      methodName: 'init',
+      args: [],
+    },
   })
 }
 
