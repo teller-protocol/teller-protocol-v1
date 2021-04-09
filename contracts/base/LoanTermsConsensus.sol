@@ -136,7 +136,6 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
             response.signer,
             request.borrower,
             request.requestNonce,
-            response.signature.signerNonce,
             response.interestRate,
             response.collateralRatio,
             response.maxLoanAmount
@@ -162,7 +161,6 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
                     response.interestRate,
                     response.collateralRatio,
                     response.maxLoanAmount,
-                    response.signature.signerNonce,
                     _getChainId(),
                     requestHash
                 )
@@ -190,6 +188,7 @@ contract LoanTermsConsensus is LoanTermsConsensusInterface, Consensus {
                     request.amount,
                     request.duration,
                     request.requestTime,
+                    request.minaProofIdHash,
                     _getChainId()
                 )
             );

@@ -59,6 +59,8 @@ contract LoansBase is LoansInterface, Base {
 
     mapping(uint256 => TellerCommon.Loan) public loans;
 
+    mapping(bytes32 => bool) internal submittedMinaProofs;
+    
     /* Modifiers */
 
     /**
@@ -219,6 +221,11 @@ contract LoansBase is LoansInterface, Base {
             uint256 collateralRatio,
             uint256 maxLoanAmount
         ) = loanTermsConsensus.processRequest(request, responses);
+
+        if (request.minaProofIdHash != bytes32(0)) {
+            require(!submittedMinaProofs[request.minaProofIdHash]);
+            submittedMinaProofs[request.minaProofIdHash] = true;
+        }
 
         loans[loanID].init(
             request,

@@ -35,10 +35,6 @@ contract Consensus is Base, OwnerSignersRole {
     // Has signer address already submitted their answer for (user, identifier)?
     mapping(address => mapping(address => mapping(uint256 => bool))) public hasSubmitted;
 
-    // mapping from signer address, to signerNonce, to boolean.
-    // Has the signer already used this nonce?
-    mapping(address => mapping(uint256 => bool)) public signerNonceTaken;
-
     // the address with permissions to submit a request for processing
     address public callerAddress;
 
@@ -113,11 +109,6 @@ contract Consensus is Base, OwnerSignersRole {
     ) internal view returns (bool) {
         if (!isSigner(expectedSigner)) return false;
 
-        require(
-            !signerNonceTaken[expectedSigner][signature.signerNonce],
-            "SIGNER_NONCE_TAKEN"
-        );
-
         address signer = ECDSA.recover(
             keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", dataHash)),
             signature.v,
@@ -183,7 +174,6 @@ contract Consensus is Base, OwnerSignersRole {
         );
 
         require(_signatureValid(signature, responseHash, signer), "SIGNATURE_INVALID");
-        signerNonceTaken[signer][signature.signerNonce] = true;
     }
 
     /**

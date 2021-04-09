@@ -63,14 +63,6 @@ contract LoanTermsConsensusMock is LoanTermsConsensus {
         hasSubmitted[signer][lender][blockNumber] = hasSub;
     }
 
-    function mockSignerNonce(
-        address signer,
-        uint256 signerNonce,
-        bool taken
-    ) external {
-        signerNonceTaken[signer][signerNonce] = taken;
-    }
-
     function mockBorrowerToLastLoanTermRequest(address borrower, uint256 lastTime)
         external
     {
