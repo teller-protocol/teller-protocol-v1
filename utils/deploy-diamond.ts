@@ -26,12 +26,13 @@ export const deployDiamond = async <C extends Contract>(
       },
       getNamedAccounts,
       ethers,
+      log,
     },
   } = args
 
   const { deployer } = await getNamedAccounts()
 
-  process.stdout.write(` * Deploying ${args.name}...: `)
+  log(`Deploying ${args.name}...: `, { star: true, indent: 1, nl: false })
 
   const { abi, address, receipt, newlyDeployed } = await deploy(args.name, {
     owner: args.owner ?? deployer,
@@ -39,13 +40,12 @@ export const deployDiamond = async <C extends Contract>(
     facets: args.facets,
     execute: args.execute,
     from: deployer,
+    log: false,
   })
   if (newlyDeployed) {
-    process.stdout.write(
-      `${address} ${receipt ? `with ${receipt.gasUsed} gas` : ''} \n`
-    )
+    log(`${address} ${receipt ? `with ${receipt.gasUsed} gas` : ''}`)
   } else {
-    process.stdout.write(` already deployed ${address} \n`)
+    log(` already deployed ${address}`)
   }
 
   return (await ethers.getContractAt(abi, address)) as C

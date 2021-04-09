@@ -13,6 +13,7 @@ import 'hardhat-deploy'
 import { ERC20 } from '../types/typechain'
 import { Address } from '../types/custom/config-types'
 import { getTokens } from '../config'
+import { formatMsg, FormatMsgConfig } from './formatMsg'
 
 declare module 'hardhat/types/runtime' {
   interface HardhatRuntimeEnvironment {
@@ -23,7 +24,7 @@ declare module 'hardhat/types/runtime' {
     fastForward(seconds: BigNumberish): Promise<void>
     toBN(amount: BigNumberish, decimals?: BigNumberish): BigNumber
     fromBN(amount: BigNumberish, decimals?: BigNumberish): BigNumber
-    log(message: string): void
+    log: (msg: string, config?: FormatMsgConfig) => void
   }
 }
 
@@ -211,6 +212,11 @@ extendEnvironment((hre) => {
       return num.div(BigNumber.from('10').pow(decimals))
     }
     return num
+  }
+
+  hre.log = (msg: string, config?: FormatMsgConfig): void => {
+    if (hre.network.name === 'hardhat') return
+    process.stdout.write(formatMsg(msg, config))
   }
 
   const originalDeploymentsSave = hre.deployments.save
