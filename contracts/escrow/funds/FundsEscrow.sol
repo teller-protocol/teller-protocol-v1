@@ -34,7 +34,7 @@ contract FundsEscrow is OwnableUpgradeable {
         uint256 amount
     ) external onlyOwner {
         balances[id][owner] = balances[id][owner].add(amount);
-        totalBalance = totalBalance.add(amount);
+        // totalBalance = totalBalance.add(amount);
         ERC20(asset).safeTransferFrom(from, address(this), amount);
     }
 
@@ -55,7 +55,7 @@ contract FundsEscrow is OwnableUpgradeable {
 
         ERC20(asset).safeTransfer(to, amount);
         balances[id][owner] = balances[id][owner].sub(amount);
-        totalBalance = totalBalance.sub(amount);
+        // totalBalance = totalBalance.sub(amount);
     }
 
     /**

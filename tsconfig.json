@@ -18,7 +18,8 @@
     //    "./tasks",
     //    "./test",
     "./types",
-    "./utils"
+    "./utils",
+    "./test-diamond"
   ],
   "exclude": [
     "./artifacts",

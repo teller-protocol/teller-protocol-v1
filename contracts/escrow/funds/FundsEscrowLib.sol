@@ -66,13 +66,5 @@ library FundsEscrowLib {
      * @dev If one already exists, nothing happens.
      * @param asset Asset to create an escrow for.
      */
-    function create(address asset) internal {
-        if (exists(asset)) return;
-
-        address escrow =
-            Clones.cloneDeterministic(s().implementation, bytes32(asset));
-        s().escrows.add(escrow);
-        s().assetEscrow[asset] = FundsEscrow(escrow);
-        s().assetEscrow[asset].init(asset);
-    }
+    function create(address asset) internal {}
 }

@@ -1,18 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+// Data
+import "../shared/roles.sol";
+
 // Contracts
 import "../contexts2/access-control/roles/RolesMods.sol";
 import "../contexts2/access-control/reentry/ReentryMods.sol";
 import "../contexts2/pausable/PausableMods.sol";
+import { EscrowLib } from "../escrow/manager/EscrowLib.sol";
+import { EscrowLogic } from "../escrow/manager/EscrowLogic.sol";
 
 // Storage
 import { AppStorageLib, AppStorage } from "../storage/app.sol";
 import { LendingStorageLib, LendingStorage } from "../storage/lending.sol";
-import { FundsEscrowLib } from "../escrow/funds/FundsEscrowLib.sol";
 
 contract LendingFacet is RolesMods, ReentryMods, PausableMods {
-    bytes32 constant FACET_ID = keccak256("LendingFacet");
+    bytes32 internal constant FACET_ID = keccak256("LendingFacet");
 
     /**
      * @notice This event is emitted when an user deposits tokens into the pool.
@@ -46,15 +50,18 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
     function deposit(address asset, uint256 amount)
         external
         paused(FACET_ID, false)
-        authorized(msg.sender)
+        authorized(USER, msg.sender)
         nonReentry(FACET_ID)
     {
+        EscrowLogic escrow =
+            EscrowLogic(EscrowLib.getAssetEscrow(address(this), asset));
+        escrow.deposit(msg.sender, amount);
         //        ITToken tToken = getLendingPool().tToken;
         //        uint256 previousSupply = _getTotalSupplied();
         //        uint256 exchangeRate = _exchangeRate();
 
         // Transferring tokens to the LendingPool
-        FundsEscrowLib.deposit(FACET_ID, asset, amount, msg.sender);
+        // FundsEscrowLib.deposit(FACET_ID, asset, amount, msg.sender);
         //        lendingTokenAmount = tokenTransferFrom(msg.sender, lendingTokenAmount);
 
         //        require(
