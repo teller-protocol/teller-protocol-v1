@@ -42,6 +42,7 @@ library TellerCommon {
         uint256 amount;
         uint256 duration;
         uint256 requestTime;
+        bytes32 minaProofIdHash;
     }
 
     /**
