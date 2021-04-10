@@ -28,8 +28,6 @@ export const addMerkles = async (
     return
   }
 
-  console.log(network.config.forkName, network.name)
-
   const { merkleTrees, distributionsOutputFile } = getNFT(network)
   if (!merkleTrees || !Array.isArray(merkleTrees))
     throw new Error(

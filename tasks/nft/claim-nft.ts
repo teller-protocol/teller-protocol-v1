@@ -8,6 +8,7 @@ import { ITellerNFTDistributor } from '../../types/typechain'
 
 interface ClaimNFTArgs {
   address: string
+  merkleIndex?: number
   sendTx?: boolean
 }
 
@@ -26,7 +27,7 @@ export const claimNFT = async (
     return
   }
 
-  const { address } = args
+  const { address, merkleIndex } = args
 
   const nftDistributor = await contracts.get<ITellerNFTDistributor>(
     'TellerNFTDistributor'
@@ -45,26 +46,42 @@ export const claimNFT = async (
     amount: BigNumberish
     merkleProof: string[]
   }> = []
-  for (let i = 0; i < distributions.length; i++) {
+
+  if (merkleIndex) {
     const {
       claims: { [address]: claim },
-    } = distributions[i]
-    const isClaimed = await nftDistributor.isClaimed(i, claim.index)
-    if (!isClaimed) {
-      requests.push({
-        merkleIndex: i,
-        nodeIndex: claim.index,
-        amount: parseInt(claim.amount, 16),
-        merkleProof: claim.proof,
-      })
+    } = distributions[merkleIndex]
+    requests.push({
+      merkleIndex,
+      nodeIndex: claim.index,
+      amount: parseInt(claim.amount, 16),
+      merkleProof: claim.proof,
+    })
+  } else {
+    for (let i = 0; i < distributions.length; i++) {
+      const {
+        claims: { [address]: claim },
+      } = distributions[i]
+      const isClaimed = await nftDistributor.isClaimed(i, claim.index)
+      if (!isClaimed) {
+        requests.push({
+          merkleIndex: i,
+          nodeIndex: claim.index,
+          amount: parseInt(claim.amount, 16),
+          merkleProof: claim.proof,
+        })
+      }
     }
   }
-  console.log(requests)
 
-  await nftDistributor.claim(args.address, requests.slice(0, 1))
+  await nftDistributor.claim(args.address, requests)
 }
 
 task('claim-nft', 'Claims an NFT on behalf of an account')
   .addParam('address', 'Address to claim NFTs for')
+  .addOptionalParam(
+    'merkleIndex',
+    'Only claim tokens using the specified merkle index.'
+  )
   .addFlag('sendTx', 'Required flag to ensure this is not ran on accident')
   .setAction(claimNFT)

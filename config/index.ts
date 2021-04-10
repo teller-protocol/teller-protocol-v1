@@ -38,7 +38,5 @@ export const getUniswap = (network: Network) => uniswap[getNetworkName(network)]
 export const getNFT = (network: Network) => ({
   tiers: nftTiers,
   merkleTrees: nftMerkleTree[getNetworkName(network)],
-  distributionsOutputFile: `deployments/${getNetworkName(
-    network
-  )}/_nftDistribution.json`,
+  distributionsOutputFile: `deployments/${network.name}/_nftDistribution.json`,
 })

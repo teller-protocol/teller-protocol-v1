@@ -34,6 +34,10 @@ const GAS_PRICE: HardhatNetworkUserConfig['gasPrice'] = process.env
     ).toNumber()
   : 'auto'
 
+const FORK_BLOCK_NUMBER = process.env.FORKING_BLOCK
+  ? parseInt(process.env.FORKING_BLOCK)
+  : undefined
+
 export default <HardhatUserConfig>{
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
@@ -107,9 +111,9 @@ export default <HardhatUserConfig>{
     hardhat: {
       forking: {
         url: process.env.ALCHEMY_MAINNET_KEY,
-        // Block to fork can be specified via cli: `yarn h fork {network} [block number]`
+        // Block to fork can be specified via cli: `yarn h fork {network} ([block number] | latest)`
         // Defaults to the latest deployment block
-        blockNumber: parseInt(process.env.FORKING_BLOCK ?? '12200383'),
+        blockNumber: FORK_BLOCK_NUMBER,
         enabled: true,
       },
       forkName: process.env.FORKING_NETWORK,

@@ -3,10 +3,9 @@
 echo
 
 available_networks=('mainnet' 'rinkeby' 'kovan' 'ropsten')
-local_networks=('localhost' 'hardhat')
 
 ## Exit and display help output
-show_help() {
+show_main_help() {
   echo "Usage: <COMMAND> [NETWORK] [PARAMS] [OPTIONS]"
   echo
   echo "Available networks:"
@@ -16,8 +15,7 @@ show_help() {
 }
 
 script=$1
-network=$2
-opts=${*:3}
+opts=(${*:2})
 ENV_VARS=''
 
 deployments_folder=./deployments/localhost
@@ -37,7 +35,7 @@ if [ -z "$script" ]
 then
   echo "Hardhat script not given..."
   echo
-  show_help
+  show_main_help
 fi
 
 ## Verify that the network name given is available
@@ -59,33 +57,26 @@ verify_network() {
   fi
 }
 
-## If the script is "node" preform a network name check
+slice_network() {
+  if [ -z "$network" ]
+  then
+    network="${opts[0]}"
+    verify_network "$network"
+    if [ -z $verify_network_return ] && [ "${1:-0}" == 'verify' ]
+    then
+      echo "Must specify a non local network name"
+      echo
+      show_main_help
+    fi
+
+    opts=("${opts[*]:1}")
+  fi
+}
+
+## The "node" script is redirected to "fork" a network locally
 if [ "$script" == "node" ]
 then
-  ## If starting a local hardhat rpc node the network should be a valid network
-  if [ "$network" == 'hardhat' ] || [ "$network" == 'localhost' ]
-  then
-    echo "Should not start a local node with the hardhat network"
-    echo
-    show_help
-  fi
-
-  ## Verify the network name
-  verify_network "$network"
-  if [ -z $verify_network_return ]
-  then
-    echo "Must specify a non local network name"
-    echo
-    show_help
-  fi
-fi
-
-## If network is not valid, assume "localhost" and use remaining values as options
-verify_network "$network"
-if [ "$verify_network_return" == '' ]
-then
-  opts="$network $opts"
-  network='localhost'
+  script='fork'
 fi
 
 ## Grab the remaining options passed in
@@ -94,12 +85,17 @@ extra_opts=''
 ## If the script given is "fork" preform required operations
 if [ "$script" == "fork" ]
 then
-  if [[ " ${local_networks[*]} " == *"$network"* ]]
+  if [[ "${opts[0]}" =~ ^-h|--help$ ]]
   then
-    echo "Must specify a non local network to fork!!"
+    echo "Usage: fork <NETWORK> [<BLOCK_NUMBER> | latest]"
     echo
-    show_help
+    echo "  The default behavior is to fork the specified network at the last deployment block for any contracts."
+    echo "  This can be overridden by ether specifying a block number OR 'latest'"
+    echo
+    exit
   fi
+
+  slice_network verify
 
   echo "Forking network $network..."
 
@@ -116,6 +112,9 @@ then
   if [[ "${opts[0]}" -gt 0 ]]
   then
     ENV_VARS+="FORKING_BLOCK=${opts[0]} "
+  elif [ "${opts[0]}" == 'latest' ]
+  then
+    opts=(${opts[*]:1})
   elif [ -n "$latestDeploymentBlock" ]
   then
     ENV_VARS+="FORKING_BLOCK=$latestDeploymentBlock "
@@ -131,4 +130,13 @@ then
   echo
 fi
 
-eval "$ENV_VARS yarn hh $script --network $network $extra_opts $opts"
+## If network is not valid, assume "localhost" and use remaining values as options
+slice_network
+if [ -z $verify_network_return ]
+then
+  echo "Invalid network '$network' - defaulting to 'localhost'"
+  echo
+  network='localhost'
+fi
+
+eval "$ENV_VARS yarn hh $script --network $network $extra_opts ${opts[*]}"
