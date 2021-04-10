@@ -99,7 +99,7 @@ export interface TierInfo {
   contributionMultiplier: string
 }
 
-export type NFTMerkelTree = Array<{
+export type NFTMerkleTree = Array<{
   tierIndex: number
   balances: Array<{
     address: string
