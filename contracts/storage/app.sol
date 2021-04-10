@@ -6,6 +6,7 @@ import "../nft/TellerNFT.sol";
 
 // Interfaces
 import { IUniswapV2Router } from "../shared/interfaces/IUniswapV2Router.sol";
+import { IPriceAggregator } from "../shared/interfaces/IPriceAggregator.sol";
 
 // Libraries
 import { PlatformSettingsLib } from "../settings/PlatformSettingsLib.sol";
@@ -19,6 +20,7 @@ struct AppStorage {
     mapping(string => address) assetAddresses;
     mapping(address => bool) ctokenRegistry;
     IUniswapV2Router uniswapRouter;
+    IPriceAggregator priceAggregator;
     TellerNFT nft;
 }
 
