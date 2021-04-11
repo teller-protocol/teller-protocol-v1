@@ -14,7 +14,7 @@ import {
 import { getTokens } from '../config'
 import { formatMsg, FormatMsgConfig } from './formatMsg'
 import { Address } from '../types/custom/config-types'
-import { ERC20 } from '../types/typechain'
+import { IERC20 } from '../types/typechain'
 
 declare module 'hardhat/types/runtime' {
   interface HardhatRuntimeEnvironment {
@@ -37,7 +37,7 @@ interface ContractsExtension {
 }
 
 interface TokensExtension {
-  get: <T extends ERC20>(name: string) => Promise<T>
+  get: <T extends IERC20>(name: string) => Promise<T>
 }
 
 interface EVM {
@@ -149,9 +149,9 @@ extendEnvironment((hre) => {
   }
 
   hre.tokens = {
-    async get<T extends ERC20>(name: string): Promise<T> {
+    async get<T extends IERC20>(name: string): Promise<T> {
       const tokens = getTokens(network)
-      const token = await ethers.getContractAt('ERC20', tokens[name])
+      const token = await ethers.getContractAt('IERC20', tokens[name])
       return token as T
     },
   }
