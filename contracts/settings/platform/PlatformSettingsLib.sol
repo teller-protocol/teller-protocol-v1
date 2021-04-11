@@ -22,7 +22,7 @@ struct PlatformSetting {
  * @author develop@teller.finance
  */
 library PlatformSettingsLib {
-    function s(bytes32 name) private view returns (PlatformSetting storage) {
+    function s(bytes32 name) internal view returns (PlatformSetting storage) {
         return AppStorageLib.store().platformSettings[name];
     }
 
@@ -129,68 +129,4 @@ library PlatformSettingsLib {
     {
         value_ = s(NAMES.OVER_COLLATERALIZED_BUFFER).value;
     }
-
-    //    /**
-    //     * @notice It gets whether the platform is paused or not.
-    //     * @return true if platform is paused. Otherwise it returns false.
-    //     */
-    //    function isPaused() internal view returns (bool) {
-    //        return PausableStorageLib.store().paused[address(this)];
-    //    }
-    //
-    //    function isMarketPaused(address market) internal view returns (bool) {
-    //        return PausableStorageLib.store().paused[market];
-    //    }
-    //
-    //    /**
-    //     * @notice Returns whether the platform is restricted or not
-    //     * @return bool True if the platform is restricted, false if not
-    //     */
-    //    function isPlatformRestricted() internal view returns (bool) {
-    //        return AppStorageLib.store().platformRestricted;
-    //    }
-    //
-    //    /**
-    //     * @notice Adds a wallet address to the list of authorized wallets
-    //     * @param account The wallet address of the user being authorized
-    //     */
-    //    function addAuthorizedAddress(address account)
-    //        public
-    //    {
-    //        require(RolesLib.hasRole(ADMIN, msg.sender), "AccessControl: not authorized");
-    //        RolesLib.grantRole(AUTHORIZED, account);
-    //    }
-    //
-    //    /**
-    //     * @notice Adds a list of wallet addresses to the list of authorized wallets
-    //     * @param addressesToAdd The list of wallet addresses being authorized
-    //     */
-    //    function addAuthorizedAddressList(address[] calldata addressesToAdd)
-    //        internal
-    //    {
-    //        require(RolesLib.hasRole(ADMIN, msg.sender), "AccessControl: not authorized");
-    //        for (uint256 i = 0; i < addressesToAdd.length; i++) {
-    //            RolesLib.grantRole(AUTHORIZED, addressesToAdd[i]);
-    //        }
-    //    }
-    //
-    //    /**
-    //     * @notice Removes a wallet address from the list of authorized wallets
-    //     * @param account The wallet address of the user being unauthorized
-    //     */
-    //    function removeAuthorizedAddress(address account)
-    //        internal
-    //    {
-    //        require(RolesLib.hasRole(ADMIN, msg.sender), "AccessControl: not authorized");
-    //        RolesLib.revokeRole(AUTHORIZED, account);
-    //    }
-    //
-    //    /**
-    //     * @notice Tests whether an account has authorization
-    //     * @param account The account address to check for
-    //     * @return True if account has authorization, false if it does not
-    //     */
-    //    function hasAuthorization(address account) internal view returns (bool) {
-    //        return RolesLib.hasRole(AUTHORIZED, account) || RolesLib.hasRole(ADMIN, account);
-    //    }
 }

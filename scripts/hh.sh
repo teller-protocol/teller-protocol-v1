@@ -18,7 +18,8 @@ show_main_help() {
   echo "Usage: <COMMAND> [NETWORK] [PARAMS] [OPTIONS]"
   echo
   echo "Available networks:"
-  echo "  ${available_networks[*]} (Use 'localhost' for testing)"
+  echo "  ${available_networks[*]}"
+  echo "    - NOTE: Use 'localhost' for testing once you have a local fork running"
   echo
   exit 0
 }
@@ -104,7 +105,13 @@ then
     exit
   fi
 
-  slice_network verify
+  slice_network
+  if [ "$network" == 'localhost' ]
+  then
+    echo "Cannot fork the localhost network!"
+    echo
+    show_main_help
+  fi
 
   echo -n "Forking $network... "
 

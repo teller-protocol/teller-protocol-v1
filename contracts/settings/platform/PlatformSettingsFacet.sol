@@ -1,18 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+// Contracts
+import { RolesMods } from "../../contexts2/access-control/roles/RolesMods.sol";
+import { ADMIN, AUTHORIZED } from "../../shared/roles.sol";
+
+// Libraries
 import {
     PlatformSettingsLib,
     PlatformSetting
 } from "./PlatformSettingsLib.sol";
 import { AppStorageLib } from "../../storage/app.sol";
 
+// Storage
+import { AppStorageLib, AppStorage } from "../../storage/app.sol";
+
 /**
  * @notice Utility library of inline functions on the PlatformSetting struct.
  *
  * @author develop@teller.finance
  */
-library PlatformSettingsFacet {
+contract PlatformSettingsFacet is RolesMods {
     /**
      * @notice This event is emitted when a new platform setting is created.
      * @param settingName New setting name.
@@ -61,10 +69,6 @@ library PlatformSettingsFacet {
         uint256 newMax
     );
 
-    function s(bytes32 name) private view returns (PlatformSetting storage) {
-        return AppStorageLib.store().platformSettings[name];
-    }
-
     /**
      * @notice Gets the values for a platform setting name.
      * @param name The keccak'ed name for a setting.
@@ -72,9 +76,10 @@ library PlatformSettingsFacet {
      */
     function getPlatformSetting(bytes32 name)
         external
+        view
         returns (PlatformSetting memory setting_)
     {
-        setting_ = s(name);
+        setting_ = PlatformSettingsLib.s(name);
     }
 
     /**
@@ -89,18 +94,21 @@ library PlatformSettingsFacet {
         uint256 value,
         uint256 min,
         uint256 max
-    ) internal {
-        require(!s(name).exists, "Teller: platform setting already exists");
+    ) external authorized(ADMIN, msg.sender) {
+        require(
+            !PlatformSettingsLib.s(name).exists,
+            "Teller: platform setting already exists"
+        );
         require(value >= min, "Teller: platform setting value less than min");
         require(
             value <= max,
             "Teller: platform setting value greater than max"
         );
 
-        s(name).value = value;
-        s(name).min = min;
-        s(name).max = max;
-        s(name).exists = true;
+        PlatformSettingsLib.s(name).value = value;
+        PlatformSettingsLib.s(name).min = min;
+        PlatformSettingsLib.s(name).max = max;
+        PlatformSettingsLib.s(name).exists = true;
 
         emit PlatformSettingCreated(name, msg.sender, value, min, max);
     }
@@ -116,26 +124,31 @@ library PlatformSettingsFacet {
      *  - New value is less than the min value
      */
     function updatePlatformSetting(bytes32 name, uint256 newValue)
-        internal
+        external
+        authorized(ADMIN, msg.sender)
         returns (uint256 oldValue)
     {
-        require(s(name).exists, "Teller: platform setting not exists");
         require(
-            s(name).value != newValue,
+            PlatformSettingsLib.s(name).exists,
+            "Teller: platform setting not exists"
+        );
+        require(
+            PlatformSettingsLib.s(name).value != newValue,
             "Teller: new platform setting not different"
         );
         require(
-            newValue >= s(name).min,
+            newValue >= PlatformSettingsLib.s(name).min,
             "Teller: new platform setting less than min"
         );
         require(
-            newValue <= s(name).max,
+            newValue <= PlatformSettingsLib.s(name).max,
             "Teller: new platform setting greater than max"
         );
 
-        emit PlatformSettingUpdated(name, msg.sender, s(name).value, newValue);
+        oldValue = PlatformSettingsLib.s(name).value;
+        PlatformSettingsLib.s(name).value = newValue;
 
-        s(name).value = newValue;
+        emit PlatformSettingUpdated(name, msg.sender, oldValue, newValue);
     }
 
     /**
@@ -148,19 +161,22 @@ library PlatformSettingsFacet {
         bytes32 name,
         uint256 min,
         uint256 max
-    ) internal {
-        require(s(name).exists, "Teller: platform setting not exists");
+    ) external authorized(ADMIN, msg.sender) {
+        require(
+            PlatformSettingsLib.s(name).exists,
+            "Teller: platform setting not exists"
+        );
 
         emit PlatformSettingBoundariesUpdated(
             name,
             msg.sender,
-            s(name).min,
-            s(name).max,
+            PlatformSettingsLib.s(name).min,
+            PlatformSettingsLib.s(name).max,
             min,
             max
         );
 
-        s(name).min = min;
-        s(name).max = max;
+        PlatformSettingsLib.s(name).min = min;
+        PlatformSettingsLib.s(name).max = max;
     }
 }
