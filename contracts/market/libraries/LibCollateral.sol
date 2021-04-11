@@ -16,6 +16,20 @@ library LibCollateral {
         uint256 depositAmount
     );
 
+    /**
+     * @notice This event is emitted when collateral has been withdrawn
+     * @param loanID ID of loan from which collateral was withdrawn
+     * @param borrower Account address of the borrower
+     * @param recipient Account address of the recipient
+     * @param amount Value of collateral withdrawn
+     */
+    event CollateralWithdrawn(
+        uint256 indexed loanID,
+        address indexed borrower,
+        address indexed recipient,
+        uint256 amount
+    );
+
     function _payInCollateral(uint256 loanID, uint256 amount) internal {
         require(msg.value == amount, "INCORRECT_ETH_AMOUNT");
 
@@ -24,6 +38,21 @@ library LibCollateral {
         MarketStorageLib.marketStore().loans[loanID].lastCollateralIn = block
             .timestamp;
         emit CollateralDeposited(loanID, msg.sender, amount);
+    }
+
+    function _withdrawCollateral(
+        uint256 loanID,
+        uint256 amount,
+        address payable recipient
+    ) internal {
+        _payOutCollateral(loanID, amount, recipient);
+
+        emit CollateralWithdrawn(
+            loanID,
+            MarketStorageLib.marketStore().loans[loanID].loanTerms.borrower,
+            recipient,
+            amount
+        );
     }
 
     function _payOutCollateral(

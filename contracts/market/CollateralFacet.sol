@@ -17,20 +17,6 @@ import { LibCollateral } from "./libraries/LibCollateral.sol";
 
 contract CollateralFacet is RolesMods, PausableMods, LoansMods {
     /**
-     * @notice This event is emitted when collateral has been withdrawn
-     * @param loanID ID of loan from which collateral was withdrawn
-     * @param borrower Account address of the borrower
-     * @param recipient Account address of the recipient
-     * @param amount Value of collateral withdrawn
-     */
-    event CollateralWithdrawn(
-        uint256 indexed loanID,
-        address indexed borrower,
-        address indexed recipient,
-        uint256 amount
-    );
-
-    /**
      * @notice Deposit collateral tokens into a loan.
      * @param borrower The address of the loan borrower.
      * @param loanID The ID of the loan the collateral is for
@@ -94,21 +80,6 @@ contract CollateralFacet is RolesMods, PausableMods, LoansMods {
             );
         }
 
-        _withdrawCollateral(loanID, amount, payable(msg.sender));
-    }
-
-    function _withdrawCollateral(
-        uint256 loanID,
-        uint256 amount,
-        address payable recipient
-    ) internal {
-        LibCollateral._payOutCollateral(loanID, amount, recipient);
-
-        emit CollateralWithdrawn(
-            loanID,
-            MarketStorageLib.marketStore().loans[loanID].loanTerms.borrower,
-            recipient,
-            amount
-        );
+        LibCollateral._withdrawCollateral(loanID, amount, payable(msg.sender));
     }
 }

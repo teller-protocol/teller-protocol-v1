@@ -11,13 +11,51 @@ import { IEscrow } from "../../shared/interfaces/IEscrow.sol";
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 import {
     PlatformSettingsLib
-} from "../settings/platform/PlatformSettingsLib.sol";
+} from "../../settings/platform/PlatformSettingsLib.sol";
 
 library LibLoans {
     using NumbersLib for int256;
+    using NumbersLib for uint256;
 
     function libStore() private pure returns (MarketStorage storage) {
         return MarketStorageLib.marketStore();
+    }
+
+    /**
+     * @notice Returns the total amount owed for a specified loan.
+     * @param loanID The loan ID to get the total amount owed.
+     * @return uint256 The total owed amount.
+     */
+    function getTotalOwed(uint256 loanID) public view returns (uint256) {
+        if (libStore().loans[loanID].status == LoanStatus.TermsSet) {
+            uint256 interestOwed =
+                getInterestOwedFor(
+                    loanID,
+                    libStore().loans[loanID].loanTerms.maxLoanAmount
+                );
+            return
+                libStore().loans[loanID].loanTerms.maxLoanAmount +
+                (interestOwed);
+        } else if (libStore().loans[loanID].status == LoanStatus.Active) {
+            return
+                libStore().loans[loanID].principalOwed +
+                (libStore().loans[loanID].interestOwed);
+        }
+        return 0;
+    }
+
+    /**
+     * @notice Returns the amount of interest owed for a given loan and loan amount.
+     * @param loanID The loan ID to get the owed interest.
+     * @param amountBorrow The principal of the loan to take out.
+     * @return uint256 The interest owed.
+     */
+    function getInterestOwedFor(uint256 loanID, uint256 amountBorrow)
+        public
+        view
+        returns (uint256)
+    {
+        return amountBorrow.percent(getInterestRatio(loanID));
     }
 
     function getCollateralNeededInfo(uint256 loanID)

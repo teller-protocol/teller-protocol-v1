@@ -3,6 +3,10 @@ pragma solidity ^0.8.0;
 
 import { AppStorageLib } from "../../storage/app.sol";
 import "./names.sol" as NAMES;
+import { RolesMods } from "../../contexts2/access-control/roles/RolesMods.sol";
+import { ADMIN, AUTHORIZED } from "../../shared/roles.sol";
+import { RolesLib } from "../../contexts2/access-control/roles/RolesLib.sol";
+import { PausableStorageLib } from "../../contexts2/pausable/storage.sol";
 
 // It defines a platform settings. It includes: value, min, and max values.
 struct PlatformSetting {
@@ -18,13 +22,13 @@ struct PlatformSetting {
  * @author develop@teller.finance
  */
 library PlatformSettingsLib {
-    function s(bytes32 name) private pure returns (PlatatformSetting storage) {
+    function s(bytes32 name) private view returns (PlatformSetting storage) {
         return AppStorageLib.store().platformSettings[name];
     }
 
     /**
      * @notice It gets the current "RequiredSubmissionsPercentage" setting's value
-     * @return value the current value.
+     * @return value_ the current value.
      */
     function getRequiredSubmissionsPercentageValue()
         internal
@@ -36,7 +40,7 @@ library PlatformSettingsLib {
 
     /**
      * @notice It gets the current "MaximumTolerance" setting's value
-     * @return value the current value.
+     * @return value_ the current value.
      */
     function getMaximumToleranceValue() internal view returns (uint256 value_) {
         value_ = s(NAMES.MAXIMUM_TOLERANCE).value;
@@ -44,7 +48,7 @@ library PlatformSettingsLib {
 
     /**
      * @notice It gets the current "ResponseExpiryLength" setting's value
-     * @return value the current value.
+     * @return value_ the current value.
      */
     function getResponseExpiryLengthValue()
         internal
@@ -56,7 +60,7 @@ library PlatformSettingsLib {
 
     /**
      * @notice It gets the current "SafetyInterval" setting's value
-     * @return value the current value.
+     * @return value_ the current value.
      */
     function getSafetyIntervalValue() internal view returns (uint256 value_) {
         value_ = s(NAMES.SAFETY_INTERVAL).value;
@@ -64,7 +68,7 @@ library PlatformSettingsLib {
 
     /**
      * @notice It gets the current "TermsExpiryTime" setting's value
-     * @return value the current value.
+     * @return value_ the current value.
      */
     function getTermsExpiryTimeValue() internal view returns (uint256 value_) {
         value_ = s(NAMES.TERMS_EXPIRY_TIME).value;
@@ -72,7 +76,7 @@ library PlatformSettingsLib {
 
     /**
      * @notice It gets the current "LiquidateEthPrice" setting's value
-     * @return value the current value.
+     * @return value_ the current value.
      */
     function getLiquidateEthPriceValue()
         internal
@@ -84,7 +88,7 @@ library PlatformSettingsLib {
 
     /**
      * @notice It gets the current "MaximumLoanDuration" setting's value
-     * @return value the current value.
+     * @return value_ the current value.
      */
     function getMaximumLoanDurationValue()
         internal
@@ -96,7 +100,7 @@ library PlatformSettingsLib {
 
     /**
      * @notice It gets the current "RequestLoanTermsRateLimit" setting's value
-     * @return value the current value.
+     * @return value_ the current value.
      */
     function getRequestLoanTermsRateLimitValue()
         internal
@@ -108,7 +112,7 @@ library PlatformSettingsLib {
 
     /**
      * @notice It gets the current "CollateralBuffer" setting's value
-     * @return value the current value.
+     * @return value_ the current value.
      */
     function getCollateralBufferValue() internal view returns (uint256 value_) {
         value_ = s(NAMES.COLLATERAL_BUFFER).value;
@@ -116,7 +120,7 @@ library PlatformSettingsLib {
 
     /**
      * @notice It gets the current "OverCollateralizedBuffer" setting's value
-     * @return value the current value.
+     * @return value_ the current value.
      */
     function getOverCollateralizedBufferValue()
         internal
@@ -126,67 +130,67 @@ library PlatformSettingsLib {
         value_ = s(NAMES.OVER_COLLATERALIZED_BUFFER).value;
     }
 
-    /**
-     * @notice It gets whether the platform is paused or not.
-     * @return true if platform is paused. Otherwise it returns false.
-     */
-    function isPaused() internal view returns (bool) {
-        return pausableStorage().paused[address(this)];
-    }
-
-    function isMarketPaused(address market) internal view returns (bool) {
-        return pausableStorage().paused[market];
-    }
-
-    /**
-     * @notice Returns whether the platform is restricted or not
-     * @return bool True if the platform is restricted, false if not
-     */
-    function isPlatformRestricted() internal view returns (bool) {
-        return s().platformRestricted;
-    }
-
-    /**
-     * @notice Adds a wallet address to the list of authorized wallets
-     * @param account The wallet address of the user being authorized
-     */
-    function addAuthorizedAddress(address account)
-        public
-        authorized(PAUSER, msg.sender)
-    {
-        _grantRole(USER, account);
-    }
-
-    /**
-     * @notice Adds a list of wallet addresses to the list of authorized wallets
-     * @param addressesToAdd The list of wallet addresses being authorized
-     */
-    function addAuthorizedAddressList(address[] calldata addressesToAdd)
-        internal
-        authorized(PAUSER, msg.sender)
-    {
-        for (uint256 i = 0; i < addressesToAdd.length; i++) {
-            _grantRole(USER < addressesToAdd[i]);
-        }
-    }
-
-    /**
-     * @notice Removes a wallet address from the list of authorized wallets
-     * @param account The wallet address of the user being unauthorized
-     */
-    function removeAuthorizedAddress(address account)
-        internal
-        authorized(PAUSER, msg.sender)
-    {
-        _revokeRole(USER, account);
-    }
-
-    /**
-     * @notice Tests whether an account has authorization
-     * @param account The account address to check for
-     * @return True if account has authorization, false if it does not
-     */
-    function hasAuthorization(address account) internal view returns (bool) {
-        return _hasRole(USER, account) || _hasRole(PAUSER, account);
-    }
+    //    /**
+    //     * @notice It gets whether the platform is paused or not.
+    //     * @return true if platform is paused. Otherwise it returns false.
+    //     */
+    //    function isPaused() internal view returns (bool) {
+    //        return PausableStorageLib.store().paused[address(this)];
+    //    }
+    //
+    //    function isMarketPaused(address market) internal view returns (bool) {
+    //        return PausableStorageLib.store().paused[market];
+    //    }
+    //
+    //    /**
+    //     * @notice Returns whether the platform is restricted or not
+    //     * @return bool True if the platform is restricted, false if not
+    //     */
+    //    function isPlatformRestricted() internal view returns (bool) {
+    //        return AppStorageLib.store().platformRestricted;
+    //    }
+    //
+    //    /**
+    //     * @notice Adds a wallet address to the list of authorized wallets
+    //     * @param account The wallet address of the user being authorized
+    //     */
+    //    function addAuthorizedAddress(address account)
+    //        public
+    //    {
+    //        require(RolesLib.hasRole(ADMIN, msg.sender), "AccessControl: not authorized");
+    //        RolesLib.grantRole(AUTHORIZED, account);
+    //    }
+    //
+    //    /**
+    //     * @notice Adds a list of wallet addresses to the list of authorized wallets
+    //     * @param addressesToAdd The list of wallet addresses being authorized
+    //     */
+    //    function addAuthorizedAddressList(address[] calldata addressesToAdd)
+    //        internal
+    //    {
+    //        require(RolesLib.hasRole(ADMIN, msg.sender), "AccessControl: not authorized");
+    //        for (uint256 i = 0; i < addressesToAdd.length; i++) {
+    //            RolesLib.grantRole(AUTHORIZED, addressesToAdd[i]);
+    //        }
+    //    }
+    //
+    //    /**
+    //     * @notice Removes a wallet address from the list of authorized wallets
+    //     * @param account The wallet address of the user being unauthorized
+    //     */
+    //    function removeAuthorizedAddress(address account)
+    //        internal
+    //    {
+    //        require(RolesLib.hasRole(ADMIN, msg.sender), "AccessControl: not authorized");
+    //        RolesLib.revokeRole(AUTHORIZED, account);
+    //    }
+    //
+    //    /**
+    //     * @notice Tests whether an account has authorization
+    //     * @param account The account address to check for
+    //     * @return True if account has authorization, false if it does not
+    //     */
+    //    function hasAuthorization(address account) internal view returns (bool) {
+    //        return RolesLib.hasRole(AUTHORIZED, account) || RolesLib.hasRole(ADMIN, account);
+    //    }
 }

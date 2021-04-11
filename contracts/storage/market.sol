@@ -5,6 +5,8 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 
 import "../shared/libraries/AddressArrayLib.sol";
 import "../shared/libraries/NumbersList.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ITToken } from "../shared/interfaces/ITToken.sol";
 
 enum LoanStatus { NonExistent, TermsSet, Active, Closed, Liquidated }
 
@@ -159,10 +161,19 @@ struct MarketStorage {
 
 struct LendingPool {
     // ^
-    address lendingToken;
-    uint256 totalSupplied;
+    uint256 tmp;
+    mapping(string => address) addresses;
+    mapping(address => uint256) totalSuppliedUnderlyingLender;
+    mapping(address => uint256) totalInterestEarnedLender;
+    ITToken tToken;
+    ERC20 lendingToken;
+    address cToken;
+    address compound;
+    address comp;
     uint256 totalBorrowed;
     uint256 totalRepaid;
+    uint256 totalInterestEarned;
+    uint256 totalSupplied;
     address[] collateralTokens;
     uint256 totalCollateralInLendingTokens;
 }

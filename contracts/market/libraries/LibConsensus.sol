@@ -14,7 +14,7 @@ import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 import { NumbersList } from "../../shared/libraries/NumbersList.sol";
 import {
     PlatformSettingsLib
-} from "../settings/platform/PlatformSettingsLib.sol";
+} from "../../settings/platform/PlatformSettingsLib.sol";
 import { ECDSA } from "./ECDSALib.sol";
 import { RolesLib } from "../../contexts2/access-control/roles/RolesLib.sol";
 import { SIGNER } from "../../shared/roles.sol";

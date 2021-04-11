@@ -10,7 +10,7 @@ import { IUniswapV2Router } from "../shared/interfaces/IUniswapV2Router.sol";
 import { IPriceAggregator } from "../shared/interfaces/IPriceAggregator.sol";
 
 // Libraries
-import { PlatformSettingsLib } from "./PlatformSettingsLib.sol";
+import { PlatformSettingsLib } from "./platform/PlatformSettingsLib.sol";
 import { RolesLib } from "../contexts2/access-control/roles/RolesLib.sol";
 
 // Storage
@@ -28,8 +28,6 @@ struct InitArgs {
 }
 
 contract SettingsFacet is RolesMods {
-    using PlatformSettingsLib for PlatformSettingsLib.PlatformSetting;
-
     /**
         @notice This event is emitted when the platform restriction is switched
         @param restriction Boolean representing the state of the restriction

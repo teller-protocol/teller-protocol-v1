@@ -12,7 +12,7 @@ library LibLendingPool {
         view
         returns (uint256)
     {
-        LendingPool memory lendingPool =
+        LendingPool storage lendingPool =
             MarketStorageLib.marketStore().lendingPool[lendingToken];
         uint256 totalSupplied = lendingPool.totalSupplied;
 
