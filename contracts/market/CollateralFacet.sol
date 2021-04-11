@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Storage
-import { AppStorageLib, AppStorage } from "../storage/app.sol";
+import { AppStorageLib } from "../storage/app.sol";
 import {
     MarketStorageLib,
     MarketStorage,
@@ -14,21 +14,10 @@ import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
 import { AUTHORIZED } from "../shared/roles.sol";
 import { LibLoans } from "./libraries/LibLoans.sol";
 import { AddressLib } from "../shared/libraries/AddressLib.sol";
+import { LibCollateral } from "./libraries/LibCollateral.sol";
 
 contract CollateralFacet is RolesMods, PausableMods, LoansMods {
     using AddressLib for address;
-
-    /**
-     * @notice This event is emitted when collateral has been deposited for the loan
-     * @param loanID ID of the loan for which collateral was deposited
-     * @param borrower Account address of the borrower
-     * @param depositAmount Amount of collateral deposited
-     */
-    event CollateralDeposited(
-        uint256 indexed loanID,
-        address indexed borrower,
-        uint256 depositAmount
-    );
 
     /**
      * @notice This event is emitted when collateral has been withdrawn
@@ -68,7 +57,7 @@ contract CollateralFacet is RolesMods, PausableMods, LoansMods {
         require(amount > 0, "CANNOT_DEPOSIT_ZERO");
 
         // Update the loan collateral and total. Transfer tokens to this contract.
-        _payInCollateral(loanID, amount);
+        LibCollateral._payInCollateral(loanID, amount);
     }
 
     function withdrawCollateral(uint256 amount, uint256 loanID)
@@ -115,7 +104,7 @@ contract CollateralFacet is RolesMods, PausableMods, LoansMods {
         uint256 amount,
         address payable recipient
     ) internal {
-        _payOutCollateral(loanID, amount, recipient);
+        LibCollateral._payOutCollateral(loanID, amount, recipient);
 
         emit CollateralWithdrawn(
             loanID,
@@ -123,29 +112,5 @@ contract CollateralFacet is RolesMods, PausableMods, LoansMods {
             recipient,
             amount
         );
-    }
-
-    function _payInCollateral(uint256 loanID, uint256 amount) internal {
-        require(msg.value == amount, "INCORRECT_ETH_AMOUNT");
-
-        MarketStorageLib.marketStore().totalCollateral += amount;
-        MarketStorageLib.marketStore().loans[loanID].collateral += amount;
-        MarketStorageLib.marketStore().loans[loanID].lastCollateralIn = block
-            .timestamp;
-        emit CollateralDeposited(loanID, msg.sender, amount);
-    }
-
-    function _payOutCollateral(
-        uint256 loanID,
-        uint256 amount,
-        address payable recipient
-    ) internal {
-        MarketStorageLib.marketStore().totalCollateral =
-            MarketStorageLib.marketStore().totalCollateral -
-            (amount);
-        MarketStorageLib.marketStore().loans[loanID].collateral =
-            MarketStorageLib.marketStore().loans[loanID].collateral -
-            (amount);
-        recipient.transfer(amount);
     }
 }

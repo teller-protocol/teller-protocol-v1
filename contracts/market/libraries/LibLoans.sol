@@ -10,7 +10,8 @@ import { AppStorageLib } from "../../storage/app.sol";
 import { IEscrow } from "../../shared/interfaces/IEscrow.sol";
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 import {
-    COLLATERAL_BUFFER_SETTING
+    COLLATERAL_BUFFER_SETTING,
+    OVER_COLLATERALIZED_BUFFER_SETTING
 } from "../../shared/constants/platform-setting-names.sol";
 
 library LibLoans {
@@ -115,6 +116,18 @@ library LibLoans {
         }
     }
 
+    function canGoToEOA(uint256 loanID) external view returns (bool) {
+        uint256 overCollateralizedBuffer =
+            AppStorageLib.store().platformSettings[
+                OVER_COLLATERALIZED_BUFFER_SETTING
+            ]
+                .value;
+
+        return
+            libStore().loans[loanID].loanTerms.collateralRatio >=
+            overCollateralizedBuffer;
+    }
+
     /**
      * @notice Returns the interest ratio based on the loan interest rate for the loan duration.
      * @dev The interest rate on the loan terms is APY.
@@ -124,7 +137,7 @@ library LibLoans {
         return
             (libStore().loans[loanID].loanTerms.interestRate *
                 (libStore().loans[loanID].loanTerms.duration)) /
-            //                .div(SECONDS_PER_YEAR);
+            //                .div(SECONDS_PER_YEAR); // change to new constants file once written
             (31536000);
     }
 
