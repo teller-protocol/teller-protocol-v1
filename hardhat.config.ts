@@ -1,10 +1,11 @@
 import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-waffle'
-import { config } from 'dotenv'
-import { BigNumber as BN, ethers } from 'ethers'
 import 'hardhat-contract-sizer'
 import 'hardhat-deploy'
 import 'hardhat-gas-reporter'
+
+import { config } from 'dotenv'
+import { BigNumber as BN, ethers } from 'ethers'
 import { HardhatUserConfig } from 'hardhat/config'
 import {
   HardhatNetworkHDAccountsUserConfig,
@@ -12,7 +13,7 @@ import {
 } from 'hardhat/types'
 
 if (process.env.COMPILING != 'true') {
-  // require('./tasks')
+  require('./tasks')
   require('./utils/hre-extensions')
 }
 
@@ -32,6 +33,10 @@ const GAS_PRICE: HardhatNetworkUserConfig['gasPrice'] = process.env
       ethers.utils.parseUnits(process.env.GAS_PRICE_GWEI_KEY, 'gwei')
     ).toNumber()
   : 'auto'
+
+const FORK_BLOCK_NUMBER = process.env.FORKING_BLOCK
+  ? parseInt(process.env.FORKING_BLOCK)
+  : undefined
 
 export default <HardhatUserConfig>{
   etherscan: {
@@ -106,15 +111,20 @@ export default <HardhatUserConfig>{
     hardhat: {
       forking: {
         url: process.env.ALCHEMY_MAINNET_KEY,
-        // blockNumber: 12064000,
+        // Block to fork can be specified via cli: `yarn h fork {network} ([block number] | latest)`
+        // Defaults to the latest deployment block
+        blockNumber: FORK_BLOCK_NUMBER,
         enabled: true,
       },
+      forkName: process.env.FORKING_NETWORK,
       accounts,
     },
     // Uses the forked node from the hardhat network above
     localhost: {
       url: 'http://127.0.0.1:8545',
+      forkName: process.env.FORKING_NETWORK,
       accounts,
+      timeout: 100000,
     },
     mainnet: {
       url: process.env.ALCHEMY_MAINNET_KEY,

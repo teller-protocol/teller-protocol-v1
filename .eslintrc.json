@@ -1,0 +1,29 @@
+{
+  "extends": [
+    "plugin:@typescript-eslint/recommended",
+    "standard-kit/prettier/typescript",
+    "standard-kit/prettier/node"
+  ],
+  "parserOptions": {
+    "project": "tsconfig.json"
+  },
+  "plugins": ["prettier", "simple-import-sort", "@typescript-eslint"],
+  "rules": {
+    "@typescript-eslint/no-empty-function": "warn",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "ignoreRestSiblings": true,
+        "argsIgnorePattern": "^_"
+      }
+    ],
+    "@typescript-eslint/promise-function-async": "off",
+    "@typescript-eslint/restrict-template-expressions": "off",
+    "@typescript-eslint/strict-boolean-expressions": "off",
+    "no-unused-vars": "warn",
+    "no-useless-return": "off",
+    "no-void": "off",
+    "arrow-parens": "error",
+    "simple-import-sort/imports": "error"
+  }
+}

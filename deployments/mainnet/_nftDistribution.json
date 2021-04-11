@@ -22896,5 +22896,16 @@
         ]
       }
     }
+  },
+  {
+    "merkleRoot": "0x5533ff0d078b4b3173c2a68134396dfc4549bbef117ba4fa4cedbbb4d57488b3",
+    "tokenTotal": "0x01",
+    "claims": {
+      "0x391891Af67E29D97E61E30C3036a0874F5Da411e": {
+        "index": 0,
+        "amount": "0x01",
+        "proof": []
+      }
+    }
   }
 ]
