@@ -1,0 +1,165 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import {
+    PlatformSettingsLib,
+    PlatformSetting
+} from "./PlatformSettingsLib.sol";
+
+/**
+ * @notice Utility library of inline functions on the PlatformSetting struct.
+ *
+ * @author develop@teller.finance
+ */
+library PlatformSettingsFacet {
+    /**
+     * @notice This event is emitted when a new platform setting is created.
+     * @param settingName New setting name.
+     * @param sender Address that created it.
+     * @param value Value for the new setting.
+     * @param minValue Minimum boundary for the new setting.
+     * @param maxValue Maximum boundary for the new setting.
+     */
+    event PlatformSettingCreated(
+        bytes32 indexed settingName,
+        address indexed sender,
+        uint256 value,
+        uint256 minValue,
+        uint256 maxValue
+    );
+
+    /**
+     * @notice This event is emitted when a platform setting is updated.
+     * @param settingName Keccak'ed settings name.
+     * @param sender Address that updated it.
+     * @param oldValue Previous value for the setting.
+     * @param newValue New value for the setting.
+     */
+    event PlatformSettingUpdated(
+        bytes32 indexed settingName,
+        address indexed sender,
+        uint256 oldValue,
+        uint256 newValue
+    );
+
+    /**
+     * @notice This event is emitted when a current platform setting is removed.
+     * @param settingName setting name removed.
+     * @param sender address that removed it.
+     * @param oldMin Previous minimum boundary.
+     * @param oldMax Previous minimum boundary.
+     * @param newMin New minimum boundary.
+     * @param newMax New maximum boundary.
+     */
+    event PlatformSettingBoundariesUpdated(
+        bytes32 indexed settingName,
+        address indexed sender,
+        uint256 oldMin,
+        uint256 oldMax,
+        uint256 newMin,
+        uint256 newMax
+    );
+
+    function s(bytes32 name) private pure returns (PlatatformSetting storage) {
+        return AppStorageLib.store().platformSettings[name];
+    }
+
+    /**
+     * @notice Gets the values for a platform setting name.
+     * @param name The keccak'ed name for a setting.
+     * @return setting_ Values for the setting {name}
+     */
+    function getPlatformSetting(bytes32 name)
+        external
+        returns (PlatformSetting memory setting_)
+    {
+        setting_ = s().platformSettings[name];
+    }
+
+    /**
+     * @notice It creates a new platform setting given a name, min and max values.
+     * @param name Keccak'ed name for the setting.
+     * @param value Initial value for the setting.
+     * @param min Minimum value allowed for the setting.
+     * @param max Maximum value allowed for the setting.
+     */
+    function createPlatformSetting(
+        bytes32 name,
+        uint256 value,
+        uint256 min,
+        uint256 max
+    ) internal {
+        require(!s(name).exits, "Teller: platform setting already exists");
+        require(value >= min, "Teller: platform setting value less than min");
+        require(
+            value <= max,
+            "Teller: platform setting value greater than max"
+        );
+
+        s(name).value = value;
+        s(name).min = min;
+        s(name).max = max;
+        s(name).exists = true;
+
+        emit PlatformSettingCreated(name, msg.sender, value, min, max);
+    }
+
+    /**
+     * @notice It updates a current platform setting.
+     * @param name Keccak'ed name for the setting.
+     * @param newValue the new value to set in the platform setting.
+     *
+     * Requirements:
+     *  - New value is equal to the current value.
+     *  - New value is grater than the max value.
+     *  - New value is less than the min value
+     */
+    function updatePlatformSetting(bytes32 name, uint256 newValue)
+        internal
+        returns (uint256 oldValue)
+    {
+        require(s(name).exits, "Teller: platform setting not exists");
+        require(
+            s(name).value != newValue,
+            "Teller: new platform setting not different"
+        );
+        require(
+            newValue >= s(name).min,
+            "Teller: new platform setting less than min"
+        );
+        require(
+            newValue <= s(name).max,
+            "Teller: new platform setting greater than max"
+        );
+
+        emit PlatformSettingUpdated(name, msg.sender, s(name).value, newValue);
+
+        s(name).value = newValue;
+    }
+
+    /**
+     * @notice Updates the boundary (min & max) values for a platform setting.
+     * @param name Keccak'ed name for the setting.
+     * @param min New minimum boundary for the setting.
+     * @param max New maximum boundary for the setting.
+     */
+    function updatePlatformSettingBoundaries(
+        bytes32 name,
+        uint256 min,
+        uint256 max
+    ) internal {
+        require(s(name).exits, "Teller: platform setting not exists");
+
+        emit PlatformSettingBoundariesUpdated(
+            name,
+            msg.sender,
+            s(name).min,
+            s(name).max,
+            min,
+            max
+        );
+
+        s(name).min = min;
+        s(name).max = max;
+    }
+}

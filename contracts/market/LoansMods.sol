@@ -12,8 +12,8 @@ import {
     MAX_DEBT_RATIO_SETTING
 } from "../shared/constants/asset-setting-names.sol";
 import {
-    MAXIMUM_LOAN_DURATION_SETTING
-} from "../shared/constants/platform-setting-names.sol";
+    PlatformSettingsLib
+} from "../settings/platform/PlatformSettingsLib.sol";
 import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
 import { LibLendingPool } from "../lending/libraries/LibLendingPool.sol";
 
@@ -55,13 +55,9 @@ abstract contract LoansMods {
      * @param loanRequest to validate.
      */
     modifier withValidLoanRequest(LoanRequest memory loanRequest) {
-        uint256 maxLoanDuration =
-            AppStorageLib.store().platformSettings[
-                MAXIMUM_LOAN_DURATION_SETTING
-            ]
-                .value;
         require(
-            maxLoanDuration >= loanRequest.duration,
+            PlatformSettingsLib.getMaximumLoanDurationValue() >=
+                loanRequest.duration,
             "DURATION_EXCEEDS_MAX_DURATION"
         );
 

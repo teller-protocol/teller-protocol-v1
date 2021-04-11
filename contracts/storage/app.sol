@@ -9,13 +9,13 @@ import { IUniswapV2Router } from "../shared/interfaces/IUniswapV2Router.sol";
 import { IPriceAggregator } from "../shared/interfaces/IPriceAggregator.sol";
 
 // Libraries
-import { PlatformSettingsLib } from "../settings/PlatformSettingsLib.sol";
+import { PlatformSetting } from "../settings/platform/PlatformSettingsLib.sol";
 import { CacheLib } from "../shared/libraries/CacheLib.sol";
 
 struct AppStorage {
     bool initialized;
     bool platformRestricted;
-    mapping(bytes32 => PlatformSettingsLib.PlatformSetting) platformSettings;
+    mapping(bytes32 => PlatformSetting) platformSettings;
     mapping(address => CacheLib.Cache) assetSettings;
     mapping(string => address) assetAddresses;
     mapping(address => bool) ctokenRegistry;

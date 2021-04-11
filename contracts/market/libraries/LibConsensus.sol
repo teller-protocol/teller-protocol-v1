@@ -13,11 +13,8 @@ import {
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 import { NumbersList } from "../../shared/libraries/NumbersList.sol";
 import {
-    REQUIRED_SUBMISSIONS_PERCENTAGE_SETTING,
-    REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING,
-    TERMS_EXPIRY_TIME_SETTING,
-    MAXIMUM_TOLERANCE_SETTING
-} from "../../shared/constants/platform-setting-names.sol";
+    PlatformSettingsLib
+} from "../settings/platform/PlatformSettingsLib.sol";
 import { ECDSA } from "./ECDSALib.sol";
 import { RolesLib } from "../../contexts2/access-control/roles/RolesLib.sol";
 import { SIGNER } from "../../shared/roles.sol";
@@ -26,26 +23,7 @@ library LibConsensus {
     using NumbersLib for uint256;
     using NumbersList for NumbersList.Values;
 
-    /**
-        @notice Checks if the number of responses is greater or equal to a percentage of
-        the number of signers.
-     */
-    modifier onlyEnoughSubmissions(uint256 responseCount) {
-        uint256 percentageRequired =
-            AppStorageLib.store().platformSettings[
-                REQUIRED_SUBMISSIONS_PERCENTAGE_SETTING
-            ]
-                .value;
-
-        require(
-            responseCount.ratioOf(libStore().signers.array.length) >=
-                percentageRequired,
-            "INSUFFICIENT_NUMBER_OF_RESPONSES"
-        );
-        _;
-    }
-
-    function libStore() private pure returns (MarketStorage storage) {
+    function marketStore() private pure returns (MarketStorage storage) {
         return MarketStorageLib.marketStore();
     }
 
@@ -60,80 +38,66 @@ library LibConsensus {
             uint256 maxLoanAmount
         )
     {
-        uint256 percentageRequired =
-            AppStorageLib.store().platformSettings[
-                REQUIRED_SUBMISSIONS_PERCENTAGE_SETTING
-            ]
-                .value;
-
         require(
-            responses.length.ratioOf(libStore().signers.array.length) >=
-                percentageRequired,
-            "INSUFFICIENT_NUMBER_OF_RESPONSES"
+            responses.length.ratioOf(marketStore().signers.array.length) >=
+                PlatformSettingsLib.getRequiredSubmissionsPercentageValue(),
+            "Teller: insufficient signer responses"
         );
 
-        address borrower = request.borrower;
+        _validateLoanRequest(request.borrower, request.requestNonce);
 
-        _validateLoanRequest(borrower, request.requestNonce);
-
+        // TODO: remove from request
         require(
             request.consensusAddress == address(this),
-            "BAD_CONSENSUS_ADDRESS"
+            "Teller: bad consensus address"
         );
 
         uint256 chainId = _getChainId();
-
         bytes32 requestHash = _hashRequest(request, chainId);
-
-        uint256 responseExpiryLengthValue =
-            AppStorageLib.store().platformSettings[TERMS_EXPIRY_TIME_SETTING]
-                .value;
 
         AccruedLoanTerms memory termSubmissions;
 
         for (uint256 i = 0; i < responses.length; i++) {
             LoanResponse memory response = responses[i];
-            _requireAuthorization(SIGNER, response.signer);
 
+            require(
+                RolesLib.hasRole(SIGNER, response.signer),
+                "Teller: invalid signer"
+            );
+            // TODO: remove from response
             require(
                 response.consensusAddress == request.consensusAddress,
-                "CONSENSUS_ADDRESS_MISMATCH"
+                "Teller: consensus address mismatch"
             );
-
-            for (uint8 j = 0; j < i; j++) {
-                require(
-                    response.signer != responses[j].signer,
-                    "SIGNER_ALREADY_SUBMITTED"
-                );
-            }
-
             require(
                 response.responseTime >=
-                    block.timestamp - responseExpiryLengthValue,
-                "RESPONSE_EXPIRED"
+                    block.timestamp -
+                        PlatformSettingsLib.getTermsExpiryTimeValue(),
+                "Teller: consensus response expired"
             );
-
-            bytes32 responseHash =
-                _hashResponse(response, requestHash, chainId);
-
             require(
                 _signatureValid(
                     response.signature,
-                    responseHash,
+                    _hashResponse(response, requestHash, chainId),
                     response.signer
                 ),
-                "SIGNATURE_INVALID"
+                "Teller: response signature invalid"
             );
+
+            // TODO: use a local AddressArrayLib instead to save gas
+            for (uint8 j = 0; j < i; j++) {
+                require(
+                    response.signer != responses[j].signer,
+                    "Teller: dup signer response"
+                );
+            }
 
             termSubmissions.interestRate.addValue(response.interestRate);
             termSubmissions.collateralRatio.addValue(response.collateralRatio);
             termSubmissions.maxLoanAmount.addValue(response.maxLoanAmount);
         }
 
-        uint256 tolerance =
-            AppStorageLib.store().platformSettings[MAXIMUM_TOLERANCE_SETTING]
-                .value;
-
+        uint256 tolerance = PlatformSettingsLib.getMaximumToleranceValue();
         interestRate = _getConsensus(termSubmissions.interestRate, tolerance);
         collateralRatio = _getConsensus(
             termSubmissions.collateralRatio,
@@ -143,19 +107,19 @@ library LibConsensus {
     }
 
     /**
-    Checks if the nonce provided in the request is equal to the borrower's number of loans.
-    Also verifies if the borrower has taken out a loan recently (rate limit).
- * @param borrower the borrower's address.
- * @param nonce the nonce included in the loan request.
- */
+     * @dev Checks if the nonce provided in the request is equal to the borrower's number of loans.
+     * @dev Also verifies if the borrower has taken out a loan recently (rate limit).
+     * @param borrower the borrower's address.
+     * @param nonce the nonce included in the loan request.
+     */
     function _validateLoanRequest(address borrower, uint256 nonce)
         private
         view
     {
-        uint256[] storage borrowerLoans = libStore().borrowerLoans[borrower];
+        uint256[] storage borrowerLoans = marketStore().borrowerLoans[borrower];
         uint256 numberOfLoans = borrowerLoans.length;
 
-        require(nonce == numberOfLoans, "BAD_NONCE");
+        require(nonce == numberOfLoans, "Teller: bad request nonce");
 
         // In case it is the first time that borrower requests loan terms, we don't
         // validate the rate limit.
@@ -163,14 +127,13 @@ library LibConsensus {
             return;
         }
 
+        uint256 loanStartTime =
+            marketStore().loans[borrowerLoans[numberOfLoans - 1]].loanStartTime;
         require(
-            libStore().loans[borrowerLoans[numberOfLoans - 1]].loanStartTime +
-                AppStorageLib.store().platformSettings[
-                    REQUEST_LOAN_TERMS_RATE_LIMIT_SETTING
-                ]
-                    .value <=
+            loanStartTime +
+                PlatformSettingsLib.getRequestLoanTermsRateLimitValue() <=
                 block.timestamp,
-            "REQS_LOAN_TERMS_LMT_EXCEEDS_MAX"
+            "Teller: loan terms rate limit reached"
         );
     }
 
@@ -275,12 +238,11 @@ library LibConsensus {
         pure
         returns (uint256)
     {
-        require(values.isWithinTolerance(tolerance), "RESPONSES_TOO_VARIED");
+        require(
+            values.isWithinTolerance(tolerance),
+            "Teller: consensus response values too varied"
+        );
 
         return values.getAverage();
-    }
-
-    function _requireAuthorization(bytes32 role, address account) internal {
-        require(RolesLib.hasRole(role, account), "AccessControl: unauthorized");
     }
 }

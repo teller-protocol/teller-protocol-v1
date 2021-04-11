@@ -4,6 +4,8 @@
   "license": "MIT",
   "scripts": {
     "h": "dotenv -- ./scripts/hh.sh",
+    "lint": "prettier .",
+    "format:write": "prettier --write",
     "compile": "yarn contract:compile && yarn types && yarn tsc",
     "contract:compile": "COMPILING=true yarn hh compile",
     "contract:size": "yarn contract:compile && yarn hh size-contracts",

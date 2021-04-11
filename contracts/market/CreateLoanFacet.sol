@@ -17,8 +17,8 @@ import { AUTHORIZED } from "../shared/roles.sol";
 import "../contexts2/access-control/roles/RolesMods.sol";
 import { LibConsensus } from "./libraries/LibConsensus.sol";
 import {
-    TERMS_EXPIRY_TIME_SETTING
-} from "../shared/constants/platform-setting-names.sol";
+    PlatformSettingsLib
+} from "../settings/platform/PlatformSettingsLib.sol";
 import { LibCollateral } from "./libraries/LibCollateral.sol";
 import { AddressLib } from "../../diamonds/libraries/AddressLib.sol";
 
@@ -148,12 +148,9 @@ contract CreateLoanFacet is LoansMods, PausableMods, RolesMods {
             duration: request.duration
         });
 
-        uint256 termsExpiryTime =
-            AppStorageLib.store().platformSettings[TERMS_EXPIRY_TIME_SETTING]
-                .value;
         MarketStorageLib.marketStore().loans[loanID].termsExpiry =
             block.timestamp +
-            termsExpiryTime;
+            PlatformSettingsLib.getTermsExpiryTimeValue();
 
         return loanID;
     }

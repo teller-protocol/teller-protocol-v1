@@ -30,26 +30,27 @@ struct InitArgs {
 contract SettingsFacet is RolesMods {
     using PlatformSettingsLib for PlatformSettingsLib.PlatformSetting;
 
+    /**
+        @notice This event is emitted when the platform restriction is switched
+        @param restriction Boolean representing the state of the restriction
+        @param pauser address of the pauser flipping the switch
+    */
+    event PlatformRestricted(bool restriction, address indexed pauser);
+
     function s() private pure returns (AppStorage storage) {
         return AppStorageLib.store();
     }
 
-    function updatePlatformSetting(bytes32 name, uint256 newValue)
-        external
+    /**
+     * @notice Restricts the use of the Teller protocol to authorized wallet addresses only
+     * @param restriction Bool turning the resitriction on or off
+     */
+    function restrictPlatform(bool restriction)
+        internal
         authorized(ADMIN, msg.sender)
     {
-        s().platformSettings[name].update(newValue);
-    }
-
-    function removePlatformSetting(bytes32 name)
-        external
-        authorized(ADMIN, msg.sender)
-    {
-        s().platformSettings[name].remove();
-    }
-
-    function getPlatformSetting(bytes32 name) external returns (uint256 value) {
-        value = s().platformSettings[name].value;
+        s().platformRestricted = restriction;
+        emit PlatformRestricted(restriction, msg.sender);
     }
 
     function init(InitArgs calldata _args) external {

@@ -10,9 +10,8 @@ import { AppStorageLib } from "../../storage/app.sol";
 import { IEscrow } from "../../shared/interfaces/IEscrow.sol";
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 import {
-    COLLATERAL_BUFFER_SETTING,
-    OVER_COLLATERALIZED_BUFFER_SETTING
-} from "../../shared/constants/platform-setting-names.sol";
+    PlatformSettingsLib
+} from "../settings/platform/PlatformSettingsLib.sol";
 
 library LibLoans {
     using NumbersLib for int256;
@@ -22,7 +21,7 @@ library LibLoans {
     }
 
     function getCollateralNeededInfo(uint256 loanID)
-        public
+        internal
         view
         returns (
             int256 neededInLendingTokens,
@@ -63,7 +62,7 @@ library LibLoans {
      * @return escrowLoanValue uint256 The value of the loan held in the escrow contract.
      */
     function getCollateralNeededInTokens(uint256 loanID)
-        public
+        internal
         view
         returns (int256 neededInLendingTokens, uint256 escrowLoanValue)
     {
@@ -92,15 +91,10 @@ library LibLoans {
             neededInLendingTokens = int256(
                 libStore().loans[loanID].principalOwed
             );
-            uint256 bufferPercent =
-                AppStorageLib.store().platformSettings[
-                    COLLATERAL_BUFFER_SETTING
-                ]
-                    .value;
             uint256 requiredRatio =
                 libStore().loans[loanID].loanTerms.collateralRatio -
-                    (getInterestRatio(loanID)) -
-                    (bufferPercent);
+                    getInterestRatio(loanID) -
+                    PlatformSettingsLib.getCollateralBufferValue();
             if (libStore().loans[loanID].escrow != address(0)) {
                 escrowLoanValue = IEscrow(libStore().loans[loanID].escrow)
                     .calculateTotalValue();
@@ -116,16 +110,10 @@ library LibLoans {
         }
     }
 
-    function canGoToEOA(uint256 loanID) external view returns (bool) {
-        uint256 overCollateralizedBuffer =
-            AppStorageLib.store().platformSettings[
-                OVER_COLLATERALIZED_BUFFER_SETTING
-            ]
-                .value;
-
+    function canGoToEOA(uint256 loanID) internal view returns (bool) {
         return
             libStore().loans[loanID].loanTerms.collateralRatio >=
-            overCollateralizedBuffer;
+            PlatformSettingsLib.getOverCollateralizedBufferValue();
     }
 
     /**
@@ -133,7 +121,7 @@ library LibLoans {
      * @dev The interest rate on the loan terms is APY.
      * @param loanID The loan ID to get the interest rate for.
      */
-    function getInterestRatio(uint256 loanID) public view returns (uint256) {
+    function getInterestRatio(uint256 loanID) internal view returns (uint256) {
         return
             (libStore().loans[loanID].loanTerms.interestRate *
                 (libStore().loans[loanID].loanTerms.duration)) /
@@ -141,7 +129,7 @@ library LibLoans {
             (31536000);
     }
 
-    function _getLoanAmount(uint256 loanID) internal view returns (uint256) {
+    function _getLoanAmount(uint256 loanID) private view returns (uint256) {
         if (libStore().loans[loanID].status == LoanStatus.TermsSet) {
             return libStore().loans[loanID].loanTerms.maxLoanAmount;
         } else if (libStore().loans[loanID].status == LoanStatus.Active) {
@@ -150,7 +138,7 @@ library LibLoans {
         return 0;
     }
 
-    function _isActiveOrSet(uint256 loanID) internal view returns (bool) {
+    function _isActiveOrSet(uint256 loanID) private view returns (bool) {
         LoanStatus status = libStore().loans[loanID].status;
         return status == LoanStatus.Active || status == LoanStatus.TermsSet;
     }
