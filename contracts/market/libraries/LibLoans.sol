@@ -11,7 +11,7 @@ import { IEscrow } from "../../shared/interfaces/IEscrow.sol";
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 import {
     PlatformSettingsLib
-} from "../settings/platform/PlatformSettingsLib.sol";
+} from "../../settings/platform/PlatformSettingsLib.sol";
 
 library LibLoans {
     using NumbersLib for int256;

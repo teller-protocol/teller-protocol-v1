@@ -14,7 +14,7 @@ import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 import { NumbersList } from "../../shared/libraries/NumbersList.sol";
 import {
     PlatformSettingsLib
-} from "../settings/platform/PlatformSettingsLib.sol";
+} from "../../settings/platform/PlatformSettingsLib.sol";
 import { ECDSA } from "./ECDSALib.sol";
 import { RolesLib } from "../../contexts2/access-control/roles/RolesLib.sol";
 import { SIGNER } from "../../shared/roles.sol";
@@ -32,6 +32,7 @@ library LibConsensus {
         LoanResponse[] calldata responses
     )
         external
+        view
         returns (
             uint256 interestRate,
             uint256 collateralRatio,
@@ -46,12 +47,6 @@ library LibConsensus {
 
         _validateLoanRequest(request.borrower, request.requestNonce);
 
-        // TODO: remove from request
-        require(
-            request.consensusAddress == address(this),
-            "Teller: bad consensus address"
-        );
-
         uint256 chainId = _getChainId();
         bytes32 requestHash = _hashRequest(request, chainId);
 
@@ -64,9 +59,8 @@ library LibConsensus {
                 RolesLib.hasRole(SIGNER, response.signer),
                 "Teller: invalid signer"
             );
-            // TODO: remove from response
             require(
-                response.consensusAddress == request.consensusAddress,
+                response.assetAddress == request.assetAddress,
                 "Teller: consensus address mismatch"
             );
             require(
@@ -166,7 +160,7 @@ library LibConsensus {
                 abi.encode(
                     request.borrower,
                     request.recipient,
-                    request.consensusAddress,
+                    request.assetAddress,
                     request.requestNonce,
                     request.amount,
                     request.duration,
@@ -190,7 +184,7 @@ library LibConsensus {
         return
             keccak256(
                 abi.encode(
-                    response.consensusAddress,
+                    response.assetAddress,
                     response.responseTime,
                     response.interestRate,
                     response.collateralRatio,

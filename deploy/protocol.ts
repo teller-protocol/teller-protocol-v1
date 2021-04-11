@@ -20,6 +20,7 @@ const deployProtocol: DeployFunction = async (hre) => {
     facets: [
       'SettingsFacet',
       'PlatformSettingsFacet',
+      'AssetSettingsFacet',
       'LendingFacet',
       'CreateLoanFacet',
       'LoanDataFacet',

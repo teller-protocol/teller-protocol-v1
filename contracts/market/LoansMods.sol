@@ -8,10 +8,6 @@ import {
 } from "../storage/market.sol";
 import { AppStorageLib } from "../storage/app.sol";
 import {
-    MAX_LOAN_AMOUNT_ASSET_SETTING,
-    MAX_DEBT_RATIO_SETTING
-} from "../shared/constants/asset-setting-names.sol";
-import {
     PlatformSettingsLib
 } from "../settings/platform/PlatformSettingsLib.sol";
 import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
@@ -61,20 +57,15 @@ abstract contract LoansMods {
             "DURATION_EXCEEDS_MAX_DURATION"
         );
 
-        bool exceedsMaxLoanAmount =
-            //            AppStorageLib.store().assetSettings[MarketStorageLib.marketStore()
-            //            .lendingPool[].lendingToken].exceedsUint( // change once lending pool facet is done
-            AppStorageLib.store().assetSettings[
-                AppStorageLib.store().assetAddresses["DAI"]
-            ]
-                .uints[MAX_LOAN_AMOUNT_ASSET_SETTING] < loanRequest.amount;
-        require(!exceedsMaxLoanAmount, "AMOUNT_EXCEEDS_MAX_AMOUNT");
+        require(
+            AppStorageLib.store().assetSettings[loanRequest.assetAddress].uints[
+                keccak256("MaxLoanAmount")
+            ] > loanRequest.amount,
+            "AMOUNT_EXCEEDS_MAX_AMOUNT"
+        );
 
         require(
-            _isDebtRatioValid(
-                AppStorageLib.store().assetAddresses["DAI"],
-                loanRequest.amount
-            ),
+            _isDebtRatioValid(loanRequest.assetAddress, loanRequest.amount),
             "SUPPLY_TO_DEBT_EXCEEDS_MAX"
         );
         _;
@@ -90,12 +81,10 @@ abstract contract LoansMods {
         view
         returns (bool)
     {
-        uint256 maxDebtRatio =
-            AppStorageLib.store().assetSettings[lendingToken].uints[
-                MAX_DEBT_RATIO_SETTING
-            ];
         return
             LibLendingPool.getDebtRatioFor(lendingToken, newLoanAmount) <=
-            maxDebtRatio;
+            AppStorageLib.store().assetSettings[lendingToken].uints[
+                keccak256("MaxDebtRatio")
+            ];
     }
 }
