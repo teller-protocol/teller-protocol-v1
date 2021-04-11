@@ -10,6 +10,8 @@ import { platformSettings } from './platform-settings'
 import { signers } from './signers'
 import { tokens } from './tokens'
 import { uniswap } from './uniswap'
+import fs from 'fs'
+import { MerkleDistributorInfo } from '../scripts/merkle/root'
 
 const getNetworkName = (network: Network): string =>
   network.config.forkName ?? network.name
@@ -35,8 +37,16 @@ export const getTokens = (network: Network) => tokens[getNetworkName(network)]
 
 export const getUniswap = (network: Network) => uniswap[getNetworkName(network)]
 
-export const getNFT = (network: Network) => ({
-  tiers: nftTiers,
-  merkleTrees: nftMerkleTree[getNetworkName(network)],
-  distributionsOutputFile: `deployments/${network.name}/_nftDistribution.json`,
-})
+export const getNFT = (network: Network) => {
+  const distributionsOutputFile = `deployments/${network.name}/_nftDistribution.json`
+  const distributions: MerkleDistributorInfo[] = JSON.parse(
+    fs.readFileSync(distributionsOutputFile).toString()
+  )
+
+  return {
+    tiers: nftTiers,
+    merkleTrees: nftMerkleTree[getNetworkName(network)],
+    distributionsOutputFile,
+    distributions,
+  }
+}

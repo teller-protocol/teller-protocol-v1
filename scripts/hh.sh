@@ -1,5 +1,14 @@
 #!/bin/bash
 
+##
+## @author Noah Passalacqua <noah@teller.finance>
+##
+## This script is for doing some preliminary checks and changes before working with a Hardhat script.
+##
+## It makes it easier to fork and test certain functionality easily by being able to fork a network without
+##  additional setup.
+##
+
 echo
 
 available_networks=('mainnet' 'rinkeby' 'kovan' 'ropsten')
@@ -97,7 +106,7 @@ then
 
   slice_network verify
 
-  echo "Forking network $network..."
+  echo -n "Forking $network... "
 
   ## Copy network deployments
   rm -rf "./deployments/localhost"
@@ -111,12 +120,15 @@ then
   ## Check if there a block number was passed
   if [[ "${opts[0]}" -gt 0 ]]
   then
+    echo "on block ${opts[0]}"
     ENV_VARS+="FORKING_BLOCK=${opts[0]} "
   elif [ "${opts[0]}" == 'latest' ]
   then
+    echo "on the latest block"
     opts=(${opts[*]:1})
   elif [ -n "$latestDeploymentBlock" ]
   then
+    echo "on the latest Teller deployment block: $latestDeploymentBlock"
     ENV_VARS+="FORKING_BLOCK=$latestDeploymentBlock "
   fi
 
@@ -130,13 +142,7 @@ then
   echo
 fi
 
-## If network is not valid, assume "localhost" and use remaining values as options
-slice_network
-if [ -z $verify_network_return ]
-then
-  echo "Invalid network '$network' - defaulting to 'localhost'"
-  echo
-  network='localhost'
-fi
+## Verify the network is correct
+slice_network verify
 
 eval "$ENV_VARS yarn hh $script --network $network $extra_opts ${opts[*]}"

@@ -37,6 +37,7 @@ const GAS_PRICE: HardhatNetworkUserConfig['gasPrice'] = process.env
 const FORK_BLOCK_NUMBER = process.env.FORKING_BLOCK
   ? parseInt(process.env.FORKING_BLOCK)
   : undefined
+console.log(process.env.FORKING_NETWORK)
 
 export default <HardhatUserConfig>{
   etherscan: {

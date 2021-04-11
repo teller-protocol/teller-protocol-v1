@@ -16,7 +16,7 @@ export const claimNFT = async (
   args: ClaimNFTArgs,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
-  const { contracts, network } = hre
+  const { contracts, network, ethers, toBN, log } = hre
 
   if (network.name !== 'localhost' && !args.sendTx) {
     console.log()
@@ -28,6 +28,7 @@ export const claimNFT = async (
   }
 
   const { address, merkleIndex } = args
+  const checkedAddress = ethers.utils.getAddress(address)
 
   const nftDistributor = await contracts.get<ITellerNFTDistributor>(
     'TellerNFTDistributor'
@@ -35,10 +36,7 @@ export const claimNFT = async (
   if (!nftDistributor)
     throw new Error(`No Teller NFT Distributor is deployed for ${network.name}`)
 
-  const { distributionsOutputFile } = getNFT(network)
-  const distributions = JSON.parse(
-    fs.readFileSync(distributionsOutputFile).toString()
-  )
+  const { distributions, merkleTrees } = getNFT(network)
 
   const requests: Array<{
     merkleIndex: BigNumberish
@@ -49,7 +47,7 @@ export const claimNFT = async (
 
   if (merkleIndex) {
     const {
-      claims: { [address]: claim },
+      claims: { [checkedAddress]: claim },
     } = distributions[merkleIndex]
     requests.push({
       merkleIndex,
@@ -60,8 +58,10 @@ export const claimNFT = async (
   } else {
     for (let i = 0; i < distributions.length; i++) {
       const {
-        claims: { [address]: claim },
+        claims: { [checkedAddress]: claim },
       } = distributions[i]
+      if (!claim) continue
+
       const isClaimed = await nftDistributor.isClaimed(i, claim.index)
       if (!isClaimed) {
         requests.push({
@@ -73,6 +73,26 @@ export const claimNFT = async (
       }
     }
   }
+
+  const tierIndices: number[] = []
+  const tierTokens: { [index: number]: number } = []
+  for (const request of requests) {
+    const merkleIndex = toBN(request.merkleIndex).toNumber()
+    const { claims } = distributions[merkleIndex]
+    const { tierIndex } = merkleTrees[merkleIndex]
+
+    tierIndices.push(tierIndex)
+    tierTokens[tierIndex] = parseInt(claims[checkedAddress].amount, 16)
+  }
+  const sortedTierIndices = tierIndices.sort((a, b) => a - b)
+
+  log('')
+  log(`Claiming NFTs for ${checkedAddress}`, { indent: 2, star: true })
+  log(`Tiers: ${tierIndices}`, { indent: 4 })
+  sortedTierIndices.forEach((tierIndex) => {
+    log(`Tier ${tierIndex}: ${tierTokens[tierIndex]}`, { indent: 6 })
+  })
+  log('')
 
   await nftDistributor.claim(args.address, requests)
 }

@@ -14,9 +14,9 @@
   "include": [
     "./config",
     "./deploy",
-    //    "./scripts",
-    //    "./tasks",
-    //    "./test",
+    "./scripts",
+    "./tasks",
+    "./test",
     "./types",
     "./utils"
   ],
