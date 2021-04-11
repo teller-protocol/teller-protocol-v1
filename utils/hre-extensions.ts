@@ -1,19 +1,20 @@
-import { ethers } from 'hardhat'
+import '@nomiclabs/hardhat-ethers'
+import 'hardhat-deploy'
+
 import { makeNodeDisklet } from 'disklet'
+import { BigNumber, BigNumberish, Contract, Signer } from 'ethers'
+import { ethers } from 'hardhat'
 import { extendEnvironment } from 'hardhat/config'
 import {
   DeploymentSubmission,
   DeployOptions,
   DeployResult,
 } from 'hardhat-deploy/types'
-import { BigNumber, BigNumberish, Contract, Signer } from 'ethers'
-import '@nomiclabs/hardhat-ethers'
-import 'hardhat-deploy'
 
-import { ERC20 } from '../types/typechain'
-import { Address } from '../types/custom/config-types'
 import { getTokens } from '../config'
 import { formatMsg, FormatMsgConfig } from './formatMsg'
+import { Address } from '../types/custom/config-types'
+import { ERC20 } from '../types/typechain'
 
 declare module 'hardhat/types/runtime' {
   interface HardhatRuntimeEnvironment {
@@ -29,11 +30,14 @@ declare module 'hardhat/types/runtime' {
 }
 
 interface ContractsExtension {
-  get<C extends Contract>(name: string, config?: Config): Promise<C>
+  get: <C extends Contract>(
+    name: string,
+    config?: Config
+  ) => Promise<C | undefined>
 }
 
 interface TokensExtension {
-  get<T extends ERC20>(name: string): Promise<T>
+  get: <T extends ERC20>(name: string) => Promise<T>
 }
 
 interface EVM {
@@ -41,20 +45,20 @@ interface EVM {
    * This increases the next block's timestamp by the specified amount of seconds.
    * @param seconds {BigNumberish} Amount of seconds to increase the next block's timestamp by.
    */
-  advanceTime(seconds: BigNumberish): Promise<void>
+  advanceTime: (seconds: BigNumberish) => Promise<void>
 
   /**
    * Will mine the specified number of blocks locally. This is helpful when functionality
    * requires a certain number of blocks to be processed for values to change.
    * @param blocks {number} Amount of blocks to mine.
    */
-  advanceBlocks(blocks?: number): Promise<void>
+  advanceBlocks: (blocks?: number) => Promise<void>
 
   /**
    * Creates a snapshot of the blockchain in its current state. It then returns a function
    * that can be used to revert back to the state at which the snapshot was taken.
    */
-  snapshot(): Promise<() => Promise<void>>
+  snapshot: () => Promise<() => Promise<void>>
 
   /**
    * This allows for functionality to executed within the scope of the specified number
@@ -63,7 +67,7 @@ interface EVM {
    * @param blocks {number} The number of blocks that should be mined.
    * @param fn {function} A function that should be executed once blocks have been mined.
    */
-  withBlockScope<T>(blocks: number, fn: () => T): Promise<T>
+  withBlockScope: <T>(blocks: number, fn: () => T) => Promise<T>
 
   /**
    * Impersonates a supplied address. This allows for the execution of transactions
@@ -83,13 +87,13 @@ interface EVM {
    * @param address {string} An address to start impersonating.
    * @return {Promise<ImpersonateReturn>}
    */
-  impersonate(address: string): Promise<ImpersonateReturn>
+  impersonate: (address: string) => Promise<ImpersonateReturn>
 
   /**
    * It stops the ability to impersonate an address on the local blockchain.
    * @param address {string} An address to stop impersonating.
    */
-  stopImpersonating(address: string): Promise<void>
+  stopImpersonating: (address: string) => Promise<void>
 }
 
 interface ImpersonateReturn {
@@ -120,19 +124,24 @@ extendEnvironment((hre) => {
   const disklet = makeNodeDisklet('.')
 
   hre.contracts = {
-    async get<C extends Contract>(name: string, config?: Config): Promise<C> {
+    async get<C extends Contract>(
+      name: string,
+      config?: Config
+    ): Promise<C | undefined> {
+      const deployment = await deployments.getOrNull(name)
+      if (!deployment) return
+
       const { address } = config?.at
         ? { address: config.at }
         : await deployments.get(name)
-      let contract = await ethers.getContractAt(name, address)
 
-      if (config) {
-        if (config.from) {
-          const signer = Signer.isSigner(config.from)
-            ? config.from
-            : ethers.provider.getSigner(config.from)
-          contract = contract.connect(signer)
-        }
+      let contract = await ethers.getContractAt(deployment.abi, address)
+
+      if (config?.from) {
+        const signer = Signer.isSigner(config.from)
+          ? config.from
+          : ethers.provider.getSigner(config.from)
+        contract = contract.connect(signer)
       }
 
       return contract as C
@@ -238,10 +247,23 @@ extendEnvironment((hre) => {
     // Don't save addresses on the hardhat network
     if (hre.network.name === 'hardhat') return
 
-    const filePath = `deployments/${hre.network.name}/_addresses.json`
+    const blockNumber =
+      deployment.receipt?.blockNumber ??
+      (await ethers.provider.getBlockNumber())
+    const deploymentBlockPath = `deployments/${hre.network.name}/.latestDeploymentBlock`
+    await disklet
+      .getText(deploymentBlockPath)
+      .catch(() => {})
+      .then((lastDeployment) => {
+        if (!lastDeployment || blockNumber > parseInt(lastDeployment)) {
+          return disklet.setText(deploymentBlockPath, blockNumber.toString())
+        }
+      })
+
+    const addressesPath = `deployments/${hre.network.name}/_addresses.json`
     let data: AddressData
     try {
-      data = JSON.parse(await disklet.getText(filePath))
+      data = JSON.parse(await disklet.getText(addressesPath))
     } catch {
       data = {
         libraries: {},
@@ -276,7 +298,7 @@ extendEnvironment((hre) => {
 
     const sortedData: AddressData = sortObject(data)
 
-    await disklet.setText(filePath, JSON.stringify(sortedData, null, 2))
+    await disklet.setText(addressesPath, JSON.stringify(sortedData, null, 2))
   }
 
   const originalDeploymentsDeploy = hre.deployments.deploy

@@ -1,63 +1,20 @@
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
-import fs from 'fs'
-import {
-  generateMerkleDistribution,
-  MerkleDistributorInfo,
-} from '../scripts/merkle/root'
-import { deployDiamond } from '../utils/deploy-diamond'
-import { NULL_ADDRESS } from '../utils/consts'
-import { getNFT } from '../config'
+
 import { ITellerNFT, ITellerNFTDistributor } from '../types/typechain'
+import { deployDiamond } from '../utils/deploy-diamond'
 import { deploy } from '../utils/deploy-helpers'
-import { TierInfo } from '../types/custom/config-types'
 
 const deployNFT: DeployFunction = async (hre) => {
-  const { getNamedSigner, network, run } = hre
+  const { getNamedSigner, run } = hre
 
-  const { tiers, merkleTrees } = getNFT(network)
   const deployer = await getNamedSigner('deployer')
 
   // Make sure contracts are compiled
   await run('compile')
 
-  const distributions: Array<{
-    tierIndex: number
-    info: MerkleDistributorInfo
-  }> = []
-  for (const tree of merkleTrees) {
-    const { tierIndex, balances } = tree
-
-    const info = generateMerkleDistribution(balances)
-    distributions.push({ tierIndex, info })
-  }
-
-  console.log()
-  console.log('  ** Deploying Teller NFT **')
-  console.log()
-
-  const nft = await deploy<ITellerNFT>({
-    contract: 'TellerNFT',
-    hre,
-  }).then((c) => c.connect(deployer))
-
-  console.log()
-  console.log('  ** Deploying Teller NFT Distributor **')
-  console.log()
-
-  const nftDistributor = await deployDiamond<ITellerNFTDistributor>({
-    name: 'TellerNFTDistributor',
-    facets: [
-      'ent_initialize_NFTDistributor_v1',
-      'ent_addMerkle_NFTDistributor_v1',
-      'ent_claim_NFTDistributor_v1',
-      'ext_distributor_NFT_v1',
-    ],
-    execute: {
-      methodName: 'initialize',
-      args: [nft.address, await deployer.getAddress()],
-    },
-    hre,
-  }).then((c) => c.connect(deployer))
+  const nft = await getOrDeployNFT(hre)
+  const nftDistributor = await getOrDeployNFTDistributor(hre, nft)
 
   console.log()
   console.log('  ** Initializing Teller NFT **')
@@ -68,7 +25,7 @@ const deployNFT: DeployFunction = async (hre) => {
       nftDistributor.address,
       await deployer.getAddress(),
     ]
-    await nft.initialize(minters).then(({ wait }) => wait())
+    await nft.initialize(minters).then(async ({ wait }) => await wait())
     console.log(' * Teller NFT initialized')
   } catch (err) {
     const message = err?.error?.message ?? err?.message ?? ''
@@ -79,53 +36,73 @@ const deployNFT: DeployFunction = async (hre) => {
     }
   }
 
+  await run('add-nft-tiers', { sendTx: true })
+  await run('add-nft-merkles', { sendTx: true })
+}
+
+const getOrDeployNFT = async (
+  hre: HardhatRuntimeEnvironment
+): Promise<ITellerNFT> => {
+  const { contracts, getNamedSigner } = hre
+
   console.log()
-  console.log('  ** Adding Tiers to Teller NFT **')
+  console.log('  ** Deploying Teller NFT **')
   console.log()
 
-  for (let i = 0; i < tiers.length; i++) {
-    const tier = await nft.getTier(i)
-    if (tier.contributionAsset === NULL_ADDRESS) {
-      await nft.addTier(tiers[i]).then(({ wait }) => wait())
-
-      console.log(` * Tier ${i} added`)
-    } else {
-      console.log(` * Tier ${i} already exists`)
-    }
+  let nft = await contracts.get<ITellerNFT>('TellerNFT')
+  if (nft == null) {
+    nft = await deploy<ITellerNFT>({
+      contract: 'TellerNFT',
+      hre,
+    })
+  } else {
+    console.log(`    ** Teller NFT already deployed: ${nft.address}`)
   }
 
   console.log()
-  console.log('  ** Adding Merkle Roots to NFT Distributor **')
+
+  return nft.connect(await getNamedSigner('deployer'))
+}
+
+const getOrDeployNFTDistributor = async (
+  hre: HardhatRuntimeEnvironment,
+  nft: ITellerNFT
+): Promise<ITellerNFTDistributor> => {
+  const { contracts, getNamedSigner } = hre
+
+  const deployer = await getNamedSigner('deployer')
+
+  console.log()
+  console.log('  ** Deploying Teller NFT Distributor **')
   console.log()
 
-  const distributionsInfo: MerkleDistributorInfo[] = []
-  for (let i = 0; i < distributions.length; i++) {
-    const { tierIndex, info } = distributions[i]
-    distributionsInfo.push(info)
-    const merkleRoots = await nftDistributor.getMerkleRoots()
-
-    if (merkleRoots[i] == null) {
-      await nftDistributor
-        .addMerkle(tierIndex, info.merkleRoot)
-        .then(({ wait }) => wait())
-      console.log(
-        ` * Merkle root for tier ${tierIndex} added: ${info.merkleRoot} \n`
-      )
-    } else {
-      console.log(
-        ` * Merkle root for tier ${tierIndex} ALREADY added: ${info.merkleRoot} \n`
-      )
-    }
-  }
-
-  const distributionOutputPath = `deployments/${network.name}/_nftDistribution.json`
-  fs.writeFileSync(
-    distributionOutputPath,
-    JSON.stringify(distributionsInfo, null, 2)
+  let nftDistributor = await contracts.get<ITellerNFTDistributor>(
+    'TellerNFTDistributor'
   )
+  if (nftDistributor == null) {
+    nftDistributor = await deployDiamond<ITellerNFTDistributor>({
+      name: 'TellerNFTDistributor',
+      facets: [
+        'ent_initialize_NFTDistributor_v1',
+        'ent_addMerkle_NFTDistributor_v1',
+        'ent_claim_NFTDistributor_v1',
+        'ext_distributor_NFT_v1',
+      ],
+      execute: {
+        methodName: 'initialize',
+        args: [nft.address, await deployer.getAddress()],
+      },
+      hre,
+    })
+  } else {
+    console.log(
+      `    ** Teller NFT Distributor already deployed: ${nftDistributor.address}`
+    )
+  }
 
-  console.log(` ** Output written to ${distributionOutputPath}`)
   console.log()
+
+  return nftDistributor.connect(deployer)
 }
 
 deployNFT.tags = ['nft']
