@@ -13,12 +13,9 @@ import { LoansMods } from "./LoansMods.sol";
 import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
 import { AUTHORIZED } from "../shared/roles.sol";
 import { LibLoans } from "./libraries/LibLoans.sol";
-import { AddressLib } from "../shared/libraries/AddressLib.sol";
 import { LibCollateral } from "./libraries/LibCollateral.sol";
 
 contract CollateralFacet is RolesMods, PausableMods, LoansMods {
-    using AddressLib for address;
-
     /**
      * @notice This event is emitted when collateral has been withdrawn
      * @param loanID ID of loan from which collateral was withdrawn
@@ -50,8 +47,9 @@ contract CollateralFacet is RolesMods, PausableMods, LoansMods {
         paused("", false)
         authorized(AUTHORIZED, msg.sender)
     {
-        borrower.requireEqualTo(
-            MarketStorageLib.marketStore().loans[loanID].loanTerms.borrower,
+        require(
+            borrower ==
+                MarketStorageLib.marketStore().loans[loanID].loanTerms.borrower,
             "BORROWER_LOAN_ID_MISMATCH"
         );
         require(amount > 0, "CANNOT_DEPOSIT_ZERO");
