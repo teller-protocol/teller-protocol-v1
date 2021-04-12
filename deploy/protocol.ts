@@ -19,8 +19,6 @@ const deployProtocol: DeployFunction = async (hre) => {
     name: 'TellerDiamond',
     facets: [
       'SettingsFacet',
-      'PlatformSettingsFacet',
-      'AssetSettingsFacet',
       'LendingFacet',
       'CreateLoanFacet',
       'LoanDataFacet',

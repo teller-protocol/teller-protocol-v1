@@ -8,11 +8,7 @@ import {
     LendingPool
 } from "../storage/market.sol";
 import { LibLoans } from "./libraries/LibLoans.sol";
-import {
-    ReentryMods
-} from "../contexts2/access-control/reentry/ReentryMods.sol";
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
-import { LoansMods } from "./LoansMods.sol";
 import { LibCollateral } from "./libraries/LibCollateral.sol";
 import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
 import { AUTHORIZED } from "../shared/roles.sol";
@@ -21,7 +17,7 @@ import {
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract RepayFacet is ReentryMods, PausableMods, LoansMods, RolesMods {
+contract RepayFacet is PausableMods, RolesMods {
     /**
         @notice This event is emitted when a loan has been successfully repaid
         @param loanID ID of loan from which collateral was withdrawn
