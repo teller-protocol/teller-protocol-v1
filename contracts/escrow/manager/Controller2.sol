@@ -1,11 +1,9 @@
 import "./Beacon2.sol";
 import "./Proxy2.sol";
-import "../../contexts2/access-control/roles/RolesMods.sol";
-import "../../shared/roles.sol";
-import "contracts/shared/libraries/LibDiamond.sol";
 
-contract EscrowManager2 {
-    mapping(string => address) public implementations;
+contract Controller2 {
+    address public admin;
+    mapping(string => address) implementations;
 
     event BeaconCreated(
         string indexed name,
@@ -16,6 +14,10 @@ contract EscrowManager2 {
 
     enum BeaconType { Main, Backup }
 
+    function initialize() external {
+        admin = msg.sender;
+    }
+
     function getImplementation(string calldata name)
         external
         view
@@ -25,20 +27,20 @@ contract EscrowManager2 {
     }
 
     function createImplementation(string memory name, address impl) public {
-        LibDiamond.enforceIsContractOwner();
+        require(msg.sender == admin, "NOT ADMIN");
         implementations[name] = impl;
         _deployBeacon(name, BeaconType.Main);
     }
 
     function beginUpgrade(string memory name, address newImpl) public {
-        LibDiamond.enforceIsContractOwner();
+        require(msg.sender == admin);
         implementations[name] = newImpl;
         _deployBeacon(name, BeaconType.Backup);
         _destroyBeacon(name, BeaconType.Main);
     }
 
     function finishUpgrade(string memory name) public {
-        LibDiamond.enforceIsContractOwner();
+        require(msg.sender == admin);
         _deployBeacon(name, BeaconType.Main);
         _destroyBeacon(name, BeaconType.Backup);
     }
@@ -51,8 +53,8 @@ contract EscrowManager2 {
                 type(Proxy2).creationCode,
                 abi.encode(main, backup)
             );
-
         address deployed;
+
         assembly {
             deployed := create(0, add(proxyCode, 0x20), mload(proxyCode))
         }

@@ -2,7 +2,7 @@ import { Signer } from '@ethersproject/abstract-signer'
 import { contracts, deployments, getNamedSigner, network } from 'hardhat'
 import { getTokens } from '../config'
 import { Tokens } from '../types/custom/config-types'
-import { ERC20, EscrowLogic, EscrowManager } from '../types/typechain'
+import { EscrowLogic, EscrowManager, IERC20 } from '../types/typechain'
 import { EscrowManager2 } from '../types/typechain/EscrowManager2'
 
 const setup = deployments.createFixture(async () => {
@@ -18,9 +18,9 @@ const setup = deployments.createFixture(async () => {
 describe('EscrowManager', () => {
   let tokens: Tokens
   let deployer: Signer
-  let escrowManager: EscrowManager
+  let escrowManager: EscrowManager2
   let escrowLogic: EscrowLogic
-  let dai: ERC20
+  let dai: IERC20
   let teller: string
 
   beforeEach(async () => {
@@ -40,11 +40,18 @@ describe('EscrowManager', () => {
       from: await deployer.getAddress(),
     })
 
-    await escrowManager.createImplementation('EscrowLogic', escrowLogic.address)
+    await escrowManager
+      .createImplementation('EscrowLogic', escrowLogic.address)
+      .then((t) => t.wait())
+      .then((r) => console.log(JSON.stringify(r.events, null, 2)))
 
-    const createProxyTx = await escrowManager.createProxy('EscrowLogic')
-    const createProxyRx = await createProxyTx.wait()
-    const proxyAddress = createProxyRx.events?.[0].args?.[0]
+    // console.log({ mainBeaconAddress })
+
+    const proxyAddress = await escrowManager
+      .createProxy('EscrowLogic')
+      .then((t) => t.wait())
+      .then((r) => r.events?.[0].args?.[0])
+
     const escrow = await contracts.get<EscrowLogic>('EscrowLogic', {
       from: await deployer.getAddress(),
       at: proxyAddress,

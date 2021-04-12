@@ -10,7 +10,7 @@ import { BigNumber, BigNumberish, Contract, Signer } from 'ethers'
 import '@nomiclabs/hardhat-ethers'
 import 'hardhat-deploy'
 
-import { ERC20 } from '../types/typechain'
+import { IERC20 } from '../types/typechain'
 import { Address } from '../types/custom/config-types'
 import { getTokens } from '../config'
 
@@ -32,7 +32,7 @@ interface ContractsExtension {
 }
 
 interface TokensExtension {
-  get<T extends ERC20>(name: string): Promise<T>
+  get<T extends IERC20>(name: string): Promise<T>
 }
 
 interface EVM {
@@ -139,7 +139,7 @@ extendEnvironment((hre) => {
   }
 
   hre.tokens = {
-    async get<T extends ERC20>(name: string): Promise<T> {
+    async get<T extends IERC20>(name: string): Promise<T> {
       const tokens = getTokens(network)
       const token = await ethers.getContractAt('ERC20', tokens[name])
       return token as T

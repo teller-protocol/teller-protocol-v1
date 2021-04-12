@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./IDestroyable.sol";
 import "./EscrowLib.sol";
-import "hardhat/console.sol";
 
 contract EscrowLogic {
     function deposit(address account, uint256 amount) external {

@@ -1,3 +1,4 @@
+import { getNamedAccounts } from 'hardhat'
 import { DeployFunction } from 'hardhat-deploy/types'
 import { deployDiamond } from '../utils/deploy-diamond'
 
@@ -18,6 +19,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       'StakingFacet',
       'EscrowFacet',
     ],
+    owner: (await getNamedAccounts()).deployer,
   })
 }
 

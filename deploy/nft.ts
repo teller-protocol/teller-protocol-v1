@@ -1,15 +1,14 @@
-import { DeployFunction } from 'hardhat-deploy/types'
 import fs from 'fs'
+import { DeployFunction } from 'hardhat-deploy/types'
+import { getNFT } from '../config'
 import {
   generateMerkleDistribution,
   MerkleDistributorInfo,
 } from '../scripts/merkle/root'
-import { deployDiamond } from '../utils/deploy-diamond'
-import { NULL_ADDRESS } from '../utils/consts'
-import { getNFT } from '../config'
 import { ITellerNFT, ITellerNFTDistributor } from '../types/typechain'
+import { NULL_ADDRESS } from '../utils/consts'
+import { deployDiamond } from '../utils/deploy-diamond'
 import { deploy } from '../utils/deploy-helpers'
-import { TierInfo } from '../types/custom/config-types'
 
 const deployNFT: DeployFunction = async (hre) => {
   const { getNamedSigner, network, run } = hre
