@@ -28,7 +28,7 @@ import {
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { LibLendingPool } from "../lending/libraries/LibLendingPool.sol";
 
-contract CreateLoanFacet is LoansMods, PausableMods, RolesMods {
+contract CreateLoanFacet is RolesMods, PausableMods, LoansMods {
     using AddressLib for address;
 
     /**

@@ -18,7 +18,7 @@ import {
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { LibLendingPool } from "../lending/libraries/LibLendingPool.sol";
 
-contract RepayFacet is PausableMods, RolesMods {
+contract RepayFacet is RolesMods, PausableMods {
     /**
         @notice This event is emitted when a loan has been successfully repaid
         @param loanID ID of loan from which collateral was withdrawn
@@ -83,22 +83,6 @@ contract RepayFacet is PausableMods, RolesMods {
         }
 
         LibLendingPool.repay(loanID, principalPaid, interestPaid, msg.sender);
-
-        //        uint256 totalAmount = principalPaid + interestPaid;
-        //        require(totalAmount > 0, "REPAY_ZERO");
-        //
-        //        address lendingToken =
-        //            MarketStorageLib.marketStore().loans[loanID].lendingToken;
-        //        // Transfers tokens to LendingPool.
-        //        tokenTransferFrom(msg.sender, totalAmount, lendingToken);
-        //
-        //        LendingPool storage lendingPool =
-        //            MarketStorageLib.marketStore().lendingPool[lendingToken];
-        //
-        //        lendingPool.totalRepaid = lendingPool.totalRepaid + principalPaid;
-        //        lendingPool.totalInterestEarned =
-        //            lendingPool.totalInterestEarned +
-        //            interestPaid;
 
         // if the loan is now fully paid, close it and return collateral
         if (totalOwed == 0) {
