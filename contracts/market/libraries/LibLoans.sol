@@ -12,6 +12,7 @@ import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 import {
     PlatformSettingsLib
 } from "../../settings/platform/PlatformSettingsLib.sol";
+import { IEscrow } from "../../shared/interfaces/IEscrow.sol";
 
 library LibLoans {
     using NumbersLib for int256;
@@ -59,7 +60,7 @@ library LibLoans {
     }
 
     function getCollateralNeededInfo(uint256 loanID)
-        internal
+        public
         view
         returns (
             int256 neededInLendingTokens,
@@ -152,6 +153,79 @@ library LibLoans {
         return
             libStore().loans[loanID].loanTerms.collateralRatio >=
             PlatformSettingsLib.getOverCollateralizedBufferValue();
+    }
+
+    /**
+     * @notice It checks if a loan can be liquidated.
+     * @param loanID The loan ID to check.
+     * @return true if the loan is liquidable.
+     */
+    function isLiquidable(uint256 loanID) public view returns (bool) {
+        // Check if loan can be liquidated
+        if (libStore().loans[loanID].status != LoanStatus.Active) {
+            return false;
+        }
+
+        if (libStore().loans[loanID].loanTerms.collateralRatio > 0) {
+            // If loan has a collateral ratio, check how much is needed
+            (, int256 neededInCollateral, ) = getCollateralNeededInfo(loanID);
+            return
+                neededInCollateral >
+                int256(libStore().loans[loanID].collateral);
+        } else {
+            // Otherwise, check if the loan has expired
+            return
+                block.timestamp >=
+                libStore().loans[loanID].loanStartTime +
+                    (libStore().loans[loanID].loanTerms.duration);
+        }
+    }
+
+    /**
+     * @notice It gets the current liquidation reward for a given loan.
+     * @param loanID The loan ID to get the info.
+     * @return The value the liquidator will receive denoted in collateral tokens.
+     */
+    function getLiquidationReward(uint256 loanID) public view returns (int256) {
+        uint256 amountToLiquidate = getTotalOwed(loanID);
+        uint256 availableValue =
+            getCollateralInLendingTokens(loanID) +
+                (
+                    IEscrow(libStore().loans[loanID].escrow)
+                        .calculateTotalValue()
+                );
+        uint256 maxReward =
+            amountToLiquidate.percent(
+                PlatformSettingsLib
+                    .getLiquidateEthPriceValue()
+                    .diffOneHundredPercent()
+            );
+        if (availableValue < amountToLiquidate + maxReward) {
+            return int256(availableValue);
+        } else {
+            return int256(maxReward) + (int256(amountToLiquidate));
+        }
+    }
+
+    /**
+     * @notice Returns the collateral needed for a loan, in the lending token, needed to take out the loan or for it be liquidated.
+     * @param loanID The loan ID for which to get collateral information for
+     * @return uint256 Collateral needed in lending token value
+     */
+    function getCollateralInLendingTokens(uint256 loanID)
+        public
+        view
+        returns (uint256)
+    {
+        if (!_isActiveOrSet(loanID)) {
+            return 0;
+        }
+        return
+            AppStorageLib.store().priceAggregator.valueFor(
+                libStore().loans[loanID].collateralToken,
+                libStore().loans[loanID].lendingToken,
+                libStore().loans[loanID].collateral
+            );
     }
 
     /**

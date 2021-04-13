@@ -65,26 +65,12 @@ abstract contract LoansMods {
         );
 
         require(
-            _isDebtRatioValid(loanRequest.assetAddress, loanRequest.amount),
+            LibLendingPool.isDebtRatioValid(
+                loanRequest.assetAddress,
+                loanRequest.amount
+            ),
             "SUPPLY_TO_DEBT_EXCEEDS_MAX"
         );
         _;
-    }
-
-    /**
-     * @notice It validates whether supply to debt (StD) ratio is valid including the loan amount.
-     * @param newLoanAmount the new loan amount to consider o the StD ratio.
-     * @return true if the ratio is valid. Otherwise it returns false.
-     */
-    function _isDebtRatioValid(address lendingToken, uint256 newLoanAmount)
-        internal
-        view
-        returns (bool)
-    {
-        return
-            LibLendingPool.getDebtRatioFor(lendingToken, newLoanAmount) <=
-            AppStorageLib.store().assetSettings[lendingToken].uints[
-                keccak256("MaxDebtRatio")
-            ];
     }
 }

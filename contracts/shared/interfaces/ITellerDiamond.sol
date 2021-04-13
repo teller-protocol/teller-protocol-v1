@@ -17,7 +17,7 @@ abstract contract ITellerDiamond is
     CreateLoanFacet,
     LoanDataFacet,
     RepayFacet,
-    LiquidateFacet,
+    //    LiquidateFacet,
     SignersFacet,
     StakingFacet,
     EscrowFacet

@@ -16,6 +16,7 @@ import {
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { LibLendingPool } from "../lending/libraries/LibLendingPool.sol";
 
 contract RepayFacet is PausableMods, RolesMods {
     /**
@@ -41,6 +42,8 @@ contract RepayFacet is PausableMods, RolesMods {
      */
     function repay(uint256 amount, uint256 loanID)
         external
+        //        nonReentrant
+        //        loanActiveOrSet(loanID)
         paused("", false)
         authorized(AUTHORIZED, msg.sender)
     {
@@ -79,21 +82,23 @@ contract RepayFacet is PausableMods, RolesMods {
             }
         }
 
-        uint256 totalAmount = principalPaid + interestPaid;
-        require(totalAmount > 0, "REPAY_ZERO");
+        LibLendingPool.repay(loanID, principalPaid, interestPaid, msg.sender);
 
-        address lendingToken =
-            MarketStorageLib.marketStore().loans[loanID].lendingToken;
-        // Transfers tokens to LendingPool.
-        tokenTransferFrom(msg.sender, totalAmount, lendingToken);
-
-        LendingPool storage lendingPool =
-            MarketStorageLib.marketStore().lendingPool[lendingToken];
-
-        lendingPool.totalRepaid = lendingPool.totalRepaid + principalPaid;
-        lendingPool.totalInterestEarned =
-            lendingPool.totalInterestEarned +
-            interestPaid;
+        //        uint256 totalAmount = principalPaid + interestPaid;
+        //        require(totalAmount > 0, "REPAY_ZERO");
+        //
+        //        address lendingToken =
+        //            MarketStorageLib.marketStore().loans[loanID].lendingToken;
+        //        // Transfers tokens to LendingPool.
+        //        tokenTransferFrom(msg.sender, totalAmount, lendingToken);
+        //
+        //        LendingPool storage lendingPool =
+        //            MarketStorageLib.marketStore().lendingPool[lendingToken];
+        //
+        //        lendingPool.totalRepaid = lendingPool.totalRepaid + principalPaid;
+        //        lendingPool.totalInterestEarned =
+        //            lendingPool.totalInterestEarned +
+        //            interestPaid;
 
         // if the loan is now fully paid, close it and return collateral
         if (totalOwed == 0) {
@@ -113,27 +118,5 @@ contract RepayFacet is PausableMods, RolesMods {
             msg.sender,
             totalOwed
         );
-    }
-
-    /**
-        @notice It transfers an amount of tokens from an address to this contract.
-        @param from address where the tokens will transfer from.
-        @param amount to be transferred.
-        @param lendingToken the address of the lending token
-        @dev It throws a require error if 'transferFrom' invocation fails.
-     */
-    function tokenTransferFrom(
-        address from,
-        uint256 amount,
-        address lendingToken
-    ) private returns (uint256 balanceIncrease) {
-        uint256 balanceBefore = IERC20(lendingToken).balanceOf(address(this));
-        SafeERC20.safeTransferFrom(
-            IERC20(lendingToken),
-            from,
-            address(this),
-            amount
-        );
-        return IERC20(lendingToken).balanceOf(address(this)) - (balanceBefore);
     }
 }
