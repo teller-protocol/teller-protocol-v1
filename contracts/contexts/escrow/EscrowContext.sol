@@ -53,8 +53,17 @@ bytes32 constant PROXY_CREATION_CODE_HASH = keccak256(PROXY_CREATION_CODE);
     We need this to be implemented on the logic contract at all times to be able to destroy the
     contract.
  */
-interface IDestroyable {
-    function destroy() external;
+abstract contract AMetamorphic {
+    function destroy() external virtual;
+
+    // modifier entrance() {
+    //     _;
+    //     assembly {
+    //         if iszero(returndatasize()) {
+    //             return(caller(), 20)
+    //         }
+    //     }
+    // }
 }
 
 /**
@@ -127,9 +136,17 @@ abstract contract AssetEscrowContext is AssetEscrowAddress {
         We may eventually be able to deploy a version of the escrow logic which allows us to revamp
         the code data of the clone to encode important information like the asset, ident and metadata.
      */
-    function createEscrow(address asset, bytes32 ident)
+    function createEscrow(
+        address asset,
+        bytes32 ident,
+        bytes calldata init
+    )
         external
-        returns (address instance)
+        returns (
+            address instance,
+            bool success,
+            bytes memory result
+        )
     {
         bytes memory creationCode = PROXY_CREATION_CODE;
         assembly {
@@ -140,6 +157,11 @@ abstract contract AssetEscrowContext is AssetEscrowAddress {
                 or(ident, asset) // salt
             )
         }
+
+        if (init.length != 0) {
+            // solhint-disable-next-line
+            (success, result) = instance.call(init);
+        }
     }
 
     /**
@@ -149,12 +171,12 @@ abstract contract AssetEscrowContext is AssetEscrowAddress {
         assert(deployed);
         deployed = false;
         address _metamorphic = metamorphic;
-        IDestroyable(_metamorphic).destroy();
+        AMetamorphic(_metamorphic).destroy();
         uint256 deployedCodeSize;
         assembly {
             deployedCodeSize := extcodesize(_metamorphic)
         }
-        assert(deployedCodeSize != 0);
+        assert(deployedCodeSize == 0);
     }
 
     /**
@@ -184,10 +206,8 @@ abstract contract AssetEscrowContext is AssetEscrowAddress {
 
         assert(
             IERC165(metamorphic).supportsInterface(
-                type(IDestroyable).interfaceId
+                type(AMetamorphic).interfaceId
             )
         );
-
-        // TODO: Finish this block (just deploying the metamorphic using create 2)
     }
 }
