@@ -81,10 +81,7 @@ contract SettingsFacet is RolesMods {
     }
 
     function init(InitArgs calldata _args) external {
-        require(
-            !AppStorageLib.store().initialized,
-            "Teller: platform already initialized"
-        );
+        if (AppStorageLib.store().initialized) return;
         AppStorageLib.store().initialized = true;
 
         RolesLib.grantRole(ADMIN, _args.admin);

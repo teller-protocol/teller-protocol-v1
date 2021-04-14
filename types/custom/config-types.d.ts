@@ -1,22 +1,29 @@
 import { BigNumberish } from 'ethers'
+import { AssetType } from '../../utils/consts'
 
 type Address = string
 type TokenSymbol = string
 type URI = string
 
 export interface AssetSettings {
-  [tokenSymbol: string]: AssetSetting
+  [tokenSymbol: string]: AssetSetting[]
 }
 
-export interface AssetSetting {
-  cToken: TokenSymbol
-  aToken?: TokenSymbol
-  yVault?: TokenSymbol
-  pPool?: TokenSymbol
-  maxLoanAmount: number
-  maxTVLAmount: number
-  maxDebtRatio: number
+export interface AssetSetting<V = any> {
+  key: string
+  value: V
+  type: AssetType
 }
+
+// export interface AssetSetting {
+//   cToken: TokenSymbol
+//   aToken?: TokenSymbol
+//   yVault?: TokenSymbol
+//   pPool?: TokenSymbol
+//   maxLoanAmount: number
+//   maxTVLAmount: number
+//   maxDebtRatio: number
+// }
 
 export interface ATMs {
   [atmName: string]: ATM

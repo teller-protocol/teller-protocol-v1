@@ -4,12 +4,12 @@ pragma solidity ^0.8.0;
 enum CacheType { Address, Uint, Int, Byte, Bool }
 
 /**
-    @notice This struct manages the cache of the library instance.
-    @param addresses A mapping of address values mapped to cache keys in bytes.
-    @param uints A mapping of uint values mapped to cache keys names in bytes.
-    @param ints A mapping of int values mapped to cache keys names in bytes.
-    @param bites A mapping of bytes values mapped to cache keys names in bytes.
-    @param bools A mapping of bool values mapped to cache keys names in bytes.
+ * @notice This struct manages the cache of the library instance.
+ * @param addresses A mapping of address values mapped to cache keys in bytes.
+ * @param uints A mapping of uint values mapped to cache keys names in bytes.
+ * @param ints A mapping of int values mapped to cache keys names in bytes.
+ * @param bites A mapping of bytes values mapped to cache keys names in bytes.
+ * @param bools A mapping of bool values mapped to cache keys names in bytes.
  */
 struct Cache {
     // Mapping of cache keys names to address values.
@@ -25,63 +25,73 @@ struct Cache {
 }
 
 library CacheLib {
-    /**
-        @notice The constant for the initialization check
-     */
-    //   bytes32 private constant INITIALIZED = keccak256("Initialized");
+    // The constant for the initialization check
+    bytes32 private constant INITIALIZED = keccak256("Initialized");
 
     /**
-        @notice Initializes the cache instance.
-        @param cache The current cache
+     * @notice Initializes the cache instance.
+     * @param cache The current cache
      */
     function initialize(Cache storage cache) internal {
         requireNotExists(cache);
-        cache.bools[keccak256("Initialized")] = true;
+        cache.bools[INITIALIZED] = true;
     }
 
     /**
-        @notice Checks whether the current cache does not, throwing an error if it does.
-        @param cache The current cache
+     * @notice Checks whether the current cache does not, throwing an error if it does.
+     * @param cache The current cache
      */
     function requireNotExists(Cache storage cache) internal view {
         require(!exists(cache), "CACHE_ALREADY_EXISTS");
     }
 
     /**
-        @notice Checks whether the current cache exists, throwing an error if the cache does not.
-        @param cache The current cache
+     * @notice Checks whether the current cache exists, throwing an error if the cache does not.
+     * @param cache The current cache
      */
     function requireExists(Cache storage cache) internal view {
         require(exists(cache), "CACHE_DOES_NOT_EXIST");
     }
 
     /**
-        @notice Tests whether the current cache exists or not.
-        @param cache The current cache.
-        @return bool True if the cache exists.
+     * @notice Tests whether the current cache exists or not.
+     * @param cache The current cache.
+     * @return bool True if the cache exists.
      */
     function exists(Cache storage cache) internal view returns (bool) {
-        return cache.bools[keccak256("Initialized")];
+        return cache.bools[INITIALIZED];
     }
 
     function update(
         Cache storage cache,
         bytes32 key,
-        bytes memory value,
+        bytes32 value,
         CacheType cacheType
     ) internal {
         requireExists(cache);
 
         if (cacheType == CacheType.Address) {
-            cache.addresses[key] = abi.decode(value, (address));
+            address addr = cache.addresses[key];
+            assembly {
+                sstore(sload(addr), value)
+            }
         } else if (cacheType == CacheType.Uint) {
-            cache.uints[key] = abi.decode(value, (uint256));
+            uint256 ui = cache.uints[key];
+            assembly {
+                sstore(sload(ui), value)
+            }
         } else if (cacheType == CacheType.Int) {
-            cache.ints[key] = abi.decode(value, (int256));
+            int256 i = cache.ints[key];
+            assembly {
+                sstore(sload(i), value)
+            }
         } else if (cacheType == CacheType.Byte) {
-            cache.bites[key] = abi.decode(value, (bytes32));
+            cache.bites[key] = value;
         } else if (cacheType == CacheType.Bool) {
-            cache.bools[key] = abi.decode(value, (bool));
+            bool b = cache.bools[key];
+            assembly {
+                sstore(sload(b), value)
+            }
         }
     }
 

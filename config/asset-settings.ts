@@ -1,90 +1,91 @@
 import { AssetSettings } from '../types/custom/config-types'
+import { AssetType } from '../utils/consts'
 
 const mainnetAssetSettings: AssetSettings = {
-  DAI: {
-    cToken: 'CDAI',
-    aToken: 'ADAI',
-    yVault: 'YDAI',
-    pPool: 'PCDAI',
-    maxLoanAmount: 10000,
-    maxTVLAmount: 100000,
-    maxDebtRatio: 5000,
-  },
-  USDC: {
-    cToken: 'CUSDC',
-    maxLoanAmount: 10000,
-    maxTVLAmount: 100000,
-    maxDebtRatio: 5000,
-  },
-  ETH: {
-    cToken: 'CETH',
-    maxLoanAmount: 0,
-    maxTVLAmount: 0,
-    maxDebtRatio: 5000,
-  },
+  DAI: [
+    { key: 'cToken', value: 'CDAI', type: AssetType.Address },
+    { key: 'aToken', value: 'ADAI', type: AssetType.Address },
+    { key: 'yVault', value: 'YDAI', type: AssetType.Address },
+    { key: 'pPool', value: 'PCDAI', type: AssetType.Address },
+    { key: 'maxLoanAmount', value: 10000, type: AssetType.Amount },
+    { key: 'maxTVLAmount', value: 100000, type: AssetType.Amount },
+    { key: 'maxDebtRatio', value: 5000, type: AssetType.Uint },
+  ],
+  USDC: [
+    { key: 'cToken', value: 'CUSDC', type: AssetType.Address },
+    { key: 'maxLoanAmount', value: 10000, type: AssetType.Amount },
+    { key: 'maxTVLAmount', value: 100000, type: AssetType.Amount },
+    { key: 'maxDebtRatio', value: 5000, type: AssetType.Uint },
+  ],
+  WETH: [
+    { key: 'cToken', value: 'CETH', type: AssetType.Address },
+    { key: 'maxLoanAmount', value: 0, type: AssetType.Amount },
+    { key: 'maxTVLAmount', value: 0, type: AssetType.Amount },
+    { key: 'maxDebtRatio', value: 5000, type: AssetType.Uint },
+  ],
 }
 
 export const assetSettings: Record<string, AssetSettings> = {
   kovan: {
-    DAI: {
-      cToken: 'CDAI',
-      maxLoanAmount: 1000,
-      maxTVLAmount: 100000,
-      maxDebtRatio: 5000,
-    },
-    USDC: {
-      cToken: 'CUSDC',
-      maxLoanAmount: 1000,
-      maxTVLAmount: 100000,
-      maxDebtRatio: 5000,
-    },
-    ETH: {
-      cToken: 'CETH',
-      maxLoanAmount: 0,
-      maxTVLAmount: 0,
-      maxDebtRatio: 5000,
-    },
+    DAI: [
+      { key: 'cToken', value: 'CDAI', type: AssetType.Address },
+      { key: 'maxLoanAmount', value: 1000, type: AssetType.Amount },
+      { key: 'maxTVLAmount', value: 100000, type: AssetType.Amount },
+      { key: 'maxDebtRatio', value: 5000, type: AssetType.Uint },
+    ],
+    USDC: [
+      { key: 'cToken', value: 'CUSDC', type: AssetType.Address },
+      { key: 'maxLoanAmount', value: 1000, type: AssetType.Amount },
+      { key: 'maxTVLAmount', value: 100000, type: AssetType.Amount },
+      { key: 'maxDebtRatio', value: 5000, type: AssetType.Uint },
+    ],
+    WETH: [
+      { key: 'cToken', value: 'CETH', type: AssetType.Address },
+      { key: 'maxLoanAmount', value: 0, type: AssetType.Amount },
+      { key: 'maxTVLAmount', value: 0, type: AssetType.Amount },
+      { key: 'maxDebtRatio', value: 5000, type: AssetType.Uint },
+    ],
   },
   rinkeby: {
-    DAI: {
-      cToken: 'CDAI',
-      pPool: 'PCDAI',
-      maxLoanAmount: 1000,
-      maxTVLAmount: 100000,
-      maxDebtRatio: 5000,
-    },
-    USDC: {
-      cToken: 'CUSDC',
-      maxLoanAmount: 1000,
-      maxTVLAmount: 100000,
-      maxDebtRatio: 5000,
-    },
-    ETH: {
-      cToken: 'CETH',
-      maxLoanAmount: 0,
-      maxTVLAmount: 0,
-      maxDebtRatio: 5000,
-    },
+    DAI: [
+      { key: 'cToken', value: 'CDAI', type: AssetType.Address },
+      { key: 'pPool', value: 'PCDAI', type: AssetType.Address },
+      { key: 'maxLoanAmount', value: 1000, type: AssetType.Amount },
+      { key: 'maxTVLAmount', value: 100000, type: AssetType.Amount },
+      { key: 'maxDebtRatio', value: 5000, type: AssetType.Uint },
+    ],
+    USDC: [
+      { key: 'cToken', value: 'CUSDC', type: AssetType.Address },
+      { key: 'maxLoanAmount', value: 1000, type: AssetType.Amount },
+      { key: 'maxTVLAmount', value: 100000, type: AssetType.Amount },
+      { key: 'maxDebtRatio', value: 5000, type: AssetType.Uint },
+    ],
+    WETH: [
+      { key: 'cToken', value: 'CETH', type: AssetType.Address },
+      { key: 'maxLoanAmount', value: 0, type: AssetType.Amount },
+      { key: 'maxTVLAmount', value: 0, type: AssetType.Amount },
+      { key: 'maxDebtRatio', value: 5000, type: AssetType.Uint },
+    ],
   },
   ropsten: {
-    DAI: {
-      cToken: 'CDAI',
-      maxLoanAmount: 1000,
-      maxTVLAmount: 100000,
-      maxDebtRatio: 5000,
-    },
-    USDC: {
-      cToken: 'CUSDC',
-      maxLoanAmount: 1000,
-      maxTVLAmount: 100000,
-      maxDebtRatio: 5000,
-    },
-    ETH: {
-      cToken: 'CETH',
-      maxLoanAmount: 0,
-      maxTVLAmount: 0,
-      maxDebtRatio: 5000,
-    },
+    DAI: [
+      { key: 'cToken', value: 'CDAI', type: AssetType.Address },
+      { key: 'maxLoanAmount', value: 1000, type: AssetType.Amount },
+      { key: 'maxTVLAmount', value: 100000, type: AssetType.Amount },
+      { key: 'maxDebtRatio', value: 5000, type: AssetType.Uint },
+    ],
+    USDC: [
+      { key: 'cToken', value: 'CUSDC', type: AssetType.Address },
+      { key: 'maxLoanAmount', value: 1000, type: AssetType.Amount },
+      { key: 'maxTVLAmount', value: 100000, type: AssetType.Amount },
+      { key: 'maxDebtRatio', value: 5000, type: AssetType.Uint },
+    ],
+    WETH: [
+      { key: 'cToken', value: 'CETH', type: AssetType.Address },
+      { key: 'maxLoanAmount', value: 0, type: AssetType.Amount },
+      { key: 'maxTVLAmount', value: 0, type: AssetType.Amount },
+      { key: 'maxDebtRatio', value: 5000, type: AssetType.Uint },
+    ],
   },
   hardhat: mainnetAssetSettings,
   localhost: mainnetAssetSettings,

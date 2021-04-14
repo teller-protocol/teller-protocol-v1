@@ -6,7 +6,7 @@ import {
     LoanStatus,
     LoanRequest
 } from "../storage/market.sol";
-import { AppStorageLib } from "../storage/app.sol";
+import { MaxLoanAmountLib } from "../settings/asset/MaxLoanAmountLib.sol";
 import {
     PlatformSettingsLib
 } from "../settings/platform/PlatformSettingsLib.sol";
@@ -39,7 +39,7 @@ abstract contract LoansMods {
                 LoanStatus.Active ||
                 MarketStorageLib.marketStore().loans[loanID].status ==
                 LoanStatus.TermsSet,
-            "LOAN_NOT_ACTIVE_OR_SET"
+            "Teller: loan not active or set"
         );
         _;
     }
@@ -54,14 +54,12 @@ abstract contract LoansMods {
         require(
             PlatformSettingsLib.getMaximumLoanDurationValue() >=
                 loanRequest.duration,
-            "DURATION_EXCEEDS_MAX_DURATION"
+            "Teller: max loan duration exceeded"
         );
 
         require(
-            AppStorageLib.store().assetSettings[loanRequest.assetAddress].uints[
-                keccak256("MaxLoanAmount")
-            ] > loanRequest.amount,
-            "AMOUNT_EXCEEDS_MAX_AMOUNT"
+            MaxLoanAmountLib.get(loanRequest.assetAddress) > loanRequest.amount,
+            "Teller: max loan amount exceeded"
         );
 
         require(
@@ -69,7 +67,7 @@ abstract contract LoansMods {
                 loanRequest.assetAddress,
                 loanRequest.amount
             ),
-            "SUPPLY_TO_DEBT_EXCEEDS_MAX"
+            "Teller: max supply-to-debt ratio exceeded"
         );
         _;
     }
