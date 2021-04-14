@@ -7,11 +7,15 @@ import "../contexts2/access-control/reentry/ReentryMods.sol";
 import "../contexts2/pausable/PausableMods.sol";
 
 // Storage
-import { AppStorageLib, AppStorage } from "../storage/app.sol";
-import { LendingStorageLib, LendingStorage } from "../storage/lending.sol";
-import { FundsEscrowLib } from "../escrow/funds/FundsEscrowLib.sol";
+// import { AppStorageLib, AppStorage } from "../storage/app.sol";
+// import { LendingStorageLib, LendingStorage } from "../storage/lending.sol";
+// import { FundsEscrowLib } from "../escrow/funds/FundsEscrowLib.sol";
+import { AssetEscrowAddress } from "../escrow/asset/AssetEscrow.sol";
 
-contract LendingFacet is RolesMods, ReentryMods, PausableMods {
+// RolesMods,
+// ReentryMods,
+// PausableMods,
+contract LendingFacet is AssetEscrowAddress {
     bytes32 constant FACET_ID = keccak256("LendingFacet");
 
     /**
@@ -36,46 +40,46 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
         uint256 tTokenAmount
     );
 
-    /**
-     * @notice It allows users to deposit tokens into the pool.
-     * @dev the user must call ERC20.approve function previously.
-     * @dev If the cToken is available (not 0x0), it deposits the lending token amount into Compound directly.
-     * @param asset Asset address to deposit into the lending pool.
-     * @param amount Amount of {asset} to deposit in the pool.
-     */
-    function deposit(address asset, uint256 amount)
-        external
-        paused(FACET_ID, false)
-        authorized(msg.sender)
-        nonReentry(FACET_ID)
-    {
-        //        ITToken tToken = getLendingPool().tToken;
-        //        uint256 previousSupply = _getTotalSupplied();
-        //        uint256 exchangeRate = _exchangeRate();
+    // /**
+    //  * @notice It allows users to deposit tokens into the pool.
+    //  * @dev the user must call ERC20.approve function previously.
+    //  * @dev If the cToken is available (not 0x0), it deposits the lending token amount into Compound directly.
+    //  * @param asset Asset address to deposit into the lending pool.
+    //  * @param amount Amount of {asset} to deposit in the pool.
+    //  */
+    // function deposit(address asset, uint256 amount)
+    //     external
+    //     paused(FACET_ID, false)
+    //     authorized(msg.sender)
+    //     nonReentry(FACET_ID)
+    // {
+    //     //        ITToken tToken = getLendingPool().tToken;
+    //     //        uint256 previousSupply = _getTotalSupplied();
+    //     //        uint256 exchangeRate = _exchangeRate();
 
-        // Transferring tokens to the LendingPool
-        FundsEscrowLib.deposit(FACET_ID, asset, amount, msg.sender);
-        //        lendingTokenAmount = tokenTransferFrom(msg.sender, lendingTokenAmount);
+    //     // Transferring tokens to the LendingPool
+    //     FundsEscrowLib.deposit(FACET_ID, asset, amount, msg.sender);
+    //        lendingTokenAmount = tokenTransferFrom(msg.sender, lendingTokenAmount);
 
-        //        require(
-        //            previousSupply + lendingTokenAmount <=
-        //                IAssetSettings(PROTOCOL).getMaxTVLAmount(
-        //                    getLendingPool().lendingToken
-        //                ),
-        //            "MAX_TVL_REACHED"
-        //        );
-        //        // Depositing to Compound accrues interest which changes the exchange rate.
-        //        _depositToCompoundIfSupported(lendingTokenAmount);
-        //
-        //        // Mint tToken tokens
-        //        uint256 tTokenAmount =
-        //            _tTokensFromLendingTokens(lendingTokenAmount, exchangeRate);
-        //
-        //        tToken.mint(msg.sender, tTokenAmount);
-        //
-        //        // Emit event
-        //        emit TokenDeposited(msg.sender, lendingTokenAmount, tTokenAmount);
-    }
+    //        require(
+    //            previousSupply + lendingTokenAmount <=
+    //                IAssetSettings(PROTOCOL).getMaxTVLAmount(
+    //                    getLendingPool().lendingToken
+    //                ),
+    //            "MAX_TVL_REACHED"
+    //        );
+    //        // Depositing to Compound accrues interest which changes the exchange rate.
+    //        _depositToCompoundIfSupported(lendingTokenAmount);
+    //
+    //        // Mint tToken tokens
+    //        uint256 tTokenAmount =
+    //            _tTokensFromLendingTokens(lendingTokenAmount, exchangeRate);
+    //
+    //        tToken.mint(msg.sender, tTokenAmount);
+    //
+    //        // Emit event
+    //        emit TokenDeposited(msg.sender, lendingTokenAmount, tTokenAmount);
+    // }
 
     //    function withdraw(uint256 lendingTokenAmount)
     //        external
