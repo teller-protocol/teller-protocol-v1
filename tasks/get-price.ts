@@ -19,36 +19,45 @@ export const getPrice = async (
   args: GetPricesArgs,
   hre: HardhatRuntimeEnvironment
 ): Promise<GetPricesReturn> => {
-  const { src, dst, amount } = args
-  const { contracts, network, tokens, ethers } = hre
+  const { contracts, network, tokens, ethers, toBN, log } = hre
   const { BigNumber: BN, FixedNumber: FN } = ethers
-  const { [src]: srcAddress, [dst]: dstAddress } = getTokens(network)
+
+  let srcStr = args.src.toUpperCase()
+  let dstStr = args.dst.toUpperCase()
+  if (args.src === 'ETH') {
+    srcStr = 'WETH'
+  }
+  if (args.dst === 'ETH') {
+    dstStr = 'WETH'
+  }
+  const { [srcStr]: srcAddress, [dstStr]: dstAddress } = getTokens(network).all
 
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
 
-  let decimals = 18
-  if (dst !== 'ETH') {
-    const token = await tokens.get(dst)
-    decimals = await token.decimals()
-  }
-  const factor = BN.from(10).pow(decimals)
+  const src = await tokens.get(srcStr)
+  const dst = await tokens.get(dstStr)
+
+  const srcFactor = toBN(1, await src.decimals())
+  const dstFactor = toBN(1, await dst.decimals())
+
+  log(``)
+  log(`Price for ${srcStr}/${dstStr}`, { indent: 1 })
+
   const answer = await diamond.getPriceFor(srcAddress, dstAddress)
-  const price = FN.from(answer).divUnsafe(FN.from(factor.toString()))
+  const price = FN.from(answer).divUnsafe(FN.from(dstFactor))
   let value = price
-  if (amount) {
+  if (args.amount) {
     const valueFor = await diamond.getValueFor(
       srcAddress,
       dstAddress,
-      BN.from(amount).mul(factor)
+      BN.from(args.amount).mul(srcFactor)
     )
-    value = FN.from(valueFor.toString()).divUnsafe(FN.from(factor.toString()))
+    value = FN.from(valueFor.toString()).divUnsafe(FN.from(dstFactor))
   }
 
-  console.log(`
-  Pair    : ${src}/${dst}
-  Price   : ${price.toString()}
-  Value   : ${value.toString()}
-  `)
+  log(`Price   : ${price.toString()}`, { indent: 2, star: true })
+  log(`Value   : ${value.toString()}`, { indent: 2, star: true })
+  log(``)
 
   return {
     value: value.toString(),
@@ -62,6 +71,6 @@ task('get-price', 'Gets the value for a given token in terms of another')
     'amount',
     'The amount to get the value for',
     undefined,
-    types.int
+    types.float
   )
   .setAction(getPrice)

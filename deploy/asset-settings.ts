@@ -20,7 +20,7 @@ const createAssetSettings: DeployFunction = async (hre) => {
   for (const [assetSymbol, settings] of Object.entries(assetSettingsConfig)) {
     log(`${assetSymbol}: `, { indent: 2, star: true, nl: false })
 
-    const assetAddress = tokens[assetSymbol]
+    const assetAddress = tokens.all[assetSymbol]
 
     // Check if the asset setting is already initialized
     const isInitialized = await assetSettings.isAssetSettingInitialized(
@@ -38,7 +38,7 @@ const createAssetSettings: DeployFunction = async (hre) => {
         let cacheType: CacheType
         switch (setting.type) {
           case AssetType.Address:
-            value = tokens[setting.value]
+            value = tokens.all[setting.value]
             cacheType = CacheType.Address
             break
 

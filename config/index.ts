@@ -12,6 +12,7 @@ import { platformSettings } from './platform-settings'
 import { signers } from './signers'
 import { tokens } from './tokens'
 import { uniswap } from './uniswap'
+import { Tokens } from '../types/custom/config-types'
 
 const getNetworkName = (network: Network): string =>
   network.config.forkName ?? network.name
@@ -33,7 +34,18 @@ export const getPlatformSettings = (network: Network) =>
 
 export const getSigners = (network: Network) => signers[getNetworkName(network)]
 
-export const getTokens = (network: Network) => tokens[getNetworkName(network)]
+export const getTokens = (network: Network) => {
+  const networkTokens = tokens[getNetworkName(network)]
+  const all: Tokens = Object.keys(networkTokens).reduce((map, type) => {
+    // @ts-expect-error keys
+    map = { ...map, ...networkTokens[type] }
+    return map
+  }, {})
+  return {
+    ...networkTokens,
+    all,
+  }
+}
 
 export const getUniswap = (network: Network) => uniswap[getNetworkName(network)]
 
