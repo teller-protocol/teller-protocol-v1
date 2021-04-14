@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 // Interfaces
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../shared/libraries/AddressArrayLib.sol";
 import { MarketStorageLib, MarketStorage } from "../../storage/market.sol";
 import { AppStorageLib } from "../../storage/app.sol";
@@ -13,9 +14,11 @@ import {
 } from "../interfaces/IAaveLendingPoolAddressesProvider.sol";
 import { PrizePoolInterface } from "../interfaces/PrizePoolInterface.sol";
 import "../../storage/app.sol";
+import { IUniswapV2Router } from "../../shared/interfaces/IUniswapV2Router.sol";
 
 library LibDapps {
     using AddressArrayLib for AddressArrayLib.AddressArray;
+    using SafeERC20 for IERC20;
 
     function marketStore() private pure returns (MarketStorage storage) {
         return MarketStorageLib.marketStore();
@@ -105,5 +108,65 @@ library LibDapps {
         returns (address)
     {
         return getPrizePool(tokenAddress).tokens()[1];
+    }
+
+    /**
+     * @notice Swaps tokens using UniswapV2Router via the platform defined Uniswap contract.
+     * @dev The source and destination tokens must be supported by the supplied PriceAggregator.
+     * @param path An array of token addresses. path.length must be >= 2. Pools for each consecutive pair of addresses must exist and have liquidity.
+     * @param sourceAmount amount of source token to swap.
+     * @param minDestination The minimum amount of output tokens that must be received for the transaction not to revert.
+     * @return uint256 The destination amount that was acquired from the swap.
+     */
+    function swap(
+        address[] memory path,
+        uint256 sourceAmount,
+        uint256 minDestination
+    ) internal returns (uint256) {
+        require(
+            AppStorageLib.store().priceAggregator.isTokenSupported(path[0]),
+            "UNI_SRC_NOT_SUPPORTED"
+        );
+        require(
+            AppStorageLib.store().priceAggregator.isTokenSupported(
+                path[path.length - 1]
+            ),
+            "UNI_DST_NOT_SUPPORTED"
+        );
+
+        return swapWithRouter(path, sourceAmount, minDestination);
+    }
+
+    /**
+     * @notice Swaps tokens using a given UniswapV2Router.
+     * @param path An array of token addresses. path.length must be >= 2. Pools for each consecutive pair of addresses must exist and have liquidity.
+     * @param sourceAmount amount of source token to swap.
+     * @param minDestination The minimum amount of output tokens that must be received for the transaction not to revert.
+     * @return uint256 The destination amount that was acquired from the swap.
+     */
+    function swapWithRouter(
+        address[] memory path,
+        uint256 sourceAmount,
+        uint256 minDestination
+    ) public returns (uint256) {
+        require(path.length >= 2, "UNI_PATH_TOO_SHORT");
+        address source = path[0];
+        address destination = path[path.length - 1];
+        require(source != destination, "UNI_SRC_DST_SAME");
+
+        IUniswapV2Router uniRouter = AppStorageLib.store().uniswapRouter;
+
+        IERC20(source).safeIncreaseAllowance(address(uniRouter), sourceAmount);
+        uint256[] memory amounts =
+            uniRouter.swapExactTokensForTokens(
+                sourceAmount,
+                minDestination,
+                path,
+                address(this),
+                block.timestamp
+            );
+
+        require(amounts.length == path.length, "UNI_ERROR_SWAPPING");
+        return amounts[amounts.length - 1];
     }
 }
