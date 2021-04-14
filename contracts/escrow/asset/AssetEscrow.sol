@@ -53,17 +53,31 @@ bytes32 constant PROXY_CREATION_CODE_HASH = keccak256(PROXY_CREATION_CODE);
     We need this to be implemented on the logic contract at all times to be able to destroy the
     contract.
  */
-abstract contract AMetamorphic {
-    function destroy() external virtual;
+abstract contract AMetamorphic is IERC165 {
+    modifier entrance() {
+        _;
+        assembly {
+            if iszero(returndatasize()) {
+                return(caller(), 20)
+            }
+        }
+    }
 
-    // modifier entrance() {
-    //     _;
-    //     assembly {
-    //         if iszero(returndatasize()) {
-    //             return(caller(), 20)
-    //         }
-    //     }
-    // }
+    function supportsInterface(bytes4 interfaceId)
+        external
+        pure
+        override
+        returns (bool)
+    {
+        return
+            interfaceId == type(IERC165).interfaceId ||
+            interfaceId == this.destroy.selector;
+    }
+
+    function destroy() external virtual {
+        require(msg.sender == TELLER && address(this) != TELLER, "11");
+        selfdestruct(payable(msg.sender));
+    }
 }
 
 /**
@@ -93,7 +107,7 @@ abstract contract AssetEscrowAddress {
     }
 }
 
-abstract contract AssetEscrowContext is AssetEscrowAddress {
+contract AssetEscrowFacet is AssetEscrowAddress {
     /**
         @dev false if this contract doesn't exist or if the metamorphic contract is upgrading.
         true if we're smooth sailing.
@@ -152,8 +166,8 @@ abstract contract AssetEscrowContext is AssetEscrowAddress {
         assembly {
             instance := create2(
                 0, // give no callvalue
-                mload(creationCode), // the creation code bytes
                 add(creationCode, 0x20), // length of the creationCode
+                mload(creationCode), // the creation code bytes
                 or(ident, asset) // salt
             )
         }
@@ -196,8 +210,8 @@ abstract contract AssetEscrowContext is AssetEscrowAddress {
         assembly {
             deployment := create2(
                 0,
-                mload(METAMORPHIC_CREATION_CODE),
                 add(METAMORPHIC_CREATION_CODE, 0x20),
+                mload(METAMORPHIC_CREATION_CODE),
                 metamorphicSalt
             )
         }
