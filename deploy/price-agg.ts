@@ -17,7 +17,6 @@ const registerPriceAggregators: DeployFunction = async (hre) => {
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond', {
     from: deployer,
   })
-  if (!diamond) throw new Error('TellerDiamond contract not yet deployed')
 
   for (const chainlinkPair of Object.values(chainlink)) {
     const { address, baseTokenName, quoteTokenName } = chainlinkPair

@@ -32,7 +32,7 @@ interface ContractsExtension {
   get: <C extends Contract>(
     name: string,
     config?: ContractsGetConfig
-  ) => Promise<C | undefined>
+  ) => Promise<C>
 }
 
 interface TokensExtension {
@@ -126,9 +126,8 @@ extendEnvironment((hre) => {
     async get<C extends Contract>(
       name: string,
       config?: ContractsGetConfig
-    ): Promise<C | undefined> {
-      const deployment = await deployments.getOrNull(name)
-      if (!deployment) return
+    ): Promise<C> {
+      const deployment = await deployments.get(name)
 
       const { address } = config?.at
         ? { address: config.at }

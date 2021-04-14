@@ -9,8 +9,14 @@ export const formatMsg = (
 ): string => {
   const { indent = 0, star, nl = true } = config
 
-  if (star) msg = `* ${msg}`
-  msg = '  '.repeat(indent) + msg
+  msg = msg
+    .split('\n')
+    .map((m) => {
+      if (star) m = `* ${m}`
+      m = '  '.repeat(indent) + m
+      return m
+    })
+    .join('\n')
   if (nl) msg += '\n'
 
   return msg

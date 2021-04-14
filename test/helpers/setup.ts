@@ -13,17 +13,11 @@ export interface TestSetupReturn {
 export const setup = async (): Promise<TestSetupReturn> => {
   await deployments.fixture('protocol')
 
-  const diamond = await getTellerDiamond()
+  const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
   const deployer = await getNamedSigner('deployer')
 
   return {
     diamond,
     deployer,
   }
-}
-
-const getTellerDiamond = async (): Promise<ITellerDiamond> => {
-  const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
-  if (!diamond) throw new Error(`Teller Diamond not yet deployed`)
-  return diamond
 }

@@ -25,7 +25,6 @@ export const getPrice = async (
   const { [src]: srcAddress, [dst]: dstAddress } = getTokens(network)
 
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
-  if (!diamond) throw new Error('TellerDiamond not yet deployed')
 
   let decimals = 18
   if (dst !== 'ETH') {
