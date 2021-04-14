@@ -7,7 +7,7 @@ import "../shared/libraries/AddressArrayLib.sol";
 import "../shared/libraries/NumbersList.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { ITToken } from "../shared/interfaces/ITToken.sol";
-import { CErc20Interface } from "../shared/interfaces/CErc20Interface.sol";
+import { ICErc20 } from "../shared/interfaces/ICErc20.sol";
 
 enum LoanStatus { NonExistent, TermsSet, Active, Closed, Liquidated }
 
@@ -168,7 +168,7 @@ struct LendingPool {
     mapping(address => uint256) totalInterestEarnedLender;
     ITToken tToken;
     ERC20 lendingToken;
-    CErc20Interface cToken;
+    ICErc20 cToken;
     address compound;
     address comp;
     uint256 totalBorrowed;

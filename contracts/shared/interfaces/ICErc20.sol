@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./IComptroller.sol";
 
-interface CErc20Interface {
+interface ICErc20 {
     /*** User Interface ***/
 
     /**

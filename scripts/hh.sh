@@ -28,17 +28,29 @@ script=$1
 opts=(${*:2})
 ENV_VARS=''
 
-deployments_folder=./deployments/localhost
+## Helper function to run a Hardhat script
+##
+### Arguments:
+### 1) script name
+### 2) network name
+### 3) script options
+run() {
+  eval "$ENV_VARS yarn hh $1 --network $2 $3"
+}
 
-## Path to file that stores which network we are forking
-forking_network_file=$deployments_folder/.forkingNetwork
+deployments_dir=./deployments
+local_deployments=$deployments_dir/localhost
+chain_id_file=$local_deployments/.chainId
+forking_network_file=$local_deployments/.forkingNetwork
+
+## Get the network name we are currently forking
 forking_network=$(cat $forking_network_file 2>/dev/null)
 if [ -n "$forking_network" ]
 then
   ENV_VARS+="FORKING_NETWORK=$forking_network "
 fi
 
-latestDeploymentBlock=$(cat $deployments_folder/.latestDeploymentBlock 2>/dev/null)
+latestDeploymentBlock=$(cat $local_deployments/.latestDeploymentBlock 2>/dev/null)
 
 ## Make sure there is a script name passed
 if [ -z "$script" ]
@@ -47,6 +59,22 @@ then
   echo
   show_main_help
 fi
+
+get_next_opts() {
+  next_opt="${opts[0]%% *}"
+  if [[ -n $1 ]] && [ "$1" == 'slice' ]
+  then
+    slice_opts
+  fi
+}
+
+slice_opts() {
+  opts=(${opts[*]:1})
+}
+
+append_opts() {
+  opts+=("$1")
+}
 
 ## Verify that the network name given is available
 verify_network() {
@@ -70,42 +98,51 @@ verify_network() {
 slice_network() {
   if [ -z "$network" ]
   then
-    network="${opts[0]}"
-    verify_network "$network"
-    if [ -z $verify_network_return ] && [ "${1:-0}" == 'verify' ]
+    get_next_opts slice
+    network=$next_opt
+    if [ "${1:-0}" == 'verify' ]
     then
-      echo "Must specify a non local network name"
-      echo
-      show_main_help
+      verify_network "$network"
+      if [ -z $verify_network_return ]
+      then
+        echo "Must specify a valid network name"
+        echo
+        show_main_help
+      fi
     fi
-
-    opts=("${opts[*]:1}")
   fi
 }
 
-## The "node" script is redirected to "fork" a network locally
-if [ "$script" == "node" ]
-then
-  script='fork'
-fi
-
-## Grab the remaining options passed in
-extra_opts=''
-
-## If the script given is "fork" preform required operations
-if [ "$script" == "fork" ]
-then
-  if [[ "${opts[0]}" =~ ^-h|--help$ ]]
+fork() {
+  if [ "$1" == 'help' ]
   then
     echo "Usage: fork <NETWORK> [<BLOCK_NUMBER> | latest]"
     echo
     echo "  The default behavior is to fork the specified network at the last deployment block for any contracts."
     echo "  This can be overridden by ether specifying a block number OR 'latest'"
     echo
-    exit
+    exit 0
+
+  elif [ "$1" == 'stop' ]
+  then
+    fork_pid=$(lsof -ti :8545)
+    if [[ -n $fork_pid ]]
+    then
+      kill "$fork_pid"
+      echo "Forked network stopped"
+    else
+      echo "No fork running"
+    fi
+    echo
+    return 0
   fi
 
-  slice_network
+  local network=$1
+  shift
+  local block=$1
+  shift
+
+  verify_network "$network"
   if [ "$network" == 'localhost' ]
   then
     echo "Cannot fork the localhost network!"
@@ -116,40 +153,139 @@ then
   echo -n "Forking $network... "
 
   ## Copy network deployments
-  rm -rf "./deployments/localhost"
-  cp -r "./deployments/$network" "./deployments/localhost"
-  ## Set network chainId
-  echo '31337' > "./deployments/localhost/.chainId"
+  rm -rf $local_deployments
+  cp -r $deployments_dir/"$network" $local_deployments
+  ## Set network chainId (default is 31337)
+  echo '31337' > $chain_id_file
 
   ## Save the forking network name for later use in hardhat.config.ts
   echo "$network" > $forking_network_file
 
   ## Check if there a block number was passed
-  if [[ "${opts[0]}" -gt 0 ]]
+  if [[ $block -gt 0 ]]
   then
-    echo "on block ${opts[0]}"
-    ENV_VARS+="FORKING_BLOCK=${opts[0]} "
-  elif [ "${opts[0]}" == 'latest' ]
+    echo "on block $block"
+    ENV_VARS+="FORKING_BLOCK=$block "
+  elif [ "$block" == 'latest' ]
   then
     echo "on the latest block"
-    opts=(${opts[*]:1})
   elif [ -n "$latestDeploymentBlock" ]
   then
+    unset block
     echo "on the latest Teller deployment block: $latestDeploymentBlock"
     ENV_VARS+="FORKING_BLOCK=$latestDeploymentBlock "
   fi
-
-  ## Set the actual script to be "hardhat node"
-  script='node'
-  ## Forking network must be "hardhat"
-  network='hardhat'
-  ## Since we are forking, do not redeploy
-  extra_opts="$extra_opts --no-deploy"
-
   echo
+
+  ## Run the Hardhat "node" script on "hardhat" network
+  start() {
+    ## Since we are forking, do not redeploy
+    run node hardhat "--no-deploy"
+  }
+
+  ## Optional param to run fork in the background
+  if [ "$1" == "bg" ]
+  then
+    start 1> /dev/null &
+
+    while ! nc -z localhost 8545; do
+      sleep 0.1
+    done
+
+    echo " || Fork running in the background (PID $!) ||"
+    echo
+  else
+    start
+  fi
+}
+
+try_fork() {
+  network=$1
+  block=$2
+
+  verify_network "$network"
+
+  fork_pid=$(lsof -ti :8545)
+  if [[ -z $fork_pid ]]
+  then
+    fork "$network" "$block" bg
+  fi
+}
+
+fork_notice() {
+  echo
+  echo "NOTICE: Local $forking_network fork still running..."
+  echo
+}
+
+deploy() {
+  local network=$1
+  shift
+  local live=$1
+
+  if [ "$network" != "localhost" ] && [ "$live" != 'live' ]
+  then
+    echo "Must append \"live\" to the script options to deploy on mainnet!!"
+    echo
+    exit 0
+  fi
+
+  ## Deploy on network
+  run deploy "$network" "$*"
+
+  fork_notice
+}
+
+if [ "$script" == 'deploy' ]
+then
+  get_next_opts
+  if [ "$next_opt" == 'fork' ]
+  then
+    ## Slice "fork" from opts
+    slice_opts
+    ## Next value should be a valid network name
+    slice_network verify
+    ## Try to fork it
+    try_fork "$network" latest
+
+    ## Deploy on the local forked network
+    deploy localhost ${opts[*]}
+
+  else
+    ## Get the network name
+    slice_network verify
+    ## Deploy
+    deploy "$network" ${opts[*]}
+  fi
+
+elif [ "$script" == 'test' ]
+then
+  ## If a fork is already running, stop it
+  fork stop 1>/dev/null
+  try_fork mainnet
+
+  run test hardhat ${opts[*]}
+
+  fork stop
+
+elif [ "$script" == 'fork' ] || [ "$script" == 'node' ]
+then
+  get_next_opts
+  if [[ $next_opt =~ ^-h|--help$ ]]
+  then
+    fork help
+  elif [ "$next_opt" == "stop" ]
+  then
+    fork stop
+  else
+    slice_network verify
+    fork "$network" ${opts[*]}
+  fi
+
+else
+  ## Script not supported, show help
+#  show_main_help
+
+  slice_network verify
+  run "$script" "$network" "${opts[*]}"
 fi
-
-## Verify the network is correct
-slice_network verify
-
-eval "$ENV_VARS yarn hh $script --network $network $extra_opts ${opts[*]}"

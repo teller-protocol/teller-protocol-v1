@@ -1248,10 +1248,10 @@
     strip-indent "^2.0.0"
     super-split "^1.1.0"
 
-"@typechain/ethers-v5@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/@typechain/ethers-v5/-/ethers-v5-5.0.0.tgz#6c91766b76c19886cf2c4833ded09611e117f92c"
-  integrity sha512-SnLnq6BCq2NBgm5xsQP8kRIawJ7gppLux8EOMb2ceoB5EuoW87AOyi6r1J5LTYe65/J59HjOVtaGCqsO+38Xrw==
+"@typechain/ethers-v5@^6.0.5":
+  version "6.0.5"
+  resolved "https://registry.yarnpkg.com/@typechain/ethers-v5/-/ethers-v5-6.0.5.tgz#39bbf9baadd0e8d9efad9d16c60152b7cd9a467b"
+  integrity sha512-KJh+EWuxmX1a17fQWS1ba8DCYcqK7UpdbqMZZwyfiv9FQfn8ZQJX17anbkCMOSU8TV3EvRuJ/vFEKGzKnpkO8g==
 
 "@types/bn.js@*", "@types/bn.js@^5.1.0":
   version "5.1.0"
@@ -5983,9 +5983,9 @@ hardhat-shorthand@^1.0.0:
     semver "^6.3.0"
 
 hardhat-typechain@^0.3.4:
-  version "0.3.4"
-  resolved "https://registry.yarnpkg.com/hardhat-typechain/-/hardhat-typechain-0.3.4.tgz#6d7d86184152b5a3c83bde0fbbb26224b6fbfd70"
-  integrity sha512-oI9YSutDfZnRlAV1bYTpLkBHw4rkhz9JDWAEXz2PR34ylpgLWxPFbPiHT5QXadGTlBqJUAT6JSTxCK1kADMkjA==
+  version "0.3.5"
+  resolved "https://registry.yarnpkg.com/hardhat-typechain/-/hardhat-typechain-0.3.5.tgz#8e50616a9da348b33bd001168c8fda9c66b7b4af"
+  integrity sha512-w9lm8sxqTJACY+V7vijiH+NkPExnmtiQEjsV9JKD1KgMdVk2q8y+RhvU/c4B7+7b1+HylRUCxpOIvFuB3rE4+w==
 
 hardhat@^2.0.11:
   version "2.0.11"
@@ -10474,7 +10474,7 @@ type@^2.0.0:
   resolved "https://registry.yarnpkg.com/type/-/type-2.1.0.tgz#9bdc22c648cf8cf86dd23d32336a41cfb6475e3f"
   integrity sha512-G9absDWvhAWCV2gmF1zKud3OyC61nZDwWvBL2DApaVFogI07CprggiQAOOjvp2NRjYWFzPyu7vwtDrQFq8jeSA==
 
-typechain@^4.0.1:
+typechain@^4.0.3:
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/typechain/-/typechain-4.0.3.tgz#e8fcd6c984676858c64eeeb155ea783a10b73779"
   integrity sha512-tmoHQeXZWHxIdeLK+i6dU0CU0vOd9Cndr3jFTZIMzak5/YpFZ8XoiYpTZcngygGBqZo+Z1EUmttLbW9KkFZLgQ==

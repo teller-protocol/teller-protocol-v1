@@ -1,12 +1,16 @@
+import { Contract } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Libraries } from 'hardhat-deploy/types'
-import { Contract } from 'ethers'
+import { DiamondOptions } from 'hardhat-deploy/dist/types'
 
-export interface DeployArgs {
+interface CommonDeployArgs {
   hre: HardhatRuntimeEnvironment
-  contract: string
   name?: string
   libraries?: Libraries
+}
+
+export interface DeployArgs extends CommonDeployArgs {
+  contract: string
   args?: any[]
   mock?: boolean
 }
@@ -19,6 +23,7 @@ export const deploy = async <C extends Contract>(
       deployments: { deploy, getOrNull },
       getNamedAccounts,
       ethers,
+      log,
     },
   } = args
 
@@ -32,7 +37,11 @@ export const deploy = async <C extends Contract>(
     // If marked as mock, prepend "Mock" to the contract name
     const contractName = `${args.contract}${args.mock ? 'Mock' : ''}`
 
-    process.stdout.write(` * Deploying ${contractDeployName}...: `)
+    log(`Deploying ${contractDeployName}...: `, {
+      indent: 1,
+      star: true,
+      nl: false,
+    })
 
     const { address, receipt } = await deploy(contractDeployName, {
       contract: contractName,
@@ -43,15 +52,72 @@ export const deploy = async <C extends Contract>(
     })
 
     contractAddress = address
-    process.stdout.write(
-      `${address} ${receipt ? `with ${receipt.gasUsed} gas` : ''} \n`
-    )
+    log(`${address} ${receipt ? `with ${receipt.gasUsed} gas` : ''}`)
   } else {
     contractAddress = existingContract.address
-    process.stdout.write(
-      ` * Reusing ${contractDeployName} deployment at ${existingContract.address} \n`
+    log(
+      `Reusing ${contractDeployName} deployment at ${existingContract.address}`,
+      { indent: 1, star: true }
     )
   }
 
   return (await ethers.getContractAt(args.contract, contractAddress)) as C
+}
+
+interface DiamondExecuteArgs<F, A> {
+  methodName: F
+  args: A
+}
+
+export interface DeployDiamondArgs<
+  C extends Contract,
+  F = string | undefined,
+  A = F extends string ? Parameters<C[F]> : never[]
+> extends CommonDeployArgs {
+  name: string
+  facets: string[]
+  owner?: string
+  execute: F extends string
+    ? DiamondExecuteArgs<F, A>
+    : DiamondOptions['execute']
+}
+
+export const deployDiamond = async <
+  C extends Contract,
+  F = string | undefined,
+  A = F extends string ? Parameters<C[F]> : undefined
+>(
+  args: DeployDiamondArgs<C, F, A>
+): Promise<C> => {
+  const {
+    hre: {
+      deployments: {
+        diamond: { deploy },
+      },
+      getNamedAccounts,
+      ethers,
+      log,
+    },
+  } = args
+
+  const { deployer } = await getNamedAccounts()
+
+  log(`Deploying ${args.name}...: `, { star: true, indent: 1, nl: false })
+
+  const { abi, address, receipt, newlyDeployed } = await deploy(args.name, {
+    owner: args.owner ?? deployer,
+    libraries: args.libraries,
+    facets: args.facets,
+    // @ts-expect-error fix type
+    execute: args.execute,
+    from: deployer,
+    log: false,
+  })
+  if (newlyDeployed) {
+    log(`${address} ${receipt ? `with ${receipt.gasUsed} gas` : ''}`)
+  } else {
+    log(` already deployed ${address}`)
+  }
+
+  return (await ethers.getContractAt(abi, address)) as C
 }

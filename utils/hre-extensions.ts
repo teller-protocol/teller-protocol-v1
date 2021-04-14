@@ -3,7 +3,6 @@ import 'hardhat-deploy'
 
 import { makeNodeDisklet } from 'disklet'
 import { BigNumber, BigNumberish, Contract, Signer } from 'ethers'
-import { ethers } from 'hardhat'
 import { extendEnvironment } from 'hardhat/config'
 import {
   DeploymentSubmission,
@@ -12,19 +11,19 @@ import {
 } from 'hardhat-deploy/types'
 
 import { getTokens } from '../config'
-import { formatMsg, FormatMsgConfig } from './formatMsg'
 import { Address } from '../types/custom/config-types'
-import { IERC20 } from '../types/typechain'
+import { ERC20 } from '../types/typechain'
+import { formatMsg, FormatMsgConfig } from './formatMsg'
 
 declare module 'hardhat/types/runtime' {
   interface HardhatRuntimeEnvironment {
     contracts: ContractsExtension
     tokens: TokensExtension
     evm: EVM
-    getNamedSigner(name: string): Promise<Signer>
-    fastForward(seconds: BigNumberish): Promise<void>
-    toBN(amount: BigNumberish, decimals?: BigNumberish): BigNumber
-    fromBN(amount: BigNumberish, decimals?: BigNumberish): BigNumber
+    getNamedSigner: (name: string) => Promise<Signer>
+    fastForward: (seconds: BigNumberish) => Promise<void>
+    toBN: (amount: BigNumberish, decimals?: BigNumberish) => BigNumber
+    fromBN: (amount: BigNumberish, decimals?: BigNumberish) => BigNumber
     log: (msg: string, config?: FormatMsgConfig) => void
   }
 }
@@ -32,12 +31,12 @@ declare module 'hardhat/types/runtime' {
 interface ContractsExtension {
   get: <C extends Contract>(
     name: string,
-    config?: Config
+    config?: ContractsGetConfig
   ) => Promise<C | undefined>
 }
 
 interface TokensExtension {
-  get: <T extends IERC20>(name: string) => Promise<T>
+  get: (name: string) => Promise<ERC20>
 }
 
 interface EVM {
@@ -101,7 +100,7 @@ interface ImpersonateReturn {
   stop: () => Promise<void>
 }
 
-interface Config {
+interface ContractsGetConfig {
   from?: string | Signer
   at?: string
 }
@@ -126,7 +125,7 @@ extendEnvironment((hre) => {
   hre.contracts = {
     async get<C extends Contract>(
       name: string,
-      config?: Config
+      config?: ContractsGetConfig
     ): Promise<C | undefined> {
       const deployment = await deployments.getOrNull(name)
       if (!deployment) return
@@ -149,10 +148,9 @@ extendEnvironment((hre) => {
   }
 
   hre.tokens = {
-    async get<T extends IERC20>(name: string): Promise<T> {
+    async get(name: string): Promise<ERC20> {
       const tokens = getTokens(network)
-      const token = await ethers.getContractAt('IERC20', tokens[name])
-      return token as T
+      return (await ethers.getContractAt('ERC20', tokens[name])) as ERC20
     },
   }
 
@@ -277,14 +275,17 @@ extendEnvironment((hre) => {
 
     if (loanManagerRegex.test(name)) {
       // Is LoanManager
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const [_, market] = name.match(loanManagerRegex)!
       data.proxies.loanManagers[market] = deployment.address
     } else if (lpRegex.test(name)) {
       // Is LendingPool
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const [_, sym] = name.match(lpRegex)!
       data.proxies.lendingPools[sym] = deployment.address
     } else if (logicsRegex.test(name)) {
       // Is logic contract
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const [_, contractName] = name.match(logicsRegex)!
       data.logics[contractName] = deployment.address
     } else if (libRegex.test(name)) {
@@ -292,6 +293,7 @@ extendEnvironment((hre) => {
       data.libraries[name] = deployment.address
     } else if (dynamicProxyRegex.test(name)) {
       // Is DynamicProxy
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const [_, contractName] = name.match(dynamicProxyRegex)!
       data.proxies[contractName] = deployment.address
     }
