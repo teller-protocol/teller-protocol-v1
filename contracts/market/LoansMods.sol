@@ -71,4 +71,11 @@ abstract contract LoansMods {
         );
         _;
     }
+
+    modifier onlyBorrower(uint256 loanID) {
+        require(
+            msg.sender == MarketStorageLib.marketStore().loans[loanID].borrower
+        );
+        _;
+    }
 }

@@ -59,6 +59,7 @@ struct Loan {
     //    address escrow;
     LoanStatus status;
     bool liquidated;
+    address borrower;
 }
 
 /**
