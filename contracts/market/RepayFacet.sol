@@ -103,4 +103,26 @@ contract RepayFacet is RolesMods, PausableMods {
             totalOwed
         );
     }
+
+    /**
+        @notice It transfers an amount of tokens from an address to this contract.
+        @param from address where the tokens will transfer from.
+        @param amount to be transferred.
+        @param lendingToken the address of the lending token
+        @dev It throws a require error if 'transferFrom' invocation fails.
+     */
+    function tokenTransferFrom(
+        address from,
+        uint256 amount,
+        address lendingToken
+    ) private returns (uint256 balanceIncrease) {
+        uint256 balanceBefore = IERC20(lendingToken).balanceOf(address(this));
+        SafeERC20.safeTransferFrom(
+            IERC20(lendingToken),
+            from,
+            address(this),
+            amount
+        );
+        return IERC20(lendingToken).balanceOf(address(this)) - (balanceBefore);
+    }
 }

@@ -1,5 +1,7 @@
+import fs from 'fs'
 import { Network } from 'hardhat/types'
 
+import { MerkleDistributorInfo } from '../scripts/merkle/root'
 import { assetSettings } from './asset-settings'
 import { atms } from './atms'
 import { chainlink } from './chainlink'
@@ -10,8 +12,6 @@ import { platformSettings } from './platform-settings'
 import { signers } from './signers'
 import { tokens } from './tokens'
 import { uniswap } from './uniswap'
-import fs from 'fs'
-import { MerkleDistributorInfo } from '../scripts/merkle/root'
 
 const getNetworkName = (network: Network): string =>
   network.config.forkName ?? network.name

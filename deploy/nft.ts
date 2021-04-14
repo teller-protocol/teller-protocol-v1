@@ -2,8 +2,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
 import { ITellerNFT, ITellerNFTDistributor } from '../types/typechain'
-import { deployDiamond } from '../utils/deploy-diamond'
-import { deploy } from '../utils/deploy-helpers'
+import { deploy, deployDiamond } from '../utils/deploy-helpers'
 
 const deployNFT: DeployFunction = async (hre) => {
   const { getNamedSigner, run } = hre

@@ -6,11 +6,9 @@
     "h": "dotenv -- ./scripts/hh.sh",
     "lint": "prettier .",
     "format:write": "prettier --write",
-    "compile": "yarn contract:compile && yarn types && yarn tsc",
-    "contract:compile": "COMPILING=true yarn hh compile",
-    "contract:size": "yarn contract:compile && yarn hh size-contracts",
-    "coverage": "#yarn hh coverage --solcoverjs ./solcover.js",
-    "types": "yarn typechain --target ethers-v5 --outDir types/typechain 'artifacts/!(build-info)/**/+([a-zA-Z0-9]).json'"
+    "compile": "COMPILING=true yarn hh compile",
+    "build": "yarn compile && yarn tsc",
+    "coverage": "#yarn hh coverage --solcoverjs ./solcover.js"
   },
   "dependencies": {
     "@chainlink/contracts": "^0.1.6",
@@ -19,7 +17,7 @@
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@openzeppelin/contracts": "^4.0.0",
     "@openzeppelin/contracts-upgradeable": "^4.0.0",
-    "@typechain/ethers-v5": "^5.0.0",
+    "@typechain/ethers-v5": "^6.0.5",
     "@types/chai": "^4.2.14",
     "@types/chai-as-promised": "^7.1.3",
     "@types/expect": "^24.3.0",
@@ -62,7 +60,7 @@
     "solhint-plugin-prettier": "^0.0.5",
     "ts-generator": "^0.1.1",
     "ts-node": "^9.1.1",
-    "typechain": "^4.0.1",
+    "typechain": "^4.0.3",
     "typescript": "^4.1.3"
   },
   "husky": {

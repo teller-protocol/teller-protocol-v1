@@ -9,9 +9,10 @@
   },
   "plugins": ["prettier", "simple-import-sort", "@typescript-eslint"],
   "rules": {
+    "@typescript-eslint/no-empty-interface": "off",
     "@typescript-eslint/no-empty-function": "warn",
     "@typescript-eslint/no-unused-vars": [
-      "error",
+      "warn",
       {
         "ignoreRestSiblings": true,
         "argsIgnorePattern": "^_"
@@ -20,7 +21,7 @@
     "@typescript-eslint/promise-function-async": "off",
     "@typescript-eslint/restrict-template-expressions": "off",
     "@typescript-eslint/strict-boolean-expressions": "off",
-    "no-unused-vars": "warn",
+    "no-unused-vars": "off",
     "no-useless-return": "off",
     "no-void": "off",
     "arrow-parens": "error",

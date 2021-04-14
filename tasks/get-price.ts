@@ -1,9 +1,9 @@
+import { BigNumberish } from 'ethers'
 import { task, types } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-import { BigNumberish } from 'ethers'
 
-import { PriceAggregator } from '../types/typechain'
 import { getTokens } from '../config'
+import { ITellerDiamond } from '../types/typechain'
 
 interface GetPricesArgs {
   src: string
@@ -24,23 +24,19 @@ export const getPrice = async (
   const { BigNumber: BN, FixedNumber: FN } = ethers
   const { [src]: srcAddress, [dst]: dstAddress } = getTokens(network)
 
-  const chainLinkAggregator = await contracts.get<PriceAggregator>(
-    'PriceAggregator'
-  )
+  const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
+
   let decimals = 18
   if (dst !== 'ETH') {
     const token = await tokens.get(dst)
     decimals = await token.decimals()
   }
   const factor = BN.from(10).pow(decimals)
-  const answer = await chainLinkAggregator.latestAnswerFor(
-    srcAddress,
-    dstAddress
-  )
+  const answer = await diamond.getPriceFor(srcAddress, dstAddress)
   const price = FN.from(answer).divUnsafe(FN.from(factor.toString()))
   let value = price
   if (amount) {
-    const valueFor = await chainLinkAggregator.valueFor(
+    const valueFor = await diamond.getValueFor(
       srcAddress,
       dstAddress,
       BN.from(amount).mul(factor)
@@ -65,7 +61,7 @@ task('get-price', 'Gets the value for a given token in terms of another')
   .addOptionalParam(
     'amount',
     'The amount to get the value for',
-    null,
+    undefined,
     types.int
   )
   .setAction(getPrice)

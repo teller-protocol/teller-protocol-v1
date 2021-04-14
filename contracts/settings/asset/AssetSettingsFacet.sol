@@ -17,7 +17,7 @@ import { AppStorageLib, AppStorage } from "../../storage/app.sol";
 
 struct AssetSettingRequest {
     bytes32 key;
-    bytes value;
+    bytes32 value;
     CacheType cacheType;
 }
 
@@ -34,16 +34,24 @@ contract AssetSettingsFacet is RolesMods {
     event AssetSettingsCreated(
         address indexed asset,
         bytes32 indexed key,
-        bytes value,
+        bytes32 value,
         CacheType cacheType
     );
 
     event AssetSettingsUpdated(
         address indexed asset,
         bytes32 indexed key,
-        bytes value,
+        bytes32 value,
         CacheType cacheType
     );
+
+    function isAssetSettingInitialized(address asset)
+        external
+        view
+        returns (bool)
+    {
+        return CacheLib.exists(s(asset));
+    }
 
     /**
      * @notice It creates an asset with the given parameters.

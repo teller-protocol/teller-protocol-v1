@@ -1,18 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+// Interfaces
+import { IEscrow } from "../../shared/interfaces/IEscrow.sol";
+
+// Libraries
+import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
+import {
+    PlatformSettingsLib
+} from "../../settings/platform/PlatformSettingsLib.sol";
+import { PriceAggLib } from "../../price-aggregator/PriceAggLib.sol";
+
+// Storage
 import {
     MarketStorageLib,
     MarketStorage,
     LoanStatus
 } from "../../storage/market.sol";
 import { AppStorageLib } from "../../storage/app.sol";
-import { IEscrow } from "../../shared/interfaces/IEscrow.sol";
-import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
-import {
-    PlatformSettingsLib
-} from "../../settings/platform/PlatformSettingsLib.sol";
-import { IEscrow } from "../../shared/interfaces/IEscrow.sol";
 
 library LibLoans {
     using NumbersLib for int256;
@@ -76,7 +81,7 @@ library LibLoans {
             neededInCollateralTokens = 0;
         } else {
             uint256 value =
-                AppStorageLib.store().priceAggregator.valueFor(
+                PriceAggLib.valueFor(
                     libStore().loans[loanID].lendingToken,
                     libStore().loans[loanID].collateralToken,
                     uint256(
@@ -221,7 +226,7 @@ library LibLoans {
             return 0;
         }
         return
-            AppStorageLib.store().priceAggregator.valueFor(
+            PriceAggLib.valueFor(
                 libStore().loans[loanID].collateralToken,
                 libStore().loans[loanID].lendingToken,
                 libStore().loans[loanID].collateral

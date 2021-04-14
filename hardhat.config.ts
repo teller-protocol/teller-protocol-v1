@@ -1,5 +1,6 @@
 import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-waffle'
+import 'hardhat-typechain'
 import 'hardhat-contract-sizer'
 import 'hardhat-deploy'
 import 'hardhat-gas-reporter'
@@ -38,6 +39,7 @@ const FORK_BLOCK_NUMBER = process.env.FORKING_BLOCK
   ? parseInt(process.env.FORKING_BLOCK)
   : undefined
 
+// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 export default <HardhatUserConfig>{
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
@@ -58,10 +60,20 @@ export default <HardhatUserConfig>{
       },
     ],
   },
+  typechain: {
+    target: 'ethers-v5',
+    outDir: 'types/typechain',
+  },
   contractSizer: {
-    runOnCompile: false,
-    alphaSort: true,
+    runOnCompile: !!process.env.COMPILING,
+    alphaSort: false,
     disambiguatePaths: false,
+  },
+  gasReporter: {
+    currency: 'USD',
+    coinmarketcap: process.env.CMC_KEY,
+    outputFile: process.env.SAVE_GAS_REPORT ? 'gas-reporter.txt' : undefined,
+    noColors: !!process.env.SAVE_GAS_REPORT,
   },
   namedAccounts: {
     deployer: {
@@ -133,12 +145,6 @@ export default <HardhatUserConfig>{
       gas: GAS,
       gasPrice: GAS_PRICE,
     },
-  },
-  gasReporter: {
-    currency: 'USD',
-    coinmarketcap: process.env.CMC_KEY,
-    outputFile: process.env.SAVE_GAS_REPORT ? 'gas-reporter.txt' : undefined,
-    noColors: !!process.env.SAVE_GAS_REPORT,
   },
   mocha: {
     timeout: 100000,

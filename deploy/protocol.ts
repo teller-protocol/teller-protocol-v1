@@ -1,34 +1,42 @@
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { deployDiamond } from '../utils/deploy-diamond'
-import { ITellerDiamond } from '../types/typechain'
 import { getTokens, getUniswap } from '../config'
+import { ITellerDiamond } from '../types/typechain'
+import { deployDiamond } from '../utils/deploy-helpers'
 
 const deployProtocol: DeployFunction = async (hre) => {
-  const { network } = hre
+  const { network, getNamedAccounts } = hre
+
+  const { deployer } = await getNamedAccounts()
 
   const tokens = getTokens(network)
-  const initArgs = {
-    assets: Object.entries(tokens),
+  const initArgs: Parameters<ITellerDiamond['init']>[0] = {
+    admin: deployer,
+    assets: Object.entries(tokens).map(([sym, addr]) => ({ sym, addr })),
     uniswapV2Router: getUniswap(network).v2Router,
   }
 
   // Deploy platform diamond
-  const diamond = await deployDiamond<ITellerDiamond>({
+  const diamond = await deployDiamond<ITellerDiamond, 'init'>({
     hre,
     name: 'TellerDiamond',
     facets: [
       'SettingsFacet',
-      'LendingFacet',
-      'CreateLoanFacet',
-      'LoanDataFacet',
-      'CollateralFacet',
-      'RepayFacet',
-      'LiquidateFacet',
-      'SignersFacet',
-      'StakingFacet',
-      'EscrowFacet',
+      'PlatformSettingsFacet',
+      'AssetSettingsFacet',
+      'PriceAggFacet',
+      'ChainlinkAggFacet',
+      // 'LendingFacet',
+      // 'CreateLoanFacet',
+      // 'LoanDataFacet',
+      // 'CollateralFacet',
+      // 'RepayFacet',
+      // 'LiquidateFacet',
+      // 'SignersFacet',
+      // 'StakingFacet',
+      // 'EscrowFacet',
     ],
+    owner: deployer,
     execute: {
       methodName: 'init',
       args: [initArgs],
