@@ -58,10 +58,11 @@ contract CompoundFacet is RolesMods, PausableMods, LoansMods {
 
     /**
         @notice To lend we first have to approve the cToken to access the token balance then mint.
+        @param loanID id of the loan being used in the dapp
         @param tokenAddress address of the token.
         @param amount amount of tokens to mint.
     */
-    function lend(
+    function compoundLend(
         uint256 loanID,
         address tokenAddress,
         uint256 amount
@@ -91,10 +92,11 @@ contract CompoundFacet is RolesMods, PausableMods, LoansMods {
 
     /**
         @notice This function redeems the user's cTokens for a specific amount of the underlying token.
+        @param loanID id of the loan being used in the dapp
         @param tokenAddress address of the token.
         @param amount amount of underlying tokens to redeem.
     */
-    function redeem(
+    function compoundRedeem(
         uint256 loanID,
         address tokenAddress,
         uint256 amount
@@ -106,9 +108,10 @@ contract CompoundFacet is RolesMods, PausableMods, LoansMods {
 
     /**
         @notice This function redeems the complete cToken balance.
+        @param loanID id of the loan being used in the dapp
         @param tokenAddress address of the token.
     */
-    function redeemAll(uint256 loanID, address tokenAddress)
+    function CompoundRedeemAll(uint256 loanID, address tokenAddress)
         public
         loanActiveOrSet(loanID)
         paused("", false)
@@ -121,6 +124,7 @@ contract CompoundFacet is RolesMods, PausableMods, LoansMods {
 
     /**
         @notice This function calls on Compound cToken to redeem an amount of the underlying token.
+        @param loanID id of the loan being used in the dapp
         @param cToken the instance of the cToken.
         @param amount amount of cToken or underlying token to redeem.
         @param isUnderlying boolean indicating if the amount to redeem is in the underlying token amount.

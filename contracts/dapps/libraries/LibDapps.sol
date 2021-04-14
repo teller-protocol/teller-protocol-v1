@@ -5,11 +5,14 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../shared/libraries/AddressArrayLib.sol";
 import { MarketStorageLib, MarketStorage } from "../../storage/market.sol";
+import { AppStorageLib } from "../../storage/app.sol";
 import { IAToken } from "../interfaces/IAToken.sol";
 import { IAaveLendingPool } from "../interfaces/IAaveLendingPool.sol";
 import {
     IAaveLendingPoolAddressesProvider
 } from "../interfaces/IAaveLendingPoolAddressesProvider.sol";
+import { PrizePoolInterface } from "../interfaces/PrizePoolInterface.sol";
+import "../../storage/app.sol";
 
 library LibDapps {
     using AddressArrayLib for AddressArrayLib.AddressArray;
@@ -69,5 +72,38 @@ library LibDapps {
             IAToken(
                 getAaveLendingPool().getReserveData(tokenAddress).aTokenAddress
             );
+    }
+
+    /**
+        @notice Grabs the Pool Together Prize Pool address for an token from the asset settings.
+        @notice The pool underlying address must match the supplied token address.
+        @param tokenAddress The token address to get the cToken for.
+        @return PrizePool instance.
+     */
+    function getPrizePool(address tokenAddress)
+        internal
+        view
+        returns (PrizePoolInterface)
+    {
+        return
+            PrizePoolInterface(
+                AppStorageLib.store().assetSettings[tokenAddress].addresses[
+                    keccak256("PrizePoolTogether")
+                ]
+            );
+    }
+
+    /**
+        @notice Grabs the controlled ticket token address for the prize pool
+        @notice The pool underlying address must match the supplied token address.
+        @param tokenAddress The token address to get the cToken for.
+        @return The address of the ticket token contract.
+    */
+    function getTicketAddress(address tokenAddress)
+        internal
+        view
+        returns (address)
+    {
+        return getPrizePool(tokenAddress).tokens()[1];
     }
 }

@@ -49,10 +49,11 @@ contract AaveFacet is RolesMods, PausableMods, LoansMods {
 
     /**
         @notice The deposit, the aToken needs to be approved to have access to the token balance
+        @param loanID id of the loan being used in the dapp
         @param tokenAddress address of the token
         @param amount amount of tokens to deposit
      */
-    function deposit(
+    function aaveDeposit(
         uint256 loanID,
         address tokenAddress,
         uint256 amount
@@ -82,10 +83,11 @@ contract AaveFacet is RolesMods, PausableMods, LoansMods {
 
     /**
         @notice This function withdraws the user's aTokens for a specific amount
+        @param loanID id of the loan being used in the dapp
         @param tokenAddress address of the token
         @param amount amount of the underlying tokens to withdraw
      */
-    function withdraw(
+    function aaveWithdraw(
         uint256 loanID,
         address tokenAddress,
         uint256 amount
@@ -118,9 +120,10 @@ contract AaveFacet is RolesMods, PausableMods, LoansMods {
 
     /**
         @notice This function withdraws all the user's aTokens from previous deposits
+        @param loanID id of the loan being used in the dapp
         @param tokenAddress address of the token
      */
-    function withdrawAll(uint256 loanID, address tokenAddress)
+    function aaveWithdrawAll(uint256 loanID, address tokenAddress)
         public
         loanActiveOrSet(loanID)
         paused("", false)
