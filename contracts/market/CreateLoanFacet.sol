@@ -26,7 +26,7 @@ import {
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { LibLendingPool } from "../lending/libraries/LibLendingPool.sol";
+import { LendingLib } from "../lending/libraries/LendingLib.sol";
 
 contract CreateLoanFacet is RolesMods, PausableMods, LoansMods {
     using AddressLib for address;
@@ -150,7 +150,7 @@ contract CreateLoanFacet is RolesMods, PausableMods, LoansMods {
             MarketStorageLib.marketStore().lendingPool[lendingTokenAddress];
 
         require(
-            LibLendingPool.isDebtRatioValid(lendingTokenAddress, amountBorrow),
+            LendingLib.isDebtRatioValid(lendingTokenAddress, amountBorrow),
             "SUPPLY_TO_DEBT_EXCEEDS_MAX"
         );
         require(
@@ -206,7 +206,7 @@ contract CreateLoanFacet is RolesMods, PausableMods, LoansMods {
         uint256 lendingTokenBalance =
             lendingPool.lendingToken.balanceOf(address(this));
         if (lendingTokenBalance < amountBorrow) {
-            LibLendingPool.withdrawFromCompoundIfSupported(
+            LendingLib.withdrawFromCompoundIfSupported(
                 lendingTokenAddress,
                 amountBorrow - (lendingTokenBalance)
             );

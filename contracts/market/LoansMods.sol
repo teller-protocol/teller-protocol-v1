@@ -11,7 +11,7 @@ import {
     PlatformSettingsLib
 } from "../settings/platform/PlatformSettingsLib.sol";
 import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
-import { LibLendingPool } from "../lending/libraries/LibLendingPool.sol";
+import { LendingLib } from "../lending/libraries/LendingLib.sol";
 
 abstract contract LoansMods {
     using NumbersLib for uint256;
@@ -63,7 +63,7 @@ abstract contract LoansMods {
         );
 
         require(
-            LibLendingPool.isDebtRatioValid(
+            LendingLib.isDebtRatioValid(
                 loanRequest.assetAddress,
                 loanRequest.amount
             ),

@@ -13,27 +13,31 @@ import { PriceAggFacet } from "../../price-aggregator/PriceAggFacet.sol";
 import {
     ChainlinkAggFacet
 } from "../../price-aggregator/chainlink/ChainlinkAggFacet.sol";
-import {AssetEscrowFacet} from "../../escrow/asset/AssetEscrow.sol";
-import { LendingFacet } from "../../lending/LendingFacet.sol";
+import { LendingDepositFacet } from "../../lending/LendingDepositFacet.sol";
+import { LendingWithdrawFacet } from "../../lending/LendingWithdrawFacet.sol";
+import { LendingDataFacet } from "../../lending/LendingDataFacet.sol";
 import { CreateLoanFacet } from "../../market/CreateLoanFacet.sol";
 import { LoanDataFacet } from "../../market/LoanDataFacet.sol";
 import { RepayFacet } from "../../market/RepayFacet.sol";
 import { LiquidateFacet } from "../../market/LiquidateFacet.sol";
 import { SignersFacet } from "../../market/SignersFacet.sol";
 import { StakingFacet } from "../../staking/StakingFacet.sol";
+import { EscrowFacet } from "../../escrow/EscrowFacet.sol";
 
 abstract contract ITellerDiamond is
-    LendingFacet,
     SettingsFacet,
     PlatformSettingsFacet,
     AssetSettingsFacet,
     PriceAggFacet,
-    ChainlinkAggFacet
+    ChainlinkAggFacet,
+    LendingDepositFacet,
+    LendingWithdrawFacet,
+    LendingDataFacet,
     CreateLoanFacet,
     LoanDataFacet,
     RepayFacet,
     LiquidateFacet,
     SignersFacet,
     StakingFacet,
-    AssetEscrowFacet
+    EscrowFacet
 {}

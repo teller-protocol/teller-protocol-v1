@@ -1,16 +1,154 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { MarketStorageLib, LendingPool } from "../../storage/market.sol";
+// Libraries
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
-import { AppStorageLib } from "../../storage/app.sol";
 import {
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { CompoundLib } from "../../shared/libraries/CompoundLib.sol";
+
+// Interfaces
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-library LibLendingPool {
+// Storage
+import { LendingStorageLib, LendingStorage } from "../../storage/lending.sol";
+import { AppStorageLib } from "../../storage/app.sol";
+import { MarketStorageLib, LendingPool } from "../../storage/market.sol";
+import { PriceAggLib } from "../../price-aggregator/PriceAggLib.sol";
+
+library LendingLib {
     using NumbersLib for uint256;
+
+    function s(address asset) internal pure returns (LendingStorage storage) {
+        return LendingStorageLib.store(asset);
+    }
+
+    uint256 internal constant EXCHANGE_RATE_FACTOR = 1e18;
+
+    /**
+     * @dev
+     */
+    function tTokenValue(uint256 assetAmount, uint256 exchangeRate)
+        internal
+        pure
+        returns (uint256 value_)
+    {
+        value_ = (assetAmount * EXCHANGE_RATE_FACTOR) / exchangeRate;
+    }
+
+    /**
+     * @dev
+     */
+    function assetValue(uint256 tTokenAmount, uint256 exchangeRate)
+        internal
+        pure
+        returns (uint256 value_)
+    {
+        value_ = (tTokenAmount * (exchangeRate)) / EXCHANGE_RATE_FACTOR;
+    }
+
+    /**
+     * @dev
+     */
+    function exchangeRateSupply(address asset)
+        internal
+        view
+        returns (uint256 rate_, uint256 supply_)
+    {
+        if (tToken.totalSupply() == 0) {
+            return EXCHANGE_RATE_FACTOR;
+        }
+
+        supply_ = totalSupplied(asset);
+        rate_ = exchangeRateForSupply(asset, supply);
+    }
+
+    /**
+     * @dev
+     */
+    function exchangeRate(address asset) internal view returns (uint256 rate_) {
+        if (tToken.totalSupply() == 0) {
+            return EXCHANGE_RATE_FACTOR;
+        }
+
+        rate_ = exchangeRateForSupply(asset, totalSupplied(asset));
+    }
+
+    /**
+     * @dev
+     */
+    function exchangeRateForSupply(address asset, uint256 supply)
+        internal
+        view
+        returns (uint256 rate_)
+    {
+        rate_ = (supply * EXCHANGE_RATE_FACTOR) / tToken.totalSupply();
+    }
+
+    /**
+     * @dev
+     */
+    function exchangeRateCurrentSupply(address asset)
+        internal
+        returns (uint256 rate_, uint256 supply_)
+    {
+        accrueInterest(asset);
+        (rate_, supply_) = exchangeRateSupply(asset);
+    }
+
+    /**
+     * @dev
+     */
+    function exchangeRateCurrent(address asset)
+        internal
+        returns (uint256 rate_)
+    {
+        accrueInterest(asset);
+        rate_ = exchangeRate(asset);
+    }
+
+    /**
+     * @dev
+     */
+    function accrueInterest(address asset) internal {
+        // TODO: Accrue interest for secondary LP assets
+    }
+
+    /**
+        @notice It calculates the total supply of the lending asset across all markets.
+        @return totalSupplied the total supply denoted in the lending asset.
+     */
+    function totalSupplied(address asset)
+        internal
+        view
+        returns (uint256 totalSupplied_)
+    {
+        totalSupplied_ =
+            ERC20(asset).balanceOf(address(this)) +
+            s(asset).totalBorrowed -
+            s(asset).totalRepaid;
+
+        for (uint256 i; i < store.secondaryFunds.length(); i++) {
+            address otherToken = store.secondaryFunds.at(i);
+            totalSupplied_ += PriceAggLib.valueFor(
+                otherToken,
+                asset,
+                // TODO: replace with funding escrow
+                ERC20(otherToken).balanceOf(address(this))
+            );
+        }
+    }
+
+    function lenderInterestEarned(
+        address asset,
+        uint256 rate,
+        address lender
+    ) internal view returns (uint256 interest_) {
+        interest_ =
+            assetValue(tToken.balanceOf(lender), rate) -
+            s(asset).lenderTotalSupplied[lender];
+    }
 
     function getDebtRatioFor(address lendingToken, uint256 newLoanAmount)
         internal
