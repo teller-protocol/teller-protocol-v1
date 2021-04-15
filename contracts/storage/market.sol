@@ -1,15 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/utils/Counters.sol";
+import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
 
 import "../shared/libraries/AddressArrayLib.sol";
 import "../shared/libraries/NumbersList.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { ITToken } from "../shared/interfaces/ITToken.sol";
-import { ICErc20 } from "../shared/interfaces/ICErc20.sol";
-
-enum LoanStatus { NonExistent, TermsSet, Active, Closed, Liquidated }
 
 /**
  * @notice Represents the terms of a loan based on the consensus of a LoanRequest
@@ -29,48 +24,44 @@ struct LoanTerms {
     uint256 duration;
 }
 
-/**
- * @notice Data per borrow as struct
- * @param id The id of the loan for internal tracking
- * @param loanTerms The loan terms returned by the signers
- * @param termsExpiry The timestamp at which the loan terms expire, after which if the loan is not yet active, cannot be taken out
- * @param loanStartTime The timestamp at which the loan became active
- * @param collateral The total amount of collateral deposited by the borrower to secure the loan
- * @param lastCollateralIn The amount of collateral that was last deposited by the borrower to keep the loan active
- * @param principalOwed The total amount of the loan taken out by the borrower, reduces on loan repayments
- * @param interestOwed The total interest owed by the borrower for the loan, reduces on loan repayments
- * @param borrowedAmount The total amount of the loan size taken out
- * @param escrow The address of the escrow contract that holds the funds taken out in the loan on behalf of the borrower
- * @param status The status of the loan currently based on the LoanStatus enum - NonExistent, TermsSet, Active, Closed
- * @param liquidated Flag marking if the loan has been liquidated or not
- */
+enum LoanStatus { NonExistent, TermsSet, Active, Closed, Liquidated }
+
 struct Loan {
+    // The id of the loan for internal tracking
     uint256 id;
+    // The asset lent out for the loan
     address lendingToken;
+    // The token used as collateral for the loan
     address collateralToken;
+    // The loan terms returned by the signers
     LoanTerms loanTerms;
-    uint256 termsExpiry;
-    uint256 loanStartTime;
-    uint256 collateral;
-    uint256 lastCollateralIn;
-    uint256 principalOwed;
-    uint256 interestOwed;
-    uint256 borrowedAmount;
-    //    address escrow;
+    // The status of the loan
     LoanStatus status;
-    bool liquidated;
-    address borrower;
+    // The total amount of the loan taken out by the borrower, reduces on loan repayments
+    uint256 principalOwed;
+    // The total interest owed by the borrower for the loan, reduces on loan repayments
+    uint256 interestOwed;
+    // The total amount of the loan size taken out
+    uint256 borrowedAmount;
+    // The timestamp at which the loan terms expire, after which if the loan is not yet active, cannot be taken out
+    uint256 termsExpiry;
+    // The timestamp at which the loan became active
+    uint256 loanStartTime;
+    // The total amount of collateral deposited by the borrower to secure the loan
+    uint256 collateral;
+    // The amount of collateral that was last deposited by the borrower to keep the loan active
+    uint256 lastCollateralIn;
 }
 
 /**
-    @notice Borrower request object to take out a loan
-    @param borrower The wallet address of the borrower
-    @param recipient The address where funds will be sent, only applicable in over collateralized loans
-    @param assetAddress The address of the asset for the requested loan
-    @param requestNonce The nonce of the borrower wallet address required for authentication
-    @param amount The amount of tokens requested by the borrower for the loan
-    @param duration The length of time in seconds that the loan has been requested for
-    @param requestTime The timestamp at which the loan was requested
+ * @notice Borrower request object to take out a loan
+ * @param borrower The wallet address of the borrower
+ * @param recipient The address where funds will be sent, only applicable in over collateralized loans
+ * @param assetAddress The address of the asset for the requested loan
+ * @param requestNonce The nonce of the borrower wallet address required for authentication
+ * @param amount The amount of tokens requested by the borrower for the loan
+ * @param duration The length of time in seconds that the loan has been requested for
+ * @param requestTime The timestamp at which the loan was requested
  */
 struct LoanRequest {
     address payable borrower;
@@ -83,14 +74,14 @@ struct LoanRequest {
 }
 
 /**
-    @notice Borrower response object to take out a loan
-    @param signer The wallet address of the signer validating the interest request of the lender
-    @param assetAddress The address of the asset for the requested loan
-    @param responseTime The timestamp at which the response was sent
-    @param interestRate The signed interest rate generated by the signer's Credit Risk Algorithm (CRA)
-    @param collateralRatio The ratio of collateral to loan amount that is generated by the signer's Credit Risk Algorithm (CRA)
-    @param maxLoanAmount The largest amount of tokens that can be taken out in the loan by the borrower
-    @param signature The signature generated by the signer in the format of the above Signature struct
+ * @notice Borrower response object to take out a loan
+ * @param signer The wallet address of the signer validating the interest request of the lender
+ * @param assetAddress The address of the asset for the requested loan
+ * @param responseTime The timestamp at which the response was sent
+ * @param interestRate The signed interest rate generated by the signer's Credit Risk Algorithm (CRA)
+ * @param collateralRatio The ratio of collateral to loan amount that is generated by the signer's Credit Risk Algorithm (CRA)
+ * @param maxLoanAmount The largest amount of tokens that can be taken out in the loan by the borrower
+ * @param signature The signature generated by the signer in the format of the above Signature struct
  */
 struct LoanResponse {
     address signer;
@@ -103,10 +94,10 @@ struct LoanResponse {
 }
 
 /**
-    @notice Represents a user signature
-    @param v The recovery identifier represented by the last byte of a ECDSA signature as an int
-    @param r The random point x-coordinate of the signature respresented by the first 32 bytes of the generated ECDSA signature
-    @param s The signature proof represented by the second 32 bytes of the generated ECDSA signature
+ * @notice Represents a user signature
+ * @param v The recovery identifier represented by the last byte of a ECDSA signature as an int
+ * @param r The random point x-coordinate of the signature respresented by the first 32 bytes of the generated ECDSA signature
+ * @param s The signature proof represented by the second 32 bytes of the generated ECDSA signature
  */
 struct Signature {
     uint8 v;
@@ -115,10 +106,10 @@ struct Signature {
 }
 
 /**
-    @notice Represents loan terms based on consensus values
-    @param interestRate The consensus value for the interest rate based on all the loan responses from the signers
-    @param collateralRatio The consensus value for the ratio of collateral to loan amount required for the loan, based on all the loan responses from the signers
-    @param maxLoanAmount The consensus value for the largest amount of tokens that can be taken out in the loan, based on all the loan responses from the signers
+ * @notice Represents loan terms based on consensus values
+ * @param interestRate The consensus value for the interest rate based on all the loan responses from the signers
+ * @param collateralRatio The consensus value for the ratio of collateral to loan amount required for the loan, based on all the loan responses from the signers
+ * @param maxLoanAmount The consensus value for the largest amount of tokens that can be taken out in the loan, based on all the loan responses from the signers
  */
 struct AccruedLoanTerms {
     NumbersList.Values interestRate;
@@ -149,38 +140,18 @@ struct DappData {
 }
 
 struct MarketStorage {
+    // Holds the index for the next loan ID
+    Counters.Counter loanIDCounter;
+    // Maps of IDs to loan data
     mapping(uint256 => Loan) loans;
-    uint256 loanIDCounter;
-    mapping(address => uint256[]) borrowerLoans;
-    AddressArrayLib.AddressArray signers;
-    mapping(address => LendingPool) lendingPool;
-    // TODO: Moving to an appropriate struct below based on lending asset
-    uint256 totalCollateral;
-    uint256 totalSupplied;
-    uint256 totalBorrowed;
-    uint256 totalRepaid;
-    // Mapping loanIDs to escrow address to list of held tokens
-    mapping(uint256 => address) escrows;
+    // Maps loanIDs to escrow address to list of held tokens
+    mapping(uint256 => address) loanEscrows;
+    // Holds an array of tokens owned by a loan escrow
     mapping(address => AddressArrayLib.AddressArray) escrowTokens;
-}
-
-struct LendingPool {
-    // ^
-    uint256 tmp;
-    mapping(string => address) addresses;
-    mapping(address => uint256) totalSuppliedUnderlyingLender;
-    mapping(address => uint256) totalInterestEarnedLender;
-    ITToken tToken;
-    ERC20 lendingToken;
-    ICErc20 cToken;
-    address compound;
-    address comp;
-    uint256 totalBorrowed;
-    uint256 totalRepaid;
-    uint256 totalInterestEarned;
-    uint256 totalSupplied;
-    address[] collateralTokens;
-    uint256 totalCollateralInLendingTokens;
+    // Maps accounts to owned loan IDs
+    mapping(address => uint256[]) borrowerLoans;
+    // List of the signer addresses who are only ones that can verify loan requests
+    AddressArrayLib.AddressArray signers;
 }
 
 bytes32 constant MARKET_STORAGE_POS = keccak256("teller.market.storage");

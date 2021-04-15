@@ -116,8 +116,8 @@ library LendingLib {
     }
 
     /**
-        @notice It calculates the total supply of the lending asset across all markets.
-        @return totalSupplied the total supply denoted in the lending asset.
+     * @notice It calculates the total supply of the lending asset across all markets.
+     * @return totalSupplied the total supply denoted in the lending asset.
      */
     function totalSupplied(address asset)
         internal
@@ -150,76 +150,55 @@ library LendingLib {
             s(asset).lenderTotalSupplied[lender];
     }
 
-    function getDebtRatioFor(address lendingToken, uint256 newLoanAmount)
-        internal
-        view
-        returns (uint256)
-    {
-        LendingPool storage lendingPool =
-            MarketStorageLib.marketStore().lendingPool[lendingToken];
-        uint256 totalSupplied = lendingPool.totalSupplied;
-
-        return
-            totalSupplied == 0
-                ? 0
-                : (lendingPool.totalBorrowed +
-                    newLoanAmount -
-                    lendingPool.totalRepaid)
-                    .ratioOf(totalSupplied);
-    }
-
     /**
      * @notice It validates whether supply to debt (StD) ratio is valid including the loan amount.
      * @param newLoanAmount the new loan amount to consider o the StD ratio.
      * @return true if the ratio is valid. Otherwise it returns false.
      */
-    function isDebtRatioValid(address lendingToken, uint256 newLoanAmount)
+    function debtRatioFor(address asset, uint256 newLoanAmount)
         internal
         view
-        returns (bool)
+        returns (uint256 ratio_)
     {
-        return
-            getDebtRatioFor(lendingToken, newLoanAmount) <=
-            AppStorageLib.store().assetSettings[lendingToken].uints[
-                keccak256("MaxDebtRatio")
-            ];
+        // NOTE: potentially costly function
+        uint256 supplied = totalSupplied(asset);
+        if (supplied > 0) {
+            uint256 newOnLoanAmount =
+                s(asset).totalBorrowed - s(asset).totalRepaid + newLoanAmount;
+            ratio_ = newOnLoanAmount.ratioOf(supplied);
+        }
     }
 
     /**
-        @notice It withdraws a given amount of tokens from Compound.
-        @param amount The amount of underlying tokens to withdraw.
-        @return The amount of underlying tokens withdrawn.
+     * @notice It withdraws a given amount of tokens from Compound.
+     * @param amount The amount of underlying tokens to withdraw.
+     * @return The amount of underlying tokens withdrawn.
      */
-    function withdrawFromCompoundIfSupported(
-        address lendingToken,
-        uint256 amount
-    ) internal returns (uint256) {
-        LendingPool storage lendingPool =
-            MarketStorageLib.marketStore().lendingPool[lendingToken];
-
-        if (address(lendingPool.cToken) == address(0)) {
+    function withdrawFromCompoundIfSupported(address asset, uint256 amount)
+        internal
+        returns (uint256)
+    {
+        if (address(s(asset).cToken) == address(0)) {
             return 0;
         }
 
-        uint256 balanceBefore =
-            lendingPool.lendingToken.balanceOf(address(this));
+        uint256 balanceBefore = s(asset).asset.balanceOf(address(this));
 
-        uint256 redeemResult = lendingPool.cToken.redeemUnderlying(amount);
+        uint256 redeemResult = s(asset).cToken.redeemUnderlying(amount);
         require(redeemResult == 0, "COMPOUND_REDEEM_UNDERLYING_ERROR");
 
-        uint256 balanceAfter =
-            lendingPool.lendingToken.balanceOf(address(this));
+        uint256 balanceAfter = s(asset).asset.balanceOf(address(this));
         return balanceAfter - (balanceBefore);
     }
 
     /**
-        @notice It allows a borrower to repay their loan or a liquidator to liquidate a loan.
-        @dev It requires a ERC20.approve call before calling it. (Does it though with diamonds?)
-        @dev It throws a require error if borrower called ERC20.approve function before calling it.
-        @param loanID The id of the loan being repaid or liquidated.
-        @param principalAmount amount of tokens towards the principal.
-        @param interestAmount amount of tokens towards the interest.
-        @param sender address that is repaying the loan.
+     * @notice It allows a borrower to repay their loan or a liquidator to liquidate a loan.
+     * @dev It requires a ERC20.approve call before calling it. (Does it though with diamonds?)
+     * @dev It throws a require error if borrower called ERC20.approve function before calling it.
+     * @param loanID The id of the loan being repaid or liquidated.
+     * @param principalAmount amount of tokens towards the principal.
+     * @param interestAmount amount of tokens towards the interest.
+     * @param sender address that is repaying the loan.
      */
     function repay(
         uint256 loanID,
@@ -230,80 +209,62 @@ library LendingLib {
         uint256 totalAmount = principalAmount + interestAmount;
         require(totalAmount > 0, "REPAY_ZERO");
 
-        address lendingToken =
-            MarketStorageLib.marketStore().loans[loanID].lendingToken;
+        address asset = MarketStorageLib.marketStore().loans[loanID].asset;
         // Transfers tokens to LendingPool.
-        tokenTransferFrom(sender, totalAmount, lendingToken);
+        tokenTransferFrom(sender, totalAmount, asset);
 
-        LendingPool storage lendingPool =
-            MarketStorageLib.marketStore().lendingPool[lendingToken];
-
-        lendingPool.totalRepaid = lendingPool.totalRepaid + principalAmount;
-        lendingPool.totalInterestEarned =
-            lendingPool.totalInterestEarned +
+        s(asset).totalRepaid = s(asset).totalRepaid + principalAmount;
+        s(asset).totalInterestEarned =
+            s(asset).totalInterestEarned +
             interestAmount;
 
-        depositToCompoundIfSupported(lendingToken, totalAmount);
+        depositToCompoundIfSupported(asset, totalAmount);
     }
 
     /**
-        @notice It deposits a given amount of tokens to Compound.
-        @dev The cToken address must be defined in AssetSettings.
-        @dev The underlying token value of the tokens to be deposited must be positive. Because the decimals of
+     * @notice It deposits a given amount of tokens to Compound.
+     * @dev The cToken address must be defined in AssetSettings.
+     * @dev The underlying token value of the tokens to be deposited must be positive. Because the decimals of
             cTokens and the underlying asset can differ, the deposit of dust tokens may result in no cTokens minted.
-        @param amount The amount of underlying tokens to deposit.
-        @return difference The amount of underlying tokens deposited.
+     * @param amount The amount of underlying tokens to deposit.
+     * @return difference The amount of underlying tokens deposited.
      */
-    function depositToCompoundIfSupported(address lendingToken, uint256 amount)
+    function depositToCompoundIfSupported(address asset, uint256 amount)
         internal
         returns (uint256 difference)
     {
-        LendingPool storage lendingPool =
-            MarketStorageLib.marketStore().lendingPool[lendingToken];
-
-        if (address(lendingPool.cToken) == address(0)) {
+        if (address(s(asset).cToken) == address(0)) {
             return 0;
         }
 
         // approve the cToken contract to take lending tokens
-        SafeERC20.safeApprove(
-            IERC20(lendingToken),
-            address(lendingPool.cToken),
-            amount
-        );
+        SafeERC20.safeApprove(IERC20(asset), address(s(asset).cToken), amount);
 
-        uint256 balanceBefore =
-            lendingPool.lendingToken.balanceOf(address(this));
+        uint256 balanceBefore = s(asset).asset.balanceOf(address(this));
 
         // Now mint cTokens, which will take lending tokens
-        uint256 mintResult = lendingPool.cToken.mint(amount);
+        uint256 mintResult = s(asset).cToken.mint(amount);
         require(mintResult == 0, "COMPOUND_DEPOSIT_ERROR");
 
-        uint256 balanceAfter =
-            lendingPool.lendingToken.balanceOf(address(this));
+        uint256 balanceAfter = s(asset).asset.balanceOf(address(this));
         difference = balanceBefore - (balanceAfter);
         require(difference > 0, "DEPOSIT_CTOKEN_DUST");
     }
 
     /**
-        @notice It transfers an amount of tokens from an address to this contract.
-        @param from address where the tokens will transfer from.
-        @param amount to be transferred.
-        @param lendingToken the address of the lending token
-        @dev It throws a require error if 'transferFrom' invocation fails.
+     * @notice It transfers an amount of tokens from an address to this contract.
+     * @param from address where the tokens will transfer from.
+     * @param amount to be transferred.
+     * @param asset the address of the lending token
+     * @dev It throws a require error if 'transferFrom' invocation fails.
      */
     function tokenTransferFrom(
         address from,
         uint256 amount,
-        address lendingToken
+        address asset
     ) private returns (uint256 balanceIncrease) {
-        uint256 balanceBefore = IERC20(lendingToken).balanceOf(address(this));
-        SafeERC20.safeTransferFrom(
-            IERC20(lendingToken),
-            from,
-            address(this),
-            amount
-        );
-        return IERC20(lendingToken).balanceOf(address(this)) - (balanceBefore);
+        uint256 balanceBefore = IERC20(asset).balanceOf(address(this));
+        SafeERC20.safeTransferFrom(IERC20(asset), from, address(this), amount);
+        return IERC20(asset).balanceOf(address(this)) - (balanceBefore);
     }
 }

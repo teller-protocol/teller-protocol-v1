@@ -98,7 +98,8 @@ contract LendingWithdrawFacet is RolesMods, ReentryMods, PausableMods {
         LendingLib.s(asset).lenderTotalInterest[msg.sender] += lenderInterest;
 
         // Update total supplied value taking into account earn interest
-        LendingLib.s(asset).lenderTotalSupplied -= assetAmount > lenderInterest
+        LendingLib.s(asset).lenderTotalSupplied[msg.sender] -= assetAmount >
+            lenderInterest
             ? assetAmount - lenderInterest
             : lenderInterest - assetAmount;
 
