@@ -3,12 +3,13 @@ import { NetworkTokens } from '../types/custom/config-types'
 // ETH: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
 const mainnetTokens: NetworkTokens = {
   compound: {
-    COMP: '0xc00e94cb662c3520282e6f5717214004a7f26888',
     CDAI: '0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643',
     CUSDC: '0x39aa39c021dfbae8fac545936693ac917d5e7563',
     CETH: '0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5',
   },
   erc20: {
+    // Compound
+    COMP: '0xc00e94cb662c3520282e6f5717214004a7f26888',
     // Aave
     AAVE: '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9',
     ADAI: '0x028171bCA77440897B824Ca71D1c56caC55b68A3',
@@ -32,12 +33,13 @@ const mainnetTokens: NetworkTokens = {
 export const tokens: Record<string, NetworkTokens> = {
   kovan: {
     compound: {
-      COMP: '0x61460874a7196d6a22d1ee4922473664b3e95270',
       CDAI: '0xf0d0eb522cfa50b716b3b1604c4f0fa6f04376ad',
       CUSDC: '0x4a92e71227d294f041bd82dd8f78591b75140d63',
       CETH: '0x41b5844f4680a8c38fbb695b7f9cfd1f64474a72',
     },
     erc20: {
+      // Compound
+      COMP: '0x61460874a7196d6a22d1ee4922473664b3e95270',
       // Aave
       ADAI: '0x0000000000000000000000000000000000000000',
       // Pool Together
@@ -53,12 +55,13 @@ export const tokens: Record<string, NetworkTokens> = {
   },
   rinkeby: {
     compound: {
-      COMP: '0x0000000000000000000000000000000000000000',
       CDAI: '0x6D7F0754FFeb405d23C51CE938289d4835bE3b14',
       CUSDC: '0x5B281A6DdA0B271e91ae35DE655Ad301C976edb1',
       CETH: '0xd6801a1dffcd0a410336ef88def4320d6df1883e',
     },
     erc20: {
+      // Compound
+      COMP: '0x0000000000000000000000000000000000000000',
       // Aave
       ADAI: '0x0000000000000000000000000000000000000000',
       // Pool Together
@@ -74,12 +77,13 @@ export const tokens: Record<string, NetworkTokens> = {
   },
   ropsten: {
     compound: {
-      COMP: '0xf76d4a441e4ba86a923ce32b89aff89dbccaa075',
       CDAI: '0xdb5Ed4605C11822811a39F94314fDb8F0fb59A2C',
       CUSDC: '0x8aF93cae804cC220D1A608d4FA54D1b6ca5EB361',
       CETH: '0xbe839b6d93e3ea47effcca1f27841c917a8794f3',
     },
     erc20: {
+      // Compound
+      COMP: '0xf76d4a441e4ba86a923ce32b89aff89dbccaa075',
       // Aave
       ADAI: '0x0000000000000000000000000000000000000000',
       // Pool Together
