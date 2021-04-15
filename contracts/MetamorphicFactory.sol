@@ -1,0 +1,2 @@
+library MetamorphicFactory {
+  function deployConstructed()
