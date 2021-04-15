@@ -34,7 +34,7 @@ library LibConsensus {
         LoanRequest calldata request,
         LoanResponse[] calldata responses
     )
-        external
+        internal
         view
         returns (
             uint256 interestRate,

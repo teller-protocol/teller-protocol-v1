@@ -52,7 +52,9 @@ const initializeMarkets: DeployFunction = async (hre) => {
     const existingCollateralTokens = await diamond.getCollateralTokens(
       lendingTokenAddress
     )
-    const collateralTokensToAdd = new Set(collateralTokens)
+    const collateralTokensToAdd = new Set(
+      collateralTokens.map((sym) => tokenAddresses.all[sym])
+    )
     for (const token of existingCollateralTokens) {
       if (collateralTokensToAdd.has(token)) collateralTokensToAdd.delete(token)
     }

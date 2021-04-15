@@ -17,7 +17,6 @@ import {
     MarketStorage,
     LoanStatus
 } from "../../storage/market.sol";
-import { AppStorageLib } from "../../storage/app.sol";
 
 library LibLoans {
     using NumbersLib for int256;
@@ -32,7 +31,7 @@ library LibLoans {
      * @param loanID The loan ID to get the total amount owed.
      * @return uint256 The total owed amount.
      */
-    function getTotalOwed(uint256 loanID) public view returns (uint256) {
+    function getTotalOwed(uint256 loanID) internal view returns (uint256) {
         if (s().loans[loanID].status == LoanStatus.TermsSet) {
             uint256 interestOwed =
                 getInterestOwedFor(
@@ -55,7 +54,7 @@ library LibLoans {
      * @return uint256 The interest owed.
      */
     function getInterestOwedFor(uint256 loanID, uint256 amountBorrow)
-        public
+        internal
         view
         returns (uint256)
     {
@@ -63,7 +62,7 @@ library LibLoans {
     }
 
     function getCollateralNeededInfo(uint256 loanID)
-        public
+        internal
         view
         returns (
             int256 neededInLendingTokens,
@@ -166,7 +165,7 @@ library LibLoans {
      * @param loanID The loan ID to check.
      * @return true if the loan is liquidable.
      */
-    function isLiquidable(uint256 loanID) public view returns (bool) {
+    function isLiquidable(uint256 loanID) internal view returns (bool) {
         // Check if loan can be liquidated
         if (s().loans[loanID].status != LoanStatus.Active) {
             return false;
@@ -190,7 +189,11 @@ library LibLoans {
      * @param loanID The loan ID to get the info.
      * @return The value the liquidator will receive denoted in collateral tokens.
      */
-    function getLiquidationReward(uint256 loanID) public view returns (int256) {
+    function getLiquidationReward(uint256 loanID)
+        internal
+        view
+        returns (int256)
+    {
         uint256 amountToLiquidate = getTotalOwed(loanID);
         uint256 availableValue =
             getCollateralInLendingTokens(loanID) +
@@ -214,7 +217,7 @@ library LibLoans {
      * @return uint256 Collateral needed in lending token value
      */
     function getCollateralInLendingTokens(uint256 loanID)
-        public
+        internal
         view
         returns (uint256)
     {

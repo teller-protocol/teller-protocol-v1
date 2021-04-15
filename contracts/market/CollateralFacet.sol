@@ -14,13 +14,7 @@ import {
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Storage
-import { AppStorageLib } from "../storage/app.sol";
-import {
-    MarketStorageLib,
-    MarketStorage,
-    LoanStatus,
-    Loan
-} from "../storage/market.sol";
+import { MarketStorageLib, LoanStatus, Loan } from "../storage/market.sol";
 
 contract CollateralFacet is RolesMods, PausableMods {
     /**

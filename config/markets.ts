@@ -3,7 +3,7 @@ import { Market } from '../types/custom/config-types'
 const mainnetMarkets: Market[] = [
   {
     lendingToken: 'DAI',
-    collateralTokens: ['ETH'],
+    collateralTokens: ['WETH'],
   },
 ]
 
@@ -11,19 +11,19 @@ export const markets: Record<string, Market[]> = {
   kovan: [
     {
       lendingToken: 'DAI',
-      collateralTokens: ['ETH'],
+      collateralTokens: ['WETH'],
     },
   ],
   rinkeby: [
     {
       lendingToken: 'DAI',
-      collateralTokens: ['ETH'],
+      collateralTokens: ['WETH'],
     },
   ],
   ropsten: [
     {
       lendingToken: 'DAI',
-      collateralTokens: ['ETH'],
+      collateralTokens: ['WETH'],
     },
   ],
   hardhat: mainnetMarkets,
