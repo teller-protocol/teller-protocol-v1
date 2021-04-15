@@ -13,7 +13,7 @@ import { ICErc20 } from "../../shared/interfaces/ICErc20.sol";
 import { AppStorageLib } from "../../storage/app.sol";
 
 /**
- * @notice Utility library of inline functions for MaxTVLAmount asset setting.
+ * @notice Utility library of inline functions for Compound asset setting.
  *
  * @author develop@teller.finance
  */

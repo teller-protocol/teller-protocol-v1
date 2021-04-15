@@ -12,7 +12,7 @@ import {
 import { AppStorageLib } from "../../storage/app.sol";
 
 /**
- * @notice Utility library of inline functions for MaxTVLAmount asset setting.
+ * @notice Utility library of inline functions for MaxDebtRatio asset setting.
  *
  * @author develop@teller.finance
  */
