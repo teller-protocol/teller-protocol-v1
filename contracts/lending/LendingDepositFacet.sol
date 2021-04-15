@@ -7,6 +7,9 @@ import "../contexts2/access-control/reentry/ReentryMods.sol";
 import "../contexts2/pausable/PausableMods.sol";
 import { AUTHORIZED } from "../shared/roles.sol";
 
+// Interfaces
+import { ILendingEscrow } from "./escrow/ILendingEscrow.sol";
+
 // Libraries
 import { LendingLib } from "./libraries/LendingLib.sol";
 import { MaxTVLAmountLib } from "../settings/asset/MaxTVLAmountLib.sol";
@@ -48,14 +51,16 @@ contract LendingDepositFacet is RolesMods, ReentryMods, PausableMods {
             "Teller: max tvl reached"
         );
 
-        // Transferring tokens to the LendingPool
+        // Transferring tokens to the lending pool escrow
+        ILendingEscrow escrow = LendingLib.s(asset).escrow;
         SafeERC20.safeTransferFrom(
             IERC20(asset),
             msg.sender,
-            // TODO: use escrow
-            address(this),
+            address(escrow),
             amount
         );
+        escrow.executeStrategy();
+
         // Update the store amount of lender supply
         LendingLib.s(asset).lenderTotalSupplied[msg.sender] += amount;
 

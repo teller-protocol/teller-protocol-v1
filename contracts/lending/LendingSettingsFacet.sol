@@ -2,11 +2,14 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import "../contexts2/access-control/roles/RolesMods.sol";
+import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
 import { ADMIN } from "../shared/roles.sol";
 
+// Interfaces
+import { ILendingEscrow } from "./escrow/ILendingEscrow.sol";
+
 // Libraries
-import { LendingLib } from "./libraries/LendingLib.sol";
+import { LendingLib, LendingStorageLib } from "./libraries/LendingLib.sol";
 import {
     IERC20,
     SafeERC20
@@ -23,13 +26,14 @@ contract LendingSettingsFacet is RolesMods {
     /**
      * @notice Initialized a new lending pool for {asset}
      */
-    function initLendingPool(address asset)
+    function initLendingPool(address asset, address escrow)
         external
         authorized(ADMIN, msg.sender)
     {
         require(false, "Teller: lending pool already initialized");
 
         // TODO: create lending escrow
+        LendingStorageLib.store(asset).escrow = ILendingEscrow(escrow);
         // TODO: create ttoken
 
         // Emit event

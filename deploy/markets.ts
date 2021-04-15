@@ -2,12 +2,21 @@ import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import { getMarkets, getSigners, getTokens } from '../config'
-import { ITellerDiamond } from '../types/typechain'
+import { ILendingEscrow, ITellerDiamond } from '../types/typechain'
 import { NULL_ADDRESS } from '../utils/consts'
 import { ContractTransaction } from 'ethers'
+import { deploy } from '../utils/deploy-helpers'
 
 const initializeMarkets: DeployFunction = async (hre) => {
-  const { getNamedAccounts, contracts, tokens, network, deployments, log } = hre
+  const {
+    getNamedAccounts,
+    contracts,
+    tokens,
+    network,
+    ethers,
+    deployments,
+    log,
+  } = hre
   const { deployer, craSigner } = await getNamedAccounts()
 
   log('********** Lending Pools **********')
@@ -19,6 +28,7 @@ const initializeMarkets: DeployFunction = async (hre) => {
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond', {
     from: deployer,
   })
+  const escrowFactory = await deployEscrowBeacon(hre, diamond)
 
   for (const { lendingToken, collateralTokens } of markets) {
     const lendingTokenAddress = tokenAddresses.all[lendingToken]
@@ -72,14 +82,61 @@ const initializeMarkets: DeployFunction = async (hre) => {
     const tToken = await diamond.getTToken(lendingTokenAddress)
     if (tToken !== NULL_ADDRESS) {
       // Initialize the lending pool
-      await waitAndLog(
-        'Lending pool initialized',
-        diamond.initLendingPool(asset.address),
-        hre
+      const promise = escrowFactory().then((escrowAddress) =>
+        diamond.initLendingPool(asset.address, escrowAddress)
       )
+      await waitAndLog('Lending pool initialized', promise, hre)
     } else {
       log(`Lending pool ALREADY initialized`, { indent: 2, star: true })
     }
+  }
+}
+
+const deployEscrowBeacon = async (
+  hre: HardhatRuntimeEnvironment,
+  diamond: ITellerDiamond
+): Promise<() => Promise<string>> => {
+  const { ethers, deployments, log } = hre
+
+  log('Deploying Lending Escrow Beacon:', { indent: 2, star: true })
+
+  const logicVersion = 1
+
+  const lendingEscrowLogic = await deploy<ILendingEscrow>({
+    hre,
+    contract: `LendingEscrow_V${logicVersion}`,
+  })
+
+  log(`Logic V${logicVersion}: ${lendingEscrowLogic.address}`, {
+    indent: 3,
+    star: true,
+  })
+
+  const beaconFactory = await ethers.getContractFactory('UpgradeableBeacon')
+  const lendingEscrowBeacon = await beaconFactory.deploy(
+    lendingEscrowLogic.address
+  )
+
+  // Check if we need to upgrade
+  const currentImpl = await lendingEscrowBeacon.implementation()
+  if (currentImpl !== lendingEscrowLogic.adddress) {
+    log(`Upgrading Lending Escrow logic: ${lendingEscrowLogic.address}`, {
+      indent: 4,
+    })
+    await lendingEscrowBeacon.upgradeTo(lendingEscrowLogic.address)
+  }
+
+  log(`Using Beacon: ${lendingEscrowBeacon.address}`, { indent: 3, star: true })
+
+  const proxyFactory = await ethers.getContractFactory('BeaconProxy')
+  return async (): Promise<string> => {
+    const { address: proxyAddress } = await proxyFactory.deploy([
+      lendingEscrowBeacon.address,
+      lendingEscrowLogic.interface.encodeFunctionData('init', [
+        diamond.address,
+      ]),
+    ])
+    return proxyAddress
   }
 }
 

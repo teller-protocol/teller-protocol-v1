@@ -47,6 +47,13 @@ export default <HardhatUserConfig>{
   paths: {
     sources: 'contracts',
   },
+  external: {
+    contracts: [
+      {
+        artifacts: 'node_modules/@openzeppelin/contracts/build/contracts',
+      },
+    ],
+  },
   solidity: {
     compilers: [
       {

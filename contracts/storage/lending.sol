@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+// Interfaces
+import { ILendingEscrow } from "../lending/escrow/ILendingEscrow.sol";
 import { ITToken } from "../shared/interfaces/ITToken.sol";
+
+// Libraries
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 struct LendingStorage {
+    ILendingEscrow escrow;
     EnumerableSet.AddressSet secondaryFunds;
     uint256 totalBorrowed;
     uint256 totalRepaid;
