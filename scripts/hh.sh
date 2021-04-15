@@ -223,7 +223,11 @@ deploy() {
   shift
   local live=$1
 
-  if [ "$network" != "localhost" ] && [ "$live" != 'live' ]
+  if [ "$live" == 'live' ]
+  then
+    ## Remove from args
+    shift
+  elif [ "$network" != "localhost" ]
   then
     echo "Must append \"live\" to the script options to deploy on mainnet!!"
     echo
@@ -231,9 +235,7 @@ deploy() {
   fi
 
   ## Deploy on network
-  run deploy "$network" "$*"
-
-  fork_notice
+  run deploy "$network" "$*" && fork_notice
 }
 
 if [ "$script" == 'deploy' ]

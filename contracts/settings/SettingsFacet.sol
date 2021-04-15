@@ -22,6 +22,7 @@ struct InitAssets {
 struct InitArgs {
     address admin;
     InitAssets[] assets;
+    address[] cTokens;
     address uniswapV2Router;
 }
 
@@ -81,18 +82,20 @@ contract SettingsFacet is RolesMods {
     }
 
     function init(InitArgs calldata _args) external {
-        if (AppStorageLib.store().initialized) return;
-        AppStorageLib.store().initialized = true;
+        AppStorage storage s = AppStorageLib.store();
+
+        if (s.initialized) return;
+        s.initialized = true;
 
         RolesLib.grantRole(ADMIN, _args.admin);
 
         for (uint256 i; i < _args.assets.length; i++) {
-            AppStorageLib.store().assetAddresses[_args.assets[i].sym] = _args
-                .assets[i]
-                .addr;
+            s.assetAddresses[_args.assets[i].sym] = _args.assets[i].addr;
         }
-        AppStorageLib.store().uniswapRouter = IUniswapV2Router(
-            _args.uniswapV2Router
-        );
+        for (uint256 i; i < _args.cTokens.length; i++) {
+            s.cTokenRegistry[_args.cTokens[i]] = true;
+        }
+
+        s.uniswapRouter = IUniswapV2Router(_args.uniswapV2Router);
     }
 }

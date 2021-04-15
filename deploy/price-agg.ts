@@ -28,8 +28,8 @@ const registerPriceAggregators: DeployFunction = async (hre) => {
 
     // Check that the aggregator is already registered
     const { agg } = await diamond.getChainlinkAggregatorFor(
-      tokens[baseTokenName],
-      tokens[quoteTokenName]
+      tokens.all[baseTokenName],
+      tokens.all[quoteTokenName]
     )
     if (agg === address) {
       log(`${address} already registered`)
@@ -47,8 +47,8 @@ const registerPriceAggregators: DeployFunction = async (hre) => {
       // Try to register the Chainlink aggregator address
       const receipt = await diamond
         .addChainlinkAggregator(
-          tokens[baseTokenName],
-          tokens[quoteTokenName],
+          tokens.all[baseTokenName],
+          tokens.all[quoteTokenName],
           address
         )
         .then(({ wait }) => wait())

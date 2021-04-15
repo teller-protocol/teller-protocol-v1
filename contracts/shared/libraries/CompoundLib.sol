@@ -18,6 +18,10 @@ library CompoundLib {
      */
     uint256 internal constant EXCHANGE_RATE_SCALE = 1e18;
 
+    function exchangeRate(address cToken) internal view returns (uint256) {
+        return ICErc20(cToken).exchangeRateStored();
+    }
+
     /**
      * @notice Takes an amount of the Compound asset and calculates the underlying amount using the stored exchange rate.
      * @param cToken Address of the Compound token.
@@ -51,7 +55,7 @@ library CompoundLib {
     }
 
     function isCompoundToken(address token) internal view returns (bool) {
-        return AppStorageLib.store().ctokenRegistry[token];
+        return AppStorageLib.store().cTokenRegistry[token];
     }
 
     /**

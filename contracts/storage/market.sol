@@ -56,9 +56,10 @@ struct Loan {
     uint256 principalOwed;
     uint256 interestOwed;
     uint256 borrowedAmount;
-    address escrow;
+    //    address escrow;
     LoanStatus status;
     bool liquidated;
+    address borrower;
 }
 
 /**
@@ -158,6 +159,9 @@ struct MarketStorage {
     uint256 totalSupplied;
     uint256 totalBorrowed;
     uint256 totalRepaid;
+    // Mapping loanIDs to escrow address to list of held tokens
+    mapping(uint256 => address) escrows;
+    mapping(address => AddressArrayLib.AddressArray) escrowTokens;
 }
 
 struct LendingPool {

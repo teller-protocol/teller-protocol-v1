@@ -101,10 +101,9 @@ library LibCollateral {
             );
             if (
                 remainingCollateralAmount > 0 &&
-                MarketStorageLib.marketStore().loans[loanID].escrow !=
-                address(0x0)
+                MarketStorageLib.marketStore().escrows[loanID] != address(0x0)
             ) {
-                IEscrow(MarketStorageLib.marketStore().loans[loanID].escrow)
+                IEscrow(MarketStorageLib.marketStore().escrows[loanID])
                     .claimTokensByCollateralValue(
                     recipient,
                     remainingCollateralAmount

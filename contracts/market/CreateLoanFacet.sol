@@ -223,8 +223,7 @@ contract CreateLoanFacet is RolesMods, PausableMods, LoansMods {
 
         if (!eoaAllowed) {
             require(
-                MarketStorageLib.marketStore().loans[loanID].escrow !=
-                    address(0),
+                MarketStorageLib.marketStore().escrows[loanID] != address(0),
                 "ESCROW_CONTRACT_NOT_DEFINED"
             );
             // TODO: Implement once escrow facet is complete
@@ -240,7 +239,7 @@ contract CreateLoanFacet is RolesMods, PausableMods, LoansMods {
         emit LoanTakenOut(
             loanID,
             MarketStorageLib.marketStore().loans[loanID].loanTerms.borrower,
-            MarketStorageLib.marketStore().loans[loanID].escrow,
+            MarketStorageLib.marketStore().escrows[loanID],
             amountBorrow
         );
     }

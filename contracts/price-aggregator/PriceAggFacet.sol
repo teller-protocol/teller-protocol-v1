@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+// Libraries
+import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+
 // Interfaces
 import {
     AggregatorV2V3Interface
@@ -42,15 +45,19 @@ contract PriceAggFacet {
         address dst,
         uint256 srcAmount
     ) external view returns (uint256) {
-        (bool isCToken, address underlying) = _isCToken(src);
-        if (isCToken) {
-            srcAmount = CompoundLib.valueInUnderlying(src, srcAmount);
-            src = underlying;
-        }
+        return _valueFor(src, srcAmount, uint256(_priceFor(src, dst)));
+    }
 
-        return
-            (srcAmount * uint256(_priceFor(src, dst))) /
-            uint256(TEN**_decimalsFor(src));
+    function _valueFor(
+        address src,
+        uint256 amount,
+        uint256 exchangeRate
+    ) internal view returns (uint256) {
+        return (amount * exchangeRate) / _oneToken(src);
+    }
+
+    function _oneToken(address token) internal view returns (uint256) {
+        return TEN**_decimalsFor(token);
     }
 
     /**
@@ -62,36 +69,121 @@ contract PriceAggFacet {
         return ERC20(addr).decimals();
     }
 
-    function _priceFor(address src, address dst) private view returns (int256) {
+    /**
+     * @dev Tries to calculate a price from Compound and Chainlink.
+     */
+    function _priceFor(address src, address dst)
+        private
+        view
+        returns (int256 price_)
+    {
+        // If no Compound route, try Chainlink directly.
+        price_ = int256(_compoundPriceFor(src, dst));
+        if (price_ == 0) {
+            price_ = _chainlinkPriceFor(src, dst);
+            if (price_ == 0) {
+                revert("Teller: cannot calc price");
+            }
+        }
+    }
+
+    /**
+     * @dev Tries to get a price from {src} to {dst} by checking if either tokens are from Compound.
+     */
+    function _compoundPriceFor(address src, address dst)
+        private
+        view
+        returns (uint256)
+    {
+        (bool isSrcCompound, address srcUnderlying) = _isCToken(src);
+        if (isSrcCompound) {
+            uint256 cRate = CompoundLib.valueInUnderlying(src, _oneToken(src));
+            if (srcUnderlying == dst) {
+                return cRate;
+            } else {
+                return _calcPriceFromCompoundRate(srcUnderlying, dst, cRate);
+            }
+        } else {
+            (bool isDstCompound, address dstUnderlying) = _isCToken(dst);
+            if (isDstCompound) {
+                uint256 cRate =
+                    CompoundLib.valueOfUnderlying(dst, _oneToken(src));
+                if (dstUnderlying == src) {
+                    return cRate;
+                } else {
+                    return
+                        _calcPriceFromCompoundRate(src, dstUnderlying, cRate);
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * @dev Tries to get a price from {src} to {dst} and then converts using a rate from Compound.
+     */
+    function _calcPriceFromCompoundRate(
+        address src,
+        address dst,
+        uint256 cRate
+    ) private view returns (uint256) {
+        uint256 rate = uint256(_chainlinkPriceFor(src, dst));
+        uint256 value = (cRate * _oneToken(dst)) / rate;
+        return _scale(value, _decimalsFor(src), _decimalsFor(dst));
+    }
+
+    /**
+     * @dev Scales the {value} by the difference in decimal values.
+     */
+    function _scale(
+        uint256 value,
+        uint256 srcDecimals,
+        uint256 dstDecimals
+    ) internal pure returns (uint256) {
+        if (dstDecimals > srcDecimals) {
+            return value * (TEN**(dstDecimals - srcDecimals));
+        } else {
+            return value / (TEN**(srcDecimals - dstDecimals));
+        }
+    }
+
+    /**
+     * @dev Tries to calculate the price of {src} in {dst}
+     */
+    function _chainlinkPriceFor(address src, address dst)
+        private
+        view
+        returns (int256)
+    {
         (address agg, bool foundAgg, bool inverse) =
             ChainlinkLib.aggregatorFor(src, dst);
-        uint256 dstDecimals = _decimalsFor(dst);
-        int256 dstFactor = int256(TEN**dstDecimals);
         if (foundAgg) {
-            int256 price = AggregatorV2V3Interface(agg).latestAnswer();
-            uint256 resDecimals = AggregatorV2V3Interface(agg).decimals();
+            uint256 price =
+                SafeCast.toUint256(AggregatorV2V3Interface(agg).latestAnswer());
+            uint8 resDecimals = AggregatorV2V3Interface(agg).decimals();
             if (inverse) {
-                price = int256(TEN**(resDecimals + resDecimals)) / price;
+                price = (resDecimals * resDecimals) / price;
             }
-            if (dstDecimals > resDecimals) {
-                price = price * int256(TEN**(dstDecimals - resDecimals));
-            } else {
-                price = price / int256(TEN**(resDecimals - dstDecimals));
-            }
-            return price;
+            return
+                SafeCast.toInt256(
+                    (_scale(price, resDecimals, _decimalsFor(dst)))
+                );
         } else {
             address WETH = AppStorageLib.store().assetAddresses["WETH"];
-            // If the destination asset is WETH in this `else` block,
-            // it means we already been here and should revert.
-            if (dst == WETH) {
-                revert("Teller: cannot calc price from Chainlink");
+            if (dst != WETH) {
+                int256 price1 = _priceFor(src, WETH);
+                if (price1 > 0) {
+                    int256 price2 = _priceFor(dst, WETH);
+                    if (price2 > 0) {
+                        uint256 dstFactor = TEN**_decimalsFor(dst);
+                        return (price1 * int256(dstFactor)) / price2;
+                    }
+                }
             }
-
-            int256 price1 = _priceFor(src, WETH);
-            int256 price2 = _priceFor(dst, WETH);
-
-            return (price1 * dstFactor) / price2;
         }
+
+        return 0;
     }
 
     function _isCToken(address token)
