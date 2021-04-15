@@ -15,6 +15,7 @@ import {
 import { PrizePoolInterface } from "../interfaces/PrizePoolInterface.sol";
 import "../../storage/app.sol";
 import { IUniswapV2Router } from "../../shared/interfaces/IUniswapV2Router.sol";
+import { IVault } from "../interfaces/IVault.sol";
 
 library LibDapps {
     using AddressArrayLib for AddressArrayLib.AddressArray;
@@ -91,7 +92,7 @@ library LibDapps {
         return
             PrizePoolInterface(
                 AppStorageLib.store().assetSettings[tokenAddress].addresses[
-                    keccak256("PrizePoolTogether")
+                    keccak256("pPoolAddress")
                 ]
             );
     }
@@ -168,5 +169,19 @@ library LibDapps {
 
         require(amounts.length == path.length, "UNI_ERROR_SWAPPING");
         return amounts[amounts.length - 1];
+    }
+
+    /**
+        @notice Grabs the yVault address for a token from the asset settings
+        @param tokenAddress The underlying token address for the associated yVault
+        @return yVault instance
+     */
+    function getYVault(address tokenAddress) internal view returns (IVault) {
+        return
+            IVault(
+                AppStorageLib.store().assetSettings[tokenAddress].addresses[
+                    keccak256("yVaultAddress")
+                ]
+            );
     }
 }
