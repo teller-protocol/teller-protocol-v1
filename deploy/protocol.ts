@@ -1,4 +1,5 @@
 import { DeployFunction } from 'hardhat-deploy/types'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import { getTokens, getUniswap } from '../config'
 import { ITellerDiamond } from '../types/typechain'
@@ -43,6 +44,24 @@ const deployProtocol: DeployFunction = async (hre) => {
       args: [initArgs],
     },
   })
+
+  await addAuthorizedAddresses(hre, diamond)
+}
+
+const addAuthorizedAddresses = async (
+  hre: HardhatRuntimeEnvironment,
+  diamond: ITellerDiamond
+): Promise<void> => {
+  const { getNamedAccounts, network } = hre
+
+  const addresses: string[] = []
+  if (network.name === 'mainnet') {
+  } else {
+    const accounts = await getNamedAccounts()
+    addresses.push(accounts.lender, accounts.borrower)
+  }
+
+  await diamond.addAuthorizedAddressList(addresses)
 }
 
 deployProtocol.tags = ['protocol']
