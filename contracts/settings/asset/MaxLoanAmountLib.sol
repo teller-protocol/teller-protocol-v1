@@ -27,7 +27,7 @@ library MaxLoanAmountLib {
         return s(asset).uints[NAME];
     }
 
-    function set(address asset, uint256 newValue) internal returns (uint256) {
-        return s(asset).uints[NAME] = newValue;
+    function set(address asset, uint256 newValue) internal {
+        s(asset).uints[NAME] = newValue;
     }
 }

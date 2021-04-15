@@ -1,6 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+// Contracts
+import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
+import { LoansMods } from "./LoansMods.sol";
+import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
+import { ADMIN, AUTHORIZED } from "../shared/roles.sol";
+
+// Libraries
+import { LibLoans } from "./libraries/LibLoans.sol";
+import { LibCollateral } from "./libraries/LibCollateral.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+
 // Storage
 import { AppStorageLib } from "../storage/app.sol";
 import {
@@ -8,12 +21,6 @@ import {
     MarketStorage,
     LoanStatus
 } from "../storage/market.sol";
-import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
-import { LoansMods } from "./LoansMods.sol";
-import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
-import { AUTHORIZED } from "../shared/roles.sol";
-import { LibLoans } from "./libraries/LibLoans.sol";
-import { LibCollateral } from "./libraries/LibCollateral.sol";
 
 contract CollateralFacet is RolesMods, PausableMods, LoansMods {
     /**
@@ -33,15 +40,15 @@ contract CollateralFacet is RolesMods, PausableMods, LoansMods {
         paused("", false)
         authorized(AUTHORIZED, msg.sender)
     {
+        // TODO: necessary check?
         require(
             borrower ==
-                MarketStorageLib.marketStore().loans[loanID].loanTerms.borrower,
-            "BORROWER_LOAN_ID_MISMATCH"
+                MarketStorageLib.store().loans[loanID].loanTerms.borrower,
+            "Teller: borrower mismatch"
         );
-        require(amount > 0, "CANNOT_DEPOSIT_ZERO");
 
         // Update the loan collateral and total. Transfer tokens to this contract.
-        LibCollateral._payInCollateral(loanID, amount);
+        LibCollateral.depositCollateral(loanID, amount);
     }
 
     function withdrawCollateral(uint256 amount, uint256 loanID)
@@ -50,23 +57,17 @@ contract CollateralFacet is RolesMods, PausableMods, LoansMods {
         paused("", false)
         authorized(AUTHORIZED, msg.sender)
     {
-        require(
-            msg.sender ==
-                MarketStorageLib.marketStore().loans[loanID].loanTerms.borrower,
-            "CALLER_DOESNT_OWN_LOAN"
-        );
-        require(amount > 0, "CANNOT_WITHDRAW_ZERO");
+        Loan storage loan = MarketStorageLib.store().loans[loanID];
 
-        if (
-            MarketStorageLib.marketStore().loans[loanID].status ==
-            LoanStatus.Active
-        ) {
+        require(msg.sender == loan.loanTerms.borrower, "Teller: not borrower");
+        require(amount > 0, "Teller: zero withdraw");
+
+        if (loan.status == LoanStatus.Active) {
             (, int256 neededInCollateralTokens, ) =
                 LibLoans.getCollateralNeededInfo(loanID);
             if (neededInCollateralTokens > 0) {
                 uint256 withdrawalAmount =
-                    MarketStorageLib.marketStore().loans[loanID].collateral -
-                        (uint256(neededInCollateralTokens));
+                    loan.collateral - (uint256(neededInCollateralTokens));
                 require(
                     withdrawalAmount >= amount,
                     "COLLATERAL_AMOUNT_TOO_HIGH"
@@ -74,12 +75,30 @@ contract CollateralFacet is RolesMods, PausableMods, LoansMods {
             }
         } else {
             require(
-                MarketStorageLib.marketStore().loans[loanID].collateral >=
-                    amount,
-                "COLLATERAL_AMOUNT_NOT_MATCH"
+                loan.collateral >= amount,
+                "Teller: withdraw greater than collateral"
             );
         }
 
-        LibCollateral._withdrawCollateral(loanID, amount, payable(msg.sender));
+        LibCollateral.withdrawCollateral(loanID, amount, payable(msg.sender));
+    }
+
+    /**
+     * @notice Adds tokens allowed to be used as collateral for {asset} loans.
+     * @param asset Token address to add allowed collateral tokens.
+     * @param collateralTokens List of allowed collateral token addresses.
+     *
+     * Requirements:
+     *  - Sender must be admin
+     */
+    function addCollateralTokens(
+        address asset,
+        address[] calldata collateralTokens
+    ) external authorized(ADMIN, msg.sender) {
+        for (uint256 i; i < collateralTokens; i++) {
+            MarketStorageLib.store().collateralTokens[asset].add(
+                collateralTokens[i]
+            );
+        }
     }
 }

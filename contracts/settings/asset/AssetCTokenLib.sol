@@ -16,18 +16,18 @@ import { AppStorageLib } from "../../storage/app.sol";
  *
  * @author develop@teller.finance
  */
-library MaxDebtRatioLib {
-    bytes32 private constant NAME = keccak256("MaxDebtRatio");
+library AssetCTokenLib {
+    bytes32 private constant NAME = keccak256("cToken");
 
     function s(address asset) private view returns (Cache storage) {
         return AppStorageLib.store().assetSettings[asset];
     }
 
-    function get(address asset) internal view returns (uint256) {
-        return s(asset).uints[NAME];
+    function get(address asset) internal view returns (address) {
+        return s(asset).addresses[NAME];
     }
 
-    function set(address asset, uint256 newValue) internal {
-        s(asset).uints[NAME] = newValue;
+    function set(address asset, address newValue) internal {
+        s(asset).addresses[NAME] = newValue;
     }
 }

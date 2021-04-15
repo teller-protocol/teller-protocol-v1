@@ -23,8 +23,8 @@ library LibConsensus {
     using NumbersLib for uint256;
     using NumbersList for NumbersList.Values;
 
-    function marketStore() private pure returns (MarketStorage storage) {
-        return MarketStorageLib.marketStore();
+    function s() private pure returns (MarketStorage storage) {
+        return MarketStorageLib.store();
     }
 
     function processLoanTerms(
@@ -40,7 +40,7 @@ library LibConsensus {
         )
     {
         require(
-            responses.length.ratioOf(marketStore().signers.array.length) >=
+            responses.length.ratioOf(s().signers.array.length) >=
                 PlatformSettingsLib.getRequiredSubmissionsPercentageValue(),
             "Teller: insufficient signer responses"
         );
@@ -110,7 +110,7 @@ library LibConsensus {
         private
         view
     {
-        uint256[] storage borrowerLoans = marketStore().borrowerLoans[borrower];
+        uint256[] storage borrowerLoans = s().borrowerLoans[borrower];
         uint256 numberOfLoans = borrowerLoans.length;
 
         require(nonce == numberOfLoans, "Teller: bad request nonce");
@@ -122,7 +122,7 @@ library LibConsensus {
         }
 
         uint256 loanStartTime =
-            marketStore().loans[borrowerLoans[numberOfLoans - 1]].loanStartTime;
+            s().loans[borrowerLoans[numberOfLoans - 1]].loanStartTime;
         require(
             loanStartTime +
                 PlatformSettingsLib.getRequestLoanTermsRateLimitValue() <=

@@ -23,8 +23,8 @@ library LibLoans {
     using NumbersLib for int256;
     using NumbersLib for uint256;
 
-    function libStore() private pure returns (MarketStorage storage) {
-        return MarketStorageLib.marketStore();
+    function s() private pure returns (MarketStorage storage) {
+        return MarketStorageLib.store();
     }
 
     /**
@@ -33,19 +33,17 @@ library LibLoans {
      * @return uint256 The total owed amount.
      */
     function getTotalOwed(uint256 loanID) public view returns (uint256) {
-        if (libStore().loans[loanID].status == LoanStatus.TermsSet) {
+        if (s().loans[loanID].status == LoanStatus.TermsSet) {
             uint256 interestOwed =
                 getInterestOwedFor(
                     loanID,
-                    libStore().loans[loanID].loanTerms.maxLoanAmount
+                    s().loans[loanID].loanTerms.maxLoanAmount
                 );
+            return s().loans[loanID].loanTerms.maxLoanAmount + (interestOwed);
+        } else if (s().loans[loanID].status == LoanStatus.Active) {
             return
-                libStore().loans[loanID].loanTerms.maxLoanAmount +
-                (interestOwed);
-        } else if (libStore().loans[loanID].status == LoanStatus.Active) {
-            return
-                libStore().loans[loanID].principalOwed +
-                (libStore().loans[loanID].interestOwed);
+                s().loans[loanID].principalOwed +
+                (s().loans[loanID].interestOwed);
         }
         return 0;
     }
@@ -82,8 +80,8 @@ library LibLoans {
         } else {
             uint256 value =
                 PriceAggLib.valueFor(
-                    libStore().loans[loanID].lendingToken,
-                    libStore().loans[loanID].collateralToken,
+                    s().loans[loanID].lendingToken,
+                    s().loans[loanID].collateralToken,
                     uint256(
                         neededInLendingTokens < 0
                             ? -neededInLendingTokens
@@ -112,7 +110,7 @@ library LibLoans {
     {
         if (
             !_isActiveOrSet(loanID) ||
-            libStore().loans[loanID].loanTerms.collateralRatio == 0
+            s().loans[loanID].loanTerms.collateralRatio == 0
         ) {
             return (0, 0);
         }
@@ -127,23 +125,21 @@ library LibLoans {
         // * To take out a loan (if status == TermsSet), the required collateral is (max loan amount * the collateral ratio).
         // * For the loan to not be liquidated (when status == Active), the minimum collateral is (principal owed * (X collateral factor + liquidation reward)).
         // * If the loan has an escrow account, the minimum collateral is ((principal owed - escrow value) * (X collateral factor + liquidation reward)).
-        if (libStore().loans[loanID].status == LoanStatus.TermsSet) {
+        if (s().loans[loanID].status == LoanStatus.TermsSet) {
             neededInLendingTokens = int256(_getLoanAmount(loanID)).percent(
-                libStore().loans[loanID].loanTerms.collateralRatio
+                s().loans[loanID].loanTerms.collateralRatio
             );
         } else {
-            neededInLendingTokens = int256(
-                libStore().loans[loanID].principalOwed
-            );
+            neededInLendingTokens = int256(s().loans[loanID].principalOwed);
             uint256 requiredRatio =
-                libStore().loans[loanID].loanTerms.collateralRatio -
+                s().loans[loanID].loanTerms.collateralRatio -
                     getInterestRatio(loanID) -
                     PlatformSettingsLib.getCollateralBufferValue();
-            if (libStore().escrows[loanID] != address(0)) {
-                escrowLoanValue = IEscrow(libStore().escrows[loanID])
+            if (s().escrows[loanID] != address(0)) {
+                escrowLoanValue = IEscrow(s().escrows[loanID])
                     .calculateTotalValue();
-                //            if (libStore().loans[loanID].escrow != address(0)) {
-                //                escrowLoanValue = IEscrow(libStore().loans[loanID].escrow)
+                //            if (s().loans[loanID].escrow != address(0)) {
+                //                escrowLoanValue = IEscrow(s().loans[loanID].escrow)
                 //                    .calculateTotalValue();
                 neededInLendingTokens =
                     neededInLendingTokens +
@@ -151,15 +147,13 @@ library LibLoans {
             }
             neededInLendingTokens =
                 neededInLendingTokens +
-                (int256(libStore().loans[loanID].interestOwed)).percent(
-                    requiredRatio
-                );
+                (int256(s().loans[loanID].interestOwed)).percent(requiredRatio);
         }
     }
 
     function canGoToEOA(uint256 loanID) internal view returns (bool) {
         return
-            libStore().loans[loanID].loanTerms.collateralRatio >=
+            s().loans[loanID].loanTerms.collateralRatio >=
             PlatformSettingsLib.getOverCollateralizedBufferValue();
     }
 
@@ -170,22 +164,20 @@ library LibLoans {
      */
     function isLiquidable(uint256 loanID) public view returns (bool) {
         // Check if loan can be liquidated
-        if (libStore().loans[loanID].status != LoanStatus.Active) {
+        if (s().loans[loanID].status != LoanStatus.Active) {
             return false;
         }
 
-        if (libStore().loans[loanID].loanTerms.collateralRatio > 0) {
+        if (s().loans[loanID].loanTerms.collateralRatio > 0) {
             // If loan has a collateral ratio, check how much is needed
             (, int256 neededInCollateral, ) = getCollateralNeededInfo(loanID);
-            return
-                neededInCollateral >
-                int256(libStore().loans[loanID].collateral);
+            return neededInCollateral > int256(s().loans[loanID].collateral);
         } else {
             // Otherwise, check if the loan has expired
             return
                 block.timestamp >=
-                libStore().loans[loanID].loanStartTime +
-                    (libStore().loans[loanID].loanTerms.duration);
+                s().loans[loanID].loanStartTime +
+                    (s().loans[loanID].loanTerms.duration);
         }
     }
 
@@ -198,7 +190,7 @@ library LibLoans {
         uint256 amountToLiquidate = getTotalOwed(loanID);
         uint256 availableValue =
             getCollateralInLendingTokens(loanID) +
-                (IEscrow(libStore().escrows[loanID]).calculateTotalValue());
+                (IEscrow(s().escrows[loanID]).calculateTotalValue());
         uint256 maxReward =
             amountToLiquidate.percent(
                 PlatformSettingsLib
@@ -227,9 +219,9 @@ library LibLoans {
         }
         return
             PriceAggLib.valueFor(
-                libStore().loans[loanID].collateralToken,
-                libStore().loans[loanID].lendingToken,
-                libStore().loans[loanID].collateral
+                s().loans[loanID].collateralToken,
+                s().loans[loanID].lendingToken,
+                s().loans[loanID].collateral
             );
     }
 
@@ -240,23 +232,23 @@ library LibLoans {
      */
     function getInterestRatio(uint256 loanID) internal view returns (uint256) {
         return
-            (libStore().loans[loanID].loanTerms.interestRate *
-                (libStore().loans[loanID].loanTerms.duration)) /
+            (s().loans[loanID].loanTerms.interestRate *
+                (s().loans[loanID].loanTerms.duration)) /
             //                .div(SECONDS_PER_YEAR); // change to new constants file once written
             (31536000);
     }
 
     function _getLoanAmount(uint256 loanID) private view returns (uint256) {
-        if (libStore().loans[loanID].status == LoanStatus.TermsSet) {
-            return libStore().loans[loanID].loanTerms.maxLoanAmount;
-        } else if (libStore().loans[loanID].status == LoanStatus.Active) {
-            return libStore().loans[loanID].borrowedAmount;
+        if (s().loans[loanID].status == LoanStatus.TermsSet) {
+            return s().loans[loanID].loanTerms.maxLoanAmount;
+        } else if (s().loans[loanID].status == LoanStatus.Active) {
+            return s().loans[loanID].borrowedAmount;
         }
         return 0;
     }
 
     function _isActiveOrSet(uint256 loanID) private view returns (bool) {
-        LoanStatus status = libStore().loans[loanID].status;
+        LoanStatus status = s().loans[loanID].status;
         return status == LoanStatus.Active || status == LoanStatus.TermsSet;
     }
 }

@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// Libraries
-import { AddressArrayLib } from "../shared/libraries/AddressArrayLib.sol";
-
 struct PriceAggStorage {
     mapping(address => mapping(address => address)) chainlinkAggregators;
 }

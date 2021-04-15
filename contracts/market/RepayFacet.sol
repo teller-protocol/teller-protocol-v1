@@ -59,25 +59,23 @@ contract RepayFacet is RolesMods, PausableMods {
         // Deduct the interest and principal owed
         uint256 principalPaid;
         uint256 interestPaid;
-        if (
-            amount < MarketStorageLib.marketStore().loans[loanID].interestOwed
-        ) {
+        if (amount < MarketStorageLib.store().loans[loanID].interestOwed) {
             interestPaid = amount;
-            MarketStorageLib.marketStore().loans[loanID].interestOwed =
-                MarketStorageLib.marketStore().loans[loanID].interestOwed -
+            MarketStorageLib.store().loans[loanID].interestOwed =
+                MarketStorageLib.store().loans[loanID].interestOwed -
                 (amount);
         } else {
-            if (MarketStorageLib.marketStore().loans[loanID].interestOwed > 0) {
-                interestPaid = MarketStorageLib.marketStore().loans[loanID]
+            if (MarketStorageLib.store().loans[loanID].interestOwed > 0) {
+                interestPaid = MarketStorageLib.store().loans[loanID]
                     .interestOwed;
                 amount = amount - interestPaid;
-                MarketStorageLib.marketStore().loans[loanID].interestOwed = 0;
+                MarketStorageLib.store().loans[loanID].interestOwed = 0;
             }
 
             if (amount > 0) {
                 principalPaid = amount;
-                MarketStorageLib.marketStore().loans[loanID].principalOwed =
-                    MarketStorageLib.marketStore().loans[loanID].principalOwed -
+                MarketStorageLib.store().loans[loanID].principalOwed =
+                    MarketStorageLib.store().loans[loanID].principalOwed -
                     (amount);
             }
         }
@@ -86,18 +84,17 @@ contract RepayFacet is RolesMods, PausableMods {
 
         // if the loan is now fully paid, close it and return collateral
         if (totalOwed == 0) {
-            MarketStorageLib.marketStore().loans[loanID].status = LoanStatus
-                .Closed;
-            LibCollateral._withdrawCollateral(
+            MarketStorageLib.store().loans[loanID].status = LoanStatus.Closed;
+            LibCollateral.withdrawCollateral(
                 loanID,
-                MarketStorageLib.marketStore().loans[loanID].collateral,
-                MarketStorageLib.marketStore().loans[loanID].loanTerms.borrower
+                MarketStorageLib.store().loans[loanID].collateral,
+                MarketStorageLib.store().loans[loanID].loanTerms.borrower
             );
         }
 
         emit LoanRepaid(
             loanID,
-            MarketStorageLib.marketStore().loans[loanID].loanTerms.borrower,
+            MarketStorageLib.store().loans[loanID].loanTerms.borrower,
             principalPaid + interestPaid,
             msg.sender,
             totalOwed

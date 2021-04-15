@@ -11,8 +11,7 @@ contract LendingDataFacet {
      * @return value_ Current Teller token value for the {asset} lending pool.
      */
     function getTToken(address asset) external returns (address tToken_) {
-        // TODO: get tToken
-        tToken_ = tToken;
+        tToken_ = LendingLib.s(asset).tToken;
     }
 
     /**

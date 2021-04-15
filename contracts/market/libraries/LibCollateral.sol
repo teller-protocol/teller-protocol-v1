@@ -1,10 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { MarketStorageLib } from "../../storage/market.sol";
+// Interfaces
 import { IEscrow } from "../../shared/interfaces/IEscrow.sol";
+import { IWETH } from "../../shared/interfaces/IWETH.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {
+    SafeERC20
+} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
+// Storage
+import { MarketStorageLib, Loan } from "../../storage/market.sol";
 
 library LibCollateral {
+    function l(uint256 loanID) internal pure returns (Loan storage l_) {
+        l_ = MarketStorageLib.store().loans[loanID];
+    }
+
     /**
      * @notice This event is emitted when collateral has been deposited for the loan
      * @param loanID ID of the loan for which collateral was deposited
@@ -31,43 +43,50 @@ library LibCollateral {
         uint256 amount
     );
 
-    function _payInCollateral(uint256 loanID, uint256 amount) internal {
-        require(msg.value == amount, "INCORRECT_ETH_AMOUNT");
+    function depositCollateral(uint256 loanID, uint256 amount) internal {
+        require(amount > 0, "Teller: zero deposit");
 
-        MarketStorageLib.marketStore().totalCollateral += amount;
-        MarketStorageLib.marketStore().loans[loanID].collateral += amount;
-        MarketStorageLib.marketStore().loans[loanID].lastCollateralIn = block
-            .timestamp;
+        // Check if ETH deposit and wrap in WETH
+        if (msg.value > 0) {
+            require(msg.value == amount, "Teller: incorrect eth deposit");
+            IWETH(l(loanID).collateralToken).deposit{ value: amount }();
+        }
+        // TODO: transfer collateral to token escrow
+
+        l(loanID).collateral += amount;
+        l(loanID).lastCollateralIn = block.timestamp;
+
         emit CollateralDeposited(loanID, msg.sender, amount);
     }
 
-    function _withdrawCollateral(
+    function withdrawCollateral(
         uint256 loanID,
         uint256 amount,
         address payable recipient
     ) internal {
-        _payOutCollateral(loanID, amount, recipient);
+        l(loanID).collateral -= amount;
+
+        // TODO: withdraw collateral from token escrow
+        // Check if ETH deposit and wrap in WETH
+        address weth = AppStorageLib.store().assetAddresses["WETH"];
+        if (weth == l(loanID).collateralToken) {
+            IWETH(weth).withdraw(amount);
+            recipient.transfer(amount);
+        } else {
+            SafeERC20.safeTransferFrom(
+                IERC20(l(loanID).collateralToken),
+                escrow,
+                recipient,
+                amount
+            );
+        }
 
         emit CollateralWithdrawn(
             loanID,
-            MarketStorageLib.marketStore().loans[loanID].loanTerms.borrower,
+            l(loanID).loanTerms.borrower,
             recipient,
             amount
         );
-    }
-
-    function _payOutCollateral(
-        uint256 loanID,
-        uint256 amount,
-        address payable recipient
-    ) internal {
-        MarketStorageLib.marketStore().totalCollateral =
-            MarketStorageLib.marketStore().totalCollateral -
-            (amount);
-        MarketStorageLib.marketStore().loans[loanID].collateral =
-            MarketStorageLib.marketStore().loans[loanID].collateral -
-            (amount);
-        recipient.transfer(amount);
     }
 
     /**
@@ -77,7 +96,7 @@ library LibCollateral {
      * @param rewardInCollateral The total amount of reward based in the collateral token to pay the liquidator
      * @param recipient The address of the liquidator where the liquidation reward will be sent to
      */
-    function _payOutLiquidator(
+    function payOutLiquidator(
         uint256 loanID,
         int256 rewardInCollateral,
         address payable recipient
@@ -86,24 +105,23 @@ library LibCollateral {
             return;
         }
         uint256 reward = uint256(rewardInCollateral);
-        if (reward < MarketStorageLib.marketStore().loans[loanID].collateral) {
-            _payOutCollateral(loanID, reward, recipient);
+        if (reward < MarketStorageLib.store().loans[loanID].collateral) {
+            withdrawCollateral(loanID, reward, recipient);
         } else if (
-            reward >= MarketStorageLib.marketStore().loans[loanID].collateral
+            reward >= MarketStorageLib.store().loans[loanID].collateral
         ) {
             uint256 remainingCollateralAmount =
-                reward -
-                    (MarketStorageLib.marketStore().loans[loanID].collateral);
-            _payOutCollateral(
+                reward - (MarketStorageLib.store().loans[loanID].collateral);
+            withdrawCollateral(
                 loanID,
-                MarketStorageLib.marketStore().loans[loanID].collateral,
+                MarketStorageLib.store().loans[loanID].collateral,
                 recipient
             );
             if (
                 remainingCollateralAmount > 0 &&
-                MarketStorageLib.marketStore().escrows[loanID] != address(0x0)
+                MarketStorageLib.store().escrows[loanID] != address(0x0)
             ) {
-                IEscrow(MarketStorageLib.marketStore().escrows[loanID])
+                IEscrow(MarketStorageLib.store().escrows[loanID])
                     .claimTokensByCollateralValue(
                     recipient,
                     remainingCollateralAmount

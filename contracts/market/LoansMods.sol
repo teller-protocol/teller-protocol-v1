@@ -22,8 +22,7 @@ abstract contract LoansMods {
      */
     modifier loanActive(uint256 loanID) {
         require(
-            MarketStorageLib.marketStore().loans[loanID].status ==
-                LoanStatus.Active,
+            MarketStorageLib.store().loans[loanID].status == LoanStatus.Active,
             "LOAN_NOT_ACTIVE"
         );
         _;
@@ -35,9 +34,9 @@ abstract contract LoansMods {
      */
     modifier loanActiveOrSet(uint256 loanID) {
         require(
-            MarketStorageLib.marketStore().loans[loanID].status ==
+            MarketStorageLib.store().loans[loanID].status ==
                 LoanStatus.Active ||
-                MarketStorageLib.marketStore().loans[loanID].status ==
+                MarketStorageLib.store().loans[loanID].status ==
                 LoanStatus.TermsSet,
             "Teller: loan not active or set"
         );
@@ -73,9 +72,7 @@ abstract contract LoansMods {
     }
 
     modifier onlyBorrower(uint256 loanID) {
-        require(
-            msg.sender == MarketStorageLib.marketStore().loans[loanID].borrower
-        );
+        require(msg.sender == MarketStorageLib.store().loans[loanID].borrower);
         _;
     }
 }

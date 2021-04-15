@@ -8,16 +8,14 @@ import {
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 struct LendingStorage {
+    bool initialized;
     EnumerableSet.AddressSet secondaryFunds;
     uint256 totalBorrowed;
     uint256 totalRepaid;
     uint256 totalInterestEarned;
-    address[] collateralTokens;
     mapping(address => uint256) lenderTotalSupplied;
     mapping(address => uint256) lenderTotalInterest;
-    //    ERC20 lendingToken;
-    //    ITToken tToken;
-    //    ICErc20 cToken;
+    ITToken tToken;
     //    address compound;
     //    address comp;
     //    uint256 totalCollateralInLendingTokens;

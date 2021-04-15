@@ -67,11 +67,7 @@ contract CreateLoanFacet is RolesMods, PausableMods, LoansMods {
 
         // Get and increment new loan ID
         uint256 loanID = CreateLoanLib.newID();
-        Loan storage loan = MarketStorageLib.marketStore().loans[loanID];
-        MarketStorageLib.marketStore().borrowerLoans[request.borrower].push(
-            loanID
-        );
-
+        Loan storage loan = MarketStorageLib.store().loans[loanID];
         require(
             loan.status == LoanStatus.NonExistent,
             "Teller: loan already exists"
@@ -81,9 +77,20 @@ contract CreateLoanFacet is RolesMods, PausableMods, LoansMods {
         (uint256 interestRate, uint256 collateralRatio, uint256 maxLoanAmount) =
             LibConsensus.processLoanTerms(request, responses);
 
+        // Pay in collateral
+        if (collateralAmount > 0) {
+            LibCollateral.depositCollateral(loanID, collateralAmount);
+        }
+
+        // Add loanID to borrower list
+        MarketStorageLib.store().borrowerLoans[request.borrower].push(loanID);
+
         // TODO: need to store on struct?
         loan.id = loanID;
         loan.status = LoanStatus.TermsSet;
+        loan.termsExpiry =
+            block.timestamp +
+            PlatformSettingsLib.getTermsExpiryTimeValue();
         loan.loanTerms = LoanTerms({
             borrower: request.borrower,
             recipient: request.recipient,
@@ -92,14 +99,6 @@ contract CreateLoanFacet is RolesMods, PausableMods, LoansMods {
             maxLoanAmount: maxLoanAmount,
             duration: request.duration
         });
-
-        loan.termsExpiry =
-            block.timestamp +
-            PlatformSettingsLib.getTermsExpiryTimeValue();
-
-        if (collateralAmount > 0) {
-            LibCollateral._payInCollateral(loanID, collateralAmount);
-        }
 
         emit LoanTermsSet(loanID, msg.sender, request.recipient);
     }
@@ -116,7 +115,7 @@ contract CreateLoanFacet is RolesMods, PausableMods, LoansMods {
         paused("", false)
         authorized(AUTHORIZED, msg.sender)
     {
-        Loan storage loan = MarketStorageLib.marketStore().loans[loanID];
+        Loan storage loan = MarketStorageLib.store().loans[loanID];
         CreateLoanLib.verifyTakeOut(loan);
 
         loan.borrowedAmount = amount;
@@ -144,12 +143,12 @@ contract CreateLoanFacet is RolesMods, PausableMods, LoansMods {
 
         if (!eoaAllowed) {
             // TODO: Implement once escrow facet is complete
-            //            IEscrow(MarketStorageLib.marketStore().loans[loanID].escrow).initialize(
+            //            IEscrow(MarketStorageLib.store().loans[loanID].escrow).initialize(
             //                address(IPlatformSettings(PROTOCOL)),
             //                address(ILendingPool(PROTOCOL)),
             //                loanID,
-            //                MarketStorageLib.marketStore().lendingToken,
-            //                MarketStorageLib.marketStore().loans[loanID].loanTerms.borrower
+            //                MarketStorageLib.store().lendingToken,
+            //                MarketStorageLib.store().loans[loanID].loanTerms.borrower
             //            );
         }
 
@@ -160,7 +159,7 @@ contract CreateLoanFacet is RolesMods, PausableMods, LoansMods {
 library CreateLoanLib {
     function newID() internal view returns (uint256 id_) {
         Counters.Counter storage counter =
-            MarketStorageLib.marketStore().loanIDCounter;
+            MarketStorageLib.store().loanIDCounter;
         id_ = Counter.current(counter);
         Counter.increment(counter);
     }

@@ -34,7 +34,7 @@ export const freshMarket = (args?: FreshMarketArgs): Promise<MarketReturn> =>
       collTokenSym = args.collTokenSym
     } else {
       const markets = await getMarkets(network)
-      lendTokenSym = markets[0].borrowedToken
+      lendTokenSym = markets[0].lendingToken
       collTokenSym = markets[0].collateralToken
     }
 

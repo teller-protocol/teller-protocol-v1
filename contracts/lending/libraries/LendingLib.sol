@@ -209,7 +209,7 @@ library LendingLib {
         uint256 totalAmount = principalAmount + interestAmount;
         require(totalAmount > 0, "REPAY_ZERO");
 
-        address asset = MarketStorageLib.marketStore().loans[loanID].asset;
+        address asset = MarketStorageLib.store().loans[loanID].asset;
         // Transfers tokens to LendingPool.
         tokenTransferFrom(sender, totalAmount, asset);
 

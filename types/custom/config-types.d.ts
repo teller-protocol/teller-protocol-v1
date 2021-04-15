@@ -45,8 +45,8 @@ interface ATMToken {
 }
 
 interface Market {
-  borrowedToken: TokenSymbol
-  collateralToken: TokenSymbol
+  lendingToken: TokenSymbol
+  collateralTokens: TokenSymbol[]
 }
 
 export interface Chainlink {

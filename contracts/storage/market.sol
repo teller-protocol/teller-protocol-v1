@@ -2,8 +2,10 @@
 pragma solidity ^0.8.0;
 
 import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import "../shared/libraries/AddressArrayLib.sol";
 import "../shared/libraries/NumbersList.sol";
 
 /**
@@ -142,22 +144,24 @@ struct DappData {
 struct MarketStorage {
     // Holds the index for the next loan ID
     Counters.Counter loanIDCounter;
-    // Maps of IDs to loan data
+    // Maps loanIDs to loan data
     mapping(uint256 => Loan) loans;
     // Maps loanIDs to escrow address to list of held tokens
     mapping(uint256 => address) loanEscrows;
-    // Holds an array of tokens owned by a loan escrow
-    mapping(address => AddressArrayLib.AddressArray) escrowTokens;
+    // Maps loanIDs to list of tokens owned by a loan escrow
+    mapping(uint256 => EnumerableSet.AddressSet) escrowTokens;
     // Maps accounts to owned loan IDs
     mapping(address => uint256[]) borrowerLoans;
-    // List of the signer addresses who are only ones that can verify loan requests
-    AddressArrayLib.AddressArray signers;
+    // Maps lending token to list of signer addresses who are only ones allowed to verify loan requests
+    mapping(address => EnumerableSet.AddressSet) signers;
+    // Maps lending token to list of allowed collateral tokens
+    mapping(address => EnumerableSet.AddressSet) collateralTokens;
 }
 
 bytes32 constant MARKET_STORAGE_POS = keccak256("teller.market.storage");
 
 library MarketStorageLib {
-    function marketStore() internal pure returns (MarketStorage storage s) {
+    function store() internal pure returns (MarketStorage storage s) {
         bytes32 pos = MARKET_STORAGE_POS;
         assembly {
             s.slot := pos
