@@ -8,7 +8,7 @@ contract LendingDataFacet {
     /**
      * @notice Gets the address for the {asset} Teller token.
      * @param asset Lending asset address.
-     * @return value_ Current Teller token value for the {asset} lending pool.
+     * @return tToken_ Current Teller token value for the {asset} lending pool.
      */
     function getTToken(address asset) external returns (address tToken_) {
         tToken_ = LendingLib.s(asset).tToken;

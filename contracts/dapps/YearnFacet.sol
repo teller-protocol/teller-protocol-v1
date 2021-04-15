@@ -2,17 +2,14 @@
 pragma solidity ^0.8.0;
 
 // Storage
-import { MarketStorageLib, LoanStatus } from "../storage/market.sol";
-import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
-import { LoansMods } from "../market/LoansMods.sol";
+import { DappMods } from "./DappMods.sol";
 import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
-import { AUTHORIZED } from "../shared/roles.sol";
 import { LibDapps } from "./libraries/LibDapps.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IVault } from "./interfaces/IVault.sol";
 
-contract YearnFacet is RolesMods, PausableMods, LoansMods {
+contract YearnFacet is PausableMods, DappMods {
     using SafeERC20 for IERC20;
 
     /**
@@ -56,7 +53,7 @@ contract YearnFacet is RolesMods, PausableMods, LoansMods {
         uint256 loanID,
         address tokenAddress,
         uint256 amount
-    ) public loanActiveOrSet(loanID) paused("", false) onlyBorrower(loanID) {
+    ) public paused("", false) onlyBorrower(loanID) {
         IVault iVault = LibDapps.getYVault(tokenAddress);
         uint256 tokenBalanceBeforeDeposit = iVault.balanceOf(address(this));
         IERC20(tokenAddress).safeApprove(address(iVault), amount);
@@ -89,7 +86,7 @@ contract YearnFacet is RolesMods, PausableMods, LoansMods {
         uint256 loanID,
         address tokenAddress,
         uint256 amount
-    ) public loanActiveOrSet(loanID) paused("", false) onlyBorrower(loanID) {
+    ) public paused("", false) onlyBorrower(loanID) {
         IVault iVault = LibDapps.getYVault(tokenAddress);
         uint256 price = iVault.getPricePerShare();
         uint256 shares = amount / price;
@@ -126,7 +123,6 @@ contract YearnFacet is RolesMods, PausableMods, LoansMods {
      */
     function yearnWithdrawAll(uint256 loanID, address tokenAddress)
         public
-        loanActiveOrSet(loanID)
         paused("", false)
         onlyBorrower(loanID)
     {

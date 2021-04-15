@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
-import { LoansMods } from "./LoansMods.sol";
 import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
 import { ADMIN, AUTHORIZED } from "../shared/roles.sol";
 
@@ -19,10 +18,11 @@ import { AppStorageLib } from "../storage/app.sol";
 import {
     MarketStorageLib,
     MarketStorage,
-    LoanStatus
+    LoanStatus,
+    Loan
 } from "../storage/market.sol";
 
-contract CollateralFacet is RolesMods, PausableMods, LoansMods {
+contract CollateralFacet is RolesMods, PausableMods {
     /**
      * @notice Deposit collateral tokens into a loan.
      * @param borrower The address of the loan borrower.
@@ -33,13 +33,14 @@ contract CollateralFacet is RolesMods, PausableMods, LoansMods {
         address borrower,
         uint256 loanID,
         uint256 amount
-    )
-        external
-        payable
-        loanActiveOrSet(loanID)
-        paused("", false)
-        authorized(AUTHORIZED, msg.sender)
-    {
+    ) external payable paused("", false) authorized(AUTHORIZED, msg.sender) {
+        require(
+            MarketStorageLib.store().loans[loanID].status ==
+                LoanStatus.Active ||
+                MarketStorageLib.store().loans[loanID].status ==
+                LoanStatus.TermsSet,
+            "Teller: loan not active or set"
+        );
         // TODO: necessary check?
         require(
             borrower ==
@@ -53,7 +54,6 @@ contract CollateralFacet is RolesMods, PausableMods, LoansMods {
 
     function withdrawCollateral(uint256 amount, uint256 loanID)
         external
-        loanActiveOrSet(loanID)
         paused("", false)
         authorized(AUTHORIZED, msg.sender)
     {
@@ -99,6 +99,19 @@ contract CollateralFacet is RolesMods, PausableMods, LoansMods {
             MarketStorageLib.store().collateralTokens[asset].add(
                 collateralTokens[i]
             );
+        }
+    }
+
+    function getCollateralTokens(address asset)
+        external
+        view
+        returns (address[] memory tokens_)
+    {
+        EnumerableSet.AddressSet memory collateralTokens =
+            MarketStorageLib.store().collateralTokens[asset];
+        tokens_ = new address[](EnumerableSet.length(collateralTokens));
+        for (uint256 i; i < collateralTokens; i++) {
+            tokens_.push(EnumerableSet.at(collateralTokens, i));
         }
     }
 }

@@ -11,8 +11,6 @@ import { AUTHORIZED } from "../shared/roles.sol";
 import { LendingLib } from "./libraries/LendingLib.sol";
 
 contract LendingWithdrawFacet is RolesMods, ReentryMods, PausableMods {
-    bytes32 constant FACET_ID = keccak256("LendingFacet");
-
     /**
      * @notice This event is emitted when an user withdraws tokens from the pool.
      * @param sender address that withdrew the tokens.
@@ -29,8 +27,8 @@ contract LendingWithdrawFacet is RolesMods, ReentryMods, PausableMods {
      */
     function lendingWithdraw(address asset, uint256 assetAmount)
         external
-        nonReentry(FACET_ID)
-        paused(FACET_ID, false)
+        nonReentry(LendingLib.FACET_ID)
+        paused(LendingLib.FACET_ID, false)
     {
         require(assetAmount > 0, "Teller: cannot withdraw 0");
 
@@ -40,8 +38,7 @@ contract LendingWithdrawFacet is RolesMods, ReentryMods, PausableMods {
         uint256 tTokenAmount = LendingLib.tTokenValue(assetAmount, rate);
 
         require(
-            // TODO: get tToken
-            tToken.balanceOf(msg.sender) > tTokenAmount,
+            LendingLib.s(asset).tToken.balanceOf(msg.sender) > tTokenAmount,
             "Teller: withdraw insufficient balance"
         );
 
@@ -54,13 +51,12 @@ contract LendingWithdrawFacet is RolesMods, ReentryMods, PausableMods {
      */
     function lendingWithdrawAll(address asset)
         external
-        nonReentry(FACET_ID)
-        paused(FACET_ID, false)
+        nonReentry(LendingLib.FACET_ID)
+        paused(LendingLib.FACET_ID, false)
         returns (uint256 assetAmount)
     {
         // Get the user's supply balance
-        // TODO: get tToken
-        uint256 tTokenAmount = tToken.balanceOf(msg.sender);
+        uint256 tTokenAmount = LendingLib.s(asset).tToken.balanceOf(msg.sender);
         require(tTokenAmount > 0, "Teller: withdraw no balance");
 
         // Get the current exchange rate
@@ -86,10 +82,10 @@ contract LendingWithdrawFacet is RolesMods, ReentryMods, PausableMods {
         uint256 rate
     ) private {
         // Get the LP balance of the asset
-        uint256 assetBalance = lendingToken.balanceOf(address(this));
+        uint256 assetBalance = asset.balanceOf(address(this));
 
         // Only withdraw how much is needed
-        _withdrawFromCompoundIfSupported(assetAmount - assetBalance);
+        //_withdrawFromCompoundIfSupported(assetAmount - assetBalance);
 
         // Calculate lender's interest earned
         uint256 lenderInterest =
@@ -104,12 +100,11 @@ contract LendingWithdrawFacet is RolesMods, ReentryMods, PausableMods {
             : lenderInterest - assetAmount;
 
         // Burn tToken tokens.
-        // TODO: get tToken
-        tToken.burn(msg.sender, tTokenAmount);
+        LendingLib.s(asset).tToken.burn(msg.sender, tTokenAmount);
 
         // Transfers tokens
         // TODO: get escrow
-        escrow.transferTo(asset, msg.sender, assetAmount);
+        //escrow.transferTo(asset, msg.sender, assetAmount);
 
         // Emit event.
         emit LendingWithdraw(msg.sender, assetAmount, tTokenAmount);

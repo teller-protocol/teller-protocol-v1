@@ -18,7 +18,7 @@ contract LendingSettingsFacet is RolesMods {
     /**
      * @notice This event is emitted when a new lending pool is initialized.
      * @param sender address.
-     * @param amount of tokens.
+     * @param asset Token address the pool was initialized for.
      */
     event LendingPoolInitialized(address indexed sender, address asset);
 

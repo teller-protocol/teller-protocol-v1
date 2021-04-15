@@ -10,6 +10,7 @@ import {
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // Storage
+import { AppStorageLib } from "../../storage/app.sol";
 import { MarketStorageLib, Loan } from "../../storage/market.sol";
 
 library LibCollateral {
@@ -73,12 +74,12 @@ library LibCollateral {
             IWETH(weth).withdraw(amount);
             recipient.transfer(amount);
         } else {
-            SafeERC20.safeTransferFrom(
-                IERC20(l(loanID).collateralToken),
-                escrow,
-                recipient,
-                amount
-            );
+            //            SafeERC20.safeTransferFrom(
+            //                IERC20(l(loanID).collateralToken),
+            //                escrow,
+            //                recipient,
+            //                amount
+            //            );
         }
 
         emit CollateralWithdrawn(

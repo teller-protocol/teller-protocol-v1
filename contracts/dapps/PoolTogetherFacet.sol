@@ -2,25 +2,22 @@
 pragma solidity ^0.8.0;
 
 // Storage
-import { MarketStorageLib, LoanStatus } from "../storage/market.sol";
-import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
-import { LoansMods } from "../market/LoansMods.sol";
+import { DappMods } from "./DappMods.sol";
 import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
-import { AUTHORIZED } from "../shared/roles.sol";
 import { LibDapps } from "./libraries/LibDapps.sol";
 import { PrizePoolInterface } from "./interfaces/PrizePoolInterface.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-contract PoolTogetherFacet is RolesMods, PausableMods, LoansMods {
+contract PoolTogetherFacet is PausableMods, DappMods {
     using SafeERC20 for IERC20;
     /**
-        @notice This event is emitted every time Pool Together depositTo is invoked successfully.
-        @param tokenAddress address of the underlying token.
-        @param ticketAddress pool ticket token address.
-        @param amount amount of tokens deposited.
-        @param tokenBalance underlying token balance after depositing.
-        @param creditBalanceAfter pool together credit after depositing.
+     * @notice This event is emitted every time Pool Together depositTo is invoked successfully.
+     * @param tokenAddress address of the underlying token.
+     * @param ticketAddress pool ticket token address.
+     * @param amount amount of tokens deposited.
+     * @param tokenBalance underlying token balance after depositing.
+     * @param creditBalanceAfter pool together credit after depositing.
      */
     event PoolTogetherDeposited(
         address indexed tokenAddress,
@@ -31,12 +28,12 @@ contract PoolTogetherFacet is RolesMods, PausableMods, LoansMods {
     );
 
     /**
-        @notice This event is emitted every time Pool Together withdrawInstantlyFrom is invoked successfully.
-        @param tokenAddress address of the underlying token.
-        @param ticketAddress pool ticket token address.
-        @param amount amount of tokens to Redeem.
-        @param tokenBalance underlying token balance after Redeem.
-        @param creditBalanceAfter pool together credit after depositing.
+     * @notice This event is emitted every time Pool Together withdrawInstantlyFrom is invoked successfully.
+     * @param tokenAddress address of the underlying token.
+     * @param ticketAddress pool ticket token address.
+     * @param amount amount of tokens to Redeem.
+     * @param tokenBalance underlying token balance after Redeem.
+     * @param creditBalanceAfter pool together credit after depositing.
      */
     event PoolTogetherWithdrawal(
         address indexed tokenAddress,
@@ -47,16 +44,16 @@ contract PoolTogetherFacet is RolesMods, PausableMods, LoansMods {
     );
 
     /**
-        @notice This function deposits the users funds into a Pool Together Prize Pool for a ticket.
-        @param loanID id of the loan being used in the dapp
-        @param tokenAddress address of the token.
-        @param amount of tokens to deposit.
-    */
+     * @notice This function deposits the users funds into a Pool Together Prize Pool for a ticket.
+     * @param loanID id of the loan being used in the dapp
+     * @param tokenAddress address of the token.
+     * @param amount of tokens to deposit.
+     */
     function poolTogetherDepositTicket(
         uint256 loanID,
         address tokenAddress,
         uint256 amount
-    ) public loanActiveOrSet(loanID) paused("", false) onlyBorrower(loanID) {
+    ) public paused("", false) onlyBorrower(loanID) {
         require(
             LibDapps.balanceOf(loanID, tokenAddress) >= amount,
             "POOL_INSUFFICIENT_UNDERLYING"
@@ -91,16 +88,16 @@ contract PoolTogetherFacet is RolesMods, PausableMods, LoansMods {
     }
 
     /**
-        @notice This function withdraws the users funds from a Pool Together Prize Pool.
-        @param loanID id of the loan being used in the dapp
-        @param tokenAddress address of the token.
-        @param amount The amount of tokens to withdraw.
-    */
+     * @notice This function withdraws the users funds from a Pool Together Prize Pool.
+     * @param loanID id of the loan being used in the dapp
+     * @param tokenAddress address of the token.
+     * @param amount The amount of tokens to withdraw.
+     */
     function poolTogetherWithdraw(
         uint256 loanID,
         address tokenAddress,
         uint256 amount
-    ) public loanActiveOrSet(loanID) paused("", false) onlyBorrower(loanID) {
+    ) public paused("", false) onlyBorrower(loanID) {
         PrizePoolInterface prizePool = LibDapps.getPrizePool(tokenAddress);
 
         address ticketAddress = LibDapps.getTicketAddress(tokenAddress);
@@ -138,13 +135,12 @@ contract PoolTogetherFacet is RolesMods, PausableMods, LoansMods {
     }
 
     /**
-        @notice This function withdraws the users funds from a Pool Together Prize Pool.
-        @param loanID id of the loan being used in the dapp
-        @param tokenAddress address of the token.
-    */
+     * @notice This function withdraws the users funds from a Pool Together Prize Pool.
+     * @param loanID id of the loan being used in the dapp
+     * @param tokenAddress address of the token.
+     */
     function poolTogetherWithdrawAll(uint256 loanID, address tokenAddress)
         public
-        loanActiveOrSet(loanID)
         paused("", false)
         onlyBorrower(loanID)
     {

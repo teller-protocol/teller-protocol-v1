@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 // Interfaces
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../../shared/libraries/AddressArrayLib.sol";
 import { MarketStorageLib, MarketStorage } from "../../storage/market.sol";
 import { AppStorageLib } from "../../storage/app.sol";
 import { IAToken } from "../interfaces/IAToken.sol";
@@ -17,12 +16,15 @@ import "../../storage/app.sol";
 import { IUniswapV2Router } from "../../shared/interfaces/IUniswapV2Router.sol";
 import { IVault } from "../interfaces/IVault.sol";
 
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+
 library LibDapps {
-    using AddressArrayLib for AddressArrayLib.AddressArray;
     using SafeERC20 for IERC20;
 
-    function marketStore() private pure returns (MarketStorage storage) {
-        return MarketStorageLib.marketStore();
+    function s() private pure returns (MarketStorage storage) {
+        return MarketStorageLib.store();
     }
 
     /**
@@ -30,16 +32,16 @@ library LibDapps {
      * @param tokenAddress The token address to be added or removed
      */
     function tokenUpdated(uint256 loanID, address tokenAddress) internal {
-        require(marketStore().escrows[loanID] != address(0), "NO_ESCROW");
-        address escrow = marketStore().escrows[loanID];
-        (bool found, uint256 index) =
-            marketStore().escrowTokens[escrow].getIndex(tokenAddress);
+        require(s().loanEscrows[loanID] != address(0), "Teller: no escrow");
+
+        EnumerableSet.AddressSet storage tokens = s().escrowTokens[loanID];
+        bool contains = EnumerableSet.contains(tokens, tokenAddress);
         if (balanceOf(loanID, tokenAddress) > 0) {
-            if (!found) {
-                marketStore().escrowTokens[escrow].add(tokenAddress);
+            if (!contains) {
+                EnumerableSet.add(tokens, tokenAddress);
             }
-        } else if (found) {
-            marketStore().escrowTokens[escrow].remove(index);
+        } else if (contains) {
+            EnumerableSet.remove(tokens, tokenAddress);
         }
     }
 
@@ -48,7 +50,7 @@ library LibDapps {
         view
         returns (uint256)
     {
-        address escrow = marketStore().escrows[loanID];
+        address escrow = s().loanEscrows[loanID];
         return IERC20(token).balanceOf(escrow);
     }
 

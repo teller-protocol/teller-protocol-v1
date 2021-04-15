@@ -28,13 +28,13 @@ contract SignersFacet {
     }
 
     function _addSigner(address asset, address account) internal {
-        if (!_isSigner(account)) {
+        if (!isSigner(account)) {
             MarketStorageLib.store().signers[asset].add(account);
         }
     }
 
-    function _isSigner(address asset, address account)
-        internal
+    function isSigner(address asset, address account)
+        public
         view
         returns (bool isSigner_)
     {

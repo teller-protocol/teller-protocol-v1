@@ -2,18 +2,15 @@
 pragma solidity ^0.8.0;
 
 // Storage
-import { MarketStorageLib } from "../storage/market.sol";
-import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
-import { LoansMods } from "../market/LoansMods.sol";
+import { DappMods } from "./DappMods.sol";
 import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
-import { AUTHORIZED } from "../shared/roles.sol";
 import { LibDapps } from "./libraries/LibDapps.sol";
 import { IAToken } from "./interfaces/IAToken.sol";
 import { IAaveLendingPool } from "./interfaces/IAaveLendingPool.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-contract AaveFacet is RolesMods, PausableMods, LoansMods {
+contract AaveFacet is PausableMods, DappMods {
     using SafeERC20 for IERC20;
     /**
         @notice This event is emitted every time Aave deposit is invoked successfully.
@@ -57,7 +54,7 @@ contract AaveFacet is RolesMods, PausableMods, LoansMods {
         uint256 loanID,
         address tokenAddress,
         uint256 amount
-    ) public loanActiveOrSet(loanID) paused("", false) onlyBorrower(loanID) {
+    ) public paused("", false) onlyBorrower(loanID) {
         IAaveLendingPool aaveLendingPool = LibDapps.getAaveLendingPool();
         IAToken aToken = LibDapps.getAToken(tokenAddress);
         uint256 aTokenBalanceBeforeDeposit = aToken.balanceOf(address(this));
@@ -91,7 +88,7 @@ contract AaveFacet is RolesMods, PausableMods, LoansMods {
         uint256 loanID,
         address tokenAddress,
         uint256 amount
-    ) public loanActiveOrSet(loanID) paused("", false) onlyBorrower(loanID) {
+    ) public paused("", false) onlyBorrower(loanID) {
         IAToken aToken = LibDapps.getAToken(tokenAddress);
         IAaveLendingPool aaveLendingPool = LibDapps.getAaveLendingPool();
         uint256 aTokenBalanceBeforeWithdraw = aToken.balanceOf(address(this));
@@ -125,7 +122,6 @@ contract AaveFacet is RolesMods, PausableMods, LoansMods {
      */
     function aaveWithdrawAll(uint256 loanID, address tokenAddress)
         public
-        loanActiveOrSet(loanID)
         paused("", false)
         onlyBorrower(loanID)
     {

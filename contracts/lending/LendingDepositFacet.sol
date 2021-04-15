@@ -16,8 +16,6 @@ import {
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract LendingDepositFacet is RolesMods, ReentryMods, PausableMods {
-    bytes32 constant FACET_ID = keccak256("LendingFacet");
-
     /**
      * @notice This event is emitted when an user deposits tokens into the pool.
      * @param sender address.
@@ -36,41 +34,36 @@ contract LendingDepositFacet is RolesMods, ReentryMods, PausableMods {
      * @param asset Token address to deposit into the lending pool.
      * @param amount Amount of {asset} to deposit in the pool.
      */
-    function lendingPoolDeposit(address asset, uint256 assetAmount)
+    function lendingPoolDeposit(address asset, uint256 amount)
         external
-        paused(FACET_ID, false)
+        paused(LendingLib.FACET_ID, false)
         authorized(AUTHORIZED, msg.sender)
-        nonReentry(FACET_ID)
+        nonReentry(LendingLib.FACET_ID)
     {
         // Check the max TVL
         (uint256 previousRate, uint256 previousSupply) =
             LendingLib.exchangeRateSupply(asset);
         require(
-            previousSupply + assetAmount <= MaxTVLAmountLib.get(asset),
+            previousSupply + amount <= MaxTVLAmountLib.get(asset),
             "Teller: max tvl reached"
         );
 
         // Transferring tokens to the LendingPool
-        // TODO: get escrow
         SafeERC20(IERC20(asset)).safeTransferFrom(
             msg.sender,
-            escrow,
-            assetAmount
+            // TODO: use escrow
+            address(this),
+            amount
         );
         // Update the store amount of lender supply
-        LendingLib.s(asset).lenderTotalSupplied[msg.sender] += assetAmount;
-
-        // Depositing to Compound accrues interest which changes the exchange rate.
-        _depositToCompoundIfSupported(assetAmount);
+        LendingLib.s(asset).lenderTotalSupplied[msg.sender] += amount;
 
         // Calculate Teller token value to mint
-        uint256 tTokenAmount =
-            LendingLib.tTokenValue(assetAmount, previousRate);
+        uint256 tTokenAmount = LendingLib.tTokenValue(amount, previousRate);
         // Mint lender their tokens
-        // TODO: get tToken
-        tToken.mint(msg.sender, tTokenAmount);
+        LendingLib.s(asset).tToken.mint(msg.sender, tTokenAmount);
 
         // Emit event
-        emit LendingPoolDeposit(msg.sender, assetAmount, tTokenAmount);
+        emit LendingPoolDeposit(msg.sender, amount, tTokenAmount);
     }
 }

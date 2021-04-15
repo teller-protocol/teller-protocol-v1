@@ -6,7 +6,12 @@ import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 import {
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { PriceAggLib } from "../../price-aggregator/PriceAggLib.sol";
 import { CompoundLib } from "../../shared/libraries/CompoundLib.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { AssetCTokenLib } from "../../settings/asset/AssetCTokenLib.sol";
 
 // Interfaces
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -14,8 +19,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // Storage
 import { LendingStorageLib, LendingStorage } from "../../storage/lending.sol";
 import { AppStorageLib } from "../../storage/app.sol";
-import { MarketStorageLib, LendingPool } from "../../storage/market.sol";
-import { PriceAggLib } from "../../price-aggregator/PriceAggLib.sol";
+import { MarketStorageLib } from "../../storage/market.sol";
 
 library LendingLib {
     using NumbersLib for uint256;
@@ -23,6 +27,8 @@ library LendingLib {
     function s(address asset) internal pure returns (LendingStorage storage) {
         return LendingStorageLib.store(asset);
     }
+
+    bytes32 constant FACET_ID = keccak256("LendingFacet");
 
     uint256 internal constant EXCHANGE_RATE_FACTOR = 1e18;
 
@@ -56,19 +62,19 @@ library LendingLib {
         view
         returns (uint256 rate_, uint256 supply_)
     {
-        if (tToken.totalSupply() == 0) {
-            return EXCHANGE_RATE_FACTOR;
+        if (s(asset).tToken.totalSupply() == 0) {
+            rate_ = EXCHANGE_RATE_FACTOR;
+        } else {
+            supply_ = totalSupplied(asset);
+            rate_ = exchangeRateForSupply(asset, supply_);
         }
-
-        supply_ = totalSupplied(asset);
-        rate_ = exchangeRateForSupply(asset, supply);
     }
 
     /**
      * @dev
      */
     function exchangeRate(address asset) internal view returns (uint256 rate_) {
-        if (tToken.totalSupply() == 0) {
+        if (s(asset).tToken.totalSupply() == 0) {
             return EXCHANGE_RATE_FACTOR;
         }
 
@@ -83,7 +89,7 @@ library LendingLib {
         view
         returns (uint256 rate_)
     {
-        rate_ = (supply * EXCHANGE_RATE_FACTOR) / tToken.totalSupply();
+        rate_ = (supply * EXCHANGE_RATE_FACTOR) / s(asset).tToken.totalSupply();
     }
 
     /**
@@ -117,7 +123,7 @@ library LendingLib {
 
     /**
      * @notice It calculates the total supply of the lending asset across all markets.
-     * @return totalSupplied the total supply denoted in the lending asset.
+     * @return totalSupplied_ the total supply denoted in the lending asset.
      */
     function totalSupplied(address asset)
         internal
@@ -125,17 +131,21 @@ library LendingLib {
         returns (uint256 totalSupplied_)
     {
         totalSupplied_ =
-            ERC20(asset).balanceOf(address(this)) +
+            IERC20(asset).balanceOf(address(this)) +
             s(asset).totalBorrowed -
             s(asset).totalRepaid;
 
-        for (uint256 i; i < store.secondaryFunds.length(); i++) {
-            address otherToken = store.secondaryFunds.at(i);
+        for (
+            uint256 i;
+            i < EnumerableSet.length(s(asset).secondaryFunds);
+            i++
+        ) {
+            address otherToken = EnumerableSet.at(s(asset).secondaryFunds, i);
             totalSupplied_ += PriceAggLib.valueFor(
                 otherToken,
                 asset,
                 // TODO: replace with funding escrow
-                ERC20(otherToken).balanceOf(address(this))
+                IERC20(otherToken).balanceOf(address(this))
             );
         }
     }
@@ -146,14 +156,14 @@ library LendingLib {
         address lender
     ) internal view returns (uint256 interest_) {
         interest_ =
-            assetValue(tToken.balanceOf(lender), rate) -
+            assetValue(s(asset).tToken.balanceOf(lender), rate) -
             s(asset).lenderTotalSupplied[lender];
     }
 
     /**
      * @notice It validates whether supply to debt (StD) ratio is valid including the loan amount.
      * @param newLoanAmount the new loan amount to consider o the StD ratio.
-     * @return true if the ratio is valid. Otherwise it returns false.
+     * @return ratio_ Whether debt ratio for lending pool is valid.
      */
     function debtRatioFor(address asset, uint256 newLoanAmount)
         internal
@@ -178,16 +188,17 @@ library LendingLib {
         internal
         returns (uint256)
     {
-        if (address(s(asset).cToken) == address(0)) {
+        if (address(AssetCTokenLib.get(asset)) == address(0)) {
             return 0;
         }
 
-        uint256 balanceBefore = s(asset).asset.balanceOf(address(this));
+        uint256 balanceBefore = IERC20(asset).balanceOf(address(this));
 
-        uint256 redeemResult = s(asset).cToken.redeemUnderlying(amount);
+        uint256 redeemResult =
+            AssetCTokenLib.get(asset).redeemUnderlying(amount);
         require(redeemResult == 0, "COMPOUND_REDEEM_UNDERLYING_ERROR");
 
-        uint256 balanceAfter = s(asset).asset.balanceOf(address(this));
+        uint256 balanceAfter = IERC20(asset).balanceOf(address(this));
         return balanceAfter - (balanceBefore);
     }
 
@@ -209,7 +220,7 @@ library LendingLib {
         uint256 totalAmount = principalAmount + interestAmount;
         require(totalAmount > 0, "REPAY_ZERO");
 
-        address asset = MarketStorageLib.store().loans[loanID].asset;
+        address asset = MarketStorageLib.store().loans[loanID].lendingToken;
         // Transfers tokens to LendingPool.
         tokenTransferFrom(sender, totalAmount, asset);
 
@@ -233,20 +244,24 @@ library LendingLib {
         internal
         returns (uint256 difference)
     {
-        if (address(s(asset).cToken) == address(0)) {
+        if (address(AssetCTokenLib.get(asset)) == address(0)) {
             return 0;
         }
 
         // approve the cToken contract to take lending tokens
-        SafeERC20.safeApprove(IERC20(asset), address(s(asset).cToken), amount);
+        SafeERC20.safeApprove(
+            IERC20(asset),
+            address(AssetCTokenLib.get(asset)),
+            amount
+        );
 
-        uint256 balanceBefore = s(asset).asset.balanceOf(address(this));
+        uint256 balanceBefore = IERC20(asset).balanceOf(address(this));
 
         // Now mint cTokens, which will take lending tokens
-        uint256 mintResult = s(asset).cToken.mint(amount);
+        uint256 mintResult = AssetCTokenLib.get(asset).mint(amount);
         require(mintResult == 0, "COMPOUND_DEPOSIT_ERROR");
 
-        uint256 balanceAfter = s(asset).asset.balanceOf(address(this));
+        uint256 balanceAfter = IERC20(asset).balanceOf(address(this));
         difference = balanceBefore - (balanceAfter);
         require(difference > 0, "DEPOSIT_CTOKEN_DUST");
     }

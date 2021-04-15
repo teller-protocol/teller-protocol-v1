@@ -15,7 +15,6 @@ interface IWETH {
 
     /**
      * @notice It deposits ETH into the contract and increases the caller's internal balance of WETH.
-     * @param amount The amount of ETH to deposit.
      */
     function deposit() external payable;
 }

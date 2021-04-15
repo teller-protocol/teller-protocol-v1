@@ -1,22 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// Storage
-import {
-    MarketStorageLib,
-    LoanStatus,
-    LendingPool
-} from "../storage/market.sol";
-import { LibLoans } from "./libraries/LibLoans.sol";
+// Contracts
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
 import { LibCollateral } from "./libraries/LibCollateral.sol";
 import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
 import { AUTHORIZED } from "../shared/roles.sol";
+
 import {
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { LendingLib } from "../lending/libraries/LendingLib.sol";
+import { LibLoans } from "./libraries/LibLoans.sol";
+
+// Interfaces
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { LibLendingPool } from "../lending/libraries/LibLendingPool.sol";
+
+// Storage
+import { MarketStorageLib, LoanStatus } from "../storage/market.sol";
 
 contract RepayFacet is RolesMods, PausableMods {
     /**
@@ -80,7 +81,7 @@ contract RepayFacet is RolesMods, PausableMods {
             }
         }
 
-        LibLendingPool.repay(loanID, principalPaid, interestPaid, msg.sender);
+        LendingLib.repay(loanID, principalPaid, interestPaid, msg.sender);
 
         // if the loan is now fully paid, close it and return collateral
         if (totalOwed == 0) {

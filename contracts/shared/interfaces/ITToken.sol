@@ -2,14 +2,14 @@
 pragma solidity ^0.8.0;
 
 // Interfaces
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 /**
-    @notice This contract acts as an interface for the Teller token (TToken).
-
-    @author develop@teller.finance
+ * @notice This contract acts as an interface for the Teller token (TToken).
+ *
+ * @author develop@teller.finance
  */
-abstract contract ITToken {
+abstract contract ITToken is ERC20 {
     /**
      * @notice The token that is the underlying assets for this Teller token.
      */

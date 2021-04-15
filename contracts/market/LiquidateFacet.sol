@@ -1,24 +1,30 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+// Contracts
+import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
+import {
+    ReentryMods
+} from "../contexts2/access-control/reentry/ReentryMods.sol";
+import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
+import { AUTHORIZED } from "../shared/roles.sol";
+
+// Libraries
+import { LibCollateral } from "./libraries/LibCollateral.sol";
+import { LibLoans } from "./libraries/LibLoans.sol";
+import { LendingLib } from "../lending/libraries/LendingLib.sol";
+
 // Storage
 import { MarketStorageLib, LoanStatus } from "../storage/market.sol";
-import { LibCollateral } from "./libraries/LibCollateral.sol";
-import { AUTHORIZED } from "../shared/roles.sol";
-import { LibLoans } from "./libraries/LibLoans.sol";
-import { LoansMods } from "./LoansMods.sol";
-import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
-import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
-import { LibLendingPool } from "../lending/libraries/LibLendingPool.sol";
 
-contract LiquidateFacet is RolesMods, PausableMods {
+contract LiquidateFacet is RolesMods, ReentryMods, PausableMods {
     /**
-        @notice This event is emitted when a loan has been successfully liquidated
-        @param loanID ID of loan from which collateral was withdrawn
-        @param borrower Account address of the borrower
-        @param liquidator Account address of the liquidator
-        @param collateralOut Collateral that is sent to the liquidator
-        @param tokensIn Percentage of the collateral price paid by the liquidator to the lending pool
+     * @notice This event is emitted when a loan has been successfully liquidated
+     * @param loanID ID of loan from which collateral was withdrawn
+     * @param borrower Account address of the borrower
+     * @param liquidator Account address of the liquidator
+     * @param collateralOut Collateral that is sent to the liquidator
+     * @param tokensIn Percentage of the collateral price paid by the liquidator to the lending pool
      */
     event LoanLiquidated(
         uint256 indexed loanID,
@@ -34,8 +40,7 @@ contract LiquidateFacet is RolesMods, PausableMods {
      */
     function liquidateLoan(uint256 loanID)
         external
-        //        nonReentrant
-        //        loanActiveOrSet(loanID)
+        nonReentry("")
         paused("", false)
         authorized(AUTHORIZED, msg.sender)
     {
@@ -48,7 +53,7 @@ contract LiquidateFacet is RolesMods, PausableMods {
             MarketStorageLib.marketStore().loans[loanID].principalOwed +
                 (MarketStorageLib.marketStore().loans[loanID].interestOwed);
 
-        LibLendingPool.repay(
+        LendingLib.repay(
             loanID,
             MarketStorageLib.marketStore().loans[loanID].principalOwed,
             MarketStorageLib.marketStore().loans[loanID].interestOwed,

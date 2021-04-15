@@ -8,7 +8,6 @@ import {
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 struct LendingStorage {
-    bool initialized;
     EnumerableSet.AddressSet secondaryFunds;
     uint256 totalBorrowed;
     uint256 totalRepaid;
@@ -30,11 +29,7 @@ bytes32 constant LENDING_MARKETS_STORAGE_POS = keccak256(
 );
 
 library LendingStorageLib {
-    function marketsStore()
-        internal
-        view
-        returns (LendingMarketsStorage storage s)
-    {
+    function marketsStore() internal view returns (LendingMarkets storage s) {
         bytes32 pos = LENDING_MARKETS_STORAGE_POS;
         assembly {
             s.slot := pos
@@ -46,6 +41,6 @@ library LendingStorageLib {
         view
         returns (LendingStorage storage s)
     {
-        s = marketsStore().stores[asset];
+        s = marketsStore().lendingMarket[asset];
     }
 }

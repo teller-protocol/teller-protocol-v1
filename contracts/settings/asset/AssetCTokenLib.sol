@@ -7,6 +7,7 @@ import {
     Cache,
     CacheType
 } from "../../shared/libraries/CacheLib.sol";
+import { ICErc20 } from "../../shared/interfaces/ICErc20.sol";
 
 // Storage
 import { AppStorageLib } from "../../storage/app.sol";
@@ -23,8 +24,8 @@ library AssetCTokenLib {
         return AppStorageLib.store().assetSettings[asset];
     }
 
-    function get(address asset) internal view returns (address) {
-        return s(asset).addresses[NAME];
+    function get(address asset) internal view returns (ICErc20) {
+        return ICErc20(s(asset).addresses[NAME]);
     }
 
     function set(address asset, address newValue) internal {

@@ -2,9 +2,8 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import { LoansMods } from "./LoansMods.sol";
 import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
-import { RolesLib } from "../contexts2/access-control/roles/RolesMods.sol";
+import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
 import { AUTHORIZED } from "../shared/roles.sol";
 
 // Libraries
@@ -16,6 +15,8 @@ import {
     PlatformSettingsLib
 } from "../settings/platform/PlatformSettingsLib.sol";
 import { MaxDebtRatioLib } from "../settings/asset/MaxDebtRatioLib.sol";
+import { MaxLoanAmountLib } from "../settings/asset/MaxLoanAmountLib.sol";
+import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
 
 // Storage
 import {
@@ -23,15 +24,16 @@ import {
     LoanResponse,
     LoanStatus,
     LoanTerms,
+    Loan,
     MarketStorageLib
 } from "../storage/market.sol";
 
-contract CreateLoanFacet is RolesMods, PausableMods, LoansMods {
+contract CreateLoanFacet is RolesMods, PausableMods {
     /**
-        @notice This event is emitted when loan terms have been successfully set
-        @param loanID ID of loan from which collateral was withdrawn
-        @param borrower Account address of the borrower
-        @param recipient Account address of the recipient
+     * @notice This event is emitted when loan terms have been successfully set
+     * @param loanID ID of loan from which collateral was withdrawn
+     * @param borrower Account address of the borrower
+     * @param recipient Account address of the recipient
      */
     event LoanTermsSet(
         uint256 indexed loanID,
@@ -40,10 +42,10 @@ contract CreateLoanFacet is RolesMods, PausableMods, LoansMods {
     );
 
     /**
-        @notice This event is emitted when a loan has been successfully taken out
-        @param loanID ID of loan from which collateral was withdrawn
-        @param borrower Account address of the borrower
-        @param amountBorrowed Total amount taken out in the loan
+     * @notice This event is emitted when a loan has been successfully taken out
+     * @param loanID ID of loan from which collateral was withdrawn
+     * @param borrower Account address of the borrower
+     * @param amountBorrowed Total amount taken out in the loan
      */
     event LoanTakenOut(
         uint256 indexed loanID,
@@ -76,6 +78,12 @@ contract CreateLoanFacet is RolesMods, PausableMods, LoansMods {
         // Get consensus values from request
         (uint256 interestRate, uint256 collateralRatio, uint256 maxLoanAmount) =
             LibConsensus.processLoanTerms(request, responses);
+
+        require(
+            request.recipient == address(0) ||
+                LibLoans.canGoToEOAWithCollateralRatio(collateralRatio),
+            "Teller: under collateralized loan with recipient"
+        );
 
         // Pay in collateral
         if (collateralAmount > 0) {
@@ -116,7 +124,7 @@ contract CreateLoanFacet is RolesMods, PausableMods, LoansMods {
         authorized(AUTHORIZED, msg.sender)
     {
         Loan storage loan = MarketStorageLib.store().loans[loanID];
-        CreateLoanLib.verifyTakeOut(loan);
+        CreateLoanLib.verifyTakeOut(loan, amount);
 
         loan.borrowedAmount = amount;
         loan.principalOwed = amount;
@@ -125,15 +133,18 @@ contract CreateLoanFacet is RolesMods, PausableMods, LoansMods {
         loan.loanStartTime = block.timestamp;
 
         address loanRecipient;
-        bool eoaAllowed = LibLoans.canGoToEOA(loanID);
+        bool eoaAllowed =
+            LibLoans.canGoToEOAWithCollateralRatio(
+                loan.loanTerms.collateralRatio
+            );
         if (eoaAllowed) {
             loanRecipient = loan.loanTerms.recipient == address(0)
                 ? loan.loanTerms.borrower
                 : loan.loanTerms.recipient;
         } else {
             // TODO: escrows
-            address escrow = _createEscrow(loanID);
-            loanRecipient = escrow;
+            //            address escrow = _createEscrow(loanID);
+            //            loanRecipient = escrow;
         }
 
         // Transfer tokens to the borrower.
@@ -160,8 +171,8 @@ library CreateLoanLib {
     function newID() internal view returns (uint256 id_) {
         Counters.Counter storage counter =
             MarketStorageLib.store().loanIDCounter;
-        id_ = Counter.current(counter);
-        Counter.increment(counter);
+        id_ = Counters.current(counter);
+        Counters.increment(counter);
     }
 
     function validateRequest(LoanRequest memory request) internal view {
@@ -171,7 +182,7 @@ library CreateLoanLib {
         );
         require(
             LendingLib.debtRatioFor(request.assetAddress, request.amount) >
-                MaxDebtRatioLib.get(loan.lendingToken),
+                MaxDebtRatioLib.get(request.assetAddress),
             "Teller: max supply-to-debt ratio exceeded"
         );
         require(
@@ -183,16 +194,9 @@ library CreateLoanLib {
                 request.duration,
             "Teller: max loan duration exceeded"
         );
-
-        if (request.recipient != address(0)) {
-            require(
-                LibLoans.canGoToEOA(loanID),
-                "Teller: under collateralized loan with recipient"
-            );
-        }
     }
 
-    function verifyTakeOut(Loan storage loan) internal view {
+    function verifyTakeOut(Loan storage loan, uint256 amount) internal view {
         require(msg.sender == loan.loanTerms.borrower, "Teller: not borrower");
         require(loan.status == LoanStatus.TermsSet, "Teller: loan not set");
         require(
@@ -200,17 +204,17 @@ library CreateLoanLib {
             "Teller: loan terms expired"
         );
         require(
-            LendingLib.debtRatioFor(loan.lendingToken, amountBorrow) >
+            LendingLib.debtRatioFor(loan.lendingToken, amount) >
                 MaxDebtRatioLib.get(loan.lendingToken),
             "Teller: max supply-to-debt exceeded"
         );
         require(
-            loan.loanTerms.maxLoanAmount >= amountBorrow,
+            loan.loanTerms.maxLoanAmount >= amount,
             "Teller: max loan amount exceeded"
         );
         // Check that enough collateral has been provided for this loan
         (, int256 neededInCollateral, ) =
-            LibLoans.getCollateralNeededInfo(loanID);
+            LibLoans.getCollateralNeededInfo(loan.id);
         require(
             neededInCollateral <= int256(loan.collateral),
             "Teller: more collateral required"

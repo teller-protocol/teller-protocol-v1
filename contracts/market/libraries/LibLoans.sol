@@ -151,9 +151,13 @@ library LibLoans {
         }
     }
 
-    function canGoToEOA(uint256 loanID) internal view returns (bool) {
+    function canGoToEOAWithCollateralRatio(uint256 collateralRatio)
+        internal
+        view
+        returns (bool)
+    {
         return
-            s().loans[loanID].loanTerms.collateralRatio >=
+            collateralRatio >=
             PlatformSettingsLib.getOverCollateralizedBufferValue();
     }
 
