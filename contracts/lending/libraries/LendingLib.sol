@@ -24,7 +24,7 @@ import { MarketStorageLib } from "../../storage/market.sol";
 library LendingLib {
     using NumbersLib for uint256;
 
-    function s(address asset) internal pure returns (LendingStorage storage) {
+    function s(address asset) internal view returns (LendingStorage storage) {
         return LendingStorageLib.store(asset);
     }
 

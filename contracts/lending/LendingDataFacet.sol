@@ -4,13 +4,16 @@ pragma solidity ^0.8.0;
 // Libraries
 import { LendingLib } from "./libraries/LendingLib.sol";
 
+// Interfaces
+import { ITToken } from "../shared/interfaces/ITToken.sol";
+
 contract LendingDataFacet {
     /**
      * @notice Gets the address for the {asset} Teller token.
      * @param asset Lending asset address.
      * @return tToken_ Current Teller token value for the {asset} lending pool.
      */
-    function getTToken(address asset) external returns (address tToken_) {
+    function getTToken(address asset) external view returns (ITToken tToken_) {
         tToken_ = LendingLib.s(asset).tToken;
     }
 
@@ -113,6 +116,7 @@ contract LendingDataFacet {
      */
     function getTotalBorrowed(address asset)
         external
+        view
         returns (uint256 borrowed_)
     {
         borrowed_ = LendingLib.s(asset).totalBorrowed;
@@ -123,7 +127,11 @@ contract LendingDataFacet {
      * @param asset Lending asset address.
      * @return repaid_ Total amount repaid.
      */
-    function getTotalRepaid(address asset) external returns (uint256 repaid_) {
+    function getTotalRepaid(address asset)
+        external
+        view
+        returns (uint256 repaid_)
+    {
         repaid_ = LendingLib.s(asset).totalRepaid;
     }
 
@@ -134,6 +142,7 @@ contract LendingDataFacet {
      */
     function getTotalInterestEarned(address asset)
         external
+        view
         returns (uint256 interest_)
     {
         interest_ = LendingLib.s(asset).totalInterestEarned;

@@ -18,6 +18,9 @@ import {
 import { ECDSA } from "./ECDSALib.sol";
 import { RolesLib } from "../../contexts2/access-control/roles/RolesLib.sol";
 import { SIGNER } from "../../shared/roles.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 library LibConsensus {
     using NumbersLib for uint256;
@@ -40,8 +43,9 @@ library LibConsensus {
         )
     {
         require(
-            responses.length.ratioOf(s().signers.array.length) >=
-                PlatformSettingsLib.getRequiredSubmissionsPercentageValue(),
+            responses.length.ratioOf(
+                EnumerableSet.length(s().signers[request.assetAddress])
+            ) >= PlatformSettingsLib.getRequiredSubmissionsPercentageValue(),
             "Teller: insufficient signer responses"
         );
 

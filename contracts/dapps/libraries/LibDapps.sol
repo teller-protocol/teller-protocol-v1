@@ -11,7 +11,6 @@ import { IAaveLendingPool } from "../interfaces/IAaveLendingPool.sol";
 import {
     IAaveLendingPoolAddressesProvider
 } from "../interfaces/IAaveLendingPoolAddressesProvider.sol";
-import { PrizePoolInterface } from "../interfaces/PrizePoolInterface.sol";
 import "../../storage/app.sol";
 import { IUniswapV2Router } from "../../shared/interfaces/IUniswapV2Router.sol";
 import { IVault } from "../interfaces/IVault.sol";
@@ -78,39 +77,6 @@ library LibDapps {
             IAToken(
                 getAaveLendingPool().getReserveData(tokenAddress).aTokenAddress
             );
-    }
-
-    /**
-        @notice Grabs the Pool Together Prize Pool address for an token from the asset settings.
-        @notice The pool underlying address must match the supplied token address.
-        @param tokenAddress The token address to get the cToken for.
-        @return PrizePool instance.
-     */
-    function getPrizePool(address tokenAddress)
-        internal
-        view
-        returns (PrizePoolInterface)
-    {
-        return
-            PrizePoolInterface(
-                AppStorageLib.store().assetSettings[tokenAddress].addresses[
-                    keccak256("pPoolAddress")
-                ]
-            );
-    }
-
-    /**
-        @notice Grabs the controlled ticket token address for the prize pool
-        @notice The pool underlying address must match the supplied token address.
-        @param tokenAddress The token address to get the cToken for.
-        @return The address of the ticket token contract.
-    */
-    function getTicketAddress(address tokenAddress)
-        internal
-        view
-        returns (address)
-    {
-        return getPrizePool(tokenAddress).tokens()[1];
     }
 
     /**

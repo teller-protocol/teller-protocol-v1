@@ -14,7 +14,7 @@ import { AppStorageLib } from "../../storage/app.sol";
 import { MarketStorageLib, Loan } from "../../storage/market.sol";
 
 library LibCollateral {
-    function l(uint256 loanID) internal pure returns (Loan storage l_) {
+    function l(uint256 loanID) internal view returns (Loan storage l_) {
         l_ = MarketStorageLib.store().loans[loanID];
     }
 
@@ -120,9 +120,9 @@ library LibCollateral {
             );
             if (
                 remainingCollateralAmount > 0 &&
-                MarketStorageLib.store().escrows[loanID] != address(0x0)
+                MarketStorageLib.store().loanEscrows[loanID] != address(0x0)
             ) {
-                IEscrow(MarketStorageLib.store().escrows[loanID])
+                IEscrow(MarketStorageLib.store().loanEscrows[loanID])
                     .claimTokensByCollateralValue(
                     recipient,
                     remainingCollateralAmount

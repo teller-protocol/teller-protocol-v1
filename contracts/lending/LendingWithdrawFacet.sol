@@ -7,6 +7,9 @@ import "../contexts2/access-control/reentry/ReentryMods.sol";
 import "../contexts2/pausable/PausableMods.sol";
 import { AUTHORIZED } from "../shared/roles.sol";
 
+// Interfaces
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 // Libraries
 import { LendingLib } from "./libraries/LendingLib.sol";
 
@@ -43,7 +46,7 @@ contract LendingWithdrawFacet is RolesMods, ReentryMods, PausableMods {
         );
 
         // Perform withdraw
-        _lendingWithdraw(assetAmount, tTokenAmount, rate);
+        _lendingWithdraw(asset, assetAmount, tTokenAmount, rate);
     }
 
     /**
@@ -65,7 +68,7 @@ contract LendingWithdrawFacet is RolesMods, ReentryMods, PausableMods {
         assetAmount = LendingLib.assetValue(tTokenAmount, rate);
 
         // Perform withdraw
-        _lendingWithdraw(assetAmount, tTokenAmount, rate);
+        _lendingWithdraw(asset, assetAmount, tTokenAmount, rate);
 
         // Return how much was withdrawn
         // Note this is for testing purposes
@@ -82,8 +85,10 @@ contract LendingWithdrawFacet is RolesMods, ReentryMods, PausableMods {
         uint256 rate
     ) private {
         // Get the LP balance of the asset
-        uint256 assetBalance = asset.balanceOf(address(this));
+        // TODO escrow
+        uint256 assetBalance = IERC20(asset).balanceOf(address(this));
 
+        // TODO
         // Only withdraw how much is needed
         //_withdrawFromCompoundIfSupported(assetAmount - assetBalance);
 

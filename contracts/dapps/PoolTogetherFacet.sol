@@ -5,6 +5,8 @@ pragma solidity ^0.8.0;
 import { DappMods } from "./DappMods.sol";
 import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
 import { LibDapps } from "./libraries/LibDapps.sol";
+import { AssetPPoolLib } from "../settings/asset/AssetPPoolLib.sol";
+import { PoolTogetherLib } from "./libraries/PoolTogetherLib.sol";
 import { PrizePoolInterface } from "./interfaces/PrizePoolInterface.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -59,9 +61,9 @@ contract PoolTogetherFacet is PausableMods, DappMods {
             "POOL_INSUFFICIENT_UNDERLYING"
         );
 
-        PrizePoolInterface prizePool = LibDapps.getPrizePool(tokenAddress);
+        PrizePoolInterface prizePool = AssetPPoolLib.get(tokenAddress);
 
-        address ticketAddress = LibDapps.getTicketAddress(tokenAddress);
+        address ticketAddress = PoolTogetherLib.getTicketAddress(tokenAddress);
         uint256 balanceBefore = LibDapps.balanceOf(loanID, ticketAddress);
         IERC20(tokenAddress).safeApprove(address(prizePool), amount);
 
@@ -98,9 +100,9 @@ contract PoolTogetherFacet is PausableMods, DappMods {
         address tokenAddress,
         uint256 amount
     ) public paused("", false) onlyBorrower(loanID) {
-        PrizePoolInterface prizePool = LibDapps.getPrizePool(tokenAddress);
+        PrizePoolInterface prizePool = AssetPPoolLib.get(tokenAddress);
 
-        address ticketAddress = LibDapps.getTicketAddress(tokenAddress);
+        address ticketAddress = PoolTogetherLib.getTicketAddress(tokenAddress);
         uint256 balanceBefore = LibDapps.balanceOf(loanID, ticketAddress);
 
         (
@@ -144,9 +146,9 @@ contract PoolTogetherFacet is PausableMods, DappMods {
         paused("", false)
         onlyBorrower(loanID)
     {
-        PrizePoolInterface prizePool = LibDapps.getPrizePool(tokenAddress);
+        PrizePoolInterface prizePool = AssetPPoolLib.get(tokenAddress);
 
-        address ticketAddress = LibDapps.getTicketAddress(tokenAddress);
+        address ticketAddress = PoolTogetherLib.getTicketAddress(tokenAddress);
 
         uint256 balanceBefore = LibDapps.balanceOf(loanID, ticketAddress);
 

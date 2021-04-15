@@ -1,7 +1,6 @@
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
-import { getMarket, GetMarketReturn } from '../tasks'
 import { getMarkets, getSigners, getTokens } from '../config'
 import { ITellerDiamond } from '../types/typechain'
 import { NULL_ADDRESS } from '../utils/consts'
@@ -34,7 +33,7 @@ const initializeMarkets: DeployFunction = async (hre) => {
     const signersToAdd = await Promise.all(
       signers.map(async (signer) => ({
         signer,
-        isSigner: await diamond.isSigner(signer),
+        isSigner: await diamond.isSigner(lendingTokenAddress, signer),
       }))
     ).then((result) =>
       result.reduce<string[]>((arr, { signer, isSigner }) => {
@@ -43,11 +42,15 @@ const initializeMarkets: DeployFunction = async (hre) => {
       }, [])
     )
     if (signersToAdd.length > 0)
-      await waitAndLog('Signers added', diamond.addSigners(signersToAdd), hre)
+      await waitAndLog(
+        'Signers added',
+        diamond.addSigners(lendingTokenAddress, signersToAdd),
+        hre
+      )
 
     // Add collateral tokens
     const existingCollateralTokens = await diamond.getCollateralTokens(
-      lendingToken
+      lendingTokenAddress
     )
     const collateralTokensToAdd = new Set(collateralTokens)
     for (const token of existingCollateralTokens) {
@@ -56,7 +59,10 @@ const initializeMarkets: DeployFunction = async (hre) => {
     if (collateralTokensToAdd.size > 0)
       await waitAndLog(
         'Collateral tokens added',
-        diamond.addCollateralTokens(Array.from(collateralTokensToAdd)),
+        diamond.addCollateralTokens(
+          lendingTokenAddress,
+          Array.from(collateralTokensToAdd)
+        ),
         hre
       )
 
@@ -66,7 +72,7 @@ const initializeMarkets: DeployFunction = async (hre) => {
       // Initialize the lending pool
       await waitAndLog(
         'Lending pool initialized',
-        diamond.initLendingPool(asset),
+        diamond.initLendingPool(asset.address),
         hre
       )
     } else {

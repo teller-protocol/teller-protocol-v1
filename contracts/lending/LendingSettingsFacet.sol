@@ -13,8 +13,6 @@ import {
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract LendingSettingsFacet is RolesMods {
-    bytes32 constant FACET_ID = keccak256("LendingFacet");
-
     /**
      * @notice This event is emitted when a new lending pool is initialized.
      * @param sender address.

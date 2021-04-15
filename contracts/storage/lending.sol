@@ -29,7 +29,7 @@ bytes32 constant LENDING_MARKETS_STORAGE_POS = keccak256(
 );
 
 library LendingStorageLib {
-    function marketsStore() internal view returns (LendingMarkets storage s) {
+    function marketsStore() internal pure returns (LendingMarkets storage s) {
         bytes32 pos = LENDING_MARKETS_STORAGE_POS;
         assembly {
             s.slot := pos

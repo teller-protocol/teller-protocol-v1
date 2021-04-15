@@ -44,27 +44,29 @@ contract LiquidateFacet is RolesMods, ReentryMods, PausableMods {
         paused("", false)
         authorized(AUTHORIZED, msg.sender)
     {
-        require(LibLoans.isLiquidable(loanID), "DOESNT_NEED_LIQUIDATION");
+        require(
+            LibLoans.isLiquidable(loanID),
+            "Teller: does not need liquidation"
+        );
 
         int256 rewardInCollateral = LibLoans.getLiquidationReward(loanID);
 
         // the liquidator pays the amount still owed on the loan
         uint256 amountToLiquidate =
-            MarketStorageLib.marketStore().loans[loanID].principalOwed +
-                (MarketStorageLib.marketStore().loans[loanID].interestOwed);
+            MarketStorageLib.store().loans[loanID].principalOwed +
+                (MarketStorageLib.store().loans[loanID].interestOwed);
 
         LendingLib.repay(
             loanID,
-            MarketStorageLib.marketStore().loans[loanID].principalOwed,
-            MarketStorageLib.marketStore().loans[loanID].interestOwed,
+            MarketStorageLib.store().loans[loanID].principalOwed,
+            MarketStorageLib.store().loans[loanID].interestOwed,
             msg.sender
         );
 
-        MarketStorageLib.marketStore().loans[loanID].status = LoanStatus.Closed;
-        MarketStorageLib.marketStore().loans[loanID].liquidated = true;
+        MarketStorageLib.store().loans[loanID].status = LoanStatus.Liquidated;
 
         // the caller gets the collateral from the loan
-        LibCollateral._payOutLiquidator(
+        LibCollateral.payOutLiquidator(
             loanID,
             rewardInCollateral,
             payable(msg.sender)
@@ -72,7 +74,7 @@ contract LiquidateFacet is RolesMods, ReentryMods, PausableMods {
 
         emit LoanLiquidated(
             loanID,
-            MarketStorageLib.marketStore().loans[loanID].loanTerms.borrower,
+            MarketStorageLib.store().loans[loanID].loanTerms.borrower,
             msg.sender,
             uint256(rewardInCollateral),
             amountToLiquidate

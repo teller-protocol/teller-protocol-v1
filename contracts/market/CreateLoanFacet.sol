@@ -168,7 +168,7 @@ contract CreateLoanFacet is RolesMods, PausableMods {
 }
 
 library CreateLoanLib {
-    function newID() internal view returns (uint256 id_) {
+    function newID() internal returns (uint256 id_) {
         Counters.Counter storage counter =
             MarketStorageLib.store().loanIDCounter;
         id_ = Counters.current(counter);
@@ -176,10 +176,7 @@ library CreateLoanLib {
     }
 
     function validateRequest(LoanRequest memory request) internal view {
-        require(
-            msg.sender == request.loanTerms.borrower,
-            "Teller: not loan requester"
-        );
+        require(msg.sender == request.borrower, "Teller: not loan requester");
         require(
             LendingLib.debtRatioFor(request.assetAddress, request.amount) >
                 MaxDebtRatioLib.get(request.assetAddress),

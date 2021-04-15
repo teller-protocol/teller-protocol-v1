@@ -135,8 +135,8 @@ library LibLoans {
                 s().loans[loanID].loanTerms.collateralRatio -
                     getInterestRatio(loanID) -
                     PlatformSettingsLib.getCollateralBufferValue();
-            if (s().escrows[loanID] != address(0)) {
-                escrowLoanValue = IEscrow(s().escrows[loanID])
+            if (s().loanEscrows[loanID] != address(0)) {
+                escrowLoanValue = IEscrow(s().loanEscrows[loanID])
                     .calculateTotalValue();
                 //            if (s().loans[loanID].escrow != address(0)) {
                 //                escrowLoanValue = IEscrow(s().loans[loanID].escrow)
@@ -194,7 +194,7 @@ library LibLoans {
         uint256 amountToLiquidate = getTotalOwed(loanID);
         uint256 availableValue =
             getCollateralInLendingTokens(loanID) +
-                (IEscrow(s().escrows[loanID]).calculateTotalValue());
+                (IEscrow(s().loanEscrows[loanID]).calculateTotalValue());
         uint256 maxReward =
             amountToLiquidate.percent(
                 PlatformSettingsLib

@@ -95,10 +95,10 @@ contract CollateralFacet is RolesMods, PausableMods {
         address asset,
         address[] calldata collateralTokens
     ) external authorized(ADMIN, msg.sender) {
-        for (uint256 i; i < collateralTokens; i++) {
-            MarketStorageLib.store().collateralTokens[asset].add(
-                collateralTokens[i]
-            );
+        EnumerableSet.AddressSet storage tokens =
+            MarketStorageLib.store().collateralTokens[asset];
+        for (uint256 i; i < collateralTokens.length; i++) {
+            EnumerableSet.add(tokens, collateralTokens[i]);
         }
     }
 
@@ -107,11 +107,11 @@ contract CollateralFacet is RolesMods, PausableMods {
         view
         returns (address[] memory tokens_)
     {
-        EnumerableSet.AddressSet memory collateralTokens =
+        EnumerableSet.AddressSet storage collateralTokens =
             MarketStorageLib.store().collateralTokens[asset];
         tokens_ = new address[](EnumerableSet.length(collateralTokens));
-        for (uint256 i; i < collateralTokens; i++) {
-            tokens_.push(EnumerableSet.at(collateralTokens, i));
+        for (uint256 i; i < EnumerableSet.length(collateralTokens); i++) {
+            tokens_[i] = EnumerableSet.at(collateralTokens, i);
         }
     }
 }

@@ -23,6 +23,8 @@ import { LiquidateFacet } from "../../market/LiquidateFacet.sol";
 import { SignersFacet } from "../../market/SignersFacet.sol";
 import { StakingFacet } from "../../staking/StakingFacet.sol";
 import { EscrowFacet } from "../../escrow/EscrowFacet.sol";
+import "../../lending/LendingSettingsFacet.sol";
+import "../../market/CollateralFacet.sol";
 
 abstract contract ITellerDiamond is
     SettingsFacet,
@@ -33,6 +35,8 @@ abstract contract ITellerDiamond is
     LendingDepositFacet,
     LendingWithdrawFacet,
     LendingDataFacet,
+    LendingSettingsFacet,
+    CollateralFacet,
     CreateLoanFacet,
     LoanDataFacet,
     RepayFacet,

@@ -49,7 +49,8 @@ contract LendingDepositFacet is RolesMods, ReentryMods, PausableMods {
         );
 
         // Transferring tokens to the LendingPool
-        SafeERC20(IERC20(asset)).safeTransferFrom(
+        SafeERC20.safeTransferFrom(
+            IERC20(asset),
             msg.sender,
             // TODO: use escrow
             address(this),
