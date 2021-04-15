@@ -16,15 +16,19 @@ import {
 import { LendingDepositFacet } from "../../lending/LendingDepositFacet.sol";
 import { LendingWithdrawFacet } from "../../lending/LendingWithdrawFacet.sol";
 import { LendingDataFacet } from "../../lending/LendingDataFacet.sol";
+import { LendingSettingsFacet } from "../../lending/LendingSettingsFacet.sol";
 import { CreateLoanFacet } from "../../market/CreateLoanFacet.sol";
 import { LoanDataFacet } from "../../market/LoanDataFacet.sol";
 import { RepayFacet } from "../../market/RepayFacet.sol";
 import { LiquidateFacet } from "../../market/LiquidateFacet.sol";
 import { SignersFacet } from "../../market/SignersFacet.sol";
 import { StakingFacet } from "../../staking/StakingFacet.sol";
-import { EscrowFacet } from "../../escrow/EscrowFacet.sol";
-import "../../lending/LendingSettingsFacet.sol";
-import "../../market/CollateralFacet.sol";
+import {
+    EscrowClaimTokensFacet
+} from "../../escrow/EscrowClaimTokensFacet.sol";
+import { EscrowRepayFacet } from "../../escrow/EscrowRepayFacet.sol";
+import { EscrowSettingsFacet } from "../../escrow/EscrowSettingsFacet.sol";
+import { CollateralFacet } from "../../market/CollateralFacet.sol";
 
 abstract contract ITellerDiamond is
     SettingsFacet,
@@ -43,5 +47,7 @@ abstract contract ITellerDiamond is
     LiquidateFacet,
     SignersFacet,
     StakingFacet,
-    EscrowFacet
+    EscrowClaimTokensFacet,
+    EscrowRepayFacet,
+    EscrowSettingsFacet
 {}
