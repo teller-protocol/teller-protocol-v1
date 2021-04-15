@@ -90,6 +90,11 @@ export interface PlatformSetting {
 
 export interface Signers extends Array<Address> {}
 
+export interface NetworkTokens {
+  erc20: Tokens
+  compound: Tokens
+}
+
 export interface Tokens {
   [tokenSymbol: string]: Address
 }

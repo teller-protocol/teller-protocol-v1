@@ -12,7 +12,8 @@ const deployProtocol: DeployFunction = async (hre) => {
   const tokens = getTokens(network)
   const initArgs: Parameters<ITellerDiamond['init']>[0] = {
     admin: deployer,
-    assets: Object.entries(tokens).map(([sym, addr]) => ({ sym, addr })),
+    assets: Object.entries(tokens.erc20).map(([sym, addr]) => ({ sym, addr })),
+    cTokens: Object.values(tokens.compound),
     uniswapV2Router: getUniswap(network).v2Router,
   }
 

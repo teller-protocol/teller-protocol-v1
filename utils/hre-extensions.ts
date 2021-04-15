@@ -149,7 +149,7 @@ extendEnvironment((hre) => {
   hre.tokens = {
     async get(name: string): Promise<ERC20> {
       const tokens = getTokens(network)
-      return (await ethers.getContractAt('ERC20', tokens[name])) as ERC20
+      return (await ethers.getContractAt('ERC20', tokens.all[name])) as ERC20
     },
   }
 

@@ -22,7 +22,7 @@ describe('PriceAggregator', () => {
   const tokenAddresses = getTokens(hre.network)
   const pairs = Object.values(chainlink)
 
-  const getTokenAddress = (sym: string): Address => tokenAddresses[sym]
+  const getTokenAddress = (sym: string): Address => tokenAddresses.all[sym]
 
   before(async () => {
     await deployments.fixture('protocol')
