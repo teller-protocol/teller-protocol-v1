@@ -12,7 +12,7 @@ import { AUTHORIZED } from "../shared/roles.sol";
 // Libraries
 import { LibCollateral } from "./libraries/LibCollateral.sol";
 import { LibLoans } from "./libraries/LibLoans.sol";
-import { LendingLib } from "../lending/libraries/LendingLib.sol";
+import { LendingLib } from "../lending/LendingLib.sol";
 
 // Storage
 import { MarketStorageLib, LoanStatus } from "../storage/market.sol";
