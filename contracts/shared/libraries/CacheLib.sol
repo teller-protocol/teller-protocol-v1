@@ -70,28 +70,35 @@ library CacheLib {
     ) internal {
         requireExists(cache);
 
+        assembly {
+            mstore(0, value)
+        }
         if (cacheType == CacheType.Address) {
-            address addr = cache.addresses[key];
+            address addr;
             assembly {
-                sstore(sload(addr), value)
+                addr := mload(0)
             }
+            cache.addresses[key] = addr;
         } else if (cacheType == CacheType.Uint) {
-            uint256 ui = cache.uints[key];
+            uint256 ui;
             assembly {
-                sstore(sload(ui), value)
+                ui := mload(0)
             }
+            cache.uints[key] = ui;
         } else if (cacheType == CacheType.Int) {
-            int256 i = cache.ints[key];
+            int256 i;
             assembly {
-                sstore(sload(i), value)
+                i := mload(0)
             }
+            cache.ints[key] = i;
         } else if (cacheType == CacheType.Byte) {
             cache.bites[key] = value;
         } else if (cacheType == CacheType.Bool) {
-            bool b = cache.bools[key];
+            bool b;
             assembly {
-                sstore(sload(b), value)
+                b := mload(0)
             }
+            cache.bools[key] = b;
         }
     }
 
