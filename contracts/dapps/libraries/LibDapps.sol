@@ -31,7 +31,10 @@ library LibDapps {
      * @param tokenAddress The token address to be added or removed
      */
     function tokenUpdated(uint256 loanID, address tokenAddress) internal {
-        require(s().loanEscrows[loanID] != address(0), "Teller: no escrow");
+        require(
+            address(s().loanEscrows[loanID]) != address(0),
+            "Teller: no escrow"
+        );
 
         EnumerableSet.AddressSet storage tokens = s().escrowTokens[loanID];
         bool contains = EnumerableSet.contains(tokens, tokenAddress);
@@ -49,8 +52,8 @@ library LibDapps {
         view
         returns (uint256)
     {
-        address escrow = s().loanEscrows[loanID];
-        return IERC20(token).balanceOf(escrow);
+        address escrowAddress = address(s().loanEscrows[loanID]);
+        return IERC20(token).balanceOf(escrowAddress);
     }
 
     /**

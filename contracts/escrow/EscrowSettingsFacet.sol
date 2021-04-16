@@ -34,7 +34,7 @@ contract EscrowSettingsFacet is RolesMods {
         require(false, "Teller: escrow already initialized");
 
         //TODO: Create loans escrow
-        MarketStorageLib.store().loanEscrows[loanID] = escrow;
+        MarketStorageLib.store().loanEscrows[loanID] = ILoansEscrow(escrow);
 
         // Emit event
         emit EscrowInitialized(msg.sender, loanID, escrow);

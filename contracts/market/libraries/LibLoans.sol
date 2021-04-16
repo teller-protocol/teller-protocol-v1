@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Interfaces
-import { IEscrow } from "../../shared/interfaces/IEscrow.sol";
+import { ILoansEscrow } from "../../escrow/interfaces/ILoansEscrow.sol";
 
 // Libraries
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
@@ -135,9 +135,9 @@ library LibLoans {
                 s().loans[loanID].loanTerms.collateralRatio -
                     getInterestRatio(loanID) -
                     PlatformSettingsLib.getCollateralBufferValue();
-            if (s().loanEscrows[loanID] != address(0)) {
-                escrowLoanValue = IEscrow(s().loanEscrows[loanID])
-                    .calculateTotalValue();
+            if (address(s().loanEscrows[loanID]) != address(0)) {
+                //                escrowLoanValue = s().loanEscrows[loanID]
+                //                    .calculateTotalValue(); // TODO: add to interface? or add function here?
                 //            if (s().loans[loanID].escrow != address(0)) {
                 //                escrowLoanValue = IEscrow(s().loans[loanID].escrow)
                 //                    .calculateTotalValue();
@@ -198,7 +198,11 @@ library LibLoans {
         uint256 amountToLiquidate = getTotalOwed(loanID);
         uint256 availableValue =
             getCollateralInLendingTokens(loanID) +
-                (IEscrow(s().loanEscrows[loanID]).calculateTotalValue());
+                (
+                    ILoansEscrow(s().loanEscrows[loanID]).calculateTotalValue(
+                        loanID
+                    )
+                );
         uint256 maxReward =
             amountToLiquidate.percent(
                 PlatformSettingsLib

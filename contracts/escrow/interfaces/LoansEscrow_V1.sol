@@ -25,11 +25,20 @@ contract LoansEscrow_V1 is OwnableUpgradeable, ILoansEscrow {
         external
         override
         onlyOperator
-    {
-        executeStrategy();
-    }
+    {}
 
-    function claimTokens() external override onlyOperator {}
+    function claimTokens(uint256 loanID) external override onlyOperator {}
 
-    function executeStrategy() public override {}
+    function claimTokensByCollateralValue(
+        uint256 loanID,
+        address recipient,
+        uint256 value
+    ) external override {}
+
+    function calculateTotalValue(uint256 loanID)
+        external
+        view
+        override
+        returns (uint256)
+    {}
 }
