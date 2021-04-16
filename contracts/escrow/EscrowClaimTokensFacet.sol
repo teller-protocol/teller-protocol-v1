@@ -20,8 +20,10 @@ import {
 // Storage
 import { MarketStorageLib, LoanStatus } from "../storage/market.sol";
 import { LibDapps } from "../dapps/libraries/LibDapps.sol";
+import { LibLoans } from "../market/libraries/LibLoans.sol";
 
 contract EscrowClaimTokensFacet is RolesMods, ReentryMods, PausableMods {
+    using SafeERC20 for IERC20;
     /**
      * @notice Notifies when the Escrow's tokens have been claimed.
      * @param recipient address where the tokens where sent to.
@@ -41,16 +43,20 @@ contract EscrowClaimTokensFacet is RolesMods, ReentryMods, PausableMods {
         nonReentry("")
     {
         require(
-            loanManager.status(loanID) == LoanStatus.Closed,
+            MarketStorageLib.store().loans[loanID].status == LoanStatus.Closed,
             "LOAN_NOT_CLOSED"
         );
 
-        EnumerableSet.AddressSet memory tokens =
-            MarketStorageLib.marketStore().escrowTokens(loanID);
-        for (uint256 i = 0; i < tokens.length; i++) {
-            uint256 balance = LibDapps.balanceOf(loanID, tokens[i]);
+        EnumerableSet.AddressSet storage tokens =
+            MarketStorageLib.store().escrowTokens[loanID];
+        for (uint256 i = 0; i < EnumerableSet.length(tokens); i++) {
+            uint256 balance =
+                LibDapps.balanceOf(loanID, EnumerableSet.at(tokens, i));
             if (balance > 0) {
-                IERC20(tokens[i]).safeTransfer(msg.sender, balance);
+                IERC20(EnumerableSet.at(tokens, i)).safeTransfer(
+                    msg.sender,
+                    balance
+                );
             }
         }
 

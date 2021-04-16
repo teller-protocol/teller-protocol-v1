@@ -17,33 +17,37 @@ import {
 // Libraries
 import { LibDapps } from "../dapps/libraries/LibDapps.sol";
 import { LibLoans } from "../market/libraries/LibLoans.sol";
-import { LendingLib } from "../lending/libraries/LendingLib.sol";
+import { MarketStorageLib } from "../storage/market.sol";
 
 contract EscrowRepayFacet is RolesMods, ReentryMods, PausableMods {
+    using SafeERC20 for IERC20;
+
     /**
      * @notice Repay this Escrow's loan.
      * @dev If the Escrow's balance of the borrowed token is less than the amount to repay, transfer tokens from the sender's wallet.
      * @dev Only the owner of the Escrow can call this. If someone else wants to make a payment, they should call the loan manager directly.
+     * @param loanID The id of the loan being used.
+     * @param amount The amount being repaid.
      */
-    function repay(uint256 amount)
+    function escrowRepay(uint256 loanID, uint256 amount)
         external
         paused("", false)
         authorized(AUTHORIZED, msg.sender)
         nonReentry("")
     {
+        address lendingToken =
+            MarketStorageLib.store().loans[loanID].lendingToken;
         IERC20 token = IERC20(lendingToken);
-        uint256 balance = LibDapps.balanceOf(address(token));
+        uint256 balance = LibDapps.balanceOf(loanID, address(token));
         uint256 totalOwed = LibLoans.getTotalOwed(loanID);
         if (balance < totalOwed && amount > balance) {
             uint256 amountNeeded =
-                amount > totalOwed
-                    ? totalOwed.sub(balance)
-                    : amount.sub(balance);
+                amount > totalOwed ? totalOwed - (balance) : amount - (balance);
 
             token.safeTransferFrom(msg.sender, address(this), amountNeeded);
         }
-        token.safeApprove(lendingPool, amount);
 
-        LendingLib.repay(amount, loanID);
+        token.safeApprove(address(this), amount);
+        LibLoans.repay(amount, loanID);
     }
 }
