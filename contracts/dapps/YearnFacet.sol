@@ -57,7 +57,10 @@ contract YearnFacet is PausableMods, DappMods {
         IVault iVault = LibDapps.getYVault(tokenAddress);
         uint256 tokenBalanceBeforeDeposit = iVault.balanceOf(address(this));
         IERC20(tokenAddress).safeApprove(address(iVault), amount);
-        iVault.deposit(amount);
+
+        bytes memory callData = abi.encode(IVault.deposit.selector, amount);
+        LibDapps.s().loanEscrows[loanID].callDapp(address(iVault), callData);
+
         uint256 tokenBalanceAfterDeposit = iVault.balanceOf(address(this));
         require(
             tokenBalanceAfterDeposit > tokenBalanceBeforeDeposit,
@@ -96,7 +99,10 @@ contract YearnFacet is PausableMods, DappMods {
             shares >= iVault.balanceOf(address(this)),
             "INSUFFICIENT_DEPOSIT"
         );
-        iVault.withdraw(shares);
+
+        bytes memory callData = abi.encode(IVault.withdraw.selector, shares);
+        LibDapps.s().loanEscrows[loanID].callDapp(address(iVault), callData);
+
         uint256 tokenBalanceAfterWithdrawal =
             IERC20(tokenAddress).balanceOf(address(this));
         require(
@@ -129,7 +135,10 @@ contract YearnFacet is PausableMods, DappMods {
         IVault iVault = LibDapps.getYVault(tokenAddress);
         uint256 tokenBalanceBeforeWithdrawal =
             IERC20(tokenAddress).balanceOf(address(this));
-        iVault.withdraw();
+
+        bytes memory callData = abi.encode(IVault.withdrawAll.selector);
+        LibDapps.s().loanEscrows[loanID].callDapp(address(iVault), callData);
+
         uint256 tokenBalanceAfterWithdrawal =
             IERC20(tokenAddress).balanceOf(address(this));
         require(
