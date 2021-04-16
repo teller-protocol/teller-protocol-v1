@@ -11,14 +11,17 @@ import { AUTHORIZED } from "../shared/roles.sol";
 import {
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { LendingLib } from "../lending/libraries/LendingLib.sol";
 import { LibLoans } from "./libraries/LibLoans.sol";
 
 // Interfaces
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // Storage
-import { MarketStorageLib, LoanStatus } from "../storage/market.sol";
+import {
+    MarketStorageLib,
+    MarketStorage,
+    LoanStatus
+} from "../storage/market.sol";
 
 contract RepayFacet is RolesMods, PausableMods {
     /**
@@ -58,45 +61,43 @@ contract RepayFacet is RolesMods, PausableMods {
         // update the amount owed on the loan
         totalOwed = totalOwed - amount;
 
+        MarketStorage storage s = MarketStorageLib.store();
+
         // Deduct the interest and principal owed
         uint256 principalPaid;
         uint256 interestPaid;
-        if (amount < MarketStorageLib.store().loans[loanID].interestOwed) {
+        if (amount < s.loans[loanID].interestOwed) {
             interestPaid = amount;
-            MarketStorageLib.store().loans[loanID].interestOwed =
-                MarketStorageLib.store().loans[loanID].interestOwed -
-                (amount);
+            s.loans[loanID].interestOwed -= amount;
         } else {
-            if (MarketStorageLib.store().loans[loanID].interestOwed > 0) {
-                interestPaid = MarketStorageLib.store().loans[loanID]
-                    .interestOwed;
+            if (s.loans[loanID].interestOwed > 0) {
+                interestPaid = s.loans[loanID].interestOwed;
                 amount = amount - interestPaid;
-                MarketStorageLib.store().loans[loanID].interestOwed = 0;
+                s.loans[loanID].interestOwed = 0;
             }
 
             if (amount > 0) {
                 principalPaid = amount;
-                MarketStorageLib.store().loans[loanID].principalOwed =
-                    MarketStorageLib.store().loans[loanID].principalOwed -
-                    (amount);
+                s.loans[loanID].principalOwed -= amount;
             }
         }
 
-        LendingLib.repay(loanID, principalPaid, interestPaid, msg.sender);
+        s.totalRepaid[s.loans[loanID].lendingToken] += principalPaid;
+        s.totalInterestRepaid[s.loans[loanID].lendingToken] += interestPaid;
 
         // if the loan is now fully paid, close it and return collateral
         if (totalOwed == 0) {
-            MarketStorageLib.store().loans[loanID].status = LoanStatus.Closed;
+            s.loans[loanID].status = LoanStatus.Closed;
             LibCollateral.withdrawCollateral(
                 loanID,
-                MarketStorageLib.store().loans[loanID].collateral,
-                MarketStorageLib.store().loans[loanID].loanTerms.borrower
+                s.loans[loanID].collateral,
+                s.loans[loanID].loanTerms.borrower
             );
         }
 
         emit LoanRepaid(
             loanID,
-            MarketStorageLib.store().loans[loanID].loanTerms.borrower,
+            s.loans[loanID].loanTerms.borrower,
             principalPaid + interestPaid,
             msg.sender,
             totalOwed

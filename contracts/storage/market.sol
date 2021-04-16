@@ -5,8 +5,10 @@ import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-
 import "../shared/libraries/NumbersList.sol";
+
+// Libraries
+import { ITToken } from "../lending/ttoken/ITToken.sol";
 
 /**
  * @notice Represents the terms of a loan based on the consensus of a LoanRequest
@@ -152,6 +154,14 @@ struct MarketStorage {
     mapping(uint256 => EnumerableSet.AddressSet) escrowTokens;
     // Maps accounts to owned loan IDs
     mapping(address => uint256[]) borrowerLoans;
+    // Maps lending token to overall amount lent out for loans
+    mapping(address => uint256) totalBorrowed;
+    // Maps lending token to overall amount repaid from loans
+    mapping(address => uint256) totalRepaid;
+    // Maps lending token to overall amount of interest collected from loans
+    mapping(address => uint256) totalInterestRepaid;
+    // Maps lending token to overall amount of interest collected from loans
+    mapping(address => ITToken) tTokens;
     // Maps lending token to list of signer addresses who are only ones allowed to verify loan requests
     mapping(address => EnumerableSet.AddressSet) signers;
     // Maps lending token to list of allowed collateral tokens

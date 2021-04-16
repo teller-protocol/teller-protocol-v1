@@ -11,7 +11,7 @@ export interface FundedMarketArgs {
 }
 
 export const fundedMarket = (args?: FundedMarketArgs): Promise<void> =>
-  deployments.createFixture(async (hre) => {
+  deployments.createFixture(async (_hre) => {
     const { assetSym = 'DAI', amount } = args ?? {}
 
     const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
@@ -19,9 +19,9 @@ export const fundedMarket = (args?: FundedMarketArgs): Promise<void> =>
 
     // Fund the market
     let amountToFundLP: BigNumberish
-    if (args?.amount) {
+    if (amount) {
       const decimals = await lendingToken.decimals()
-      amountToFundLP = toBN(args.amount, decimals)
+      amountToFundLP = toBN(amount, decimals)
     } else {
       amountToFundLP = await diamond.getMaxTVLAmount(lendingToken.address)
     }

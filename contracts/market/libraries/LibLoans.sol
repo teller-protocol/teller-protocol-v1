@@ -259,32 +259,4 @@ library LibLoans {
         LoanStatus status = s().loans[loanID].status;
         return status == LoanStatus.Active || status == LoanStatus.TermsSet;
     }
-
-    function repay(uint256 loanID, uint256 amount) internal {
-        // Deduct the interest and principal owed
-        uint256 principalPaid;
-        uint256 interestPaid;
-        if (amount < MarketStorageLib.store().loans[loanID].interestOwed) {
-            interestPaid = amount;
-            MarketStorageLib.store().loans[loanID].interestOwed =
-                MarketStorageLib.store().loans[loanID].interestOwed -
-                (amount);
-        } else {
-            if (MarketStorageLib.store().loans[loanID].interestOwed > 0) {
-                interestPaid = MarketStorageLib.store().loans[loanID]
-                    .interestOwed;
-                amount = amount - interestPaid;
-                MarketStorageLib.store().loans[loanID].interestOwed = 0;
-            }
-
-            if (amount > 0) {
-                principalPaid = amount;
-                MarketStorageLib.store().loans[loanID].principalOwed =
-                    MarketStorageLib.store().loans[loanID].principalOwed -
-                    (amount);
-            }
-        }
-
-        LendingLib.repay(loanID, principalPaid, interestPaid, msg.sender);
-    }
 }

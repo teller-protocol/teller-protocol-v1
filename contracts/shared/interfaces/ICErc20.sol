@@ -77,6 +77,13 @@ interface ICErc20 {
 
     function exchangeRateStored() external view returns (uint256);
 
+    /**
+     * @notice Applies accrued interest to total borrows and reserves
+     * @dev This calculates interest accrued from the last checkpointed block
+     *   up to the current block and writes new checkpoint to storage.
+     */
+    function accrueInterest() external;
+
     function decimals() external view returns (uint8);
 
     function balanceOf(address account) external view returns (uint256);

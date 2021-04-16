@@ -11,7 +11,7 @@ const createAssetSettings: DeployFunction = async (hre) => {
   log('********** Asset Settings **********', { indent: 1 })
   log('')
 
-  const assetSettings = await contracts.get<ITellerDiamond>('TellerDiamond', {
+  const diamond = await contracts.get<ITellerDiamond>('TellerDiamond', {
     from: deployer,
   })
 
@@ -23,9 +23,7 @@ const createAssetSettings: DeployFunction = async (hre) => {
     const assetAddress = tokens.all[assetSymbol]
 
     // Check if the asset setting is already initialized
-    const isInitialized = await assetSettings.isAssetSettingInitialized(
-      assetAddress
-    )
+    const isInitialized = await diamond.isAssetSettingInitialized(assetAddress)
     if (!isInitialized) {
       const token = await hre.tokens.get(assetSymbol)
       const decimals = await token.decimals()
@@ -68,7 +66,7 @@ const createAssetSettings: DeployFunction = async (hre) => {
         })
       }
 
-      await assetSettings
+      await diamond
         .createAssetSetting(token.address, requests)
         .then(({ wait }) => wait())
 

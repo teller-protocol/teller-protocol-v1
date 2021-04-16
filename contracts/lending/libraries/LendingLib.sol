@@ -17,147 +17,11 @@ import { AssetCTokenLib } from "../../settings/asset/AssetCTokenLib.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // Storage
-import { LendingStorageLib, LendingStorage } from "../../storage/lending.sol";
-import { AppStorageLib } from "../../storage/app.sol";
-import { MarketStorageLib } from "../../storage/market.sol";
+import { MarketStorageLib, MarketStorage } from "../../storage/market.sol";
 
 library LendingLib {
-    using NumbersLib for uint256;
-
-    function s(address asset) internal view returns (LendingStorage storage) {
-        return LendingStorageLib.store(asset);
-    }
-
-    bytes32 constant FACET_ID = keccak256("LendingFacet");
-
-    uint256 internal constant EXCHANGE_RATE_FACTOR = 1e18;
-
-    /**
-     * @dev
-     */
-    function tTokenValue(uint256 assetAmount, uint256 exchangeRate)
-        internal
-        pure
-        returns (uint256 value_)
-    {
-        value_ = (assetAmount * EXCHANGE_RATE_FACTOR) / exchangeRate;
-    }
-
-    /**
-     * @dev
-     */
-    function assetValue(uint256 tTokenAmount, uint256 exchangeRate)
-        internal
-        pure
-        returns (uint256 value_)
-    {
-        value_ = (tTokenAmount * (exchangeRate)) / EXCHANGE_RATE_FACTOR;
-    }
-
-    /**
-     * @dev
-     */
-    function exchangeRateSupply(address asset)
-        internal
-        view
-        returns (uint256 rate_, uint256 supply_)
-    {
-        if (s(asset).tToken.totalSupply() == 0) {
-            rate_ = EXCHANGE_RATE_FACTOR;
-        } else {
-            supply_ = totalSupplied(asset);
-            rate_ = exchangeRateForSupply(asset, supply_);
-        }
-    }
-
-    /**
-     * @dev
-     */
-    function exchangeRate(address asset) internal view returns (uint256 rate_) {
-        if (s(asset).tToken.totalSupply() == 0) {
-            return EXCHANGE_RATE_FACTOR;
-        }
-
-        rate_ = exchangeRateForSupply(asset, totalSupplied(asset));
-    }
-
-    /**
-     * @dev
-     */
-    function exchangeRateForSupply(address asset, uint256 supply)
-        internal
-        view
-        returns (uint256 rate_)
-    {
-        rate_ = (supply * EXCHANGE_RATE_FACTOR) / s(asset).tToken.totalSupply();
-    }
-
-    /**
-     * @dev
-     */
-    function exchangeRateCurrentSupply(address asset)
-        internal
-        returns (uint256 rate_, uint256 supply_)
-    {
-        accrueInterest(asset);
-        (rate_, supply_) = exchangeRateSupply(asset);
-    }
-
-    /**
-     * @dev
-     */
-    function exchangeRateCurrent(address asset)
-        internal
-        returns (uint256 rate_)
-    {
-        accrueInterest(asset);
-        rate_ = exchangeRate(asset);
-    }
-
-    /**
-     * @dev
-     */
-    function accrueInterest(address asset) internal {
-        // TODO: Accrue interest for secondary LP assets
-    }
-
-    /**
-     * @notice It calculates the total supply of the lending asset across all markets.
-     * @return totalSupplied_ the total supply denoted in the lending asset.
-     */
-    function totalSupplied(address asset)
-        internal
-        view
-        returns (uint256 totalSupplied_)
-    {
-        totalSupplied_ =
-            IERC20(asset).balanceOf(address(this)) +
-            s(asset).totalBorrowed -
-            s(asset).totalRepaid;
-
-        for (
-            uint256 i;
-            i < EnumerableSet.length(s(asset).secondaryFunds);
-            i++
-        ) {
-            address otherToken = EnumerableSet.at(s(asset).secondaryFunds, i);
-            totalSupplied_ += PriceAggLib.valueFor(
-                otherToken,
-                asset,
-                // TODO: replace with funding escrow
-                IERC20(otherToken).balanceOf(address(this))
-            );
-        }
-    }
-
-    function lenderInterestEarned(
-        address asset,
-        uint256 rate,
-        address lender
-    ) internal view returns (uint256 interest_) {
-        interest_ =
-            assetValue(s(asset).tToken.balanceOf(lender), rate) -
-            s(asset).lenderTotalSupplied[lender];
+    function s() internal view returns (MarketStorage storage) {
+        return MarketStorageLib.store();
     }
 
     /**
@@ -170,12 +34,13 @@ library LendingLib {
         view
         returns (uint256 ratio_)
     {
-        // NOTE: potentially costly function
-        uint256 supplied = totalSupplied(asset);
+        uint256 supplied = s().tTokens[asset].totalUnderlyingSupply();
         if (supplied > 0) {
             uint256 newOnLoanAmount =
-                s(asset).totalBorrowed - s(asset).totalRepaid + newLoanAmount;
-            ratio_ = newOnLoanAmount.ratioOf(supplied);
+                s().totalBorrowed[asset] -
+                    s().totalRepaid[asset] +
+                    newLoanAmount;
+            ratio_ = NumbersLib.ratioOf(newOnLoanAmount, supplied);
         }
     }
 
@@ -201,12 +66,8 @@ library LendingLib {
         // Transfers tokens to LendingPool.
         tokenTransferFrom(sender, totalAmount, asset);
 
-        s(asset).totalRepaid = s(asset).totalRepaid + principalAmount;
-        s(asset).totalInterestEarned =
-            s(asset).totalInterestEarned +
-            interestAmount;
-
-        //        depositToCompoundIfSupported(asset, totalAmount);
+        s().totalRepaid[asset] += principalAmount;
+        s().totalInterestRepaid[asset] += interestAmount;
     }
 
     /**

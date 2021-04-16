@@ -16,28 +16,77 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  * @author develop@teller.finance
  */
 abstract contract ITToken is OwnableUpgradeable, ERC20Upgradeable {
+    struct InitArgs {
+        address controller;
+        address underlying;
+        address cToken;
+        uint256 maxTVL;
+    }
+
     /**
      * @notice The token that is the underlying assets for this Teller token.
      */
     function underlying() external view virtual returns (ERC20);
 
     /**
+     * @notice The balance of an {account} denoted in underlying value.
+     */
+    function balanceOfUnderlying(address account)
+        public
+        virtual
+        returns (uint256 balance_);
+
+    /**
      * @notice Increase account supply of specified token amount.
-     * @param account The account to mint tokens to.
      * @param amount The amount of tokens to mint.
      */
-    function mint(address account, uint256 amount) external virtual;
+    function mint(uint256 amount) external virtual;
 
     /**
-     * @notice Reduce account supply of specified token amount.
-     * @param account The account to burn tokens from.
-     * @param amount The amount of tokens to burn.
+     * @notice Increase account supply of specified token amount
+     * @param account The account to mint tokens to
+     * @param amount The amount of tokens to mint
+     *
+     * Restrictions:
+     *  - Caller must be the owner
      */
-    function burn(address account, uint256 amount) external virtual;
+    function mintOnBehalf(address account, uint256 amount) external virtual;
 
     /**
-     * @param _diamond The TellerDiamond address used as the owner.
-     * @param _underlying The token address represented by this TToken.
+     * @notice Redeem supplied Teller token underlying value.
+     * @param amount The amount of Teller tokens to redeem.
      */
-    function initialize(address _diamond, address _underlying) external virtual;
+    function redeem(uint256 amount) external virtual;
+
+    /**
+     * @notice Redeem supplied Teller token value.
+     * @param account The account to redeem tokens for.
+     * @param amount The amount of Teller tokens to redeem.
+     */
+    function redeemOnBehalf(address account, uint256 amount) external virtual;
+
+    /**
+     * @notice Redeem supplied underlying value.
+     * @param amount The amount of underlying tokens to redeem.
+     */
+    function redeemUnderlying(uint256 amount) external virtual;
+
+    /**
+     * @notice Redeem supplied underlying value.
+     * @param account The account to redeem tokens for.
+     * @param amount The amount of underlying tokens to redeem.
+     */
+    function redeemUnderlyingOnBehalf(address account, uint256 amount)
+        external
+        virtual;
+
+    function totalUnderlyingSupply()
+        external
+        virtual
+        returns (uint256 totalSupply_);
+
+    /**
+     * @notice Initializes the Teller token
+     */
+    function initialize(InitArgs calldata args) external virtual;
 }

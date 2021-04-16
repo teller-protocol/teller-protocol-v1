@@ -22,9 +22,9 @@ describe.only('Lending Pool', () => {
     let lendingToken: ERC20
     let helpers: ReturnType<typeof getLPHelpers>
 
-    before(async () => {
-      // Start with the diamond being setup
-      await hre.deployments.fixture('protocol')
+    beforeEach(async () => {
+      // Get a fresh market
+      await hre.deployments.fixture('markets')
 
       diamond = await hre.contracts.get<ITellerDiamond>('TellerDiamond')
       lendingToken = await hre.tokens.get(market.lendingToken)
@@ -36,9 +36,6 @@ describe.only('Lending Pool', () => {
 
     describe(`${market.lendingToken} Lending Pool`, () => {
       it('should be able deposit and withdraw all with interest', async () => {
-        // Get a fresh market
-        await hre.deployments.fixture('markets')
-
         const lender = await hre.getNamedSigner('lender')
         const lenderAddress = await lender.getAddress()
 

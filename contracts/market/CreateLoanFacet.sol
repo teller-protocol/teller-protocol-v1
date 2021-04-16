@@ -175,10 +175,10 @@ library CreateLoanLib {
         Counters.increment(counter);
     }
 
-    function validateRequest(LoanRequest memory request) internal view {
+    function validateRequest(LoanRequest memory request) internal {
         require(msg.sender == request.borrower, "Teller: not loan requester");
         require(
-            LendingLib.debtRatioFor(request.assetAddress, request.amount) >
+            LendingLib.debtRatioFor(request.assetAddress, request.amount) <
                 MaxDebtRatioLib.get(request.assetAddress),
             "Teller: max supply-to-debt ratio exceeded"
         );
@@ -193,7 +193,7 @@ library CreateLoanLib {
         );
     }
 
-    function verifyTakeOut(Loan storage loan, uint256 amount) internal view {
+    function verifyTakeOut(Loan storage loan, uint256 amount) internal {
         require(msg.sender == loan.loanTerms.borrower, "Teller: not borrower");
         require(loan.status == LoanStatus.TermsSet, "Teller: loan not set");
         require(

@@ -1,5 +1,5 @@
-import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
+import { DeployFunction } from 'hardhat-deploy/types'
 
 import { getTokens, getUniswap } from '../config'
 import { ITellerDiamond } from '../types/typechain'
@@ -29,10 +29,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       'AssetSettingsFacet',
       'PriceAggFacet',
       'ChainlinkAggFacet',
-      'LendingDepositFacet',
-      'LendingWithdrawFacet',
-      'LendingDataFacet',
-      'LendingSettingsFacet',
+      'LendingFacet',
       'CollateralFacet',
       'CreateLoanFacet',
       'LoanDataFacet',

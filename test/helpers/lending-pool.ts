@@ -3,13 +3,14 @@ import { solidity } from 'ethereum-waffle'
 import { BigNumber, Signer } from 'ethers'
 import { evm } from 'hardhat'
 
-import { ERC20, ITellerDiamond } from '../../types/typechain'
+import { ERC20, ITellerDiamond, ITToken } from '../../types/typechain'
 
 chai.use(solidity)
 
 export interface LPHelperArgs {
   diamond: ITellerDiamond
   lendingToken: ERC20
+  tToken: ITToken
 }
 
 /**
@@ -44,16 +45,12 @@ export const depositWithArgs = (args: LPHelperArgs) =>
       .connect(lender)
       .approve(args.diamond.address, amount)
 
-    const expectedTTokenAmount = await evm.withBlockScope(1, () =>
-      args.diamond.callStatic.getTTokenValue(args.lendingToken.address, amount)
-    )
-
     // Deposit into lending pool
     await args.diamond
       .connect(lender)
-      .deposit(args.lendingToken.address, amount)
-      .should.emit(args.diamond, 'TokenDeposited')
-      .withArgs(await lender.getAddress(), amount, expectedTTokenAmount)
+      .lendingPoolDeposit(args.lendingToken.address, amount)
+      .should.emit(args.diamond, 'LendingPoolDeposit')
+      .withArgs(await lender.getAddress(), amount)
   }
 
 /**
@@ -78,19 +75,9 @@ export const withdrawWithArgs = (args: LPHelperArgs) =>
     // Get expected withdrawal amount with interest
     const expectedWithdrawalAmount = amount
       ? amount
-      : await evm.withBlockScope(
-          1,
-          () => 0
-          // args.diamond.callStatic.balanceOfUnderlying(lenderAddress)
+      : await evm.withBlockScope(1, () =>
+          args.tToken.callStatic.balanceOfUnderlying(lenderAddress)
         )
-
-    // Get expected TToken amount to be burned
-    const expectedTTokenAmount = await evm.withBlockScope(1, () =>
-      args.diamond.callStatic.getTTokenValue(
-        lendingAddress,
-        expectedWithdrawalAmount
-      )
-    )
 
     // Connect the lender
     const d = args.diamond.connect(lender)
@@ -101,8 +88,8 @@ export const withdrawWithArgs = (args: LPHelperArgs) =>
 
     // Verify event
     await tx.should
-      .emit(args.diamond, 'TokenWithdrawn')
-      .withArgs(lenderAddress, expectedWithdrawalAmount, expectedTTokenAmount)
+      .emit(args.diamond, 'LendingWithdraw')
+      .withArgs(lenderAddress, expectedWithdrawalAmount)
   }
 
 // /**
