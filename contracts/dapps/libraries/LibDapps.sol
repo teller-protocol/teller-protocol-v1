@@ -22,7 +22,7 @@ import {
 library LibDapps {
     using SafeERC20 for IERC20;
 
-    function s() private pure returns (MarketStorage storage) {
+    function s() public pure returns (MarketStorage storage) {
         return MarketStorageLib.store();
     }
 

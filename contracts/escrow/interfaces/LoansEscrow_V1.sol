@@ -21,7 +21,7 @@ contract LoansEscrow_V1 is OwnableUpgradeable, ILoansEscrow {
         operator = _operator;
     }
 
-    function callDapp(DappData calldata dappData)
+    function callDapp(address dappAddress, bytes calldata dappData)
         external
         override
         onlyOperator

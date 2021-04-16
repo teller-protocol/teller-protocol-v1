@@ -5,7 +5,9 @@ import { DappData } from "../../storage/market.sol";
 interface ILoansEscrow {
     function init(address _operator) external virtual;
 
-    function callDapp(DappData calldata dappData) external virtual;
+    function callDapp(address dappAddress, bytes calldata dappData)
+        external
+        virtual;
 
     function claimTokens(uint256 loanID) external;
 
