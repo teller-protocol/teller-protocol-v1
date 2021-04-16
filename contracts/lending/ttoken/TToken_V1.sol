@@ -31,8 +31,8 @@ contract TToken_V1 is ITToken {
     uint256 public maxTVL;
 
     // Supply data
-    uint256 public lenderTotalSupplied;
-    uint256 public lenderTotalInterest;
+    mapping(address => uint256) internal lenderTotalSupplied;
+    mapping(address => uint256) internal lenderTotalInterest;
     uint256 public totalInterestEarned;
 
     /* Modifiers */
@@ -180,7 +180,7 @@ contract TToken_V1 is ITToken {
         // Update lender interest data
         uint256 lenderInterestEarned = _calcLenderInterestEarned(account, rate);
         lenderTotalInterest[account] += lenderInterestEarned;
-        totalInterestEarned[account] += lenderInterestEarned;
+        totalInterestEarned += lenderInterestEarned;
 
         // Update lender supplied data
         if (amount > lenderInterestEarned) {

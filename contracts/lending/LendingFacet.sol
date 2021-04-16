@@ -21,7 +21,7 @@ import {
 // Storage
 import { LendingLib } from "./LendingLib.sol";
 
-bytes23 constant ID = keccak256("LENDING");
+bytes32 constant ID = keccak256("LENDING");
 
 contract LendingFacet is RolesMods, ReentryMods, PausableMods {
     /**
@@ -77,8 +77,8 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
      */
     function lendingWithdraw(address asset, uint256 assetAmount)
         external
-        nonReentry(LendingLib.FACET_ID)
-        paused(LendingLib.FACET_ID, false)
+        nonReentry(ID)
+        paused(ID, false)
     {
         // Redeem underlying token for lender
         LendingLib.tToken(asset).redeemUnderlyingOnBehalf(
@@ -94,8 +94,8 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
      */
     function lendingWithdrawAll(address asset)
         external
-        nonReentry(LendingLib.FACET_ID)
-        paused(LendingLib.FACET_ID, false)
+        nonReentry(ID)
+        paused(ID, false)
         returns (uint256 assetAmount)
     {
         // Redeem entire Teller token balance for lender

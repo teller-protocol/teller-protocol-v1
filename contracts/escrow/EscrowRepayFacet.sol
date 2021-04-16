@@ -48,6 +48,7 @@ contract EscrowRepayFacet is RolesMods, ReentryMods, PausableMods {
         }
 
         token.safeApprove(address(this), amount);
-        LibLoans.repay(amount, loanID);
+        //        TODO merge with 'contarcts/market/RepayFacet'
+        //        LibLoans.repay(amount, loanID);
     }
 }

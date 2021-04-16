@@ -56,12 +56,13 @@ contract LiquidateFacet is RolesMods, ReentryMods, PausableMods {
             MarketStorageLib.store().loans[loanID].principalOwed +
                 (MarketStorageLib.store().loans[loanID].interestOwed);
 
-        LendingLib.repay(
-            loanID,
-            MarketStorageLib.store().loans[loanID].principalOwed,
-            MarketStorageLib.store().loans[loanID].interestOwed,
-            msg.sender
-        );
+        //        TODO merge with 'contracts/market/RepayFacet
+        //        LendingLib.repay(
+        //            loanID,
+        //            MarketStorageLib.store().loans[loanID].principalOwed,
+        //            MarketStorageLib.store().loans[loanID].interestOwed,
+        //            msg.sender
+        //        );
 
         MarketStorageLib.store().loans[loanID].status = LoanStatus.Liquidated;
 

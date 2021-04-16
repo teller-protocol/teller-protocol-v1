@@ -17,7 +17,6 @@ import {
     MarketStorage,
     LoanStatus
 } from "../../storage/market.sol";
-import { LendingLib } from "../../lending/libraries/LendingLib.sol";
 
 library LibLoans {
     using NumbersLib for int256;
