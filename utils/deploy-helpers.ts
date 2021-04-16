@@ -7,6 +7,7 @@ interface CommonDeployArgs {
   hre: HardhatRuntimeEnvironment
   name?: string
   libraries?: Libraries
+  log?: boolean
 }
 
 export interface DeployArgs extends CommonDeployArgs {
@@ -23,9 +24,10 @@ export const deploy = async <C extends Contract>(
       deployments: { deploy, getOrNull },
       getNamedAccounts,
       ethers,
-      log,
     },
   } = args
+
+  const log = args.log === false ? (...args: any[]) => {} : args.hre.log
 
   const { deployer } = await getNamedAccounts()
 

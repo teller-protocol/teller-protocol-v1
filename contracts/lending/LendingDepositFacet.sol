@@ -52,14 +52,13 @@ contract LendingDepositFacet is RolesMods, ReentryMods, PausableMods {
         );
 
         // Transferring tokens to the lending pool escrow
-        ILendingEscrow escrow = LendingLib.s(asset).escrow;
         SafeERC20.safeTransferFrom(
             IERC20(asset),
             msg.sender,
-            address(escrow),
+            address(this),
             amount
         );
-        escrow.executeStrategy();
+        LendingLib.s(asset).escrow.deposit(address(this), amount);
 
         // Update the store amount of lender supply
         LendingLib.s(asset).lenderTotalSupplied[msg.sender] += amount;

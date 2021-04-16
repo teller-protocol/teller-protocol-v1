@@ -4,6 +4,7 @@ import 'hardhat-deploy'
 import { makeNodeDisklet } from 'disklet'
 import { BigNumber, BigNumberish, Contract, Signer } from 'ethers'
 import { extendEnvironment } from 'hardhat/config'
+import { Deployment } from 'hardhat-deploy/dist/types'
 import {
   DeploymentSubmission,
   DeployOptions,
@@ -127,13 +128,16 @@ extendEnvironment((hre) => {
       name: string,
       config?: ContractsGetConfig
     ): Promise<C> {
-      const deployment = await deployments.get(name)
+      const { address = config?.at, abi }: { address?: string; abi: any[] } =
+        (await deployments.getOrNull(name)) ??
+        (await deployments.getArtifact(name))
 
-      const { address } = config?.at
-        ? { address: config.at }
-        : await deployments.get(name)
+      if (address == null)
+        throw new Error(
+          `No deployment exists for ${name}. If expected, supply an address (config.at)`
+        )
 
-      let contract = await ethers.getContractAt(deployment.abi, address)
+      let contract = await ethers.getContractAt(abi, address)
 
       if (config?.from) {
         const signer = Signer.isSigner(config.from)

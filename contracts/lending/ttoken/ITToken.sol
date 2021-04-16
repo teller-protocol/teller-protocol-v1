@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// Interfaces
+// Contracts
+import {
+    OwnableUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {
+    ERC20Upgradeable
+} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 /**
@@ -9,7 +15,7 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  *
  * @author develop@teller.finance
  */
-abstract contract ITToken is ERC20 {
+abstract contract ITToken is OwnableUpgradeable, ERC20Upgradeable {
     /**
      * @notice The token that is the underlying assets for this Teller token.
      */
@@ -30,7 +36,8 @@ abstract contract ITToken is ERC20 {
     function burn(address account, uint256 amount) external virtual;
 
     /**
-     * @param underlyingAsset the address of the lending pool this token is linked to. It is only used to add it as a minter.
+     * @param _diamond The TellerDiamond address used as the owner.
+     * @param _underlying The token address represented by this TToken.
      */
-    function initialize(address underlyingAsset) external virtual;
+    function initialize(address _diamond, address _underlying) external virtual;
 }

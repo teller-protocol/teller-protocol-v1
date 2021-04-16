@@ -21,10 +21,12 @@
     "@typescript-eslint/promise-function-async": "off",
     "@typescript-eslint/restrict-template-expressions": "off",
     "@typescript-eslint/strict-boolean-expressions": "off",
+    "arrow-parens": "error",
     "no-unused-vars": "off",
     "no-useless-return": "off",
     "no-void": "off",
-    "arrow-parens": "error",
+    "semi": ["error", "never"],
+    "no-extra-semi": "error",
     "simple-import-sort/imports": "error"
   }
 }

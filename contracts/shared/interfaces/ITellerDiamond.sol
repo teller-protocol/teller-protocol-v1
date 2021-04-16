@@ -6,6 +6,9 @@ import {
     PlatformSettingsFacet
 } from "../../settings/platform/PlatformSettingsFacet.sol";
 import {
+    AssetSettingsDataFacet
+} from "../../settings/asset/AssetSettingsDataFacet.sol";
+import {
     AssetSettingsFacet
 } from "../../settings/asset/AssetSettingsFacet.sol";
 import { SettingsFacet } from "../../settings/SettingsFacet.sol";
@@ -33,6 +36,7 @@ import { CollateralFacet } from "../../market/CollateralFacet.sol";
 abstract contract ITellerDiamond is
     SettingsFacet,
     PlatformSettingsFacet,
+    AssetSettingsDataFacet,
     AssetSettingsFacet,
     PriceAggFacet,
     ChainlinkAggFacet,

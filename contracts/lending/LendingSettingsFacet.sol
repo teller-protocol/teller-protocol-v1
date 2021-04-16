@@ -7,6 +7,7 @@ import { ADMIN } from "../shared/roles.sol";
 
 // Interfaces
 import { ILendingEscrow } from "./escrow/ILendingEscrow.sol";
+import { ITToken } from "./ttoken/ITToken.sol";
 
 // Libraries
 import { LendingLib, LendingStorageLib } from "./libraries/LendingLib.sol";
@@ -26,15 +27,18 @@ contract LendingSettingsFacet is RolesMods {
     /**
      * @notice Initialized a new lending pool for {asset}
      */
-    function initLendingPool(address asset, address escrow)
-        external
-        authorized(ADMIN, msg.sender)
-    {
-        require(false, "Teller: lending pool already initialized");
+    function initLendingPool(
+        address asset,
+        address tToken,
+        address escrow
+    ) external authorized(ADMIN, msg.sender) {
+        require(
+            address(LendingStorageLib.store(asset).tToken) == address(0),
+            "Teller: lending pool already initialized"
+        );
 
-        // TODO: create lending escrow
+        LendingStorageLib.store(asset).tToken = ITToken(tToken);
         LendingStorageLib.store(asset).escrow = ILendingEscrow(escrow);
-        // TODO: create ttoken
 
         // Emit event
         emit LendingPoolInitialized(msg.sender, asset);

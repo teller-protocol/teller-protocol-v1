@@ -25,6 +25,7 @@ const deployProtocol: DeployFunction = async (hre) => {
     facets: [
       'SettingsFacet',
       'PlatformSettingsFacet',
+      'AssetSettingsDataFacet',
       'AssetSettingsFacet',
       'PriceAggFacet',
       'ChainlinkAggFacet',
@@ -39,7 +40,9 @@ const deployProtocol: DeployFunction = async (hre) => {
       'LiquidateFacet',
       'SignersFacet',
       'StakingFacet',
-      'EscrowFacet',
+      'EscrowClaimTokensFacet',
+      'EscrowRepayFacet',
+      'EscrowSettingsFacet',
     ],
     owner: deployer,
     execute: {

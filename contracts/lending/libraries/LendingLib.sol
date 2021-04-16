@@ -180,29 +180,6 @@ library LendingLib {
     }
 
     /**
-     * @notice It withdraws a given amount of tokens from Compound.
-     * @param amount The amount of underlying tokens to withdraw.
-     * @return The amount of underlying tokens withdrawn.
-     */
-    function withdrawFromCompoundIfSupported(address asset, uint256 amount)
-        internal
-        returns (uint256)
-    {
-        if (address(AssetCTokenLib.get(asset)) == address(0)) {
-            return 0;
-        }
-
-        uint256 balanceBefore = IERC20(asset).balanceOf(address(this));
-
-        uint256 redeemResult =
-            AssetCTokenLib.get(asset).redeemUnderlying(amount);
-        require(redeemResult == 0, "COMPOUND_REDEEM_UNDERLYING_ERROR");
-
-        uint256 balanceAfter = IERC20(asset).balanceOf(address(this));
-        return balanceAfter - (balanceBefore);
-    }
-
-    /**
      * @notice It allows a borrower to repay their loan or a liquidator to liquidate a loan.
      * @dev It requires a ERC20.approve call before calling it. (Does it though with diamonds?)
      * @dev It throws a require error if borrower called ERC20.approve function before calling it.
@@ -229,41 +206,7 @@ library LendingLib {
             s(asset).totalInterestEarned +
             interestAmount;
 
-        depositToCompoundIfSupported(asset, totalAmount);
-    }
-
-    /**
-     * @notice It deposits a given amount of tokens to Compound.
-     * @dev The cToken address must be defined in AssetSettings.
-     * @dev The underlying token value of the tokens to be deposited must be positive. Because the decimals of
-            cTokens and the underlying asset can differ, the deposit of dust tokens may result in no cTokens minted.
-     * @param amount The amount of underlying tokens to deposit.
-     * @return difference The amount of underlying tokens deposited.
-     */
-    function depositToCompoundIfSupported(address asset, uint256 amount)
-        internal
-        returns (uint256 difference)
-    {
-        if (address(AssetCTokenLib.get(asset)) == address(0)) {
-            return 0;
-        }
-
-        // approve the cToken contract to take lending tokens
-        SafeERC20.safeApprove(
-            IERC20(asset),
-            address(AssetCTokenLib.get(asset)),
-            amount
-        );
-
-        uint256 balanceBefore = IERC20(asset).balanceOf(address(this));
-
-        // Now mint cTokens, which will take lending tokens
-        uint256 mintResult = AssetCTokenLib.get(asset).mint(amount);
-        require(mintResult == 0, "COMPOUND_DEPOSIT_ERROR");
-
-        uint256 balanceAfter = IERC20(asset).balanceOf(address(this));
-        difference = balanceBefore - (balanceAfter);
-        require(difference > 0, "DEPOSIT_CTOKEN_DUST");
+        //        depositToCompoundIfSupported(asset, totalAmount);
     }
 
     /**

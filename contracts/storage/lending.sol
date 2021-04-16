@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 // Interfaces
 import { ILendingEscrow } from "../lending/escrow/ILendingEscrow.sol";
-import { ITToken } from "../shared/interfaces/ITToken.sol";
+import { ITToken } from "../lending/ttoken/ITToken.sol";
 
 // Libraries
 import {

@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import { LendingLib } from "./libraries/LendingLib.sol";
 
 // Interfaces
-import { ITToken } from "../shared/interfaces/ITToken.sol";
+import { ITToken } from "../lending/ttoken/ITToken.sol";
 
 contract LendingDataFacet {
     /**

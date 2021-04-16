@@ -21,11 +21,6 @@ struct AssetSettingRequest {
     CacheType cacheType;
 }
 
-/**
- * @notice Utility library of inline functions on the PlatformSetting struct.
- *
- * @author develop@teller.finance
- */
 contract AssetSettingsFacet is RolesMods {
     function s(address asset) private view returns (Cache storage) {
         return AppStorageLib.store().assetSettings[asset];
