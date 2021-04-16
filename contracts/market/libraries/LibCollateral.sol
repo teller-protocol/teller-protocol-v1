@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 // Interfaces
-import { IEscrow } from "../../shared/interfaces/IEscrow.sol";
 import { IWETH } from "../../shared/interfaces/IWETH.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {
@@ -120,10 +119,12 @@ library LibCollateral {
             );
             if (
                 remainingCollateralAmount > 0 &&
-                MarketStorageLib.store().loanEscrows[loanID] != address(0x0)
+                address(MarketStorageLib.store().loanEscrows[loanID]) !=
+                address(0x0)
             ) {
-                IEscrow(MarketStorageLib.store().loanEscrows[loanID])
+                MarketStorageLib.store().loanEscrows[loanID]
                     .claimTokensByCollateralValue(
+                    loanID,
                     recipient,
                     remainingCollateralAmount
                 );

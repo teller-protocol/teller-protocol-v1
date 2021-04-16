@@ -67,12 +67,15 @@ contract PoolTogetherFacet is PausableMods, DappMods {
         uint256 balanceBefore = LibDapps.balanceOf(loanID, ticketAddress);
         IERC20(tokenAddress).safeApprove(address(prizePool), amount);
 
-        prizePool.depositTo(
-            address(this),
-            amount,
-            ticketAddress,
-            address(this)
-        );
+        bytes memory callData =
+            abi.encode(
+                PrizePoolInterface.depositTo.selector,
+                address(this),
+                amount,
+                ticketAddress,
+                address(this)
+            );
+        LibDapps.s().loanEscrows[loanID].callDapp(address(prizePool), callData);
 
         uint256 balanceAfter = LibDapps.balanceOf(loanID, ticketAddress);
         require(balanceAfter > balanceBefore, "DEPOSIT_ERROR");
@@ -114,12 +117,16 @@ contract PoolTogetherFacet is PausableMods, DappMods {
                 ticketAddress,
                 amount
             );
-        prizePool.withdrawInstantlyFrom(
-            address(this),
-            amount,
-            ticketAddress,
-            maxExitFee
-        );
+
+        bytes memory callData =
+            abi.encode(
+                PrizePoolInterface.withdrawInstantlyFrom.selector,
+                address(this),
+                amount,
+                ticketAddress,
+                maxExitFee
+            );
+        LibDapps.s().loanEscrows[loanID].callDapp(address(prizePool), callData);
 
         uint256 balanceAfter = LibDapps.balanceOf(loanID, ticketAddress);
         require(balanceAfter < balanceBefore, "WITHDRAW_ERROR");
@@ -158,12 +165,16 @@ contract PoolTogetherFacet is PausableMods, DappMods {
                 ticketAddress,
                 balanceBefore
             );
-        prizePool.withdrawInstantlyFrom(
-            address(this),
-            balanceBefore,
-            ticketAddress,
-            maxExitFee
-        );
+
+        bytes memory callData =
+            abi.encode(
+                PrizePoolInterface.withdrawInstantlyFrom.selector,
+                address(this),
+                balanceBefore,
+                ticketAddress,
+                maxExitFee
+            );
+        LibDapps.s().loanEscrows[loanID].callDapp(address(prizePool), callData);
 
         uint256 balanceAfter = LibDapps.balanceOf(loanID, ticketAddress);
         require(balanceAfter < balanceBefore, "WITHDRAW_ERROR");

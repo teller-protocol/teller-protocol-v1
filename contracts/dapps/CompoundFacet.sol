@@ -76,8 +76,11 @@ contract CompoundFacet is PausableMods, DappMods {
 
         ICErc20 cToken = AssetCTokenLib.get(tokenAddress);
         IERC20(tokenAddress).safeApprove(address(cToken), amount);
-        uint256 result = cToken.mint(amount);
-        require(result == NO_ERROR, "Teller: compound deposit error");
+
+        bytes memory callData = abi.encode(ICErc20.mint.selector, amount);
+        LibDapps.s().loanEscrows[loanID].callDapp(address(cToken), callData);
+
+        //        require(result == NO_ERROR, "Teller: compound deposit error");
 
         LibDapps.tokenUpdated(loanID, address(cToken));
         LibDapps.tokenUpdated(loanID, tokenAddress);
@@ -134,15 +137,27 @@ contract CompoundFacet is PausableMods, DappMods {
         bool isUnderlying
     ) internal {
         address tokenAddress = cToken.underlying();
-        uint256 result =
-            isUnderlying
-                ? cToken.redeemUnderlying(amount)
-                : cToken.redeem(amount);
-        require(
-            result != TOKEN_INSUFFICIENT_BALANCE,
-            "Teller: compound dapp insufficient balance"
-        );
-        require(result == NO_ERROR, "Teller: compound dapp withdrawal error");
+        bytes memory callData;
+        if (isUnderlying) {
+            callData = abi.encode(ICErc20.redeemUnderlying.selector, amount);
+            LibDapps.s().loanEscrows[loanID].callDapp(
+                address(cToken),
+                callData
+            );
+        } else {
+            callData = abi.encode(ICErc20.redeem.selector, amount);
+        }
+        LibDapps.s().loanEscrows[loanID].callDapp(address(cToken), callData);
+
+        //        uint256 result =
+        //            isUnderlying // TODO: Verify errors
+        //                ? cToken.redeemUnderlying(amount)
+        //                : cToken.redeem(amount);
+        //        require(
+        //            result != TOKEN_INSUFFICIENT_BALANCE,
+        //            "Teller: compound dapp insufficient balance"
+        //        );
+        //        require(result == NO_ERROR, "Teller: compound dapp withdrawal error");
 
         LibDapps.tokenUpdated(loanID, address(cToken));
         LibDapps.tokenUpdated(loanID, tokenAddress);

@@ -84,11 +84,6 @@ interface IVault {
     function withdraw(uint256 amountToWithdraw) external;
 
     /**
-        @notice Withdraws all to the sender.
-     */
-    function withdraw() external;
-
-    /**
         @notice Withdraws the maximum available amount of native unwrapped token (same as token()) from the Vault
      */
     function withdrawAll() external;

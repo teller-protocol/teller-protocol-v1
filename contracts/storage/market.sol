@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+// Libraries
 import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "../shared/libraries/NumbersList.sol";
 
-// Libraries
+// Interfaces
+import { ILoansEscrow } from "../escrow/interfaces/ILoansEscrow.sol";
 import { ITToken } from "../lending/ttoken/ITToken.sol";
-
 /**
  * @notice Represents the terms of a loan based on the consensus of a LoanRequest
  * @param borrower The wallet address of the borrower
@@ -149,7 +150,7 @@ struct MarketStorage {
     // Maps loanIDs to loan data
     mapping(uint256 => Loan) loans;
     // Maps loanIDs to escrow address to list of held tokens
-    mapping(uint256 => address) loanEscrows;
+    mapping(uint256 => ILoansEscrow) loanEscrows;
     // Maps loanIDs to list of tokens owned by a loan escrow
     mapping(uint256 => EnumerableSet.AddressSet) escrowTokens;
     // Maps accounts to owned loan IDs
