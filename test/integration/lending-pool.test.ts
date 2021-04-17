@@ -1,11 +1,11 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
-import { BigNumber, BigNumberish } from 'ethers'
+import { BigNumber, BigNumberish, Signer } from 'ethers'
 import hre from 'hardhat'
 
 import { getMarkets } from '../../config'
 import { Market } from '../../types/custom/config-types'
-import { ERC20, ITellerDiamond } from '../../types/typechain'
+import { ERC20, ITellerDiamond, ITToken } from '../../types/typechain'
 import { fundedMarket } from '../fixtures'
 import { fundLender, getFunds } from '../helpers/get-funds'
 import { getLPHelpers, LPHelperArgs } from '../helpers/lending-pool'
@@ -20,23 +20,43 @@ describe.only('Lending Pool', () => {
   function testLP(market: Market): void {
     let diamond: ITellerDiamond
     let lendingToken: ERC20
+    let tToken: ITToken
     let helpers: ReturnType<typeof getLPHelpers>
+
+    let deployer: Signer
+    let lender: Signer
 
     beforeEach(async () => {
       // Get a fresh market
       await hre.deployments.fixture('markets')
 
-      diamond = await hre.contracts.get<ITellerDiamond>('TellerDiamond')
+      diamond = await hre.contracts.get('TellerDiamond')
       lendingToken = await hre.tokens.get(market.lendingToken)
+      tToken = await hre.contracts.get('ITToken', {
+        at: await diamond.getTTokenFor(lendingToken.address),
+      })
       helpers = getLPHelpers({
         diamond,
         lendingToken,
+        tToken,
       })
+
+      deployer = await hre.getNamedSigner('deployer')
+      lender = await hre.getNamedSigner('lender')
     })
 
     describe(`${market.lendingToken} Lending Pool`, () => {
+      it('should not be able deposit directly on the Teller Token contract', async () => {
+        await tToken.connect(deployer).restrict(true)
+
+        const depositAmount = await fundLender(lendingToken, 100)
+        await tToken
+          .connect(lender)
+          .functions['mint(uint256)'](depositAmount)
+          .should.be.revertedWith('Teller: platform restricted')
+      })
+
       it('should be able deposit and withdraw all with interest', async () => {
-        const lender = await hre.getNamedSigner('lender')
         const lenderAddress = await lender.getAddress()
 
         // Fund the market
@@ -47,7 +67,7 @@ describe.only('Lending Pool', () => {
         await hre.evm.advanceTime(6048000)
 
         // const claimableInterest = await diamond.callStatic.getClaimableInterestEarned(
-        //   lenderAddress
+        //   await lender.getAddress()
         // )
         // claimableInterest
         //   .isNegative()

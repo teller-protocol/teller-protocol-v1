@@ -15,7 +15,6 @@ import {
     CacheType
 } from "../../shared/libraries/CacheLib.sol";
 import { AssetCTokenLib } from "./AssetCTokenLib.sol";
-import { MaxTVLAmountLib } from "./MaxTVLAmountLib.sol";
 
 // Storage
 import { AppStorageLib, AppStorage } from "../../storage/app.sol";
@@ -32,13 +31,5 @@ contract AssetSettingsDataFacet {
         returns (ICErc20 cToken_)
     {
         cToken_ = AssetCTokenLib.get(asset);
-    }
-
-    function getAssetMaxTVLAmount(address asset)
-        external
-        view
-        returns (uint256 maxTVL_)
-    {
-        maxTVL_ = MaxTVLAmountLib.get(asset);
     }
 }

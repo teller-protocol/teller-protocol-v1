@@ -1,4 +1,5 @@
 import { BigNumberish } from 'ethers'
+
 import { AssetType } from '../../utils/consts'
 
 type Address = string
@@ -47,6 +48,7 @@ interface ATMToken {
 interface Market {
   lendingToken: TokenSymbol
   collateralTokens: TokenSymbol[]
+  maxTVL: BigNumberish
 }
 
 export interface Chainlink {

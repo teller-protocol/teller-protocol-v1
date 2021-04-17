@@ -2,9 +2,10 @@
 pragma solidity ^0.8.0;
 
 // Contracts
+import { InitArgs } from "./data.sol";
 import {
-    OwnableUpgradeable
-} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+    AccessControlUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {
     ERC20Upgradeable
 } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
@@ -15,14 +16,7 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  *
  * @author develop@teller.finance
  */
-abstract contract ITToken is OwnableUpgradeable, ERC20Upgradeable {
-    struct InitArgs {
-        address controller;
-        address underlying;
-        address cToken;
-        uint256 maxTVL;
-    }
-
+abstract contract ITToken is AccessControlUpgradeable, ERC20Upgradeable {
     /**
      * @notice The token that is the underlying assets for this Teller token.
      */
@@ -38,19 +32,12 @@ abstract contract ITToken is OwnableUpgradeable, ERC20Upgradeable {
 
     /**
      * @notice Increase account supply of specified token amount.
-     * @param amount The amount of tokens to mint.
+     * @param amount The amount of underlying tokens to use to mint.
      */
-    function mint(uint256 amount) external virtual;
-
-    /**
-     * @notice Increase account supply of specified token amount
-     * @param account The account to mint tokens to
-     * @param amount The amount of tokens to mint
-     *
-     * Restrictions:
-     *  - Caller must be the owner
-     */
-    function mintOnBehalf(address account, uint256 amount) external virtual;
+    function mint(uint256 amount)
+        external
+        virtual
+        returns (uint256 mintAmount_);
 
     /**
      * @notice Redeem supplied Teller token underlying value.
@@ -59,31 +46,24 @@ abstract contract ITToken is OwnableUpgradeable, ERC20Upgradeable {
     function redeem(uint256 amount) external virtual;
 
     /**
-     * @notice Redeem supplied Teller token value.
-     * @param account The account to redeem tokens for.
-     * @param amount The amount of Teller tokens to redeem.
-     */
-    function redeemOnBehalf(address account, uint256 amount) external virtual;
-
-    /**
      * @notice Redeem supplied underlying value.
      * @param amount The amount of underlying tokens to redeem.
      */
     function redeemUnderlying(uint256 amount) external virtual;
 
     /**
-     * @notice Redeem supplied underlying value.
-     * @param account The account to redeem tokens for.
-     * @param amount The amount of underlying tokens to redeem.
+     * @notice Redeem supplied Teller token underlying value.
+     * @return totalSupply_ The total value of the underlying token managed by the LP.
      */
-    function redeemUnderlyingOnBehalf(address account, uint256 amount)
-        external
-        virtual;
-
     function totalUnderlyingSupply()
         external
         virtual
         returns (uint256 totalSupply_);
+
+    /**
+     * @notice Sets the restricted state of the platform.
+     */
+    function restrict(bool state) external virtual;
 
     /**
      * @notice Initializes the Teller token

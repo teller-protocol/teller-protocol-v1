@@ -17,6 +17,9 @@ import {
     IERC20,
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {
+    SafeERC20Upgradeable
+} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 
 // Storage
 import { LendingLib } from "./LendingLib.sol";
@@ -37,12 +40,25 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
      * @param amount of tokens.
      */
     event LendingPoolDeposit(address indexed sender, uint256 amount);
+
     /**
      * @notice This event is emitted when an user withdraws tokens from the pool.
      * @param sender address that withdrew the tokens.
      * @param amount of tokens.
      */
     event LendingWithdraw(address indexed sender, uint256 amount);
+
+    /**
+     * @notice Get the Teller Token address for an underlying asset.
+     * @param asset Address to get a Teller Token for.
+     */
+    function getTTokenFor(address asset)
+        external
+        view
+        returns (address tToken_)
+    {
+        tToken_ = address(LendingLib.tToken(asset));
+    }
 
     /**
      * @notice It allows users to deposit tokens into the pool.
@@ -65,9 +81,15 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
             amount
         );
         // Set allowance for Teller token to pull funds to mint
-        LendingLib.tToken(asset).approve(msg.sender, amount);
+        ITToken tToken = LendingLib.tToken(asset);
+        SafeERC20.safeApprove(IERC20(asset), address(tToken), amount);
         // Mint Teller tokens for lender
-        LendingLib.tToken(asset).mintOnBehalf(msg.sender, amount);
+        SafeERC20Upgradeable.safeTransfer(
+            tToken,
+            msg.sender,
+            // Minting returns the amount of Teller tokens minted
+            tToken.mint(amount)
+        );
 
         emit LendingPoolDeposit(msg.sender, amount);
     }
@@ -81,10 +103,7 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
         paused(ID, false)
     {
         // Redeem underlying token for lender
-        LendingLib.tToken(asset).redeemUnderlyingOnBehalf(
-            msg.sender,
-            assetAmount
-        );
+        LendingLib.tToken(asset).redeemUnderlying(assetAmount);
 
         emit LendingWithdraw(msg.sender, assetAmount);
     }
@@ -100,7 +119,21 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
     {
         // Redeem entire Teller token balance for lender
         ITToken tToken = LendingLib.tToken(asset);
-        tToken.redeemOnBehalf(msg.sender, tToken.balanceOf(msg.sender));
+        uint256 tTokenBalance = tToken.balanceOf(msg.sender);
+        SafeERC20Upgradeable.safeTransferFrom(
+            tToken,
+            msg.sender,
+            address(this),
+            tTokenBalance
+        );
+        uint256 assetBalanceBefore = ERC20(asset).balanceOf(address(this));
+        tToken.redeem(tTokenBalance);
+        uint256 assetBalanceAfter = ERC20(asset).balanceOf(address(this));
+        SafeERC20.safeTransfer(
+            tToken,
+            msg.sender,
+            assetBalanceAfter - assetBalanceBefore
+        );
 
         emit LendingWithdraw(msg.sender, assetAmount);
     }

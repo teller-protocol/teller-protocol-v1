@@ -18,7 +18,5 @@ The setting values are stored on the root level `AppStorage.assetSettings` mappi
   - Stores the associated PoolTogether pool address
 - `MaxLoanAmount`
   - Stores the maximum loan size amount allowed for a token
-- `MaxTVLAmount`
-  - Stores the maximum total value locked for a specific lending asset
 - `MaxDebtRatio`
   - Stores the maximum debt ratio allowed for a lending asset

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Contracts
+import { InitArgs, CONTROLLER, ADMIN } from "./data.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // Utils
@@ -12,7 +13,7 @@ import { ITToken } from "./ITToken.sol";
 import { ICErc20 } from "../../shared/interfaces/ICErc20.sol";
 
 /**
- * @notice This contract represents a wrapped token within the Teller protocol
+ * @notice This contract represents a lending pool for an asset within Teller protocol.
  *
  * @author develop@teller.finance
  */
@@ -30,15 +31,24 @@ contract TToken_V1 is ITToken {
     // LP settings
     uint256 public maxTVL;
 
-    // Supply data
-    mapping(address => uint256) internal lenderTotalSupplied;
-    mapping(address => uint256) internal lenderTotalInterest;
-    uint256 public totalInterestEarned;
-
     /* Modifiers */
 
-    modifier isNotRestricted {
-        require(!_restricted, "Teller: platform restricted");
+    modifier authorized(bytes32 role) {
+        require(hasRole(role, _msgSender()));
+        _;
+    }
+
+    /**
+     * @notice Checks if the LP is restricted or has the CONTROLLER role.
+     *
+     * The LP being restricted means that only the Teller protocol may
+     *  lend/borrow funds.
+     */
+    modifier notRestricted {
+        require(
+            !_restricted || hasRole(CONTROLLER, _msgSender()),
+            "Teller: platform restricted"
+        );
         _;
     }
 
@@ -68,32 +78,17 @@ contract TToken_V1 is ITToken {
 
     /**
      * @notice Increase account supply of specified token amount
-     * @param amount The amount of tokens to mint
+     * @param amount The amount of underlying tokens to use to mint.
      */
-    function mint(uint256 amount) external override isNotRestricted {
-        _deposit(_msgSender(), amount);
-    }
-
-    /**
-     * @notice Increase account supply of specified token amount
-     * @param account The account to mint tokens to
-     * @param amount The amount of tokens to mint
-     *
-     * Restrictions:
-     *  - Caller must be the owner
-     */
-    function mintOnBehalf(address account, uint256 amount)
+    function mint(uint256 amount)
         external
         override
-        onlyOwner
+        notRestricted
+        returns (uint256 mintAmount_)
     {
-        _deposit(account, amount);
-    }
-
-    function _deposit(address account, uint256 amount) internal {
         require(amount > 0, "Teller: cannot mint 0");
         require(
-            amount <= _underlying.balanceOf(account),
+            amount <= _underlying.balanceOf(_msgSender()),
             "Teller: insufficient underlying"
         );
 
@@ -102,68 +97,32 @@ contract TToken_V1 is ITToken {
         require(supply + amount <= maxTVL, "Teller: max tvl exceeded");
 
         // Transfer tokens from lender
-        _underlying.transferFrom(account, address(this), amount);
-        // Update lender data
-        lenderTotalSupplied[account] += amount;
+        _underlying.transferFrom(_msgSender(), address(this), amount);
+
+        // Calculate amount of tokens to mint
+        mintAmount_ = _valueOfUnderlying(amount, rate);
 
         // Mint Teller token value of underlying
-        _mint(account, _valueOfUnderlying(amount, rate));
+        _mint(_msgSender(), mintAmount_);
     }
 
     /**
      * @notice Redeem supplied Teller token underlying value.
      * @param amount The amount of Teller tokens to redeem.
      */
-    function redeem(uint256 amount) external override isNotRestricted {
-        // Accrue interest and calculate exchange rate
-        // Redeem Teller tokens for underlying
+    function redeem(uint256 amount) external override notRestricted {
         _redeem(_msgSender(), amount, exchangeRate());
     }
 
     /**
-     * @notice Redeem supplied Teller token value.
-     * @param account The account to redeem tokens for.
-     * @param amount The amount of Teller tokens to redeem.
-     */
-    function redeemOnBehalf(address account, uint256 amount)
-        external
-        override
-        onlyOwner
-    {
-        // Accrue interest and calculate exchange rate
-        // Redeem Teller tokens for underlying
-        _redeem(account, amount, exchangeRate());
-    }
-
-    /**
      * @notice Redeem supplied underlying value.
      * @param amount The amount of underlying tokens to redeem.
      */
-    function redeemUnderlying(uint256 amount)
-        external
-        override
-        isNotRestricted
-    {
+    function redeemUnderlying(uint256 amount) external override notRestricted {
         // Accrue interest and calculate exchange rate
         uint256 rate = exchangeRate();
         // Calculate underlying amount value in Teller tokens and redeem
         _redeem(_msgSender(), _valueOfUnderlying(amount, rate), rate);
-    }
-
-    /**
-     * @notice Redeem supplied underlying value.
-     * @param account The account to redeem tokens for.
-     * @param amount The amount of underlying tokens to redeem.
-     */
-    function redeemUnderlyingOnBehalf(address account, uint256 amount)
-        external
-        override
-        onlyOwner
-    {
-        // Accrue interest and calculate exchange rate
-        uint256 rate = exchangeRate();
-        // Calculate underlying amount value in Teller tokens and redeem
-        _redeem(account, _valueOfUnderlying(amount, rate), rate);
     }
 
     function _redeem(
@@ -176,18 +135,6 @@ contract TToken_V1 is ITToken {
             amount <= balanceOf(account),
             "Teller: redeem amount exceeds balance"
         );
-
-        // Update lender interest data
-        uint256 lenderInterestEarned = _calcLenderInterestEarned(account, rate);
-        lenderTotalInterest[account] += lenderInterestEarned;
-        totalInterestEarned += lenderInterestEarned;
-
-        // Update lender supplied data
-        if (amount > lenderInterestEarned) {
-            lenderTotalSupplied[account] -= amount - lenderInterestEarned;
-        } else {
-            lenderTotalSupplied[account] += lenderInterestEarned - amount;
-        }
 
         // Burn Teller tokens
         _burn(account, _valueOfUnderlying(amount, rate));
@@ -209,9 +156,8 @@ contract TToken_V1 is ITToken {
             "Teller: underlying token not contract"
         );
 
-        // Make the TellerDiamond the owner instead of caller
-        __Ownable_init();
-        transferOwnership(args.controller);
+        _setupRole(CONTROLLER, args.controller);
+        _setupRole(ADMIN, _msgSender());
 
         cToken = ICErc20(args.cToken);
         _underlying = ERC20(args.underlying);
@@ -229,7 +175,7 @@ contract TToken_V1 is ITToken {
     /**
      * @notice Sets the restricted state of the platform.
      */
-    function restrict(bool state) public onlyOwner {
+    function restrict(bool state) public override authorized(ADMIN) {
         _restricted = state;
     }
 
@@ -312,15 +258,5 @@ contract TToken_V1 is ITToken {
     {
         // Get underlying balance from Compound
         totalSupply_ += cToken.balanceOfUnderlying(address(this));
-    }
-
-    function _calcLenderInterestEarned(address lender, uint256 rate)
-        internal
-        view
-        returns (uint256 interest_)
-    {
-        interest_ =
-            _valueInUnderlying(balanceOf(lender), rate) -
-            lenderTotalSupplied[lender];
     }
 }
