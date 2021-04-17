@@ -20,13 +20,11 @@ import { LendingFacet } from "../../lending/LendingFacet.sol";
 import { CreateLoanFacet } from "../../market/CreateLoanFacet.sol";
 import { LoanDataFacet } from "../../market/LoanDataFacet.sol";
 import { RepayFacet } from "../../market/RepayFacet.sol";
-import { LiquidateFacet } from "../../market/LiquidateFacet.sol";
 import { SignersFacet } from "../../market/SignersFacet.sol";
 import { StakingFacet } from "../../staking/StakingFacet.sol";
 import {
     EscrowClaimTokensFacet
 } from "../../escrow/EscrowClaimTokensFacet.sol";
-import { EscrowRepayFacet } from "../../escrow/EscrowRepayFacet.sol";
 import { EscrowSettingsFacet } from "../../escrow/EscrowSettingsFacet.sol";
 import { CollateralFacet } from "../../market/CollateralFacet.sol";
 
@@ -42,10 +40,8 @@ abstract contract ITellerDiamond is
     CreateLoanFacet,
     LoanDataFacet,
     RepayFacet,
-    LiquidateFacet,
     SignersFacet,
     StakingFacet,
     EscrowClaimTokensFacet,
-    EscrowRepayFacet,
     EscrowSettingsFacet
 {}
