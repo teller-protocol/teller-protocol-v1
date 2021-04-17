@@ -126,10 +126,10 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
             address(this),
             tTokenBalance
         );
-        uint256 assetBalanceBefore = ERC20(asset).balanceOf(address(this));
+        uint256 assetBalanceBefore = IERC20(asset).balanceOf(address(this));
         tToken.redeem(tTokenBalance);
-        uint256 assetBalanceAfter = ERC20(asset).balanceOf(address(this));
-        SafeERC20.safeTransfer(
+        uint256 assetBalanceAfter = IERC20(asset).balanceOf(address(this));
+        SafeERC20Upgradeable.safeTransfer(
             tToken,
             msg.sender,
             assetBalanceAfter - assetBalanceBefore
