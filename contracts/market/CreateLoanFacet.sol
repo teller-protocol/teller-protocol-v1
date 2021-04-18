@@ -17,6 +17,7 @@ import {
 import { MaxDebtRatioLib } from "../settings/asset/MaxDebtRatioLib.sol";
 import { MaxLoanAmountLib } from "../settings/asset/MaxLoanAmountLib.sol";
 import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Interfaces
 import { ILoansEscrow } from "../escrow/interfaces/ILoansEscrow.sol";
@@ -35,8 +36,8 @@ import {
     Loan,
     MarketStorageLib
 } from "../storage/market.sol";
-
 import { AppStorageLib } from "../storage/app.sol";
+import { StakingStorageLib } from "../storage/staking.sol";
 
 contract CreateLoanFacet is RolesMods, PausableMods {
     /**
@@ -115,7 +116,8 @@ contract CreateLoanFacet is RolesMods, PausableMods {
             interestRate: interestRate,
             collateralRatio: collateralRatio,
             maxLoanAmount: maxLoanAmount,
-            duration: request.duration
+            duration: request.duration,
+            nftID: request.nftID
         });
 
         emit LoanTermsSet(loanID, msg.sender, request.recipient);
@@ -175,6 +177,8 @@ contract CreateLoanFacet is RolesMods, PausableMods {
             );
         }
 
+        StakingStorageLib.store().nftLinkedLoans[loanID] = loan.loanTerms.nftID;
+
         emit LoanTakenOut(loanID, loan.loanTerms.borrower, amount);
     }
 }
@@ -202,6 +206,21 @@ library CreateLoanLib {
             PlatformSettingsLib.getMaximumLoanDurationValue() >=
                 request.duration,
             "Teller: max loan duration exceeded"
+        );
+        require(
+            EnumerableSet.contains(
+                StakingStorageLib.store().stakedNFTs[msg.sender],
+                request.nftID
+            ),
+            "Teller: no staked NFT"
+        );
+        require(
+            abi
+                .encodePacked(
+                StakingStorageLib.store().nftLinkedLoans[request.nftID]
+            )
+                .length != 0,
+            "Teller: nft already in use"
         );
     }
 

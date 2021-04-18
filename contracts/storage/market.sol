@@ -27,6 +27,7 @@ struct LoanTerms {
     uint256 collateralRatio;
     uint256 maxLoanAmount;
     uint256 duration;
+    uint256 nftID;
 }
 
 enum LoanStatus { NonExistent, TermsSet, Active, Closed, Liquidated }
@@ -76,6 +77,8 @@ struct LoanRequest {
     uint256 amount;
     uint256 duration;
     uint256 requestTime;
+    // staked NFT ID
+    uint256 nftID;
 }
 
 /**

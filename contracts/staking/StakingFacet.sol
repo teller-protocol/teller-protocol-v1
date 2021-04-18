@@ -24,6 +24,14 @@ contract StakingFacet {
         }
     }
 
+    function getActiveLinkedLoan(uint256 nftID)
+        external
+        view
+        returns (uint256 loanID)
+    {
+        return StakingStorageLib.store().nftLinkedLoans[nftID];
+    }
+
     function _stakeNFT(uint256 tokenId) internal {
         TellerNFT nft = AppStorageLib.store().nft;
         require(
@@ -35,7 +43,8 @@ contract StakingFacet {
             StakingStorageLib.store().stakedNFTs[msg.sender];
         if (!set.contains(tokenId)) {
             set.add(tokenId);
-            // transfer
+            // transfer to diamond, note. nft has to be approved beforehand
+            nft.safeTransferFrom(msg.sender, address(this), tokenId);
         }
     }
 }

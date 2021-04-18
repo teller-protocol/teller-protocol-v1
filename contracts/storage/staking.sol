@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 struct StakingStorage {
     mapping(address => EnumerableSet.UintSet) stakedNFTs;
+    // nftID mapped to loanID (linked when loan is created with submitted terms)
+    mapping(uint256 => uint256) nftLinkedLoans;
 }
 
 bytes32 constant STAKING_STORAGE_POS = keccak256("teller.staking.storage");
