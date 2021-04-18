@@ -15,7 +15,7 @@ contract LoansEscrow_V1 is OwnableUpgradeable, ILoansEscrow {
         _;
     }
 
-    function init(address _operator) external override {
+    function initLoansEscrow(address _operator) external override {
         OwnableUpgradeable.__Ownable_init();
 
         operator = _operator;

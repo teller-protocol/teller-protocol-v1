@@ -116,12 +116,7 @@ const deployLoansEscrowBeacon = async (
   const proxyFactory = await ethers.getContractFactory('BeaconProxy')
   return async (): Promise<string> => {
     const { address: proxyAddress } = await proxyFactory.deploy(
-      loansEscrowBeacon.address,
-      loansEscrowLogic.interface.encodeFunctionData('initialize', [
-        {
-          controller: diamond.address,
-        },
-      ])
+      loansEscrowBeacon.address
     )
     return proxyAddress
   }

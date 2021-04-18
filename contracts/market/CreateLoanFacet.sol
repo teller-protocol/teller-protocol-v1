@@ -18,6 +18,14 @@ import { MaxDebtRatioLib } from "../settings/asset/MaxDebtRatioLib.sol";
 import { MaxLoanAmountLib } from "../settings/asset/MaxLoanAmountLib.sol";
 import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
 
+// Interfaces
+import { ILoansEscrow } from "../escrow/interfaces/ILoansEscrow.sol";
+// Proxy
+import {
+    BeaconProxy
+} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
+
 // Storage
 import {
     LoanRequest,
@@ -27,6 +35,8 @@ import {
     Loan,
     MarketStorageLib
 } from "../storage/market.sol";
+
+import { AppStorageLib } from "../storage/app.sol";
 
 contract CreateLoanFacet is RolesMods, PausableMods {
     /**
@@ -143,8 +153,13 @@ contract CreateLoanFacet is RolesMods, PausableMods {
                 : loan.loanTerms.recipient;
         } else {
             // TODO: escrows
-            //            address escrow = _createEscrow(loanID);
-            //            loanRecipient = escrow;
+            // Clone loans escrow logic
+            address loansEscrowAddress =
+                Clones.clone(AppStorageLib.store().loansEscrowProxy);
+            loanRecipient = loansEscrowAddress;
+            MarketStorageLib.store().loanEscrows[loanID] = ILoansEscrow(
+                loansEscrowAddress
+            );
         }
 
         // Transfer tokens to the borrower.
@@ -154,13 +169,10 @@ contract CreateLoanFacet is RolesMods, PausableMods {
 
         if (!eoaAllowed) {
             // TODO: Implement once escrow facet is complete
-            //            IEscrow(MarketStorageLib.store().loans[loanID].escrow).initialize(
-            //                address(IPlatformSettings(PROTOCOL)),
-            //                address(ILendingPool(PROTOCOL)),
-            //                loanID,
-            //                MarketStorageLib.store().lendingToken,
-            //                MarketStorageLib.store().loans[loanID].loanTerms.borrower
-            //            );
+            // Initialize loans escrow
+            MarketStorageLib.store().loanEscrows[loanID].initLoansEscrow(
+                MarketStorageLib.store().loans[loanID].loanTerms.borrower
+            );
         }
 
         emit LoanTakenOut(loanID, loan.loanTerms.borrower, amount);
