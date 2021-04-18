@@ -24,6 +24,7 @@ struct InitArgs {
     InitAssets[] assets;
     address[] cTokens;
     address uniswapV2Router;
+    address loansEscrowProxy;
 }
 
 contract SettingsFacet is RolesMods {
@@ -97,5 +98,6 @@ contract SettingsFacet is RolesMods {
         }
 
         s.uniswapRouter = IUniswapV2Router(_args.uniswapV2Router);
+        s.loansEscrowProxy = _args.loansEscrowProxy;
     }
 }

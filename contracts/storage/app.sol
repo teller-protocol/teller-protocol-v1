@@ -22,6 +22,7 @@ struct AppStorage {
     IUniswapV2Router uniswapRouter;
     TellerNFT nft;
     IPriceAggregator priceAggregator;
+    address loansEscrowProxy;
 }
 
 library AppStorageLib {
