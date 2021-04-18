@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import { IDiamondCut } from "./IDiamondCut.sol";
+import { IDiamondLoupe } from "./IDiamondLoupe.sol";
 import { SettingsFacet } from "../../settings/SettingsFacet.sol";
 import {
     PlatformSettingsFacet
@@ -43,5 +45,7 @@ abstract contract ITellerDiamond is
     SignersFacet,
     StakingFacet,
     EscrowClaimTokensFacet,
-    EscrowSettingsFacet
+    EscrowSettingsFacet,
+    IDiamondCut,
+    IDiamondLoupe
 {}
