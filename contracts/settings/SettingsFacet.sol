@@ -4,6 +4,9 @@ pragma solidity ^0.8.0;
 // Contracts
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
 import { ADMIN, AUTHORIZED } from "../shared/roles.sol";
+import {
+    UpgradeableBeaconFactory
+} from "../shared/proxy/beacon/UpgradeableBeaconFactory.sol";
 
 // Interfaces
 import { IUniswapV2Router } from "../shared/interfaces/IUniswapV2Router.sol";
@@ -24,7 +27,7 @@ struct InitArgs {
     InitAssets[] assets;
     address[] cTokens;
     address uniswapV2Router;
-    address loansEscrowProxy;
+    address loansEscrowBeacon;
 }
 
 contract SettingsFacet is RolesMods {
@@ -98,6 +101,6 @@ contract SettingsFacet is RolesMods {
         }
 
         s.uniswapRouter = IUniswapV2Router(_args.uniswapV2Router);
-        s.loansEscrowProxy = _args.loansEscrowProxy;
+        s.loansEscrowBeacon = UpgradeableBeaconFactory(_args.loansEscrowBeacon);
     }
 }

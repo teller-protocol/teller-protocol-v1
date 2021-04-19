@@ -2,7 +2,11 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
 import { getTokens, getUniswap } from '../config'
-import { ILoansEscrow, ITellerDiamond } from '../types/typechain'
+import {
+  ILoansEscrow,
+  ITellerDiamond,
+  UpgradeableBeaconFactory,
+} from '../types/typechain'
 import { deploy, deployDiamond } from '../utils/deploy-helpers'
 
 const deployProtocol: DeployFunction = async (hre) => {
@@ -10,7 +14,7 @@ const deployProtocol: DeployFunction = async (hre) => {
 
   const { deployer } = await getNamedAccounts()
 
-  const loansEscrowFactory = await deployLoansEscrowBeacon(hre)
+  const loansEscrowBeacon = await deployLoansEscrowBeacon(hre)
 
   const tokens = getTokens(network)
   const initArgs: Parameters<ITellerDiamond['init']>[0] = {
@@ -18,7 +22,7 @@ const deployProtocol: DeployFunction = async (hre) => {
     assets: Object.entries(tokens.erc20).map(([sym, addr]) => ({ sym, addr })),
     cTokens: Object.values(tokens.compound),
     uniswapV2Router: getUniswap(network).v2Router,
-    loansEscrowProxy: await loansEscrowFactory(),
+    loansEscrowBeacon: loansEscrowBeacon.address,
   }
 
   // Deploy platform diamond
@@ -70,13 +74,8 @@ const addAuthorizedAddresses = async (
 
 const deployLoansEscrowBeacon = async (
   hre: HardhatRuntimeEnvironment
-): Promise<() => Promise<string>> => {
-  const { ethers, contracts, log, getNamedAccounts } = hre
-  const { deployer } = await getNamedAccounts()
-
-  const diamond = await contracts.get<ITellerDiamond>('TellerDiamond', {
-    from: deployer,
-  })
+): Promise<UpgradeableBeaconFactory> => {
+  const { ethers, log } = hre
 
   log('********** Loans Escrow Beacon **********', { indent: 2 })
   log('')
@@ -94,11 +93,20 @@ const deployLoansEscrowBeacon = async (
     star: true,
   })
 
-  const beaconFactory = await ethers.getContractFactory('UpgradeableBeacon')
-  const loansEscrowBeacon = await beaconFactory.deploy(loansEscrowLogic.address)
+  const beaconProxy = await deploy({
+    hre,
+    contract: 'InitializeableBeaconProxy',
+  })
+
+  const beacon = await deploy<UpgradeableBeaconFactory>({
+    hre,
+    contract: 'UpgradeableBeaconFactory',
+    name: 'EscrowBeaconFactory',
+    args: [beaconProxy.address, loansEscrowLogic.address],
+  })
 
   // Check to see if we need to upgrade
-  const currentImpl = await loansEscrowBeacon.implementation()
+  const currentImpl = await beacon.implementation()
   if (
     ethers.utils.getAddress(currentImpl) !==
     ethers.utils.getAddress(loansEscrowLogic.address)
@@ -107,19 +115,13 @@ const deployLoansEscrowBeacon = async (
       indent: 4,
       star: true,
     })
-    await loansEscrowBeacon.upgradeTo(loansEscrowLogic.address)
+    await beacon.upgradeTo(loansEscrowLogic.address)
   }
 
-  log(`Using Beacon: ${loansEscrowBeacon.address}`, { indent: 3, star: true })
+  log(`Using Beacon: ${beacon.address}`, { indent: 3, star: true })
   log('')
 
-  const proxyFactory = await ethers.getContractFactory('BeaconProxy')
-  return async (): Promise<string> => {
-    const { address: proxyAddress } = await proxyFactory.deploy(
-      loansEscrowBeacon.address
-    )
-    return proxyAddress
-  }
+  return beacon
 }
 
 deployProtocol.tags = ['protocol']

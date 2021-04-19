@@ -11,6 +11,9 @@ import { IPriceAggregator } from "../shared/interfaces/IPriceAggregator.sol";
 // Libraries
 import { PlatformSetting } from "../settings/platform/PlatformSettingsLib.sol";
 import { Cache } from "../shared/libraries/CacheLib.sol";
+import {
+    UpgradeableBeaconFactory
+} from "../shared/proxy/beacon/UpgradeableBeaconFactory.sol";
 
 struct AppStorage {
     bool initialized;
@@ -22,7 +25,7 @@ struct AppStorage {
     IUniswapV2Router uniswapRouter;
     TellerNFT nft;
     IPriceAggregator priceAggregator;
-    address loansEscrowProxy;
+    UpgradeableBeaconFactory loansEscrowBeacon;
 }
 
 library AppStorageLib {

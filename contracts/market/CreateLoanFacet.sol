@@ -156,11 +156,12 @@ contract CreateLoanFacet is RolesMods, PausableMods {
         } else {
             // TODO: escrows
             // Clone loans escrow logic
-            address loansEscrowAddress =
-                Clones.clone(AppStorageLib.store().loansEscrowProxy);
-            loanRecipient = loansEscrowAddress;
+            loanRecipient = AppStorageLib
+                .store()
+                .loansEscrowBeacon
+                .cloneProxy();
             MarketStorageLib.store().loanEscrows[loanID] = ILoansEscrow(
-                loansEscrowAddress
+                loanRecipient
             );
         }
 
