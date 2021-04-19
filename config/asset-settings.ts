@@ -10,16 +10,8 @@ const mainnetAssetSettings: AssetSettings = {
     { key: 'MaxLoanAmount', value: 10000, type: AssetType.Amount },
     { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
   ],
-  USDC: [
-    { key: 'cToken', value: 'CUSDC', type: AssetType.Address },
-    { key: 'MaxLoanAmount', value: 10000, type: AssetType.Amount },
-    { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
-  ],
-  WETH: [
-    { key: 'cToken', value: 'CETH', type: AssetType.Address },
-    { key: 'MaxLoanAmount', value: 0, type: AssetType.Amount },
-    { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
-  ],
+  USDC: [{ key: 'cToken', value: 'CUSDC', type: AssetType.Address }],
+  WETH: [{ key: 'cToken', value: 'CETH', type: AssetType.Address }],
 }
 
 export const assetSettings: Record<string, AssetSettings> = {
@@ -29,16 +21,8 @@ export const assetSettings: Record<string, AssetSettings> = {
       { key: 'MaxLoanAmount', value: 1000, type: AssetType.Amount },
       { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
     ],
-    USDC: [
-      { key: 'cToken', value: 'CUSDC', type: AssetType.Address },
-      { key: 'MaxLoanAmount', value: 1000, type: AssetType.Amount },
-      { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
-    ],
-    WETH: [
-      { key: 'cToken', value: 'CETH', type: AssetType.Address },
-      { key: 'MaxLoanAmount', value: 0, type: AssetType.Amount },
-      { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
-    ],
+    USDC: [{ key: 'cToken', value: 'CUSDC', type: AssetType.Address }],
+    WETH: [{ key: 'cToken', value: 'CETH', type: AssetType.Address }],
   },
   rinkeby: {
     DAI: [
@@ -47,28 +31,12 @@ export const assetSettings: Record<string, AssetSettings> = {
       { key: 'MaxLoanAmount', value: 1000, type: AssetType.Amount },
       { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
     ],
-    USDC: [
-      { key: 'cToken', value: 'CUSDC', type: AssetType.Address },
-      { key: 'MaxLoanAmount', value: 1000, type: AssetType.Amount },
-      { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
-    ],
-    WETH: [
-      { key: 'cToken', value: 'CETH', type: AssetType.Address },
-      { key: 'MaxLoanAmount', value: 0, type: AssetType.Amount },
-      { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
-    ],
+    USDC: [{ key: 'cToken', value: 'CUSDC', type: AssetType.Address }],
+    WETH: [{ key: 'cToken', value: 'CETH', type: AssetType.Address }],
   },
   ropsten: {
-    DAI: [
-      { key: 'cToken', value: 'CDAI', type: AssetType.Address },
-      { key: 'MaxLoanAmount', value: 1000, type: AssetType.Amount },
-      { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
-    ],
-    USDC: [
-      { key: 'cToken', value: 'CUSDC', type: AssetType.Address },
-      { key: 'MaxLoanAmount', value: 1000, type: AssetType.Amount },
-      { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
-    ],
+    DAI: [{ key: 'cToken', value: 'CDAI', type: AssetType.Address }],
+    USDC: [{ key: 'cToken', value: 'CUSDC', type: AssetType.Address }],
     WETH: [
       { key: 'cToken', value: 'CETH', type: AssetType.Address },
       { key: 'MaxLoanAmount', value: 0, type: AssetType.Amount },

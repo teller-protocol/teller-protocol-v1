@@ -9,6 +9,7 @@ bytes32 constant ADMIN = keccak256("ADMIN");
 // Args to initialize the Teller token with
 struct InitArgs {
     address controller;
+    address admin;
     address underlying;
     address cToken;
     uint256 maxTVL;

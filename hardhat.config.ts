@@ -35,6 +35,7 @@ const GAS_PRICE: HardhatNetworkUserConfig['gasPrice'] = process.env
     ).toNumber()
   : 'auto'
 
+const FORKING_NETWORK = process.env.FORKING_NETWORK ?? 'mainnet'
 const FORK_BLOCK_NUMBER = process.env.FORKING_BLOCK
   ? parseInt(process.env.FORKING_BLOCK)
   : undefined
@@ -131,19 +132,19 @@ export default <HardhatUserConfig>{
     },
     hardhat: {
       forking: {
-        url: process.env.ALCHEMY_MAINNET_KEY,
+        url: process.env[`ALCHEMY_${FORKING_NETWORK.toUpperCase()}_KEY`],
         // Block to fork can be specified via cli: `yarn h fork {network} ([block number] | latest)`
         // Defaults to the latest deployment block
         blockNumber: FORK_BLOCK_NUMBER,
         enabled: true,
       },
-      forkName: process.env.FORKING_NETWORK,
+      forkName: FORKING_NETWORK,
       accounts,
     },
     // Uses the forked node from the hardhat network above
     localhost: {
       url: 'http://127.0.0.1:8545',
-      forkName: process.env.FORKING_NETWORK,
+      forkName: FORKING_NETWORK,
       accounts,
       timeout: 100000,
     },

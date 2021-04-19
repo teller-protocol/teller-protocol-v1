@@ -64,7 +64,7 @@ const addAuthorizedAddresses = async (
 
   const addresses: string[] = []
   if (network.name === 'mainnet') {
-  } else {
+  } else if (network.name === 'hardhat' || network.name === 'localhost') {
     const accounts = await getNamedAccounts()
     addresses.push(accounts.lender, accounts.borrower)
   }

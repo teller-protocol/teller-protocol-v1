@@ -191,7 +191,7 @@ contract TToken_V1 is ITToken {
         );
 
         _setupRole(CONTROLLER, args.controller);
-        _setupRole(ADMIN, _msgSender());
+        _setupRole(ADMIN, args.admin);
 
         cToken = ICErc20(args.cToken);
         _underlying = ERC20(args.underlying);
