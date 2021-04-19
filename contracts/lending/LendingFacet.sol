@@ -35,20 +35,6 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
     event LendingPoolInitialized(address indexed sender, address asset);
 
     /**
-     * @notice This event is emitted when an user deposits tokens into the pool.
-     * @param sender address.
-     * @param amount of tokens.
-     */
-    event LendingPoolDeposit(address indexed sender, uint256 amount);
-
-    /**
-     * @notice This event is emitted when an user withdraws tokens from the pool.
-     * @param sender address that withdrew the tokens.
-     * @param amount of tokens.
-     */
-    event LendingWithdraw(address indexed sender, uint256 amount);
-
-    /**
      * @notice Get the Teller Token address for an underlying asset.
      * @param asset Address to get a Teller Token for.
      */
@@ -73,6 +59,12 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
         authorized(AUTHORIZED, msg.sender)
         nonReentry(ID)
     {
+        ITToken tToken = LendingLib.tToken(asset);
+        require(
+            address(tToken) != address(0),
+            "Teller: lending pool not initialized"
+        );
+
         // Transfer tokens from lender
         SafeERC20.safeTransferFrom(
             IERC20(asset),
@@ -81,61 +73,14 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
             amount
         );
         // Set allowance for Teller token to pull funds to mint
-        ITToken tToken = LendingLib.tToken(asset);
-        SafeERC20.safeApprove(IERC20(asset), address(tToken), amount);
-        // Mint Teller tokens for lender
+        SafeERC20.safeIncreaseAllowance(IERC20(asset), address(tToken), amount);
+        // Mint Teller tokens, then transfer to lender
         SafeERC20Upgradeable.safeTransfer(
             tToken,
             msg.sender,
             // Minting returns the amount of Teller tokens minted
             tToken.mint(amount)
         );
-
-        emit LendingPoolDeposit(msg.sender, amount);
-    }
-
-    /**
-     * @notice
-     */
-    function lendingWithdraw(address asset, uint256 assetAmount)
-        external
-        nonReentry(ID)
-        paused(ID, false)
-    {
-        // Redeem underlying token for lender
-        LendingLib.tToken(asset).redeemUnderlying(assetAmount);
-
-        emit LendingWithdraw(msg.sender, assetAmount);
-    }
-
-    /**
-     * @notice
-     */
-    function lendingWithdrawAll(address asset)
-        external
-        nonReentry(ID)
-        paused(ID, false)
-        returns (uint256 assetAmount)
-    {
-        // Redeem entire Teller token balance for lender
-        ITToken tToken = LendingLib.tToken(asset);
-        uint256 tTokenBalance = tToken.balanceOf(msg.sender);
-        SafeERC20Upgradeable.safeTransferFrom(
-            tToken,
-            msg.sender,
-            address(this),
-            tTokenBalance
-        );
-        uint256 assetBalanceBefore = IERC20(asset).balanceOf(address(this));
-        tToken.redeem(tTokenBalance);
-        uint256 assetBalanceAfter = IERC20(asset).balanceOf(address(this));
-        SafeERC20Upgradeable.safeTransfer(
-            tToken,
-            msg.sender,
-            assetBalanceAfter - assetBalanceBefore
-        );
-
-        emit LendingWithdraw(msg.sender, assetAmount);
     }
 
     /**

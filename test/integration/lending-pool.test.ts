@@ -57,25 +57,12 @@ describe.only('Lending Pool', () => {
       })
 
       it('should be able deposit and withdraw all with interest', async () => {
-        const lenderAddress = await lender.getAddress()
-
         // Fund the market
         const depositAmount = await fundLender(lendingToken, 1000)
         await helpers.deposit(lender, depositAmount)
 
         // Fast forward block timestamp by 10 weeks
         await hre.evm.advanceTime(6048000)
-
-        // const claimableInterest = await diamond.callStatic.getClaimableInterestEarned(
-        //   await lender.getAddress()
-        // )
-        // claimableInterest
-        //   .isNegative()
-        //   .should.equal(false, 'Lender did not earn interest')
-        //
-        // claimableInterest
-        //   .isZero()
-        //   .should.equal(false, "Lender didn't earn interest")
 
         // Withdraw all funds
         await helpers.withdraw(lender)

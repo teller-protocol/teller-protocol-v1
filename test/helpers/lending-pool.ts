@@ -49,8 +49,7 @@ export const depositWithArgs = (args: LPHelperArgs) =>
     await args.diamond
       .connect(lender)
       .lendingPoolDeposit(args.lendingToken.address, amount)
-      .should.emit(args.diamond, 'LendingPoolDeposit')
-      .withArgs(await lender.getAddress(), amount)
+      .should.emit(args.tToken, 'Mint')
   }
 
 /**
@@ -70,26 +69,19 @@ export const withdrawWithArgs = (args: LPHelperArgs) =>
    */
   async (lender: Signer, amount?: BigNumber): Promise<void> => {
     const lenderAddress = await lender.getAddress()
-    const lendingAddress = args.lendingToken.address
 
-    // Get expected withdrawal amount with interest
-    const expectedWithdrawalAmount = amount
-      ? amount
-      : await evm.withBlockScope(1, () =>
-          args.tToken.callStatic.balanceOfUnderlying(lenderAddress)
-        )
-
-    // Connect the lender
-    const d = args.diamond.connect(lender)
-    // Withdraw loan
-    const tx = amount
-      ? await d.lendingWithdraw(lendingAddress, amount)
-      : await d.lendingWithdrawAll(lendingAddress)
-
-    // Verify event
-    await tx.should
-      .emit(args.diamond, 'LendingWithdraw')
-      .withArgs(lenderAddress, expectedWithdrawalAmount)
+    // Withdraw
+    if (amount == null) {
+      await args.tToken
+        .connect(lender)
+        .redeem(await args.tToken.balanceOf(lenderAddress))
+        .should.emit(args.tToken, 'Redeem')
+    } else {
+      await args.tToken
+        .connect(lender)
+        .redeemUnderlying(amount)
+        .should.emit(args.tToken, 'Redeem')
+    }
   }
 
 // /**

@@ -12,6 +12,12 @@ import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { ITToken } from "./ITToken.sol";
 import { ICErc20 } from "../../shared/interfaces/ICErc20.sol";
 
+// Libraries
+import {
+    IERC20,
+    SafeERC20
+} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
 /**
  * @notice This contract represents a lending pool for an asset within Teller protocol.
  *
@@ -77,7 +83,7 @@ contract TToken_V1 is ITToken {
     }
 
     /**
-     * @notice Increase account supply of specified token amount
+     * @notice Deposit underlying token amount into LP and mint tokens.
      * @param amount The amount of underlying tokens to use to mint.
      */
     function mint(uint256 amount)
@@ -97,50 +103,78 @@ contract TToken_V1 is ITToken {
         require(supply + amount <= maxTVL, "Teller: max tvl exceeded");
 
         // Transfer tokens from lender
-        _underlying.transferFrom(_msgSender(), address(this), amount);
+        SafeERC20.safeTransferFrom(
+            _underlying,
+            _msgSender(),
+            address(this),
+            amount
+        );
+        // Deposit tokens to Compound
+        SafeERC20.safeIncreaseAllowance(_underlying, address(cToken), amount);
+        cToken.mint(amount);
 
         // Calculate amount of tokens to mint
         mintAmount_ = _valueOfUnderlying(amount, rate);
 
         // Mint Teller token value of underlying
         _mint(_msgSender(), mintAmount_);
+
+        emit Mint(_msgSender(), mintAmount_, amount);
     }
 
     /**
      * @notice Redeem supplied Teller token underlying value.
      * @param amount The amount of Teller tokens to redeem.
      */
-    function redeem(uint256 amount) external override notRestricted {
-        _redeem(_msgSender(), amount, exchangeRate());
+    function redeem(uint256 amount) external override {
+        require(amount > 0, "Teller: cannot withdraw 0");
+        require(
+            amount <= balanceOf(_msgSender()),
+            "Teller: redeem amount exceeds balance"
+        );
+
+        // Accrue interest and calculate exchange rate
+        uint256 underlyingAmount = _valueInUnderlying(amount, exchangeRate());
+
+        // Burn Teller tokens
+        _burn(_msgSender(), amount);
+
+        // Claim tokens from Compound
+        cToken.redeemUnderlying(underlyingAmount);
+
+        // Transfer funds back to lender
+        SafeERC20.safeTransfer(_underlying, _msgSender(), underlyingAmount);
+
+        emit Redeem(_msgSender(), amount, underlyingAmount);
     }
 
     /**
      * @notice Redeem supplied underlying value.
      * @param amount The amount of underlying tokens to redeem.
      */
-    function redeemUnderlying(uint256 amount) external override notRestricted {
+    function redeemUnderlying(uint256 amount) external override {
+        require(amount > 0, "Teller: cannot withdraw 0");
+
         // Accrue interest and calculate exchange rate
         uint256 rate = exchangeRate();
-        // Calculate underlying amount value in Teller tokens and redeem
-        _redeem(_msgSender(), _valueOfUnderlying(amount, rate), rate);
-    }
+        uint256 tokenValue = _valueOfUnderlying(amount, rate);
 
-    function _redeem(
-        address account,
-        uint256 amount,
-        uint256 rate
-    ) internal {
-        require(amount > 0, "Teller: cannot withdraw 0");
+        // Make sure sender has adequate balance
         require(
-            amount <= balanceOf(account),
+            tokenValue <= balanceOf(_msgSender()),
             "Teller: redeem amount exceeds balance"
         );
 
         // Burn Teller tokens
-        _burn(account, _valueOfUnderlying(amount, rate));
+        _burn(_msgSender(), tokenValue);
+
+        // Claim tokens from Compound
+        cToken.redeemUnderlying(amount);
 
         // Transfer funds back to lender
-        _underlying.transfer(account, amount);
+        SafeERC20.safeTransfer(_underlying, _msgSender(), amount);
+
+        emit Redeem(_msgSender(), tokenValue, amount);
     }
 
     /**

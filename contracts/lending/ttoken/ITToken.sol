@@ -18,6 +18,24 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  */
 abstract contract ITToken is AccessControlUpgradeable, ERC20Upgradeable {
     /**
+     * @notice This event is emitted when an user deposits tokens into the pool.
+     */
+    event Mint(
+        address indexed sender,
+        uint256 tTokenAmount,
+        uint256 underlyingAmount
+    );
+
+    /**
+     * @notice This event is emitted when an user withdraws tokens from the pool.
+     */
+    event Redeem(
+        address indexed sender,
+        uint256 tTokenAmount,
+        uint256 underlyingAmount
+    );
+
+    /**
      * @notice The token that is the underlying assets for this Teller token.
      */
     function underlying() external view virtual returns (ERC20);
