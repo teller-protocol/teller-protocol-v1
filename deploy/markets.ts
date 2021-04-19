@@ -3,7 +3,11 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
 import { getMarkets, getSigners, getTokens } from '../config'
-import { ITellerDiamond, ITToken } from '../types/typechain'
+import {
+  ITellerDiamond,
+  ITToken,
+  UpgradeableBeaconFactory,
+} from '../types/typechain'
 import { NULL_ADDRESS } from '../utils/consts'
 import { deploy } from '../utils/deploy-helpers'
 
@@ -101,7 +105,7 @@ const deployTTokenBeacon = async (
   hre: HardhatRuntimeEnvironment,
   diamond: ITellerDiamond
 ): Promise<(assetAddress: string, maxTVL: BigNumberish) => Promise<string>> => {
-  const { ethers, deployments, log } = hre
+  const { ethers, getNamedAccounts, log } = hre
 
   log('********** Teller Token (TToken) Beacon **********', { indent: 2 })
   log('')
@@ -119,11 +123,20 @@ const deployTTokenBeacon = async (
     star: true,
   })
 
-  const beaconFactory = await ethers.getContractFactory('UpgradeableBeacon')
-  const tTokenBeacon = await beaconFactory.deploy(tTokenLogic.address)
+  const beaconProxy = await deploy({
+    hre,
+    contract: 'InitializeableBeaconProxy',
+  })
 
-  // Check if we need to upgrade
-  const currentImpl = await tTokenBeacon.implementation()
+  const beacon = await deploy<UpgradeableBeaconFactory>({
+    hre,
+    contract: 'UpgradeableBeaconFactory',
+    name: 'TTokenBeaconFactory',
+    args: [beaconProxy.address, tTokenLogic.address],
+  })
+
+  // Check to see if we need to upgrade
+  const currentImpl = await beacon.implementation()
   if (
     ethers.utils.getAddress(currentImpl) !==
     ethers.utils.getAddress(tTokenLogic.address)
@@ -132,29 +145,42 @@ const deployTTokenBeacon = async (
       indent: 4,
       star: true,
     })
-    await tTokenBeacon.upgradeTo(tTokenLogic.address)
+    await beacon.upgradeTo(tTokenLogic.address)
   }
 
-  log(`Using Beacon: ${tTokenBeacon.address}`, { indent: 3, star: true })
+  log(`Using Beacon: ${beacon.address}`, { indent: 3, star: true })
   log('')
 
-  const proxyFactory = await ethers.getContractFactory('BeaconProxy')
   return async (
     assetAddress: string,
     maxTVL: BigNumberish
   ): Promise<string> => {
-    const { address: proxyAddress } = await proxyFactory.deploy(
-      tTokenBeacon.address,
-      tTokenLogic.interface.encodeFunctionData('initialize', [
-        {
-          controller: diamond.address,
-          underlying: assetAddress,
-          cToken: await diamond.getAssetCToken(assetAddress),
-          maxTVL,
-        },
-      ])
+    const receipt = await beacon
+      .cloneProxy(
+        tTokenLogic.interface.encodeFunctionData('initialize', [
+          {
+            controller: diamond.address,
+            admin: await getNamedAccounts().then(({ deployer }) => deployer),
+            underlying: assetAddress,
+            cToken: await diamond.getAssetCToken(assetAddress),
+            maxTVL,
+          },
+        ])
+      )
+      .then(({ wait }) => wait())
+    const topic = beacon.interface.getEventTopic(
+      beacon.interface.getEvent('ProxyCloned')
     )
-    return proxyAddress
+    const [log] = await beacon.provider.getLogs({
+      fromBlock: receipt.blockNumber,
+      address: beacon.address,
+      topics: [topic],
+    })
+    const {
+      args: { newProxy },
+    } = beacon.interface.parseLog(log)
+    if (newProxy == null || newProxy == '') throw new Error('No proxy cloned')
+    return newProxy
   }
 }
 
