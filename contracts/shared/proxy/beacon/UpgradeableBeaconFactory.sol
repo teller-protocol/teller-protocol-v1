@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "./InitializeableBeaconProxy.sol";
 
 /**
  * @dev This contract is used in conjunction with one or more instances of {BeaconProxy} to determine their
@@ -14,7 +15,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
  */
 contract UpgradeableBeaconFactory is IBeacon, Ownable {
     address private _implementation;
-    address public proxyAddress;
+    InitializeableBeaconProxy public proxyAddress;
 
     /**
      * @dev Emitted when the implementation returned by the beacon is changed.
@@ -26,7 +27,7 @@ contract UpgradeableBeaconFactory is IBeacon, Ownable {
      * beacon.
      */
     constructor(address proxyAddress_, address implementation_) {
-        proxyAddress = proxyAddress_;
+        proxyAddress = InitializeableBeaconProxy(proxyAddress_);
         _setImplementation(implementation_);
     }
 
@@ -37,8 +38,12 @@ contract UpgradeableBeaconFactory is IBeacon, Ownable {
         return _implementation;
     }
 
-    function cloneProxy() external returns (address) {
-        return Clones.clone(proxyAddress);
+    function cloneProxy(bytes memory initData)
+        external
+        returns (address proxy_)
+    {
+        proxy_ = Clones.clone(address(proxyAddress));
+        InitializeableBeaconProxy(proxy_).initialize(address(this), initData);
     }
 
     /**
