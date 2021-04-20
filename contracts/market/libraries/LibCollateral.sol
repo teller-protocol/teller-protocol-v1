@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 // Interfaces
 import { IWETH } from "../../shared/interfaces/IWETH.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ICollateralEscrow } from "../collateral/ICollateralEscrow.sol";
 
 // Libraries
 import {
@@ -58,12 +59,39 @@ library LibCollateral {
             require(msg.value == amount, "Teller: incorrect eth deposit");
             IWETH(l(loanID).collateralToken).deposit{ value: amount }();
         }
-        // TODO: transfer collateral to token escrow
+        // Check if collateral escrow exists
+        if (
+            address(
+                MarketStorageLib.store().collateralEscrows[
+                    l(loanID).collateralToken
+                ]
+            ) == address(0)
+        ) {
+            // Create escrow if non-existent
+            createCollateralEscrow(l(loanID).collateralToken);
+        }
+        // Transfer collateral to token escrow
+        MarketStorageLib.store().collateralEscrows[l(loanID).collateralToken]
+            .depositCollateral(amount, l(loanID).loanTerms.borrower);
 
         l(loanID).collateral += amount;
         l(loanID).lastCollateralIn = block.timestamp;
 
         emit CollateralDeposited(loanID, msg.sender, amount);
+    }
+
+    function createCollateralEscrow(address collateralToken)
+        internal
+        returns (address escrow_)
+    {
+        // Create escrow
+        escrow_ = AppStorageLib.store().collateralEscrowBeacon.cloneProxy(
+            abi.encode(ICollateralEscrow.init.selector, collateralToken)
+        );
+        // Save escrow address for loan
+        MarketStorageLib.store().collateralEscrows[
+            collateralToken
+        ] = ICollateralEscrow(escrow_);
     }
 
     function withdrawCollateral(
@@ -72,20 +100,17 @@ library LibCollateral {
         address payable recipient
     ) internal {
         l(loanID).collateral -= amount;
-
-        // TODO: withdraw collateral from token escrow
         // Check if ETH deposit and wrap in WETH
         address weth = AppStorageLib.store().assetAddresses["WETH"];
         if (weth == l(loanID).collateralToken) {
             IWETH(weth).withdraw(amount);
             recipient.transfer(amount);
         } else {
-            //            SafeERC20.safeTransferFrom(
-            //                IERC20(l(loanID).collateralToken),
-            //                escrow,
-            //                recipient,
-            //                amount
-            //            );
+            // Withdraw collateral from token escrow
+            MarketStorageLib.store().collateralEscrows[
+                l(loanID).collateralToken
+            ]
+                .withdrawCollateral(amount, l(loanID).loanTerms.borrower);
         }
 
         emit CollateralWithdrawn(

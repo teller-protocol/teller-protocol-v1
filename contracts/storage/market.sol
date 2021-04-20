@@ -10,6 +10,7 @@ import "../shared/libraries/NumbersList.sol";
 
 // Interfaces
 import { ILoansEscrow } from "../escrow/interfaces/ILoansEscrow.sol";
+import { ICollateralEscrow } from "../market/collateral/ICollateralEscrow.sol";
 import { ITToken } from "../lending/ttoken/ITToken.sol";
 /**
  * @notice Represents the terms of a loan based on the consensus of a LoanRequest
@@ -154,7 +155,7 @@ struct MarketStorage {
     // Maps loanIDs to list of tokens owned by a loan escrow
     mapping(uint256 => EnumerableSet.AddressSet) escrowTokens;
     // Maps collateral token address to a LoanCollateralEscrow that hold collateral funds
-    mapping(address => address) collateralEscrows;
+    mapping(address => ICollateralEscrow) collateralEscrows;
     // Maps accounts to owned loan IDs
     mapping(address => uint256[]) borrowerLoans;
     // Maps lending token to overall amount lent out for loans

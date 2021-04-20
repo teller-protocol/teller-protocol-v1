@@ -4,6 +4,7 @@ import { DeployFunction } from 'hardhat-deploy/types'
 import { getTokens, getUniswap } from '../config'
 import {
   ILoansEscrow,
+  ICollateralEscrow,
   ITellerDiamond,
   UpgradeableBeaconFactory,
 } from '../types/typechain'
@@ -16,6 +17,8 @@ const deployProtocol: DeployFunction = async (hre) => {
 
   const loansEscrowBeacon = await deployLoansEscrowBeacon(hre)
 
+  const collateralEscrowBeacon = await deployCollateralEscrowBeacon(hre)
+
   const tokens = getTokens(network)
   const initArgs: Parameters<ITellerDiamond['init']>[0] = {
     admin: deployer,
@@ -23,6 +26,7 @@ const deployProtocol: DeployFunction = async (hre) => {
     cTokens: Object.values(tokens.compound),
     uniswapV2Router: getUniswap(network).v2Router,
     loansEscrowBeacon: loansEscrowBeacon.address,
+    collateralEscrowBeacon: collateralEscrowBeacon.address,
   }
 
   // Deploy platform diamond
@@ -121,6 +125,58 @@ const deployLoansEscrowBeacon = async (
       star: true,
     })
     await beacon.upgradeTo(loansEscrowLogic.address)
+  }
+
+  log(`Using Beacon: ${beacon.address}`, { indent: 3, star: true })
+  log('')
+
+  return beacon
+}
+
+const deployCollateralEscrowBeacon = async (
+  hre: HardhatRuntimeEnvironment
+): Promise<UpgradeableBeaconFactory> => {
+  const { ethers, log } = hre
+
+  log('********** Collateral Escrow Beacon **********', { indent: 2 })
+  log('')
+
+  const logicVersion = 1
+
+  const collateralEscrowLogic = await deploy<ICollateralEscrow>({
+    hre,
+    contract: `CollateralEscrow_V${logicVersion}`,
+    log: false,
+  })
+
+  log(`Current Logic V${logicVersion}: ${collateralEscrowLogic.address}`, {
+    indent: 3,
+    star: true,
+  })
+
+  const beaconProxy = await deploy({
+    hre,
+    contract: 'InitializeableBeaconProxy',
+  })
+
+  const beacon = await deploy<UpgradeableBeaconFactory>({
+    hre,
+    contract: 'UpgradeableBeaconFactory',
+    name: 'CollateralEscrowBeaconFactory',
+    args: [beaconProxy.address, collateralEscrowLogic.address],
+  })
+
+  // Check to see if we need to upgrade
+  const currentImpl = await beacon.implementation()
+  if (
+    ethers.utils.getAddress(currentImpl) !==
+    ethers.utils.getAddress(collateralEscrowLogic.address)
+  ) {
+    log(`Upgrading Collateral Escrow logic: ${collateralEscrowLogic.address}`, {
+      indent: 4,
+      star: true,
+    })
+    await beacon.upgradeTo(collateralEscrowLogic.address)
   }
 
   log(`Using Beacon: ${beacon.address}`, { indent: 3, star: true })
