@@ -6,8 +6,10 @@ import moment from 'moment'
 
 import { getMarkets } from '../../config'
 import { Market } from '../../types/custom/config-types'
-import { ERC20, ITellerDiamond } from '../../types/typechain'
+import { ERC20, ITellerDiamond, ITToken } from '../../types/typechain'
 import { CacheType, LoanStatus } from '../../utils/consts'
+import { fundedMarket } from '../fixtures'
+import { getFunds } from '../helpers/get-funds'
 import {
   createLoan,
   CreateLoanReturn,
@@ -21,7 +23,7 @@ chai.use(solidity)
 
 const { getNamedSigner, getNamedAccounts, contracts, ethers, evm, toBN } = hre
 
-describe('Loans', () => {
+describe.only('Loans', () => {
   getMarkets(hre.network).forEach(testLoans)
 
   function testLoans(market: Market): void {
@@ -37,6 +39,9 @@ describe('Loans', () => {
       deployer = await getNamedSigner('deployer')
       diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
       lendingToken = await hre.tokens.get(market.lendingToken)
+
+      // Fund the market
+      await fundedMarket({ assetSym: market.lendingToken })
     })
 
     interface CreateArgs {
@@ -45,16 +50,17 @@ describe('Loans', () => {
       loanType: LoanType
     }
     const create = async (args: CreateArgs): Promise<CreateLoanReturn> => {
+      const tToken = await contracts.get<ITToken>('ITToken', {
+        at: await diamond.getTTokenFor(lendingToken.address),
+      })
       const { amount, borrower, loanType } = args
-      const helpers = await createLoan({
+      return await createLoan({
         lendTokenSym: market.lendingToken,
         collTokenSym: market.collateralTokens[0],
         amount,
         borrower,
         loanType,
       })
-      prevHelpers = helpers
-      return helpers
     }
 
     it('should be able to take out a loan with collateral', async function () {
@@ -64,11 +70,12 @@ describe('Loans', () => {
       const amount = toBN(100, await lendingToken.decimals())
 
       // Create loan
-      const helpers = await create({
+      const { getHelpers } = await create({
         amount,
         borrower,
         loanType: LoanType.OVER_COLLATERALIZED,
       })
+      const helpers = await getHelpers()
 
       // Deposit collateral needed
       await helpers.collateral.deposit()
@@ -98,11 +105,13 @@ describe('Loans', () => {
       const amount = toBN(100, await lendingToken.decimals())
 
       // Create loan with terms without depositing collateral
-      const helpers = await create({
+      const { getHelpers } = await create({
         amount,
         borrower,
         loanType: LoanType.OVER_COLLATERALIZED,
       })
+      const helpers = await getHelpers()
+      prevHelpers = helpers
 
       // Try to take out loan which should fail
       await helpers
@@ -140,13 +149,25 @@ describe('Loans', () => {
         updatedLoan.interestOwed
       )
 
+      // Get the funds to pay back the interest
+      await getFunds({
+        tokenSym: market.lendingToken,
+        to: details.borrower.address,
+        amount: updatedLoan.interestOwed,
+      })
+
       // Approve loan repayment
       await lendingToken
         .connect(details.borrower.signer)
         .approve(diamond.address, amountToRepay)
 
+      console.log(
+        'borrower balance',
+        (await lendingToken.balanceOf(details.borrower.address)).toString()
+      )
+
       // Repay loan
-      await repay(amountToRepay)
+      await repay(amountToRepay, details.borrower.signer)
         .should.emit(diamond, 'LoanRepaid')
         .withArgs(
           details.loan.id,
@@ -201,11 +222,12 @@ describe('Loans', () => {
       const amount = toBN(100, await lendingToken.decimals())
 
       // Create loan with terms without depositing collateral
-      const helpers = await create({
+      const { getHelpers } = await create({
         amount,
         borrower,
         loanType: LoanType.OVER_COLLATERALIZED,
       })
+      const helpers = await getHelpers()
 
       // Deposit collateral
       await helpers.collateral.deposit()

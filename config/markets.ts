@@ -5,7 +5,6 @@ const mainnetMarkets: Market[] = [
   {
     lendingToken: 'DAI',
     collateralTokens: ['WETH'],
-    maxTVL: 100000,
   },
 ]
 
@@ -14,21 +13,18 @@ export const markets: Record<string, Market[]> = {
     {
       lendingToken: 'DAI',
       collateralTokens: ['WETH'],
-      maxTVL: 100000,
     },
   ],
   rinkeby: [
     {
       lendingToken: 'DAI',
       collateralTokens: ['WETH'],
-      maxTVL: 100000,
     },
   ],
   ropsten: [
     {
       lendingToken: 'DAI',
       collateralTokens: ['WETH'],
-      maxTVL: 100000,
     },
   ],
   hardhat: mainnetMarkets,

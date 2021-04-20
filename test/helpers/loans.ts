@@ -16,12 +16,21 @@ export enum LoanType {
 export interface LoanHelpersReturn {
   diamond: ITellerDiamond
   details: PromiseReturn<ReturnType<typeof loanDetails>>
-  takeOut: (amount?: BigNumberish) => ReturnType<typeof takeOutLoan>
-  repay: (amount: BigNumberish) => ReturnType<typeof repayLoan>
+  takeOut: (
+    amount?: BigNumberish,
+    from?: Signer
+  ) => ReturnType<typeof takeOutLoan>
+  repay: (amount: BigNumberish, from?: Signer) => ReturnType<typeof repayLoan>
   collateral: {
     needed: PromiseReturn<ReturnType<typeof collateralNeeded>>
-    deposit: (amount?: BigNumberish) => ReturnType<typeof depositCollateral>
-    withdraw: (amount: BigNumberish) => ReturnType<typeof withdrawCollateral>
+    deposit: (
+      amount?: BigNumberish,
+      from?: Signer
+    ) => ReturnType<typeof depositCollateral>
+    withdraw: (
+      amount: BigNumberish,
+      from?: Signer
+    ) => ReturnType<typeof withdrawCollateral>
   }
 }
 
@@ -34,15 +43,16 @@ export const loanHelpers = async (
   return {
     diamond,
     details,
-    takeOut: (amount = details.loan.loanTerms.maxLoanAmount) =>
-      takeOutLoan({ diamond, details, amount }),
-    repay: (amount: BigNumberish) => repayLoan({ diamond, details, amount }),
+    takeOut: (amount = details.loan.loanTerms.maxLoanAmount, from?: Signer) =>
+      takeOutLoan({ diamond, details, amount, from }),
+    repay: (amount: BigNumberish, from?: Signer) =>
+      repayLoan({ diamond, details, amount, from }),
     collateral: {
       needed: collNeeded,
-      deposit: (amount = collNeeded) =>
-        depositCollateral({ diamond, details, amount }),
-      withdraw: (amount: BigNumberish) =>
-        withdrawCollateral({ diamond, details, amount }),
+      deposit: (amount = collNeeded, from?: Signer) =>
+        depositCollateral({ diamond, details, amount, from }),
+      withdraw: (amount: BigNumberish, from?: Signer) =>
+        withdrawCollateral({ diamond, details, amount, from }),
     },
   }
 }
@@ -55,8 +65,9 @@ interface CreateLoanArgs {
   amount: BigNumberish
 }
 
-export interface CreateLoanReturn extends LoanHelpersReturn {
-  tx: ContractTransaction
+export interface CreateLoanReturn {
+  tx: Promise<ContractTransaction>
+  getHelpers: () => Promise<LoanHelpersReturn>
 }
 
 export const createLoan = async (
@@ -98,7 +109,7 @@ export const createLoan = async (
   })
 
   // Create loan with terms
-  const tx = await diamond
+  const tx = diamond
     .connect(ethers.provider.getSigner(borrower))
     .createLoanWithTerms(
       craReturn.request,
@@ -107,12 +118,13 @@ export const createLoan = async (
       '0'
     )
 
-  // Return ID for created loan
-  const allBorrowerLoans = await diamond.getBorrowerLoans(borrower)
-  const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
   return {
-    ...(await loanHelpers(loanID)),
     tx,
+    getHelpers: async (): Promise<LoanHelpersReturn> => {
+      const allBorrowerLoans = await diamond.getBorrowerLoans(borrower)
+      const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
+      return await loanHelpers(loanID)
+    },
   }
 }
 
@@ -142,7 +154,7 @@ const loanDetails = async (
 interface CommonLoanArgs {
   diamond: ITellerDiamond
   details: LoanDetailsReturn
-  from?: string | Signer
+  from?: Signer
 }
 
 interface TakeOutLoanArgs extends CommonLoanArgs {
@@ -159,9 +171,7 @@ const takeOutLoan = async (
     from = details.borrower.signer,
   } = args
 
-  const tx = await diamond.connect(from).takeOutLoan(details.loan.id, amount)
-  await tx.wait()
-  return tx
+  return await diamond.connect(from).takeOutLoan(details.loan.id, amount)
 }
 
 interface DepositCollateralArgs extends CommonLoanArgs {
@@ -178,13 +188,11 @@ const depositCollateral = async (
     from = details.borrower.signer,
   } = args
 
-  const tx = await diamond
+  return await diamond
     .connect(from)
     .depositCollateral(details.borrower.address, details.loan.id, amount, {
       value: amount, // TODO: only if collateral is ETH
     })
-  await tx.wait()
-  return tx
 }
 
 interface WithdrawCollateralArgs extends CommonLoanArgs {
@@ -196,11 +204,7 @@ const withdrawCollateral = async (
 ): Promise<ContractTransaction> => {
   const { diamond, details, amount, from = details.borrower.signer } = args
 
-  const tx = await diamond
-    .connect(from)
-    .withdrawCollateral(amount, details.loan.id)
-  await tx.wait()
-  return tx
+  return await diamond.connect(from).withdrawCollateral(amount, details.loan.id)
 }
 
 interface CollateralNeededArgs extends CommonLoanArgs {}
@@ -227,7 +231,5 @@ const repayLoan = async (args: RepayLoanArgs): Promise<ContractTransaction> => {
     from = borrower.signer,
   } = args
 
-  const tx = await diamond.connect(from).repay(amount, loan.id)
-  await tx.wait()
-  return tx
+  return await diamond.connect(from).repay(amount, loan.id)
 }

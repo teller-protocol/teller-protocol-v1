@@ -48,7 +48,6 @@ interface ATMToken {
 interface Market {
   lendingToken: TokenSymbol
   collateralTokens: TokenSymbol[]
-  maxTVL: BigNumberish
 }
 
 export interface Chainlink {

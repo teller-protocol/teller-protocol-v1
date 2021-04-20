@@ -66,7 +66,12 @@ const addAuthorizedAddresses = async (
   if (network.name === 'mainnet') {
   } else if (network.name === 'hardhat' || network.name === 'localhost') {
     const accounts = await getNamedAccounts()
-    addresses.push(accounts.lender, accounts.borrower)
+    addresses.push(
+      accounts.lender,
+      accounts.borrower,
+      accounts.liquidator,
+      accounts.funder
+    )
   }
 
   await diamond.addAuthorizedAddressList(addresses)

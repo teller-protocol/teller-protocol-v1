@@ -85,21 +85,21 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         authorized(AUTHORIZED, msg.sender)
         nonReentry("")
     {
-        address lendingToken =
-            MarketStorageLib.store().loans[loanID].lendingToken;
-        IERC20 token = IERC20(lendingToken);
-        uint256 balance = LibDapps.balanceOf(loanID, address(token));
-        uint256 totalOwed = LibLoans.getTotalOwed(loanID);
-        if (balance < totalOwed && amount > balance) {
-            uint256 amountNeeded =
-                amount > totalOwed ? totalOwed - (balance) : amount - (balance);
-
-            token.safeTransferFrom(msg.sender, address(this), amountNeeded);
-        }
-
-        token.safeApprove(address(this), amount);
-        //        TODO merge with 'contarcts/market/RepayFacet'
-        repay(amount, loanID);
+        //        address lendingToken =
+        //            MarketStorageLib.store().loans[loanID].lendingToken;
+        //        IERC20 token = IERC20(lendingToken);
+        //        uint256 balance = LibDapps.balanceOf(loanID, address(token));
+        //        uint256 totalOwed = LibLoans.getTotalOwed(loanID);
+        //        if (balance < totalOwed && amount > balance) {
+        //            uint256 amountNeeded =
+        //                amount > totalOwed ? totalOwed - (balance) : amount - (balance);
+        //
+        //            token.safeTransferFrom(msg.sender, address(this), amountNeeded);
+        //        }
+        //
+        //        token.safeApprove(address(this), amount);
+        //        //        TODO merge with 'contarcts/market/RepayFacet'
+        //        repay(amount, loanID);
     }
 
     /**
@@ -114,56 +114,81 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         paused("", false)
         authorized(AUTHORIZED, msg.sender)
     {
-        require(amount > 0, "Teller: zero repay");
-        // calculate the actual amount to repay
-        uint256 totalOwed = LibLoans.getTotalOwed(loanID);
-        if (totalOwed < amount) {
-            amount = totalOwed;
-        }
-        // update the amount owed on the loan
-        totalOwed = totalOwed - amount;
+        uint256 leftToPay = __repayLoan(loanID, amount);
+        Loan storage loan = LibLoans.loan(loanID);
+        emit LoanRepaid(
+            loanID,
+            loan.loanTerms.borrower,
+            amount,
+            msg.sender,
+            leftToPay
+        );
 
-        MarketStorage storage s = MarketStorageLib.store();
+        // if the loan is now fully paid, close it and return collateral
+        if (leftToPay == 0) {
+            loan.status = LoanStatus.Closed;
+            LibCollateral.withdrawCollateral(
+                loanID,
+                loan.collateral,
+                loan.loanTerms.borrower
+            );
+        }
+    }
+
+    function __repayLoan(uint256 loanID, uint256 amount)
+        internal
+        returns (uint256 totalOwed_)
+    {
+        require(amount > 0, "Teller: zero repay");
+
+        Loan storage loan = LibLoans.loan(loanID);
+
+        // calculate the actual amount to repay
+        totalOwed_ = loan.principalOwed + loan.interestOwed;
+        if (totalOwed_ < amount) {
+            amount = totalOwed_;
+            totalOwed_ = 0;
+        } else {
+            totalOwed_ -= amount;
+        }
+
+        // Get the Teller token for the loan
+        ITToken tToken = MarketStorageLib.store().tTokens[loan.lendingToken];
+        // Transfer funds from account
+        SafeERC20.safeTransferFrom(
+            IERC20(loan.lendingToken),
+            msg.sender,
+            address(tToken),
+            amount
+        );
+        // Tell the Teller token we sent funds and to execute the deposit strategy
+        tToken.depositStrategy();
 
         // Deduct the interest and principal owed
         uint256 principalPaid;
         uint256 interestPaid;
-        if (amount < s.loans[loanID].interestOwed) {
+        if (amount < loan.interestOwed) {
             interestPaid = amount;
-            s.loans[loanID].interestOwed -= amount;
+            loan.interestOwed -= amount;
         } else {
-            if (s.loans[loanID].interestOwed > 0) {
-                interestPaid = s.loans[loanID].interestOwed;
-                amount = amount - interestPaid;
-                s.loans[loanID].interestOwed = 0;
+            if (loan.interestOwed > 0) {
+                interestPaid = loan.interestOwed;
+                amount -= interestPaid;
+                loan.interestOwed = 0;
             }
 
             if (amount > 0) {
                 principalPaid = amount;
-                s.loans[loanID].principalOwed -= amount;
+                loan.principalOwed -= amount;
             }
         }
 
-        s.totalRepaid[s.loans[loanID].lendingToken] += principalPaid;
-        s.totalInterestRepaid[s.loans[loanID].lendingToken] += interestPaid;
-
-        // if the loan is now fully paid, close it and return collateral
-        if (totalOwed == 0) {
-            s.loans[loanID].status = LoanStatus.Closed;
-            LibCollateral.withdrawCollateral(
-                loanID,
-                s.loans[loanID].collateral,
-                s.loans[loanID].loanTerms.borrower
-            );
-        }
-
-        emit LoanRepaid(
-            loanID,
-            s.loans[loanID].loanTerms.borrower,
-            principalPaid + interestPaid,
-            msg.sender,
-            totalOwed
-        );
+        MarketStorageLib.store().totalRepaid[
+            loan.lendingToken
+        ] += principalPaid;
+        MarketStorageLib.store().totalInterestRepaid[
+            loan.lendingToken
+        ] += interestPaid;
     }
 
     /**
@@ -182,27 +207,16 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
             "Teller: does not need liquidation"
         );
 
-        // Get the Teller token for the loan
-        ITToken tToken = MarketStorageLib.store().tTokens[loan.lendingToken];
-
         // The liquidator pays the amount still owed on the loan
         uint256 amountToLiquidate = loan.principalOwed + loan.interestOwed;
-        SafeERC20.safeTransferFrom(
-            IERC20(loan.lendingToken),
-            msg.sender,
-            address(tToken),
-            amountToLiquidate
+        // Make sure there is nothing left to repay on the loan
+        require(
+            __repayLoan(loanID, amountToLiquidate) == 0,
+            "Teller: liquidate partial repay"
         );
-        // Tell the Teller token we sent funds and to execute the deposit strategy
-        tToken.depositStrategy();
 
         // Set loan status
         loan.status = LoanStatus.Liquidated;
-        // Update global stats
-        MarketStorageLib.store().totalRepaid[loan.lendingToken] += loan
-            .principalOwed;
-        MarketStorageLib.store().totalInterestRepaid[loan.lendingToken] += loan
-            .interestOwed;
 
         int256 rewardInCollateral = getLiquidationReward(loanID);
         // the caller gets the collateral from the loan

@@ -1,4 +1,4 @@
-import { BigNumberish, ContractTransaction } from 'ethers'
+import { ContractTransaction } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
@@ -12,15 +12,7 @@ import { NULL_ADDRESS } from '../utils/consts'
 import { deploy } from '../utils/deploy-helpers'
 
 const initializeMarkets: DeployFunction = async (hre) => {
-  const {
-    getNamedAccounts,
-    contracts,
-    tokens,
-    network,
-    ethers,
-    deployments,
-    log,
-  } = hre
+  const { getNamedAccounts, contracts, tokens, network, log } = hre
   const { deployer, craSigner } = await getNamedAccounts()
 
   log('********** Lending Pools **********')
@@ -34,7 +26,7 @@ const initializeMarkets: DeployFunction = async (hre) => {
   })
   const tTokenFactory = await deployTTokenBeacon(hre, diamond)
 
-  for (const { lendingToken, collateralTokens, maxTVL } of markets) {
+  for (const { lendingToken, collateralTokens } of markets) {
     const lendingTokenAddress = tokenAddresses.all[lendingToken]
     const asset = await tokens.get(lendingToken)
     const name = await asset.name()
@@ -86,10 +78,7 @@ const initializeMarkets: DeployFunction = async (hre) => {
     const tToken = await diamond.getTTokenFor(lendingTokenAddress)
     if (tToken === NULL_ADDRESS) {
       // Deploy new Teller Token
-      const tTokenAddress = await tTokenFactory(
-        lendingTokenAddress,
-        hre.toBN(maxTVL, await asset.decimals())
-      )
+      const tTokenAddress = await tTokenFactory(lendingTokenAddress)
 
       // Initialize the lending pool with new TToken and Lending Escrow
       await diamond.initLendingPool(asset.address, tTokenAddress)
@@ -104,7 +93,7 @@ const initializeMarkets: DeployFunction = async (hre) => {
 const deployTTokenBeacon = async (
   hre: HardhatRuntimeEnvironment,
   diamond: ITellerDiamond
-): Promise<(assetAddress: string, maxTVL: BigNumberish) => Promise<string>> => {
+): Promise<(assetAddress: string) => Promise<string>> => {
   const { ethers, getNamedAccounts, log } = hre
 
   log('********** Teller Token (TToken) Beacon **********', { indent: 2 })
@@ -151,10 +140,7 @@ const deployTTokenBeacon = async (
   log(`Using Beacon: ${beacon.address}`, { indent: 3, star: true })
   log('')
 
-  return async (
-    assetAddress: string,
-    maxTVL: BigNumberish
-  ): Promise<string> => {
+  return async (assetAddress: string): Promise<string> => {
     const receipt = await beacon
       .cloneProxy(
         tTokenLogic.interface.encodeFunctionData('initialize', [
@@ -163,7 +149,6 @@ const deployTTokenBeacon = async (
             admin: await getNamedAccounts().then(({ deployer }) => deployer),
             underlying: assetAddress,
             cToken: await diamond.getAssetCToken(assetAddress),
-            maxTVL,
           },
         ])
       )

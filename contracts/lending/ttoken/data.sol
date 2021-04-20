@@ -12,5 +12,4 @@ struct InitArgs {
     address admin;
     address underlying;
     address cToken;
-    uint256 maxTVL;
 }

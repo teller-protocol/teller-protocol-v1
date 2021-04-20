@@ -225,16 +225,25 @@ contract CreateLoanFacet is RolesMods, PausableMods {
             loanRecipient = CreateLoanLib.createEscrow(loanID);
         }
 
-        // Transfer tokens to the borrower.
-        // TODO: pull funds from lending escrow
-        // TODO: transfer tokens to borrower
-        // TODO: update lending total borrowed amount
+        // Transfer tokens to the recipient.
+        CreateLoanLib.fundLoan(loan.lendingToken, loanRecipient, amount);
 
         emit LoanTakenOut(loanID, loan.loanTerms.borrower, amount);
     }
 }
 
 library CreateLoanLib {
+    function fundLoan(
+        address asset,
+        address recipient,
+        uint256 amount
+    ) internal {
+        // Pull funds from Teller token LP
+        MarketStorageLib.store().tTokens[asset].fundLoan(recipient, amount);
+        // Increase total borrowed amount
+        MarketStorageLib.store().totalBorrowed[asset] += amount;
+    }
+
     function newID() internal returns (uint256 id_) {
         Counters.Counter storage counter =
             MarketStorageLib.store().loanIDCounter;

@@ -34,9 +34,6 @@ contract TToken_V1 is ITToken {
     uint8 private _decimals;
     bool private _restricted;
 
-    // LP settings
-    uint256 public maxTVL;
-
     /* Modifiers */
 
     modifier authorized(bytes32 role) {
@@ -117,9 +114,8 @@ contract TToken_V1 is ITToken {
             "Teller: insufficient underlying"
         );
 
-        // Accrue interest and calculate exchange rate and total supply
-        (uint256 rate, uint256 supply) = _exchangeRateSupply();
-        require(supply + amount <= maxTVL, "Teller: max tvl exceeded");
+        // Calculate amount of tokens to mint
+        mintAmount_ = _valueOfUnderlying(amount, exchangeRate());
 
         // Transfer tokens from lender
         SafeERC20.safeTransferFrom(
@@ -130,9 +126,6 @@ contract TToken_V1 is ITToken {
         );
         // Execute deposit strategy
         depositStrategy();
-
-        // Calculate amount of tokens to mint
-        mintAmount_ = _valueOfUnderlying(amount, rate);
 
         // Mint Teller token value of underlying
         _mint(_msgSender(), mintAmount_);
@@ -228,8 +221,6 @@ contract TToken_V1 is ITToken {
         _decimals = _underlying.decimals();
         // Platform restricted by default
         _restricted = true;
-
-        maxTVL = args.maxTVL;
     }
 
     /**
