@@ -82,7 +82,7 @@ export default <HardhatUserConfig>{
     coinmarketcap: process.env.CMC_KEY,
     outputFile: process.env.SAVE_GAS_REPORT ? 'gas-reporter.txt' : undefined,
     noColors: !!process.env.SAVE_GAS_REPORT,
-    showMethodSig: true,
+    showMethodSig: false,
     showTimeSpent: true,
   },
   namedAccounts: {

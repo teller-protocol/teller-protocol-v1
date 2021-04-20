@@ -24,14 +24,6 @@ contract StakingFacet {
         }
     }
 
-    function getActiveLinkedLoan(uint256 nftID)
-        external
-        view
-        returns (uint256 loanID)
-    {
-        return StakingStorageLib.store().nftLinkedLoans[nftID];
-    }
-
     function _stakeNFT(uint256 tokenId) internal {
         TellerNFT nft = AppStorageLib.store().nft;
         require(

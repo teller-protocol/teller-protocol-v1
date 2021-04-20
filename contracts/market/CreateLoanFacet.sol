@@ -18,6 +18,7 @@ import { MaxDebtRatioLib } from "../settings/asset/MaxDebtRatioLib.sol";
 import { MaxLoanAmountLib } from "../settings/asset/MaxLoanAmountLib.sol";
 import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
 
 // Interfaces
 import { ILoansEscrow } from "../escrow/interfaces/ILoansEscrow.sol";
@@ -26,6 +27,7 @@ import {
     BeaconProxy
 } from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
+import { ITellerNFT } from "../nft/ITellerNFT.sol";
 
 // Storage
 import {
@@ -68,11 +70,13 @@ contract CreateLoanFacet is RolesMods, PausableMods {
      * @notice Creates a loan with the loan request and terms
      * @param request Struct of the protocol loan request
      * @param responses List of structs of the protocol loan responses
+     * @param collateralToken Token address to use as collateral for the new loan
      * @param collateralAmount Amount of collateral required for the loan
      */
     function createLoanWithTerms(
         LoanRequest calldata request,
         LoanResponse[] calldata responses,
+        address collateralToken,
         uint256 collateralAmount
     ) external payable paused("", false) authorized(AUTHORIZED, msg.sender) {
         // Perform loan request checks
@@ -80,47 +84,101 @@ contract CreateLoanFacet is RolesMods, PausableMods {
 
         // Get and increment new loan ID
         uint256 loanID = CreateLoanLib.newID();
-        Loan storage loan = MarketStorageLib.store().loans[loanID];
-        require(
-            loan.status == LoanStatus.NonExistent,
-            "Teller: loan already exists"
-        );
+        {
+            Loan storage loan = MarketStorageLib.store().loans[loanID];
+            require(
+                loan.status == LoanStatus.NonExistent,
+                "Teller: loan already exists"
+            );
 
-        // Get consensus values from request
-        (uint256 interestRate, uint256 collateralRatio, uint256 maxLoanAmount) =
-            LibConsensus.processLoanTerms(request, responses);
+            // Get consensus values from request
+            (
+                uint256 interestRate,
+                uint256 collateralRatio,
+                uint256 maxLoanAmount
+            ) = LibConsensus.processLoanTerms(request, responses);
 
-        require(
-            request.recipient == address(0) ||
-                LibLoans.canGoToEOAWithCollateralRatio(collateralRatio),
-            "Teller: under collateralized loan with recipient"
-        );
+            require(
+                request.recipient == address(0) ||
+                    LibLoans.canGoToEOAWithCollateralRatio(collateralRatio),
+                "Teller: under collateralized loan with recipient"
+            );
 
-        // Pay in collateral
-        if (collateralAmount > 0) {
-            LibCollateral.depositCollateral(loanID, collateralAmount);
+            // TODO: need to store on struct?
+            loan.id = loanID;
+            loan.status = LoanStatus.TermsSet;
+            loan.lendingToken = request.assetAddress;
+            loan.collateralToken = collateralToken;
+            loan.termsExpiry =
+                block.timestamp +
+                PlatformSettingsLib.getTermsExpiryTimeValue();
+            loan.loanTerms = LoanTerms({
+                borrower: request.borrower,
+                recipient: request.recipient,
+                interestRate: interestRate,
+                collateralRatio: collateralRatio,
+                maxLoanAmount: maxLoanAmount,
+                duration: request.duration
+            });
         }
 
         // Add loanID to borrower list
         MarketStorageLib.store().borrowerLoans[request.borrower].push(loanID);
 
-        // TODO: need to store on struct?
-        loan.id = loanID;
-        loan.status = LoanStatus.TermsSet;
-        loan.termsExpiry =
-            block.timestamp +
-            PlatformSettingsLib.getTermsExpiryTimeValue();
-        loan.loanTerms = LoanTerms({
-            borrower: request.borrower,
-            recipient: request.recipient,
-            interestRate: interestRate,
-            collateralRatio: collateralRatio,
-            maxLoanAmount: maxLoanAmount,
-            duration: request.duration,
-            nftID: request.nftID
-        });
+        // Verify collateral token is acceptable
+        require(
+            EnumerableSet.contains(
+                MarketStorageLib.store().collateralTokens[request.assetAddress],
+                collateralToken
+            ),
+            "Teller: collateral token not allowed"
+        );
+        // Pay in collateral
+        if (collateralAmount > 0) {
+            LibCollateral.depositCollateral(loanID, collateralAmount);
+        }
 
         emit LoanTermsSet(loanID, msg.sender, request.recipient);
+    }
+
+    function takeOutLoanWithNFTs(
+        uint256 loanID,
+        uint256 amount,
+        uint256[] calldata nftIDs
+    ) external paused("", false) {
+        Loan storage loan = MarketStorageLib.store().loans[loanID];
+        CreateLoanLib.verifyTakeOut(loan, amount);
+
+        EnumerableSet.UintSet storage userStakedNFTs =
+            StakingStorageLib.store().stakedNFTs[msg.sender];
+        ITellerNFT nft = AppStorageLib.store().nft;
+        uint256 allowedLoanSize;
+        for (uint256 i; i < nftIDs.length; i++) {
+            // NFT must be currently staked
+            require(
+                EnumerableSet.contains(userStakedNFTs, nftIDs[i]),
+                "Teller: borrower nft not staked"
+            );
+            // Remove NFT from being staked
+            EnumerableSet.remove(userStakedNFTs, nftIDs[i]);
+
+            EnumerableSet.add(
+                StakingStorageLib.store().loanNFTs[loanID],
+                nftIDs[i]
+            );
+
+            (, ITellerNFT.Tier memory tier) = nft.getTokenTier(nftIDs[i]);
+            allowedLoanSize += ((tier.baseLoanSize *
+                tier.contributionMultiplier) / 100);
+        }
+        require(
+            amount <= allowedLoanSize,
+            "Teller: insufficient NFT loan size"
+        );
+
+        CreateLoanLib.init(loan, amount);
+
+        address loanEscrow = CreateLoanLib.createEscrow(loanID);
     }
 
     /**
@@ -138,11 +196,21 @@ contract CreateLoanFacet is RolesMods, PausableMods {
         Loan storage loan = MarketStorageLib.store().loans[loanID];
         CreateLoanLib.verifyTakeOut(loan, amount);
 
-        loan.borrowedAmount = amount;
-        loan.principalOwed = amount;
-        loan.interestOwed = LibLoans.getInterestOwedFor(loanID, amount);
-        loan.status = LoanStatus.Active;
-        loan.loanStartTime = block.timestamp;
+        // Check that enough collateral has been provided for this loan
+        (, int256 neededInCollateral, ) =
+            LibLoans.getCollateralNeededInfo(loan.id);
+        require(
+            neededInCollateral <= int256(loan.collateral),
+            "Teller: more collateral required"
+        );
+        require(
+            loan.lastCollateralIn <=
+                block.timestamp -
+                    (PlatformSettingsLib.getSafetyIntervalValue()),
+            "Teller: collateral deposited recently"
+        );
+
+        CreateLoanLib.init(loan, amount);
 
         address loanRecipient;
         bool eoaAllowed =
@@ -154,30 +222,13 @@ contract CreateLoanFacet is RolesMods, PausableMods {
                 ? loan.loanTerms.borrower
                 : loan.loanTerms.recipient;
         } else {
-            // TODO: escrows
-            // Clone loans escrow logic
-            loanRecipient = AppStorageLib.store().loansEscrowBeacon.cloneProxy(
-                ""
-            );
-            MarketStorageLib.store().loanEscrows[loanID] = ILoansEscrow(
-                loanRecipient
-            );
+            loanRecipient = CreateLoanLib.createEscrow(loanID);
         }
 
         // Transfer tokens to the borrower.
         // TODO: pull funds from lending escrow
         // TODO: transfer tokens to borrower
         // TODO: update lending total borrowed amount
-
-        if (!eoaAllowed) {
-            // TODO: Implement once escrow facet is complete
-            // Initialize loans escrow
-            MarketStorageLib.store().loanEscrows[loanID].initLoansEscrow(
-                MarketStorageLib.store().loans[loanID].loanTerms.borrower
-            );
-        }
-
-        StakingStorageLib.store().nftLinkedLoans[loanID] = loan.loanTerms.nftID;
 
         emit LoanTakenOut(loanID, loan.loanTerms.borrower, amount);
     }
@@ -189,6 +240,23 @@ library CreateLoanLib {
             MarketStorageLib.store().loanIDCounter;
         id_ = Counters.current(counter);
         Counters.increment(counter);
+    }
+
+    function init(Loan storage loan, uint256 amount) internal {
+        loan.borrowedAmount = amount;
+        loan.principalOwed = amount;
+        loan.interestOwed = LibLoans.getInterestOwedFor(loan.id, amount);
+        loan.status = LoanStatus.Active;
+        loan.loanStartTime = block.timestamp;
+    }
+
+    function createEscrow(uint256 loanID) internal returns (address escrow_) {
+        // Create escrow
+        escrow_ = AppStorageLib.store().loansEscrowBeacon.cloneProxy(
+            abi.encode(ILoansEscrow.init.selector)
+        );
+        // Save escrow address for loan
+        MarketStorageLib.store().loanEscrows[loanID] = ILoansEscrow(escrow_);
     }
 
     function validateRequest(LoanRequest memory request) internal {
@@ -207,21 +275,6 @@ library CreateLoanLib {
                 request.duration,
             "Teller: max loan duration exceeded"
         );
-        require(
-            EnumerableSet.contains(
-                StakingStorageLib.store().stakedNFTs[msg.sender],
-                request.nftID
-            ),
-            "Teller: no staked NFT"
-        );
-        require(
-            abi
-                .encodePacked(
-                StakingStorageLib.store().nftLinkedLoans[request.nftID]
-            )
-                .length != 0,
-            "Teller: nft already in use"
-        );
     }
 
     function verifyTakeOut(Loan storage loan, uint256 amount) internal {
@@ -232,26 +285,13 @@ library CreateLoanLib {
             "Teller: loan terms expired"
         );
         require(
-            LendingLib.debtRatioFor(loan.lendingToken, amount) >
+            LendingLib.debtRatioFor(loan.lendingToken, amount) <=
                 MaxDebtRatioLib.get(loan.lendingToken),
             "Teller: max supply-to-debt exceeded"
         );
         require(
             loan.loanTerms.maxLoanAmount >= amount,
             "Teller: max loan amount exceeded"
-        );
-        // Check that enough collateral has been provided for this loan
-        (, int256 neededInCollateral, ) =
-            LibLoans.getCollateralNeededInfo(loan.id);
-        require(
-            neededInCollateral <= int256(loan.collateral),
-            "Teller: more collateral required"
-        );
-        require(
-            loan.lastCollateralIn <=
-                block.timestamp -
-                    (PlatformSettingsLib.getSafetyIntervalValue()),
-            "Teller: collateral deposited recently"
         );
     }
 }

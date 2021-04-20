@@ -2,66 +2,52 @@
 pragma solidity ^0.8.0;
 
 // Libraries
-import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
+import { LibDapps } from "../../dapps/libraries/LibDapps.sol";
 import { PriceAggLib } from "../../price-aggregator/PriceAggLib.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Interfaces
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { ICErc20 } from "../../shared/interfaces/ICErc20.sol";
 
 // Storage
+import { MarketStorageLib } from "../../storage/market.sol";
 import { AppStorageLib } from "../../storage/app.sol";
 
 library LibEscrow {
-    using NumbersLib for uint256;
-
     /**
-     * @notice Calculate a value of a token amount.
-     * @param baseAddress base token address.
-     * @param quoteAddress quote token address.
-     * @param baseAmount amount of base token.
-     * @return Value of baseAmount in quote token.
+     * @notice Calculate the value of the loan by getting the value of all tokens the Escrow owns.
+     * @return value_ Escrow total value denoted in the lending token.
      */
-    function valueOfIn(
-        address baseAddress,
-        address quoteAddress,
-        uint256 baseAmount
-    ) internal view returns (uint256) {
-        bool success;
-        bytes memory returnData;
-        // call function to base address for function signature of underlying
-        (success, returnData) = baseAddress.staticcall(
-            abi.encodeWithSignature("exchangeRateStored()")
-        );
-        require(success, "EXCHANGE_RATE_CALL_FAIL");
-        if (returnData.length > 0) {
-            uint8 cTokenDecimals = ICErc20(baseAddress).decimals();
-            uint256 exchangeRate = abi.decode(returnData, (uint256));
-            uint256 diffFactor =
-                uint256(10)**uint256(18).diff(uint256(cTokenDecimals));
-
-            if (cTokenDecimals > uint256(18)) {
-                exchangeRate = exchangeRate * (diffFactor);
-            } else {
-                exchangeRate = exchangeRate / (diffFactor);
-            }
-
+    function calculateTotalValue(uint256 loanID)
+        internal
+        view
+        returns (uint256 value_)
+    {
+        EnumerableSet.AddressSet storage tokens =
+            MarketStorageLib.store().escrowTokens[loanID];
+        if (EnumerableSet.length(tokens) > 0) {
             address WETH_ADDRESS = AppStorageLib.store().assetAddresses["WETH"];
-            address CETH_ADDRESS = AppStorageLib.store().assetAddresses["CETH"];
-
-            uint8 assetDecimals;
-            if (baseAddress == CETH_ADDRESS) {
-                baseAddress = WETH_ADDRESS;
-                assetDecimals = uint8(18);
-            } else {
-                baseAddress = ICErc20(baseAddress).underlying();
-                assetDecimals = ERC20(baseAddress).decimals();
+            for (uint256 i = 0; i < EnumerableSet.length(tokens); i++) {
+                if (EnumerableSet.at(tokens, i) == WETH_ADDRESS) {
+                    value_ += LibDapps.balanceOf(
+                        loanID,
+                        EnumerableSet.at(tokens, i)
+                    );
+                } else {
+                    value_ += PriceAggLib.valueFor(
+                        EnumerableSet.at(tokens, i),
+                        WETH_ADDRESS,
+                        LibDapps.balanceOf(loanID, EnumerableSet.at(tokens, i))
+                    );
+                }
             }
+            address lendingToken =
+                MarketStorageLib.store().loans[loanID].lendingToken;
 
-            baseAmount =
-                (baseAmount * (exchangeRate)) /
-                (uint256(10)**assetDecimals);
+            value_ = PriceAggLib.valueFor(WETH_ADDRESS, lendingToken, value_);
         }
-        return PriceAggLib.valueFor(baseAddress, quoteAddress, baseAmount);
     }
 }

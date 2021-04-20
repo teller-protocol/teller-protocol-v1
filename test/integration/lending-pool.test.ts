@@ -13,7 +13,7 @@ import { getLPHelpers, LPHelperArgs } from '../helpers/lending-pool'
 chai.should()
 chai.use(solidity)
 
-describe.only('Lending Pool', () => {
+describe('Lending Pool', () => {
   // Run tests for all markets
   getMarkets(hre.network).forEach(testLP)
 

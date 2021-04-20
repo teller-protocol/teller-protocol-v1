@@ -17,7 +17,6 @@ import {
 } from "../../settings/platform/PlatformSettingsLib.sol";
 import { ECDSA } from "./ECDSALib.sol";
 import { RolesLib } from "../../contexts2/access-control/roles/RolesLib.sol";
-import { SIGNER } from "../../shared/roles.sol";
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -42,10 +41,11 @@ library LibConsensus {
             uint256 maxLoanAmount
         )
     {
+        EnumerableSet.AddressSet storage signers =
+            s().signers[request.assetAddress];
         require(
-            responses.length.ratioOf(
-                EnumerableSet.length(s().signers[request.assetAddress])
-            ) >= PlatformSettingsLib.getRequiredSubmissionsPercentageValue(),
+            responses.length.ratioOf(EnumerableSet.length(signers)) >=
+                PlatformSettingsLib.getRequiredSubmissionsPercentageValue(),
             "Teller: insufficient signer responses"
         );
 
@@ -60,7 +60,7 @@ library LibConsensus {
             LoanResponse memory response = responses[i];
 
             require(
-                RolesLib.hasRole(SIGNER, response.signer),
+                EnumerableSet.contains(signers, response.signer),
                 "Teller: invalid signer"
             );
             require(

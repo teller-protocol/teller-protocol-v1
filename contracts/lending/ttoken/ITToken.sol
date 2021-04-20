@@ -48,6 +48,10 @@ abstract contract ITToken is AccessControlUpgradeable, ERC20Upgradeable {
         virtual
         returns (uint256 balance_);
 
+    function fundLoan(address recipient, uint256 amount) external virtual;
+
+    function depositStrategy() external virtual;
+
     /**
      * @notice Increase account supply of specified token amount.
      * @param amount The amount of underlying tokens to use to mint.

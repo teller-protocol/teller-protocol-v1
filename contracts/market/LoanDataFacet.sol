@@ -1,16 +1,41 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// Storage
+// Libraries
 import { LibLoans } from "./libraries/LibLoans.sol";
 
+// Storage
+import { Loan } from "../storage/market.sol";
+
 contract LoanDataFacet {
+    /**
+     * @notice Returns the information about the given {loanID}.
+     * @param loanID The loan ID to get information for.
+     * @return loan_ The loan data.
+     */
+    function getLoan(uint256 loanID) external view returns (Loan memory loan_) {
+        loan_ = LibLoans.s().loans[loanID];
+    }
+
+    /**
+     * @notice Returns the loan IDs created by the {borrower} account.
+     * @param borrower The account to get loan IDs for.
+     * @return loanIDs The IDs for loans created by the {borrower}
+     */
+    function getBorrowerLoans(address borrower)
+        external
+        view
+        returns (uint256[] memory loanIDs)
+    {
+        return LibLoans.s().borrowerLoans[borrower];
+    }
+
     /**
      * @notice Returns the total amount owed for a specified loan.
      * @param loanID The loan ID to get the total amount owed.
      * @return uint256 The total owed amount.
      */
-    function getTotalOwed(uint256 loanID) public view returns (uint256) {
+    function getTotalOwed(uint256 loanID) external view returns (uint256) {
         return LibLoans.getTotalOwed(loanID);
     }
 
@@ -21,7 +46,7 @@ contract LoanDataFacet {
      * @return uint256 The interest owed.
      */
     function getInterestOwedFor(uint256 loanID, uint256 amountBorrow)
-        public
+        external
         view
         returns (uint256)
     {
@@ -38,15 +63,6 @@ contract LoanDataFacet {
         )
     {
         return LibLoans.getCollateralNeededInfo(loanID);
-    }
-
-    /**
-     * @notice It gets the current liquidation reward for a given loan.
-     * @param loanID The loan ID to get the info.
-     * @return The value the liquidator will receive denoted in collateral tokens.
-     */
-    function getLiquidationReward(uint256 loanID) public view returns (int256) {
-        return LibLoans.getLiquidationReward(loanID);
     }
 
     /**

@@ -4,13 +4,20 @@ pragma solidity ^0.8.0;
 // Interfaces
 import { IWETH } from "../../shared/interfaces/IWETH.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+// Libraries
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { LibDapps } from "../../dapps/libraries/LibDapps.sol";
+import { PriceAggLib } from "../../price-aggregator/PriceAggLib.sol";
 
 // Storage
 import { AppStorageLib } from "../../storage/app.sol";
-import { MarketStorageLib, Loan } from "../../storage/market.sol";
+import { MarketStorageLib, Loan, LoanStatus } from "../../storage/market.sol";
 
 library LibCollateral {
     function l(uint256 loanID) internal view returns (Loan storage l_) {
@@ -94,40 +101,95 @@ library LibCollateral {
      * @dev See Escrow.claimTokens for more info.
      * @param loanID The ID of the loan which is being liquidated
      * @param rewardInCollateral The total amount of reward based in the collateral token to pay the liquidator
-     * @param recipient The address of the liquidator where the liquidation reward will be sent to
+     * @param liquidator The address of the liquidator where the liquidation reward will be sent to
      */
     function payOutLiquidator(
         uint256 loanID,
         int256 rewardInCollateral,
-        address payable recipient
+        address payable liquidator
     ) internal {
         if (rewardInCollateral <= 0) {
             return;
         }
         uint256 reward = uint256(rewardInCollateral);
-        if (reward < MarketStorageLib.store().loans[loanID].collateral) {
-            withdrawCollateral(loanID, reward, recipient);
-        } else if (
-            reward >= MarketStorageLib.store().loans[loanID].collateral
-        ) {
-            uint256 remainingCollateralAmount =
-                reward - (MarketStorageLib.store().loans[loanID].collateral);
-            withdrawCollateral(
-                loanID,
-                MarketStorageLib.store().loans[loanID].collateral,
-                recipient
-            );
+        if (reward < l(loanID).collateral) {
+            withdrawCollateral(loanID, reward, liquidator);
+        } else if (reward >= l(loanID).collateral) {
+            uint256 remainingCollateralAmount = reward - (l(loanID).collateral);
+            // Payout whats available in the collateral token
+            withdrawCollateral(loanID, l(loanID).collateral, liquidator);
+            // If liquidator needs additional reward, claim tokens from the loan escrow
             if (
                 remainingCollateralAmount > 0 &&
                 address(MarketStorageLib.store().loanEscrows[loanID]) !=
-                address(0x0)
+                address(0)
             ) {
-                MarketStorageLib.store().loanEscrows[loanID]
-                    .claimTokensByCollateralValue(
+                claimEscrowTokensByCollateralValue(
                     loanID,
-                    recipient,
+                    liquidator,
                     remainingCollateralAmount
                 );
+            }
+        }
+    }
+
+    /**
+     * @notice Send the equivalent of tokens owned by this escrow (in collateral value) to the recipient,
+     * @dev The loan must be liquidated
+     * @param recipient address to send the tokens to
+     * @param value The value of escrow held tokens, to be claimed based on collateral value
+     */
+    function claimEscrowTokensByCollateralValue(
+        uint256 loanID,
+        address recipient,
+        uint256 value
+    ) private {
+        require(
+            l(loanID).status == LoanStatus.Liquidated,
+            "Teller: loan not liquidated"
+        );
+
+        EnumerableSet.AddressSet storage tokens =
+            MarketStorageLib.store().escrowTokens[loanID];
+        uint256 valueLeftToTransfer = value;
+        // cycle through tokens
+        for (uint256 i = 0; i < EnumerableSet.length(tokens); i++) {
+            if (valueLeftToTransfer == 0) {
+                break;
+            }
+
+            uint256 balance =
+                LibDapps.balanceOf(loanID, EnumerableSet.at(tokens, i));
+            address collateralToken = l(loanID).collateralToken;
+            // get value of token balance in collateral value
+            if (balance > 0) {
+                uint256 valueInCollateralToken =
+                    (EnumerableSet.at(tokens, i) == collateralToken)
+                        ? balance
+                        : PriceAggLib.valueFor(
+                            EnumerableSet.at(tokens, i),
+                            collateralToken,
+                            balance
+                        );
+                // if <= value, transfer tokens
+                if (valueInCollateralToken <= valueLeftToTransfer) {
+                    SafeERC20.safeTransfer(
+                        IERC20(EnumerableSet.at(tokens, i)),
+                        recipient,
+                        valueInCollateralToken
+                    );
+                    valueLeftToTransfer =
+                        valueLeftToTransfer -
+                        (valueInCollateralToken);
+                } else {
+                    SafeERC20.safeTransfer(
+                        IERC20(EnumerableSet.at(tokens, i)),
+                        recipient,
+                        valueLeftToTransfer
+                    );
+                    valueLeftToTransfer = 0;
+                }
+                LibDapps.tokenUpdated(loanID, EnumerableSet.at(tokens, i));
             }
         }
     }

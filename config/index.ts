@@ -2,6 +2,7 @@ import fs from 'fs'
 import { Network } from 'hardhat/types'
 
 import { MerkleDistributorInfo } from '../scripts/merkle/root'
+import { Tokens } from '../types/custom/config-types'
 import { assetSettings } from './asset-settings'
 import { atms } from './atms'
 import { chainlink } from './chainlink'
@@ -12,7 +13,6 @@ import { platformSettings } from './platform-settings'
 import { signers } from './signers'
 import { tokens } from './tokens'
 import { uniswap } from './uniswap'
-import { Tokens } from '../types/custom/config-types'
 
 const getNetworkName = (network: Network): string =>
   network.config.forkName ?? network.name
@@ -32,7 +32,7 @@ export const getNodes = (network: Network) => nodes[getNetworkName(network)]
 export const getPlatformSettings = (network: Network) =>
   platformSettings[getNetworkName(network)]
 
-export const getSigners = (network: Network) => signers[getNetworkName(network)]
+export const getSigners = (network: Network) => signers[network.name]
 
 export const getTokens = (network: Network) => {
   const networkTokens = tokens[getNetworkName(network)]

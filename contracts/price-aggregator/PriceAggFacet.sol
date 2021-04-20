@@ -163,7 +163,7 @@ contract PriceAggFacet {
                 SafeCast.toUint256(AggregatorV2V3Interface(agg).latestAnswer());
             uint8 resDecimals = AggregatorV2V3Interface(agg).decimals();
             if (inverse) {
-                price = (resDecimals * resDecimals) / price;
+                price = (TEN**(resDecimals + resDecimals)) / price;
             }
             return
                 SafeCast.toInt256(

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import { PriceAggFacet } from "./PriceAggFacet.sol";
+
 // Storage
 import { AppStorageLib } from "../storage/app.sol";
 
@@ -9,52 +11,24 @@ import { AppStorageLib } from "../storage/app.sol";
  */
 library PriceAggLib {
     /**
-     * @notice See {PriceAggFacet.valueFor}
+     * @notice See {PriceAggFacet.getValueFor}
      */
     function valueFor(
         address src,
         address dst,
         uint256 srcAmount
-    ) internal view returns (uint256 price) {
-        bytes memory data =
-            _view(
-                abi.encode(
-                    "getValueFor(address,address,uint256)",
-                    src,
-                    dst,
-                    srcAmount
-                )
-            );
-        price = abi.decode(data, (uint256));
+    ) internal view returns (uint256 value_) {
+        value_ = PriceAggFacet(address(this)).getValueFor(src, dst, srcAmount);
     }
 
     /**
-     * @notice See {PriceAggFacet.priceFor}
+     * @notice See {PriceAggFacet.getPriceFor}
      */
     function priceFor(address src, address dst)
         internal
         view
-        returns (int256 price)
+        returns (int256 price_)
     {
-        bytes memory data =
-            _view(abi.encode("getPriceFor(address,address)", src, dst));
-        price = abi.decode(data, (int256));
-    }
-
-    function _view(bytes memory callData)
-        private
-        view
-        returns (bytes memory response)
-    {
-        bool success;
-        (success, response) = address(this).staticcall(callData);
-        if (!success) {
-            assembly {
-                let ptr := mload(0x40)
-                let size := returndatasize()
-                returndatacopy(ptr, 0, size)
-                revert(ptr, size)
-            }
-        }
+        price_ = PriceAggFacet(address(this)).getPriceFor(src, dst);
     }
 }

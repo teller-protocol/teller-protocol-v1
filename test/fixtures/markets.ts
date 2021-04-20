@@ -7,7 +7,7 @@ import { getFunds } from '../helpers/get-funds'
 export interface FundedMarketArgs {
   assetSym: string
   // Amount should be denoted in decimal value for the token (i.e. 100 = 100 * (10^tokenDecimals)
-  amount?: number
+  amount?: BigNumberish
 }
 
 export const fundedMarket = (args?: FundedMarketArgs): Promise<void> =>

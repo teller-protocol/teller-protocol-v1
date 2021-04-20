@@ -27,7 +27,6 @@ struct LoanTerms {
     uint256 collateralRatio;
     uint256 maxLoanAmount;
     uint256 duration;
-    uint256 nftID;
 }
 
 enum LoanStatus { NonExistent, TermsSet, Active, Closed, Liquidated }
@@ -77,8 +76,6 @@ struct LoanRequest {
     uint256 amount;
     uint256 duration;
     uint256 requestTime;
-    // staked NFT ID
-    uint256 nftID;
 }
 
 /**
@@ -156,6 +153,8 @@ struct MarketStorage {
     mapping(uint256 => ILoansEscrow) loanEscrows;
     // Maps loanIDs to list of tokens owned by a loan escrow
     mapping(uint256 => EnumerableSet.AddressSet) escrowTokens;
+    // Maps collateral token address to a LoanCollateralEscrow that hold collateral funds
+    mapping(address => address) collateralEscrows;
     // Maps accounts to owned loan IDs
     mapping(address => uint256[]) borrowerLoans;
     // Maps lending token to overall amount lent out for loans

@@ -8,6 +8,7 @@ import {
     ReentryMods
 } from "../contexts2/access-control/reentry/ReentryMods.sol";
 import { AUTHORIZED } from "../shared/roles.sol";
+import { LoanDataFacet } from "./LoanDataFacet.sol";
 
 // Libraries
 import {
@@ -16,17 +17,24 @@ import {
 import { LibLoans } from "./libraries/LibLoans.sol";
 import { LibCollateral } from "./libraries/LibCollateral.sol";
 import { LibDapps } from "../dapps/libraries/LibDapps.sol";
+import { LibEscrow } from "../escrow/libraries/LibEscrow.sol";
+import {
+    PlatformSettingsLib
+} from "../settings/platform/PlatformSettingsLib.sol";
+import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
 
 // Interfaces
 import {
     IERC20,
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { ITToken } from "../lending/ttoken/ITToken.sol";
 
 // Storage
 import {
     MarketStorageLib,
     MarketStorage,
+    Loan,
     LoanStatus
 } from "../storage/market.sol";
 
@@ -168,28 +176,35 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         paused("", false)
         authorized(AUTHORIZED, msg.sender)
     {
+        Loan storage loan = LibLoans.loan(loanID);
         require(
-            LibLoans.isLiquidable(loanID),
+            RepayLib.isLiquidable(loan),
             "Teller: does not need liquidation"
         );
 
-        int256 rewardInCollateral = LibLoans.getLiquidationReward(loanID);
+        // Get the Teller token for the loan
+        ITToken tToken = MarketStorageLib.store().tTokens[loan.lendingToken];
 
-        // the liquidator pays the amount still owed on the loan
-        uint256 amountToLiquidate =
-            MarketStorageLib.store().loans[loanID].principalOwed +
-                (MarketStorageLib.store().loans[loanID].interestOwed);
-
-        //        TODO merge with 'contracts/market/RepayFacet
-        _repayLoan(
-            loanID,
-            MarketStorageLib.store().loans[loanID].principalOwed,
-            MarketStorageLib.store().loans[loanID].interestOwed,
-            msg.sender
+        // The liquidator pays the amount still owed on the loan
+        uint256 amountToLiquidate = loan.principalOwed + loan.interestOwed;
+        SafeERC20.safeTransferFrom(
+            IERC20(loan.lendingToken),
+            msg.sender,
+            address(tToken),
+            amountToLiquidate
         );
+        // Tell the Teller token we sent funds and to execute the deposit strategy
+        tToken.depositStrategy();
 
-        MarketStorageLib.store().loans[loanID].status = LoanStatus.Liquidated;
+        // Set loan status
+        loan.status = LoanStatus.Liquidated;
+        // Update global stats
+        MarketStorageLib.store().totalRepaid[loan.lendingToken] += loan
+            .principalOwed;
+        MarketStorageLib.store().totalInterestRepaid[loan.lendingToken] += loan
+            .interestOwed;
 
+        int256 rewardInCollateral = getLiquidationReward(loanID);
         // the caller gets the collateral from the loan
         LibCollateral.payOutLiquidator(
             loanID,
@@ -199,7 +214,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
 
         emit LoanLiquidated(
             loanID,
-            MarketStorageLib.store().loans[loanID].loanTerms.borrower,
+            loan.loanTerms.borrower,
             msg.sender,
             uint256(rewardInCollateral),
             amountToLiquidate
@@ -207,50 +222,51 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
     }
 
     /**
-     * @notice It allows a borrower to repay their loan or a liquidator to liquidate a loan.
-     * @dev It requires a ERC20.approve call before calling it. (Does it though with diamonds?)
-     * @dev It throws a require error if borrower called ERC20.approve function before calling it.
-     * @param loanID The id of the loan being repaid or liquidated.
-     * @param principalAmount amount of tokens towards the principal.
-     * @param interestAmount amount of tokens towards the interest.
-     * @param sender address that is repaying the loan.
+     * @notice It gets the current liquidation reward for a given loan.
+     * @param loanID The loan ID to get the info.
+     * @return The value the liquidator will receive denoted in collateral tokens.
      */
-    function _repayLoan(
-        uint256 loanID,
-        uint256 principalAmount,
-        uint256 interestAmount,
-        address sender
-    ) internal {
-        uint256 totalAmount = principalAmount + interestAmount;
-        require(totalAmount > 0, "REPAY_ZERO");
-
-        address asset = MarketStorageLib.store().loans[loanID].lendingToken;
-        // Transfers tokens to LendingPool.
-        tokenTransferFrom(sender, totalAmount, asset);
-
-        MarketStorageLib.store().totalRepaid[asset] += principalAmount;
-        MarketStorageLib.store().totalInterestRepaid[asset] += interestAmount;
+    function getLiquidationReward(uint256 loanID) public view returns (int256) {
+        uint256 amountToLiquidate = LibLoans.getTotalOwed(loanID);
+        uint256 availableValue =
+            LibLoans.getCollateralInLendingTokens(loanID) +
+                LibEscrow.calculateTotalValue(loanID);
+        uint256 maxReward =
+            NumbersLib.percent(
+                amountToLiquidate,
+                NumbersLib.diffOneHundredPercent(
+                    PlatformSettingsLib.getLiquidateEthPriceValue()
+                )
+            );
+        if (availableValue < amountToLiquidate + maxReward) {
+            return int256(availableValue);
+        } else {
+            return int256(maxReward) + (int256(amountToLiquidate));
+        }
     }
+}
 
+library RepayLib {
     /**
-        @notice It transfers an amount of tokens from an address to this contract.
-        @param from address where the tokens will transfer from.
-        @param amount to be transferred.
-        @param lendingToken the address of the lending token
-        @dev It throws a require error if 'transferFrom' invocation fails.
+     * @notice It checks if a loan can be liquidated.
+     * @param loan The loan storage pointer to check.
+     * @return true if the loan is liquidable.
      */
-    function tokenTransferFrom(
-        address from,
-        uint256 amount,
-        address lendingToken
-    ) private returns (uint256 balanceIncrease) {
-        uint256 balanceBefore = IERC20(lendingToken).balanceOf(address(this));
-        SafeERC20.safeTransferFrom(
-            IERC20(lendingToken),
-            from,
-            address(this),
-            amount
-        );
-        return IERC20(lendingToken).balanceOf(address(this)) - (balanceBefore);
+    function isLiquidable(Loan storage loan) internal view returns (bool) {
+        // Check if loan can be liquidated
+        if (loan.status != LoanStatus.Active) {
+            return false;
+        }
+
+        if (loan.loanTerms.collateralRatio > 0) {
+            // If loan has a collateral ratio, check how much is needed
+            (, int256 neededInCollateral, ) =
+                LoanDataFacet(address(this)).getCollateralNeededInfo(loan.id);
+            return neededInCollateral > int256(loan.collateral);
+        } else {
+            // Otherwise, check if the loan has expired
+            return
+                block.timestamp >= loan.loanStartTime + loan.loanTerms.duration;
+        }
     }
 }

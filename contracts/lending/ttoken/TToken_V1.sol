@@ -82,6 +82,25 @@ contract TToken_V1 is ITToken {
         balance_ = _valueInUnderlying(balanceOf(account), exchangeRate());
     }
 
+    function fundLoan(address recipient, uint256 amount)
+        external
+        override
+        authorized(CONTROLLER)
+    {
+        // Claim tokens from Compound
+        cToken.redeemUnderlying(amount);
+        // Transfer tokens to recipient
+        SafeERC20.safeTransfer(_underlying, recipient, amount);
+    }
+
+    function depositStrategy() public override {
+        uint256 balance = _underlying.balanceOf(address(this));
+        // Allow Compound to take underlying tokens
+        SafeERC20.safeIncreaseAllowance(_underlying, address(cToken), balance);
+        // Deposit tokens to Compound
+        cToken.mint(balance);
+    }
+
     /**
      * @notice Deposit underlying token amount into LP and mint tokens.
      * @param amount The amount of underlying tokens to use to mint.
@@ -109,9 +128,8 @@ contract TToken_V1 is ITToken {
             address(this),
             amount
         );
-        // Deposit tokens to Compound
-        SafeERC20.safeIncreaseAllowance(_underlying, address(cToken), amount);
-        cToken.mint(amount);
+        // Execute deposit strategy
+        depositStrategy();
 
         // Calculate amount of tokens to mint
         mintAmount_ = _valueOfUnderlying(amount, rate);
@@ -135,6 +153,10 @@ contract TToken_V1 is ITToken {
 
         // Accrue interest and calculate exchange rate
         uint256 underlyingAmount = _valueInUnderlying(amount, exchangeRate());
+        require(
+            underlyingAmount <= totalUnderlyingSupply(),
+            "Teller: redeem ttoken lp not enough supply"
+        );
 
         // Burn Teller tokens
         _burn(_msgSender(), amount);
@@ -154,6 +176,10 @@ contract TToken_V1 is ITToken {
      */
     function redeemUnderlying(uint256 amount) external override {
         require(amount > 0, "Teller: cannot withdraw 0");
+        require(
+            amount <= totalUnderlyingSupply(),
+            "Teller: redeem ttoken lp not enough supply"
+        );
 
         // Accrue interest and calculate exchange rate
         uint256 rate = exchangeRate();
