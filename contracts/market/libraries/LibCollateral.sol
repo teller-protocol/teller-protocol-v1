@@ -58,24 +58,21 @@ library LibCollateral {
         if (msg.value > 0) {
             require(msg.value == amount, "Teller: incorrect eth deposit");
             IWETH(l(loanID).collateralToken).deposit{ value: amount }();
-        } else {
-            // Check if collateral escrow exists
-            if (
-                address(
-                    MarketStorageLib.store().collateralEscrows[
-                        l(loanID).collateralToken
-                    ]
-                ) == address(0)
-            ) {
-                // Create escrow if non-existent
-                createCollateralEscrow(l(loanID).collateralToken);
-            }
-            // Transfer collateral to token escrow
-            MarketStorageLib.store().collateralEscrows[
-                l(loanID).collateralToken
-            ]
-                .depositCollateral(amount, l(loanID).loanTerms.borrower);
         }
+        // Check if collateral escrow exists
+        if (
+            address(
+                MarketStorageLib.store().collateralEscrows[
+                    l(loanID).collateralToken
+                ]
+            ) == address(0)
+        ) {
+            // Create escrow if non-existent
+            createCollateralEscrow(l(loanID).collateralToken);
+        }
+        // Transfer collateral to token escrow
+        MarketStorageLib.store().collateralEscrows[l(loanID).collateralToken]
+            .depositCollateral(amount, l(loanID).loanTerms.borrower);
 
         l(loanID).collateral += amount;
         l(loanID).lastCollateralIn = block.timestamp;
