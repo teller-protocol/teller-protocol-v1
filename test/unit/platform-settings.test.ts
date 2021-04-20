@@ -12,7 +12,7 @@ chai.use(solidity)
 
 const { deployments, getNamedSigner, ethers, network } = hre
 
-describe('Platform Settings', () => {
+describe.skip('Platform Settings', () => {
   const platformSettings = getPlatformSettings(network)
   const settingNames = Object.keys(platformSettings) as Array<
     keyof typeof platformSettings

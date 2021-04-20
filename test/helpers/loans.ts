@@ -106,7 +106,6 @@ export const createLoan = async (
       collToken.address,
       '0'
     )
-  await tx.wait()
 
   // Return ID for created loan
   const allBorrowerLoans = await diamond.getBorrowerLoans(borrower)
