@@ -28,6 +28,7 @@ struct InitArgs {
     address[] cTokens;
     address uniswapV2Router;
     address loansEscrowBeacon;
+    address collateralEscrowBeacon;
 }
 
 contract SettingsFacet is RolesMods {
@@ -102,5 +103,8 @@ contract SettingsFacet is RolesMods {
 
         s.uniswapRouter = IUniswapV2Router(_args.uniswapV2Router);
         s.loansEscrowBeacon = UpgradeableBeaconFactory(_args.loansEscrowBeacon);
+        s.collateralEscrowBeacon = UpgradeableBeaconFactory(
+            _args.collateralEscrowBeacon
+        );
     }
 }
