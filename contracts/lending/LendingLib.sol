@@ -10,8 +10,6 @@ import { ITToken } from "./ttoken/ITToken.sol";
 // Storage
 import { MarketStorageLib, MarketStorage } from "../storage/market.sol";
 
-import "hardhat/console.sol";
-
 library LendingLib {
     function s() internal pure returns (MarketStorage storage) {
         return MarketStorageLib.store();
@@ -32,7 +30,6 @@ library LendingLib {
     {
         // NOTE: potentially costly function
         uint256 supplied = s().tTokens[asset].totalUnderlyingSupply();
-        console.log("supplied underlying", supplied);
         if (supplied > 0) {
             uint256 newOnLoanAmount =
                 s().totalBorrowed[asset] -

@@ -114,7 +114,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         paused("", false)
         authorized(AUTHORIZED, msg.sender)
     {
-        require(amount > 0, "AMOUNT_VALUE_REQUIRED");
+        require(amount > 0, "Teller: zero repay");
         // calculate the actual amount to repay
         uint256 totalOwed = LibLoans.getTotalOwed(loanID);
         if (totalOwed < amount) {

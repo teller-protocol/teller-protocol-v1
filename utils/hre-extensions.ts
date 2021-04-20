@@ -4,12 +4,12 @@ import 'hardhat-deploy'
 import { makeNodeDisklet } from 'disklet'
 import { BigNumber, BigNumberish, Contract, Signer } from 'ethers'
 import { extendEnvironment } from 'hardhat/config'
-import { Deployment } from 'hardhat-deploy/dist/types'
 import {
   DeploymentSubmission,
   DeployOptions,
   DeployResult,
 } from 'hardhat-deploy/types'
+import moment from 'moment'
 
 import { getTokens } from '../config'
 import { Address } from '../types/custom/config-types'
@@ -45,7 +45,7 @@ interface EVM {
    * This increases the next block's timestamp by the specified amount of seconds.
    * @param seconds {BigNumberish} Amount of seconds to increase the next block's timestamp by.
    */
-  advanceTime: (seconds: BigNumberish) => Promise<void>
+  advanceTime: (seconds: BigNumberish | moment.Duration) => Promise<void>
 
   /**
    * Will mine the specified number of blocks locally. This is helpful when functionality
@@ -172,7 +172,8 @@ extendEnvironment((hre) => {
   }
 
   hre.evm = {
-    async advanceTime(seconds: BigNumberish): Promise<void> {
+    async advanceTime(seconds: BigNumberish | moment.Duration): Promise<void> {
+      if (moment.isDuration(seconds)) seconds = seconds.asSeconds()
       await hre.fastForward(seconds)
     },
 
