@@ -149,6 +149,7 @@ export default <HardhatUserConfig>{
       forkName: FORKING_NETWORK,
       accounts,
       timeout: 100000,
+      gasPrice: GAS_PRICE,
     },
     mainnet: {
       url: process.env.ALCHEMY_MAINNET_KEY,
