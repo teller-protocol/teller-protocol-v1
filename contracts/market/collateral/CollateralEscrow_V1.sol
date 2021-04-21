@@ -13,36 +13,36 @@ contract CollateralEscrow_V1 is OwnableUpgradeable, ICollateralEscrow {
     using SafeERC20 for IERC20;
     IERC20 public collateralToken;
 
-    mapping(address => uint256) public collateralBalances;
+    mapping(uint256 => uint256) public collateralBalances; // loanID -> collateral
 
     function init(address tokenAddress) external override {
         require(
-            address(tokenAddress) != address(0),
-            "Teller escrow: collateral token address"
+            tokenAddress != address(0),
+            "Teller escrow: collateral token address 0"
         );
         OwnableUpgradeable.__Ownable_init();
         collateralToken = IERC20(tokenAddress);
     }
 
-    function depositCollateral(uint256 amount, address depositor)
+    function depositCollateral(uint256 amount, uint256 loanID)
         external
         override
         onlyOwner
     {
-        collateralToken.safeTransferFrom(depositor, address(this), amount);
-        collateralBalances[depositor] += amount;
+        collateralToken.safeTransferFrom(msg.sender, address(this), amount);
+        collateralBalances[loanID] += amount;
     }
 
-    function withdrawCollateral(uint256 amount, address depositor)
-        external
-        override
-        onlyOwner
-    {
+    function withdrawCollateral(
+        uint256 amount,
+        uint256 loanID,
+        address receiver
+    ) external override onlyOwner {
         require(
-            collateralBalances[depositor] <= amount,
+            collateralBalances[loanID] >= amount,
             "Teller escrow: Insufficient collateral balance"
         );
-        collateralToken.safeTransfer(depositor, amount);
-        collateralBalances[depositor] -= amount;
+        collateralToken.safeTransfer(receiver, amount);
+        collateralBalances[loanID] -= amount;
     }
 }

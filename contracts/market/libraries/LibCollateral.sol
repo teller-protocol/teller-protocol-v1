@@ -72,7 +72,7 @@ library LibCollateral {
         }
         // Transfer collateral to token escrow
         MarketStorageLib.store().collateralEscrows[l(loanID).collateralToken]
-            .depositCollateral(amount, l(loanID).loanTerms.borrower);
+            .depositCollateral(amount, loanID);
 
         l(loanID).collateral += amount;
         l(loanID).lastCollateralIn = block.timestamp;
@@ -85,9 +85,10 @@ library LibCollateral {
         returns (address escrow_)
     {
         // Create escrow
-        escrow_ = AppStorageLib.store().collateralEscrowBeacon.cloneProxy(
-            abi.encode(ICollateralEscrow.init.selector, collateralToken)
-        );
+        escrow_ = AppStorageLib.store().collateralEscrowBeacon.cloneProxy("");
+        ICollateralEscrow(escrow_).init(collateralToken);
+        // Set max allowance
+        IERC20(collateralToken).approve(escrow_, type(uint256).max);
         // Save escrow address for loan
         MarketStorageLib.store().collateralEscrows[
             collateralToken
@@ -99,19 +100,11 @@ library LibCollateral {
         uint256 amount,
         address payable recipient
     ) internal {
+        // Withdraw collateral from token escrow
+        MarketStorageLib.store().collateralEscrows[l(loanID).collateralToken]
+            .withdrawCollateral(amount, loanID, l(loanID).loanTerms.borrower);
+
         l(loanID).collateral -= amount;
-        // Check if ETH deposit and wrap in WETH
-        address weth = AppStorageLib.store().assetAddresses["WETH"];
-        if (weth == l(loanID).collateralToken) {
-            IWETH(weth).withdraw(amount);
-            recipient.transfer(amount);
-        } else {
-            // Withdraw collateral from token escrow
-            MarketStorageLib.store().collateralEscrows[
-                l(loanID).collateralToken
-            ]
-                .withdrawCollateral(amount, l(loanID).loanTerms.borrower);
-        }
 
         emit CollateralWithdrawn(
             loanID,

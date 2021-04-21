@@ -1,7 +1,7 @@
 import { BigNumber, BigNumberish, ContractTransaction, Signer } from 'ethers'
 import { contracts, ethers, toBN, tokens } from 'hardhat'
 
-import { ITellerDiamond } from '../../types/typechain'
+import { IERC20, ITellerDiamond } from '../../types/typechain'
 import { ONE_DAY } from '../../utils/consts'
 import { mockCRAResponse } from './mock-cra-response'
 
@@ -188,11 +188,22 @@ const depositCollateral = async (
     from = details.borrower.signer,
   } = args
 
-  return await diamond
-    .connect(from)
-    .depositCollateral(details.borrower.address, details.loan.id, amount, {
-      value: amount, // TODO: only if collateral is ETH
-    })
+  const eth = await tokens.get('WETH')
+  const collateralToken = await contracts.get<IERC20>('IERC20', {
+    at: details.loan.collateralToken,
+  })
+  if (details.loan.collateralToken == eth.address) {
+    return await diamond
+      .connect(from)
+      .depositCollateral(details.borrower.address, details.loan.id, amount, {
+        value: amount, // Only if collateral is ETH
+      })
+  } else {
+    await collateralToken.approve(diamond.address, amount)
+    return await diamond
+      .connect(from)
+      .depositCollateral(details.borrower.address, details.loan.id, amount)
+  }
 }
 
 interface WithdrawCollateralArgs extends CommonLoanArgs {
