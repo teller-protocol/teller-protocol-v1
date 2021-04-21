@@ -6,14 +6,12 @@ import { AppStorageLib, AppStorage } from "../storage/app.sol";
 import { StakingStorageLib, StakingStorage } from "../storage/staking.sol";
 
 // Contracts
-import "../nft/TellerNFT.sol";
+import { TellerNFT } from "../nft/TellerNFT.sol";
 
 // Utils
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 contract StakingFacet {
-    using EnumerableSet for EnumerableSet.UintSet;
-
     function stakeNFT(uint256 nftId) external {
         _stakeNFT(nftId);
     }
@@ -25,18 +23,21 @@ contract StakingFacet {
     }
 
     function _stakeNFT(uint256 tokenId) internal {
-        TellerNFT nft = AppStorageLib.store().nft;
-        require(
-            nft.ownerOf(tokenId) == msg.sender,
-            "Teller Staking: not owner"
-        );
-
-        EnumerableSet.UintSet storage set =
-            StakingStorageLib.store().stakedNFTs[msg.sender];
-        if (!set.contains(tokenId)) {
-            set.add(tokenId);
-            // transfer to diamond, note. nft has to be approved beforehand
-            nft.safeTransferFrom(msg.sender, address(this), tokenId);
+        if (
+            EnumerableSet.add(
+                StakingStorageLib.store().stakedNFTs[msg.sender],
+                tokenId
+            )
+        ) {
+            // Transfer to diamond
+            AppStorageLib.store().nft.transferFrom(
+                msg.sender,
+                address(this),
+                tokenId
+            );
+            (, TellerNFT.Tier memory tier) =
+                AppStorageLib.store().nft.getTokenTier(tokenId);
+            StakingStorageLib.store().baseLoanSize[tokenId] = tier.baseLoanSize;
         }
     }
 }

@@ -13,14 +13,14 @@ export const addTiers = async (
   args: AddTiersArgs,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
-  const { contracts, network } = hre
+  const { contracts, network, log } = hre
 
-  if (network.name !== 'localhost' && !args.sendTx) {
-    console.log()
-    console.log('================================================')
-    console.log('  Must pass --send-tx flag to execute tx')
-    console.log('================================================')
-    console.log()
+  if (!['localhost', 'hardhat'].includes(network.name) && !args.sendTx) {
+    log('')
+    log('================================================')
+    log('  Must pass --send-tx flag to execute tx')
+    log('================================================')
+    log('')
     return
   }
 
@@ -30,9 +30,9 @@ export const addTiers = async (
       `No deployment for Teller NFT. Please run the NFT deployment script.`
     )
 
-  console.log()
-  console.log('  ** Adding Tiers to Teller NFT **')
-  console.log()
+  log('')
+  log('Adding Tiers to Teller NFT', { indent: 1, star: true })
+  log('')
 
   const { tiers } = getNFT(network)
   for (let i = 0; i < tiers.length; i++) {
@@ -40,9 +40,9 @@ export const addTiers = async (
     if (tier.contributionAsset === NULL_ADDRESS) {
       await nft.addTier(tiers[i]).then(({ wait }) => wait())
 
-      console.log(` * Tier ${i} added`)
+      log(`Tier ${i} added`, { indent: 2, star: true })
     } else {
-      console.log(` * Tier ${i} already exists`)
+      log(`Tier ${i} already exists`, { indent: 2, star: true })
     }
   }
 }

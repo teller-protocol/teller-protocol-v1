@@ -17,14 +17,14 @@ export const addMerkles = async (
   args: AddMerklesArgs,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
-  const { contracts, network } = hre
+  const { contracts, network, log } = hre
 
-  if (network.name !== 'localhost' && !args.sendTx) {
-    console.log()
-    console.log('================================================')
-    console.log('  Must pass --send-tx flag to execute tx')
-    console.log('================================================')
-    console.log()
+  if (!['localhost', 'hardhat'].includes(network.name) && !args.sendTx) {
+    log('')
+    log('================================================')
+    log('  Must pass --send-tx flag to execute tx')
+    log('================================================')
+    log('')
     return
   }
 
@@ -40,9 +40,9 @@ export const addMerkles = async (
   if (!nftDistributor)
     throw new Error(`No Teller NFT Distributor is deployed for ${network.name}`)
 
-  console.log()
-  console.log('  ** Adding Merkle Roots to NFT Distributor **')
-  console.log()
+  log('')
+  log('Adding Merkle Roots to NFT Distributor', { indent: 1, star: true })
+  log('')
 
   const distributions: Array<{
     tierIndex: number
@@ -65,12 +65,14 @@ export const addMerkles = async (
       await nftDistributor
         .addMerkle(tierIndex, info.merkleRoot)
         .then(({ wait }) => wait())
-      console.log(
-        ` * NEW merkle root for tier ${tierIndex} added: ${info.merkleRoot}`
-      )
+      log(`NEW merkle root for tier ${tierIndex} added: ${info.merkleRoot}`, {
+        indent: 2,
+        star: true,
+      })
     } else {
-      console.log(
-        ` * Merkle root for tier ${tierIndex} ALREADY added: ${info.merkleRoot}`
+      log(
+        `Merkle root for tier ${tierIndex} ALREADY added: ${info.merkleRoot}`,
+        { indent: 2, star: true }
       )
     }
   }
@@ -80,11 +82,9 @@ export const addMerkles = async (
     JSON.stringify(distributionsInfo, null, 2)
   )
 
-  if (network.name !== 'hardhat') {
-    console.log()
-    console.log(` ** Output written to ${distributionsOutputFile}`)
-  }
-  console.log()
+  log('')
+  log(`Output written to ${distributionsOutputFile}`, { indent: 2, star: true })
+  log('')
 }
 
 task(

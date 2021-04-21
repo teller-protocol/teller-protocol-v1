@@ -9,6 +9,7 @@ struct StakingStorage {
     mapping(address => EnumerableSet.UintSet) stakedNFTs;
     // Maps loanID to NFT IDs indicating NFT being used for the loan
     mapping(uint256 => EnumerableSet.UintSet) loanNFTs;
+    mapping(uint256 => uint256) baseLoanSize;
 }
 
 bytes32 constant STAKING_STORAGE_POS = keccak256("teller.staking.storage");

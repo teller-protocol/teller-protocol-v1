@@ -50,7 +50,9 @@ export const getTokens = (network: Network) => {
 export const getUniswap = (network: Network) => uniswap[getNetworkName(network)]
 
 export const getNFT = (network: Network) => {
-  const distributionsOutputFile = `deployments/${network.name}/_nftDistribution.json`
+  const distributionsOutputFile = `deployments/${getNetworkName(
+    network
+  )}/_nftDistribution.json`
   const distributions: MerkleDistributorInfo[] = JSON.parse(
     fs.readFileSync(distributionsOutputFile).toString()
   )

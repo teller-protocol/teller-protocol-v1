@@ -4,9 +4,16 @@ import { BigNumberish, Signer } from 'ethers'
 import hre from 'hardhat'
 import moment from 'moment'
 
-import { getMarkets } from '../../config'
+import { getMarkets, getNFT } from '../../config'
+import { claimNFT } from '../../tasks'
 import { Market } from '../../types/custom/config-types'
-import { ERC20, ITellerDiamond, ITToken } from '../../types/typechain'
+import {
+  ERC20,
+  ITellerDiamond,
+  ITellerNFT,
+  ITToken,
+  TellerNFT,
+} from '../../types/typechain'
 import { CacheType, LoanStatus } from '../../utils/consts'
 import { fundedMarket } from '../fixtures'
 import { getFunds } from '../helpers/get-funds'
@@ -23,7 +30,7 @@ chai.use(solidity)
 
 const { getNamedSigner, getNamedAccounts, contracts, ethers, evm, toBN } = hre
 
-describe.only('Loans', () => {
+describe('Loans', () => {
   getMarkets(hre.network).forEach(testLoans)
 
   function testLoans(market: Market): void {
@@ -34,7 +41,7 @@ describe.only('Loans', () => {
 
     before(async () => {
       // Get a fresh market
-      await hre.deployments.fixture('markets')
+      await hre.deployments.fixture(['markets', 'nft'])
 
       deployer = await getNamedSigner('deployer')
       diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
@@ -50,9 +57,6 @@ describe.only('Loans', () => {
       loanType: LoanType
     }
     const create = async (args: CreateArgs): Promise<CreateLoanReturn> => {
-      const tToken = await contracts.get<ITToken>('ITToken', {
-        at: await diamond.getTTokenFor(lendingToken.address),
-      })
       const { amount, borrower, loanType } = args
       return await createLoan({
         lendTokenSym: market.lendingToken,
@@ -63,7 +67,7 @@ describe.only('Loans', () => {
       })
     }
 
-    it('should be able to take out a loan with collateral', async function () {
+    it('should be able to take out a loan with collateral', async () => {
       const revert = await evm.snapshot()
 
       const { borrower } = await getNamedAccounts()
@@ -161,11 +165,6 @@ describe.only('Loans', () => {
         .connect(details.borrower.signer)
         .approve(diamond.address, amountToRepay)
 
-      console.log(
-        'borrower balance',
-        (await lendingToken.balanceOf(details.borrower.address)).toString()
-      )
-
       // Repay loan
       await repay(amountToRepay, details.borrower.signer)
         .should.emit(diamond, 'LoanRepaid')
@@ -181,6 +180,64 @@ describe.only('Loans', () => {
       repaidLoan.status.should.eq(LoanStatus.Closed)
     })
 
+    it('should be able to take out a loan with an NFT', async () => {
+      const revert = await evm.snapshot()
+
+      // Setup for NFT user
+      const { merkleTrees } = getNFT(hre.network)
+      const merkleIndex = 0
+      const borrower = ethers.utils.getAddress(
+        merkleTrees[merkleIndex].balances[0].address
+      )
+      const imp = await evm.impersonate(borrower)
+      await diamond.connect(deployer).addAuthorizedAddress(borrower)
+
+      // Claim user's NFTs
+      await claimNFT({ address: borrower, merkleIndex }, hre)
+
+      // Get the sum of loan amount to take out
+      const nft = await contracts.get<TellerNFT>('TellerNFT')
+      const ownedNFTs = await nft.getOwnedTokens(borrower)
+      let amount = toBN(0)
+      for (const nftID of ownedNFTs) {
+        const { tier_ } = await nft.getTokenTier(nftID)
+        amount = amount.add(
+          toBN(tier_.baseLoanSize, await lendingToken.decimals())
+        )
+      }
+      console.log('nft total amount', amount.toString())
+
+      await nft
+        .connect(imp.signer)
+        .setApprovalForAll(diamond.address, true)
+        .then(({ wait }) => wait())
+      await diamond
+        .connect(imp.signer)
+        .stakeNFTs(ownedNFTs)
+        .then(({ wait }) => wait())
+
+      // Create loan
+      const { getHelpers } = await create({
+        amount,
+        borrower,
+        loanType: LoanType.ZERO_COLLATERAL,
+      })
+      const { details } = await getHelpers()
+
+      // Take out loan
+      await diamond
+        .connect(imp.signer)
+        .takeOutLoanWithNFTs(details.loan.id, amount, ownedNFTs)
+        .should.emit(diamond, 'LoanTakenOut')
+        .withArgs(details.loan.id, borrower, amount)
+
+      const { loan: updatedLoan } = await details.refresh()
+      updatedLoan.status.should.eq(LoanStatus.Active)
+
+      await imp.stop()
+      await revert()
+    })
+
     it('should not be able to take out with invalid debt ratio', async () => {
       // Skip ahead a day to avoid request rate limit
       await evm.advanceTime(moment.duration(1, 'day'))
@@ -194,19 +251,20 @@ describe.only('Loans', () => {
         cacheType: CacheType.Uint,
       })
 
-      const amount = toBN(100, await lendingToken.decimals())
+      const amount = toBN(100000, await lendingToken.decimals())
       const { borrower } = await getNamedAccounts()
 
       // Try to take out another loan which should fail
-      const { tx } = await create({
+      const { tx, getHelpers } = await create({
         amount,
         borrower,
         loanType: LoanType.OVER_COLLATERALIZED,
       })
+      const helpers = await getHelpers()
 
-      await tx.should.be.revertedWith(
-        'Teller: max supply-to-debt ratio exceeded'
-      )
+      await helpers
+        .takeOut()
+        .should.be.revertedWith('Teller: max supply-to-debt ratio exceeded')
 
       await revert()
     })

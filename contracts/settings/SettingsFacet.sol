@@ -7,6 +7,7 @@ import { ADMIN, AUTHORIZED } from "../shared/roles.sol";
 import {
     UpgradeableBeaconFactory
 } from "../shared/proxy/beacon/UpgradeableBeaconFactory.sol";
+import { TellerNFT } from "../nft/TellerNFT.sol";
 
 // Interfaces
 import { IUniswapV2Router } from "../shared/interfaces/IUniswapV2Router.sol";
@@ -26,6 +27,7 @@ struct InitArgs {
     address admin;
     InitAssets[] assets;
     address[] cTokens;
+    address tellerNFT;
     address uniswapV2Router;
     address loansEscrowBeacon;
     address collateralEscrowBeacon;
@@ -101,6 +103,7 @@ contract SettingsFacet is RolesMods {
             s.cTokenRegistry[_args.cTokens[i]] = true;
         }
 
+        s.nft = TellerNFT(_args.tellerNFT);
         s.uniswapRouter = IUniswapV2Router(_args.uniswapV2Router);
         s.loansEscrowBeacon = UpgradeableBeaconFactory(_args.loansEscrowBeacon);
         s.collateralEscrowBeacon = UpgradeableBeaconFactory(

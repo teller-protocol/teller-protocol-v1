@@ -18,7 +18,7 @@ export const claimNFT = async (
 ): Promise<void> => {
   const { contracts, network, ethers, toBN, log } = hre
 
-  if (network.name !== 'localhost' && !args.sendTx) {
+  if (!['localhost', 'hardhat'].includes(network.name) && !args.sendTx) {
     console.log()
     console.log('================================================')
     console.log('  Must pass --send-tx flag to execute tx')

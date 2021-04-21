@@ -11,10 +11,11 @@ import {
 import { deploy, deployDiamond } from '../utils/deploy-helpers'
 
 const deployProtocol: DeployFunction = async (hre) => {
-  const { network, getNamedAccounts } = hre
+  const { contracts, network, getNamedAccounts } = hre
 
   const { deployer } = await getNamedAccounts()
 
+  const { address: nftAddress } = await contracts.get('TellerNFT')
   const loansEscrowBeacon = await deployLoansEscrowBeacon(hre)
 
   const collateralEscrowBeacon = await deployCollateralEscrowBeacon(hre)
@@ -24,6 +25,7 @@ const deployProtocol: DeployFunction = async (hre) => {
     admin: deployer,
     assets: Object.entries(tokens.erc20).map(([sym, addr]) => ({ sym, addr })),
     cTokens: Object.values(tokens.compound),
+    tellerNFT: nftAddress,
     uniswapV2Router: getUniswap(network).v2Router,
     loansEscrowBeacon: loansEscrowBeacon.address,
     collateralEscrowBeacon: collateralEscrowBeacon.address,
@@ -186,5 +188,6 @@ const deployCollateralEscrowBeacon = async (
 }
 
 deployProtocol.tags = ['protocol']
+deployProtocol.dependencies = ['nft']
 
 export default deployProtocol
