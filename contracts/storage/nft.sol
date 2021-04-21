@@ -4,19 +4,20 @@ pragma solidity ^0.8.0;
 // Utils
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-struct StakingStorage {
+struct NFTStorage {
     // Maps NFT owner to set of token IDs owned
     mapping(address => EnumerableSet.UintSet) stakedNFTs;
     // Maps loanID to NFT IDs indicating NFT being used for the loan
     mapping(uint256 => EnumerableSet.UintSet) loanNFTs;
-    mapping(uint256 => uint256) baseLoanSize;
+    // Merkle root used for verifying nft IDs to base loan size
+    bytes32 nftMerkleRoot;
 }
 
-bytes32 constant STAKING_STORAGE_POS = keccak256("teller.staking.storage");
+bytes32 constant NFT_STORAGE_POS = keccak256("teller.staking.storage");
 
-library StakingStorageLib {
-    function store() internal pure returns (StakingStorage storage s) {
-        bytes32 pos = STAKING_STORAGE_POS;
+library NFTStorageLib {
+    function store() internal pure returns (NFTStorage storage s) {
+        bytes32 pos = NFT_STORAGE_POS;
         assembly {
             s.slot := pos
         }

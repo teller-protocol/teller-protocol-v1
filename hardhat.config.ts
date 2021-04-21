@@ -142,6 +142,7 @@ export default <HardhatUserConfig>{
       },
       forkName: FORKING_NETWORK,
       accounts,
+      gasPrice: GAS_PRICE,
     },
     // Uses the forked node from the hardhat network above
     localhost: {

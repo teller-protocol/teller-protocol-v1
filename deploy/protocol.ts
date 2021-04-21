@@ -3,8 +3,8 @@ import { DeployFunction } from 'hardhat-deploy/types'
 
 import { getTokens, getUniswap } from '../config'
 import {
-  ILoansEscrow,
   ICollateralEscrow,
+  ILoansEscrow,
   ITellerDiamond,
   UpgradeableBeaconFactory,
 } from '../types/typechain'
@@ -48,7 +48,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       'LoanDataFacet',
       'RepayFacet',
       'SignersFacet',
-      'StakingFacet',
+      'NFTFacet',
       'EscrowClaimTokensFacet',
       'EscrowSettingsFacet',
     ],

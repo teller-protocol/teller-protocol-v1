@@ -5,7 +5,12 @@ import hre from 'hardhat'
 import moment from 'moment'
 
 import { getMarkets, getNFT } from '../../config'
+import NftLoanTree from '../../scripts/merkle/nft-loan-tree'
 import { claimNFT } from '../../tasks'
+import {
+  getLoanMerkleTree,
+  setLoanMerkle,
+} from '../../tasks/nft/set-nft-loan-merkle'
 import { Market } from '../../types/custom/config-types'
 import {
   ERC20,
@@ -180,7 +185,7 @@ describe('Loans', () => {
       repaidLoan.status.should.eq(LoanStatus.Closed)
     })
 
-    it('should be able to take out a loan with an NFT', async () => {
+    it.only('should be able to take out a loan with an NFT', async () => {
       const revert = await evm.snapshot()
 
       // Setup for NFT user
@@ -195,17 +200,30 @@ describe('Loans', () => {
       // Claim user's NFTs
       await claimNFT({ address: borrower, merkleIndex }, hre)
 
+      // Create and set NFT loan merkle
+      const nftLoanTree = await getLoanMerkleTree(hre)
+      await setLoanMerkle({ loanTree: nftLoanTree }, hre)
+      const proofs = []
+
       // Get the sum of loan amount to take out
       const nft = await contracts.get<TellerNFT>('TellerNFT')
       const ownedNFTs = await nft.getOwnedTokens(borrower)
       let amount = toBN(0)
       for (const nftID of ownedNFTs) {
         const { tier_ } = await nft.getTokenTier(nftID)
-        amount = amount.add(
-          toBN(tier_.baseLoanSize, await lendingToken.decimals())
+        const baseLoanSize = toBN(
+          tier_.baseLoanSize,
+          await lendingToken.decimals()
         )
+        amount = amount.add(baseLoanSize)
+
+        // Get the proofs for the NFT loan size
+        proofs.push({
+          id: nftID,
+          baseLoanSize,
+          proof: nftLoanTree.getProof(nftID, baseLoanSize),
+        })
       }
-      console.log('nft total amount', amount.toString())
 
       await nft
         .connect(imp.signer)
@@ -227,7 +245,7 @@ describe('Loans', () => {
       // Take out loan
       await diamond
         .connect(imp.signer)
-        .takeOutLoanWithNFTs(details.loan.id, amount, ownedNFTs)
+        .takeOutLoanWithNFTs(details.loan.id, amount, proofs)
         .should.emit(diamond, 'LoanTakenOut')
         .withArgs(details.loan.id, borrower, amount)
 

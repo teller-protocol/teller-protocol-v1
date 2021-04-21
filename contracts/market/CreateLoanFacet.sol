@@ -18,17 +18,20 @@ import {
 import { MaxDebtRatioLib } from "../settings/asset/MaxDebtRatioLib.sol";
 import { MaxLoanAmountLib } from "../settings/asset/MaxLoanAmountLib.sol";
 import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
+import { NFTLib, NftLoanSizeProof } from "../nft/libraries/NFTLib.sol";
 
 // Interfaces
 import { ILoansEscrow } from "../escrow/interfaces/ILoansEscrow.sol";
+
 // Proxy
 import {
     BeaconProxy
 } from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
-import { ITellerNFT } from "../nft/ITellerNFT.sol";
 
 // Storage
 import {
@@ -40,7 +43,6 @@ import {
     MarketStorageLib
 } from "../storage/market.sol";
 import { AppStorageLib } from "../storage/app.sol";
-import { StakingStorageLib } from "../storage/staking.sol";
 
 contract CreateLoanFacet is RolesMods, PausableMods {
     /**
@@ -144,32 +146,13 @@ contract CreateLoanFacet is RolesMods, PausableMods {
     function takeOutLoanWithNFTs(
         uint256 loanID,
         uint256 amount,
-        uint256[] calldata nftIDs
+        NftLoanSizeProof[] calldata proofs
     ) external paused("", false) __takeOutLoan(loanID, amount) {
-        ERC20 asset =
-            ERC20(MarketStorageLib.store().loans[loanID].lendingToken);
-        uint256 factor = 10**asset.decimals();
         uint256 allowedLoanSize;
-        for (uint256 i; i < nftIDs.length; i++) {
-            // NFT must be currently staked
-            require(
-                // Remove NFT from being staked - returns bool
-                EnumerableSet.remove(
-                    StakingStorageLib.store().stakedNFTs[msg.sender],
-                    nftIDs[i]
-                ),
-                "Teller: borrower nft not staked"
-            );
+        for (uint256 i; i < proofs.length; i++) {
+            NFTLib.applyToLoan(loanID, proofs[i]);
 
-            EnumerableSet.add(
-                StakingStorageLib.store().loanNFTs[loanID],
-                nftIDs[i]
-            );
-
-            allowedLoanSize +=
-                StakingStorageLib.store().baseLoanSize[nftIDs[i]] *
-                factor;
-
+            allowedLoanSize += proofs[i].baseLoanSize;
             if (allowedLoanSize >= amount) {
                 break;
             }
