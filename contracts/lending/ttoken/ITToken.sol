@@ -50,7 +50,7 @@ abstract contract ITToken is AccessControlUpgradeable, ERC20Upgradeable {
 
     function fundLoan(address recipient, uint256 amount) external virtual;
 
-    function depositStrategy() external virtual;
+    function rebalance() external virtual;
 
     /**
      * @notice Increase account supply of specified token amount.

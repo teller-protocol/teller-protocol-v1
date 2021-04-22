@@ -3,6 +3,9 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { InitArgs, CONTROLLER, ADMIN } from "./data.sol";
+import "./storage.sol" as Storage;
+import "./Ticketed.sol";
+
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // Utils
@@ -17,22 +20,27 @@ import {
     IERC20,
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { MaxDebtRatioLib } from "../../settings/asset/MaxDebtRatioLib.sol";
+import { MaxLoanAmountLib } from "../../settings/asset/MaxLoanAmountLib.sol";
+import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
+import {
+    ReentryMods
+} from "../../contexts2/access-control/reentry/ReentryMods.sol";
 
 /**
  * @notice This contract represents a lending pool for an asset within Teller protocol.
  *
  * @author develop@teller.finance
  */
-contract TToken_V1 is ITToken {
-    /* State Variables */
+contract TToken_V1 is ITToken, ReentryMods, Ticketed {
+    using NumbersLib for uint256;
 
+    /* State Variables */
     uint256 public constant EXCHANGE_RATE_FACTOR = 1e18;
     uint256 public constant ONE_HUNDRED_PERCENT = 10000;
 
-    ICErc20 public cToken;
-    ERC20 private _underlying;
-    uint8 private _decimals;
-    bool private _restricted;
+    function() internal pure returns (Storage.Store storage)
+        private constant S = Storage.store;
 
     /* Modifiers */
 
@@ -40,6 +48,24 @@ contract TToken_V1 is ITToken {
         require(hasRole(role, _msgSender()));
         _;
     }
+
+    /** 
+        Initial implementation/experimentation with metamorphic contracts/storage
+        as the controllers for deposit/withdraw/etc. hooks from TTokens.
+    */
+    // modifier strategized(int256 amountIn) {
+    //     uint256 balanceBefore = underlying().balanceOf(address(this));
+    //     if (amountIn < 0 && int256(balanceBefore) + amountIn < 0) {
+    //         // We don't have enough
+    //         S().strategist.rug()
+    //     }
+    //     _;
+    //     (bool success, bytes memory result) =
+    //         STRATEGIST.delegatecall(
+    //             balanceBefore,
+    //             underlying().balanceOf(address(this))
+    //         );
+    // }
 
     /**
      * @notice Checks if the LP is restricted or has the CONTROLLER role.
@@ -49,7 +75,7 @@ contract TToken_V1 is ITToken {
      */
     modifier notRestricted {
         require(
-            !_restricted || hasRole(CONTROLLER, _msgSender()),
+            !S().restricted || hasRole(CONTROLLER, _msgSender()),
             "Teller: platform restricted"
         );
         _;
@@ -57,17 +83,26 @@ contract TToken_V1 is ITToken {
 
     /* Public Functions */
 
+    function cToken() public view returns (ICErc20 cToken_) {
+        cToken_ = S().cToken;
+    }
+
     function decimals() public view override returns (uint8 decimals_) {
-        decimals_ = _decimals;
+        decimals_ = S().decimals;
     }
 
     /**
      * @notice The token that is the underlying assets for this Teller token.
      */
     function underlying() public view override returns (ERC20 underlying_) {
-        underlying_ = _underlying;
+        underlying_ = S().underlying;
     }
 
+    /**
+        TODO: make these view functions, just getting the exchange rate stored
+        from compound to save on some gas.
+        We will be accruing interest and calling compound during rebalance().
+     */
     /**
      * @notice The balance of an {account} denoted in underlying value.
      */
@@ -79,23 +114,27 @@ contract TToken_V1 is ITToken {
         balance_ = _valueInUnderlying(balanceOf(account), exchangeRate());
     }
 
+    /**
+        TODO: try/catch transfer calls which fail due to not having the balance
+        in this contract, but instead it being on compound.
+        Can return a nice message to the user and have them click on a button to
+        get a reward for fixing the issue + getting their tx through.
+     */
+    /**
+        Take underlying token from the pool at this address and send it
+        to a loan contract.
+        @param recipient of the funds.
+        @param amount sent to recipient.
+     */
     function fundLoan(address recipient, uint256 amount)
         external
         override
         authorized(CONTROLLER)
     {
         // Claim tokens from Compound
-        cToken.redeemUnderlying(amount);
+        // S().cToken.redeemUnderlying(amount);
         // Transfer tokens to recipient
-        SafeERC20.safeTransfer(_underlying, recipient, amount);
-    }
-
-    function depositStrategy() public override {
-        uint256 balance = _underlying.balanceOf(address(this));
-        // Allow Compound to take underlying tokens
-        SafeERC20.safeIncreaseAllowance(_underlying, address(cToken), balance);
-        // Deposit tokens to Compound
-        cToken.mint(balance);
+        SafeERC20.safeTransfer(S().underlying, recipient, amount);
     }
 
     /**
@@ -110,26 +149,24 @@ contract TToken_V1 is ITToken {
     {
         require(amount > 0, "Teller: cannot mint 0");
         require(
-            amount <= _underlying.balanceOf(_msgSender()),
+            amount <= S().underlying.balanceOf(_msgSender()),
             "Teller: insufficient underlying"
         );
 
         // Calculate amount of tokens to mint
+        // TODO: just use standard exchange rate not compound accrued one.
         mintAmount_ = _valueOfUnderlying(amount, exchangeRate());
 
         // Transfer tokens from lender
         SafeERC20.safeTransferFrom(
-            _underlying,
+            S().underlying,
             _msgSender(),
             address(this),
             amount
         );
-        // Execute deposit strategy
-        depositStrategy();
 
         // Mint Teller token value of underlying
         _mint(_msgSender(), mintAmount_);
-
         emit Mint(_msgSender(), mintAmount_, amount);
     }
 
@@ -144,23 +181,98 @@ contract TToken_V1 is ITToken {
             "Teller: redeem amount exceeds balance"
         );
 
-        // Accrue interest and calculate exchange rate
+        // TODO: don't accrue interest here and just do it in rebalance
         uint256 underlyingAmount = _valueInUnderlying(amount, exchangeRate());
         require(
-            underlyingAmount <= totalUnderlyingSupply(),
+            underlyingAmount <= S().underlying.balanceOf(address(this)),
             "Teller: redeem ttoken lp not enough supply"
         );
 
         // Burn Teller tokens
         _burn(_msgSender(), amount);
-
         // Claim tokens from Compound
-        cToken.redeemUnderlying(underlyingAmount);
+        // S().cToken.redeemUnderlying(underlyingAmount);
 
         // Transfer funds back to lender
-        SafeERC20.safeTransfer(_underlying, _msgSender(), underlyingAmount);
+        SafeERC20.safeTransfer(S().underlying, _msgSender(), underlyingAmount);
 
         emit Redeem(_msgSender(), amount, underlyingAmount);
+    }
+
+    /**
+        This is untested for now, but basically just fill up a bytes32 with
+        relevant data so that later we can parse it and reward the user accurately.
+        See {Ticketed} abstract contract for more details.
+     */
+    function ticketId(bytes4 selector) internal view returns (bytes32 id_) {
+        assembly {
+            id_ := shl(or(id_, selector), 224)
+            id_ := or(id_, shl(gasprice(), 64))
+            id_ := or(id_, number())
+        }
+    }
+
+    /**
+        Called by community members, third party developers, etc. to rebalance
+        the amount of capital allocated to the investment strategy vs. sitting
+        idle in this contract. Just looks at the maximum debt ratio and tries to
+        keep that amount at most on the balance of this contract. Additional check
+        for maximum loan amount.
+        This uses a ticketing system where users are rewarded semi-cheap "tickets"
+        for doing this action. The idea is to reward holders of pattern matching
+        tickets together. Tickets can be traded, it's fully up to the owner.
+        They're kind of like NFT's but less flexible in a way. Door's open for NFTs
+        though.
+     */
+    function rebalance()
+        external
+        override
+        nonReentry("")
+        notRestricted
+        ticketed(ticketId(msg.sig), msg.sender)
+    {
+        S().cToken.accrueInterest();
+        address _underlying = address(S().underlying);
+        uint256 maxLoanAmount = MaxLoanAmountLib.get(_underlying);
+        uint256 maxDebtRatio = MaxDebtRatioLib.get(_underlying);
+
+        uint256 _localUnderlyingSupply =
+            IERC20(_underlying).balanceOf(address(this));
+        uint256 _compoundUnderlyingSupply =
+            // TODO: don't store the value here as well? Maybe compound just does
+            // sometimes and not always.
+            S().cToken.balanceOfUnderlying(address(this));
+        uint256 _totalUnderlyingSupply =
+            _localUnderlyingSupply + _compoundUnderlyingSupply;
+
+        // We are missing some funds in address(this), wouldn't be able to cover
+        // max loan capacity. Therefore we withdraw from compound.
+        if (
+            _totalUnderlyingSupply.ratioOf(_localUnderlyingSupply) <
+            maxDebtRatio
+        ) {
+            uint256 amountToWithdraw =
+                (maxDebtRatio * _totalUnderlyingSupply) /
+                    10000 -
+                    _localUnderlyingSupply;
+            S().cToken.redeemUnderlying(amountToWithdraw);
+            return;
+        }
+        // Otherwise, we have more than max debt in address(this), e.g. from lots
+        // of repayments. So we mint cTokens (deposit into compound) unless it would
+        // leave us with less than maxLoan left.
+        else {
+            uint256 amountToDeposit =
+                _localUnderlyingSupply -
+                    ((maxDebtRatio * _totalUnderlyingSupply) / 10000);
+            if (_localUnderlyingSupply - amountToDeposit > maxLoanAmount) {
+                S().cToken.mint(amountToDeposit);
+                return;
+            }
+        }
+
+        // We don't want to ticket this call.
+        revert("Invalid call");
     }
 
     /**
@@ -174,6 +286,7 @@ contract TToken_V1 is ITToken {
             "Teller: redeem ttoken lp not enough supply"
         );
 
+        // TODO: remove this
         // Accrue interest and calculate exchange rate
         uint256 rate = exchangeRate();
         uint256 tokenValue = _valueOfUnderlying(amount, rate);
@@ -188,10 +301,10 @@ contract TToken_V1 is ITToken {
         _burn(_msgSender(), tokenValue);
 
         // Claim tokens from Compound
-        cToken.redeemUnderlying(amount);
+        // S().cToken.redeemUnderlying(amount);
 
         // Transfer funds back to lender
-        SafeERC20.safeTransfer(_underlying, _msgSender(), amount);
+        SafeERC20.safeTransfer(S().underlying, _msgSender(), amount);
 
         emit Redeem(_msgSender(), tokenValue, amount);
     }
@@ -212,22 +325,22 @@ contract TToken_V1 is ITToken {
         _setupRole(CONTROLLER, args.controller);
         _setupRole(ADMIN, args.admin);
 
-        cToken = ICErc20(args.cToken);
-        _underlying = ERC20(args.underlying);
+        S().cToken = ICErc20(args.cToken);
+        S().underlying = ERC20(args.underlying);
         __ERC20_init(
-            string(abi.encodePacked("Teller ", _underlying.name())),
-            string(abi.encodePacked("t", _underlying.symbol()))
+            string(abi.encodePacked("Teller ", S().underlying.name())),
+            string(abi.encodePacked("t", S().underlying.symbol()))
         );
-        _decimals = _underlying.decimals();
+        S().decimals = S().underlying.decimals();
         // Platform restricted by default
-        _restricted = true;
+        S().restricted = true;
     }
 
     /**
      * @notice Sets the restricted state of the platform.
      */
     function restrict(bool state) public override authorized(ADMIN) {
-        _restricted = state;
+        S().restricted = state;
     }
 
     /**
@@ -250,22 +363,6 @@ contract TToken_V1 is ITToken {
         returns (uint256 value_)
     {
         value_ = (amount * (rate)) / EXCHANGE_RATE_FACTOR;
-    }
-
-    /**
-     * @dev
-     */
-    function _exchangeRateSupply()
-        internal
-        returns (uint256 rate_, uint256 supply_)
-    {
-        accrueInterest();
-        if (totalSupply() == 0) {
-            rate_ = EXCHANGE_RATE_FACTOR;
-        } else {
-            supply_ = totalUnderlyingSupply();
-            rate_ = _exchangeRateForSupply(supply_);
-        }
     }
 
     /**
@@ -295,7 +392,7 @@ contract TToken_V1 is ITToken {
      * @dev
      */
     function accrueInterest() public {
-        cToken.accrueInterest();
+        S().cToken.accrueInterest();
     }
 
     /**
@@ -308,6 +405,8 @@ contract TToken_V1 is ITToken {
         returns (uint256 totalSupply_)
     {
         // Get underlying balance from Compound
-        totalSupply_ += cToken.balanceOfUnderlying(address(this));
+        totalSupply_ =
+            S().underlying.balanceOf(address(this)) +
+            S().cToken.balanceOfUnderlying(address(this));
     }
 }
