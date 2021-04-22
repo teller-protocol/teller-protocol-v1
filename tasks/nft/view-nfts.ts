@@ -1,11 +1,10 @@
-import { BigNumberish } from 'ethers'
 import fs from 'fs'
 import { task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import { getNFT } from '../../config'
-import { ITellerNFT, ITellerNFTDistributor } from '../../types/typechain'
 import { MerkleDistributorInfo } from '../../scripts/merkle/root'
+import { ITellerNFT, ITellerNFTDistributor } from '../../types/typechain'
 
 interface ViewNFTsArgs {
   address?: string
@@ -32,12 +31,18 @@ export const viewNFTs = async (
 
   const getAll = address == null && tier == null && !claimable && !claimed
 
-  const { merkleTrees, distributions } = getNFT(network)
+  const { merkleTrees, distributionsOutputFile } = getNFT(network)
+  const distributions: MerkleDistributorInfo[] = JSON.parse(
+    fs.readFileSync(distributionsOutputFile).toString()
+  )
+
   const tierIndices: { claimable: Set<number>; claimed: Set<number> } = {
     claimable: new Set(),
     claimed: new Set(),
   }
-  type TierTokens = { [index: number]: number }
+  interface TierTokens {
+    [index: number]: number
+  }
   const tierTokens: { claimable: TierTokens; claimed: TierTokens } = {
     claimable: {},
     claimed: {},
@@ -61,7 +66,8 @@ export const viewNFTs = async (
     }
 
     const claimEntries = Object.entries(info.claims)
-    for (const [address, claim] of claimEntries) {
+    for (const [, claim] of claimEntries) {
+      if (!claim) continue
       const isClaimed = await nftDistributor.isClaimed(i, claim.index)
 
       const skip = (claimed && !isClaimed) || (claimable && isClaimed)
@@ -82,14 +88,14 @@ export const viewNFTs = async (
 
   log('')
 
-  if (getAll || claimable) log(`Claimable NFTs`, { indent: 2, star: true })
+  log(`Claimable NFTs`, { indent: 2, star: true })
   for (const tierIndex of tierIndices.claimable) {
     log(`Tier ${tierIndex}: ${tierTokens.claimable[tierIndex]}`, { indent: 4 })
   }
 
   log('')
 
-  if (getAll || claimed) log(`Already claimed NFTs`, { indent: 2, star: true })
+  log(`Already claimed NFTs`, { indent: 2, star: true })
   for (const tierIndex of tierIndices.claimed) {
     log(`Tier ${tierIndex}: ${tierTokens.claimed[tierIndex]}`, { indent: 4 })
   }
