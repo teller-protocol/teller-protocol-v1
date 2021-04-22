@@ -56,7 +56,6 @@ contract CollateralEscrow_V1 is OwnableUpgradeable, ICollateralEscrow {
         uint256 amount,
         address payable receiver
     ) external override onlyOwner {
-        console.log("collateral balance -- amount", _balances[loanID], amount);
         require(
             _balances[loanID] >= amount,
             "Teller escrow: Insufficient collateral balance"
@@ -85,4 +84,3 @@ contract CollateralEscrow_V1 is OwnableUpgradeable, ICollateralEscrow {
         supply_ = IERC20(collateralToken).balanceOf(address(this));
     }
 }
-import "hardhat/console.sol";
