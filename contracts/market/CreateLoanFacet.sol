@@ -240,7 +240,7 @@ library CreateLoanLib {
             LibConsensus.processLoanTerms(request, responses);
 
         // Get and increment new loan ID
-        uint256 loanID_ = CreateLoanLib.newID();
+        loanID_ = CreateLoanLib.newID();
         LibLoans.loan(loanID_).id = loanID_;
         LibLoans.loan(loanID_).status = LoanStatus.TermsSet;
         LibLoans.loan(loanID_).lendingToken = request.assetAddress;
