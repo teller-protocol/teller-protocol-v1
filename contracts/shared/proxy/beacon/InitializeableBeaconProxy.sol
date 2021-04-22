@@ -98,4 +98,10 @@ contract InitializeableBeaconProxy is Proxy {
             );
         }
     }
+
+    receive() external payable override {
+        // Needed to receive ETH without data
+        // OZ Proxy contract calls the _fallback() on receive and tries to delegatecall which fails
+    }
 }
+import "hardhat/console.sol";

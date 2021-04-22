@@ -1,7 +1,5 @@
-import fs from 'fs'
 import { Network } from 'hardhat/types'
 
-import { MerkleDistributorInfo } from '../scripts/merkle/root'
 import { Tokens } from '../types/custom/config-types'
 import { assetSettings } from './asset-settings'
 import { atms } from './atms'
@@ -53,14 +51,10 @@ export const getNFT = (network: Network) => {
   const distributionsOutputFile = `deployments/${getNetworkName(
     network
   )}/_nftDistribution.json`
-  const distributions: MerkleDistributorInfo[] = JSON.parse(
-    fs.readFileSync(distributionsOutputFile).toString()
-  )
 
   return {
     tiers: nftTiers,
     merkleTrees: nftMerkleTree[getNetworkName(network)],
     distributionsOutputFile,
-    distributions,
   }
 }

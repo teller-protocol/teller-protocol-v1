@@ -3,6 +3,9 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
+import {
+    ReentryMods
+} from "../contexts2/access-control/reentry/ReentryMods.sol";
 import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
 import { ADMIN, AUTHORIZED } from "../shared/roles.sol";
 
@@ -14,41 +17,42 @@ import {
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Storage
-import { MarketStorageLib, LoanStatus, Loan } from "../storage/market.sol";
+import {
+    MarketStorageLib,
+    MarketStorage,
+    LoanStatus,
+    Loan
+} from "../storage/market.sol";
 
-contract CollateralFacet is RolesMods, PausableMods {
+contract CollateralFacet is RolesMods, ReentryMods, PausableMods {
     /**
      * @notice Deposit collateral tokens into a loan.
-     * @param borrower The address of the loan borrower.
      * @param loanID The ID of the loan the collateral is for
      * @param amount The amount to deposit as collateral.
      */
-    function depositCollateral(
-        address borrower,
-        uint256 loanID,
-        uint256 amount
-    ) external payable paused("", false) authorized(AUTHORIZED, msg.sender) {
+    function depositCollateral(uint256 loanID, uint256 amount)
+        external
+        payable
+        paused("", false)
+        nonReentry("")
+        authorized(AUTHORIZED, msg.sender)
+    {
+        uint256 status = uint256(MarketStorageLib.store().loans[loanID].status);
         require(
-            MarketStorageLib.store().loans[loanID].status ==
-                LoanStatus.Active ||
-                MarketStorageLib.store().loans[loanID].status ==
-                LoanStatus.TermsSet,
+            status ==
+                (uint256(LoanStatus.TermsSet) ^ uint256(LoanStatus.Active)) &
+                    status,
             "Teller: loan not active or set"
         );
-        // TODO: necessary check?
-        require(
-            borrower ==
-                MarketStorageLib.store().loans[loanID].loanTerms.borrower,
-            "Teller: borrower mismatch"
-        );
 
-        // Update the loan collateral and total. Transfer tokens to this contract.
-        LibCollateral.depositCollateral(loanID, amount);
+        // Transfer tokens to the collateral escrow
+        LibCollateral.deposit(loanID, amount);
     }
 
     function withdrawCollateral(uint256 amount, uint256 loanID)
         external
         paused("", false)
+        nonReentry("")
         authorized(AUTHORIZED, msg.sender)
     {
         Loan storage loan = MarketStorageLib.store().loans[loanID];
@@ -57,24 +61,19 @@ contract CollateralFacet is RolesMods, PausableMods {
         require(amount > 0, "Teller: zero withdraw");
 
         if (loan.status == LoanStatus.Active) {
-            (, int256 neededInCollateralTokens, ) =
-                LibLoans.getCollateralNeededInfo(loanID);
-            if (neededInCollateralTokens > 0) {
-                uint256 withdrawalAmount =
-                    loan.collateral - (uint256(neededInCollateralTokens));
+            (, int256 needed, ) = LibLoans.getCollateralNeededInfo(loanID);
+            if (needed > 0) {
                 require(
-                    withdrawalAmount >= amount,
-                    "COLLATERAL_AMOUNT_TOO_HIGH"
+                    LibCollateral.e(loanID).loanSupply(loanID) -
+                        uint256(needed) >=
+                        amount,
+                    "Teller: collateral withdraw amount over limit"
                 );
             }
-        } else {
-            require(
-                loan.collateral >= amount,
-                "Teller: withdraw greater than collateral"
-            );
         }
 
-        LibCollateral.withdrawCollateral(loanID, amount, payable(msg.sender));
+        // Withdraw collateral and send to loan borrower
+        LibCollateral.withdraw(loanID, amount, loan.loanTerms.borrower);
     }
 
     /**
@@ -89,10 +88,12 @@ contract CollateralFacet is RolesMods, PausableMods {
         address asset,
         address[] calldata collateralTokens
     ) external authorized(ADMIN, msg.sender) {
-        EnumerableSet.AddressSet storage tokens =
-            MarketStorageLib.store().collateralTokens[asset];
         for (uint256 i; i < collateralTokens.length; i++) {
-            EnumerableSet.add(tokens, collateralTokens[i]);
+            EnumerableSet.add(
+                MarketStorageLib.store().collateralTokens[asset],
+                collateralTokens[i]
+            );
+            LibCollateral.createEscrow(collateralTokens[i]);
         }
     }
 
@@ -107,5 +108,13 @@ contract CollateralFacet is RolesMods, PausableMods {
         for (uint256 i; i < EnumerableSet.length(collateralTokens); i++) {
             tokens_[i] = EnumerableSet.at(collateralTokens, i);
         }
+    }
+
+    function getLoanCollateral(uint256 loanID)
+        external
+        view
+        returns (uint256 supply_)
+    {
+        supply_ = LibCollateral.e(loanID).loanSupply(loanID);
     }
 }

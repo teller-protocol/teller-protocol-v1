@@ -1,7 +1,13 @@
-import { BigNumber, BigNumberish, ContractTransaction, Signer } from 'ethers'
+import {
+  BigNumber,
+  BigNumberish,
+  ContractTransaction,
+  PayableOverrides,
+  Signer,
+} from 'ethers'
 import { contracts, ethers, toBN, tokens } from 'hardhat'
 
-import { IERC20, ITellerDiamond } from '../../types/typechain'
+import { ITellerDiamond } from '../../types/typechain'
 import { ONE_DAY } from '../../utils/consts'
 import { mockCRAResponse } from './mock-cra-response'
 
@@ -22,9 +28,10 @@ export interface LoanHelpersReturn {
   ) => ReturnType<typeof takeOutLoan>
   repay: (amount: BigNumberish, from?: Signer) => ReturnType<typeof repayLoan>
   collateral: {
-    needed: PromiseReturn<ReturnType<typeof collateralNeeded>>
+    needed: () => ReturnType<typeof collateralNeeded>
+    current: () => ReturnType<typeof collateralCurrent>
     deposit: (
-      amount?: BigNumberish,
+      amount: BigNumberish,
       from?: Signer
     ) => ReturnType<typeof depositCollateral>
     withdraw: (
@@ -39,7 +46,7 @@ export const loanHelpers = async (
 ): Promise<LoanHelpersReturn> => {
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
   const details = await loanDetails(loanID)
-  const collNeeded = await collateralNeeded({ diamond, details })
+
   return {
     diamond,
     details,
@@ -48,8 +55,9 @@ export const loanHelpers = async (
     repay: (amount: BigNumberish, from?: Signer) =>
       repayLoan({ diamond, details, amount, from }),
     collateral: {
-      needed: collNeeded,
-      deposit: (amount = collNeeded, from?: Signer) =>
+      needed: () => collateralNeeded({ diamond, details }),
+      current: () => collateralCurrent({ diamond, details }),
+      deposit: (amount: BigNumberish, from?: Signer) =>
         depositCollateral({ diamond, details, amount, from }),
       withdraw: (amount: BigNumberish, from?: Signer) =>
         withdrawCollateral({ diamond, details, amount, from }),
@@ -70,9 +78,9 @@ export interface CreateLoanReturn {
   getHelpers: () => Promise<LoanHelpersReturn>
 }
 
-export const createLoan = async (
+export const createLoanArgs = async (
   args: CreateLoanArgs
-): Promise<CreateLoanReturn> => {
+): Promise<Parameters<ITellerDiamond['createLoanWithTerms']>> => {
   const {
     lendTokenSym,
     collTokenSym,
@@ -81,7 +89,6 @@ export const createLoan = async (
     amount: loanAmount,
   } = args
 
-  const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
   const collToken = await tokens.get(collTokenSym)
   const lendingToken = await tokens.get(lendTokenSym)
 
@@ -108,15 +115,21 @@ export const createLoan = async (
     borrower,
   })
 
+  return [craReturn.request, [craReturn.response], collToken.address, '0']
+}
+
+export const createLoan = async (
+  args: CreateLoanArgs
+): Promise<CreateLoanReturn> => {
+  const { borrower } = args
+
+  const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
+  const createArgs = await createLoanArgs(args)
+
   // Create loan with terms
   const tx = diamond
     .connect(ethers.provider.getSigner(borrower))
-    .createLoanWithTerms(
-      craReturn.request,
-      [craReturn.response],
-      collToken.address,
-      '0'
-    )
+    .createLoanWithTerms(...createArgs)
 
   return {
     tx,
@@ -188,22 +201,18 @@ const depositCollateral = async (
     from = details.borrower.signer,
   } = args
 
-  const eth = await tokens.get('WETH')
-  const collateralToken = await contracts.get<IERC20>('IERC20', {
-    at: details.loan.collateralToken,
-  })
-  if (details.loan.collateralToken == eth.address) {
-    return await diamond
-      .connect(from)
-      .depositCollateral(details.borrower.address, details.loan.id, amount, {
-        value: amount, // Only if collateral is ETH
-      })
+  const weth = await tokens.get('WETH')
+  const collateralToken = await tokens.get(details.loan.collateralToken)
+  const options: PayableOverrides = {}
+  if (details.loan.collateralToken == weth.address) {
+    options.value = amount
   } else {
     await collateralToken.approve(diamond.address, amount)
-    return await diamond
-      .connect(from)
-      .depositCollateral(details.borrower.address, details.loan.id, amount)
   }
+
+  return await diamond
+    .connect(from)
+    .depositCollateral(details.loan.id, amount, options)
 }
 
 interface WithdrawCollateralArgs extends CommonLoanArgs {
@@ -228,6 +237,15 @@ const collateralNeeded = async (
     details.loan.id
   )
   return neededInCollateralTokens
+}
+
+interface CollateralCurrentArgs extends CommonLoanArgs {}
+
+const collateralCurrent = async (
+  args: CollateralCurrentArgs
+): Promise<BigNumber> => {
+  const { diamond, details } = args
+  return diamond.getLoanCollateral(details.loan.id)
 }
 
 interface RepayLoanArgs extends CommonLoanArgs {

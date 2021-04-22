@@ -4,6 +4,7 @@ import { task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import { getNFT } from '../../config'
+import { MerkleDistributorInfo } from '../../scripts/merkle/root'
 import { ITellerNFTDistributor } from '../../types/typechain'
 
 interface ClaimNFTArgs {
@@ -36,7 +37,10 @@ export const claimNFT = async (
   if (!nftDistributor)
     throw new Error(`No Teller NFT Distributor is deployed for ${network.name}`)
 
-  const { distributions, merkleTrees } = getNFT(network)
+  const { distributionsOutputFile, merkleTrees } = getNFT(network)
+  const distributions: MerkleDistributorInfo[] = JSON.parse(
+    fs.readFileSync(distributionsOutputFile).toString()
+  )
 
   const requests: Array<{
     merkleIndex: BigNumberish

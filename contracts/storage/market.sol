@@ -53,10 +53,6 @@ struct Loan {
     uint256 termsExpiry;
     // The timestamp at which the loan became active
     uint256 loanStartTime;
-    // The total amount of collateral deposited by the borrower to secure the loan
-    uint256 collateral;
-    // The amount of collateral that was last deposited by the borrower to keep the loan active
-    uint256 lastCollateralIn;
 }
 
 /**

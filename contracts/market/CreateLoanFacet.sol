@@ -3,6 +3,9 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
+import {
+    ReentryMods
+} from "../contexts2/access-control/reentry/ReentryMods.sol";
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
 import { AUTHORIZED } from "../shared/roles.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -44,7 +47,7 @@ import {
 } from "../storage/market.sol";
 import { AppStorageLib } from "../storage/app.sol";
 
-contract CreateLoanFacet is RolesMods, PausableMods {
+contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
     /**
      * @notice This event is emitted when loan terms have been successfully set
      * @param loanID ID of loan from which collateral was withdrawn
@@ -81,63 +84,20 @@ contract CreateLoanFacet is RolesMods, PausableMods {
         LoanResponse[] calldata responses,
         address collateralToken,
         uint256 collateralAmount
-    ) external payable paused("", false) authorized(AUTHORIZED, msg.sender) {
-        // Perform loan request checks
-        require(msg.sender == request.borrower, "Teller: not loan requester");
-        require(
-            PlatformSettingsLib.getMaximumLoanDurationValue() >=
-                request.duration,
-            "Teller: max loan duration exceeded"
-        );
+    )
+        external
+        payable
+        paused("", false)
+        nonReentry("")
+        authorized(AUTHORIZED, msg.sender)
+    {
+        CreateLoanLib.verifyCreateLoan(request, collateralToken);
+        uint256 loanID =
+            CreateLoanLib.initLoan(request, responses, collateralToken);
 
-        // Get and increment new loan ID
-        uint256 loanID = CreateLoanLib.newID();
-        {
-            Loan storage loan = MarketStorageLib.store().loans[loanID];
-
-            // Get consensus values from request
-            (
-                uint256 interestRate,
-                uint256 collateralRatio,
-                uint256 maxLoanAmount
-            ) = LibConsensus.processLoanTerms(request, responses);
-            require(
-                MaxLoanAmountLib.get(request.assetAddress) > request.amount,
-                "Teller: max loan amount exceeded"
-            );
-
-            // TODO: need to store on struct?
-            loan.id = loanID;
-            loan.status = LoanStatus.TermsSet;
-            loan.lendingToken = request.assetAddress;
-            loan.collateralToken = collateralToken;
-            loan.termsExpiry =
-                block.timestamp +
-                PlatformSettingsLib.getTermsExpiryTimeValue();
-            loan.loanTerms = LoanTerms({
-                borrower: request.borrower,
-                recipient: request.recipient,
-                interestRate: interestRate,
-                collateralRatio: collateralRatio,
-                maxLoanAmount: maxLoanAmount,
-                duration: request.duration
-            });
-        }
-
-        // Add loanID to borrower list
-        MarketStorageLib.store().borrowerLoans[request.borrower].push(loanID);
-
-        // Verify collateral token is acceptable
-        require(
-            EnumerableSet.contains(
-                MarketStorageLib.store().collateralTokens[request.assetAddress],
-                collateralToken
-            ),
-            "Teller: collateral token not allowed"
-        );
         // Pay in collateral
         if (collateralAmount > 0) {
-            LibCollateral.depositCollateral(loanID, collateralAmount);
+            LibCollateral.deposit(loanID, collateralAmount);
         }
 
         emit LoanTermsSet(loanID, msg.sender, request.recipient);
@@ -210,24 +170,22 @@ contract CreateLoanFacet is RolesMods, PausableMods {
     function takeOutLoan(uint256 loanID, uint256 amount)
         external
         paused("", false)
+        nonReentry("")
         authorized(AUTHORIZED, msg.sender)
         __takeOutLoan(loanID, amount)
     {
-        Loan storage loan = MarketStorageLib.store().loans[loanID];
-        // Check that enough collateral has been provided for this loan
-        (, int256 neededInCollateral, ) =
-            LibLoans.getCollateralNeededInfo(loanID);
-        require(
-            neededInCollateral <= int256(loan.collateral),
-            "Teller: more collateral required"
-        );
-        require(
-            loan.lastCollateralIn <=
-                block.timestamp -
-                    (PlatformSettingsLib.getSafetyIntervalValue()),
-            "Teller: collateral deposited recently"
-        );
+        {
+            // Check that enough collateral has been provided for this loan
+            (, int256 neededInCollateral, ) =
+                LibLoans.getCollateralNeededInfo(loanID);
+            require(
+                neededInCollateral <=
+                    int256(LibCollateral.e(loanID).loanSupply(loanID)),
+                "Teller: more collateral required"
+            );
+        }
 
+        Loan storage loan = MarketStorageLib.store().loans[loanID];
         address loanRecipient;
         bool eoaAllowed =
             LibLoans.canGoToEOAWithCollateralRatio(
@@ -247,6 +205,62 @@ contract CreateLoanFacet is RolesMods, PausableMods {
 }
 
 library CreateLoanLib {
+    function verifyCreateLoan(
+        LoanRequest calldata request,
+        address collateralToken
+    ) internal {
+        // Perform loan request checks
+        require(msg.sender == request.borrower, "Teller: not loan requester");
+        require(
+            PlatformSettingsLib.getMaximumLoanDurationValue() >=
+                request.duration,
+            "Teller: max loan duration exceeded"
+        );
+        // Verify collateral token is acceptable
+        require(
+            EnumerableSet.contains(
+                MarketStorageLib.store().collateralTokens[request.assetAddress],
+                collateralToken
+            ),
+            "Teller: collateral token not allowed"
+        );
+        require(
+            MaxLoanAmountLib.get(request.assetAddress) > request.amount,
+            "Teller: max loan amount exceeded"
+        );
+    }
+
+    function initLoan(
+        LoanRequest calldata request,
+        LoanResponse[] calldata responses,
+        address collateralToken
+    ) internal returns (uint256 loanID_) {
+        // Get consensus values from request
+        (uint256 interestRate, uint256 collateralRatio, uint256 maxLoanAmount) =
+            LibConsensus.processLoanTerms(request, responses);
+
+        // Get and increment new loan ID
+        loanID_ = CreateLoanLib.newID();
+        LibLoans.loan(loanID_).id = loanID_;
+        LibLoans.loan(loanID_).status = LoanStatus.TermsSet;
+        LibLoans.loan(loanID_).lendingToken = request.assetAddress;
+        LibLoans.loan(loanID_).collateralToken = collateralToken;
+        LibLoans.loan(loanID_).termsExpiry =
+            block.timestamp +
+            PlatformSettingsLib.getTermsExpiryTimeValue();
+        LibLoans.loan(loanID_).loanTerms = LoanTerms({
+            borrower: request.borrower,
+            recipient: request.recipient,
+            interestRate: interestRate,
+            collateralRatio: collateralRatio,
+            maxLoanAmount: maxLoanAmount,
+            duration: request.duration
+        });
+
+        // Add loanID to borrower list
+        MarketStorageLib.store().borrowerLoans[request.borrower].push(loanID_);
+    }
+
     function fundLoan(
         address asset,
         address recipient,
