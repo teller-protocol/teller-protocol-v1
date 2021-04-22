@@ -22,12 +22,15 @@ struct AppStorage {
     mapping(address => Cache) assetSettings;
     mapping(string => address) assetAddresses;
     mapping(address => bool) cTokenRegistry;
-    IUniswapV2Router uniswapRouter;
     TellerNFT nft;
     IPriceAggregator priceAggregator;
     UpgradeableBeaconFactory loansEscrowBeacon;
     UpgradeableBeaconFactory collateralEscrowBeacon;
 }
+
+IUniswapV2Router constant uniswapRouter = IUniswapV2Router(
+    0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D
+);
 
 library AppStorageLib {
     function store() internal pure returns (AppStorage storage s) {

@@ -28,7 +28,6 @@ struct InitArgs {
     InitAssets[] assets;
     address[] cTokens;
     address tellerNFT;
-    address uniswapV2Router;
     address loansEscrowBeacon;
     address collateralEscrowBeacon;
 }
@@ -104,7 +103,6 @@ contract SettingsFacet is RolesMods {
         }
 
         s.nft = TellerNFT(_args.tellerNFT);
-        s.uniswapRouter = IUniswapV2Router(_args.uniswapV2Router);
         s.loansEscrowBeacon = UpgradeableBeaconFactory(_args.loansEscrowBeacon);
         s.collateralEscrowBeacon = UpgradeableBeaconFactory(
             _args.collateralEscrowBeacon

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Storage
-import { AppStorageLib } from "../storage/app.sol";
+import { AppStorageLib, uniswapRouter } from "../storage/app.sol";
 import { DappMods } from "./DappMods.sol";
 import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
 import { LibDapps } from "./libraries/LibDapps.sol";
@@ -57,9 +57,8 @@ contract UniswapFacet is PausableMods, DappMods {
         internal
         returns (uint256)
     {
-        IUniswapV2Router uniRouter = AppStorageLib.store().uniswapRouter;
         uint256 minDestination =
-            uniRouter.getAmountsOut(sourceAmount, path)[path.length - 1];
+            uniswapRouter.getAmountsOut(sourceAmount, path)[path.length - 1];
         return LibDapps.swap(path, sourceAmount, minDestination);
     }
 }

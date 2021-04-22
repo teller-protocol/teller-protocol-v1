@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { MarketStorageLib, MarketStorage } from "../../storage/market.sol";
-import { AppStorageLib } from "../../storage/app.sol";
+import { AppStorageLib, uniswapRouter } from "../../storage/app.sol";
 import { IAToken } from "../interfaces/IAToken.sol";
 import { IAaveLendingPool } from "../interfaces/IAaveLendingPool.sol";
 import {
@@ -126,11 +126,12 @@ library LibDapps {
         address destination = path[path.length - 1];
         require(source != destination, "UNI_SRC_DST_SAME");
 
-        IUniswapV2Router uniRouter = AppStorageLib.store().uniswapRouter;
-
-        IERC20(source).safeIncreaseAllowance(address(uniRouter), sourceAmount);
+        IERC20(source).safeIncreaseAllowance(
+            address(uniswapRouter),
+            sourceAmount
+        );
         uint256[] memory amounts =
-            uniRouter.swapExactTokensForTokens(
+            uniswapRouter.swapExactTokensForTokens(
                 sourceAmount,
                 minDestination,
                 path,
