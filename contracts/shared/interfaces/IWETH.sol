@@ -17,4 +17,10 @@ interface IWETH {
      * @notice It deposits ETH into the contract and increases the caller's internal balance of WETH.
      */
     function deposit() external payable;
+
+    /**
+     * @notice It gets the ETH deposit balance of an {account}.
+     * @param account Address to get balance of.
+     */
+    function balanceOf(address account) external view returns (uint256);
 }

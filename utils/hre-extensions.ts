@@ -154,9 +154,15 @@ extendEnvironment((hre) => {
   }
 
   hre.tokens = {
-    async get(name: string): Promise<ERC20> {
-      const tokens = getTokens(network)
-      return (await ethers.getContractAt('ERC20', tokens.all[name])) as ERC20
+    async get(nameOrAddress: string): Promise<ERC20> {
+      let address: string
+      if (ethers.utils.isAddress(nameOrAddress)) {
+        address = nameOrAddress
+      } else {
+        const tokens = getTokens(network)
+        address = tokens.all[nameOrAddress]
+      }
+      return (await ethers.getContractAt('ERC20', address)) as ERC20
     },
   }
 

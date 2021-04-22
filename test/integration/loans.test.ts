@@ -5,7 +5,6 @@ import hre from 'hardhat'
 import moment from 'moment'
 
 import { getMarkets, getNFT } from '../../config'
-import NftLoanTree from '../../scripts/merkle/nft-loan-tree'
 import { claimNFT } from '../../tasks'
 import {
   getLoanMerkleTree,
@@ -15,8 +14,7 @@ import { Market } from '../../types/custom/config-types'
 import {
   ERC20,
   ITellerDiamond,
-  ITellerNFT,
-  ITToken,
+  ReentryTest,
   TellerNFT,
 } from '../../types/typechain'
 import { CacheType, LoanStatus } from '../../utils/consts'
@@ -24,6 +22,7 @@ import { fundedMarket } from '../fixtures'
 import { getFunds } from '../helpers/get-funds'
 import {
   createLoan,
+  createLoanArgs,
   CreateLoanReturn,
   loanHelpers,
   LoanHelpersReturn,
@@ -60,6 +59,7 @@ describe('Loans', () => {
       amount: BigNumberish
       borrower: string
       loanType: LoanType
+      encodeOnly?: boolean
     }
     const create = async (args: CreateArgs): Promise<CreateLoanReturn> => {
       const { amount, borrower, loanType } = args
@@ -87,7 +87,7 @@ describe('Loans', () => {
       const helpers = await getHelpers()
 
       // Deposit collateral needed
-      await helpers.collateral.deposit()
+      await helpers.collateral.deposit(await helpers.collateral.needed())
       // .should.emit(diamond, 'CollateralDeposited')
       // .withArgs(loanID, borrowerAddress, collateralNeeded)
 
@@ -135,7 +135,7 @@ describe('Loans', () => {
       const { diamond, details, takeOut, repay, collateral } = prevHelpers
 
       // Deposit collateral
-      await collateral.deposit()
+      await collateral.deposit(await collateral.needed())
 
       // Advance time
       await evm.advanceTime(moment.duration(5, 'minutes'))
@@ -185,7 +185,7 @@ describe('Loans', () => {
       repaidLoan.status.should.eq(LoanStatus.Closed)
     })
 
-    it.only('should be able to take out a loan with an NFT', async () => {
+    it('should be able to take out a loan with an NFT', async () => {
       const revert = await evm.snapshot()
 
       // Setup for NFT user
@@ -291,8 +291,6 @@ describe('Loans', () => {
       // Skip ahead a day to avoid request rate limit
       await evm.advanceTime(moment.duration(1, 'day'))
 
-      const revert = await evm.snapshot()
-
       // Create loan terms
       const { borrower } = await getNamedAccounts()
       const amount = toBN(100, await lendingToken.decimals())
@@ -303,27 +301,55 @@ describe('Loans', () => {
         borrower,
         loanType: LoanType.OVER_COLLATERALIZED,
       })
-      const helpers = await getHelpers()
+      const { collateral } = await getHelpers()
 
       // Deposit collateral
-      await helpers.collateral.deposit()
+      const neededCollateral = await collateral.needed()
+      await collateral.deposit(neededCollateral)
 
       // Verify collateral has been added
-      await helpers.details
-        .refresh()
-        .then(({ loan }) =>
-          loan.collateral.should.eq(helpers.collateral.needed)
-        )
+      const currentColl = await collateral.current()
+      currentColl.should.eq(neededCollateral)
 
       // Withdraw collateral without taking out the loan
-      await helpers.collateral.withdraw(helpers.collateral.needed)
+      await collateral.withdraw(currentColl)
 
       // Verify collateral has been removed
-      await helpers.details
-        .refresh()
-        .then(({ loan }) => loan.collateral.should.eq(toBN(0)))
+      await collateral.current().then((coll) => coll.should.eq(toBN(0)))
+    })
 
-      await revert()
+    it('should not be able to deposit collateral and take out loan in same block', async () => {
+      // Skip ahead a day to avoid request rate limit
+      await evm.advanceTime(moment.duration(1, 'day'))
+
+      const amount = toBN(100, await lendingToken.decimals())
+
+      const factory = await ethers.getContractFactory('ReentryTest')
+      const contract = (await factory.deploy()) as ReentryTest
+
+      await diamond.connect(deployer).addAuthorizedAddress(contract.address)
+
+      // Create loan with terms without depositing collateral
+      const createArgs = await createLoanArgs({
+        lendTokenSym: market.lendingToken,
+        collTokenSym: market.collateralTokens[0],
+        amount,
+        borrower: contract.address,
+        loanType: LoanType.OVER_COLLATERALIZED,
+      })
+
+      await contract.createAndTakeOutLoan(
+        diamond.address,
+        {
+          request: createArgs[0],
+          responses: createArgs[1],
+          collateralToken: createArgs[2],
+          collateralAmount: toBN(5, 18),
+        },
+        {
+          value: toBN(5, 18),
+        }
+      )
     })
   }
 })

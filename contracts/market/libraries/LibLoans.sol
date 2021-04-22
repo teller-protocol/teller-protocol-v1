@@ -156,27 +156,6 @@ library LibLoans {
     }
 
     /**
-     * @notice Returns the collateral needed for a loan, in the lending token, needed to take out the loan or for it be liquidated.
-     * @param loanID The loan ID for which to get collateral information for
-     * @return uint256 Collateral needed in lending token value
-     */
-    function getCollateralInLendingTokens(uint256 loanID)
-        internal
-        view
-        returns (uint256)
-    {
-        if (!_isActiveOrSet(loanID)) {
-            return 0;
-        }
-        return
-            PriceAggLib.valueFor(
-                loan(loanID).collateralToken,
-                loan(loanID).lendingToken,
-                loan(loanID).collateral
-            );
-    }
-
-    /**
      * @notice Returns the interest ratio based on the loan interest rate for the loan duration.
      * @dev The interest rate on the loan terms is APY.
      * @param loanID The loan ID to get the interest rate for.
