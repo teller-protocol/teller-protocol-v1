@@ -117,12 +117,4 @@ contract CollateralFacet is RolesMods, ReentryMods, PausableMods {
     {
         supply_ = LibCollateral.e(loanID).loanSupply(loanID);
     }
-
-    function getLoanEscrow(uint256 loanID)
-        external
-        view
-        returns (address escrow_)
-    {
-        escrow_ = address(LibCollateral.e(loanID));
-    }
 }

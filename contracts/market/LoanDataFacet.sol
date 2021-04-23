@@ -85,4 +85,12 @@ contract LoanDataFacet {
     {
         return LibLoans.getMarketState(lendingToken);
     }
+
+    function getLoanEscrow(uint256 loanID)
+        external
+        view
+        returns (address escrow_)
+    {
+        escrow_ = address(LibLoans.s().loanEscrows[loanID]);
+    }
 }
