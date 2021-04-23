@@ -108,4 +108,15 @@ contract SettingsFacet is RolesMods {
             _args.collateralEscrowBeacon
         );
     }
+
+    /**
+        @notice Tests whether an account has authorization
+        @param account The account address to check for
+        @return True if account has authorization, false if it does not
+     */
+    function hasAuthorization(address account) external view returns (bool) {
+        return
+            RolesLib.hasRole(ADMIN, account) ||
+            RolesLib.hasRole(AUTHORIZED, account);
+    }
 }
