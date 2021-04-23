@@ -10,6 +10,7 @@ import {
     ERC20Upgradeable
 } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { HelperConfig, HookConfig } from "./data.sol";
 
 /**
  * @notice This contract acts as an interface for the Teller token (TToken).
@@ -50,7 +51,28 @@ abstract contract ITToken is AccessControlUpgradeable, ERC20Upgradeable {
 
     function fundLoan(address recipient, uint256 amount) external virtual;
 
-    function rebalance() external virtual;
+    /**
+        Configure hooks for deposit and withdraw events in the TToken logic.
+        Available hooks are deposit and withdraw and they are called either before
+        or after the body of a function using the hook() modifier.
+     */
+    function configureHooks(HookConfig memory hooks) external virtual;
+
+    /**
+        Configure an additional helper which can be called through the help() function
+        on the TToken. Useful to have a small piece of upgradeability for utility
+        functions which can be more frequently upgraded.
+     */
+    function configureHelper(HelperConfig memory helperConfig) external virtual;
+
+    /**
+        Call the TToken's configured helper function by passing in the abi.encode'ed
+        function params.
+     */
+    function help(bytes calldata input)
+        external
+        virtual
+        returns (bytes memory output);
 
     /**
      * @notice Increase account supply of specified token amount.

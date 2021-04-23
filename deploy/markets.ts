@@ -6,6 +6,7 @@ import { getMarkets, getSigners, getTokens } from '../config'
 import {
   ITellerDiamond,
   ITToken,
+  Rebalance,
   UpgradeableBeaconFactory,
 } from '../types/typechain'
 import { NULL_ADDRESS } from '../utils/consts'
@@ -107,6 +108,13 @@ const deployTTokenBeacon = async (
     log: false,
   })
 
+  const rebalanceHelper = await deploy<Rebalance>({
+    contract: 'Rebalance',
+    hre,
+    args: [],
+    name: 'RebalanceHelper',
+  })
+
   log(`Current Logic V${logicVersion}: ${tTokenLogic.address}`, {
     indent: 3,
     star: true,
@@ -149,6 +157,22 @@ const deployTTokenBeacon = async (
             admin: await getNamedAccounts().then(({ deployer }) => deployer),
             underlying: assetAddress,
             cToken: await diamond.getAssetCToken(assetAddress),
+            helperConfig: {
+              target: NULL_ADDRESS,
+              selector: '0x00000000',
+            },
+            hookConfig: {
+              deposit: {
+                data: '0x',
+                selector: '0x00000000',
+                target: NULL_ADDRESS,
+              },
+              withdraw: {
+                data: '0x',
+                selector: '0x00000000',
+                target: NULL_ADDRESS,
+              },
+            },
           },
         ])
       )

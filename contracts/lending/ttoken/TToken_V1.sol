@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import { InitArgs, CONTROLLER, ADMIN } from "./data.sol";
+import { InitArgs, CONTROLLER, ADMIN, Hook, HelperConfig } from "./data.sol";
 import "./storage.sol" as Storage;
 import "./Ticketed.sol";
 
@@ -10,6 +10,9 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // Utils
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Interfaces
 import { ITToken } from "./ITToken.sol";
@@ -27,6 +30,8 @@ import {
     ReentryMods
 } from "../../contexts2/access-control/reentry/ReentryMods.sol";
 
+error HookDelegateCallFailed(string);
+
 /**
  * @notice This contract represents a lending pool for an asset within Teller protocol.
  *
@@ -34,6 +39,7 @@ import {
  */
 contract TToken_V1 is ITToken, ReentryMods {
     using NumbersLib for uint256;
+    using EnumerableSet for EnumerableSet.Set;
 
     /* State Variables */
     uint256 public constant EXCHANGE_RATE_FACTOR = 1e18;
@@ -48,24 +54,6 @@ contract TToken_V1 is ITToken, ReentryMods {
         require(hasRole(role, _msgSender()));
         _;
     }
-
-    /** 
-        Initial implementation/experimentation with metamorphic contracts/storage
-        as the controllers for deposit/withdraw/etc. hooks from TTokens.
-    */
-    // modifier strategized(int256 amountIn) {
-    //     uint256 balanceBefore = underlying().balanceOf(address(this));
-    //     if (amountIn < 0 && int256(balanceBefore) + amountIn < 0) {
-    //         // We don't have enough
-    //         S().strategist.rug()
-    //     }
-    //     _;
-    //     (bool success, bytes memory result) =
-    //         STRATEGIST.delegatecall(
-    //             balanceBefore,
-    //             underlying().balanceOf(address(this))
-    //         );
-    // }
 
     /**
      * @notice Checks if the LP is restricted or has the CONTROLLER role.
@@ -99,27 +87,31 @@ contract TToken_V1 is ITToken, ReentryMods {
     }
 
     /**
-        TODO: make these view functions, just getting the exchange rate stored
-        from compound to save on some gas.
-        We will be accruing interest and calling compound during rebalance().
-     */
-    /**
      * @notice The balance of an {account} denoted in underlying value.
      */
     function balanceOfUnderlying(address account)
         public
+        view
         override
         returns (uint256 balance_)
     {
-        balance_ = _valueInUnderlying(balanceOf(account), exchangeRate());
+        balance_ = _valueInUnderlying(balanceOf(account), _exchangeRate());
     }
 
-    /**
-        TODO: try/catch transfer calls which fail due to not having the balance
-        in this contract, but instead it being on compound.
-        Can return a nice message to the user and have them click on a button to
-        get a reward for fixing the issue + getting their tx through.
-     */
+    modifier hook(bool pre, Hook memory _hook) {
+        // Strategy might not be managed through hooks.
+        if (_hook.target == address(0)) return;
+        // We should run the function body before the core of the modifier.
+        if (!pre) _;
+        // Selector defined by the hook config, data is static and forward msg.data.
+        bytes memory data = bytes.concat(_hook.selector, _hook.data, msg.data);
+        // Delegate call and handle response.
+        (bool success, bytes memory result) = _hook.target.delegatecall(data);
+        if (!success) revert(string(result));
+        // We should run the function body after the core of the modifier.
+        if (pre) _;
+    }
+
     /**
         Take underlying token from the pool at this address and send it
         to a loan contract.
@@ -130,9 +122,8 @@ contract TToken_V1 is ITToken, ReentryMods {
         external
         override
         authorized(CONTROLLER)
+        hook(true, S().hooks.withdraw)
     {
-        // Claim tokens from Compound
-        // S().cToken.redeemUnderlying(amount);
         // Transfer tokens to recipient
         SafeERC20.safeTransfer(S().underlying, recipient, amount);
     }
@@ -145,6 +136,7 @@ contract TToken_V1 is ITToken, ReentryMods {
         external
         override
         notRestricted
+        hook(false, S().hooks.deposit)
         returns (uint256 mintAmount_)
     {
         require(amount > 0, "Teller: cannot mint 0");
@@ -152,10 +144,8 @@ contract TToken_V1 is ITToken, ReentryMods {
             amount <= S().underlying.balanceOf(_msgSender()),
             "Teller: insufficient underlying"
         );
-
         // Calculate amount of tokens to mint
-        // TODO: just use standard exchange rate not compound accrued one.
-        mintAmount_ = _valueOfUnderlying(amount, exchangeRate());
+        mintAmount_ = _valueOfUnderlying(amount, _exchangeRate());
 
         // Transfer tokens from lender
         SafeERC20.safeTransferFrom(
@@ -174,15 +164,14 @@ contract TToken_V1 is ITToken, ReentryMods {
      * @notice Redeem supplied Teller token underlying value.
      * @param amount The amount of Teller tokens to redeem.
      */
-    function redeem(uint256 amount) external override {
+    function redeem(uint256 amount) external override hook(true, S().hooks.withdraw) {
         require(amount > 0, "Teller: cannot withdraw 0");
         require(
             amount <= balanceOf(_msgSender()),
             "Teller: redeem amount exceeds balance"
         );
 
-        // TODO: don't accrue interest here and just do it in rebalance
-        uint256 underlyingAmount = _valueInUnderlying(amount, exchangeRate());
+        uint256 underlyingAmount = _valueInUnderlying(amount, _exchangeRate());
         require(
             underlyingAmount <= S().underlying.balanceOf(address(this)),
             "Teller: redeem ttoken lp not enough supply"
@@ -190,8 +179,6 @@ contract TToken_V1 is ITToken, ReentryMods {
 
         // Burn Teller tokens
         _burn(_msgSender(), amount);
-        // Claim tokens from Compound
-        // S().cToken.redeemUnderlying(underlyingAmount);
 
         // Transfer funds back to lender
         SafeERC20.safeTransfer(S().underlying, _msgSender(), underlyingAmount);
@@ -200,30 +187,16 @@ contract TToken_V1 is ITToken, ReentryMods {
     }
 
     /**
-        This is untested for now, but basically just fill up a bytes32 with
-        relevant data so that later we can parse it and reward the user accurately.
-        See {Ticketed} abstract contract for more details.
-     */
-    function ticketId(bytes4 selector) internal view returns (bytes32 id_) {
-        assembly {
-            id_ := shl(or(id_, selector), 224)
-            id_ := or(id_, shl(gasprice(), 64))
-            id_ := or(id_, number())
-        }
-    }
-
-    /**
      * @notice Redeem supplied underlying value.
      * @param amount The amount of underlying tokens to redeem.
      */
-    function redeemUnderlying(uint256 amount) external override {
+    function redeemUnderlying(uint256 amount) external override  hook(true, S().hooks.withdraw) {
         require(amount > 0, "Teller: cannot withdraw 0");
         require(
             amount <= totalUnderlyingSupply(),
             "Teller: redeem ttoken lp not enough supply"
         );
 
-        // TODO: remove this
         // Accrue interest and calculate exchange rate
         uint256 rate = exchangeRate();
         uint256 tokenValue = _valueOfUnderlying(amount, rate);
@@ -237,13 +210,27 @@ contract TToken_V1 is ITToken, ReentryMods {
         // Burn Teller tokens
         _burn(_msgSender(), tokenValue);
 
-        // Claim tokens from Compound
-        // S().cToken.redeemUnderlying(amount);
-
         // Transfer funds back to lender
         SafeERC20.safeTransfer(S().underlying, _msgSender(), amount);
 
         emit Redeem(_msgSender(), tokenValue, amount);
+    }
+
+    function configureHooks(Storage.HookConfig memory hooks)
+        external
+        override
+        authorized(ADMIN)
+    {
+        S().hooks = hooks;
+    }
+
+    function configureHelper(HelperConfig memory helperConfig) external override authorized(ADMIN) {
+        S().helper = helperConfig;
+    }
+
+    function help(bytes calldata input) external override returns (bytes memory output) {
+        bool success;
+        (success, output) = S().helper.target.delegatecall(bytes.concat(S().helper.selector, input));
     }
 
     /**
@@ -271,6 +258,12 @@ contract TToken_V1 is ITToken, ReentryMods {
         S().decimals = S().underlying.decimals();
         // Platform restricted by default
         S().restricted = true;
+        if (args.helperConfig.target != address(0)) S().helper = args.helperConfig;
+        if ((args.hookConfig.withdraw.selector | args.hookConfig.deposit.selector) != bytes4(0)) S().hooks = args.hookConfig;
+    }
+
+    function exchangeRate() public view returns (uint256 rate_) {
+        rate_ = _exchangeRate();
     }
 
     /**
@@ -302,31 +295,17 @@ contract TToken_V1 is ITToken, ReentryMods {
         value_ = (amount * (rate)) / EXCHANGE_RATE_FACTOR;
     }
 
-    /**
-     * @dev
-     */
-    function _exchangeRateForSupply(uint256 supply)
-        internal
-        view
-        returns (uint256 rate_)
-    {
-        rate_ = (supply * EXCHANGE_RATE_FACTOR) / totalSupply();
-    }
-
-    /**
-     * @dev
-     */
-    function exchangeRate() public returns (uint256 rate_) {
-        if (totalSupply() == 0) {
-            return EXCHANGE_RATE_FACTOR;
+    function _exchangeRate() internal view returns (uint256 rate_) {
+        uint256 _totalSupply = totalSupply();
+        if (_totalSupply == 0) {
+            rate_ = EXCHANGE_RATE_FACTOR;
+        } else {
+            rate_ = (totalUnderlyingSupply()) * EXCHANGE_RATE_FACTOR / _totalSupply;
         }
-
-        accrueInterest();
-        rate_ = _exchangeRateForSupply(totalUnderlyingSupply());
     }
 
     /**
-     * @dev
+     * @dev Accrues interest earned by this TToken and its lenders on compound.
      */
     function accrueInterest() public {
         S().cToken.accrueInterest();
@@ -338,12 +317,15 @@ contract TToken_V1 is ITToken, ReentryMods {
      */
     function totalUnderlyingSupply()
         public
+        view
         override
         returns (uint256 totalSupply_)
     {
         // Get underlying balance from Compound
         totalSupply_ =
             S().underlying.balanceOf(address(this)) +
-            S().cToken.balanceOfUnderlying(address(this));
+            (S().cToken.balanceOf(address(this)) *
+                S().cToken.exchangeRateStored()) /
+            1e18;
     }
 }

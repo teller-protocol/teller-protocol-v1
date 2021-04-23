@@ -6,29 +6,32 @@ import "../../../shared/interfaces/ICErc20.sol";
 import "../../../shared/libraries/NumbersLib.sol";
 import "../../../settings/asset/MaxLoanAmountLib.sol";
 import "../../../settings/asset/MaxDebtRatioLib.sol";
-import "../../../contexts/ticketed/Ticketed.sol";
+import "../../../contexts/tickets/Ticketed.sol";
 import "../storage.sol" as Storage;
 
+/**
+    This contract is meant to e be DELEGATECALL'ed in the same context as the TToken
+    which is operates for.
+    It uses the TToken's lending token and cToken balance and its max debt ratio and
+    max loan amount to either deposit or withdraw with Compound.
+ */
 contract Rebalance is Ticketed {
     using NumbersLib for uint256;
 
     address public immutable lendingToken;
     address public immutable tToken;
     address public immutable cToken;
-    address public immutable chainlinkAggregator;
 
     function() internal pure returns (Storage.Store storage) constant S = Storage.store;
 
     constructor(
         address _lendingToken,
         address _tToken,
-        address _cToken,
-        address _chainlinkAggregator
+        address _cToken
     ) {
         lendingToken = _lendingToken;
         tToken = _tToken;
         cToken = _cToken;
-        chainlinkAggregator = _chainlinkAggregator;
     }
 
     /**
@@ -36,13 +39,10 @@ contract Rebalance is Ticketed {
         the amount of capital allocated to the investment strategy (compound) vs. 
         sitting idle in the pool. Just looks at the maximum debt ratio and tries to
         keep that amount at most on the balance of the lending pool.
-        This uses a ticketing system where users are rewarded semi-cheap "tickets"
-        for doing this action. The idea is to reward holders of pattern matching
-        tickets together. Tickets can be traded, it's fully up to the owner.
-        Rewards should be proportional to how much impact a given call had. This would
-        be measured by how much interest is accrued as part of the call and the size of
-        the rebalancing which happened. Alternatively we can pay a flat amount of the
-        interest accrued to the caller.
+        The caller is given a ticket which summarizes their contribution and enables
+        anyone to create reward pools for holders of tickets matching certain criteria.
+        For example: Every ticket where the block number is between X and Y can be used
+        to receive Z ETH due to increased usage of the platform.
     */
     function rebalance()
         external
@@ -99,8 +99,5 @@ contract Rebalance is Ticketed {
         assembly {
             id := mload(add(data, 0x20))
         }
-        
     }
-
-
 }
