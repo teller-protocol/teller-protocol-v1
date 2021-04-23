@@ -29,7 +29,7 @@ import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
 import { NFTLib, NftLoanSizeProof } from "../nft/libraries/NFTLib.sol";
 
 // Interfaces
-import { ILoansEscrow } from "../escrow/interfaces/ILoansEscrow.sol";
+import { ILoansEscrow } from "../escrow/escrow/ILoansEscrow.sol";
 
 // Proxy
 import {
@@ -287,9 +287,8 @@ library CreateLoanLib {
 
     function createEscrow(uint256 loanID) internal returns (address escrow_) {
         // Create escrow
-        escrow_ = AppStorageLib.store().loansEscrowBeacon.cloneProxy(
-            abi.encode(ILoansEscrow.init.selector)
-        );
+        escrow_ = AppStorageLib.store().loansEscrowBeacon.cloneProxy("");
+        ILoansEscrow(escrow_).init();
         // Save escrow address for loan
         MarketStorageLib.store().loanEscrows[loanID] = ILoansEscrow(escrow_);
     }

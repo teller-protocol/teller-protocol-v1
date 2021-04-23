@@ -3,9 +3,15 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+// Interfaces
 import { ILoansEscrow } from "./ILoansEscrow.sol";
-import { DappData } from "../../storage/market.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+// Libraries
+import {
+    SafeERC20
+} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract LoansEscrow_V1 is OwnableUpgradeable, ILoansEscrow {
     function init() external override {
@@ -17,4 +23,12 @@ contract LoansEscrow_V1 is OwnableUpgradeable, ILoansEscrow {
         override
         onlyOwner
     {}
+
+    function claimToken(
+        address token,
+        address to,
+        uint256 amount
+    ) external override onlyOwner {
+        SafeERC20.safeTransfer(IERC20(token), to, amount);
+    }
 }

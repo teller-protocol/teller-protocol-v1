@@ -4,10 +4,12 @@
   "license": "MIT",
   "scripts": {
     "h": "dotenv -- ./scripts/hh.sh",
+    "test": "TS_NODE_TRANSPILE_ONLY=1 yarn hh test",
     "lint": "prettier .",
     "format:write": "prettier --write",
     "compile": "COMPILING=true yarn hh compile",
-    "build": "yarn compile && yarn tsc",
+    "build": "yarn compile && yarn types && yarn tsc",
+    "types": "yarn typechain --target ethers-v5 --outDir types/typechain 'artifacts/!(build-info)/**/+([a-zA-Z0-9]).json'",
     "coverage": "#yarn hh coverage --solcoverjs ./solcover.js"
   },
   "dependencies": {
@@ -51,7 +53,6 @@
     "hardhat-deploy": "^0.7.0-beta.57",
     "hardhat-gas-reporter": "^1.0.4",
     "hardhat-shorthand": "^1.0.0",
-    "hardhat-typechain": "^0.3.4",
     "husky": "^4.2.3",
     "json2csv": "^5.0.6",
     "lint-staged": "^10.5.3",

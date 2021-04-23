@@ -23,7 +23,7 @@ chai.use(solidity)
 
 const { getNamedSigner, getNamedAccounts, contracts, ethers, evm, toBN } = hre
 
-describe('Liquidate Loans', () => {
+describe.only('Liquidate Loans', () => {
   getMarkets(hre.network).forEach(testLoans)
 
   function testLoans(market: Market): void {
@@ -77,9 +77,13 @@ describe('Liquidate Loans', () => {
       })
     }
 
+    enum LiqLoanStatus {
+      Expired,
+    }
     interface TestSetupArgs {
       amount: BigNumberish
       loanType: LoanType
+      status: LiqLoanStatus
     }
     const testSetup = async (
       args: TestSetupArgs
@@ -111,9 +115,6 @@ describe('Liquidate Loans', () => {
       // Get the amount that is owed after loan taken out
       helpers.details = await helpers.details.refresh()
 
-      // Advance time
-      await evm.advanceTime(duration)
-
       // Get required amount of tokens to repay loan
       let neededAmount = helpers.details.totalOwed
       const tokenBal = await lendingToken.balanceOf(liquidator.address)
@@ -134,85 +135,198 @@ describe('Liquidate Loans', () => {
         .connect(liquidator.signer)
         .approve(diamond.address, helpers.details.totalOwed)
 
+      switch (args.status) {
+        case LiqLoanStatus.Expired:
+          // Advance time
+          await evm.advanceTime(helpers.details.loan.loanTerms.duration)
+      }
+
       return helpers
     }
 
-    it('should calculate correct liquidation reward for an under collateralized loan', async () => {
-      const amount = toBN(100, await lendingToken.decimals())
-      const { details } = await testSetup({
-        amount,
-        loanType: LoanType.UNDER_COLLATERALIZED,
+    describe('reward', () => {
+      it('should calculate correct liquidation reward for a zero collateral loan', async () => {
+        const amount = toBN(100, await lendingToken.decimals())
+        const { details } = await testSetup({
+          amount,
+          loanType: LoanType.ZERO_COLLATERAL,
+          status: LiqLoanStatus.Expired,
+        })
+
+        // Expected reward amount right after taking out loan w/ 0 collateral should be the amount owed
+        const expectedReward = await diamond.getLoanEscrowValue(details.loan.id)
+        const reward = await diamond.getLiquidationReward(details.loan.id)
+        reward.inLending_.should.eql(
+          expectedReward,
+          'Invalid zero collateral liquidation reward calculated'
+        )
       })
 
-      // Get the expected reward amount
-      const expectedReward = details.totalOwed.add(
-        details.totalOwed.mul(liquidateRewardPercent).div(HUNDRED_PERCENT)
-      )
-      const reward = await diamond.getLiquidationReward(details.loan.id)
-      reward.inLending_.should.eql(
-        expectedReward,
-        'Invalid liquidation reward calculated'
-      )
+      it('should calculate correct liquidation reward for an under collateralized loan', async () => {
+        const amount = toBN(100, await lendingToken.decimals())
+        const { details } = await testSetup({
+          amount,
+          loanType: LoanType.UNDER_COLLATERALIZED,
+          status: LiqLoanStatus.Expired,
+        })
+
+        // Get the expected reward amount
+        const expectedReward = details.totalOwed.add(
+          details.totalOwed.mul(liquidateRewardPercent).div(HUNDRED_PERCENT)
+        )
+        const reward = await diamond.getLiquidationReward(details.loan.id)
+        reward.inLending_.should.eql(
+          expectedReward,
+          'Invalid under collateralized liquidation reward calculated'
+        )
+      })
+
+      it('should calculate correct liquidation reward for an over collateralized loan', async () => {
+        const amount = toBN(100, await lendingToken.decimals())
+        const { details } = await testSetup({
+          amount,
+          loanType: LoanType.OVER_COLLATERALIZED,
+          status: LiqLoanStatus.Expired,
+        })
+
+        // Get the expected reward amount
+        const expectedReward = details.totalOwed.add(
+          details.totalOwed.mul(liquidateRewardPercent).div(HUNDRED_PERCENT)
+        )
+        const reward = await diamond.getLiquidationReward(details.loan.id)
+        reward.inLending_.should.eql(
+          expectedReward,
+          'Invalid over collateralized liquidation reward calculated'
+        )
+        reward.inLending_
+          .gt(details.totalOwed)
+          .should.eql(true, 'Reward less than liquidation payment')
+      })
     })
 
-    it('should calculate correct liquidation reward for an over collateralized loan', async () => {
-      const amount = toBN(100, await lendingToken.decimals())
-      const { details } = await testSetup({
-        amount,
-        loanType: LoanType.OVER_COLLATERALIZED,
-      })
+    describe('expired', () => {
+      it('should be able to liquidate an expired zero collateral loan', async () => {
+        const amount = toBN(100, await lendingToken.decimals())
+        const { details } = await testSetup({
+          amount,
+          loanType: LoanType.ZERO_COLLATERAL,
+          status: LiqLoanStatus.Expired,
+        })
 
-      // Get the expected reward amount
-      const expectedReward = details.totalOwed.add(
-        details.totalOwed.mul(liquidateRewardPercent).div(HUNDRED_PERCENT)
-      )
-      const reward = await diamond.getLiquidationReward(details.loan.id)
-      reward.inLending_.should.eql(
-        expectedReward,
-        'Invalid liquidation reward calculated'
-      )
-      reward.inLending_
-        .gt(details.totalOwed)
-        .should.eql(true, 'Reward less than liquidation payment')
-    })
+        const liquidatorLendBefore = await lendingToken.balanceOf(
+          liquidator.address
+        )
+        const liquidatorCollBefore = await collateralToken.balanceOf(
+          liquidator.address
+        )
+        const reward = await diamond.getLiquidationReward(details.loan.id)
 
-    it('should be able to liquidate an expired loan', async () => {
-      const amount = toBN(100, await lendingToken.decimals())
-      const { details, collateral } = await testSetup({
-        amount,
-        loanType: LoanType.OVER_COLLATERALIZED,
-      })
+        await diamond
+          .connect(liquidator.signer)
+          .liquidateLoan(details.loan.id)
+          .should.emit(diamond, 'LoanLiquidated')
 
-      const availableColl = await collateral.current()
-      console.log('collateral', availableColl.toString())
+        await details
+          .refresh()
+          .then(({ loan: { status } }) =>
+            status.should.eq(LoanStatus.Liquidated, 'Loan not liquidated')
+          )
 
-      const liquidatorCollBefore = await collateralToken.balanceOf(
-        liquidator.address
-      )
-      const reward = await diamond.getLiquidationReward(details.loan.id)
-
-      const tx = await diamond
-        .connect(liquidator.signer)
-        .liquidateLoan(details.loan.id)
-
-      await tx.should.emit(diamond, 'LoanLiquidated')
-
-      await details
-        .refresh()
-        .then(({ loan: { status } }) =>
-          status.should.eq(LoanStatus.Liquidated, 'Loan not liquidated')
+        const liquidatorLendAfter = await lendingToken.balanceOf(
+          liquidator.address
+        )
+        const lendDiff = liquidatorLendAfter
+          .add(details.totalOwed)
+          .sub(liquidatorLendBefore)
+        lendDiff.should.eql(
+          reward.inLending_,
+          'Expected liquidator to be paid by loan escrow in lending token'
         )
 
-      const liquidatorCollAfter = await collateralToken.balanceOf(
-        liquidator.address
-      )
-      liquidatorCollAfter
-        .sub(liquidatorCollBefore)
-        .gt(0)
-        .should.eql(true, 'Collateral reward not positive')
-      liquidatorCollAfter
-        .sub(liquidatorCollBefore)
-        .should.eql(reward.inCollateral_, 'Incorrect collateral reward paid')
+        const liquidatorCollAfter = await collateralToken.balanceOf(
+          liquidator.address
+        )
+        const collDiff = liquidatorCollAfter.sub(liquidatorCollBefore)
+        collDiff
+          .eq(0)
+          .should.eql(
+            true,
+            'Liquidator collateral token balance should not increase'
+          )
+      })
+
+      it('should be able to liquidate an expired under collateralized loan', async () => {
+        const amount = toBN(100, await lendingToken.decimals())
+        const { details, collateral } = await testSetup({
+          amount,
+          loanType: LoanType.UNDER_COLLATERALIZED,
+          status: LiqLoanStatus.Expired,
+        })
+        // Advance time
+        await evm.advanceTime(details.loan.loanTerms.duration)
+
+        const loanCollateral = await collateral.current()
+        const liquidatorCollBefore = await collateralToken.balanceOf(
+          liquidator.address
+        )
+
+        await diamond
+          .connect(liquidator.signer)
+          .liquidateLoan(details.loan.id)
+          .should.emit(diamond, 'LoanLiquidated')
+
+        await details
+          .refresh()
+          .then(({ loan: { status } }) =>
+            status.should.eq(LoanStatus.Liquidated, 'Loan not liquidated')
+          )
+
+        const liquidatorCollAfter = await collateralToken.balanceOf(
+          liquidator.address
+        )
+        const collDiff = liquidatorCollAfter.sub(liquidatorCollBefore)
+
+        collDiff.gt(0).should.eql(true, 'Collateral reward not positive')
+        collDiff.should.eql(loanCollateral, 'Incorrect collateral reward paid')
+      })
+
+      it('should be able to liquidate an expired over collateralized loan', async () => {
+        const amount = toBN(100, await lendingToken.decimals())
+        const { details } = await testSetup({
+          amount,
+          loanType: LoanType.OVER_COLLATERALIZED,
+          status: LiqLoanStatus.Expired,
+        })
+        // Advance time
+        await evm.advanceTime(details.loan.loanTerms.duration)
+
+        const liquidatorCollBefore = await collateralToken.balanceOf(
+          liquidator.address
+        )
+        const reward = await diamond.getLiquidationReward(details.loan.id)
+
+        await diamond
+          .connect(liquidator.signer)
+          .liquidateLoan(details.loan.id)
+          .should.emit(diamond, 'LoanLiquidated')
+
+        await details
+          .refresh()
+          .then(({ loan: { status } }) =>
+            status.should.eq(LoanStatus.Liquidated, 'Loan not liquidated')
+          )
+
+        const liquidatorCollAfter = await collateralToken.balanceOf(
+          liquidator.address
+        )
+        liquidatorCollAfter
+          .sub(liquidatorCollBefore)
+          .gt(0)
+          .should.eql(true, 'Collateral reward not positive')
+        liquidatorCollAfter
+          .sub(liquidatorCollBefore)
+          .should.eql(reward.inCollateral_, 'Incorrect collateral reward paid')
+      })
     })
   }
 })

@@ -208,7 +208,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         );
 
         // Calculate the reward before repaying the loan
-        uint256 rewardInLending =
+        (uint256 rewardInLending, uint256 collateralInLending) =
             RepayLib.getLiquidationReward(loanID, collateralAmount);
 
         // The liquidator pays the amount still owed on the loan
@@ -227,6 +227,8 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
             RepayLib.payOutLiquidator(
                 loan,
                 rewardInLending,
+                collateralInLending,
+                collateralAmount,
                 payable(msg.sender)
             );
         }
@@ -251,7 +253,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         view
         returns (uint256 inLending_, uint256 inCollateral_)
     {
-        inLending_ = RepayLib.getLiquidationReward(
+        (inLending_, ) = RepayLib.getLiquidationReward(
             loanID,
             LibCollateral.e(loanID).loanSupply(loanID)
         );
@@ -301,7 +303,7 @@ library RepayLib {
     function getLiquidationReward(uint256 loanID, uint256 collateralAmount)
         internal
         view
-        returns (uint256 reward_)
+        returns (uint256 reward_, uint256 collateralValue_)
     {
         uint256 amountToLiquidate =
             LibLoans.loan(loanID).principalOwed +
@@ -317,11 +319,12 @@ library RepayLib {
 
         // Calculate available collateral for reward
         if (collateralAmount > 0) {
-            reward_ += PriceAggLib.valueFor(
+            collateralValue_ = PriceAggLib.valueFor(
                 LibLoans.loan(loanID).collateralToken,
                 LibLoans.loan(loanID).lendingToken,
                 collateralAmount
             );
+            reward_ += collateralValue_;
         }
 
         // Calculate loan escrow value if collateral not enough to cover reward
@@ -340,102 +343,108 @@ library RepayLib {
      * @dev See Escrow.claimTokens for more info.
      * @param loan The loan storage pointer which is being liquidated
      * @param rewardInLending The total amount of reward based in the lending token to pay the liquidator
+     * @param collateralInLending The amount of collateral that is available for the loan denoted in lending tokens
+     * @param collateralAmount The amount of collateral that is available for the loan
      * @param liquidator The address of the liquidator where the liquidation reward will be sent to
      */
     function payOutLiquidator(
         Loan storage loan,
         uint256 rewardInLending,
+        uint256 collateralInLending,
+        uint256 collateralAmount,
         address payable liquidator
     ) internal {
-        uint256 rewardInCollateral =
-            PriceAggLib.valueFor(
-                LibLoans.loan(loan.id).lendingToken,
-                LibLoans.loan(loan.id).collateralToken,
-                uint256(rewardInLending)
-            );
-
-        uint256 availableCollateral =
-            LibCollateral.e(loan.id).loanSupply(loan.id);
-        if (rewardInCollateral <= availableCollateral) {
-            LibCollateral.withdraw(loan.id, rewardInCollateral, liquidator);
-        } else {
-            uint256 remainingCollateralAmount =
-                rewardInCollateral - (availableCollateral);
-            // Payout whats available in the collateral token
-            LibCollateral.withdrawAll(loan.id, liquidator);
-
-            // If liquidator needs additional reward, claim tokens from the loan escrow
-            if (
-                remainingCollateralAmount > 0 &&
-                address(MarketStorageLib.store().loanEscrows[loan.id]) !=
-                address(0)
-            ) {
-                claimEscrowTokensByCollateralValue(
-                    loan,
-                    liquidator,
-                    remainingCollateralAmount
-                );
-            }
-        }
-    }
-
-    /**
-     * @notice Send the equivalent of tokens owned by this escrow (in collateral value) to the recipient,
-     * @dev The loan must be liquidated
-     * @param recipient address to send the tokens to
-     * @param value The value of escrow held tokens, to be claimed based on collateral value
-     */
-    function claimEscrowTokensByCollateralValue(
-        Loan storage loan,
-        address recipient,
-        uint256 value
-    ) private {
         require(
             loan.status == LoanStatus.Liquidated,
             "Teller: loan not liquidated"
         );
 
+        if (rewardInLending <= collateralInLending) {
+            uint256 rewardInCollateral =
+                PriceAggLib.valueFor(
+                    LibLoans.loan(loan.id).lendingToken,
+                    LibLoans.loan(loan.id).collateralToken,
+                    rewardInLending
+                );
+
+            LibCollateral.withdraw(loan.id, rewardInCollateral, liquidator);
+        } else {
+            // Payout whats available in the collateral token
+            LibCollateral.withdraw(loan.id, collateralAmount, liquidator);
+
+            // Claim remaining reward value from the loan escrow
+            claimEscrowTokensByValue(
+                loan,
+                liquidator,
+                rewardInLending - collateralInLending
+            );
+        }
+    }
+
+    /**
+     * @dev Send the equivalent of tokens owned by the loan escrow (in lending value) to the recipient,
+     * @param recipient address to send the tokens to
+     * @param value The value of escrow held tokens to be claimed based in lending value
+     */
+    function claimEscrowTokensByValue(
+        Loan storage loan,
+        address recipient,
+        uint256 value
+    ) private {
         EnumerableSet.AddressSet storage tokens =
             MarketStorageLib.store().escrowTokens[loan.id];
         uint256 valueLeftToTransfer = value;
         // cycle through tokens
         for (uint256 i = 0; i < EnumerableSet.length(tokens); i++) {
             if (valueLeftToTransfer == 0) {
-                break;
+                return;
             }
 
             uint256 balance =
                 LibEscrow.balanceOf(loan.id, EnumerableSet.at(tokens, i));
-            address collateralToken = loan.collateralToken;
-            // get value of token balance in collateral value
+            // get value of token balance in lending value
             if (balance > 0) {
-                uint256 valueInCollateralToken =
-                    (EnumerableSet.at(tokens, i) == collateralToken)
-                        ? balance
-                        : PriceAggLib.valueFor(
-                            EnumerableSet.at(tokens, i),
-                            collateralToken,
-                            balance
-                        );
-                // if <= value, transfer tokens
-                if (valueInCollateralToken <= valueLeftToTransfer) {
-                    SafeERC20.safeTransfer(
-                        IERC20(EnumerableSet.at(tokens, i)),
-                        recipient,
-                        valueInCollateralToken
-                    );
-                    valueLeftToTransfer =
-                        valueLeftToTransfer -
-                        (valueInCollateralToken);
+                // If token not the lending token, get value of token
+                uint256 balanceInLending;
+                if (EnumerableSet.at(tokens, i) == loan.lendingToken) {
+                    balanceInLending = balance;
                 } else {
-                    SafeERC20.safeTransfer(
-                        IERC20(EnumerableSet.at(tokens, i)),
+                    balanceInLending = PriceAggLib.valueFor(
+                        EnumerableSet.at(tokens, i),
+                        loan.lendingToken,
+                        balance
+                    );
+                }
+
+                if (balanceInLending <= valueLeftToTransfer) {
+                    LibEscrow.e(loan.id).claimToken(
+                        EnumerableSet.at(tokens, i),
                         recipient,
-                        valueLeftToTransfer
+                        balance
+                    );
+                    valueLeftToTransfer -= balanceInLending;
+                } else {
+                    // Token balance is more than enough so calculate ratio of balance to transfer
+                    uint256 valueToTransfer;
+                    if (EnumerableSet.at(tokens, i) == loan.lendingToken) {
+                        valueToTransfer = valueLeftToTransfer;
+                    } else {
+                        valueToTransfer = NumbersLib.percent(
+                            balanceInLending,
+                            NumbersLib.ratioOf(
+                                valueLeftToTransfer,
+                                balanceInLending
+                            )
+                        );
+                    }
+
+                    LibEscrow.e(loan.id).claimToken(
+                        EnumerableSet.at(tokens, i),
+                        recipient,
+                        valueToTransfer
                     );
                     valueLeftToTransfer = 0;
                 }
-                LibEscrow.tokenUpdated(loan.id, EnumerableSet.at(tokens, i));
             }
         }
     }

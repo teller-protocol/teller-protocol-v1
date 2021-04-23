@@ -318,7 +318,7 @@ describe('Loans', () => {
       await collateral.current().then((coll) => coll.should.eq(toBN(0)))
     })
 
-    it('should not be able to deposit collateral and take out loan in same block', async () => {
+    it.skip('should not be able to deposit collateral and take out loan in same block', async () => {
       // Skip ahead a day to avoid request rate limit
       await evm.advanceTime(moment.duration(1, 'day'))
 

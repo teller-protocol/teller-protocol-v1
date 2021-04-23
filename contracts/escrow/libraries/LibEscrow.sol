@@ -11,13 +11,18 @@ import {
 
 // Interfaces
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { ILoansEscrow } from "../escrow/ILoansEscrow.sol";
 
 // Storage
 import { MarketStorageLib, MarketStorage } from "../../storage/market.sol";
 
 library LibEscrow {
-    function s() public pure returns (MarketStorage storage) {
+    function s() internal pure returns (MarketStorage storage) {
         return MarketStorageLib.store();
+    }
+
+    function e(uint256 loanID) internal view returns (ILoansEscrow e_) {
+        e_ = s().loanEscrows[loanID];
     }
 
     function balanceOf(uint256 loanID, address token)
@@ -25,8 +30,7 @@ library LibEscrow {
         view
         returns (uint256)
     {
-        address escrowAddress = address(s().loanEscrows[loanID]);
-        return IERC20(token).balanceOf(escrowAddress);
+        return IERC20(token).balanceOf(address(e(loanID)));
     }
 
     /**

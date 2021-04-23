@@ -9,7 +9,7 @@ import {
 import "../shared/libraries/NumbersList.sol";
 
 // Interfaces
-import { ILoansEscrow } from "../escrow/interfaces/ILoansEscrow.sol";
+import { ILoansEscrow } from "../escrow/escrow/ILoansEscrow.sol";
 import { ICollateralEscrow } from "../market/collateral/ICollateralEscrow.sol";
 import { ITToken } from "../lending/ttoken/ITToken.sol";
 /**

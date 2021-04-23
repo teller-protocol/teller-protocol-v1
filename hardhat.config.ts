@@ -1,6 +1,5 @@
 import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-waffle'
-import 'hardhat-typechain'
 import 'hardhat-contract-sizer'
 import 'hardhat-deploy'
 import 'hardhat-gas-reporter'
@@ -69,10 +68,6 @@ export default <HardhatUserConfig>{
         },
       },
     ],
-  },
-  typechain: {
-    target: 'ethers-v5',
-    outDir: 'types/typechain',
   },
   contractSizer: {
     runOnCompile: !!process.env.COMPILING,

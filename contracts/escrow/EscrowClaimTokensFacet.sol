@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import "../contexts2/pausable/PausableMods.sol";
 
 // Interfaces
-import { ILoansEscrow } from "./interfaces/ILoansEscrow.sol";
+import { ILoansEscrow } from "./escrow/ILoansEscrow.sol";
 import {
     IERC20,
     SafeERC20

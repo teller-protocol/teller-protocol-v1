@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 // Libraries
 import { LibLoans } from "./libraries/LibLoans.sol";
+import { LibEscrow } from "../escrow/libraries/LibEscrow.sol";
 
 // Storage
 import { Loan } from "../storage/market.sol";
@@ -92,5 +93,13 @@ contract LoanDataFacet {
         returns (address escrow_)
     {
         escrow_ = address(LibLoans.s().loanEscrows[loanID]);
+    }
+
+    function getLoanEscrowValue(uint256 loanID)
+        external
+        view
+        returns (uint256)
+    {
+        return LibEscrow.calculateTotalValue(loanID);
     }
 }
