@@ -32,7 +32,7 @@ import {
  *
  * @author develop@teller.finance
  */
-contract TToken_V1 is ITToken, ReentryMods, Ticketed {
+contract TToken_V1 is ITToken, ReentryMods {
     using NumbersLib for uint256;
 
     /* State Variables */
@@ -210,69 +210,6 @@ contract TToken_V1 is ITToken, ReentryMods, Ticketed {
             id_ := or(id_, shl(gasprice(), 64))
             id_ := or(id_, number())
         }
-    }
-
-    /**
-        Called by community members, third party developers, etc. to rebalance
-        the amount of capital allocated to the investment strategy vs. sitting
-        idle in this contract. Just looks at the maximum debt ratio and tries to
-        keep that amount at most on the balance of this contract. Additional check
-        for maximum loan amount.
-        This uses a ticketing system where users are rewarded semi-cheap "tickets"
-        for doing this action. The idea is to reward holders of pattern matching
-        tickets together. Tickets can be traded, it's fully up to the owner.
-        They're kind of like NFT's but less flexible in a way. Door's open for NFTs
-        though.
-     */
-    function rebalance()
-        external
-        override
-        nonReentry("")
-        notRestricted
-        ticketed(ticketId(msg.sig), msg.sender)
-    {
-        S().cToken.accrueInterest();
-        address _underlying = address(S().underlying);
-        uint256 maxLoanAmount = MaxLoanAmountLib.get(_underlying);
-        uint256 maxDebtRatio = MaxDebtRatioLib.get(_underlying);
-
-        uint256 _localUnderlyingSupply =
-            IERC20(_underlying).balanceOf(address(this));
-        uint256 _compoundUnderlyingSupply =
-            // TODO: don't store the value here as well? Maybe compound just does
-            // sometimes and not always.
-            S().cToken.balanceOfUnderlying(address(this));
-        uint256 _totalUnderlyingSupply =
-            _localUnderlyingSupply + _compoundUnderlyingSupply;
-
-        // We are missing some funds in address(this), wouldn't be able to cover
-        // max loan capacity. Therefore we withdraw from compound.
-        if (
-            _totalUnderlyingSupply.ratioOf(_localUnderlyingSupply) <
-            maxDebtRatio
-        ) {
-            uint256 amountToWithdraw =
-                (maxDebtRatio * _totalUnderlyingSupply) /
-                    10000 -
-                    _localUnderlyingSupply;
-            S().cToken.redeemUnderlying(amountToWithdraw);
-            return;
-        }
-        // Otherwise, we have more than max debt in address(this), e.g. from lots
-        // of repayments. So we mint cTokens (deposit into compound) unless it would
-        // leave us with less than maxLoan left.
-        else {
-            uint256 amountToDeposit =
-                _localUnderlyingSupply -
-                    ((maxDebtRatio * _totalUnderlyingSupply) / 10000);
-            if (_localUnderlyingSupply - amountToDeposit > maxLoanAmount) {
-                S().cToken.mint(amountToDeposit);
-                return;
-            }
-        }
-
-        // We don't want to ticket this call.
-        revert("Invalid call");
     }
 
     /**

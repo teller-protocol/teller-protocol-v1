@@ -160,8 +160,8 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
             address(tToken),
             amount
         );
-        // Tell the Teller token we sent funds and to execute the deposit strategy
-        tToken.depositStrategy();
+        // // Tell the Teller token we sent funds and to execute the deposit strategy
+        // tToken.depositStrategy();
 
         // Deduct the interest and principal owed
         uint256 principalPaid;
