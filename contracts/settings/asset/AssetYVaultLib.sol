@@ -7,7 +7,7 @@ import {
     Cache,
     CacheType
 } from "../../shared/libraries/CacheLib.sol";
-import { IVault } from "../../dapps/interfaces/IVault.sol";
+import { IVault } from "../../escrow/dapps/interfaces/IVault.sol";
 
 // Storage
 import { AppStorageLib } from "../../storage/app.sol";

@@ -4,15 +4,17 @@ pragma solidity ^0.8.0;
 // Interfaces
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { MarketStorageLib, MarketStorage } from "../../storage/market.sol";
-import { AppStorageLib } from "../../storage/app.sol";
+import { MarketStorageLib, MarketStorage } from "../../../storage/market.sol";
+import { AppStorageLib } from "../../../storage/app.sol";
 import { IAToken } from "../interfaces/IAToken.sol";
 import { IAaveLendingPool } from "../interfaces/IAaveLendingPool.sol";
 import {
     IAaveLendingPoolAddressesProvider
 } from "../interfaces/IAaveLendingPoolAddressesProvider.sol";
-import "../../storage/app.sol";
-import { IUniswapV2Router } from "../../shared/interfaces/IUniswapV2Router.sol";
+import "../../../storage/app.sol";
+import {
+    IUniswapV2Router
+} from "../../../shared/interfaces/IUniswapV2Router.sol";
 import { IVault } from "../interfaces/IVault.sol";
 
 import {
@@ -24,36 +26,6 @@ library LibDapps {
 
     function s() public pure returns (MarketStorage storage) {
         return MarketStorageLib.store();
-    }
-
-    /**
-     * @notice Adds or removes tokens held by the Escrow contract
-     * @param tokenAddress The token address to be added or removed
-     */
-    function tokenUpdated(uint256 loanID, address tokenAddress) internal {
-        require(
-            address(s().loanEscrows[loanID]) != address(0),
-            "Teller: no escrow"
-        );
-
-        EnumerableSet.AddressSet storage tokens = s().escrowTokens[loanID];
-        bool contains = EnumerableSet.contains(tokens, tokenAddress);
-        if (balanceOf(loanID, tokenAddress) > 0) {
-            if (!contains) {
-                EnumerableSet.add(tokens, tokenAddress);
-            }
-        } else if (contains) {
-            EnumerableSet.remove(tokens, tokenAddress);
-        }
-    }
-
-    function balanceOf(uint256 loanID, address token)
-        internal
-        view
-        returns (uint256)
-    {
-        address escrowAddress = address(s().loanEscrows[loanID]);
-        return IERC20(token).balanceOf(escrowAddress);
     }
 
     /**

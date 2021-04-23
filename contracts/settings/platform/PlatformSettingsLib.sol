@@ -75,15 +75,15 @@ library PlatformSettingsLib {
     }
 
     /**
-     * @notice It gets the current "LiquidateEthPrice" setting's value
+     * @notice It gets the current "LiquidateRewardPercent" setting's value
      * @return value_ the current value.
      */
-    function getLiquidateEthPriceValue()
+    function getLiquidateRewardPercent()
         internal
         view
         returns (uint256 value_)
     {
-        value_ = s(NAMES.LIQUIDATE_ETH_PRICE).value;
+        value_ = s(NAMES.LIQUIDATE_REWARD_PERCENT).value;
     }
 
     /**

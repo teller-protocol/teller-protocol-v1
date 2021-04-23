@@ -13,6 +13,7 @@ import { IWETH } from "../../shared/interfaces/IWETH.sol";
 import {
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 contract CollateralEscrow_V1 is OwnableUpgradeable, ICollateralEscrow {
     mapping(uint256 => uint256) internal _balances; // loanID -> collateral
@@ -36,7 +37,7 @@ contract CollateralEscrow_V1 is OwnableUpgradeable, ICollateralEscrow {
         override
         onlyOwner
     {
-        if (_isWETH) {
+        if (_isWETH && msg.value > 0) {
             require(msg.value == amount, "Teller: incorrect eth deposit");
             IWETH(collateralToken).deposit{ value: msg.value }();
         } else {
@@ -61,13 +62,7 @@ contract CollateralEscrow_V1 is OwnableUpgradeable, ICollateralEscrow {
             "Teller escrow: Insufficient collateral balance"
         );
 
-        if (_isWETH) {
-            IWETH(collateralToken).withdraw(amount);
-            receiver.transfer(amount);
-        } else {
-            SafeERC20.safeTransfer(IERC20(collateralToken), receiver, amount);
-        }
-
+        SafeERC20.safeTransfer(IERC20(collateralToken), receiver, amount);
         _balances[loanID] -= amount;
     }
 

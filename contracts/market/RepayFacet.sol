@@ -19,7 +19,7 @@ import {
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { LibLoans } from "./libraries/LibLoans.sol";
 import { LibCollateral } from "./libraries/LibCollateral.sol";
-import { LibDapps } from "../dapps/libraries/LibDapps.sol";
+import { LibDapps } from "../escrow/dapps/libraries/LibDapps.sol";
 import { LibEscrow } from "../escrow/libraries/LibEscrow.sol";
 import {
     PlatformSettingsLib
@@ -65,14 +65,14 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
      * @param loanID ID of loan from which collateral was withdrawn
      * @param borrower Account address of the borrower
      * @param liquidator Account address of the liquidator
-     * @param collateralOut Collateral that is sent to the liquidator
+     * @param reward Value in lending token paid out to liquidator
      * @param tokensIn Percentage of the collateral price paid by the liquidator to the lending pool
      */
     event LoanLiquidated(
         uint256 indexed loanID,
         address indexed borrower,
         address liquidator,
-        uint256 collateralOut,
+        uint256 reward,
         uint256 tokensIn
     );
 
@@ -92,7 +92,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         //        address lendingToken =
         //            MarketStorageLib.store().loans[loanID].lendingToken;
         //        IERC20 token = IERC20(lendingToken);
-        //        uint256 balance = LibDapps.balanceOf(loanID, address(token));
+        //        uint256 balance = LibEscrow.balanceOf(loanID, address(token));
         //        uint256 totalOwed = LibLoans.getTotalOwed(loanID);
         //        if (balance < totalOwed && amount > balance) {
         //            uint256 amountNeeded =
@@ -201,10 +201,15 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         authorized(AUTHORIZED, msg.sender)
     {
         Loan storage loan = LibLoans.loan(loanID);
+        uint256 collateralAmount = LibCollateral.e(loan.id).loanSupply(loan.id);
         require(
-            RepayLib.isLiquidable(loan),
+            RepayLib.isLiquidable(loan, collateralAmount),
             "Teller: does not need liquidation"
         );
+
+        // Calculate the reward before repaying the loan
+        uint256 rewardInLending =
+            RepayLib.getLiquidationReward(loanID, collateralAmount);
 
         // The liquidator pays the amount still owed on the loan
         uint256 amountToLiquidate = loan.principalOwed + loan.interestOwed;
@@ -217,19 +222,20 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         // Set loan status
         loan.status = LoanStatus.Liquidated;
 
-        int256 rewardInCollateral = getLiquidationReward(loanID);
-        // the caller gets the collateral from the loan
-        RepayLib.payOutLiquidator(
-            loan,
-            rewardInCollateral,
-            payable(msg.sender)
-        );
+        // Payout the liquidator reward owed
+        if (rewardInLending > 0) {
+            RepayLib.payOutLiquidator(
+                loan,
+                rewardInLending,
+                payable(msg.sender)
+            );
+        }
 
         emit LoanLiquidated(
             loanID,
             loan.loanTerms.borrower,
             msg.sender,
-            uint256(rewardInCollateral),
+            rewardInLending,
             amountToLiquidate
         );
     }
@@ -237,31 +243,23 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
     /**
      * @notice It gets the current liquidation reward for a given loan.
      * @param loanID The loan ID to get the info.
-     * @return The value the liquidator will receive denoted in collateral tokens.
+     * @return inLending_ The value the liquidator will receive denoted in lending tokens.
+     * @return inCollateral_ The value the liquidator will receive denoted in collateral tokens.
      */
-    function getLiquidationReward(uint256 loanID) public view returns (int256) {
-        uint256 amountToLiquidate = LibLoans.getTotalOwed(loanID);
-        uint256 availableValue =
-            // Loan collateral value
-            PriceAggLib.valueFor(
-                LibLoans.loan(loanID).collateralToken,
-                LibLoans.loan(loanID).lendingToken,
-                LibCollateral.e(loanID).loanSupply(loanID)
-            ) +
-                // Loan escrow value
-                LibEscrow.calculateTotalValue(loanID);
-        uint256 maxReward =
-            NumbersLib.percent(
-                amountToLiquidate,
-                NumbersLib.diffOneHundredPercent(
-                    PlatformSettingsLib.getLiquidateEthPriceValue()
-                )
-            );
-        if (availableValue < amountToLiquidate + maxReward) {
-            return int256(availableValue);
-        } else {
-            return int256(maxReward) + (int256(amountToLiquidate));
-        }
+    function getLiquidationReward(uint256 loanID)
+        external
+        view
+        returns (uint256 inLending_, uint256 inCollateral_)
+    {
+        inLending_ = RepayLib.getLiquidationReward(
+            loanID,
+            LibCollateral.e(loanID).loanSupply(loanID)
+        );
+        inCollateral_ = PriceAggLib.valueFor(
+            LibLoans.loan(loanID).lendingToken,
+            LibLoans.loan(loanID).collateralToken,
+            inLending_
+        );
     }
 }
 
@@ -271,7 +269,11 @@ library RepayLib {
      * @param loan The loan storage pointer to check.
      * @return true if the loan is liquidable.
      */
-    function isLiquidable(Loan storage loan) internal view returns (bool) {
+    function isLiquidable(Loan storage loan, uint256 collateralAmount)
+        internal
+        view
+        returns (bool)
+    {
         // Check if loan can be liquidated
         if (loan.status != LoanStatus.Active) {
             return false;
@@ -279,15 +281,57 @@ library RepayLib {
 
         if (loan.loanTerms.collateralRatio > 0) {
             // If loan has a collateral ratio, check how much is needed
-            (, int256 neededInCollateral, ) =
+            (, uint256 neededInCollateral, ) =
                 LoanDataFacet(address(this)).getCollateralNeededInfo(loan.id);
-            return
-                neededInCollateral >
-                int256(LibCollateral.e(loan.id).loanSupply(loan.id));
-        } else {
-            // Otherwise, check if the loan has expired
-            return
-                block.timestamp >= loan.loanStartTime + loan.loanTerms.duration;
+            if (neededInCollateral > collateralAmount) {
+                return true;
+            }
+        }
+
+        // Otherwise, check if the loan has expired
+        return block.timestamp >= loan.loanStartTime + loan.loanTerms.duration;
+    }
+
+    /**
+     * @notice It gets the current liquidation reward for a given loan.
+     * @param loanID The loan ID to get the info.
+     * @param collateralAmount The amount of collateral for the {loanID}. Passed in to save gas calling the collateral escrow multiple times.
+     * @return reward_ The value the liquidator will receive denoted in lending tokens.
+     */
+    function getLiquidationReward(uint256 loanID, uint256 collateralAmount)
+        internal
+        view
+        returns (uint256 reward_)
+    {
+        uint256 amountToLiquidate =
+            LibLoans.loan(loanID).principalOwed +
+                LibLoans.loan(loanID).interestOwed;
+
+        // Max reward is amount repaid on loan plus extra percentage
+        uint256 maxReward =
+            amountToLiquidate +
+                NumbersLib.percent(
+                    amountToLiquidate,
+                    PlatformSettingsLib.getLiquidateRewardPercent()
+                );
+
+        // Calculate available collateral for reward
+        if (collateralAmount > 0) {
+            reward_ += PriceAggLib.valueFor(
+                LibLoans.loan(loanID).collateralToken,
+                LibLoans.loan(loanID).lendingToken,
+                collateralAmount
+            );
+        }
+
+        // Calculate loan escrow value if collateral not enough to cover reward
+        if (reward_ < maxReward) {
+            reward_ += LibEscrow.calculateTotalValue(loanID);
+        }
+
+        // Cap the reward to max
+        if (reward_ > maxReward) {
+            reward_ = maxReward;
         }
     }
 
@@ -295,24 +339,28 @@ library RepayLib {
      * @notice Checks if the loan has an Escrow and claims any tokens then pays out the loan collateral.
      * @dev See Escrow.claimTokens for more info.
      * @param loan The loan storage pointer which is being liquidated
-     * @param rewardInCollateral The total amount of reward based in the collateral token to pay the liquidator
+     * @param rewardInLending The total amount of reward based in the lending token to pay the liquidator
      * @param liquidator The address of the liquidator where the liquidation reward will be sent to
      */
     function payOutLiquidator(
         Loan storage loan,
-        int256 rewardInCollateral,
+        uint256 rewardInLending,
         address payable liquidator
     ) internal {
-        if (rewardInCollateral <= 0) {
-            return;
-        }
-        uint256 reward = uint256(rewardInCollateral);
+        uint256 rewardInCollateral =
+            PriceAggLib.valueFor(
+                LibLoans.loan(loan.id).lendingToken,
+                LibLoans.loan(loan.id).collateralToken,
+                uint256(rewardInLending)
+            );
+
         uint256 availableCollateral =
             LibCollateral.e(loan.id).loanSupply(loan.id);
-        if (reward < availableCollateral) {
-            LibCollateral.withdraw(loan.id, reward, liquidator);
-        } else if (reward >= availableCollateral) {
-            uint256 remainingCollateralAmount = reward - (availableCollateral);
+        if (rewardInCollateral <= availableCollateral) {
+            LibCollateral.withdraw(loan.id, rewardInCollateral, liquidator);
+        } else {
+            uint256 remainingCollateralAmount =
+                rewardInCollateral - (availableCollateral);
             // Payout whats available in the collateral token
             LibCollateral.withdrawAll(loan.id, liquidator);
 
@@ -357,7 +405,7 @@ library RepayLib {
             }
 
             uint256 balance =
-                LibDapps.balanceOf(loan.id, EnumerableSet.at(tokens, i));
+                LibEscrow.balanceOf(loan.id, EnumerableSet.at(tokens, i));
             address collateralToken = loan.collateralToken;
             // get value of token balance in collateral value
             if (balance > 0) {
@@ -387,7 +435,7 @@ library RepayLib {
                     );
                     valueLeftToTransfer = 0;
                 }
-                LibDapps.tokenUpdated(loan.id, EnumerableSet.at(tokens, i));
+                LibEscrow.tokenUpdated(loan.id, EnumerableSet.at(tokens, i));
             }
         }
     }

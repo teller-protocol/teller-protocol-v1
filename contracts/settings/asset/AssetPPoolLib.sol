@@ -9,7 +9,7 @@ import {
 } from "../../shared/libraries/CacheLib.sol";
 import {
     PrizePoolInterface
-} from "../../dapps/interfaces/PrizePoolInterface.sol";
+} from "../../escrow/dapps/interfaces/PrizePoolInterface.sol";
 
 // Storage
 import { AppStorageLib } from "../../storage/app.sol";

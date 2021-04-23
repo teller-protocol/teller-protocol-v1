@@ -3,9 +3,10 @@ pragma solidity ^0.8.0;
 
 // Storage
 import { DappMods } from "./DappMods.sol";
-import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
+import { PausableMods } from "../../contexts2/pausable/PausableMods.sol";
 import { LibDapps } from "./libraries/LibDapps.sol";
-import { AssetPPoolLib } from "../settings/asset/AssetPPoolLib.sol";
+import { LibEscrow } from "../libraries/LibEscrow.sol";
+import { AssetPPoolLib } from "../../settings/asset/AssetPPoolLib.sol";
 import { PoolTogetherLib } from "./libraries/PoolTogetherLib.sol";
 import { PrizePoolInterface } from "./interfaces/PrizePoolInterface.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -57,14 +58,14 @@ contract PoolTogetherFacet is PausableMods, DappMods {
         uint256 amount
     ) public paused("", false) onlyBorrower(loanID) {
         require(
-            LibDapps.balanceOf(loanID, tokenAddress) >= amount,
+            LibEscrow.balanceOf(loanID, tokenAddress) >= amount,
             "POOL_INSUFFICIENT_UNDERLYING"
         );
 
         PrizePoolInterface prizePool = AssetPPoolLib.get(tokenAddress);
 
         address ticketAddress = PoolTogetherLib.getTicketAddress(tokenAddress);
-        uint256 balanceBefore = LibDapps.balanceOf(loanID, ticketAddress);
+        uint256 balanceBefore = LibEscrow.balanceOf(loanID, ticketAddress);
         IERC20(tokenAddress).safeApprove(address(prizePool), amount);
 
         bytes memory callData =
@@ -77,11 +78,11 @@ contract PoolTogetherFacet is PausableMods, DappMods {
             );
         LibDapps.s().loanEscrows[loanID].callDapp(address(prizePool), callData);
 
-        uint256 balanceAfter = LibDapps.balanceOf(loanID, ticketAddress);
+        uint256 balanceAfter = LibEscrow.balanceOf(loanID, ticketAddress);
         require(balanceAfter > balanceBefore, "DEPOSIT_ERROR");
 
-        LibDapps.tokenUpdated(loanID, address(ticketAddress));
-        LibDapps.tokenUpdated(loanID, tokenAddress);
+        LibEscrow.tokenUpdated(loanID, address(ticketAddress));
+        LibEscrow.tokenUpdated(loanID, tokenAddress);
 
         emit PoolTogetherDeposited(
             tokenAddress,
@@ -106,7 +107,7 @@ contract PoolTogetherFacet is PausableMods, DappMods {
         PrizePoolInterface prizePool = AssetPPoolLib.get(tokenAddress);
 
         address ticketAddress = PoolTogetherLib.getTicketAddress(tokenAddress);
-        uint256 balanceBefore = LibDapps.balanceOf(loanID, ticketAddress);
+        uint256 balanceBefore = LibEscrow.balanceOf(loanID, ticketAddress);
 
         (
             uint256 maxExitFee, /* uint256 burnedCredit */
@@ -128,11 +129,11 @@ contract PoolTogetherFacet is PausableMods, DappMods {
             );
         LibDapps.s().loanEscrows[loanID].callDapp(address(prizePool), callData);
 
-        uint256 balanceAfter = LibDapps.balanceOf(loanID, ticketAddress);
+        uint256 balanceAfter = LibEscrow.balanceOf(loanID, ticketAddress);
         require(balanceAfter < balanceBefore, "WITHDRAW_ERROR");
 
-        LibDapps.tokenUpdated(loanID, address(ticketAddress));
-        LibDapps.tokenUpdated(loanID, tokenAddress);
+        LibEscrow.tokenUpdated(loanID, address(ticketAddress));
+        LibEscrow.tokenUpdated(loanID, tokenAddress);
 
         emit PoolTogetherWithdrawal(
             tokenAddress,
@@ -157,7 +158,7 @@ contract PoolTogetherFacet is PausableMods, DappMods {
 
         address ticketAddress = PoolTogetherLib.getTicketAddress(tokenAddress);
 
-        uint256 balanceBefore = LibDapps.balanceOf(loanID, ticketAddress);
+        uint256 balanceBefore = LibEscrow.balanceOf(loanID, ticketAddress);
 
         (uint256 maxExitFee, ) =
             prizePool.calculateEarlyExitFee(
@@ -176,17 +177,17 @@ contract PoolTogetherFacet is PausableMods, DappMods {
             );
         LibDapps.s().loanEscrows[loanID].callDapp(address(prizePool), callData);
 
-        uint256 balanceAfter = LibDapps.balanceOf(loanID, ticketAddress);
+        uint256 balanceAfter = LibEscrow.balanceOf(loanID, ticketAddress);
         require(balanceAfter < balanceBefore, "WITHDRAW_ERROR");
 
-        LibDapps.tokenUpdated(loanID, address(ticketAddress));
-        LibDapps.tokenUpdated(loanID, tokenAddress);
+        LibEscrow.tokenUpdated(loanID, address(ticketAddress));
+        LibEscrow.tokenUpdated(loanID, tokenAddress);
 
         emit PoolTogetherWithdrawal(
             tokenAddress,
             ticketAddress,
             balanceBefore,
-            LibDapps.balanceOf(loanID, tokenAddress),
+            LibEscrow.balanceOf(loanID, tokenAddress),
             balanceAfter
         );
     }

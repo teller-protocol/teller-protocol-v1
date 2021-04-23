@@ -3,8 +3,9 @@ pragma solidity ^0.8.0;
 
 // Storage
 import { DappMods } from "./DappMods.sol";
-import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
+import { PausableMods } from "../../contexts2/pausable/PausableMods.sol";
 import { LibDapps } from "./libraries/LibDapps.sol";
+import { LibEscrow } from "../libraries/LibEscrow.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IVault } from "./interfaces/IVault.sol";
@@ -67,8 +68,8 @@ contract YearnFacet is PausableMods, DappMods {
             "YEARN_BALANCE_NOT_INCREASED"
         );
 
-        LibDapps.tokenUpdated(loanID, tokenAddress);
-        LibDapps.tokenUpdated(loanID, address(iVault));
+        LibEscrow.tokenUpdated(loanID, tokenAddress);
+        LibEscrow.tokenUpdated(loanID, address(iVault));
 
         emit YearnDeposited(
             tokenAddress,
@@ -110,8 +111,8 @@ contract YearnFacet is PausableMods, DappMods {
             "WITHDRAWAL_UNSUCCESSFUL"
         );
 
-        LibDapps.tokenUpdated(loanID, tokenAddress);
-        LibDapps.tokenUpdated(loanID, address(iVault));
+        LibEscrow.tokenUpdated(loanID, tokenAddress);
+        LibEscrow.tokenUpdated(loanID, address(iVault));
 
         emit YearnWithdrawn(
             iVault.token(),
@@ -146,8 +147,8 @@ contract YearnFacet is PausableMods, DappMods {
             "WITHDRAWAL_UNSUCCESSFUL"
         );
 
-        LibDapps.tokenUpdated(loanID, tokenAddress);
-        LibDapps.tokenUpdated(loanID, address(iVault));
+        LibEscrow.tokenUpdated(loanID, tokenAddress);
+        LibEscrow.tokenUpdated(loanID, address(iVault));
 
         emit YearnWithdrawn(
             iVault.token(),

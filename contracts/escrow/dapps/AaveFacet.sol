@@ -3,8 +3,9 @@ pragma solidity ^0.8.0;
 
 // Storage
 import { DappMods } from "./DappMods.sol";
-import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
+import { PausableMods } from "../../contexts2/pausable/PausableMods.sol";
 import { LibDapps } from "./libraries/LibDapps.sol";
+import { LibEscrow } from "../libraries/LibEscrow.sol";
 import { IAToken } from "./interfaces/IAToken.sol";
 import { IAaveLendingPool } from "./interfaces/IAaveLendingPool.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -79,8 +80,8 @@ contract AaveFacet is PausableMods, DappMods {
             "AAVE_BALANCE_NOT_INCREASED"
         );
 
-        LibDapps.tokenUpdated(loanID, address(aToken));
-        LibDapps.tokenUpdated(loanID, tokenAddress);
+        LibEscrow.tokenUpdated(loanID, address(aToken));
+        LibEscrow.tokenUpdated(loanID, tokenAddress);
 
         emit AaveDeposited(
             tokenAddress,
@@ -128,8 +129,8 @@ contract AaveFacet is PausableMods, DappMods {
             "AAVE_WITHDRAWAL_ERROR"
         );
 
-        LibDapps.tokenUpdated(loanID, address(aToken));
-        LibDapps.tokenUpdated(loanID, tokenAddress);
+        LibEscrow.tokenUpdated(loanID, address(aToken));
+        LibEscrow.tokenUpdated(loanID, tokenAddress);
 
         emit AaveWithdrawn(
             tokenAddress,
@@ -172,8 +173,8 @@ contract AaveFacet is PausableMods, DappMods {
         uint256 aTokenBalanceAfterWithdraw = aToken.balanceOf(address(this));
         require(aTokenBalanceAfterWithdraw == 0, "AAVE_WITHDRAWAL_ERROR");
 
-        LibDapps.tokenUpdated(loanID, address(aToken));
-        LibDapps.tokenUpdated(loanID, tokenAddress);
+        LibEscrow.tokenUpdated(loanID, address(aToken));
+        LibEscrow.tokenUpdated(loanID, tokenAddress);
 
         emit AaveWithdrawn(
             tokenAddress,

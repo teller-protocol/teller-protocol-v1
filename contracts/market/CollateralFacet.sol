@@ -61,11 +61,10 @@ contract CollateralFacet is RolesMods, ReentryMods, PausableMods {
         require(amount > 0, "Teller: zero withdraw");
 
         if (loan.status == LoanStatus.Active) {
-            (, int256 needed, ) = LibLoans.getCollateralNeededInfo(loanID);
+            (, uint256 needed, ) = LibLoans.getCollateralNeededInfo(loanID);
             if (needed > 0) {
                 require(
-                    LibCollateral.e(loanID).loanSupply(loanID) -
-                        uint256(needed) >=
+                    LibCollateral.e(loanID).loanSupply(loanID) - needed >=
                         amount,
                     "Teller: collateral withdraw amount over limit"
                 );

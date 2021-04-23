@@ -6,12 +6,10 @@ import {
   Signer,
 } from 'ethers'
 import { contracts, ethers, toBN, tokens } from 'hardhat'
+import moment from 'moment'
 
 import { ITellerDiamond } from '../../types/typechain'
-import { ONE_DAY } from '../../utils/consts'
 import { mockCRAResponse } from './mock-cra-response'
-
-type PromiseReturn<T> = T extends PromiseLike<infer U> ? U : T
 
 export enum LoanType {
   ZERO_COLLATERAL,
@@ -21,7 +19,7 @@ export enum LoanType {
 
 export interface LoanHelpersReturn {
   diamond: ITellerDiamond
-  details: PromiseReturn<ReturnType<typeof loanDetails>>
+  details: PromiseReturnType<typeof loanDetails>
   takeOut: (
     amount?: BigNumberish,
     from?: Signer
@@ -71,6 +69,7 @@ interface CreateLoanArgs {
   borrower: string
   loanType: LoanType
   amount: BigNumberish
+  duration?: moment.Duration
 }
 
 export interface CreateLoanReturn {
@@ -87,6 +86,7 @@ export const createLoanArgs = async (
     borrower,
     loanType,
     amount: loanAmount,
+    duration = moment.duration(1, 'day'),
   } = args
 
   const collToken = await tokens.get(collTokenSym)
@@ -108,9 +108,9 @@ export const createLoanArgs = async (
   // Get mock cra request and response
   const craReturn = await mockCRAResponse({
     lendingToken: lendingToken.address,
-    loanAmount: toBN(loanAmount).toString(),
-    loanTermLength: ONE_DAY.toString(),
-    collateralRatio: collateralRatio.toString(),
+    loanAmount: toBN(loanAmount),
+    loanTermLength: duration.asSeconds(),
+    collateralRatio: collateralRatio,
     interestRate: '400',
     borrower,
   })
@@ -142,7 +142,8 @@ export const createLoan = async (
 }
 
 interface LoanDetailsReturn {
-  loan: PromiseReturn<ReturnType<typeof ITellerDiamond.prototype.getLoan>>
+  loan: PromiseReturnType<typeof ITellerDiamond.prototype.getLoan>
+  totalOwed: BigNumber
   borrower: {
     address: string
     signer: Signer
@@ -155,10 +156,12 @@ const loanDetails = async (
 ): Promise<LoanDetailsReturn> => {
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
   const loan = await diamond.getLoan(loanID)
+  const totalOwed = loan.principalOwed.add(loan.interestOwed)
   const signer = await ethers.provider.getSigner(loan.loanTerms.borrower)
 
   return {
     loan,
+    totalOwed,
     borrower: { address: loan.loanTerms.borrower, signer },
     refresh: () => loanDetails(loanID),
   }
@@ -245,7 +248,7 @@ const collateralCurrent = async (
   args: CollateralCurrentArgs
 ): Promise<BigNumber> => {
   const { diamond, details } = args
-  return diamond.getLoanCollateral(details.loan.id)
+  return await diamond.getLoanCollateral(details.loan.id)
 }
 
 interface RepayLoanArgs extends CommonLoanArgs {

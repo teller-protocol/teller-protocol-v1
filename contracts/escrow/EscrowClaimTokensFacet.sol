@@ -18,7 +18,7 @@ import {
 import { MarketStorageLib, LoanStatus } from "../storage/market.sol";
 
 // Libraries
-import { LibDapps } from "../dapps/libraries/LibDapps.sol";
+import { LibDapps } from "../escrow/dapps/libraries/LibDapps.sol";
 import { LibLoans } from "../market/libraries/LibLoans.sol";
 import { LibEscrow } from "./libraries/LibEscrow.sol";
 import { PriceAggLib } from "../price-aggregator/PriceAggLib.sol";
@@ -45,7 +45,7 @@ contract EscrowClaimTokensFacet is PausableMods {
             MarketStorageLib.store().escrowTokens[loanID];
         for (uint256 i = 0; i < EnumerableSet.length(tokens); i++) {
             uint256 balance =
-                LibDapps.balanceOf(loanID, EnumerableSet.at(tokens, i));
+                LibEscrow.balanceOf(loanID, EnumerableSet.at(tokens, i));
             if (balance > 0) {
                 IERC20(EnumerableSet.at(tokens, i)).safeTransfer(
                     msg.sender,

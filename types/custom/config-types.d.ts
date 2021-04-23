@@ -74,7 +74,7 @@ export interface PlatformSettings {
   ResponseExpiryLength: PlatformSetting
   SafetyInterval: PlatformSetting
   TermsExpiryTime: PlatformSetting
-  LiquidateEthPrice: PlatformSetting
+  LiquidateRewardPercent: PlatformSetting
   MaximumLoanDuration: PlatformSetting
   CollateralBuffer: PlatformSetting
   OverCollateralizedBuffer: PlatformSetting

@@ -50,7 +50,6 @@ const deployProtocol: DeployFunction = async (hre) => {
       'SignersFacet',
       'NFTFacet',
       'EscrowClaimTokensFacet',
-      'EscrowSettingsFacet',
     ],
     owner: deployer,
     execute: {

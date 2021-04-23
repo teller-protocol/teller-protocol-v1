@@ -34,9 +34,9 @@ const mainnetPlatformSettings: PlatformSettings = {
     max:
       '115792089237316195423570985008687907853269984665640564039457584007913129639935',
   },
-  LiquidateEthPrice: {
+  LiquidateRewardPercent: {
     processOnDeployment: true,
-    value: 9500,
+    value: 500,
     min: 0,
     max:
       '115792089237316195423570985008687907853269984665640564039457584007913129639935',
@@ -112,9 +112,9 @@ export const platformSettings: Record<string, PlatformSettings> = {
       max:
         '115792089237316195423570985008687907853269984665640564039457584007913129639935',
     },
-    LiquidateEthPrice: {
+    LiquidateRewardPercent: {
       processOnDeployment: true,
-      value: 9500,
+      value: 500,
       min: 0,
       max:
         '115792089237316195423570985008687907853269984665640564039457584007913129639935',
@@ -188,9 +188,9 @@ export const platformSettings: Record<string, PlatformSettings> = {
       max:
         '115792089237316195423570985008687907853269984665640564039457584007913129639935',
     },
-    LiquidateEthPrice: {
+    LiquidateRewardPercent: {
       processOnDeployment: true,
-      value: 9500,
+      value: 500,
       min: 5000,
       max: 10000,
     },
@@ -262,9 +262,9 @@ export const platformSettings: Record<string, PlatformSettings> = {
       max:
         '115792089237316195423570985008687907853269984665640564039457584007913129639935',
     },
-    LiquidateEthPrice: {
+    LiquidateRewardPercent: {
       processOnDeployment: true,
-      value: 9500,
+      value: 500,
       min: 0,
       max:
         '115792089237316195423570985008687907853269984665640564039457584007913129639935',

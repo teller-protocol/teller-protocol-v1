@@ -9,10 +9,10 @@ const { contracts, getNamedSigner, ethers } = hre
 
 interface CRAArgs {
   lendingToken: string
-  loanAmount: string
-  loanTermLength: string
-  collateralRatio: string
-  interestRate: string
+  loanAmount: BigNumberish
+  loanTermLength: BigNumberish
+  collateralRatio: BigNumberish
+  interestRate: BigNumberish
   borrower: string
   recipient?: string
 }

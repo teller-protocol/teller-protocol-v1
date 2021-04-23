@@ -27,7 +27,6 @@ import { NFTFacet } from "../../nft/NFTFacet.sol";
 import {
     EscrowClaimTokensFacet
 } from "../../escrow/EscrowClaimTokensFacet.sol";
-import { EscrowSettingsFacet } from "../../escrow/EscrowSettingsFacet.sol";
 import { CollateralFacet } from "../../market/CollateralFacet.sol";
 
 abstract contract ITellerDiamond is
@@ -45,7 +44,6 @@ abstract contract ITellerDiamond is
     SignersFacet,
     NFTFacet,
     EscrowClaimTokensFacet,
-    EscrowSettingsFacet,
     IDiamondCut,
     IDiamondLoupe
 {}

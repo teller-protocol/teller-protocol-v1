@@ -3,18 +3,19 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { DappMods } from "./DappMods.sol";
-import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
+import { PausableMods } from "../../contexts2/pausable/PausableMods.sol";
 
 // Libraries
 import { LibDapps } from "./libraries/LibDapps.sol";
-import { AssetCTokenLib } from "../settings/asset/AssetCTokenLib.sol";
+import { LibEscrow } from "../libraries/LibEscrow.sol";
+import { AssetCTokenLib } from "../../settings/asset/AssetCTokenLib.sol";
 
 // Interfaces
 import {
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { ICErc20 } from "../shared/interfaces/ICErc20.sol";
+import { ICErc20 } from "../../shared/interfaces/ICErc20.sol";
 
 uint256 constant NO_ERROR = 0;
 
@@ -70,7 +71,7 @@ contract CompoundFacet is PausableMods, DappMods {
         uint256 amount
     ) public paused("", false) onlyBorrower(loanID) {
         require(
-            LibDapps.balanceOf(loanID, tokenAddress) >= amount,
+            LibEscrow.balanceOf(loanID, tokenAddress) >= amount,
             "COMPOUND_INSUFFICIENT_UNDERLYING"
         );
 
@@ -82,14 +83,14 @@ contract CompoundFacet is PausableMods, DappMods {
 
         //        require(result == NO_ERROR, "Teller: compound deposit error");
 
-        LibDapps.tokenUpdated(loanID, address(cToken));
-        LibDapps.tokenUpdated(loanID, tokenAddress);
+        LibEscrow.tokenUpdated(loanID, address(cToken));
+        LibEscrow.tokenUpdated(loanID, tokenAddress);
 
         emit CompoundLended(
             tokenAddress,
             address(cToken),
             amount,
-            LibDapps.balanceOf(loanID, tokenAddress),
+            LibEscrow.balanceOf(loanID, tokenAddress),
             cToken.balanceOf(address(this))
         );
     }
@@ -159,15 +160,15 @@ contract CompoundFacet is PausableMods, DappMods {
         //        );
         //        require(result == NO_ERROR, "Teller: compound dapp withdrawal error");
 
-        LibDapps.tokenUpdated(loanID, address(cToken));
-        LibDapps.tokenUpdated(loanID, tokenAddress);
+        LibEscrow.tokenUpdated(loanID, address(cToken));
+        LibEscrow.tokenUpdated(loanID, tokenAddress);
 
         emit CompoundRedeemed(
             tokenAddress,
             address(cToken),
             amount,
             isUnderlying,
-            LibDapps.balanceOf(loanID, tokenAddress),
+            LibEscrow.balanceOf(loanID, tokenAddress),
             cToken.balanceOf(address(this))
         );
     }

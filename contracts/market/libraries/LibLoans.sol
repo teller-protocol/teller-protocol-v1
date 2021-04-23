@@ -66,8 +66,8 @@ library LibLoans {
         internal
         view
         returns (
-            int256 neededInLendingTokens,
-            int256 neededInCollateralTokens,
+            uint256 neededInLendingTokens,
+            uint256 neededInCollateralTokens,
             uint256 escrowLoanValue
         )
     {
@@ -78,20 +78,11 @@ library LibLoans {
         if (neededInLendingTokens == 0) {
             neededInCollateralTokens = 0;
         } else {
-            uint256 value =
-                PriceAggLib.valueFor(
-                    loan(loanID).lendingToken,
-                    loan(loanID).collateralToken,
-                    uint256(
-                        neededInLendingTokens < 0
-                            ? -neededInLendingTokens
-                            : neededInLendingTokens
-                    )
-                );
-            neededInCollateralTokens = int256(value);
-            if (neededInLendingTokens < 0) {
-                neededInCollateralTokens = neededInCollateralTokens * -1;
-            }
+            neededInCollateralTokens = PriceAggLib.valueFor(
+                loan(loanID).lendingToken,
+                loan(loanID).collateralToken,
+                neededInLendingTokens
+            );
         }
     }
 
@@ -106,7 +97,7 @@ library LibLoans {
     function getCollateralNeededInTokens(uint256 loanID)
         internal
         view
-        returns (int256 neededInLendingTokens, uint256 escrowLoanValue)
+        returns (uint256 neededInLendingTokens, uint256 escrowLoanValue)
     {
         if (
             !_isActiveOrSet(loanID) ||
@@ -126,22 +117,27 @@ library LibLoans {
         // * For the loan to not be liquidated (when status == Active), the minimum collateral is (principal owed * (X collateral factor + liquidation reward)).
         // * If the loan has an escrow account, the minimum collateral is ((principal owed - escrow value) * (X collateral factor + liquidation reward)).
         if (loan(loanID).status == LoanStatus.TermsSet) {
-            neededInLendingTokens = int256(_getLoanAmount(loanID)).percent(
+            neededInLendingTokens = _getLoanAmount(loanID).percent(
                 loan(loanID).loanTerms.collateralRatio
             );
         } else {
-            neededInLendingTokens = int256(loan(loanID).principalOwed);
             uint256 requiredRatio =
                 loan(loanID).loanTerms.collateralRatio -
                     getInterestRatio(loanID) -
                     PlatformSettingsLib.getCollateralBufferValue();
+
+            neededInLendingTokens =
+                loan(loanID).principalOwed +
+                loan(loanID).interestOwed;
             escrowLoanValue = LibEscrow.calculateTotalValue(loanID);
-            if (escrowLoanValue > 0) {
-                neededInLendingTokens += (neededInLendingTokens -
-                    int256(escrowLoanValue));
+            if (
+                escrowLoanValue > 0 && neededInLendingTokens > escrowLoanValue
+            ) {
+                neededInLendingTokens -= escrowLoanValue;
             }
-            neededInLendingTokens += (int256(loan(loanID).interestOwed))
-                .percent(requiredRatio);
+            neededInLendingTokens = neededInLendingTokens.percent(
+                requiredRatio
+            );
         }
     }
 

@@ -57,8 +57,8 @@ contract LoanDataFacet {
         external
         view
         returns (
-            int256 neededInLendingTokens,
-            int256 neededInCollateralTokens,
+            uint256 neededInLendingTokens,
+            uint256 neededInCollateralTokens,
             uint256 escrowLoanValue
         )
     {

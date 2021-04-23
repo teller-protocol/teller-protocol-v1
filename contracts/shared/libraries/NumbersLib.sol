@@ -8,34 +8,9 @@ pragma solidity ^0.8.0;
  */
 library NumbersLib {
     /**
-        @dev It represents 100% with 2 decimal places.
+     * @dev It represents 100% with 2 decimal places.
      */
-    function ONE_HUNDRED_PERCENT() internal pure returns (uint256) {
-        return 10000;
-    }
-
-    /**
-        @notice Returns the positive difference value of a number to another number
-        @param self The number to return the difference value for
-        @param other The other number to calucualte the difference against
-        @return uint256 The difference value
-     */
-    function diff(uint256 self, uint256 other) internal pure returns (uint256) {
-        return other > self ? other - self : self - other;
-    }
-
-    /**
-        @notice Returns the positive percentage difference of a value to 100%
-        @param self The number to return the percentage difference for
-        @return uint256 The percentage difference value
-     */
-    function diffOneHundredPercent(uint256 self)
-        internal
-        pure
-        returns (uint256)
-    {
-        return diff(self, ONE_HUNDRED_PERCENT());
-    }
+    uint256 internal constant ONE_HUNDRED_PERCENT = 10000;
 
     /**
      * @notice Returns a percentage value of a number.
@@ -47,7 +22,7 @@ library NumbersLib {
         pure
         returns (uint256)
     {
-        return (self * percentage) / ONE_HUNDRED_PERCENT();
+        return (self * percentage) / ONE_HUNDRED_PERCENT;
     }
 
     function percent(int256 self, uint256 percentage)
@@ -55,7 +30,7 @@ library NumbersLib {
         pure
         returns (int256)
     {
-        return (self * int256(percentage)) / int256(ONE_HUNDRED_PERCENT());
+        return (self * int256(percentage)) / int256(ONE_HUNDRED_PERCENT);
     }
 
     function abs(int256 self) internal pure returns (uint256) {
@@ -73,6 +48,6 @@ library NumbersLib {
         pure
         returns (uint256)
     {
-        return (self * ONE_HUNDRED_PERCENT()) / num;
+        return (self * ONE_HUNDRED_PERCENT) / num;
     }
 }

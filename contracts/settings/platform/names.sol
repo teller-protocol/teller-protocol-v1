@@ -40,11 +40,11 @@ bytes32 constant SAFETY_INTERVAL = keccak256("SafetyInterval");
 bytes32 constant TERMS_EXPIRY_TIME = keccak256("TermsExpiryTime");
 
 /**
-        @dev The setting name for the liquidate ETH price settings.
-        @dev It represents the percentage value (with 2 decimal places) to liquidate loans.
-            i.e. an ETH liquidation price at 95% is stored as 9500
+        @dev The setting name for the liquidation reward percent setting.
+        @dev It represents the percentage value (with 2 decimal places) for the MAX liquidation reward.
+            i.e. an ETH liquidation price at 5% is stored as 500
      */
-bytes32 constant LIQUIDATE_ETH_PRICE = keccak256("LiquidateEthPrice");
+bytes32 constant LIQUIDATE_REWARD_PERCENT = keccak256("LiquidateRewardPercent");
 
 /**
         @dev The setting name for the maximum loan duration settings.

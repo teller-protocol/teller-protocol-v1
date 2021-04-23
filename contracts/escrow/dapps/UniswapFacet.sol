@@ -2,11 +2,12 @@
 pragma solidity ^0.8.0;
 
 // Storage
-import { AppStorageLib } from "../storage/app.sol";
+import { AppStorageLib } from "../../storage/app.sol";
 import { DappMods } from "./DappMods.sol";
-import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
+import { PausableMods } from "../../contexts2/pausable/PausableMods.sol";
 import { LibDapps } from "./libraries/LibDapps.sol";
-import { IUniswapV2Router } from "../shared/interfaces/IUniswapV2Router.sol";
+import { LibEscrow } from "../libraries/LibEscrow.sol";
+import { IUniswapV2Router } from "../../shared/interfaces/IUniswapV2Router.sol";
 
 contract UniswapFacet is PausableMods, DappMods {
     /**
@@ -37,8 +38,8 @@ contract UniswapFacet is PausableMods, DappMods {
     ) public paused("", false) onlyBorrower(loanID) {
         uint256 destinationAmount = _uniswap(path, sourceAmount);
 
-        LibDapps.tokenUpdated(loanID, path[0]);
-        LibDapps.tokenUpdated(loanID, path[path.length - 1]);
+        LibEscrow.tokenUpdated(loanID, path[0]);
+        LibEscrow.tokenUpdated(loanID, path[path.length - 1]);
 
         emit UniswapSwapped(
             path[0],

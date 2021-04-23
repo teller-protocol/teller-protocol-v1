@@ -12,7 +12,7 @@ export interface SwapArgs {
 }
 
 export const getFunds = async (args: SwapArgs): Promise<void> => {
-  const { getNamedSigner, ethers, contracts } = hre
+  const { getNamedSigner, ethers, tokens, contracts } = hre
 
   const funder = await getNamedSigner('funder')
 
@@ -23,13 +23,7 @@ export const getFunds = async (args: SwapArgs): Promise<void> => {
   })
 
   // Tokens
-  const tokens = getTokens(hre.network)
-
-  // ETH balance
-  const deployerETHBalance = await ethers.provider.getBalance(
-    funder.getAddress()
-  )
-  const ethToSend = deployerETHBalance.mul('5').div('10')
+  const { all: tokenAddresses } = getTokens(hre.network)
 
   const toAddress = Signer.isSigner(args.to)
     ? await args.to.getAddress()
@@ -41,10 +35,16 @@ export const getFunds = async (args: SwapArgs): Promise<void> => {
       value: args.amount,
     })
   } else {
+    // ETH balance
+    const deployerETHBalance = await ethers.provider.getBalance(
+      funder.getAddress()
+    )
+    const ethToSend = deployerETHBalance.mul('1').div('10')
+
     // Swap ETH for given token
     await swapper.swapETHForExactTokens(
       args.amount,
-      [tokens.all.WETH, tokens.all[args.tokenSym]],
+      [tokenAddresses.WETH, tokenAddresses[args.tokenSym]],
       toAddress,
       Date.now() + 10000,
       { value: ethToSend }

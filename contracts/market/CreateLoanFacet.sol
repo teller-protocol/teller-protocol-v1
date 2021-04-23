@@ -12,6 +12,7 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // Libraries
 import { LibLoans } from "./libraries/LibLoans.sol";
+import { LibEscrow } from "../escrow/libraries/LibEscrow.sol";
 import { LibCollateral } from "./libraries/LibCollateral.sol";
 import { LibConsensus } from "./libraries/LibConsensus.sol";
 import { LendingLib } from "../lending/LendingLib.sol";
@@ -176,11 +177,11 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
     {
         {
             // Check that enough collateral has been provided for this loan
-            (, int256 neededInCollateral, ) =
+            (, uint256 neededInCollateral, ) =
                 LibLoans.getCollateralNeededInfo(loanID);
             require(
                 neededInCollateral <=
-                    int256(LibCollateral.e(loanID).loanSupply(loanID)),
+                    LibCollateral.e(loanID).loanSupply(loanID),
                 "Teller: more collateral required"
             );
         }
@@ -201,6 +202,11 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
 
         // Transfer tokens to the recipient.
         CreateLoanLib.fundLoan(loan.lendingToken, loanRecipient, amount);
+
+        // Initialize the escrow token list
+        if (!eoaAllowed) {
+            LibEscrow.tokenUpdated(loanID, loan.lendingToken);
+        }
     }
 }
 

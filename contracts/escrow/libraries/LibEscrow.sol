@@ -2,23 +2,53 @@
 pragma solidity ^0.8.0;
 
 // Libraries
-import { LibDapps } from "../../dapps/libraries/LibDapps.sol";
+import { LibDapps } from "../dapps/libraries/LibDapps.sol";
+import { LibLoans } from "../../market/libraries/LibLoans.sol";
 import { PriceAggLib } from "../../price-aggregator/PriceAggLib.sol";
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Interfaces
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { ICErc20 } from "../../shared/interfaces/ICErc20.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // Storage
-import { MarketStorageLib } from "../../storage/market.sol";
-import { AppStorageLib } from "../../storage/app.sol";
+import { MarketStorageLib, MarketStorage } from "../../storage/market.sol";
 
 library LibEscrow {
+    function s() public pure returns (MarketStorage storage) {
+        return MarketStorageLib.store();
+    }
+
+    function balanceOf(uint256 loanID, address token)
+        internal
+        view
+        returns (uint256)
+    {
+        address escrowAddress = address(s().loanEscrows[loanID]);
+        return IERC20(token).balanceOf(escrowAddress);
+    }
+
+    /**
+     * @notice Adds or removes tokens held by the Escrow contract
+     * @param loanID The loan ID to update the token list for
+     * @param tokenAddress The token address to be added or removed
+     */
+    function tokenUpdated(uint256 loanID, address tokenAddress) internal {
+        EnumerableSet.AddressSet storage tokens = s().escrowTokens[loanID];
+        bool contains = EnumerableSet.contains(tokens, tokenAddress);
+        if (balanceOf(loanID, tokenAddress) > 0) {
+            if (!contains) {
+                EnumerableSet.add(tokens, tokenAddress);
+            }
+        } else if (contains) {
+            EnumerableSet.remove(tokens, tokenAddress);
+        }
+    }
+
     /**
      * @notice Calculate the value of the loan by getting the value of all tokens the Escrow owns.
+     * @param loanID The loan ID to calculate value for
      * @return value_ Escrow total value denoted in the lending token.
      */
     function calculateTotalValue(uint256 loanID)
@@ -29,25 +59,20 @@ library LibEscrow {
         EnumerableSet.AddressSet storage tokens =
             MarketStorageLib.store().escrowTokens[loanID];
         if (EnumerableSet.length(tokens) > 0) {
-            address WETH_ADDRESS = AppStorageLib.store().assetAddresses["WETH"];
+            address lendingToken = LibLoans.loan(loanID).lendingToken;
             for (uint256 i = 0; i < EnumerableSet.length(tokens); i++) {
-                if (EnumerableSet.at(tokens, i) == WETH_ADDRESS) {
-                    value_ += LibDapps.balanceOf(
-                        loanID,
-                        EnumerableSet.at(tokens, i)
-                    );
+                uint256 tokenBal =
+                    balanceOf(loanID, EnumerableSet.at(tokens, i));
+                if (EnumerableSet.at(tokens, i) == lendingToken) {
+                    value_ += tokenBal;
                 } else {
                     value_ += PriceAggLib.valueFor(
                         EnumerableSet.at(tokens, i),
-                        WETH_ADDRESS,
-                        LibDapps.balanceOf(loanID, EnumerableSet.at(tokens, i))
+                        lendingToken,
+                        tokenBal
                     );
                 }
             }
-            address lendingToken =
-                MarketStorageLib.store().loans[loanID].lendingToken;
-
-            value_ = PriceAggLib.valueFor(WETH_ADDRESS, lendingToken, value_);
         }
     }
 }
