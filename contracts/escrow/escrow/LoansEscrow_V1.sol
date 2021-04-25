@@ -13,16 +13,30 @@ import {
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+// Proxy
+import {
+    InitializeableBeaconProxy
+} from "../../shared/proxy/beacon/InitializeableBeaconProxy.sol";
+import { IBeacon } from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
+
 contract LoansEscrow_V1 is OwnableUpgradeable, ILoansEscrow {
     function init() external override {
         OwnableUpgradeable.__Ownable_init();
     }
 
-    function callDapp(address dappAddress, bytes calldata dappData)
-        external
-        override
-        onlyOwner
-    {}
+    function callDapp(bytes calldata dappData) external override onlyOwner {
+        address _impl = IBeacon(address(this)).implementation();
+        (bool success, ) = _impl.delegatecall(dappData);
+
+        if (!success) {
+            assembly {
+                let ptr := mload(0x40)
+                let size := returndatasize()
+                returndatacopy(ptr, 0, size)
+                revert(ptr, size)
+            }
+        }
+    }
 
     function claimToken(
         address token,

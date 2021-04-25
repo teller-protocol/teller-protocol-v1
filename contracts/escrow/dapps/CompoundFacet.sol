@@ -79,7 +79,7 @@ contract CompoundFacet is PausableMods, DappMods {
         IERC20(tokenAddress).safeApprove(address(cToken), amount);
 
         bytes memory callData = abi.encode(ICErc20.mint.selector, amount);
-        LibDapps.s().loanEscrows[loanID].callDapp(address(cToken), callData);
+        LibDapps.s().loanEscrows[loanID].callDapp(callData);
 
         //        require(result == NO_ERROR, "Teller: compound deposit error");
 
@@ -141,14 +141,10 @@ contract CompoundFacet is PausableMods, DappMods {
         bytes memory callData;
         if (isUnderlying) {
             callData = abi.encode(ICErc20.redeemUnderlying.selector, amount);
-            LibDapps.s().loanEscrows[loanID].callDapp(
-                address(cToken),
-                callData
-            );
         } else {
             callData = abi.encode(ICErc20.redeem.selector, amount);
         }
-        LibDapps.s().loanEscrows[loanID].callDapp(address(cToken), callData);
+        LibDapps.s().loanEscrows[loanID].callDapp(callData);
 
         //        uint256 result =
         //            isUnderlying // TODO: Verify errors

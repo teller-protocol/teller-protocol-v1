@@ -35,7 +35,7 @@ contract UniswapFacet is PausableMods, DappMods {
         address[] memory path,
         uint256 sourceAmount,
         uint256 minDestination
-    ) public paused("", false) onlyBorrower(loanID) {
+    ) public paused("", false) onlyBorrower(loanID) onlySecured(loanID) {
         uint256 destinationAmount = _uniswap(path, sourceAmount);
 
         LibEscrow.tokenUpdated(loanID, path[0]);
