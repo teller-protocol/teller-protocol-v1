@@ -76,7 +76,7 @@ contract PoolTogetherFacet is PausableMods, DappMods {
                 ticketAddress,
                 address(this)
             );
-        LibDapps.s().loanEscrows[loanID].callDapp(callData);
+        LibDapps.s().loanEscrows[loanID].callDapp(address(prizePool), callData);
 
         uint256 balanceAfter = LibEscrow.balanceOf(loanID, ticketAddress);
         require(balanceAfter > balanceBefore, "DEPOSIT_ERROR");
@@ -127,7 +127,7 @@ contract PoolTogetherFacet is PausableMods, DappMods {
                 ticketAddress,
                 maxExitFee
             );
-        LibDapps.s().loanEscrows[loanID].callDapp(callData);
+        LibDapps.s().loanEscrows[loanID].callDapp(address(prizePool), callData);
 
         uint256 balanceAfter = LibEscrow.balanceOf(loanID, ticketAddress);
         require(balanceAfter < balanceBefore, "WITHDRAW_ERROR");
@@ -175,7 +175,7 @@ contract PoolTogetherFacet is PausableMods, DappMods {
                 ticketAddress,
                 maxExitFee
             );
-        LibDapps.s().loanEscrows[loanID].callDapp(callData);
+        LibDapps.s().loanEscrows[loanID].callDapp(address(prizePool), callData);
 
         uint256 balanceAfter = LibEscrow.balanceOf(loanID, ticketAddress);
         require(balanceAfter < balanceBefore, "WITHDRAW_ERROR");

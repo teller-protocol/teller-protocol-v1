@@ -5,7 +5,10 @@ import { DappData } from "../../storage/market.sol";
 interface ILoansEscrow {
     function init() external virtual;
 
-    function callDapp(bytes calldata dappData) external virtual;
+    function callDapp(address dappAddress, bytes calldata dappData)
+        external
+        virtual
+        returns (bytes memory);
 
     function claimToken(
         address token,

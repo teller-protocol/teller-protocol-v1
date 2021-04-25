@@ -24,9 +24,14 @@ contract LoansEscrow_V1 is OwnableUpgradeable, ILoansEscrow {
         OwnableUpgradeable.__Ownable_init();
     }
 
-    function callDapp(bytes calldata dappData) external override onlyOwner {
-        address _impl = IBeacon(address(this)).implementation();
-        (bool success, ) = _impl.delegatecall(dappData);
+    function callDapp(address dappAddress, bytes calldata dappData)
+        external
+        override
+        onlyOwner
+        returns (bytes memory)
+    {
+        (bool success, bytes memory _returnedData) =
+            dappAddress.delegatecall(dappData);
 
         if (!success) {
             assembly {
@@ -36,6 +41,7 @@ contract LoansEscrow_V1 is OwnableUpgradeable, ILoansEscrow {
                 revert(ptr, size)
             }
         }
+        return _returnedData;
     }
 
     function claimToken(

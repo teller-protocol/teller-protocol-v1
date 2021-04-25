@@ -69,7 +69,10 @@ contract AaveFacet is PausableMods, DappMods {
                 address(this),
                 0
             );
-        LibDapps.s().loanEscrows[loanID].callDapp(callData);
+        LibDapps.s().loanEscrows[loanID].callDapp(
+            address(aaveLendingPool),
+            callData
+        );
 
         uint256 aTokenBalanceAfterDeposit = aToken.balanceOf(address(this));
         require(
@@ -115,7 +118,10 @@ contract AaveFacet is PausableMods, DappMods {
                 amount,
                 address(this)
             );
-        LibDapps.s().loanEscrows[loanID].callDapp(callData);
+        LibDapps.s().loanEscrows[loanID].callDapp(
+            address(aaveLendingPool),
+            callData
+        );
 
         uint256 aTokenBalanceAfterWithdraw = aToken.balanceOf(address(this));
         require(
@@ -159,7 +165,10 @@ contract AaveFacet is PausableMods, DappMods {
                 aTokenBalanceBeforeWithdraw,
                 address(this)
             );
-        LibDapps.s().loanEscrows[loanID].callDapp(callData);
+        LibDapps.s().loanEscrows[loanID].callDapp(
+            address(aaveLendingPool),
+            callData
+        );
 
         uint256 aTokenBalanceAfterWithdraw = aToken.balanceOf(address(this));
         require(aTokenBalanceAfterWithdraw == 0, "AAVE_WITHDRAWAL_ERROR");
