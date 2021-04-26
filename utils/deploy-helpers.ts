@@ -1,7 +1,7 @@
 import { Contract } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-import { Libraries } from 'hardhat-deploy/types'
 import { DiamondOptions } from 'hardhat-deploy/dist/types'
+import { Libraries } from 'hardhat-deploy/types'
 
 interface CommonDeployArgs {
   hre: HardhatRuntimeEnvironment
@@ -13,6 +13,7 @@ interface CommonDeployArgs {
 export interface DeployArgs extends CommonDeployArgs {
   contract: string
   args?: any[]
+  skipIfAlreadyDeployed?: boolean
   mock?: boolean
 }
 
@@ -25,6 +26,7 @@ export const deploy = async <C extends Contract>(
       getNamedAccounts,
       ethers,
     },
+    skipIfAlreadyDeployed = true,
   } = args
 
   const log = args.log === false ? (...args: any[]) => {} : args.hre.log
@@ -35,7 +37,7 @@ export const deploy = async <C extends Contract>(
   const existingContract = await getOrNull(contractDeployName)
   let contractAddress: string
 
-  if (!existingContract) {
+  if (!existingContract || (existingContract && !skipIfAlreadyDeployed)) {
     // If marked as mock, prepend "Mock" to the contract name
     const contractName = `${args.contract}${args.mock ? 'Mock' : ''}`
 
