@@ -37,8 +37,13 @@ contract EscrowClaimTokensFacet is PausableMods {
      */
     function claimTokens(uint256 loanID) external paused("", false) {
         require(
+            MarketStorageLib.store().loans[loanID].loanTerms.borrower ==
+                msg.sender,
+            "Teller: claim not borrower"
+        );
+        require(
             MarketStorageLib.store().loans[loanID].status == LoanStatus.Closed,
-            "LOAN_NOT_CLOSED"
+            "Teller: loan not closed"
         );
 
         EnumerableSet.AddressSet storage tokens =
@@ -47,7 +52,8 @@ contract EscrowClaimTokensFacet is PausableMods {
             uint256 balance =
                 LibEscrow.balanceOf(loanID, EnumerableSet.at(tokens, i));
             if (balance > 0) {
-                IERC20(EnumerableSet.at(tokens, i)).safeTransfer(
+                LibEscrow.e(loanID).claimToken(
+                    EnumerableSet.at(tokens, i),
                     msg.sender,
                     balance
                 );
