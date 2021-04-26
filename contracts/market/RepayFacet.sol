@@ -155,7 +155,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         // Get the Teller token for the loan
         ITToken tToken = MarketStorageLib.store().tTokens[loan.lendingToken];
         // Transfer funds from account
-        if (loan.loanTerms.recipient == sender) {
+        if (address(MarketStorageLib.store().loanEscrows[loanID]) == sender) {
             MarketStorageLib.store().loanEscrows[loanID].claimToken(
                 loan.lendingToken,
                 address(tToken),
