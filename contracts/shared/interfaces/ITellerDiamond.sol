@@ -28,6 +28,8 @@ import {
     EscrowClaimTokensFacet
 } from "../../escrow/EscrowClaimTokensFacet.sol";
 import { CollateralFacet } from "../../market/CollateralFacet.sol";
+import { CompoundFacet } from "../../escrow/dapps/CompoundFacet.sol";
+import { UniswapFacet } from "../../escrow/dapps/UniswapFacet.sol";
 
 abstract contract ITellerDiamond is
     SettingsFacet,

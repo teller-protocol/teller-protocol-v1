@@ -79,9 +79,16 @@ contract CompoundFacet is PausableMods, DappMods {
         IERC20(tokenAddress).safeApprove(address(cToken), amount);
 
         bytes memory callData = abi.encode(ICErc20.mint.selector, amount);
-        LibDapps.s().loanEscrows[loanID].callDapp(address(cToken), callData);
+        bytes memory result =
+            LibDapps.s().loanEscrows[loanID].callDapp(
+                address(cToken),
+                callData
+            );
 
-        //        require(result == NO_ERROR, "Teller: compound deposit error");
+        require(
+            abi.decode(result, (uint256)) == NO_ERROR,
+            "Teller: compound deposit error"
+        );
 
         LibEscrow.tokenUpdated(loanID, address(cToken));
         LibEscrow.tokenUpdated(loanID, tokenAddress);
@@ -141,24 +148,23 @@ contract CompoundFacet is PausableMods, DappMods {
         bytes memory callData;
         if (isUnderlying) {
             callData = abi.encode(ICErc20.redeemUnderlying.selector, amount);
+        } else {
+            callData = abi.encode(ICErc20.redeem.selector, amount);
+        }
+        bytes memory result =
             LibDapps.s().loanEscrows[loanID].callDapp(
                 address(cToken),
                 callData
             );
-        } else {
-            callData = abi.encode(ICErc20.redeem.selector, amount);
-        }
-        LibDapps.s().loanEscrows[loanID].callDapp(address(cToken), callData);
 
-        //        uint256 result =
-        //            isUnderlying // TODO: Verify errors
-        //                ? cToken.redeemUnderlying(amount)
-        //                : cToken.redeem(amount);
-        //        require(
-        //            result != TOKEN_INSUFFICIENT_BALANCE,
-        //            "Teller: compound dapp insufficient balance"
-        //        );
-        //        require(result == NO_ERROR, "Teller: compound dapp withdrawal error");
+        require(
+            abi.decode(result, (uint256)) != TOKEN_INSUFFICIENT_BALANCE,
+            "Teller: compound dapp insufficient balance"
+        );
+        require(
+            abi.decode(result, (uint256)) == NO_ERROR,
+            "Teller: compound dapp withdrawal error"
+        );
 
         LibEscrow.tokenUpdated(loanID, address(cToken));
         LibEscrow.tokenUpdated(loanID, tokenAddress);

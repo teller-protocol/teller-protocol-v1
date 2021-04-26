@@ -7,7 +7,8 @@ interface ILoansEscrow {
 
     function callDapp(address dappAddress, bytes calldata dappData)
         external
-        virtual;
+        virtual
+        returns (bytes memory);
 
     function claimToken(
         address token,
