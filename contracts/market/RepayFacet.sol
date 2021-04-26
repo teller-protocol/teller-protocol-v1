@@ -33,6 +33,7 @@ import {
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ITToken } from "../lending/ttoken/ITToken.sol";
+import { ILoansEscrow } from "../escrow/escrow/ILoansEscrow.sol";
 
 // Storage
 import {
@@ -89,21 +90,20 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         authorized(AUTHORIZED, msg.sender)
         nonReentry("")
     {
-        //        address lendingToken =
-        //            MarketStorageLib.store().loans[loanID].lendingToken;
-        //        IERC20 token = IERC20(lendingToken);
-        //        uint256 balance = LibEscrow.balanceOf(loanID, address(token));
-        //        uint256 totalOwed = LibLoans.getTotalOwed(loanID);
-        //        if (balance < totalOwed && amount > balance) {
-        //            uint256 amountNeeded =
-        //                amount > totalOwed ? totalOwed - (balance) : amount - (balance);
-        //
-        //            token.safeTransferFrom(msg.sender, address(this), amountNeeded);
-        //        }
-        //
-        //        token.safeApprove(address(this), amount);
-        //        //        TODO merge with 'contarcts/market/RepayFacet'
-        //        repay(amount, loanID);
+        address lendingToken =
+            MarketStorageLib.store().loans[loanID].lendingToken;
+        IERC20 token = IERC20(lendingToken);
+        uint256 balance = LibEscrow.balanceOf(loanID, address(token));
+        uint256 totalOwed = LibLoans.getTotalOwed(loanID);
+        ILoansEscrow escrow = MarketStorageLib.store().loanEscrows[loanID];
+        if (balance < totalOwed && amount > balance) {
+            uint256 amountNeeded =
+                amount > totalOwed ? totalOwed - (balance) : amount - (balance);
+
+            escrow.claimToken(lendingToken, address(this), amountNeeded);
+        }
+
+        __repayLoan(amount, loanID, address(escrow));
     }
 
     /**
@@ -117,7 +117,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         paused("", false)
         authorized(AUTHORIZED, msg.sender)
     {
-        uint256 leftToPay = __repayLoan(loanID, amount);
+        uint256 leftToPay = __repayLoan(loanID, amount, msg.sender);
         Loan storage loan = LibLoans.loan(loanID);
         emit LoanRepaid(
             loanID,
@@ -134,10 +134,11 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         }
     }
 
-    function __repayLoan(uint256 loanID, uint256 amount)
-        internal
-        returns (uint256 totalOwed_)
-    {
+    function __repayLoan(
+        uint256 loanID,
+        uint256 amount,
+        address sender
+    ) internal returns (uint256 totalOwed_) {
         require(amount > 0, "Teller: zero repay");
 
         Loan storage loan = LibLoans.loan(loanID);
@@ -156,7 +157,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         // Transfer funds from account
         SafeERC20.safeTransferFrom(
             IERC20(loan.lendingToken),
-            msg.sender,
+            sender,
             address(tToken),
             amount
         );
@@ -215,7 +216,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         uint256 amountToLiquidate = loan.principalOwed + loan.interestOwed;
         // Make sure there is nothing left to repay on the loan
         require(
-            __repayLoan(loanID, amountToLiquidate) == 0,
+            __repayLoan(loanID, amountToLiquidate, msg.sender) == 0,
             "Teller: liquidate partial repay"
         );
 
