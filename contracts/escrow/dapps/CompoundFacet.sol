@@ -97,7 +97,7 @@ contract CompoundFacet is PausableMods, DappMods {
             loanID,
             address(cToken),
             tokenAddress,
-            abi.encodeWithSelector(ICErc20.redeem.selector, amount)
+            abi.encodeWithSelector(ICErc20.redeemUnderlying.selector, amount)
         );
 
         emit CompoundRedeemed(tokenAddress, address(cToken), amount);

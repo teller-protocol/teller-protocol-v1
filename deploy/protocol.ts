@@ -58,6 +58,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       'EscrowClaimTokensFacet',
       // Dapps
       'CompoundFacet',
+      'UniswapFacet',
     ],
     owner: deployer,
     execute: {
