@@ -10,6 +10,8 @@ interface ILoansEscrow {
         virtual
         returns (bytes memory);
 
+    function setTokenAllowance(address token, address spender) external virtual;
+
     function claimToken(
         address token,
         address to,

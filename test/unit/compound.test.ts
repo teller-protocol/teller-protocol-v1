@@ -23,21 +23,18 @@ import {
 chai.should()
 chai.use(solidity)
 
-const { getNamedSigner, contracts, tokens, evm, toBN } = hre
+const { getNamedSigner, getNamedAccounts, contracts, tokens, evm, toBN } = hre
 
 describe.only('CompoundDapp', () => {
   getMarkets(hre.network).forEach(testCompound)
 
   function testCompound(market: Market): void {
-    let escrow: ILoansEscrow
-    let borrower: Signer
     let diamond: ITellerDiamond
     let lendingToken: ERC20
     let cToken: ICErc20
 
     before(async () => {
       await hre.deployments.fixture(['markets'])
-      borrower = await getNamedSigner('borrower')
       diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
 
       lendingToken = await tokens.get(market.lendingToken)
@@ -51,14 +48,18 @@ describe.only('CompoundDapp', () => {
     })
 
     const testSetup = async (): Promise<LoanHelpersReturn> => {
+      // Advance time
+      await evm.advanceTime(moment.duration(1, 'day'))
+
       const duration = moment.duration(2, 'days')
 
       const loan = async (amount: BigNumberish): Promise<CreateLoanReturn> => {
+        const { borrower } = await getNamedAccounts()
         return await createLoan({
           lendTokenSym: market.lendingToken,
           collTokenSym: market.collateralTokens[0],
           amount,
-          borrower: await borrower.getAddress(),
+          borrower,
           loanType: LoanType.UNDER_COLLATERALIZED,
           duration,
         })
@@ -78,7 +79,13 @@ describe.only('CompoundDapp', () => {
       await helpers
         .takeOut()
         .should.emit(diamond, 'LoanTakenOut')
-        .withArgs(helpers.details.loan.id, await borrower.getAddress(), amount)
+        .withArgs(
+          helpers.details.loan.id,
+          helpers.details.borrower.address,
+          amount
+        )
+
+      helpers.details = await helpers.details.refresh()
 
       return helpers
     }
@@ -87,8 +94,12 @@ describe.only('CompoundDapp', () => {
       it('Should be able to lend and then redeem successfully from Compound', async () => {
         const { details } = await testSetup()
         await diamond
-          .connect(borrower)
-          .compoundLend(details.loan.id, details.loan.lendingToken, 50)
+          .connect(details.borrower.signer)
+          .compoundLend(
+            details.loan.id,
+            details.loan.lendingToken,
+            details.loan.borrowedAmount
+          )
 
         const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
 
@@ -98,16 +109,18 @@ describe.only('CompoundDapp', () => {
 
         let tokenAddresses: string[]
         tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
+        console.log(tokenAddresses)
         tokenAddresses.should.include(cToken.address)
 
         await diamond
-          .connect(borrower)
-          .compoundRedeemAll(details.loan.id, details.loan.lendingToken)
+          .connect(details.borrower.signer)
+          .compoundRedeemAll(details.loan.id, lendingToken.address)
 
         tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
+        console.log(tokenAddresses)
         tokenAddresses.should.not.include(cToken.address)
 
-        cDaiBalance = await cToken.balanceOf(escrow.address)
+        cDaiBalance = await cToken.balanceOf(escrowAddress)
         cDaiBalance.eq(0).should.eql(true, '')
       })
 
@@ -116,8 +129,12 @@ describe.only('CompoundDapp', () => {
         const rando = await getNamedSigner('lender')
         await diamond
           .connect(rando)
-          .compoundLend(details.loan.id, details.loan.lendingToken, 50)
-          .should.rejectedWith('NOT_BORROWER')
+          .compoundLend(
+            details.loan.id,
+            details.loan.lendingToken,
+            details.loan.borrowedAmount
+          )
+          .should.rejectedWith('Teller: dapp not loan borrower')
       })
     })
   }

@@ -30,15 +30,11 @@ contract CompoundFacet is PausableMods, DappMods {
      * @param tokenAddress address of the underlying token.
      * @param cTokenAddress compound token address.
      * @param amount amount of tokens to Lend.
-     * @param tokenBalance underlying token balance after Lend.
-     * @param cTokenBalance cTokens balance after Lend.
      */
     event CompoundLended(
         address indexed tokenAddress,
         address indexed cTokenAddress,
-        uint256 amount,
-        uint256 tokenBalance,
-        uint256 cTokenBalance
+        uint256 amount
     );
 
     /**
@@ -46,17 +42,11 @@ contract CompoundFacet is PausableMods, DappMods {
      * @param tokenAddress address of the underlying token.
      * @param cTokenAddress compound token address.
      * @param amount amount of tokens to Redeem.
-     * @param isUnderlyingAmount boolean indicating if the amount was in the underlying token.
-     * @param tokenBalance underlying token balance after Redeem.
-     * @param cTokenBalance cTokens balance after Redeem.
      */
     event CompoundRedeemed(
         address indexed tokenAddress,
         address indexed cTokenAddress,
-        uint256 amount,
-        bool isUnderlyingAmount,
-        uint256 tokenBalance,
-        uint256 cTokenBalance
+        uint256 amount
     );
 
     /**
@@ -70,19 +60,14 @@ contract CompoundFacet is PausableMods, DappMods {
         address tokenAddress,
         uint256 amount
     ) public paused("", false) onlyBorrower(loanID) {
-        require(
-            LibEscrow.balanceOf(loanID, tokenAddress) >= amount,
-            "Teller: insufficient underlying"
-        );
-
         ICErc20 cToken = AssetCTokenLib.get(tokenAddress);
-        IERC20(tokenAddress).safeApprove(address(cToken), amount);
 
-        bytes memory callData = abi.encode(ICErc20.mint.selector, amount);
+        LibEscrow.e(loanID).setTokenAllowance(tokenAddress, address(cToken));
+
         bytes memory result =
-            LibDapps.s().loanEscrows[loanID].callDapp(
+            LibEscrow.e(loanID).callDapp(
                 address(cToken),
-                callData
+                abi.encodeWithSelector(ICErc20.mint.selector, amount)
             );
 
         require(
@@ -93,13 +78,7 @@ contract CompoundFacet is PausableMods, DappMods {
         LibEscrow.tokenUpdated(loanID, address(cToken));
         LibEscrow.tokenUpdated(loanID, tokenAddress);
 
-        emit CompoundLended(
-            tokenAddress,
-            address(cToken),
-            amount,
-            LibEscrow.balanceOf(loanID, tokenAddress),
-            cToken.balanceOf(address(this))
-        );
+        emit CompoundLended(tokenAddress, address(cToken), amount);
     }
 
     /**
@@ -114,7 +93,14 @@ contract CompoundFacet is PausableMods, DappMods {
         uint256 amount
     ) public paused("", false) onlyBorrower(loanID) {
         ICErc20 cToken = AssetCTokenLib.get(tokenAddress);
-        _redeem(loanID, cToken, amount, true);
+        __compoundRedeem(
+            loanID,
+            address(cToken),
+            tokenAddress,
+            abi.encodeWithSelector(ICErc20.redeem.selector, amount)
+        );
+
+        emit CompoundRedeemed(tokenAddress, address(cToken), amount);
     }
 
     /**
@@ -128,34 +114,38 @@ contract CompoundFacet is PausableMods, DappMods {
         onlyBorrower(loanID)
     {
         ICErc20 cToken = AssetCTokenLib.get(tokenAddress);
-        _redeem(loanID, cToken, cToken.balanceOf(address(this)), false);
+        __compoundRedeem(
+            loanID,
+            address(cToken),
+            tokenAddress,
+            abi.encodeWithSelector(
+                ICErc20.redeem.selector,
+                cToken.balanceOf(address(LibEscrow.e(loanID)))
+            )
+        );
+
+        emit CompoundRedeemed(
+            tokenAddress,
+            address(cToken),
+            IERC20(tokenAddress).balanceOf(address(LibEscrow.e(loanID)))
+        );
     }
 
     /**
      * @notice This function calls on Compound cToken to redeem an amount of the underlying token.
-     * @param loanID id of the loan being used in the dapp
-     * @param cToken the instance of the cToken.
-     * @param amount amount of cToken or underlying token to redeem.
-     * @param isUnderlying boolean indicating if the amount to redeem is in the underlying token amount.
+     * @param loanID ID of the loan being used for the dapp.
+     * @param cTokenAddress Compound token address.
+     * @param tokenAddress Underlying Compound token address.
+     * @param callData Encoded data to send to the escrow to call.
      */
-    function _redeem(
+    function __compoundRedeem(
         uint256 loanID,
-        ICErc20 cToken,
-        uint256 amount,
-        bool isUnderlying
-    ) internal {
-        address tokenAddress = cToken.underlying();
-        bytes memory callData;
-        if (isUnderlying) {
-            callData = abi.encode(ICErc20.redeemUnderlying.selector, amount);
-        } else {
-            callData = abi.encode(ICErc20.redeem.selector, amount);
-        }
+        address cTokenAddress,
+        address tokenAddress,
+        bytes memory callData
+    ) private {
         bytes memory result =
-            LibDapps.s().loanEscrows[loanID].callDapp(
-                address(cToken),
-                callData
-            );
+            LibEscrow.e(loanID).callDapp(cTokenAddress, callData);
 
         require(
             abi.decode(result, (uint256)) != TOKEN_INSUFFICIENT_BALANCE,
@@ -166,16 +156,7 @@ contract CompoundFacet is PausableMods, DappMods {
             "Teller: compound dapp withdrawal error"
         );
 
-        LibEscrow.tokenUpdated(loanID, address(cToken));
+        LibEscrow.tokenUpdated(loanID, cTokenAddress);
         LibEscrow.tokenUpdated(loanID, tokenAddress);
-
-        emit CompoundRedeemed(
-            tokenAddress,
-            address(cToken),
-            amount,
-            isUnderlying,
-            LibEscrow.balanceOf(loanID, tokenAddress),
-            cToken.balanceOf(address(this))
-        );
     }
 }

@@ -2,26 +2,25 @@
 pragma solidity ^0.8.0;
 
 // Libraries
-import { MarketStorageLib } from "../../storage/market.sol";
-import { AppStorageLib } from "../../storage/app.sol";
-import { OVER_COLLATERALIZED_BUFFER } from "../../settings/platform/names.sol";
+import { LibLoans } from "../../market/libraries/LibLoans.sol";
+import {
+    PlatformSettingsLib
+} from "../../settings/platform/PlatformSettingsLib.sol";
 
 abstract contract DappMods {
     modifier onlyBorrower(uint256 loanID) {
         require(
-            msg.sender ==
-                MarketStorageLib.store().loans[loanID].loanTerms.borrower
+            msg.sender == LibLoans.loan(loanID).loanTerms.borrower,
+            "Teller: dapp not loan borrower"
         );
         _;
     }
 
     modifier onlySecured(uint256 loanID) {
         require(
-            MarketStorageLib.store().loans[loanID].loanTerms.collateralRatio >=
-                AppStorageLib.store().platformSettings[
-                    OVER_COLLATERALIZED_BUFFER
-                ]
-                    .value
+            LibLoans.loan(loanID).loanTerms.collateralRatio >=
+                PlatformSettingsLib.getCollateralBufferValue(),
+            "Teller: dapp loan not secured"
         );
         _;
     }

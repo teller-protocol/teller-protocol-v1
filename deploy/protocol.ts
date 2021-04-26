@@ -36,20 +36,28 @@ const deployProtocol: DeployFunction = async (hre) => {
     hre,
     name: 'TellerDiamond',
     facets: [
+      // Settings
       'SettingsFacet',
       'PlatformSettingsFacet',
       'AssetSettingsDataFacet',
       'AssetSettingsFacet',
+      // Pricing
       'PriceAggFacet',
       'ChainlinkAggFacet',
+      // Lending
       'LendingFacet',
+      // Loans
       'CollateralFacet',
       'CreateLoanFacet',
       'LoanDataFacet',
       'RepayFacet',
       'SignersFacet',
+      // NFT
       'NFTFacet',
+      // Escrow
       'EscrowClaimTokensFacet',
+      // Dapps
+      'CompoundFacet',
     ],
     owner: deployer,
     execute: {

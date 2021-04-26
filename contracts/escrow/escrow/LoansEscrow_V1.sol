@@ -7,11 +7,13 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 // Interfaces
 import { ILoansEscrow } from "./ILoansEscrow.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { ICErc20 } from "../../shared/interfaces/ICErc20.sol";
 
 // Libraries
 import {
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 // Proxy
 import {
@@ -28,20 +30,21 @@ contract LoansEscrow_V1 is OwnableUpgradeable, ILoansEscrow {
         external
         override
         onlyOwner
-        returns (bytes memory)
+        returns (bytes memory resData_)
     {
-        (bool success, bytes memory _returnedData) =
-            dappAddress.delegatecall(dappData);
+        resData_ = Address.functionCall(
+            dappAddress,
+            dappData,
+            "Teller: dapp call failed"
+        );
+    }
 
-        if (!success) {
-            assembly {
-                let ptr := mload(0x40)
-                let size := returndatasize()
-                returndatacopy(ptr, 0, size)
-                revert(ptr, size)
-            }
-        }
-        return _returnedData;
+    function setTokenAllowance(address token, address spender)
+        external
+        override
+        onlyOwner
+    {
+        IERC20(token).approve(spender, type(uint256).max);
     }
 
     function claimToken(

@@ -104,4 +104,3 @@ contract InitializeableBeaconProxy is Proxy {
         // OZ Proxy contract calls the _fallback() on receive and tries to delegatecall which fails
     }
 }
-import "hardhat/console.sol";

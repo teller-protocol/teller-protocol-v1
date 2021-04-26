@@ -24,7 +24,7 @@ import {
 library LibDapps {
     using SafeERC20 for IERC20;
 
-    function s() public pure returns (MarketStorage storage) {
+    function s() internal pure returns (MarketStorage storage) {
         return MarketStorageLib.store();
     }
 
@@ -92,7 +92,7 @@ library LibDapps {
         address[] memory path,
         uint256 sourceAmount,
         uint256 minDestination
-    ) public returns (uint256) {
+    ) internal returns (uint256) {
         require(path.length >= 2, "UNI_PATH_TOO_SHORT");
         address source = path[0];
         address destination = path[path.length - 1];
