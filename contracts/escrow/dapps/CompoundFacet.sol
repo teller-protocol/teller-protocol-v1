@@ -72,7 +72,7 @@ contract CompoundFacet is PausableMods, DappMods {
     ) public paused("", false) onlyBorrower(loanID) {
         require(
             LibEscrow.balanceOf(loanID, tokenAddress) >= amount,
-            "COMPOUND_INSUFFICIENT_UNDERLYING"
+            "Teller: insufficient underlying"
         );
 
         ICErc20 cToken = AssetCTokenLib.get(tokenAddress);

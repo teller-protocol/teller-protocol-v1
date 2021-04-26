@@ -1,16 +1,17 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
+import { BigNumberish, Signer } from 'ethers'
 import hre from 'hardhat'
+import moment from 'moment'
 
+import { getMarkets } from '../../config'
+import { Market } from '../../types/custom/config-types'
 import {
   ERC20,
-  ITellerDiamond,
-  ILoansEscrow,
   ICErc20,
+  ILoansEscrow,
+  ITellerDiamond,
 } from '../../types/typechain'
-import { BigNumberish, Signer } from 'ethers'
-import { getMarkets, getTokens } from '../../config'
-import { Market } from '../../types/custom/config-types'
 import { fundedMarket } from '../fixtures'
 import {
   createLoan,
@@ -18,37 +19,30 @@ import {
   LoanHelpersReturn,
   LoanType,
 } from '../helpers/loans'
-import moment from 'moment'
 
 chai.should()
 chai.use(solidity)
 
-const { getNamedSigner, getNamedAccounts, contracts, ethers, evm, toBN } = hre
+const { getNamedSigner, contracts, tokens, evm, toBN } = hre
 
-describe('CompoundDapp', async () => {
+describe.only('CompoundDapp', () => {
   getMarkets(hre.network).forEach(testCompound)
 
   function testCompound(market: Market): void {
     let escrow: ILoansEscrow
     let borrower: Signer
-    let rando: Signer
     let diamond: ITellerDiamond
-    let dai: ERC20
-    let cDai: ICErc20
-    let amount: BigNumberish
-    let tokens: string[]
+    let lendingToken: ERC20
+    let cToken: ICErc20
 
     before(async () => {
-      await hre.deployments.fixture(['markets', 'nft'])
+      await hre.deployments.fixture(['markets'])
       borrower = await getNamedSigner('borrower')
-      rando = await getNamedSigner('liquidator')
       diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
 
-      dai = await contracts.get<ERC20>('ERC20', {
-        at: getTokens(hre.network).erc20.DAI,
-      })
-      cDai = await contracts.get<ICErc20>('ICErc20', {
-        at: getTokens(hre.network).compound.CDAI,
+      lendingToken = await tokens.get(market.lendingToken)
+      cToken = await contracts.get<ICErc20>('ICErc20', {
+        at: await diamond.getAssetCToken(lendingToken.address),
       })
     })
 
@@ -59,18 +53,19 @@ describe('CompoundDapp', async () => {
     const testSetup = async (): Promise<LoanHelpersReturn> => {
       const duration = moment.duration(2, 'days')
 
-      const loan = async (): Promise<CreateLoanReturn> => {
+      const loan = async (amount: BigNumberish): Promise<CreateLoanReturn> => {
         return await createLoan({
           lendTokenSym: market.lendingToken,
           collTokenSym: market.collateralTokens[0],
-          amount: 100,
+          amount,
           borrower: await borrower.getAddress(),
-          loanType: LoanType.ZERO_COLLATERAL,
+          loanType: LoanType.UNDER_COLLATERALIZED,
           duration,
         })
       }
 
-      const { getHelpers } = await loan()
+      const amount = toBN(100, await lendingToken.decimals())
+      const { getHelpers } = await loan(amount)
       const helpers = await getHelpers()
 
       // Deposit collateral needed
@@ -83,7 +78,7 @@ describe('CompoundDapp', async () => {
       await helpers
         .takeOut()
         .should.emit(diamond, 'LoanTakenOut')
-        .withArgs(helpers.details.loan.id, borrower, amount)
+        .withArgs(helpers.details.loan.id, await borrower.getAddress(), amount)
 
       return helpers
     }
@@ -97,26 +92,28 @@ describe('CompoundDapp', async () => {
 
         const escrowAddress = await diamond.getLoanEscrow(details.loan.id)
 
-        let cDaiBalance = (await cDai.balanceOf(escrowAddress)).toString()
+        let cDaiBalance = await cToken.balanceOf(escrowAddress)
 
-        cDaiBalance.should.not.equals('0')
+        cDaiBalance.eq(0).should.eql(false, '')
 
-        tokens = await diamond.getEscrowTokens(details.loan.id)
-        tokens.should.include(cDai.address)
+        let tokenAddresses: string[]
+        tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
+        tokenAddresses.should.include(cToken.address)
 
         await diamond
           .connect(borrower)
           .compoundRedeemAll(details.loan.id, details.loan.lendingToken)
 
-        tokens = await diamond.getEscrowTokens(details.loan.id)
-        tokens.should.not.include(cDai.address)
+        tokenAddresses = await diamond.getEscrowTokens(details.loan.id)
+        tokenAddresses.should.not.include(cToken.address)
 
-        cDaiBalance = (await cDai.balanceOf(escrow.address)).toString()
-        cDaiBalance.should.equals('0')
+        cDaiBalance = await cToken.balanceOf(escrow.address)
+        cDaiBalance.eq(0).should.eql(true, '')
       })
 
       it('Should not be able to lend into Compound as not the loan borrower', async () => {
         const { details } = await testSetup()
+        const rando = await getNamedSigner('lender')
         await diamond
           .connect(rando)
           .compoundLend(details.loan.id, details.loan.lendingToken, 50)
