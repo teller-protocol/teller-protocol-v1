@@ -235,7 +235,12 @@ deploy() {
   fi
 
   ## Deploy on network
-  run deploy "$network" "$*" && fork_notice
+  run deploy "$network" "$*"
+
+  if [ "$network" == "localhost" ]
+  then
+     fork_notice
+  fi
 }
 
 if [ "$script" == 'deploy' ]
