@@ -66,11 +66,13 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
      * @param loanID ID of loan from which collateral was withdrawn
      * @param borrower Account address of the borrower
      * @param amountBorrowed Total amount taken out in the loan
+     * @param withNFT Boolean indicating if the loan was taken out using NFTs
      */
     event LoanTakenOut(
         uint256 indexed loanID,
         address indexed borrower,
-        uint256 amountBorrowed
+        uint256 amountBorrowed,
+        bool withNFT
     );
 
     /**
@@ -129,6 +131,8 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
             CreateLoanLib.createEscrow(loanID),
             amount
         );
+
+        emit LoanTakenOut(loanID, msg.sender, amount, true);
     }
 
     modifier __takeOutLoan(uint256 loanID, uint256 amount) {
@@ -157,8 +161,6 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         loan.loanStartTime = block.timestamp;
 
         _;
-
-        emit LoanTakenOut(loanID, loan.loanTerms.borrower, amount);
     }
 
     /**
@@ -207,6 +209,8 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         if (!eoaAllowed) {
             LibEscrow.tokenUpdated(loanID, loan.lendingToken);
         }
+
+        emit LoanTakenOut(loanID, msg.sender, amount, false);
     }
 }
 
