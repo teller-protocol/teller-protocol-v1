@@ -8,7 +8,7 @@ import { MerkleDistributorInfo } from '../../scripts/merkle/root'
 import { ITellerNFTDistributor } from '../../types/typechain'
 
 interface ClaimNFTArgs {
-  address: string
+  account: string
   merkleIndex?: number
   sendTx?: boolean
 }
@@ -28,8 +28,8 @@ export const claimNFT = async (
     return
   }
 
-  const { address, merkleIndex } = args
-  const checkedAddress = ethers.utils.getAddress(address)
+  const { account, merkleIndex } = args
+  const checkedAddress = ethers.utils.getAddress(account)
 
   const nftDistributor = await contracts.get<ITellerNFTDistributor>(
     'TellerNFTDistributor'
@@ -98,11 +98,11 @@ export const claimNFT = async (
   })
   log('')
 
-  await nftDistributor.claim(args.address, requests)
+  await nftDistributor.claim(args.account, requests)
 }
 
 task('claim-nft', 'Claims an NFT on behalf of an account')
-  .addParam('address', 'Address to claim NFTs for')
+  .addParam('account', 'Address to claim NFTs for')
   .addOptionalParam(
     'merkleIndex',
     'Only claim tokens using the specified merkle index.'

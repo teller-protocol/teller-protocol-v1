@@ -198,7 +198,7 @@ describe('Loans', () => {
       await diamond.connect(deployer).addAuthorizedAddress(borrower)
 
       // Claim user's NFTs
-      await claimNFT({ address: borrower, merkleIndex }, hre)
+      await claimNFT({ account: borrower, merkleIndex }, hre)
 
       // Create and set NFT loan merkle
       const nftLoanTree = await getLoanMerkleTree(hre)

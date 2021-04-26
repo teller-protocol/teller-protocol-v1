@@ -2,13 +2,17 @@ import { BigNumber, BigNumberish, utils } from 'ethers'
 
 import MerkleTree from './merkle-tree'
 
+type NftSizeElements = Array<{ id: BigNumberish, baseLoanSize: BigNumberish }>
+type NftSizeElementsOutput = Array<{ id: string, baseLoanSize: string, proof: string[] }>
+
 export default class NftLoanTree {
   private readonly tree: MerkleTree
-  constructor(
-    loanSize: Array<{ id: BigNumberish; baseLoanSize: BigNumberish }>
-  ) {
+  private readonly elements: NftSizeElements
+
+  constructor(elements: NftSizeElements) {
+    this.elements = elements
     this.tree = new MerkleTree(
-      loanSize.map(({ id, baseLoanSize }) => {
+      elements.map(({ id, baseLoanSize }) => {
         return NftLoanTree.toNode(id, baseLoanSize)
       })
     )
@@ -44,5 +48,13 @@ export default class NftLoanTree {
   // returns the hex bytes32 values of the proof
   public getProof(id: BigNumberish, baseLoanSize: BigNumberish): string[] {
     return this.tree.getHexProof(NftLoanTree.toNode(id, baseLoanSize))
+  }
+
+  public getElements(): NftSizeElementsOutput {
+    return this.elements.map((e) => ({
+      id: BigNumber.from(e.id).toString(),
+      baseLoanSize: BigNumber.from(e.baseLoanSize).toString(),
+      proof: this.getProof(e.id, e.baseLoanSize)
+    }))
   }
 }
