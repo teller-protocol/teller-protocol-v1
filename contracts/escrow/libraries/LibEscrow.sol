@@ -25,6 +25,14 @@ library LibEscrow {
         e_ = s().loanEscrows[loanID];
     }
 
+    function getEscrowTokens(uint256 loanID)
+        internal
+        view
+        returns (EnumerableSet.AddressSet storage t_)
+    {
+        t_ = s().escrowTokens[loanID];
+    }
+
     function balanceOf(uint256 loanID, address token)
         internal
         view

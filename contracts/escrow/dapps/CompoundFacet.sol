@@ -122,7 +122,7 @@ contract CompoundFacet is PausableMods, DappMods {
      * @param loanID id of the loan being used in the dapp
      * @param tokenAddress address of the token.
      */
-    function CompoundRedeemAll(uint256 loanID, address tokenAddress)
+    function compoundRedeemAll(uint256 loanID, address tokenAddress)
         public
         paused("", false)
         onlyBorrower(loanID)

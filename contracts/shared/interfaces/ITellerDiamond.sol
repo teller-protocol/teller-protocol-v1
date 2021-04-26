@@ -46,6 +46,8 @@ abstract contract ITellerDiamond is
     SignersFacet,
     NFTFacet,
     EscrowClaimTokensFacet,
+    CompoundFacet,
+    UniswapFacet,
     IDiamondCut,
     IDiamondLoupe
 {}

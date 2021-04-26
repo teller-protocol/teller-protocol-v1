@@ -5,6 +5,10 @@ pragma solidity ^0.8.0;
 import { LibLoans } from "./libraries/LibLoans.sol";
 import { LibEscrow } from "../escrow/libraries/LibEscrow.sol";
 
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+
 // Storage
 import { Loan } from "../storage/market.sol";
 
@@ -101,5 +105,18 @@ contract LoanDataFacet {
         returns (uint256)
     {
         return LibEscrow.calculateTotalValue(loanID);
+    }
+
+    function getEscrowTokens(uint256 loanID)
+        external
+        view
+        returns (address[] memory tokens_)
+    {
+        EnumerableSet.AddressSet storage escrowTokens =
+            LibEscrow.getEscrowTokens(loanID);
+        tokens_ = new address[](EnumerableSet.length(escrowTokens));
+        for (uint256 i; i < tokens_.length; i++) {
+            tokens_[i] = EnumerableSet.at(escrowTokens, i);
+        }
     }
 }
