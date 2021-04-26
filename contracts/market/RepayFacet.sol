@@ -100,7 +100,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
             uint256 amountNeeded =
                 amount > totalOwed ? totalOwed - (balance) : amount - (balance);
 
-            escrow.claimToken(lendingToken, address(this), amountNeeded);
+            token.safeTransferFrom(msg.sender, address(escrow), amountNeeded);
         }
 
         __repayLoan(amount, loanID, address(escrow));
@@ -155,12 +155,20 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         // Get the Teller token for the loan
         ITToken tToken = MarketStorageLib.store().tTokens[loan.lendingToken];
         // Transfer funds from account
-        SafeERC20.safeTransferFrom(
-            IERC20(loan.lendingToken),
-            sender,
-            address(tToken),
-            amount
-        );
+        if (loan.loanTerms.recipient == sender) {
+            MarketStorageLib.store().loanEscrows[loanID].claimToken(
+                loan.lendingToken,
+                address(tToken),
+                amount
+            );
+        } else {
+            SafeERC20.safeTransferFrom(
+                IERC20(loan.lendingToken),
+                sender,
+                address(tToken),
+                amount
+            );
+        }
         // Tell the Teller token we sent funds and to execute the deposit strategy
         tToken.depositStrategy();
 
