@@ -40,6 +40,18 @@ library NFTLib {
         success_ = EnumerableSet.remove(s().stakedNFTs[msg.sender], nftID);
     }
 
+    function stakedNFTs(address nftOwner)
+        internal
+        view
+        returns (uint256[] memory staked_)
+    {
+        EnumerableSet.UintSet storage nfts = s().stakedNFTs[nftOwner];
+        staked_ = new uint256[](EnumerableSet.length(nfts));
+        for (uint256 i; i < staked_.length; i++) {
+            staked_[i] = EnumerableSet.at(nfts, i);
+        }
+    }
+
     function applyToLoan(uint256 loanID, NftLoanSizeProof calldata proof)
         internal
     {

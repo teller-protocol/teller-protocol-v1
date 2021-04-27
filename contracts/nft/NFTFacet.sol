@@ -23,6 +23,13 @@ contract NFTFacet is RolesMods {
         }
     }
 
+    function getStakedNFTs(address nftOwner)
+        public
+        returns (uint256[] memory staked_)
+    {
+        staked_ = NFTLib.stakedNFTs(nftOwner);
+    }
+
     /**
      * @notice Transfers multiple Teller NFTs to Diamond and applies user stake.
      * @param nftIDs IDs of Teller NFTs to stake.
