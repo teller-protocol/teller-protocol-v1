@@ -72,13 +72,11 @@ export interface PlatformSettings {
   RequiredSubmissionsPercentage: PlatformSetting
   MaximumTolerance: PlatformSetting
   ResponseExpiryLength: PlatformSetting
-  SafetyInterval: PlatformSetting
   TermsExpiryTime: PlatformSetting
   LiquidateRewardPercent: PlatformSetting
   MaximumLoanDuration: PlatformSetting
   CollateralBuffer: PlatformSetting
   OverCollateralizedBuffer: PlatformSetting
-  StartingBlockOffsetNumber: PlatformSetting
   RequestLoanTermsRateLimit: PlatformSetting
 }
 

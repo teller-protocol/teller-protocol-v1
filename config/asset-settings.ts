@@ -7,7 +7,7 @@ const mainnetAssetSettings: AssetSettings = {
     { key: 'aToken', value: 'ADAI', type: AssetType.Address },
     { key: 'yVault', value: 'YDAI', type: AssetType.Address },
     { key: 'pPool', value: 'PCDAI', type: AssetType.Address },
-    { key: 'MaxLoanAmount', value: 1000000, type: AssetType.Amount },
+    { key: 'MaxLoanAmount', value: 25000, type: AssetType.Amount },
     { key: 'MaxTVL', value: 10000000, type: AssetType.Amount },
     { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
   ],

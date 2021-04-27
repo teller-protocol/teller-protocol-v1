@@ -7,7 +7,6 @@ import {
     MarketStorage,
     LoanRequest,
     LoanResponse,
-    AccruedLoanTerms,
     Signature
 } from "../../storage/market.sol";
 import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
@@ -24,6 +23,18 @@ import {
 library LibConsensus {
     using NumbersLib for uint256;
     using NumbersList for NumbersList.Values;
+
+    /**
+     * @notice Represents loan terms based on consensus values
+     * @param interestRate The consensus value for the interest rate based on all the loan responses from the signers
+     * @param collateralRatio The consensus value for the ratio of collateral to loan amount required for the loan, based on all the loan responses from the signers
+     * @param maxLoanAmount The consensus value for the largest amount of tokens that can be taken out in the loan, based on all the loan responses from the signers
+     */
+    struct AccruedLoanTerms {
+        NumbersList.Values interestRate;
+        NumbersList.Values collateralRatio;
+        NumbersList.Values maxLoanAmount;
+    }
 
     function s() private pure returns (MarketStorage storage) {
         return MarketStorageLib.store();

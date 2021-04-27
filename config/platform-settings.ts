@@ -20,13 +20,6 @@ const mainnetPlatformSettings: PlatformSettings = {
     max:
       '115792089237316195423570985008687907853269984665640564039457584007913129639935',
   },
-  SafetyInterval: {
-    processOnDeployment: true,
-    value: 300,
-    min: 0,
-    max:
-      '115792089237316195423570985008687907853269984665640564039457584007913129639935',
-  },
   TermsExpiryTime: {
     processOnDeployment: true,
     value: 3600,
@@ -61,16 +54,9 @@ const mainnetPlatformSettings: PlatformSettings = {
     min: 11000,
     max: 50000,
   },
-  StartingBlockOffsetNumber: {
-    processOnDeployment: true,
-    value: 40,
-    min: 0,
-    max:
-      '115792089237316195423570985008687907853269984665640564039457584007913129639935',
-  },
   RequestLoanTermsRateLimit: {
     processOnDeployment: true,
-    value: 86400,
+    value: 3600,
     min: 0,
     max:
       '115792089237316195423570985008687907853269984665640564039457584007913129639935',
@@ -94,13 +80,6 @@ export const platformSettings: Record<string, PlatformSettings> = {
     ResponseExpiryLength: {
       processOnDeployment: true,
       value: 300,
-      min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
-    },
-    SafetyInterval: {
-      processOnDeployment: true,
-      value: 30,
       min: 0,
       max:
         '115792089237316195423570985008687907853269984665640564039457584007913129639935',
@@ -139,13 +118,6 @@ export const platformSettings: Record<string, PlatformSettings> = {
       min: 11000,
       max: 50000,
     },
-    StartingBlockOffsetNumber: {
-      processOnDeployment: true,
-      value: 40,
-      min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
-    },
     RequestLoanTermsRateLimit: {
       processOnDeployment: true,
       value: 30,
@@ -170,13 +142,6 @@ export const platformSettings: Record<string, PlatformSettings> = {
     ResponseExpiryLength: {
       processOnDeployment: true,
       value: 300,
-      min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
-    },
-    SafetyInterval: {
-      processOnDeployment: true,
-      value: 30,
       min: 0,
       max:
         '115792089237316195423570985008687907853269984665640564039457584007913129639935',
@@ -213,13 +178,6 @@ export const platformSettings: Record<string, PlatformSettings> = {
       min: 11000,
       max: 50000,
     },
-    StartingBlockOffsetNumber: {
-      processOnDeployment: true,
-      value: 40,
-      min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
-    },
     RequestLoanTermsRateLimit: {
       processOnDeployment: true,
       value: 30,
@@ -244,13 +202,6 @@ export const platformSettings: Record<string, PlatformSettings> = {
     ResponseExpiryLength: {
       processOnDeployment: true,
       value: 300,
-      min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
-    },
-    SafetyInterval: {
-      processOnDeployment: true,
-      value: 30,
       min: 0,
       max:
         '115792089237316195423570985008687907853269984665640564039457584007913129639935',
@@ -288,13 +239,6 @@ export const platformSettings: Record<string, PlatformSettings> = {
       value: 13000,
       min: 11000,
       max: 50000,
-    },
-    StartingBlockOffsetNumber: {
-      processOnDeployment: true,
-      value: 40,
-      min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
     },
     RequestLoanTermsRateLimit: {
       processOnDeployment: true,

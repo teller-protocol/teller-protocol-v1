@@ -107,40 +107,6 @@ struct Signature {
     bytes32 s;
 }
 
-/**
- * @notice Represents loan terms based on consensus values
- * @param interestRate The consensus value for the interest rate based on all the loan responses from the signers
- * @param collateralRatio The consensus value for the ratio of collateral to loan amount required for the loan, based on all the loan responses from the signers
- * @param maxLoanAmount The consensus value for the largest amount of tokens that can be taken out in the loan, based on all the loan responses from the signers
- */
-struct AccruedLoanTerms {
-    NumbersList.Values interestRate;
-    NumbersList.Values collateralRatio;
-    NumbersList.Values maxLoanAmount;
-}
-
-/**
- * @notice This struct defines the dapp address and data to execute in the callDapp function.
- * @dev It is executed using a delegatecall in the Escrow contract.
- * @param exists Flag marking whether the dapp is a Teller registered address
- * @param unsecured Flag marking if the loan allowed to be used in the dapp is a secured, or unsecured loan
- */
-struct Dapp {
-    bool exists;
-    bool unsecured;
-}
-
-/**
- * @notice This struct defines the dapp address and data to execute in the callDapp function.
- * @dev It is executed using a delegatecall in the Escrow contract.
- * @param location The proxy contract address for the dapp that will be used by the Escrow contract delegatecall
- * @param data The encoded function signature with parameters for the dapp method in bytes that will be sent in the Escrow delegatecall
- */
-struct DappData {
-    address location;
-    bytes data;
-}
-
 struct MarketStorage {
     // Holds the index for the next loan ID
     Counters.Counter loanIDCounter;
