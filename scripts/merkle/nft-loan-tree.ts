@@ -2,8 +2,17 @@ import { BigNumber, BigNumberish, utils } from 'ethers'
 
 import MerkleTree from './merkle-tree'
 
-type NftSizeElements = Array<{ id: BigNumberish, baseLoanSize: BigNumberish }>
-type NftSizeElementsOutput = Array<{ id: string, baseLoanSize: string, proof: string[] }>
+type NftSizeElements = Array<{
+  id: BigNumberish
+  baseLoanSize: BigNumberish
+  tierIndex: BigNumberish
+}>
+type NftSizeElementsOutput = Array<{
+  id: string
+  baseLoanSize: string
+  proof: string[]
+  tierIndex: string
+}>
 
 export default class NftLoanTree {
   private readonly tree: MerkleTree
@@ -54,7 +63,8 @@ export default class NftLoanTree {
     return this.elements.map((e) => ({
       id: BigNumber.from(e.id).toString(),
       baseLoanSize: BigNumber.from(e.baseLoanSize).toString(),
-      proof: this.getProof(e.id, e.baseLoanSize)
+      proof: this.getProof(e.id, e.baseLoanSize),
+      tierIndex: BigNumber.from(e.tierIndex).toString(),
     }))
   }
 }

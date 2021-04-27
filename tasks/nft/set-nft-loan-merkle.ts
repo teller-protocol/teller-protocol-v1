@@ -41,10 +41,7 @@ export const setLoanMerkle = async (
   log('')
 
   if (args.output) {
-    fs.writeFileSync(
-      args.output,
-      JSON.stringify(tree.getElements(), null, 2)
-    )
+    fs.writeFileSync(args.output, JSON.stringify(tree.getElements(), null, 2))
 
     log(`NFT size data written to ${args.output}`)
     log('')
@@ -62,16 +59,19 @@ export const getLoanMerkleTree = async (
   try {
     let nftID = ethers.BigNumber.from(0)
     while (await nft.ownerOf(nftID)) {
-      const { tier_ } = await nft.getTokenTier(nftID)
+      const { index_, tier_ } = await nft.getTokenTier(nftID)
       const baseLoanSize = toBN(tier_.baseLoanSize, 18)
       info.push({
         id: nftID,
         baseLoanSize,
+        tierIndex: index_,
       })
       nftID = nftID.add(1)
     }
   } catch (e) {
-    if (!e.message.includes('ERC721: owner query for nonexistent token')) {
+    if (
+      !e.error?.message?.includes('ERC721: owner query for nonexistent token')
+    ) {
       throw e
     }
   }
@@ -82,6 +82,11 @@ task(
   'set-nft-loan-merkle',
   'Generates and sets the merkle used to verify NFT loan sizes while taking out a loan'
 )
-  .addParam('output', 'Path to file to output merkle proofs', undefined, types.string)
+  .addParam(
+    'output',
+    'Path to file to output merkle proofs',
+    undefined,
+    types.string
+  )
   .addFlag('sendTx', 'Required flag to ensure this is not ran on accident')
   .setAction(setLoanMerkle)
