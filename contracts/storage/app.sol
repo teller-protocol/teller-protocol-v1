@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import { TellerNFT } from "../nft/TellerNFT.sol";
 
 // Interfaces
-import { IUniswapV2Router } from "../shared/interfaces/IUniswapV2Router.sol";
 
 // Libraries
 import {
@@ -24,7 +23,6 @@ struct AppStorage {
     mapping(address => Cache) assetSettings;
     mapping(string => address) assetAddresses;
     mapping(address => bool) cTokenRegistry;
-    IUniswapV2Router uniswapRouter;
     TellerNFT nft;
     UpgradeableBeaconFactory loansEscrowBeacon;
     UpgradeableBeaconFactory collateralEscrowBeacon;

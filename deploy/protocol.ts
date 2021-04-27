@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { getTokens, getUniswap } from '../config'
+import { getTokens } from '../config'
 import {
   ICollateralEscrow,
   ILoansEscrow,
@@ -26,7 +26,6 @@ const deployProtocol: DeployFunction = async (hre) => {
     assets: Object.entries(tokens.erc20).map(([sym, addr]) => ({ sym, addr })),
     cTokens: Object.values(tokens.compound),
     tellerNFT: nftAddress,
-    uniswapV2Router: getUniswap(network).v2Router,
     loansEscrowBeacon: loansEscrowBeacon.address,
     collateralEscrowBeacon: collateralEscrowBeacon.address,
   }

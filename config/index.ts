@@ -10,7 +10,6 @@ import { nodes } from './nodes'
 import { platformSettings } from './platform-settings'
 import { signers } from './signers'
 import { tokens } from './tokens'
-import { uniswap } from './uniswap'
 
 const getNetworkName = (network: Network): string =>
   network.config.forkName ?? network.name
@@ -44,8 +43,6 @@ export const getTokens = (network: Network) => {
     all,
   }
 }
-
-export const getUniswap = (network: Network) => uniswap[getNetworkName(network)]
 
 export const getNFT = (network: Network) => {
   const distributionsOutputFile = `deployments/${getNetworkName(

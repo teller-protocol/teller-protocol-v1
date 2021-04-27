@@ -5,12 +5,11 @@ import hre from 'hardhat'
 
 import { getPlatformSettings } from '../../config'
 import { ITellerDiamond } from '../../types/typechain'
-import { setup } from '../helpers/setup'
 
 chai.should()
 chai.use(solidity)
 
-const { deployments, getNamedSigner, ethers, network } = hre
+const { contracts, deployments, getNamedSigner, ethers, network } = hre
 
 describe.skip('Platform Settings', () => {
   const platformSettings = getPlatformSettings(network)
@@ -22,7 +21,8 @@ describe.skip('Platform Settings', () => {
   let deployer: Signer
 
   before(async () => {
-    ;({ diamond, deployer } = await setup())
+    diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
+    deployer = await getNamedSigner('deployer')
   })
 
   describe('updatePlatformSetting', () => {

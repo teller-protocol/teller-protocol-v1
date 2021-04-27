@@ -7,12 +7,11 @@ import { getChainlink, getTokens } from '../../config'
 import { Address } from '../../types/custom/config-types'
 import { ITellerDiamond } from '../../types/typechain'
 import { NULL_ADDRESS } from '../../utils/consts'
-import { setup } from '../helpers/setup'
 
 chai.should()
 chai.use(chaiAsPromised)
 
-const { tokens, deployments, getNamedSigner, toBN } = hre
+const { contracts, tokens, deployments, getNamedSigner, toBN } = hre
 
 describe('PriceAggregator', () => {
   let diamond: ITellerDiamond
@@ -26,7 +25,9 @@ describe('PriceAggregator', () => {
 
   before(async () => {
     await deployments.fixture('protocol')
-    ;({ diamond, deployer } = await setup())
+
+    diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
+    deployer = await getNamedSigner('deployer')
   })
 
   describe('addChainlinkAggregator', () => {
