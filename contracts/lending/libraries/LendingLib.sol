@@ -11,6 +11,8 @@ import { ITToken } from "../ttoken/ITToken.sol";
 import { MarketStorageLib, MarketStorage } from "../../storage/market.sol";
 
 library LendingLib {
+    bytes32 internal constant ID = keccak256("LENDING");
+
     function s() internal pure returns (MarketStorage storage) {
         return MarketStorageLib.store();
     }

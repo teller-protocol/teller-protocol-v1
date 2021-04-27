@@ -1,14 +1,13 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
-import { BigNumber, BigNumberish, Signer } from 'ethers'
+import { Signer } from 'ethers'
 import hre from 'hardhat'
 
 import { getMarkets } from '../../config'
 import { Market } from '../../types/custom/config-types'
 import { ERC20, ITellerDiamond, ITToken } from '../../types/typechain'
-import { fundedMarket } from '../fixtures'
-import { fundLender, getFunds } from '../helpers/get-funds'
-import { getLPHelpers, LPHelperArgs } from '../helpers/lending-pool'
+import { fundLender } from '../helpers/get-funds'
+import { getLPHelpers } from '../helpers/lending-pool'
 
 chai.should()
 chai.use(solidity)
@@ -46,7 +45,7 @@ describe('Lending Pool', () => {
     })
 
     describe(`${market.lendingToken} Lending Pool`, () => {
-      it('should not be able deposit directly on the Teller Token contract', async () => {
+      it('should NOT be able deposit directly on the Teller Token contract', async () => {
         await tToken.connect(deployer).restrict(true)
 
         const depositAmount = await fundLender(lendingToken, 100)
@@ -54,6 +53,38 @@ describe('Lending Pool', () => {
           .connect(lender)
           .functions['mint(uint256)'](depositAmount)
           .should.be.revertedWith('Teller: platform restricted')
+      })
+
+      it('should NOT be able deposit when lending facet is paused', async () => {
+        const LENDING_ID = hre.ethers.utils.id('LENDING')
+
+        // Pause lending
+        await diamond
+          .connect(deployer)
+          .pause(LENDING_ID, true)
+          .should.emit(diamond, 'Paused')
+          .withArgs(LENDING_ID, await deployer.getAddress())
+
+        // Fund the market
+        const depositAmount = await fundLender(lendingToken, 1000)
+
+        // Approve amount to loan
+        await lendingToken
+          .connect(lender)
+          .approve(diamond.address, depositAmount)
+
+        // Try deposit into lending pool
+        await diamond
+          .connect(lender)
+          .lendingPoolDeposit(lendingToken.address, depositAmount)
+          .should.be.revertedWith('Pausable: paused')
+
+        // Unpause lending
+        await diamond
+          .connect(deployer)
+          .pause(LENDING_ID, false)
+          .should.emit(diamond, 'UnPaused')
+          .withArgs(LENDING_ID, await deployer.getAddress())
       })
 
       it('should be able deposit and withdraw all with interest', async () => {

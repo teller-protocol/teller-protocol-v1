@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { DappMods } from "./DappMods.sol";
-import { PausableMods } from "../../contexts2/pausable/PausableMods.sol";
+import { PausableMods } from "../../settings/pausable/PausableMods.sol";
 
 // Libraries
 import { LibDapps } from "./libraries/LibDapps.sol";

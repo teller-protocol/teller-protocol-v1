@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import { IDiamondCut } from "./IDiamondCut.sol";
 import { IDiamondLoupe } from "./IDiamondLoupe.sol";
+
 import { SettingsFacet } from "../../settings/SettingsFacet.sol";
 import {
     PlatformSettingsFacet
@@ -13,7 +14,7 @@ import {
 import {
     AssetSettingsFacet
 } from "../../settings/asset/AssetSettingsFacet.sol";
-import { SettingsFacet } from "../../settings/SettingsFacet.sol";
+import { PausableFacet } from "../../settings/pausable/PausableFacet.sol";
 import { PriceAggFacet } from "../../price-aggregator/PriceAggFacet.sol";
 import {
     ChainlinkAggFacet
@@ -36,6 +37,7 @@ abstract contract ITellerDiamond is
     PlatformSettingsFacet,
     AssetSettingsDataFacet,
     AssetSettingsFacet,
+    PausableFacet,
     PriceAggFacet,
     ChainlinkAggFacet,
     LendingFacet,

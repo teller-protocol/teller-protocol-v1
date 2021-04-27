@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
+import { PausableMods } from "../settings/pausable/PausableMods.sol";
 import {
     ReentryMods
 } from "../contexts2/access-control/reentry/ReentryMods.sol";
@@ -94,7 +94,7 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
     )
         external
         payable
-        paused("", false)
+        paused(LibLoans.ID, false)
         nonReentry("")
         authorized(AUTHORIZED, msg.sender)
     {
@@ -114,7 +114,7 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         uint256 loanID,
         uint256 amount,
         NftLoanSizeProof[] calldata proofs
-    ) external paused("", false) __takeOutLoan(loanID, amount) {
+    ) external paused(LibLoans.ID, false) __takeOutLoan(loanID, amount) {
         uint256 allowedLoanSize;
         for (uint256 i; i < proofs.length; i++) {
             NFTLib.applyToLoan(loanID, proofs[i]);
@@ -176,7 +176,7 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
      */
     function takeOutLoan(uint256 loanID, uint256 amount)
         external
-        paused("", false)
+        paused(LibLoans.ID, false)
         nonReentry("")
         authorized(AUTHORIZED, msg.sender)
         __takeOutLoan(loanID, amount)

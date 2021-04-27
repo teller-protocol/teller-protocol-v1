@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import "../contexts2/pausable/PausableMods.sol";
+import { PausableMods } from "../settings/pausable/PausableMods.sol";
 
 // Interfaces
 import { ILoansEscrow } from "./escrow/ILoansEscrow.sol";

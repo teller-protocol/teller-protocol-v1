@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import { RolesMods } from "./RolesMods.sol";
 import { RolesLib } from "./RolesLib.sol";
 import { ADMIN } from "../../../shared/roles.sol";
 
-contract RolesFacet {
+contract RolesFacet is RolesMods {
     /**
      * @notice Checks if an account has a specific role.
      * @param role Encoding of the role to check.
@@ -26,8 +27,10 @@ contract RolesFacet {
      * Requirements:
      *  - Sender must be role admin.
      */
-    function grantRole(bytes32 role, address account) external {
-        require(RolesLib.hasRole(ADMIN, account), "AccessControl: not admin");
+    function grantRole(bytes32 role, address account)
+        external
+        authorized(ADMIN, msg.sender)
+    {
         RolesLib.grantRole(role, account);
     }
 
@@ -39,8 +42,10 @@ contract RolesFacet {
      * Requirements:
      *  - Sender must be role admin.
      */
-    function revokeRole(bytes32 role, address account) external {
-        require(RolesLib.hasRole(ADMIN, account), "AccessControl: not admin");
+    function revokeRole(bytes32 role, address account)
+        external
+        authorized(ADMIN, msg.sender)
+    {
         RolesLib.revokeRole(role, account);
     }
 

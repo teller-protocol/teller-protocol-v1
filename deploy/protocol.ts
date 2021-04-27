@@ -41,6 +41,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       'PlatformSettingsFacet',
       'AssetSettingsDataFacet',
       'AssetSettingsFacet',
+      'PausableFacet',
       // Pricing
       'PriceAggFacet',
       'ChainlinkAggFacet',

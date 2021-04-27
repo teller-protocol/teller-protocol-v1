@@ -20,6 +20,7 @@ import {
 struct AppStorage {
     bool initialized;
     bool platformRestricted;
+    mapping(bytes32 => bool) paused;
     mapping(bytes32 => PlatformSetting) platformSettings;
     mapping(address => Cache) assetSettings;
     mapping(string => address) assetAddresses;

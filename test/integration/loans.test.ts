@@ -11,7 +11,7 @@ import { Market } from '../../types/custom/config-types'
 import { ITellerDiamond, TellerNFT } from '../../types/typechain'
 import { CacheType, LoanStatus } from '../../utils/consts'
 import { fundedMarket } from '../fixtures'
-import { getFunds } from '../helpers/get-funds'
+import { fundLender, getFunds } from '../helpers/get-funds'
 import { createLoan, LoanType, takeOut } from '../helpers/loans'
 
 chai.should()
@@ -47,6 +47,32 @@ describe('Loans', () => {
           hre
         )
         await evm.advanceTime(rateLimit)
+      })
+
+      it('should NOT be able to take out loan when loans facet is paused', async () => {
+        const LOANS_ID = hre.ethers.utils.id('LOANS')
+
+        // Pause lending
+        await diamond
+          .connect(deployer)
+          .pause(LOANS_ID, true)
+          .should.emit(diamond, 'Paused')
+          .withArgs(LOANS_ID, await deployer.getAddress())
+
+        // Try deposit into lending pool
+        const { tx } = await createLoan({
+          lendToken: market.lendingToken,
+          collToken: market.collateralTokens[0],
+          loanType: LoanType.OVER_COLLATERALIZED,
+        })
+        await tx.should.be.revertedWith('Pausable: paused')
+
+        // Unpause lending
+        await diamond
+          .connect(deployer)
+          .pause(LOANS_ID, false)
+          .should.emit(diamond, 'UnPaused')
+          .withArgs(LOANS_ID, await deployer.getAddress())
       })
 
       it('should not be able to take out a loan without collateral', async () => {

@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
-import { ADMIN, AUTHORIZED } from "../shared/roles.sol";
+import { ADMIN, PAUSER, AUTHORIZED } from "../shared/roles.sol";
 import {
     UpgradeableBeaconFactory
 } from "../shared/proxy/beacon/UpgradeableBeaconFactory.sol";
@@ -35,10 +35,10 @@ struct InitArgs {
 
 contract SettingsFacet is RolesMods {
     /**
-        @notice This event is emitted when the platform restriction is switched
-        @param restriction Boolean representing the state of the restriction
-        @param pauser address of the pauser flipping the switch
-    */
+     * @notice This event is emitted when the platform restriction is switched
+     * @param restriction Boolean representing the state of the restriction
+     * @param pauser address of the pauser flipping the switch
+     */
     event PlatformRestricted(bool restriction, address indexed pauser);
 
     /**
@@ -88,6 +88,17 @@ contract SettingsFacet is RolesMods {
         RolesLib.revokeRole(AUTHORIZED, account);
     }
 
+    /**
+     * @notice Tests whether an account has authorization
+     * @param account The account address to check for
+     * @return True if account has authorization, false if it does not
+     */
+    function hasAuthorization(address account) external view returns (bool) {
+        return
+            RolesLib.hasRole(ADMIN, account) ||
+            RolesLib.hasRole(AUTHORIZED, account);
+    }
+
     function init(InitArgs calldata _args) external {
         AppStorage storage s = AppStorageLib.store();
 
@@ -95,6 +106,7 @@ contract SettingsFacet is RolesMods {
         s.initialized = true;
 
         RolesLib.grantRole(ADMIN, _args.admin);
+        RolesLib.grantRole(PAUSER, _args.admin);
 
         for (uint256 i; i < _args.assets.length; i++) {
             s.assetAddresses[_args.assets[i].sym] = _args.assets[i].addr;
@@ -109,16 +121,5 @@ contract SettingsFacet is RolesMods {
         s.collateralEscrowBeacon = UpgradeableBeaconFactory(
             _args.collateralEscrowBeacon
         );
-    }
-
-    /**
-        @notice Tests whether an account has authorization
-        @param account The account address to check for
-        @return True if account has authorization, false if it does not
-     */
-    function hasAuthorization(address account) external view returns (bool) {
-        return
-            RolesLib.hasRole(ADMIN, account) ||
-            RolesLib.hasRole(AUTHORIZED, account);
     }
 }

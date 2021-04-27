@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { PausableStorageLib } from "./storage.sol";
-import { RolesMods } from "../access-control/roles/RolesMods.sol";
+// Contracts
+import { RolesMods } from "../../contexts2/access-control/roles/RolesMods.sol";
+import { PAUSER } from "../../shared/roles.sol";
+
+// Storage
+import { AppStorageLib } from "../../storage/app.sol";
 
 contract PausableFacet is RolesMods {
-    bytes32 constant PAUSER = keccak256("PAUSER");
-
     /**
      * @dev Emitted when an {id} is paused by {sender}.
      */
@@ -31,7 +33,7 @@ contract PausableFacet is RolesMods {
         authorized(PAUSER, msg.sender)
     {
         if (isPaused(id) == state) return;
-        PausableStorageLib.store().paused[id] = state;
+        AppStorageLib.store().paused[id] = state;
         if (state) {
             emit Paused(id, msg.sender);
         } else {
@@ -46,6 +48,6 @@ contract PausableFacet is RolesMods {
      * @return The state that {id} is in.
      */
     function isPaused(bytes32 id) public view returns (bool) {
-        return PausableStorageLib.store().paused[id];
+        return AppStorageLib.store().paused[id];
     }
 }

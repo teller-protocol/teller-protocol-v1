@@ -21,6 +21,8 @@ library LibLoans {
     using NumbersLib for int256;
     using NumbersLib for uint256;
 
+    bytes32 constant ID = keccak256("LOANS");
+
     function s() internal pure returns (MarketStorage storage) {
         return MarketStorageLib.store();
     }

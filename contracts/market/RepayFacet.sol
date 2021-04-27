@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 // Contracts
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
-import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
+import { PausableMods } from "../settings/pausable/PausableMods.sol";
 import {
     ReentryMods
 } from "../contexts2/access-control/reentry/ReentryMods.sol";

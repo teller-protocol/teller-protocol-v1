@@ -8,7 +8,6 @@ import {
 } from "../../../contexts2/access-control/roles/RolesMods.sol";
 import { ADMIN, AUTHORIZED } from "../../../shared/roles.sol";
 import { RolesLib } from "../../../contexts2/access-control/roles/RolesLib.sol";
-import { PausableStorageLib } from "../../../contexts2/pausable/storage.sol";
 
 // It defines a platform settings. It includes: value, min, and max values.
 struct PlatformSetting {

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import { PausableMods } from "../contexts2/pausable/PausableMods.sol";
+import { PausableMods } from "../settings/pausable/PausableMods.sol";
 import {
     ReentryMods
 } from "../contexts2/access-control/reentry/ReentryMods.sol";
@@ -24,8 +24,6 @@ import { MaxTVLLib } from "../settings/asset/libraries/MaxTVLLib.sol";
 
 // Storage
 import { LendingLib } from "./libraries/LendingLib.sol";
-
-bytes32 constant ID = keccak256("LENDING");
 
 contract LendingFacet is RolesMods, ReentryMods, PausableMods {
     /**
@@ -56,9 +54,9 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
      */
     function lendingPoolDeposit(address asset, uint256 amount)
         external
-        paused("", false)
+        paused(LendingLib.ID, false)
         authorized(AUTHORIZED, msg.sender)
-        nonReentry(ID)
+        nonReentry(LendingLib.ID)
     {
         ITToken tToken = LendingLib.tToken(asset);
         require(

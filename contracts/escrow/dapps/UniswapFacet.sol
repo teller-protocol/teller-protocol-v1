@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // Storage
 import { AppStorageLib } from "../../storage/app.sol";
 import { DappMods } from "./DappMods.sol";
-import { PausableMods } from "../../contexts2/pausable/PausableMods.sol";
+import { PausableMods } from "../../settings/pausable/PausableMods.sol";
 import { LibDapps } from "./libraries/LibDapps.sol";
 import { LibEscrow } from "../libraries/LibEscrow.sol";
 import { IUniswapV2Router } from "../../shared/interfaces/IUniswapV2Router.sol";
