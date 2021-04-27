@@ -24,7 +24,7 @@ import { LibDapps } from "../escrow/dapps/libraries/LibDapps.sol";
 import { LibEscrow } from "../escrow/libraries/LibEscrow.sol";
 import {
     PlatformSettingsLib
-} from "../settings/platform/PlatformSettingsLib.sol";
+} from "../settings/platform/libraries/PlatformSettingsLib.sol";
 import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
 import { PriceAggLib } from "../price-aggregator/PriceAggLib.sol";
 

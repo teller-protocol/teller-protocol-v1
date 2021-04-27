@@ -9,7 +9,7 @@ import { ADMIN, AUTHORIZED } from "../../shared/roles.sol";
 import {
     PlatformSettingsLib,
     PlatformSetting
-} from "./PlatformSettingsLib.sol";
+} from "./libraries/PlatformSettingsLib.sol";
 import { AppStorageLib } from "../../storage/app.sol";
 
 // Storage

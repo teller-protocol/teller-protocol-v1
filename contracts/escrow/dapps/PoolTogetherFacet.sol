@@ -6,7 +6,9 @@ import { DappMods } from "./DappMods.sol";
 import { PausableMods } from "../../contexts2/pausable/PausableMods.sol";
 import { LibDapps } from "./libraries/LibDapps.sol";
 import { LibEscrow } from "../libraries/LibEscrow.sol";
-import { AssetPPoolLib } from "../../settings/asset/AssetPPoolLib.sol";
+import {
+    AssetPPoolLib
+} from "../../settings/asset/libraries/AssetPPoolLib.sol";
 import { PoolTogetherLib } from "./libraries/PoolTogetherLib.sol";
 import { PrizePoolInterface } from "./interfaces/PrizePoolInterface.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";

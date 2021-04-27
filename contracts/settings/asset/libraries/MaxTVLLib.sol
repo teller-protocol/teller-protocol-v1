@@ -6,10 +6,10 @@ import {
     CacheLib,
     Cache,
     CacheType
-} from "../../shared/libraries/CacheLib.sol";
+} from "../../../shared/libraries/CacheLib.sol";
 
 // Storage
-import { AppStorageLib } from "../../storage/app.sol";
+import { AppStorageLib } from "../../../storage/app.sol";
 
 /**
  * @notice Utility library of inline functions for MaxDebtRatio asset setting.

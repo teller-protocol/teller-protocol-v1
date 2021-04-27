@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import { LibLoans } from "../../market/libraries/LibLoans.sol";
 import {
     PlatformSettingsLib
-} from "../../settings/platform/PlatformSettingsLib.sol";
+} from "../../settings/platform/libraries/PlatformSettingsLib.sol";
 
 abstract contract DappMods {
     modifier onlyBorrower(uint256 loanID) {

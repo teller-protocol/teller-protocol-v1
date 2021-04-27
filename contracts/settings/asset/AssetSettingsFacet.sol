@@ -11,7 +11,7 @@ import {
     Cache,
     CacheType
 } from "../../shared/libraries/CacheLib.sol";
-import { MaxTVLLib } from "./MaxTVLLib.sol";
+import { MaxTVLLib } from "./libraries/MaxTVLLib.sol";
 
 // Storage
 import { AppStorageLib, AppStorage } from "../../storage/app.sol";

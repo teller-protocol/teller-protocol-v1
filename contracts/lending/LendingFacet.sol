@@ -20,7 +20,7 @@ import {
 import {
     SafeERC20Upgradeable
 } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import { MaxTVLLib } from "../settings/asset/MaxTVLLib.sol";
+import { MaxTVLLib } from "../settings/asset/libraries/MaxTVLLib.sol";
 
 // Storage
 import { LendingLib } from "./LendingLib.sol";

@@ -6,13 +6,13 @@ import {
     CacheLib,
     Cache,
     CacheType
-} from "../../shared/libraries/CacheLib.sol";
+} from "../../../shared/libraries/CacheLib.sol";
 import {
     PrizePoolInterface
-} from "../../escrow/dapps/interfaces/PrizePoolInterface.sol";
+} from "../../../escrow/dapps/interfaces/PrizePoolInterface.sol";
 
 // Storage
-import { AppStorageLib } from "../../storage/app.sol";
+import { AppStorageLib } from "../../../storage/app.sol";
 
 /**
  * @notice Utility library of inline functions for Pool together asset setting.

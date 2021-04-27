@@ -18,9 +18,13 @@ import { LibConsensus } from "./libraries/LibConsensus.sol";
 import { LendingLib } from "../lending/LendingLib.sol";
 import {
     PlatformSettingsLib
-} from "../settings/platform/PlatformSettingsLib.sol";
-import { MaxDebtRatioLib } from "../settings/asset/MaxDebtRatioLib.sol";
-import { MaxLoanAmountLib } from "../settings/asset/MaxLoanAmountLib.sol";
+} from "../settings/platform/libraries/PlatformSettingsLib.sol";
+import {
+    MaxDebtRatioLib
+} from "../settings/asset/libraries/MaxDebtRatioLib.sol";
+import {
+    MaxLoanAmountLib
+} from "../settings/asset/libraries/MaxLoanAmountLib.sol";
 import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
 import {
     EnumerableSet

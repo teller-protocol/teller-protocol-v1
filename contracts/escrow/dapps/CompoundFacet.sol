@@ -8,7 +8,9 @@ import { PausableMods } from "../../contexts2/pausable/PausableMods.sol";
 // Libraries
 import { LibDapps } from "./libraries/LibDapps.sol";
 import { LibEscrow } from "../libraries/LibEscrow.sol";
-import { AssetCTokenLib } from "../../settings/asset/AssetCTokenLib.sol";
+import {
+    AssetCTokenLib
+} from "../../settings/asset/libraries/AssetCTokenLib.sol";
 
 // Interfaces
 import {

@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { AppStorageLib } from "../../storage/app.sol";
-import "./names.sol" as NAMES;
-import { RolesMods } from "../../contexts2/access-control/roles/RolesMods.sol";
-import { ADMIN, AUTHORIZED } from "../../shared/roles.sol";
-import { RolesLib } from "../../contexts2/access-control/roles/RolesLib.sol";
-import { PausableStorageLib } from "../../contexts2/pausable/storage.sol";
+import { AppStorageLib } from "../../../storage/app.sol";
+import "../names.sol" as NAMES;
+import {
+    RolesMods
+} from "../../../contexts2/access-control/roles/RolesMods.sol";
+import { ADMIN, AUTHORIZED } from "../../../shared/roles.sol";
+import { RolesLib } from "../../../contexts2/access-control/roles/RolesLib.sol";
+import { PausableStorageLib } from "../../../contexts2/pausable/storage.sol";
 
 // It defines a platform settings. It includes: value, min, and max values.
 struct PlatformSetting {

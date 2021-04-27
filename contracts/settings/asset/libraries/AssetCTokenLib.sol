@@ -6,11 +6,11 @@ import {
     CacheLib,
     Cache,
     CacheType
-} from "../../shared/libraries/CacheLib.sol";
-import { ICErc20 } from "../../shared/interfaces/ICErc20.sol";
+} from "../../../shared/libraries/CacheLib.sol";
+import { ICErc20 } from "../../../shared/interfaces/ICErc20.sol";
 
 // Storage
-import { AppStorageLib } from "../../storage/app.sol";
+import { AppStorageLib } from "../../../storage/app.sol";
 
 /**
  * @notice Utility library of inline functions for Compound asset setting.

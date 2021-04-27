@@ -6,11 +6,11 @@ import {
     CacheLib,
     Cache,
     CacheType
-} from "../../shared/libraries/CacheLib.sol";
-import { IAToken } from "../../escrow/dapps/interfaces/IAToken.sol";
+} from "../../../shared/libraries/CacheLib.sol";
+import { IAToken } from "../../../escrow/dapps/interfaces/IAToken.sol";
 
 // Storage
-import { AppStorageLib } from "../../storage/app.sol";
+import { AppStorageLib } from "../../../storage/app.sol";
 
 /**
  * @notice Utility library of inline functions for Aave asset setting.

@@ -14,22 +14,32 @@ import {
     Cache,
     CacheType
 } from "../../shared/libraries/CacheLib.sol";
-import { AssetCTokenLib } from "./AssetCTokenLib.sol";
+import { AssetCTokenLib } from "./libraries/AssetCTokenLib.sol";
+import { MaxLoanAmountLib } from "./libraries/MaxLoanAmountLib.sol";
+import { MaxTVLLib } from "./libraries/MaxTVLLib.sol";
 
 // Storage
 import { AppStorageLib, AppStorage } from "../../storage/app.sol";
 
 /**
- * @notice Utility library of inline functions on the PlatformSetting struct.
+ * @notice View function to get asset setting values.
  *
  * @author develop@teller.finance
  */
 contract AssetSettingsDataFacet {
-    function getAssetCToken(address asset)
+    function getAssetMaxLoanAmount(address asset)
         external
         view
-        returns (ICErc20 cToken_)
+        returns (uint256)
     {
-        cToken_ = AssetCTokenLib.get(asset);
+        return MaxLoanAmountLib.get(asset);
+    }
+
+    function getAssetMaxTVL(address asset) external view returns (uint256) {
+        return MaxTVLLib.get(asset);
+    }
+
+    function getAssetCToken(address asset) external view returns (ICErc20) {
+        return AssetCTokenLib.get(asset);
     }
 }

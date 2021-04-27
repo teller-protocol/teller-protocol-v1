@@ -6,18 +6,18 @@ import {
     CacheLib,
     Cache,
     CacheType
-} from "../../shared/libraries/CacheLib.sol";
+} from "../../../shared/libraries/CacheLib.sol";
 
 // Storage
-import { AppStorageLib } from "../../storage/app.sol";
+import { AppStorageLib } from "../../../storage/app.sol";
 
 /**
- * @notice Utility library of inline functions for MaxDebtRatio asset setting.
+ * @notice Utility library of inline functions for MaxLoanAmount asset setting.
  *
  * @author develop@teller.finance
  */
-library MaxDebtRatioLib {
-    bytes32 private constant NAME = keccak256("MaxDebtRatio");
+library MaxLoanAmountLib {
+    bytes32 private constant NAME = keccak256("MaxLoanAmount");
 
     function s(address asset) private view returns (Cache storage) {
         return AppStorageLib.store().assetSettings[asset];

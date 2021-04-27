@@ -6,11 +6,11 @@ import {
     CacheLib,
     Cache,
     CacheType
-} from "../../shared/libraries/CacheLib.sol";
-import { IVault } from "../../escrow/dapps/interfaces/IVault.sol";
+} from "../../../shared/libraries/CacheLib.sol";
+import { IVault } from "../../../escrow/dapps/interfaces/IVault.sol";
 
 // Storage
-import { AppStorageLib } from "../../storage/app.sol";
+import { AppStorageLib } from "../../../storage/app.sol";
 
 /**
  * @notice Utility library of inline functions for Yearn vault asset setting.
