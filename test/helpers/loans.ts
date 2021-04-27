@@ -28,6 +28,10 @@ export interface LoanHelpersReturn {
     from?: Signer
   ) => ReturnType<typeof takeOutLoan>
   repay: (amount: BigNumberish, from?: Signer) => ReturnType<typeof repayLoan>
+  escrowRepay: (
+    amount: BigNumberish,
+    from?: Signer
+  ) => ReturnType<typeof escrowRepayLoan>
   collateral: {
     needed: () => ReturnType<typeof collateralNeeded>
     current: () => ReturnType<typeof collateralCurrent>
@@ -55,6 +59,8 @@ export const loanHelpers = async (
       takeOutLoan({ diamond, details, amount, from }),
     repay: (amount: BigNumberish, from?: Signer) =>
       repayLoan({ diamond, details, amount, from }),
+    escrowRepay: (amount: BigNumberish, from?: Signer) =>
+      escrowRepayLoan({ diamond, details, amount, from }),
     collateral: {
       needed: () => collateralNeeded({ diamond, details }),
       current: () => collateralCurrent({ diamond, details }),
@@ -307,5 +313,18 @@ const repayLoan = async (args: RepayLoanArgs): Promise<ContractTransaction> => {
     from = borrower.signer,
   } = args
 
-  return await diamond.connect(from).repay(amount, loan.id)
+  return await diamond.connect(from).repayLoan(loan.id, amount)
+}
+
+const escrowRepayLoan = async (
+  args: RepayLoanArgs
+): Promise<ContractTransaction> => {
+  const {
+    diamond,
+    details: { loan, borrower },
+    amount,
+    from = borrower.signer,
+  } = args
+
+  return await diamond.connect(from).escrowRepay(loan.id, amount)
 }

@@ -12,6 +12,7 @@ import { LoanDataFacet } from "./LoanDataFacet.sol";
 
 // Libraries
 import {
+    IERC20,
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {
@@ -28,10 +29,6 @@ import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
 import { PriceAggLib } from "../price-aggregator/PriceAggLib.sol";
 
 // Interfaces
-import {
-    IERC20,
-    SafeERC20
-} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ITToken } from "../lending/ttoken/ITToken.sol";
 import { ILoansEscrow } from "../escrow/escrow/ILoansEscrow.sol";
 
@@ -44,7 +41,6 @@ import {
 } from "../storage/market.sol";
 
 contract RepayFacet is RolesMods, ReentryMods, PausableMods {
-    using SafeERC20 for IERC20;
     /**
         @notice This event is emitted when a loan has been successfully repaid
         @param loanID ID of loan from which collateral was withdrawn
@@ -90,73 +86,88 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         authorized(AUTHORIZED, msg.sender)
         nonReentry("")
     {
-        address lendingToken =
-            MarketStorageLib.store().loans[loanID].lendingToken;
-        IERC20 token = IERC20(lendingToken);
-        uint256 balance = LibEscrow.balanceOf(loanID, address(token));
+        uint256 balance =
+            LibEscrow.balanceOf(loanID, LibLoans.loan(loanID).lendingToken);
         uint256 totalOwed = LibLoans.getTotalOwed(loanID);
-        ILoansEscrow escrow = MarketStorageLib.store().loanEscrows[loanID];
         if (balance < totalOwed && amount > balance) {
             uint256 amountNeeded =
                 amount > totalOwed ? totalOwed - (balance) : amount - (balance);
 
-            token.safeTransferFrom(msg.sender, address(escrow), amountNeeded);
+            SafeERC20.safeTransferFrom(
+                IERC20(LibLoans.loan(loanID).lendingToken),
+                msg.sender,
+                address(LibEscrow.e(loanID)),
+                amountNeeded
+            );
         }
 
-        __repayLoan(amount, loanID, address(escrow));
-    }
-
-    /**
-     * @notice Make a payment to a loan
-     * @param amount The amount of tokens to pay back to the loan
-     * @param loanID The ID of the loan the payment is for
-     */
-    function repay(uint256 amount, uint256 loanID)
-        public
-        nonReentry("")
-        paused("", false)
-        authorized(AUTHORIZED, msg.sender)
-    {
-        uint256 leftToPay = __repayLoan(loanID, amount, msg.sender);
         Loan storage loan = LibLoans.loan(loanID);
+        uint256 leftToPay =
+            __repayLoan(loan, amount, address(LibEscrow.e(loanID)));
+        // if the loan is now fully paid, close it and withdraw borrower collateral
+        if (leftToPay == 0) {
+            loan.status = LoanStatus.Closed;
+            LibCollateral.withdrawAll(loan.id, loan.loanTerms.borrower);
+        }
+
         emit LoanRepaid(
-            loanID,
+            loan.id,
             loan.loanTerms.borrower,
             amount,
             msg.sender,
             leftToPay
         );
+    }
 
-        // if the loan is now fully paid, close it and return collateral
+    /**
+     * @notice Make a payment to a loan
+     * @param loanID The ID of the loan the payment is for
+     * @param amount The amount of tokens to pay back to the loan
+     */
+    function repayLoan(uint256 loanID, uint256 amount)
+        external
+        nonReentry("")
+        paused("", false)
+        authorized(AUTHORIZED, msg.sender)
+    {
+        Loan storage loan = LibLoans.loan(loanID);
+        uint256 leftToPay = __repayLoan(loan, amount, msg.sender);
+        // if the loan is now fully paid, close it and withdraw borrower collateral
         if (leftToPay == 0) {
             loan.status = LoanStatus.Closed;
-            LibCollateral.withdrawAll(loanID, loan.loanTerms.borrower);
+            LibCollateral.withdrawAll(loan.id, loan.loanTerms.borrower);
         }
+
+        emit LoanRepaid(
+            loan.id,
+            loan.loanTerms.borrower,
+            amount,
+            msg.sender,
+            leftToPay
+        );
     }
 
     function __repayLoan(
-        uint256 loanID,
+        Loan storage loan,
         uint256 amount,
         address sender
-    ) internal returns (uint256 totalOwed_) {
+    ) private returns (uint256 leftToPay_) {
         require(amount > 0, "Teller: zero repay");
 
-        Loan storage loan = LibLoans.loan(loanID);
-
         // calculate the actual amount to repay
-        totalOwed_ = loan.principalOwed + loan.interestOwed;
-        if (totalOwed_ < amount) {
-            amount = totalOwed_;
-            totalOwed_ = 0;
+        leftToPay_ = loan.principalOwed + loan.interestOwed;
+        if (leftToPay_ < amount) {
+            amount = leftToPay_;
+            leftToPay_ = 0;
         } else {
-            totalOwed_ -= amount;
+            leftToPay_ -= amount;
         }
 
         // Get the Teller token for the loan
         ITToken tToken = MarketStorageLib.store().tTokens[loan.lendingToken];
         // Transfer funds from account
-        if (address(MarketStorageLib.store().loanEscrows[loanID]) == sender) {
-            MarketStorageLib.store().loanEscrows[loanID].claimToken(
+        if (address(LibEscrow.e(loan.id)) == sender) {
+            LibEscrow.e(loan.id).claimToken(
                 loan.lendingToken,
                 address(tToken),
                 amount
@@ -224,7 +235,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         uint256 amountToLiquidate = loan.principalOwed + loan.interestOwed;
         // Make sure there is nothing left to repay on the loan
         require(
-            __repayLoan(loanID, amountToLiquidate, msg.sender) == 0,
+            __repayLoan(loan, amountToLiquidate, msg.sender) == 0,
             "Teller: liquidate partial repay"
         );
 

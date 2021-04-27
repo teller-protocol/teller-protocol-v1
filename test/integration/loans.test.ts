@@ -80,42 +80,6 @@ describe('Loans', () => {
         currentColl.gt(0).should.eq(true, 'Loan must have collateral')
       })
 
-      it('should be able to repay loan as borrower', async () => {
-        const { details, repay } = await takeOut({
-          lendToken: market.lendingToken,
-          collToken: market.collateralTokens[0],
-          loanType: LoanType.OVER_COLLATERALIZED,
-        })
-
-        // Get the funds to pay back the interest
-        await getFunds({
-          tokenSym: market.lendingToken,
-          to: details.borrower.address,
-          amount: details.loan.interestOwed,
-        })
-
-        // Approve loan repayment
-        await details.lendingToken
-          .connect(details.borrower.signer)
-          .approve(diamond.address, details.totalOwed)
-
-        // Repay loan
-        await repay(details.totalOwed)
-          .should.emit(diamond, 'LoanRepaid')
-          .withArgs(
-            details.loan.id,
-            details.borrower.address,
-            details.totalOwed,
-            details.borrower.address,
-            '0'
-          )
-
-        // Verify loan is closed
-        await details
-          .refresh()
-          .then(({ loan }) => loan.status.should.eq(LoanStatus.Closed))
-      })
-
       it('should be able to take out a loan with an NFT', async () => {
         // Setup for NFT user
         const { merkleTrees } = getNFT(hre.network)
@@ -268,6 +232,82 @@ describe('Loans', () => {
       //     }
       //   )
       // })
+
+      describe('repay', () => {
+        it('should be able to repay loan as borrower', async () => {
+          const { details, repay } = await takeOut({
+            lendToken: market.lendingToken,
+            collToken: market.collateralTokens[0],
+            loanType: LoanType.OVER_COLLATERALIZED,
+          })
+
+          // Get the funds to pay back the interest
+          await getFunds({
+            tokenSym: market.lendingToken,
+            to: details.borrower.address,
+            amount: details.loan.interestOwed,
+          })
+
+          // Approve loan repayment
+          await details.lendingToken
+            .connect(details.borrower.signer)
+            .approve(diamond.address, details.totalOwed)
+
+          // Repay loan
+          await repay(details.totalOwed)
+            .should.emit(diamond, 'LoanRepaid')
+            .withArgs(
+              details.loan.id,
+              details.borrower.address,
+              details.totalOwed,
+              details.borrower.address,
+              '0'
+            )
+
+          // Verify loan is closed
+          await details
+            .refresh()
+            .then(({ loan }) => loan.status.should.eq(LoanStatus.Closed))
+        })
+
+        it('should be able to take out and repay an under collateralized loan', async () => {
+          // Create loan
+          const { details, escrowRepay } = await takeOut({
+            lendToken: market.lendingToken,
+            collToken: market.collateralTokens[0],
+            loanType: LoanType.UNDER_COLLATERALIZED,
+          })
+
+          // Repay full amount
+          const amountToRepay = details.totalOwed
+
+          // Get the funds to pay back the interest
+          await getFunds({
+            tokenSym: market.lendingToken,
+            to: details.borrower.address,
+            amount: details.loan.interestOwed,
+          })
+
+          // Approve loan repayment
+          await details.lendingToken
+            .connect(details.borrower.signer)
+            .approve(diamond.address, amountToRepay)
+
+          // Repay loan
+          await escrowRepay(amountToRepay)
+            .should.emit(diamond, 'LoanRepaid')
+            .withArgs(
+              details.loan.id,
+              details.borrower.address,
+              amountToRepay,
+              details.borrower.address,
+              '0'
+            )
+
+          const { loan: repaidLoan } = await details.refresh()
+          repaidLoan.status.should.eq(LoanStatus.Closed)
+        })
+      })
     })
   }
 })
