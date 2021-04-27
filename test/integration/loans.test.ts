@@ -238,32 +238,6 @@ describe('Loans', () => {
         await collateral.current().then((coll) => coll.should.eq(toBN(0)))
       })
 
-      it('should NOT be able to claim tokens from a loan Escrow as NOT the borrower', async () => {
-        const { details } = await takeOut({
-          lendToken: market.lendingToken,
-          collToken: market.collateralTokens[0],
-          loanType: LoanType.OVER_COLLATERALIZED,
-        })
-
-        await diamond
-          .connect(deployer)
-          .claimTokens(details.loan.id)
-          .should.be.rejectedWith('Teller: claim not borrower')
-      })
-
-      it('should NOT be able to claim tokens from a loan Escrow as the borrower before loan repaid', async () => {
-        const { details } = await takeOut({
-          lendToken: market.lendingToken,
-          collToken: market.collateralTokens[0],
-          loanType: LoanType.OVER_COLLATERALIZED,
-        })
-
-        await diamond
-          .connect(details.borrower.signer)
-          .claimTokens(details.loan.id)
-          .should.be.rejectedWith('Teller: loan not closed')
-      })
-
       // it.skip('should not be able to deposit collateral and take out loan in same block', async () => {
       //   const amount = toBN(100, await lendingToken.decimals())
       //
