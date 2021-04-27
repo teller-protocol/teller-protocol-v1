@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 // Libraries
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import { ChainlinkLib } from "./chainlink/ChainlinkLib.sol";
+import { CompoundLib } from "../shared/libraries/CompoundLib.sol";
 
 // Interfaces
 import {
@@ -12,8 +14,6 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // Storage
 import { AppStorageLib } from "../storage/app.sol";
-import { ChainlinkLib } from "./chainlink/ChainlinkLib.sol";
-import { CompoundLib } from "../shared/libraries/CompoundLib.sol";
 
 contract PriceAggFacet {
     uint256 internal constant TEN = 10;

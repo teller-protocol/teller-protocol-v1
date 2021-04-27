@@ -64,12 +64,47 @@ describe('PriceAggregator', () => {
           dstTokenAddress
         )
 
-        // const tokenSupportResponse = await priceAggregator.isTokenSupported(
-        //   srcTokenAddress
-        // )
+        const tokenSupportResponse = await diamond.isChainlinkTokenSupported(
+          srcTokenAddress
+        )
 
-        aggregatorResponse.agg.should.be.equals(pair.address)
-        // tokenSupportResponse.should.be.true
+        aggregatorResponse.agg.should.be.equals(
+          pair.address,
+          'Chainlink pair Aggregator was not stored'
+        )
+        tokenSupportResponse.should.eql(
+          true,
+          'Chainlink token not supported after pair added'
+        )
+      })
+    }
+  })
+
+  describe('getPriceFor', () => {
+    for (const pair of pairs) {
+      it(`Should be able get the latest price for ${pair.baseTokenName}/${pair.quoteTokenName}`, async () => {
+        const answer = await diamond.getPriceFor(
+          getTokenAddress(pair.baseTokenName),
+          getTokenAddress(pair.quoteTokenName)
+        )
+
+        answer.gt(0).should.eql(true, 'Chainlink pair zero price')
+      })
+    }
+  })
+
+  describe('getValueFor', () => {
+    for (const pair of pairs) {
+      it(`Should be able get the latest price for ${pair.baseTokenName}/${pair.quoteTokenName}`, async () => {
+        const answer = await diamond.getValueFor(
+          getTokenAddress(pair.baseTokenName),
+          getTokenAddress(pair.quoteTokenName),
+          await tokens
+            .get(pair.baseTokenName)
+            .then(async (t) => toBN(1, await t.decimals()))
+        )
+
+        answer.gt(0).should.eql(true, 'Chainlink pair zero value')
       })
     }
   })
@@ -90,8 +125,6 @@ describe('PriceAggregator', () => {
 
     for (const pair of pairs) {
       it(`Should be able remove the aggregator for ${pair.baseTokenName}/${pair.quoteTokenName} as an admin`, async () => {
-        const revert = await hre.evm.snapshot()
-
         const srcTokenAddress = getTokenAddress(pair.baseTokenName)
         const dstTokenAddress = getTokenAddress(pair.quoteTokenName)
 
@@ -106,38 +139,29 @@ describe('PriceAggregator', () => {
           dstTokenAddress
         )
 
-        agg.should.be.equal(NULL_ADDRESS)
-
-        await revert()
+        agg.should.be.equal(NULL_ADDRESS, 'Chainlink Aggregator not removed')
       })
     }
-  })
 
-  describe('getPriceFor', () => {
-    for (const pair of pairs) {
-      it(`Should be able get the latest price for ${pair.baseTokenName}/${pair.quoteTokenName}`, async () => {
-        const answer = await diamond.getPriceFor(
-          getTokenAddress(pair.baseTokenName),
-          getTokenAddress(pair.quoteTokenName)
+    const tokenAddresses = pairs.reduce(
+      (set, { baseTokenName, quoteTokenName }) => {
+        set.add(getTokenAddress(baseTokenName))
+        set.add(getTokenAddress(quoteTokenName))
+        return set
+      },
+      new Set<string>()
+    )
+
+    for (const tokenAddress of tokenAddresses) {
+      it(`should not support any tokens after all aggregators being removed`, async () => {
+        const tokenSupportResponse = await diamond.isChainlinkTokenSupported(
+          tokenAddress
         )
 
-        answer.gt(0).should.eq(true)
-      })
-    }
-  })
-
-  describe('getValueFor', () => {
-    for (const pair of pairs) {
-      it(`Should be able get the latest price for ${pair.baseTokenName}/${pair.quoteTokenName}`, async () => {
-        const answer = await diamond.getValueFor(
-          getTokenAddress(pair.baseTokenName),
-          getTokenAddress(pair.quoteTokenName),
-          await tokens
-            .get(pair.baseTokenName)
-            .then(async (t) => toBN(1, await t.decimals()))
+        tokenSupportResponse.should.eql(
+          false,
+          'Chainlink token still supported'
         )
-
-        answer.gt(0).should.eq(true)
       })
     }
   })
