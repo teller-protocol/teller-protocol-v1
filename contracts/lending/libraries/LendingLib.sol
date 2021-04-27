@@ -2,13 +2,13 @@
 pragma solidity ^0.8.0;
 
 // Libraries
-import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
+import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 
 // Interfaces
-import { ITToken } from "./ttoken/ITToken.sol";
+import { ITToken } from "../ttoken/ITToken.sol";
 
 // Storage
-import { MarketStorageLib, MarketStorage } from "../storage/market.sol";
+import { MarketStorageLib, MarketStorage } from "../../storage/market.sol";
 
 library LendingLib {
     function s() internal pure returns (MarketStorage storage) {

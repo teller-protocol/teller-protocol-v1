@@ -15,7 +15,7 @@ import { LibLoans } from "./libraries/LibLoans.sol";
 import { LibEscrow } from "../escrow/libraries/LibEscrow.sol";
 import { LibCollateral } from "./libraries/LibCollateral.sol";
 import { LibConsensus } from "./libraries/LibConsensus.sol";
-import { LendingLib } from "../lending/LendingLib.sol";
+import { LendingLib } from "../lending/libraries/LendingLib.sol";
 import {
     PlatformSettingsLib
 } from "../settings/platform/libraries/PlatformSettingsLib.sol";

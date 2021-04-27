@@ -23,7 +23,7 @@ import {
 import { MaxTVLLib } from "../settings/asset/libraries/MaxTVLLib.sol";
 
 // Storage
-import { LendingLib } from "./LendingLib.sol";
+import { LendingLib } from "./libraries/LendingLib.sol";
 
 bytes32 constant ID = keccak256("LENDING");
 
