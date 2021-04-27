@@ -5,11 +5,14 @@ import {
   PayableOverrides,
   Signer,
 } from 'ethers'
-import { contracts, ethers, toBN, tokens } from 'hardhat'
+import hre from 'hardhat'
 import moment from 'moment'
 
-import { ITellerDiamond } from '../../types/typechain'
+import { ERC20, ITellerDiamond } from '../../types/typechain'
+import { LoanStatus } from '../../utils/consts'
 import { mockCRAResponse } from './mock-cra-response'
+
+const { getNamedAccounts, contracts, tokens, ethers, toBN, evm } = hre
 
 export enum LoanType {
   ZERO_COLLATERAL,
@@ -64,11 +67,12 @@ export const loanHelpers = async (
 }
 
 interface CreateLoanArgs {
-  lendTokenSym: string
-  collTokenSym: string
-  borrower: string
+  lendToken: string | ERC20
+  collToken: string | ERC20
   loanType: LoanType
-  amount: BigNumberish
+  amount?: BigNumberish
+  amountBN?: BigNumberish
+  borrower?: string
   duration?: moment.Duration
 }
 
@@ -77,20 +81,26 @@ export interface CreateLoanReturn {
   getHelpers: () => Promise<LoanHelpersReturn>
 }
 
-export const createLoanArgs = async (
+export const createLoan = async (
   args: CreateLoanArgs
-): Promise<Parameters<ITellerDiamond['createLoanWithTerms']>> => {
+): Promise<CreateLoanReturn> => {
   const {
-    lendTokenSym,
-    collTokenSym,
-    borrower,
+    lendToken,
+    collToken,
     loanType,
-    amount: loanAmount,
+    amount = 100,
+    amountBN,
     duration = moment.duration(1, 'day'),
   } = args
 
-  const collToken = await tokens.get(collTokenSym)
-  const lendingToken = await tokens.get(lendTokenSym)
+  const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
+  const lendingToken =
+    typeof lendToken === 'string' ? await tokens.get(lendToken) : lendToken
+  const collateralToken =
+    typeof collToken === 'string' ? await tokens.get(collToken) : collToken
+
+  const borrower = args.borrower ?? (await getNamedAccounts()).borrower
+  const loanAmount = amountBN ?? toBN(amount, await lendingToken.decimals())
 
   // Set up collateral
   let collateralRatio = 0
@@ -108,32 +118,27 @@ export const createLoanArgs = async (
   // Get mock cra request and response
   const craReturn = await mockCRAResponse({
     lendingToken: lendingToken.address,
-    loanAmount: toBN(loanAmount),
+    loanAmount,
     loanTermLength: duration.asSeconds(),
     collateralRatio: collateralRatio,
     interestRate: '400',
     borrower,
   })
 
-  return [craReturn.request, [craReturn.response], collToken.address, '0']
-}
-
-export const createLoan = async (
-  args: CreateLoanArgs
-): Promise<CreateLoanReturn> => {
-  const { borrower } = args
-
-  const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
-  const createArgs = await createLoanArgs(args)
-
   // Create loan with terms
   const tx = diamond
     .connect(ethers.provider.getSigner(borrower))
-    .createLoanWithTerms(...createArgs)
+    .createLoanWithTerms(
+      craReturn.request,
+      [craReturn.response],
+      collateralToken.address,
+      '0'
+    )
 
   return {
     tx,
     getHelpers: async (): Promise<LoanHelpersReturn> => {
+      await tx
       const allBorrowerLoans = await diamond.getBorrowerLoans(borrower)
       const loanID = allBorrowerLoans[allBorrowerLoans.length - 1].toString()
       return await loanHelpers(loanID)
@@ -141,7 +146,42 @@ export const createLoan = async (
   }
 }
 
+export const takeOut = async (
+  args: CreateLoanArgs
+): Promise<LoanHelpersReturn> => {
+  // Create loan
+  const { getHelpers } = await createLoan(args)
+  const helpers = await getHelpers()
+  const { diamond, collateral, details, takeOut } = helpers
+
+  // Deposit collateral needed
+  const neededCollateral = await collateral.needed()
+  if (neededCollateral.gt(0)) {
+    await collateral.deposit(neededCollateral)
+    // .should.emit(diamond, 'CollateralDeposited')
+    // .withArgs(loanID, borrowerAddress, collateralNeeded)
+  }
+
+  // Advance time
+  await evm.advanceTime(moment.duration(5, 'minutes'))
+
+  // Take out loan
+  const loanAmount = args.amount ?? details.loan.loanTerms.maxLoanAmount
+  await takeOut()
+    .should.emit(diamond, 'LoanTakenOut')
+    .withArgs(details.loan.id, details.borrower.address, loanAmount, false)
+
+  // Refresh details after taking out loan
+  helpers.details = await details.refresh()
+  // Verify loan is now active
+  helpers.details.loan.status.should.eq(LoanStatus.Active)
+
+  return helpers
+}
+
 interface LoanDetailsReturn {
+  lendingToken: ERC20
+  collateralToken: ERC20
   loan: PromiseReturnType<typeof ITellerDiamond.prototype.getLoan>
   totalOwed: BigNumber
   borrower: {
@@ -156,11 +196,15 @@ const loanDetails = async (
 ): Promise<LoanDetailsReturn> => {
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
   const loan = await diamond.getLoan(loanID)
+  const lendingToken = await tokens.get(loan.lendingToken)
+  const collateralToken = await tokens.get(loan.collateralToken)
   const totalOwed = loan.principalOwed.add(loan.interestOwed)
   const signer = await ethers.provider.getSigner(loan.loanTerms.borrower)
 
   return {
     loan,
+    lendingToken,
+    collateralToken,
     totalOwed,
     borrower: { address: loan.loanTerms.borrower, signer },
     refresh: () => loanDetails(loanID),

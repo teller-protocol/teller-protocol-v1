@@ -12,112 +12,66 @@ import { HUNDRED_PERCENT, LoanStatus } from '../../utils/consts'
 import { fundedMarket } from '../fixtures'
 import { getFunds } from '../helpers/get-funds'
 import {
-  createLoan,
   CreateLoanReturn,
   LoanHelpersReturn,
   LoanType,
+  takeOut,
 } from '../helpers/loans'
 
 chai.should()
 chai.use(solidity)
 
-const { getNamedSigner, getNamedAccounts, contracts, ethers, evm, toBN } = hre
+const { getNamedSigner, evm } = hre
 
 describe('Liquidate Loans', () => {
   getMarkets(hre.network).forEach(testLoans)
 
   function testLoans(market: Market): void {
-    let deployer: Signer
     let liquidator: { signer: Signer; address: string }
     let diamond: ITellerDiamond
-    let lendingToken: ERC20
-    let collateralToken: ERC20
     let liquidateRewardPercent: BigNumber
 
     before(async () => {
-      // Get a fresh market
-      await hre.deployments.fixture(['markets', 'nft'])
+      // Get funded market
+      ;({ diamond } = await fundedMarket({
+        assetSym: market.lendingToken,
+        amount: 100000,
+        tags: ['nft'],
+      }))
 
-      deployer = await getNamedSigner('deployer')
       const liquidatorSigner = await getNamedSigner('liquidator')
       liquidator = {
         signer: liquidatorSigner,
         address: await liquidatorSigner.getAddress(),
       }
-      diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
-      lendingToken = await hre.tokens.get(market.lendingToken)
-      collateralToken = await hre.tokens.get(market.collateralTokens[0])
       liquidateRewardPercent = await getPlatformSetting(
         'LiquidateRewardPercent',
         hre
       ).then(({ value }) => value)
     })
 
-    beforeEach(async () => {
-      // Fund the market
-      await fundedMarket({ assetSym: market.lendingToken, amount: 1000 })
-    })
-
-    interface CreateArgs {
-      amount: BigNumberish
-      borrower: string
-      loanType: LoanType
-      duration?: moment.Duration
-      encodeOnly?: boolean
-    }
-    const create = async (args: CreateArgs): Promise<CreateLoanReturn> => {
-      const { amount, borrower, loanType, duration } = args
-      return await createLoan({
-        lendTokenSym: market.lendingToken,
-        collTokenSym: market.collateralTokens[0],
-        amount,
-        borrower,
-        loanType,
-        duration,
-      })
-    }
-
     enum LiqLoanStatus {
       Expired,
     }
     interface TestSetupArgs {
-      amount: BigNumberish
+      amount?: BigNumberish
       loanType: LoanType
       status: LiqLoanStatus
     }
     const testSetup = async (
       args: TestSetupArgs
     ): Promise<LoanHelpersReturn> => {
-      const { borrower } = await getNamedAccounts()
-      const duration = moment.duration(2, 'days')
-
-      // Create loan
-      const { getHelpers } = await create({
+      const helpers = await takeOut({
+        lendToken: market.lendingToken,
+        collToken: market.collateralTokens[0],
         amount: args.amount,
-        borrower,
         loanType: args.loanType,
-        duration,
       })
-      const helpers = await getHelpers()
-
-      // Deposit collateral needed
-      await helpers.collateral.deposit(await helpers.collateral.needed())
-
-      // Advance time
-      await evm.advanceTime(moment.duration(5, 'minutes'))
-
-      // Take out loan
-      await helpers
-        .takeOut()
-        .should.emit(diamond, 'LoanTakenOut')
-        .withArgs(helpers.details.loan.id, borrower, args.amount)
-
-      // Get the amount that is owed after loan taken out
-      helpers.details = await helpers.details.refresh()
+      const { details } = helpers
 
       // Get required amount of tokens to repay loan
-      let neededAmount = helpers.details.totalOwed
-      const tokenBal = await lendingToken.balanceOf(liquidator.address)
+      let neededAmount = details.totalOwed
+      const tokenBal = await details.lendingToken.balanceOf(liquidator.address)
       if (tokenBal.lt(neededAmount)) {
         neededAmount = tokenBal.add(neededAmount.sub(tokenBal))
       }
@@ -131,14 +85,14 @@ describe('Liquidate Loans', () => {
         })
       }
       // Approve the token on the diamond
-      await lendingToken
+      await details.lendingToken
         .connect(liquidator.signer)
-        .approve(diamond.address, helpers.details.totalOwed)
+        .approve(diamond.address, details.totalOwed)
 
       switch (args.status) {
         case LiqLoanStatus.Expired:
           // Advance time
-          await evm.advanceTime(helpers.details.loan.loanTerms.duration)
+          await evm.advanceTime(details.loan.loanTerms.duration)
       }
 
       return helpers
@@ -146,9 +100,7 @@ describe('Liquidate Loans', () => {
 
     describe('reward', () => {
       it('should calculate correct liquidation reward for a zero collateral loan', async () => {
-        const amount = toBN(100, await lendingToken.decimals())
         const { details } = await testSetup({
-          amount,
           loanType: LoanType.ZERO_COLLATERAL,
           status: LiqLoanStatus.Expired,
         })
@@ -163,9 +115,7 @@ describe('Liquidate Loans', () => {
       })
 
       it('should calculate correct liquidation reward for an under collateralized loan', async () => {
-        const amount = toBN(100, await lendingToken.decimals())
         const { details } = await testSetup({
-          amount,
           loanType: LoanType.UNDER_COLLATERALIZED,
           status: LiqLoanStatus.Expired,
         })
@@ -182,9 +132,7 @@ describe('Liquidate Loans', () => {
       })
 
       it('should calculate correct liquidation reward for an over collateralized loan', async () => {
-        const amount = toBN(100, await lendingToken.decimals())
         const { details } = await testSetup({
-          amount,
           loanType: LoanType.OVER_COLLATERALIZED,
           status: LiqLoanStatus.Expired,
         })
@@ -206,17 +154,15 @@ describe('Liquidate Loans', () => {
 
     describe('expired', () => {
       it('should be able to liquidate an expired zero collateral loan', async () => {
-        const amount = toBN(100, await lendingToken.decimals())
         const { details } = await testSetup({
-          amount,
           loanType: LoanType.ZERO_COLLATERAL,
           status: LiqLoanStatus.Expired,
         })
 
-        const liquidatorLendBefore = await lendingToken.balanceOf(
+        const liquidatorLendBefore = await details.lendingToken.balanceOf(
           liquidator.address
         )
-        const liquidatorCollBefore = await collateralToken.balanceOf(
+        const liquidatorCollBefore = await details.collateralToken.balanceOf(
           liquidator.address
         )
         const reward = await diamond.getLiquidationReward(details.loan.id)
@@ -232,7 +178,7 @@ describe('Liquidate Loans', () => {
             status.should.eq(LoanStatus.Liquidated, 'Loan not liquidated')
           )
 
-        const liquidatorLendAfter = await lendingToken.balanceOf(
+        const liquidatorLendAfter = await details.lendingToken.balanceOf(
           liquidator.address
         )
         const lendDiff = liquidatorLendAfter
@@ -243,7 +189,7 @@ describe('Liquidate Loans', () => {
           'Expected liquidator to be paid by loan escrow in lending token'
         )
 
-        const liquidatorCollAfter = await collateralToken.balanceOf(
+        const liquidatorCollAfter = await details.collateralToken.balanceOf(
           liquidator.address
         )
         const collDiff = liquidatorCollAfter.sub(liquidatorCollBefore)
@@ -256,17 +202,13 @@ describe('Liquidate Loans', () => {
       })
 
       it('should be able to liquidate an expired under collateralized loan', async () => {
-        const amount = toBN(100, await lendingToken.decimals())
         const { details, collateral } = await testSetup({
-          amount,
           loanType: LoanType.UNDER_COLLATERALIZED,
           status: LiqLoanStatus.Expired,
         })
-        // Advance time
-        await evm.advanceTime(details.loan.loanTerms.duration)
 
         const loanCollateral = await collateral.current()
-        const liquidatorCollBefore = await collateralToken.balanceOf(
+        const liquidatorCollBefore = await details.collateralToken.balanceOf(
           liquidator.address
         )
 
@@ -281,7 +223,7 @@ describe('Liquidate Loans', () => {
             status.should.eq(LoanStatus.Liquidated, 'Loan not liquidated')
           )
 
-        const liquidatorCollAfter = await collateralToken.balanceOf(
+        const liquidatorCollAfter = await details.collateralToken.balanceOf(
           liquidator.address
         )
         const collDiff = liquidatorCollAfter.sub(liquidatorCollBefore)
@@ -291,16 +233,12 @@ describe('Liquidate Loans', () => {
       })
 
       it('should be able to liquidate an expired over collateralized loan', async () => {
-        const amount = toBN(100, await lendingToken.decimals())
         const { details } = await testSetup({
-          amount,
           loanType: LoanType.OVER_COLLATERALIZED,
           status: LiqLoanStatus.Expired,
         })
-        // Advance time
-        await evm.advanceTime(details.loan.loanTerms.duration)
 
-        const liquidatorCollBefore = await collateralToken.balanceOf(
+        const liquidatorCollBefore = await details.collateralToken.balanceOf(
           liquidator.address
         )
         const reward = await diamond.getLiquidationReward(details.loan.id)
@@ -316,7 +254,7 @@ describe('Liquidate Loans', () => {
             status.should.eq(LoanStatus.Liquidated, 'Loan not liquidated')
           )
 
-        const liquidatorCollAfter = await collateralToken.balanceOf(
+        const liquidatorCollAfter = await details.collateralToken.balanceOf(
           liquidator.address
         )
         liquidatorCollAfter

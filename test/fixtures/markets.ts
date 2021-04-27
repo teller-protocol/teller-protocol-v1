@@ -1,18 +1,32 @@
 import { BigNumberish } from 'ethers'
-import { contracts, deployments, getNamedSigner, toBN, tokens } from 'hardhat'
+import hre from 'hardhat'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
-import { ITellerDiamond } from '../../types/typechain'
+import { ERC20, ITellerDiamond } from '../../types/typechain'
 import { getFunds } from '../helpers/get-funds'
 
 export interface FundedMarketArgs {
   assetSym: string
   // Amount should be denoted in decimal value for the token (i.e. 100 = 100 * (10^tokenDecimals)
   amount?: BigNumberish
+  tags?: string[]
 }
 
-export const fundedMarket = (args?: FundedMarketArgs): Promise<void> =>
-  deployments.createFixture(async (_hre) => {
-    const { assetSym = 'DAI', amount } = args ?? {}
+export interface FundedMarketReturn {
+  diamond: ITellerDiamond
+  lendingToken: ERC20
+}
+
+export const fundedMarket = hre.deployments.createFixture(
+  async (
+    hre: HardhatRuntimeEnvironment,
+    opts?: FundedMarketArgs
+  ): Promise<FundedMarketReturn> => {
+    const { contracts, deployments, getNamedSigner, toBN, tokens } = hre
+    const { assetSym = 'DAI', amount, tags = [] } = opts ?? {}
+
+    tags.push('markets')
+    await deployments.fixture(tags)
 
     const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
     const lendingToken = await tokens.get(assetSym)
@@ -36,4 +50,10 @@ export const fundedMarket = (args?: FundedMarketArgs): Promise<void> =>
     await diamond
       .connect(funder)
       .lendingPoolDeposit(lendingToken.address, amountToFundLP)
-  })()
+
+    return {
+      diamond,
+      lendingToken,
+    }
+  }
+)
