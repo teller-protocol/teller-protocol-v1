@@ -310,5 +310,23 @@
       { "address": "0xd59e99927018b995ee9Ad6b9003677f1e7393F8A", "count": 10 },
       { "address": "0x06940cfBc097ed8A3F535715E500Ffbe1E685fDc", "count": 10 }
     ]
+  },
+  {
+    "tierIndex": 0,
+    "balances": [
+      { "address": "0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5", "count": 10 }
+    ]
+  },
+  {
+    "tierIndex": 2,
+    "balances": [
+      { "address": "0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5", "count": 10 }
+    ]
+  },
+  {
+    "tierIndex": 3,
+    "balances": [
+      { "address": "0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5", "count": 10 }
+    ]
   }
 ]

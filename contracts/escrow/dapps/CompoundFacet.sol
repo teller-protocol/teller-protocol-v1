@@ -6,6 +6,7 @@ import { DappMods } from "./DappMods.sol";
 import { PausableMods } from "../../settings/pausable/PausableMods.sol";
 
 // Libraries
+import { LibCompound } from "./libraries/LibCompound.sol";
 import { LibDapps } from "./libraries/LibDapps.sol";
 import { LibEscrow } from "../libraries/LibEscrow.sol";
 import {
@@ -13,20 +14,10 @@ import {
 } from "../../settings/asset/libraries/AssetCTokenLib.sol";
 
 // Interfaces
-import {
-    SafeERC20
-} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICErc20 } from "../../shared/interfaces/ICErc20.sol";
 
-uint256 constant NO_ERROR = 0;
-
-// @notice Caller does not have sufficient balance in the ERC-20 contract to complete the desired action.
-uint256 constant TOKEN_INSUFFICIENT_BALANCE = 13;
-
 contract CompoundFacet is PausableMods, DappMods {
-    using SafeERC20 for IERC20;
-
     /**
      * @notice This event is emitted every time Compound lend is invoked successfully.
      * @param tokenAddress address of the underlying token.
@@ -73,7 +64,7 @@ contract CompoundFacet is PausableMods, DappMods {
             );
 
         require(
-            abi.decode(result, (uint256)) == NO_ERROR,
+            abi.decode(result, (uint256)) == LibCompound.NO_ERROR,
             "Teller: compound deposit error"
         );
 
@@ -150,11 +141,12 @@ contract CompoundFacet is PausableMods, DappMods {
             LibEscrow.e(loanID).callDapp(cTokenAddress, callData);
 
         require(
-            abi.decode(result, (uint256)) != TOKEN_INSUFFICIENT_BALANCE,
+            abi.decode(result, (uint256)) !=
+                LibCompound.TOKEN_INSUFFICIENT_BALANCE,
             "Teller: compound dapp insufficient balance"
         );
         require(
-            abi.decode(result, (uint256)) == NO_ERROR,
+            abi.decode(result, (uint256)) == LibCompound.NO_ERROR,
             "Teller: compound dapp withdrawal error"
         );
 

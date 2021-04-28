@@ -8,6 +8,9 @@ import { PausableMods } from "../../settings/pausable/PausableMods.sol";
 // Libraries
 import { LibEscrow } from "../libraries/LibEscrow.sol";
 import { LibUniswap } from "./libraries/LibUniswap.sol";
+import {
+    ChainlinkLib
+} from "../../price-aggregator/chainlink/ChainlinkLib.sol";
 
 // Interfaces
 import { IUniswapV2Router } from "../../shared/interfaces/IUniswapV2Router.sol";
@@ -28,30 +31,56 @@ contract UniswapFacet is PausableMods, DappMods {
     );
 
     /**
-     * @notice Swaps ETH/Tokens for Tokens/ETH using different Uniswap v2 Router 02 methods.
-     * @param path An array of token addresses. path.length must be >= 2. Pools for each consecutive pair of addresses must exist and have liquidity.
+     * @notice Swaps tokens for tokens on Uniswap.
+     * @dev {path} must have at least 2 token addresses
+     * @param path An array of token addresses.
      * @param sourceAmount amount of source token to swap.
      * @param minDestination The minimum amount of output tokens that must be received for the transaction not to revert.
      */
-    function swap(
+    function uniswapSwap(
         uint256 loanID,
         address[] memory path,
         uint256 sourceAmount,
         uint256 minDestination
-    ) external paused("", false) onlyBorrower(loanID) {
-        //        uint256 minDestination =
-        //            LibUniswap.ROUTER.getAmountsOut(sourceAmount, path)[path.length - 1];
-        uint256 destinationAmount =
-            LibUniswap.swap(path, sourceAmount, minDestination);
-
-        LibEscrow.tokenUpdated(loanID, path[0]);
-        LibEscrow.tokenUpdated(loanID, path[path.length - 1]);
-
-        emit UniswapSwapped(
-            path[0],
-            path[path.length - 1],
-            sourceAmount,
-            destinationAmount
+    ) external paused("", false) onlySecured(loanID) onlyBorrower(loanID) {
+        address src = path[0];
+        address dst = path[path.length - 1];
+        require(
+            ChainlinkLib.isTokenSupported(src),
+            "Teller: uniswap src not supported"
         );
+        require(
+            ChainlinkLib.isTokenSupported(dst),
+            "Teller: uniswap dst not supported"
+        );
+
+        // Set allowance on source token to Uniswap Router
+        LibEscrow.e(loanID).setTokenAllowance(src, address(LibUniswap.ROUTER));
+
+        // Encode data for LoansEscrow to call
+        bytes memory callData =
+            abi.encodeWithSelector(
+                IUniswapV2Router.swapExactTokensForTokens.selector,
+                sourceAmount,
+                minDestination,
+                path,
+                address(LibEscrow.e(loanID)),
+                block.timestamp
+            );
+        // Call Escrow to do swap get the response amounts
+        uint256[] memory amounts =
+            abi.decode(
+                LibEscrow.e(loanID).callDapp(
+                    address(LibUniswap.ROUTER),
+                    callData
+                ),
+                (uint256[])
+            );
+        uint256 destinationAmount = amounts[amounts.length - 1];
+
+        LibEscrow.tokenUpdated(loanID, src);
+        LibEscrow.tokenUpdated(loanID, dst);
+
+        emit UniswapSwapped(src, dst, sourceAmount, destinationAmount);
     }
 }

@@ -811,5 +811,38 @@
         ]
       }
     }
+  },
+  {
+    "merkleRoot": "0x51765a1e27aaf96f2ba5227584952da186882a07ab36461917084950b645c3e4",
+    "tokenTotal": "0x0a",
+    "claims": {
+      "0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5": {
+        "index": 0,
+        "amount": "0x0a",
+        "proof": []
+      }
+    }
+  },
+  {
+    "merkleRoot": "0x51765a1e27aaf96f2ba5227584952da186882a07ab36461917084950b645c3e4",
+    "tokenTotal": "0x0a",
+    "claims": {
+      "0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5": {
+        "index": 0,
+        "amount": "0x0a",
+        "proof": []
+      }
+    }
+  },
+  {
+    "merkleRoot": "0x51765a1e27aaf96f2ba5227584952da186882a07ab36461917084950b645c3e4",
+    "tokenTotal": "0x0a",
+    "claims": {
+      "0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5": {
+        "index": 0,
+        "amount": "0x0a",
+        "proof": []
+      }
+    }
   }
 ]

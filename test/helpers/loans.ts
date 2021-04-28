@@ -172,10 +172,14 @@ export const takeOut = async (
   await evm.advanceTime(moment.duration(5, 'minutes'))
 
   // Take out loan
-  const loanAmount = args.amount ?? details.loan.loanTerms.maxLoanAmount
   await takeOut()
     .should.emit(diamond, 'LoanTakenOut')
-    .withArgs(details.loan.id, details.borrower.address, loanAmount, false)
+    .withArgs(
+      details.loan.id,
+      details.borrower.address,
+      details.loan.loanTerms.maxLoanAmount,
+      false
+    )
 
   // Refresh details after taking out loan
   helpers.details = await details.refresh()

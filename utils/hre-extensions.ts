@@ -160,7 +160,7 @@ extendEnvironment((hre) => {
         address = nameOrAddress
       } else {
         const tokens = getTokens(network)
-        address = tokens.all[nameOrAddress]
+        address = tokens.all[nameOrAddress.toUpperCase()]
       }
       return (await ethers.getContractAt('ERC20', address)) as ERC20
     },

@@ -69,9 +69,8 @@ export const getLoanMerkleTree = async (
       nftID = nftID.add(1)
     }
   } catch (e) {
-    if (
-      !e.error?.message?.includes('ERC721: owner query for nonexistent token')
-    ) {
+    const message = e.message ?? e.error?.message
+    if (!message.includes('ERC721: owner query for nonexistent token')) {
       throw e
     }
   }
