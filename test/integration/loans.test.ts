@@ -234,7 +234,7 @@ describe('Loans', () => {
       //   const factory = await ethers.getContractFactory('ReentryTest')
       //   const contract = (await factory.deploy()) as ReentryTest
       //
-      //   await diamond.connect(deployer).addAuthorizedAddress(contract.address)
+      //   await diamond.connect(deployer).addAuthorizedAccount(contract.address)
       //
       //   // Create loan with terms without depositing collateral
       //   const createArgs = await createLoanArgs({

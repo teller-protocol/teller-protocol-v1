@@ -7,7 +7,7 @@ interface AddAuthorizedAddressArgs {
   address: string
 }
 
-export async function addAuthorizedAddress(
+export async function addAuthorizedAccount(
   args: AddAuthorizedAddressArgs,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> {
@@ -27,11 +27,11 @@ export async function addAuthorizedAddress(
   log('')
 }
 
-task('add-authorized-address', 'Adds the AUTHORIZED role to an account')
+task('add-authorized-account', 'Adds the AUTHORIZED role to an account')
   .addParam(
-    'address',
+    'account',
     'Account to grant authorization',
     undefined,
     types.string
   )
-  .setAction(addAuthorizedAddress)
+  .setAction(addAuthorizedAccount)
