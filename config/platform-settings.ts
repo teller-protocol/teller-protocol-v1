@@ -31,8 +31,7 @@ const mainnetPlatformSettings: PlatformSettings = {
     processOnDeployment: true,
     value: 500,
     min: 0,
-    max:
-      '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+    max: 10000,
   },
   MaximumLoanDuration: {
     processOnDeployment: true,
@@ -45,8 +44,7 @@ const mainnetPlatformSettings: PlatformSettings = {
     processOnDeployment: true,
     value: 1500,
     min: 0,
-    max:
-      '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+    max: 10000,
   },
   OverCollateralizedBuffer: {
     processOnDeployment: true,
@@ -95,8 +93,7 @@ export const platformSettings: Record<string, PlatformSettings> = {
       processOnDeployment: true,
       value: 500,
       min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+      max: 10000,
     },
     MaximumLoanDuration: {
       processOnDeployment: true,
@@ -109,8 +106,7 @@ export const platformSettings: Record<string, PlatformSettings> = {
       processOnDeployment: true,
       value: 1500,
       min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+      max: 10000,
     },
     OverCollateralizedBuffer: {
       processOnDeployment: true,
@@ -170,7 +166,7 @@ export const platformSettings: Record<string, PlatformSettings> = {
       processOnDeployment: true,
       value: 1500,
       min: 0,
-      max: 20000,
+      max: 10000,
     },
     OverCollateralizedBuffer: {
       processOnDeployment: true,
@@ -217,8 +213,7 @@ export const platformSettings: Record<string, PlatformSettings> = {
       processOnDeployment: true,
       value: 500,
       min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+      max: 10000,
     },
     MaximumLoanDuration: {
       processOnDeployment: true,
@@ -231,8 +226,7 @@ export const platformSettings: Record<string, PlatformSettings> = {
       processOnDeployment: true,
       value: 1500,
       min: 0,
-      max:
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935',
+      max: 10000,
     },
     OverCollateralizedBuffer: {
       processOnDeployment: true,
