@@ -27,6 +27,7 @@ import {
 } from "../settings/platform/libraries/PlatformSettingsLib.sol";
 import { NumbersLib } from "../shared/libraries/NumbersLib.sol";
 import { PriceAggLib } from "../price-aggregator/PriceAggLib.sol";
+import { NFTLib } from "../nft/libraries/NFTLib.sol";
 
 // Interfaces
 import { ITToken } from "../lending/ttoken/ITToken.sol";
@@ -136,6 +137,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         if (leftToPay == 0) {
             loan.status = LoanStatus.Closed;
             LibCollateral.withdrawAll(loan.id, loan.loanTerms.borrower);
+            NFTLib.unlinkFromLoan(loan.id);
         }
 
         emit LoanRepaid(

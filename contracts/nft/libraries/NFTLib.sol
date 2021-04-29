@@ -11,7 +11,8 @@ import {
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import { RolesLib } from "../contexts2/access-control/roles/RolesLib.sol";
+import { RolesLib } from "../../contexts2/access-control/roles/RolesLib.sol";
+import { AUTHORIZED } from "../../shared/roles.sol";
 
 // Storage
 import { AppStorageLib, AppStorage } from "../../storage/app.sol";
@@ -68,6 +69,19 @@ library NFTLib {
 
         // Apply NFT to loan
         EnumerableSet.add(s().loanNFTs[loanID], proof.id);
+    }
+
+    function unlinkFromLoan(uint256 loanID) internal {
+        // Get linked NFT
+        EnumerableSet.UintSet storage nfts = s().loanNFTs[loanID];
+        uint256[] memory linked = new uint256[](EnumerableSet.length(nfts));
+
+        for (uint256 i; i < linked.length; i++) {
+            // Remove link from NFT to loan
+            EnumerableSet.remove(s().loanNFTs[loanID], linked[i]);
+            // Restake the NFT
+            stake(linked[i]);
+        }
     }
 
     function verifyLoanSize(NftLoanSizeProof calldata proof)
