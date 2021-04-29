@@ -77,8 +77,6 @@ library NFTLib {
         uint256[] memory linked = new uint256[](EnumerableSet.length(nfts));
 
         for (uint256 i; i < linked.length; i++) {
-            // Remove link from NFT to loan
-            EnumerableSet.remove(s().loanNFTs[loanID], linked[i]);
             // Restake the NFT
             stake(linked[i]);
         }
