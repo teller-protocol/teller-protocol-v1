@@ -11,6 +11,7 @@ import {
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { RolesLib } from "../contexts2/access-control/roles/RolesLib.sol";
 
 // Storage
 import { AppStorageLib, AppStorage } from "../../storage/app.sol";
@@ -34,6 +35,10 @@ library NFTLib {
     function stake(uint256 nftID) internal returns (bool success_) {
         // Add NFT ID to user set - returns true if added
         success_ = EnumerableSet.add(s().stakedNFTs[msg.sender], nftID);
+        // Check if user has authorization and add the staker if not
+        if (!RolesLib.hasRole(AUTHORIZED, msg.sender)) {
+            RolesLib.grantRole(AUTHORIZED, msg.sender);
+        }
     }
 
     function unstake(uint256 nftID) internal returns (bool success_) {
