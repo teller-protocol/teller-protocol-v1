@@ -58,6 +58,22 @@ library NFTLib {
         }
     }
 
+    function liquidateNFT(uint256 loanID) internal {
+        // Check if NFTs are linked
+        EnumerableSet.UintSet storage nfts = s().loanNFTs[loanID];
+        uint256[] memory staked_ = new uint256[](EnumerableSet.length(nfts));
+        if (staked_.length > 0) {
+            for (uint256 i; i < staked_.length; i++) {
+                // Transfer to gnosis wallet address
+                NFTLib.nft().transferFrom(
+                    msg.sender,
+                    AppStorageLib.store().nftLiquidator,
+                    staked_[i]
+                );
+            }
+        }
+    }
+
     function applyToLoan(uint256 loanID, NftLoanSizeProof calldata proof)
         internal
     {

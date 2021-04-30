@@ -26,6 +26,7 @@ struct AppStorage {
     TellerNFT nft;
     UpgradeableBeaconFactory loansEscrowBeacon;
     UpgradeableBeaconFactory collateralEscrowBeacon;
+    address nftLiquidator;
 }
 
 library AppStorageLib {

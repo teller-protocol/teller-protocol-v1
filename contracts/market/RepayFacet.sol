@@ -255,6 +255,9 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
             );
         }
 
+        // Transfer NFT if linked
+        NFTLib.liquidateNFT(loanID);
+
         emit LoanLiquidated(
             loanID,
             loan.loanTerms.borrower,
