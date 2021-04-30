@@ -16,6 +16,16 @@ const mainnetAssetSettings: AssetSettings = {
 }
 
 export const assetSettings: Record<string, AssetSettings> = {
+  goerli: {
+    DAI: [
+      { key: 'cToken', value: 'CDAI', type: AssetType.Address },
+      { key: 'MaxLoanAmount', value: 25000, type: AssetType.Amount },
+      { key: 'MaxTVL', value: 100000, type: AssetType.Amount },
+      { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
+    ],
+    USDC: [{ key: 'cToken', value: 'CUSDC', type: AssetType.Address }],
+    WETH: [{ key: 'cToken', value: 'CETH', type: AssetType.Address }],
+  },
   kovan: {
     DAI: [
       { key: 'cToken', value: 'CDAI', type: AssetType.Address },

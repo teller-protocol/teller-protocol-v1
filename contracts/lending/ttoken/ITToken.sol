@@ -2,21 +2,20 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import { InitArgs } from "./data.sol";
-import {
-    AccessControlUpgradeable
-} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {
     ERC20Upgradeable
 } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {
+    RolesFacet
+} from "../../contexts2/access-control/roles/RolesFacet.sol";
 
 /**
  * @notice This contract acts as an interface for the Teller token (TToken).
  *
  * @author develop@teller.finance
  */
-abstract contract ITToken is AccessControlUpgradeable, ERC20Upgradeable {
+abstract contract ITToken is ERC20Upgradeable, RolesFacet {
     /**
      * @notice This event is emitted when an user deposits tokens into the pool.
      */
@@ -50,8 +49,6 @@ abstract contract ITToken is AccessControlUpgradeable, ERC20Upgradeable {
 
     function fundLoan(address recipient, uint256 amount) external virtual;
 
-    function depositStrategy() external virtual;
-
     /**
      * @notice Increase account supply of specified token amount.
      * @param amount The amount of underlying tokens to use to mint.
@@ -82,13 +79,25 @@ abstract contract ITToken is AccessControlUpgradeable, ERC20Upgradeable {
         virtual
         returns (uint256 totalSupply_);
 
+    function exchangeRate() external virtual returns (uint256 rate_);
+
     /**
      * @notice Sets the restricted state of the platform.
      */
     function restrict(bool state) external virtual;
 
-    /**
-     * @notice Initializes the Teller token
-     */
+    function rebalance() external virtual;
+
+    function setStrategy(address strategy, bytes calldata initData)
+        external
+        virtual;
+
+    // Args to initialize the Teller token with
+    struct InitArgs {
+        address controller;
+        address admin;
+        address underlying;
+    }
+
     function initialize(InitArgs calldata args) external virtual;
 }

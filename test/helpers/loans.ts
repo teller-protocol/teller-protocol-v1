@@ -261,7 +261,10 @@ const depositCollateral = async (
   const weth = await tokens.get('WETH')
   const collateralToken = await tokens.get(details.loan.collateralToken)
   const options: PayableOverrides = {}
-  if (details.loan.collateralToken == weth.address) {
+  if (
+    ethers.utils.getAddress(details.loan.collateralToken) ==
+    ethers.utils.getAddress(weth.address)
+  ) {
     options.value = amount
   } else {
     await collateralToken.approve(diamond.address, amount)

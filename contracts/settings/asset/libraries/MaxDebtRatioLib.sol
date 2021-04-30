@@ -23,11 +23,11 @@ library MaxDebtRatioLib {
         return AppStorageLib.store().assetSettings[asset];
     }
 
-    function get(address asset) internal view returns (uint256) {
-        return s(asset).uints[NAME];
+    function get(address asset) internal view returns (uint16) {
+        return uint16(s(asset).uints[NAME]);
     }
 
-    function set(address asset, uint256 newValue) internal {
-        s(asset).uints[NAME] = newValue;
+    function set(address asset, uint16 newValue) internal {
+        s(asset).uints[NAME] = uint256(newValue);
     }
 }

@@ -48,6 +48,14 @@ interface ATMToken {
 interface Market {
   lendingToken: TokenSymbol
   collateralTokens: TokenSymbol[]
+  strategy: MarketStrategy
+}
+interface MarketStrategy {
+  name: string
+  initArgs: Array<{
+    type: 'TokenSymbol' | 'Address' | 'Number'
+    value: any
+  }>
 }
 
 export interface Chainlink {

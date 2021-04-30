@@ -21,7 +21,6 @@ import {
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 library LibConsensus {
-    using NumbersLib for uint256;
     using NumbersList for NumbersList.Values;
 
     /**
@@ -55,8 +54,15 @@ library LibConsensus {
         EnumerableSet.AddressSet storage signers =
             s().signers[request.assetAddress];
         require(
-            responses.length.ratioOf(EnumerableSet.length(signers)) >=
-                PlatformSettingsLib.getRequiredSubmissionsPercentageValue(),
+            uint16(
+                NumbersLib.ratioOf(
+                    responses.length,
+                    EnumerableSet.length(signers)
+                )
+            ) >=
+                uint16(
+                    PlatformSettingsLib.getRequiredSubmissionsPercentageValue()
+                ),
             "Teller: insufficient signer responses"
         );
 
@@ -106,7 +112,8 @@ library LibConsensus {
             termSubmissions.maxLoanAmount.addValue(response.maxLoanAmount);
         }
 
-        uint256 tolerance = PlatformSettingsLib.getMaximumToleranceValue();
+        uint16 tolerance =
+            uint16(PlatformSettingsLib.getMaximumToleranceValue());
         interestRate = _getConsensus(termSubmissions.interestRate, tolerance);
         collateralRatio = _getConsensus(
             termSubmissions.collateralRatio,
@@ -242,7 +249,7 @@ library LibConsensus {
      * @notice The values must be in a maximum tolerance range.
      * @return the consensus value.
      */
-    function _getConsensus(NumbersList.Values memory values, uint256 tolerance)
+    function _getConsensus(NumbersList.Values memory values, uint16 tolerance)
         internal
         pure
         returns (uint256)

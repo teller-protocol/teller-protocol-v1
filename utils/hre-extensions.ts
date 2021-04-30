@@ -22,7 +22,6 @@ declare module 'hardhat/types/runtime' {
     tokens: TokensExtension
     evm: EVM
     getNamedSigner: (name: string) => Promise<Signer>
-    fastForward: (seconds: BigNumberish) => Promise<void>
     toBN: (amount: BigNumberish, decimals?: BigNumberish) => BigNumber
     fromBN: (amount: BigNumberish, decimals?: BigNumberish) => BigNumber
     log: (msg: string, config?: FormatMsgConfig) => void
@@ -51,8 +50,10 @@ interface EVM {
    * Will mine the specified number of blocks locally. This is helpful when functionality
    * requires a certain number of blocks to be processed for values to change.
    * @param blocks {number} Amount of blocks to mine.
+   * @param secsPerBlock {number} Determines how many seconds to increase time by for
+   *  each block that is mined. Default is 15.
    */
-  advanceBlocks: (blocks?: number) => Promise<void>
+  advanceBlocks: (blocks?: number, secsPerBlock?: number) => Promise<void>
 
   /**
    * Creates a snapshot of the blockchain in its current state. It then returns a function
@@ -171,22 +172,19 @@ extendEnvironment((hre) => {
     return ethers.provider.getSigner(accounts[name])
   }
 
-  hre.fastForward = async (seconds: BigNumberish) => {
-    seconds = hre.toBN(seconds).toNumber()
-    await network.provider.send('evm_increaseTime', [seconds])
-    await network.provider.send('evm_mine')
-  }
-
   hre.evm = {
     async advanceTime(seconds: BigNumberish | moment.Duration): Promise<void> {
       if (moment.isDuration(seconds)) seconds = seconds.asSeconds()
-      await hre.fastForward(seconds)
+
+      const secsPerBlock = 15
+      const blocks = BigNumber.from(seconds).div(secsPerBlock).toNumber()
+      await this.advanceBlocks(blocks, secsPerBlock)
     },
 
-    async advanceBlocks(blocks = 1): Promise<void> {
+    async advanceBlocks(blocks = 1, secsPerBlock = 15): Promise<void> {
       for (let block = 0; block < blocks; block++) {
-        // 15 seconds per block
-        await this.advanceTime(15)
+        await network.provider.send('evm_increaseTime', [secsPerBlock])
+        await network.provider.send('evm_mine')
       }
     },
 

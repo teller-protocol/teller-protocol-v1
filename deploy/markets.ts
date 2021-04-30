@@ -26,12 +26,12 @@ const initializeMarkets: DeployFunction = async (hre) => {
   })
   const tTokenFactory = await deployTTokenBeacon(hre, diamond)
 
-  for (const { lendingToken, collateralTokens } of markets) {
-    const lendingTokenAddress = tokenAddresses.all[lendingToken]
-    const asset = await tokens.get(lendingToken)
+  for (const market of markets) {
+    const lendingTokenAddress = tokenAddresses.all[market.lendingToken]
+    const asset = await tokens.get(market.lendingToken)
     const name = await asset.name()
 
-    log(`${name} (${lendingToken})`, { indent: 1, star: true })
+    log(`${name} (${market.lendingToken})`, { indent: 1, star: true })
 
     // Get initial signers to add
     const signers = getSigners(network)
@@ -59,7 +59,7 @@ const initializeMarkets: DeployFunction = async (hre) => {
       lendingTokenAddress
     )
     const collateralTokensToAdd = new Set(
-      collateralTokens.map((sym) => tokenAddresses.all[sym])
+      market.collateralTokens.map((sym) => tokenAddresses.all[sym])
     )
     for (const token of existingCollateralTokens) {
       if (collateralTokensToAdd.has(token)) collateralTokensToAdd.delete(token)
@@ -80,6 +80,39 @@ const initializeMarkets: DeployFunction = async (hre) => {
       // Deploy new Teller Token
       const tTokenAddress = await tTokenFactory(lendingTokenAddress)
 
+      log('Deploying new Teller Token', { indent: 2, star: true })
+      log(`Using TToken Strategy: ${market.strategy.name}`, {
+        indent: 3,
+        star: true,
+      })
+
+      const strategy = await deploy({
+        hre,
+        contract: market.strategy.name,
+      })
+
+      const tToken = await contracts.get<ITToken>('ITToken', {
+        at: tTokenAddress,
+      })
+      await tToken.setStrategy(
+        strategy.address,
+        strategy.interface.encodeFunctionData(
+          'init',
+          market.strategy.initArgs.map(({ type, value }) => {
+            switch (type) {
+              case 'TokenSymbol':
+                return tokenAddresses.all[value]
+              case 'Address':
+              case 'Number':
+                return value
+            }
+          })
+        )
+      )
+
+      // cToken: await diamond.getAssetCToken(assetAddress),
+      log(`TToken initialized`, { indent: 3, star: true })
+
       // Initialize the lending pool with new TToken and Lending Escrow
       await diamond.initLendingPool(asset.address, tTokenAddress)
 
@@ -94,7 +127,7 @@ const deployTTokenBeacon = async (
   hre: HardhatRuntimeEnvironment,
   diamond: ITellerDiamond
 ): Promise<(assetAddress: string) => Promise<string>> => {
-  const { ethers, getNamedAccounts, log } = hre
+  const { contracts, ethers, getNamedAccounts, log } = hre
 
   log('********** Teller Token (TToken) Beacon **********', { indent: 2 })
   log('')
@@ -148,7 +181,6 @@ const deployTTokenBeacon = async (
             controller: diamond.address,
             admin: await getNamedAccounts().then(({ deployer }) => deployer),
             underlying: assetAddress,
-            cToken: await diamond.getAssetCToken(assetAddress),
           },
         ])
       )

@@ -61,7 +61,7 @@ library LibLoans {
         view
         returns (uint256)
     {
-        return amountBorrow.percent(getInterestRatio(loanID));
+        return amountBorrow.percent(uint16(getInterestRatio(loanID)));
     }
 
     function getCollateralNeededInfo(uint256 loanID)
@@ -120,7 +120,7 @@ library LibLoans {
         // * If the loan has an escrow account, the minimum collateral is ((principal owed - escrow value) * (X collateral factor + liquidation reward)).
         if (loan(loanID).status == LoanStatus.TermsSet) {
             neededInLendingTokens = _getLoanAmount(loanID).percent(
-                loan(loanID).loanTerms.collateralRatio
+                uint16(loan(loanID).loanTerms.collateralRatio)
             );
         } else {
             uint256 requiredRatio =
@@ -138,7 +138,7 @@ library LibLoans {
                 neededInLendingTokens -= escrowLoanValue;
             }
             neededInLendingTokens = neededInLendingTokens.percent(
-                requiredRatio
+                uint16(requiredRatio)
             );
         }
     }

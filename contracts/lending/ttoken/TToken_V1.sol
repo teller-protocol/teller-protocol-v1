@@ -2,7 +2,13 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import { InitArgs, CONTROLLER, ADMIN } from "./data.sol";
+import {
+    CONTROLLER,
+    ADMIN,
+    EXCHANGE_RATE_FACTOR,
+    ONE_HUNDRED_PERCENT
+} from "./data.sol";
+import { ITTokenStrategy } from "./strategies/ITTokenStrategy.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // Utils
@@ -17,6 +23,13 @@ import {
     IERC20,
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {
+    ERC165Checker
+} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import { RolesLib } from "../../contexts2/access-control/roles/RolesLib.sol";
+
+// Storage
+import "./storage.sol" as Storage;
 
 /**
  * @notice This contract represents a lending pool for an asset within Teller protocol.
@@ -24,22 +37,10 @@ import {
  * @author develop@teller.finance
  */
 contract TToken_V1 is ITToken {
-    /* State Variables */
-
-    uint256 public constant EXCHANGE_RATE_FACTOR = 1e18;
-    uint256 public constant ONE_HUNDRED_PERCENT = 10000;
-
-    ICErc20 public cToken;
-    ERC20 private _underlying;
-    uint8 private _decimals;
-    bool private _restricted;
+    function() pure returns (Storage.Store storage) private constant s =
+        Storage.store;
 
     /* Modifiers */
-
-    modifier authorized(bytes32 role) {
-        require(hasRole(role, _msgSender()));
-        _;
-    }
 
     /**
      * @notice Checks if the LP is restricted or has the CONTROLLER role.
@@ -49,7 +50,7 @@ contract TToken_V1 is ITToken {
      */
     modifier notRestricted {
         require(
-            !_restricted || hasRole(CONTROLLER, _msgSender()),
+            !s().restricted || RolesLib.hasRole(CONTROLLER, _msgSender()),
             "Teller: platform restricted"
         );
         _;
@@ -57,15 +58,15 @@ contract TToken_V1 is ITToken {
 
     /* Public Functions */
 
-    function decimals() public view override returns (uint8 decimals_) {
-        decimals_ = _decimals;
+    function decimals() public view override returns (uint8) {
+        return s().decimals;
     }
 
     /**
      * @notice The token that is the underlying assets for this Teller token.
      */
-    function underlying() public view override returns (ERC20 underlying_) {
-        underlying_ = _underlying;
+    function underlying() public view override returns (ERC20) {
+        return s().underlying;
     }
 
     /**
@@ -74,63 +75,65 @@ contract TToken_V1 is ITToken {
     function balanceOfUnderlying(address account)
         public
         override
-        returns (uint256 balance_)
+        returns (uint256)
     {
-        balance_ = _valueInUnderlying(balanceOf(account), exchangeRate());
+        return _valueInUnderlying(balanceOf(account), exchangeRate());
     }
 
     function fundLoan(address recipient, uint256 amount)
         external
         override
-        authorized(CONTROLLER)
+        authorized(CONTROLLER, _msgSender())
     {
-        // Claim tokens from Compound
-        cToken.redeemUnderlying(amount);
-        // Transfer tokens to recipient
-        SafeERC20.safeTransfer(_underlying, recipient, amount);
-    }
+        // If TToken is not holding enough funds to cover the loan, call the strategy to try to withdraw
+        uint256 balance = s().underlying.balanceOf(address(this));
+        if (balance < amount) {
+            _delegateStrategy(
+                abi.encodeWithSelector(
+                    ITTokenStrategy.withdraw.selector,
+                    amount - balance
+                )
+            );
+        }
 
-    function depositStrategy() public override {
-        uint256 balance = _underlying.balanceOf(address(this));
-        // Allow Compound to take underlying tokens
-        SafeERC20.safeIncreaseAllowance(_underlying, address(cToken), balance);
-        // Deposit tokens to Compound
-        cToken.mint(balance);
+        // Transfer tokens to recipient
+        SafeERC20.safeTransfer(s().underlying, recipient, amount);
     }
 
     /**
      * @notice Deposit underlying token amount into LP and mint tokens.
      * @param amount The amount of underlying tokens to use to mint.
+     * @return Amount of TTokens minted.
      */
     function mint(uint256 amount)
         external
         override
         notRestricted
-        returns (uint256 mintAmount_)
+        returns (uint256)
     {
         require(amount > 0, "Teller: cannot mint 0");
         require(
-            amount <= _underlying.balanceOf(_msgSender()),
+            amount <= s().underlying.balanceOf(_msgSender()),
             "Teller: insufficient underlying"
         );
 
         // Calculate amount of tokens to mint
-        mintAmount_ = _valueOfUnderlying(amount, exchangeRate());
+        uint256 mintAmount = _valueOfUnderlying(amount, exchangeRate());
 
         // Transfer tokens from lender
         SafeERC20.safeTransferFrom(
-            _underlying,
+            s().underlying,
             _msgSender(),
             address(this),
             amount
         );
-        // Execute deposit strategy
-        depositStrategy();
 
         // Mint Teller token value of underlying
-        _mint(_msgSender(), mintAmount_);
+        _mint(_msgSender(), mintAmount);
 
-        emit Mint(_msgSender(), mintAmount_, amount);
+        emit Mint(_msgSender(), mintAmount, amount);
+
+        return mintAmount;
     }
 
     /**
@@ -154,11 +157,16 @@ contract TToken_V1 is ITToken {
         // Burn Teller tokens
         _burn(_msgSender(), amount);
 
-        // Claim tokens from Compound
-        cToken.redeemUnderlying(underlyingAmount);
+        // Make sure enough funds are available to redeem
+        _delegateStrategy(
+            abi.encodeWithSelector(
+                ITTokenStrategy.withdraw.selector,
+                underlyingAmount
+            )
+        );
 
         // Transfer funds back to lender
-        SafeERC20.safeTransfer(_underlying, _msgSender(), underlyingAmount);
+        SafeERC20.safeTransfer(s().underlying, _msgSender(), underlyingAmount);
 
         emit Redeem(_msgSender(), amount, underlyingAmount);
     }
@@ -187,14 +195,18 @@ contract TToken_V1 is ITToken {
         // Burn Teller tokens
         _burn(_msgSender(), tokenValue);
 
-        // Claim tokens from Compound
-        cToken.redeemUnderlying(amount);
+        // Make sure enough funds are available to redeem
+        _delegateStrategy(
+            abi.encodeWithSelector(ITTokenStrategy.withdraw.selector, amount)
+        );
 
         // Transfer funds back to lender
-        SafeERC20.safeTransfer(_underlying, _msgSender(), amount);
+        SafeERC20.safeTransfer(s().underlying, _msgSender(), amount);
 
         emit Redeem(_msgSender(), tokenValue, amount);
     }
+
+    function _redeem(uint256 underlyingAmount) internal {}
 
     /**
      * @notice Initializes the Teller token
@@ -209,25 +221,28 @@ contract TToken_V1 is ITToken {
             "Teller: underlying token not contract"
         );
 
-        _setupRole(CONTROLLER, args.controller);
-        _setupRole(ADMIN, args.admin);
+        RolesLib.grantRole(CONTROLLER, args.controller);
+        RolesLib.grantRole(ADMIN, args.admin);
 
-        cToken = ICErc20(args.cToken);
-        _underlying = ERC20(args.underlying);
+        s().underlying = ERC20(args.underlying);
         __ERC20_init(
-            string(abi.encodePacked("Teller ", _underlying.name())),
-            string(abi.encodePacked("t", _underlying.symbol()))
+            string(abi.encodePacked("Teller ", s().underlying.name())),
+            string(abi.encodePacked("t", s().underlying.symbol()))
         );
-        _decimals = _underlying.decimals();
+        s().decimals = s().underlying.decimals();
         // Platform restricted by default
-        _restricted = true;
+        s().restricted = true;
     }
 
     /**
      * @notice Sets the restricted state of the platform.
      */
-    function restrict(bool state) public override authorized(ADMIN) {
-        _restricted = state;
+    function restrict(bool state)
+        public
+        override
+        authorized(ADMIN, _msgSender())
+    {
+        s().restricted = state;
     }
 
     /**
@@ -259,7 +274,6 @@ contract TToken_V1 is ITToken {
         internal
         returns (uint256 rate_, uint256 supply_)
     {
-        accrueInterest();
         if (totalSupply() == 0) {
             rate_ = EXCHANGE_RATE_FACTOR;
         } else {
@@ -282,32 +296,74 @@ contract TToken_V1 is ITToken {
     /**
      * @dev
      */
-    function exchangeRate() public returns (uint256 rate_) {
+    function exchangeRate() public override returns (uint256 rate_) {
         if (totalSupply() == 0) {
             return EXCHANGE_RATE_FACTOR;
         }
 
-        accrueInterest();
         rate_ = _exchangeRateForSupply(totalUnderlyingSupply());
-    }
-
-    /**
-     * @dev
-     */
-    function accrueInterest() public {
-        cToken.accrueInterest();
     }
 
     /**
      * @notice It calculates the total supply of the underlying asset.
      * @return totalSupply_ the total supply denoted in the underlying asset.
      */
-    function totalUnderlyingSupply()
-        public
+    function totalUnderlyingSupply() public override returns (uint256) {
+        bytes memory data =
+            _delegateStrategy(
+                abi.encodeWithSelector(
+                    ITTokenStrategy.totalUnderlyingSupply.selector
+                )
+            );
+        return abi.decode(data, (uint256));
+    }
+
+    /**
+     * @notice Calls the current strategy to rebalance the funds based on its defined rules.
+     */
+    function rebalance() public override {
+        _delegateStrategy(
+            abi.encodeWithSelector(ITTokenStrategy.rebalance.selector)
+        );
+    }
+
+    /**
+     * @notice Sets a new strategy to use for balancing funds.
+     * @param strategy Address to the new strategy contract. Must implement the {ITTokenStrategy} interface.
+     * @param initData Optional data to initialize the strategy.
+     *
+     * Requirements:
+     *  - Sender must have ADMIN role
+     */
+    function setStrategy(address strategy, bytes calldata initData)
+        external
         override
-        returns (uint256 totalSupply_)
+        authorized(ADMIN, _msgSender())
     {
-        // Get underlying balance from Compound
-        totalSupply_ += cToken.balanceOfUnderlying(address(this));
+        require(
+            ERC165Checker.supportsInterface(
+                strategy,
+                type(ITTokenStrategy).interfaceId
+            ),
+            "Teller: strategy does not support ITTokenStrategy"
+        );
+        s().strategy = strategy;
+        if (initData.length > 0) {
+            _delegateStrategy(initData);
+        }
+    }
+
+    /**
+     * @notice Delegates data to call on the strategy contract.
+     * @param callData Data to call the strategy contract with.
+     *
+     * Requirements:
+     *  - Sender must have ADMIN role
+     */
+    function _delegateStrategy(bytes memory callData)
+        internal
+        returns (bytes memory)
+    {
+        return Address.functionDelegateCall(s().strategy, callData);
     }
 }

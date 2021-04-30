@@ -68,7 +68,7 @@ library NumbersList {
      * The percentage should be entered with 2 decimal places. e.g. 2.5% should be entered as 250.
      * @return boolean
      */
-    function isWithinTolerance(Values memory self, uint256 tolerancePercentage)
+    function isWithinTolerance(Values memory self, uint16 tolerancePercentage)
         internal
         pure
         returns (bool)

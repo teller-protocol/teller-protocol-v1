@@ -45,9 +45,9 @@ export const getTokens = (network: Network) => {
 }
 
 export const getNFT = (network: Network) => {
-  const distributionsOutputFile = `deployments/${getNetworkName(
-    network
-  )}/_nftDistribution.json`
+  const distributionsOutputFile = `deployments/${
+    network.config.forkName != null ? 'localhost' : network.name
+  }/_nftDistribution.json`
 
   return {
     tiers: nftTiers,

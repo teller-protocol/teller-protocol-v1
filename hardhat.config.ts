@@ -22,7 +22,7 @@ config()
 const accounts: HardhatNetworkHDAccountsUserConfig = {
   mnemonic: process.env.MNEMONIC_KEY,
   count: parseInt(process.env.ADDRESS_COUNT_KEY ?? '15'),
-  accountsBalance: ethers.utils.parseEther('1000000').toString(),
+  accountsBalance: ethers.utils.parseEther('100000000').toString(),
 }
 
 const GAS: HardhatNetworkUserConfig['gas'] = 'auto'
@@ -94,9 +94,13 @@ export default <HardhatUserConfig>{
       hardhat: 5,
       localhost: 5,
     },
-    borrower: {
+    lender2: {
       hardhat: 6,
       localhost: 6,
+    },
+    borrower: {
+      hardhat: 7,
+      localhost: 7,
     },
     liquidator: {
       hardhat: 9,
@@ -112,6 +116,14 @@ export default <HardhatUserConfig>{
     },
   },
   networks: {
+    goerli: {
+      url: process.env.ALCHEMY_GOERLI_KEY,
+      chainId: 5,
+      accounts,
+      gas: GAS,
+      gasPrice:
+        GAS_PRICE === 'auto' ? GAS_PRICE : BN.from(GAS_PRICE).div(4).toNumber(),
+    },
     kovan: {
       url: process.env.ALCHEMY_KOVAN_KEY,
       chainId: 42,

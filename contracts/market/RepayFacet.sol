@@ -180,8 +180,6 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
                 amount
             );
         }
-        // Tell the Teller token we sent funds and to execute the deposit strategy
-        tToken.depositStrategy();
 
         // Deduct the interest and principal owed
         uint256 principalPaid;
@@ -334,7 +332,7 @@ library RepayLib {
             amountToLiquidate +
                 NumbersLib.percent(
                     amountToLiquidate,
-                    PlatformSettingsLib.getLiquidateRewardPercent()
+                    uint16(PlatformSettingsLib.getLiquidateRewardPercent())
                 );
 
         // Calculate available collateral for reward

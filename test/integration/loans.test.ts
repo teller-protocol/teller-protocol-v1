@@ -2,7 +2,6 @@ import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { Signer } from 'ethers'
 import hre from 'hardhat'
-import moment from 'moment'
 
 import { getMarkets, getNFT } from '../../config'
 import { claimNFT, getPlatformSetting } from '../../tasks'

@@ -17,12 +17,12 @@ library NumbersLib {
      * @param self The number to get a percentage of.
      * @param percentage The percentage value to calculate with 2 decimal places (10000 = 100%).
      */
-    function percent(uint256 self, uint256 percentage)
+    function percent(uint256 self, uint16 percentage)
         internal
         pure
         returns (uint256)
     {
-        return (self * percentage) / ONE_HUNDRED_PERCENT;
+        return (self * uint256(percentage)) / ONE_HUNDRED_PERCENT;
     }
 
     function percent(int256 self, uint256 percentage)
@@ -38,16 +38,16 @@ library NumbersLib {
     }
 
     /**
-     * @notice Returns a ratio of 2 numbers.
-     * @param self The number to get a ratio of.
-     * @param num The number to calculate the ratio for.
-     * @return Ratio of 2 numbers with 2 decimal places (10000 = 100%).
+     * @notice Returns a ratio percentage of {num1} to {num2}.
+     * @param num1 The number used to get the ratio for.
+     * @param num2 The number used to get the ratio from.
+     * @return Ratio percentage with 2 decimal places (10000 = 100%).
      */
-    function ratioOf(uint256 self, uint256 num)
+    function ratioOf(uint256 num1, uint256 num2)
         internal
         pure
-        returns (uint256)
+        returns (uint16)
     {
-        return (self * ONE_HUNDRED_PERCENT) / num;
+        return uint16((num1 * ONE_HUNDRED_PERCENT) / num2);
     }
 }

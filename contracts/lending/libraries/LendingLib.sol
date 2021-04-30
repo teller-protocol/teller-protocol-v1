@@ -28,7 +28,7 @@ library LendingLib {
      */
     function debtRatioFor(address asset, uint256 newLoanAmount)
         internal
-        returns (uint256 ratio_)
+        returns (uint16 ratio_)
     {
         // NOTE: potentially costly function
         uint256 supplied = s().tTokens[asset].totalUnderlyingSupply();
