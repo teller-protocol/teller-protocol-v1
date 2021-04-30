@@ -11,6 +11,8 @@ import {
 import {
     EnumerableSet
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { RolesLib } from "../../contexts2/access-control/roles/RolesLib.sol";
+import { AUTHORIZED } from "../../shared/roles.sol";
 
 // Storage
 import { AppStorageLib, AppStorage } from "../../storage/app.sol";
@@ -31,9 +33,13 @@ library NFTLib {
         nft_ = AppStorageLib.store().nft;
     }
 
-    function stake(uint256 nftID) internal returns (bool success_) {
-        // Add NFT ID to user set - returns true if added
-        success_ = EnumerableSet.add(s().stakedNFTs[msg.sender], nftID);
+    function stake(uint256 nftID, address owner) internal {
+        // Transfer to diamond
+        NFTLib.nft().transferFrom(msg.sender, address(this), nftID);
+        // Add NFT ID to user set
+        EnumerableSet.add(s().stakedNFTs[owner], nftID);
+        // Give the owner authorization to protocol
+        RolesLib.grantRole(AUTHORIZED, owner);
     }
 
     function unstake(uint256 nftID) internal returns (bool success_) {
@@ -52,6 +58,18 @@ library NFTLib {
         }
     }
 
+    function liquidateNFT(uint256 loanID) internal {
+        // Check if NFTs are linked
+        EnumerableSet.UintSet storage nfts = s().loanNFTs[loanID];
+        for (uint256 i; i < EnumerableSet.length(nfts); i++) {
+            NFTLib.nft().transferFrom(
+                address(this),
+                AppStorageLib.store().nftLiquidationController,
+                EnumerableSet.at(nfts, i)
+            );
+        }
+    }
+
     function applyToLoan(uint256 loanID, NftLoanSizeProof calldata proof)
         internal
     {
@@ -63,6 +81,15 @@ library NFTLib {
 
         // Apply NFT to loan
         EnumerableSet.add(s().loanNFTs[loanID], proof.id);
+    }
+
+    function restakeLinked(uint256 loanID, address owner) internal {
+        // Get linked NFT
+        EnumerableSet.UintSet storage nfts = s().loanNFTs[loanID];
+        for (uint256 i; i < EnumerableSet.length(nfts); i++) {
+            // Restake the NFT
+            stake(EnumerableSet.at(nfts, i), owner);
+        }
     }
 
     function verifyLoanSize(NftLoanSizeProof calldata proof)

@@ -328,5 +328,47 @@
     "balances": [
       { "address": "0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5", "count": 10 }
     ]
+  },
+  {
+    "tierIndex": 4,
+    "balances": [
+      { "address": "0x941653d6e49399d85639c7d486410c0a29185118", "count": 1 }
+    ]
+  },
+  {
+    "tierIndex": 5,
+    "balances": [
+      { "address": "0x3af30b956f1737005b6e3146dbbd35b70f30df91", "count": 1 },
+      { "address": "0x0eb96d5ec478b68ff0d48628ab4df6a63c21ddaa", "count": 1 },
+      { "address": "0xbe15d15bb99cacbd87530f4b40bc706baf35972e", "count": 1 },
+      { "address": "0x5f813f7135a73b4360527f6428d5d8dbcd48a39e", "count": 1 },
+      { "address": "0xd8b896b3f6cb4edfa3353efc5ac59443ab50c596", "count": 1 },
+      { "address": "0x3dac271d1b36a434880c527a678b6487ac9c1f8c", "count": 1 },
+      { "address": "0x9e7943ceac1f02b00e5f9d6e182f257efaa4653e", "count": 1 },
+      { "address": "0xd7ddf70125342f44e65ccbafae5135f2bb6526bb", "count": 1 },
+      { "address": "0x70be2bfe60d875faad5922f2379af1a0afc8e754", "count": 1 },
+      { "address": "0xc821477e0310001dd4dbd978425002ee890bd975", "count": 1 },
+      { "address": "0x5477729b43a0a9bea8c41367c62e7864123b57d8", "count": 1 },
+      { "address": "0x2f43e98067b488f2fbb8465ce5f6da1552d339c1", "count": 1 },
+      { "address": "0x7a22e7a4d912231f9c0fb6760c59ab560188360b", "count": 1 },
+      { "address": "0xc579ef8b14774bd15c021d2c0aafd04bdd7dd137", "count": 1 },
+      { "address": "0xe88663f5878dd0967c905ec8c7cc65d6d8e091e6", "count": 1 },
+      { "address": "0xf69ea6646cf682262e84cd7c67133eac59cef07b", "count": 1 },
+      { "address": "0xefde6a97af618ad407211c3d5d494bc257948208", "count": 1 }
+    ]
+  },
+  {
+    "tierIndex": 6,
+    "balances": [
+      { "address": "0x433663f1258376f0c7aec8fbc5cc81292e921527", "count": 1 },
+      { "address": "0x84803775437a51bcd484cf4aa6beea1e50426eab", "count": 1 }
+    ]
+  },
+  {
+    "tierIndex": 7,
+    "balances": [
+      { "address": "0x3c229864378b3b0adf98ae247ca33986aed8ec1e", "count": 1 },
+      { "address": "0x78d58cc37cdaabfde72c9a45b57acbc3abc3d7c9", "count": 1 }
+    ]
   }
 ]

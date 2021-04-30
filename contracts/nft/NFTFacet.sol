@@ -11,18 +11,6 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { NFTLib } from "./libraries/NFTLib.sol";
 
 contract NFTFacet is RolesMods {
-    /**
-     * @notice Transfers Teller NFT to Diamond and applies user stake.
-     * @param nftID The ID of a Teller NFT to stake.
-     */
-    function stakeNFT(uint256 nftID) public {
-        // Stake NFT and transfer into diamond
-        if (NFTLib.stake(nftID)) {
-            // Transfer to diamond
-            NFTLib.nft().transferFrom(msg.sender, address(this), nftID);
-        }
-    }
-
     function getStakedNFTs(address nftOwner)
         public
         returns (uint256[] memory staked_)
@@ -36,7 +24,8 @@ contract NFTFacet is RolesMods {
      */
     function stakeNFTs(uint256[] calldata nftIDs) external {
         for (uint256 i; i < nftIDs.length; i++) {
-            stakeNFT(nftIDs[i]);
+            // Stake NFT and transfer into diamond
+            NFTLib.stake(nftIDs[i], msg.sender);
         }
     }
 
