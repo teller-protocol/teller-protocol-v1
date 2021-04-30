@@ -4,7 +4,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { ITellerDiamond } from '../../types/typechain'
 
 interface AddAuthorizedAddressArgs {
-  address: string
+  account: string
 }
 
 export async function addAuthorizedAccount(
@@ -14,14 +14,14 @@ export async function addAuthorizedAccount(
   const { contracts, log } = hre
 
   log('')
-  log(`Granting ${args.address} AUTHORIZED role`, {
+  log(`Granting ${args.account} AUTHORIZED role`, {
     indent: 1,
     star: true,
   })
   log('')
 
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
-  await diamond.addAuthorizedAddress(args.address)
+  await diamond.addAuthorizedAddress(args.account)
 
   log('Success!')
   log('')
