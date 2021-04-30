@@ -152,7 +152,7 @@ export const platformSettings: Record<string, PlatformSettings> = {
     LiquidateRewardPercent: {
       processOnDeployment: true,
       value: 500,
-      min: 5000,
+      min: 500,
       max: 10000,
     },
     MaximumLoanDuration: {

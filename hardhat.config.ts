@@ -112,6 +112,14 @@ export default <HardhatUserConfig>{
     },
   },
   networks: {
+    kovan: {
+      url: process.env.ALCHEMY_KOVAN_KEY,
+      chainId: 42,
+      accounts,
+      gas: GAS,
+      gasPrice:
+        GAS_PRICE === 'auto' ? GAS_PRICE : BN.from(GAS_PRICE).div(4).toNumber(),
+    },
     rinkeby: {
       url: process.env.ALCHEMY_RINKEBY_KEY,
       chainId: 4,

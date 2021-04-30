@@ -35,6 +35,13 @@ ENV_VARS=''
 ### 2) network name
 ### 3) script options
 run() {
+  ## Get the network name we are currently forking
+  forking_network=$(cat $forking_network_file 2>/dev/null)
+  if [ -n "$forking_network" ]
+  then
+    ENV_VARS+="FORKING_NETWORK=$forking_network "
+  fi
+
   eval "$ENV_VARS yarn hh $1 --network $2 $3"
 }
 
@@ -42,15 +49,6 @@ deployments_dir=./deployments
 local_deployments=$deployments_dir/localhost
 chain_id_file=$local_deployments/.chainId
 forking_network_file=$local_deployments/.forkingNetwork
-
-## Get the network name we are currently forking
-forking_network=$(cat $forking_network_file 2>/dev/null)
-if [ -n "$forking_network" ]
-then
-  ENV_VARS+="FORKING_NETWORK=$forking_network "
-fi
-
-latestDeploymentBlock=$(cat $local_deployments/.latestDeploymentBlock 2>/dev/null)
 
 ## Make sure there is a script name passed
 if [ -z "$script" ]
@@ -169,11 +167,16 @@ fork() {
   elif [ "$block" == 'latest' ]
   then
     echo "on the latest block"
-  elif [ -n "$latestDeploymentBlock" ]
-  then
-    unset block
-    echo "on the latest Teller deployment block: $latestDeploymentBlock"
-    ENV_VARS+="FORKING_BLOCK=$latestDeploymentBlock "
+  else
+    local latestDeploymentBlock
+    latestDeploymentBlock=$(cat "$deployments_dir"/"$network"/.latestDeploymentBlock 2>/dev/null)
+
+    if [ -n "$latestDeploymentBlock" ]
+    then
+      unset block
+      echo "on the latest Teller deployment block: $latestDeploymentBlock"
+      ENV_VARS+="FORKING_BLOCK=$latestDeploymentBlock "
+    fi
   fi
   echo
 
@@ -269,7 +272,8 @@ elif [ "$script" == 'test' ]
 then
   ## If a fork is already running, stop it
   fork stop 1>/dev/null
-  try_fork mainnet
+  slice_network verify
+  try_fork "$network" latest
 
   run test hardhat ${opts[*]}
 

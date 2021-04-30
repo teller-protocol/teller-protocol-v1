@@ -204,6 +204,7 @@ export const tiers: TierInfo[] = [
 ]
 
 export const nftMerkleTree: Record<string, NFTMerkleTree> = {
+  kovan: testnetNFTMerkle,
   rinkeby: testnetNFTMerkle,
   hardhat: testnetNFTMerkle,
   localhost: testnetNFTMerkle,

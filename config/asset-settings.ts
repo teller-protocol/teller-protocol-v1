@@ -19,7 +19,7 @@ export const assetSettings: Record<string, AssetSettings> = {
   kovan: {
     DAI: [
       { key: 'cToken', value: 'CDAI', type: AssetType.Address },
-      { key: 'MaxLoanAmount', value: 1000, type: AssetType.Amount },
+      { key: 'MaxLoanAmount', value: 25000, type: AssetType.Amount },
       { key: 'MaxTVL', value: 100000, type: AssetType.Amount },
       { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
     ],
@@ -30,7 +30,7 @@ export const assetSettings: Record<string, AssetSettings> = {
     DAI: [
       { key: 'cToken', value: 'CDAI', type: AssetType.Address },
       { key: 'pPool', value: 'PCDAI', type: AssetType.Address },
-      { key: 'MaxLoanAmount', value: 1000, type: AssetType.Amount },
+      { key: 'MaxLoanAmount', value: 25000, type: AssetType.Amount },
       { key: 'MaxTVL', value: 100000, type: AssetType.Amount },
       { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
     ],
@@ -40,7 +40,7 @@ export const assetSettings: Record<string, AssetSettings> = {
   ropsten: {
     DAI: [
       { key: 'cToken', value: 'CDAI', type: AssetType.Address },
-      { key: 'MaxLoanAmount', value: 1000, type: AssetType.Amount },
+      { key: 'MaxLoanAmount', value: 25000, type: AssetType.Amount },
       { key: 'MaxTVL', value: 100000, type: AssetType.Amount },
       { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
     ],
