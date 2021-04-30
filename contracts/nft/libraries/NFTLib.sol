@@ -33,11 +33,13 @@ library NFTLib {
         nft_ = AppStorageLib.store().nft;
     }
 
-    function stake(uint256 nftID) internal returns (bool success_) {
-        // Add NFT ID to user set - returns true if added
-        success_ = EnumerableSet.add(s().stakedNFTs[msg.sender], nftID);
-        // Check if user has authorization and add the staker if not
-        RolesLib.grantRole(AUTHORIZED, msg.sender);
+    function stake(uint256 nftID, address owner) internal {
+        // Transfer to diamond
+        NFTLib.nft().transferFrom(msg.sender, address(this), nftID);
+        // Add NFT ID to user set
+        EnumerableSet.add(s().stakedNFTs[owner], nftID);
+        // Give the owner authorization to protocol
+        RolesLib.grantRole(AUTHORIZED, owner);
     }
 
     function unstake(uint256 nftID) internal returns (bool success_) {
@@ -81,14 +83,12 @@ library NFTLib {
         EnumerableSet.add(s().loanNFTs[loanID], proof.id);
     }
 
-    function unlinkFromLoan(uint256 loanID) internal {
+    function restakeLinked(uint256 loanID, address owner) internal {
         // Get linked NFT
         EnumerableSet.UintSet storage nfts = s().loanNFTs[loanID];
-        uint256[] memory linked = new uint256[](EnumerableSet.length(nfts));
-
-        for (uint256 i; i < linked.length; i++) {
+        for (uint256 i; i < EnumerableSet.length(nfts); i++) {
             // Restake the NFT
-            stake(linked[i]);
+            stake(EnumerableSet.at(nfts, i), owner);
         }
     }
 

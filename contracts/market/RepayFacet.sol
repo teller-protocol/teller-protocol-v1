@@ -137,7 +137,8 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         if (leftToPay == 0) {
             loan.status = LoanStatus.Closed;
             LibCollateral.withdrawAll(loan.id, loan.loanTerms.borrower);
-            NFTLib.unlinkFromLoan(loan.id);
+            // Restake any NFTs linked to loan for borrower
+            NFTLib.restakeLinked(loan.id, loan.loanTerms.borrower);
         }
 
         emit LoanRepaid(
