@@ -37,9 +37,7 @@ library NFTLib {
         // Add NFT ID to user set - returns true if added
         success_ = EnumerableSet.add(s().stakedNFTs[msg.sender], nftID);
         // Check if user has authorization and add the staker if not
-        if (!RolesLib.hasRole(AUTHORIZED, msg.sender)) {
-            RolesLib.grantRole(AUTHORIZED, msg.sender);
-        }
+        RolesLib.grantRole(AUTHORIZED, msg.sender);
     }
 
     function unstake(uint256 nftID) internal returns (bool success_) {
