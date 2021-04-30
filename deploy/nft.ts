@@ -43,12 +43,7 @@ const deployNFT: DeployFunction = async (hre) => {
     await nft.initialize(minters).then(async ({ wait }) => await wait())
     log('Teller NFT initialized', { indent: 2, star: true })
   } catch (err) {
-    const message = err?.error?.message ?? err?.message ?? ''
-    if (message.includes('already initialized')) {
-      log('Teller NFT already initialized', { indent: 2, star: true })
-    } else {
-      throw err
-    }
+    log('Teller NFT already initialized', { indent: 2, star: true })
   }
 
   await run('add-nft-tiers', { sendTx: true })

@@ -88,7 +88,7 @@ const addAuthorizedAddresses = async (
     )
   }
 
-  await diamond.addAuthorizedAddressList(addresses)
+  await diamond.addAuthorizedAddressList(addresses).then(({ wait }) => wait())
 }
 
 const deployLoansEscrowBeacon = async (
@@ -134,7 +134,7 @@ const deployLoansEscrowBeacon = async (
       indent: 4,
       star: true,
     })
-    await beacon.upgradeTo(loansEscrowLogic.address)
+    await beacon.upgradeTo(loansEscrowLogic.address).then(({ wait }) => wait())
   }
 
   log(`Using Beacon: ${beacon.address}`, { indent: 3, star: true })
@@ -186,7 +186,9 @@ const deployCollateralEscrowBeacon = async (
       indent: 4,
       star: true,
     })
-    await beacon.upgradeTo(collateralEscrowLogic.address)
+    await beacon
+      .upgradeTo(collateralEscrowLogic.address)
+      .then(({ wait }) => wait())
   }
 
   log(`Using Beacon: ${beacon.address}`, { indent: 3, star: true })

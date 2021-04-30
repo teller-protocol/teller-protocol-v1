@@ -94,27 +94,30 @@ const initializeMarkets: DeployFunction = async (hre) => {
       const tToken = await contracts.get<ITToken>('ITToken', {
         at: tTokenAddress,
       })
-      await tToken.setStrategy(
-        strategy.address,
-        strategy.interface.encodeFunctionData(
-          'init',
-          market.strategy.initArgs.map(({ type, value }) => {
-            switch (type) {
-              case 'TokenSymbol':
-                return tokenAddresses.all[value]
-              case 'Address':
-              case 'Number':
-                return value
-            }
-          })
+      await tToken
+        .setStrategy(
+          strategy.address,
+          strategy.interface.encodeFunctionData(
+            'init',
+            market.strategy.initArgs.map(({ type, value }) => {
+              switch (type) {
+                case 'TokenSymbol':
+                  return tokenAddresses.all[value]
+                case 'Address':
+                case 'Number':
+                  return value
+              }
+            })
+          )
         )
-      )
+        .then(({ wait }) => wait())
 
-      // cToken: await diamond.getAssetCToken(assetAddress),
       log(`TToken initialized`, { indent: 3, star: true })
 
       // Initialize the lending pool with new TToken and Lending Escrow
-      await diamond.initLendingPool(asset.address, tTokenAddress)
+      await diamond
+        .initLendingPool(asset.address, tTokenAddress)
+        .then(({ wait }) => wait())
 
       log('Lending pool initialized', { indent: 2, star: true })
     } else {
@@ -167,7 +170,7 @@ const deployTTokenBeacon = async (
       indent: 4,
       star: true,
     })
-    await beacon.upgradeTo(tTokenLogic.address)
+    await beacon.upgradeTo(tTokenLogic.address).then(({ wait }) => wait())
   }
 
   log(`Using Beacon: ${beacon.address}`, { indent: 3, star: true })

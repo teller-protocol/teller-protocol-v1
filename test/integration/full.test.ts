@@ -25,7 +25,7 @@ const {
   toBN,
 } = hre
 
-describe.only('Full Integration', () => {
+describe('Full Integration', () => {
   // Run tests for all markets
   getMarkets(network).forEach(testLP)
 
