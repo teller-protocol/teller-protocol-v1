@@ -116,14 +116,6 @@ export default <HardhatUserConfig>{
     },
   },
   networks: {
-    goerli: {
-      url: process.env.ALCHEMY_GOERLI_KEY,
-      chainId: 5,
-      accounts,
-      gas: GAS,
-      gasPrice:
-        GAS_PRICE === 'auto' ? GAS_PRICE : BN.from(GAS_PRICE).div(4).toNumber(),
-    },
     kovan: {
       url: process.env.ALCHEMY_KOVAN_KEY,
       chainId: 42,
