@@ -55,7 +55,7 @@ export const loanHelpers = async (
   return {
     diamond,
     details,
-    takeOut: (amount = details.loan.loanTerms.maxLoanAmount, from?: Signer) =>
+    takeOut: (amount = details.terms.maxLoanAmount, from?: Signer) =>
       takeOutLoan({ diamond, details, amount, from }),
     repay: (amount: BigNumberish, from?: Signer) =>
       repayLoan({ diamond, details, amount, from }),
@@ -177,7 +177,7 @@ export const takeOut = async (
     .withArgs(
       details.loan.id,
       details.borrower.address,
-      details.loan.loanTerms.maxLoanAmount,
+      details.terms.maxLoanAmount,
       false
     )
 
@@ -193,6 +193,8 @@ interface LoanDetailsReturn {
   lendingToken: ERC20
   collateralToken: ERC20
   loan: PromiseReturnType<typeof ITellerDiamond.prototype.getLoan>
+  debt: PromiseReturnType<typeof ITellerDiamond.prototype.getDebtOwed>
+  terms: PromiseReturnType<typeof ITellerDiamond.prototype.getLoanTerms>
   totalOwed: BigNumber
   borrower: {
     address: string
@@ -208,15 +210,19 @@ const loanDetails = async (
   const loan = await diamond.getLoan(loanID)
   const lendingToken = await tokens.get(loan.lendingToken)
   const collateralToken = await tokens.get(loan.collateralToken)
-  const totalOwed = loan.principalOwed.add(loan.interestOwed)
-  const signer = await ethers.provider.getSigner(loan.loanTerms.borrower)
+  const debt = await diamond.getDebtOwed(loan.id)
+  const totalOwed = debt.principalOwed.add(debt.interestOwed)
+  const terms = await diamond.getLoanTerms(loan.id)
+  const signer = await ethers.provider.getSigner(loan.borrower)
 
   return {
     loan,
     lendingToken,
     collateralToken,
+    debt,
     totalOwed,
-    borrower: { address: loan.loanTerms.borrower, signer },
+    terms,
+    borrower: { address: loan.borrower, signer },
     refresh: () => loanDetails(loanID),
   }
 }
@@ -237,7 +243,7 @@ const takeOutLoan = async (
   const {
     diamond,
     details,
-    amount = details.loan.loanTerms.maxLoanAmount,
+    amount = details.terms.maxLoanAmount,
     from = details.borrower.signer,
   } = args
 

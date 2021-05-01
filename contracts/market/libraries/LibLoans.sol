@@ -14,7 +14,9 @@ import {
     MarketStorageLib,
     MarketStorage,
     Loan,
-    LoanStatus
+    LoanStatus,
+    LoanDebt,
+    LoanTerms
 } from "../../storage/market.sol";
 
 library LibLoans {
@@ -31,6 +33,18 @@ library LibLoans {
         l_ = s().loans[loanID];
     }
 
+    function debt(uint256 loanID) internal view returns (LoanDebt storage d_) {
+        d_ = s().loanDebt[loanID];
+    }
+
+    function terms(uint256 loanID)
+        internal
+        view
+        returns (LoanTerms storage t_)
+    {
+        t_ = s().loanTerms[loanID];
+    }
+
     /**
      * @notice Returns the total amount owed for a specified loan.
      * @param loanID The loan ID to get the total amount owed.
@@ -39,13 +53,10 @@ library LibLoans {
     function getTotalOwed(uint256 loanID) internal view returns (uint256) {
         if (loan(loanID).status == LoanStatus.TermsSet) {
             uint256 interestOwed =
-                getInterestOwedFor(
-                    loanID,
-                    loan(loanID).loanTerms.maxLoanAmount
-                );
-            return loan(loanID).loanTerms.maxLoanAmount + (interestOwed);
+                getInterestOwedFor(loanID, terms(loanID).maxLoanAmount);
+            return terms(loanID).maxLoanAmount + (interestOwed);
         } else if (loan(loanID).status == LoanStatus.Active) {
-            return loan(loanID).principalOwed + (loan(loanID).interestOwed);
+            return debt(loanID).principalOwed + (debt(loanID).interestOwed);
         }
         return 0;
     }
@@ -101,10 +112,7 @@ library LibLoans {
         view
         returns (uint256 neededInLendingTokens, uint256 escrowLoanValue)
     {
-        if (
-            !_isActiveOrSet(loanID) ||
-            loan(loanID).loanTerms.collateralRatio == 0
-        ) {
+        if (!_isActiveOrSet(loanID) || loan(loanID).collateralRatio == 0) {
             return (0, 0);
         }
 
@@ -120,17 +128,17 @@ library LibLoans {
         // * If the loan has an escrow account, the minimum collateral is ((principal owed - escrow value) * (X collateral factor + liquidation reward)).
         if (loan(loanID).status == LoanStatus.TermsSet) {
             neededInLendingTokens = _getLoanAmount(loanID).percent(
-                uint16(loan(loanID).loanTerms.collateralRatio)
+                loan(loanID).collateralRatio
             );
         } else {
-            uint256 requiredRatio =
-                loan(loanID).loanTerms.collateralRatio -
+            uint16 requiredRatio =
+                loan(loanID).collateralRatio -
                     getInterestRatio(loanID) -
-                    PlatformSettingsLib.getCollateralBufferValue();
+                    uint16(PlatformSettingsLib.getCollateralBufferValue());
 
             neededInLendingTokens =
-                loan(loanID).principalOwed +
-                loan(loanID).interestOwed;
+                debt(loanID).principalOwed +
+                debt(loanID).interestOwed;
             escrowLoanValue = LibEscrow.calculateTotalValue(loanID);
             if (
                 escrowLoanValue > 0 && neededInLendingTokens > escrowLoanValue
@@ -138,7 +146,7 @@ library LibLoans {
                 neededInLendingTokens -= escrowLoanValue;
             }
             neededInLendingTokens = neededInLendingTokens.percent(
-                uint16(requiredRatio)
+                requiredRatio
             );
         }
     }
@@ -158,17 +166,17 @@ library LibLoans {
      * @dev The interest rate on the loan terms is APY.
      * @param loanID The loan ID to get the interest rate for.
      */
-    function getInterestRatio(uint256 loanID) internal view returns (uint256) {
+    function getInterestRatio(uint256 loanID) internal view returns (uint16) {
         return
-            (loan(loanID).loanTerms.interestRate *
-                (loan(loanID).loanTerms.duration)) /
-            //                .div(SECONDS_PER_YEAR); // change to new constants file once written
-            (31536000);
+            uint16(
+                (uint32(loan(loanID).interestRate) * (loan(loanID).duration)) /
+                    (31536000)
+            ); // seconds per year
     }
 
     function _getLoanAmount(uint256 loanID) private view returns (uint256) {
         if (loan(loanID).status == LoanStatus.TermsSet) {
-            return loan(loanID).loanTerms.maxLoanAmount;
+            return terms(loanID).maxLoanAmount;
         } else if (loan(loanID).status == LoanStatus.Active) {
             return loan(loanID).borrowedAmount;
         }

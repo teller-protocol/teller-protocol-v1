@@ -102,18 +102,17 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
             );
         }
 
-        Loan storage loan = LibLoans.loan(loanID);
         uint256 leftToPay =
-            __repayLoan(loan, amount, address(LibEscrow.e(loanID)));
+            __repayLoan(loanID, amount, address(LibEscrow.e(loanID)));
         // if the loan is now fully paid, close it and withdraw borrower collateral
         if (leftToPay == 0) {
-            loan.status = LoanStatus.Closed;
-            LibCollateral.withdrawAll(loan.id, loan.loanTerms.borrower);
+            LibLoans.loan(loanID).status = LoanStatus.Closed;
+            LibCollateral.withdrawAll(loanID, LibLoans.loan(loanID).borrower);
         }
 
         emit LoanRepaid(
-            loan.id,
-            loan.loanTerms.borrower,
+            loanID,
+            LibLoans.loan(loanID).borrower,
             amount,
             msg.sender,
             leftToPay
@@ -131,19 +130,18 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         paused("", false)
         authorized(AUTHORIZED, msg.sender)
     {
-        Loan storage loan = LibLoans.loan(loanID);
-        uint256 leftToPay = __repayLoan(loan, amount, msg.sender);
+        uint256 leftToPay = __repayLoan(loanID, amount, msg.sender);
         // if the loan is now fully paid, close it and withdraw borrower collateral
         if (leftToPay == 0) {
-            loan.status = LoanStatus.Closed;
-            LibCollateral.withdrawAll(loan.id, loan.loanTerms.borrower);
+            LibLoans.loan(loanID).status = LoanStatus.Closed;
+            LibCollateral.withdrawAll(loanID, LibLoans.loan(loanID).borrower);
             // Restake any NFTs linked to loan for borrower
-            NFTLib.restakeLinked(loan.id, loan.loanTerms.borrower);
+            NFTLib.restakeLinked(loanID, LibLoans.loan(loanID).borrower);
         }
 
         emit LoanRepaid(
-            loan.id,
-            loan.loanTerms.borrower,
+            loanID,
+            LibLoans.loan(loanID).borrower,
             amount,
             msg.sender,
             leftToPay
@@ -151,14 +149,16 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
     }
 
     function __repayLoan(
-        Loan storage loan,
+        uint256 loanID,
         uint256 amount,
         address sender
     ) private returns (uint256 leftToPay_) {
         require(amount > 0, "Teller: zero repay");
 
         // calculate the actual amount to repay
-        leftToPay_ = loan.principalOwed + loan.interestOwed;
+        leftToPay_ =
+            LibLoans.debt(loanID).principalOwed +
+            LibLoans.debt(loanID).interestOwed;
         if (leftToPay_ < amount) {
             amount = leftToPay_;
             leftToPay_ = 0;
@@ -167,17 +167,20 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         }
 
         // Get the Teller token for the loan
-        ITToken tToken = MarketStorageLib.store().tTokens[loan.lendingToken];
+        ITToken tToken =
+            MarketStorageLib.store().tTokens[
+                LibLoans.loan(loanID).lendingToken
+            ];
         // Transfer funds from account
-        if (address(LibEscrow.e(loan.id)) == sender) {
-            LibEscrow.e(loan.id).claimToken(
-                loan.lendingToken,
+        if (address(LibEscrow.e(loanID)) == sender) {
+            LibEscrow.e(loanID).claimToken(
+                LibLoans.loan(loanID).lendingToken,
                 address(tToken),
                 amount
             );
         } else {
             SafeERC20.safeTransferFrom(
-                IERC20(loan.lendingToken),
+                IERC20(LibLoans.loan(loanID).lendingToken),
                 sender,
                 address(tToken),
                 amount
@@ -187,27 +190,27 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         // Deduct the interest and principal owed
         uint256 principalPaid;
         uint256 interestPaid;
-        if (amount < loan.interestOwed) {
+        if (amount < LibLoans.debt(loanID).interestOwed) {
             interestPaid = amount;
-            loan.interestOwed -= amount;
+            LibLoans.debt(loanID).interestOwed -= amount;
         } else {
-            if (loan.interestOwed > 0) {
-                interestPaid = loan.interestOwed;
+            if (LibLoans.debt(loanID).interestOwed > 0) {
+                interestPaid = LibLoans.debt(loanID).interestOwed;
                 amount -= interestPaid;
-                loan.interestOwed = 0;
+                LibLoans.debt(loanID).interestOwed = 0;
             }
 
             if (amount > 0) {
                 principalPaid = amount;
-                loan.principalOwed -= amount;
+                LibLoans.debt(loanID).principalOwed -= amount;
             }
         }
 
         MarketStorageLib.store().totalRepaid[
-            loan.lendingToken
+            LibLoans.loan(loanID).lendingToken
         ] += principalPaid;
         MarketStorageLib.store().totalInterestRepaid[
-            loan.lendingToken
+            LibLoans.loan(loanID).lendingToken
         ] += interestPaid;
     }
 
@@ -222,9 +225,9 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         authorized(AUTHORIZED, msg.sender)
     {
         Loan storage loan = LibLoans.loan(loanID);
-        uint256 collateralAmount = LibCollateral.e(loan.id).loanSupply(loan.id);
+        uint256 collateralAmount = LibCollateral.e(loanID).loanSupply(loanID);
         require(
-            RepayLib.isLiquidable(loan, collateralAmount),
+            RepayLib.isLiquidable(loanID, collateralAmount),
             "Teller: does not need liquidation"
         );
 
@@ -233,10 +236,12 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
             RepayLib.getLiquidationReward(loanID, collateralAmount);
 
         // The liquidator pays the amount still owed on the loan
-        uint256 amountToLiquidate = loan.principalOwed + loan.interestOwed;
+        uint256 amountToLiquidate =
+            LibLoans.debt(loanID).principalOwed +
+                LibLoans.debt(loanID).interestOwed;
         // Make sure there is nothing left to repay on the loan
         require(
-            __repayLoan(loan, amountToLiquidate, msg.sender) == 0,
+            __repayLoan(loanID, amountToLiquidate, msg.sender) == 0,
             "Teller: liquidate partial repay"
         );
 
@@ -246,7 +251,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         // Payout the liquidator reward owed
         if (rewardInLending > 0) {
             RepayLib.payOutLiquidator(
-                loan,
+                loanID,
                 rewardInLending,
                 collateralInLending,
                 collateralAmount,
@@ -259,7 +264,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
 
         emit LoanLiquidated(
             loanID,
-            loan.loanTerms.borrower,
+            loan.borrower,
             msg.sender,
             rewardInLending,
             amountToLiquidate
@@ -292,30 +297,31 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
 library RepayLib {
     /**
      * @notice It checks if a loan can be liquidated.
-     * @param loan The loan storage pointer to check.
+     * @param loanID The loan ID to check.
      * @return true if the loan is liquidable.
      */
-    function isLiquidable(Loan storage loan, uint256 collateralAmount)
+    function isLiquidable(uint256 loanID, uint256 collateralAmount)
         internal
         view
         returns (bool)
     {
+        Loan storage loan = LibLoans.loan(loanID);
         // Check if loan can be liquidated
         if (loan.status != LoanStatus.Active) {
             return false;
         }
 
-        if (loan.loanTerms.collateralRatio > 0) {
+        if (loan.collateralRatio > 0) {
             // If loan has a collateral ratio, check how much is needed
             (, uint256 neededInCollateral, ) =
-                LoanDataFacet(address(this)).getCollateralNeededInfo(loan.id);
+                LoanDataFacet(address(this)).getCollateralNeededInfo(loanID);
             if (neededInCollateral > collateralAmount) {
                 return true;
             }
         }
 
         // Otherwise, check if the loan has expired
-        return block.timestamp >= loan.loanStartTime + loan.loanTerms.duration;
+        return block.timestamp >= loan.loanStartTime + loan.duration;
     }
 
     /**
@@ -330,8 +336,8 @@ library RepayLib {
         returns (uint256 reward_, uint256 collateralValue_)
     {
         uint256 amountToLiquidate =
-            LibLoans.loan(loanID).principalOwed +
-                LibLoans.loan(loanID).interestOwed;
+            LibLoans.debt(loanID).principalOwed +
+                LibLoans.debt(loanID).interestOwed;
 
         // Max reward is amount repaid on loan plus extra percentage
         uint256 maxReward =
@@ -365,40 +371,40 @@ library RepayLib {
     /**
      * @notice Checks if the loan has an Escrow and claims any tokens then pays out the loan collateral.
      * @dev See Escrow.claimTokens for more info.
-     * @param loan The loan storage pointer which is being liquidated
+     * @param loanID The loan ID which is being liquidated
      * @param rewardInLending The total amount of reward based in the lending token to pay the liquidator
      * @param collateralInLending The amount of collateral that is available for the loan denoted in lending tokens
      * @param collateralAmount The amount of collateral that is available for the loan
      * @param liquidator The address of the liquidator where the liquidation reward will be sent to
      */
     function payOutLiquidator(
-        Loan storage loan,
+        uint256 loanID,
         uint256 rewardInLending,
         uint256 collateralInLending,
         uint256 collateralAmount,
         address payable liquidator
     ) internal {
         require(
-            loan.status == LoanStatus.Liquidated,
+            LibLoans.loan(loanID).status == LoanStatus.Liquidated,
             "Teller: loan not liquidated"
         );
 
         if (rewardInLending <= collateralInLending) {
             uint256 rewardInCollateral =
                 PriceAggLib.valueFor(
-                    LibLoans.loan(loan.id).lendingToken,
-                    LibLoans.loan(loan.id).collateralToken,
+                    LibLoans.loan(loanID).lendingToken,
+                    LibLoans.loan(loanID).collateralToken,
                     rewardInLending
                 );
 
-            LibCollateral.withdraw(loan.id, rewardInCollateral, liquidator);
+            LibCollateral.withdraw(loanID, rewardInCollateral, liquidator);
         } else {
             // Payout whats available in the collateral token
-            LibCollateral.withdraw(loan.id, collateralAmount, liquidator);
+            LibCollateral.withdraw(loanID, collateralAmount, liquidator);
 
             // Claim remaining reward value from the loan escrow
             claimEscrowTokensByValue(
-                loan,
+                loanID,
                 liquidator,
                 rewardInLending - collateralInLending
             );
@@ -407,16 +413,17 @@ library RepayLib {
 
     /**
      * @dev Send the equivalent of tokens owned by the loan escrow (in lending value) to the recipient,
+     * @param loanID The loan ID to clam tokens from
      * @param recipient address to send the tokens to
      * @param value The value of escrow held tokens to be claimed based in lending value
      */
     function claimEscrowTokensByValue(
-        Loan storage loan,
+        uint256 loanID,
         address recipient,
         uint256 value
     ) private {
         EnumerableSet.AddressSet storage tokens =
-            MarketStorageLib.store().escrowTokens[loan.id];
+            MarketStorageLib.store().escrowTokens[loanID];
         uint256 valueLeftToTransfer = value;
         // cycle through tokens
         for (uint256 i = 0; i < EnumerableSet.length(tokens); i++) {
@@ -425,23 +432,26 @@ library RepayLib {
             }
 
             uint256 balance =
-                LibEscrow.balanceOf(loan.id, EnumerableSet.at(tokens, i));
+                LibEscrow.balanceOf(loanID, EnumerableSet.at(tokens, i));
             // get value of token balance in lending value
             if (balance > 0) {
                 // If token not the lending token, get value of token
                 uint256 balanceInLending;
-                if (EnumerableSet.at(tokens, i) == loan.lendingToken) {
+                if (
+                    EnumerableSet.at(tokens, i) ==
+                    LibLoans.loan(loanID).lendingToken
+                ) {
                     balanceInLending = balance;
                 } else {
                     balanceInLending = PriceAggLib.valueFor(
                         EnumerableSet.at(tokens, i),
-                        loan.lendingToken,
+                        LibLoans.loan(loanID).lendingToken,
                         balance
                     );
                 }
 
                 if (balanceInLending <= valueLeftToTransfer) {
-                    LibEscrow.e(loan.id).claimToken(
+                    LibEscrow.e(loanID).claimToken(
                         EnumerableSet.at(tokens, i),
                         recipient,
                         balance
@@ -450,7 +460,10 @@ library RepayLib {
                 } else {
                     // Token balance is more than enough so calculate ratio of balance to transfer
                     uint256 valueToTransfer;
-                    if (EnumerableSet.at(tokens, i) == loan.lendingToken) {
+                    if (
+                        EnumerableSet.at(tokens, i) ==
+                        LibLoans.loan(loanID).lendingToken
+                    ) {
                         valueToTransfer = valueLeftToTransfer;
                     } else {
                         valueToTransfer = NumbersLib.percent(
@@ -462,7 +475,7 @@ library RepayLib {
                         );
                     }
 
-                    LibEscrow.e(loan.id).claimToken(
+                    LibEscrow.e(loanID).claimToken(
                         EnumerableSet.at(tokens, i),
                         recipient,
                         valueToTransfer

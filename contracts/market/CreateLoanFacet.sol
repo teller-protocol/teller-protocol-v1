@@ -57,13 +57,8 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
      * @notice This event is emitted when loan terms have been successfully set
      * @param loanID ID of loan from which collateral was withdrawn
      * @param borrower Account address of the borrower
-     * @param recipient Account address of the recipient
      */
-    event LoanTermsSet(
-        uint256 indexed loanID,
-        address indexed borrower,
-        address indexed recipient
-    );
+    event LoanTermsSet(uint256 indexed loanID, address indexed borrower);
 
     /**
      * @notice This event is emitted when a loan has been successfully taken out
@@ -107,7 +102,7 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
             LibCollateral.deposit(loanID, collateralAmount);
         }
 
-        emit LoanTermsSet(loanID, msg.sender, request.recipient);
+        emit LoanTermsSet(loanID, msg.sender);
     }
 
     function takeOutLoanWithNFTs(
@@ -140,12 +135,12 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
     }
 
     modifier __takeOutLoan(uint256 loanID, uint256 amount) {
-        Loan storage loan = MarketStorageLib.store().loans[loanID];
+        Loan storage loan = LibLoans.loan(loanID);
 
-        require(msg.sender == loan.loanTerms.borrower, "Teller: not borrower");
+        require(msg.sender == loan.borrower, "Teller: not borrower");
         require(loan.status == LoanStatus.TermsSet, "Teller: loan not set");
         require(
-            loan.termsExpiry >= block.timestamp,
+            uint256(LibLoans.terms(loanID).termsExpiry) >= block.timestamp,
             "Teller: loan terms expired"
         );
         require(
@@ -154,15 +149,18 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
             "Teller: max supply-to-debt ratio exceeded"
         );
         require(
-            loan.loanTerms.maxLoanAmount >= amount,
+            LibLoans.terms(loanID).maxLoanAmount >= amount,
             "Teller: max loan amount exceeded"
         );
 
         loan.borrowedAmount = amount;
-        loan.principalOwed = amount;
-        loan.interestOwed = LibLoans.getInterestOwedFor(loan.id, amount);
+        LibLoans.debt(loanID).principalOwed = amount;
+        LibLoans.debt(loanID).interestOwed = LibLoans.getInterestOwedFor(
+            uint256(loan.id),
+            amount
+        );
         loan.status = LoanStatus.Active;
-        loan.loanStartTime = block.timestamp;
+        loan.loanStartTime = uint32(block.timestamp);
 
         _;
     }
@@ -195,13 +193,9 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         Loan storage loan = MarketStorageLib.store().loans[loanID];
         address loanRecipient;
         bool eoaAllowed =
-            LibLoans.canGoToEOAWithCollateralRatio(
-                loan.loanTerms.collateralRatio
-            );
+            LibLoans.canGoToEOAWithCollateralRatio(loan.collateralRatio);
         if (eoaAllowed) {
-            loanRecipient = loan.loanTerms.recipient == address(0)
-                ? loan.loanTerms.borrower
-                : loan.loanTerms.recipient;
+            loanRecipient = loan.borrower;
         } else {
             loanRecipient = CreateLoanLib.createEscrow(loanID);
         }
@@ -250,29 +244,28 @@ library CreateLoanLib {
         address collateralToken
     ) internal returns (uint256 loanID_) {
         // Get consensus values from request
-        (uint256 interestRate, uint256 collateralRatio, uint256 maxLoanAmount) =
+        (uint16 interestRate, uint16 collateralRatio, uint256 maxLoanAmount) =
             LibConsensus.processLoanTerms(request, responses);
 
         // Get and increment new loan ID
         loanID_ = CreateLoanLib.newID();
-        LibLoans.loan(loanID_).id = loanID_;
+        LibLoans.terms(loanID_).maxLoanAmount = maxLoanAmount;
+        LibLoans.terms(loanID_).termsExpiry = uint32(
+            block.timestamp + PlatformSettingsLib.getTermsExpiryTimeValue()
+        );
+        LibLoans.loan(loanID_).id = uint128(loanID_);
         LibLoans.loan(loanID_).status = LoanStatus.TermsSet;
         LibLoans.loan(loanID_).lendingToken = request.assetAddress;
         LibLoans.loan(loanID_).collateralToken = collateralToken;
-        LibLoans.loan(loanID_).termsExpiry =
-            block.timestamp +
-            PlatformSettingsLib.getTermsExpiryTimeValue();
-        LibLoans.loan(loanID_).loanTerms = LoanTerms({
-            borrower: request.borrower,
-            recipient: request.recipient,
-            interestRate: interestRate,
-            collateralRatio: collateralRatio,
-            maxLoanAmount: maxLoanAmount,
-            duration: request.duration
-        });
+        LibLoans.loan(loanID_).borrower = request.borrower;
+        LibLoans.loan(loanID_).interestRate = interestRate;
+        LibLoans.loan(loanID_).collateralRatio = collateralRatio;
+        LibLoans.loan(loanID_).duration = request.duration;
 
         // Add loanID to borrower list
-        MarketStorageLib.store().borrowerLoans[request.borrower].push(loanID_);
+        MarketStorageLib.store().borrowerLoans[request.borrower].push(
+            uint128(loanID_)
+        );
     }
 
     function fundLoan(

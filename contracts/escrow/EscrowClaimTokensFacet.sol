@@ -37,12 +37,11 @@ contract EscrowClaimTokensFacet is PausableMods {
      */
     function claimTokens(uint256 loanID) external paused("", false) {
         require(
-            MarketStorageLib.store().loans[loanID].loanTerms.borrower ==
-                msg.sender,
+            LibLoans.loan(loanID).borrower == msg.sender,
             "Teller: claim not borrower"
         );
         require(
-            MarketStorageLib.store().loans[loanID].status == LoanStatus.Closed,
+            LibLoans.loan(loanID).status == LoanStatus.Closed,
             "Teller: loan not closed"
         );
 
