@@ -1,5 +1,6 @@
 import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-waffle'
+import '@tenderly/hardhat-tenderly'
 import 'hardhat-contract-sizer'
 import 'hardhat-deploy'
 import 'hardhat-gas-reporter'
@@ -45,6 +46,10 @@ const FORK_BLOCK_NUMBER = process.env.FORKING_BLOCK
 export default <HardhatUserConfig>{
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
+  },
+  tenderly: {
+    username: 'soltel',
+    project: FORKING_NETWORK,
   },
   paths: {
     sources: 'contracts',
