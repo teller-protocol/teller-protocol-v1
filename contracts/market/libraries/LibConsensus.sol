@@ -14,7 +14,7 @@ import { NumbersList } from "../../shared/libraries/NumbersList.sol";
 import {
     PlatformSettingsLib
 } from "../../settings/platform/libraries/PlatformSettingsLib.sol";
-import { ECDSA } from "./ECDSALib.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { RolesLib } from "../../contexts2/access-control/roles/RolesLib.sol";
 import {
     EnumerableSet
