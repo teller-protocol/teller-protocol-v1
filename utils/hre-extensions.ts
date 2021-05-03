@@ -256,6 +256,12 @@ extendEnvironment((hre) => {
     // Don't save addresses on the hardhat network
     if (hre.network.name === 'hardhat') return
 
+    // Save deployment to tenderly
+    await hre.tenderly.push({
+      name,
+      address: deployment.address,
+    })
+
     const blockNumber =
       deployment.receipt?.blockNumber ??
       (await ethers.provider.getBlockNumber())
@@ -269,7 +275,7 @@ extendEnvironment((hre) => {
         }
       })
 
-    const addressesPath = `deployments/${hre.network.name}/_addresses.json`
+    const addressesPath = `deployments/${hre.network.name}/.addresses.json`
     let data: AddressData
     try {
       data = JSON.parse(await disklet.getText(addressesPath))
