@@ -106,21 +106,33 @@ export const deployDiamond = async <
 
   const { deployer } = await getNamedAccounts()
 
-  log(`Deploying ${args.name}...: `, { star: true, indent: 1, nl: false })
+  const deployment = await args.hre.deployments.getOrNull(args.name)
+  let address: string
+  let abi: any[]
+  if (deployment == null) {
+    log(`Deploying ${args.name}...: `, { star: true, indent: 1, nl: false })
 
-  const { abi, address, receipt, newlyDeployed } = await deploy(args.name, {
-    owner: args.owner ?? deployer,
-    libraries: args.libraries,
-    facets: args.facets,
-    // @ts-expect-error fix type
-    execute: args.execute,
-    from: deployer,
-    log: false,
-  })
-  if (newlyDeployed) {
-    log(`${address} ${receipt ? `with ${receipt.gasUsed} gas` : ''}`)
+    const result = await deploy(args.name, {
+      owner: args.owner ?? deployer,
+      libraries: args.libraries,
+      facets: args.facets,
+      // @ts-expect-error fix type
+      execute: args.execute,
+      from: deployer,
+      log: false,
+    })
+    address = result.address
+    abi = result.abi
+
+    log(
+      `${result.address} ${
+        result.receipt ? `with ${result.receipt.gasUsed} gas` : ''
+      }`
+    )
   } else {
-    log(` already deployed ${address}`)
+    log(` already deployed ${deployment.address}`)
+    address = deployment.address
+    abi = deployment.abi
   }
 
   return (await ethers.getContractAt(abi, address)) as C
