@@ -153,7 +153,7 @@ describe('Full Integration', () => {
           await getFunds({
             tokenSym: market.lendingToken,
             to: details.borrower.address,
-            amount: details.loan.interestOwed,
+            amount: details.debt.interestOwed,
           })
 
           // Approve loan repayment
@@ -193,7 +193,7 @@ describe('Full Integration', () => {
           await getFunds({
             tokenSym: market.lendingToken,
             to: details.borrower.address,
-            amount: details.loan.interestOwed,
+            amount: details.debt.interestOwed,
           })
 
           // Approve loan repayment

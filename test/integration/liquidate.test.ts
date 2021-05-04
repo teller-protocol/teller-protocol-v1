@@ -92,7 +92,7 @@ describe('Liquidate Loans', () => {
       switch (args.status) {
         case LiqLoanStatus.Expired:
           // Advance time
-          await evm.advanceTime(details.loan.loanTerms.duration)
+          await evm.advanceTime(details.loan.duration)
       }
 
       return helpers

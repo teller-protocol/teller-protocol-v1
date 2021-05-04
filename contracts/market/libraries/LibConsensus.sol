@@ -46,29 +46,26 @@ library LibConsensus {
         internal
         view
         returns (
-            uint256 interestRate,
-            uint256 collateralRatio,
+            uint16 interestRate,
+            uint16 collateralRatio,
             uint256 maxLoanAmount
         )
     {
         EnumerableSet.AddressSet storage signers =
             s().signers[request.assetAddress];
         require(
-            uint16(
+            uint256(
                 NumbersLib.ratioOf(
                     responses.length,
                     EnumerableSet.length(signers)
                 )
-            ) >=
-                uint16(
-                    PlatformSettingsLib.getRequiredSubmissionsPercentageValue()
-                ),
+            ) >= PlatformSettingsLib.getRequiredSubmissionsPercentageValue(),
             "Teller: insufficient signer responses"
         );
 
         _validateLoanRequest(request.borrower, request.requestNonce);
 
-        uint256 chainId = _getChainId();
+        uint32 chainId = _getChainId();
         bytes32 requestHash = _hashRequest(request, chainId);
 
         AccruedLoanTerms memory termSubmissions;
@@ -85,7 +82,7 @@ library LibConsensus {
                 "Teller: consensus address mismatch"
             );
             require(
-                response.responseTime >=
+                uint256(response.responseTime) >=
                     block.timestamp -
                         PlatformSettingsLib.getTermsExpiryTimeValue(),
                 "Teller: consensus response expired"
@@ -93,7 +90,7 @@ library LibConsensus {
             require(
                 _signatureValid(
                     response.signature,
-                    _hashResponse(response, requestHash, chainId),
+                    _hashResponse(requestHash, response, chainId),
                     response.signer
                 ),
                 "Teller: response signature invalid"
@@ -114,10 +111,11 @@ library LibConsensus {
 
         uint16 tolerance =
             uint16(PlatformSettingsLib.getMaximumToleranceValue());
-        interestRate = _getConsensus(termSubmissions.interestRate, tolerance);
-        collateralRatio = _getConsensus(
-            termSubmissions.collateralRatio,
-            tolerance
+        interestRate = uint16(
+            _getConsensus(termSubmissions.interestRate, tolerance)
+        );
+        collateralRatio = uint16(
+            _getConsensus(termSubmissions.collateralRatio, tolerance)
         );
         maxLoanAmount = _getConsensus(termSubmissions.maxLoanAmount, tolerance);
     }
@@ -132,7 +130,7 @@ library LibConsensus {
         private
         view
     {
-        uint256[] storage borrowerLoans = s().borrowerLoans[borrower];
+        uint128[] storage borrowerLoans = s().borrowerLoans[borrower];
         uint256 numberOfLoans = borrowerLoans.length;
 
         require(nonce == numberOfLoans, "Teller: bad request nonce");
@@ -143,10 +141,11 @@ library LibConsensus {
             return;
         }
 
-        uint256 loanStartTime =
-            s().loans[borrowerLoans[numberOfLoans - 1]].loanStartTime;
         require(
-            loanStartTime +
+            uint256(
+                s().loans[uint256(borrowerLoans[numberOfLoans - 1])]
+                    .loanStartTime
+            ) +
                 PlatformSettingsLib.getRequestLoanTermsRateLimitValue() <=
                 block.timestamp,
             "Teller: loan terms rate limit reached"
@@ -155,16 +154,14 @@ library LibConsensus {
 
     /**
      * @notice Gets the current chain id using the opcode 'chainid()'.
-     * @return the current chain id.
+     * @return id_ The current chain id.
      */
-    function _getChainId() private view returns (uint256) {
+    function _getChainId() private view returns (uint32 id_) {
         // silence state mutability warning without generating bytecode.
         // see https://github.com/ethereum/solidity/issues/2691
-        uint256 id;
         assembly {
-            id := chainid()
+            id_ := chainid()
         }
-        return id;
     }
 
     /**
@@ -172,7 +169,7 @@ library LibConsensus {
      * @param request Struct of the protocol loan request
      * @return bytes32 Hash of the loan request
      */
-    function _hashRequest(LoanRequest memory request, uint256 chainId)
+    function _hashRequest(LoanRequest memory request, uint32 chainId)
         private
         pure
         returns (bytes32)
@@ -181,10 +178,9 @@ library LibConsensus {
             keccak256(
                 abi.encode(
                     request.borrower,
-                    request.recipient,
                     request.assetAddress,
-                    request.requestNonce,
                     request.amount,
+                    request.requestNonce,
                     request.duration,
                     request.requestTime,
                     chainId
@@ -194,25 +190,25 @@ library LibConsensus {
 
     /**
      * @notice Generates a hash for the loan response
-     * @param response Structs of the protocol loan responses
      * @param requestHash Hash of the loan request
+     * @param response Structs of the protocol loan responses
      * @return bytes32 Hash of the loan response
      */
     function _hashResponse(
-        LoanResponse memory response,
         bytes32 requestHash,
-        uint256 chainId
+        LoanResponse memory response,
+        uint32 chainId
     ) internal pure returns (bytes32) {
         return
             keccak256(
                 abi.encode(
                     response.assetAddress,
+                    response.maxLoanAmount,
+                    requestHash,
                     response.responseTime,
                     response.interestRate,
                     response.collateralRatio,
-                    response.maxLoanAmount,
-                    chainId,
-                    requestHash
+                    chainId
                 )
             );
     }

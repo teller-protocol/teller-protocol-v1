@@ -55,12 +55,13 @@ contract CollateralFacet is RolesMods, ReentryMods, PausableMods {
         nonReentry("")
         authorized(AUTHORIZED, msg.sender)
     {
-        Loan storage loan = MarketStorageLib.store().loans[loanID];
-
-        require(msg.sender == loan.loanTerms.borrower, "Teller: not borrower");
+        require(
+            msg.sender == LibLoans.loan(loanID).borrower,
+            "Teller: not borrower"
+        );
         require(amount > 0, "Teller: zero withdraw");
 
-        if (loan.status == LoanStatus.Active) {
+        if (LibLoans.loan(loanID).status == LoanStatus.Active) {
             (, uint256 needed, ) = LibLoans.getCollateralNeededInfo(loanID);
             if (needed > 0) {
                 require(
@@ -72,7 +73,7 @@ contract CollateralFacet is RolesMods, ReentryMods, PausableMods {
         }
 
         // Withdraw collateral and send to loan borrower
-        LibCollateral.withdraw(loanID, amount, loan.loanTerms.borrower);
+        LibCollateral.withdraw(loanID, amount, LibLoans.loan(loanID).borrower);
     }
 
     /**
