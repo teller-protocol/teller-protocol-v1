@@ -10,7 +10,7 @@ import {
 } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Storage
-import { Loan } from "../storage/market.sol";
+import { Loan, LoanDebt, LoanTerms } from "../storage/market.sol";
 
 contract LoanDataFacet {
     /**
@@ -23,6 +23,19 @@ contract LoanDataFacet {
     }
 
     /**
+     * @notice Returns the terms for a specified loan.
+     * @param loanID The loan ID to get the total amount owed.
+     * @return LoanTerms The terms that the loan weer created with.
+     */
+    function getLoanTerms(uint256 loanID)
+        external
+        view
+        returns (LoanTerms memory)
+    {
+        return LibLoans.terms(loanID);
+    }
+
+    /**
      * @notice Returns the loan IDs created by the {borrower} account.
      * @param borrower The account to get loan IDs for.
      * @return loanIDs The IDs for loans created by the {borrower}
@@ -30,9 +43,22 @@ contract LoanDataFacet {
     function getBorrowerLoans(address borrower)
         external
         view
-        returns (uint256[] memory loanIDs)
+        returns (uint128[] memory loanIDs)
     {
         return LibLoans.s().borrowerLoans[borrower];
+    }
+
+    /**
+     * @notice Returns the debt owed for a specified loan.
+     * @param loanID The loan ID to get the total amount owed.
+     * @return LoanDebt The principal and interest owed amount.
+     */
+    function getDebtOwed(uint256 loanID)
+        external
+        view
+        returns (LoanDebt memory)
+    {
+        return LibLoans.debt(loanID);
     }
 
     /**

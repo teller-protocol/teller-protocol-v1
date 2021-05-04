@@ -39,8 +39,8 @@ contract ReentryTest {
             args.collateralAmount
         );
 
-        uint256[] memory loanIDs = diamond.getBorrowerLoans(address(this));
-        loanID = loanIDs[loanIDs.length - 1];
+        uint128[] memory loanIDs = diamond.getBorrowerLoans(address(this));
+        loanID = uint256(loanIDs[loanIDs.length - 1]);
 
         diamond.withdrawCollateral(1 ether, loanID);
     }

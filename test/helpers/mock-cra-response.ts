@@ -53,7 +53,7 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
   const { length: nonce } = await diamond.getBorrowerLoans(args.borrower)
 
-  const requestTime = Date.now().toString()
+  const requestTime = ethers.BigNumber.from(Date.now()).div(1000)
   const request: CRARequest = {
     borrower: args.borrower,
     recipient: args.recipient ?? NULL_ADDRESS,
@@ -67,20 +67,18 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
     ethers.utils.defaultAbiCoder.encode(
       [
         'address', // borrower
-        'address', // recipient
         'address', // assetAddress
-        'uint256', // requestNonce
         'uint256', // loan amount
-        'uint256', // duration
-        'uint256', // requestTime
-        'uint256', // chain ID
+        'uint32', // requestNonce
+        'uint32', // duration
+        'uint32', // requestTime
+        'uint32', // chain ID
       ],
       [
         request.borrower,
-        request.recipient,
         args.lendingToken,
-        nonce,
         request.amount,
+        nonce,
         request.duration,
         requestTime,
         chainId,
@@ -88,26 +86,26 @@ export const mockCRAResponse = async (args: CRAArgs): Promise<CRAReturn> => {
     )
   )
 
-  const responseTime = Date.now().toString()
+  const responseTime = ethers.BigNumber.from(Date.now()).div(1000)
   const responseHash = ethers.utils.keccak256(
     ethers.utils.defaultAbiCoder.encode(
       [
         'address', // assetAddress
-        'uint256', // responseTime
-        'uint256', // interestRate
-        'uint256', // collateralRatio
         'uint256', // maxLoanAmount
-        'uint256', // chain ID
         'bytes32', // request hash
+        'uint32', // responseTime
+        'uint16', // interestRate
+        'uint16', // collateralRatio
+        'uint32', // chain ID
       ],
       [
         args.lendingToken,
+        args.loanAmount,
+        requestHash,
         responseTime,
         args.interestRate,
         args.collateralRatio,
-        args.loanAmount,
         chainId,
-        requestHash,
       ]
     )
   )

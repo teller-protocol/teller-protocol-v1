@@ -10,7 +10,7 @@ import {
 abstract contract DappMods {
     modifier onlyBorrower(uint256 loanID) {
         require(
-            msg.sender == LibLoans.loan(loanID).loanTerms.borrower,
+            msg.sender == LibLoans.loan(loanID).borrower,
             "Teller: dapp not loan borrower"
         );
         _;
@@ -18,7 +18,7 @@ abstract contract DappMods {
 
     modifier onlySecured(uint256 loanID) {
         require(
-            LibLoans.loan(loanID).loanTerms.collateralRatio >=
+            LibLoans.loan(loanID).collateralRatio >=
                 PlatformSettingsLib.getCollateralBufferValue(),
             "Teller: dapp loan not secured"
         );

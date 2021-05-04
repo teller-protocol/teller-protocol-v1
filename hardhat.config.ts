@@ -49,7 +49,7 @@ export default <HardhatUserConfig>{
   },
   tenderly: {
     username: 'soltel',
-    project: FORKING_NETWORK,
+    project: 'teller',
   },
   paths: {
     sources: 'contracts',
