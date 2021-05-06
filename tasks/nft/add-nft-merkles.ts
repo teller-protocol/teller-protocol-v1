@@ -41,7 +41,7 @@ export const addMerkles = async (
     throw new Error(`No Teller NFT Distributor is deployed for ${network.name}`)
 
   log('')
-  log('Adding Merkle Roots to NFT Distributor', { indent: 1, star: true })
+  log('Adding Merkle Roots to NFT Distributor', { indent: 2, star: true })
   log('')
 
   const distributions: Array<{
@@ -66,13 +66,13 @@ export const addMerkles = async (
         .addMerkle(tierIndex, info.merkleRoot)
         .then(({ wait }) => wait())
       log(`NEW merkle root for tier ${tierIndex} added: ${info.merkleRoot}`, {
-        indent: 2,
+        indent: 3,
         star: true,
       })
     } else {
       log(
         `Merkle root for tier ${tierIndex} ALREADY added: ${info.merkleRoot}`,
-        { indent: 2, star: true }
+        { indent: 3, star: true }
       )
     }
   }
@@ -83,7 +83,7 @@ export const addMerkles = async (
   )
 
   log('')
-  log(`Output written to ${distributionsOutputFile}`, { indent: 2, star: true })
+  log(`Output written to ${distributionsOutputFile}`, { indent: 3, star: true })
   log('')
 }
 

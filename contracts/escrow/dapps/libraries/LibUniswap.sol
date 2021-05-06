@@ -28,11 +28,8 @@ library LibUniswap {
         uint256 sourceAmount,
         uint256 minDestination
     ) internal returns (uint256) {
-        address source = path[0];
-        address destination = path[path.length - 1];
-
         SafeERC20.safeIncreaseAllowance(
-            IERC20(source),
+            IERC20(path[0]),
             address(ROUTER),
             sourceAmount
         );

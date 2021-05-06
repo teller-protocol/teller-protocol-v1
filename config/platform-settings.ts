@@ -65,7 +65,7 @@ export const platformSettings: Record<string, PlatformSettings> = {
   rinkeby: {
     RequiredSubmissionsPercentage: {
       processOnDeployment: true,
-      value: 8000,
+      value: 100,
       min: 0,
       max: 10000,
     },
@@ -125,7 +125,7 @@ export const platformSettings: Record<string, PlatformSettings> = {
   kovan: {
     RequiredSubmissionsPercentage: {
       processOnDeployment: true,
-      value: 8000,
+      value: 100,
       min: 0,
       max: 10000,
     },
@@ -185,7 +185,7 @@ export const platformSettings: Record<string, PlatformSettings> = {
   ropsten: {
     RequiredSubmissionsPercentage: {
       processOnDeployment: true,
-      value: 8000,
+      value: 100,
       min: 0,
       max: 10000,
     },

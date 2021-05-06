@@ -7,9 +7,9 @@ interface ITTokenStrategy {
         address indexed sender
     );
 
-    function totalUnderlyingSupply() external virtual returns (uint256);
+    function totalUnderlyingSupply() external returns (uint256);
 
-    function rebalance() external virtual;
+    function rebalance() external;
 
-    function withdraw(uint256 amount) external virtual;
+    function withdraw(uint256 amount) external;
 }

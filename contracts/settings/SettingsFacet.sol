@@ -93,9 +93,7 @@ contract SettingsFacet is RolesMods {
      * @return True if account has authorization, false if it does not
      */
     function hasAuthorization(address account) external view returns (bool) {
-        return
-            RolesLib.hasRole(ADMIN, account) ||
-            RolesLib.hasRole(AUTHORIZED, account);
+        return RolesLib.hasRole(AUTHORIZED, account);
     }
 
     function init(InitArgs calldata _args) external {

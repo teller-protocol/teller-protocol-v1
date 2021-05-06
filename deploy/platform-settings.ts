@@ -12,7 +12,6 @@ const createPlatformSettings: DeployFunction = async (hre) => {
     from: deployer,
   })
 
-  log('')
   log('********** Platform Settings **********', { indent: 1 })
   log('')
 

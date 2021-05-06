@@ -7,7 +7,7 @@ import { MerkleDistributorInfo } from '../../scripts/merkle/root'
 import { ITellerNFT, ITellerNFTDistributor } from '../../types/typechain'
 
 interface ViewNFTsArgs {
-  address?: string
+  account?: string
   tier?: number
   claimable: boolean
   claimed: boolean
@@ -17,7 +17,7 @@ export const viewNFTs = async (
   args: ViewNFTsArgs,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
-  const { address, tier, claimable, claimed } = args
+  const { account, tier, claimable, claimed } = args
   const { contracts, network, ethers, log } = hre
 
   const nft = await contracts.get<ITellerNFT>('TellerNFT')
@@ -29,7 +29,7 @@ export const viewNFTs = async (
       `Teller NFT has not been fully deployed yet on ${network.name}`
     )
 
-  const getAll = address == null && tier == null && !claimable && !claimed
+  const getAll = account == null && tier == null && !claimable && !claimed
 
   const { merkleTrees, distributionsOutputFile } = getNFT(network)
   const distributions: MerkleDistributorInfo[] = JSON.parse(
@@ -57,8 +57,8 @@ export const viewNFTs = async (
 
     if (getAll) {
       info.claims = claims
-    } else if (address != null) {
-      const checkedAddress = ethers.utils.getAddress(address)
+    } else if (account != null) {
+      const checkedAddress = ethers.utils.getAddress(account)
       const { [checkedAddress]: claim } = claims
       info.claims[checkedAddress] = claim
     } else if (tier != null && merkleTrees[i].tierIndex === tier) {
@@ -104,7 +104,7 @@ export const viewNFTs = async (
 }
 
 task('view-nfts', 'Retrieve information about NFTs on the blockchain')
-  .addOptionalParam('address', 'Address to view NFTs for')
+  .addOptionalParam('account', 'Address to view NFTs for')
   .addOptionalParam('tier', 'A tier index to view NFTs for')
   .addFlag(
     'claimable',

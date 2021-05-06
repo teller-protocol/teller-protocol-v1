@@ -11,6 +11,10 @@ const deployNFT: DeployFunction = async (hre) => {
   // Make sure contracts are compiled
   await run('compile')
 
+  log('')
+  log('********** Teller NFT **********', { indent: 1 })
+  log('')
+
   const nft = await deploy<ITellerNFT>({
     contract: 'TellerNFT',
     hre,
@@ -32,7 +36,7 @@ const deployNFT: DeployFunction = async (hre) => {
   })
 
   log('')
-  log('Initializing Teller NFT', { indent: 1, star: true })
+  log('Initializing Teller NFT', { indent: 2, star: true })
   log('')
 
   try {
@@ -41,9 +45,9 @@ const deployNFT: DeployFunction = async (hre) => {
       await deployer.getAddress(),
     ]
     await nft.initialize(minters).then(async ({ wait }) => await wait())
-    log('Teller NFT initialized', { indent: 2, star: true })
+    log('Teller NFT initialized', { indent: 3, star: true })
   } catch (err) {
-    log('Teller NFT already initialized', { indent: 2, star: true })
+    log('Teller NFT already initialized', { indent: 3, star: true })
   }
 
   await run('add-nft-tiers', { sendTx: true })
