@@ -41,13 +41,79 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
 
     /**
      * @notice The balance of an {account} denoted in underlying value.
+     * @param account Address to calculate the underlying balance.
      */
     function balanceOfUnderlying(address account)
-        public
+        external
         virtual
         returns (uint256 balance_);
 
+    /**
+     * @notice It calculates the current exchange rate for a whole Teller Token based of the underlying token balance.
+     * @return rate_ The current exchange rate.
+     */
+    function exchangeRate() external virtual returns (uint256 rate_);
+
+    /**
+     * @notice Redeem supplied Teller token underlying value.
+     * @return totalSupply_ The total value of the underlying token managed by the LP.
+     */
+    function totalUnderlyingSupply()
+        external
+        virtual
+        returns (uint256 totalSupply_);
+
+    /**
+     * @notice It calculates the market state values across a given markets.
+     * @notice Returns values that represent the global state across the market.
+     * @return totalSupplied Total amount of the underlying asset supplied.
+     * @return totalBorrowed Total amount borrowed through loans.
+     * @return totalRepaid The total amount repaid till the current timestamp.
+     * @return totalInterestRepaid The total amount interest repaid till the current timestamp.
+     * @return totalOnLoan Total amount currently deployed in loans.
+     */
+    function getMarketState()
+        external
+        virtual
+        returns (
+            uint256 totalSupplied,
+            uint256 totalBorrowed,
+            uint256 totalRepaid,
+            uint256 totalInterestRepaid,
+            uint256 totalOnLoan
+        );
+
+    /**
+     * @notice Calculates the current Total Value Locked, denoted in the underlying asset, in the Teller Token pool.
+     * @return tvl_ The value locked in the pool.
+     *
+     * Note: This value includes the amount that is on loan (including ones that were sent to EOAs).
+     */
+    function currentTVL() external virtual returns (uint256 tvl_);
+
+    /**
+     * @notice It validates whether supply to debt (StD) ratio is valid including the loan amount.
+     * @param newLoanAmount the new loan amount to consider o the StD ratio.
+     * @return ratio_ Whether debt ratio for lending pool is valid.
+     */
+    function debtRatioFor(uint256 newLoanAmount)
+        external
+        virtual
+        returns (uint16 ratio_);
+
+    /**
+     * @notice Called by the Teller Diamond contract when a loan has been taken out and requires funds.
+     * @param recipient The account to send the funds to.
+     * @param amount Funds requested to fulfil the loan.
+     */
     function fundLoan(address recipient, uint256 amount) external virtual;
+
+    /**
+     * @notice Called by the Teller Diamond contract when a loan has been repaid.
+     * @param amount Funds deposited back into the pool to repay the principal amount of a loan.
+     * @param interestAmount Interest value paid into the pool from a loan.
+     */
+    function repayLoan(uint256 amount, uint256 interestAmount) external virtual;
 
     /**
      * @notice Increase account supply of specified token amount.
@@ -71,26 +137,28 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
     function redeemUnderlying(uint256 amount) external virtual;
 
     /**
-     * @notice Redeem supplied Teller token underlying value.
-     * @return totalSupply_ The total value of the underlying token managed by the LP.
+     * @notice Rebalances the funds controlled by Teller Token according to the current strategy.
+     *
+     * See {TTokenStrategy}.
      */
-    function totalUnderlyingSupply()
-        external
-        virtual
-        returns (uint256 totalSupply_);
+    function rebalance() external virtual;
 
-    function exchangeRate() external virtual returns (uint256 rate_);
+    /**
+     * @notice Sets a new strategy to use for balancing funds.
+     * @param strategy Address to the new strategy contract. Must implement the {ITTokenStrategy} interface.
+     * @param initData Optional data to initialize the strategy.
+     *
+     * Requirements:
+     *  - Sender must have ADMIN role
+     */
+    function setStrategy(address strategy, bytes calldata initData)
+        external
+        virtual;
 
     /**
      * @notice Sets the restricted state of the platform.
      */
     function restrict(bool state) external virtual;
-
-    function rebalance() external virtual;
-
-    function setStrategy(address strategy, bytes calldata initData)
-        external
-        virtual;
 
     // Args to initialize the Teller token with
     struct InitArgs {

@@ -57,6 +57,9 @@ export default <HardhatUserConfig>{
   external: {
     contracts: [
       {
+        artifacts: 'node_modules/hardhat-deploy/extendedArtifacts',
+      },
+      {
         artifacts: 'node_modules/@openzeppelin/contracts/build/contracts',
       },
     ],
@@ -129,6 +132,7 @@ export default <HardhatUserConfig>{
       gas: GAS,
       gasPrice:
         GAS_PRICE === 'auto' ? GAS_PRICE : BN.from(GAS_PRICE).div(4).toNumber(),
+      live: true,
     },
     rinkeby: {
       url: process.env.ALCHEMY_RINKEBY_KEY,
@@ -137,6 +141,7 @@ export default <HardhatUserConfig>{
       gas: GAS,
       gasPrice:
         GAS_PRICE === 'auto' ? GAS_PRICE : BN.from(GAS_PRICE).div(4).toNumber(),
+      live: true,
     },
     ropsten: {
       url: process.env.ALCHEMY_ROPSTEN_KEY,
@@ -144,6 +149,7 @@ export default <HardhatUserConfig>{
       gas: GAS,
       gasPrice:
         GAS_PRICE === 'auto' ? GAS_PRICE : BN.from(GAS_PRICE).div(4).toNumber(),
+      live: true,
     },
     hardhat: {
       forking: {
@@ -171,6 +177,7 @@ export default <HardhatUserConfig>{
       accounts,
       gas: GAS,
       gasPrice: GAS_PRICE,
+      live: true,
     },
   },
   mocha: {

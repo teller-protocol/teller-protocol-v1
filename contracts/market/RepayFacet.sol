@@ -206,12 +206,8 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
             }
         }
 
-        MarketStorageLib.store().totalRepaid[
-            LibLoans.loan(loanID).lendingToken
-        ] += principalPaid;
-        MarketStorageLib.store().totalInterestRepaid[
-            LibLoans.loan(loanID).lendingToken
-        ] += interestPaid;
+        // Tell the Teller Token value has been deposited back into the pool.
+        tToken.repayLoan(principalPaid, interestPaid);
     }
 
     /**

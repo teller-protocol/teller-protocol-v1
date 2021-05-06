@@ -124,9 +124,8 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
             "Teller: insufficient NFT loan size"
         );
 
-        // Transfer tokens to the loan escrow.
-        CreateLoanLib.fundLoan(
-            MarketStorageLib.store().loans[loanID].lendingToken,
+        // Pull funds from Teller Token LP and transfer to the new loan escrow
+        LendingLib.tToken(LibLoans.loan(loanID).lendingToken).fundLoan(
             CreateLoanLib.createEscrow(loanID),
             amount
         );
@@ -144,7 +143,7 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
             "Teller: loan terms expired"
         );
         require(
-            LendingLib.debtRatioFor(loan.lendingToken, amount) <=
+            LendingLib.tToken(loan.lendingToken).debtRatioFor(amount) <=
                 MaxDebtRatioLib.get(loan.lendingToken),
             "Teller: max supply-to-debt ratio exceeded"
         );
@@ -200,8 +199,11 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
             loanRecipient = CreateLoanLib.createEscrow(loanID);
         }
 
-        // Transfer tokens to the recipient.
-        CreateLoanLib.fundLoan(loan.lendingToken, loanRecipient, amount);
+        // Pull funds from Teller token LP and and transfer to the recipient
+        LendingLib.tToken(LibLoans.loan(loanID).lendingToken).fundLoan(
+            loanRecipient,
+            amount
+        );
 
         // Initialize the escrow token list
         if (!eoaAllowed) {
@@ -216,7 +218,7 @@ library CreateLoanLib {
     function verifyCreateLoan(
         LoanRequest calldata request,
         address collateralToken
-    ) internal {
+    ) internal view {
         // Perform loan request checks
         require(msg.sender == request.borrower, "Teller: not loan requester");
         require(
@@ -266,17 +268,6 @@ library CreateLoanLib {
         MarketStorageLib.store().borrowerLoans[request.borrower].push(
             uint128(loanID_)
         );
-    }
-
-    function fundLoan(
-        address asset,
-        address recipient,
-        uint256 amount
-    ) internal {
-        // Pull funds from Teller token LP
-        MarketStorageLib.store().tTokens[asset].fundLoan(recipient, amount);
-        // Increase total borrowed amount
-        MarketStorageLib.store().totalBorrowed[asset] += amount;
     }
 
     function newID() internal returns (uint256 id_) {

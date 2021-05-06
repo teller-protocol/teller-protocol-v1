@@ -187,28 +187,4 @@ library LibLoans {
         LoanStatus status = loan(loanID).status;
         return status == LoanStatus.Active || status == LoanStatus.TermsSet;
     }
-
-    /**
-        @notice It calculates the market state values across a given markets.
-        @notice Returns values that represent the global state across the market.
-        @param lendingToken The address of the asset.
-        @return totalSupplied Total amount of the underlying asset supplied.
-        @return totalBorrowed Total amount borrowed through loans.
-        @return totalRepaid The total amount repaid till the current timestamp.
-        @return totalOnLoan Total amount currently deployed in loans.
-     */
-    function getMarketState(address lendingToken)
-        internal
-        returns (
-            uint256 totalSupplied,
-            uint256 totalBorrowed,
-            uint256 totalRepaid,
-            uint256 totalOnLoan
-        )
-    {
-        totalSupplied = s().tTokens[lendingToken].totalUnderlyingSupply();
-        totalBorrowed = s().totalBorrowed[lendingToken];
-        totalRepaid = s().totalRepaid[lendingToken];
-        totalOnLoan = totalBorrowed - (totalRepaid);
-    }
 }

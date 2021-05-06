@@ -3,12 +3,7 @@ import 'hardhat-deploy'
 
 import { makeNodeDisklet } from 'disklet'
 import { BigNumber, BigNumberish, Contract, Signer } from 'ethers'
-import { extendEnvironment } from 'hardhat/config'
-import {
-  DeploymentSubmission,
-  DeployOptions,
-  DeployResult,
-} from 'hardhat-deploy/types'
+import { extendEnvironment, subtask } from 'hardhat/config'
 import moment from 'moment'
 
 import { getTokens } from '../config'
@@ -236,106 +231,22 @@ extendEnvironment((hre) => {
     if (hre.network.name === 'hardhat') return
     process.stdout.write(formatMsg(msg, config))
   }
-
-  const originalDeploymentsSave = hre.deployments.save
-  hre.deployments.save = async (
-    name: string,
-    deployment: DeploymentSubmission
-  ): Promise<void> => {
-    const loanManagerRegex = /^LM_(.+_.+)/
-    const lpRegex = /^LP_(.+)/
-    const logicsRegex = /(.+)_Logic$/
-    const libRegex = /Lib$/
-    const dynamicProxyRegex = /(.+)_DP$/
-
-    // Don't save deployment files for specific name (i.e. LoanManager and LendingPool contracts)
-    if (![loanManagerRegex, lpRegex].some((regex) => regex.test(name))) {
-      await originalDeploymentsSave(name, deployment)
-    }
-
-    // Don't save addresses on the hardhat network
-    if (hre.network.name === 'hardhat') return
-
-    // Save deployment to tenderly
-    await hre.tenderly.push({
-      name,
-      address: deployment.address,
-    })
-
-    const blockNumber =
-      deployment.receipt?.blockNumber ??
-      (await ethers.provider.getBlockNumber())
-    const deploymentBlockPath = `deployments/${hre.network.name}/.latestDeploymentBlock`
-    await disklet
-      .getText(deploymentBlockPath)
-      .catch(() => {})
-      .then((lastDeployment) => {
-        if (!lastDeployment || blockNumber > parseInt(lastDeployment)) {
-          return disklet.setText(deploymentBlockPath, blockNumber.toString())
-        }
-      })
-
-    const addressesPath = `deployments/${hre.network.name}/.addresses.json`
-    let data: AddressData
-    try {
-      data = JSON.parse(await disklet.getText(addressesPath))
-    } catch {
-      data = {
-        libraries: {},
-        proxies: {
-          lendingPools: {},
-          loanManagers: {},
-        },
-        logics: {},
-      }
-    }
-
-    if (loanManagerRegex.test(name)) {
-      // Is LoanManager
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const [_, market] = name.match(loanManagerRegex)!
-      data.proxies.loanManagers[market] = deployment.address
-    } else if (lpRegex.test(name)) {
-      // Is LendingPool
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const [_, sym] = name.match(lpRegex)!
-      data.proxies.lendingPools[sym] = deployment.address
-    } else if (logicsRegex.test(name)) {
-      // Is logic contract
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const [_, contractName] = name.match(logicsRegex)!
-      data.logics[contractName] = deployment.address
-    } else if (libRegex.test(name)) {
-      // Is Library
-      data.libraries[name] = deployment.address
-    } else if (dynamicProxyRegex.test(name)) {
-      // Is DynamicProxy
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const [_, contractName] = name.match(dynamicProxyRegex)!
-      data.proxies[contractName] = deployment.address
-    }
-
-    const sortedData: AddressData = sortObject(data)
-
-    await disklet.setText(addressesPath, JSON.stringify(sortedData, null, 2))
-  }
-
-  const originalDeploymentsDeploy = hre.deployments.deploy
-  hre.deployments.deploy = async (
-    name: string,
-    options: DeployOptions
-  ): Promise<DeployResult> => {
-    const result = await originalDeploymentsDeploy(name, options)
-    await hre.deployments.save(name, result)
-    return result
-  }
 })
 
-const sortObject = (obj: any): any => {
-  const tmp: any = {}
-  const keys = Object.keys(obj).sort()
-  for (const key of keys) {
-    tmp[key] = typeof obj[key] === 'object' ? sortObject(obj[key]) : obj[key]
-  }
-  return tmp
-}
+/**
+ * Override `hardhat-deploy` deploy subtask to do some magic after it runs.
+ */
+subtask('deploy:runDeploy', async (args, hre, runSuper) => {
+  if (!runSuper.isDefined) return
+
+  await runSuper(args)
+
+  // Only continue on a live network
+  if (!hre.network.live) return
+
+  // Verify contracts on Etherscan
+  await hre.run('etherscan-verify', { solcInput: true })
+
+  // Save and verify contracts on Tenderly
+  await hre.run('tenderly-contracts')
+})
