@@ -23629,6 +23629,26 @@
     }
   },
   {
+    "merkleRoot": "0x5f3f9452707c93a22cda2557207ddef9af0ca68a67b6978580ddc0b62505b6ce",
+    "tokenTotal": "0x14",
+    "claims": {
+      "0x592000b2c8c590531d490893C16AfC4b9cbbe6B9": {
+        "index": 0,
+        "amount": "0x0a",
+        "proof": [
+          "0xf1151262562a2b79a243e55a1d9176e04161c11e0a2d75989b59437654a7daa7"
+        ]
+      },
+      "0x70B9997F00fE9D046c49f3d88dC63314d47cbF8F": {
+        "index": 1,
+        "amount": "0x0a",
+        "proof": [
+          "0xe14ded7d43ca5e4b79fff8a3e4c8aaac1c9b14a50819d1337da7d572a7997c94"
+        ]
+      }
+    }
+  },
+  {
     "merkleRoot": "0xd541ba87b428007c4fdbfb862dddd74a417824a744ad1a8d8734b4c2b295d634",
     "tokenTotal": "0x46",
     "claims": {
