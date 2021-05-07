@@ -5945,6 +5945,13 @@
   {
     "tierIndex": 2,
     "balances": [
+      { "address": "0x592000b2c8c590531d490893C16AfC4b9cbbe6B9", "count": 10 },
+      { "address": "0x70B9997F00fE9D046c49f3d88dC63314d47cbF8F", "count": 10 }
+    ]
+  },
+  {
+    "tierIndex": 2,
+    "balances": [
       { "address": "0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5", "count": 10 },
       { "address": "0xd59e99927018b995ee9Ad6b9003677f1e7393F8A", "count": 10 },
       { "address": "0xa243A7b4e9AF8D7e87a5443Aa7E21AB27624eaaA", "count": 10 },
