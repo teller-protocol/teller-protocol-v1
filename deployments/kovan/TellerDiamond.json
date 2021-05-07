@@ -380,6 +380,11 @@
               "internalType": "address",
               "name": "collateralEscrowBeacon",
               "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "tTokenBeacon",
+              "type": "address"
             }
           ],
           "internalType": "struct InitArgs",
@@ -401,6 +406,29 @@
         }
       ],
       "name": "removeAuthorizedAddress",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "loansEscrowBeacon",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "collateralEscrowBeacon",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "tTokenBeacon",
+          "type": "address"
+        }
+      ],
+      "name": "upgrade",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -1124,11 +1152,6 @@
         {
           "internalType": "address",
           "name": "asset",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "tToken",
           "type": "address"
         }
       ],
@@ -2280,17 +2303,18 @@
       ["0xf2fde38b", "0x8da5cb5b"]
     ],
     {
-      "facetAddress": "0xA9819d897bE03453F5fd7137686235A9641bcE6E",
+      "facetAddress": "0xB0147AA445bDC989E97406298FfCFbc24A7CE0F2",
       "functionSelectors": [
         "0x42f1181e",
         "0x6eade577",
         "0xad21879e",
-        "0x2b99faaa",
-        "0x70712939"
+        "0xb6c7a0a3",
+        "0x70712939",
+        "0xf000999e"
       ]
     },
     {
-      "facetAddress": "0xa9000D9604a893dE8fBa1415Ddd775a9b2fe09F3",
+      "facetAddress": "0xCBF7073F036A612c3D86F5a464AC0a1ABa15bD38",
       "functionSelectors": [
         "0x9dec88b9",
         "0xce199129",
@@ -2299,11 +2323,11 @@
       ]
     },
     {
-      "facetAddress": "0x45692b17E0A21c255cce364918A41F453ae73A96",
+      "facetAddress": "0xDC80C1a4A6e2a12715A04f58edaE8C7F540E18B1",
       "functionSelectors": ["0xc76d202d", "0x839bb9a6", "0x8e756bb3"]
     },
     {
-      "facetAddress": "0xD688C54B999dbd971381C4a8d47F9b04d81d92E0",
+      "facetAddress": "0x1B857466EAB593AD545D783db7FC7bd0F9fe4194",
       "functionSelectors": [
         "0xfee2792b",
         "0xbf6d79ab",
@@ -2312,11 +2336,11 @@
       ]
     },
     {
-      "facetAddress": "0xEbdAa51B514820E3f3A3B9F74d7701B82305CabD",
+      "facetAddress": "0xE0Dc79BC521F2820818aD04C42809d0823fe8fcf",
       "functionSelectors": ["0x241b71bb", "0xbb14516c"]
     },
     {
-      "facetAddress": "0xAFD06Bfe8e05a6016C9e16f68043038C8328BDAB",
+      "facetAddress": "0x4Ab37088810850A28a98b36ff989575062C5a202",
       "functionSelectors": ["0x35a7206d", "0xc05b1ec3"]
     },
     {
@@ -2329,11 +2353,11 @@
       ]
     },
     {
-      "facetAddress": "0x0070b4bBddf51b1607E97F920E7C7da1c7544B8E",
-      "functionSelectors": ["0x9912dde8", "0x1e4d2992", "0x8a4f4f92"]
+      "facetAddress": "0x032124867C0E5b3D31c6608b868bEF9bdE3E9395",
+      "functionSelectors": ["0x9912dde8", "0x5a601668", "0x8a4f4f92"]
     },
     {
-      "facetAddress": "0xc9109c7A848C8e3a4db9D63F8Aaf116f376D08B2",
+      "facetAddress": "0xBB59BBf3D4B74644357F376cA0CAdDF5b3E6C133",
       "functionSelectors": [
         "0x13abaf07",
         "0xece13732",
@@ -2343,11 +2367,11 @@
       ]
     },
     {
-      "facetAddress": "0x832884aca6AD813Acb1adfb7937950dEED4090E4",
+      "facetAddress": "0xaE1b398f62d4555a1403FcCc74Bc568abBEe40d6",
       "functionSelectors": ["0xce6e9f9f", "0x02bc2cdb", "0x0448a5c4"]
     },
     {
-      "facetAddress": "0x40301431F951cB6c1B32378923221a91984D9497",
+      "facetAddress": "0x055A8f48156382C61c61867c219781083c0d490f",
       "functionSelectors": [
         "0xeee8b7ff",
         "0x72e11327",
@@ -2362,7 +2386,7 @@
       ]
     },
     {
-      "facetAddress": "0xDa8a619EE0f5556970d51E0eeEcF695787987B78",
+      "facetAddress": "0x3C7C23b9AeEf192082a1608884b80a873373CfB4",
       "functionSelectors": [
         "0xe89ad656",
         "0x5ebc6334",
@@ -2371,27 +2395,35 @@
       ]
     },
     {
-      "facetAddress": "0x8fF09182e1861Aef46cEe459518CfB8B20fbe9F7",
+      "facetAddress": "0xCdae82ab08DB2bcF51D63878A5ABF09964ab45b3",
       "functionSelectors": ["0x2239f556", "0x46efd16c", "0x78b248e4"]
     },
     {
-      "facetAddress": "0x51Fad86ac488599aDA33bF835Ee2FD03eA075CfA",
+      "facetAddress": "0x35259777412C57711A72f159F95c483A0CA97674",
       "functionSelectors": ["0x6f70d212", "0x0967aa82", "0x0f48a482"]
     },
     {
-      "facetAddress": "0xF482766925c1D265920990e6be5971fb2ACE4B9D",
+      "facetAddress": "0x0fbD72d0170Ba2698CD064561F8567ce55cCDD39",
       "functionSelectors": ["0x46e04a2f"]
     },
     {
-      "facetAddress": "0x171153333C7b0946b1DfaAcEE7dFf35ede95D8af",
+      "facetAddress": "0xa6289b6Fc9505dB6874f3f4d6E705974281B7e35",
       "functionSelectors": ["0x7197d575", "0x3ca4c96b", "0x5d86dbe7"]
     },
     {
-      "facetAddress": "0xc4aBBf996A849323E0c7e54f2Dc6cE8e9b1cDA2f",
+      "facetAddress": "0xcC586A49298c4615169F21289d7B4087720F0BBE",
       "functionSelectors": ["0x262201b6"]
     }
   ],
   "diamondCut": [],
+  "execute": {
+    "methodName": "upgrade",
+    "args": [
+      "0x1845fF363D33df8641465aFC5185286ADCF3b812",
+      "0x6091dB0013907C1475686Dc758ABbB454aC3d27c",
+      "0x1Cd73EC615210effAE184C2ec83417c9C12ca601"
+    ]
+  },
   "history": [
     {
       "address": "0xC86Ca2BB9C9c9c9F140d832dE00BfA9e153FA1e3",

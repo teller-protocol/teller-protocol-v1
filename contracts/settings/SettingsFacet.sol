@@ -30,6 +30,7 @@ struct InitArgs {
     address tellerNFT;
     address loansEscrowBeacon;
     address collateralEscrowBeacon;
+    address tTokenBeacon;
 }
 
 contract SettingsFacet is RolesMods {
@@ -96,6 +97,20 @@ contract SettingsFacet is RolesMods {
         return RolesLib.hasRole(AUTHORIZED, account);
     }
 
+    function upgrade(
+        address loansEscrowBeacon,
+        address collateralEscrowBeacon,
+        address tTokenBeacon
+    ) external {
+        AppStorage storage s = AppStorageLib.store();
+
+        s.loansEscrowBeacon = UpgradeableBeaconFactory(loansEscrowBeacon);
+        s.collateralEscrowBeacon = UpgradeableBeaconFactory(
+            collateralEscrowBeacon
+        );
+        s.tTokenBeacon = UpgradeableBeaconFactory(tTokenBeacon);
+    }
+
     function init(InitArgs calldata _args) external {
         AppStorage storage s = AppStorageLib.store();
 
@@ -117,5 +132,6 @@ contract SettingsFacet is RolesMods {
         s.collateralEscrowBeacon = UpgradeableBeaconFactory(
             _args.collateralEscrowBeacon
         );
+        s.tTokenBeacon = UpgradeableBeaconFactory(_args.tTokenBeacon);
     }
 }

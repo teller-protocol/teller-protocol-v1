@@ -156,16 +156,14 @@ abstract contract ITToken is ERC20Upgradeable, RolesFacet {
         virtual;
 
     /**
+     * @notice Gets the strategy used for balancing funds.
+     */
+    function getStrategy() external view virtual returns (address);
+
+    /**
      * @notice Sets the restricted state of the platform.
      */
     function restrict(bool state) external virtual;
 
-    // Args to initialize the Teller token with
-    struct InitArgs {
-        address controller;
-        address admin;
-        address underlying;
-    }
-
-    function initialize(InitArgs calldata args) external virtual;
+    function initialize(address admin, address underlying) external virtual;
 }

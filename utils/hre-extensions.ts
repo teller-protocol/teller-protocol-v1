@@ -1,7 +1,6 @@
 import '@nomiclabs/hardhat-ethers'
 import 'hardhat-deploy'
 
-import { makeNodeDisklet } from 'disklet'
 import { BigNumber, BigNumberish, Contract, Signer } from 'ethers'
 import { extendEnvironment, subtask } from 'hardhat/config'
 import moment from 'moment'
@@ -116,8 +115,6 @@ interface AddressObj {
 
 extendEnvironment((hre) => {
   const { deployments, ethers, getNamedAccounts, network } = hre
-
-  const disklet = makeNodeDisklet('.')
 
   hre.contracts = {
     async get<C extends Contract>(

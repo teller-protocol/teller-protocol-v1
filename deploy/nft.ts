@@ -35,19 +35,19 @@ const deployNFT: DeployFunction = async (hre) => {
     hre,
   })
 
-  log('')
-  log('Initializing Teller NFT', { indent: 2, star: true })
-  log('')
+  log('Initializing Teller NFT...:', { indent: 2, star: true, nl: false })
 
   try {
     const minters: string[] = [
       nftDistributor.address,
       await deployer.getAddress(),
     ]
-    await nft.initialize(minters).then(async ({ wait }) => await wait())
-    log('Teller NFT initialized', { indent: 3, star: true })
+    const receipt = await nft
+      .initialize(minters)
+      .then(async ({ wait }) => await wait())
+    log(` with ${receipt.gasUsed} gas`)
   } catch (err) {
-    log('Teller NFT already initialized', { indent: 3, star: true })
+    log(' already initialized')
   }
 
   await run('add-nft-tiers', { sendTx: true })

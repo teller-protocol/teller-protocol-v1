@@ -37,6 +37,8 @@ contract InitializeableBeaconProxy is Proxy {
             _BEACON_SLOT ==
                 bytes32(uint256(keccak256("eip1967.proxy.beacon")) - 1)
         );
+        require(_beacon() == address(0), "Beacon: already initialized");
+
         _setBeacon(beacon, data);
     }
 
@@ -75,14 +77,6 @@ contract InitializeableBeaconProxy is Proxy {
      * - The implementation returned by `beacon` must be a contract.
      */
     function _setBeacon(address beacon, bytes memory data) internal virtual {
-        require(
-            Address.isContract(beacon),
-            "BeaconProxy: beacon is not a contract"
-        );
-        require(
-            Address.isContract(IBeacon(beacon).implementation()),
-            "BeaconProxy: beacon implementation is not a contract"
-        );
         bytes32 slot = _BEACON_SLOT;
 
         // solhint-disable-next-line no-inline-assembly

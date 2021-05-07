@@ -421,64 +421,78 @@ library RepayLib {
         EnumerableSet.AddressSet storage tokens =
             MarketStorageLib.store().escrowTokens[loanID];
         uint256 valueLeftToTransfer = value;
-        // cycle through tokens
+
+        // Start with the lending token
+        valueLeftToTransfer = claimEscrowToken(
+            loanID,
+            LibLoans.loan(loanID).lendingToken,
+            recipient,
+            valueLeftToTransfer
+        );
+
+        // Cycle through remaining tokens
         for (uint256 i = 0; i < EnumerableSet.length(tokens); i++) {
             if (valueLeftToTransfer == 0) {
                 return;
             }
 
-            uint256 balance =
-                LibEscrow.balanceOf(loanID, EnumerableSet.at(tokens, i));
-            // get value of token balance in lending value
-            if (balance > 0) {
-                // If token not the lending token, get value of token
-                uint256 balanceInLending;
-                if (
-                    EnumerableSet.at(tokens, i) ==
-                    LibLoans.loan(loanID).lendingToken
-                ) {
-                    balanceInLending = balance;
+            valueLeftToTransfer = claimEscrowToken(
+                loanID,
+                EnumerableSet.at(tokens, i),
+                recipient,
+                valueLeftToTransfer
+            );
+        }
+    }
+
+    function claimEscrowToken(
+        uint256 loanID,
+        address token,
+        address recipient,
+        uint256 valueLeftToTransfer
+    ) private returns (uint256) {
+        uint256 balance = LibEscrow.balanceOf(loanID, token);
+        // get value of token balance in lending value
+        if (balance > 0) {
+            // If token not the lending token, get value of token
+            uint256 balanceInLending;
+            if (token == LibLoans.loan(loanID).lendingToken) {
+                balanceInLending = balance;
+            } else {
+                balanceInLending = PriceAggLib.valueFor(
+                    token,
+                    LibLoans.loan(loanID).lendingToken,
+                    balance
+                );
+            }
+
+            if (balanceInLending <= valueLeftToTransfer) {
+                LibEscrow.e(loanID).claimToken(token, recipient, balance);
+                valueLeftToTransfer -= balanceInLending;
+            } else {
+                // Token balance is more than enough so calculate ratio of balance to transfer
+                uint256 valueToTransfer;
+                if (token == LibLoans.loan(loanID).lendingToken) {
+                    valueToTransfer = valueLeftToTransfer;
                 } else {
-                    balanceInLending = PriceAggLib.valueFor(
-                        EnumerableSet.at(tokens, i),
-                        LibLoans.loan(loanID).lendingToken,
-                        balance
+                    valueToTransfer = NumbersLib.percent(
+                        balanceInLending,
+                        NumbersLib.ratioOf(
+                            valueLeftToTransfer,
+                            balanceInLending
+                        )
                     );
                 }
 
-                if (balanceInLending <= valueLeftToTransfer) {
-                    LibEscrow.e(loanID).claimToken(
-                        EnumerableSet.at(tokens, i),
-                        recipient,
-                        balance
-                    );
-                    valueLeftToTransfer -= balanceInLending;
-                } else {
-                    // Token balance is more than enough so calculate ratio of balance to transfer
-                    uint256 valueToTransfer;
-                    if (
-                        EnumerableSet.at(tokens, i) ==
-                        LibLoans.loan(loanID).lendingToken
-                    ) {
-                        valueToTransfer = valueLeftToTransfer;
-                    } else {
-                        valueToTransfer = NumbersLib.percent(
-                            balanceInLending,
-                            NumbersLib.ratioOf(
-                                valueLeftToTransfer,
-                                balanceInLending
-                            )
-                        );
-                    }
-
-                    LibEscrow.e(loanID).claimToken(
-                        EnumerableSet.at(tokens, i),
-                        recipient,
-                        valueToTransfer
-                    );
-                    valueLeftToTransfer = 0;
-                }
+                LibEscrow.e(loanID).claimToken(
+                    token,
+                    recipient,
+                    valueToTransfer
+                );
+                valueLeftToTransfer = 0;
             }
         }
+
+        return valueLeftToTransfer;
     }
 }

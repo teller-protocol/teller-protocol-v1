@@ -1,13 +1,10 @@
+import colors from 'colors'
 import { ContractTransaction } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
 import { getMarkets, getSigners, getTokens } from '../config'
-import {
-  ITellerDiamond,
-  ITToken,
-  UpgradeableBeaconFactory,
-} from '../types/typechain'
+import { ITellerDiamond, ITToken } from '../types/typechain'
 import { NULL_ADDRESS } from '../utils/consts'
 import { deploy } from '../utils/deploy-helpers'
 
@@ -24,7 +21,6 @@ const initializeMarkets: DeployFunction = async (hre) => {
   const diamond = await contracts.get<ITellerDiamond>('TellerDiamond', {
     from: deployer,
   })
-  const tTokenFactory = await deployTTokenBeacon(hre, diamond)
 
   for (const market of markets) {
     const lendingTokenAddress = tokenAddresses.all[market.lendingToken]
@@ -79,29 +75,44 @@ const initializeMarkets: DeployFunction = async (hre) => {
       )
 
     // Check if the market is already initialized
-    const tToken = await diamond.getTTokenFor(lendingTokenAddress)
-    if (tToken === NULL_ADDRESS) {
-      // Deploy new Teller Token
-      const tTokenAddress = await tTokenFactory(lendingTokenAddress)
+    let tTokenAddress = await diamond.getTTokenFor(lendingTokenAddress)
+    if (tTokenAddress === NULL_ADDRESS) {
+      // Initialize the lending pool that creates a TToken
+      await diamond.initLendingPool(asset.address).then(({ wait }) => wait())
+      tTokenAddress = await diamond.getTTokenFor(lendingTokenAddress)
 
-      log('Deploying new Teller Token', { indent: 2, star: true })
-      log(`Using TToken Strategy: ${market.strategy.name}`, {
-        indent: 3,
+      log(`Lending pool ${colors.yellow('initialized')}`, {
+        indent: 2,
         star: true,
       })
+    } else {
+      log(`Lending pool ${colors.yellow('already initialized')}`, {
+        indent: 2,
+        star: true,
+      })
+    }
 
-      const strategy = await deploy({
-        hre,
-        contract: market.strategy.name,
+    const tTokenStrategy = await deploy({
+      hre,
+      contract: market.strategy.name,
+      indent: 4,
+    })
+
+    const tToken = await contracts.get<ITToken>('ITToken', {
+      at: tTokenAddress,
+    })
+    const currentStrategy = await tToken.getStrategy()
+    if (currentStrategy !== tTokenStrategy.address) {
+      log(`Setting new TToken strategy...:`, {
+        indent: 4,
+        star: true,
+        nl: false,
       })
 
-      const tToken = await contracts.get<ITToken>('ITToken', {
-        at: tTokenAddress,
-      })
-      await tToken
+      const receipt = await tToken
         .setStrategy(
-          strategy.address,
-          strategy.interface.encodeFunctionData(
+          tTokenStrategy.address,
+          tTokenStrategy.interface.encodeFunctionData(
             'init',
             market.strategy.initArgs.map(({ type, value }) => {
               switch (type) {
@@ -116,110 +127,9 @@ const initializeMarkets: DeployFunction = async (hre) => {
         )
         .then(({ wait }) => wait())
 
-      log(`TToken initialized`, { indent: 3, star: true })
-
-      // Initialize the lending pool with new TToken and Lending Escrow
-      await diamond
-        .initLendingPool(asset.address, tTokenAddress)
-        .then(({ wait }) => wait())
-
-      log('Lending pool initialized', { indent: 2, star: true })
-    } else {
-      log(`Lending pool ALREADY initialized`, { indent: 2, star: true })
+      const gas = colors.cyan(`${receipt.gasUsed} gas`)
+      log(` with ${gas}`)
     }
-  }
-}
-
-const deployTTokenBeacon = async (
-  hre: HardhatRuntimeEnvironment,
-  diamond: ITellerDiamond
-): Promise<(assetAddress: string) => Promise<string>> => {
-  const { contracts, ethers, getNamedAccounts, log } = hre
-
-  log('********** Teller Token (TToken) Beacon **********', { indent: 2 })
-  log('')
-
-  const logicVersion = 1
-
-  const tTokenLogic = await deploy<ITToken>({
-    hre,
-    contract: `TToken_V${logicVersion}`,
-    log: false,
-  })
-
-  log(`Current Logic V${logicVersion}: ${tTokenLogic.address}`, {
-    indent: 3,
-    star: true,
-  })
-
-  const beaconProxy = await deploy({
-    hre,
-    contract: 'InitializeableBeaconProxy',
-  })
-
-  const beacon = await deploy<UpgradeableBeaconFactory>({
-    hre,
-    contract: 'UpgradeableBeaconFactory',
-    name: 'TTokenBeaconFactory',
-    args: [beaconProxy.address, tTokenLogic.address],
-  })
-
-  // Check to see if we need to upgrade
-  const currentImpl = await beacon.implementation()
-  if (
-    ethers.utils.getAddress(currentImpl) !==
-    ethers.utils.getAddress(tTokenLogic.address)
-  ) {
-    log(`Upgrading Teller Token logic: ${tTokenLogic.address}`, {
-      indent: 4,
-      star: true,
-    })
-    await beacon.upgradeTo(tTokenLogic.address).then(({ wait }) => wait())
-  }
-
-  log(`Using Beacon: ${beacon.address}`, { indent: 3, star: true })
-  log('')
-
-  return async (assetAddress: string): Promise<string> => {
-    const asset = await hre.tokens.get(assetAddress)
-
-    const receipt = await beacon
-      .cloneProxy(
-        tTokenLogic.interface.encodeFunctionData('initialize', [
-          {
-            controller: diamond.address,
-            admin: await getNamedAccounts().then(({ deployer }) => deployer),
-            underlying: assetAddress,
-          },
-        ])
-      )
-      .then(({ wait }) => wait())
-    const topic = beacon.interface.getEventTopic(
-      beacon.interface.getEvent('ProxyCloned')
-    )
-    const [log] = await beacon.provider.getLogs({
-      fromBlock: receipt.blockNumber,
-      address: beacon.address,
-      topics: [topic],
-    })
-    const {
-      args: { newProxy },
-    } = beacon.interface.parseLog(log)
-    if (newProxy == null || newProxy == '') throw new Error('No proxy cloned')
-
-    await hre.deployments.save(`t${await asset.symbol()}`, {
-      address: newProxy,
-      ...(await hre.deployments
-        .getArtifact('InitializeableBeaconProxy')
-        .then(async (artifact) => ({
-          ...artifact,
-          abi: artifact.abi.concat(
-            await hre.artifacts.readArtifact('ITToken').then(({ abi }) => abi)
-          ),
-        }))),
-    })
-
-    return newProxy
   }
 }
 
@@ -229,7 +139,8 @@ const waitAndLog = async (
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
   const receipt = await tx.then(({ wait }) => wait())
-  hre.log(`${msg} with ${receipt.gasUsed} gas`, {
+  const gas = colors.cyan(`${receipt.gasUsed} gas`)
+  hre.log(`${msg} with ${gas}`, {
     indent: 2,
     star: true,
   })

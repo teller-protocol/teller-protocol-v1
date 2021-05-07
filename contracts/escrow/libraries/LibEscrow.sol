@@ -47,6 +47,9 @@ library LibEscrow {
      * @param tokenAddress The token address to be added or removed
      */
     function tokenUpdated(uint256 loanID, address tokenAddress) internal {
+        // Skip if is lending token
+        if (LibLoans.loan(loanID).lendingToken == tokenAddress) return;
+
         EnumerableSet.AddressSet storage tokens = s().escrowTokens[loanID];
         bool contains = EnumerableSet.contains(tokens, tokenAddress);
         if (balanceOf(loanID, tokenAddress) > 0) {
@@ -68,22 +71,19 @@ library LibEscrow {
         view
         returns (uint256 value_)
     {
-        EnumerableSet.AddressSet storage tokens =
-            MarketStorageLib.store().escrowTokens[loanID];
+        address lendingToken = LibLoans.loan(loanID).lendingToken;
+        value_ += balanceOf(loanID, lendingToken);
+
+        EnumerableSet.AddressSet storage tokens = getEscrowTokens(loanID);
         if (EnumerableSet.length(tokens) > 0) {
-            address lendingToken = LibLoans.loan(loanID).lendingToken;
             for (uint256 i = 0; i < EnumerableSet.length(tokens); i++) {
                 uint256 tokenBal =
                     balanceOf(loanID, EnumerableSet.at(tokens, i));
-                if (EnumerableSet.at(tokens, i) == lendingToken) {
-                    value_ += tokenBal;
-                } else {
-                    value_ += PriceAggLib.valueFor(
-                        EnumerableSet.at(tokens, i),
-                        lendingToken,
-                        tokenBal
-                    );
-                }
+                value_ += PriceAggLib.valueFor(
+                    EnumerableSet.at(tokens, i),
+                    lendingToken,
+                    tokenBal
+                );
             }
         }
     }

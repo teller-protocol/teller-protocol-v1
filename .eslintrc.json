@@ -21,6 +21,7 @@
     "@typescript-eslint/promise-function-async": "off",
     "@typescript-eslint/restrict-template-expressions": "off",
     "@typescript-eslint/strict-boolean-expressions": "off",
+    "@typescript-eslint/no-non-null-assertion": "warn",
     "@typescript-eslint/no-unused-expressions": "off",
     "arrow-parens": "error",
     "no-unused-vars": "off",

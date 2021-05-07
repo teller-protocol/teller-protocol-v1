@@ -17,8 +17,6 @@ contract UpgradeableBeaconFactory is IBeacon, Ownable {
     address private _implementation;
     InitializeableBeaconProxy public proxyAddress;
 
-    event ProxyCloned(address newProxy);
-
     /**
      * @dev Emitted when the implementation returned by the beacon is changed.
      */
@@ -46,8 +44,6 @@ contract UpgradeableBeaconFactory is IBeacon, Ownable {
     {
         proxy_ = payable(Clones.clone(address(proxyAddress)));
         InitializeableBeaconProxy(proxy_).initialize(address(this), initData);
-
-        emit ProxyCloned(address(proxy_));
     }
 
     /**
