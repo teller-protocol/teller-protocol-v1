@@ -94,6 +94,7 @@ library NFTLib {
 
     function verifyLoanSize(NftLoanSizeProof calldata proof)
         internal
+        view
         returns (bool verified_)
     {
         verified_ = MerkleProof.verify(

@@ -27,6 +27,7 @@ import {
     ERC165Checker
 } from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import { RolesLib } from "../../contexts2/access-control/roles/RolesLib.sol";
+import { NumbersLib } from "../../shared/libraries/NumbersLib.sol";
 
 // Storage
 import "./storage.sol" as Storage;
@@ -71,6 +72,7 @@ contract TToken_V1 is ITToken {
 
     /**
      * @notice The balance of an {account} denoted in underlying value.
+     * @param account Address to calculate the underlying balance.
      */
     function balanceOfUnderlying(address account)
         public
@@ -80,6 +82,94 @@ contract TToken_V1 is ITToken {
         return _valueInUnderlying(balanceOf(account), exchangeRate());
     }
 
+    /**
+     * @notice It calculates the current exchange rate for a whole Teller Token based of the underlying token balance.
+     * @return rate_ The current exchange rate.
+     */
+    function exchangeRate() public override returns (uint256 rate_) {
+        if (totalSupply() == 0) {
+            return EXCHANGE_RATE_FACTOR;
+        }
+
+        rate_ = (currentTVL() * EXCHANGE_RATE_FACTOR) / totalSupply();
+    }
+
+    /**
+     * @notice It calculates the total supply of the underlying asset.
+     * @return totalSupply_ the total supply denoted in the underlying asset.
+     */
+    function totalUnderlyingSupply() public override returns (uint256) {
+        bytes memory data =
+            _delegateStrategy(
+                abi.encodeWithSelector(
+                    ITTokenStrategy.totalUnderlyingSupply.selector
+                )
+            );
+        return abi.decode(data, (uint256));
+    }
+
+    /**
+     * @notice It calculates the market state values across a given markets.
+     * @notice Returns values that represent the global state across the market.
+     * @return totalSupplied Total amount of the underlying asset supplied.
+     * @return totalBorrowed Total amount borrowed through loans.
+     * @return totalRepaid The total amount repaid till the current timestamp.
+     * @return totalInterestRepaid The total amount interest repaid till the current timestamp.
+     * @return totalOnLoan Total amount currently deployed in loans.
+     */
+    function getMarketState()
+        external
+        override
+        returns (
+            uint256 totalSupplied,
+            uint256 totalBorrowed,
+            uint256 totalRepaid,
+            uint256 totalInterestRepaid,
+            uint256 totalOnLoan
+        )
+    {
+        totalSupplied = totalUnderlyingSupply();
+        totalBorrowed = s().totalBorrowed;
+        totalRepaid = s().totalRepaid;
+        totalInterestRepaid = s().totalInterestRepaid;
+        totalOnLoan = totalBorrowed - totalRepaid;
+    }
+
+    /**
+     * @notice Calculates the current Total Value Locked, denoted in the underlying asset, in the Teller Token pool.
+     * @return tvl_ The value locked in the pool.
+     *
+     * Note: This value includes the amount that is on loan (including ones that were sent to EOAs).
+     */
+    function currentTVL() public override returns (uint256 tvl_) {
+        tvl_ += totalUnderlyingSupply();
+        tvl_ += s().totalBorrowed;
+        tvl_ -= s().totalRepaid;
+    }
+
+    /**
+     * @notice It validates whether supply to debt (StD) ratio is valid including the loan amount.
+     * @param newLoanAmount the new loan amount to consider o the StD ratio.
+     * @return ratio_ Whether debt ratio for lending pool is valid.
+     */
+    function debtRatioFor(uint256 newLoanAmount)
+        external
+        override
+        returns (uint16 ratio_)
+    {
+        uint256 supplied = totalUnderlyingSupply();
+        if (supplied > 0) {
+            uint256 newOnLoanAmount =
+                s().totalBorrowed - s().totalRepaid + newLoanAmount;
+            ratio_ = NumbersLib.ratioOf(newOnLoanAmount, supplied);
+        }
+    }
+
+    /**
+     * @notice Called by the Teller Diamond contract when a loan has been taken out and requires funds.
+     * @param recipient The account to send the funds to.
+     * @param amount Funds requested to fulfil the loan.
+     */
     function fundLoan(address recipient, uint256 amount)
         external
         override
@@ -96,8 +186,25 @@ contract TToken_V1 is ITToken {
             );
         }
 
+        // Increase total borrowed amount
+        s().totalBorrowed += amount;
+
         // Transfer tokens to recipient
         SafeERC20.safeTransfer(s().underlying, recipient, amount);
+    }
+
+    /**
+     * @notice Called by the Teller Diamond contract when a loan has been repaid.
+     * @param amount Funds deposited back into the pool to repay the principal amount of a loan.
+     * @param interestAmount Interest value paid into the pool from a loan.
+     */
+    function repayLoan(uint256 amount, uint256 interestAmount)
+        external
+        override
+        authorized(CONTROLLER, _msgSender())
+    {
+        s().totalRepaid += amount;
+        s().totalInterestRepaid += interestAmount;
     }
 
     /**
@@ -154,21 +261,8 @@ contract TToken_V1 is ITToken {
             "Teller: redeem ttoken lp not enough supply"
         );
 
-        // Burn Teller tokens
-        _burn(_msgSender(), amount);
-
-        // Make sure enough funds are available to redeem
-        _delegateStrategy(
-            abi.encodeWithSelector(
-                ITTokenStrategy.withdraw.selector,
-                underlyingAmount
-            )
-        );
-
-        // Transfer funds back to lender
-        SafeERC20.safeTransfer(s().underlying, _msgSender(), underlyingAmount);
-
-        emit Redeem(_msgSender(), amount, underlyingAmount);
+        // Burn Teller Tokens and transfer underlying
+        _redeem(amount, underlyingAmount);
     }
 
     /**
@@ -192,134 +286,40 @@ contract TToken_V1 is ITToken {
             "Teller: redeem amount exceeds balance"
         );
 
+        // Burn Teller Tokens and transfer underlying
+        _redeem(tokenValue, amount);
+    }
+
+    /**
+     * @dev Redeem an {amount} of Teller Tokens and transfers {underlyingAmount} to the caller.
+     * @param amount Total amount of Teller Tokens to burn.
+     * @param underlyingAmount Total amount of underlying asset tokens to transfer to caller.
+     *
+     * This function should only be called by {redeem} and {redeemUnderlying} after the exchange
+     * rate and both token values have been calculated to use.
+     */
+    function _redeem(uint256 amount, uint256 underlyingAmount) internal {
         // Burn Teller tokens
-        _burn(_msgSender(), tokenValue);
+        _burn(_msgSender(), amount);
 
         // Make sure enough funds are available to redeem
         _delegateStrategy(
-            abi.encodeWithSelector(ITTokenStrategy.withdraw.selector, amount)
+            abi.encodeWithSelector(
+                ITTokenStrategy.withdraw.selector,
+                underlyingAmount
+            )
         );
 
         // Transfer funds back to lender
-        SafeERC20.safeTransfer(s().underlying, _msgSender(), amount);
+        SafeERC20.safeTransfer(s().underlying, _msgSender(), underlyingAmount);
 
-        emit Redeem(_msgSender(), tokenValue, amount);
-    }
-
-    function _redeem(uint256 underlyingAmount) internal {}
-
-    /**
-     * @notice Initializes the Teller token
-     */
-    function initialize(InitArgs calldata args) external override initializer {
-        require(
-            Address.isContract(args.controller),
-            "Teller: controller not contract"
-        );
-        require(
-            Address.isContract(args.underlying),
-            "Teller: underlying token not contract"
-        );
-
-        RolesLib.grantRole(CONTROLLER, args.controller);
-        RolesLib.grantRole(ADMIN, args.admin);
-
-        s().underlying = ERC20(args.underlying);
-        __ERC20_init(
-            string(abi.encodePacked("Teller ", s().underlying.name())),
-            string(abi.encodePacked("t", s().underlying.symbol()))
-        );
-        s().decimals = s().underlying.decimals();
-        // Platform restricted by default
-        s().restricted = true;
+        emit Redeem(_msgSender(), amount, underlyingAmount);
     }
 
     /**
-     * @notice Sets the restricted state of the platform.
-     */
-    function restrict(bool state)
-        public
-        override
-        authorized(ADMIN, _msgSender())
-    {
-        s().restricted = state;
-    }
-
-    /**
-     * @dev
-     */
-    function _valueOfUnderlying(uint256 amount, uint256 rate)
-        internal
-        pure
-        returns (uint256 value_)
-    {
-        value_ = (amount * EXCHANGE_RATE_FACTOR) / rate;
-    }
-
-    /**
-     * @dev
-     */
-    function _valueInUnderlying(uint256 amount, uint256 rate)
-        internal
-        pure
-        returns (uint256 value_)
-    {
-        value_ = (amount * (rate)) / EXCHANGE_RATE_FACTOR;
-    }
-
-    /**
-     * @dev
-     */
-    function _exchangeRateSupply()
-        internal
-        returns (uint256 rate_, uint256 supply_)
-    {
-        if (totalSupply() == 0) {
-            rate_ = EXCHANGE_RATE_FACTOR;
-        } else {
-            supply_ = totalUnderlyingSupply();
-            rate_ = _exchangeRateForSupply(supply_);
-        }
-    }
-
-    /**
-     * @dev
-     */
-    function _exchangeRateForSupply(uint256 supply)
-        internal
-        view
-        returns (uint256 rate_)
-    {
-        rate_ = (supply * EXCHANGE_RATE_FACTOR) / totalSupply();
-    }
-
-    /**
-     * @dev
-     */
-    function exchangeRate() public override returns (uint256 rate_) {
-        if (totalSupply() == 0) {
-            return EXCHANGE_RATE_FACTOR;
-        }
-
-        rate_ = _exchangeRateForSupply(totalUnderlyingSupply());
-    }
-
-    /**
-     * @notice It calculates the total supply of the underlying asset.
-     * @return totalSupply_ the total supply denoted in the underlying asset.
-     */
-    function totalUnderlyingSupply() public override returns (uint256) {
-        bytes memory data =
-            _delegateStrategy(
-                abi.encodeWithSelector(
-                    ITTokenStrategy.totalUnderlyingSupply.selector
-                )
-            );
-        return abi.decode(data, (uint256));
-    }
-
-    /**
-     * @notice Calls the current strategy to rebalance the funds based on its defined rules.
+     * @notice Rebalances the funds controlled by Teller Token according to the current strategy.
+     *
+     * See {TTokenStrategy}.
      */
     function rebalance() public override {
         _delegateStrategy(
@@ -351,6 +351,65 @@ contract TToken_V1 is ITToken {
         if (initData.length > 0) {
             _delegateStrategy(initData);
         }
+    }
+
+    /**
+     * @notice Sets the restricted state of the platform.
+     */
+    function restrict(bool state)
+        public
+        override
+        authorized(ADMIN, _msgSender())
+    {
+        s().restricted = state;
+    }
+
+    /**
+     * @notice Initializes the Teller token
+     */
+    function initialize(InitArgs calldata args) external override initializer {
+        require(
+            Address.isContract(args.controller),
+            "Teller: controller not contract"
+        );
+        require(
+            Address.isContract(args.underlying),
+            "Teller: underlying token not contract"
+        );
+
+        RolesLib.grantRole(CONTROLLER, args.controller);
+        RolesLib.grantRole(ADMIN, args.admin);
+
+        s().underlying = ERC20(args.underlying);
+        __ERC20_init(
+            string(abi.encodePacked("Teller ", s().underlying.name())),
+            string(abi.encodePacked("t", s().underlying.symbol()))
+        );
+        s().decimals = s().underlying.decimals();
+        // Platform restricted by default
+        s().restricted = true;
+    }
+
+    /**
+     * @dev
+     */
+    function _valueOfUnderlying(uint256 amount, uint256 rate)
+        internal
+        pure
+        returns (uint256 value_)
+    {
+        value_ = (amount * EXCHANGE_RATE_FACTOR) / rate;
+    }
+
+    /**
+     * @dev
+     */
+    function _valueInUnderlying(uint256 amount, uint256 rate)
+        internal
+        pure
+        returns (uint256 value_)
+    {
+        value_ = (amount * (rate)) / EXCHANGE_RATE_FACTOR;
     }
 
     /**

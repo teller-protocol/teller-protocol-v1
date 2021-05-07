@@ -31,7 +31,7 @@ export const addTiers = async (
     )
 
   log('')
-  log('Adding Tiers to Teller NFT', { indent: 1, star: true })
+  log('Adding Tiers to Teller NFT', { indent: 2, star: true })
   log('')
 
   const { tiers } = getNFT(network)
@@ -40,9 +40,9 @@ export const addTiers = async (
     if (tier.contributionAsset === NULL_ADDRESS) {
       await nft.addTier(tiers[i]).then(({ wait }) => wait())
 
-      log(`Tier ${i} added`, { indent: 2, star: true })
+      log(`Tier ${i} added`, { indent: 3, star: true })
     } else {
-      log(`Tier ${i} already exists`, { indent: 2, star: true })
+      log(`Tier ${i} already exists`, { indent: 3, star: true })
     }
   }
 }

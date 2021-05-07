@@ -5941,5 +5941,17 @@
       { "address": "0x3c229864378b3b0adf98ae247ca33986aed8ec1e", "count": 1 },
       { "address": "0x78d58cc37cdaabfde72c9a45b57acbc3abc3d7c9", "count": 1 }
     ]
+  },
+  {
+    "tierIndex": 2,
+    "balances": [
+      { "address": "0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5", "count": 10 },
+      { "address": "0xd59e99927018b995ee9Ad6b9003677f1e7393F8A", "count": 10 },
+      { "address": "0xa243A7b4e9AF8D7e87a5443Aa7E21AB27624eaaA", "count": 10 },
+      { "address": "0x592000b2c8c590531d490893C16AfC4b9cbbe6B9", "count": 10 },
+      { "address": "0xd965Cd540d2B80e7ef2840Ff097016B3A0e930fC", "count": 10 },
+      { "address": "0xb8fAF03a268F259dDD9adfAf8E1148Fc81021e54", "count": 10 },
+      { "address": "0xc756Be144729EcDBE51f49073D295ABd318f0048", "count": 10 }
+    ]
   }
 ]

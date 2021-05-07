@@ -1,22 +1,30 @@
 import { task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
-export const tenderlyPush = async (
+export const tenderlyContracts = async (
   args: null,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
-  const { deployments, tenderly } = hre
+  const { deployments, tenderly, network } = hre
+
+  // Only continue on a live network
+  if (!network.live)
+    throw new Error('Must be on a live network to submit to Tenderly')
 
   const allDeployments = await deployments.all().then((all) =>
-    Object.entries(all).map(([name, { address }]) => ({
-      name,
+    // const contracts:  = []
+    Object.entries(all).map(([name, { artifactName, address }]) => ({
+      name: artifactName ?? name,
+      customName: name,
       address,
     }))
   )
 
-  await tenderly.push(allDeployments)
+  await tenderly.verify(...allDeployments)
+  await tenderly.push(...allDeployments)
 }
 
-task('tenderly-push', 'Pushes all deployed contracts to Tenderly').setAction(
-  tenderlyPush
-)
+task(
+  'tenderly-contracts',
+  'Verifies and pushes all deployed contracts to Tenderly'
+).setAction(tenderlyContracts)

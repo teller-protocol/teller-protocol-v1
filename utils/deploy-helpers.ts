@@ -81,7 +81,10 @@ export interface DeployDiamondArgs<
   name: string
   facets: string[]
   owner?: string
-  execute: F extends string
+  execute?: F extends string
+    ? DiamondExecuteArgs<F, A>
+    : DiamondOptions['execute']
+  upgrade?: F extends string
     ? DiamondExecuteArgs<F, A>
     : DiamondOptions['execute']
 }
@@ -106,33 +109,25 @@ export const deployDiamond = async <
 
   const { deployer } = await getNamedAccounts()
 
+  log(`Deploying ${args.name}...: `, { star: true, indent: 1, nl: false })
+
   const deployment = await args.hre.deployments.getOrNull(args.name)
-  let address: string
-  let abi: any[]
-  if (deployment == null) {
-    log(`Deploying ${args.name}...: `, { star: true, indent: 1, nl: false })
+  const executeArgs = deployment ? args.upgrade : args.execute
 
-    const result = await deploy(args.name, {
-      owner: args.owner ?? deployer,
-      libraries: args.libraries,
-      facets: args.facets,
-      // @ts-expect-error fix type
-      execute: args.execute,
-      from: deployer,
-      log: false,
-    })
-    address = result.address
-    abi = result.abi
+  const { address, abi, receipt, newlyDeployed } = await deploy(args.name, {
+    owner: args.owner ?? deployer,
+    libraries: args.libraries,
+    facets: args.facets,
+    // @ts-expect-error fix type
+    execute: executeArgs,
+    from: deployer,
+    log: false,
+  })
 
-    log(
-      `${result.address} ${
-        result.receipt ? `with ${result.receipt.gasUsed} gas` : ''
-      }`
-    )
+  if (newlyDeployed) {
+    log(`${address} ${receipt ? `with ${receipt.gasUsed} gas` : ''}`)
   } else {
-    log(` already deployed ${deployment.address}`)
-    address = deployment.address
-    abi = deployment.abi
+    log(`already deployed ${address}`)
   }
 
   return (await ethers.getContractAt(abi, address)) as C

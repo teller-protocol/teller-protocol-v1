@@ -84,7 +84,7 @@ describe('Lending', () => {
               .should.emit(diamond, 'Paused')
               .withArgs(LENDING_ID, await deployer.getAddress())
 
-            // Fund the market
+            // Fund the lender
             const depositAmount = await fundLender(lendingToken, 1000)
 
             // Approve amount to loan
@@ -104,6 +104,29 @@ describe('Lending', () => {
               .pause(LENDING_ID, false)
               .should.emit(diamond, 'UnPaused')
               .withArgs(LENDING_ID, await deployer.getAddress())
+          })
+
+          it('should NOT be able to deposit more than the max TVL setting', async () => {
+            const maxTVL = await diamond.getAssetMaxTVL(lendingToken.address)
+            const depositAmount = maxTVL.add(1)
+
+            // Fund the lender
+            await getFunds({
+              to: await lender.getAddress(),
+              tokenSym: market.lendingToken,
+              amount: depositAmount,
+            })
+
+            // Approve amount to loan
+            await lendingToken
+              .connect(lender)
+              .approve(diamond.address, depositAmount)
+
+            // Try deposit into lending pool
+            await diamond
+              .connect(lender)
+              .lendingPoolDeposit(lendingToken.address, depositAmount)
+              .should.be.revertedWith('Teller: deposit TVL exceeded')
           })
 
           it('should be able deposit and receive a Teller Token LP balance', async () => {

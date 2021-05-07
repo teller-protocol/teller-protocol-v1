@@ -119,12 +119,6 @@ struct MarketStorage {
     mapping(address => ICollateralEscrow) collateralEscrows;
     // Maps accounts to owned loan IDs
     mapping(address => uint128[]) borrowerLoans;
-    // Maps lending token to overall amount lent out for loans
-    mapping(address => uint256) totalBorrowed;
-    // Maps lending token to overall amount repaid from loans
-    mapping(address => uint256) totalRepaid;
-    // Maps lending token to overall amount of interest collected from loans
-    mapping(address => uint256) totalInterestRepaid;
     // Maps lending token to overall amount of interest collected from loans
     mapping(address => ITToken) tTokens;
     // Maps lending token to list of signer addresses who are only ones allowed to verify loan requests

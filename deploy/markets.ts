@@ -12,7 +12,7 @@ import { NULL_ADDRESS } from '../utils/consts'
 import { deploy } from '../utils/deploy-helpers'
 
 const initializeMarkets: DeployFunction = async (hre) => {
-  const { getNamedAccounts, contracts, tokens, network, log } = hre
+  const { getNamedAccounts, contracts, tokens, network, ethers, log } = hre
   const { deployer, craSigner } = await getNamedAccounts()
 
   log('********** Lending Pools **********')
@@ -59,10 +59,14 @@ const initializeMarkets: DeployFunction = async (hre) => {
       lendingTokenAddress
     )
     const collateralTokensToAdd = new Set(
-      market.collateralTokens.map((sym) => tokenAddresses.all[sym])
+      market.collateralTokens.map((sym) =>
+        ethers.utils.getAddress(tokenAddresses.all[sym])
+      )
     )
     for (const token of existingCollateralTokens) {
-      if (collateralTokensToAdd.has(token)) collateralTokensToAdd.delete(token)
+      const tokenAddress = ethers.utils.getAddress(token)
+      if (collateralTokensToAdd.has(tokenAddress))
+        collateralTokensToAdd.delete(tokenAddress)
     }
     if (collateralTokensToAdd.size > 0)
       await waitAndLog(
@@ -177,6 +181,8 @@ const deployTTokenBeacon = async (
   log('')
 
   return async (assetAddress: string): Promise<string> => {
+    const asset = await hre.tokens.get(assetAddress)
+
     const receipt = await beacon
       .cloneProxy(
         tTokenLogic.interface.encodeFunctionData('initialize', [
@@ -200,6 +206,19 @@ const deployTTokenBeacon = async (
       args: { newProxy },
     } = beacon.interface.parseLog(log)
     if (newProxy == null || newProxy == '') throw new Error('No proxy cloned')
+
+    await hre.deployments.save(`t${await asset.symbol()}`, {
+      address: newProxy,
+      ...(await hre.deployments
+        .getArtifact('InitializeableBeaconProxy')
+        .then(async (artifact) => ({
+          ...artifact,
+          abi: artifact.abi.concat(
+            await hre.artifacts.readArtifact('ITToken').then(({ abi }) => abi)
+          ),
+        }))),
+    })
+
     return newProxy
   }
 }

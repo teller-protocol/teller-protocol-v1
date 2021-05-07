@@ -64,16 +64,8 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
             "Teller: lending pool not initialized"
         );
 
-        uint256 currentTVL =
-            // LP total underlying supply
-            tToken.totalUnderlyingSupply() +
-                // Total current on loan
-                (LendingLib.s().totalBorrowed[asset] -
-                    LendingLib.s().totalRepaid[asset]) +
-                // New deposit amount
-                amount;
         require(
-            currentTVL <= MaxTVLLib.get(asset),
+            tToken.currentTVL() + amount <= MaxTVLLib.get(asset),
             "Teller: deposit TVL exceeded"
         );
 
