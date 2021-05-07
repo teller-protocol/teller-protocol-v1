@@ -61,9 +61,12 @@ After checking the prerequisites, you are able to execute the unit tests, and co
 
 To create a localhost network:
 
-Hardhat creates a local ganache instance and deploys all contracts to that instance. To verify if instances have been deployed, check `deployments/localhost`
+Hardhat creates a local ganache instance and deploys all contracts to that instance.
+To verify if instances have been deployed, check `deployments/localhost`
 
 - Using Hardhat: `npx hardhat node`
+
+For other instances of hardhat tasks, run `npx hardhat --show-stack-traces`
 
 ### Running Unit Tests
 
