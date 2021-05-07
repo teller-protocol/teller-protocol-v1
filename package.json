@@ -4,6 +4,7 @@
   "license": "MIT",
   "scripts": {
     "h": "dotenv -- ./scripts/hh.sh",
+    "git": "func() { git add . && git commit -m \"$1\" && git push origin HEAD; }; func",
     "test": "TS_NODE_TRANSPILE_ONLY=1 yarn hh test",
     "lint": "prettier .",
     "format:write": "prettier --write",
@@ -49,7 +50,7 @@
     "ethereumjs-abi": "^0.6.8",
     "ethereumjs-util": "^7.0.9",
     "ethers": "^5.0.26",
-    "hardhat": "^2.0.11",
+    "hardhat": "^2.2.1",
     "hardhat-contract-sizer": "^2.0.2",
     "hardhat-deploy": "^0.7.0-beta.57",
     "hardhat-gas-reporter": "^1.0.4",

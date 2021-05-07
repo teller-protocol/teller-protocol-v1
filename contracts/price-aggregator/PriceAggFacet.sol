@@ -9,7 +9,7 @@ import { CompoundLib } from "../shared/libraries/CompoundLib.sol";
 // Interfaces
 import {
     AggregatorV2V3Interface
-} from "@chainlink/contracts/src/v0.7/interfaces/AggregatorV2V3Interface.sol";
+} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // Storage
