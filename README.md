@@ -20,13 +20,9 @@ If you would like to contribute, we encourage you to submit a PR directly or joi
 
 To avoid any issue with the NodeJS version, please check it before continuing. It should be >= _v10.15.3_ and =< _lts/dubnium / v10.21.0_.
 
-### Install Global Dependencies
+### Install Dependencies
 
-To make the development process easier, we use [Truffle](https://www.trufflesuite.com/truffle) as a dependency in the project and as a global dependency.
-
-At this moment, the team is using Truffle v5.1.16.
-
-`yarn global add truffle@5.1.16`
+To make the development process easier, we use [Hardhat](https://hardhat.org/) as a dependency in the project.
 
 ### Create a `.ENV` file
 
@@ -49,17 +45,6 @@ The alchemy keys are is used to deploy smart contracts on their respective netwo
 
 `NB: The Alchemy keys have to be the full alchemy network URL`
 
-### Verifying Versions
-
-```sh
-$ truffle version
-
-Truffle v5.1.16 (core: 5.1.16)
-Solidity - 0.5.17 (solc-js)
-Node v14.15.4
-Web3.js v1.2.1
-```
-
 > This is important to have a stable NodeJS version installed. At the moment of writing this document, the team is using the NodeJS _lts/dubnium / vv14.15.4_ without issues.
 
 ## Get Started
@@ -69,7 +54,8 @@ Web3.js v1.2.1
 To get started, you need to install the dependencies:
 
 - Using Yarn: `yarn install`
-- Using NPM: `npm install`
+
+`NB: you should only use yarn in conjunction with the yarn.lock file`
 
 After checking the prerequisites, you are able to execute the unit tests, and code coverage.
 

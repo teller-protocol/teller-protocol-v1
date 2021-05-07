@@ -15,4 +15,3 @@ cache
 artifacts
 .vscode
 deployments/localhost
-yarn.lock
