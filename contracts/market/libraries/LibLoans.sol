@@ -23,7 +23,8 @@ library LibLoans {
     using NumbersLib for int256;
     using NumbersLib for uint256;
 
-    bytes32 constant ID = keccak256("LOANS");
+    bytes32 internal constant ID = keccak256("LOANS");
+    uint32 internal constant SECONDS_PER_YEAR = 31536000;
 
     function s() internal pure returns (MarketStorage storage) {
         return MarketStorageLib.store();
@@ -169,9 +170,9 @@ library LibLoans {
     function getInterestRatio(uint256 loanID) internal view returns (uint16) {
         return
             uint16(
-                (uint32(loan(loanID).interestRate) * (loan(loanID).duration)) /
-                    (31536000)
-            ); // seconds per year
+                (uint64(loan(loanID).duration) * loan(loanID).interestRate) /
+                    SECONDS_PER_YEAR
+            );
     }
 
     function _getLoanAmount(uint256 loanID) private view returns (uint256) {
