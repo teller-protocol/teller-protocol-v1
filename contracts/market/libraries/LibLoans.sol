@@ -164,15 +164,23 @@ library LibLoans {
 
     /**
      * @notice Returns the interest ratio based on the loan interest rate for the loan duration.
+     * @notice There is a minimum threshold of 1%.
      * @dev The interest rate on the loan terms is APY.
      * @param loanID The loan ID to get the interest rate for.
      */
-    function getInterestRatio(uint256 loanID) internal view returns (uint16) {
-        return
-            uint16(
-                (uint64(loan(loanID).duration) * loan(loanID).interestRate) /
-                    SECONDS_PER_YEAR
-            );
+    function getInterestRatio(uint256 loanID)
+        internal
+        view
+        returns (uint16 ratio_)
+    {
+        ratio_ = uint16(
+            (uint64(loan(loanID).duration) * loan(loanID).interestRate) /
+                SECONDS_PER_YEAR
+        );
+
+        if (ratio_ == 0) {
+            ratio_ = 1;
+        }
     }
 
     function _getLoanAmount(uint256 loanID) private view returns (uint256) {
