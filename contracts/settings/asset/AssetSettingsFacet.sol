@@ -27,13 +27,6 @@ contract AssetSettingsFacet is RolesMods {
         return AppStorageLib.store().assetSettings[asset];
     }
 
-    event AssetSettingsCreated(
-        address indexed asset,
-        bytes32 indexed key,
-        bytes32 value,
-        CacheType cacheType
-    );
-
     event AssetSettingsUpdated(
         address indexed asset,
         bytes32 indexed key,
@@ -72,7 +65,7 @@ contract AssetSettingsFacet is RolesMods {
                 requests[i].cacheType
             );
 
-            emit AssetSettingsCreated(
+            emit AssetSettingsUpdated(
                 asset,
                 requests[i].key,
                 requests[i].value,
