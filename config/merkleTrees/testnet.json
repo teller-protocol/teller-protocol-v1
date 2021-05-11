@@ -5960,5 +5960,34 @@
       { "address": "0xb8fAF03a268F259dDD9adfAf8E1148Fc81021e54", "count": 10 },
       { "address": "0xc756Be144729EcDBE51f49073D295ABd318f0048", "count": 10 }
     ]
+  },
+  {
+    "tierIndex": 2,
+    "balances": [
+      { "address": "0xafe87013dc96ede1e116a288d80fcaa0effe5fe5", "count": 1 },
+      { "address": "0x8e4933d9d82c1486f47808a761b2c21d1a0c3328", "count": 1 },
+      { "address": "0xa243a7b4e9af8d7e87a5443aa7e21ab27624eaaa", "count": 1 },
+      { "address": "0xea459a5aa7e52f0493eda1faae0b862c51bf40b9", "count": 1 },
+      { "address": "0xf9b45a3c3ade1d975566da21b262d3afaf611833", "count": 1 },
+      { "address": "0x32b21cf35bb38b2304914bb256da77f12b9ae825", "count": 1 },
+      { "address": "0xa2e3bdae9569c89b13cd4407a87fd063253b84f8", "count": 1 },
+      { "address": "0x42d2184dac8580e6224b361a36ca3a917f7ea67b", "count": 1 },
+      { "address": "0x38148ecc2078da7f65e6233dda28efaf4c51e96f", "count": 1 },
+      { "address": "0x7553fa99ab1f429551eec660708c08e14e30584f", "count": 1 },
+      { "address": "0x11b67a503b3b702104eeef69a4ea1365d0f2c658", "count": 1 },
+      { "address": "0x4e8ef2e11a8056a75b0aac2d313202bea4016eb0", "count": 1 },
+      { "address": "0x049808d5eaa90a2665b9703d2246dded34f1eb73", "count": 1 },
+      { "address": "0xefff9f68c79088d1efeea73b03c84ee422f09af2", "count": 1 },
+      { "address": "0x6b853955f54becaecdbeabaaaa96dcd35e4a1577", "count": 1 },
+      { "address": "0x7c74f84ab9d211b0ad306fd793c593b744135c49", "count": 1 },
+      { "address": "0x4c0dc41e82a9da9162be29b379687c648aee4388", "count": 1 },
+      { "address": "0x71535aae1b6c0c51db317b54d5eee72d1ab843c1", "count": 1 },
+      { "address": "0x09f258f399c421afff697ff75caca4ba3c73f02b", "count": 1 },
+      { "address": "0xbadab2f42f87378a05de7faf5e2bace4aeb5fe59", "count": 1 },
+      { "address": "0xbcafd7a10f18b873653f18f0021ac0bd64b122bc", "count": 1 },
+      { "address": "0xae6eca6b0836e37d270722ba81bb2ecacb674b08", "count": 1 },
+      { "address": "0x5a9bd3e84376d2961d64e7088d0aa60cab148100", "count": 1 },
+      { "address": "0xe5a3f1e72d1dfa5c361516ac2779e9602106fea6", "count": 1 }
+    ]
   }
 ]
