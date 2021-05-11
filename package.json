@@ -60,7 +60,7 @@
     "jsonfile": "^6.0.1",
     "leche": "^2.3.0",
     "lint-staged": "^10.5.3",
-    "lodash": "^4.17.19",
+    "lodash": "^4.17.21",
     "mocha": "^7.1.0",
     "node-fetch": "^2.6.1",
     "prettier": "^2.0.2",
