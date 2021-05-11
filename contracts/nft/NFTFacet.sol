@@ -4,11 +4,12 @@ pragma solidity ^0.8.0;
 // Contracts
 import { TellerNFT } from "../nft/TellerNFT.sol";
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
-import { ADMIN } from "../shared/roles.sol";
+import { ADMIN, AUTHORIZED } from "../shared/roles.sol";
 
 // Libraries
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { NFTLib } from "./libraries/NFTLib.sol";
+import { RolesLib } from "../contexts2/access-control/roles/RolesLib.sol";
 
 contract NFTFacet is RolesMods {
     function getStakedNFTs(address nftOwner)
@@ -28,6 +29,8 @@ contract NFTFacet is RolesMods {
             // Stake NFT and transfer into diamond
             NFTLib.stake(nftIDs[i], msg.sender);
         }
+        // Give the caller authorization to protocol
+        RolesLib.grantRole(AUTHORIZED, msg.sender);
     }
 
     /**
