@@ -35,7 +35,7 @@ library LibDapps {
         return
             IAaveLendingPool(
                 IAaveLendingPoolAddressesProvider(
-                    0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5
+                    0xd05e3E715d945B59290df0ae8eF85c1BdB684744 // Polygon mainnet
                 )
                     .getLendingPool()
             ); // LP address provider contract is immutable and the address will never change
