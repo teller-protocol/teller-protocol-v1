@@ -6,8 +6,8 @@ import { DappMods } from "./DappMods.sol";
 import { PausableMods } from "../../settings/pausable/PausableMods.sol";
 import { LibDapps } from "./libraries/LibDapps.sol";
 import { LibEscrow } from "../libraries/LibEscrow.sol";
-import { IAToken } from "./interfaces/IAToken.sol";
-import { IAaveLendingPool } from "./interfaces/IAaveLendingPool.sol";
+import { IAToken } from "../../shared/interfaces/IAToken.sol";
+import { IAaveLendingPool } from "../../shared/interfaces/IAaveLendingPool.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 

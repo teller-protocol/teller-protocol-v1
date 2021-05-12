@@ -3,11 +3,13 @@ pragma solidity ^0.8.0;
 
 // Interfaces
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IAToken } from "../interfaces/IAToken.sol";
-import { IAaveLendingPool } from "../interfaces/IAaveLendingPool.sol";
+import { IAToken } from "../../../shared/interfaces/IAToken.sol";
+import {
+    IAaveLendingPool
+} from "../../../shared/interfaces/IAaveLendingPool.sol";
 import {
     IAaveLendingPoolAddressesProvider
-} from "../interfaces/IAaveLendingPoolAddressesProvider.sol";
+} from "../../../shared/interfaces/IAaveLendingPoolAddressesProvider.sol";
 import {
     IUniswapV2Router
 } from "../../../shared/interfaces/IUniswapV2Router.sol";

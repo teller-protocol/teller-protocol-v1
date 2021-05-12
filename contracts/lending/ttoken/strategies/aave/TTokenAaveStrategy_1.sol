@@ -19,7 +19,7 @@ import {
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { NumbersLib } from "../../../../shared/libraries/NumbersLib.sol";
-import { LibDapps } from "../../escrow/dapps/libraries/LibDapps.sol";
+import { LibDapps } from "../../../../escrow/dapps/libraries/LibDapps.sol";
 
 // Storage
 import "../../storage.sol" as TokenStorage;
@@ -33,8 +33,7 @@ contract TTokenAaveStrategy_1 is RolesMods, TTokenStrategy {
         private constant aaveStore = AaveStorage.store;
 
     // Get aave lending pool for polygon
-    IAaveLendingPool public constant aaveLendingPool =
-        LibDapps.getAaveLendingPool();
+    IAaveLendingPool aaveLendingPool = LibDapps.getAaveLendingPool();
 
     string public constant NAME = "AaveStrategy_1";
 
@@ -60,17 +59,19 @@ contract TTokenAaveStrategy_1 is RolesMods, TTokenStrategy {
             // Calculate median ratio to rebalance to
             uint16 medianRatio =
                 (aaveStore().balanceRatioMax + aaveStore().balanceRatioMin) / 2;
+            uint256 requiredBal =
+                NumbersLib.percent(storedBal + aaveBal, medianRatio);
             uint256 amountToDeposit = storedBal - requiredBal;
 
             // Approve Aave lending pool
             SafeERC20.safeIncreaseAllowance(
-                tokenStore.underlying,
+                tokenStore().underlying,
                 address(aaveLendingPool),
                 amountToDeposit
             );
             // Deposit into Aave
             aaveLendingPool.deposit(
-                tokenStore.underlying,
+                address(tokenStore().underlying),
                 amountToDeposit,
                 address(this),
                 0
@@ -138,7 +139,7 @@ contract TTokenAaveStrategy_1 is RolesMods, TTokenStrategy {
         uint256 redeemAmount = amount - storedBal + requiredBal;
         // Withdraw tokens from the Aave lending pool if needed
         aaveLendingPool.withdraw(
-            tokenStore.underlying,
+            address(tokenStore().underlying),
             redeemAmount,
             address(this)
         );
