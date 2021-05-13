@@ -25,4 +25,6 @@ export const signers: Record<string, Signers> = {
     '0x8bCd79c2AE760E70573fCFA4e4460a7B3C8A3134',
     '0x312a5217c12aD9b206A0380B4B134ef2b02d09A5',
   ],
+  polygon: [],
+  polygon_mumbai: [],
 }

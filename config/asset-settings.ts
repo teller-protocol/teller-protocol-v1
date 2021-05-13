@@ -15,6 +15,17 @@ const mainnetAssetSettings: AssetSettings = {
   WETH: [{ key: 'cToken', value: 'CETH', type: AssetType.Address }],
 }
 
+const polygonAssetSettings: AssetSettings = {
+  DAI: [
+    { key: 'aToken', value: 'ADAI', type: AssetType.Address },
+    { key: 'MaxLoanAmount', value: 25000, type: AssetType.Amount },
+    { key: 'MaxTVL', value: 10000000, type: AssetType.Amount },
+    { key: 'MaxDebtRatio', value: 5000, type: AssetType.Uint },
+  ],
+  USDC: [{ key: 'aToken', value: 'AUSDC', type: AssetType.Address }],
+  WETH: [{ key: 'aToken', value: 'AETH', type: AssetType.Address }],
+}
+
 export const assetSettings: Record<string, AssetSettings> = {
   kovan: {
     DAI: [
@@ -50,4 +61,6 @@ export const assetSettings: Record<string, AssetSettings> = {
   hardhat: mainnetAssetSettings,
   localhost: mainnetAssetSettings,
   mainnet: mainnetAssetSettings,
+  polygon: polygonAssetSettings,
+  polygon_mumbai: polygonAssetSettings,
 }

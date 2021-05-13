@@ -26,6 +26,32 @@ const mainnetMarkets: Market[] = [
   },
 ]
 
+const polygonMarkets: Market[] = [
+  {
+    lendingToken: 'DAI',
+    collateralTokens: ['WETH'],
+    strategy: {
+      name: 'TTokenAaveStrategy_1',
+      initArgs: [
+        {
+          type: 'TokenSymbol',
+          value: 'ADAI',
+        },
+        {
+          // Balance Ratio Min
+          type: 'Number',
+          value: '2000',
+        },
+        {
+          // Balance Ratio Max
+          type: 'Number',
+          value: '4000',
+        },
+      ],
+    },
+  },
+]
+
 export const markets: Record<string, Market[]> = {
   kovan: [
     {
@@ -105,4 +131,6 @@ export const markets: Record<string, Market[]> = {
   hardhat: mainnetMarkets,
   localhost: mainnetMarkets,
   mainnet: mainnetMarkets,
+  polygon: polygonMarkets,
+  polygon_mumbai: polygonMarkets,
 }

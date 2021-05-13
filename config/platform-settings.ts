@@ -245,4 +245,6 @@ export const platformSettings: Record<string, PlatformSettings> = {
   hardhat: mainnetPlatformSettings,
   localhost: mainnetPlatformSettings,
   mainnet: mainnetPlatformSettings,
+  polygon: mainnetPlatformSettings,
+  ploygon_mumbai: mainnetPlatformSettings,
 }

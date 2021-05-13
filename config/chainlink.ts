@@ -121,6 +121,50 @@ export const chainlink: Record<string, Chainlink> = {
       address: '0xD4d78d8e18d4717F5eE8801335eE5b5B97a4b824',
     },
   },
+  polygon: {
+    USDC_ETH: {
+      baseTokenName: 'USDC',
+      quoteTokenName: 'WETH',
+      address: '0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7',
+    },
+    DAI_ETH: {
+      baseTokenName: 'DAI',
+      quoteTokenName: 'WETH',
+      address: '0xFC539A559e170f848323e19dfD66007520510085',
+    },
+    LINK_DAI: {
+      baseTokenName: 'LINK',
+      quoteTokenName: 'DAI',
+      address: '0xd9FFdb71EbE7496cC440152d43986Aae0AB76665', // LINK-USD
+    },
+    LINK_USDC: {
+      baseTokenName: 'LINK',
+      quoteTokenName: 'USDC',
+      address: '0xd9FFdb71EbE7496cC440152d43986Aae0AB76665', // LINK-USD
+    },
+  },
+  polygon_mumbai: {
+    USDC_ETH: {
+      baseTokenName: 'USDC',
+      quoteTokenName: 'WETH',
+      address: '0x0715A7794a1dc8e42615F059dD6e406A6594651A', // ETH-USD
+    },
+    DAI_ETH: {
+      baseTokenName: 'DAI',
+      quoteTokenName: 'WETH',
+      address: '0x0715A7794a1dc8e42615F059dD6e406A6594651A', // ETH-USD
+    },
+    LINK_DAI: {
+      baseTokenName: 'LINK',
+      quoteTokenName: 'DAI',
+      address: '0xd9FFdb71EbE7496cC440152d43986Aae0AB76665', // LINK-USD MAINNET
+    },
+    LINK_USDC: {
+      baseTokenName: 'LINK',
+      quoteTokenName: 'USDC',
+      address: '0xd9FFdb71EbE7496cC440152d43986Aae0AB76665', // LINK-USD MAINNET
+    },
+  },
   hardhat: mainnetChainlink,
   localhost: mainnetChainlink,
   mainnet: mainnetChainlink,

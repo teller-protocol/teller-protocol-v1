@@ -42,6 +42,13 @@ const FORK_BLOCK_NUMBER = process.env.FORKING_BLOCK
   ? 12250227
   : undefined
 
+let forkUrl
+if (FORKING_NETWORK != 'polygon' || 'polygon_mumbai') {
+  forkUrl = `https://rpc-mainnet.maticvigil.com`
+} else {
+  forkUrl = process.env[`ALCHEMY_${FORKING_NETWORK.toUpperCase()}_KEY`]
+}
+
 // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 export default <HardhatUserConfig>{
   etherscan: {
@@ -153,7 +160,7 @@ export default <HardhatUserConfig>{
     },
     hardhat: {
       forking: {
-        url: process.env[`ALCHEMY_${FORKING_NETWORK.toUpperCase()}_KEY`],
+        url: forkUrl,
         // Block to fork can be specified via cli: `yarn h fork {network} ([block number] | latest)`
         // Defaults to the latest deployment block
         blockNumber: FORK_BLOCK_NUMBER,
@@ -174,6 +181,22 @@ export default <HardhatUserConfig>{
     mainnet: {
       url: process.env.ALCHEMY_MAINNET_KEY,
       chainId: 1,
+      accounts,
+      gas: GAS,
+      gasPrice: GAS_PRICE,
+      live: true,
+    },
+    polygon: {
+      url: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA_KEY}`,
+      chainId: 137,
+      accounts,
+      gas: GAS,
+      gasPrice: GAS_PRICE,
+      live: true,
+    },
+    polygon_mumbai: {
+      url: `https://polygon-mumbai.infura.io/v3/${process.env.INFURA_KEY}`,
+      chainId: 80001,
       accounts,
       gas: GAS,
       gasPrice: GAS_PRICE,

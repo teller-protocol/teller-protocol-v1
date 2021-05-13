@@ -99,7 +99,7 @@ export interface Signers extends Array<Address> {}
 
 export interface NetworkTokens {
   erc20: Tokens
-  compound: Tokens
+  compound: Tokens // TODO: Rename/refactor for agnostic strategy token/tokens
 }
 
 export interface Tokens {
