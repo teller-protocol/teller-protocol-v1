@@ -9,6 +9,7 @@ import {
   ITToken,
   UpgradeableBeaconFactory,
 } from '../types/typechain'
+import { DUMMY_ADDRESS } from '../utils/consts'
 import {
   deploy,
   deployDiamond,
@@ -57,77 +58,77 @@ const deployProtocol: DeployFunction = async (hre) => {
       // Settings
       {
         contract: 'SettingsFacet',
-        skipIfAlreadyDeploy: false,
+        skipIfAlreadyDeployed: false,
       },
       {
         contract: 'PlatformSettingsFacet',
-        skipIfAlreadyDeploy: false,
+        skipIfAlreadyDeployed: false,
       },
       {
         contract: 'AssetSettingsDataFacet',
-        skipIfAlreadyDeploy: false,
+        skipIfAlreadyDeployed: false,
       },
       {
         contract: 'AssetSettingsFacet',
-        skipIfAlreadyDeploy: false,
+        skipIfAlreadyDeployed: false,
       },
       {
         contract: 'PausableFacet',
-        skipIfAlreadyDeploy: false,
+        skipIfAlreadyDeployed: false,
       },
       // Pricing
       {
         contract: 'PriceAggFacet',
-        skipIfAlreadyDeploy: false,
+        skipIfAlreadyDeployed: false,
       },
       {
         contract: 'ChainlinkAggFacet',
-        skipIfAlreadyDeploy: false,
+        skipIfAlreadyDeployed: false,
       },
       // Lending
       {
         contract: 'LendingFacet',
-        skipIfAlreadyDeploy: false,
+        skipIfAlreadyDeployed: false,
       },
       // Loans
       {
         contract: 'CollateralFacet',
-        skipIfAlreadyDeploy: false,
+        skipIfAlreadyDeployed: false,
       },
       {
         contract: 'CreateLoanFacet',
-        skipIfAlreadyDeploy: false,
+        skipIfAlreadyDeployed: false,
       },
       {
         contract: 'LoanDataFacet',
-        skipIfAlreadyDeploy: false,
+        skipIfAlreadyDeployed: false,
       },
       {
         contract: 'RepayFacet',
-        skipIfAlreadyDeploy: false,
+        skipIfAlreadyDeployed: false,
       },
       {
         contract: 'SignersFacet',
-        skipIfAlreadyDeploy: false,
+        skipIfAlreadyDeployed: false,
       },
       // NFT
       {
         contract: 'NFTFacet',
-        skipIfAlreadyDeploy: false,
+        skipIfAlreadyDeployed: false,
       },
       // Escrow
       {
         contract: 'EscrowClaimTokensFacet',
-        skipIfAlreadyDeploy: false,
+        skipIfAlreadyDeployed: false,
       },
       // Dapps
       {
         contract: 'CompoundFacet',
-        skipIfAlreadyDeploy: false,
+        skipIfAlreadyDeployed: false,
       },
       {
         contract: 'UniswapFacet',
-        skipIfAlreadyDeploy: false,
+        skipIfAlreadyDeployed: false,
       },
     ],
     owner: deployer,
