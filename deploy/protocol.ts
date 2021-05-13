@@ -122,7 +122,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       },
       // Dapps
       {
-        contract: 'CompoundFacet',
+        contract: 'AaveFacet',
         skipIfAlreadyDeploy: false,
       },
       {
