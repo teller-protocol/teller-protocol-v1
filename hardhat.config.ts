@@ -5,7 +5,6 @@ import 'solidity-coverage'
 import 'hardhat-contract-sizer'
 import 'hardhat-deploy'
 import 'hardhat-gas-reporter'
-
 import { config } from 'dotenv'
 import { BigNumber as BN, ethers } from 'ethers'
 import { HardhatUserConfig } from 'hardhat/config'
@@ -71,7 +70,7 @@ export default <HardhatUserConfig>{
         version: '0.8.3',
         settings: {
           optimizer: {
-            enabled: true,
+            enabled: false,
             runs: 200,
           },
         },

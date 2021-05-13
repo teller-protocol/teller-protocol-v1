@@ -32,7 +32,6 @@ export const deploy = async <C extends Contract>(
   const log = args.log === false ? (...args: any[]) => {} : args.hre.log
 
   const { deployer } = await getNamedAccounts()
-
   const contractDeployName = args.name ?? args.contract
   const existingContract = await getOrNull(contractDeployName)
   let contractAddress: string
