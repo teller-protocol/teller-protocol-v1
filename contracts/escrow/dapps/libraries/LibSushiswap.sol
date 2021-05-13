@@ -12,7 +12,7 @@ import {
     SafeERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-library LibUniswap {
+library LibSushiswap {
     IUniswapV2Router constant ROUTER =
         IUniswapV2Router(0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506); // Sushiswap polygon
 

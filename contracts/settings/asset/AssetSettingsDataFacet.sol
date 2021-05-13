@@ -7,6 +7,7 @@ import { ADMIN, AUTHORIZED } from "../../shared/roles.sol";
 
 // Interfaces
 import { ICErc20 } from "../../shared/interfaces/ICErc20.sol";
+import { IAToken } from "../../shared/interfaces/IAToken.sol";
 
 // Libraries
 import {
@@ -15,6 +16,7 @@ import {
     CacheType
 } from "../../shared/libraries/CacheLib.sol";
 import { AssetCTokenLib } from "./libraries/AssetCTokenLib.sol";
+import { AssetATokenLib } from "./libraries/AssetATokenLib.sol";
 import { MaxLoanAmountLib } from "./libraries/MaxLoanAmountLib.sol";
 import { MaxTVLLib } from "./libraries/MaxTVLLib.sol";
 
@@ -41,5 +43,9 @@ contract AssetSettingsDataFacet {
 
     function getAssetCToken(address asset) external view returns (ICErc20) {
         return AssetCTokenLib.get(asset);
+    }
+
+    function getAssetAToken(address asset) external view returns (IAToken) {
+        return AssetATokenLib.get(asset);
     }
 }
