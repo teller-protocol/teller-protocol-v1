@@ -668,6 +668,13 @@
     }
   ],
   "diamondCut": [],
+  "execute": {
+    "methodName": "initialize",
+    "args": [
+      "0x1BE9B4282DEb423b4cC6588168ca769AbC7211E9",
+      "0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5"
+    ]
+  },
   "devdoc": {
     "kind": "dev",
     "methods": {},

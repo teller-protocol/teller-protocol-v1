@@ -27,6 +27,7 @@ struct AppStorage {
     UpgradeableBeaconFactory loansEscrowBeacon;
     UpgradeableBeaconFactory collateralEscrowBeacon;
     address nftLiquidationController;
+    UpgradeableBeaconFactory tTokenBeacon;
 }
 
 library AppStorageLib {

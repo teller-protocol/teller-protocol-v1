@@ -35,8 +35,7 @@ ENV_VARS=''
 ### 2) network name
 ### 3) script options
 run() {
-  ## Get the network name we are currently forking
-  forking_network=$(cat $forking_network_file 2>/dev/null)
+  get_forking_network
   if [ -n "$forking_network" ]
   then
     ENV_VARS+="FORKING_NETWORK=$forking_network "
@@ -49,6 +48,11 @@ deployments_dir=./deployments
 local_deployments=$deployments_dir/localhost
 chain_id_file=$local_deployments/.chainId
 forking_network_file=$local_deployments/.forkingNetwork
+
+get_forking_network() {
+  ## Get the network name we are currently forking
+  forking_network=$(cat $forking_network_file 2>/dev/null)
+}
 
 ## Make sure there is a script name passed
 if [ -z "$script" ]
@@ -253,20 +257,37 @@ then
   then
     ## Slice "fork" from opts
     slice_opts
+
     ## Next value should be a valid network name
     slice_network verify
     ## Try to fork it
     try_fork "$network" latest
 
-    ## Deploy on the local forked network
-    deploy localhost ${opts[*]}
+    ## Set network to localhost
+    network=localhost
 
   else
     ## Get the network name
     slice_network verify
-    ## Deploy
-    deploy "$network" ${opts[*]}
   fi
+
+  get_next_opts
+  if [ "$next_opt" == 'reset' ]
+  then
+    ## Slice "reset" from opts
+    slice_opts
+
+    echo "Resetting deployments for \"$network\" in 5 seconds..."
+    sleep 5
+    echo "  - proceeding"
+    echo
+
+    ## Delete all deployments
+    rm -rf $local_deployments/**
+  fi
+
+  ## Deploy
+  deploy "$network" ${opts[*]}
 
 elif [ "$script" == 'test' ]
 then

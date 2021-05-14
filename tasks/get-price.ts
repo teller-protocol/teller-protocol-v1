@@ -24,10 +24,10 @@ export const getPrice = async (
 
   let srcStr = args.src.toUpperCase()
   let dstStr = args.dst.toUpperCase()
-  if (args.src === 'ETH') {
+  if (args.src.toUpperCase() === 'ETH') {
     srcStr = 'WETH'
   }
-  if (args.dst === 'ETH') {
+  if (args.dst.toUpperCase() === 'ETH') {
     dstStr = 'WETH'
   }
   const { [srcStr]: srcAddress, [dstStr]: dstAddress } = getTokens(network).all
@@ -37,7 +37,6 @@ export const getPrice = async (
   const src = await tokens.get(srcStr)
   const dst = await tokens.get(dstStr)
 
-  const srcFactor = toBN(1, await src.decimals())
   const dstFactor = toBN(1, await dst.decimals())
 
   log(``)
@@ -50,7 +49,10 @@ export const getPrice = async (
     const valueFor = await diamond.getValueFor(
       srcAddress,
       dstAddress,
-      BN.from(args.amount).mul(srcFactor)
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
+      BN.from(
+        ethers.utils.parseUnits(args.amount.toString(), await src.decimals())
+      )
     )
     value = FN.from(valueFor.toString()).divUnsafe(FN.from(dstFactor))
   }

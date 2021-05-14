@@ -205,11 +205,6 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
             amount
         );
 
-        // Initialize the escrow token list
-        if (!eoaAllowed) {
-            LibEscrow.tokenUpdated(loanID, loan.lendingToken);
-        }
-
         emit LoanTakenOut(loanID, msg.sender, amount, false);
     }
 }

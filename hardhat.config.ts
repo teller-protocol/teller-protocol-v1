@@ -39,8 +39,6 @@ const GAS_PRICE: HardhatNetworkUserConfig['gasPrice'] = process.env
 const FORKING_NETWORK = process.env.FORKING_NETWORK ?? 'mainnet'
 const FORK_BLOCK_NUMBER = process.env.FORKING_BLOCK
   ? parseInt(process.env.FORKING_BLOCK)
-  : FORKING_NETWORK === 'mainnet'
-  ? 12250227
   : undefined
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-assertions

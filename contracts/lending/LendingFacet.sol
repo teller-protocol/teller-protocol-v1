@@ -21,9 +21,10 @@ import {
     SafeERC20Upgradeable
 } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import { MaxTVLLib } from "../settings/asset/libraries/MaxTVLLib.sol";
+import { LendingLib } from "./libraries/LendingLib.sol";
 
 // Storage
-import { LendingLib } from "./libraries/LendingLib.sol";
+import { AppStorageLib } from "../storage/app.sol";
 
 contract LendingFacet is RolesMods, ReentryMods, PausableMods {
     /**
@@ -89,8 +90,9 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
 
     /**
      * @notice Initialized a new lending pool for {asset}
+     * @param asset Token address to initialize the lending pool for.
      */
-    function initLendingPool(address asset, address tToken)
+    function initLendingPool(address asset)
         external
         authorized(ADMIN, msg.sender)
     {
@@ -99,8 +101,12 @@ contract LendingFacet is RolesMods, ReentryMods, PausableMods {
             "Teller: lending pool already initialized"
         );
 
-        // Set the Teller token to the asset mapping
+        // Create a new Teller Token
+        address tToken = AppStorageLib.store().tTokenBeacon.cloneProxy("");
+        // Set the Teller Token to the asset mapping
         LendingLib.s().tTokens[asset] = ITToken(tToken);
+        // Initialize the Teller Token
+        LendingLib.s().tTokens[asset].initialize(msg.sender, asset);
 
         // Emit event
         emit LendingPoolInitialized(msg.sender, asset);

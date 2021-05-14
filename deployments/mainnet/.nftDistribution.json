@@ -23505,5 +23505,63 @@
         ]
       }
     }
+  },
+  {
+    "merkleRoot": "0x281205e2b46e15dd349dc7fcf11094af9dd8ac7f38afa0af576b302e3bdd5f87",
+    "tokenTotal": "0x08",
+    "claims": {
+      "0x0D2D49D2570B9075E07778dc6E5f59d091FA835e": {
+        "index": 0,
+        "amount": "0x01",
+        "proof": [
+          "0xb2ec733f287af99f7c7b135ed4fce25b488652e8cfafd62fe931b31a0f58e408",
+          "0x285b7582f173bf0e2f6b0ee2dedc11db9ac546373bd516b9010cdbf7c6841ea4",
+          "0xa53059eeaeb62c07fc8de254d70ecc1288debbfb9e13cff0de3c01bccdc84390"
+        ]
+      },
+      "0x323410305c69C44b28874417c0221F065c25318E": {
+        "index": 1,
+        "amount": "0x01",
+        "proof": [
+          "0x4591b8147c41895af10c0efda159c939b54bac4e2370c4eb32a0bf55df569921",
+          "0xe658153b834155150f3de682b01bb2a83f2df6a77a2337751d5c2fc011071949",
+          "0xa53059eeaeb62c07fc8de254d70ecc1288debbfb9e13cff0de3c01bccdc84390"
+        ]
+      },
+      "0x359E65B68Bc002DABDeF259D9fC4D30f600F35f8": {
+        "index": 2,
+        "amount": "0x01",
+        "proof": [
+          "0x76843b961195d334e84095462a0275fd82e955341283081ce4abba1cfbe8b6d9",
+          "0x285b7582f173bf0e2f6b0ee2dedc11db9ac546373bd516b9010cdbf7c6841ea4",
+          "0xa53059eeaeb62c07fc8de254d70ecc1288debbfb9e13cff0de3c01bccdc84390"
+        ]
+      },
+      "0x42D2184dac8580e6224b361A36CA3a917F7EA67b": {
+        "index": 3,
+        "amount": "0x01",
+        "proof": [
+          "0xd73f8364cdfd02864f8ac0bc1273c1f333aad1dc08304ac20754a4c23c3783fa",
+          "0x9e7640cc254f84c0b5d2985d27f82f532db9e668704c003fdbca36cd0b1681ae"
+        ]
+      },
+      "0xA14964479Ebf9cD336011ad80652b08CD83dFE3A": {
+        "index": 4,
+        "amount": "0x03",
+        "proof": [
+          "0x43ea6e3332e04f0014ace5f09b60310729a6573f51348f863d854641e3dc5cbd",
+          "0xe658153b834155150f3de682b01bb2a83f2df6a77a2337751d5c2fc011071949",
+          "0xa53059eeaeb62c07fc8de254d70ecc1288debbfb9e13cff0de3c01bccdc84390"
+        ]
+      },
+      "0xFdb01E4CC9AD0aE0206558a07F5190172c335Aa2": {
+        "index": 5,
+        "amount": "0x01",
+        "proof": [
+          "0xee8cb0a553ebd1f73b699944bfd43045a3d027425326bba44750ca2bff5e42ee",
+          "0x9e7640cc254f84c0b5d2985d27f82f532db9e668704c003fdbca36cd0b1681ae"
+        ]
+      }
+    }
   }
 ]

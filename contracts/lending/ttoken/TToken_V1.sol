@@ -354,6 +354,13 @@ contract TToken_V1 is ITToken {
     }
 
     /**
+     * @notice Gets the strategy used for balancing funds.
+     */
+    function getStrategy() external view override returns (address) {
+        return s().strategy;
+    }
+
+    /**
      * @notice Sets the restricted state of the platform.
      */
     function restrict(bool state)
@@ -367,20 +374,24 @@ contract TToken_V1 is ITToken {
     /**
      * @notice Initializes the Teller token
      */
-    function initialize(InitArgs calldata args) external override initializer {
+    function initialize(address admin, address underlying)
+        external
+        override
+        initializer
+    {
         require(
-            Address.isContract(args.controller),
+            Address.isContract(msg.sender),
             "Teller: controller not contract"
         );
         require(
-            Address.isContract(args.underlying),
+            Address.isContract(underlying),
             "Teller: underlying token not contract"
         );
 
-        RolesLib.grantRole(CONTROLLER, args.controller);
-        RolesLib.grantRole(ADMIN, args.admin);
+        RolesLib.grantRole(CONTROLLER, msg.sender);
+        RolesLib.grantRole(ADMIN, admin);
 
-        s().underlying = ERC20(args.underlying);
+        s().underlying = ERC20(underlying);
         __ERC20_init(
             string(abi.encodePacked("Teller ", s().underlying.name())),
             string(abi.encodePacked("t", s().underlying.symbol()))

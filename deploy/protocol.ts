@@ -6,9 +6,15 @@ import {
   ICollateralEscrow,
   ILoansEscrow,
   ITellerDiamond,
+  ITToken,
   UpgradeableBeaconFactory,
 } from '../types/typechain'
-import { deploy, deployDiamond } from '../utils/deploy-helpers'
+import { DUMMY_ADDRESS } from '../utils/consts'
+import {
+  deploy,
+  deployDiamond,
+  DeployDiamondArgs,
+} from '../utils/deploy-helpers'
 
 const deployProtocol: DeployFunction = async (hre) => {
   const { contracts, network, getNamedAccounts, log } = hre
@@ -19,52 +25,114 @@ const deployProtocol: DeployFunction = async (hre) => {
   const { address: nftAddress } = await contracts.get('TellerNFT')
   const loansEscrowBeacon = await deployLoansEscrowBeacon(hre)
   const collateralEscrowBeacon = await deployCollateralEscrowBeacon(hre)
+  const tTokenBeacon = await deployTTokenBeacon(hre)
 
   const tokens = getTokens(network)
-  const initArgs: Parameters<ITellerDiamond['init']>[0] = {
-    admin: deployer,
-    assets: Object.entries(tokens.erc20).map(([sym, addr]) => ({ sym, addr })),
-    cTokens: Object.values(tokens.compound),
-    tellerNFT: nftAddress,
-    loansEscrowBeacon: loansEscrowBeacon.address,
-    collateralEscrowBeacon: collateralEscrowBeacon.address,
+  const executeMethod = 'init'
+  const execute: DeployDiamondArgs<
+    ITellerDiamond,
+    typeof executeMethod
+  >['execute'] = {
+    methodName: executeMethod,
+    args: [
+      {
+        admin: deployer,
+        assets: Object.entries(tokens.erc20).map(([sym, addr]) => ({
+          sym,
+          addr,
+        })),
+        cTokens: Object.values(tokens.compound),
+        tellerNFT: nftAddress,
+        loansEscrowBeacon: loansEscrowBeacon.address,
+        collateralEscrowBeacon: collateralEscrowBeacon.address,
+        tTokenBeacon: tTokenBeacon.address,
+      },
+    ],
   }
 
   // Deploy platform diamond
-  const diamond = await deployDiamond<ITellerDiamond, 'init'>({
+  const diamond = await deployDiamond<ITellerDiamond, typeof executeMethod>({
     hre,
     name: 'TellerDiamond',
     facets: [
       // Settings
-      'SettingsFacet',
-      'PlatformSettingsFacet',
-      'AssetSettingsDataFacet',
-      'AssetSettingsFacet',
-      'PausableFacet',
+      {
+        contract: 'SettingsFacet',
+        skipIfAlreadyDeployed: false,
+      },
+      {
+        contract: 'PlatformSettingsFacet',
+        skipIfAlreadyDeployed: false,
+      },
+      {
+        contract: 'AssetSettingsDataFacet',
+        skipIfAlreadyDeployed: false,
+      },
+      {
+        contract: 'AssetSettingsFacet',
+        skipIfAlreadyDeployed: false,
+      },
+      {
+        contract: 'PausableFacet',
+        skipIfAlreadyDeployed: false,
+      },
       // Pricing
-      'PriceAggFacet',
-      'ChainlinkAggFacet',
+      {
+        contract: 'PriceAggFacet',
+        skipIfAlreadyDeployed: false,
+      },
+      {
+        contract: 'ChainlinkAggFacet',
+        skipIfAlreadyDeployed: false,
+      },
       // Lending
-      'LendingFacet',
+      {
+        contract: 'LendingFacet',
+        skipIfAlreadyDeployed: false,
+      },
       // Loans
-      'CollateralFacet',
-      'CreateLoanFacet',
-      'LoanDataFacet',
-      'RepayFacet',
-      'SignersFacet',
+      {
+        contract: 'CollateralFacet',
+        skipIfAlreadyDeployed: false,
+      },
+      {
+        contract: 'CreateLoanFacet',
+        skipIfAlreadyDeployed: false,
+      },
+      {
+        contract: 'LoanDataFacet',
+        skipIfAlreadyDeployed: false,
+      },
+      {
+        contract: 'RepayFacet',
+        skipIfAlreadyDeployed: false,
+      },
+      {
+        contract: 'SignersFacet',
+        skipIfAlreadyDeployed: false,
+      },
       // NFT
-      'NFTFacet',
+      {
+        contract: 'NFTFacet',
+        skipIfAlreadyDeployed: false,
+      },
       // Escrow
-      'EscrowClaimTokensFacet',
+      {
+        contract: 'EscrowClaimTokensFacet',
+        skipIfAlreadyDeployed: false,
+      },
       // Dapps
-      'CompoundFacet',
-      'UniswapFacet',
+      {
+        contract: 'CompoundFacet',
+        skipIfAlreadyDeployed: false,
+      },
+      {
+        contract: 'UniswapFacet',
+        skipIfAlreadyDeployed: false,
+      },
     ],
     owner: deployer,
-    execute: {
-      methodName: 'init',
-      args: [initArgs],
-    },
+    execute,
   })
 
   await addAuthorizedAddresses(hre, diamond)
@@ -120,17 +188,13 @@ const deployLoansEscrowBeacon = async (
   const loansEscrowLogic = await deploy<ILoansEscrow>({
     hre,
     contract: `LoansEscrow_V${logicVersion}`,
-    log: false,
-  })
-
-  log(`Current Logic V${logicVersion}: ${loansEscrowLogic.address}`, {
     indent: 3,
-    star: true,
   })
 
   const beaconProxy = await deploy({
     hre,
     contract: 'InitializeableBeaconProxy',
+    log: false,
   })
 
   const beacon = await deploy<UpgradeableBeaconFactory>({
@@ -138,6 +202,7 @@ const deployLoansEscrowBeacon = async (
     contract: 'UpgradeableBeaconFactory',
     name: 'EscrowBeaconFactory',
     args: [beaconProxy.address, loansEscrowLogic.address],
+    indent: 3,
   })
 
   // Check to see if we need to upgrade
@@ -153,7 +218,6 @@ const deployLoansEscrowBeacon = async (
     await beacon.upgradeTo(loansEscrowLogic.address).then(({ wait }) => wait())
   }
 
-  log(`Using Beacon: ${beacon.address}`, { indent: 3, star: true })
   log('')
 
   return beacon
@@ -172,17 +236,13 @@ const deployCollateralEscrowBeacon = async (
   const collateralEscrowLogic = await deploy<ICollateralEscrow>({
     hre,
     contract: `CollateralEscrow_V${logicVersion}`,
-    log: false,
-  })
-
-  log(`Current Logic V${logicVersion}: ${collateralEscrowLogic.address}`, {
     indent: 3,
-    star: true,
   })
 
   const beaconProxy = await deploy({
     hre,
     contract: 'InitializeableBeaconProxy',
+    log: false,
   })
 
   const beacon = await deploy<UpgradeableBeaconFactory>({
@@ -190,6 +250,7 @@ const deployCollateralEscrowBeacon = async (
     contract: 'UpgradeableBeaconFactory',
     name: 'CollateralEscrowBeaconFactory',
     args: [beaconProxy.address, collateralEscrowLogic.address],
+    indent: 3,
   })
 
   // Check to see if we need to upgrade
@@ -207,7 +268,54 @@ const deployCollateralEscrowBeacon = async (
       .then(({ wait }) => wait())
   }
 
-  log(`Using Beacon: ${beacon.address}`, { indent: 3, star: true })
+  log('')
+
+  return beacon
+}
+
+const deployTTokenBeacon = async (
+  hre: HardhatRuntimeEnvironment
+): Promise<UpgradeableBeaconFactory> => {
+  const { ethers, log } = hre
+
+  log('********** Teller Token (TToken) Beacon **********', { indent: 2 })
+  log('')
+
+  const logicVersion = 1
+
+  const tTokenLogic = await deploy<ITToken>({
+    hre,
+    contract: `TToken_V${logicVersion}`,
+    indent: 3,
+  })
+
+  const beaconProxy = await deploy({
+    hre,
+    contract: 'InitializeableBeaconProxy',
+    log: false,
+  })
+
+  const beacon = await deploy<UpgradeableBeaconFactory>({
+    hre,
+    contract: 'UpgradeableBeaconFactory',
+    name: 'TTokenBeaconFactory',
+    args: [beaconProxy.address, tTokenLogic.address],
+    indent: 3,
+  })
+
+  // Check to see if we need to upgrade
+  const currentImpl = await beacon.implementation()
+  if (
+    ethers.utils.getAddress(currentImpl) !==
+    ethers.utils.getAddress(tTokenLogic.address)
+  ) {
+    log(`Upgrading Teller Token logic: ${tTokenLogic.address}`, {
+      indent: 4,
+      star: true,
+    })
+    await beacon.upgradeTo(tTokenLogic.address).then(({ wait }) => wait())
+  }
+
   log('')
 
   return beacon

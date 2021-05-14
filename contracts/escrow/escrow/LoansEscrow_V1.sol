@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 // Interfaces
 import { ILoansEscrow } from "./ILoansEscrow.sol";
@@ -21,9 +20,17 @@ import {
 } from "../../shared/proxy/beacon/InitializeableBeaconProxy.sol";
 import { IBeacon } from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 
-contract LoansEscrow_V1 is OwnableUpgradeable, ILoansEscrow {
+contract LoansEscrow_V1 is ILoansEscrow {
+    address public owner;
+
+    modifier onlyOwner {
+        require(owner == msg.sender, "Teller: loan escrow not owner");
+        _;
+    }
+
     function init() external override {
-        OwnableUpgradeable.__Ownable_init();
+        require(owner == address(0), "Teller: loan escrow already initialized");
+        owner = msg.sender;
     }
 
     function callDapp(address dappAddress, bytes calldata dappData)
