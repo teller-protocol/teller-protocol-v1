@@ -801,6 +801,7 @@
       "type": "function"
     }
   ],
+  "artifactName": "TellerNFT",
   "transactionHash": "0x914eca05b6917ab965321e177f0746e27b5dd48e885a78c1ccee00937070895b",
   "receipt": {
     "to": null,

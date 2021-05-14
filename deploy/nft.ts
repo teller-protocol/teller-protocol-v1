@@ -25,13 +25,10 @@ const deployNFT: DeployFunction = async (hre) => {
     facets: [
       'ent_initialize_NFTDistributor_v1',
       'ent_addMerkle_NFTDistributor_v1',
+      'ent_moveMerkle_NFTDistributor_v1',
       'ent_claim_NFTDistributor_v1',
       'ext_distributor_NFT_v1',
     ],
-    execute: {
-      methodName: 'initialize',
-      args: [nft.address, await deployer.getAddress()],
-    },
     hre,
   })
 
