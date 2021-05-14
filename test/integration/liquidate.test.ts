@@ -16,7 +16,6 @@ import {
   LoanHelpersReturn,
   LoanType,
   takeOut,
-  takeOutNFT,
 } from '../helpers/loans'
 
 chai.should()
@@ -63,23 +62,13 @@ describe('Liquidate Loans', () => {
     const testSetup = async (
       args: TestSetupArgs
     ): Promise<LoanHelpersReturn> => {
-      let helpers
-      if (args.nft) {
-        helpers = await takeOutNFT({
-          lendToken: market.lendingToken,
-          collToken: market.collateralTokens[0],
-          amount: args.amount,
-          loanType: args.loanType,
-          nft: true,
-        })
-      } else {
-        helpers = await takeOut({
-          lendToken: market.lendingToken,
-          collToken: market.collateralTokens[0],
-          amount: args.amount,
-          loanType: args.loanType,
-        })
-      }
+      const helpers = await takeOut({
+        lendToken: market.lendingToken,
+        collToken: market.collateralTokens[0],
+        amount: args.amount,
+        loanType: args.loanType,
+        nft: args.nft,
+      })
       const { details } = helpers
 
       // Get required amount of tokens to repay loan
@@ -249,6 +238,7 @@ describe('Liquidate Loans', () => {
         const { details } = await testSetup({
           loanType: LoanType.OVER_COLLATERALIZED,
           status: LiqLoanStatus.Expired,
+          nft: true,
         })
 
         const liquidatorCollBefore = await details.collateralToken.balanceOf(
