@@ -20,7 +20,7 @@ script=$1
 ## Make sure there is a network name passed
 if [[ ${available_networks[*]} =~ "$script"  ]] 
 then 
-    eval "yarn h fork $script & yarn hardhat test"
+    eval "yarn h fork $script"
 else 
     echo "Hardhat network not given..."
     echo
