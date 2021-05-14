@@ -7,7 +7,7 @@ import moment from 'moment'
 import { getMarkets } from '../../config'
 import { getPlatformSetting } from '../../tasks'
 import { Market } from '../../types/custom/config-types'
-import { ERC20, ITellerDiamond } from '../../types/typechain'
+import { ERC20, ITellerDiamond, TellerNFT } from '../../types/typechain'
 import { HUNDRED_PERCENT, LoanStatus } from '../../utils/consts'
 import { fundedMarket } from '../fixtures'
 import { getFunds } from '../helpers/get-funds'
@@ -21,7 +21,7 @@ import {
 chai.should()
 chai.use(solidity)
 
-const { getNamedSigner, evm } = hre
+const { getNamedSigner, evm, contracts } = hre
 
 describe('Liquidate Loans', () => {
   getMarkets(hre.network).forEach(testLoans)
@@ -29,6 +29,7 @@ describe('Liquidate Loans', () => {
   function testLoans(market: Market): void {
     let liquidator: { signer: Signer; address: string }
     let diamond: ITellerDiamond
+    let nft: TellerNFT
     let liquidateRewardPercent: BigNumber
 
     before(async () => {
@@ -38,6 +39,7 @@ describe('Liquidate Loans', () => {
         amount: 100000,
         tags: ['nft'],
       }))
+      nft = await contracts.get<TellerNFT>('TellerNFT')
 
       const liquidatorSigner = await getNamedSigner('liquidator')
       liquidator = {
@@ -282,6 +284,10 @@ describe('Liquidate Loans', () => {
         )
         const reward = await diamond.getLiquidationReward(details.loan.id)
 
+        const nftBefore = await nft.getOwnedTokens(
+          '0x95143890162bd671d77ae9b771881a1cb76c29a4'
+        ) // Liq controller
+
         await diamond
           .connect(liquidator.signer)
           .liquidateLoan(details.loan.id)
@@ -314,6 +320,12 @@ describe('Liquidate Loans', () => {
             true,
             'Liquidator collateral token balance should not increase'
           )
+
+        const nftAfter = await nft.getOwnedTokens(
+          '0x95143890162bd671d77ae9b771881a1cb76c29a4'
+        )
+        console.log({ nftBefore, nftAfter })
+        nftAfter.length.should.greaterThan(nftBefore.length)
       })
     })
   }
