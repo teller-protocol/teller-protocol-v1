@@ -16,6 +16,7 @@ import {
   LoanHelpersReturn,
   LoanType,
   takeOut,
+  takeOutNFT,
 } from '../helpers/loans'
 
 chai.should()
@@ -57,16 +58,28 @@ describe('Liquidate Loans', () => {
       amount?: BigNumberish
       loanType: LoanType
       status: LiqLoanStatus
+      nft?: boolean
     }
     const testSetup = async (
       args: TestSetupArgs
     ): Promise<LoanHelpersReturn> => {
-      const helpers = await takeOut({
-        lendToken: market.lendingToken,
-        collToken: market.collateralTokens[0],
-        amount: args.amount,
-        loanType: args.loanType,
-      })
+      let helpers
+      if (args.nft) {
+        helpers = await takeOutNFT({
+          lendToken: market.lendingToken,
+          collToken: market.collateralTokens[0],
+          amount: args.amount,
+          loanType: args.loanType,
+          nft: true,
+        })
+      } else {
+        helpers = await takeOut({
+          lendToken: market.lendingToken,
+          collToken: market.collateralTokens[0],
+          amount: args.amount,
+          loanType: args.loanType,
+        })
+      }
       const { details } = helpers
 
       // Get required amount of tokens to repay loan
@@ -264,6 +277,53 @@ describe('Liquidate Loans', () => {
         liquidatorCollAfter
           .sub(liquidatorCollBefore)
           .should.eql(reward.inCollateral_, 'Incorrect collateral reward paid')
+      })
+      it.only('should be able to liquidate an expired loan with an NFT', async () => {
+        const { details } = await testSetup({
+          loanType: LoanType.ZERO_COLLATERAL,
+          status: LiqLoanStatus.Expired,
+        })
+
+        const liquidatorLendBefore = await details.lendingToken.balanceOf(
+          liquidator.address
+        )
+        const liquidatorCollBefore = await details.collateralToken.balanceOf(
+          liquidator.address
+        )
+        const reward = await diamond.getLiquidationReward(details.loan.id)
+
+        await diamond
+          .connect(liquidator.signer)
+          .liquidateLoan(details.loan.id)
+          .should.emit(diamond, 'LoanLiquidated')
+
+        await details
+          .refresh()
+          .then(({ loan: { status } }) =>
+            status.should.eq(LoanStatus.Liquidated, 'Loan not liquidated')
+          )
+
+        const liquidatorLendAfter = await details.lendingToken.balanceOf(
+          liquidator.address
+        )
+        const lendDiff = liquidatorLendAfter
+          .add(details.totalOwed)
+          .sub(liquidatorLendBefore)
+        lendDiff.should.eql(
+          reward.inLending_,
+          'Expected liquidator to be paid by loan escrow in lending token'
+        )
+
+        const liquidatorCollAfter = await details.collateralToken.balanceOf(
+          liquidator.address
+        )
+        const collDiff = liquidatorCollAfter.sub(liquidatorCollBefore)
+        collDiff
+          .eq(0)
+          .should.eql(
+            true,
+            'Liquidator collateral token balance should not increase'
+          )
       })
     })
   }
