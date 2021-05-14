@@ -301,7 +301,7 @@ then
   slice_network verify
   try_fork "$network" latest
 
-  run test hardhat ${opts[*]}
+  run test localhost ${opts[*]}
 
   fork stop
 
