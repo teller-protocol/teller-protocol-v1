@@ -231,7 +231,7 @@ library CreateLoanLib {
         );
         require(
             MaxLoanAmountLib.get(request.assetAddress) > request.amount,
-            "Teller: max loan amount exceeded"
+            "Teller: asset max loan amount exceeded"
         );
     }
 

@@ -46,6 +46,8 @@ const deployProtocol: DeployFunction = async (hre) => {
         loansEscrowBeacon: loansEscrowBeacon.address,
         collateralEscrowBeacon: collateralEscrowBeacon.address,
         tTokenBeacon: tTokenBeacon.address,
+        // Teller Gnosis Safe contract
+        nftLiquidationController: '0x95143890162bd671d77ae9b771881a1cb76c29a4',
       },
     ],
   }
