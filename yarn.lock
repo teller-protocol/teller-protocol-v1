@@ -780,9 +780,10 @@
   dependencies:
     defer-to-connect "^1.0.1"
 
-"@tenderly/hardhat-tenderly@git://github.com/teller-protocol/hardhat-tenderly":
+"@tenderly/hardhat-tenderly@^1.0.12":
   version "1.0.12"
-  resolved "git://github.com/teller-protocol/hardhat-tenderly#26864b6a523e77798a72c7397f37a2848e7164dc"
+  resolved "https://registry.yarnpkg.com/@tenderly/hardhat-tenderly/-/hardhat-tenderly-1.0.12.tgz#fa64da2bf2f6d35a1c131ac9ccaf2f7e8b189a50"
+  integrity sha512-zx2zVpbBxGWVp+aLgf59sZR5lxdqfq/PjqUhga6+iazukQNu/Y6pLfVnCcF1ggvLsf7gnMjwLe3YEx/GxCAykQ==
   dependencies:
     axios "^0.21.1"
     fs-extra "^9.0.1"

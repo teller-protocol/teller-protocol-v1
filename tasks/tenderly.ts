@@ -20,8 +20,9 @@ export const tenderlyContracts = async (
     }))
   )
 
-  await tenderly.verify(...allDeployments)
-  await tenderly.push(...allDeployments)
+  allDeployments.forEach((deployment) => {
+    void Promise.all([tenderly.verify(deployment), tenderly.push(deployment)])
+  })
 }
 
 task(

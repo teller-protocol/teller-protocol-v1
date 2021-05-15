@@ -19,7 +19,7 @@
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@openzeppelin/contracts": "^4.0.0",
     "@openzeppelin/contracts-upgradeable": "^4.0.0",
-    "@tenderly/hardhat-tenderly": "git://github.com/teller-protocol/hardhat-tenderly",
+    "@tenderly/hardhat-tenderly": "^1.0.12",
     "@typechain/ethers-v5": "^6.0.5",
     "@types/chai": "^4.2.14",
     "@types/chai-as-promised": "^7.1.3",
