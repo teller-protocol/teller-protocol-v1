@@ -8,11 +8,12 @@ import {
 import hre from 'hardhat'
 import moment from 'moment'
 
-import { ERC20, ITellerDiamond, TellerNFT } from '../../types/typechain'
-import { LoanStatus } from '../../utils/consts'
-import { mockCRAResponse } from './mock-cra-response'
 import { getNFT } from '../../config'
 import { claimNFT, getLoanMerkleTree, setLoanMerkle } from '../../tasks'
+import { ERC20, ITellerDiamond, TellerNFT } from '../../types/typechain'
+import { LoanStatus } from '../../utils/consts'
+import { getFunds } from './get-funds'
+import { mockCRAResponse } from './mock-cra-response'
 
 const { getNamedAccounts, contracts, tokens, ethers, toBN, evm } = hre
 
@@ -162,6 +163,21 @@ export const createLoan = async (
 export const takeOut = async (
   args: CreateLoanArgs
 ): Promise<LoanHelpersReturn> => {
+  // Setup for NFT user
+  const { merkleTrees } = getNFT(hre.network)
+  const borrower = ethers.utils.getAddress(merkleTrees[0].balances[0].address)
+  if (args.nft) {
+    args.borrower = borrower
+    await evm.impersonate(borrower)
+    const diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
+    await diamond.addAuthorizedAddress(borrower)
+    await getFunds({
+      to: borrower,
+      amount: ethers.utils.parseEther('1'),
+      tokenSym: 'ETH',
+    })
+  }
+
   // Create loan
   const { getHelpers } = await createLoan(args)
   const helpers = await getHelpers()
@@ -185,7 +201,7 @@ export const takeOut = async (
       details.loan.id,
       details.borrower.address,
       details.terms.maxLoanAmount,
-      false
+      args.nft
     )
 
   // Refresh details after taking out loan
@@ -255,21 +271,16 @@ const takeOutLoan = async (
     from = details.borrower.signer,
     nft,
   } = args
+
   if (!nft) {
     return await diamond.connect(from).takeOutLoan(details.loan.id, amount)
   } else {
-    // Setup for NFT user
-    const { merkleTrees } = getNFT(hre.network)
-    const merkleIndex = 0
-    const borrower = ethers.utils.getAddress(
-      merkleTrees[merkleIndex].balances[0].address
-    )
+    const borrower = await from.getAddress()
     const deployer = await ethers.provider.getSigner(0)
-    const imp = await evm.impersonate(borrower)
     await diamond.connect(deployer).addAuthorizedAddress(borrower)
 
     // Claim user's NFTs
-    await claimNFT({ account: borrower, merkleIndex }, hre)
+    await claimNFT({ account: borrower, merkleIndex: 0 }, hre)
 
     // Create and set NFT loan merkle
     const nftLoanTree = await getLoanMerkleTree(hre)
@@ -282,14 +293,14 @@ const takeOutLoan = async (
       .getOwnedTokens(borrower)
       .then((arr) => (arr.length > 2 ? arr.slice(0, 2) : arr))
     const lendingToken = await tokens.get(details.lendingToken.address)
-    let amount = toBN(0)
+    let maxNftAmount = toBN(0)
     for (const nftID of ownedNFTs) {
       const { tier_ } = await nft.getTokenTier(nftID)
       const baseLoanSize = toBN(
         tier_.baseLoanSize,
         await lendingToken.decimals()
       )
-      amount = amount.add(baseLoanSize)
+      maxNftAmount = maxNftAmount.add(baseLoanSize)
 
       // Get the proofs for the NFT loan size
       proofs.push({
@@ -299,14 +310,16 @@ const takeOutLoan = async (
       })
     }
 
-    const maxLoan = await diamond.getAssetMaxLoanAmount(lendingToken.address)
-    console.log({
-      PRE: {
-        amount: amount.toString(),
-        maxLoan: maxLoan.toString(),
-        Exceeded: amount.gt(maxLoan),
-      },
-    })
+    // Set NFT approval
+    await nft.connect(from).setApprovalForAll(diamond.address, true)
+
+    // Stake user NFTs
+    await diamond.connect(from).stakeNFTs(ownedNFTs)
+
+    const amountBN = ethers.BigNumber.from(amount)
+    if (amountBN.gt(maxNftAmount)) {
+      throw new Error(`Invalid loan amount (max: ${maxNftAmount.toString()})`)
+    }
 
     return await diamond
       .connect(from)
