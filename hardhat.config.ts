@@ -22,7 +22,7 @@ config()
 
 const accounts: HardhatNetworkHDAccountsUserConfig = {
   mnemonic: process.env.MNEMONIC_KEY,
-  count: parseInt(process.env.ADDRESS_COUNT_KEY ?? '15'),
+  count: 15,
   accountsBalance: ethers.utils.parseEther('100000000').toString(),
 }
 

@@ -3,6 +3,7 @@
   "version": "1.1.0",
   "license": "MIT",
   "scripts": {
+    "setup": "./scripts/setup.sh",
     "h": "dotenv -- ./scripts/hh.sh",
     "test": "TS_NODE_TRANSPILE_ONLY=1 yarn hh test",
     "lint": "prettier .",
