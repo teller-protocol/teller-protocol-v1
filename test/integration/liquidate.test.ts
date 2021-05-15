@@ -274,6 +274,7 @@ describe('Liquidate Loans', () => {
         const { details } = await testSetup({
           loanType: LoanType.ZERO_COLLATERAL,
           status: LiqLoanStatus.Expired,
+          nft: true,
         })
 
         const liquidatorLendBefore = await details.lendingToken.balanceOf(
@@ -324,7 +325,7 @@ describe('Liquidate Loans', () => {
         const nftAfter = await nft.getOwnedTokens(
           '0x95143890162bd671d77ae9b771881a1cb76c29a4'
         )
-        console.log({ nftBefore, nftAfter })
+        console.log({ nftBefore, nftAfter, liquidatorLendBefore })
         nftAfter.length.should.greaterThan(nftBefore.length)
       })
     })

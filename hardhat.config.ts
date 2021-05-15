@@ -3,7 +3,7 @@ import '@nomiclabs/hardhat-waffle'
 import '@tenderly/hardhat-tenderly'
 import 'hardhat-contract-sizer'
 import 'hardhat-deploy'
-import 'hardhat-gas-reporter'
+// import 'hardhat-gas-reporter'
 
 import { config } from 'dotenv'
 import { BigNumber as BN, ethers } from 'ethers'

@@ -179,7 +179,7 @@ export const takeOut = async (
   await evm.advanceTime(moment.duration(5, 'minutes'))
 
   // Take out loan
-  await takeOut()
+  await takeOut(details.terms.maxLoanAmount, details.borrower.signer, args.nft)
     .should.emit(diamond, 'LoanTakenOut')
     .withArgs(
       details.loan.id,
@@ -253,8 +253,9 @@ const takeOutLoan = async (
     details,
     amount = details.terms.maxLoanAmount,
     from = details.borrower.signer,
+    nft,
   } = args
-  if (!args.nft) {
+  if (!nft) {
     return await diamond.connect(from).takeOutLoan(details.loan.id, amount)
   } else {
     // Setup for NFT user
@@ -263,7 +264,7 @@ const takeOutLoan = async (
     const borrower = ethers.utils.getAddress(
       merkleTrees[merkleIndex].balances[0].address
     )
-    const deployer = await ethers.provider.getSigner('deployer')
+    const deployer = await ethers.provider.getSigner(0)
     const imp = await evm.impersonate(borrower)
     await diamond.connect(deployer).addAuthorizedAddress(borrower)
 
@@ -297,6 +298,15 @@ const takeOutLoan = async (
         proof: nftLoanTree.getProof(nftID, baseLoanSize),
       })
     }
+
+    const maxLoan = await diamond.getAssetMaxLoanAmount(lendingToken.address)
+    console.log({
+      PRE: {
+        amount: amount.toString(),
+        maxLoan: maxLoan.toString(),
+        Exceeded: amount.gt(maxLoan),
+      },
+    })
 
     return await diamond
       .connect(from)
