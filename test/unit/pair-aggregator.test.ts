@@ -7,6 +7,7 @@ import { getChainlink, getTokens } from '../../config'
 import { Address } from '../../types/custom/config-types'
 import { ITellerDiamond } from '../../types/typechain'
 import { NULL_ADDRESS } from '../../utils/consts'
+import { RUN_EXISTING } from '../helpers/env-helpers'
 
 chai.should()
 chai.use(chaiAsPromised)
@@ -24,7 +25,9 @@ describe('PriceAggregator', () => {
   const getTokenAddress = (sym: string): Address => tokenAddresses.all[sym]
 
   before(async () => {
-    await deployments.fixture('protocol')
+    await deployments.fixture('protocol', {
+      keepExistingDeployments: RUN_EXISTING,
+    })
 
     diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
     deployer = await getNamedSigner('deployer')
