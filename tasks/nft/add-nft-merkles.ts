@@ -44,31 +44,31 @@ export const addMerkles = async (
   log('Adding Merkle Roots to NFT Distributor', { indent: 2, star: true })
   log('')
 
-  const distributions: Array<{
-    tierIndex: number
-    info: MerkleDistributorInfo
-  }> = []
+  const distributions: MerkleDistributorInfo[] = []
   for (const tree of merkleTrees) {
     const { tierIndex, balances } = tree
 
-    const info = generateMerkleDistribution(balances)
-    distributions.push({ tierIndex, info })
+    const info = generateMerkleDistribution(tierIndex, balances)
+    distributions.push(info)
   }
 
   const distributionsInfo: MerkleDistributorInfo[] = []
   const merkleRoots = await nftDistributor.getMerkleRoots()
   for (let i = 0; i < distributions.length; i++) {
-    const { tierIndex, info } = distributions[i]
+    const info = distributions[i]
     distributionsInfo.push(info)
 
     if (merkleRoots.length <= i) {
       // Add new merkle root
-      await nftDistributor.addMerkle(tierIndex, info.merkleRoot)
-      log(`NEW merkle root for tier ${tierIndex} added: ${info.merkleRoot}`, {
-        indent: 3,
-        star: true,
-      })
-    } else if (!merkleRoots[i].tierIndex.eq(tierIndex)) {
+      // await nftDistributor.addMerkle(info.tierIndex, info.merkleRoot)
+      log(
+        `NEW merkle root for tier ${info.tierIndex} added: ${info.merkleRoot}`,
+        {
+          indent: 3,
+          star: true,
+        }
+      )
+    } else if (!merkleRoots[i].tierIndex.eq(info.tierIndex)) {
       log('')
       log(
         `Merkle root at index ${i} NOT MATCH existing tier index on distributor`,
@@ -78,13 +78,13 @@ export const addMerkles = async (
         indent: 5,
         star: true,
       })
-      log(`New:      ${tierIndex.toString()}`, { indent: 5, star: true })
+      log(`New:      ${info.tierIndex.toString()}`, { indent: 5, star: true })
       log('')
       throw new Error('NFT Merkle does not match tier index on chain')
     } else if (merkleRoots[i].merkleRoot != info.merkleRoot) {
       log('')
       log(
-        `Merkle root for tier ${tierIndex} NOT MATCH existing one on distributor`,
+        `Merkle root for tier ${info.tierIndex} NOT MATCH existing one on distributor`,
         { indent: 4, star: true }
       )
       log(`Existing: ${merkleRoots[i].merkleRoot}`, { indent: 5, star: true })
@@ -93,7 +93,7 @@ export const addMerkles = async (
       throw new Error('NFT Merkle root does not on chain')
     } else if (merkleRoots[i].merkleRoot === info.merkleRoot) {
       log(
-        `Merkle root for tier ${tierIndex} ALREADY added: ${info.merkleRoot}`,
+        `Merkle root for tier ${info.tierIndex} ALREADY added: ${info.merkleRoot}`,
         { indent: 3, star: true }
       )
     }
