@@ -110,6 +110,9 @@ contract CreateLoanFacet is RolesMods, ReentryMods, PausableMods {
         uint256 amount,
         NftLoanSizeProof[] calldata proofs
     ) external paused(LibLoans.ID, false) __takeOutLoan(loanID, amount) {
+        // Set the collateral ratio to 0 as linked NFTs are used as the collateral
+        LibLoans.loan(loanID).collateralRatio = 0;
+
         uint256 allowedLoanSize;
         for (uint256 i; i < proofs.length; i++) {
             NFTLib.applyToLoan(loanID, proofs[i]);
