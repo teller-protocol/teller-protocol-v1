@@ -2,11 +2,12 @@ import { BigNumber, BigNumberish, utils } from 'ethers'
 
 import MerkleTree from './merkle-tree'
 
-type NftSizeElements = Array<{
+type NftSizeElements = NFTSizeElement[]
+export interface NFTSizeElement {
   id: BigNumberish
   baseLoanSize: BigNumberish
   tierIndex: BigNumberish
-}>
+}
 type NftSizeElementsOutput = Array<{
   id: string
   baseLoanSize: string
