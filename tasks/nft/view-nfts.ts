@@ -67,39 +67,51 @@ export const viewNFTs = async (
     }
 
     const claimEntries = Object.entries(info.claims)
-    for (const [, claim] of claimEntries) {
-      if (!claim) continue
-      const isClaimed = await nftDistributor.isClaimed(i, claim.index)
+    await Promise.all(
+      claimEntries.map(async ([, claim]) => {
+        if (!claim) return
+        const isClaimed = await nftDistributor.isClaimed(i, claim.index)
 
-      const skip = (claimed && !isClaimed) || (claimable && isClaimed)
-      if (skip) continue
+        const skip = (claimed && !isClaimed) || (claimable && isClaimed)
+        if (skip) return
 
-      const { tierIndex } = merkleTrees[i]
-      if (isClaimed) {
-        tierIndices.claimed.add(tierIndex)
-        tierTokens.claimed[tierIndex] =
-          parseInt(claim.amount, 16) + (tierTokens.claimed[tierIndex] ?? 0)
-      } else {
-        tierIndices.claimable.add(tierIndex)
-        tierTokens.claimable[tierIndex] =
-          parseInt(claim.amount, 16) + (tierTokens.claimable[tierIndex] ?? 0)
-      }
-    }
+        const { tierIndex } = merkleTrees[i]
+        if (isClaimed) {
+          tierIndices.claimed.add(tierIndex)
+          tierTokens.claimed[tierIndex] =
+            parseInt(claim.amount, 16) + (tierTokens.claimed[tierIndex] ?? 0)
+        } else {
+          tierIndices.claimable.add(tierIndex)
+          tierTokens.claimable[tierIndex] =
+            parseInt(claim.amount, 16) + (tierTokens.claimable[tierIndex] ?? 0)
+        }
+      })
+    )
   }
 
   log('')
 
   log(`Claimable NFTs`, { indent: 2, star: true })
+  let claimableTotal = 0
   for (const tierIndex of tierIndices.claimable) {
     log(`Tier ${tierIndex}: ${tierTokens.claimable[tierIndex]}`, { indent: 4 })
+    claimableTotal += tierTokens.claimable[tierIndex]
   }
+  log(`Total NFTs: ${claimableTotal}`, { indent: 3 })
 
   log('')
 
   log(`Already claimed NFTs`, { indent: 2, star: true })
+  let claimedTotal = 0
   for (const tierIndex of tierIndices.claimed) {
     log(`Tier ${tierIndex}: ${tierTokens.claimed[tierIndex]}`, { indent: 4 })
+    claimedTotal += tierTokens.claimed[tierIndex]
   }
+  log(`Total NFTs: ${claimedTotal}`, { indent: 3 })
+
+  log('')
+
+  log(`Total NFTs: ${claimedTotal + claimableTotal}`, { indent: 2, star: true })
 
   log('')
 }
