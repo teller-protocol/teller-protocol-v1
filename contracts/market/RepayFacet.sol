@@ -469,7 +469,7 @@ library RepayLib {
                     valueToTransfer = valueLeftToTransfer;
                 } else {
                     valueToTransfer = NumbersLib.percent(
-                        balanceInLending,
+                        balance,
                         NumbersLib.ratioOf(
                             valueLeftToTransfer,
                             balanceInLending
