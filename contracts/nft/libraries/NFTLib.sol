@@ -84,7 +84,7 @@ library NFTLib {
         EnumerableSet.UintSet storage nfts = s().loanNFTs[loanID];
         for (uint256 i; i < EnumerableSet.length(nfts); i++) {
             // Restake the NFT
-            stake(EnumerableSet.at(nfts, i), owner);
+            EnumerableSet.add(s().stakedNFTs[owner], EnumerableSet.at(nfts, i));
         }
     }
 
