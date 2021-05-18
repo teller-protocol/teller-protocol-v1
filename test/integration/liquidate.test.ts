@@ -7,7 +7,7 @@ import moment from 'moment'
 import { getMarkets } from '../../config'
 import { getPlatformSetting } from '../../tasks'
 import { Market } from '../../types/custom/config-types'
-import { ERC20, ITellerDiamond } from '../../types/typechain'
+import { ERC20, ITellerDiamond, TellerNFT } from '../../types/typechain'
 import { HUNDRED_PERCENT, LoanStatus } from '../../utils/consts'
 import { fundedMarket } from '../fixtures'
 import { getFunds } from '../helpers/get-funds'
@@ -21,7 +21,7 @@ import {
 chai.should()
 chai.use(solidity)
 
-const { getNamedSigner, evm } = hre
+const { getNamedSigner, evm, contracts } = hre
 
 describe('Liquidate Loans', () => {
   getMarkets(hre.network).forEach(testLoans)
@@ -29,6 +29,7 @@ describe('Liquidate Loans', () => {
   function testLoans(market: Market): void {
     let liquidator: { signer: Signer; address: string }
     let diamond: ITellerDiamond
+    let nft: TellerNFT
     let liquidateRewardPercent: BigNumber
 
     before(async () => {
@@ -38,6 +39,7 @@ describe('Liquidate Loans', () => {
         amount: 100000,
         tags: ['nft'],
       }))
+      nft = await contracts.get<TellerNFT>('TellerNFT')
 
       const liquidatorSigner = await getNamedSigner('liquidator')
       liquidator = {
@@ -57,6 +59,7 @@ describe('Liquidate Loans', () => {
       amount?: BigNumberish
       loanType: LoanType
       status: LiqLoanStatus
+      nft?: boolean
     }
     const testSetup = async (
       args: TestSetupArgs
@@ -66,6 +69,7 @@ describe('Liquidate Loans', () => {
         collToken: market.collateralTokens[0],
         amount: args.amount,
         loanType: args.loanType,
+        nft: args.nft,
       })
       const { details } = helpers
 
@@ -236,6 +240,7 @@ describe('Liquidate Loans', () => {
         const { details } = await testSetup({
           loanType: LoanType.OVER_COLLATERALIZED,
           status: LiqLoanStatus.Expired,
+          nft: true,
         })
 
         const liquidatorCollBefore = await details.collateralToken.balanceOf(
@@ -264,6 +269,65 @@ describe('Liquidate Loans', () => {
         liquidatorCollAfter
           .sub(liquidatorCollBefore)
           .should.eql(reward.inCollateral_, 'Incorrect collateral reward paid')
+      })
+
+      it.only('should be able to liquidate an expired loan with an NFT', async () => {
+        const { details } = await testSetup({
+          loanType: LoanType.ZERO_COLLATERAL,
+          status: LiqLoanStatus.Expired,
+          nft: true,
+        })
+
+        const liquidatorLendBefore = await details.lendingToken.balanceOf(
+          liquidator.address
+        )
+        const liquidatorCollBefore = await details.collateralToken.balanceOf(
+          liquidator.address
+        )
+        const reward = await diamond.getLiquidationReward(details.loan.id)
+
+        const nftBefore = await nft.getOwnedTokens(
+          '0x95143890162bd671d77ae9b771881a1cb76c29a4'
+        ) // Liq controller
+
+        await diamond
+          .connect(liquidator.signer)
+          .liquidateLoan(details.loan.id)
+          .should.emit(diamond, 'LoanLiquidated')
+
+        await details
+          .refresh()
+          .then(({ loan: { status } }) =>
+            status.should.eq(LoanStatus.Liquidated, 'Loan not liquidated')
+          )
+
+        const liquidatorLendAfter = await details.lendingToken.balanceOf(
+          liquidator.address
+        )
+        const lendDiff = liquidatorLendAfter
+          .add(details.totalOwed)
+          .sub(liquidatorLendBefore)
+        lendDiff.should.eql(
+          reward.inLending_,
+          'Expected liquidator to be paid by loan escrow in lending token'
+        )
+
+        const liquidatorCollAfter = await details.collateralToken.balanceOf(
+          liquidator.address
+        )
+        const collDiff = liquidatorCollAfter.sub(liquidatorCollBefore)
+        collDiff
+          .eq(0)
+          .should.eql(
+            true,
+            'Liquidator collateral token balance should not increase'
+          )
+
+        const nftAfter = await nft.getOwnedTokens(
+          '0x95143890162bd671d77ae9b771881a1cb76c29a4'
+        )
+        console.log({ nftBefore, nftAfter, liquidatorLendBefore })
+        nftAfter.length.should.greaterThan(nftBefore.length)
       })
     })
   }
