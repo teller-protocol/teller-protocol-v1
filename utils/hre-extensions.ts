@@ -207,17 +207,17 @@ extendEnvironment(async (hre) => {
     },
   }
 
-  // if (network.name == 'hardhat' || network.name == 'localhost') {
-  //   const deployer = (
-  //     await hre.evm.impersonate('0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5')
-  //   ).signer
-  //   const getNamedAccountsOriginal = hre.getNamedAccounts
-  //   hre.getNamedAccounts = async () => {
-  //     const accounts = await getNamedAccountsOriginal()
-  //     accounts.deployer = await deployer.getAddress()
-  //     return accounts
-  //   }
-  // }
+  if (network.name == 'hardhat' || network.name == 'localhost') {
+    const deployer = (
+      await hre.evm.impersonate('0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5')
+    ).signer
+    const getNamedAccountsOriginal = hre.getNamedAccounts
+    hre.getNamedAccounts = async () => {
+      const accounts = await getNamedAccountsOriginal()
+      accounts.deployer = await deployer.getAddress()
+      return accounts
+    }
+  }
 
   hre.toBN = (amount: BigNumberish, decimals?: BigNumberish): BigNumber => {
     const num = BigNumber.from(amount)
