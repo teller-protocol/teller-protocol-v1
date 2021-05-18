@@ -4,8 +4,8 @@
   "license": "MIT",
   "scripts": {
     "h": "dotenv -- ./scripts/hh.sh",
-    "test": "TS_NODE_TRANSPILE_ONLY=1 yarn hh test",
-    "test:existing": "TS_NODE_TRANSPILE_ONLY=1 yarn hh test",
+    "test": "RUN_EXISTING=true TS_NODE_TRANSPILE_ONLY=1 yarn hh test",
+    "test:existing": "RUN_EXISTING=false TS_NODE_TRANSPILE_ONLY=1 yarn hh test",
     "lint": "prettier .",
     "format:write": "prettier --write",
     "compile": "COMPILING=true yarn hh compile",

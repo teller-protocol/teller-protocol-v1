@@ -1,7 +1,7 @@
 import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-waffle'
 import '@tenderly/hardhat-tenderly'
-import 'solidity-coverage'
+// import 'solidity-coverage'
 import 'hardhat-contract-sizer'
 import 'hardhat-deploy'
 import 'hardhat-gas-reporter'
