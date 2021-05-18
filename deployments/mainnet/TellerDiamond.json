@@ -2442,18 +2442,7 @@
       "functionSelectors": ["0x262201b6"]
     }
   ],
-  "diamondCut": [
-    {
-      "facetAddress": "0x1843F635aE17eae7763b14C02E0288DAC806A680",
-      "functionSelectors": [
-        "0xe89ad656",
-        "0x5ebc6334",
-        "0xccdd9f5d",
-        "0x8a700b53"
-      ],
-      "action": 1
-    }
-  ],
+  "diamondCut": [],
   "execute": {
     "methodName": "init",
     "args": [

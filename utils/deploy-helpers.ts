@@ -46,7 +46,6 @@ export const deploy = async <C extends Contract>(
       contract: contractName,
       libraries: args.libraries,
       from: deployer,
-      gasLimit: ethers.utils.hexlify(9500000),
       args: args.args,
     })
 

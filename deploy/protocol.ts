@@ -1,7 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-import { getTokens } from '../config'
 import {
   ICollateralEscrow,
   ILoansEscrow,
@@ -9,7 +8,6 @@ import {
   ITToken,
   UpgradeableBeaconFactory,
 } from '../types/typechain'
-import { DUMMY_ADDRESS } from '../utils/consts'
 import {
   deploy,
   deployDiamond,
@@ -27,30 +25,11 @@ const deployProtocol: DeployFunction = async (hre) => {
   const collateralEscrowBeacon = await deployCollateralEscrowBeacon(hre)
   const tTokenBeacon = await deployTTokenBeacon(hre)
 
-  const tokens = getTokens(network)
-  const executeMethod = 'init'
+  const executeMethod = undefined
   const execute: DeployDiamondArgs<
     ITellerDiamond,
     typeof executeMethod
-  >['execute'] = {
-    methodName: executeMethod,
-    args: [
-      {
-        admin: deployer,
-        assets: Object.entries(tokens.erc20).map(([sym, addr]) => ({
-          sym,
-          addr,
-        })),
-        cTokens: Object.values(tokens.compound),
-        tellerNFT: nftAddress,
-        loansEscrowBeacon: loansEscrowBeacon.address,
-        collateralEscrowBeacon: collateralEscrowBeacon.address,
-        tTokenBeacon: tTokenBeacon.address,
-        // Teller Gnosis Safe contract
-        nftLiquidationController: '0x95143890162bd671d77ae9b771881a1cb76c29a4',
-      },
-    ],
-  }
+  >['execute'] = undefined
 
   // Deploy platform diamond
   const diamond = await deployDiamond<ITellerDiamond, typeof executeMethod>({
@@ -99,7 +78,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       },
       {
         contract: 'CreateLoanFacet',
-        skipIfAlreadyDeployed: true,
+        skipIfAlreadyDeployed: false,
       },
       {
         contract: 'LoanDataFacet',
@@ -116,7 +95,7 @@ const deployProtocol: DeployFunction = async (hre) => {
       // NFT
       {
         contract: 'NFTFacet',
-        skipIfAlreadyDeployed: true,
+        skipIfAlreadyDeployed: false,
       },
       // Escrow
       {
