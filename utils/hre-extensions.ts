@@ -165,15 +165,6 @@ extendEnvironment(async (hre) => {
     },
   }
 
-  if (network.name == 'hardhat' || network.name == 'localhost') {
-    const getNamedAccountsOriginal = hre.getNamedAccounts
-    hre.getNamedAccounts = async () => {
-      const accounts = await getNamedAccountsOriginal()
-      accounts.deployer = '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5'
-      return accounts
-    }
-  }
-
   hre.getNamedSigner = async (name: string): Promise<Signer> => {
     const accounts = await hre.getNamedAccounts()
     return ethers.provider.getSigner(accounts[name])
@@ -249,6 +240,18 @@ extendEnvironment(async (hre) => {
   hre.log = (msg: string, config?: FormatMsgConfig): void => {
     if (hre.network.name === 'hardhat') return
     process.stdout.write(formatMsg(msg, config))
+  }
+
+  if (network.name == 'hardhat' || network.name == 'localhost') {
+    const getNamedAccountsOriginal = hre.getNamedAccounts
+    let lenderAddress
+    hre.getNamedAccounts = async () => {
+      const accounts = await getNamedAccountsOriginal()
+      accounts.deployer = '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5'
+      lenderAddress = accounts.lender
+      console.log({ lenderAddress })
+      return accounts
+    }
   }
 })
 

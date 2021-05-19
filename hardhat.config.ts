@@ -89,14 +89,7 @@ export default <HardhatUserConfig>{
     showTimeSpent: true,
   },
   namedAccounts: {
-    deployer: {
-      kovan: 0,
-      rinkeby: 0,
-      ropsten: 0,
-      hardhat: '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5',
-      localhost: '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5',
-      mainnet: 0,
-    },
+    deployer: '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5',
     lender: {
       hardhat: 5,
       localhost: 5,

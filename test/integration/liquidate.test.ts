@@ -271,7 +271,7 @@ describe('Liquidate Loans', () => {
           .should.eql(reward.inCollateral_, 'Incorrect collateral reward paid')
       })
 
-      it.only('should be able to liquidate an expired loan with an NFT', async () => {
+      it('should be able to liquidate an expired loan with an NFT', async () => {
         const { details } = await testSetup({
           loanType: LoanType.ZERO_COLLATERAL,
           status: LiqLoanStatus.Expired,

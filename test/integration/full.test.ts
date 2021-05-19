@@ -41,9 +41,9 @@ describe.only('Full Integration', () => {
 
     before(async () => {
       // Get a fresh market
-      await deployments.fixture('markets', {
-        keepExistingDeployments: RUN_EXISTING,
-      })
+      // await deployments.fixture('markets', {
+      //   keepExistingDeployments: true,
+      // })
 
       diamond = await contracts.get('TellerDiamond')
       lendingToken = await tokens.get(market.lendingToken)
@@ -62,10 +62,10 @@ describe.only('Full Integration', () => {
         let depositAmount2: BigNumber
 
         before(async () => {
-          // Get a fresh market
-          await deployments.fixture('markets', {
-            keepExistingDeployments: RUN_EXISTING,
-          })
+          // // Get a fresh market
+          // await deployments.fixture('markets', {
+          //   keepExistingDeployments: true,
+          // })
 
           // Turn off the Teller Token restriction
           await tToken.connect(deployer).restrict(false)
