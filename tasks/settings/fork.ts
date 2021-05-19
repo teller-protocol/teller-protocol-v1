@@ -42,6 +42,7 @@ export async function forkNetwork(
     noReset: true,
     write: false,
   })
+  await hre.evm.impersonate('0xafe87013dc96ede1e116a288d80fcaa0effe5fe5')
 }
 
 task('fork', 'Forks a chain and starts a JSON-RPC server of that forked chain')

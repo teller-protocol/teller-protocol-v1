@@ -174,10 +174,15 @@ extendEnvironment(async (hre) => {
     }
 
     hre.getNamedSigner = async (name: string): Promise<Signer> => {
-      if (name == 'deployer')
+      if (name == 'deployer') {
+        await network.provider.request({
+          method: 'hardhat_impersonateAccount',
+          params: ['0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5'],
+        })
         return ethers.provider.getSigner(
           '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5'
         )
+      }
       const accounts = await hre.getNamedAccounts()
       return ethers.provider.getSigner(accounts[name])
     }
