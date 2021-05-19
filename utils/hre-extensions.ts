@@ -172,11 +172,15 @@ extendEnvironment(async (hre) => {
       accounts.deployer = '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5'
       return accounts
     }
-  }
 
-  hre.getNamedSigner = async (name: string): Promise<Signer> => {
-    const accounts = await hre.getNamedAccounts()
-    return ethers.provider.getSigner(accounts[name])
+    hre.getNamedSigner = async (name: string): Promise<Signer> => {
+      if (name == 'deployer')
+        return ethers.provider.getSigner(
+          '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5'
+        )
+      const accounts = await hre.getNamedAccounts()
+      return ethers.provider.getSigner(accounts[name])
+    }
   }
 
   hre.evm = {
@@ -228,18 +232,6 @@ extendEnvironment(async (hre) => {
         params: [address],
       })
     },
-  }
-
-  if (network.name == 'hardhat' || network.name == 'localhost') {
-    const deployer = (
-      await hre.evm.impersonate('0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5')
-    ).signer
-    const getNamedAccountsOriginal = hre.getNamedAccounts
-    hre.getNamedAccounts = async () => {
-      const accounts = await getNamedAccountsOriginal()
-      accounts.deployer = await deployer.getAddress()
-      return accounts
-    }
   }
 
   hre.toBN = (amount: BigNumberish, decimals?: BigNumberish): BigNumber => {

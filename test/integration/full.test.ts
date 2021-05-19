@@ -50,10 +50,10 @@ describe.only('Full Integration', () => {
         at: await diamond.getTTokenFor(lendingToken.address),
       })
 
-      // deployer = await getNamedSigner('deployer')
-      deployer = await ethers.provider.getSigner(
-        '0x2ceB85a2402C94305526ab108e7597a102D6C175'
-      )
+      deployer = await getNamedSigner('deployer')
+      // deployer = await ethers.provider.getSigner(
+      //   '0x2ceB85a2402C94305526ab108e7597a102D6C175'
+      // )
       lender = await getNamedSigner('lender')
       lender2 = await getNamedSigner('lender2')
     })
