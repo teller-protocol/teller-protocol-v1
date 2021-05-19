@@ -17,7 +17,7 @@ export const addMerkles = async (
   args: AddMerklesArgs,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
-  const { contracts, network, log } = hre
+  const { contracts, network, log, getNamedSigner } = hre
 
   if (!['localhost', 'hardhat'].includes(network.name) && !args.sendTx) {
     log('')
@@ -51,7 +51,7 @@ export const addMerkles = async (
     const info = generateMerkleDistribution(tierIndex, balances)
     distributions.push(info)
   }
-
+  const deployer = await getNamedSigner('deployer')
   const distributionsInfo: MerkleDistributorInfo[] = []
   const merkleRoots = await nftDistributor.getMerkleRoots()
   for (let i = 0; i < distributions.length; i++) {
@@ -60,7 +60,7 @@ export const addMerkles = async (
 
     if (merkleRoots.length <= i) {
       // Add new merkle root
-      // await nftDistributor.addMerkle(info.tierIndex, info.merkleRoot)
+      await nftDistributor.connect(deployer).addMerkle(info.tierIndex, info.merkleRoot)
       log(
         `NEW merkle root for tier ${info.tierIndex} added: ${info.merkleRoot}`,
         {

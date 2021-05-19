@@ -1,7 +1,7 @@
 import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-waffle'
 import '@tenderly/hardhat-tenderly'
-// import 'solidity-coverage'
+import 'solidity-coverage'
 import 'hardhat-contract-sizer'
 import 'hardhat-deploy'
 import 'hardhat-gas-reporter'
@@ -93,8 +93,8 @@ export default <HardhatUserConfig>{
       kovan: 0,
       rinkeby: 0,
       ropsten: 0,
-      hardhat: 0,
-      localhost: 0,
+      hardhat: '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5',
+      localhost: '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5',
       mainnet: 0,
     },
     lender: {

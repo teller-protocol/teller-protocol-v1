@@ -1,7 +1,14 @@
 import '@nomiclabs/hardhat-ethers'
 import 'hardhat-deploy'
 
-import { BigNumber, BigNumberish, Contract, Signer } from 'ethers'
+import {
+  BigNumber,
+  BigNumberish,
+  Contract,
+  Signer,
+  providers,
+  utils,
+} from 'ethers'
 import { extendEnvironment, subtask } from 'hardhat/config'
 import moment from 'moment'
 
@@ -158,8 +165,17 @@ extendEnvironment(async (hre) => {
     },
   }
 
+  if (network.name == 'hardhat' || network.name == 'localhost') {
+    const getNamedAccountsOriginal = hre.getNamedAccounts
+    hre.getNamedAccounts = async () => {
+      const accounts = await getNamedAccountsOriginal()
+      accounts.deployer = '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5'
+      return accounts
+    }
+  }
+
   hre.getNamedSigner = async (name: string): Promise<Signer> => {
-    const accounts = await getNamedAccounts()
+    const accounts = await hre.getNamedAccounts()
     return ethers.provider.getSigner(accounts[name])
   }
 
@@ -195,28 +211,23 @@ extendEnvironment(async (hre) => {
     },
 
     async impersonate(address: string): Promise<ImpersonateReturn> {
-      await network.provider.send('hardhat_impersonateAccount', [address])
+      await network.provider.request({
+        method: 'hardhat_impersonateAccount',
+        params: [address],
+      })
+      const signer = await ethers.provider.getSigner(address)
       return {
-        signer: ethers.provider.getSigner(address),
+        signer,
         stop: () => this.stopImpersonating(address),
       }
     },
 
     async stopImpersonating(address: string): Promise<void> {
-      await network.provider.send('hardhat_stopImpersonatingAccount', [address])
+      await network.provider.request({
+        method: 'hardhat_stopImpersonatingAccount',
+        params: [address],
+      })
     },
-  }
-
-  if (network.name == 'hardhat' || network.name == 'localhost') {
-    const deployer = (
-      await hre.evm.impersonate('0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5')
-    ).signer
-    const getNamedAccountsOriginal = hre.getNamedAccounts
-    hre.getNamedAccounts = async () => {
-      const accounts = await getNamedAccountsOriginal()
-      accounts.deployer = await deployer.getAddress()
-      return accounts
-    }
   }
 
   hre.toBN = (amount: BigNumberish, decimals?: BigNumberish): BigNumber => {
