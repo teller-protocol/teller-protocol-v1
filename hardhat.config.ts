@@ -1,11 +1,10 @@
 import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-waffle'
 import '@tenderly/hardhat-tenderly'
-// import 'solidity-coverage'
+import 'solidity-coverage'
 import 'hardhat-contract-sizer'
 import 'hardhat-deploy'
 import 'hardhat-gas-reporter'
-
 import { config } from 'dotenv'
 import { BigNumber as BN, ethers } from 'ethers'
 import { HardhatUserConfig } from 'hardhat/config'
@@ -23,7 +22,7 @@ config()
 
 const accounts: HardhatNetworkHDAccountsUserConfig = {
   mnemonic: process.env.MNEMONIC_KEY,
-  count: parseInt(process.env.ADDRESS_COUNT_KEY ?? '15'),
+  count: 15,
   accountsBalance: ethers.utils.parseEther('100000000').toString(),
 }
 
@@ -69,7 +68,7 @@ export default <HardhatUserConfig>{
         version: '0.8.3',
         settings: {
           optimizer: {
-            enabled: true,
+            enabled: false,
             runs: 200,
           },
         },
@@ -90,14 +89,7 @@ export default <HardhatUserConfig>{
     showTimeSpent: true,
   },
   namedAccounts: {
-    deployer: {
-      kovan: 0,
-      rinkeby: 0,
-      ropsten: 0,
-      hardhat: 0,
-      localhost: 0,
-      mainnet: 0,
-    },
+    deployer: '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5',
     lender: {
       hardhat: 5,
       localhost: 5,

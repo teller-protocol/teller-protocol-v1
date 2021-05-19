@@ -12,7 +12,6 @@ export const tenderlyContracts = async (
     throw new Error('Must be on a live network to submit to Tenderly')
 
   const allDeployments = await deployments.all().then((all) =>
-    // const contracts:  = []
     Object.entries(all).map(([name, { artifactName, address }]) => ({
       name: artifactName ?? name,
       customName: name,
@@ -20,8 +19,15 @@ export const tenderlyContracts = async (
     }))
   )
 
-  await tenderly.verify(...allDeployments)
-  await tenderly.push(...allDeployments)
+  // await to make sure contracts are verified and pushed
+  await Promise.all(
+    allDeployments.map(async (deployment) => {
+      await Promise.all([
+        tenderly.verify(deployment),
+        tenderly.push(deployment),
+      ])
+    })
+  )
 }
 
 task(

@@ -102,21 +102,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
             );
         }
 
-        uint256 leftToPay =
-            __repayLoan(loanID, amount, address(LibEscrow.e(loanID)));
-        // if the loan is now fully paid, close it and withdraw borrower collateral
-        if (leftToPay == 0) {
-            LibLoans.loan(loanID).status = LoanStatus.Closed;
-            LibCollateral.withdrawAll(loanID, LibLoans.loan(loanID).borrower);
-        }
-
-        emit LoanRepaid(
-            loanID,
-            LibLoans.loan(loanID).borrower,
-            amount,
-            msg.sender,
-            leftToPay
-        );
+        __repayLoan(loanID, amount, address(LibEscrow.e(loanID)), false);
     }
 
     /**
@@ -130,28 +116,14 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         paused("", false)
         authorized(AUTHORIZED, msg.sender)
     {
-        uint256 leftToPay = __repayLoan(loanID, amount, msg.sender);
-        // if the loan is now fully paid, close it and withdraw borrower collateral
-        if (leftToPay == 0) {
-            LibLoans.loan(loanID).status = LoanStatus.Closed;
-            LibCollateral.withdrawAll(loanID, LibLoans.loan(loanID).borrower);
-            // Restake any NFTs linked to loan for borrower
-            NFTLib.restakeLinked(loanID, LibLoans.loan(loanID).borrower);
-        }
-
-        emit LoanRepaid(
-            loanID,
-            LibLoans.loan(loanID).borrower,
-            amount,
-            msg.sender,
-            leftToPay
-        );
+        __repayLoan(loanID, amount, msg.sender, false);
     }
 
     function __repayLoan(
         uint256 loanID,
         uint256 amount,
-        address sender
+        address sender,
+        bool isLiquidation
     ) private returns (uint256 leftToPay_) {
         require(amount > 0, "Teller: zero repay");
 
@@ -208,6 +180,36 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
 
         // Tell the Teller Token value has been deposited back into the pool.
         tToken.repayLoan(principalPaid, interestPaid);
+
+        if (isLiquidation) {
+            // Make sure there is nothing left to repay on the loan
+            require(leftToPay_ == 0, "Teller: liquidate partial repay");
+
+            // Set loan status
+            LibLoans.loan(loanID).status = LoanStatus.Liquidated;
+
+            // Transfer NFT if linked
+            NFTLib.liquidateNFT(loanID);
+        } else {
+            // if the loan is now fully paid, close it and withdraw borrower collateral
+            if (leftToPay_ == 0) {
+                LibLoans.loan(loanID).status = LoanStatus.Closed;
+                LibCollateral.withdrawAll(
+                    loanID,
+                    LibLoans.loan(loanID).borrower
+                );
+                // Restake any NFTs linked to loan for borrower
+                NFTLib.restakeLinked(loanID, LibLoans.loan(loanID).borrower);
+            }
+
+            emit LoanRepaid(
+                loanID,
+                LibLoans.loan(loanID).borrower,
+                amount,
+                msg.sender,
+                leftToPay_
+            );
+        }
     }
 
     /**
@@ -235,14 +237,8 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         uint256 amountToLiquidate =
             LibLoans.debt(loanID).principalOwed +
                 LibLoans.debt(loanID).interestOwed;
-        // Make sure there is nothing left to repay on the loan
-        require(
-            __repayLoan(loanID, amountToLiquidate, msg.sender) == 0,
-            "Teller: liquidate partial repay"
-        );
 
-        // Set loan status
-        loan.status = LoanStatus.Liquidated;
+        __repayLoan(loanID, amountToLiquidate, msg.sender, true);
 
         // Payout the liquidator reward owed
         if (rewardInLending > 0) {
@@ -254,9 +250,6 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
                 payable(msg.sender)
             );
         }
-
-        // Transfer NFT if linked
-        NFTLib.liquidateNFT(loanID);
 
         emit LoanLiquidated(
             loanID,
@@ -476,7 +469,7 @@ library RepayLib {
                     valueToTransfer = valueLeftToTransfer;
                 } else {
                     valueToTransfer = NumbersLib.percent(
-                        balanceInLending,
+                        balance,
                         NumbersLib.ratioOf(
                             valueLeftToTransfer,
                             balanceInLending

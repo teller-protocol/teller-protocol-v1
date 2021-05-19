@@ -3,6 +3,7 @@
   "version": "1.1.0",
   "license": "MIT",
   "scripts": {
+    "setup": "./scripts/setup.sh",
     "h": "dotenv -- ./scripts/hh.sh",
     "test": "RUN_EXISTING=true TS_NODE_TRANSPILE_ONLY=1 yarn hh test",
     "test:existing": "RUN_EXISTING=false TS_NODE_TRANSPILE_ONLY=1 yarn hh test",
@@ -11,7 +12,7 @@
     "compile": "COMPILING=true yarn hh compile",
     "build": "yarn compile && yarn types && yarn tsc",
     "types": "yarn typechain --target ethers-v5 --outDir types/typechain 'artifacts/!(build-info)/**/+([a-zA-Z0-9]).json'",
-    "coverage": "#yarn hh coverage --solcoverjs ./solcover.js",
+    "coverage": "RUN_EXISTING=true yarn hh coverage --solcoverjs ./solcover.js",
     "git": "func() { git add . && git commit -m \"$1\" && git push origin HEAD; }; func"
   },
   "dependencies": {
@@ -21,7 +22,7 @@
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@openzeppelin/contracts": "^4.0.0",
     "@openzeppelin/contracts-upgradeable": "^4.0.0",
-    "@tenderly/hardhat-tenderly": "git://github.com/teller-protocol/hardhat-tenderly",
+    "@tenderly/hardhat-tenderly": "^1.0.12",
     "@typechain/ethers-v5": "^6.0.5",
     "@types/chai": "^4.2.14",
     "@types/chai-as-promised": "^7.1.3",

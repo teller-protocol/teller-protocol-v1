@@ -48,9 +48,10 @@ export const viewNFTs = async (
     claimed: {},
   }
   for (let i = 0; i < distributions.length; i++) {
-    const { merkleRoot, tokenTotal, claims } = distributions[i]
+    const { merkleRoot, tierIndex, tokenTotal, claims } = distributions[i]
     const info: MerkleDistributorInfo = {
       merkleRoot,
+      tierIndex,
       tokenTotal,
       claims: {},
     }

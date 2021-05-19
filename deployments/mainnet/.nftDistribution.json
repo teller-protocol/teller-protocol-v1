@@ -1,6 +1,7 @@
 [
   {
     "merkleRoot": "0x170e3e58d2122a2fe3017a29a759b472790a0c4edcf4559e9c9dac13ca91e91d",
+    "tierIndex": 0,
     "tokenTotal": "0x06ed",
     "claims": {
       "0x000f4432a40560bBFf1b581a8b7AdEd8dab80026": {
@@ -17936,6 +17937,7 @@
   },
   {
     "merkleRoot": "0xa078a2427f7be8729da89fc6b51ea3f429db8f5fa505b1ed25de2d6f5225235d",
+    "tierIndex": 1,
     "tokenTotal": "0xd4",
     "claims": {
       "0x009154b39CA41372Df54564fb8fF2C437a83c411": {
@@ -20454,6 +20456,7 @@
   },
   {
     "merkleRoot": "0xd0791b641b66f43eee59bc4d01e7e3ab2861385ab34353baa151cac695a4c445",
+    "tierIndex": 2,
     "tokenTotal": "0xe1",
     "claims": {
       "0x0226068cE182ad66482ac08219d41e00Eae74aa7": {
@@ -22473,6 +22476,7 @@
   },
   {
     "merkleRoot": "0xc38b6ec672040da431d013990fa677dfc8494398731bed0701e7b88d085b533e",
+    "tierIndex": 3,
     "tokenTotal": "0x64",
     "claims": {
       "0x032ade653b7D6AbE56De3D12E2a474b40FA31d89": {
@@ -22899,6 +22903,7 @@
   },
   {
     "merkleRoot": "0x5533ff0d078b4b3173c2a68134396dfc4549bbef117ba4fa4cedbbb4d57488b3",
+    "tierIndex": 2,
     "tokenTotal": "0x01",
     "claims": {
       "0x391891Af67E29D97E61E30C3036a0874F5Da411e": {
@@ -22910,6 +22915,7 @@
   },
   {
     "merkleRoot": "0xa87a802bfc927ba55c7807638ea6309a7c37aaa432af03ebca0d0a204b4688f6",
+    "tierIndex": 0,
     "tokenTotal": "0x20",
     "claims": {
       "0x049808d5EAA90a2665b9703d2246DDed34F1EB73": {
@@ -23268,6 +23274,7 @@
   },
   {
     "merkleRoot": "0xbbd9a409c62dfe2c57d657bf5f5d1a43c0ff268270108aca1b8a7803f886f648",
+    "tierIndex": 8,
     "tokenTotal": "0x01",
     "claims": {
       "0x941653d6e49399D85639C7d486410c0A29185118": {
@@ -23279,6 +23286,7 @@
   },
   {
     "merkleRoot": "0xf402ee7441f25e46cc41f74d3ef029a4577ae5217cd5a08c42aa3b601f15dfa1",
+    "tierIndex": 9,
     "tokenTotal": "0x11",
     "claims": {
       "0x0Eb96D5ec478B68fF0d48628Ab4DF6A63c21ddAa": {
@@ -23468,6 +23476,7 @@
   },
   {
     "merkleRoot": "0xba6bb7e9a66bef5ccb095988f8dcb231fe9e754bd5f450aa16b5a30461327373",
+    "tierIndex": 10,
     "tokenTotal": "0x02",
     "claims": {
       "0x433663f1258376f0C7aec8fbC5CC81292e921527": {
@@ -23488,6 +23497,7 @@
   },
   {
     "merkleRoot": "0x2a34c36c39f7ef923ff0ec73062d6ef4e680ad24f1a860f974db404a8000804c",
+    "tierIndex": 11,
     "tokenTotal": "0x02",
     "claims": {
       "0x3c229864378b3B0adF98aE247Ca33986AED8EC1E": {
@@ -23508,6 +23518,7 @@
   },
   {
     "merkleRoot": "0x281205e2b46e15dd349dc7fcf11094af9dd8ac7f38afa0af576b302e3bdd5f87",
+    "tierIndex": 2,
     "tokenTotal": "0x08",
     "claims": {
       "0x0D2D49D2570B9075E07778dc6E5f59d091FA835e": {

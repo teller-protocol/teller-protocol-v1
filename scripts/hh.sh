@@ -15,7 +15,7 @@ available_networks=('mainnet' 'rinkeby' 'kovan' 'ropsten')
 
 ## Exit and display help output
 show_main_help() {
-  echo "Usage: <COMMAND> [NETWORK] [PARAMS] [OPTIONS]"
+  echo "Usage: <TASK> [NETWORK] [PARAMS] [OPTIONS]"
   echo
   echo "Available networks:"
   echo "  ${available_networks[*]}"
@@ -118,10 +118,15 @@ slice_network() {
 fork() {
   if [ "$1" == 'help' ]
   then
-    echo "Usage: fork <NETWORK> [<BLOCK_NUMBER> | latest]"
+    echo "Usage: fork [SUBTASK] <NETWORK> [<BLOCK_NUMBER> | latest]"
     echo
     echo "  The default behavior is to fork the specified network at the last deployment block for any contracts."
     echo "  This can be overridden by ether specifying a block number OR 'latest'"
+    echo
+    echo "AVAILABLE SUBTASKS:"
+    echo
+    echo "  help                Show this help message"
+    echo "  stop                Stop a running local fork"
     echo
     exit 0
 
@@ -307,7 +312,7 @@ then
 elif [ "$script" == 'fork' ] || [ "$script" == 'node' ]
 then
   get_next_opts
-  if [[ $next_opt =~ ^-h|--help$ ]]
+  if [[ $next_opt == 'help' ]]
   then
     fork help
   elif [ "$next_opt" == "stop" ]
