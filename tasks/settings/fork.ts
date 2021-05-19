@@ -36,16 +36,12 @@ export async function forkNetwork(
   )
   if (args.block) process.env.FORKING_BLOCK = String(args.block)
   process.env.FORKING_NETWORK = String(args.chain)
-  await run('node', { ...remaining, noDeploy: true })
-  const lender = await hre.getNamedSigner('lender')
-  const lenderBal = await lender.getBalance()
-  console.log('lender bal: %o', lenderBal.toString())
-  const tx = await lender.sendTransaction({
-    to: '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5',
-    value: lenderBal.div(2),
+  await run('node', {
+    ...remaining,
+    noDeploy: true,
+    noReset: true,
+    write: false,
   })
-  const result = await tx.wait()
-  console.log(result)
 }
 
 task('fork', 'Forks a chain and starts a JSON-RPC server of that forked chain')
