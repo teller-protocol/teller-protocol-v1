@@ -7,6 +7,7 @@ interface NetworkArgs {
   chain: string
   block?: number
   silent?: boolean
+  onlyDeployment?: boolean
 }
 
 export const forkNetwork: ActionType<NetworkArgs> = async (
@@ -37,12 +38,15 @@ export const forkNetwork: ActionType<NetworkArgs> = async (
   if (block) process.env.FORKING_BLOCK = String(block)
   process.env.FORKING_NETWORK = String(chain)
 
-  await run('node', {
-    ...remaining,
-    noDeploy: true,
-    noReset: true,
-    write: false,
-  })
+  if (!args.onlyDeployment) {
+    console.log('we shall deploy...')
+    await run('node', {
+      ...remaining,
+      noDeploy: true,
+      noReset: true,
+      write: false,
+    })
+  }
 }
 
 task('fork', 'Forks a chain and starts a JSON-RPC server of that forked chain')
@@ -58,5 +62,11 @@ task('fork', 'Forks a chain and starts a JSON-RPC server of that forked chain')
     'Fork network at a particular block number',
     undefined,
     types.int
+  )
+  .addOptionalPositionalParam(
+    'onlyDeployment',
+    'optional flag that just copies the deployment files',
+    true,
+    types.boolean
   )
   .setAction(forkNetwork)
