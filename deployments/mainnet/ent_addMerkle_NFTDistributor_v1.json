@@ -20,6 +20,7 @@
       "type": "function"
     }
   ],
+  "artifactName": "ent_addMerkle_NFTDistributor_v1",
   "transactionHash": "0xa03a169346aff7e880baccb2322a2090c1dc2c0f3057126d65ea05c9c97ee52d",
   "receipt": {
     "to": null,

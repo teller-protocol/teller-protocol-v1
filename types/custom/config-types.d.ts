@@ -111,11 +111,11 @@ export interface Nodes {
 }
 
 export interface TierInfo {
-  baseLoanSize: string
+  baseLoanSize: BigNumberish
   hashes: string[]
   contributionAsset: string
-  contributionSize: string
-  contributionMultiplier: string
+  contributionSize: BigNumberish
+  contributionMultiplier: string | number
 }
 
 export type NFTMerkleTree = Array<{

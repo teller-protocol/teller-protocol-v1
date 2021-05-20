@@ -53,6 +53,16 @@ interface ITellerNFTDistributor {
      */
     function addMerkle(uint256 tierIndex, bytes32 merkleRoot) external;
 
+    /**
+     * @notice Sets a merkle to be able to claim NFTs.
+     * @param index Index of merkle to set.
+     * @param tierIndex Index of NFT tier to assign merkle for.
+     *
+     * Requirements:
+     *  - Caller must be an admin
+     */
+    function moveMerkle(uint256 index, uint256 tierIndex) external;
+
     function grantRole(bytes32 role, address account) external;
 
     function revokeRole(bytes32 role, address account) external;

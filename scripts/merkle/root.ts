@@ -10,6 +10,7 @@ const { isAddress, getAddress } = utils
 // and the tree has no additional distributions.
 export interface MerkleDistributorInfo {
   merkleRoot: string
+  tierIndex: number
   tokenTotal: string
   claims: {
     [account: string]: {
@@ -26,6 +27,7 @@ export interface MerkleDistributorInfo {
 type Balances = Array<{ address: string; count: BigNumberish }>
 
 export function generateMerkleDistribution(
+  tierIndex: number,
   balances: Balances
 ): MerkleDistributorInfo {
   const dataByAddress = balances.reduce<{
@@ -83,6 +85,7 @@ export function generateMerkleDistribution(
 
   return {
     merkleRoot: tree.getHexRoot(),
+    tierIndex: tierIndex,
     tokenTotal: tokenTotal.toHexString(),
     claims,
   }

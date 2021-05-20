@@ -434,6 +434,61 @@ export const tiers: TierInfo[] = [
       'QmNR4t3quXH5Tf9g9rLJELFhdWozTPqmrGpxkiBLgrxGMC',
     ],
   },
+  {
+    baseLoanSize: '5000',
+    contributionAsset: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+    contributionSize: '1000000000000000000',
+    contributionMultiplier: '150',
+    hashes: [
+      'QmbLxAoHrQBuC2XautSc47WE8qRXLv4QpRLXuYTPNAAx6J',
+      'QmebG9P3Zzeyiz1vGqDynuNN2Bw4qgmuf47wURyydv1Jof',
+      'QmXZ4Zs1g2KgMQj29AiwXVexnfyDb7SyCv79gyytSHboNJ',
+      'QmNW1gc6Rjb55GuWmRFzV1tT1Sz9yajfAp7SA38zRNCfDT',
+      'QmWysJWBGRXNo1Uw7yhwxBZJVPgzPVoWhCqeVdS9CH3Btg',
+      'QmZiNRAi8rFYKCxBo1gcFW6naR1ZpJiiMAgzbSvtGuRGUN',
+      'QmcCo34sKeoU8EC3XLmbarmPZRSdyZqz3rTaXYDVQ3nnE8',
+      'QmZw3h3J5LFsarVvKhtN2omnwR78gHSjr8MxLJPbrw7ow3',
+      'QmRZ1Ztfs3zKZsmsRiAy1wYx8k8RUyDwSMhWeoazQarueQ',
+      'QmZ725DoxGgqo3LTgkjX6bRy3CCEApqTKbgn2vW2UPzu3o',
+      'QmTwZCgzhGuBGyvSZQ7ZzCWPNby8VfxXyc2qSSiR3G6oJH',
+      'QmSijhNSyhBBAf96gYSrWXmcr5M1m39VQ7hk82mD7RzPPY',
+      'QmRTGghiG5sYrRdommosbM8Wt6fMYhytJnnrWiaujUE2PE',
+      'QmQSLXEMBax135CVwk6hkPCGqDgBcoC2VyJ8t4QLAgRzw7',
+      'QmcAwhpbw9MWGzTaCeC5sp753Cz16ZU5ChJPRPfUfZWQrY',
+      'QmfAsSZsUoyFfoMZDyQizsKbUEQPxNnDKGpaCLcd3pcsct',
+      'QmbgAL1Hc5tE59vCgKb1PQ56k92qHFYRcjc5byK33qo1x7',
+    ],
+  },
+  {
+    baseLoanSize: '100000',
+    contributionAsset: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+    contributionSize: '1000000000000000000',
+    contributionMultiplier: '150',
+    hashes: [
+      'QmSn6N62m35qfscVqTF2XabczbpQrN9r4FQ4guyBWHVky9',
+      'Qmd2xPLxMJok8XmEc2DUVTArn8LttrPc4qaEpK98BQEGJr',
+    ],
+  },
+  {
+    baseLoanSize: '55000',
+    contributionAsset: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+    contributionSize: '5000000000000000000',
+    contributionMultiplier: '150',
+    hashes: [
+      'QmPBcFSweC5Nbb57zoDWY4WhW3fJ4PM9qpY1EuY1P59BC7',
+      'QmZrhxhnidvECeLxA89UZfBK3JoaPAdMcsaJif5B1997e8',
+    ],
+  },
+  {
+    baseLoanSize: '100000',
+    contributionAsset: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+    contributionSize: '10000000000000000000',
+    contributionMultiplier: '150',
+    hashes: [
+      'QmQHFzhAaTtbBybgGMCrQw9GjUZdgxbjwvdnQkkGgirheY',
+      'QmYFXx2fDg3kwXyiGNBGYyChuaGmPCwPbp288bwVonpjFW',
+    ],
+  },
 ]
 
 export const nftMerkleTree: Record<string, NFTMerkleTree> = {

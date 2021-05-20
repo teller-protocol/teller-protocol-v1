@@ -22,7 +22,7 @@ config()
 
 const accounts: HardhatNetworkHDAccountsUserConfig = {
   mnemonic: process.env.MNEMONIC_KEY,
-  count: parseInt(process.env.ADDRESS_COUNT_KEY ?? '15'),
+  count: 15,
   accountsBalance: ethers.utils.parseEther('100000000').toString(),
 }
 
@@ -38,8 +38,6 @@ const GAS_PRICE: HardhatNetworkUserConfig['gasPrice'] = process.env
 const FORKING_NETWORK = process.env.FORKING_NETWORK ?? 'mainnet'
 const FORK_BLOCK_NUMBER = process.env.FORKING_BLOCK
   ? parseInt(process.env.FORKING_BLOCK)
-  : FORKING_NETWORK === 'mainnet'
-  ? 12250227
   : undefined
 
 let forkUrl

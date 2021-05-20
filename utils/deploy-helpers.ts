@@ -2,9 +2,10 @@ import colors from 'colors'
 import { makeNodeDisklet } from 'disklet'
 import { Contract } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
+import { DeployOptions, DeployResult } from 'hardhat-deploy/dist/types'
 import { Libraries } from 'hardhat-deploy/types'
 
-interface CommonDeployArgs {
+interface CommonDeployArgs extends Omit<DeployOptions, 'from'> {
   hre: HardhatRuntimeEnvironment
   name?: string
   libraries?: Libraries
@@ -22,15 +23,12 @@ export interface DeployArgs extends CommonDeployArgs {
 export const deploy = async <C extends Contract>(
   args: DeployArgs
 ): Promise<C> => {
+  const { hre, skipIfAlreadyDeployed = true, indent = 1 } = args
   const {
-    hre: {
-      deployments: { deploy, getOrNull },
-      getNamedAccounts,
-      ethers,
-    },
-    skipIfAlreadyDeployed = true,
-    indent = 1,
-  } = args
+    deployments: { deploy, getOrNull },
+    getNamedAccounts,
+    ethers,
+  } = hre
 
   const log = args.log === false ? (...args: any[]) => {} : args.hre.log
 
@@ -40,43 +38,27 @@ export const deploy = async <C extends Contract>(
   const existingContract = await getOrNull(contractDeployName)
   let contractAddress: string
 
-  const contractDisplayName = colors.bold(
-    colors.underline(colors.green(contractDeployName))
-  )
-  log(`Deploying ${contractDisplayName}...:`, {
-    indent,
-    star: true,
-    nl: false,
-  })
-
   if (!existingContract || (existingContract && !skipIfAlreadyDeployed)) {
     // If marked as mock, prepend "Mock" to the contract name
     const contractName = `${args.contract}${args.mock ? 'Mock' : ''}`
 
-    const { address, receipt, newlyDeployed } = await deploy(
-      contractDeployName,
-      {
-        contract: contractName,
-        libraries: args.libraries,
-        from: deployer,
-        gasLimit: ethers.utils.hexlify(9500000),
-        args: args.args,
-      }
-    )
+    const result = await deploy(contractDeployName, {
+      contract: contractName,
+      libraries: args.libraries,
+      from: deployer,
+      gasLimit: ethers.utils.hexlify(9500000),
+      args: args.args,
+    })
 
-    contractAddress = address
-
-    if (newlyDeployed) {
-      const gas = colors.cyan(`${receipt!.gasUsed} gas`)
-      log(` ${colors.green('new')} ${address} ${receipt ? 'with ' + gas : ''}`)
-
-      await saveDeploymentBlock(args.hre.network.name, receipt!.blockNumber)
-    } else {
-      log(` ${colors.yellow('reusing')} ${address}`)
-    }
+    contractAddress = result.address
+    await onDeployResult({ result, hre, indent })
   } else {
     contractAddress = existingContract.address
-    log(` ${colors.yellow('reusing')} ${existingContract.address}`)
+    await onDeployResult({
+      result: { ...existingContract, newlyDeployed: false },
+      hre,
+      indent,
+    })
   }
 
   return (await ethers.getContractAt(args.contract, contractAddress)) as C
@@ -87,12 +69,7 @@ interface DiamondExecuteArgs<F, A> {
   args: A
 }
 
-type Facets =
-  | string[]
-  | Array<{
-      contract: string
-      skipIfAlreadyDeploy?: boolean
-    }>
+type Facets = Array<string | Omit<DeployArgs, 'hre'>>
 
 export interface DeployDiamondArgs<
   C extends Contract,
@@ -130,58 +107,62 @@ export const deployDiamond = async <
     indent,
   })
 
-  const facetNames: string[] = []
-  for (const facet of args.facets) {
-    let contractName: string
-    let skipIfAlreadyDeployed = true
-    if (typeof facet === 'string') {
-      contractName = facet
-    } else {
-      contractName = facet.contract
-      skipIfAlreadyDeployed = facet.skipIfAlreadyDeploy ?? skipIfAlreadyDeployed
-    }
-    facetNames.push(contractName)
+  const result = await diamond.deploy(args.name, {
+    owner: args.owner ?? deployer,
+    libraries: args.libraries,
+    facets: args.facets,
+    onFacetDeployment: (result) =>
+      onDeployResult({ result, hre, indent: indent + 1 }),
+    // @ts-expect-error fix type
+    execute: args.execute,
+    from: deployer,
+    log: false,
+  })
 
-    await deploy({
-      hre: args.hre,
-      contract: contractName,
-      log: args.log,
-      indent: indent + 1,
-      skipIfAlreadyDeployed,
-    })
-  }
+  await onDeployResult({
+    result,
+    hre,
+    name: `(Diamond) ${contractDisplayName}`,
+    indent: indent + 1,
+  })
+  log('')
 
-  log(`Deploying ${contractDisplayName} (Diamond)...:`, {
-    star: true,
+  return (await ethers.getContractAt(result.abi, result.address)) as C
+}
+
+interface DeployResultArgs {
+  result: DeployResult
+  hre: HardhatRuntimeEnvironment
+  name?: string
+  indent?: number
+}
+
+const onDeployResult = async (args: DeployResultArgs): Promise<void> => {
+  const { result, hre, name, indent = 1 } = args
+
+  const displayName =
+    name ??
+    colors.bold(
+      colors.underline(colors.green(result.artifactName ?? 'Unknown'))
+    )
+  hre.log(`${displayName}:`, {
     indent,
+    star: true,
     nl: false,
   })
 
-  const { address, abi, receipt, newlyDeployed } = await diamond.deploy(
-    args.name,
-    {
-      owner: args.owner ?? deployer,
-      libraries: args.libraries,
-      facets: facetNames,
-      // @ts-expect-error fix type
-      execute: args.execute,
-      from: deployer,
-      log: false,
-    }
-  )
+  if (result.newlyDeployed) {
+    const gas = colors.cyan(`${result.receipt!.gasUsed} gas`)
+    hre.log(
+      ` ${colors.green('new')} ${result.address} ${
+        result.receipt ? 'with ' + gas : ''
+      }`
+    )
 
-  if (newlyDeployed) {
-    const gas = colors.cyan(`${receipt!.gasUsed} gas`)
-    log(` ${colors.green('new')} ${address} ${receipt ? 'with ' + gas : ''}`)
-
-    await saveDeploymentBlock(hre.network.name, receipt!.blockNumber)
+    await saveDeploymentBlock(hre.network.name, result.receipt!.blockNumber)
   } else {
-    log(` ${colors.yellow('reusing')} ${address}`)
+    hre.log(` ${colors.yellow('reusing')} ${result.address}`)
   }
-
-  log('')
-
-  return (await ethers.getContractAt(abi, address)) as C
 }
 
 const saveDeploymentBlock = async (

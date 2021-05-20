@@ -38,6 +38,7 @@
       "type": "function"
     }
   ],
+  "artifactName": "ent_initialize_NFTDistributor_v1",
   "transactionHash": "0x76f31d49030affd1e3f7556bb3906baa8808127182f929bcc1a4e18382b5b7b5",
   "receipt": {
     "to": null,

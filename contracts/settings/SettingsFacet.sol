@@ -31,6 +31,7 @@ struct InitArgs {
     address loansEscrowBeacon;
     address collateralEscrowBeacon;
     address tTokenBeacon;
+    address nftLiquidationController;
 }
 
 contract SettingsFacet is RolesMods {
@@ -97,18 +98,26 @@ contract SettingsFacet is RolesMods {
         return RolesLib.hasRole(AUTHORIZED, account);
     }
 
-    function upgrade(
-        address loansEscrowBeacon,
-        address collateralEscrowBeacon,
-        address tTokenBeacon
-    ) external {
-        AppStorage storage s = AppStorageLib.store();
+    /**
+     * @notice Sets a new address to which NFTs should be sent when used for taking out a loan and gets liquidated.
+     * @param newController The address where NFTs should be transferred.
+     */
+    function setNFTLiquidationController(address newController)
+        external
+        authorized(ADMIN, msg.sender)
+    {
+        AppStorageLib.store().nftLiquidationController = newController;
+    }
 
-        s.loansEscrowBeacon = UpgradeableBeaconFactory(loansEscrowBeacon);
-        s.collateralEscrowBeacon = UpgradeableBeaconFactory(
-            collateralEscrowBeacon
-        );
-        s.tTokenBeacon = UpgradeableBeaconFactory(tTokenBeacon);
+    /**
+     * @notice Gets the new address where NFTs are sent when used for taking out a loan and gets liquidated.
+     * @return controller_ The address where NFTs are be transferred.
+     */
+    function getNFTLiquidationController()
+        external
+        returns (address controller_)
+    {
+        controller_ = AppStorageLib.store().nftLiquidationController;
     }
 
     function init(InitArgs calldata _args) external {
@@ -133,5 +142,6 @@ contract SettingsFacet is RolesMods {
             _args.collateralEscrowBeacon
         );
         s.tTokenBeacon = UpgradeableBeaconFactory(_args.tTokenBeacon);
+        s.nftLiquidationController = _args.nftLiquidationController;
     }
 }

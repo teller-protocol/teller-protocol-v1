@@ -4,11 +4,15 @@ pragma solidity ^0.8.0;
 // Contracts
 import { TellerNFT } from "../nft/TellerNFT.sol";
 import { RolesMods } from "../contexts2/access-control/roles/RolesMods.sol";
-import { ADMIN } from "../shared/roles.sol";
+import { ADMIN, AUTHORIZED } from "../shared/roles.sol";
 
 // Libraries
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { NFTLib } from "./libraries/NFTLib.sol";
+import { RolesLib } from "../contexts2/access-control/roles/RolesLib.sol";
+import {
+    EnumerableSet
+} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 contract NFTFacet is RolesMods {
     function getStakedNFTs(address nftOwner)
@@ -17,6 +21,18 @@ contract NFTFacet is RolesMods {
         returns (uint256[] memory staked_)
     {
         staked_ = NFTLib.stakedNFTs(nftOwner);
+    }
+
+    function getLoanNFTs(uint256 loanID)
+        external
+        view
+        returns (uint256[] memory loanNFTs)
+    {
+        EnumerableSet.UintSet storage nfts = NFTLib.s().loanNFTs[loanID];
+        loanNFTs = new uint256[](EnumerableSet.length(nfts));
+        for (uint256 i; i < EnumerableSet.length(nfts); i++) {
+            loanNFTs[i] = EnumerableSet.at(nfts, i);
+        }
     }
 
     /**
@@ -28,6 +44,8 @@ contract NFTFacet is RolesMods {
             // Stake NFT and transfer into diamond
             NFTLib.stake(nftIDs[i], msg.sender);
         }
+        // Give the caller authorization to protocol
+        RolesLib.grantRole(AUTHORIZED, msg.sender);
     }
 
     /**
