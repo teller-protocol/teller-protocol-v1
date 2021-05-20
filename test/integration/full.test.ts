@@ -2,12 +2,13 @@ import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { BigNumber, Signer } from 'ethers'
 import hre from 'hardhat'
+
 import { getMarkets } from '../../config'
 import { Market } from '../../types/custom/config-types'
 import { ERC20, ITellerDiamond, ITToken } from '../../types/typechain'
 import { LoanStatus } from '../../utils/consts'
-import { fundLender, getFunds } from '../helpers/get-funds'
 import { RUN_EXISTING } from '../helpers/env-helpers'
+import { fundLender, getFunds } from '../helpers/get-funds'
 import { getLPHelpers } from '../helpers/lending-pool'
 import { LoanType, takeOut } from '../helpers/loans'
 
@@ -29,7 +30,8 @@ describe.only('Full Integration', () => {
   // Run tests for all markets
   getMarkets(network).forEach(testLP)
 
-  console.log({ RUN_EXISTING })
+  console.log({ RUN_EXISTING, network: network.name })
+  throw new Error('test')
   function testLP(market: Market): void {
     let diamond: ITellerDiamond
     let lendingToken: ERC20

@@ -25,8 +25,13 @@ declare module 'hardhat/types/runtime' {
     getNamedSigner: (name: string) => Promise<Signer>
     toBN: (amount: BigNumberish, decimals?: BigNumberish) => BigNumber
     fromBN: (amount: BigNumberish, decimals?: BigNumberish) => BigNumber
-    log: (msg: string, config?: FormatMsgConfig) => void
+    log: (msg: string, config?: LogConfig) => void
   }
+}
+
+interface LogConfig extends FormatMsgConfig {
+  disable?: boolean
+  error?: boolean
 }
 
 interface ContractsExtension {
@@ -255,9 +260,12 @@ extendEnvironment(async (hre) => {
     return num
   }
 
-  hre.log = (msg: string, config?: FormatMsgConfig): void => {
-    if (hre.network.name === 'hardhat') return
-    process.stdout.write(formatMsg(msg, config))
+  hre.log = (msg: string, config: LogConfig = {}): void => {
+    const { disable = false } = config
+
+    if (disable) return
+    const fn = config?.error ? process.stderr : process.stdout
+    fn.write(formatMsg(msg, config))
   }
 })
 
