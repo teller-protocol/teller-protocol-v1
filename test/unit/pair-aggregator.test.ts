@@ -25,9 +25,9 @@ describe('PriceAggregator', () => {
   const getTokenAddress = (sym: string): Address => tokenAddresses.all[sym]
 
   before(async () => {
-    await deployments.fixture('protocol', {
-      keepExistingDeployments: RUN_EXISTING,
-    })
+    // await deployments.fixture('protocol', {
+    //   keepExistingDeployments: RUN_EXISTING,
+    // })
 
     diamond = await contracts.get<ITellerDiamond>('TellerDiamond')
     deployer = await getNamedSigner('deployer')

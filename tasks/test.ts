@@ -1,11 +1,13 @@
 import { spawn } from 'child_process'
 import { subtask, task, types } from 'hardhat/config'
 import waitPort from 'wait-port'
-
+import killPort from 'kill-port'
+const port = 8545
 task('test', async (args, hre, runSuper): Promise<void> => {
   const { run } = hre
 
   await run('test:fork')
+  await killPort(port, 'tcp')
   await runSuper({})
 })
 
@@ -25,18 +27,28 @@ subtask<TestForkArgs>('test:fork')
 
     fork.stderr.on('data', (data) => {
       log(`fork error: ${data}`, { star: true })
+      fork.kill('SIGKILL')
     })
 
     fork.on('close', (code) => {
       log(`fork process exited with code ${code}`, { star: true })
+      fork.kill('SIGKILL')
     })
 
-    process.on('uncaughtException', (err) => {
-      console.error(err)
-      fork.kill(1)
+    fork.on('uncaughtException', (err) => {
+      fork.kill('SIGKILL')
     })
-    process.on('exit', (code) => {
-      fork.kill(code)
+    fork.on('exit', (code) => {
+      fork.kill('SIGKILL')
+    })
+    fork.on('error', (err) => {
+      fork.kill('SIGKILL')
+    })
+    fork.on('end', (err) => {
+      fork.kill('SIGKILL')
+    })
+    fork.on('close', (err) => {
+      fork.kill('SIGKILL')
     })
 
     log('')
