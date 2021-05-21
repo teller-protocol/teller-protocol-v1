@@ -5,8 +5,8 @@ import {
   BigNumber,
   BigNumberish,
   Contract,
-  Signer,
   providers,
+  Signer,
   utils,
 } from 'ethers'
 import { extendEnvironment, subtask } from 'hardhat/config'
@@ -125,8 +125,9 @@ interface AddressObj {
   [name: string]: Address | AddressObj
 }
 
-extendEnvironment(async (hre) => {
-  const { deployments, ethers, getNamedAccounts, network } = hre
+extendEnvironment((hre) => {
+  const { deployments, ethers, network } = hre
+
   hre.contracts = {
     async get<C extends Contract>(
       name: string,

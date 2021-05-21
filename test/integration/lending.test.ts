@@ -6,8 +6,8 @@ import hre from 'hardhat'
 import { getMarkets } from '../../config'
 import { Market } from '../../types/custom/config-types'
 import { ERC20, ITellerDiamond, ITToken } from '../../types/typechain'
-import { fundLender, getFunds } from '../helpers/get-funds'
 import { RUN_EXISTING } from '../helpers/env-helpers'
+import { fundLender, getFunds } from '../helpers/get-funds'
 import { getLPHelpers } from '../helpers/lending-pool'
 
 chai.should()

@@ -51,7 +51,10 @@ export const getPrice = async (
       dstAddress,
       // eslint-disable-next-line @typescript-eslint/no-base-to-string
       BN.from(
-        ethers.utils.parseUnits(args.amount.toString(), await src.decimals())
+        ethers.utils.parseUnits(
+          BN.from(args.amount).toString(),
+          await src.decimals()
+        )
       )
     )
     value = FN.from(valueFor.toString()).divUnsafe(FN.from(dstFactor))

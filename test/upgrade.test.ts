@@ -1,3 +1,5 @@
+import chai from 'chai'
+import { solidity } from 'ethereum-waffle'
 import {
   contracts,
   deployments,
@@ -5,8 +7,7 @@ import {
   getNamedAccounts,
   getNamedSigner,
 } from 'hardhat'
-import chai from 'chai'
-import { solidity } from 'ethereum-waffle'
+
 import { ITellerDiamond, SettingsFacet } from '../types/typechain'
 import { NULL_ADDRESS } from '../utils/consts'
 import { RUN_EXISTING } from './helpers/env-helpers'
