@@ -15,7 +15,7 @@ export const addTiers = async (
   args: AddTiersArgs,
   hre: HardhatRuntimeEnvironment
 ): Promise<void> => {
-  const { contracts, network, ethers, log } = hre
+  const { contracts, network, ethers, log, getNamedSigner } = hre
 
   if (!['localhost', 'hardhat'].includes(network.name) && !args.sendTx) {
     log('')
@@ -35,12 +35,12 @@ export const addTiers = async (
   log('')
   log('Adding Tiers to Teller NFT', { indent: 2, star: true })
   log('')
-
+  const deployer = await getNamedSigner('deployer')
   const { tiers } = getNFT(network)
   for (let i = 0; i < tiers.length; i++) {
     const tier = await nft.getTier(i)
     if (tier.contributionAsset === NULL_ADDRESS) {
-      await nft.addTier(tiers[i])
+      await nft.connect(deployer).addTier(tiers[i])
 
       log(`Tier ${i} added`, { indent: 3, star: true })
     } else if (hashTier(tier) !== hashTier(tiers[i])) {

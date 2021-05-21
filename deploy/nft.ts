@@ -4,10 +4,8 @@ import { ITellerNFT, ITellerNFTDistributor } from '../types/typechain'
 import { deploy, deployDiamond } from '../utils/deploy-helpers'
 
 const deployNFT: DeployFunction = async (hre) => {
-  const { getNamedSigner, run, log } = hre
-
+  const { getNamedSigner, run, log, ethers } = hre
   const deployer = await getNamedSigner('deployer')
-
   // Make sure contracts are compiled
   await run('compile')
 

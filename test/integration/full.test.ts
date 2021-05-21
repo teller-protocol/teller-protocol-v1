@@ -7,6 +7,7 @@ import { getMarkets } from '../../config'
 import { Market } from '../../types/custom/config-types'
 import { ERC20, ITellerDiamond, ITToken } from '../../types/typechain'
 import { LoanStatus } from '../../utils/consts'
+import { RUN_EXISTING } from '../helpers/env-helpers'
 import { fundLender, getFunds } from '../helpers/get-funds'
 import { getLPHelpers } from '../helpers/lending-pool'
 import { LoanType, takeOut } from '../helpers/loans'
@@ -29,6 +30,8 @@ describe('Full Integration', () => {
   // Run tests for all markets
   getMarkets(network).forEach(testLP)
 
+  console.log({ RUN_EXISTING, network: network.name })
+  // throw new Error('test')
   function testLP(market: Market): void {
     let diamond: ITellerDiamond
     let lendingToken: ERC20
@@ -40,7 +43,9 @@ describe('Full Integration', () => {
 
     before(async () => {
       // Get a fresh market
-      await deployments.fixture('markets')
+      await deployments.fixture('markets', {
+        keepExistingDeployments: true,
+      })
 
       diamond = await contracts.get('TellerDiamond')
       lendingToken = await tokens.get(market.lendingToken)
@@ -59,8 +64,10 @@ describe('Full Integration', () => {
         let depositAmount2: BigNumber
 
         before(async () => {
-          // Get a fresh market
-          await deployments.fixture('markets')
+          // // Get a fresh market
+          // await deployments.fixture('markets', {
+          //   keepExistingDeployments: true,
+          // })
 
           // Turn off the Teller Token restriction
           await tToken.connect(deployer).restrict(false)
@@ -120,7 +127,8 @@ describe('Full Integration', () => {
         it('totalUnderlyingSupply - should return a value that is grater that the initial deposit after 1 block', async () => {
           await evm.advanceBlocks(10)
 
-          const totalUnderlyingSupply = await tToken.callStatic.totalUnderlyingSupply()
+          const totalUnderlyingSupply =
+            await tToken.callStatic.totalUnderlyingSupply()
           totalUnderlyingSupply
             .gt(depositAmount1)
             .should.eql(

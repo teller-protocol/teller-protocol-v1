@@ -89,14 +89,7 @@ export default <HardhatUserConfig>{
     showTimeSpent: true,
   },
   namedAccounts: {
-    deployer: {
-      kovan: 0,
-      rinkeby: 0,
-      ropsten: 0,
-      hardhat: 0,
-      localhost: 0,
-      mainnet: 0,
-    },
+    deployer: '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5',
     lender: {
       hardhat: 5,
       localhost: 5,
@@ -157,14 +150,12 @@ export default <HardhatUserConfig>{
         blockNumber: FORK_BLOCK_NUMBER,
         enabled: true,
       },
-      forkName: FORKING_NETWORK,
       accounts,
       gasPrice: GAS_PRICE,
     },
     // Uses the forked node from the hardhat network above
     localhost: {
-      url: `https://rpc-mainnet.maticvigil.com`, //'http://127.0.0.1:8545',
-      forkName: FORKING_NETWORK,
+      url: 'http://127.0.0.1:8545',
       accounts,
       timeout: 100000,
       gasPrice: GAS_PRICE,

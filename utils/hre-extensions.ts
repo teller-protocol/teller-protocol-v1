@@ -1,7 +1,14 @@
 import '@nomiclabs/hardhat-ethers'
 import 'hardhat-deploy'
 
-import { BigNumber, BigNumberish, Contract, Signer } from 'ethers'
+import {
+  BigNumber,
+  BigNumberish,
+  Contract,
+  providers,
+  Signer,
+  utils,
+} from 'ethers'
 import { extendEnvironment, subtask } from 'hardhat/config'
 import moment from 'moment'
 
@@ -18,8 +25,13 @@ declare module 'hardhat/types/runtime' {
     getNamedSigner: (name: string) => Promise<Signer>
     toBN: (amount: BigNumberish, decimals?: BigNumberish) => BigNumber
     fromBN: (amount: BigNumberish, decimals?: BigNumberish) => BigNumber
-    log: (msg: string, config?: FormatMsgConfig) => void
+    log: (msg: string, config?: LogConfig) => void
   }
+}
+
+interface LogConfig extends FormatMsgConfig {
+  disable?: boolean
+  error?: boolean
 }
 
 interface ContractsExtension {
@@ -114,7 +126,7 @@ interface AddressObj {
 }
 
 extendEnvironment((hre) => {
-  const { deployments, ethers, getNamedAccounts, network } = hre
+  const { deployments, ethers, network } = hre
 
   hre.contracts = {
     async get<C extends Contract>(
@@ -160,7 +172,7 @@ extendEnvironment((hre) => {
   }
 
   hre.getNamedSigner = async (name: string): Promise<Signer> => {
-    const accounts = await getNamedAccounts()
+    const accounts = await hre.getNamedAccounts()
     return ethers.provider.getSigner(accounts[name])
   }
 
@@ -196,15 +208,22 @@ extendEnvironment((hre) => {
     },
 
     async impersonate(address: string): Promise<ImpersonateReturn> {
-      await network.provider.send('hardhat_impersonateAccount', [address])
+      await network.provider.request({
+        method: 'hardhat_impersonateAccount',
+        params: [address],
+      })
+      const signer = await ethers.provider.getSigner(address)
       return {
-        signer: ethers.provider.getSigner(address),
+        signer,
         stop: () => this.stopImpersonating(address),
       }
     },
 
     async stopImpersonating(address: string): Promise<void> {
-      await network.provider.send('hardhat_stopImpersonatingAccount', [address])
+      await network.provider.request({
+        method: 'hardhat_stopImpersonatingAccount',
+        params: [address],
+      })
     },
   }
 
@@ -224,9 +243,12 @@ extendEnvironment((hre) => {
     return num
   }
 
-  hre.log = (msg: string, config?: FormatMsgConfig): void => {
-    if (hre.network.name === 'hardhat') return
-    process.stdout.write(formatMsg(msg, config))
+  hre.log = (msg: string, config: LogConfig = {}): void => {
+    const { disable = false } = config
+
+    if (disable) return
+    const fn = config?.error ? process.stderr : process.stdout
+    fn.write(formatMsg(msg, config))
   }
 })
 

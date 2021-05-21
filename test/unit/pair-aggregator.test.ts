@@ -7,6 +7,7 @@ import { getChainlink, getTokens } from '../../config'
 import { Address } from '../../types/custom/config-types'
 import { ITellerDiamond } from '../../types/typechain'
 import { NULL_ADDRESS } from '../../utils/consts'
+import { RUN_EXISTING } from '../helpers/env-helpers'
 
 chai.should()
 chai.use(chaiAsPromised)
