@@ -30,6 +30,10 @@ const deployNFT: DeployFunction = async (hre) => {
       'ext_distributor_NFT_v1',
     ],
     hre,
+    execute: {
+      methodName: 'initialize',
+      args: [nft.address, await deployer.getAddress()],
+    },
   })
 
   log('Initializing Teller NFT...:', { indent: 2, star: true, nl: false })
