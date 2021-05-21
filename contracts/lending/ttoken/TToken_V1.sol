@@ -157,11 +157,10 @@ contract TToken_V1 is ITToken {
         override
         returns (uint16 ratio_)
     {
-        uint256 supplied = totalUnderlyingSupply();
+        uint256 onLoan = s().totalBorrowed - s().totalRepaid;
+        uint256 supplied = totalUnderlyingSupply() + onLoan;
         if (supplied > 0) {
-            uint256 newOnLoanAmount =
-                s().totalBorrowed - s().totalRepaid + newLoanAmount;
-            ratio_ = NumbersLib.ratioOf(newOnLoanAmount, supplied);
+            ratio_ = NumbersLib.ratioOf(onLoan + newLoanAmount, supplied);
         }
     }
 

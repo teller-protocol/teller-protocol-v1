@@ -128,7 +128,7 @@ contract TTokenCompoundStrategy_1 is RolesMods, TTokenStrategy {
                 storedBal + compoundBal - amount,
                 medianRatio - storedRatio
             );
-        uint256 redeemAmount = amount - storedBal + requiredBal;
+        uint256 redeemAmount = requiredBal - storedBal + amount;
         // Withdraw tokens from Compound if needed
         compoundStore().cToken.redeemUnderlying(redeemAmount);
     }
