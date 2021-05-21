@@ -150,14 +150,12 @@ export default <HardhatUserConfig>{
         blockNumber: FORK_BLOCK_NUMBER,
         enabled: true,
       },
-      forkName: FORKING_NETWORK,
       accounts,
       gasPrice: GAS_PRICE,
     },
     // Uses the forked node from the hardhat network above
     localhost: {
       url: 'http://127.0.0.1:8545',
-      forkName: FORKING_NETWORK,
       accounts,
       timeout: 100000,
       gasPrice: GAS_PRICE,

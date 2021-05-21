@@ -24,14 +24,21 @@ export const forkNetwork: ActionType<NetworkArgs> = async (
     throw new Error(`network must be one of ${availableNetworks.join(', ')}`)
   }
 
+  log('')
   log(`Forking ${chain}... `, { star: true })
   log('')
 
   const networkName = 'hardhat'
   const deploymentsDir = path.resolve(process.cwd(), 'deployments')
-  const dstDir = path.resolve(process.cwd(), 'deployments', networkName)
+  const srcDir = path.resolve(deploymentsDir, chain)
+  const dstDir = path.resolve(deploymentsDir, networkName)
   await fs.emptyDirSync(dstDir)
-  await fs.copy(`${deploymentsDir}/${chain}`, dstDir)
+  await fs.ensureDir(srcDir)
+  await fs.copy(srcDir, dstDir, {
+    overwrite: true,
+    recursive: true,
+    preserveTimestamps: true,
+  })
   await fs.writeFile(`${dstDir}/.chainId`, '31337')
   await fs.writeFile(`${dstDir}/.forkingNetwork`, `${chain}`)
 

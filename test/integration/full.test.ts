@@ -43,9 +43,10 @@ describe('Full Integration', () => {
 
     before(async () => {
       // Get a fresh market
-      // await deployments.fixture('markets', {
-      //   keepExistingDeployments: true,
-      // })
+      await deployments.fixture('markets', {
+        keepExistingDeployments: true,
+      })
+
       diamond = await contracts.get('TellerDiamond')
       lendingToken = await tokens.get(market.lendingToken)
       tToken = await contracts.get('ITToken', {
@@ -53,9 +54,6 @@ describe('Full Integration', () => {
       })
 
       deployer = await getNamedSigner('deployer')
-      // deployer = await ethers.provider.getSigner(
-      //   '0x2ceB85a2402C94305526ab108e7597a102D6C175'
-      // )
       lender = await getNamedSigner('lender')
       lender2 = await getNamedSigner('lender2')
     })

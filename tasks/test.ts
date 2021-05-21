@@ -1,4 +1,4 @@
-import { subtask, task, types } from 'hardhat/config'
+import { task, types } from 'hardhat/config'
 
 interface TestForkArgs {
   chain: string

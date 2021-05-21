@@ -27,9 +27,9 @@ describe.skip('Platform Settings', () => {
 
   describe('updatePlatformSetting', () => {
     beforeEach(async () => {
-      // await deployments.fixture('platform-settings', {
-      //   keepExistingDeployments: RUN_EXISTING,
-      // })
+      await deployments.fixture('platform-settings', {
+        keepExistingDeployments: RUN_EXISTING,
+      })
     })
 
     for (const settingName of settingNames) {
