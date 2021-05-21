@@ -40,13 +40,6 @@ const FORK_BLOCK_NUMBER = process.env.FORKING_BLOCK
   ? parseInt(process.env.FORKING_BLOCK)
   : undefined
 
-let forkUrl
-if (FORKING_NETWORK != 'polygon' || 'polygon_mumbai') {
-  forkUrl = `https://rpc-mainnet.maticvigil.com`
-} else {
-  forkUrl = process.env[`ALCHEMY_${FORKING_NETWORK.toUpperCase()}_KEY`]
-}
-
 // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 export default <HardhatUserConfig>{
   etherscan: {
@@ -158,7 +151,7 @@ export default <HardhatUserConfig>{
     },
     hardhat: {
       forking: {
-        url: forkUrl,
+        url: `https://rpc-mainnet.maticvigil.com`, //process.env[`ALCHEMY_${FORKING_NETWORK.toUpperCase()}_KEY`],
         // Block to fork can be specified via cli: `yarn h fork {network} ([block number] | latest)`
         // Defaults to the latest deployment block
         blockNumber: FORK_BLOCK_NUMBER,
@@ -170,7 +163,7 @@ export default <HardhatUserConfig>{
     },
     // Uses the forked node from the hardhat network above
     localhost: {
-      url: 'http://127.0.0.1:8545',
+      url: `https://rpc-mainnet.maticvigil.com`, //'http://127.0.0.1:8545',
       forkName: FORKING_NETWORK,
       accounts,
       timeout: 100000,
