@@ -296,11 +296,15 @@ then
 
 elif [ "$script" == 'test' ]
 then
-  ## If a fork is already running, stop it
+  if [[ ${opts[*]} =~ "existing" ]];
+  then
+      ENV_VARS+="RUN_EXISTING=true "
+      opts=( ${opts[@]/"existing"} )
+  fi
+  # If a fork is already running, stop it
   fork stop 1>/dev/null
   slice_network verify
   try_fork "$network" latest
-
   run test hardhat ${opts[*]}
 
   fork stop

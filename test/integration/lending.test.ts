@@ -6,6 +6,7 @@ import hre from 'hardhat'
 import { getMarkets } from '../../config'
 import { Market } from '../../types/custom/config-types'
 import { ERC20, ITellerDiamond, ITToken } from '../../types/typechain'
+import { RUN_EXISTING } from '../helpers/env-helpers'
 import { fundLender, getFunds } from '../helpers/get-funds'
 import { getLPHelpers } from '../helpers/lending-pool'
 
@@ -38,7 +39,9 @@ describe('Lending', () => {
 
     before(async () => {
       // Get a fresh market
-      await deployments.fixture('markets')
+      // await deployments.fixture('markets', {
+      //   keepExistingDeployments: RUN_EXISTING,
+      // })
 
       diamond = await contracts.get('TellerDiamond')
       lendingToken = await tokens.get(market.lendingToken)
@@ -163,7 +166,9 @@ describe('Lending', () => {
 
         before(async () => {
           // Get a fresh market
-          await deployments.fixture('markets')
+          // await deployments.fixture('markets', {
+          //   keepExistingDeployments: RUN_EXISTING,
+          // })
 
           // Turn off the Teller Token restriction
           await tToken.connect(deployer).restrict(false)
@@ -223,7 +228,8 @@ describe('Lending', () => {
         it('totalUnderlyingSupply - should return a value that is grater that the initial deposit after 1 block', async () => {
           await evm.advanceBlocks(10)
 
-          const totalUnderlyingSupply = await tToken.callStatic.totalUnderlyingSupply()
+          const totalUnderlyingSupply =
+            await tToken.callStatic.totalUnderlyingSupply()
           totalUnderlyingSupply
             .gt(depositAmount1)
             .should.eql(
