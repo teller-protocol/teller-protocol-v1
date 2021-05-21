@@ -11,7 +11,7 @@
     "compile": "COMPILING=true yarn hh compile",
     "build": "yarn compile && yarn types && yarn tsc",
     "types": "yarn typechain --target ethers-v5 --outDir types/typechain 'artifacts/!(build-info)/**/+([a-zA-Z0-9]).json'",
-    "coverage": "yarn hh coverage --solcoverjs ./solcover.js",
+    "coverage": "#yarn hh coverage --solcoverjs ./solcover.js",
     "git": "func() { git add . && git commit -m \"$1\" && git push origin HEAD; }; func"
   },
   "dependencies": {
@@ -68,7 +68,6 @@
     "prettier-plugin-solidity": "^1.0.0-beta.7",
     "solhint": "^3.3.4",
     "solhint-plugin-prettier": "^0.0.5",
-    "solidity-coverage": "^0.7.16",
     "ts-generator": "^0.1.1",
     "ts-node": "^9.1.1",
     "typechain": "^4.0.3",

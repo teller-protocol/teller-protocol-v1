@@ -1,7 +1,6 @@
 import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-waffle'
 import '@tenderly/hardhat-tenderly'
-import 'solidity-coverage'
 import 'hardhat-contract-sizer'
 import 'hardhat-deploy'
 import 'hardhat-gas-reporter'
@@ -68,7 +67,7 @@ export default <HardhatUserConfig>{
         version: '0.8.3',
         settings: {
           optimizer: {
-            enabled: false,
+            enabled: true,
             runs: 200,
           },
         },

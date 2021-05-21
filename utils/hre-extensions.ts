@@ -170,27 +170,9 @@ extendEnvironment(async (hre) => {
     },
   }
 
-  if (network.name == 'hardhat' || network.name == 'localhost') {
-    const getNamedAccountsOriginal = hre.getNamedAccounts
-    hre.getNamedAccounts = async () => {
-      const accounts = await getNamedAccountsOriginal()
-      accounts.deployer = '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5'
-      return accounts
-    }
-
-    hre.getNamedSigner = async (name: string): Promise<Signer> => {
-      if (name == 'deployer') {
-        await network.provider.request({
-          method: 'hardhat_impersonateAccount',
-          params: ['0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5'],
-        })
-        return ethers.provider.getSigner(
-          '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5'
-        )
-      }
-      const accounts = await hre.getNamedAccounts()
-      return ethers.provider.getSigner(accounts[name])
-    }
+  hre.getNamedSigner = async (name: string): Promise<Signer> => {
+    const accounts = await hre.getNamedAccounts()
+    return ethers.provider.getSigner(accounts[name])
   }
 
   hre.evm = {
