@@ -126,10 +126,10 @@ const deployProtocol: DeployFunction = async (hre) => {
       // Dapps
       {
         contract: 'AaveFacet',
-        skipIfAlreadyDeploy: false,
+        skipIfAlreadyDeployed: false,
       },
       {
-        contract: 'UniswapFacet',
+        contract: 'SushiswapFacet',
         skipIfAlreadyDeployed: false,
       },
     ],
