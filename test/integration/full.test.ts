@@ -73,7 +73,11 @@ describe('Full Integration', () => {
           await tToken.connect(deployer).restrict(false)
 
           // Fund the lender
-          depositAmount1 = await fundLender(lendingToken, 1000)
+          depositAmount1 = await fundLender({
+            token: lendingToken,
+            amount: 1000,
+            hre,
+          })
 
           // Approve amount to loan
           await lendingToken
@@ -162,6 +166,7 @@ describe('Full Integration', () => {
             tokenSym: market.lendingToken,
             to: details.borrower.address,
             amount: details.debt.interestOwed,
+            hre,
           })
 
           // Approve loan repayment
@@ -202,6 +207,7 @@ describe('Full Integration', () => {
             tokenSym: market.lendingToken,
             to: details.borrower.address,
             amount: details.debt.interestOwed,
+            hre,
           })
 
           // Approve loan repayment
@@ -231,6 +237,7 @@ describe('Full Integration', () => {
             to: await lender2.getAddress(),
             tokenSym: market.lendingToken,
             amount: depositAmount2,
+            hre,
           })
 
           // Approve amount to loan

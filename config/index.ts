@@ -31,10 +31,7 @@ export const getATMs = (network: Network) => atms[getNetworkName(network)]
 export const getChainlink = (network: Network) =>
   chainlink[getNetworkName(network)]
 
-export const getMarkets = (network: Network) =>
-  /localhost|hardhat/.test(network.name)
-    ? markets[getNetworkName(network)]
-    : markets[network.name]
+export const getMarkets = (network: Network) => markets[getNetworkName(network)]
 
 export const getNodes = (network: Network) => nodes[getNetworkName(network)]
 
@@ -44,10 +41,7 @@ export const getPlatformSettings = (network: Network) =>
 export const getSigners = (network: Network) => signers[network.name]
 
 export const getTokens = (network: Network) => {
-  const networkTokens = /localhost|hardhat/.test(network.name)
-    ? tokens[getNetworkName(network)]
-    : tokens[network.name]
-
+  const networkTokens = tokens[getNetworkName(network)]
   const all: Tokens = Object.keys(networkTokens).reduce((map, type) => {
     // @ts-expect-error keys
     map = { ...map, ...networkTokens[type] }
