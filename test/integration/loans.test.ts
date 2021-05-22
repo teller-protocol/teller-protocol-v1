@@ -271,6 +271,7 @@ describe('Loans', () => {
             tokenSym: market.lendingToken,
             to: details.borrower.address,
             amount: details.debt.interestOwed,
+            hre,
           })
 
           // Approve loan repayment
@@ -311,6 +312,7 @@ describe('Loans', () => {
             tokenSym: market.lendingToken,
             to: details.borrower.address,
             amount: details.debt.interestOwed,
+            hre,
           })
 
           // Approve loan repayment

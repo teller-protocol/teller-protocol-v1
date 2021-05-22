@@ -1,7 +1,10 @@
 import * as fs from 'fs-extra'
-import { task, types } from 'hardhat/config'
+import { TASK_TEST_RUN_MOCHA_TESTS } from 'hardhat/builtin-tasks/task-names'
+import { subtask, task, types } from 'hardhat/config'
 import { ActionType, HardhatRuntimeEnvironment } from 'hardhat/types'
 import * as path from 'path'
+
+import { getFunds } from '../test/helpers/get-funds'
 
 interface NetworkArgs {
   chain: string
@@ -46,13 +49,13 @@ export const forkNetwork: ActionType<NetworkArgs> = async (
   process.env.FORKING_NETWORK = String(chain)
 
   if (!args.onlyDeployment) {
-    console.log('we shall deploy...')
     await run('node', {
       ...remaining,
       noDeploy: true,
       noReset: true,
       write: false,
     })
+    await run('fork:fund-deployer')
   }
 }
 
@@ -77,3 +80,20 @@ task('fork', 'Forks a chain and starts a JSON-RPC server of that forked chain')
     types.boolean
   )
   .setAction(forkNetwork)
+
+subtask('fork:fund-deployer').setAction(async (args, hre) => {
+  const { ethers } = hre
+
+  const [mainAccount] = await hre.getUnnamedAccounts()
+  const { deployer } = await hre.getNamedAccounts()
+  if (
+    ethers.utils.getAddress(mainAccount) !== ethers.utils.getAddress(deployer)
+  ) {
+    await getFunds({
+      to: deployer,
+      tokenSym: 'ETH',
+      amount: hre.ethers.utils.parseEther('1000'),
+      hre,
+    })
+  }
+})

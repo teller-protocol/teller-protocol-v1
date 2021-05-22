@@ -123,7 +123,7 @@ const addAuthorizedAddresses = async (
   hre: HardhatRuntimeEnvironment,
   diamond: ITellerDiamond
 ): Promise<void> => {
-  const { getNamedAccounts, network } = hre
+  const { getNamedSigner, getNamedAccounts, network } = hre
 
   const addresses = new Set([
     '0xAFe87013dc96edE1E116a288D80FcaA0eFFE5fe5', // - deployer
@@ -153,7 +153,10 @@ const addAuthorizedAddresses = async (
   }
 
   if (list.length > 0)
-    await diamond.addAuthorizedAddressList(list).then(({ wait }) => wait())
+    await diamond
+      .connect(await getNamedSigner('deployer'))
+      .addAuthorizedAddressList(list)
+      .then(({ wait }) => wait())
 }
 
 const deployLoansEscrowBeacon = async (

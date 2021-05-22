@@ -9,7 +9,15 @@ import { NULL_ADDRESS } from '../utils/consts'
 import { deploy } from '../utils/deploy-helpers'
 
 const initializeMarkets: DeployFunction = async (hre) => {
-  const { getNamedAccounts, contracts, tokens, network, ethers, log } = hre
+  const {
+    getNamedAccounts,
+    getNamedSigner,
+    contracts,
+    tokens,
+    network,
+    ethers,
+    log,
+  } = hre
   const { deployer, craSigner } = await getNamedAccounts()
 
   log('********** Lending Pools **********')
@@ -110,6 +118,7 @@ const initializeMarkets: DeployFunction = async (hre) => {
       })
 
       const receipt = await tToken
+        .connect(await getNamedSigner('deployer'))
         .setStrategy(
           tTokenStrategy.address,
           tTokenStrategy.interface.encodeFunctionData(
