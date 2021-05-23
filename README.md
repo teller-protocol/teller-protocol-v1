@@ -42,6 +42,12 @@ After this, you will need to make sure that the following variables are defined 
 - `CMC_KEY` - Used to fetch gas pricing info when running tests
 - `GAS_PRICE_GWEI_KEY` - Default gas price to use when running Hardhat
 
+### Compile Contracts
+
+After ENV variables are set, you will need to compile the contracts and build Typescript files:
+
+- `yarn build`
+
 ## Get Started
 
 After installing dependencies and setup, you are able to:
