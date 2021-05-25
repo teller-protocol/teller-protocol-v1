@@ -2,7 +2,6 @@ import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { BigNumber, Signer } from 'ethers'
 import hre from 'hardhat'
-
 import { getMarkets } from '../../config'
 import { Market } from '../../types/custom/config-types'
 import { ERC20, ITellerDiamond, ITToken } from '../../types/typechain'
