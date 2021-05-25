@@ -28,6 +28,7 @@ library LibEscrow {
     /**
      * @notice It returns a list of tokens owned by a loan escrow
      * @param loanID uint256 index used to return our token list
+     * @return t_ which is a list of tokens 
      */
     function getEscrowTokens(uint256 loanID)
         internal
@@ -41,6 +42,7 @@ library LibEscrow {
      * @notice It returns the balance of a respective token in a loan escrow
      * @param loanID uint256 index used to point to our loan escrow
      * @param token address of respective token to give us the balance of in our loan escrow
+     * @return uint256 balance of respective token returned in an escrow loan
      */
     function balanceOf(uint256 loanID, address token)
         internal

@@ -8,6 +8,7 @@ interface ILoansEscrow {
      * @notice it calls a dapp like YearnFinance at a target contract address with specified calldata
      * @param dappAddress address of the target contract address
      * @param dappData encoded abi of the function in our contract we want to call
+     * @return the called data in bytes
      */
     function callDapp(address dappAddress, bytes calldata dappData)
         external
@@ -21,7 +22,7 @@ interface ILoansEscrow {
     function setTokenAllowance(address token, address spender) external;
 
     /**
-     * @notice it allows user to claim their escrow tokens from the RepayFacet
+     * @notice it allows user to claim their escrow tokens
      * @param token address of the respective token contract to claim tokens from
      * @param to address where the tokens should be transferred to
      * @param amount uint256 amount of tokens to be claimed

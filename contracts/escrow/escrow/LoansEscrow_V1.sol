@@ -37,6 +37,7 @@ contract LoansEscrow_V1 is ILoansEscrow {
      * @notice it calls a dapp like YearnFinance at a target contract address with specified calldata
      * @param dappAddress address of the target contract address
      * @param dappData encoded abi of the function in our contract we want to call
+     * @return resData_ the called data in
      */
     function callDapp(address dappAddress, bytes calldata dappData)
         external
