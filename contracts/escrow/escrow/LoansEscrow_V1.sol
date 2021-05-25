@@ -66,7 +66,7 @@ contract LoansEscrow_V1 is ILoansEscrow {
     }
 
     /**
-     * @notice it allows user to claim their escrow tokens from the RepayFacet
+     * @notice it allows user to claim their escrow tokens
      * @param token address of the respective token contract to claim tokens from
      * @param to address where the tokens should be transferred to
      * @param amount uint256 amount of tokens to be claimed

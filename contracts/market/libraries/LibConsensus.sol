@@ -38,7 +38,7 @@ library LibConsensus {
     function s() private pure returns (MarketStorage storage) {
         return MarketStorageLib.store();
     }
-
+    
     function processLoanTerms(
         LoanRequest calldata request,
         LoanResponse[] calldata responses

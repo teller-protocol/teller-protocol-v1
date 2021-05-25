@@ -21,7 +21,7 @@ abstract contract DappMods {
     }
     
     /**
-     * @notice checks if the respective loan escrow is secuire
+     * @notice checks if the respective loan escrow is secure
      * @param loanID uint256 of the respective loan escrow
      */
     modifier onlySecured(uint256 loanID) {
