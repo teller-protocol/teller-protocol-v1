@@ -34,7 +34,6 @@ import "./storage.sol" as Storage;
 
 /**
  * @notice This contract represents a lending pool for an asset within Teller protocol.
- *
  * @author develop@teller.finance
  */
 contract TToken_V1 is ITToken {
@@ -59,12 +58,17 @@ contract TToken_V1 is ITToken {
 
     /* Public Functions */
 
+    /**
+     * @notice it returns the decimal places of the respective TToken
+     * @return decimals of the token
+     */
     function decimals() public view override returns (uint8) {
         return s().decimals;
     }
 
     /**
      * @notice The token that is the underlying assets for this Teller token.
+     * @return ERC20 token that is the underl
      */
     function underlying() public view override returns (ERC20) {
         return s().underlying;
@@ -73,6 +77,7 @@ contract TToken_V1 is ITToken {
     /**
      * @notice The balance of an {account} denoted in underlying value.
      * @param account Address to calculate the underlying balance.
+     * @return balance_ the balance of the account
      */
     function balanceOfUnderlying(address account)
         public
@@ -149,7 +154,7 @@ contract TToken_V1 is ITToken {
 
     /**
      * @notice It validates whether supply to debt (StD) ratio is valid including the loan amount.
-     * @param newLoanAmount the new loan amount to consider o the StD ratio.
+     * @param newLoanAmount the new loan amount to consider the StD ratio.
      * @return ratio_ Whether debt ratio for lending pool is valid.
      */
     function debtRatioFor(uint256 newLoanAmount)
@@ -354,6 +359,7 @@ contract TToken_V1 is ITToken {
 
     /**
      * @notice Gets the strategy used for balancing funds.
+     * @return address of the strategy contract
      */
     function getStrategy() external view override returns (address) {
         return s().strategy;
@@ -361,6 +367,7 @@ contract TToken_V1 is ITToken {
 
     /**
      * @notice Sets the restricted state of the platform.
+     * @param state boolean value that resembles the platform's state
      */
     function restrict(bool state)
         public
@@ -371,7 +378,9 @@ contract TToken_V1 is ITToken {
     }
 
     /**
-     * @notice Initializes the Teller token
+     * @notice it initializes the Teller Token
+     * @param admin address of the admin to the respective Teller Token
+     * @param underlying address of the ERC20 token
      */
     function initialize(address admin, address underlying)
         external
