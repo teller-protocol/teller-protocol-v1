@@ -40,7 +40,7 @@ library LibConsensus {
     }
 
     /**
-     * @notice it processes a loan terms by doing multiple checks on the LoanRequest request and LoanResponse[] responses
+     * @notice it processes a loan terms by doing checks on the LoanRequest request and LoanResponse[] responses
      * @param request LoanRequest is the borrower request object to take out a loan
      * @param response LoanResponse is the borrower response object to take out a loan
      * @return interestRate the borrower needs to pay back 
@@ -84,7 +84,7 @@ library LibConsensus {
         // create term submissions for every response ...
         AccruedLoanTerms memory termSubmissions;
 
-        // ... then iterate through the LoanResponses for every response that passes through
+        // ... then iterate through the LoanResponses. for every response that passes through
         // the checks, we add interest rate, collateral ratio and and max loan amount
         for (uint256 i = 0; i < responses.length; i++) {
             LoanResponse memory response = responses[i];

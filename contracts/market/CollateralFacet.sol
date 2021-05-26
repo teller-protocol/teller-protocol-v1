@@ -44,7 +44,6 @@ contract CollateralFacet is RolesMods, ReentryMods, PausableMods {
                     status,
             "Teller: loan not active or set"
         );
-
         // Transfer tokens to the collateral escrow
         LibCollateral.deposit(loanID, amount);
     }

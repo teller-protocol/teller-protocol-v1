@@ -90,6 +90,7 @@ contract RepayFacet is RolesMods, ReentryMods, PausableMods {
         uint256 balance =
             LibEscrow.balanceOf(loanID, LibLoans.loan(loanID).lendingToken);
         uint256 totalOwed = LibLoans.getTotalOwed(loanID);
+        
         // if there isn't enough balance in the escrow, then transfer amount needed to the escrow
         if (balance < totalOwed && amount > balance) {
             uint256 amountNeeded =
